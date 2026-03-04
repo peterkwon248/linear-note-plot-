@@ -152,6 +152,91 @@ export function getUnlinkedNotes(allNotes: Note[]): Note[] {
   return [...permanentUnlinked, ...captureUnlinked, ...inboxUntriaged]
 }
 
+/* ── Daily Review Queue ──────────────────────────────── */
+
+export type ReviewReason = "inbox-untriaged" | "snoozed-due" | "stale-capture" | "unlinked-permanent"
+
+export interface ReviewItem {
+  note: Note
+  reason: ReviewReason
+}
+
+/**
+ * Aggregates notes requiring attention, prioritized:
+ * 1. Inbox untriaged
+ * 2. Snoozed notes that are due
+ * 3. Stale capture (7+ days untouched)
+ * 4. Unlinked permanent notes
+ */
+export function getReviewQueue(allNotes: Note[]): ReviewItem[] {
+  const nowMs = Date.now()
+  const items: ReviewItem[] = []
+
+  // 1. Inbox untriaged
+  allNotes
+    .filter((n) => n.stage === "inbox" && n.triageStatus === "untriaged")
+    .forEach((note) => items.push({ note, reason: "inbox-untriaged" }))
+
+  // 2. Snoozed due
+  allNotes
+    .filter(
+      (n) =>
+        n.stage === "inbox" &&
+        n.triageStatus === "snoozed" &&
+        n.reviewAt &&
+        new Date(n.reviewAt).getTime() <= nowMs
+    )
+    .forEach((note) => items.push({ note, reason: "snoozed-due" }))
+
+  // 3. Stale capture (7+ days)
+  allNotes
+    .filter((n) => n.stage === "capture" && n.triageStatus !== "trashed" && needsReview(n))
+    .forEach((note) => items.push({ note, reason: "stale-capture" }))
+
+  // 4. Unlinked permanent
+  allNotes
+    .filter(
+      (n) =>
+        n.stage === "permanent" &&
+        n.triageStatus !== "trashed" &&
+        countBacklinks(n.id, allNotes) === 0
+    )
+    .forEach((note) => items.push({ note, reason: "unlinked-permanent" }))
+
+  return items
+}
+
+/* ── Link Suggestion (editor) ───────────────────────── */
+
+/**
+ * Suggest notes whose titles match text being typed.
+ * Returns top 5 matches, excluding the current note.
+ */
+export function suggestLinks(
+  text: string,
+  allNotes: Note[],
+  currentNoteId: string
+): Note[] {
+  if (!text.trim() || text.trim().length < 2) return []
+
+  const query = text.trim().toLowerCase()
+
+  return allNotes
+    .filter((n) => {
+      if (n.id === currentNoteId) return false
+      if (!n.title.trim()) return false
+      return n.title.toLowerCase().includes(query)
+    })
+    .sort((a, b) => {
+      // Exact start match first
+      const aStarts = a.title.toLowerCase().startsWith(query) ? 0 : 1
+      const bStarts = b.title.toLowerCase().startsWith(query) ? 0 : 1
+      if (aStarts !== bStarts) return aStarts - bStarts
+      return a.title.length - b.title.length
+    })
+    .slice(0, 5)
+}
+
 /* ── Snooze time helpers ──────────────────────────────── */
 
 export function getSnoozeTime(option: "3h" | "tomorrow" | "next-week"): string {

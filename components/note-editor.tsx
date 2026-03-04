@@ -24,6 +24,9 @@ import {
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { usePlotStore } from "@/lib/store"
+import type { Note } from "@/lib/types"
+import { suggestLinks } from "@/lib/queries/notes"
+import { LinkSuggestion } from "@/components/link-suggestion"
 
 export function NoteEditor() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
@@ -36,11 +39,16 @@ export function NoteEditor() {
   const toggleArchive = usePlotStore((s) => s.toggleArchive)
   const deleteNote = usePlotStore((s) => s.deleteNote)
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
+  const createChainNote = usePlotStore((s) => s.createChainNote)
 
   const note = notes.find((n) => n.id === selectedNoteId) ?? null
 
+  const allNotes = notes
+
   const [localTitle, setLocalTitle] = useState("")
   const [localContent, setLocalContent] = useState("")
+  const [suggestions, setSuggestions] = useState<Note[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   useEffect(() => {
     if (note) {
@@ -70,6 +78,58 @@ export function NoteEditor() {
   }, [localContent]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!note) return null
+
+  const handleContentChange = (value: string) => {
+    setLocalContent(value)
+
+    // Detect [[ trigger for link suggestions
+    const textarea = document.querySelector("textarea") as HTMLTextAreaElement | null
+    if (textarea && note) {
+      const cursorPos = textarea.selectionStart
+      const textBeforeCursor = value.slice(0, cursorPos)
+      const lastBracket = textBeforeCursor.lastIndexOf("[[")
+      const lastCloseBracket = textBeforeCursor.lastIndexOf("]]")
+
+      if (lastBracket > lastCloseBracket && lastBracket !== -1) {
+        const query = textBeforeCursor.slice(lastBracket + 2)
+        if (query.length >= 1) {
+          const results = suggestLinks(query, allNotes, note.id)
+          setSuggestions(results)
+          setShowSuggestions(results.length > 0)
+        } else {
+          setSuggestions([])
+          setShowSuggestions(false)
+        }
+      } else {
+        setShowSuggestions(false)
+      }
+    }
+  }
+
+  const handleSuggestionSelect = (selectedNote: Note) => {
+    const textarea = document.querySelector("textarea") as HTMLTextAreaElement | null
+    if (!textarea) return
+
+    const cursorPos = textarea.selectionStart
+    const textBeforeCursor = localContent.slice(0, cursorPos)
+    const lastBracket = textBeforeCursor.lastIndexOf("[[")
+
+    if (lastBracket !== -1) {
+      const before = localContent.slice(0, lastBracket)
+      const after = localContent.slice(cursorPos)
+      const newContent = before + "[[" + selectedNote.title + "]]" + after
+      setLocalContent(newContent)
+      setShowSuggestions(false)
+      setSuggestions([])
+
+      // Move cursor after the inserted link
+      requestAnimationFrame(() => {
+        const newPos = lastBracket + selectedNote.title.length + 4 // [[ + title + ]]
+        textarea.setSelectionRange(newPos, newPos)
+        textarea.focus()
+      })
+    }
+  }
 
   const currentFolder = folders.find((f) => f.id === note.folderId)
   const currentCategory = categories.find((c) => c.id === note.category)
@@ -184,12 +244,30 @@ export function NoteEditor() {
 
       {/* Content Textarea */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        <textarea
-          value={localContent}
-          onChange={(e) => setLocalContent(e.target.value)}
-          placeholder="Start writing..."
-          className="h-full w-full min-h-[300px] resize-none bg-transparent text-[14px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/40"
-        />
+        <div className="relative">
+          <textarea
+            value={localContent}
+            onChange={(e) => handleContentChange(e.target.value)}
+            onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+              if (showSuggestions && e.key === "Escape") {
+                e.preventDefault()
+                setShowSuggestions(false)
+                return
+              }
+              if (e.shiftKey && e.key === "Enter") {
+                e.preventDefault()
+                if (note) createChainNote(note.id)
+              }
+            }}
+            placeholder="Start writing..."
+            className="h-full w-full min-h-[300px] resize-none bg-transparent text-[14px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/40"
+          />
+          <LinkSuggestion
+            suggestions={suggestions}
+            onSelect={handleSuggestionSelect}
+            visible={showSuggestions}
+          />
+        </div>
       </div>
     </div>
   )
