@@ -16,6 +16,8 @@ import {
   AlignLeft,
   Paperclip,
   Link2,
+  Shield,
+  Sparkles,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -23,6 +25,7 @@ import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useState, useMemo } from "react"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
+import { computeReadyScore, isReadyToPromote } from "@/lib/queries/notes"
 import { Signal, CircleDot } from "lucide-react"
 
 function InspectorSection({
@@ -112,7 +115,7 @@ export function NoteInspector() {
 
       <div className="flex-1 overflow-y-auto">
         {/* Status Badges */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+        <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
           {note.pinned && (
             <span className="flex items-center gap-1 rounded-md bg-[#f2994a]/10 px-2 py-0.5 text-[11px] font-medium text-[#f2994a]">
               <Pin className="h-3 w-3" />
@@ -125,13 +128,29 @@ export function NoteInspector() {
               Archived
             </span>
           )}
-          {note.isInbox && (
+          {/* Stage badge */}
+          <span className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium ${
+            note.stage === "inbox"
+              ? "bg-accent/10 text-accent"
+              : note.stage === "capture"
+              ? "bg-[#26b5ce]/10 text-[#26b5ce]"
+              : note.stage === "permanent"
+              ? "bg-[#45d483]/10 text-[#45d483]"
+              : "bg-accent/10 text-accent"
+          }`}>
+            {note.stage === "permanent" && <Shield className="h-3 w-3" />}
+            {note.stage ? note.stage.charAt(0).toUpperCase() + note.stage.slice(1) : "Inbox"}
+          </span>
+          {note.stage === "capture" && isReadyToPromote(note, notes) && (
+            <span className="flex items-center gap-1 rounded-md bg-[#45d483]/10 px-2 py-0.5 text-[11px] font-medium text-[#45d483]">
+              <Sparkles className="h-3 w-3" />
+              Ready to promote
+            </span>
+          )}
+          {!note.pinned && !note.archived && !note.stage && note.isInbox && (
             <span className="flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">
               Inbox
             </span>
-          )}
-          {!note.pinned && !note.archived && !note.isInbox && (
-            <span className="text-[12px] text-muted-foreground">Active note</span>
           )}
         </div>
 

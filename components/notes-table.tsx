@@ -13,6 +13,8 @@ import {
   ChevronDown,
   X,
   SlidersHorizontal,
+  Sparkles,
+  Layers,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -28,6 +30,7 @@ import {
 } from "@/components/ui/tooltip"
 import { usePlotStore, filterNotesByRoute } from "@/lib/store"
 import { buildBacklinksMap } from "@/lib/backlinks"
+import { getUnlinkedNotes } from "@/lib/queries/notes"
 import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { format, formatDistanceToNowStrict } from "date-fns"
 import type { Note, NoteStatus, NotePriority } from "@/lib/types"
@@ -157,7 +160,7 @@ export function NotesTable({
       case "capture":    result = result.filter((n) => n.status === "capture"); break
       case "reference":  result = result.filter((n) => n.status === "reference"); break
       case "permanent":  result = result.filter((n) => n.status === "permanent"); break
-      case "unlinked":   result = result.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0); break
+      case "unlinked":   result = getUnlinkedNotes(notes); break
     }
 
     // Chip filters
@@ -391,6 +394,27 @@ function NoteRow({
         <span className="truncate text-[13px] text-foreground">
           {note.title || "Untitled"}
         </span>
+        {note.stage && (
+          <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+            note.stage === "inbox"
+              ? "bg-accent/10 text-accent"
+              : note.stage === "capture"
+              ? "bg-chart-2/10 text-chart-2"
+              : "bg-chart-5/10 text-chart-5"
+          }`}>
+            {note.stage}
+          </span>
+        )}
+        {links === 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="shrink-0 flex items-center gap-0.5 text-[10px] text-muted-foreground/50">
+                <Link2 className="h-2.5 w-2.5" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="text-[11px]">Add at least 1 link to reduce orphan notes.</TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       {/* Status */}

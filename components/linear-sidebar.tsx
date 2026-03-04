@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -19,8 +19,11 @@ import {
   Archive,
   Pin,
   FolderOpen,
+  Layers,
+  Shield,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
+import { getInboxNotes, getCaptureNotes, getPermanentNotes } from "@/lib/queries/notes"
 import { CreateItemDialog } from "@/components/create-dialog"
 
 /* ── Nav primitives ──────────────────────────────────── */
@@ -190,7 +193,9 @@ export function LinearSidebar() {
   const [createTagOpen, setCreateTagOpen] = useState(false)
   const [createCategoryOpen, setCreateCategoryOpen] = useState(false)
 
-  const inboxCount = notes.filter((n) => n.isInbox && !n.archived).length
+  const inboxCount = useMemo(() => getInboxNotes(notes).length, [notes])
+  const captureCount = useMemo(() => getCaptureNotes(notes).length, [notes])
+  const permanentCount = useMemo(() => getPermanentNotes(notes).length, [notes])
   const pinnedNotes = notes.filter((n) => n.pinned && !n.archived).slice(0, 5)
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
@@ -231,6 +236,22 @@ export function LinearSidebar() {
             shortcut="G I"
             count={inboxCount}
             active={isActive("/inbox")}
+          />
+          <NavLink
+            href="/capture"
+            icon={<Layers className="h-4 w-4" />}
+            label="Capture"
+            shortcut="G C"
+            count={captureCount}
+            active={isActive("/capture")}
+          />
+          <NavLink
+            href="/permanent"
+            icon={<Shield className="h-4 w-4" />}
+            label="Permanent"
+            shortcut="G M"
+            count={permanentCount}
+            active={isActive("/permanent")}
           />
           <NavLink
             href="/notes"
