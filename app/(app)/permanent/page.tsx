@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { getPermanentNotes } from "@/lib/queries/notes"
 import { NoteEditor } from "@/components/note-editor"
@@ -39,8 +39,34 @@ export default function PermanentPage() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const undoPromote = usePlotStore((s) => s.undoPromote)
 
   const [previewId, setPreviewId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!previewId) return
+      const target = e.target as HTMLElement
+      if (target.closest("input") || target.closest("textarea") || target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
+
+      const note = notes.find((n) => n.id === previewId)
+      if (!note || note.stage !== "permanent") return
+
+      switch (e.key.toLowerCase()) {
+        case "d":
+          e.preventDefault()
+          undoPromote(previewId)
+          break
+        case "escape":
+          if (!target.closest("[data-radix-popper-content-wrapper]")) {
+            setPreviewId(null)
+          }
+          break
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [previewId, notes, undoPromote])
 
   const permanentNotes = useMemo(() => getPermanentNotes(notes), [notes])
   const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])

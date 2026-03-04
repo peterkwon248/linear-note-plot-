@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import {
   getCaptureNotes,
@@ -52,6 +52,35 @@ export default function CapturePage() {
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
 
   const [previewId, setPreviewId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!previewId) return
+      const target = e.target as HTMLElement
+      if (target.closest("input") || target.closest("textarea") || target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
+
+      const note = notes.find((n) => n.id === previewId)
+      if (!note || note.stage !== "capture") return
+
+      switch (e.key.toLowerCase()) {
+        case "p":
+          e.preventDefault()
+          promoteToPermament(previewId)
+          break
+        case "b":
+          e.preventDefault()
+          moveBackToInbox(previewId)
+          break
+        case "escape":
+          if (!target.closest("[data-radix-popper-content-wrapper]")) {
+            setPreviewId(null)
+          }
+          break
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [previewId, notes, promoteToPermament, moveBackToInbox])
 
   const captureNotes = useMemo(() => getCaptureNotes(notes), [notes])
   const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])
@@ -280,11 +309,10 @@ function CaptureDetailPanel({
           </div>
           <button
             onClick={() => promoteToPermament(noteId)}
-            disabled={!ready}
             className={`flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[12px] font-medium transition-colors ${
               ready
                 ? "bg-chart-5/10 text-chart-5 hover:bg-chart-5/20"
-                : "bg-secondary text-muted-foreground cursor-not-allowed opacity-50"
+                : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
             }`}
           >
             <ArrowUp className="h-3.5 w-3.5" />

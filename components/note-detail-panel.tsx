@@ -25,6 +25,7 @@ import {
   ChevronDown,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
+import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { ConnectionsGraph } from "@/components/connections-graph"
@@ -224,12 +225,14 @@ export function NoteDetailPanel({
 
   const handleKeep = useCallback(() => {
     triageKeep(noteId)
+    toast("Moved to Capture")
     advanceToNext()
   }, [triageKeep, noteId, advanceToNext])
 
   const handleSnooze = useCallback(
     (option: "3h" | "tomorrow" | "next-week") => {
       triageSnooze(noteId, getSnoozeTime(option))
+      toast("Snoozed")
       advanceToNext()
     },
     [triageSnooze, noteId, advanceToNext]
@@ -237,19 +240,23 @@ export function NoteDetailPanel({
 
   const handleTrash = useCallback(() => {
     triageTrash(noteId)
+    toast("Trashed")
     advanceToNext()
   }, [triageTrash, noteId, advanceToNext])
 
   const handlePromote = useCallback(() => {
     promoteToPermament(noteId)
+    toast("Promoted to Permanent")
   }, [promoteToPermament, noteId])
 
   const handleDemote = useCallback(() => {
     undoPromote(noteId)
+    toast("Demoted to Capture")
   }, [undoPromote, noteId])
 
   const handleMoveBack = useCallback(() => {
     moveBackToInbox(noteId)
+    toast("Moved back to Inbox")
   }, [moveBackToInbox, noteId])
 
   // Keyboard shortcuts

@@ -5,6 +5,7 @@ import { LinearSidebar } from "@/components/linear-sidebar"
 import { SearchDialog } from "@/components/search-dialog"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
+import { Toaster } from "sonner"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -33,6 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <LinearSidebar />
         <div className="flex flex-1 overflow-hidden">{children}</div>
         <SearchDialog />
+        <Toaster position="bottom-right" theme="dark" />
       </div>
     </TooltipProvider>
   )

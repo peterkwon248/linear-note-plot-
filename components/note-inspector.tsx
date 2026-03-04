@@ -36,11 +36,12 @@ import {
 import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
-import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime } from "@/lib/queries/notes"
+import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { countBacklinks } from "@/lib/backlinks"
 import { Signal, CircleDot } from "lucide-react"
+import { toast } from "sonner"
 
 function InspectorSection({
   title,
@@ -109,6 +110,13 @@ export function NoteInspector() {
   const stale = note ? needsReview(note) : false
   const staleSuggest = note ? isStaleSuggest(note) : false
   const linkCount = note ? countBacklinks(note.id, notes) : 0
+
+  const advanceToNextInbox = useCallback(() => {
+    if (!note || note.stage !== "inbox") return
+    const inbox = getInboxNotes(notes)
+    const next = inbox.find((n) => n.id !== note.id)
+    setSelectedNoteId(next?.id ?? null)
+  }, [note, notes, setSelectedNoteId])
 
   if (!note) return null
 
@@ -182,7 +190,7 @@ export function NoteInspector() {
         {note.stage === "inbox" && note.triageStatus !== "trashed" && (
           <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/10">
             <button
-              onClick={() => triageKeep(note.id)}
+              onClick={() => { triageKeep(note.id); toast("Moved to Capture"); advanceToNextInbox() }}
               className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[11px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             >
               <Check className="h-3 w-3" />
@@ -197,19 +205,19 @@ export function NoteInspector() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-44">
-                <DropdownMenuItem onClick={() => triageSnooze(note.id, getSnoozeTime("3h"))} className="text-[12px]">
+                <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("3h")); toast("Snoozed"); advanceToNextInbox() }} className="text-[12px]">
                   3 hours
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => triageSnooze(note.id, getSnoozeTime("tomorrow"))} className="text-[12px]">
+                <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("tomorrow")); toast("Snoozed"); advanceToNextInbox() }} className="text-[12px]">
                   Tomorrow 10:00 AM
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => triageSnooze(note.id, getSnoozeTime("next-week"))} className="text-[12px]">
+                <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("next-week")); toast("Snoozed"); advanceToNextInbox() }} className="text-[12px]">
                   Next week 10:00 AM
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <button
-              onClick={() => triageTrash(note.id)}
+              onClick={() => { triageTrash(note.id); toast("Trashed"); advanceToNextInbox() }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-destructive transition-colors hover:bg-destructive/10"
             >
               <Trash2 className="h-3 w-3" />
@@ -222,7 +230,7 @@ export function NoteInspector() {
           <div className="border-b border-border">
             <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
               <button
-                onClick={() => promoteToPermament(note.id)}
+                onClick={() => { promoteToPermament(note.id); toast("Promoted to Permanent") }}
                 className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
                   isReadyToPromote(note, notes)
                     ? "bg-[#45d483] text-[#0a0a0a] hover:bg-[#45d483]/80"
@@ -233,7 +241,7 @@ export function NoteInspector() {
                 Promote
               </button>
               <button
-                onClick={() => moveBackToInbox(note.id)}
+                onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
                 className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <Inbox className="h-3 w-3" />
@@ -245,7 +253,7 @@ export function NoteInspector() {
                 <AlertTriangle className="h-3 w-3 shrink-0 text-destructive" />
                 <span className="text-[11px] text-destructive">14+ days untouched.</span>
                 <button
-                  onClick={() => moveBackToInbox(note.id)}
+                  onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
                   className="ml-auto text-[10px] font-medium text-destructive underline underline-offset-2 hover:no-underline"
                 >
                   Move to Inbox?
@@ -265,7 +273,7 @@ export function NoteInspector() {
           <div className="border-b border-border">
             <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
               <button
-                onClick={() => undoPromote(note.id)}
+                onClick={() => { undoPromote(note.id); toast("Demoted to Capture") }}
                 className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <ArrowDownLeft className="h-3 w-3" />

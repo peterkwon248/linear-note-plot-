@@ -28,6 +28,7 @@ import {
   FileText,
 } from "lucide-react"
 import { format } from "date-fns"
+import { toast } from "sonner"
 import type { Note } from "@/lib/types"
 
 /* ── InboxPage ─────────────────────────────────────────── */
@@ -59,6 +60,7 @@ export default function InboxPage() {
   const handleKeep = useCallback(
     (id: string) => {
       triageKeep(id)
+      toast("Moved to Capture", { description: "Note kept for further processing." })
       goNext(id)
     },
     [triageKeep, goNext]
@@ -67,6 +69,7 @@ export default function InboxPage() {
   const handleSnooze = useCallback(
     (id: string, option: "3h" | "tomorrow" | "next-week") => {
       triageSnooze(id, getSnoozeTime(option))
+      toast("Snoozed", { description: "Note will reappear later." })
       goNext(id)
     },
     [triageSnooze, goNext]
@@ -75,6 +78,7 @@ export default function InboxPage() {
   const handleTrash = useCallback(
     (id: string) => {
       triageTrash(id)
+      toast("Trashed", { description: "Note moved to trash." })
       goNext(id)
     },
     [triageTrash, goNext]
@@ -99,7 +103,7 @@ export default function InboxPage() {
           e.preventDefault()
           handleSnooze(previewId, "tomorrow")
           break
-        case "x":
+        case "t":
           e.preventDefault()
           handleTrash(previewId)
           break
@@ -146,7 +150,7 @@ export default function InboxPage() {
         {/* Workflow hint */}
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
           <span className="text-[11px] text-muted-foreground">
-            Triage notes: <kbd className="rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[10px]">K</kbd> Keep <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[10px]">S</kbd> Snooze <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[10px]">X</kbd> Trash
+            Triage notes: <kbd className="rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[10px]">K</kbd> Keep <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[10px]">S</kbd> Snooze <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[10px]">T</kbd> Trash
           </span>
         </div>
 
@@ -376,7 +380,7 @@ function InboxDetailPanel({
                   className="flex items-center justify-center gap-1.5 rounded-md bg-destructive/10 px-3 py-2 text-[12px] font-medium text-destructive transition-colors hover:bg-destructive/20"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  <kbd className="rounded border border-destructive/20 px-1 py-0.5 font-mono text-[9px]">X</kbd>
+                  <kbd className="rounded border border-destructive/20 px-1 py-0.5 font-mono text-[9px]">T</kbd>
                 </button>
               </TooltipTrigger>
               <TooltipContent>Soft delete this note</TooltipContent>
