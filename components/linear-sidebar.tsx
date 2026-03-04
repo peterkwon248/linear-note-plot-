@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import {
   Search,
   Inbox,
@@ -313,12 +314,15 @@ export function LinearSidebar() {
 
       {/* Footer */}
       <div className="border-t border-sidebar-border px-2 py-2">
-        <NavItem
-          icon={<Settings className="h-4 w-4" />}
-          label="Settings"
-          active={isActive({ type: "settings" })}
-          onClick={() => setActiveView({ type: "settings" })}
-        />
+        <Link
+          href="/settings"
+          className="group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] text-sidebar-muted transition-colors hover:bg-sidebar-hover hover:text-sidebar-foreground"
+        >
+          <span className="flex shrink-0 items-center justify-center w-4 h-4">
+            <Settings className="h-4 w-4" />
+          </span>
+          <span className="flex-1 truncate text-left">Settings</span>
+        </Link>
         <div className="mt-1 flex items-center gap-2 rounded-md px-2 py-1.5">
           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-accent-foreground">
             U

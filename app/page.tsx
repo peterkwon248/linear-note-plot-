@@ -5,7 +5,6 @@ import { LinearSidebar } from "@/components/linear-sidebar"
 import { NoteList } from "@/components/note-list"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
-import { SettingsView } from "@/components/settings-view"
 import { SearchDialog } from "@/components/search-dialog"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
@@ -13,9 +12,7 @@ import { usePlotStore } from "@/lib/store"
 export default function Page() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
-  const activeView = usePlotStore((s) => s.activeView)
   const hasSelectedNote = selectedNoteId !== null
-  const isSettings = activeView.type === "settings"
 
   // ESC key to clear selection and hide inspector
   useEffect(() => {
@@ -38,11 +35,9 @@ export default function Page() {
       <div className="flex h-screen overflow-hidden bg-background">
         <LinearSidebar />
 
-        {/* Conditional layout: settings OR list-only OR editor+inspector */}
+        {/* Conditional layout: list-only OR editor+inspector */}
         <div className="flex flex-1 overflow-hidden">
-          {isSettings ? (
-            <SettingsView />
-          ) : !hasSelectedNote ? (
+          {!hasSelectedNote ? (
             <NoteList />
           ) : (
             <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
