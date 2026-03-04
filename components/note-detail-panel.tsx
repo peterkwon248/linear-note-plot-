@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState, useEffect, useCallback } from "react"
 import {
   X,
   FileText,
@@ -15,12 +15,27 @@ import {
   ExternalLink,
   Layers,
   Shield,
+  Check,
+  AlarmClock,
+  Trash2,
+  ArrowUpRight,
+  ArrowDownLeft,
+  AlertTriangle,
+  Inbox,
+  ChevronDown,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { ConnectionsGraph } from "@/components/connections-graph"
-import { computeReadyScore, isReadyToPromote, needsReview } from "@/lib/queries/notes"
+import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
+import { countBacklinks } from "@/lib/backlinks"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { Note } from "@/lib/types"
 
 /* ── Backlinks helper ──────────────────────────────────── */
@@ -154,15 +169,24 @@ export function NoteDetailPanel({
   onClose,
   onOpenNote,
   onEditNote,
+  onTriageAction,
   embedded = false,
 }: {
   noteId: string
   onClose: () => void
   onOpenNote: (id: string) => void
   onEditNote: () => void
+  onTriageAction?: () => void
   embedded?: boolean
 }) {
   const notes = usePlotStore((s) => s.notes)
+  const triageKeep = usePlotStore((s) => s.triageKeep)
+  const triageSnooze = usePlotStore((s) => s.triageSnooze)
+  const triageTrash = usePlotStore((s) => s.triageTrash)
+  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const undoPromote = usePlotStore((s) => s.undoPromote)
+  const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
+
   const note = notes.find((n) => n.id === noteId)
 
   const backlinks = useMemo(
@@ -186,6 +210,72 @@ export function NoteDetailPanel({
   )
 
   const stale = note ? needsReview(note) : false
+  const staleSuggest = note ? isStaleSuggest(note) : false
+  const linkCount = note ? countBacklinks(note.id, notes) : 0
+
+  // Advance to next inbox note after triage action
+  const advanceToNext = useCallback(() => {
+    const inbox = getInboxNotes(notes)
+    const next = inbox.find((n) => n.id !== noteId)
+    if (next) onOpenNote(next.id)
+    else onClose()
+    onTriageAction?.()
+  }, [notes, noteId, onOpenNote, onClose, onTriageAction])
+
+  const handleKeep = useCallback(() => {
+    triageKeep(noteId)
+    advanceToNext()
+  }, [triageKeep, noteId, advanceToNext])
+
+  const handleSnooze = useCallback(
+    (option: "3h" | "tomorrow" | "next-week") => {
+      triageSnooze(noteId, getSnoozeTime(option))
+      advanceToNext()
+    },
+    [triageSnooze, noteId, advanceToNext]
+  )
+
+  const handleTrash = useCallback(() => {
+    triageTrash(noteId)
+    advanceToNext()
+  }, [triageTrash, noteId, advanceToNext])
+
+  const handlePromote = useCallback(() => {
+    promoteToPermament(noteId)
+  }, [promoteToPermament, noteId])
+
+  const handleDemote = useCallback(() => {
+    undoPromote(noteId)
+  }, [undoPromote, noteId])
+
+  const handleMoveBack = useCallback(() => {
+    moveBackToInbox(noteId)
+  }, [moveBackToInbox, noteId])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!note) return
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return
+      if (target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
+
+      if (note.stage === "inbox" && note.triageStatus !== "trashed") {
+        if (e.key === "k" || e.key === "K") { e.preventDefault(); handleKeep() }
+        if (e.key === "s" || e.key === "S") { e.preventDefault(); handleSnooze("tomorrow") }
+        if (e.key === "t" || e.key === "T") { e.preventDefault(); handleTrash() }
+      }
+      if (note.stage === "capture") {
+        if (e.key === "p" || e.key === "P") { e.preventDefault(); handlePromote() }
+        if (e.key === "b" || e.key === "B") { e.preventDefault(); handleMoveBack() }
+      }
+      if (note.stage === "permanent") {
+        if (e.key === "d" || e.key === "D") { e.preventDefault(); handleDemote() }
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [note, handleKeep, handleSnooze, handleTrash, handlePromote, handleDemote, handleMoveBack])
 
   if (!note) return null
 
@@ -227,6 +317,115 @@ export function NoteDetailPanel({
           </button>
         </div>
       </header>
+
+      {/* Stage-aware workflow action bar */}
+      {note.stage === "inbox" && note.triageStatus !== "trashed" && (
+        <div className="flex shrink-0 items-center gap-2 border-b border-border bg-secondary/20 px-4 py-2">
+          <button
+            onClick={handleKeep}
+            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+          >
+            <Check className="h-3 w-3" />
+            Keep
+            <kbd className="ml-1 rounded bg-accent-foreground/10 px-1 py-0.5 text-[10px] font-mono leading-none text-accent-foreground/60">K</kbd>
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-foreground transition-colors hover:bg-secondary">
+                <AlarmClock className="h-3 w-3" />
+                Snooze
+                <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono leading-none text-muted-foreground">S</kbd>
+                <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-44">
+              <DropdownMenuItem onClick={() => handleSnooze("3h")} className="text-[12px]">
+                <AlarmClock className="h-3 w-3 mr-2 text-muted-foreground" /> 3 hours
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSnooze("tomorrow")} className="text-[12px]">
+                <AlarmClock className="h-3 w-3 mr-2 text-muted-foreground" /> Tomorrow 10:00 AM
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSnooze("next-week")} className="text-[12px]">
+                <AlarmClock className="h-3 w-3 mr-2 text-muted-foreground" /> Next week 10:00 AM
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button
+            onClick={handleTrash}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-destructive transition-colors hover:bg-destructive/10"
+          >
+            <Trash2 className="h-3 w-3" />
+            Trash
+            <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono leading-none text-muted-foreground">T</kbd>
+          </button>
+        </div>
+      )}
+
+      {note.stage === "capture" && (
+        <div className="shrink-0 border-b border-border">
+          <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
+            <button
+              onClick={handlePromote}
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                ready
+                  ? "bg-[#45d483] text-[#0a0a0a] hover:bg-[#45d483]/80"
+                  : "border border-border bg-card text-foreground hover:bg-secondary"
+              }`}
+            >
+              <ArrowUpRight className="h-3 w-3" />
+              Promote
+              <kbd className="ml-1 rounded bg-foreground/10 px-1 py-0.5 text-[10px] font-mono leading-none opacity-60">P</kbd>
+            </button>
+            <button
+              onClick={handleMoveBack}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <Inbox className="h-3 w-3" />
+              Back to Inbox
+              <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono leading-none text-muted-foreground">B</kbd>
+            </button>
+          </div>
+          {staleSuggest && (
+            <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+              <span className="text-[12px] text-destructive">Untouched for 14+ days.</span>
+              <button
+                onClick={handleMoveBack}
+                className="ml-auto text-[11px] font-medium text-destructive underline underline-offset-2 hover:no-underline"
+              >
+                Move back to Inbox?
+              </button>
+            </div>
+          )}
+          {!staleSuggest && stale && (
+            <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-chart-3" />
+              <span className="text-[12px] text-chart-3">Review needed - untouched for 7+ days.</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {note.stage === "permanent" && (
+        <div className="shrink-0 border-b border-border">
+          <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
+            <button
+              onClick={handleDemote}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <ArrowDownLeft className="h-3 w-3" />
+              Demote to Capture
+              <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono leading-none text-muted-foreground">D</kbd>
+            </button>
+          </div>
+          {linkCount === 0 && (
+            <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
+              <Link2 className="h-3.5 w-3.5 text-chart-3" />
+              <span className="text-[12px] text-chart-3">Unlinked permanent note - add connections to strengthen your knowledge graph.</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">

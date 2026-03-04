@@ -15,6 +15,13 @@ import {
   SlidersHorizontal,
   Sparkles,
   Layers,
+  Check,
+  AlarmClock,
+  Trash2,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Inbox,
+  MoreHorizontal,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -22,7 +29,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+} from "@/components/ui/context-menu"
 import {
   Tooltip,
   TooltipContent,
@@ -30,7 +50,7 @@ import {
 } from "@/components/ui/tooltip"
 import { usePlotStore, filterNotesByRoute } from "@/lib/store"
 import { buildBacklinksMap } from "@/lib/backlinks"
-import { getUnlinkedNotes } from "@/lib/queries/notes"
+import { getUnlinkedNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { format, formatDistanceToNowStrict } from "date-fns"
 import type { Note, NoteStatus, NotePriority } from "@/lib/types"
@@ -128,6 +148,12 @@ export function NotesTable({
   const updateNote = usePlotStore((s) => s.updateNote)
   const openNote = usePlotStore((s) => s.openNote)
   const createNote = usePlotStore((s) => s.createNote)
+  const triageKeep = usePlotStore((s) => s.triageKeep)
+  const triageSnooze = usePlotStore((s) => s.triageSnooze)
+  const triageTrash = usePlotStore((s) => s.triageTrash)
+  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const undoPromote = usePlotStore((s) => s.undoPromote)
+  const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
 
   const [sortCol, setSortCol] = useState<SortColumn>("updated")
   const [sortDir, setSortDir] = useState<SortDirection>("desc")
@@ -351,6 +377,12 @@ export function NotesTable({
               onDoubleClick={() => openNote(note.id)}
               onStatus={(s) => updateNote(note.id, { status: s })}
               onPriority={(p) => updateNote(note.id, { priority: p })}
+              onKeep={() => triageKeep(note.id)}
+              onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
+              onTrash={() => triageTrash(note.id)}
+              onPromote={() => promoteToPermament(note.id)}
+              onDemote={() => undoPromote(note.id)}
+              onMoveBack={() => moveBackToInbox(note.id)}
             />
           ))}
         </div>
@@ -369,6 +401,12 @@ function NoteRow({
   onDoubleClick,
   onStatus,
   onPriority,
+  onKeep,
+  onSnooze,
+  onTrash,
+  onPromote,
+  onDemote,
+  onMoveBack,
 }: {
   note: Note
   links: number
@@ -377,17 +415,25 @@ function NoteRow({
   onDoubleClick?: () => void
   onStatus: (s: NoteStatus) => void
   onPriority: (p: NotePriority) => void
+  onKeep: () => void
+  onSnooze: (opt: "3h" | "tomorrow" | "next-week") => void
+  onTrash: () => void
+  onPromote: () => void
+  onDemote: () => void
+  onMoveBack: () => void
 }) {
   return (
-    <div
-      className={`group flex items-center border-b border-border px-5 py-2 transition-colors cursor-pointer ${
-        isActive
-          ? "bg-accent/8 border-l-2 border-l-accent"
-          : "hover:bg-secondary/30"
-      }`}
-      onClick={onOpen}
-      onDoubleClick={onDoubleClick}
-    >
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          className={`group flex items-center border-b border-border px-5 py-2 transition-colors cursor-pointer ${
+            isActive
+              ? "bg-accent/8 border-l-2 border-l-accent"
+              : "hover:bg-secondary/30"
+          }`}
+          onClick={onOpen}
+          onDoubleClick={onDoubleClick}
+        >
       {/* Name */}
       <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
         <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
@@ -468,6 +514,80 @@ function NoteRow({
           </TooltipContent>
         </Tooltip>
       </div>
-    </div>
+        </div>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className="w-52">
+        {/* Inbox actions */}
+        {note.stage === "inbox" && note.triageStatus !== "trashed" && (
+          <>
+            <ContextMenuItem onClick={onKeep} className="text-[12px]">
+              <Check className="h-3.5 w-3.5 mr-2 text-accent" />
+              Keep
+              <span className="ml-auto text-[10px] text-muted-foreground">K</span>
+            </ContextMenuItem>
+            <ContextMenuSub>
+              <ContextMenuSubTrigger className="text-[12px]">
+                <AlarmClock className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                Snooze
+                <span className="ml-auto text-[10px] text-muted-foreground">S</span>
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent className="w-44">
+                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-[12px]">
+                  3 hours
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-[12px]">
+                  Tomorrow 10:00 AM
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-[12px]">
+                  Next week 10:00 AM
+                </ContextMenuItem>
+              </ContextMenuSubContent>
+            </ContextMenuSub>
+            <ContextMenuItem onClick={onTrash} className="text-[12px] text-destructive focus:text-destructive">
+              <Trash2 className="h-3.5 w-3.5 mr-2" />
+              Trash
+              <span className="ml-auto text-[10px]">T</span>
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        )}
+
+        {/* Capture actions */}
+        {note.stage === "capture" && (
+          <>
+            <ContextMenuItem onClick={onPromote} className="text-[12px]">
+              <ArrowUpRight className="h-3.5 w-3.5 mr-2 text-[#45d483]" />
+              Promote to Permanent
+              <span className="ml-auto text-[10px] text-muted-foreground">P</span>
+            </ContextMenuItem>
+            <ContextMenuItem onClick={onMoveBack} className="text-[12px]">
+              <Inbox className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+              Back to Inbox
+              <span className="ml-auto text-[10px] text-muted-foreground">B</span>
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        )}
+
+        {/* Permanent actions */}
+        {note.stage === "permanent" && (
+          <>
+            <ContextMenuItem onClick={onDemote} className="text-[12px]">
+              <ArrowDownLeft className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+              Demote to Capture
+              <span className="ml-auto text-[10px] text-muted-foreground">D</span>
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        )}
+
+        {/* Common actions */}
+        <ContextMenuItem onClick={onOpen} className="text-[12px]">
+          <FileText className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+          Open
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
