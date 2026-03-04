@@ -21,9 +21,10 @@ import {
   FolderOpen,
   Layers,
   Shield,
+  ClipboardCheck,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
-import { getInboxNotes, getCaptureNotes, getPermanentNotes } from "@/lib/queries/notes"
+import { getInboxNotes, getCaptureNotes, getPermanentNotes, getReviewQueue } from "@/lib/queries/notes"
 import { CreateItemDialog } from "@/components/create-dialog"
 
 /* ── Nav primitives ──────────────────────────────────── */
@@ -196,6 +197,7 @@ export function LinearSidebar() {
   const inboxCount = useMemo(() => getInboxNotes(notes).length, [notes])
   const captureCount = useMemo(() => getCaptureNotes(notes).length, [notes])
   const permanentCount = useMemo(() => getPermanentNotes(notes).length, [notes])
+  const reviewCount = useMemo(() => getReviewQueue(notes).length, [notes])
   const pinnedNotes = notes.filter((n) => n.pinned && !n.archived).slice(0, 5)
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
@@ -253,6 +255,24 @@ export function LinearSidebar() {
             count={permanentCount}
             active={isActive("/permanent")}
           />
+          <Link
+            href="/review"
+            className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
+              isActive("/review")
+                ? "bg-sidebar-hover text-sidebar-foreground"
+                : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+            }`}
+          >
+            <span className="flex shrink-0 items-center justify-center w-4 h-4">
+              <ClipboardCheck className="h-4 w-4" />
+            </span>
+            <span className="flex-1 truncate text-left">Review</span>
+            {reviewCount > 0 && (
+              <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-destructive">
+                {reviewCount}
+              </span>
+            )}
+          </Link>
           <NavLink
             href="/notes"
             icon={<FileText className="h-4 w-4" />}
