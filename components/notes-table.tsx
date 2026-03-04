@@ -328,6 +328,16 @@ export function NotesTable({
         </div>
       )}
 
+      {/* ── Unlinked helper ─────────────────────────────── */}
+      {activeTab === "unlinked" && filteredNotes.length > 0 && (
+        <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
+          <Link2 className="h-3 w-3 text-muted-foreground" />
+          <span className="text-[11px] text-muted-foreground">
+            These notes have no links. Add <span className="font-mono text-foreground/70">[[wiki-links]]</span> to connect them to your knowledge graph.
+          </span>
+        </div>
+      )}
+
       {/* ── Table ──────────────────────────────────────── */}
       {filteredNotes.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-center">
