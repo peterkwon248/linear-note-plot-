@@ -24,7 +24,7 @@ const SEED_TAGS: Tag[] = [
 /** Default workflow fields for a note */
 function workflowDefaults(stage: NoteStage = "inbox"): Pick<
   Note,
-  "stage" | "triageStatus" | "reviewAt" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "archivedAt"
+  "stage" | "triageStatus" | "reviewAt" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "archivedAt" | "parentNoteId"
 > {
   return {
     stage,
@@ -37,6 +37,7 @@ function workflowDefaults(stage: NoteStage = "inbox"): Pick<
     lastTouchedAt: now(),
     snoozeCount: 0,
     archivedAt: null,
+    parentNoteId: null,
   }
 }
 
@@ -179,6 +180,9 @@ interface PlotState {
   promoteToPermament: (id: string) => void
   undoPromote: (id: string) => void
   moveBackToInbox: (id: string) => void
+
+  /** Thinking Chain */
+  createChainNote: (parentId: string) => string
 
   createFolder: (name: string, color: string) => void
   updateFolder: (id: string, updates: Partial<Folder>) => void
@@ -368,6 +372,37 @@ export const usePlotStore = create<PlotState>()(
         }))
       },
 
+      /* ── Thinking Chain ───────────────────────────────── */
+
+      createChainNote: (parentId) => {
+        const parent = get().notes.find((n) => n.id === parentId)
+        if (!parent) return ""
+        const id = genId()
+        const newNote: Note = {
+          id,
+          title: "",
+          content: "",
+          folderId: parent.folderId,
+          category: parent.category,
+          tags: [...parent.tags],
+          status: parent.status,
+          priority: "none",
+          reads: 0,
+          pinned: false,
+          archived: false,
+          isInbox: false,
+          createdAt: now(),
+          updatedAt: now(),
+          ...workflowDefaults(parent.stage),
+          parentNoteId: parentId,
+        }
+        set((state) => ({
+          notes: [newNote, ...state.notes],
+          selectedNoteId: id,
+        }))
+        return id
+      },
+
       deleteNote: (id) => {
         set((state) => ({
           notes: state.notes.filter((n) => n.id !== id),
@@ -527,7 +562,7 @@ export const usePlotStore = create<PlotState>()(
     }),
     {
       name: "plot-store",
-      version: 4,
+      version: 5,
       migrate: (persistedState: unknown) => {
         const state = persistedState as Record<string, unknown>
         if (state.notes && Array.isArray(state.notes)) {
@@ -547,6 +582,8 @@ export const usePlotStore = create<PlotState>()(
             lastTouchedAt: n.lastTouchedAt ?? n.updatedAt ?? new Date().toISOString(),
             snoozeCount: n.snoozeCount ?? 0,
             archivedAt: n.archivedAt ?? null,
+            // v5: Thinking Chain
+            parentNoteId: n.parentNoteId ?? null,
           }))
         }
         return state as PlotState

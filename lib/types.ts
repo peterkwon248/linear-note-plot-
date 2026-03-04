@@ -37,6 +37,9 @@ export interface Note {
   lastTouchedAt: string
   snoozeCount: number
   archivedAt: string | null
+
+  /* ── Thinking Chain ──────────────────────────────── */
+  parentNoteId: string | null
 }
 
 export interface Folder {

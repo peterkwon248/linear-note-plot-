@@ -9,6 +9,7 @@ import {
   Link2,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
   CircleDot,
   Signal,
   Eye,
@@ -23,6 +24,7 @@ import {
   AlertTriangle,
   Inbox,
   ChevronDown,
+  GitBranch,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
@@ -447,6 +449,34 @@ export function NoteDetailPanel({
             </p>
           )}
         </div>
+
+        {/* Thinking Chain */}
+        {(() => {
+          const parentNote = notes.find((n) => n.id === note.parentNoteId)
+          const childNote = notes.find((n) => n.parentNoteId === note.id)
+          if (!parentNote && !childNote) return null
+          return (
+            <>
+              <PanelSection title="Thinking Chain" icon={<GitBranch className="h-3.5 w-3.5" />}>
+                <div className="space-y-1">
+                  {parentNote && (
+                    <button onClick={() => onOpenNote(parentNote.id)} className="group/link flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50">
+                      <ArrowLeft className="h-3 w-3 text-muted-foreground" />
+                      <span className="truncate text-[12px] text-foreground">← {parentNote.title || "Untitled"}</span>
+                    </button>
+                  )}
+                  {childNote && (
+                    <button onClick={() => onOpenNote(childNote.id)} className="group/link flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50">
+                      <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                      <span className="truncate text-[12px] text-foreground">{childNote.title || "Untitled"} →</span>
+                    </button>
+                  )}
+                </div>
+              </PanelSection>
+              <div className="mx-5 border-b border-border" />
+            </>
+          )
+        })()}
 
         {/* Metadata */}
         <PanelSection title="Metadata" icon={<CircleDot className="h-3.5 w-3.5" />}>

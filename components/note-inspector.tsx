@@ -25,6 +25,7 @@ import {
   ArrowDownLeft,
   Inbox,
   AlertTriangle,
+  GitBranch,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -182,6 +183,12 @@ export function NoteInspector() {
           {!note.pinned && !note.archived && !note.stage && note.isInbox && (
             <span className="flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">
               Inbox
+            </span>
+          )}
+          {note.parentNoteId && (
+            <span className="flex items-center gap-1 rounded-md bg-chart-1/10 px-2 py-0.5 text-[11px] font-medium text-chart-1">
+              <GitBranch className="h-3 w-3" />
+              Chain
             </span>
           )}
         </div>
