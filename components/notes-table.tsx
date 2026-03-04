@@ -114,7 +114,13 @@ function TH({
 
 /* ── NotesTable ────────────────────────────────────────── */
 
-export function NotesTable() {
+export function NotesTable({
+  onRowClick,
+  activePreviewId,
+}: {
+  onRowClick?: (noteId: string) => void
+  activePreviewId?: string | null
+}) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
   const openNote = usePlotStore((s) => s.openNote)
@@ -337,7 +343,9 @@ export function NotesTable() {
               key={note.id}
               note={note}
               links={backlinksMap.get(note.id) ?? 0}
-              onOpen={() => openNote(note.id)}
+              isActive={activePreviewId === note.id}
+              onOpen={() => onRowClick ? onRowClick(note.id) : openNote(note.id)}
+              onDoubleClick={() => openNote(note.id)}
               onStatus={(s) => updateNote(note.id, { status: s })}
               onPriority={(p) => updateNote(note.id, { priority: p })}
             />
@@ -353,20 +361,29 @@ export function NotesTable() {
 function NoteRow({
   note,
   links,
+  isActive,
   onOpen,
+  onDoubleClick,
   onStatus,
   onPriority,
 }: {
   note: Note
   links: number
+  isActive?: boolean
   onOpen: () => void
+  onDoubleClick?: () => void
   onStatus: (s: NoteStatus) => void
   onPriority: (p: NotePriority) => void
 }) {
   return (
     <div
-      className="group flex items-center border-b border-border px-5 py-2 transition-colors hover:bg-secondary/30 cursor-pointer"
+      className={`group flex items-center border-b border-border px-5 py-2 transition-colors cursor-pointer ${
+        isActive
+          ? "bg-accent/8 border-l-2 border-l-accent"
+          : "hover:bg-secondary/30"
+      }`}
       onClick={onOpen}
+      onDoubleClick={onDoubleClick}
     >
       {/* Name */}
       <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
