@@ -1,6 +1,15 @@
 export type NoteStatus = "capture" | "reference" | "permanent" | "project"
 export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
 
+/** PRIMARY workflow stage — drives the Inbox → Capture → Permanent flow */
+export type NoteStage = "inbox" | "capture" | "permanent"
+
+/** Triage status for inbox notes */
+export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
+
+/** Source of note creation */
+export type NoteSource = "manual" | "webclip" | "import" | "share" | "api" | null
+
 export interface Note {
   id: string
   title: string
@@ -16,6 +25,18 @@ export interface Note {
   isInbox: boolean
   createdAt: string
   updatedAt: string
+
+  /* ── Workflow fields ─────────────────────────────── */
+  stage: NoteStage
+  triageStatus: TriageStatus
+  reviewAt: string | null
+  inboxRank: number
+  summary: string | null
+  source: NoteSource
+  promotedAt: string | null
+  lastTouchedAt: string
+  snoozeCount: number
+  archivedAt: string | null
 }
 
 export interface Folder {
@@ -59,3 +80,6 @@ export type NoteFilter =
   | { type: "folder"; folderId: string }
   | { type: "category"; categoryId: string }
   | { type: "tag"; tagId: string }
+  | { type: "stage-inbox" }
+  | { type: "stage-capture" }
+  | { type: "stage-permanent" }

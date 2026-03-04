@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Note, Folder, Tag, Category, ActiveView, NoteFilter } from "./types"
+import type { Note, Folder, Tag, Category, ActiveView, NoteFilter, NoteStage, TriageStatus } from "./types"
 
 const genId = () => crypto.randomUUID()
 const now = () => new Date().toISOString()
@@ -21,6 +21,25 @@ const SEED_TAGS: Tag[] = [
   { id: "tag-2", name: "reference", color: "#5e6ad2" },
 ]
 
+/** Default workflow fields for a note */
+function workflowDefaults(stage: NoteStage = "inbox"): Pick<
+  Note,
+  "stage" | "triageStatus" | "reviewAt" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "archivedAt"
+> {
+  return {
+    stage,
+    triageStatus: stage === "inbox" ? "untriaged" : "kept",
+    reviewAt: null,
+    inboxRank: 0,
+    summary: null,
+    source: "manual",
+    promotedAt: stage === "permanent" ? now() : null,
+    lastTouchedAt: now(),
+    snoozeCount: 0,
+    archivedAt: null,
+  }
+}
+
 const SEED_NOTES: Note[] = [
   {
     id: "note-1",
@@ -38,6 +57,8 @@ const SEED_NOTES: Note[] = [
     isInbox: false,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     updatedAt: new Date(Date.now() - 3600000).toISOString(),
+    ...workflowDefaults("permanent"),
+    summary: "Introduction to the Plot note-taking app",
   },
   {
     id: "note-2",
@@ -54,6 +75,7 @@ const SEED_NOTES: Note[] = [
     isInbox: true,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
     updatedAt: new Date(Date.now() - 7200000).toISOString(),
+    ...workflowDefaults("inbox"),
   },
   {
     id: "note-3",
@@ -70,6 +92,62 @@ const SEED_NOTES: Note[] = [
     isInbox: false,
     createdAt: new Date(Date.now() - 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 86400000).toISOString(),
+    ...workflowDefaults("capture"),
+    triageStatus: "kept",
+  },
+  {
+    id: "note-4",
+    title: "API design notes",
+    content: "REST vs GraphQL comparison for our new service.",
+    folderId: null,
+    category: "cat-1",
+    tags: ["tag-2"],
+    status: "reference",
+    priority: "medium",
+    reads: 3,
+    pinned: false,
+    archived: false,
+    isInbox: false,
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+    updatedAt: new Date(Date.now() - 172800000).toISOString(),
+    ...workflowDefaults("capture"),
+    triageStatus: "kept",
+    summary: "Comparison of REST and GraphQL approaches",
+  },
+  {
+    id: "note-5",
+    title: "Meeting notes",
+    content: "Discussed roadmap for Q2. Action items: finalize spec, assign tasks.",
+    folderId: "folder-2",
+    category: "cat-1",
+    tags: [],
+    status: "capture",
+    priority: "none",
+    reads: 0,
+    pinned: false,
+    archived: false,
+    isInbox: true,
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+    ...workflowDefaults("inbox"),
+  },
+  {
+    id: "note-6",
+    title: "Bookmarks",
+    content: "- https://example.com\n- https://another.dev",
+    folderId: null,
+    category: "cat-2",
+    tags: [],
+    status: "capture",
+    priority: "low",
+    reads: 0,
+    pinned: false,
+    archived: false,
+    isInbox: true,
+    createdAt: new Date(Date.now() - 1800000).toISOString(),
+    updatedAt: new Date(Date.now() - 1800000).toISOString(),
+    ...workflowDefaults("inbox"),
+    source: "webclip",
   },
 ]
 
@@ -90,6 +168,17 @@ interface PlotState {
   duplicateNote: (id: string) => void
   togglePin: (id: string) => void
   toggleArchive: (id: string) => void
+
+  /** Touch a note — updates lastTouchedAt */
+  touchNote: (id: string) => void
+
+  /** Triage actions */
+  triageKeep: (id: string) => void
+  triageSnooze: (id: string, reviewAt: string) => void
+  triageTrash: (id: string) => void
+  promoteToPermament: (id: string) => void
+  undoPromote: (id: string) => void
+  moveBackToInbox: (id: string) => void
 
   createFolder: (name: string, color: string) => void
   updateFolder: (id: string, updates: Partial<Folder>) => void
@@ -128,6 +217,7 @@ export const usePlotStore = create<PlotState>()(
       createNote: (partial) => {
         const id = genId()
         const { activeView } = get()
+        const stage: NoteStage = partial?.stage ?? (activeView.type === "inbox" ? "inbox" : "inbox")
         const newNote: Note = {
           id,
           title: partial?.title ?? "",
@@ -147,6 +237,8 @@ export const usePlotStore = create<PlotState>()(
           isInbox: partial?.isInbox ?? activeView.type === "inbox",
           createdAt: now(),
           updatedAt: now(),
+          ...workflowDefaults(stage),
+          ...(partial?.source != null ? { source: partial.source } : {}),
         }
         set((state) => ({
           notes: [newNote, ...state.notes],
@@ -158,7 +250,120 @@ export const usePlotStore = create<PlotState>()(
       updateNote: (id, updates) => {
         set((state) => ({
           notes: state.notes.map((n) =>
-            n.id === id ? { ...n, ...updates, updatedAt: now() } : n
+            n.id === id ? { ...n, ...updates, updatedAt: now(), lastTouchedAt: now() } : n
+          ),
+        }))
+      },
+
+      touchNote: (id) => {
+        set((state) => ({
+          notes: state.notes.map((n) =>
+            n.id === id ? { ...n, lastTouchedAt: now() } : n
+          ),
+        }))
+      },
+
+      /* ── Triage actions ─────────────────────────────── */
+
+      triageKeep: (id) => {
+        const reviewAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+        set((state) => ({
+          notes: state.notes.map((n) =>
+            n.id === id
+              ? {
+                  ...n,
+                  stage: "capture" as const,
+                  triageStatus: "kept" as const,
+                  reviewAt,
+                  isInbox: false,
+                  lastTouchedAt: now(),
+                  updatedAt: now(),
+                }
+              : n
+          ),
+        }))
+      },
+
+      triageSnooze: (id, reviewAt) => {
+        set((state) => ({
+          notes: state.notes.map((n) =>
+            n.id === id
+              ? {
+                  ...n,
+                  triageStatus: "snoozed" as const,
+                  reviewAt,
+                  snoozeCount: (n.snoozeCount ?? 0) + 1,
+                  lastTouchedAt: now(),
+                  updatedAt: now(),
+                }
+              : n
+          ),
+        }))
+      },
+
+      triageTrash: (id) => {
+        set((state) => ({
+          notes: state.notes.map((n) =>
+            n.id === id
+              ? {
+                  ...n,
+                  triageStatus: "trashed" as const,
+                  archivedAt: now(),
+                  lastTouchedAt: now(),
+                  updatedAt: now(),
+                }
+              : n
+          ),
+        }))
+      },
+
+      promoteToPermament: (id) => {
+        set((state) => ({
+          notes: state.notes.map((n) =>
+            n.id === id
+              ? {
+                  ...n,
+                  stage: "permanent" as const,
+                  status: "permanent" as const,
+                  promotedAt: now(),
+                  lastTouchedAt: now(),
+                  updatedAt: now(),
+                }
+              : n
+          ),
+        }))
+      },
+
+      undoPromote: (id) => {
+        set((state) => ({
+          notes: state.notes.map((n) =>
+            n.id === id
+              ? {
+                  ...n,
+                  stage: "capture" as const,
+                  status: "capture" as const,
+                  promotedAt: null,
+                  lastTouchedAt: now(),
+                  updatedAt: now(),
+                }
+              : n
+          ),
+        }))
+      },
+
+      moveBackToInbox: (id) => {
+        set((state) => ({
+          notes: state.notes.map((n) =>
+            n.id === id
+              ? {
+                  ...n,
+                  stage: "inbox" as const,
+                  triageStatus: "untriaged" as const,
+                  isInbox: true,
+                  lastTouchedAt: now(),
+                  updatedAt: now(),
+                }
+              : n
           ),
         }))
       },
@@ -183,6 +388,7 @@ export const usePlotStore = create<PlotState>()(
               title: `${note.title} (copy)`,
               createdAt: now(),
               updatedAt: now(),
+              lastTouchedAt: now(),
             },
             ...state.notes,
           ],
@@ -193,7 +399,7 @@ export const usePlotStore = create<PlotState>()(
       togglePin: (id) => {
         set((state) => ({
           notes: state.notes.map((n) =>
-            n.id === id ? { ...n, pinned: !n.pinned, updatedAt: now() } : n
+            n.id === id ? { ...n, pinned: !n.pinned, updatedAt: now(), lastTouchedAt: now() } : n
           ),
         }))
       },
@@ -201,7 +407,7 @@ export const usePlotStore = create<PlotState>()(
       toggleArchive: (id) => {
         set((state) => ({
           notes: state.notes.map((n) =>
-            n.id === id ? { ...n, archived: !n.archived, updatedAt: now() } : n
+            n.id === id ? { ...n, archived: !n.archived, updatedAt: now(), lastTouchedAt: now() } : n
           ),
         }))
       },
@@ -262,7 +468,7 @@ export const usePlotStore = create<PlotState>()(
         set((state) => ({
           notes: state.notes.map((n) =>
             n.id === noteId && !n.tags.includes(tagId)
-              ? { ...n, tags: [...n.tags, tagId], updatedAt: now() }
+              ? { ...n, tags: [...n.tags, tagId], updatedAt: now(), lastTouchedAt: now() }
               : n
           ),
         }))
@@ -272,7 +478,7 @@ export const usePlotStore = create<PlotState>()(
         set((state) => ({
           notes: state.notes.map((n) =>
             n.id === noteId
-              ? { ...n, tags: n.tags.filter((t) => t !== tagId), updatedAt: now() }
+              ? { ...n, tags: n.tags.filter((t) => t !== tagId), updatedAt: now(), lastTouchedAt: now() }
               : n
           ),
         }))
@@ -312,7 +518,7 @@ export const usePlotStore = create<PlotState>()(
         set((state) => ({
           selectedNoteId: id,
           notes: state.notes.map((n) =>
-            n.id === id ? { ...n, reads: (n.reads ?? 0) + 1 } : n
+            n.id === id ? { ...n, reads: (n.reads ?? 0) + 1, lastTouchedAt: now() } : n
           ),
         }))
       },
@@ -321,7 +527,7 @@ export const usePlotStore = create<PlotState>()(
     }),
     {
       name: "plot-store",
-      version: 3,
+      version: 4,
       migrate: (persistedState: unknown) => {
         const state = persistedState as Record<string, unknown>
         if (state.notes && Array.isArray(state.notes)) {
@@ -330,6 +536,17 @@ export const usePlotStore = create<PlotState>()(
             status: n.status ?? "capture",
             priority: n.priority ?? "none",
             reads: n.reads ?? 0,
+            // Workflow field migration
+            stage: n.stage ?? (n.isInbox ? "inbox" : (n.status === "permanent" ? "permanent" : "capture")),
+            triageStatus: n.triageStatus ?? (n.isInbox ? "untriaged" : "kept"),
+            reviewAt: n.reviewAt ?? null,
+            inboxRank: n.inboxRank ?? 0,
+            summary: n.summary ?? null,
+            source: n.source ?? "manual",
+            promotedAt: n.promotedAt ?? null,
+            lastTouchedAt: n.lastTouchedAt ?? n.updatedAt ?? new Date().toISOString(),
+            snoozeCount: n.snoozeCount ?? 0,
+            archivedAt: n.archivedAt ?? null,
           }))
         }
         return state as PlotState
@@ -337,6 +554,8 @@ export const usePlotStore = create<PlotState>()(
     }
   )
 )
+
+/* ── Selectors / Filters ──────────────────────────────── */
 
 export function getFilteredNotes(state: PlotState): Note[] {
   const { notes, activeView, searchQuery } = state
@@ -418,6 +637,19 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
     case "tag":
       filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && !n.archived)
       break
+    case "stage-inbox":
+      filtered = filtered.filter((n) =>
+        n.stage === "inbox" &&
+        n.triageStatus !== "trashed" &&
+        (n.triageStatus === "untriaged" || (n.triageStatus === "snoozed" && n.reviewAt && new Date(n.reviewAt) <= new Date()))
+      )
+      break
+    case "stage-capture":
+      filtered = filtered.filter((n) => n.stage === "capture" && n.triageStatus !== "trashed")
+      break
+    case "stage-permanent":
+      filtered = filtered.filter((n) => n.stage === "permanent" && n.triageStatus !== "trashed")
+      break
     default:
       filtered = filtered.filter((n) => !n.archived)
   }
@@ -448,6 +680,12 @@ export function getFilterTitle(filter: NoteFilter, state: PlotState): string {
       return "Projects"
     case "pinned":
       return "Pinned"
+    case "stage-inbox":
+      return "Inbox"
+    case "stage-capture":
+      return "Capture"
+    case "stage-permanent":
+      return "Permanent"
     case "folder": {
       const folder = state.folders.find((f) => f.id === filter.folderId)
       return folder?.name ?? "Folder"

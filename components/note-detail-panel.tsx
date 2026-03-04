@@ -13,11 +13,14 @@ import {
   Signal,
   Eye,
   ExternalLink,
+  Layers,
+  Shield,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { ConnectionsGraph } from "@/components/connections-graph"
+import { computeReadyScore, isReadyToPromote, needsReview } from "@/lib/queries/notes"
 import type { Note } from "@/lib/types"
 
 /* ── Backlinks helper ──────────────────────────────────── */
@@ -151,11 +154,13 @@ export function NoteDetailPanel({
   onClose,
   onOpenNote,
   onEditNote,
+  embedded = false,
 }: {
   noteId: string
   onClose: () => void
   onOpenNote: (id: string) => void
   onEditNote: () => void
+  embedded?: boolean
 }) {
   const notes = usePlotStore((s) => s.notes)
   const note = notes.find((n) => n.id === noteId)
@@ -170,6 +175,18 @@ export function NoteDetailPanel({
     [noteId, notes, note]
   )
 
+  const readyScore = useMemo(
+    () => (note ? computeReadyScore(note, notes) : 0),
+    [note, notes]
+  )
+
+  const ready = useMemo(
+    () => (note ? isReadyToPromote(note, notes) : false),
+    [note, notes]
+  )
+
+  const stale = note ? needsReview(note) : false
+
   if (!note) return null
 
   const preview = note.content
@@ -178,8 +195,13 @@ export function NoteDetailPanel({
     .trim()
     .slice(0, 200)
 
+  const Wrapper = embedded ? "div" : "aside"
+  const wrapperClass = embedded
+    ? "flex h-full flex-1 flex-col overflow-hidden bg-card"
+    : "flex h-full w-[420px] shrink-0 flex-col overflow-hidden border-l border-border bg-card animate-in slide-in-from-right-4 fade-in duration-200"
+
   return (
-    <aside className="flex h-full w-[420px] shrink-0 flex-col overflow-hidden border-l border-border bg-card animate-in slide-in-from-right-4 fade-in duration-200">
+    <Wrapper className={wrapperClass}>
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border px-5 py-3">
         <div className="flex items-center gap-2 min-w-0">
@@ -226,6 +248,28 @@ export function NoteDetailPanel({
             <MetaRow label="Status" icon={<CircleDot className="h-3 w-3" />}>
               <StatusBadge status={note.status} />
             </MetaRow>
+            <MetaRow label="Stage" icon={<Layers className="h-3 w-3" />}>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                note.stage === "inbox"
+                  ? "bg-accent/10 text-accent"
+                  : note.stage === "capture"
+                  ? "bg-chart-2/10 text-chart-2"
+                  : "bg-chart-5/10 text-chart-5"
+              }`}>
+                {note.stage === "permanent" && <Shield className="h-2.5 w-2.5" />}
+                {note.stage.charAt(0).toUpperCase() + note.stage.slice(1)}
+              </span>
+            </MetaRow>
+            {note.stage === "capture" && (
+              <MetaRow label="Ready Score" icon={<Sparkles className="h-3 w-3" />}>
+                <span className={`text-[12px] tabular-nums font-medium ${
+                  readyScore >= 5 ? "text-chart-5" : readyScore >= 3 ? "text-chart-3" : "text-muted-foreground"
+                }`}>
+                  {readyScore}/9
+                  {ready && " - Ready"}
+                </span>
+              </MetaRow>
+            )}
             <MetaRow label="Priority" icon={<Signal className="h-3 w-3" />}>
               <span className="flex items-center gap-1.5">
                 <PriorityBadge priority={note.priority} />
@@ -302,6 +346,6 @@ export function NoteDetailPanel({
           )}
         </PanelSection>
       </div>
-    </aside>
+    </Wrapper>
   )
 }
