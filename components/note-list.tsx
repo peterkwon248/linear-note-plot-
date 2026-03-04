@@ -20,11 +20,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
-import { usePlotStore, getFilteredNotes, getViewTitle } from "@/lib/store"
-import type { Note } from "@/lib/types"
+import { usePlotStore, filterNotesByRoute, getFilterTitle } from "@/lib/store"
+import type { Note, NoteFilter } from "@/lib/types"
+import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 
-/* ── helpers ─────────────────────────────────────────────── */
+/* -- helpers -------------------------------------------------- */
 
 function stripMarkdown(text: string): string {
   return text
@@ -64,27 +64,37 @@ function groupNotesByDate(notes: Note[]): { label: DateGroup; notes: Note[] }[] 
     .map((label) => ({ label, notes: groups[label] }))
 }
 
-/* ── NoteRow ─────────────────────────────────────────────── */
+/* -- NoteRow -------------------------------------------------- */
 
 function NoteRow({ note }: { note: Note }) {
-  const { selectedNoteId, setSelectedNoteId, tags, togglePin, toggleArchive, duplicateNote, deleteNote } =
-    usePlotStore()
-  const isSelected = selectedNoteId === note.id
+  const {
+    openNote,
+    tags,
+    updateNote,
+    togglePin,
+    toggleArchive,
+    duplicateNote,
+    deleteNote,
+  } = usePlotStore()
 
   const preview = stripMarkdown(note.content).slice(0, 80)
   const noteTags = tags.filter((t) => note.tags.includes(t.id)).slice(0, 2)
 
   return (
     <div
-      className={cn(
-        "group flex items-center gap-3 border-b border-border px-4 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer",
-        isSelected && "bg-secondary/70"
-      )}
-      onClick={() => setSelectedNoteId(note.id)}
+      className="group flex items-center gap-3 border-b border-border px-3 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer"
+      onClick={() => openNote(note.id)}
     >
+      {/* Priority indicator */}
+      <PriorityDropdown
+        value={note.priority}
+        onChange={(p) => updateNote(note.id, { priority: p })}
+        variant="inline"
+      />
+
       {/* Pin icon */}
       {note.pinned && (
-        <Pin className="h-3 w-3 shrink-0 text-muted-foreground fill-muted-foreground" />
+        <Pin className="h-3 w-3 shrink-0 text-[#f2994a] fill-[#f2994a]" />
       )}
 
       {/* Content area */}
@@ -98,6 +108,13 @@ function NoteRow({ note }: { note: Note }) {
           </span>
         )}
       </div>
+
+      {/* Status badge */}
+      <StatusDropdown
+        value={note.status}
+        onChange={(s) => updateNote(note.id, { status: s })}
+        variant="inline"
+      />
 
       {/* Tag badges */}
       {noteTags.length > 0 && (
@@ -177,37 +194,46 @@ function NoteRow({ note }: { note: Note }) {
   )
 }
 
-/* ── NoteList ────────────────────────────────────────────── */
+/* -- NoteList ------------------------------------------------- */
 
-export function NoteList() {
+export function NoteList({ filter }: { filter: NoteFilter }) {
   const state = usePlotStore()
-  const filteredNotes = getFilteredNotes(state)
-  const viewTitle = getViewTitle(state.activeView, state)
+  const filteredNotes = filterNotesByRoute(state.notes, filter, state.searchQuery)
+  const viewTitle = getFilterTitle(filter, state)
   const groups = groupNotesByDate(filteredNotes)
 
   return (
-    <main className="flex flex-1 flex-col overflow-hidden bg-background">
+    <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <h1 className="text-[15px] font-semibold text-foreground">{viewTitle}</h1>
-          <span className="text-[13px] text-muted-foreground">{filteredNotes.length}</span>
+      <header className="flex items-center justify-between border-b border-border px-3 py-3">
+        <div className="flex items-center gap-2">
+          <h1 className="text-[14px] font-semibold text-foreground">
+            {viewTitle}
+          </h1>
+          <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">
+            {filteredNotes.length}
+          </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+        <div className="flex items-center gap-1">
+          <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
             <Filter className="h-3 w-3" />
             Filter
           </button>
-          <button className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+          <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
             <ArrowUpDown className="h-3 w-3" />
             Sort
           </button>
           <button
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-            onClick={() => state.createNote()}
+            className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            onClick={() => state.createNote({
+              isInbox: filter.type === "inbox",
+              folderId: filter.type === "folder" ? filter.folderId : undefined,
+              category: filter.type === "category" ? filter.categoryId : undefined,
+              status: filter.type === "projects" ? "project" : undefined,
+            })}
           >
             <Plus className="h-3 w-3" />
-            New Note
+            <span>New</span>
           </button>
         </div>
       </header>
@@ -227,12 +253,12 @@ export function NoteList() {
         <div className="flex-1 overflow-y-auto">
           {groups.map((group) => (
             <div key={group.label}>
-              <div className="sticky top-0 z-10 flex items-center gap-2 bg-background/95 backdrop-blur-sm px-4 py-2 border-b border-border">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[12px] font-medium text-foreground">
+              <div className="sticky top-0 z-10 flex items-center gap-2 bg-background/95 backdrop-blur-sm px-3 py-2 border-b border-border">
+                <Calendar className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                   {group.label}
                 </span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[11px] text-muted-foreground/60">
                   {group.notes.length}
                 </span>
               </div>

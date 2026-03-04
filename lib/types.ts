@@ -1,3 +1,6 @@
+export type NoteStatus = "capture" | "reference" | "permanent" | "project"
+export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
+
 export interface Note {
   id: string
   title: string
@@ -5,6 +8,9 @@ export interface Note {
   folderId: string | null
   category: string
   tags: string[]
+  status: NoteStatus
+  priority: NotePriority
+  reads: number
   pinned: boolean
   archived: boolean
   isInbox: boolean
@@ -42,3 +48,14 @@ export type ActiveView =
   | { type: "pinned" }
   | { type: "tag"; tagId: string }
   | { type: "settings" }
+
+/** Route-based note filter, used by each page route */
+export type NoteFilter =
+  | { type: "inbox" }
+  | { type: "all" }
+  | { type: "archive" }
+  | { type: "projects" }
+  | { type: "pinned" }
+  | { type: "folder"; folderId: string }
+  | { type: "category"; categoryId: string }
+  | { type: "tag"; tagId: string }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import {
   CommandDialog,
@@ -17,7 +18,7 @@ export function SearchDialog() {
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
   const notes = usePlotStore((s) => s.notes)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
-  const setActiveView = usePlotStore((s) => s.setActiveView)
+  const router = useRouter()
 
   const [query, setQuery] = useState("")
 
@@ -33,7 +34,7 @@ export function SearchDialog() {
 
   function handleSelect(noteId: string) {
     setSelectedNoteId(noteId)
-    setActiveView({ type: "all" })
+    router.push("/notes")
     setSearchOpen(false)
     setQuery("")
   }

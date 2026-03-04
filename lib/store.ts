@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Note, Folder, Tag, Category, ActiveView } from "./types"
+import type { Note, Folder, Tag, Category, ActiveView, NoteFilter } from "./types"
 
 const genId = () => crypto.randomUUID()
 const now = () => new Date().toISOString()
@@ -30,6 +30,9 @@ const SEED_NOTES: Note[] = [
     folderId: null,
     category: "cat-1",
     tags: ["tag-2"],
+    status: "permanent",
+    priority: "high",
+    reads: 5,
     pinned: true,
     archived: false,
     isInbox: false,
@@ -43,6 +46,9 @@ const SEED_NOTES: Note[] = [
     folderId: null,
     category: "",
     tags: [],
+    status: "capture",
+    priority: "none",
+    reads: 1,
     pinned: false,
     archived: false,
     isInbox: true,
@@ -56,6 +62,9 @@ const SEED_NOTES: Note[] = [
     folderId: "folder-1",
     category: "cat-1",
     tags: ["tag-1"],
+    status: "project",
+    priority: "urgent",
+    reads: 12,
     pinned: false,
     archived: false,
     isInbox: false,
@@ -98,6 +107,7 @@ interface PlotState {
 
   setActiveView: (view: ActiveView) => void
   setSelectedNoteId: (id: string | null) => void
+  openNote: (id: string) => void
   setSearchQuery: (query: string) => void
   setSearchOpen: (open: boolean) => void
 }
@@ -129,6 +139,9 @@ export const usePlotStore = create<PlotState>()(
             partial?.category ??
             (activeView.type === "category" ? activeView.categoryId : ""),
           tags: partial?.tags ?? [],
+          status: partial?.status ?? "capture",
+          priority: partial?.priority ?? "none",
+          reads: 0,
           pinned: partial?.pinned ?? false,
           archived: false,
           isInbox: partial?.isInbox ?? activeView.type === "inbox",
@@ -295,12 +308,32 @@ export const usePlotStore = create<PlotState>()(
 
       setActiveView: (view) => set({ activeView: view, selectedNoteId: null }),
       setSelectedNoteId: (id) => set({ selectedNoteId: id }),
+      openNote: (id) => {
+        set((state) => ({
+          selectedNoteId: id,
+          notes: state.notes.map((n) =>
+            n.id === id ? { ...n, reads: (n.reads ?? 0) + 1 } : n
+          ),
+        }))
+      },
       setSearchQuery: (query) => set({ searchQuery: query }),
       setSearchOpen: (open) => set({ searchOpen: open }),
     }),
     {
       name: "plot-store",
-      version: 1,
+      version: 3,
+      migrate: (persistedState: unknown) => {
+        const state = persistedState as Record<string, unknown>
+        if (state.notes && Array.isArray(state.notes)) {
+          state.notes = (state.notes as Record<string, unknown>[]).map((n) => ({
+            ...n,
+            status: n.status ?? "capture",
+            priority: n.priority ?? "none",
+            reads: n.reads ?? 0,
+          }))
+        }
+        return state as PlotState
+      },
     }
   )
 )
@@ -354,6 +387,82 @@ export function getFilteredNotes(state: PlotState): Note[] {
   return [...filtered].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   )
+}
+
+/** Route-based filter (used by NoteList via filter prop) */
+export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuery = ""): Note[] {
+  let filtered = notes
+
+  switch (filter.type) {
+    case "inbox":
+      filtered = filtered.filter((n) => n.isInbox && !n.archived)
+      break
+    case "all":
+      filtered = filtered.filter((n) => !n.archived)
+      break
+    case "archive":
+      filtered = filtered.filter((n) => n.archived)
+      break
+    case "projects":
+      filtered = filtered.filter((n) => n.status === "project" && !n.archived)
+      break
+    case "pinned":
+      filtered = filtered.filter((n) => n.pinned && !n.archived)
+      break
+    case "folder":
+      filtered = filtered.filter((n) => n.folderId === filter.folderId && !n.archived)
+      break
+    case "category":
+      filtered = filtered.filter((n) => n.category === filter.categoryId && !n.archived)
+      break
+    case "tag":
+      filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && !n.archived)
+      break
+    default:
+      filtered = filtered.filter((n) => !n.archived)
+  }
+
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase()
+    filtered = filtered.filter(
+      (n) =>
+        n.title.toLowerCase().includes(q) ||
+        n.content.toLowerCase().includes(q)
+    )
+  }
+
+  return [...filtered].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  )
+}
+
+export function getFilterTitle(filter: NoteFilter, state: PlotState): string {
+  switch (filter.type) {
+    case "inbox":
+      return "Inbox"
+    case "all":
+      return "All Notes"
+    case "archive":
+      return "Archive"
+    case "projects":
+      return "Projects"
+    case "pinned":
+      return "Pinned"
+    case "folder": {
+      const folder = state.folders.find((f) => f.id === filter.folderId)
+      return folder?.name ?? "Folder"
+    }
+    case "category": {
+      const cat = state.categories.find((c) => c.id === filter.categoryId)
+      return cat?.name ?? "Category"
+    }
+    case "tag": {
+      const tag = state.tags.find((t) => t.id === filter.tagId)
+      return tag ? `#${tag.name}` : "Tag"
+    }
+    default:
+      return "Notes"
+  }
 }
 
 export function getViewTitle(view: ActiveView, state: PlotState): string {

@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   Search,
   Inbox,
@@ -16,21 +18,70 @@ import {
   BookOpen,
   Archive,
   Pin,
+  FolderOpen,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
-import type { ActiveView } from "@/lib/types"
 import { CreateItemDialog } from "@/components/create-dialog"
 
-interface NavItemProps {
+/* ── Nav primitives ──────────────────────────────────── */
+
+function NavLink({
+  href,
+  icon,
+  label,
+  shortcut,
+  count,
+  active,
+}: {
+  href: string
   icon: React.ReactNode
   label: string
   shortcut?: string
-  active?: boolean
   count?: number
-  onClick?: () => void
+  active?: boolean
+}) {
+  return (
+    <Link
+      href={href}
+      className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
+        active
+          ? "bg-sidebar-hover text-sidebar-foreground"
+          : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+      }`}
+    >
+      <span className="flex shrink-0 items-center justify-center w-4 h-4">
+        {icon}
+      </span>
+      <span className="flex-1 truncate text-left">{label}</span>
+      {count !== undefined && (
+        <span className="text-[11px] text-sidebar-muted tabular-nums">
+          {count}
+        </span>
+      )}
+      {shortcut && (
+        <span className="hidden text-[11px] text-sidebar-muted font-mono group-hover:inline">
+          {shortcut}
+        </span>
+      )}
+    </Link>
+  )
 }
 
-function NavItem({ icon, label, shortcut, active, count, onClick }: NavItemProps) {
+function NavButton({
+  icon,
+  label,
+  shortcut,
+  count,
+  active,
+  onClick,
+}: {
+  icon: React.ReactNode
+  label: string
+  shortcut?: string
+  count?: number
+  active?: boolean
+  onClick?: () => void
+}) {
   return (
     <button
       onClick={onClick}
@@ -40,10 +91,14 @@ function NavItem({ icon, label, shortcut, active, count, onClick }: NavItemProps
           : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
       }`}
     >
-      <span className="flex shrink-0 items-center justify-center w-4 h-4">{icon}</span>
+      <span className="flex shrink-0 items-center justify-center w-4 h-4">
+        {icon}
+      </span>
       <span className="flex-1 truncate text-left">{label}</span>
       {count !== undefined && (
-        <span className="text-[11px] text-sidebar-muted tabular-nums">{count}</span>
+        <span className="text-[11px] text-sidebar-muted tabular-nums">
+          {count}
+        </span>
       )}
       {shortcut && (
         <span className="hidden text-[11px] text-sidebar-muted font-mono group-hover:inline">
@@ -54,53 +109,58 @@ function NavItem({ icon, label, shortcut, active, count, onClick }: NavItemProps
   )
 }
 
-interface SectionProps {
+function Section({
+  title,
+  children,
+  defaultOpen = true,
+  action,
+}: {
   title: string
   children: React.ReactNode
   defaultOpen?: boolean
   action?: React.ReactNode
-}
-
-function Section({ title, children, defaultOpen = true, action }: SectionProps) {
+}) {
   const [open, setOpen] = useState(defaultOpen)
 
   return (
     <div className="mt-4">
-      <button
-        onClick={() => setOpen(!open)}
-        className="group flex w-full items-center gap-1 px-2 py-1 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted hover:text-sidebar-foreground transition-colors"
-      >
-        {open ? (
-          <ChevronDown className="h-3 w-3" />
-        ) : (
-          <ChevronRight className="h-3 w-3" />
-        )}
-        <span className="flex-1 text-left">{title}</span>
+      <div className="group flex w-full items-center gap-1 px-2 py-1">
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex flex-1 items-center gap-1 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+        >
+          {open ? (
+            <ChevronDown className="h-3 w-3" />
+          ) : (
+            <ChevronRight className="h-3 w-3" />
+          )}
+          <span className="flex-1 text-left">{title}</span>
+        </button>
         {action && (
-          <span
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity">
             {action}
           </span>
         )}
-      </button>
+      </div>
       {open && <div className="mt-0.5 space-y-px">{children}</div>}
     </div>
   )
 }
 
-interface TeamItemProps {
+function TeamLink({
+  href,
+  color,
+  name,
+  active,
+}: {
+  href: string
   color: string
   name: string
   active?: boolean
-  onClick?: () => void
-}
-
-function TeamItem({ color, name, active, onClick }: TeamItemProps) {
+}) {
   return (
-    <button
-      onClick={onClick}
+    <Link
+      href={href}
       className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
@@ -115,42 +175,25 @@ function TeamItem({ color, name, active, onClick }: TeamItemProps) {
       </span>
       <span className="flex-1 truncate text-left">{name}</span>
       <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-sidebar-muted" />
-    </button>
+    </Link>
   )
 }
 
+/* ── Sidebar ─────────────────────────────────────────── */
+
 export function LinearSidebar() {
-  const {
-    activeView,
-    setActiveView,
-    setSearchOpen,
-    setSelectedNoteId,
-    notes,
-    folders,
-    tags,
-    categories,
-    createFolder,
-    createTag,
-    createCategory,
-  } = usePlotStore()
+  const pathname = usePathname()
+  const { setSearchOpen, setSelectedNoteId, notes, folders, tags, categories, createFolder, createTag, createCategory } =
+    usePlotStore()
 
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [createTagOpen, setCreateTagOpen] = useState(false)
   const [createCategoryOpen, setCreateCategoryOpen] = useState(false)
 
-  const isActive = (check: ActiveView) => {
-    if (check.type !== activeView.type) return false
-    if (check.type === "folder" && activeView.type === "folder")
-      return check.folderId === activeView.folderId
-    if (check.type === "category" && activeView.type === "category")
-      return check.categoryId === activeView.categoryId
-    if (check.type === "tag" && activeView.type === "tag")
-      return check.tagId === activeView.tagId
-    return true
-  }
-
   const inboxCount = notes.filter((n) => n.isInbox && !n.archived).length
   const pinnedNotes = notes.filter((n) => n.pinned && !n.archived).slice(0, 5)
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
 
   return (
     <aside className="flex h-screen w-[240px] shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none">
@@ -159,7 +202,9 @@ export function LinearSidebar() {
         <div className="flex h-5 w-5 items-center justify-center rounded bg-accent">
           <BookOpen className="h-3 w-3 text-accent-foreground" />
         </div>
-        <span className="text-[13px] font-semibold text-sidebar-foreground">Plot</span>
+        <span className="text-[13px] font-semibold text-sidebar-foreground">
+          Plot
+        </span>
       </div>
 
       {/* Search */}
@@ -177,29 +222,36 @@ export function LinearSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-1 scrollbar-thin">
+      <nav className="flex-1 overflow-y-auto px-2 py-1">
         <div className="space-y-px">
-          <NavItem
+          <NavLink
+            href="/inbox"
             icon={<Inbox className="h-4 w-4" />}
             label="Inbox"
             shortcut="G I"
             count={inboxCount}
-            active={isActive({ type: "inbox" })}
-            onClick={() => setActiveView({ type: "inbox" })}
+            active={isActive("/inbox")}
           />
-          <NavItem
+          <NavLink
+            href="/notes"
             icon={<FileText className="h-4 w-4" />}
             label="All Notes"
-            shortcut="G M"
-            active={isActive({ type: "all" })}
-            onClick={() => setActiveView({ type: "all" })}
+            shortcut="G N"
+            active={isActive("/notes")}
           />
-          <NavItem
+          <NavLink
+            href="/projects"
+            icon={<FolderOpen className="h-4 w-4" />}
+            label="Projects"
+            shortcut="G P"
+            active={isActive("/projects")}
+          />
+          <NavLink
+            href="/views"
             icon={<LayoutGrid className="h-4 w-4" />}
             label="Views"
             shortcut="G V"
-            active={isActive({ type: "views" })}
-            onClick={() => setActiveView({ type: "views" })}
+            active={isActive("/views")}
           />
         </div>
 
@@ -215,31 +267,19 @@ export function LinearSidebar() {
           }
         >
           {folders.map((folder) => (
-            <TeamItem
+            <TeamLink
               key={folder.id}
+              href={`/folder/${folder.id}`}
               color={folder.color}
               name={folder.name}
-              active={isActive({ type: "folder", folderId: folder.id })}
-              onClick={() => setActiveView({ type: "folder", folderId: folder.id })}
+              active={isActive(`/folder/${folder.id}`)}
             />
           ))}
-          <NavItem
+          <NavLink
+            href="/archive"
             icon={<Archive className="h-4 w-4" />}
             label="Archive"
-            active={isActive({ type: "archive" })}
-            onClick={() => setActiveView({ type: "archive" })}
-          />
-          <NavItem
-            icon={<FileText className="h-4 w-4" />}
-            label="Templates"
-            active={isActive({ type: "templates" })}
-            onClick={() => setActiveView({ type: "templates" })}
-          />
-          <NavItem
-            icon={<BarChart3 className="h-4 w-4" />}
-            label="Insights"
-            active={isActive({ type: "insights" })}
-            onClick={() => setActiveView({ type: "insights" })}
+            active={isActive("/archive")}
           />
         </Section>
 
@@ -255,12 +295,12 @@ export function LinearSidebar() {
           }
         >
           {categories.map((cat) => (
-            <TeamItem
+            <TeamLink
               key={cat.id}
+              href={`/category/${cat.id}`}
               color={cat.color}
               name={cat.name}
-              active={isActive({ type: "category", categoryId: cat.id })}
-              onClick={() => setActiveView({ type: "category", categoryId: cat.id })}
+              active={isActive(`/category/${cat.id}`)}
             />
           ))}
         </Section>
@@ -268,15 +308,11 @@ export function LinearSidebar() {
         {pinnedNotes.length > 0 && (
           <Section title="Pinned">
             {pinnedNotes.map((note) => (
-              <NavItem
+              <NavButton
                 key={note.id}
                 icon={<Pin className="h-4 w-4" />}
                 label={note.title || "Untitled"}
-                active={isActive({ type: "pinned" })}
-                onClick={() => {
-                  setActiveView({ type: "pinned" })
-                  setSelectedNoteId(note.id)
-                }}
+                onClick={() => setSelectedNoteId(note.id)}
               />
             ))}
           </Section>
@@ -298,13 +334,13 @@ export function LinearSidebar() {
               (n) => n.tags.includes(tag.id) && !n.archived
             ).length
             return (
-              <NavItem
+              <NavLink
                 key={tag.id}
+                href={`/tag/${tag.id}`}
                 icon={<Hash className="h-4 w-4" style={{ color: tag.color }} />}
                 label={tag.name}
                 count={tagNoteCount}
-                active={isActive({ type: "tag", tagId: tag.id })}
-                onClick={() => setActiveView({ type: "tag", tagId: tag.id })}
+                active={isActive(`/tag/${tag.id}`)}
               />
             )
           })}
@@ -313,11 +349,11 @@ export function LinearSidebar() {
 
       {/* Footer */}
       <div className="border-t border-sidebar-border px-2 py-2">
-        <NavItem
+        <NavLink
+          href="/settings"
           icon={<Settings className="h-4 w-4" />}
           label="Settings"
-          active={isActive({ type: "settings" })}
-          onClick={() => setActiveView({ type: "settings" })}
+          active={isActive("/settings")}
         />
         <div className="mt-1 flex items-center gap-2 rounded-md px-2 py-1.5">
           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-accent-foreground">
