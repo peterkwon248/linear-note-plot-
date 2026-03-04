@@ -108,7 +108,7 @@ export function NoteInspector() {
         </button>
       </header>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
+      <div className="flex-1 overflow-y-auto">
         {/* Status Badges */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
           {note.pinned && (
