@@ -22,6 +22,7 @@ import {
   Layers,
   Shield,
   ClipboardCheck,
+  Network,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { getInboxNotes, getCaptureNotes, getPermanentNotes, getReviewQueue } from "@/lib/queries/notes"
@@ -187,7 +188,7 @@ function TeamLink({
 
 export function LinearSidebar() {
   const pathname = usePathname()
-  const { setSearchOpen, setSelectedNoteId, notes, folders, tags, categories, createFolder, createTag, createCategory } =
+  const { setSearchOpen, setSelectedNoteId, notes, folders, tags, categories, knowledgeMaps, createFolder, createTag, createCategory } =
     usePlotStore()
 
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
@@ -273,6 +274,13 @@ export function LinearSidebar() {
               </span>
             )}
           </Link>
+          <NavLink
+            href="/maps"
+            icon={<Network className="h-4 w-4" />}
+            label="Maps"
+            count={knowledgeMaps.length > 0 ? knowledgeMaps.length : undefined}
+            active={isActive("/maps")}
+          />
           <NavLink
             href="/notes"
             icon={<FileText className="h-4 w-4" />}

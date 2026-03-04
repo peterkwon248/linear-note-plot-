@@ -38,3 +38,138 @@ export function buildBacklinksMap(notes: Note[]): Map<string, number> {
   }
   return map
 }
+
+/**
+ * Extract [[wiki-link]] titles from text.
+ */
+export function extractWikiLinks(text: string): string[] {
+  const matches = text.match(/\[\[([^\]]+)\]\]/g)
+  if (!matches) return []
+  return matches.map((m) => m.slice(2, -2))
+}
+
+/** Simple English stopwords */
+const STOP_WORDS = new Set([
+  "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+  "have", "has", "had", "do", "does", "did", "will", "would", "could",
+  "should", "may", "might", "shall", "can", "need", "dare", "ought",
+  "to", "of", "in", "for", "on", "with", "at", "by", "from", "as",
+  "into", "through", "during", "before", "after", "above", "below",
+  "between", "out", "off", "over", "under", "again", "further", "then",
+  "once", "and", "but", "or", "nor", "not", "so", "yet", "both",
+  "either", "neither", "each", "every", "all", "any", "few", "more",
+  "most", "other", "some", "such", "no", "only", "own", "same",
+  "than", "too", "very", "just", "because", "if", "when", "while",
+  "this", "that", "these", "those", "it", "its", "he", "she", "we",
+  "they", "i", "me", "my", "your", "his", "her", "our", "their",
+])
+
+/**
+ * Simple tokenizer: lowercase, remove special chars, filter short/stopwords.
+ */
+export function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9가-힣\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 2 && !STOP_WORDS.has(w))
+}
+
+/**
+ * Suggest backlinks for a target note based on keyword overlap,
+ * unlinked mentions, and shared metadata.
+ */
+export function suggestBacklinks(
+  targetNoteId: string,
+  notes: Note[],
+  opts?: { limit?: number }
+): Array<{ noteId: string; score: number; reasons: string[] }> {
+  const limit = opts?.limit ?? 10
+  const target = notes.find((n) => n.id === targetNoteId)
+  if (!target) return []
+
+  const targetTitle = target.title.toLowerCase()
+  const targetTokens = new Set(tokenize(target.title + " " + target.content))
+  const existingLinks = new Set(extractWikiLinks(target.content).map((t) => t.toLowerCase()))
+
+  // Notes already linked TO this note (backlinks)
+  const backlinkIds = new Set<string>()
+  for (const other of notes) {
+    if (other.id === targetNoteId) continue
+    const otherLinks = extractWikiLinks(other.content).map((t) => t.toLowerCase())
+    if (otherLinks.includes(targetTitle)) backlinkIds.add(other.id)
+    if (targetTitle.length > 3 && other.content.toLowerCase().includes(targetTitle)) {
+      backlinkIds.add(other.id)
+    }
+  }
+
+  const results: Array<{ noteId: string; score: number; reasons: string[] }> = []
+
+  for (const other of notes) {
+    if (other.id === targetNoteId) continue
+    if (other.archived) continue
+    // Skip if already wiki-linked from target
+    if (existingLinks.has(other.title.toLowerCase())) continue
+
+    let score = 0
+    const reasons: string[] = []
+
+    // (A) Keyword overlap
+    const otherTokens = new Set(tokenize(other.title + " " + other.content))
+    let overlap = 0
+    for (const token of targetTokens) {
+      if (otherTokens.has(token)) overlap++
+    }
+    if (overlap >= 3) {
+      score += Math.min(overlap, 10)
+      reasons.push(`${overlap} shared keywords`)
+    }
+
+    // (B) Unlinked mention: other note mentions target title but no wiki-link
+    const otherContent = other.content.toLowerCase()
+    if (targetTitle.length > 3 && otherContent.includes(targetTitle)) {
+      const hasWikiLink = otherContent.includes(`[[${targetTitle}]]`)
+      if (!hasWikiLink) {
+        score += 15
+        reasons.push("mentions this note's title")
+      }
+    }
+
+    // (B2) Target content mentions other's title without wiki-link
+    const targetContent = target.content.toLowerCase()
+    const otherTitle = other.title.toLowerCase()
+    if (otherTitle.length > 3 && targetContent.includes(otherTitle)) {
+      if (!existingLinks.has(otherTitle)) {
+        score += 15
+        reasons.push("this note mentions their title")
+      }
+    }
+
+    // (C) Shared tags
+    const sharedTags = other.tags.filter((t) => target.tags.includes(t))
+    if (sharedTags.length > 0) {
+      score += sharedTags.length * 3
+      reasons.push(`${sharedTags.length} shared tag(s)`)
+    }
+
+    // (C) Same folder
+    if (target.folderId && other.folderId === target.folderId) {
+      score += 2
+      reasons.push("same folder")
+    }
+
+    // (C) Same category
+    if (target.category && other.category === target.category) {
+      score += 2
+      reasons.push("same category")
+    }
+
+    if (score > 0) {
+      results.push({ noteId: other.id, score, reasons })
+    }
+  }
+
+  return results
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+}

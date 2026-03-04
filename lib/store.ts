@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Note, Folder, Tag, Category, ActiveView, NoteFilter, NoteStage, TriageStatus } from "./types"
+import type { Note, Folder, Tag, Category, ActiveView, NoteFilter, NoteStage, TriageStatus, NoteEvent, NoteEventType, ThinkingChainSession, ThinkingChainStep, KnowledgeMap } from "./types"
 
 const genId = () => crypto.randomUUID()
 const now = () => new Date().toISOString()
@@ -203,11 +203,40 @@ interface PlotState {
   openNote: (id: string) => void
   setSearchQuery: (query: string) => void
   setSearchOpen: (open: boolean) => void
+
+  // Phase 2 state
+  noteEvents: NoteEvent[]
+  thinkingChains: ThinkingChainSession[]
+  graphFocusDepth: number  // 0 = off, 1/2/3 = focus depth
+  commandPaletteMode: "search" | "commands" | "links"
+
+  // Phase 2 actions
+  startThinkingChain: (noteId: string) => string
+  addThinkingStep: (chainId: string, text: string, relatedNoteIds?: string[]) => void
+  endThinkingChain: (chainId: string) => void
+  addWikiLink: (noteId: string, targetTitle: string) => void
+  setGraphFocusDepth: (depth: number) => void
+  setCommandPaletteMode: (mode: "search" | "commands" | "links") => void
+
+  // Phase 3: Knowledge Maps
+  knowledgeMaps: KnowledgeMap[]
+  createKnowledgeMap: (title: string, description?: string, color?: string) => string
+  updateKnowledgeMap: (id: string, updates: Partial<KnowledgeMap>) => void
+  deleteKnowledgeMap: (id: string) => void
+  addNoteToMap: (mapId: string, noteId: string) => void
+  removeNoteFromMap: (mapId: string, noteId: string) => void
 }
 
 export const usePlotStore = create<PlotState>()(
   persist(
-    (set, get) => ({
+    (set, get) => {
+      // Private helper for event logging
+      const appendEvent = (noteId: string, type: NoteEventType, meta?: Record<string, unknown>) => {
+        const event: NoteEvent = { id: genId(), noteId, type, at: now(), meta }
+        set((state) => ({ noteEvents: [...state.noteEvents, event] }))
+      }
+
+      return {
       notes: SEED_NOTES,
       folders: SEED_FOLDERS,
       tags: SEED_TAGS,
@@ -217,6 +246,13 @@ export const usePlotStore = create<PlotState>()(
       selectedNoteId: null,
       searchQuery: "",
       searchOpen: false,
+
+      // Phase 2 state
+      noteEvents: [] as NoteEvent[],
+      thinkingChains: [] as ThinkingChainSession[],
+      graphFocusDepth: 0,
+      commandPaletteMode: "search" as const,
+      knowledgeMaps: [] as KnowledgeMap[],
 
       createNote: (partial) => {
         const id = genId()
@@ -248,6 +284,7 @@ export const usePlotStore = create<PlotState>()(
           notes: [newNote, ...state.notes],
           selectedNoteId: id,
         }))
+        appendEvent(id, "created")
         return id
       },
 
@@ -257,6 +294,7 @@ export const usePlotStore = create<PlotState>()(
             n.id === id ? { ...n, ...updates, updatedAt: now(), lastTouchedAt: now() } : n
           ),
         }))
+        appendEvent(id, "updated")
       },
 
       touchNote: (id) => {
@@ -286,6 +324,7 @@ export const usePlotStore = create<PlotState>()(
               : n
           ),
         }))
+        appendEvent(id, "triage_keep")
       },
 
       triageSnooze: (id, reviewAt) => {
@@ -303,6 +342,7 @@ export const usePlotStore = create<PlotState>()(
               : n
           ),
         }))
+        appendEvent(id, "triage_snooze", { reviewAt })
       },
 
       triageTrash: (id) => {
@@ -319,6 +359,7 @@ export const usePlotStore = create<PlotState>()(
               : n
           ),
         }))
+        appendEvent(id, "triage_trash")
       },
 
       promoteToPermament: (id) => {
@@ -336,6 +377,7 @@ export const usePlotStore = create<PlotState>()(
               : n
           ),
         }))
+        appendEvent(id, "promoted")
       },
 
       undoPromote: (id) => {
@@ -353,6 +395,7 @@ export const usePlotStore = create<PlotState>()(
               : n
           ),
         }))
+        appendEvent(id, "updated", { action: "undoPromote" })
       },
 
       moveBackToInbox: (id) => {
@@ -370,6 +413,7 @@ export const usePlotStore = create<PlotState>()(
               : n
           ),
         }))
+        appendEvent(id, "updated", { action: "moveBackToInbox" })
       },
 
       /* ── Thinking Chain ───────────────────────────────── */
@@ -440,11 +484,14 @@ export const usePlotStore = create<PlotState>()(
       },
 
       toggleArchive: (id) => {
+        const note = get().notes.find((n) => n.id === id)
+        const wasArchived = note?.archived ?? false
         set((state) => ({
           notes: state.notes.map((n) =>
             n.id === id ? { ...n, archived: !n.archived, updatedAt: now(), lastTouchedAt: now() } : n
           ),
         }))
+        appendEvent(id, wasArchived ? "unarchived" : "archived")
       },
 
       createFolder: (name, color) => {
@@ -556,13 +603,116 @@ export const usePlotStore = create<PlotState>()(
             n.id === id ? { ...n, reads: (n.reads ?? 0) + 1, lastTouchedAt: now() } : n
           ),
         }))
+        appendEvent(id, "opened")
       },
       setSearchQuery: (query) => set({ searchQuery: query }),
       setSearchOpen: (open) => set({ searchOpen: open }),
-    }),
+
+      /* ── Phase 2: Thinking Chain Sessions ─────────────── */
+
+      startThinkingChain: (noteId) => {
+        const id = genId()
+        const session: ThinkingChainSession = {
+          id, noteId, startedAt: now(), endedAt: null, steps: [], status: "active"
+        }
+        set((state) => ({ thinkingChains: [...state.thinkingChains, session] }))
+        appendEvent(noteId, "thinking_chain_started", { chainId: id })
+        return id
+      },
+
+      addThinkingStep: (chainId, text, relatedNoteIds) => {
+        const step: ThinkingChainStep = { id: genId(), at: now(), text, relatedNoteIds }
+        set((state) => ({
+          thinkingChains: state.thinkingChains.map((c) =>
+            c.id === chainId ? { ...c, steps: [...c.steps, step] } : c
+          ),
+        }))
+        const chain = get().thinkingChains.find((c) => c.id === chainId)
+        if (chain) appendEvent(chain.noteId, "thinking_chain_step_added", { chainId, stepId: step.id })
+      },
+
+      endThinkingChain: (chainId) => {
+        set((state) => ({
+          thinkingChains: state.thinkingChains.map((c) =>
+            c.id === chainId ? { ...c, endedAt: now(), status: "done" as const } : c
+          ),
+        }))
+        const chain = get().thinkingChains.find((c) => c.id === chainId)
+        if (chain) appendEvent(chain.noteId, "thinking_chain_ended", { chainId })
+      },
+
+      addWikiLink: (noteId, targetTitle) => {
+        set((state) => ({
+          notes: state.notes.map((n) =>
+            n.id === noteId
+              ? { ...n, content: n.content + `\n[[${targetTitle}]]`, updatedAt: now(), lastTouchedAt: now() }
+              : n
+          ),
+        }))
+        appendEvent(noteId, "link_added", { targetTitle })
+      },
+
+      setGraphFocusDepth: (depth) => set({ graphFocusDepth: depth }),
+
+      setCommandPaletteMode: (mode) => set({ commandPaletteMode: mode }),
+
+      /* ── Phase 3: Knowledge Maps ────────────────────────── */
+
+      createKnowledgeMap: (title, description, color) => {
+        const id = genId()
+        const map: KnowledgeMap = {
+          id,
+          title,
+          description: description ?? "",
+          noteIds: [],
+          color: color ?? "#5e6ad2",
+          createdAt: now(),
+          updatedAt: now(),
+        }
+        set((state) => ({ knowledgeMaps: [...state.knowledgeMaps, map] }))
+        return id
+      },
+
+      updateKnowledgeMap: (id, updates) => {
+        set((state) => ({
+          knowledgeMaps: state.knowledgeMaps.map((m) =>
+            m.id === id ? { ...m, ...updates, updatedAt: now() } : m
+          ),
+        }))
+      },
+
+      deleteKnowledgeMap: (id) => {
+        set((state) => ({
+          knowledgeMaps: state.knowledgeMaps.filter((m) => m.id !== id),
+        }))
+      },
+
+      addNoteToMap: (mapId, noteId) => {
+        set((state) => ({
+          knowledgeMaps: state.knowledgeMaps.map((m) =>
+            m.id === mapId && !m.noteIds.includes(noteId)
+              ? { ...m, noteIds: [...m.noteIds, noteId], updatedAt: now() }
+              : m
+          ),
+        }))
+        appendEvent(noteId, "map_added", { mapId })
+      },
+
+      removeNoteFromMap: (mapId, noteId) => {
+        set((state) => ({
+          knowledgeMaps: state.knowledgeMaps.map((m) =>
+            m.id === mapId
+              ? { ...m, noteIds: m.noteIds.filter((id) => id !== noteId), updatedAt: now() }
+              : m
+          ),
+        }))
+        appendEvent(noteId, "map_removed", { mapId })
+      },
+      }
+    },
     {
       name: "plot-store",
-      version: 5,
+      version: 7,
       migrate: (persistedState: unknown) => {
         const state = persistedState as Record<string, unknown>
         if (state.notes && Array.isArray(state.notes)) {
@@ -586,7 +736,14 @@ export const usePlotStore = create<PlotState>()(
             parentNoteId: n.parentNoteId ?? null,
           }))
         }
-        return state as PlotState
+        // v6: Phase 2 defaults
+        if (!state.noteEvents) state.noteEvents = []
+        if (!state.thinkingChains) state.thinkingChains = []
+        if (state.graphFocusDepth === undefined) state.graphFocusDepth = 0
+        if (state.commandPaletteMode === undefined) state.commandPaletteMode = "search"
+        // v7: Knowledge Maps
+        if (!state.knowledgeMaps) state.knowledgeMaps = []
+        return state as unknown as PlotState
       },
     }
   )
@@ -627,6 +784,11 @@ export function getFilteredNotes(state: PlotState): Note[] {
         (n) => n.tags.includes(activeView.tagId) && !n.archived
       )
       break
+    case "map": {
+      const map = state.knowledgeMaps.find((m: KnowledgeMap) => m.id === activeView.mapId)
+      if (map) filtered = filtered.filter((n) => map.noteIds.includes(n.id))
+      break
+    }
     default:
       filtered = filtered.filter((n) => !n.archived)
   }
@@ -735,6 +897,8 @@ export function getFilterTitle(filter: NoteFilter, state: PlotState): string {
       const tag = state.tags.find((t) => t.id === filter.tagId)
       return tag ? `#${tag.name}` : "Tag"
     }
+    case "map":
+      return "Knowledge Map"
     default:
       return "Notes"
   }
@@ -770,6 +934,10 @@ export function getViewTitle(view: ActiveView, state: PlotState): string {
     }
     case "settings":
       return "Settings"
+    case "map": {
+      const map = state.knowledgeMaps.find((m: KnowledgeMap) => m.id === view.mapId)
+      return map?.title ?? "Knowledge Map"
+    }
     default:
       return "Notes"
   }

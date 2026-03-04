@@ -25,6 +25,12 @@ import {
   Inbox,
   ChevronDown,
   GitBranch,
+  Plus,
+  Pencil,
+  Brain,
+  Archive as ArchiveIcon,
+  MapIcon,
+  Network,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
@@ -32,14 +38,14 @@ import { usePlotStore } from "@/lib/store"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { ConnectionsGraph } from "@/components/connections-graph"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
-import { countBacklinks } from "@/lib/backlinks"
+import { countBacklinks, suggestBacklinks } from "@/lib/backlinks"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { Note } from "@/lib/types"
+import type { Note, NoteEvent, NoteEventType, ThinkingChainSession } from "@/lib/types"
 
 /* ── Backlinks helper ──────────────────────────────────── */
 
@@ -58,33 +64,25 @@ function getBacklinkNotes(noteId: string, notes: Note[]): Note[] {
   })
 }
 
-/* ── Suggested links helper ────────────────────────────── */
+/* ── Timeline event icon/label mapping ────────────────── */
 
-function getSuggestedLinks(noteId: string, notes: Note[]): Note[] {
-  const note = notes.find((n) => n.id === noteId)
-  if (!note) return []
-
-  const backlinkIds = new Set(
-    getBacklinkNotes(noteId, notes).map((n) => n.id)
-  )
-
-  return notes
-    .filter((other) => {
-      if (other.id === noteId) return false
-      if (other.archived) return false
-      if (backlinkIds.has(other.id)) return false
-      // Match by shared tags
-      const sharedTags = other.tags.filter((t) => note.tags.includes(t))
-      if (sharedTags.length > 0) return true
-      // Match by same folder
-      if (note.folderId && other.folderId === note.folderId) return true
-      // Match by same category
-      if (note.category && other.category === note.category) return true
-      // Match by same status
-      if (note.status === other.status && note.status !== "capture") return true
-      return false
-    })
-    .slice(0, 5)
+const EVENT_CONFIG: Record<NoteEventType, { icon: React.ComponentType<{ className?: string }>; label: string }> = {
+  created: { icon: Plus, label: "Created" },
+  updated: { icon: Pencil, label: "Updated" },
+  opened: { icon: Eye, label: "Opened" },
+  promoted: { icon: ArrowUpRight, label: "Promoted" },
+  archived: { icon: ArchiveIcon, label: "Archived" },
+  unarchived: { icon: ArchiveIcon, label: "Unarchived" },
+  triage_keep: { icon: Check, label: "Kept" },
+  triage_snooze: { icon: AlarmClock, label: "Snoozed" },
+  triage_trash: { icon: Trash2, label: "Trashed" },
+  link_added: { icon: Link2, label: "Link added" },
+  link_removed: { icon: Link2, label: "Link removed" },
+  thinking_chain_started: { icon: Brain, label: "Chain started" },
+  thinking_chain_step_added: { icon: Brain, label: "Step added" },
+  thinking_chain_ended: { icon: Brain, label: "Chain ended" },
+  map_added: { icon: MapIcon, label: "Added to map" },
+  map_removed: { icon: MapIcon, label: "Removed from map" },
 }
 
 /* ── Section ───────────────────────────────────────────── */
@@ -189,6 +187,14 @@ export function NoteDetailPanel({
   const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
+  const noteEvents = usePlotStore((s) => s.noteEvents)
+  const thinkingChains = usePlotStore((s) => s.thinkingChains)
+  const startThinkingChain = usePlotStore((s) => s.startThinkingChain)
+  const addThinkingStep = usePlotStore((s) => s.addThinkingStep)
+  const endThinkingChain = usePlotStore((s) => s.endThinkingChain)
+  const addWikiLink = usePlotStore((s) => s.addWikiLink)
+  const knowledgeMaps = usePlotStore((s) => s.knowledgeMaps)
+  const removeNoteFromMap = usePlotStore((s) => s.removeNoteFromMap)
 
   const note = notes.find((n) => n.id === noteId)
 
@@ -197,10 +203,67 @@ export function NoteDetailPanel({
     [noteId, notes, note]
   )
 
-  const suggested = useMemo(
-    () => (note ? getSuggestedLinks(noteId, notes) : []),
+  const suggestions = useMemo(
+    () => (note ? suggestBacklinks(noteId, notes, { limit: 10 }) : []),
     [noteId, notes, note]
   )
+
+  const noteChains = useMemo(
+    () => thinkingChains.filter((c) => c.noteId === noteId),
+    [thinkingChains, noteId]
+  )
+
+  const activeChain = useMemo(
+    () => noteChains.find((c) => c.status === "active") ?? null,
+    [noteChains]
+  )
+
+  const noteMaps = useMemo(
+    () => knowledgeMaps.filter((m) => m.noteIds.includes(noteId)),
+    [knowledgeMaps, noteId]
+  )
+
+  const timelineEvents = useMemo(() => {
+    return noteEvents
+      .filter((e) => e.noteId === noteId)
+      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+  }, [noteEvents, noteId])
+
+  const [thinkingStepInput, setThinkingStepInput] = useState("")
+  const [showAllTimeline, setShowAllTimeline] = useState(false)
+  const [collapsedSessions, setCollapsedSessions] = useState<Set<string>>(new Set())
+
+  const toggleSessionCollapse = useCallback((sessionId: string) => {
+    setCollapsedSessions((prev) => {
+      const next = new Set(prev)
+      if (next.has(sessionId)) next.delete(sessionId)
+      else next.add(sessionId)
+      return next
+    })
+  }, [])
+
+  const handleAddStep = useCallback((chainId: string) => {
+    const text = thinkingStepInput.trim()
+    if (!text) return
+    addThinkingStep(chainId, text)
+    setThinkingStepInput("")
+    toast("Step added")
+  }, [thinkingStepInput, addThinkingStep])
+
+  const handleStartChain = useCallback(() => {
+    startThinkingChain(noteId)
+    toast("Thinking chain started")
+  }, [startThinkingChain, noteId])
+
+  const handleEndChain = useCallback((chainId: string) => {
+    endThinkingChain(chainId)
+    toast("Thinking chain ended")
+  }, [endThinkingChain])
+
+  const handleLinkSuggestion = useCallback((targetTitle: string) => {
+    addWikiLink(noteId, targetTitle)
+    toast("Link added")
+  }, [addWikiLink, noteId])
 
   const readyScore = useMemo(
     () => (note ? computeReadyScore(note, notes) : 0),
@@ -528,6 +591,39 @@ export function NoteDetailPanel({
 
         <div className="mx-5 border-b border-border" />
 
+        {/* Knowledge Maps */}
+        <PanelSection
+          title="Maps"
+          icon={<Network className="h-3.5 w-3.5" />}
+          count={noteMaps.length}
+        >
+          {noteMaps.length > 0 ? (
+            <div className="space-y-0.5">
+              {noteMaps.map((m) => (
+                <div key={m.id} className="group/map flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-secondary/50">
+                  <div className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: m.color }} />
+                  <span className="flex-1 truncate text-[12px] text-foreground">{m.title}</span>
+                  <button
+                    onClick={() => {
+                      removeNoteFromMap(m.id, noteId)
+                      toast("Removed from map")
+                    }}
+                    className="shrink-0 rounded p-0.5 text-muted-foreground/0 group-hover/map:text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[12px] text-muted-foreground/60">
+              Not in any knowledge map.
+            </p>
+          )}
+        </PanelSection>
+
+        <div className="mx-5 border-b border-border" />
+
         {/* Backlinks */}
         <PanelSection
           title="Backlinks"
@@ -563,21 +659,211 @@ export function NoteDetailPanel({
 
         <div className="mx-5 border-b border-border" />
 
-        {/* Suggested Links */}
+        {/* Thinking Chain Sessions */}
         <PanelSection
-          title="Suggested Links"
-          icon={<Sparkles className="h-3.5 w-3.5" />}
-          count={suggested.length}
+          title="Thinking Chains"
+          icon={<Brain className="h-3.5 w-3.5" />}
+          count={noteChains.length}
         >
-          {suggested.length > 0 ? (
+          {noteChains.length === 0 && !activeChain ? (
+            <button
+              onClick={handleStartChain}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              <Plus className="h-3 w-3" />
+              Start Thinking Chain
+            </button>
+          ) : (
+            <div className="space-y-3">
+              {noteChains.map((session) => {
+                const isActive = session.status === "active"
+                const isCollapsed = !isActive && collapsedSessions.has(session.id)
+                return (
+                  <div key={session.id} className="rounded-md border border-border bg-secondary/20">
+                    {/* Session header */}
+                    <button
+                      onClick={() => !isActive && toggleSessionCollapse(session.id)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Brain className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-[11px] font-medium text-foreground">
+                          Session {format(new Date(session.startedAt), "MMM d, HH:mm")}
+                        </span>
+                      </div>
+                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                        isActive
+                          ? "bg-chart-5/10 text-chart-5"
+                          : "bg-muted text-muted-foreground"
+                      }`}>
+                        {session.status}
+                      </span>
+                    </button>
+
+                    {/* Steps */}
+                    {(!isCollapsed || isActive) && (
+                      <div className="border-t border-border px-3 py-2">
+                        {session.steps.length > 0 ? (
+                          <div className="space-y-1.5">
+                            {session.steps.map((step) => (
+                              <div key={step.id} className="flex gap-2">
+                                <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground mt-0.5">
+                                  {format(new Date(step.at), "HH:mm")}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[12px] text-foreground">{step.text}</p>
+                                  {step.relatedNoteIds && step.relatedNoteIds.length > 0 && (
+                                    <div className="mt-0.5 flex flex-wrap gap-1">
+                                      {step.relatedNoteIds.map((rid) => {
+                                        const rNote = notes.find((n) => n.id === rid)
+                                        return rNote ? (
+                                          <button
+                                            key={rid}
+                                            onClick={() => onOpenNote(rid)}
+                                            className="text-[10px] text-accent hover:underline"
+                                          >
+                                            {rNote.title || "Untitled"}
+                                          </button>
+                                        ) : null
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground/60">No steps yet.</p>
+                        )}
+
+                        {/* Active session controls */}
+                        {isActive && (
+                          <div className="mt-2 space-y-2">
+                            <input
+                              type="text"
+                              value={thinkingStepInput}
+                              onChange={(e) => setThinkingStepInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleAddStep(session.id)
+                              }}
+                              placeholder="Add a thinking step..."
+                              className="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent"
+                            />
+                            <button
+                              onClick={() => handleEndChain(session.id)}
+                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                            >
+                              <Check className="h-2.5 w-2.5" />
+                              End Session
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Start new chain button if no active session */}
+              {!activeChain && (
+                <button
+                  onClick={handleStartChain}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium text-foreground transition-colors hover:bg-secondary"
+                >
+                  <Plus className="h-3 w-3" />
+                  New Chain
+                </button>
+              )}
+            </div>
+          )}
+        </PanelSection>
+
+        <div className="mx-5 border-b border-border" />
+
+        {/* Backlink Suggestions */}
+        <PanelSection
+          title="Backlink Suggestions"
+          icon={<Sparkles className="h-3.5 w-3.5" />}
+          count={suggestions.length}
+        >
+          {suggestions.length > 0 ? (
             <div className="space-y-0.5">
-              {suggested.map((sl) => (
-                <NoteLink key={sl.id} note={sl} onOpen={onOpenNote} />
-              ))}
+              {suggestions.map((s) => {
+                const candidateNote = notes.find((n) => n.id === s.noteId)
+                if (!candidateNote) return null
+                return (
+                  <div
+                    key={s.noteId}
+                    className="group/link flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-secondary/50"
+                  >
+                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <button
+                        onClick={() => onOpenNote(candidateNote.id)}
+                        className="truncate text-left text-[12px] text-foreground hover:text-accent"
+                      >
+                        {candidateNote.title || "Untitled"}
+                      </button>
+                      <span className="truncate text-[10px] text-muted-foreground/60">
+                        {s.reasons.join(" · ")}
+                      </span>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] tabular-nums font-medium text-accent">
+                      {s.score}
+                    </span>
+                    <button
+                      onClick={() => handleLinkSuggestion(candidateNote.title)}
+                      className="shrink-0 rounded-md border border-border bg-card px-2 py-0.5 text-[10px] font-medium text-foreground transition-colors hover:bg-secondary"
+                    >
+                      Link
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           ) : (
             <p className="text-[12px] text-muted-foreground/60">
               No suggestions found. Try adding tags or organizing notes into folders.
+            </p>
+          )}
+        </PanelSection>
+
+        <div className="mx-5 border-b border-border" />
+
+        {/* Timeline */}
+        <PanelSection
+          title="Timeline"
+          icon={<Clock className="h-3.5 w-3.5" />}
+          count={timelineEvents.length}
+        >
+          {timelineEvents.length > 0 ? (
+            <div className="space-y-1">
+              {(showAllTimeline ? timelineEvents : timelineEvents.slice(0, 30)).map((evt) => {
+                const config = EVENT_CONFIG[evt.type]
+                if (!config) return null
+                const Icon = config.icon
+                return (
+                  <div key={evt.id} className="flex items-center gap-2.5 py-1">
+                    <Icon className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                    <span className="text-[12px] text-foreground">{config.label}</span>
+                    <span className="ml-auto shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                      {formatDistanceToNow(new Date(evt.at), { addSuffix: true })}
+                    </span>
+                  </div>
+                )
+              })}
+              {!showAllTimeline && timelineEvents.length > 30 && (
+                <button
+                  onClick={() => setShowAllTimeline(true)}
+                  className="mt-1 text-[11px] font-medium text-accent hover:underline"
+                >
+                  Show all ({timelineEvents.length} events)
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className="text-[12px] text-muted-foreground/60">
+              No events recorded yet.
             </p>
           )}
         </PanelSection>

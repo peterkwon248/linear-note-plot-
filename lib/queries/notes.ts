@@ -1,4 +1,4 @@
-import type { Note } from "@/lib/types"
+import type { Note, KnowledgeMap } from "@/lib/types"
 import { countBacklinks } from "@/lib/backlinks"
 
 /* ── Inbox Rank ────────────────────────────────────────── */
@@ -254,4 +254,61 @@ export function getSnoozeTime(option: "3h" | "tomorrow" | "next-week"): string {
       d.setHours(10, 0, 0, 0)
       return d.toISOString()
   }
+}
+
+/* ── Knowledge Map queries ───────────────────────────── */
+
+/**
+ * Get map statistics for a Knowledge Map.
+ */
+export function getMapStats(map: KnowledgeMap, allNotes: Note[]) {
+  const mapNotes = allNotes.filter((n) => map.noteIds.includes(n.id))
+  const totalLinks = mapNotes.reduce((sum, n) => sum + countBacklinks(n.id, allNotes), 0)
+  const internalLinks = mapNotes.reduce((sum, n) => {
+    const noteBacklinks = allNotes.filter((other) => {
+      if (!map.noteIds.includes(other.id)) return false
+      if (other.id === n.id) return false
+      const title = n.title.toLowerCase()
+      if (!title.trim()) return false
+      const content = other.content.toLowerCase()
+      return content.includes(`[[${title}]]`)
+    })
+    return sum + noteBacklinks.length
+  }, 0)
+  const unlinkedCount = mapNotes.filter((n) => countBacklinks(n.id, allNotes) === 0).length
+  const avgReads = mapNotes.length > 0 ? Math.round(mapNotes.reduce((s, n) => s + n.reads, 0) / mapNotes.length) : 0
+
+  return {
+    noteCount: mapNotes.length,
+    totalLinks,
+    internalLinks,
+    unlinkedCount,
+    avgReads,
+    stages: {
+      inbox: mapNotes.filter((n) => n.stage === "inbox").length,
+      capture: mapNotes.filter((n) => n.stage === "capture").length,
+      permanent: mapNotes.filter((n) => n.stage === "permanent").length,
+    },
+  }
+}
+
+/**
+ * Get notes in a map that need attention:
+ * - Unlinked within the map
+ * - Stale (not touched in 7+ days)
+ */
+export function getMapReviewItems(map: KnowledgeMap, allNotes: Note[]): ReviewItem[] {
+  const items: ReviewItem[] = []
+  const mapNotes = allNotes.filter((n) => map.noteIds.includes(n.id))
+
+  for (const note of mapNotes) {
+    if (needsReview(note)) {
+      items.push({ note, reason: "stale-capture" })
+    }
+    if (note.stage === "permanent" && countBacklinks(note.id, allNotes) === 0) {
+      items.push({ note, reason: "unlinked-permanent" })
+    }
+  }
+
+  return items
 }
