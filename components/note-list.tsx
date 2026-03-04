@@ -182,7 +182,7 @@ export function NoteList() {
   const groups = groupNotesByDate(filteredNotes)
 
   return (
-    <main className="flex h-full flex-col overflow-hidden bg-background">
+    <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border px-3 py-3">
         <div className="flex items-center gap-2">

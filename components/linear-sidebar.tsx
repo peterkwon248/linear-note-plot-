@@ -177,7 +177,7 @@ export function LinearSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-1 scrollbar-thin">
+      <nav className="flex-1 overflow-y-auto px-2 py-1">
         <div className="space-y-px">
           <NavItem
             icon={<Inbox className="h-4 w-4" />}
