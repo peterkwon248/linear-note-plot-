@@ -20,12 +20,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
-import { usePlotStore, getFilteredNotes, getViewTitle } from "@/lib/store"
-import type { Note } from "@/lib/types"
+import { usePlotStore, filterNotesByRoute, getFilterTitle } from "@/lib/store"
+import type { Note, NoteFilter } from "@/lib/types"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 
-/* ── helpers ─────────────────────────────────────────────── */
+/* -- helpers -------------------------------------------------- */
 
 function stripMarkdown(text: string): string {
   return text
@@ -65,11 +64,18 @@ function groupNotesByDate(notes: Note[]): { label: DateGroup; notes: Note[] }[] 
     .map((label) => ({ label, notes: groups[label] }))
 }
 
-/* ── NoteRow ─────────────────────────────────────────────── */
+/* -- NoteRow -------------------------------------------------- */
 
 function NoteRow({ note }: { note: Note }) {
-  const { setSelectedNoteId, tags, updateNote, togglePin, toggleArchive, duplicateNote, deleteNote } =
-    usePlotStore()
+  const {
+    setSelectedNoteId,
+    tags,
+    updateNote,
+    togglePin,
+    toggleArchive,
+    duplicateNote,
+    deleteNote,
+  } = usePlotStore()
 
   const preview = stripMarkdown(note.content).slice(0, 80)
   const noteTags = tags.filter((t) => note.tags.includes(t.id)).slice(0, 2)
@@ -188,12 +194,12 @@ function NoteRow({ note }: { note: Note }) {
   )
 }
 
-/* ── NoteList ────────────────────────────────────────────── */
+/* -- NoteList ------------------------------------------------- */
 
-export function NoteList() {
+export function NoteList({ filter }: { filter: NoteFilter }) {
   const state = usePlotStore()
-  const filteredNotes = getFilteredNotes(state)
-  const viewTitle = getViewTitle(state.activeView, state)
+  const filteredNotes = filterNotesByRoute(state.notes, filter, state.searchQuery)
+  const viewTitle = getFilterTitle(filter, state)
   const groups = groupNotesByDate(filteredNotes)
 
   return (
@@ -201,7 +207,9 @@ export function NoteList() {
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border px-3 py-3">
         <div className="flex items-center gap-2">
-          <h1 className="text-[14px] font-semibold text-foreground">{viewTitle}</h1>
+          <h1 className="text-[14px] font-semibold text-foreground">
+            {viewTitle}
+          </h1>
           <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">
             {filteredNotes.length}
           </span>
@@ -217,7 +225,12 @@ export function NoteList() {
           </button>
           <button
             className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-            onClick={() => state.createNote()}
+            onClick={() => state.createNote({
+              isInbox: filter.type === "inbox",
+              folderId: filter.type === "folder" ? filter.folderId : undefined,
+              category: filter.type === "category" ? filter.categoryId : undefined,
+              status: filter.type === "projects" ? "project" : undefined,
+            })}
           >
             <Plus className="h-3 w-3" />
             <span>New</span>

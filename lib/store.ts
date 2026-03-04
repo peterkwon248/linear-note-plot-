@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Note, Folder, Tag, Category, ActiveView } from "./types"
+import type { Note, Folder, Tag, Category, ActiveView, NoteFilter } from "./types"
 
 const genId = () => crypto.randomUUID()
 const now = () => new Date().toISOString()
@@ -373,6 +373,82 @@ export function getFilteredNotes(state: PlotState): Note[] {
   return [...filtered].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   )
+}
+
+/** Route-based filter (used by NoteList via filter prop) */
+export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuery = ""): Note[] {
+  let filtered = notes
+
+  switch (filter.type) {
+    case "inbox":
+      filtered = filtered.filter((n) => n.isInbox && !n.archived)
+      break
+    case "all":
+      filtered = filtered.filter((n) => !n.archived)
+      break
+    case "archive":
+      filtered = filtered.filter((n) => n.archived)
+      break
+    case "projects":
+      filtered = filtered.filter((n) => n.status === "project" && !n.archived)
+      break
+    case "pinned":
+      filtered = filtered.filter((n) => n.pinned && !n.archived)
+      break
+    case "folder":
+      filtered = filtered.filter((n) => n.folderId === filter.folderId && !n.archived)
+      break
+    case "category":
+      filtered = filtered.filter((n) => n.category === filter.categoryId && !n.archived)
+      break
+    case "tag":
+      filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && !n.archived)
+      break
+    default:
+      filtered = filtered.filter((n) => !n.archived)
+  }
+
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase()
+    filtered = filtered.filter(
+      (n) =>
+        n.title.toLowerCase().includes(q) ||
+        n.content.toLowerCase().includes(q)
+    )
+  }
+
+  return [...filtered].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  )
+}
+
+export function getFilterTitle(filter: NoteFilter, state: PlotState): string {
+  switch (filter.type) {
+    case "inbox":
+      return "Inbox"
+    case "all":
+      return "All Notes"
+    case "archive":
+      return "Archive"
+    case "projects":
+      return "Projects"
+    case "pinned":
+      return "Pinned"
+    case "folder": {
+      const folder = state.folders.find((f) => f.id === filter.folderId)
+      return folder?.name ?? "Folder"
+    }
+    case "category": {
+      const cat = state.categories.find((c) => c.id === filter.categoryId)
+      return cat?.name ?? "Category"
+    }
+    case "tag": {
+      const tag = state.tags.find((t) => t.id === filter.tagId)
+      return tag ? `#${tag.name}` : "Tag"
+    }
+    default:
+      return "Notes"
+  }
 }
 
 export function getViewTitle(view: ActiveView, state: PlotState): string {
