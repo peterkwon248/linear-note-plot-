@@ -32,11 +32,10 @@ import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge } from "@/
 import { format, formatDistanceToNowStrict } from "date-fns"
 import type { Note, NoteStatus, NotePriority } from "@/lib/types"
 
-/* ── Relative date helpers ─────────────────────────────── */
+/* ── Helpers ───────────────────────────────────────────── */
 
-function shortRelativeTime(dateStr: string): string {
+function shortRelative(dateStr: string): string {
   const dist = formatDistanceToNowStrict(new Date(dateStr), { addSuffix: false })
-  // "2 hours" -> "2h", "3 days" -> "3d", "1 week" -> "1w", "5 minutes" -> "5m"
   return dist
     .replace(/ seconds?/, "s")
     .replace(/ minutes?/, "m")
@@ -47,7 +46,11 @@ function shortRelativeTime(dateStr: string): string {
     .replace(/ years?/, "y")
 }
 
-/* ── Sort types ────────────────────────────────────────── */
+function absDate(dateStr: string): string {
+  return format(new Date(dateStr), "MMM d")
+}
+
+/* ── Sort ──────────────────────────────────────────────── */
 
 type SortColumn = "title" | "status" | "links" | "reads" | "priority" | "created" | "updated"
 type SortDirection = "asc" | "desc"
@@ -55,17 +58,11 @@ type SortDirection = "asc" | "desc"
 const STATUS_ORDER: Record<NoteStatus, number> = { capture: 0, reference: 1, permanent: 2, project: 3 }
 const PRIORITY_ORDER: Record<NotePriority, number> = { none: 0, low: 1, medium: 2, high: 3, urgent: 4 }
 
-/* ── Context tab types ─────────────────────────────────── */
+/* ── Context tabs ──────────────────────────────────────── */
 
-type ContextTab = "all" | "capture" | "reference" | "permanent" | "unlinked" | string
+type ContextTab = "all" | "capture" | "reference" | "permanent" | "unlinked"
 
-interface SavedView {
-  id: string
-  label: string
-  tab: ContextTab
-}
-
-const DEFAULT_TABS: { id: ContextTab; label: string }[] = [
+const TABS: { id: ContextTab; label: string }[] = [
   { id: "all", label: "All Notes" },
   { id: "capture", label: "Capture" },
   { id: "reference", label: "Reference" },
@@ -73,7 +70,7 @@ const DEFAULT_TABS: { id: ContextTab; label: string }[] = [
   { id: "unlinked", label: "Unlinked" },
 ]
 
-/* ── Filter types ──────────────────────────────────────── */
+/* ── Filter ────────────────────────────────────────────── */
 
 type FilterType = "status" | "priority" | "links" | "reads"
 
@@ -82,42 +79,34 @@ interface ActiveFilter {
   value: string
 }
 
-/* ── Table Header Cell ─────────────────────────────────── */
+/* ── Header cell ───────────────────────────────────────── */
 
-function HeaderCell({
+function TH({
   label,
-  column,
+  col,
   sortCol,
   sortDir,
   onSort,
-  align = "left",
   className = "",
 }: {
   label: string
-  column: SortColumn
+  col: SortColumn
   sortCol: SortColumn
   sortDir: SortDirection
-  onSort: (col: SortColumn) => void
-  align?: "left" | "right" | "center"
+  onSort: (c: SortColumn) => void
   className?: string
 }) {
-  const active = sortCol === column
-  const textAlign = align === "right" ? "justify-end" : align === "center" ? "justify-center" : "justify-start"
-
+  const active = sortCol === col
   return (
     <button
-      className={`flex items-center gap-1 ${textAlign} text-[11px] font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground ${className}`}
-      onClick={() => onSort(column)}
+      className={`group/th inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
+      onClick={() => onSort(col)}
     >
       {label}
       {active ? (
-        sortDir === "asc" ? (
-          <ArrowUp className="h-3 w-3" />
-        ) : (
-          <ArrowDown className="h-3 w-3" />
-        )
+        sortDir === "asc" ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />
       ) : (
-        <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-40" />
+        <ArrowUpDown className="h-2.5 w-2.5 opacity-0 group-hover/th:opacity-40" />
       )}
     </button>
   )
@@ -135,25 +124,17 @@ export function NotesTable() {
   const [sortDir, setSortDir] = useState<SortDirection>("desc")
   const [filters, setFilters] = useState<ActiveFilter[]>([])
   const [activeTab, setActiveTab] = useState<ContextTab>("all")
-  const [savedViews, setSavedViews] = useState<SavedView[]>([])
-  const [isCreatingView, setIsCreatingView] = useState(false)
-  const [newViewName, setNewViewName] = useState("")
 
   const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])
 
   function handleSort(col: SortColumn) {
-    if (sortCol === col) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-    } else {
-      setSortCol(col)
-      setSortDir(col === "title" ? "asc" : "desc")
-    }
+    if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+    else { setSortCol(col); setSortDir(col === "title" ? "asc" : "desc") }
   }
 
   function addFilter(type: FilterType, value: string) {
     setFilters((prev) => {
-      const exists = prev.find((f) => f.type === type && f.value === value)
-      if (exists) return prev
+      if (prev.find((f) => f.type === type && f.value === value)) return prev
       return [...prev, { type, value }]
     })
   }
@@ -162,109 +143,93 @@ export function NotesTable() {
     setFilters((prev) => prev.filter((_, i) => i !== idx))
   }
 
-  function handleCreateView() {
-    if (!newViewName.trim()) return
-    const view: SavedView = {
-      id: `view-${Date.now()}`,
-      label: newViewName.trim(),
-      tab: `custom-${Date.now()}`,
-    }
-    setSavedViews((prev) => [...prev, view])
-    setNewViewName("")
-    setIsCreatingView(false)
-  }
-
-  // Filter then sort
   const filteredNotes = useMemo(() => {
     let result = filterNotesByRoute(notes, { type: "all" })
 
-    // Apply active tab filter
+    // Tab filter
     switch (activeTab) {
-      case "capture":
-        result = result.filter((n) => n.status === "capture")
-        break
-      case "reference":
-        result = result.filter((n) => n.status === "reference")
-        break
-      case "permanent":
-        result = result.filter((n) => n.status === "permanent")
-        break
-      case "unlinked":
-        result = result.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0)
-        break
-      case "all":
-      default:
-        break
+      case "capture":    result = result.filter((n) => n.status === "capture"); break
+      case "reference":  result = result.filter((n) => n.status === "reference"); break
+      case "permanent":  result = result.filter((n) => n.status === "permanent"); break
+      case "unlinked":   result = result.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0); break
     }
 
+    // Chip filters
     for (const f of filters) {
       switch (f.type) {
-        case "status":
-          if (f.value === "all") break
-          result = result.filter((n) => n.status === f.value)
-          break
-        case "priority":
-          if (f.value === "all") break
-          result = result.filter((n) => n.priority === f.value)
-          break
-        case "links":
-          if (f.value === "unlinked") {
-            result = result.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0)
-          }
-          break
-        case "reads":
-          if (f.value === "unread") {
-            result = result.filter((n) => n.reads === 0)
-          }
-          break
+        case "status":   result = result.filter((n) => n.status === f.value); break
+        case "priority": result = result.filter((n) => n.priority === f.value); break
+        case "links":    if (f.value === "unlinked") result = result.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0); break
+        case "reads":    if (f.value === "unread") result = result.filter((n) => n.reads === 0); break
       }
     }
 
+    // Sort
     const dir = sortDir === "asc" ? 1 : -1
     result.sort((a, b) => {
       switch (sortCol) {
-        case "title":
-          return dir * a.title.localeCompare(b.title)
-        case "status":
-          return dir * (STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
-        case "links":
-          return dir * ((backlinksMap.get(a.id) ?? 0) - (backlinksMap.get(b.id) ?? 0))
-        case "reads":
-          return dir * (a.reads - b.reads)
-        case "priority":
-          return dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
-        case "created":
-          return dir * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        case "title":    return dir * a.title.localeCompare(b.title)
+        case "status":   return dir * (STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
+        case "links":    return dir * ((backlinksMap.get(a.id) ?? 0) - (backlinksMap.get(b.id) ?? 0))
+        case "reads":    return dir * (a.reads - b.reads)
+        case "priority": return dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
+        case "created":  return dir * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
         case "updated":
-        default:
-          return dir * (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime())
+        default:         return dir * (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime())
       }
     })
-
     return result
   }, [notes, filters, sortCol, sortDir, backlinksMap, activeTab])
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
-      {/* ── Header bar ──────────────────────────────────── */}
-      <header className="flex items-center justify-between border-b border-border px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <h1 className="text-[14px] font-semibold text-foreground">Notes</h1>
-          <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">
-            {filteredNotes.length}
-          </span>
+      {/* ── Page title ─────────────────────────────────── */}
+      <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
+        <h1 className="text-base font-semibold text-foreground">Notes</h1>
+        <button
+          className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+          onClick={() => createNote()}
+        >
+          <Plus className="h-3 w-3" />
+          New note
+        </button>
+      </header>
+
+      {/* ── Context tabs + toolbar ─────────────────────── */}
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">
+        {/* Tabs */}
+        <div className="flex items-center gap-0">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
+                activeTab === tab.id
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
+              )}
+            </button>
+          ))}
+          <button className="px-2 py-2 text-muted-foreground transition-colors hover:text-foreground">
+            <Plus className="h-3.5 w-3.5" />
+          </button>
         </div>
+
+        {/* Right toolbar */}
         <div className="flex items-center gap-1.5">
-          {/* Filter button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                 <Filter className="h-3 w-3" />
                 Filter
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              {/* Status filters */}
               <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
                 Status
               </DropdownMenuItem>
@@ -274,7 +239,6 @@ export function NotesTable() {
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              {/* Priority filters */}
               <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
                 Priority
               </DropdownMenuItem>
@@ -285,10 +249,6 @@ export function NotesTable() {
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              {/* Special filters */}
-              <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
-                Knowledge graph
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => addFilter("links", "unlinked")}>
                 <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-[12px]">Unlinked notes</span>
@@ -299,107 +259,26 @@ export function NotesTable() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Display button */}
-          <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+          <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
             <SlidersHorizontal className="h-3 w-3" />
             Display
           </button>
-
-          {/* New note */}
-          <button
-            className="flex items-center gap-1 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-            onClick={() => createNote()}
-          >
-            <Plus className="h-3 w-3" />
-            New note
-          </button>
         </div>
-      </header>
-
-      {/* ── Context Tabs ───────────────────────────────── */}
-      <div className="flex items-center gap-1 border-b border-border px-4 py-1.5">
-        {DEFAULT_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
-              activeTab === tab.id
-                ? "bg-secondary text-foreground"
-                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-
-        {savedViews.map((view) => (
-          <button
-            key={view.id}
-            onClick={() => setActiveTab(view.tab)}
-            className={`group/tab relative rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
-              activeTab === view.tab
-                ? "bg-secondary text-foreground"
-                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-            }`}
-          >
-            {view.label}
-            <span
-              onClick={(e) => {
-                e.stopPropagation()
-                setSavedViews((prev) => prev.filter((v) => v.id !== view.id))
-                if (activeTab === view.tab) setActiveTab("all")
-              }}
-              className="ml-1 hidden rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground group-hover/tab:inline-flex"
-            >
-              <X className="h-2.5 w-2.5" />
-            </span>
-          </button>
-        ))}
-
-        {isCreatingView ? (
-          <form
-            className="flex items-center"
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleCreateView()
-            }}
-          >
-            <input
-              autoFocus
-              value={newViewName}
-              onChange={(e) => setNewViewName(e.target.value)}
-              onBlur={() => {
-                if (!newViewName.trim()) setIsCreatingView(false)
-              }}
-              placeholder="View name..."
-              className="w-24 rounded-md border border-border bg-secondary px-2 py-0.5 text-[12px] text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-accent"
-            />
-          </form>
-        ) : (
-          <button
-            onClick={() => setIsCreatingView(true)}
-            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-          >
-            <Plus className="h-3 w-3" />
-          </button>
-        )}
       </div>
 
-      {/* ── Active Filters ──────────────────────────────── */}
+      {/* ── Filter chips ───────────────────────────────── */}
       {filters.length > 0 && (
-        <div className="flex items-center gap-1.5 border-b border-border px-4 py-1.5">
-          <SlidersHorizontal className="h-3 w-3 text-muted-foreground" />
+        <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
           {filters.map((f, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-[11px] text-foreground"
+              className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-[11px] text-foreground"
             >
               <span className="text-muted-foreground capitalize">{f.type}:</span>
               <span className="capitalize">{f.value}</span>
               <button
                 onClick={() => removeFilter(i)}
-                className="ml-0.5 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                className="ml-0.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-foreground"
               >
                 <X className="h-2.5 w-2.5" />
               </button>
@@ -414,41 +293,53 @@ export function NotesTable() {
         </div>
       )}
 
-      {/* ── Table ───────────────────────────────────────── */}
+      {/* ── Table ──────────────────────────────────────── */}
       {filteredNotes.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
-            <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+            <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
             <p className="text-[13px] text-muted-foreground">No notes found</p>
-            <p className="text-[12px] text-muted-foreground mt-1">
-              {filters.length > 0
-                ? "Try adjusting your filters."
-                : "Create your first note to get started."}
+            <p className="mt-1 text-[12px] text-muted-foreground/60">
+              {filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
             </p>
           </div>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          {/* Table header */}
-          <div className="sticky top-0 z-10 grid grid-cols-[1fr_110px_60px_60px_90px_90px_90px] items-center gap-0 border-b border-border bg-background/95 backdrop-blur-sm px-4 py-2">
-            <HeaderCell label="Name" column="title" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
-            <HeaderCell label="Status" column="status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
-            <HeaderCell label="Links" column="links" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="center" />
-            <HeaderCell label="Reads" column="reads" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="center" />
-            <HeaderCell label="Priority" column="priority" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
-            <HeaderCell label="Created" column="created" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="right" />
-            <HeaderCell label="Updated" column="updated" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="right" />
+          {/* Column headers */}
+          <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
+            <div className="flex-1 min-w-0">
+              <TH label="Name" col="title" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
+            </div>
+            <div className="w-[100px] shrink-0 text-right">
+              <TH label="Status" col="status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-end" />
+            </div>
+            <div className="w-[56px] shrink-0 text-center">
+              <TH label="Links" col="links" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-center" />
+            </div>
+            <div className="w-[56px] shrink-0 text-center">
+              <TH label="Reads" col="reads" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-center" />
+            </div>
+            <div className="w-[72px] shrink-0 text-center">
+              <TH label="Priority" col="priority" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-center" />
+            </div>
+            <div className="w-[80px] shrink-0 text-right">
+              <TH label="Created" col="created" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-end" />
+            </div>
+            <div className="w-[80px] shrink-0 text-right">
+              <TH label="Updated" col="updated" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-end" />
+            </div>
           </div>
 
-          {/* Table rows */}
+          {/* Rows */}
           {filteredNotes.map((note) => (
-            <TableRow
+            <NoteRow
               key={note.id}
               note={note}
               links={backlinksMap.get(note.id) ?? 0}
               onOpen={() => openNote(note.id)}
-              onStatusChange={(s) => updateNote(note.id, { status: s })}
-              onPriorityChange={(p) => updateNote(note.id, { priority: p })}
+              onStatus={(s) => updateNote(note.id, { status: s })}
+              onPriority={(p) => updateNote(note.id, { priority: p })}
             />
           ))}
         </div>
@@ -457,81 +348,85 @@ export function NotesTable() {
   )
 }
 
-/* ── Table Row ─────────────────────────────────────────── */
+/* ── Row ───────────────────────────────────────────────── */
 
-function TableRow({
+function NoteRow({
   note,
   links,
   onOpen,
-  onStatusChange,
-  onPriorityChange,
+  onStatus,
+  onPriority,
 }: {
   note: Note
   links: number
   onOpen: () => void
-  onStatusChange: (s: NoteStatus) => void
-  onPriorityChange: (p: NotePriority) => void
+  onStatus: (s: NoteStatus) => void
+  onPriority: (p: NotePriority) => void
 }) {
   return (
     <div
-      className="group grid grid-cols-[1fr_110px_60px_60px_90px_90px_90px] items-center gap-0 border-b border-border px-4 py-2 transition-colors hover:bg-secondary/40 cursor-pointer"
+      className="group flex items-center border-b border-border px-5 py-2 transition-colors hover:bg-secondary/30 cursor-pointer"
       onClick={onOpen}
     >
-      {/* Title */}
-      <div className="flex items-center gap-2 min-w-0 pr-3">
-        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        <span className="truncate text-[13px] font-medium text-foreground">
+      {/* Name */}
+      <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
+        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+        <span className="truncate text-[13px] text-foreground">
           {note.title || "Untitled"}
         </span>
       </div>
 
       {/* Status */}
-      <div onClick={(e) => e.stopPropagation()}>
-        <StatusDropdown value={note.status} onChange={onStatusChange} variant="inline" />
+      <div className="w-[100px] shrink-0 flex justify-end" onClick={(e) => e.stopPropagation()}>
+        <StatusDropdown value={note.status} onChange={onStatus} variant="inline" />
       </div>
 
       {/* Links */}
-      <div className="flex items-center justify-center">
-        <span className={`text-[12px] tabular-nums ${links === 0 ? "text-muted-foreground/40" : "text-foreground"}`}>
+      <div className="w-[56px] shrink-0 text-center">
+        <span className={`text-[12px] tabular-nums ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
           {links}
         </span>
       </div>
 
       {/* Reads */}
-      <div className="flex items-center justify-center">
-        <span className={`text-[12px] tabular-nums ${note.reads === 0 ? "text-muted-foreground/40" : "text-foreground"}`}>
+      <div className="w-[56px] shrink-0 text-center">
+        <span className={`text-[12px] tabular-nums ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
           {note.reads}
         </span>
       </div>
 
       {/* Priority */}
-      <div onClick={(e) => e.stopPropagation()}>
-        <PriorityDropdown value={note.priority} onChange={onPriorityChange} variant="inline" />
+      <div className="w-[72px] shrink-0 flex justify-center" onClick={(e) => e.stopPropagation()}>
+        <PriorityDropdown value={note.priority} onChange={onPriority} variant="inline" />
       </div>
 
-      {/* Created */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="text-right text-[12px] tabular-nums text-muted-foreground cursor-default">
-            {shortRelativeTime(note.createdAt)}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="top">
-          {format(new Date(note.createdAt), "MMM d, yyyy")}
-        </TooltipContent>
-      </Tooltip>
+      {/* Created - absolute date like Linear */}
+      <div className="w-[80px] shrink-0 text-right">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-[12px] tabular-nums text-muted-foreground cursor-default">
+              {absDate(note.createdAt)}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-[11px]">
+            {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
+          </TooltipContent>
+        </Tooltip>
+      </div>
 
-      {/* Updated */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="text-right text-[12px] tabular-nums text-muted-foreground cursor-default">
-            {shortRelativeTime(note.updatedAt)}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="top">
-          {format(new Date(note.updatedAt), "MMM d, yyyy")}
-        </TooltipContent>
-      </Tooltip>
+      {/* Updated - relative time like Linear */}
+      <div className="w-[80px] shrink-0 text-right">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-[12px] tabular-nums text-muted-foreground cursor-default">
+              {shortRelative(note.updatedAt)}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-[11px]">
+            {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+          </TooltipContent>
+        </Tooltip>
+      </div>
     </div>
   )
 }

@@ -124,25 +124,24 @@ function Section({
 
   return (
     <div className="mt-4">
-      <button
-        onClick={() => setOpen(!open)}
-        className="group flex w-full items-center gap-1 px-2 py-1 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted hover:text-sidebar-foreground transition-colors"
-      >
-        {open ? (
-          <ChevronDown className="h-3 w-3" />
-        ) : (
-          <ChevronRight className="h-3 w-3" />
-        )}
-        <span className="flex-1 text-left">{title}</span>
+      <div className="group flex w-full items-center gap-1 px-2 py-1">
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex flex-1 items-center gap-1 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+        >
+          {open ? (
+            <ChevronDown className="h-3 w-3" />
+          ) : (
+            <ChevronRight className="h-3 w-3" />
+          )}
+          <span className="flex-1 text-left">{title}</span>
+        </button>
         {action && (
-          <span
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity">
             {action}
           </span>
         )}
-      </button>
+      </div>
       {open && <div className="mt-0.5 space-y-px">{children}</div>}
     </div>
   )
