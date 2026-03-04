@@ -292,6 +292,6 @@ function CaptureDetailPanel({
           </button>
         </div>
       )}
-    </div>
+    </aside>
   )
 }
