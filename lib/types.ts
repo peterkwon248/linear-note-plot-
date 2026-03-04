@@ -14,6 +14,7 @@ export interface Note {
   id: string
   title: string
   content: string
+  contentJson: Record<string, unknown> | null
   folderId: string | null
   category: string
   tags: string[]

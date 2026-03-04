@@ -47,6 +47,7 @@ const SEED_NOTES: Note[] = [
     title: "Welcome to Plot",
     content:
       "# Welcome to Plot\n\nThis is your new note-taking app.\n\n- Create notes with **markdown**\n- Organize with folders, categories, and tags\n- Pin important notes\n- Archive when done",
+    contentJson: null,
     folderId: null,
     category: "cat-1",
     tags: ["tag-2"],
@@ -65,6 +66,7 @@ const SEED_NOTES: Note[] = [
     id: "note-2",
     title: "Quick thought",
     content: "This is an inbox note - a quick thought captured for later sorting.",
+    contentJson: null,
     folderId: null,
     category: "",
     tags: [],
@@ -82,6 +84,7 @@ const SEED_NOTES: Note[] = [
     id: "note-3",
     title: "Project planning",
     content: "## Q1 Goals\n\n1. Ship v1.0\n2. User testing\n3. Marketing launch",
+    contentJson: null,
     folderId: "folder-1",
     category: "cat-1",
     tags: ["tag-1"],
@@ -100,6 +103,7 @@ const SEED_NOTES: Note[] = [
     id: "note-4",
     title: "API design notes",
     content: "REST vs GraphQL comparison for our new service.",
+    contentJson: null,
     folderId: null,
     category: "cat-1",
     tags: ["tag-2"],
@@ -119,6 +123,7 @@ const SEED_NOTES: Note[] = [
     id: "note-5",
     title: "Meeting notes",
     content: "Discussed roadmap for Q2. Action items: finalize spec, assign tasks.",
+    contentJson: null,
     folderId: "folder-2",
     category: "cat-1",
     tags: [],
@@ -136,6 +141,7 @@ const SEED_NOTES: Note[] = [
     id: "note-6",
     title: "Bookmarks",
     content: "- https://example.com\n- https://another.dev",
+    contentJson: null,
     folderId: null,
     category: "cat-2",
     tags: [],
@@ -262,6 +268,7 @@ export const usePlotStore = create<PlotState>()(
           id,
           title: partial?.title ?? "",
           content: partial?.content ?? "",
+          contentJson: partial?.contentJson ?? null,
           folderId:
             partial?.folderId ??
             (activeView.type === "folder" ? activeView.folderId : null),
@@ -426,6 +433,7 @@ export const usePlotStore = create<PlotState>()(
           id,
           title: "",
           content: "",
+          contentJson: null,
           folderId: parent.folderId,
           category: parent.category,
           tags: [...parent.tags],
@@ -712,7 +720,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 7,
+      version: 8,
       migrate: (persistedState: unknown) => {
         const state = persistedState as Record<string, unknown>
         if (state.notes && Array.isArray(state.notes)) {
@@ -734,6 +742,8 @@ export const usePlotStore = create<PlotState>()(
             archivedAt: n.archivedAt ?? null,
             // v5: Thinking Chain
             parentNoteId: n.parentNoteId ?? null,
+            // v8: TipTap contentJson
+            contentJson: n.contentJson ?? null,
           }))
         }
         // v6: Phase 2 defaults
