@@ -10,6 +10,7 @@ export interface Note {
   tags: string[]
   status: NoteStatus
   priority: NotePriority
+  reads: number
   pinned: boolean
   archived: boolean
   isInbox: boolean

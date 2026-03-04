@@ -32,6 +32,7 @@ const SEED_NOTES: Note[] = [
     tags: ["tag-2"],
     status: "permanent",
     priority: "high",
+    reads: 5,
     pinned: true,
     archived: false,
     isInbox: false,
@@ -47,6 +48,7 @@ const SEED_NOTES: Note[] = [
     tags: [],
     status: "capture",
     priority: "none",
+    reads: 1,
     pinned: false,
     archived: false,
     isInbox: true,
@@ -62,6 +64,7 @@ const SEED_NOTES: Note[] = [
     tags: ["tag-1"],
     status: "project",
     priority: "urgent",
+    reads: 12,
     pinned: false,
     archived: false,
     isInbox: false,
@@ -104,6 +107,7 @@ interface PlotState {
 
   setActiveView: (view: ActiveView) => void
   setSelectedNoteId: (id: string | null) => void
+  openNote: (id: string) => void
   setSearchQuery: (query: string) => void
   setSearchOpen: (open: boolean) => void
 }
@@ -137,6 +141,7 @@ export const usePlotStore = create<PlotState>()(
           tags: partial?.tags ?? [],
           status: partial?.status ?? "capture",
           priority: partial?.priority ?? "none",
+          reads: 0,
           pinned: partial?.pinned ?? false,
           archived: false,
           isInbox: partial?.isInbox ?? activeView.type === "inbox",
@@ -303,12 +308,20 @@ export const usePlotStore = create<PlotState>()(
 
       setActiveView: (view) => set({ activeView: view, selectedNoteId: null }),
       setSelectedNoteId: (id) => set({ selectedNoteId: id }),
+      openNote: (id) => {
+        set((state) => ({
+          selectedNoteId: id,
+          notes: state.notes.map((n) =>
+            n.id === id ? { ...n, reads: (n.reads ?? 0) + 1 } : n
+          ),
+        }))
+      },
       setSearchQuery: (query) => set({ searchQuery: query }),
       setSearchOpen: (open) => set({ searchOpen: open }),
     }),
     {
       name: "plot-store",
-      version: 2,
+      version: 3,
       migrate: (persistedState: unknown) => {
         const state = persistedState as Record<string, unknown>
         if (state.notes && Array.isArray(state.notes)) {
@@ -316,6 +329,7 @@ export const usePlotStore = create<PlotState>()(
             ...n,
             status: n.status ?? "capture",
             priority: n.priority ?? "none",
+            reads: n.reads ?? 0,
           }))
         }
         return state as PlotState

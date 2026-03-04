@@ -68,7 +68,7 @@ function groupNotesByDate(notes: Note[]): { label: DateGroup; notes: Note[] }[] 
 
 function NoteRow({ note }: { note: Note }) {
   const {
-    setSelectedNoteId,
+    openNote,
     tags,
     updateNote,
     togglePin,
@@ -83,7 +83,7 @@ function NoteRow({ note }: { note: Note }) {
   return (
     <div
       className="group flex items-center gap-3 border-b border-border px-3 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer"
-      onClick={() => setSelectedNoteId(note.id)}
+      onClick={() => openNote(note.id)}
     >
       {/* Priority indicator */}
       <PriorityDropdown
