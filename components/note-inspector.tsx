@@ -18,14 +18,28 @@ import {
   Link2,
   Shield,
   Sparkles,
+  Check,
+  AlarmClock,
+  Trash2,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Inbox,
+  AlertTriangle,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useState, useMemo } from "react"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
-import { computeReadyScore, isReadyToPromote } from "@/lib/queries/notes"
+import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime } from "@/lib/queries/notes"
+import { countBacklinks } from "@/lib/backlinks"
 import { Signal, CircleDot } from "lucide-react"
 
 function InspectorSection({
@@ -74,6 +88,12 @@ export function NoteInspector() {
   const addTagToNote = usePlotStore((s) => s.addTagToNote)
   const removeTagFromNote = usePlotStore((s) => s.removeTagFromNote)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const triageKeep = usePlotStore((s) => s.triageKeep)
+  const triageSnooze = usePlotStore((s) => s.triageSnooze)
+  const triageTrash = usePlotStore((s) => s.triageTrash)
+  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const undoPromote = usePlotStore((s) => s.undoPromote)
+  const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
 
   const [folderOpen, setFolderOpen] = useState(false)
   const [categoryOpen, setCategoryOpen] = useState(false)
@@ -85,6 +105,10 @@ export function NoteInspector() {
     () => (note ? extractHeadings(note.content) : []),
     [note?.content] // eslint-disable-line react-hooks/exhaustive-deps
   )
+
+  const stale = note ? needsReview(note) : false
+  const staleSuggest = note ? isStaleSuggest(note) : false
+  const linkCount = note ? countBacklinks(note.id, notes) : 0
 
   if (!note) return null
 
@@ -153,6 +177,109 @@ export function NoteInspector() {
             </span>
           )}
         </div>
+
+        {/* Workflow Actions */}
+        {note.stage === "inbox" && note.triageStatus !== "trashed" && (
+          <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/10">
+            <button
+              onClick={() => triageKeep(note.id)}
+              className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[11px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            >
+              <Check className="h-3 w-3" />
+              Keep
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-secondary">
+                  <AlarmClock className="h-3 w-3" />
+                  Snooze
+                  <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-44">
+                <DropdownMenuItem onClick={() => triageSnooze(note.id, getSnoozeTime("3h"))} className="text-[12px]">
+                  3 hours
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => triageSnooze(note.id, getSnoozeTime("tomorrow"))} className="text-[12px]">
+                  Tomorrow 10:00 AM
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => triageSnooze(note.id, getSnoozeTime("next-week"))} className="text-[12px]">
+                  Next week 10:00 AM
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <button
+              onClick={() => triageTrash(note.id)}
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3 w-3" />
+              Trash
+            </button>
+          </div>
+        )}
+
+        {note.stage === "capture" && (
+          <div className="border-b border-border">
+            <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
+              <button
+                onClick={() => promoteToPermament(note.id)}
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                  isReadyToPromote(note, notes)
+                    ? "bg-[#45d483] text-[#0a0a0a] hover:bg-[#45d483]/80"
+                    : "border border-border bg-card text-foreground hover:bg-secondary"
+                }`}
+              >
+                <ArrowUpRight className="h-3 w-3" />
+                Promote
+              </button>
+              <button
+                onClick={() => moveBackToInbox(note.id)}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <Inbox className="h-3 w-3" />
+                Back to Inbox
+              </button>
+            </div>
+            {staleSuggest && (
+              <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
+                <AlertTriangle className="h-3 w-3 shrink-0 text-destructive" />
+                <span className="text-[11px] text-destructive">14+ days untouched.</span>
+                <button
+                  onClick={() => moveBackToInbox(note.id)}
+                  className="ml-auto text-[10px] font-medium text-destructive underline underline-offset-2 hover:no-underline"
+                >
+                  Move to Inbox?
+                </button>
+              </div>
+            )}
+            {!staleSuggest && stale && (
+              <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
+                <AlertTriangle className="h-3 w-3 shrink-0 text-chart-3" />
+                <span className="text-[11px] text-chart-3">Review needed - 7+ days untouched.</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {note.stage === "permanent" && (
+          <div className="border-b border-border">
+            <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
+              <button
+                onClick={() => undoPromote(note.id)}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <ArrowDownLeft className="h-3 w-3" />
+                Demote to Capture
+              </button>
+            </div>
+            {linkCount === 0 && (
+              <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
+                <Link2 className="h-3 w-3 shrink-0 text-chart-3" />
+                <span className="text-[11px] text-chart-3">Unlinked - add connections to strengthen graph.</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Dates */}
         <InspectorSection title="Dates" icon={<Calendar className="h-3.5 w-3.5" />}>
