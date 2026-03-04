@@ -66,20 +66,16 @@ function groupNotesByDate(notes: Note[]): { label: DateGroup; notes: Note[] }[] 
 
 /* ── NoteRow ─────────────────────────────────────────────── */
 
-function NoteRow({ note, compact }: { note: Note; compact: boolean }) {
-  const { selectedNoteId, setSelectedNoteId, tags, togglePin, toggleArchive, duplicateNote, deleteNote } =
+function NoteRow({ note }: { note: Note }) {
+  const { setSelectedNoteId, tags, togglePin, toggleArchive, duplicateNote, deleteNote } =
     usePlotStore()
-  const isSelected = selectedNoteId === note.id
 
-  const preview = stripMarkdown(note.content).slice(0, compact ? 50 : 80)
+  const preview = stripMarkdown(note.content).slice(0, 80)
   const noteTags = tags.filter((t) => note.tags.includes(t.id)).slice(0, 2)
 
   return (
     <div
-      className={cn(
-        "group flex items-center gap-3 border-b border-border px-3 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer",
-        isSelected && "bg-accent/10 border-l-2 border-l-accent"
-      )}
+      className="group flex items-center gap-3 border-b border-border px-3 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer"
       onClick={() => setSelectedNoteId(note.id)}
     >
       {/* Pin icon */}
@@ -99,8 +95,8 @@ function NoteRow({ note, compact }: { note: Note; compact: boolean }) {
         )}
       </div>
 
-      {/* Tag badges - hide in compact mode */}
-      {!compact && noteTags.length > 0 && (
+      {/* Tag badges */}
+      {noteTags.length > 0 && (
         <div className="flex shrink-0 items-center gap-1">
           {noteTags.map((tag) => (
             <span
@@ -184,7 +180,6 @@ export function NoteList() {
   const filteredNotes = getFilteredNotes(state)
   const viewTitle = getViewTitle(state.activeView, state)
   const groups = groupNotesByDate(filteredNotes)
-  const hasSelectedNote = state.selectedNoteId !== null
 
   return (
     <main className="flex h-full flex-col overflow-hidden bg-background">
@@ -197,24 +192,20 @@ export function NoteList() {
           </span>
         </div>
         <div className="flex items-center gap-1">
-          {!hasSelectedNote && (
-            <>
-              <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <Filter className="h-3 w-3" />
-                Filter
-              </button>
-              <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <ArrowUpDown className="h-3 w-3" />
-                Sort
-              </button>
-            </>
-          )}
+          <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+            <Filter className="h-3 w-3" />
+            Filter
+          </button>
+          <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+            <ArrowUpDown className="h-3 w-3" />
+            Sort
+          </button>
           <button
             className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => state.createNote()}
           >
             <Plus className="h-3 w-3" />
-            {!hasSelectedNote && <span>New</span>}
+            <span>New</span>
           </button>
         </div>
       </header>
@@ -244,7 +235,7 @@ export function NoteList() {
                 </span>
               </div>
               {group.notes.map((note) => (
-                <NoteRow key={note.id} note={note} compact={hasSelectedNote} />
+                <NoteRow key={note.id} note={note} />
               ))}
             </div>
           ))}

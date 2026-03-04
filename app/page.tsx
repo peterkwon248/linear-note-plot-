@@ -35,20 +35,12 @@ export default function Page() {
       <div className="flex h-screen overflow-hidden bg-background">
         <LinearSidebar />
 
-        {/* Conditional layout: list-only vs editor+inspector */}
+        {/* Conditional layout: list-only OR editor+inspector */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Note List - takes full width when no note selected, shrinks when one is */}
-          <div
-            className={`shrink-0 overflow-hidden border-r border-border transition-all duration-300 ease-in-out ${
-              hasSelectedNote ? "w-[280px]" : "flex-1"
-            }`}
-          >
+          {!hasSelectedNote ? (
             <NoteList />
-          </div>
-
-          {/* Editor + Inspector - only visible when a note is selected */}
-          {hasSelectedNote && (
-            <div className="flex flex-1 overflow-hidden animate-in fade-in slide-in-from-right-2 duration-300">
+          ) : (
+            <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
               <NoteEditor />
               <NoteInspector />
             </div>

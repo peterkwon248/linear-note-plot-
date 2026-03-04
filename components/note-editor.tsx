@@ -5,9 +5,9 @@ import {
   Pin,
   Archive,
   Trash2,
-  FileText,
   MoreHorizontal,
   Copy,
+  ArrowLeft,
 } from "lucide-react"
 import {
   Tooltip,
@@ -27,6 +27,7 @@ import { usePlotStore } from "@/lib/store"
 
 export function NoteEditor() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
   const categories = usePlotStore((s) => s.categories)
@@ -68,19 +69,7 @@ export function NoteEditor() {
     return () => clearTimeout(timer)
   }, [localContent]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!note) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-background">
-        <div className="text-center">
-          <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-          <p className="text-[13px] text-muted-foreground">Select a note</p>
-          <p className="text-[12px] text-muted-foreground mt-1">
-            Choose a note from the list or create a new one.
-          </p>
-        </div>
-      </div>
-    )
-  }
+  if (!note) return null
 
   const currentFolder = folders.find((f) => f.id === note.folderId)
   const currentCategory = categories.find((c) => c.id === note.category)
@@ -90,6 +79,18 @@ export function NoteEditor() {
       {/* Editor Header */}
       <header className="flex items-center justify-between border-b border-border px-4 py-2">
         <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setSelectedNoteId(null)}
+                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Back to list</TooltipContent>
+          </Tooltip>
+          <span className="mx-1 h-4 w-px bg-border" />
           {currentFolder && (
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <span
@@ -159,7 +160,10 @@ export function NoteEditor() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
-                onClick={() => deleteNote(note.id)}
+                onClick={() => {
+                  deleteNote(note.id)
+                  setSelectedNoteId(null)
+                }}
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Delete
