@@ -30,6 +30,8 @@ const SEED_NOTES: Note[] = [
     folderId: null,
     category: "cat-1",
     tags: ["tag-2"],
+    status: "permanent",
+    priority: "high",
     pinned: true,
     archived: false,
     isInbox: false,
@@ -43,6 +45,8 @@ const SEED_NOTES: Note[] = [
     folderId: null,
     category: "",
     tags: [],
+    status: "capture",
+    priority: "none",
     pinned: false,
     archived: false,
     isInbox: true,
@@ -56,6 +60,8 @@ const SEED_NOTES: Note[] = [
     folderId: "folder-1",
     category: "cat-1",
     tags: ["tag-1"],
+    status: "project",
+    priority: "urgent",
     pinned: false,
     archived: false,
     isInbox: false,
@@ -129,6 +135,8 @@ export const usePlotStore = create<PlotState>()(
             partial?.category ??
             (activeView.type === "category" ? activeView.categoryId : ""),
           tags: partial?.tags ?? [],
+          status: partial?.status ?? "capture",
+          priority: partial?.priority ?? "none",
           pinned: partial?.pinned ?? false,
           archived: false,
           isInbox: partial?.isInbox ?? activeView.type === "inbox",
@@ -300,7 +308,18 @@ export const usePlotStore = create<PlotState>()(
     }),
     {
       name: "plot-store",
-      version: 1,
+      version: 2,
+      migrate: (persistedState: unknown) => {
+        const state = persistedState as Record<string, unknown>
+        if (state.notes && Array.isArray(state.notes)) {
+          state.notes = (state.notes as Record<string, unknown>[]).map((n) => ({
+            ...n,
+            status: n.status ?? "capture",
+            priority: n.priority ?? "none",
+          }))
+        }
+        return state as PlotState
+      },
     }
   )
 )

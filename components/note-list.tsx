@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils"
 import { usePlotStore, getFilteredNotes, getViewTitle } from "@/lib/store"
 import type { Note } from "@/lib/types"
+import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 
 /* ── helpers ─────────────────────────────────────────────── */
 
@@ -67,7 +68,7 @@ function groupNotesByDate(notes: Note[]): { label: DateGroup; notes: Note[] }[] 
 /* ── NoteRow ─────────────────────────────────────────────── */
 
 function NoteRow({ note }: { note: Note }) {
-  const { setSelectedNoteId, tags, togglePin, toggleArchive, duplicateNote, deleteNote } =
+  const { setSelectedNoteId, tags, updateNote, togglePin, toggleArchive, duplicateNote, deleteNote } =
     usePlotStore()
 
   const preview = stripMarkdown(note.content).slice(0, 80)
@@ -78,6 +79,13 @@ function NoteRow({ note }: { note: Note }) {
       className="group flex items-center gap-3 border-b border-border px-3 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer"
       onClick={() => setSelectedNoteId(note.id)}
     >
+      {/* Priority indicator */}
+      <PriorityDropdown
+        value={note.priority}
+        onChange={(p) => updateNote(note.id, { priority: p })}
+        variant="inline"
+      />
+
       {/* Pin icon */}
       {note.pinned && (
         <Pin className="h-3 w-3 shrink-0 text-[#f2994a] fill-[#f2994a]" />
@@ -94,6 +102,13 @@ function NoteRow({ note }: { note: Note }) {
           </span>
         )}
       </div>
+
+      {/* Status badge */}
+      <StatusDropdown
+        value={note.status}
+        onChange={(s) => updateNote(note.id, { status: s })}
+        variant="inline"
+      />
 
       {/* Tag badges */}
       {noteTags.length > 0 && (

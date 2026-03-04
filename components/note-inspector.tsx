@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useState, useMemo } from "react"
+import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
+import { Signal, CircleDot } from "lucide-react"
 
 function InspectorSection({
   title,
@@ -149,6 +151,28 @@ export function NoteInspector() {
               </span>
             </div>
           </div>
+        </InspectorSection>
+
+        <div className="mx-4 border-b border-border" />
+
+        {/* Status */}
+        <InspectorSection title="Status" icon={<CircleDot className="h-3.5 w-3.5" />}>
+          <StatusDropdown
+            value={note.status}
+            onChange={(s) => updateNote(note.id, { status: s })}
+            variant="button"
+          />
+        </InspectorSection>
+
+        <div className="mx-4 border-b border-border" />
+
+        {/* Priority */}
+        <InspectorSection title="Priority" icon={<Signal className="h-3.5 w-3.5" />}>
+          <PriorityDropdown
+            value={note.priority}
+            onChange={(p) => updateNote(note.id, { priority: p })}
+            variant="button"
+          />
         </InspectorSection>
 
         <div className="mx-4 border-b border-border" />

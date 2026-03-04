@@ -1,3 +1,6 @@
+export type NoteStatus = "capture" | "reference" | "permanent" | "project"
+export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
+
 export interface Note {
   id: string
   title: string
@@ -5,6 +8,8 @@ export interface Note {
   folderId: string | null
   category: string
   tags: string[]
+  status: NoteStatus
+  priority: NotePriority
   pinned: boolean
   archived: boolean
   isInbox: boolean
