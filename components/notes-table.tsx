@@ -55,6 +55,24 @@ type SortDirection = "asc" | "desc"
 const STATUS_ORDER: Record<NoteStatus, number> = { capture: 0, reference: 1, permanent: 2, project: 3 }
 const PRIORITY_ORDER: Record<NotePriority, number> = { none: 0, low: 1, medium: 2, high: 3, urgent: 4 }
 
+/* ── Context tab types ─────────────────────────────────── */
+
+type ContextTab = "all" | "capture" | "reference" | "permanent" | "unlinked" | string
+
+interface SavedView {
+  id: string
+  label: string
+  tab: ContextTab
+}
+
+const DEFAULT_TABS: { id: ContextTab; label: string }[] = [
+  { id: "all", label: "All Notes" },
+  { id: "capture", label: "Capture" },
+  { id: "reference", label: "Reference" },
+  { id: "permanent", label: "Permanent" },
+  { id: "unlinked", label: "Unlinked" },
+]
+
 /* ── Filter types ──────────────────────────────────────── */
 
 type FilterType = "status" | "priority" | "links" | "reads"
@@ -116,6 +134,10 @@ export function NotesTable() {
   const [sortCol, setSortCol] = useState<SortColumn>("updated")
   const [sortDir, setSortDir] = useState<SortDirection>("desc")
   const [filters, setFilters] = useState<ActiveFilter[]>([])
+  const [activeTab, setActiveTab] = useState<ContextTab>("all")
+  const [savedViews, setSavedViews] = useState<SavedView[]>([])
+  const [isCreatingView, setIsCreatingView] = useState(false)
+  const [newViewName, setNewViewName] = useState("")
 
   const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])
 
@@ -140,9 +162,40 @@ export function NotesTable() {
     setFilters((prev) => prev.filter((_, i) => i !== idx))
   }
 
+  function handleCreateView() {
+    if (!newViewName.trim()) return
+    const view: SavedView = {
+      id: `view-${Date.now()}`,
+      label: newViewName.trim(),
+      tab: `custom-${Date.now()}`,
+    }
+    setSavedViews((prev) => [...prev, view])
+    setNewViewName("")
+    setIsCreatingView(false)
+  }
+
   // Filter then sort
   const filteredNotes = useMemo(() => {
     let result = filterNotesByRoute(notes, { type: "all" })
+
+    // Apply active tab filter
+    switch (activeTab) {
+      case "capture":
+        result = result.filter((n) => n.status === "capture")
+        break
+      case "reference":
+        result = result.filter((n) => n.status === "reference")
+        break
+      case "permanent":
+        result = result.filter((n) => n.status === "permanent")
+        break
+      case "unlinked":
+        result = result.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0)
+        break
+      case "all":
+      default:
+        break
+    }
 
     for (const f of filters) {
       switch (f.type) {
@@ -189,14 +242,14 @@ export function NotesTable() {
     })
 
     return result
-  }, [notes, filters, sortCol, sortDir, backlinksMap])
+  }, [notes, filters, sortCol, sortDir, backlinksMap, activeTab])
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Header bar ──────────────────────────────────── */}
       <header className="flex items-center justify-between border-b border-border px-4 py-2.5">
         <div className="flex items-center gap-2">
-          <h1 className="text-[14px] font-semibold text-foreground">All Notes</h1>
+          <h1 className="text-[14px] font-semibold text-foreground">Notes</h1>
           <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">
             {filteredNotes.length}
           </span>
@@ -263,6 +316,75 @@ export function NotesTable() {
           </button>
         </div>
       </header>
+
+      {/* ── Context Tabs ───────────────────────────────── */}
+      <div className="flex items-center gap-1 border-b border-border px-4 py-1.5">
+        {DEFAULT_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
+              activeTab === tab.id
+                ? "bg-secondary text-foreground"
+                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+
+        {savedViews.map((view) => (
+          <button
+            key={view.id}
+            onClick={() => setActiveTab(view.tab)}
+            className={`group/tab relative rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
+              activeTab === view.tab
+                ? "bg-secondary text-foreground"
+                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+            }`}
+          >
+            {view.label}
+            <span
+              onClick={(e) => {
+                e.stopPropagation()
+                setSavedViews((prev) => prev.filter((v) => v.id !== view.id))
+                if (activeTab === view.tab) setActiveTab("all")
+              }}
+              className="ml-1 hidden rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground group-hover/tab:inline-flex"
+            >
+              <X className="h-2.5 w-2.5" />
+            </span>
+          </button>
+        ))}
+
+        {isCreatingView ? (
+          <form
+            className="flex items-center"
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleCreateView()
+            }}
+          >
+            <input
+              autoFocus
+              value={newViewName}
+              onChange={(e) => setNewViewName(e.target.value)}
+              onBlur={() => {
+                if (!newViewName.trim()) setIsCreatingView(false)
+              }}
+              placeholder="View name..."
+              className="w-24 rounded-md border border-border bg-secondary px-2 py-0.5 text-[12px] text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-accent"
+            />
+          </form>
+        ) : (
+          <button
+            onClick={() => setIsCreatingView(true)}
+            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+          >
+            <Plus className="h-3 w-3" />
+          </button>
+        )}
+      </div>
 
       {/* ── Active Filters ──────────────────────────────── */}
       {filters.length > 0 && (
