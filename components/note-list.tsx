@@ -66,25 +66,25 @@ function groupNotesByDate(notes: Note[]): { label: DateGroup; notes: Note[] }[] 
 
 /* ── NoteRow ─────────────────────────────────────────────── */
 
-function NoteRow({ note }: { note: Note }) {
+function NoteRow({ note, compact }: { note: Note; compact: boolean }) {
   const { selectedNoteId, setSelectedNoteId, tags, togglePin, toggleArchive, duplicateNote, deleteNote } =
     usePlotStore()
   const isSelected = selectedNoteId === note.id
 
-  const preview = stripMarkdown(note.content).slice(0, 80)
+  const preview = stripMarkdown(note.content).slice(0, compact ? 50 : 80)
   const noteTags = tags.filter((t) => note.tags.includes(t.id)).slice(0, 2)
 
   return (
     <div
       className={cn(
-        "group flex items-center gap-3 border-b border-border px-4 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer",
-        isSelected && "bg-secondary/70"
+        "group flex items-center gap-3 border-b border-border px-3 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer",
+        isSelected && "bg-accent/10 border-l-2 border-l-accent"
       )}
       onClick={() => setSelectedNoteId(note.id)}
     >
       {/* Pin icon */}
       {note.pinned && (
-        <Pin className="h-3 w-3 shrink-0 text-muted-foreground fill-muted-foreground" />
+        <Pin className="h-3 w-3 shrink-0 text-[#f2994a] fill-[#f2994a]" />
       )}
 
       {/* Content area */}
@@ -99,8 +99,8 @@ function NoteRow({ note }: { note: Note }) {
         )}
       </div>
 
-      {/* Tag badges */}
-      {noteTags.length > 0 && (
+      {/* Tag badges - hide in compact mode */}
+      {!compact && noteTags.length > 0 && (
         <div className="flex shrink-0 items-center gap-1">
           {noteTags.map((tag) => (
             <span
@@ -184,30 +184,37 @@ export function NoteList() {
   const filteredNotes = getFilteredNotes(state)
   const viewTitle = getViewTitle(state.activeView, state)
   const groups = groupNotesByDate(filteredNotes)
+  const hasSelectedNote = state.selectedNoteId !== null
 
   return (
-    <main className="flex flex-1 flex-col overflow-hidden bg-background">
+    <main className="flex h-full flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <h1 className="text-[15px] font-semibold text-foreground">{viewTitle}</h1>
-          <span className="text-[13px] text-muted-foreground">{filteredNotes.length}</span>
+      <header className="flex items-center justify-between border-b border-border px-3 py-3">
+        <div className="flex items-center gap-2">
+          <h1 className="text-[14px] font-semibold text-foreground">{viewTitle}</h1>
+          <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">
+            {filteredNotes.length}
+          </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <Filter className="h-3 w-3" />
-            Filter
-          </button>
-          <button className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <ArrowUpDown className="h-3 w-3" />
-            Sort
-          </button>
+        <div className="flex items-center gap-1">
+          {!hasSelectedNote && (
+            <>
+              <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <Filter className="h-3 w-3" />
+                Filter
+              </button>
+              <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <ArrowUpDown className="h-3 w-3" />
+                Sort
+              </button>
+            </>
+          )}
           <button
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => state.createNote()}
           >
             <Plus className="h-3 w-3" />
-            New Note
+            {!hasSelectedNote && <span>New</span>}
           </button>
         </div>
       </header>
@@ -227,17 +234,17 @@ export function NoteList() {
         <div className="flex-1 overflow-y-auto">
           {groups.map((group) => (
             <div key={group.label}>
-              <div className="sticky top-0 z-10 flex items-center gap-2 bg-background/95 backdrop-blur-sm px-4 py-2 border-b border-border">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[12px] font-medium text-foreground">
+              <div className="sticky top-0 z-10 flex items-center gap-2 bg-background/95 backdrop-blur-sm px-3 py-2 border-b border-border">
+                <Calendar className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                   {group.label}
                 </span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[11px] text-muted-foreground/60">
                   {group.notes.length}
                 </span>
               </div>
               {group.notes.map((note) => (
-                <NoteRow key={note.id} note={note} />
+                <NoteRow key={note.id} note={note} compact={hasSelectedNote} />
               ))}
             </div>
           ))}
