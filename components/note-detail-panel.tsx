@@ -17,6 +17,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
+import { ConnectionsGraph } from "@/components/connections-graph"
 import type { Note } from "@/lib/types"
 
 /* ── Backlinks helper ──────────────────────────────────── */
@@ -264,6 +265,20 @@ export function NoteDetailPanel({
               No other notes reference this note yet.
             </p>
           )}
+        </PanelSection>
+
+        <div className="mx-5 border-b border-border" />
+
+        {/* Connections Graph */}
+        <PanelSection
+          title="Connections"
+          icon={<Link2 className="h-3.5 w-3.5" />}
+        >
+          <ConnectionsGraph
+            noteId={noteId}
+            notes={notes}
+            onOpenNote={onOpenNote}
+          />
         </PanelSection>
 
         <div className="mx-5 border-b border-border" />
