@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import { ColorPicker } from "./ColorPicker"
 import { TableMenu } from "./TableMenu"
+import { InsertMenu } from "@/components/insert-menu"
 
 interface FixedToolbarProps {
   editor: Editor | null
@@ -310,6 +311,8 @@ export function FixedToolbar({ editor }: FixedToolbarProps) {
         overflowY: "hidden",
       }}
     >
+      <InsertMenu editor={editor} />
+      <ToolbarDivider />
       <HeadingDropdown editor={editor} />
       <ToolbarDivider />
 
