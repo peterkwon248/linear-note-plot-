@@ -32,16 +32,7 @@
       "Bash(gh api repos/peterkwon248/plotui/git/trees/master?recursive=1 --jq '.tree[].path')",
       "Bash(gh api repos/peterkwon248/plotui/contents/components/editor --jq '.[].name')",
       "Bash(gh api repos/peterkwon248/plotui/contents/components/editor/TipTapEditor.tsx --jq '.content')",
-      "Bash(gh pr:*)",
-      "Bash(gh api repos/peterkwon248/linear-note-plot-/contents/components/insert-menu.tsx?ref=v0/peterkwon248-4d9b01bc --jq '.content')",
-      "Bash(gh api repos/peterkwon248/linear-note-plot-/contents/components/note-editor.tsx?ref=v0/peterkwon248-4d9b01bc --jq '.content')",
-      "Bash(netstat -ano)",
-      "WebFetch(domain:tiptap.dev)",
-      "WebFetch(domain:news.ycombinator.com)",
-      "Bash(ls -la \"C:/Users/kwonkyunghun/Desktop/리니어 노트앱/.claude/worktrees/wizardly-kare/app/\\(app\\)/\")",
-      "Bash(findstr \":3002\")",
-      "Bash(taskkill /PID 5504 /T /F)",
-      "Bash(cmd //c \"taskkill /PID 5504 /T /F\")"
+      "Bash(gh pr:*)"
     ]
   }
 }
