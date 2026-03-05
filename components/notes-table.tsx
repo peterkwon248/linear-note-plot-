@@ -52,22 +52,11 @@ import { usePlotStore, filterNotesByRoute } from "@/lib/store"
 import { buildBacklinksMap } from "@/lib/backlinks"
 import { getUnlinkedNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge } from "@/components/note-fields"
-import { format, formatDistanceToNowStrict } from "date-fns"
+import { format } from "date-fns"
+import { shortRelative } from "@/lib/format-utils"
 import type { Note, NoteStatus, NotePriority } from "@/lib/types"
 
 /* ── Helpers ───────────────────────────────────────────── */
-
-function shortRelative(dateStr: string): string {
-  const dist = formatDistanceToNowStrict(new Date(dateStr), { addSuffix: false })
-  return dist
-    .replace(/ seconds?/, "s")
-    .replace(/ minutes?/, "m")
-    .replace(/ hours?/, "h")
-    .replace(/ days?/, "d")
-    .replace(/ weeks?/, "w")
-    .replace(/ months?/, "mo")
-    .replace(/ years?/, "y")
-}
 
 function absDate(dateStr: string): string {
   return format(new Date(dateStr), "MMM d")

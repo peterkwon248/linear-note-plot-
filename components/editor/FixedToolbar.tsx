@@ -62,13 +62,13 @@ function ToolbarButton({
         justifyContent: "center",
         flexShrink: 0,
         cursor: disabled ? "not-allowed" : "pointer",
-        color: disabled ? "#3A3D44" : isActive ? "#FFFFFF" : "#8A8F98",
+        color: disabled ? "var(--muted-foreground)" : isActive ? "var(--foreground)" : "var(--muted-foreground)",
         backgroundColor: isActive ? "rgba(94,106,210,0.2)" : "transparent",
         border: "none",
         outline: "none",
         opacity: disabled ? 0.4 : 1,
       }}
-      className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)] transition-colors duration-75"
+      className="hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
     >
       {children}
     </button>
@@ -81,7 +81,7 @@ function ToolbarDivider() {
       style={{
         width: "1px",
         height: "16px",
-        backgroundColor: "rgba(255,255,255,0.1)",
+        backgroundColor: "color-mix(in srgb, var(--foreground) 10%, transparent)",
         margin: "0 6px",
         flexShrink: 0,
       }}
@@ -188,12 +188,12 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
           justifyContent: "center",
           flexShrink: 0,
           cursor: "pointer",
-          color: isAnyHeadingActive ? "#FFFFFF" : "#8A8F98",
+          color: isAnyHeadingActive ? "var(--foreground)" : "var(--muted-foreground)",
           backgroundColor: isAnyHeadingActive ? "rgba(94,106,210,0.2)" : "transparent",
           border: "none",
           outline: "none",
         }}
-        className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)] transition-colors duration-75"
+        className="hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
       >
         <Heading size={15} strokeWidth={1.5} />
       </button>
@@ -208,8 +208,8 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
               bottom: `${pos.bottom}px`,
               transform: "translateX(-50%)",
               minWidth: "120px",
-              backgroundColor: "#1E1F23",
-              border: "1px solid rgba(255,255,255,0.1)",
+              backgroundColor: "var(--popover)",
+              border: "1px solid var(--border)",
               borderRadius: "8px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
               padding: "4px",
@@ -231,9 +231,9 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
                   cursor: "pointer",
                   borderRadius: "6px",
                   backgroundColor: headingActiveMap[level] ? "rgba(94,106,210,0.2)" : "transparent",
-                  color: headingActiveMap[level] ? "#FFFFFF" : "#8A8F98",
+                  color: headingActiveMap[level] ? "var(--foreground)" : "var(--muted-foreground)",
                 }}
-                className="hover:bg-[rgba(255,255,255,0.06)]"
+                className="hover:bg-foreground/[0.06]"
               >
                 {label}
               </button>
@@ -250,9 +250,9 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
                 cursor: "pointer",
                 borderRadius: "6px",
                 backgroundColor: !isAnyHeadingActive ? "rgba(94,106,210,0.2)" : "transparent",
-                color: !isAnyHeadingActive ? "#FFFFFF" : "#8A8F98",
+                color: !isAnyHeadingActive ? "var(--foreground)" : "var(--muted-foreground)",
               }}
-              className="hover:bg-[rgba(255,255,255,0.06)]"
+              className="hover:bg-foreground/[0.06]"
             >
               Normal
             </button>
@@ -305,7 +305,7 @@ export function FixedToolbar({ editor }: FixedToolbarProps) {
         alignItems: "center",
         gap: "2px",
         padding: "0 16px",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
+        borderTop: "1px solid var(--border)",
         backgroundColor: "transparent",
         overflowX: "auto",
         overflowY: "hidden",

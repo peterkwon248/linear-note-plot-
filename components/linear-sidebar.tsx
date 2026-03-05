@@ -48,7 +48,7 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
+      className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
           : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
@@ -90,7 +90,7 @@ function NavButton({
   return (
     <button
       onClick={onClick}
-      className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
+      className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
           : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
@@ -166,7 +166,7 @@ function TeamLink({
   return (
     <Link
       href={href}
-      className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
+      className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
           : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
@@ -204,7 +204,7 @@ export function LinearSidebar() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
 
   return (
-    <aside className="flex h-screen w-[240px] shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none">
+    <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
       {/* Workspace Header */}
       <div className="flex items-center gap-2 px-3 py-3">
         <div className="flex h-5 w-5 items-center justify-center rounded bg-accent">

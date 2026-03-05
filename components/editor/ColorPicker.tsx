@@ -129,9 +129,9 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
           flexShrink: 0,
           transition: "all 0.1s ease",
           cursor: "pointer",
-          color: isActive ? "#FFFFFF" : "#8A8F98",
+          color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
           backgroundColor: isOpen
-            ? "rgba(255,255,255,0.1)"
+            ? "color-mix(in srgb, var(--foreground) 10%, transparent)"
             : isActive
               ? "rgba(94,106,210,0.2)"
               : "transparent",
@@ -139,7 +139,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
           outline: "none",
           position: "relative",
         }}
-        className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)]"
+        className="hover:text-foreground hover:bg-foreground/[0.06]"
       >
         {mode === "text" ? (
           <Type size={15} strokeWidth={1.5} />
@@ -154,7 +154,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
             right: "6px",
             height: "2px",
             borderRadius: "1px",
-            backgroundColor: activeColor || (mode === "text" ? "#8A8F98" : "transparent"),
+            backgroundColor: activeColor || (mode === "text" ? "var(--muted-foreground)" : "transparent"),
             transition: "background-color 0.1s",
           }}
         />
@@ -171,8 +171,8 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
               transform: "translateX(-50%)",
               padding: "8px",
               borderRadius: "10px",
-              backgroundColor: "#1E1F23",
-              border: "1px solid rgba(255,255,255,0.1)",
+              backgroundColor: "var(--popover)",
+              border: "1px solid var(--border)",
               boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
               zIndex: 9999,
               width: "188px",
@@ -187,7 +187,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                 padding: "0 2px",
               }}
             >
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "#8A8F98" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted-foreground)" }}>
                 {mode === "text" ? "Text color" : "Highlight color"}
               </span>
               <button
@@ -203,11 +203,11 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                   alignItems: "center",
                   justifyContent: "center",
                   cursor: "pointer",
-                  color: "#5E626D",
+                  color: "var(--muted-foreground)",
                   backgroundColor: "transparent",
                   border: "none",
                 }}
-                className="hover:bg-[rgba(255,255,255,0.08)] hover:text-[#8A8F98]"
+                className="hover:bg-foreground/[0.08] hover:text-muted-foreground"
               >
                 <X size={12} strokeWidth={1.5} />
               </button>
@@ -240,13 +240,13 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                       cursor: "pointer",
                       border: isColorActive
                         ? "2px solid #5E6AD2"
-                        : "1px solid rgba(255,255,255,0.08)",
+                        : "1px solid var(--border)",
                       backgroundColor: "transparent",
                       transition: "all 0.1s",
                       outline: "none",
                       padding: 0,
                     }}
-                    className="hover:border-[rgba(255,255,255,0.2)]"
+                    className="hover:border-foreground/20"
                   >
                     {!color.value ? (
                       <div
@@ -256,7 +256,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                           borderRadius: "3px",
                           position: "relative",
                           overflow: "hidden",
-                          border: "1px solid rgba(255,255,255,0.15)",
+                          border: "1px solid var(--border)",
                         }}
                       >
                         <div

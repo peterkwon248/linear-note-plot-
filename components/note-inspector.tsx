@@ -90,6 +90,8 @@ export function NoteInspector() {
   const addTagToNote = usePlotStore((s) => s.addTagToNote)
   const removeTagFromNote = usePlotStore((s) => s.removeTagFromNote)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const detailsOpen = usePlotStore((s) => s.detailsOpen)
+  const setDetailsOpen = usePlotStore((s) => s.setDetailsOpen)
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
@@ -108,10 +110,6 @@ export function NoteInspector() {
     [note?.content] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
-  const stale = note ? needsReview(note) : false
-  const staleSuggest = note ? isStaleSuggest(note) : false
-  const linkCount = note ? countBacklinks(note.id, notes) : 0
-
   const advanceToNextInbox = useCallback(() => {
     if (!note || note.stage !== "inbox") return
     const inbox = getInboxNotes(notes)
@@ -119,7 +117,11 @@ export function NoteInspector() {
     setSelectedNoteId(next?.id ?? null)
   }, [note, notes, setSelectedNoteId])
 
-  if (!note) return null
+  if (!note || !detailsOpen) return null
+
+  const stale = needsReview(note)
+  const staleSuggest = isStaleSuggest(note)
+  const linkCount = countBacklinks(note.id, notes)
 
   const currentFolder = folders.find((f) => f.id === note.folderId)
   const currentCategory = categories.find((c) => c.id === note.category)
@@ -138,7 +140,7 @@ export function NoteInspector() {
       <header className="flex items-center justify-between border-b border-border px-4 py-2.5">
         <span className="text-[13px] font-medium text-foreground">Details</span>
         <button
-          onClick={() => setSelectedNoteId(null)}
+          onClick={() => setDetailsOpen(false)}
           className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           aria-label="Close inspector"
         >

@@ -180,7 +180,7 @@
   height: 18px;
   min-width: 18px;
   min-height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid hsl(var(--border));
   border-radius: 5px;
   cursor: pointer;
   position: relative;
@@ -259,19 +259,25 @@
 
 /* Inline Code */
 .ProseMirror code {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #E0A8F0;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #9333ea;
   padding: 0.15em 0.45em;
   border-radius: 5px;
   font-size: 0.87em;
   font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dark .ProseMirror code {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #E0A8F0;
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 /* Code Block */
 .ProseMirror pre {
   background-color: hsl(var(--secondary));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid hsl(var(--border));
   border-radius: 10px;
   padding: 16px 20px;
   overflow-x: auto;
@@ -290,10 +296,151 @@
   border: none;
 }
 
+/* Image Node Wrapper */
+.image-node-wrapper {
+  margin: 0.75em 0;
+  display: block;
+}
+
+.image-node-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.image-node-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  cursor: default;
+  transition: box-shadow 0.15s;
+}
+
+.image-node-selected {
+  outline: 2px solid #5E6AD2;
+  outline-offset: 2px;
+}
+
+/* Image menu button (top-right "...") */
+.image-node-menu-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.image-node-menu-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  color: #FFFFFF;
+}
+
+/* Image dropdown menu */
+.image-node-dropdown {
+  position: absolute;
+  top: 40px;
+  right: 8px;
+  min-width: 160px;
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  z-index: 20;
+}
+
+.dark .image-node-dropdown {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+}
+
+.image-node-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: hsl(var(--foreground) / 0.8);
+  font-size: 13px;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: left;
+  transition: all 0.1s;
+}
+
+.image-node-dropdown-item:hover {
+  background: hsl(var(--accent) / 0.08);
+  color: hsl(var(--foreground));
+}
+
+.image-node-dropdown-danger:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #F87171;
+}
+
+.image-node-dropdown-separator {
+  height: 1px;
+  background: hsl(var(--border));
+  margin: 4px 0;
+}
+
+/* Image resize handle (bottom-right) */
+.image-node-resize-handle {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: nwse-resize;
+  z-index: 10;
+  transition: all 0.15s;
+}
+
+.image-node-resize-handle:hover {
+  background: rgba(0, 0, 0, 0.8);
+  color: #FFFFFF;
+}
+
+/* Legacy fallback for images outside NodeView */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+}
+
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid #5E6AD2;
+  outline-offset: 2px;
+}
+
 /* Horizontal Rule */
 .ProseMirror hr {
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid hsl(var(--border));
   margin: 2em 0;
 }
 
@@ -329,12 +476,12 @@
   table-layout: fixed;
   overflow: hidden;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid hsl(var(--border));
 }
 
 .ProseMirror th,
 .ProseMirror td {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid hsl(var(--border));
   padding: 10px 14px;
   vertical-align: top;
   position: relative;
@@ -344,7 +491,7 @@
 }
 
 .ProseMirror th {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: hsl(var(--muted));
   font-weight: 600;
   font-size: 13px;
 }
@@ -422,6 +569,37 @@
   margin-bottom: 0.15em;
 }
 
+/* === Editor Settings === */
+
+/* Word wrap OFF: code blocks use horizontal scroll */
+[data-word-wrap="off"] .ProseMirror pre code {
+  white-space: pre;
+  word-break: normal;
+}
+
+/* Word wrap ON: code blocks wrap long lines */
+[data-word-wrap="on"] .ProseMirror pre code {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Tab size */
+[data-tab-size="2"] .ProseMirror pre code {
+  tab-size: 2;
+  -moz-tab-size: 2;
+}
+
+[data-tab-size="4"] .ProseMirror pre code {
+  tab-size: 4;
+  -moz-tab-size: 4;
+}
+
+/* Code font family: sans-serif option */
+[data-code-font="sans"] .ProseMirror code,
+[data-code-font="sans"] .ProseMirror pre code {
+  font-family: var(--font-sans, 'Geist', system-ui, -apple-system, sans-serif);
+}
+
 /* Scrollbar for code blocks */
 .ProseMirror pre::-webkit-scrollbar {
   height: 6px;
@@ -432,10 +610,18 @@
 }
 
 .ProseMirror pre::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
 }
 
+.dark .ProseMirror pre::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .ProseMirror pre::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark .ProseMirror pre::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }

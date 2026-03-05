@@ -79,16 +79,16 @@ export function TableMenu({ editor }: TableMenuProps) {
           flexShrink: 0,
           transition: "all 0.1s ease",
           cursor: "pointer",
-          color: isInsideTable ? "#FFFFFF" : "#8A8F98",
+          color: isInsideTable ? "var(--foreground)" : "var(--muted-foreground)",
           backgroundColor: isOpen
-            ? "rgba(255,255,255,0.1)"
+            ? "color-mix(in srgb, var(--foreground) 10%, transparent)"
             : isInsideTable
               ? "rgba(94,106,210,0.2)"
               : "transparent",
           border: "none",
           outline: "none",
         }}
-        className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)]"
+        className="hover:text-foreground hover:bg-foreground/[0.06]"
       >
         <Grid3x3 size={15} strokeWidth={1.5} />
       </button>
@@ -104,8 +104,8 @@ export function TableMenu({ editor }: TableMenuProps) {
               transform: "translateX(-50%)",
               padding: "10px",
               borderRadius: "10px",
-              backgroundColor: "#1E1F23",
-              border: "1px solid rgba(255,255,255,0.1)",
+              backgroundColor: "var(--popover)",
+              border: "1px solid var(--border)",
               boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
               zIndex: 9999,
               minWidth: "180px",
@@ -117,7 +117,7 @@ export function TableMenu({ editor }: TableMenuProps) {
                   style={{
                     fontSize: "11px",
                     fontWeight: 600,
-                    color: "#8A8F98",
+                    color: "var(--muted-foreground)",
                     marginBottom: "8px",
                     padding: "0 2px",
                   }}
@@ -142,7 +142,7 @@ export function TableMenu({ editor }: TableMenuProps) {
                           height: "22px",
                           borderRadius: "3px",
                           border: "1px solid",
-                          borderColor: isHighlighted ? "rgba(94,106,210,0.6)" : "rgba(255,255,255,0.1)",
+                          borderColor: isHighlighted ? "rgba(94,106,210,0.6)" : "var(--border)",
                           backgroundColor: isHighlighted ? "rgba(94,106,210,0.2)" : "transparent",
                           cursor: "pointer",
                           transition: "all 0.05s",
@@ -151,24 +151,24 @@ export function TableMenu({ editor }: TableMenuProps) {
                     )
                   })}
                 </div>
-                <div style={{ fontSize: "11px", color: "#5E626D", textAlign: "center" }}>
+                <div style={{ fontSize: "11px", color: "var(--muted-foreground)", textAlign: "center" }}>
                   {hoverRow > 0 && hoverCol > 0 ? `${hoverRow} x ${hoverCol}` : "Select size"}
                 </div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: "11px", fontWeight: 600, color: "#8A8F98", marginBottom: "8px", padding: "0 2px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted-foreground)", marginBottom: "8px", padding: "0 2px" }}>
                   Edit table
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                   <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add row above" onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
                   <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add row below" onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
                   <TableAction icon={<Minus size={13} strokeWidth={1.5} />} label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
-                  <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.06)", margin: "4px 0" }} />
+                  <div style={{ height: "1px", backgroundColor: "var(--border)", margin: "4px 0" }} />
                   <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add column left" onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
                   <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add column right" onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
                   <TableAction icon={<Minus size={13} strokeWidth={1.5} />} label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
-                  <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.06)", margin: "4px 0" }} />
+                  <div style={{ height: "1px", backgroundColor: "var(--border)", margin: "4px 0" }} />
                   <TableAction icon={<Trash2 size={13} strokeWidth={1.5} />} label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
                 </div>
               </>
@@ -192,7 +192,7 @@ function TableAction({ icon, label, onClick, danger = false }: { icon: React.Rea
         borderRadius: "5px",
         fontSize: "12px",
         fontWeight: 500,
-        color: danger ? "#EF4444" : "#C1C4C9",
+        color: danger ? "#EF4444" : "var(--foreground)",
         backgroundColor: "transparent",
         border: "none",
         cursor: "pointer",
@@ -200,7 +200,7 @@ function TableAction({ icon, label, onClick, danger = false }: { icon: React.Rea
         width: "100%",
         textAlign: "left",
       }}
-      className="hover:bg-[rgba(255,255,255,0.06)]"
+      className="hover:bg-foreground/[0.06]"
     >
       {icon}
       {label}

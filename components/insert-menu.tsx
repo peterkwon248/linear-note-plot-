@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef } from "react"
 import { format } from "date-fns"
 import { Editor } from "@tiptap/react"
 import {
@@ -24,12 +25,41 @@ interface InsertMenuProps {
 }
 
 export function InsertMenu({ editor }: InsertMenuProps) {
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const handleImage = () => {
-    editor.chain().focus().insertContent("![Image](url)").run()
+    imageInputRef.current?.click()
+  }
+
+  const onImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      editor.chain().focus().setImage({ src: dataUrl, alt: file.name }).run()
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ""
   }
 
   const handleFile = () => {
-    editor.chain().focus().insertContent("[File](url)").run()
+    fileInputRef.current?.click()
+  }
+
+  const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      editor.chain().focus().insertContent(
+        `<a href="${dataUrl}" download="${file.name}">${file.name}</a>`
+      ).run()
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ""
   }
 
   const handleTable = () => {
@@ -49,6 +79,20 @@ export function InsertMenu({ editor }: InsertMenuProps) {
   }
 
   return (
+    <>
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        onChange={onImageSelected}
+        style={{ display: "none" }}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        onChange={onFileSelected}
+        style={{ display: "none" }}
+      />
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
@@ -63,7 +107,7 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             gap: "4px",
             flexShrink: 0,
             cursor: "pointer",
-            color: "#8A8F98",
+            color: "var(--muted-foreground)",
             backgroundColor: "transparent",
             border: "none",
             outline: "none",
@@ -71,7 +115,7 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             fontSize: "13px",
             fontWeight: 500,
           }}
-          className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)] transition-colors duration-75"
+          className="hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
         >
           <Plus size={14} strokeWidth={2} />
           <span>Insert</span>
@@ -80,8 +124,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
       <DropdownMenuContent
         align="start"
         style={{
-          backgroundColor: "#1E1F23",
-          border: "1px solid rgba(255,255,255,0.1)",
+          backgroundColor: "var(--popover)",
+          border: "1px solid var(--border)",
           borderRadius: "8px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
           minWidth: "180px",
@@ -97,10 +141,10 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             padding: "6px 10px",
             borderRadius: "6px",
             cursor: "pointer",
-            color: "#8A8F98",
+            color: "var(--muted-foreground)",
             fontSize: "13px",
           }}
-          className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)] focus:text-[#FFFFFF] focus:bg-[rgba(255,255,255,0.06)]"
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Image size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Image</span>
@@ -115,16 +159,16 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             padding: "6px 10px",
             borderRadius: "6px",
             cursor: "pointer",
-            color: "#8A8F98",
+            color: "var(--muted-foreground)",
             fontSize: "13px",
           }}
-          className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)] focus:text-[#FFFFFF] focus:bg-[rgba(255,255,255,0.06)]"
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Paperclip size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>File</span>
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator style={{ backgroundColor: "rgba(255,255,255,0.08)", margin: "4px 0" }} />
+        <DropdownMenuSeparator style={{ backgroundColor: "var(--border)", margin: "4px 0" }} />
 
         <DropdownMenuItem
           onSelect={handleTable}
@@ -135,10 +179,10 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             padding: "6px 10px",
             borderRadius: "6px",
             cursor: "pointer",
-            color: "#8A8F98",
+            color: "var(--muted-foreground)",
             fontSize: "13px",
           }}
-          className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)] focus:text-[#FFFFFF] focus:bg-[rgba(255,255,255,0.06)]"
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Table size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Table</span>
@@ -153,16 +197,16 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             padding: "6px 10px",
             borderRadius: "6px",
             cursor: "pointer",
-            color: "#8A8F98",
+            color: "var(--muted-foreground)",
             fontSize: "13px",
           }}
-          className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)] focus:text-[#FFFFFF] focus:bg-[rgba(255,255,255,0.06)]"
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <CalendarDays size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Date</span>
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator style={{ backgroundColor: "rgba(255,255,255,0.08)", margin: "4px 0" }} />
+        <DropdownMenuSeparator style={{ backgroundColor: "var(--border)", margin: "4px 0" }} />
 
         <DropdownMenuItem
           onSelect={handleDivider}
@@ -173,10 +217,10 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             padding: "6px 10px",
             borderRadius: "6px",
             cursor: "pointer",
-            color: "#8A8F98",
+            color: "var(--muted-foreground)",
             fontSize: "13px",
           }}
-          className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)] focus:text-[#FFFFFF] focus:bg-[rgba(255,255,255,0.06)]"
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Minus size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Divider</span>
@@ -191,15 +235,16 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             padding: "6px 10px",
             borderRadius: "6px",
             cursor: "pointer",
-            color: "#8A8F98",
+            color: "var(--muted-foreground)",
             fontSize: "13px",
           }}
-          className="hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.06)] focus:text-[#FFFFFF] focus:bg-[rgba(255,255,255,0.06)]"
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Code size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Code Block</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   )
 }

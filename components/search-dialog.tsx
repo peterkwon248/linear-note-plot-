@@ -2,8 +2,18 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
 import { usePlotStore } from "@/lib/store"
 import { getSnoozeTime } from "@/lib/queries/notes"
+import { buildBacklinksMap } from "@/lib/backlinks"
+import { shortRelative } from "@/lib/format-utils"
+import {
+  createNoteFuse,
+  searchNotes,
+  highlightMatches,
+  getTitleIndices,
+  type FuzzyNoteResult,
+} from "@/lib/fuzzy-search"
 import { toast } from "sonner"
 import {
   CommandDialog,
@@ -13,6 +23,7 @@ import {
   CommandGroup,
   CommandItem,
   CommandSeparator,
+  CommandShortcut,
 } from "@/components/ui/command"
 import {
   FileText,
@@ -34,6 +45,14 @@ import {
   Search,
   Terminal,
   Network,
+  Layers,
+  Shield,
+  ClipboardCheck,
+  FolderOpen,
+  LayoutGrid,
+  Settings,
+  Sun,
+  Moon,
 } from "lucide-react"
 
 type PaletteMode = "search" | "commands" | "links"
@@ -73,6 +92,7 @@ export function SearchDialog() {
   const addNoteToMap = usePlotStore((s) => s.addNoteToMap)
 
   const router = useRouter()
+  const { resolvedTheme, setTheme } = useTheme()
 
   const [query, setQuery] = useState("")
   const [thinkingStepInput, setThinkingStepInput] = useState(false)
@@ -137,26 +157,7 @@ export function SearchDialog() {
     [query, commandPaletteMode, setCommandPaletteMode]
   )
 
-  // Cmd/Ctrl+K and "/" keyboard shortcuts
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      // Cmd/Ctrl+K
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setSearchOpen(!searchOpen)
-        return
-      }
-      // "/" shortcut (when not in an input)
-      if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
-        const target = e.target as HTMLElement
-        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return
-        e.preventDefault()
-        setSearchOpen(true)
-      }
-    }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, [setSearchOpen, searchOpen])
+  // Ctrl+K and "/" shortcuts are now in hooks/use-global-shortcuts.ts
 
   function closePalette() {
     setSearchOpen(false)
@@ -168,25 +169,53 @@ export function SearchDialog() {
 
   // ---------- Search Mode ----------
 
-  const searchResults = useMemo(() => {
-    if (commandPaletteMode !== "search" && commandPaletteMode !== "links") return []
-    if (!query.trim()) {
-      // Show recent notes when no query
-      return [...notes]
-        .filter((n) => !n.archived && n.triageStatus !== "trashed")
+  // Filtered note pool (non-archived, non-trashed) shared by Search + Links
+  const searchableNotes = useMemo(
+    () => notes.filter((n) => !n.archived && n.triageStatus !== "trashed"),
+    [notes],
+  )
+
+  // Backlinks map — O(n²) but memoized, recalculated only when notes change
+  const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])
+
+  // Fuse instance – rebuilt only when the searchable notes change
+  const fuse = useMemo(() => createNoteFuse(searchableNotes), [searchableNotes])
+
+  // Recent notes (no query) – unchanged behavior
+  const recentNotes = useMemo(
+    () =>
+      [...searchableNotes]
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-        .slice(0, 8)
-    }
-    const q = query.toLowerCase()
-    return notes
-      .filter(
-        (n) =>
-          !n.archived &&
-          n.triageStatus !== "trashed" &&
-          (n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q))
-      )
-      .slice(0, 10)
-  }, [notes, query, commandPaletteMode])
+        .slice(0, 8),
+    [searchableNotes],
+  )
+
+  // Fuzzy search results (with query)
+  const fuzzyResults: FuzzyNoteResult[] = useMemo(() => {
+    if (commandPaletteMode !== "search" && commandPaletteMode !== "links") return []
+    if (!query.trim()) return []
+    return searchNotes(fuse, query).slice(0, 12)
+  }, [fuse, query, commandPaletteMode])
+
+  // Whether we're showing fuzzy results (non-empty query) vs recent notes
+  const hasFuzzyQuery = query.trim().length > 0
+
+  /** Build sublabel text: "Inbox · Updated 2d · 3 backlinks" */
+  function noteSublabel(note: { id: string; stage: string; updatedAt: string; createdAt: string }): string {
+    const stageLabel = note.stage.charAt(0).toUpperCase() + note.stage.slice(1)
+    const relTime = shortRelative(note.updatedAt || note.createdAt)
+    const bl = backlinksMap.get(note.id) ?? 0
+    const blSuffix = bl > 0 ? ` · ${bl} backlink${bl !== 1 ? "s" : ""}` : ""
+    return `${stageLabel} · Updated ${relTime}${blSuffix}`
+  }
+
+  // Disable cmdk's internal filter for Search/Links so Fuse controls ordering.
+  // For Commands mode, let cmdk handle its own filtering (return undefined).
+  const cmdkFilter = useMemo(
+    () =>
+      commandPaletteMode === "commands" ? undefined : () => 1,
+    [commandPaletteMode],
+  )
 
   function handleSearchSelect(noteId: string) {
     setSelectedNoteId(noteId)
@@ -243,6 +272,7 @@ export function SearchDialog() {
       }}
       title="Command Palette"
       description={dialogDescription}
+      filter={cmdkFilter}
     >
       <div className="relative">
         {/* Mode badge */}
@@ -300,31 +330,89 @@ export function SearchDialog() {
           {/* ====== SEARCH MODE ====== */}
           {commandPaletteMode === "search" && (
             <>
-              {searchResults.length > 0 && (
-                <CommandGroup heading={query.trim() ? "Results" : "Recent Notes"}>
-                  {searchResults.map((note) => (
+              {/* Fuzzy results (non-empty query) */}
+              {hasFuzzyQuery && fuzzyResults.length > 0 && (
+                <CommandGroup heading="Results">
+                  {fuzzyResults.map((result) => {
+                    const titleIndices = getTitleIndices(result.matches)
+                    return (
+                      <CommandItem
+                        key={result.note.id}
+                        value={`search-${result.note.id}`}
+                        onSelect={() => handleSearchSelect(result.note.id)}
+                      >
+                        {result.note.pinned ? (
+                          <Pin className="h-4 w-4 shrink-0 self-start mt-0.5" />
+                        ) : (
+                          <FileText className="h-4 w-4 shrink-0 self-start mt-0.5" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate">
+                            {titleIndices
+                              ? highlightMatches(result.note.title || "Untitled", titleIndices)
+                              : result.note.title || "Untitled"}
+                          </div>
+                          <div className="truncate text-xs text-muted-foreground leading-tight">
+                            {noteSublabel(result.note)}
+                          </div>
+                        </div>
+                      </CommandItem>
+                    )
+                  })}
+                </CommandGroup>
+              )}
+
+              {/* Recent notes (empty query) */}
+              {!hasFuzzyQuery && recentNotes.length > 0 && (
+                <CommandGroup heading="Recent Notes">
+                  {recentNotes.map((note) => (
                     <CommandItem
                       key={note.id}
                       value={`search-${note.id}-${note.title || "Untitled"}`}
                       onSelect={() => handleSearchSelect(note.id)}
                     >
                       {note.pinned ? (
-                        <Pin className="h-4 w-4" />
+                        <Pin className="h-4 w-4 shrink-0 self-start mt-0.5" />
                       ) : (
-                        <FileText className="h-4 w-4" />
+                        <FileText className="h-4 w-4 shrink-0 self-start mt-0.5" />
                       )}
-                      <span className="flex-1 truncate">{note.title || "Untitled"}</span>
-                      <span className="ml-2 text-xs text-muted-foreground capitalize">
-                        {note.stage}
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate">{note.title || "Untitled"}</div>
+                        <div className="truncate text-xs text-muted-foreground leading-tight">
+                          {noteSublabel(note)}
+                        </div>
+                      </div>
                     </CommandItem>
                   ))}
                 </CommandGroup>
               )}
-              {!query.trim() && (
+
+              {/* Quick actions (empty query only) */}
+              {!hasFuzzyQuery && (
                 <>
                   <CommandSeparator />
                   <CommandGroup heading="Quick Actions">
+                    <CommandItem
+                      value="quick-go-to-inbox"
+                      onSelect={() => {
+                        router.push("/inbox")
+                        closePalette()
+                      }}
+                    >
+                      <Inbox className="h-4 w-4" />
+                      <span>Go to Inbox</span>
+                      <CommandShortcut>G I</CommandShortcut>
+                    </CommandItem>
+                    <CommandItem
+                      value="quick-go-to-settings"
+                      onSelect={() => {
+                        router.push("/settings")
+                        closePalette()
+                      }}
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Go to Settings</span>
+                    </CommandItem>
                     <CommandItem
                       value="switch-to-commands"
                       onSelect={() => {
@@ -334,7 +422,7 @@ export function SearchDialog() {
                     >
                       <Terminal className="h-4 w-4" />
                       <span>Open Commands</span>
-                      <span className="ml-auto text-xs text-muted-foreground">{">"}</span>
+                      <CommandShortcut>{">"}</CommandShortcut>
                     </CommandItem>
                     {selectedNoteId && (
                       <CommandItem
@@ -346,7 +434,7 @@ export function SearchDialog() {
                       >
                         <Link2 className="h-4 w-4" />
                         <span>Link to note...</span>
-                        <span className="ml-auto text-xs text-muted-foreground">{"[["}</span>
+                        <CommandShortcut>{"[["}</CommandShortcut>
                       </CommandItem>
                     )}
                   </CommandGroup>
@@ -358,8 +446,83 @@ export function SearchDialog() {
           {/* ====== COMMANDS MODE ====== */}
           {commandPaletteMode === "commands" && (
             <>
-              {/* Global Commands */}
-              <CommandGroup heading="Global">
+              {/* Navigation */}
+              <CommandGroup heading="Navigation">
+                <CommandItem
+                  value="go-to-inbox"
+                  onSelect={() => { router.push("/inbox"); closePalette() }}
+                >
+                  <Inbox className="h-4 w-4" />
+                  <span>Go to Inbox</span>
+                  <CommandShortcut>G I</CommandShortcut>
+                </CommandItem>
+                <CommandItem
+                  value="go-to-capture"
+                  onSelect={() => { router.push("/capture"); closePalette() }}
+                >
+                  <Layers className="h-4 w-4" />
+                  <span>Go to Capture</span>
+                  <CommandShortcut>G C</CommandShortcut>
+                </CommandItem>
+                <CommandItem
+                  value="go-to-permanent"
+                  onSelect={() => { router.push("/permanent"); closePalette() }}
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>Go to Permanent</span>
+                  <CommandShortcut>G M</CommandShortcut>
+                </CommandItem>
+                <CommandItem
+                  value="go-to-review"
+                  onSelect={() => { router.push("/review"); closePalette() }}
+                >
+                  <ClipboardCheck className="h-4 w-4" />
+                  <span>Go to Review</span>
+                </CommandItem>
+                <CommandItem
+                  value="go-to-maps"
+                  onSelect={() => { router.push("/maps"); closePalette() }}
+                >
+                  <Network className="h-4 w-4" />
+                  <span>Go to Maps</span>
+                </CommandItem>
+                <CommandItem
+                  value="go-to-all-notes"
+                  onSelect={() => { router.push("/notes"); closePalette() }}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Go to All Notes</span>
+                  <CommandShortcut>G N</CommandShortcut>
+                </CommandItem>
+                <CommandItem
+                  value="go-to-projects"
+                  onSelect={() => { router.push("/projects"); closePalette() }}
+                >
+                  <FolderOpen className="h-4 w-4" />
+                  <span>Go to Projects</span>
+                  <CommandShortcut>G P</CommandShortcut>
+                </CommandItem>
+                <CommandItem
+                  value="go-to-views"
+                  onSelect={() => { router.push("/views"); closePalette() }}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  <span>Go to Views</span>
+                  <CommandShortcut>G V</CommandShortcut>
+                </CommandItem>
+                <CommandItem
+                  value="go-to-settings"
+                  onSelect={() => { router.push("/settings"); closePalette() }}
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Go to Settings</span>
+                </CommandItem>
+              </CommandGroup>
+
+              <CommandSeparator />
+
+              {/* Creation */}
+              <CommandGroup heading="Creation">
                 <CommandItem
                   value="create-new-note"
                   onSelect={() =>
@@ -372,21 +535,36 @@ export function SearchDialog() {
                 >
                   <Plus className="h-4 w-4" />
                   <span>Create New Note</span>
+                  <CommandShortcut>C</CommandShortcut>
                 </CommandItem>
+              </CommandGroup>
 
+              <CommandSeparator />
+
+              {/* System */}
+              <CommandGroup heading="System">
                 <CommandItem
-                  value="open-knowledge-maps"
-                  onSelect={() => {
-                    router.push("/maps")
-                    closePalette()
-                  }}
+                  value="toggle-theme"
+                  onSelect={() =>
+                    execCommand(
+                      () => setTheme(resolvedTheme === "dark" ? "light" : "dark"),
+                      `Switched to ${resolvedTheme === "dark" ? "light" : "dark"} mode`
+                    )
+                  }
                 >
-                  <Network className="h-4 w-4" />
-                  <span>Open Knowledge Maps</span>
+                  {resolvedTheme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                  <span>Toggle Theme</span>
                 </CommandItem>
+              </CommandGroup>
 
-                <CommandSeparator />
+              <CommandSeparator />
 
+              {/* Graph */}
+              <CommandGroup heading="Graph">
                 <CommandItem
                   value="graph-focus-depth-1"
                   onSelect={() => execCommand(() => setGraphFocusDepth(1), "Graph focus: depth 1")}
@@ -433,6 +611,7 @@ export function SearchDialog() {
                     >
                       <Pin className="h-4 w-4" />
                       <span>{selectedNote.pinned ? "Unpin Note" : "Pin Note"}</span>
+                      <CommandShortcut>⌘⇧P</CommandShortcut>
                     </CommandItem>
 
                     <CommandItem
@@ -504,6 +683,7 @@ export function SearchDialog() {
                     >
                       <Link2 className="h-4 w-4" />
                       <span>Link to Note...</span>
+                      <CommandShortcut>{"[["}</CommandShortcut>
                     </CommandItem>
 
                     {/* Add to map */}
@@ -544,6 +724,7 @@ export function SearchDialog() {
                         >
                           <CheckCircle2 className="h-4 w-4" />
                           <span>Keep</span>
+                          <CommandShortcut>K</CommandShortcut>
                         </CommandItem>
                         <CommandItem
                           value="triage-snooze"
@@ -556,6 +737,7 @@ export function SearchDialog() {
                         >
                           <Clock className="h-4 w-4" />
                           <span>Snooze until Tomorrow</span>
+                          <CommandShortcut>S</CommandShortcut>
                         </CommandItem>
                         <CommandItem
                           value="triage-trash"
@@ -565,6 +747,7 @@ export function SearchDialog() {
                         >
                           <Trash2 className="h-4 w-4" />
                           <span>Trash</span>
+                          <CommandShortcut>T</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>
                     </>
@@ -585,6 +768,7 @@ export function SearchDialog() {
                         >
                           <ArrowUpCircle className="h-4 w-4" />
                           <span>Promote to Permanent</span>
+                          <CommandShortcut>P</CommandShortcut>
                         </CommandItem>
                         <CommandItem
                           value="move-back-to-inbox"
@@ -597,6 +781,7 @@ export function SearchDialog() {
                         >
                           <Inbox className="h-4 w-4" />
                           <span>Back to Inbox</span>
+                          <CommandShortcut>B</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>
                     </>
@@ -617,6 +802,7 @@ export function SearchDialog() {
                         >
                           <ArrowDownCircle className="h-4 w-4" />
                           <span>Demote to Capture</span>
+                          <CommandShortcut>D</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>
                     </>
@@ -629,9 +815,40 @@ export function SearchDialog() {
           {/* ====== LINKS MODE ====== */}
           {commandPaletteMode === "links" && (
             <>
-              {searchResults.length > 0 && (
+              {/* Fuzzy results in Links mode */}
+              {hasFuzzyQuery && fuzzyResults.length > 0 && (
                 <CommandGroup heading="Select a note to link">
-                  {searchResults
+                  {fuzzyResults
+                    .filter((r) => r.note.id !== selectedNoteId)
+                    .map((result) => {
+                      const titleIndices = getTitleIndices(result.matches)
+                      return (
+                        <CommandItem
+                          key={result.note.id}
+                          value={`link-${result.note.id}`}
+                          onSelect={() => handleLinkSelect(result.note)}
+                        >
+                          <Link2 className="h-4 w-4 shrink-0 self-start mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <div className="truncate">
+                              {titleIndices
+                                ? highlightMatches(result.note.title || "Untitled", titleIndices)
+                                : result.note.title || "Untitled"}
+                            </div>
+                            <div className="truncate text-xs text-muted-foreground leading-tight">
+                              {noteSublabel(result.note)}
+                            </div>
+                          </div>
+                        </CommandItem>
+                      )
+                    })}
+                </CommandGroup>
+              )}
+
+              {/* Recent notes when no query in Links mode */}
+              {!hasFuzzyQuery && (
+                <CommandGroup heading="Select a note to link">
+                  {recentNotes
                     .filter((n) => n.id !== selectedNoteId)
                     .map((note) => (
                       <CommandItem
@@ -639,11 +856,13 @@ export function SearchDialog() {
                         value={`link-${note.id}-${note.title || "Untitled"}`}
                         onSelect={() => handleLinkSelect(note)}
                       >
-                        <Link2 className="h-4 w-4" />
-                        <span className="flex-1 truncate">{note.title || "Untitled"}</span>
-                        <span className="ml-2 text-xs text-muted-foreground capitalize">
-                          {note.stage}
-                        </span>
+                        <Link2 className="h-4 w-4 shrink-0 self-start mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate">{note.title || "Untitled"}</div>
+                          <div className="truncate text-xs text-muted-foreground leading-tight">
+                            {noteSublabel(note)}
+                          </div>
+                        </div>
                       </CommandItem>
                     ))}
                 </CommandGroup>
