@@ -10,25 +10,22 @@ import { NoteDetailPanel } from "@/components/note-detail-panel"
 export default function NotesPage() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
-  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const isEditing = selectedNoteId !== null
 
   const [previewId, setPreviewId] = useState<string | null>(null)
 
-  // ESC closes panel
+  // ESC closes preview panel (editor Esc is handled by use-global-shortcuts)
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         const target = e.target as HTMLElement
         if (target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
-        if (isEditing) {
-          setSelectedNoteId(null)
-        } else if (previewId) {
+        if (!isEditing && previewId) {
           setPreviewId(null)
         }
       }
     },
-    [isEditing, previewId, setSelectedNoteId]
+    [isEditing, previewId]
   )
 
   useEffect(() => {

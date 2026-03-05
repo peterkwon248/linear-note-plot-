@@ -48,7 +48,7 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
+      className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
           : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
@@ -90,7 +90,7 @@ function NavButton({
   return (
     <button
       onClick={onClick}
-      className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
+      className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
           : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
@@ -166,7 +166,7 @@ function TeamLink({
   return (
     <Link
       href={href}
-      className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
+      className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
           : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"

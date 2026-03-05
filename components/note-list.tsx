@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { usePlotStore, filterNotesByRoute, getFilterTitle } from "@/lib/store"
+import { useSettingsStore } from "@/lib/settings-store"
 import type { Note, NoteFilter } from "@/lib/types"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 
@@ -76,13 +77,14 @@ function NoteRow({ note }: { note: Note }) {
     duplicateNote,
     deleteNote,
   } = usePlotStore()
+  const confirmDelete = useSettingsStore((s) => s.confirmDelete)
 
   const preview = stripMarkdown(note.content).slice(0, 80)
   const noteTags = tags.filter((t) => note.tags.includes(t.id)).slice(0, 2)
 
   return (
     <div
-      className="group flex items-center gap-3 border-b border-border px-3 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer"
+      className="note-row group flex items-center gap-3 border-b border-border px-3 transition-colors hover:bg-secondary/50 cursor-pointer"
       onClick={() => openNote(note.id)}
     >
       {/* Priority indicator */}
@@ -182,6 +184,10 @@ function NoteRow({ note }: { note: Note }) {
             variant="destructive"
             onClick={(e) => {
               e.stopPropagation()
+              if (confirmDelete) {
+                const ok = window.confirm("Are you sure you want to delete this note?")
+                if (!ok) return
+              }
               deleteNote(note.id)
             }}
           >

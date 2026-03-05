@@ -51,7 +51,7 @@ function BubbleButton({ onClick, isActive = false, title, children }: { onClick:
       onClick={onClick}
       title={title}
       className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors duration-75 flex-shrink-0 ${
-        isActive ? "text-[#FFFFFF] bg-[rgba(255,255,255,0.12)]" : "text-[#8A8F98] hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.08)]"
+        isActive ? "text-foreground bg-foreground/[0.12]" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]"
       }`}
     >
       {children}
@@ -60,7 +60,7 @@ function BubbleButton({ onClick, isActive = false, title, children }: { onClick:
 }
 
 function BubbleDivider() {
-  return <div className="w-px h-4 bg-[rgba(255,255,255,0.1)] mx-0.5 flex-shrink-0" />
+  return <div className="w-px h-4 bg-foreground/10 mx-0.5 flex-shrink-0" />
 }
 
 function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
@@ -128,7 +128,7 @@ function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
         onClick={() => setIsOpen((prev) => !prev)}
         title="Heading"
         className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors duration-75 flex-shrink-0 ${
-          isAnyHeadingActive ? "text-[#FFFFFF] bg-[rgba(255,255,255,0.12)]" : "text-[#8A8F98] hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.08)]"
+          isAnyHeadingActive ? "text-foreground bg-foreground/[0.12]" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]"
         }`}
       >
         <Heading size={14} strokeWidth={1.5} />
@@ -141,8 +141,8 @@ function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
             left: "0",
             marginTop: "8px",
             minWidth: "120px",
-            backgroundColor: "#1E1F23",
-            border: "1px solid rgba(255,255,255,0.1)",
+            backgroundColor: "var(--popover)",
+            border: "1px solid var(--border)",
             borderRadius: "8px",
             boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
             padding: "4px",
@@ -164,9 +164,9 @@ function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
                 cursor: "pointer",
                 borderRadius: "6px",
                 backgroundColor: headingActiveMap[level] ? "rgba(94,106,210,0.2)" : "transparent",
-                color: headingActiveMap[level] ? "#FFFFFF" : "#8A8F98",
+                color: headingActiveMap[level] ? "var(--foreground)" : "var(--muted-foreground)",
               }}
-              className="hover:bg-[rgba(255,255,255,0.06)]"
+              className="hover:bg-foreground/[0.06]"
             >
               {label}
             </button>
@@ -183,9 +183,9 @@ function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
               cursor: "pointer",
               borderRadius: "6px",
               backgroundColor: !isAnyHeadingActive ? "rgba(94,106,210,0.2)" : "transparent",
-              color: !isAnyHeadingActive ? "#FFFFFF" : "#8A8F98",
+              color: !isAnyHeadingActive ? "var(--foreground)" : "var(--muted-foreground)",
             }}
-            className="hover:bg-[rgba(255,255,255,0.06)]"
+            className="hover:bg-foreground/[0.06]"
           >
             Normal
           </button>
@@ -223,16 +223,16 @@ function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
-            border: "1px solid rgba(255,255,255,0.1)",
+            border: "1px solid var(--border)",
             backgroundColor: "transparent",
             outline: "none",
             padding: 0,
             flexShrink: 0,
           }}
-          className="hover:border-[rgba(255,255,255,0.3)]"
+          className="hover:border-foreground/30"
         >
           {!color.value ? (
-            <div style={{ width: "12px", height: "12px", borderRadius: "2px", position: "relative", overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <div style={{ width: "12px", height: "12px", borderRadius: "2px", position: "relative", overflow: "hidden", border: "1px solid var(--border)" }}>
               <div style={{ position: "absolute", top: "50%", left: "-2px", right: "-2px", height: "1px", backgroundColor: "#EF4444", transform: "rotate(-45deg)" }} />
             </div>
           ) : (
@@ -242,8 +242,8 @@ function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "
       ))}
       <button
         onMouseDown={(e) => { e.preventDefault(); onClose() }}
-        style={{ width: "20px", height: "20px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#5E626D", backgroundColor: "transparent", border: "none", flexShrink: 0 }}
-        className="hover:text-[#8A8F98]"
+        style={{ width: "20px", height: "20px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--muted-foreground)", backgroundColor: "transparent", border: "none", flexShrink: 0 }}
+        className="hover:text-muted-foreground"
       >
         <X size={12} strokeWidth={1.5} />
       </button>
@@ -327,7 +327,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   return (
     <div
       ref={menuRef}
-      className={`fixed z-[100] flex items-center gap-0.5 px-1.5 py-1 rounded-[10px] bg-[#1E1F23] border border-[rgba(255,255,255,0.1)] shadow-[0_4px_24px_rgba(0,0,0,0.55)] transition-all duration-150 ${
+      className={`fixed z-[100] flex items-center gap-0.5 px-1.5 py-1 rounded-[10px] bg-popover border border-border shadow-[0_4px_24px_rgba(0,0,0,0.55)] transition-all duration-150 ${
         isVisible ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
       }`}
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
@@ -355,7 +355,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title="Text color">
             <div style={{ position: "relative" }}>
               <Type size={14} strokeWidth={1.5} />
-              <div style={{ position: "absolute", bottom: "-3px", left: "1px", right: "1px", height: "2px", borderRadius: "1px", backgroundColor: activeTextColor || "#8A8F98" }} />
+              <div style={{ position: "absolute", bottom: "-3px", left: "1px", right: "1px", height: "2px", borderRadius: "1px", backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
             </div>
           </BubbleButton>
           <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title="Highlight">

@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
@@ -17,8 +18,10 @@ import { Table } from "@tiptap/extension-table"
 import { TableRow } from "@tiptap/extension-table-row"
 import { TableCell } from "@tiptap/extension-table-cell"
 import { TableHeader } from "@tiptap/extension-table-header"
+import { ResizableImage } from "./ResizableImage"
 import { EditorToolbar } from "./EditorToolbar"
 import { FixedToolbar } from "./FixedToolbar"
+import { useSettingsStore } from "@/lib/settings-store"
 import "./EditorStyles.css"
 
 interface TipTapEditorProps {
@@ -34,6 +37,11 @@ export function TipTapEditor({
   editable = true,
   placeholder = "Start writing...",
 }: TipTapEditorProps) {
+  const spellcheck = useSettingsStore((s) => s.spellcheck)
+  const wordWrap = useSettingsStore((s) => s.wordWrap)
+  const tabSize = useSettingsStore((s) => s.tabSize)
+  const codeFontFamily = useSettingsStore((s) => s.codeFontFamily)
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -55,6 +63,7 @@ export function TipTapEditor({
       TableRow,
       TableCell,
       TableHeader,
+      ResizableImage.configure({ inline: false, allowBase64: true }),
     ],
     content: content && Object.keys(content).length > 0 ? content : undefined,
     editable,
@@ -66,11 +75,27 @@ export function TipTapEditor({
     },
     editorProps: {
       attributes: {
+        spellcheck: spellcheck ? "true" : "false",
         class:
           "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-[15px] leading-[1.75] text-foreground",
       },
     },
   })
+
+  // Sync spellcheck dynamically
+  useEffect(() => {
+    if (editor) {
+      editor.setOptions({
+        editorProps: {
+          attributes: {
+            spellcheck: spellcheck ? "true" : "false",
+            class:
+              "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-[15px] leading-[1.75] text-foreground",
+          },
+        },
+      })
+    }
+  }, [editor, spellcheck])
 
   // Sync editable prop
   if (editor && editor.isEditable !== editable) {
@@ -78,7 +103,12 @@ export function TipTapEditor({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div
+      className="flex flex-col h-full"
+      data-word-wrap={wordWrap ? "on" : "off"}
+      data-tab-size={tabSize}
+      data-code-font={codeFontFamily}
+    >
       <div className="flex-1 overflow-y-auto">
         <EditorContent editor={editor} className="h-full w-full" />
       </div>

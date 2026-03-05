@@ -1,32 +1,32 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
+import { usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
 import { LinearSidebar } from "@/components/linear-sidebar"
 import { SearchDialog } from "@/components/search-dialog"
+import { ShortcutOverlay } from "@/components/shortcut-overlay"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
+import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts"
 import { Toaster } from "sonner"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const { resolvedTheme } = useTheme()
+  const pathname = usePathname()
+  const prevPathname = useRef(pathname)
 
-  // ESC key to clear selection
+  // Clear selected note when navigating to a different route
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        const target = e.target as HTMLElement
-        if (
-          target.closest("[role='dialog']") ||
-          target.closest("[data-radix-popper-content-wrapper]")
-        ) {
-          return
-        }
-        setSelectedNoteId(null)
-      }
+    if (prevPathname.current !== pathname) {
+      setSelectedNoteId(null)
+      prevPathname.current = pathname
     }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, [setSelectedNoteId])
+  }, [pathname, setSelectedNoteId])
+
+  // Single consolidated global shortcut handler
+  useGlobalShortcuts()
 
   return (
     <TooltipProvider>
@@ -34,7 +34,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <LinearSidebar />
         <div className="flex flex-1 overflow-hidden">{children}</div>
         <SearchDialog />
-        <Toaster position="bottom-right" theme="dark" />
+        <ShortcutOverlay />
+        <Toaster position="bottom-right" theme={resolvedTheme === "dark" ? "dark" : "light"} />
       </div>
     </TooltipProvider>
   )

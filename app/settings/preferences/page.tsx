@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { Switch } from "@/components/ui/switch"
+import { useSettingsStore } from "@/lib/settings-store"
 import {
   SettingsPageTitle,
   SettingsCard,
@@ -11,10 +11,12 @@ import {
 } from "@/components/settings-ui"
 
 export default function PreferencesPage() {
-  const [language, setLanguage] = useState("en")
-  const [startView, setStartView] = useState("all")
-  const [confirmDelete, setConfirmDelete] = useState(true)
-  const [markdown, setMarkdown] = useState(true)
+  const language = useSettingsStore((s) => s.language)
+  const setLanguage = useSettingsStore((s) => s.setLanguage)
+  const startView = useSettingsStore((s) => s.startView)
+  const setStartView = useSettingsStore((s) => s.setStartView)
+  const confirmDelete = useSettingsStore((s) => s.confirmDelete)
+  const setConfirmDelete = useSettingsStore((s) => s.setConfirmDelete)
 
   return (
     <>
@@ -27,10 +29,11 @@ export default function PreferencesPage() {
             onChange={setLanguage}
             options={[
               { label: "English", value: "en" },
-              { label: "Spanish", value: "es" },
-              { label: "French", value: "fr" },
-              { label: "German", value: "de" },
-              { label: "Japanese", value: "ja" },
+              { label: "한국어", value: "ko" },
+              { label: "日本語", value: "ja" },
+              { label: "Español", value: "es" },
+              { label: "Français", value: "fr" },
+              { label: "Deutsch", value: "de" },
             ]}
           />
         </SettingRow>
@@ -38,7 +41,7 @@ export default function PreferencesPage() {
         <SettingRow label="Start view" description="Default view when opening the app">
           <SelectControl
             value={startView}
-            onChange={setStartView}
+            onChange={(v) => setStartView(v as "all" | "inbox" | "pinned")}
             options={[
               { label: "All Notes", value: "all" },
               { label: "Inbox", value: "inbox" },
@@ -52,15 +55,6 @@ export default function PreferencesPage() {
           description="Show confirmation dialog when deleting notes"
         >
           <Switch checked={confirmDelete} onCheckedChange={setConfirmDelete} />
-        </SettingRow>
-      </SettingsCard>
-
-      <SettingsCard title="Markdown">
-        <SettingRow
-          label="Live markdown preview"
-          description="Render markdown formatting as you type"
-        >
-          <Switch checked={markdown} onCheckedChange={setMarkdown} />
         </SettingRow>
       </SettingsCard>
     </>

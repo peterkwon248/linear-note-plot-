@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Copy,
   ArrowLeft,
+  PanelRight,
 } from "lucide-react"
 import {
   Tooltip,
@@ -24,6 +25,7 @@ import {
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { usePlotStore } from "@/lib/store"
+import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 
 export function NoteEditor() {
@@ -37,6 +39,9 @@ export function NoteEditor() {
   const toggleArchive = usePlotStore((s) => s.toggleArchive)
   const deleteNote = usePlotStore((s) => s.deleteNote)
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
+  const detailsOpen = usePlotStore((s) => s.detailsOpen)
+  const toggleDetailsOpen = usePlotStore((s) => s.toggleDetailsOpen)
+  const confirmDelete = useSettingsStore((s) => s.confirmDelete)
 
   const note = notes.find((n) => n.id === selectedNoteId) ?? null
 
@@ -57,6 +62,38 @@ export function NoteEditor() {
     }, 300)
     return () => clearTimeout(timer)
   }, [localTitle]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Editor keyboard shortcuts: Ctrl+S, Ctrl+Shift+P, Ctrl+Backspace
+  useEffect(() => {
+    if (!note) return
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey
+      // Ctrl+S: save (auto-saved, just prevent default)
+      if (mod && e.key === "s") {
+        e.preventDefault()
+        return
+      }
+      // Ctrl+Shift+P: toggle pin
+      if (mod && e.shiftKey && e.key === "P") {
+        e.preventDefault()
+        togglePin(note.id)
+        return
+      }
+      // Ctrl+Backspace: delete note
+      if (mod && e.key === "Backspace") {
+        e.preventDefault()
+        if (confirmDelete) {
+          const ok = window.confirm("Are you sure you want to delete this note?")
+          if (!ok) return
+        }
+        deleteNote(note.id)
+        setSelectedNoteId(null)
+        return
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [note, togglePin, deleteNote, setSelectedNoteId, confirmDelete])
 
   if (!note) return null
 
@@ -150,6 +187,10 @@ export function NoteEditor() {
               <DropdownMenuItem
                 variant="destructive"
                 onClick={() => {
+                  if (confirmDelete) {
+                    const ok = window.confirm("Are you sure you want to delete this note?")
+                    if (!ok) return
+                  }
                   deleteNote(note.id)
                   setSelectedNoteId(null)
                 }}
@@ -159,6 +200,22 @@ export function NoteEditor() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <span className="mx-0.5 h-4 w-px bg-border" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={toggleDetailsOpen}
+                className={cn(
+                  "rounded-md p-1.5 transition-colors hover:bg-secondary",
+                  detailsOpen ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                <PanelRight className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{detailsOpen ? "Hide details" : "Show details"}</TooltipContent>
+          </Tooltip>
         </div>
       </header>
 

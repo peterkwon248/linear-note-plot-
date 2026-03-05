@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { Moon, Sun, Monitor } from "lucide-react"
+import { useSettingsStore } from "@/lib/settings-store"
 import {
   SettingsPageTitle,
   SettingsCard,
@@ -11,14 +11,17 @@ import {
 } from "@/components/settings-ui"
 
 export default function AppearancePage() {
-  const [theme, setTheme] = useState("dark")
-  const [fontSize, setFontSize] = useState("14")
-  const [density, setDensity] = useState("default")
+  const theme = useSettingsStore((s) => s.theme)
+  const setTheme = useSettingsStore((s) => s.setTheme)
+  const fontSize = useSettingsStore((s) => s.fontSize)
+  const setFontSize = useSettingsStore((s) => s.setFontSize)
+  const density = useSettingsStore((s) => s.density)
+  const setDensity = useSettingsStore((s) => s.setDensity)
 
   const themes = [
-    { id: "light", label: "Light", icon: Sun },
-    { id: "dark", label: "Dark", icon: Moon },
-    { id: "system", label: "System", icon: Monitor },
+    { id: "light" as const, label: "Light", icon: Sun },
+    { id: "dark" as const, label: "Dark", icon: Moon },
+    { id: "system" as const, label: "System", icon: Monitor },
   ]
 
   return (
@@ -65,7 +68,7 @@ export default function AppearancePage() {
         <SettingRow label="Display density" description="Compact or comfortable spacing">
           <SelectControl
             value={density}
-            onChange={setDensity}
+            onChange={(v) => setDensity(v as "compact" | "default" | "comfortable")}
             options={[
               { label: "Compact", value: "compact" },
               { label: "Default", value: "default" },
