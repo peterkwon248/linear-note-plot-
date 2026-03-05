@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { usePlotStore } from "@/lib/store"
+import { InsertMenu } from "@/components/insert-menu"
 
 export function NoteEditor() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
@@ -118,6 +119,38 @@ export function NoteEditor() {
             </span>
           )}
         </div>
+
+        <div className="flex items-center gap-1">
+          <InsertMenu
+            onInsertImage={() => {
+              setLocalContent((prev) => prev + "\n![Image description](url)\n")
+            }}
+            onInsertFile={() => {
+              setLocalContent((prev) => prev + "\n[File attachment](url)\n")
+            }}
+            onInsertTable={() => {
+              setLocalContent(
+                (prev) =>
+                  prev +
+                  "\n| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Cell 1   | Cell 2   | Cell 3   |\n"
+              )
+            }}
+            onInsertDate={() => {
+              setLocalContent(
+                (prev) => prev + format(new Date(), "yyyy-MM-dd")
+              )
+            }}
+            onInsertDivider={() => {
+              setLocalContent((prev) => prev + "\n---\n")
+            }}
+            onInsertCodeBlock={() => {
+              setLocalContent((prev) => prev + "\n```\n\n```\n")
+            }}
+          />
+
+          <span className="mx-1 h-4 w-px bg-border" />
+        </div>
+
         <div className="flex items-center gap-0.5">
           <Tooltip>
             <TooltipTrigger asChild>
