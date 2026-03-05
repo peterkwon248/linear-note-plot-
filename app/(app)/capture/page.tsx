@@ -60,7 +60,7 @@ export default function CapturePage() {
       if (target.closest("input") || target.closest("textarea") || target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
 
       const note = notes.find((n) => n.id === previewId)
-      if (!note || note.stage !== "capture") return
+      if (!note || note.status !== "capture") return
 
       switch (e.key.toLowerCase()) {
         case "p":
@@ -294,7 +294,7 @@ function CaptureDetailPanel({
       />
 
       {/* Promote bar */}
-      {note.stage === "capture" && (
+      {note.status === "capture" && (
         <div className="shrink-0 border-t border-border bg-secondary/30 px-4 py-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[11px] text-muted-foreground">

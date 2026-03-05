@@ -190,11 +190,11 @@ export default function MapDetailPage() {
                     <Plus className="h-3 w-3 text-accent shrink-0" />
                     <span className="truncate text-[12px] text-foreground">{note.title || "Untitled"}</span>
                     <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                      note.stage === "inbox" ? "bg-accent/10 text-accent" :
-                      note.stage === "capture" ? "bg-chart-2/10 text-chart-2" :
+                      note.status === "inbox" ? "bg-accent/10 text-accent" :
+                      note.status === "capture" ? "bg-chart-2/10 text-chart-2" :
                       "bg-chart-5/10 text-chart-5"
                     }`}>
-                      {note.stage}
+                      {note.status}
                     </span>
                   </div>
                 ))

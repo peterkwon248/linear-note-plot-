@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useState, useMemo, useCallback } from "react"
-import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
+import { StatusDropdown, PriorityDropdown, ProjectLevelDropdown, ProjectDropdown, PROJECT_LEVEL_CONFIG } from "@/components/note-fields"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { countBacklinks } from "@/lib/backlinks"
 import { Signal, CircleDot } from "lucide-react"
@@ -105,13 +105,19 @@ export function NoteInspector() {
 
   const note = notes.find((n) => n.id === selectedNoteId) ?? null
 
+  const existingProjects = useMemo(() => {
+    const set = new Set<string>()
+    for (const n of notes) if (n.project) set.add(n.project)
+    return Array.from(set).sort()
+  }, [notes])
+
   const headings = useMemo(
     () => (note ? extractHeadings(note.content) : []),
     [note?.content] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const advanceToNextInbox = useCallback(() => {
-    if (!note || note.stage !== "inbox") return
+    if (!note || note.status !== "inbox") return
     const inbox = getInboxNotes(notes)
     const next = inbox.find((n) => n.id !== note.id)
     setSelectedNoteId(next?.id ?? null)
@@ -165,26 +171,21 @@ export function NoteInspector() {
           )}
           {/* Stage badge */}
           <span className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium ${
-            note.stage === "inbox"
+            note.status === "inbox"
               ? "bg-accent/10 text-accent"
-              : note.stage === "capture"
+              : note.status === "capture"
               ? "bg-[#26b5ce]/10 text-[#26b5ce]"
-              : note.stage === "permanent"
+              : note.status === "permanent"
               ? "bg-[#45d483]/10 text-[#45d483]"
               : "bg-accent/10 text-accent"
           }`}>
-            {note.stage === "permanent" && <Shield className="h-3 w-3" />}
-            {note.stage ? note.stage.charAt(0).toUpperCase() + note.stage.slice(1) : "Inbox"}
+            {note.status === "permanent" && <Shield className="h-3 w-3" />}
+            {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Inbox"}
           </span>
-          {note.stage === "capture" && isReadyToPromote(note, notes) && (
+          {note.status === "capture" && isReadyToPromote(note, notes) && (
             <span className="flex items-center gap-1 rounded-md bg-[#45d483]/10 px-2 py-0.5 text-[11px] font-medium text-[#45d483]">
               <Sparkles className="h-3 w-3" />
               Ready to promote
-            </span>
-          )}
-          {!note.pinned && !note.archived && !note.stage && note.isInbox && (
-            <span className="flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">
-              Inbox
             </span>
           )}
           {note.parentNoteId && (
@@ -196,7 +197,7 @@ export function NoteInspector() {
         </div>
 
         {/* Workflow Actions */}
-        {note.stage === "inbox" && note.triageStatus !== "trashed" && (
+        {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/10">
             <button
               onClick={() => { triageKeep(note.id); toast("Moved to Capture"); advanceToNextInbox() }}
@@ -235,7 +236,7 @@ export function NoteInspector() {
           </div>
         )}
 
-        {note.stage === "capture" && (
+        {note.status === "capture" && (
           <div className="border-b border-border">
             <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
               <button
@@ -278,7 +279,7 @@ export function NoteInspector() {
           </div>
         )}
 
-        {note.stage === "permanent" && (
+        {note.status === "permanent" && (
           <div className="border-b border-border">
             <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
               <button
@@ -336,6 +337,35 @@ export function NoteInspector() {
             onChange={(p) => updateNote(note.id, { priority: p })}
             variant="button"
           />
+        </InspectorSection>
+
+        <div className="mx-4 border-b border-border" />
+
+        {/* Project */}
+        <InspectorSection title="Project" icon={<Layers className="h-3.5 w-3.5" />}>
+          {note.project ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] text-muted-foreground">{note.project}</span>
+                <ProjectLevelDropdown
+                  value={note.projectLevel}
+                  onChange={(lvl) => updateNote(note.id, { projectLevel: lvl })}
+                />
+              </div>
+              <button
+                onClick={() => updateNote(note.id, { project: null, projectLevel: null })}
+                className="text-[11px] text-destructive hover:underline"
+              >
+                Remove from project
+              </button>
+            </div>
+          ) : (
+            <ProjectDropdown
+              value={null}
+              existingProjects={existingProjects}
+              onChange={(p) => updateNote(note.id, { project: p, projectLevel: "planning" })}
+            />
+          )}
         </InspectorSection>
 
         <div className="mx-4 border-b border-border" />

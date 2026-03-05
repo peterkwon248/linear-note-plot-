@@ -56,7 +56,7 @@ const REASON_ORDER: ReviewReason[] = [
   "unlinked-permanent",
 ]
 
-const STAGE_BADGE: Record<string, { label: string; className: string }> = {
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   inbox: { label: "Inbox", className: "bg-accent/10 text-accent" },
   capture: { label: "Capture", className: "bg-chart-2/10 text-chart-2" },
   permanent: { label: "Permanent", className: "bg-chart-5/10 text-chart-5" },
@@ -151,7 +151,7 @@ export default function ReviewPage() {
 
                   {/* Rows */}
                   {group.map(({ note, reason: itemReason }) => {
-                    const stageBadge = STAGE_BADGE[note.stage]
+                    const stageBadge = STATUS_BADGE[note.status]
                     const reasonBadge = REASON_BADGE[itemReason]
                     return (
                       <div

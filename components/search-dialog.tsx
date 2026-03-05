@@ -201,8 +201,8 @@ export function SearchDialog() {
   const hasFuzzyQuery = query.trim().length > 0
 
   /** Build sublabel text: "Inbox · Updated 2d · 3 backlinks" */
-  function noteSublabel(note: { id: string; stage: string; updatedAt: string; createdAt: string }): string {
-    const stageLabel = note.stage.charAt(0).toUpperCase() + note.stage.slice(1)
+  function noteSublabel(note: { id: string; status: string; updatedAt: string; createdAt: string }): string {
+    const stageLabel = note.status.charAt(0).toUpperCase() + note.status.slice(1)
     const relTime = shortRelative(note.updatedAt || note.createdAt)
     const bl = backlinksMap.get(note.id) ?? 0
     const blSuffix = bl > 0 ? ` · ${bl} backlink${bl !== 1 ? "s" : ""}` : ""
@@ -712,7 +712,7 @@ export function SearchDialog() {
                   </CommandGroup>
 
                   {/* Stage-Specific Commands */}
-                  {selectedNote.stage === "inbox" && (
+                  {selectedNote.status === "inbox" && (
                     <>
                       <CommandSeparator />
                       <CommandGroup heading="Inbox Actions">
@@ -753,7 +753,7 @@ export function SearchDialog() {
                     </>
                   )}
 
-                  {selectedNote.stage === "capture" && (
+                  {selectedNote.status === "capture" && (
                     <>
                       <CommandSeparator />
                       <CommandGroup heading="Capture Actions">
@@ -787,7 +787,7 @@ export function SearchDialog() {
                     </>
                   )}
 
-                  {selectedNote.stage === "permanent" && (
+                  {selectedNote.status === "permanent" && (
                     <>
                       <CommandSeparator />
                       <CommandGroup heading="Permanent Actions">
