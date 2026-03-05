@@ -1,0 +1,121 @@
+{
+  "version": "2.0",
+  "lastUpdated": "2026-03-05T00:51:07.472Z",
+  "activeFeatures": [
+    "editor",
+    "wizardly-kare"
+  ],
+  "primaryFeature": "editor",
+  "features": {
+    "editor": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-05T00:23:24.929Z",
+        "lastUpdated": "2026-03-05T00:51:07.472Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-kare\\components\\editor\\EditorToolbar.tsx"
+    },
+    "wizardly-kare": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-05T00:43:29.104Z",
+        "lastUpdated": "2026-03-05T00:43:29.104Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-kare\\components\\note-editor.tsx"
+    }
+  },
+  "pipeline": {
+    "currentPhase": 1,
+    "level": "Dynamic",
+    "phaseHistory": []
+  },
+  "session": {
+    "startedAt": "2026-03-05T00:16:19.956Z",
+    "onboardingCompleted": false,
+    "lastActivity": "2026-03-05T00:51:07.472Z"
+  },
+  "history": [
+    {
+      "timestamp": "2026-03-05T00:23:24.929Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:40:11.605Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:40:34.288Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:41:22.057Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:42:13.552Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:43:16.665Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:43:29.104Z",
+      "feature": "wizardly-kare",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:50:07.544Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:50:17.959Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:50:40.846Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:50:50.372Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-05T00:51:07.472Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(python -c \":*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next:*)",
+      "Bash(npm run:*)",
+      "Bash(git pull:*)",
+      "Bash(git:*)",
+      "Bash(start:*)",
+      "mcp__Claude_Preview__preview_start",
+      "WebFetch(domain:github.com)",
+      "Bash(gh api repos/peterkwon248/plot/git/trees/main?recursive=1)",
+      "Bash(gh api repos/peterkwon248/plot/git/trees/main?recursive=1 --jq '.tree[].path')",
+      "Bash(gh api repos/peterkwon248/plot/contents/components/editor --jq '.[].name')",
+      "Bash(gh api repos/peterkwon248/plot/contents/components/editor/TipTapEditor.tsx --jq '.content')",
+      "Bash(gh api repos/peterkwon248/notelab/git/trees/main?recursive=1 --jq '.tree[].path')",
+      "Bash(gh api repos/peterkwon248/notelab --jq '.default_branch')",
+      "Bash(gh api repos/peterkwon248/notelab/git/trees/master?recursive=1 --jq '.tree[].path')",
+      "Bash(gh api repos/peterkwon248/notelab/contents/src/components/editor/EditorToolbar.tsx --jq '.content')",
+      "Bash(gh api repos/peterkwon248/notelab/contents/src/components/editor/FixedToolbar.tsx --jq '.content')",
+      "Bash(gh api repos/peterkwon248/notelab/contents/src/components/editor/NoteEditor.tsx --jq '.content')",
+      "Bash(gh api repos/peterkwon248/notelab/contents/src/components/editor/EditorStyles.css --jq '.content')",
+      "Bash(gh api repos/peterkwon248/notelab/contents/src/components/editor/ColorPicker.tsx --jq '.content')",
+      "Bash(gh api repos/peterkwon248/notelab/contents/src/components/editor/TableMenu.tsx --jq '.content')",
+      "Bash(gh api repos/peterkwon248/plotui/git/trees/main?recursive=1 --jq '.tree[].path')",
+      "Bash(gh api repos/peterkwon248/plotui/git/trees/master?recursive=1 --jq '.tree[].path')",
+      "Bash(gh api repos/peterkwon248/plotui/contents/components/editor --jq '.[].name')",
+      "Bash(gh api repos/peterkwon248/plotui/contents/components/editor/TipTapEditor.tsx --jq '.content')",
+      "Bash(gh pr:*)"
+    ]
+  }
+}
