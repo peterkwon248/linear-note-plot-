@@ -215,6 +215,16 @@ interface PlotState {
   setDetailsOpen: (open: boolean) => void
   toggleDetailsOpen: () => void
 
+  // Sidebar resize / collapse / peek
+  sidebarWidth: number
+  sidebarLastWidth: number
+  sidebarCollapsed: boolean
+  sidebarPeek: boolean
+  setSidebarWidth: (width: number) => void
+  setSidebarCollapsed: (collapsed: boolean) => void
+  setSidebarPeek: (peek: boolean) => void
+  restoreSidebar: () => void
+
   // Phase 2 state
   noteEvents: NoteEvent[]
   thinkingChains: ThinkingChainSession[]
@@ -259,6 +269,12 @@ export const usePlotStore = create<PlotState>()(
       searchOpen: false,
       shortcutOverlayOpen: false,
       detailsOpen: true,
+
+      // Sidebar resize / collapse / peek
+      sidebarWidth: 240,
+      sidebarLastWidth: 240,
+      sidebarCollapsed: false,
+      sidebarPeek: false,
 
       // Phase 2 state
       noteEvents: [] as NoteEvent[],
@@ -626,6 +642,11 @@ export const usePlotStore = create<PlotState>()(
       setDetailsOpen: (open) => set({ detailsOpen: open }),
       toggleDetailsOpen: () => set((s) => ({ detailsOpen: !s.detailsOpen })),
 
+      setSidebarWidth: (width) => set({ sidebarWidth: width, sidebarLastWidth: width }),
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed, sidebarPeek: false }),
+      setSidebarPeek: (peek) => set({ sidebarPeek: peek }),
+      restoreSidebar: () => set((s) => ({ sidebarCollapsed: false, sidebarPeek: false, sidebarWidth: s.sidebarLastWidth })),
+
       /* ── Phase 2: Thinking Chain Sessions ─────────────── */
 
       startThinkingChain: (noteId) => {
@@ -730,7 +751,12 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 9,
+      version: 10,
+      partialize: (state) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { sidebarPeek, ...rest } = state
+        return rest
+      },
       migrate: (persistedState: unknown) => {
         const state = persistedState as Record<string, unknown>
         if (state.notes && Array.isArray(state.notes)) {
@@ -765,6 +791,11 @@ export const usePlotStore = create<PlotState>()(
         if (!state.knowledgeMaps) state.knowledgeMaps = []
         // v9: Details panel toggle
         if (state.detailsOpen === undefined) state.detailsOpen = true
+        // v10: Sidebar resize / collapse
+        if (state.sidebarWidth === undefined) state.sidebarWidth = 240
+        if (state.sidebarLastWidth === undefined) state.sidebarLastWidth = 240
+        if (state.sidebarCollapsed === undefined) state.sidebarCollapsed = false
+        state.sidebarPeek = false // always reset transient state
         return state as unknown as PlotState
       },
     }

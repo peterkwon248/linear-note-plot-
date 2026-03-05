@@ -204,7 +204,7 @@ export function LinearSidebar() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
 
   return (
-    <aside className="flex h-screen w-[240px] shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none">
+    <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
       {/* Workspace Header */}
       <div className="flex items-center gap-2 px-3 py-3">
         <div className="flex h-5 w-5 items-center justify-center rounded bg-accent">

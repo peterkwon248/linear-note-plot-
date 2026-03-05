@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useCallback } from "react"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
+import { PanelLeft } from "lucide-react"
 import { LinearSidebar } from "@/components/linear-sidebar"
 import { SearchDialog } from "@/components/search-dialog"
 import { ShortcutOverlay } from "@/components/shortcut-overlay"
@@ -11,11 +12,23 @@ import { usePlotStore } from "@/lib/store"
 import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts"
 import { Toaster } from "sonner"
 
+const MIN_WIDTH = 220
+const MAX_WIDTH = 360
+const COLLAPSE_THRESHOLD = 80
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const sidebarWidth = usePlotStore((s) => s.sidebarWidth)
+  const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
+  const sidebarPeek = usePlotStore((s) => s.sidebarPeek)
+  const setSidebarWidth = usePlotStore((s) => s.setSidebarWidth)
+  const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
+  const setSidebarPeek = usePlotStore((s) => s.setSidebarPeek)
+  const restoreSidebar = usePlotStore((s) => s.restoreSidebar)
   const { resolvedTheme } = useTheme()
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
+  const sidebarRef = useRef<HTMLDivElement>(null)
 
   // Clear selected note when navigating to a different route
   useEffect(() => {
@@ -28,11 +41,99 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Single consolidated global shortcut handler
   useGlobalShortcuts()
 
+  // ── Resize handle drag ──────────────────────────────────
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault()
+      const startX = e.clientX
+      const startWidth = sidebarWidth
+      document.body.style.cursor = "col-resize"
+      document.body.style.userSelect = "none"
+
+      const onPointerMove = (ev: PointerEvent) => {
+        const delta = ev.clientX - startX
+        const newWidth = startWidth + delta
+
+        if (newWidth < COLLAPSE_THRESHOLD) {
+          setSidebarCollapsed(true)
+        } else {
+          const clamped = Math.min(Math.max(newWidth, MIN_WIDTH), MAX_WIDTH)
+          setSidebarWidth(clamped)
+          if (sidebarCollapsed) setSidebarCollapsed(false)
+        }
+      }
+
+      const onPointerUp = () => {
+        document.body.style.cursor = ""
+        document.body.style.userSelect = ""
+        document.removeEventListener("pointermove", onPointerMove)
+        document.removeEventListener("pointerup", onPointerUp)
+      }
+
+      document.addEventListener("pointermove", onPointerMove)
+      document.addEventListener("pointerup", onPointerUp)
+    },
+    [sidebarWidth, sidebarCollapsed, setSidebarWidth, setSidebarCollapsed]
+  )
+
   return (
     <TooltipProvider>
-      <div className="flex h-screen overflow-hidden bg-background">
-        <LinearSidebar />
-        <div className="flex flex-1 overflow-hidden">{children}</div>
+      <div className="relative flex h-screen overflow-hidden bg-background">
+        {/* ── Collapsed toggle button ── */}
+        {sidebarCollapsed && (
+          <div
+            className="absolute left-0 top-0 z-50 flex h-full w-[40px] flex-col"
+            onMouseEnter={() => setSidebarPeek(true)}
+          >
+            <button
+              onClick={restoreSidebar}
+              className="m-1.5 mt-2.5 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              aria-label="Expand sidebar"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* ── Peek overlay sidebar ── */}
+        {sidebarCollapsed && sidebarPeek && (
+          <div
+            ref={sidebarRef}
+            className="absolute left-0 top-0 z-40 h-full animate-in slide-in-from-left-2 duration-150"
+            style={{ width: usePlotStore.getState().sidebarLastWidth }}
+            onMouseLeave={() => setSidebarPeek(false)}
+          >
+            <div className="h-full shadow-xl border-r border-border">
+              <LinearSidebar />
+            </div>
+          </div>
+        )}
+
+        {/* ── Normal sidebar ── */}
+        {!sidebarCollapsed && (
+          <div
+            className="relative shrink-0 h-full"
+            style={{ width: sidebarWidth }}
+          >
+            <LinearSidebar />
+            {/* Resize handle */}
+            <div
+              onPointerDown={handlePointerDown}
+              className="absolute right-0 top-0 z-10 h-full w-[4px] cursor-col-resize transition-colors hover:bg-primary/20 active:bg-primary/30"
+              role="separator"
+              aria-orientation="vertical"
+            />
+          </div>
+        )}
+
+        {/* ── Main content ── */}
+        <div
+          className="flex flex-1 overflow-hidden"
+          style={sidebarCollapsed ? { marginLeft: 40 } : undefined}
+        >
+          {children}
+        </div>
+
         <SearchDialog />
         <ShortcutOverlay />
         <Toaster position="bottom-right" theme={resolvedTheme === "dark" ? "dark" : "light"} />
