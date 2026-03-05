@@ -51,10 +51,10 @@ import {
 import { usePlotStore, filterNotesByRoute } from "@/lib/store"
 import { buildBacklinksMap } from "@/lib/backlinks"
 import { getUnlinkedNotes, getSnoozeTime } from "@/lib/queries/notes"
-import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge } from "@/components/note-fields"
+import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge, PROJECT_LEVEL_CONFIG, ProjectLevelDropdown, ProjectDropdown } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
-import type { Note, NoteStatus, NotePriority } from "@/lib/types"
+import type { Note, NoteStatus, NotePriority, ProjectLevel } from "@/lib/types"
 
 /* ── Helpers ───────────────────────────────────────────── */
 
@@ -64,18 +64,19 @@ function absDate(dateStr: string): string {
 
 /* ── Sort ──────────────────────────────────────────────── */
 
-type SortColumn = "title" | "status" | "links" | "reads" | "priority" | "created" | "updated"
+type SortColumn = "title" | "status" | "project" | "links" | "reads" | "priority" | "created" | "updated"
 type SortDirection = "asc" | "desc"
 
-const STATUS_ORDER: Record<NoteStatus, number> = { capture: 0, reference: 1, permanent: 2, project: 3 }
+const STATUS_ORDER: Record<NoteStatus, number> = { inbox: 0, capture: 1, reference: 2, permanent: 3 }
 const PRIORITY_ORDER: Record<NotePriority, number> = { none: 0, low: 1, medium: 2, high: 3, urgent: 4 }
 
 /* ── Context tabs ──────────────────────────────────────── */
 
-type ContextTab = "all" | "capture" | "reference" | "permanent" | "unlinked"
+type ContextTab = "all" | "inbox" | "capture" | "reference" | "permanent" | "unlinked"
 
 const TABS: { id: ContextTab; label: string }[] = [
   { id: "all", label: "All Notes" },
+  { id: "inbox", label: "Inbox" },
   { id: "capture", label: "Capture" },
   { id: "reference", label: "Reference" },
   { id: "permanent", label: "Permanent" },
@@ -134,6 +135,7 @@ export function NotesTable({
   activePreviewId?: string | null
 }) {
   const notes = usePlotStore((s) => s.notes)
+  const categories = usePlotStore((s) => s.categories)
   const updateNote = usePlotStore((s) => s.updateNote)
   const openNote = usePlotStore((s) => s.openNote)
   const createNote = usePlotStore((s) => s.createNote)
@@ -150,6 +152,12 @@ export function NotesTable({
   const [activeTab, setActiveTab] = useState<ContextTab>("all")
 
   const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])
+
+  const existingProjects = useMemo(() => {
+    const set = new Set<string>()
+    for (const n of notes) if (n.project) set.add(n.project)
+    return Array.from(set).sort()
+  }, [notes])
 
   function handleSort(col: SortColumn) {
     if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"))
@@ -172,6 +180,7 @@ export function NotesTable({
 
     // Tab filter
     switch (activeTab) {
+      case "inbox":      result = result.filter((n) => n.status === "inbox"); break
       case "capture":    result = result.filter((n) => n.status === "capture"); break
       case "reference":  result = result.filter((n) => n.status === "reference"); break
       case "permanent":  result = result.filter((n) => n.status === "permanent"); break
@@ -194,6 +203,11 @@ export function NotesTable({
       switch (sortCol) {
         case "title":    return dir * a.title.localeCompare(b.title)
         case "status":   return dir * (STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
+        case "project": {
+          const ap = a.project ?? ""
+          const bp = b.project ?? ""
+          return dir * ap.localeCompare(bp)
+        }
         case "links":    return dir * ((backlinksMap.get(a.id) ?? 0) - (backlinksMap.get(b.id) ?? 0))
         case "reads":    return dir * (a.reads - b.reads)
         case "priority": return dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
@@ -257,7 +271,7 @@ export function NotesTable({
               <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
                 Status
               </DropdownMenuItem>
-              {(["capture", "reference", "permanent", "project"] as NoteStatus[]).map((s) => (
+              {(["inbox", "capture", "reference", "permanent"] as NoteStatus[]).map((s) => (
                 <DropdownMenuItem key={s} onClick={() => addFilter("status", s)}>
                   <StatusBadge status={s} />
                 </DropdownMenuItem>
@@ -348,6 +362,9 @@ export function NotesTable({
             <div className="w-[100px] shrink-0 text-right">
               <TH label="Status" col="status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-end" />
             </div>
+            <div className="w-[80px] shrink-0 text-center">
+              <TH label="Project" col="project" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-center" />
+            </div>
             <div className="w-[56px] shrink-0 text-center">
               <TH label="Links" col="links" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-center" />
             </div>
@@ -370,12 +387,17 @@ export function NotesTable({
             <NoteRow
               key={note.id}
               note={note}
+              categories={categories}
+              existingProjects={existingProjects}
               links={backlinksMap.get(note.id) ?? 0}
               isActive={activePreviewId === note.id}
               onOpen={() => onRowClick ? onRowClick(note.id) : openNote(note.id)}
               onDoubleClick={() => openNote(note.id)}
               onStatus={(s) => updateNote(note.id, { status: s })}
               onPriority={(p) => updateNote(note.id, { priority: p })}
+              onProjectLevel={(lvl) => updateNote(note.id, { projectLevel: lvl })}
+              onSetProject={(p) => updateNote(note.id, { project: p, projectLevel: "planning" })}
+              onRemoveProject={() => updateNote(note.id, { project: null, projectLevel: null })}
               onKeep={() => triageKeep(note.id)}
               onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
               onTrash={() => triageTrash(note.id)}
@@ -394,12 +416,17 @@ export function NotesTable({
 
 function NoteRow({
   note,
+  categories,
+  existingProjects,
   links,
   isActive,
   onOpen,
   onDoubleClick,
   onStatus,
   onPriority,
+  onProjectLevel,
+  onSetProject,
+  onRemoveProject,
   onKeep,
   onSnooze,
   onTrash,
@@ -408,12 +435,17 @@ function NoteRow({
   onMoveBack,
 }: {
   note: Note
+  categories: { id: string; name: string; color: string }[]
+  existingProjects: string[]
   links: number
   isActive?: boolean
   onOpen: () => void
   onDoubleClick?: () => void
   onStatus: (s: NoteStatus) => void
   onPriority: (p: NotePriority) => void
+  onProjectLevel: (lvl: ProjectLevel) => void
+  onSetProject: (project: string) => void
+  onRemoveProject: () => void
   onKeep: () => void
   onSnooze: (opt: "3h" | "tomorrow" | "next-week") => void
   onTrash: () => void
@@ -439,17 +471,18 @@ function NoteRow({
         <span className="truncate text-[13px] text-foreground">
           {note.title || "Untitled"}
         </span>
-        {note.stage && (
-          <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-            note.stage === "inbox"
-              ? "bg-accent/10 text-accent"
-              : note.stage === "capture"
-              ? "bg-chart-2/10 text-chart-2"
-              : "bg-chart-5/10 text-chart-5"
-          }`}>
-            {note.stage}
-          </span>
-        )}
+        {(() => {
+          const cat = categories.find((c) => c.id === note.category)
+          if (!cat) return null
+          return (
+            <span
+              className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+              style={{ backgroundColor: `${cat.color}18`, color: cat.color }}
+            >
+              {cat.name}
+            </span>
+          )
+        })()}
         {links === 0 && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -465,6 +498,15 @@ function NoteRow({
       {/* Status */}
       <div className="w-[100px] shrink-0 flex justify-end" onClick={(e) => e.stopPropagation()}>
         <StatusDropdown value={note.status} onChange={onStatus} variant="inline" />
+      </div>
+
+      {/* Project */}
+      <div className="w-[80px] shrink-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+        {note.project ? (
+          <ProjectLevelDropdown value={note.projectLevel} onChange={onProjectLevel} variant="dot" />
+        ) : (
+          <ProjectDropdown value={null} existingProjects={existingProjects} onChange={onSetProject} variant="table" />
+        )}
       </div>
 
       {/* Links */}
@@ -518,7 +560,7 @@ function NoteRow({
 
       <ContextMenuContent className="w-52">
         {/* Inbox actions */}
-        {note.stage === "inbox" && note.triageStatus !== "trashed" && (
+        {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
             <ContextMenuItem onClick={onKeep} className="text-[12px]">
               <Check className="h-3.5 w-3.5 mr-2 text-accent" />
@@ -553,7 +595,7 @@ function NoteRow({
         )}
 
         {/* Capture actions */}
-        {note.stage === "capture" && (
+        {note.status === "capture" && (
           <>
             <ContextMenuItem onClick={onPromote} className="text-[12px]">
               <ArrowUpRight className="h-3.5 w-3.5 mr-2 text-[#45d483]" />
@@ -570,7 +612,7 @@ function NoteRow({
         )}
 
         {/* Permanent actions */}
-        {note.stage === "permanent" && (
+        {note.status === "permanent" && (
           <>
             <ContextMenuItem onClick={onDemote} className="text-[12px]">
               <ArrowDownLeft className="h-3.5 w-3.5 mr-2 text-muted-foreground" />

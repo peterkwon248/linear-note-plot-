@@ -1,8 +1,6 @@
-export type NoteStatus = "capture" | "reference" | "permanent" | "project"
+export type NoteStatus = "inbox" | "capture" | "reference" | "permanent"
 export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
-
-/** PRIMARY workflow stage — drives the Inbox → Capture → Permanent flow */
-export type NoteStage = "inbox" | "capture" | "permanent"
+export type ProjectLevel = "planning" | "active" | "review" | "done"
 
 /** Triage status for inbox notes */
 export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
@@ -19,16 +17,16 @@ export interface Note {
   category: string
   tags: string[]
   status: NoteStatus
+  project: string | null
+  projectLevel: ProjectLevel | null
   priority: NotePriority
   reads: number
   pinned: boolean
   archived: boolean
-  isInbox: boolean
   createdAt: string
   updatedAt: string
 
   /* ── Workflow fields ─────────────────────────────── */
-  stage: NoteStage
   triageStatus: TriageStatus
   reviewAt: string | null
   inboxRank: number
@@ -85,9 +83,9 @@ export type NoteFilter =
   | { type: "folder"; folderId: string }
   | { type: "category"; categoryId: string }
   | { type: "tag"; tagId: string }
-  | { type: "stage-inbox" }
-  | { type: "stage-capture" }
-  | { type: "stage-permanent" }
+  | { type: "status-inbox" }
+  | { type: "status-capture" }
+  | { type: "status-permanent" }
   | { type: "map"; mapId: string }
 
 /* ── Phase 2: Event Log / Timeline ──────────────────── */

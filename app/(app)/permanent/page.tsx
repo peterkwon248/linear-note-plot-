@@ -50,7 +50,7 @@ export default function PermanentPage() {
       if (target.closest("input") || target.closest("textarea") || target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
 
       const note = notes.find((n) => n.id === previewId)
-      if (!note || note.stage !== "permanent") return
+      if (!note || note.status !== "permanent") return
 
       switch (e.key.toLowerCase()) {
         case "d":

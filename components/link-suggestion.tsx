@@ -30,7 +30,7 @@ export function LinkSuggestion({
           <FileText className="h-3 w-3 shrink-0 text-muted-foreground/60" />
           <span className="truncate">{note.title}</span>
           <span className="ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground bg-secondary">
-            {note.stage}
+            {note.status}
           </span>
         </button>
       ))}

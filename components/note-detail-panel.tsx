@@ -35,7 +35,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
-import { StatusBadge, PriorityBadge } from "@/components/note-fields"
+import { StatusBadge, PriorityBadge, PROJECT_LEVEL_CONFIG, ProjectDropdown } from "@/components/note-fields"
 import { ConnectionsGraph } from "@/components/connections-graph"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { countBacklinks, suggestBacklinks } from "@/lib/backlinks"
@@ -181,6 +181,7 @@ export function NoteDetailPanel({
   embedded?: boolean
 }) {
   const notes = usePlotStore((s) => s.notes)
+  const updateNote = usePlotStore((s) => s.updateNote)
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
@@ -197,6 +198,12 @@ export function NoteDetailPanel({
   const removeNoteFromMap = usePlotStore((s) => s.removeNoteFromMap)
 
   const note = notes.find((n) => n.id === noteId)
+
+  const existingProjects = useMemo(() => {
+    const set = new Set<string>()
+    for (const n of notes) if (n.project) set.add(n.project)
+    return Array.from(set).sort()
+  }, [notes])
 
   const backlinks = useMemo(
     () => (note ? getBacklinkNotes(noteId, notes) : []),
@@ -332,16 +339,16 @@ export function NoteDetailPanel({
       if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return
       if (target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
 
-      if (note.stage === "inbox" && note.triageStatus !== "trashed") {
+      if (note.status === "inbox" && note.triageStatus !== "trashed") {
         if (e.key === "k" || e.key === "K") { e.preventDefault(); handleKeep() }
         if (e.key === "s" || e.key === "S") { e.preventDefault(); handleSnooze("tomorrow") }
         if (e.key === "t" || e.key === "T") { e.preventDefault(); handleTrash() }
       }
-      if (note.stage === "capture") {
+      if (note.status === "capture") {
         if (e.key === "p" || e.key === "P") { e.preventDefault(); handlePromote() }
         if (e.key === "b" || e.key === "B") { e.preventDefault(); handleMoveBack() }
       }
-      if (note.stage === "permanent") {
+      if (note.status === "permanent") {
         if (e.key === "d" || e.key === "D") { e.preventDefault(); handleDemote() }
       }
     }
@@ -391,7 +398,7 @@ export function NoteDetailPanel({
       </header>
 
       {/* Stage-aware workflow action bar */}
-      {note.stage === "inbox" && note.triageStatus !== "trashed" && (
+      {note.status === "inbox" && note.triageStatus !== "trashed" && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border bg-secondary/20 px-4 py-2">
           <button
             onClick={handleKeep}
@@ -433,7 +440,7 @@ export function NoteDetailPanel({
         </div>
       )}
 
-      {note.stage === "capture" && (
+      {note.status === "capture" && (
         <div className="shrink-0 border-b border-border">
           <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
             <button
@@ -478,7 +485,7 @@ export function NoteDetailPanel({
         </div>
       )}
 
-      {note.stage === "permanent" && (
+      {note.status === "permanent" && (
         <div className="shrink-0 border-b border-border">
           <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
             <button
@@ -547,19 +554,23 @@ export function NoteDetailPanel({
             <MetaRow label="Status" icon={<CircleDot className="h-3 w-3" />}>
               <StatusBadge status={note.status} />
             </MetaRow>
-            <MetaRow label="Stage" icon={<Layers className="h-3 w-3" />}>
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                note.stage === "inbox"
-                  ? "bg-accent/10 text-accent"
-                  : note.stage === "capture"
-                  ? "bg-chart-2/10 text-chart-2"
-                  : "bg-chart-5/10 text-chart-5"
-              }`}>
-                {note.stage === "permanent" && <Shield className="h-2.5 w-2.5" />}
-                {note.stage.charAt(0).toUpperCase() + note.stage.slice(1)}
-              </span>
+            <MetaRow label="Project" icon={<Layers className="h-3 w-3" />}>
+              {note.project ? (() => {
+                const cfg = PROJECT_LEVEL_CONFIG[note.projectLevel ?? "planning"] ?? PROJECT_LEVEL_CONFIG.planning
+                return (
+                  <span className="inline-flex items-center rounded-md px-2 py-1 text-[13px] font-semibold leading-none" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
+                    {cfg.label}
+                  </span>
+                )
+              })() : (
+                <ProjectDropdown
+                  value={null}
+                  existingProjects={existingProjects}
+                  onChange={(p) => updateNote(noteId, { project: p, projectLevel: "planning" })}
+                />
+              )}
             </MetaRow>
-            {note.stage === "capture" && (
+            {note.status === "capture" && (
               <MetaRow label="Ready Score" icon={<Sparkles className="h-3 w-3" />}>
                 <span className={`text-[12px] tabular-nums font-medium ${
                   readyScore >= 5 ? "text-chart-5" : readyScore >= 3 ? "text-chart-3" : "text-muted-foreground"

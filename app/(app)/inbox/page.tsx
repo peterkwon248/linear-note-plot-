@@ -92,7 +92,7 @@ export default function InboxPage() {
       if (target.closest("input") || target.closest("textarea") || target.closest("[role='dialog']")) return
 
       const note = notes.find((n) => n.id === previewId)
-      if (!note || note.stage !== "inbox" || note.triageStatus === "trashed") return
+      if (!note || note.status !== "inbox" || note.triageStatus === "trashed") return
 
       switch (e.key.toLowerCase()) {
         case "k":
@@ -141,7 +141,7 @@ export default function InboxPage() {
           </div>
           <button
             className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-            onClick={() => createNote({ stage: "inbox", isInbox: true })}
+            onClick={() => createNote({ status: "inbox" })}
           >
             + Capture
           </button>
@@ -163,7 +163,7 @@ export default function InboxPage() {
               All notes have been triaged. Capture a new thought to get started.
             </p>
             <button
-              onClick={() => createNote({ stage: "inbox", isInbox: true })}
+              onClick={() => createNote({ status: "inbox" })}
               className="mt-4 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             >
               Capture new note
@@ -310,7 +310,7 @@ function InboxDetailPanel({
   if (!note) return null
 
   const showTriageBar =
-    note.stage === "inbox" && note.triageStatus !== "trashed"
+    note.status === "inbox" && note.triageStatus !== "trashed"
 
   return (
     <aside className="flex h-full w-[420px] shrink-0 flex-col overflow-hidden border-l border-border bg-card animate-in slide-in-from-right-4 fade-in duration-200">
