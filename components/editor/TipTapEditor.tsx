@@ -7,6 +7,19 @@ import TaskList from "@tiptap/extension-task-list"
 import TaskItem from "@tiptap/extension-task-item"
 import Highlight from "@tiptap/extension-highlight"
 import Link from "@tiptap/extension-link"
+import Underline from "@tiptap/extension-underline"
+import TextAlign from "@tiptap/extension-text-align"
+import Color from "@tiptap/extension-color"
+import { TextStyle } from "@tiptap/extension-text-style"
+import Superscript from "@tiptap/extension-superscript"
+import Subscript from "@tiptap/extension-subscript"
+import { Table } from "@tiptap/extension-table"
+import { TableRow } from "@tiptap/extension-table-row"
+import { TableCell } from "@tiptap/extension-table-cell"
+import { TableHeader } from "@tiptap/extension-table-header"
+import { EditorToolbar } from "./EditorToolbar"
+import { FixedToolbar } from "./FixedToolbar"
+import "./EditorStyles.css"
 
 interface TipTapEditorProps {
   content: Record<string, unknown>
@@ -22,15 +35,26 @@ export function TipTapEditor({
   placeholder = "Start writing...",
 }: TipTapEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
+        heading: { levels: [1, 2, 3, 4, 5, 6] },
       }),
       Placeholder.configure({ placeholder }),
       TaskList,
       TaskItem.configure({ nested: true }),
-      Highlight,
+      Highlight.configure({ multicolor: true }),
       Link.configure({ openOnClick: false }),
+      Underline,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Color,
+      TextStyle,
+      Superscript,
+      Subscript,
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableCell,
+      TableHeader,
     ],
     content: content && Object.keys(content).length > 0 ? content : undefined,
     editable,
@@ -43,7 +67,7 @@ export function TipTapEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-[14px] leading-relaxed text-foreground",
+          "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-[15px] leading-[1.75] text-foreground",
       },
     },
   })
@@ -54,93 +78,12 @@ export function TipTapEditor({
   }
 
   return (
-    <>
-      <EditorContent editor={editor} className="h-full w-full" />
-      <style jsx global>{`
-        .tiptap p.is-editor-empty:first-child::before {
-          content: attr(data-placeholder);
-          float: left;
-          color: hsl(var(--muted-foreground) / 0.4);
-          pointer-events: none;
-          height: 0;
-        }
-        .tiptap ul[data-type="taskList"] {
-          list-style: none;
-          padding: 0;
-        }
-        .tiptap ul[data-type="taskList"] li {
-          display: flex;
-          align-items: flex-start;
-          gap: 0.5rem;
-        }
-        .tiptap ul[data-type="taskList"] li > label {
-          flex-shrink: 0;
-          margin-top: 0.25rem;
-        }
-        .tiptap ul[data-type="taskList"] li > div {
-          flex: 1;
-        }
-        .tiptap ul {
-          list-style-type: disc;
-        }
-        .tiptap ol {
-          list-style-type: decimal;
-        }
-        .tiptap h1 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-top: 1.5rem;
-          margin-bottom: 0.5rem;
-        }
-        .tiptap h2 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          margin-top: 1.25rem;
-          margin-bottom: 0.5rem;
-        }
-        .tiptap h3 {
-          font-size: 1.1rem;
-          font-weight: 600;
-          margin-top: 1rem;
-          margin-bottom: 0.5rem;
-        }
-        .tiptap mark {
-          background-color: hsl(var(--accent) / 0.3);
-          border-radius: 0.2rem;
-          padding: 0.1rem 0.2rem;
-        }
-        .tiptap a {
-          color: hsl(var(--accent));
-          text-decoration: underline;
-          cursor: pointer;
-        }
-        .tiptap blockquote {
-          border-left: 3px solid hsl(var(--border));
-          padding-left: 1rem;
-          margin-left: 0;
-          color: hsl(var(--muted-foreground));
-        }
-        .tiptap code {
-          background-color: hsl(var(--secondary));
-          border-radius: 0.25rem;
-          padding: 0.15rem 0.3rem;
-          font-size: 0.875em;
-        }
-        .tiptap pre {
-          background-color: hsl(var(--secondary));
-          border-radius: 0.5rem;
-          padding: 0.75rem 1rem;
-          overflow-x: auto;
-        }
-        .tiptap pre code {
-          background: none;
-          padding: 0;
-        }
-        .tiptap hr {
-          border-color: hsl(var(--border));
-          margin: 1.5rem 0;
-        }
-      `}</style>
-    </>
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto">
+        <EditorContent editor={editor} className="h-full w-full" />
+      </div>
+      <EditorToolbar editor={editor} />
+      {editable && <FixedToolbar editor={editor} />}
+    </div>
   )
 }
