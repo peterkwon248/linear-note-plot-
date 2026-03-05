@@ -166,37 +166,6 @@ export function NoteEditor() {
           )}
         </div>
 
-        <div className="flex items-center gap-1">
-          <InsertMenu
-            onInsertImage={() => {
-              setLocalContent((prev) => prev + "\n![Image description](url)\n")
-            }}
-            onInsertFile={() => {
-              setLocalContent((prev) => prev + "\n[File attachment](url)\n")
-            }}
-            onInsertTable={() => {
-              setLocalContent(
-                (prev) =>
-                  prev +
-                  "\n| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Cell 1   | Cell 2   | Cell 3   |\n"
-              )
-            }}
-            onInsertDate={() => {
-              setLocalContent(
-                (prev) => prev + format(new Date(), "yyyy-MM-dd")
-              )
-            }}
-            onInsertDivider={() => {
-              setLocalContent((prev) => prev + "\n---\n")
-            }}
-            onInsertCodeBlock={() => {
-              setLocalContent((prev) => prev + "\n```\n\n```\n")
-            }}
-          />
-
-          <span className="mx-1 h-4 w-px bg-border" />
-        </div>
-
         <div className="flex items-center gap-0.5">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -252,60 +221,6 @@ export function NoteEditor() {
         </div>
       </header>
 
-      {/* Formatting Toolbar */}
-      <div className="flex items-center gap-0.5 border-b border-border px-4 py-1.5">
-        <ToolbarButton label="Bold" shortcut="Ctrl+B" onClick={() => wrapSelection("**")}>
-          <Bold className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton label="Italic" shortcut="Ctrl+I" onClick={() => wrapSelection("_")}>
-          <Italic className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton label="Strikethrough" onClick={() => wrapSelection("~~")}>
-          <Strikethrough className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton label="Inline code" onClick={() => wrapSelection("`")}>
-          <Code className="h-3.5 w-3.5" />
-        </ToolbarButton>
-
-        <span className="mx-1 h-4 w-px bg-border" />
-
-        <ToolbarButton label="Heading 1" onClick={() => insertLinePrefix("# ")}>
-          <Heading1 className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton label="Heading 2" onClick={() => insertLinePrefix("## ")}>
-          <Heading2 className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton label="Heading 3" onClick={() => insertLinePrefix("### ")}>
-          <Heading3 className="h-3.5 w-3.5" />
-        </ToolbarButton>
-
-        <span className="mx-1 h-4 w-px bg-border" />
-
-        <ToolbarButton label="Bullet list" onClick={() => insertLinePrefix("- ")}>
-          <List className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton label="Numbered list" onClick={() => insertLinePrefix("1. ")}>
-          <ListOrdered className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton label="Task list" onClick={() => insertLinePrefix("- [ ] ")}>
-          <CheckSquare className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton label="Blockquote" onClick={() => insertLinePrefix("> ")}>
-          <Quote className="h-3.5 w-3.5" />
-        </ToolbarButton>
-
-        <span className="mx-1 h-4 w-px bg-border" />
-
-        <ToolbarButton label="Link" onClick={() => wrapSelection("[", "](url)")}>
-          <Link2 className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton label="Divider" onClick={() => {
-          setLocalContent((prev) => prev + "\n---\n")
-        }}>
-          <Minus className="h-3.5 w-3.5" />
-        </ToolbarButton>
-      </div>
-
       {/* Title Input */}
       <input
         type="text"
@@ -328,6 +243,94 @@ export function NoteEditor() {
             if ((e.ctrlKey || e.metaKey) && e.key === "i") { e.preventDefault(); wrapSelection("_") }
           }}
         />
+      </div>
+
+      {/* Bottom Formatting Toolbar */}
+      <div className="sticky bottom-0 z-10 flex shrink-0 items-center gap-0.5 border-t border-border bg-background px-3 py-1.5">
+        {/* Insert menu */}
+        <InsertMenu
+          onInsertImage={() => {
+            setLocalContent((prev) => prev + "\n![Image description](url)\n")
+          }}
+          onInsertFile={() => {
+            setLocalContent((prev) => prev + "\n[File attachment](url)\n")
+          }}
+          onInsertTable={() => {
+            setLocalContent(
+              (prev) =>
+                prev +
+                "\n| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Cell 1   | Cell 2   | Cell 3   |\n"
+            )
+          }}
+          onInsertDate={() => {
+            setLocalContent(
+              (prev) => prev + format(new Date(), "yyyy-MM-dd")
+            )
+          }}
+          onInsertDivider={() => {
+            setLocalContent((prev) => prev + "\n---\n")
+          }}
+          onInsertCodeBlock={() => {
+            setLocalContent((prev) => prev + "\n```\n\n```\n")
+          }}
+        />
+
+        <span className="mx-1 h-4 w-px bg-border" />
+
+        {/* Heading */}
+        <ToolbarButton label="Heading 1" onClick={() => insertLinePrefix("# ")}>
+          <Heading1 className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Heading 2" onClick={() => insertLinePrefix("## ")}>
+          <Heading2 className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Heading 3" onClick={() => insertLinePrefix("### ")}>
+          <Heading3 className="h-3.5 w-3.5" />
+        </ToolbarButton>
+
+        <span className="mx-1 h-4 w-px bg-border" />
+
+        {/* Inline formatting */}
+        <ToolbarButton label="Bold" shortcut="Ctrl+B" onClick={() => wrapSelection("**")}>
+          <Bold className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Italic" shortcut="Ctrl+I" onClick={() => wrapSelection("_")}>
+          <Italic className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Strikethrough" onClick={() => wrapSelection("~~")}>
+          <Strikethrough className="h-3.5 w-3.5" />
+        </ToolbarButton>
+
+        <span className="mx-1 h-4 w-px bg-border" />
+
+        {/* Lists */}
+        <ToolbarButton label="Bullet list" onClick={() => insertLinePrefix("- ")}>
+          <List className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Numbered list" onClick={() => insertLinePrefix("1. ")}>
+          <ListOrdered className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Task list" onClick={() => insertLinePrefix("- [ ] ")}>
+          <CheckSquare className="h-3.5 w-3.5" />
+        </ToolbarButton>
+
+        <span className="mx-1 h-4 w-px bg-border" />
+
+        {/* Blocks */}
+        <ToolbarButton label="Blockquote" onClick={() => insertLinePrefix("> ")}>
+          <Quote className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Inline code" onClick={() => wrapSelection("`")}>
+          <Code className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Link" onClick={() => wrapSelection("[", "](url)")}>
+          <Link2 className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Divider" onClick={() => {
+          setLocalContent((prev) => prev + "\n---\n")
+        }}>
+          <Minus className="h-3.5 w-3.5" />
+        </ToolbarButton>
       </div>
     </div>
   )
