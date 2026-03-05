@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import {
   Pin,
   Archive,
@@ -8,6 +8,19 @@ import {
   MoreHorizontal,
   Copy,
   ArrowLeft,
+  Bold,
+  Italic,
+  Strikethrough,
+  Code,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListOrdered,
+  Quote,
+  CheckSquare,
+  Link2,
+  Minus,
 } from "lucide-react"
 import {
   Tooltip,
@@ -42,6 +55,39 @@ export function NoteEditor() {
 
   const [localTitle, setLocalTitle] = useState("")
   const [localContent, setLocalContent] = useState("")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  /** Wrap selection with prefix/suffix or insert at cursor */
+  const wrapSelection = useCallback((prefix: string, suffix: string = prefix) => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const selected = localContent.slice(start, end)
+    const replacement = `${prefix}${selected || "text"}${suffix}`
+    const next = localContent.slice(0, start) + replacement + localContent.slice(end)
+    setLocalContent(next)
+    requestAnimationFrame(() => {
+      ta.focus()
+      const cursorPos = start + prefix.length
+      const cursorEnd = start + prefix.length + (selected || "text").length
+      ta.setSelectionRange(cursorPos, cursorEnd)
+    })
+  }, [localContent])
+
+  /** Insert prefix at the start of the current line */
+  const insertLinePrefix = useCallback((prefix: string) => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const lineStart = localContent.lastIndexOf("\n", start - 1) + 1
+    const next = localContent.slice(0, lineStart) + prefix + localContent.slice(lineStart)
+    setLocalContent(next)
+    requestAnimationFrame(() => {
+      ta.focus()
+      ta.setSelectionRange(start + prefix.length, start + prefix.length)
+    })
+  }, [localContent])
 
   useEffect(() => {
     if (note) {
@@ -206,6 +252,60 @@ export function NoteEditor() {
         </div>
       </header>
 
+      {/* Formatting Toolbar */}
+      <div className="flex items-center gap-0.5 border-b border-border px-4 py-1.5">
+        <ToolbarButton label="Bold" shortcut="Ctrl+B" onClick={() => wrapSelection("**")}>
+          <Bold className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Italic" shortcut="Ctrl+I" onClick={() => wrapSelection("_")}>
+          <Italic className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Strikethrough" onClick={() => wrapSelection("~~")}>
+          <Strikethrough className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Inline code" onClick={() => wrapSelection("`")}>
+          <Code className="h-3.5 w-3.5" />
+        </ToolbarButton>
+
+        <span className="mx-1 h-4 w-px bg-border" />
+
+        <ToolbarButton label="Heading 1" onClick={() => insertLinePrefix("# ")}>
+          <Heading1 className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Heading 2" onClick={() => insertLinePrefix("## ")}>
+          <Heading2 className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Heading 3" onClick={() => insertLinePrefix("### ")}>
+          <Heading3 className="h-3.5 w-3.5" />
+        </ToolbarButton>
+
+        <span className="mx-1 h-4 w-px bg-border" />
+
+        <ToolbarButton label="Bullet list" onClick={() => insertLinePrefix("- ")}>
+          <List className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Numbered list" onClick={() => insertLinePrefix("1. ")}>
+          <ListOrdered className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Task list" onClick={() => insertLinePrefix("- [ ] ")}>
+          <CheckSquare className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Blockquote" onClick={() => insertLinePrefix("> ")}>
+          <Quote className="h-3.5 w-3.5" />
+        </ToolbarButton>
+
+        <span className="mx-1 h-4 w-px bg-border" />
+
+        <ToolbarButton label="Link" onClick={() => wrapSelection("[", "](url)")}>
+          <Link2 className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton label="Divider" onClick={() => {
+          setLocalContent((prev) => prev + "\n---\n")
+        }}>
+          <Minus className="h-3.5 w-3.5" />
+        </ToolbarButton>
+      </div>
+
       {/* Title Input */}
       <input
         type="text"
@@ -218,12 +318,53 @@ export function NoteEditor() {
       {/* Content Textarea */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <textarea
+          ref={textareaRef}
           value={localContent}
           onChange={(e) => setLocalContent(e.target.value)}
           placeholder="Start writing..."
           className="h-full w-full min-h-[300px] resize-none bg-transparent text-[14px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/40"
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "b") { e.preventDefault(); wrapSelection("**") }
+            if ((e.ctrlKey || e.metaKey) && e.key === "i") { e.preventDefault(); wrapSelection("_") }
+          }}
         />
       </div>
     </div>
+  )
+}
+
+/* ─── Toolbar button ─────────────────────────────── */
+
+function ToolbarButton({
+  label,
+  shortcut,
+  onClick,
+  children,
+}: {
+  label: string
+  shortcut?: string
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={onClick}
+          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent className="text-[11px]">
+        {label}
+        {shortcut && (
+          <kbd className="ml-1.5 rounded bg-muted px-1 py-0.5 text-[10px] font-mono leading-none text-muted-foreground">
+            {shortcut}
+          </kbd>
+        )}
+      </TooltipContent>
+    </Tooltip>
   )
 }
