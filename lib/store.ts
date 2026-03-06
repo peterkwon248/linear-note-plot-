@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Note, Folder, Tag, Category, ActiveView, NoteFilter, NoteStage, TriageStatus, NoteEvent, NoteEventType, ThinkingChainSession, ThinkingChainStep, KnowledgeMap } from "./types"
+import type { Note, Folder, Tag, Category, ActiveView, NoteFilter, NoteStatus, TriageStatus, NoteEvent, NoteEventType, ThinkingChainSession, ThinkingChainStep, KnowledgeMap } from "./types"
 
 const genId = () => crypto.randomUUID()
 const now = () => new Date().toISOString()
@@ -22,18 +22,17 @@ const SEED_TAGS: Tag[] = [
 ]
 
 /** Default workflow fields for a note */
-function workflowDefaults(stage: NoteStage = "inbox"): Pick<
+function workflowDefaults(status: NoteStatus = "inbox"): Pick<
   Note,
-  "stage" | "triageStatus" | "reviewAt" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "archivedAt" | "parentNoteId"
+  "triageStatus" | "reviewAt" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "archivedAt" | "parentNoteId"
 > {
   return {
-    stage,
-    triageStatus: stage === "inbox" ? "untriaged" : "kept",
+    triageStatus: status === "inbox" ? "untriaged" : "kept",
     reviewAt: null,
     inboxRank: 0,
     summary: null,
     source: "manual",
-    promotedAt: stage === "permanent" ? now() : null,
+    promotedAt: status === "permanent" ? now() : null,
     lastTouchedAt: now(),
     snoozeCount: 0,
     archivedAt: null,
@@ -56,11 +55,11 @@ const SEED_NOTES: Note[] = [
     reads: 5,
     pinned: true,
     archived: false,
-    isInbox: false,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     updatedAt: new Date(Date.now() - 3600000).toISOString(),
     ...workflowDefaults("permanent"),
     summary: "Introduction to the Plot note-taking app",
+    project: null,
   },
   {
     id: "note-2",
@@ -70,12 +69,12 @@ const SEED_NOTES: Note[] = [
     folderId: null,
     category: "",
     tags: [],
-    status: "capture",
+    status: "inbox",
+    project: null,
     priority: "none",
     reads: 1,
     pinned: false,
     archived: false,
-    isInbox: true,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
     updatedAt: new Date(Date.now() - 7200000).toISOString(),
     ...workflowDefaults("inbox"),
@@ -88,12 +87,12 @@ const SEED_NOTES: Note[] = [
     folderId: "folder-1",
     category: "cat-1",
     tags: ["tag-1"],
-    status: "project",
+    status: "capture",
+    project: "Q1 Goals",
     priority: "urgent",
     reads: 12,
     pinned: false,
     archived: false,
-    isInbox: false,
     createdAt: new Date(Date.now() - 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 86400000).toISOString(),
     ...workflowDefaults("capture"),
@@ -108,11 +107,11 @@ const SEED_NOTES: Note[] = [
     category: "cat-1",
     tags: ["tag-2"],
     status: "reference",
+    project: null,
     priority: "medium",
     reads: 3,
     pinned: false,
     archived: false,
-    isInbox: false,
     createdAt: new Date(Date.now() - 172800000).toISOString(),
     updatedAt: new Date(Date.now() - 172800000).toISOString(),
     ...workflowDefaults("capture"),
@@ -127,12 +126,12 @@ const SEED_NOTES: Note[] = [
     folderId: "folder-2",
     category: "cat-1",
     tags: [],
-    status: "capture",
+    status: "inbox",
+    project: null,
     priority: "none",
     reads: 0,
     pinned: false,
     archived: false,
-    isInbox: true,
     createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
     updatedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
     ...workflowDefaults("inbox"),
@@ -145,12 +144,12 @@ const SEED_NOTES: Note[] = [
     folderId: null,
     category: "cat-2",
     tags: [],
-    status: "capture",
+    status: "inbox",
+    project: null,
     priority: "low",
     reads: 0,
     pinned: false,
     archived: false,
-    isInbox: true,
     createdAt: new Date(Date.now() - 1800000).toISOString(),
     updatedAt: new Date(Date.now() - 1800000).toISOString(),
     ...workflowDefaults("inbox"),
@@ -286,7 +285,6 @@ export const usePlotStore = create<PlotState>()(
       createNote: (partial) => {
         const id = genId()
         const { activeView } = get()
-        const stage: NoteStage = partial?.stage ?? (activeView.type === "inbox" ? "inbox" : "inbox")
         const newNote: Note = {
           id,
           title: partial?.title ?? "",
@@ -299,15 +297,15 @@ export const usePlotStore = create<PlotState>()(
             partial?.category ??
             (activeView.type === "category" ? activeView.categoryId : ""),
           tags: partial?.tags ?? [],
-          status: partial?.status ?? "capture",
+          status: partial?.status ?? "inbox",
+          project: partial?.project ?? null,
           priority: partial?.priority ?? "none",
           reads: 0,
           pinned: partial?.pinned ?? false,
           archived: false,
-          isInbox: partial?.isInbox ?? activeView.type === "inbox",
           createdAt: now(),
           updatedAt: now(),
-          ...workflowDefaults(stage),
+          ...workflowDefaults(partial?.status ?? "inbox"),
           ...(partial?.source != null ? { source: partial.source } : {}),
         }
         set((state) => ({
@@ -344,10 +342,9 @@ export const usePlotStore = create<PlotState>()(
             n.id === id
               ? {
                   ...n,
-                  stage: "capture" as const,
+                  status: "capture" as const,
                   triageStatus: "kept" as const,
                   reviewAt,
-                  isInbox: false,
                   lastTouchedAt: now(),
                   updatedAt: now(),
                 }
@@ -398,7 +395,6 @@ export const usePlotStore = create<PlotState>()(
             n.id === id
               ? {
                   ...n,
-                  stage: "permanent" as const,
                   status: "permanent" as const,
                   promotedAt: now(),
                   lastTouchedAt: now(),
@@ -416,7 +412,6 @@ export const usePlotStore = create<PlotState>()(
             n.id === id
               ? {
                   ...n,
-                  stage: "capture" as const,
                   status: "capture" as const,
                   promotedAt: null,
                   lastTouchedAt: now(),
@@ -434,9 +429,8 @@ export const usePlotStore = create<PlotState>()(
             n.id === id
               ? {
                   ...n,
-                  stage: "inbox" as const,
+                  status: "inbox" as const,
                   triageStatus: "untriaged" as const,
-                  isInbox: true,
                   lastTouchedAt: now(),
                   updatedAt: now(),
                 }
@@ -461,14 +455,14 @@ export const usePlotStore = create<PlotState>()(
           category: parent.category,
           tags: [...parent.tags],
           status: parent.status,
+          project: parent.project,
           priority: "none",
           reads: 0,
           pinned: false,
           archived: false,
-          isInbox: false,
           createdAt: now(),
           updatedAt: now(),
-          ...workflowDefaults(parent.stage),
+          ...workflowDefaults(parent.status),
           parentNoteId: parentId,
         }
         set((state) => ({
@@ -751,7 +745,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 10,
+      version: 12,
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { sidebarPeek, ...rest } = state
@@ -760,13 +754,27 @@ export const usePlotStore = create<PlotState>()(
       migrate: (persistedState: unknown) => {
         const state = persistedState as Record<string, unknown>
         if (state.notes && Array.isArray(state.notes)) {
-          state.notes = (state.notes as Record<string, unknown>[]).map((n) => ({
-            ...n,
-            status: n.status ?? "capture",
+          state.notes = (state.notes as Record<string, unknown>[]).map((n) => {
+            // v11: Separate project from status
+            if (n.status === "project") {
+              n.status = "capture"
+              n.project = "Migrated"
+            } else {
+              n.project = n.project ?? null
+            }
+            // v12: Merge stage into status, remove stage & isInbox
+            const oldStage = n.stage ?? (n.isInbox ? "inbox" : (n.status === "permanent" ? "permanent" : "capture"));
+            const mergedStatus = oldStage === "inbox" ? "inbox"
+              : oldStage === "permanent" ? "permanent"
+              : (n.status ?? "capture"); // capture stage keeps existing status (capture or reference)
+
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { stage: _stage, isInbox: _isInbox, ...rest } = n;
+            return {
+            ...rest,
+            status: mergedStatus,
             priority: n.priority ?? "none",
             reads: n.reads ?? 0,
-            // Workflow field migration
-            stage: n.stage ?? (n.isInbox ? "inbox" : (n.status === "permanent" ? "permanent" : "capture")),
             triageStatus: n.triageStatus ?? (n.isInbox ? "untriaged" : "kept"),
             reviewAt: n.reviewAt ?? null,
             inboxRank: n.inboxRank ?? 0,
@@ -780,7 +788,8 @@ export const usePlotStore = create<PlotState>()(
             parentNoteId: n.parentNoteId ?? null,
             // v8: TipTap contentJson
             contentJson: n.contentJson ?? null,
-          }))
+          }
+          })
         }
         // v6: Phase 2 defaults
         if (!state.noteEvents) state.noteEvents = []
@@ -811,7 +820,7 @@ export function getFilteredNotes(state: PlotState): Note[] {
 
   switch (activeView.type) {
     case "inbox":
-      filtered = filtered.filter((n) => n.isInbox && !n.archived)
+      filtered = filtered.filter((n) => n.status === "inbox" && !n.archived)
       break
     case "all":
       filtered = filtered.filter((n) => !n.archived)
@@ -866,7 +875,7 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
 
   switch (filter.type) {
     case "inbox":
-      filtered = filtered.filter((n) => n.isInbox && !n.archived)
+      filtered = filtered.filter((n) => n.status === "inbox" && !n.archived)
       break
     case "all":
       filtered = filtered.filter((n) => !n.archived)
@@ -875,7 +884,7 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
       filtered = filtered.filter((n) => n.archived)
       break
     case "projects":
-      filtered = filtered.filter((n) => n.status === "project" && !n.archived)
+      filtered = filtered.filter((n) => n.project != null && n.project !== "" && !n.archived)
       break
     case "pinned":
       filtered = filtered.filter((n) => n.pinned && !n.archived)
@@ -889,18 +898,18 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
     case "tag":
       filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && !n.archived)
       break
-    case "stage-inbox":
+    case "status-inbox":
       filtered = filtered.filter((n) =>
-        n.stage === "inbox" &&
+        n.status === "inbox" &&
         n.triageStatus !== "trashed" &&
         (n.triageStatus === "untriaged" || (n.triageStatus === "snoozed" && n.reviewAt && new Date(n.reviewAt) <= new Date()))
       )
       break
-    case "stage-capture":
-      filtered = filtered.filter((n) => n.stage === "capture" && n.triageStatus !== "trashed")
+    case "status-capture":
+      filtered = filtered.filter((n) => n.status === "capture" && n.triageStatus !== "trashed")
       break
-    case "stage-permanent":
-      filtered = filtered.filter((n) => n.stage === "permanent" && n.triageStatus !== "trashed")
+    case "status-permanent":
+      filtered = filtered.filter((n) => n.status === "permanent" && n.triageStatus !== "trashed")
       break
     default:
       filtered = filtered.filter((n) => !n.archived)
@@ -932,11 +941,11 @@ export function getFilterTitle(filter: NoteFilter, state: PlotState): string {
       return "Projects"
     case "pinned":
       return "Pinned"
-    case "stage-inbox":
+    case "status-inbox":
       return "Inbox"
-    case "stage-capture":
+    case "status-capture":
       return "Capture"
-    case "stage-permanent":
+    case "status-permanent":
       return "Permanent"
     case "folder": {
       const folder = state.folders.find((f) => f.id === filter.folderId)

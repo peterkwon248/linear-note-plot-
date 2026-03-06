@@ -66,7 +66,7 @@ export function computeReadyScore(note: Note, allNotes: Note[]): number {
 
 /** Whether a capture note is ready for promotion */
 export function isReadyToPromote(note: Note, allNotes: Note[]): boolean {
-  if (note.stage !== "capture") return false
+  if (note.status !== "capture") return false
   const score = computeReadyScore(note, allNotes)
   if (score >= 5) return true
   // Alternative: links >= 2 AND summary exists
@@ -80,14 +80,14 @@ const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Check if a capture note needs review (7+ days untouched) */
 export function needsReview(note: Note): boolean {
-  if (note.stage !== "capture") return false
+  if (note.status !== "capture") return false
   const touched = new Date(note.lastTouchedAt ?? note.updatedAt).getTime()
   return Date.now() - touched > 7 * DAY_MS
 }
 
 /** Check if a capture note is stale enough to suggest moving back to inbox (14+ days) */
 export function isStaleSuggest(note: Note): boolean {
-  if (note.stage !== "capture") return false
+  if (note.status !== "capture") return false
   const touched = new Date(note.lastTouchedAt ?? note.updatedAt).getTime()
   return Date.now() - touched > 14 * DAY_MS
 }
@@ -102,7 +102,7 @@ export function getInboxNotes(allNotes: Note[]): Note[] {
   const nowMs = Date.now()
   return allNotes
     .filter((n) => {
-      if (n.stage !== "inbox") return false
+      if (n.status !== "inbox") return false
       if (n.triageStatus === "trashed") return false
       if (n.triageStatus === "untriaged") return true
       if (n.triageStatus === "snoozed" && n.reviewAt && new Date(n.reviewAt).getTime() <= nowMs) return true
@@ -119,7 +119,7 @@ export function getInboxNotes(allNotes: Note[]): Note[] {
 
 export function getCaptureNotes(allNotes: Note[]): Note[] {
   return allNotes
-    .filter((n) => n.stage === "capture" && n.triageStatus !== "trashed")
+    .filter((n) => n.status === "capture" && n.triageStatus !== "trashed")
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 }
 
@@ -127,7 +127,7 @@ export function getCaptureNotes(allNotes: Note[]): Note[] {
 
 export function getPermanentNotes(allNotes: Note[]): Note[] {
   return allNotes
-    .filter((n) => n.stage === "permanent" && n.triageStatus !== "trashed")
+    .filter((n) => n.status === "permanent" && n.triageStatus !== "trashed")
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 }
 
@@ -135,19 +135,19 @@ export function getPermanentNotes(allNotes: Note[]): Note[] {
 
 /**
  * Get unlinked notes for cleanup, with the specified priority order:
- * 1. stage=permanent with links=0
- * 2. stage=capture with links=0
- * 3. stage=inbox untriaged
+ * 1. status=permanent with links=0
+ * 2. status=capture with links=0
+ * 3. status=inbox untriaged
  */
 export function getUnlinkedNotes(allNotes: Note[]): Note[] {
   const permanentUnlinked = allNotes.filter(
-    (n) => n.stage === "permanent" && countBacklinks(n.id, allNotes) === 0 && n.triageStatus !== "trashed"
+    (n) => n.status === "permanent" && countBacklinks(n.id, allNotes) === 0 && n.triageStatus !== "trashed"
   )
   const captureUnlinked = allNotes.filter(
-    (n) => n.stage === "capture" && countBacklinks(n.id, allNotes) === 0 && n.triageStatus !== "trashed"
+    (n) => n.status === "capture" && countBacklinks(n.id, allNotes) === 0 && n.triageStatus !== "trashed"
   )
   const inboxUntriaged = allNotes.filter(
-    (n) => n.stage === "inbox" && n.triageStatus === "untriaged"
+    (n) => n.status === "inbox" && n.triageStatus === "untriaged"
   )
   return [...permanentUnlinked, ...captureUnlinked, ...inboxUntriaged]
 }
@@ -174,14 +174,14 @@ export function getReviewQueue(allNotes: Note[]): ReviewItem[] {
 
   // 1. Inbox untriaged
   allNotes
-    .filter((n) => n.stage === "inbox" && n.triageStatus === "untriaged")
+    .filter((n) => n.status === "inbox" && n.triageStatus === "untriaged")
     .forEach((note) => items.push({ note, reason: "inbox-untriaged" }))
 
   // 2. Snoozed due
   allNotes
     .filter(
       (n) =>
-        n.stage === "inbox" &&
+        n.status === "inbox" &&
         n.triageStatus === "snoozed" &&
         n.reviewAt &&
         new Date(n.reviewAt).getTime() <= nowMs
@@ -190,14 +190,14 @@ export function getReviewQueue(allNotes: Note[]): ReviewItem[] {
 
   // 3. Stale capture (7+ days)
   allNotes
-    .filter((n) => n.stage === "capture" && n.triageStatus !== "trashed" && needsReview(n))
+    .filter((n) => n.status === "capture" && n.triageStatus !== "trashed" && needsReview(n))
     .forEach((note) => items.push({ note, reason: "stale-capture" }))
 
   // 4. Unlinked permanent
   allNotes
     .filter(
       (n) =>
-        n.stage === "permanent" &&
+        n.status === "permanent" &&
         n.triageStatus !== "trashed" &&
         countBacklinks(n.id, allNotes) === 0
     )
@@ -285,9 +285,9 @@ export function getMapStats(map: KnowledgeMap, allNotes: Note[]) {
     unlinkedCount,
     avgReads,
     stages: {
-      inbox: mapNotes.filter((n) => n.stage === "inbox").length,
-      capture: mapNotes.filter((n) => n.stage === "capture").length,
-      permanent: mapNotes.filter((n) => n.stage === "permanent").length,
+      inbox: mapNotes.filter((n) => n.status === "inbox").length,
+      capture: mapNotes.filter((n) => n.status === "capture").length,
+      permanent: mapNotes.filter((n) => n.status === "permanent").length,
     },
   }
 }
@@ -305,7 +305,7 @@ export function getMapReviewItems(map: KnowledgeMap, allNotes: Note[]): ReviewIt
     if (needsReview(note)) {
       items.push({ note, reason: "stale-capture" })
     }
-    if (note.stage === "permanent" && countBacklinks(note.id, allNotes) === 0) {
+    if (note.status === "permanent" && countBacklinks(note.id, allNotes) === 0) {
       items.push({ note, reason: "unlinked-permanent" })
     }
   }

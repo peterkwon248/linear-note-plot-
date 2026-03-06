@@ -232,10 +232,10 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
           <button
             className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => state.createNote({
-              isInbox: filter.type === "inbox",
+              status: filter.type === "inbox" ? "inbox" as const : undefined,
               folderId: filter.type === "folder" ? filter.folderId : undefined,
               category: filter.type === "category" ? filter.categoryId : undefined,
-              status: filter.type === "projects" ? "project" : undefined,
+              project: filter.type === "projects" ? "New Project" : undefined,
             })}
           >
             <Plus className="h-3 w-3" />

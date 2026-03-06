@@ -82,7 +82,7 @@ export default function ProjectsPage() {
   const projects = useMemo(
     () =>
       notes
-        .filter((n) => n.status === "project" && !n.archived)
+        .filter((n) => n.project != null && n.project !== "" && !n.archived)
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
     [notes]
   )
@@ -104,7 +104,7 @@ export default function ProjectsPage() {
         <div className="flex items-center gap-1.5">
           <button
             className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-            onClick={() => createNote({ status: "project" })}
+            onClick={() => createNote({ project: "New Project" })}
           >
             <Plus className="h-3 w-3" />
             New project
