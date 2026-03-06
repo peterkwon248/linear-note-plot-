@@ -32,7 +32,8 @@
       "Bash(gh api repos/peterkwon248/plotui/git/trees/master?recursive=1 --jq '.tree[].path')",
       "Bash(gh api repos/peterkwon248/plotui/contents/components/editor --jq '.[].name')",
       "Bash(gh api repos/peterkwon248/plotui/contents/components/editor/TipTapEditor.tsx --jq '.content')",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(ls \"C:\\\\Users\\\\kwonkyunghun\\\\Desktop\\\\리니어 노트앱\\\\.claude\\\\worktrees\\\\wizardly-kare\\\\next.config.\"*)"
     ]
   }
 }
