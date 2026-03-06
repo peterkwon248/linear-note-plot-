@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getReviewQueue } from "@/lib/queries/notes"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { NoteEditor } from "@/components/note-editor"
@@ -76,9 +77,11 @@ export default function ReviewPage() {
   const openNote = usePlotStore((s) => s.openNote)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
 
+  const backlinks = useBacklinksIndex()
+
   const [previewId, setPreviewId] = useState<string | null>(null)
 
-  const reviewItems = useMemo(() => getReviewQueue(notes), [notes])
+  const reviewItems = useMemo(() => getReviewQueue(notes, backlinks), [notes, backlinks])
 
   const grouped = useMemo(() => {
     const map = new Map<ReviewReason, typeof reviewItems>()

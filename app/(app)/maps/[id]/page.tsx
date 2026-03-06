@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getMapStats } from "@/lib/queries/notes"
 import { KnowledgeMapCanvas } from "@/components/knowledge-map-canvas"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
@@ -34,6 +35,8 @@ export default function MapDetailPage() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
 
+  const backlinks = useBacklinksIndex()
+
   const map = knowledgeMaps.find((m) => m.id === mapId)
   const [focusNoteId, setFocusNoteId] = useState<string | null>(null)
   const [previewId, setPreviewId] = useState<string | null>(null)
@@ -46,8 +49,8 @@ export default function MapDetailPage() {
   )
 
   const stats = useMemo(
-    () => (map ? getMapStats(map, notes) : null),
-    [map, notes]
+    () => (map ? getMapStats(map, notes, backlinks) : null),
+    [map, notes, backlinks]
   )
 
   // Notes available to add (not already in map, not archived)
@@ -59,7 +62,7 @@ export default function MapDetailPage() {
       .filter((n) => {
         if (!addQuery.trim()) return true
         const q = addQuery.toLowerCase()
-        return n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q)
+        return n.title.toLowerCase().includes(q) || n.preview.toLowerCase().includes(q)
       })
       .slice(0, 20)
   }, [map, notes, addQuery])

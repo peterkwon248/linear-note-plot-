@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getInboxNotes, computeInboxRank, getSnoozeTime } from "@/lib/queries/notes"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
@@ -43,9 +44,11 @@ export default function InboxPage() {
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
 
+  const backlinks = useBacklinksIndex()
+
   const [previewId, setPreviewId] = useState<string | null>(null)
 
-  const inboxNotes = useMemo(() => getInboxNotes(notes), [notes])
+  const inboxNotes = useMemo(() => getInboxNotes(notes, backlinks), [notes, backlinks])
 
   // Navigate to next inbox item after triage action
   const goNext = useCallback(
@@ -176,7 +179,7 @@ export default function InboxPage() {
                 key={note.id}
                 note={note}
                 isActive={previewId === note.id}
-                allNotes={notes}
+                backlinks={backlinks}
                 onClick={() => setPreviewId(note.id)}
                 onDoubleClick={() => openNote(note.id)}
               />
@@ -209,17 +212,17 @@ export default function InboxPage() {
 function InboxRow({
   note,
   isActive,
-  allNotes,
+  backlinks,
   onClick,
   onDoubleClick,
 }: {
   note: Note
   isActive: boolean
-  allNotes: Note[]
+  backlinks: Map<string, number>
   onClick: () => void
   onDoubleClick: () => void
 }) {
-  const rank = computeInboxRank(note, allNotes)
+  const rank = computeInboxRank(note, backlinks)
   const isSnoozed = note.triageStatus === "snoozed"
 
   return (

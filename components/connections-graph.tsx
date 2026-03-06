@@ -8,35 +8,33 @@ import type { GraphNode as FocusGraphNode, GraphEdge as FocusGraphEdge } from "@
 
 /* ── Helpers ───────────────────────────────────────────── */
 
-/** Get notes that reference this note (backlinks) */
+/** Get notes that reference this note (backlinks) — uses precomputed linksOut */
 function getBacklinkNotes(noteId: string, notes: Note[]): Note[] {
   const note = notes.find((n) => n.id === noteId)
   if (!note || !note.title.trim()) return []
   const title = note.title.toLowerCase()
   return notes.filter((other) => {
     if (other.id === noteId) return false
-    const content = other.content.toLowerCase()
-    return (
-      content.includes(`[[${title}]]`) ||
-      (title.length > 3 && content.includes(title))
-    )
+    return other.linksOut.includes(title)
   })
 }
 
-/** Get notes that this note references (forward links) */
+/** Get notes that this note references (forward links) — uses precomputed linksOut */
 function getForwardLinks(noteId: string, notes: Note[]): Note[] {
   const note = notes.find((n) => n.id === noteId)
   if (!note) return []
-  const content = note.content.toLowerCase()
-  return notes.filter((other) => {
-    if (other.id === noteId) return false
-    if (!other.title.trim()) return false
-    const otherTitle = other.title.toLowerCase()
-    return (
-      content.includes(`[[${otherTitle}]]`) ||
-      (otherTitle.length > 3 && content.includes(otherTitle))
-    )
-  })
+  const titleToNote = new Map<string, Note>()
+  for (const n of notes) {
+    if (n.id !== noteId && n.title.trim()) {
+      titleToNote.set(n.title.toLowerCase(), n)
+    }
+  }
+  const result: Note[] = []
+  for (const linkTitle of note.linksOut) {
+    const target = titleToNote.get(linkTitle)
+    if (target) result.push(target)
+  }
+  return result
 }
 
 interface LocalGraphNode {

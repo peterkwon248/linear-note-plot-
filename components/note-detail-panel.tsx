@@ -38,7 +38,8 @@ import { usePlotStore } from "@/lib/store"
 import { StatusBadge, PriorityBadge, PROJECT_LEVEL_CONFIG, ProjectDropdown } from "@/components/note-fields"
 import { ConnectionsGraph } from "@/components/connections-graph"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
-import { countBacklinks, suggestBacklinks } from "@/lib/backlinks"
+import { suggestBacklinks } from "@/lib/backlinks"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,11 +57,7 @@ function getBacklinkNotes(noteId: string, notes: Note[]): Note[] {
   const title = note.title.toLowerCase()
   return notes.filter((other) => {
     if (other.id === noteId) return false
-    const content = other.content.toLowerCase()
-    return (
-      content.includes(`[[${title}]]`) ||
-      (title.length > 3 && content.includes(title))
-    )
+    return other.linksOut.includes(title)
   })
 }
 
@@ -197,6 +194,8 @@ export function NoteDetailPanel({
   const knowledgeMaps = usePlotStore((s) => s.knowledgeMaps)
   const removeNoteFromMap = usePlotStore((s) => s.removeNoteFromMap)
 
+  const backlinksIndex = useBacklinksIndex()
+
   const note = notes.find((n) => n.id === noteId)
 
   const existingProjects = useMemo(() => {
@@ -273,27 +272,27 @@ export function NoteDetailPanel({
   }, [addWikiLink, noteId])
 
   const readyScore = useMemo(
-    () => (note ? computeReadyScore(note, notes) : 0),
-    [note, notes]
+    () => (note ? computeReadyScore(note, backlinksIndex) : 0),
+    [note, backlinksIndex]
   )
 
   const ready = useMemo(
-    () => (note ? isReadyToPromote(note, notes) : false),
-    [note, notes]
+    () => (note ? isReadyToPromote(note, backlinksIndex) : false),
+    [note, backlinksIndex]
   )
 
   const stale = note ? needsReview(note) : false
   const staleSuggest = note ? isStaleSuggest(note) : false
-  const linkCount = note ? countBacklinks(note.id, notes) : 0
+  const linkCount = note ? (backlinksIndex.get(note.id) ?? 0) : 0
 
   // Advance to next inbox note after triage action
   const advanceToNext = useCallback(() => {
-    const inbox = getInboxNotes(notes)
+    const inbox = getInboxNotes(notes, backlinksIndex)
     const next = inbox.find((n) => n.id !== noteId)
     if (next) onOpenNote(next.id)
     else onClose()
     onTriageAction?.()
-  }, [notes, noteId, onOpenNote, onClose, onTriageAction])
+  }, [notes, backlinksIndex, noteId, onOpenNote, onClose, onTriageAction])
 
   const handleKeep = useCallback(() => {
     triageKeep(noteId)
@@ -358,11 +357,7 @@ export function NoteDetailPanel({
 
   if (!note) return null
 
-  const preview = note.content
-    .replace(/^#.*$/gm, "")
-    .replace(/[*_~`[\]]/g, "")
-    .trim()
-    .slice(0, 200)
+  const preview = note.preview
 
   const Wrapper = embedded ? "div" : "aside"
   const wrapperClass = embedded

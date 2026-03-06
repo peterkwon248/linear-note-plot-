@@ -1,6 +1,21 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Note, Folder, Tag, Category, ActiveView, NoteFilter, NoteStatus, TriageStatus, NoteEvent, NoteEventType, ThinkingChainSession, ThinkingChainStep, KnowledgeMap } from "./types"
+import type { Note, NoteBody, Folder, Tag, Category, ActiveView, NoteFilter, NoteStatus, TriageStatus, NoteEvent, NoteEventType, ThinkingChainSession, ThinkingChainStep, KnowledgeMap } from "./types"
+import { extractPreview, extractLinksOut } from "./body-helpers"
+import { saveBody as saveBodyToIDB, deleteBody as deleteBodyFromIDB, BODIES_MIGRATED_KEY } from "./note-body-store"
+import { createIDBStorage } from "./idb-storage"
+
+/** Fire-and-forget IDB body write (guarded for SSR) */
+function persistBody(body: NoteBody) {
+  if (typeof indexedDB === "undefined") return
+  saveBodyToIDB(body).catch((err) => console.warn("[Plot] Body save failed:", err))
+}
+
+/** Fire-and-forget IDB body delete (guarded for SSR) */
+function removeBody(id: string) {
+  if (typeof indexedDB === "undefined") return
+  deleteBodyFromIDB(id).catch((err) => console.warn("[Plot] Body delete failed:", err))
+}
 
 const genId = () => crypto.randomUUID()
 const now = () => new Date().toISOString()
@@ -60,6 +75,9 @@ const SEED_NOTES: Note[] = [
     ...workflowDefaults("permanent"),
     summary: "Introduction to the Plot note-taking app",
     project: null,
+    projectLevel: null,
+    preview: "Welcome to Plot This is your new note-taking app. - Create notes with markdown - Organize with folders, categories, and tags",
+    linksOut: [],
   },
   {
     id: "note-2",
@@ -71,6 +89,7 @@ const SEED_NOTES: Note[] = [
     tags: [],
     status: "inbox",
     project: null,
+    projectLevel: null,
     priority: "none",
     reads: 1,
     pinned: false,
@@ -78,6 +97,8 @@ const SEED_NOTES: Note[] = [
     createdAt: new Date(Date.now() - 7200000).toISOString(),
     updatedAt: new Date(Date.now() - 7200000).toISOString(),
     ...workflowDefaults("inbox"),
+    preview: "This is an inbox note - a quick thought captured for later sorting.",
+    linksOut: [],
   },
   {
     id: "note-3",
@@ -89,6 +110,7 @@ const SEED_NOTES: Note[] = [
     tags: ["tag-1"],
     status: "capture",
     project: "Q1 Goals",
+    projectLevel: null,
     priority: "urgent",
     reads: 12,
     pinned: false,
@@ -97,6 +119,8 @@ const SEED_NOTES: Note[] = [
     updatedAt: new Date(Date.now() - 86400000).toISOString(),
     ...workflowDefaults("capture"),
     triageStatus: "kept",
+    preview: "Q1 Goals 1. Ship v1.0 2. User testing 3. Marketing launch",
+    linksOut: [],
   },
   {
     id: "note-4",
@@ -108,6 +132,7 @@ const SEED_NOTES: Note[] = [
     tags: ["tag-2"],
     status: "reference",
     project: null,
+    projectLevel: null,
     priority: "medium",
     reads: 3,
     pinned: false,
@@ -117,6 +142,8 @@ const SEED_NOTES: Note[] = [
     ...workflowDefaults("capture"),
     triageStatus: "kept",
     summary: "Comparison of REST and GraphQL approaches",
+    preview: "REST vs GraphQL comparison for our new service.",
+    linksOut: [],
   },
   {
     id: "note-5",
@@ -128,6 +155,7 @@ const SEED_NOTES: Note[] = [
     tags: [],
     status: "inbox",
     project: null,
+    projectLevel: null,
     priority: "none",
     reads: 0,
     pinned: false,
@@ -135,6 +163,8 @@ const SEED_NOTES: Note[] = [
     createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
     updatedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
     ...workflowDefaults("inbox"),
+    preview: "Discussed roadmap for Q2. Action items: finalize spec, assign tasks.",
+    linksOut: [],
   },
   {
     id: "note-6",
@@ -146,6 +176,7 @@ const SEED_NOTES: Note[] = [
     tags: [],
     status: "inbox",
     project: null,
+    projectLevel: null,
     priority: "low",
     reads: 0,
     pinned: false,
@@ -154,6 +185,8 @@ const SEED_NOTES: Note[] = [
     updatedAt: new Date(Date.now() - 1800000).toISOString(),
     ...workflowDefaults("inbox"),
     source: "webclip",
+    preview: "- https://example.com - https://another.dev",
+    linksOut: [],
   },
 ]
 
@@ -245,6 +278,9 @@ interface PlotState {
   deleteKnowledgeMap: (id: string) => void
   addNoteToMap: (mapId: string, noteId: string) => void
   removeNoteFromMap: (mapId: string, noteId: string) => void
+
+  // Internal: body hydration from IndexedDB (called by BodyProvider)
+  _hydrateNoteBodies: (bodies: NoteBody[]) => void
 }
 
 export const usePlotStore = create<PlotState>()(
@@ -285,10 +321,11 @@ export const usePlotStore = create<PlotState>()(
       createNote: (partial) => {
         const id = genId()
         const { activeView } = get()
+        const content = partial?.content ?? ""
         const newNote: Note = {
           id,
           title: partial?.title ?? "",
-          content: partial?.content ?? "",
+          content,
           contentJson: partial?.contentJson ?? null,
           folderId:
             partial?.folderId ??
@@ -299,12 +336,15 @@ export const usePlotStore = create<PlotState>()(
           tags: partial?.tags ?? [],
           status: partial?.status ?? "inbox",
           project: partial?.project ?? null,
+          projectLevel: partial?.projectLevel ?? null,
           priority: partial?.priority ?? "none",
           reads: 0,
           pinned: partial?.pinned ?? false,
           archived: false,
           createdAt: now(),
           updatedAt: now(),
+          preview: extractPreview(content),
+          linksOut: extractLinksOut(content),
           ...workflowDefaults(partial?.status ?? "inbox"),
           ...(partial?.source != null ? { source: partial.source } : {}),
         }
@@ -312,16 +352,28 @@ export const usePlotStore = create<PlotState>()(
           notes: [newNote, ...state.notes],
           selectedNoteId: id,
         }))
+        persistBody({ id, content, contentJson: partial?.contentJson ?? null })
         appendEvent(id, "created")
         return id
       },
 
       updateNote: (id, updates) => {
+        // Recompute preview/linksOut when content changes
+        const contentUpdates = updates.content !== undefined
+          ? { preview: extractPreview(updates.content), linksOut: extractLinksOut(updates.content) }
+          : {}
         set((state) => ({
           notes: state.notes.map((n) =>
-            n.id === id ? { ...n, ...updates, updatedAt: now(), lastTouchedAt: now() } : n
+            n.id === id ? { ...n, ...updates, ...contentUpdates, updatedAt: now(), lastTouchedAt: now() } : n
           ),
         }))
+        // Persist body to IDB when content changes
+        if (updates.content !== undefined || updates.contentJson !== undefined) {
+          const note = get().notes.find((n) => n.id === id)
+          if (note) {
+            persistBody({ id, content: note.content, contentJson: note.contentJson })
+          }
+        }
         appendEvent(id, "updated")
       },
 
@@ -456,12 +508,15 @@ export const usePlotStore = create<PlotState>()(
           tags: [...parent.tags],
           status: parent.status,
           project: parent.project,
+          projectLevel: parent.projectLevel,
           priority: "none",
           reads: 0,
           pinned: false,
           archived: false,
           createdAt: now(),
           updatedAt: now(),
+          preview: "",
+          linksOut: [],
           ...workflowDefaults(parent.status),
           parentNoteId: parentId,
         }
@@ -478,6 +533,7 @@ export const usePlotStore = create<PlotState>()(
           selectedNoteId:
             state.selectedNoteId === id ? null : state.selectedNoteId,
         }))
+        removeBody(id)
       },
 
       duplicateNote: (id) => {
@@ -498,6 +554,7 @@ export const usePlotStore = create<PlotState>()(
           ],
           selectedNoteId: newId,
         }))
+        persistBody({ id: newId, content: note.content, contentJson: note.contentJson })
       },
 
       togglePin: (id) => {
@@ -676,12 +733,23 @@ export const usePlotStore = create<PlotState>()(
 
       addWikiLink: (noteId, targetTitle) => {
         set((state) => ({
-          notes: state.notes.map((n) =>
-            n.id === noteId
-              ? { ...n, content: n.content + `\n[[${targetTitle}]]`, updatedAt: now(), lastTouchedAt: now() }
-              : n
-          ),
+          notes: state.notes.map((n) => {
+            if (n.id !== noteId) return n
+            const newContent = n.content + `\n[[${targetTitle}]]`
+            return {
+              ...n,
+              content: newContent,
+              linksOut: extractLinksOut(newContent),
+              updatedAt: now(),
+              lastTouchedAt: now(),
+            }
+          }),
         }))
+        // Persist updated body to IDB
+        const note = get().notes.find((n) => n.id === noteId)
+        if (note) {
+          persistBody({ id: noteId, content: note.content, contentJson: note.contentJson })
+        }
         appendEvent(noteId, "link_added", { targetTitle })
       },
 
@@ -741,15 +809,34 @@ export const usePlotStore = create<PlotState>()(
         }))
         appendEvent(noteId, "map_removed", { mapId })
       },
+
+      /* ── Internal: Body hydration from IndexedDB ──────── */
+
+      _hydrateNoteBodies: (bodies) => {
+        const bodyMap = new Map(bodies.map((b) => [b.id, b]))
+        set((state) => ({
+          notes: state.notes.map((n) => {
+            // Only hydrate notes that have empty content (not already loaded)
+            if (n.content) return n
+            const body = bodyMap.get(n.id)
+            return body ? { ...n, content: body.content, contentJson: body.contentJson } : n
+          }),
+        }))
+      },
       }
     },
     {
       name: "plot-store",
-      version: 12,
+      version: 15,
+      storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { sidebarPeek, ...rest } = state
-        return rest
+        // Always strip body content — bodies are persisted separately in IndexedDB
+        return {
+          ...rest,
+          notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
+        }
       },
       migrate: (persistedState: unknown) => {
         const state = persistedState as Record<string, unknown>
@@ -770,6 +857,9 @@ export const usePlotStore = create<PlotState>()(
 
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { stage: _stage, isInbox: _isInbox, ...rest } = n;
+
+            // v13: Precompute preview and linksOut from content
+            const content = typeof rest.content === "string" ? rest.content as string : ""
             return {
             ...rest,
             status: mergedStatus,
@@ -784,13 +874,33 @@ export const usePlotStore = create<PlotState>()(
             lastTouchedAt: n.lastTouchedAt ?? n.updatedAt ?? new Date().toISOString(),
             snoozeCount: n.snoozeCount ?? 0,
             archivedAt: n.archivedAt ?? null,
-            // v5: Thinking Chain
             parentNoteId: n.parentNoteId ?? null,
-            // v8: TipTap contentJson
             contentJson: n.contentJson ?? null,
+            projectLevel: n.projectLevel ?? null,
+            // v13: Precomputed fields
+            preview: n.preview ?? extractPreview(content),
+            linksOut: n.linksOut ?? extractLinksOut(content),
           }
           })
         }
+        // v14: Extract bodies for IDB migration (handled async by BodyProvider)
+        if (typeof window !== "undefined" && state.notes && Array.isArray(state.notes)) {
+          const noteArr = state.notes as Array<Record<string, unknown>>
+          const hasContent = noteArr.some(
+            (n) => typeof n.content === "string" && (n.content as string).length > 0
+          )
+          if (hasContent) {
+            const bodies: NoteBody[] = noteArr
+              .filter((n) => typeof n.content === "string" && (n.content as string).length > 0)
+              .map((n) => ({
+                id: n.id as string,
+                content: n.content as string,
+                contentJson: (n.contentJson as Record<string, unknown>) ?? null,
+              }))
+            ;(window as any).__plotMigrationBodies = bodies
+          }
+        }
+
         // v6: Phase 2 defaults
         if (!state.noteEvents) state.noteEvents = []
         if (!state.thinkingChains) state.thinkingChains = []
@@ -860,7 +970,7 @@ export function getFilteredNotes(state: PlotState): Note[] {
     filtered = filtered.filter(
       (n) =>
         n.title.toLowerCase().includes(q) ||
-        n.content.toLowerCase().includes(q)
+        n.preview.toLowerCase().includes(q)
     )
   }
 
@@ -920,7 +1030,7 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
     filtered = filtered.filter(
       (n) =>
         n.title.toLowerCase().includes(q) ||
-        n.content.toLowerCase().includes(q)
+        n.preview.toLowerCase().includes(q)
     )
   }
 

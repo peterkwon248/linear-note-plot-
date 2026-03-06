@@ -160,12 +160,6 @@ export function NotesTable({
     return Array.from(set).sort()
   }, [notes])
 
-  const existingProjects = useMemo(() => {
-    const set = new Set<string>()
-    for (const n of notes) if (n.project) set.add(n.project)
-    return Array.from(set).sort()
-  }, [notes])
-
   function handleSort(col: SortColumn) {
     if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"))
     else { setSortCol(col); setSortDir(col === "title" ? "asc" : "desc") }
@@ -191,7 +185,7 @@ export function NotesTable({
       case "capture":    result = result.filter((n) => n.status === "capture"); break
       case "reference":  result = result.filter((n) => n.status === "reference"); break
       case "permanent":  result = result.filter((n) => n.status === "permanent"); break
-      case "unlinked":   result = getUnlinkedNotes(notes); break
+      case "unlinked":   result = getUnlinkedNotes(notes, backlinksMap); break
     }
 
     // Chip filters

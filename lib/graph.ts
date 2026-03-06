@@ -1,5 +1,4 @@
 import type { Note } from "./types"
-import { extractWikiLinks } from "./backlinks"
 
 export interface GraphNode {
   id: string
@@ -30,9 +29,8 @@ export function buildAdjacencyList(notes: Note[]): Map<string, Set<string>> {
   const adj = new Map<string, Set<string>>()
   for (const note of notes) {
     if (!adj.has(note.id)) adj.set(note.id, new Set())
-    const links = extractWikiLinks(note.content)
-    for (const linkTitle of links) {
-      const targetId = titleToId.get(linkTitle.toLowerCase())
+    for (const linkTitle of note.linksOut) {
+      const targetId = titleToId.get(linkTitle)
       if (targetId && targetId !== note.id) {
         adj.get(note.id)!.add(targetId)
         if (!adj.has(targetId)) adj.set(targetId, new Set())

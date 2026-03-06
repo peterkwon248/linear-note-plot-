@@ -1,5 +1,4 @@
 import type { Note, KnowledgeMap } from "@/lib/types"
-import { countBacklinks } from "@/lib/backlinks"
 
 /* ── Inbox Rank ────────────────────────────────────────── */
 
@@ -15,12 +14,12 @@ import { countBacklinks } from "@/lib/backlinks"
  * +5  if created within last 24h
  * +3  if snoozeCount >= 2
  */
-export function computeInboxRank(note: Note, allNotes: Note[]): number {
+export function computeInboxRank(note: Note, backlinks: Map<string, number>): number {
   let score = 0
   if (note.triageStatus === "untriaged") score += 10
   if (note.title.length <= 12) score += 2
   if (note.content.length <= 120) score += 3
-  const links = countBacklinks(note.id, allNotes)
+  const links = backlinks.get(note.id) ?? 0
   if (links >= 1) score += 4
   if (note.tags.length >= 1) score += 2
   const age = Date.now() - new Date(note.createdAt).getTime()
@@ -42,21 +41,14 @@ export function computeInboxRank(note: Note, allNotes: Note[]): number {
  * +1 if outline headings >= 1
  * +1 if priority is "high"
  */
-export function computeReadyScore(note: Note, allNotes: Note[]): number {
+export function computeReadyScore(note: Note, backlinks: Map<string, number>): number {
   let score = 0
   if (note.summary && note.summary.trim().length > 0) score += 2
   if (note.tags.length >= 1) score += 1
-  const links = countBacklinks(note.id, allNotes)
+  const links = backlinks.get(note.id) ?? 0
   if (links >= 1) score += 2
-  // Count notes this note references (forward links)
-  const forwardLinks = allNotes.filter((other) => {
-    if (other.id === note.id) return false
-    const title = other.title.toLowerCase()
-    if (!title.trim()) return false
-    const content = note.content.toLowerCase()
-    return content.includes(`[[${title}]]`) || (title.length > 3 && content.includes(title))
-  }).length
-  if (forwardLinks >= 1) score += 2
+  // Count forward links (using precomputed linksOut)
+  if (note.linksOut.length >= 1) score += 2
   // Outline headings
   const headingCount = (note.content.match(/^#{1,6}\s+.+/gm) || []).length
   if (headingCount >= 1) score += 1
@@ -65,12 +57,12 @@ export function computeReadyScore(note: Note, allNotes: Note[]): number {
 }
 
 /** Whether a capture note is ready for promotion */
-export function isReadyToPromote(note: Note, allNotes: Note[]): boolean {
+export function isReadyToPromote(note: Note, backlinks: Map<string, number>): boolean {
   if (note.status !== "capture") return false
-  const score = computeReadyScore(note, allNotes)
+  const score = computeReadyScore(note, backlinks)
   if (score >= 5) return true
   // Alternative: links >= 2 AND summary exists
-  const links = countBacklinks(note.id, allNotes)
+  const links = backlinks.get(note.id) ?? 0
   return links >= 2 && !!note.summary && note.summary.trim().length > 0
 }
 
@@ -98,7 +90,7 @@ export function isStaleSuggest(note: Note): boolean {
  * Get inbox notes sorted by inboxRank desc, then createdAt desc.
  * Only shows untriaged or snoozed-that-are-due.
  */
-export function getInboxNotes(allNotes: Note[]): Note[] {
+export function getInboxNotes(allNotes: Note[], backlinks: Map<string, number>): Note[] {
   const nowMs = Date.now()
   return allNotes
     .filter((n) => {
@@ -108,7 +100,7 @@ export function getInboxNotes(allNotes: Note[]): Note[] {
       if (n.triageStatus === "snoozed" && n.reviewAt && new Date(n.reviewAt).getTime() <= nowMs) return true
       return false
     })
-    .map((n) => ({ ...n, inboxRank: computeInboxRank(n, allNotes) }))
+    .map((n) => ({ ...n, inboxRank: computeInboxRank(n, backlinks) }))
     .sort((a, b) => {
       if (b.inboxRank !== a.inboxRank) return b.inboxRank - a.inboxRank
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -139,12 +131,12 @@ export function getPermanentNotes(allNotes: Note[]): Note[] {
  * 2. status=capture with links=0
  * 3. status=inbox untriaged
  */
-export function getUnlinkedNotes(allNotes: Note[]): Note[] {
+export function getUnlinkedNotes(allNotes: Note[], backlinks: Map<string, number>): Note[] {
   const permanentUnlinked = allNotes.filter(
-    (n) => n.status === "permanent" && countBacklinks(n.id, allNotes) === 0 && n.triageStatus !== "trashed"
+    (n) => n.status === "permanent" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
   )
   const captureUnlinked = allNotes.filter(
-    (n) => n.status === "capture" && countBacklinks(n.id, allNotes) === 0 && n.triageStatus !== "trashed"
+    (n) => n.status === "capture" && (backlinks.get(n.id) ?? 0) === 0 && n.triageStatus !== "trashed"
   )
   const inboxUntriaged = allNotes.filter(
     (n) => n.status === "inbox" && n.triageStatus === "untriaged"
@@ -168,7 +160,7 @@ export interface ReviewItem {
  * 3. Stale capture (7+ days untouched)
  * 4. Unlinked permanent notes
  */
-export function getReviewQueue(allNotes: Note[]): ReviewItem[] {
+export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>): ReviewItem[] {
   const nowMs = Date.now()
   const items: ReviewItem[] = []
 
@@ -199,7 +191,7 @@ export function getReviewQueue(allNotes: Note[]): ReviewItem[] {
       (n) =>
         n.status === "permanent" &&
         n.triageStatus !== "trashed" &&
-        countBacklinks(n.id, allNotes) === 0
+        (backlinks.get(n.id) ?? 0) === 0
     )
     .forEach((note) => items.push({ note, reason: "unlinked-permanent" }))
 
@@ -261,21 +253,26 @@ export function getSnoozeTime(option: "3h" | "tomorrow" | "next-week"): string {
 /**
  * Get map statistics for a Knowledge Map.
  */
-export function getMapStats(map: KnowledgeMap, allNotes: Note[]) {
+export function getMapStats(map: KnowledgeMap, allNotes: Note[], backlinks: Map<string, number>) {
   const mapNotes = allNotes.filter((n) => map.noteIds.includes(n.id))
-  const totalLinks = mapNotes.reduce((sum, n) => sum + countBacklinks(n.id, allNotes), 0)
+  const totalLinks = mapNotes.reduce((sum, n) => sum + (backlinks.get(n.id) ?? 0), 0)
+  // Count internal links within the map using precomputed linksOut
+  const mapNoteSet = new Set(map.noteIds)
+  const titleToId = new Map<string, string>()
+  for (const n of mapNotes) {
+    if (n.title.trim()) titleToId.set(n.title.toLowerCase(), n.id)
+  }
   const internalLinks = mapNotes.reduce((sum, n) => {
-    const noteBacklinks = allNotes.filter((other) => {
-      if (!map.noteIds.includes(other.id)) return false
-      if (other.id === n.id) return false
-      const title = n.title.toLowerCase()
-      if (!title.trim()) return false
-      const content = other.content.toLowerCase()
-      return content.includes(`[[${title}]]`)
-    })
-    return sum + noteBacklinks.length
+    let count = 0
+    for (const linkTitle of n.linksOut) {
+      const targetId = titleToId.get(linkTitle)
+      if (targetId && targetId !== n.id && mapNoteSet.has(targetId)) {
+        count++
+      }
+    }
+    return sum + count
   }, 0)
-  const unlinkedCount = mapNotes.filter((n) => countBacklinks(n.id, allNotes) === 0).length
+  const unlinkedCount = mapNotes.filter((n) => (backlinks.get(n.id) ?? 0) === 0).length
   const avgReads = mapNotes.length > 0 ? Math.round(mapNotes.reduce((s, n) => s + n.reads, 0) / mapNotes.length) : 0
 
   return {
@@ -297,7 +294,7 @@ export function getMapStats(map: KnowledgeMap, allNotes: Note[]) {
  * - Unlinked within the map
  * - Stale (not touched in 7+ days)
  */
-export function getMapReviewItems(map: KnowledgeMap, allNotes: Note[]): ReviewItem[] {
+export function getMapReviewItems(map: KnowledgeMap, allNotes: Note[], backlinks: Map<string, number>): ReviewItem[] {
   const items: ReviewItem[] = []
   const mapNotes = allNotes.filter((n) => map.noteIds.includes(n.id))
 
@@ -305,7 +302,7 @@ export function getMapReviewItems(map: KnowledgeMap, allNotes: Note[]): ReviewIt
     if (needsReview(note)) {
       items.push({ note, reason: "stale-capture" })
     }
-    if (note.status === "permanent" && countBacklinks(note.id, allNotes) === 0) {
+    if (note.status === "permanent" && (backlinks.get(note.id) ?? 0) === 0) {
       items.push({ note, reason: "unlinked-permanent" })
     }
   }

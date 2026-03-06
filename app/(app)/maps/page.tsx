@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getMapStats } from "@/lib/queries/notes"
 import {
   Map as MapIcon,
@@ -34,6 +35,8 @@ export default function MapsPage() {
   const [creating, setCreating] = useState(false)
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")
+  const backlinks = useBacklinksIndex()
+
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [editDescription, setEditDescription] = useState("")
@@ -151,7 +154,7 @@ export default function MapsPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {knowledgeMaps.map((map) => {
-              const stats = getMapStats(map, notes)
+              const stats = getMapStats(map, notes, backlinks)
               const isEditing = editingId === map.id
 
               return (

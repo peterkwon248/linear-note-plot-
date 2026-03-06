@@ -25,6 +25,7 @@ import {
   Network,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getInboxNotes, getCaptureNotes, getPermanentNotes, getReviewQueue } from "@/lib/queries/notes"
 import { CreateItemDialog } from "@/components/create-dialog"
 
@@ -191,14 +192,16 @@ export function LinearSidebar() {
   const { setSearchOpen, setSelectedNoteId, notes, folders, tags, categories, knowledgeMaps, createFolder, createTag, createCategory } =
     usePlotStore()
 
+  const backlinks = useBacklinksIndex()
+
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [createTagOpen, setCreateTagOpen] = useState(false)
   const [createCategoryOpen, setCreateCategoryOpen] = useState(false)
 
-  const inboxCount = useMemo(() => getInboxNotes(notes).length, [notes])
+  const inboxCount = useMemo(() => getInboxNotes(notes, backlinks).length, [notes, backlinks])
   const captureCount = useMemo(() => getCaptureNotes(notes).length, [notes])
   const permanentCount = useMemo(() => getPermanentNotes(notes).length, [notes])
-  const reviewCount = useMemo(() => getReviewQueue(notes).length, [notes])
+  const reviewCount = useMemo(() => getReviewQueue(notes, backlinks).length, [notes, backlinks])
   const pinnedNotes = notes.filter((n) => n.pinned && !n.archived).slice(0, 5)
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")

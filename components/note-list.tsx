@@ -85,7 +85,7 @@ function NoteRow({ note }: { note: Note }) {
   } = usePlotStore()
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
 
-  const preview = stripMarkdown(note.content).slice(0, 80)
+  const preview = note.preview
   const noteTags = tags.filter((t) => note.tags.includes(t.id)).slice(0, 2)
 
   return (
