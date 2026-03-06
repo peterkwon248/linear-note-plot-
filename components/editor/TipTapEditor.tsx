@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
@@ -22,7 +22,84 @@ import { ResizableImage } from "./ResizableImage"
 import { EditorToolbar } from "./EditorToolbar"
 import { FixedToolbar } from "./FixedToolbar"
 import { useSettingsStore } from "@/lib/settings-store"
+import { usePlotStore } from "@/lib/store"
+import { Extension } from "@tiptap/core"
+import { Plugin, PluginKey } from "@tiptap/pm/state"
 import "./EditorStyles.css"
+
+// ── Typewriter Extension ─────────────────────────────────────────────
+// Scroll-based typewriter mode: keeps the caret vertically centred
+// inside the scroll container.  Only active when Focus Mode is on.
+// Uses a ProseMirror plugin so it fires synchronously on every
+// transaction — no React render-delay.
+
+const typewriterPluginKey = new PluginKey("typewriter")
+
+const TypewriterExtension = Extension.create<{
+  scrollContainerRef: { current: HTMLDivElement | null }
+  focusModeRef: { current: boolean }
+}>({
+  name: "typewriter",
+
+  addOptions() {
+    return {
+      scrollContainerRef: { current: null } as { current: HTMLDivElement | null },
+      focusModeRef: { current: false },
+    }
+  },
+
+  addProseMirrorPlugins() {
+    const { scrollContainerRef, focusModeRef } = this.options
+    return [
+      new Plugin({
+        key: typewriterPluginKey,
+        view() {
+          return {
+            update(view, prevState) {
+              // 1. Only active in Focus Mode
+              if (!focusModeRef.current) return
+
+              // 2. Skip during IME composition
+              if (view.composing) return
+
+              // 3. Only when selection is collapsed (cursor, not range)
+              const { selection } = view.state
+              if (!selection.empty) return
+
+              // 4. Only when editor is focused
+              if (!view.hasFocus()) return
+
+              // 5. Skip if selection hasn't changed position
+              if (prevState && prevState.selection.eq(view.state.selection)) return
+
+              const container = scrollContainerRef.current
+              if (!container) return
+
+              // 6. Get cursor DOM coordinates
+              const coords = view.coordsAtPos(selection.from)
+              const containerRect = container.getBoundingClientRect()
+
+              // 7. Calculate center of visible area
+              const centerY = containerRect.top + containerRect.height / 2
+
+              // 8. Offset from center
+              const offsetFromCenter = coords.top - centerY
+
+              // 9. Threshold: skip micro-adjustments (15% of container height)
+              const threshold = containerRect.height * 0.15
+              if (Math.abs(offsetFromCenter) < threshold) return
+
+              // 10. Smooth scroll adjustment via requestAnimationFrame
+              requestAnimationFrame(() => {
+                container.scrollTop += offsetFromCenter
+              })
+            },
+          }
+        },
+      }),
+    ]
+  },
+})
 
 interface TipTapEditorProps {
   content: Record<string, unknown>
@@ -41,6 +118,15 @@ export function TipTapEditor({
   const wordWrap = useSettingsStore((s) => s.wordWrap)
   const tabSize = useSettingsStore((s) => s.tabSize)
   const codeFontFamily = useSettingsStore((s) => s.codeFontFamily)
+
+  // Focus Mode detection for Typewriter Mode
+  const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
+  const detailsOpen = usePlotStore((s) => s.detailsOpen)
+  const focusMode = sidebarCollapsed && !detailsOpen
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const focusModeRef = useRef(false)
+  focusModeRef.current = focusMode
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -64,6 +150,10 @@ export function TipTapEditor({
       TableCell,
       TableHeader,
       ResizableImage.configure({ inline: false, allowBase64: true }),
+      TypewriterExtension.configure({
+        scrollContainerRef,
+        focusModeRef,
+      }),
     ],
     content: content && Object.keys(content).length > 0 ? content : undefined,
     editable,
@@ -109,7 +199,7 @@ export function TipTapEditor({
       data-tab-size={tabSize}
       data-code-font={codeFontFamily}
     >
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         <EditorContent editor={editor} className="h-full w-full" />
       </div>
       <EditorToolbar editor={editor} />

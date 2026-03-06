@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef, useMemo } from "react"
 import {
   Plus,
   Filter,
@@ -13,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { isToday, isThisWeek, formatDistanceToNow } from "date-fns"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,6 +66,10 @@ function groupNotesByDate(notes: Note[]): { label: DateGroup; notes: Note[] }[] 
     .filter((label) => groups[label].length > 0)
     .map((label) => ({ label, notes: groups[label] }))
 }
+
+type FlatItem =
+  | { type: "header"; label: DateGroup; count: number }
+  | { type: "note"; note: Note }
 
 /* -- NoteRow -------------------------------------------------- */
 
@@ -208,6 +214,25 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
   const viewTitle = getFilterTitle(filter, state)
   const groups = groupNotesByDate(filteredNotes)
 
+  const flatItems = useMemo(() => {
+    const items: FlatItem[] = []
+    for (const group of groups) {
+      items.push({ type: "header", label: group.label, count: group.notes.length })
+      for (const note of group.notes) {
+        items.push({ type: "note", note })
+      }
+    }
+    return items
+  }, [groups])
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const rowVirtualizer = useVirtualizer({
+    count: flatItems.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: (index) => flatItems[index].type === "header" ? 37 : 72,
+    overscan: 5,
+  })
+
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* Header */}
@@ -256,23 +281,45 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
-          {groups.map((group) => (
-            <div key={group.label}>
-              <div className="sticky top-0 z-10 flex items-center gap-2 bg-background/95 backdrop-blur-sm px-3 py-2 border-b border-border">
-                <Calendar className="h-3 w-3 text-muted-foreground" />
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                  {group.label}
-                </span>
-                <span className="text-[11px] text-muted-foreground/60">
-                  {group.notes.length}
-                </span>
-              </div>
-              {group.notes.map((note) => (
-                <NoteRow key={note.id} note={note} />
-              ))}
-            </div>
-          ))}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const item = flatItems[virtualRow.index]
+              return (
+                <div
+                  key={virtualRow.index}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  {item.type === "header" ? (
+                    <div className="flex items-center gap-2 bg-background/95 backdrop-blur-sm px-3 py-2 border-b border-border">
+                      <Calendar className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                        {item.label}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground/60">
+                        {item.count}
+                      </span>
+                    </div>
+                  ) : (
+                    <NoteRow note={item.note} />
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
     </main>
