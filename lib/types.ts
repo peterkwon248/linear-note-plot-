@@ -39,6 +39,17 @@ export interface Note {
 
   /* ── Thinking Chain ──────────────────────────────── */
   parentNoteId: string | null
+
+  /* ── Precomputed (from content, for performance) ── */
+  preview: string          // first ~120 chars of plaintext (for list display)
+  linksOut: string[]       // extracted [[wiki-link]] targets, lowercased
+}
+
+/** Note body stored in IndexedDB (separated from meta for perf) */
+export interface NoteBody {
+  id: string
+  content: string
+  contentJson: Record<string, unknown> | null
 }
 
 export interface Folder {

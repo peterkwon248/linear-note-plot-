@@ -185,7 +185,7 @@ export function NotesTable({
       case "capture":    result = result.filter((n) => n.status === "capture"); break
       case "reference":  result = result.filter((n) => n.status === "reference"); break
       case "permanent":  result = result.filter((n) => n.status === "permanent"); break
-      case "unlinked":   result = getUnlinkedNotes(notes); break
+      case "unlinked":   result = getUnlinkedNotes(notes, backlinksMap); break
     }
 
     // Chip filters

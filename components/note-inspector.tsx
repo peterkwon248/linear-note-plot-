@@ -40,7 +40,7 @@ import { usePlotStore } from "@/lib/store"
 import { useState, useMemo, useCallback } from "react"
 import { StatusDropdown, PriorityDropdown, ProjectLevelDropdown, ProjectDropdown, PROJECT_LEVEL_CONFIG } from "@/components/note-fields"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
-import { countBacklinks } from "@/lib/backlinks"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { Signal, CircleDot } from "lucide-react"
 import { toast } from "sonner"
 
@@ -99,6 +99,8 @@ export function NoteInspector() {
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
 
+  const backlinks = useBacklinksIndex()
+
   const [folderOpen, setFolderOpen] = useState(false)
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [tagOpen, setTagOpen] = useState(false)
@@ -118,16 +120,16 @@ export function NoteInspector() {
 
   const advanceToNextInbox = useCallback(() => {
     if (!note || note.status !== "inbox") return
-    const inbox = getInboxNotes(notes)
+    const inbox = getInboxNotes(notes, backlinks)
     const next = inbox.find((n) => n.id !== note.id)
     setSelectedNoteId(next?.id ?? null)
-  }, [note, notes, setSelectedNoteId])
+  }, [note, notes, backlinks, setSelectedNoteId])
 
   if (!note || !detailsOpen) return null
 
   const stale = needsReview(note)
   const staleSuggest = isStaleSuggest(note)
-  const linkCount = countBacklinks(note.id, notes)
+  const linkCount = backlinks.get(note.id) ?? 0
 
   const currentFolder = folders.find((f) => f.id === note.folderId)
   const currentCategory = categories.find((c) => c.id === note.category)
@@ -182,7 +184,7 @@ export function NoteInspector() {
             {note.status === "permanent" && <Shield className="h-3 w-3" />}
             {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Inbox"}
           </span>
-          {note.status === "capture" && isReadyToPromote(note, notes) && (
+          {note.status === "capture" && isReadyToPromote(note, backlinks) && (
             <span className="flex items-center gap-1 rounded-md bg-[#45d483]/10 px-2 py-0.5 text-[11px] font-medium text-[#45d483]">
               <Sparkles className="h-3 w-3" />
               Ready to promote
@@ -242,7 +244,7 @@ export function NoteInspector() {
               <button
                 onClick={() => { promoteToPermament(note.id); toast("Promoted to Permanent") }}
                 className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                  isReadyToPromote(note, notes)
+                  isReadyToPromote(note, backlinks)
                     ? "bg-[#45d483] text-[#0a0a0a] hover:bg-[#45d483]/80"
                     : "border border-border bg-card text-foreground hover:bg-secondary"
                 }`}

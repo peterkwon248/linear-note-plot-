@@ -13,7 +13,7 @@ import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
-import { buildBacklinksMap } from "@/lib/backlinks"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import {
   Tooltip,
   TooltipContent,
@@ -83,7 +83,7 @@ export default function CapturePage() {
   }, [previewId, notes, promoteToPermament, moveBackToInbox])
 
   const captureNotes = useMemo(() => getCaptureNotes(notes), [notes])
-  const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])
+  const backlinksMap = useBacklinksIndex()
 
   // Full editor mode
   if (selectedNoteId) {
@@ -145,8 +145,8 @@ export default function CapturePage() {
             </div>
 
             {captureNotes.map((note) => {
-              const readyScore = computeReadyScore(note, notes)
-              const ready = isReadyToPromote(note, notes)
+              const readyScore = computeReadyScore(note, backlinksMap)
+              const ready = isReadyToPromote(note, backlinksMap)
               const stale = needsReview(note)
               const staleSuggest = isStaleSuggest(note)
               const links = backlinksMap.get(note.id) ?? 0
@@ -280,8 +280,9 @@ function CaptureDetailPanel({
 
   if (!note) return null
 
-  const ready = isReadyToPromote(note, notes)
-  const readyScore = computeReadyScore(note, notes)
+  const captureBacklinks = useBacklinksIndex()
+  const ready = isReadyToPromote(note, captureBacklinks)
+  const readyScore = computeReadyScore(note, captureBacklinks)
 
   return (
     <aside className="flex h-full w-[420px] shrink-0 flex-col overflow-hidden border-l border-border bg-card animate-in slide-in-from-right-4 fade-in duration-200">

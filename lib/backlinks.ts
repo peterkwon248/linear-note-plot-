@@ -3,8 +3,8 @@
 import type { Note } from "./types"
 
 /**
- * Count how many other notes reference a given note by title.
- * Looks for [[title]] wiki-link syntax or plain title mentions in content.
+ * Count how many other notes reference a given note via [[wiki-link]].
+ * Uses precomputed linksOut field — O(n) where n = number of notes.
  */
 export function countBacklinks(noteId: string, notes: Note[]): number {
   const note = notes.find((n) => n.id === noteId)
@@ -15,14 +15,7 @@ export function countBacklinks(noteId: string, notes: Note[]): number {
 
   for (const other of notes) {
     if (other.id === noteId) continue
-    const content = other.content.toLowerCase()
-    // Check for [[title]] wiki-links or plain title mention
-    if (
-      content.includes(`[[${title}]]`) ||
-      (title.length > 3 && content.includes(title))
-    ) {
-      count++
-    }
+    if (other.linksOut.includes(title)) count++
   }
 
   return count
@@ -30,6 +23,7 @@ export function countBacklinks(noteId: string, notes: Note[]): number {
 
 /**
  * Build a map of noteId -> backlink count for all notes.
+ * Uses precomputed linksOut for fast lookup.
  */
 export function buildBacklinksMap(notes: Note[]): Map<string, number> {
   const map = new Map<string, number>()
@@ -78,6 +72,7 @@ export function tokenize(text: string): string[] {
 /**
  * Suggest backlinks for a target note based on keyword overlap,
  * unlinked mentions, and shared metadata.
+ * Uses precomputed preview/linksOut fields for performance.
  */
 export function suggestBacklinks(
   targetNoteId: string,
@@ -89,19 +84,8 @@ export function suggestBacklinks(
   if (!target) return []
 
   const targetTitle = target.title.toLowerCase()
-  const targetTokens = new Set(tokenize(target.title + " " + target.content))
-  const existingLinks = new Set(extractWikiLinks(target.content).map((t) => t.toLowerCase()))
-
-  // Notes already linked TO this note (backlinks)
-  const backlinkIds = new Set<string>()
-  for (const other of notes) {
-    if (other.id === targetNoteId) continue
-    const otherLinks = extractWikiLinks(other.content).map((t) => t.toLowerCase())
-    if (otherLinks.includes(targetTitle)) backlinkIds.add(other.id)
-    if (targetTitle.length > 3 && other.content.toLowerCase().includes(targetTitle)) {
-      backlinkIds.add(other.id)
-    }
-  }
+  const targetTokens = new Set(tokenize(target.title + " " + target.preview))
+  const existingLinks = new Set(target.linksOut)
 
   const results: Array<{ noteId: string; score: number; reasons: string[] }> = []
 
@@ -114,8 +98,8 @@ export function suggestBacklinks(
     let score = 0
     const reasons: string[] = []
 
-    // (A) Keyword overlap
-    const otherTokens = new Set(tokenize(other.title + " " + other.content))
+    // (A) Keyword overlap (using preview instead of full content)
+    const otherTokens = new Set(tokenize(other.title + " " + other.preview))
     let overlap = 0
     for (const token of targetTokens) {
       if (otherTokens.has(token)) overlap++
@@ -125,24 +109,17 @@ export function suggestBacklinks(
       reasons.push(`${overlap} shared keywords`)
     }
 
-    // (B) Unlinked mention: other note mentions target title but no wiki-link
-    const otherContent = other.content.toLowerCase()
-    if (targetTitle.length > 3 && otherContent.includes(targetTitle)) {
-      const hasWikiLink = otherContent.includes(`[[${targetTitle}]]`)
-      if (!hasWikiLink) {
-        score += 15
-        reasons.push("mentions this note's title")
-      }
+    // (B) Unlinked mention: other note has target title in linksOut
+    if (other.linksOut.includes(targetTitle)) {
+      score += 15
+      reasons.push("links to this note")
     }
 
-    // (B2) Target content mentions other's title without wiki-link
-    const targetContent = target.content.toLowerCase()
+    // (B2) Target preview mentions other's title (potential unlinked mention)
     const otherTitle = other.title.toLowerCase()
-    if (otherTitle.length > 3 && targetContent.includes(otherTitle)) {
-      if (!existingLinks.has(otherTitle)) {
-        score += 15
-        reasons.push("this note mentions their title")
-      }
+    if (!existingLinks.has(otherTitle) && otherTitle.length > 3 && target.preview.toLowerCase().includes(otherTitle)) {
+      score += 15
+      reasons.push("this note mentions their title")
     }
 
     // (C) Shared tags
@@ -178,6 +155,7 @@ export function suggestBacklinks(
  * Incremental backlinks index.
  * Maintains outlinks and backlinks maps, updated per-note rather than full recompute.
  * O(k) per update where k = links in the changed note.
+ * Uses precomputed linksOut field instead of content scanning.
  */
 export class BacklinksIndex {
   private outlinks = new Map<string, Set<string>>()   // noteId -> Set<linkedNoteId>
@@ -185,7 +163,7 @@ export class BacklinksIndex {
   private titleToId = new Map<string, string>()        // lowercase title -> noteId
 
   /** Build the full index from scratch. Call once on init. */
-  buildFromScratch(notes: { id: string; title: string; content: string }[]): void {
+  buildFromScratch(notes: { id: string; title: string; linksOut: string[] }[]): void {
     this.outlinks.clear()
     this.backlinks.clear()
     this.titleToId.clear()
@@ -197,9 +175,9 @@ export class BacklinksIndex {
       }
     }
 
-    // Build outlinks for each note
+    // Build outlinks for each note using precomputed linksOut
     for (const note of notes) {
-      const linkedIds = this.parseLinks(note.id, note.content)
+      const linkedIds = this.resolveLinksOut(note.id, note.linksOut)
       this.outlinks.set(note.id, linkedIds)
       // Register backlinks
       for (const linkedId of linkedIds) {
@@ -212,7 +190,7 @@ export class BacklinksIndex {
   }
 
   /** Update a single note. Diffs old vs new outlinks. */
-  upsert(noteId: string, title: string, content: string): void {
+  upsert(noteId: string, title: string, linksOut: string[]): void {
     // Update title index
     // Remove old title mapping for this note
     for (const [t, id] of this.titleToId) {
@@ -226,7 +204,7 @@ export class BacklinksIndex {
     }
 
     const oldLinks = this.outlinks.get(noteId) ?? new Set<string>()
-    const newLinks = this.parseLinks(noteId, content)
+    const newLinks = this.resolveLinksOut(noteId, linksOut)
 
     // Remove backlinks for links that no longer exist
     for (const oldId of oldLinks) {
@@ -296,28 +274,15 @@ export class BacklinksIndex {
     return map
   }
 
-  /** Parse content to find linked note IDs. */
-  private parseLinks(noteId: string, content: string): Set<string> {
+  /** Resolve linksOut titles to note IDs. */
+  private resolveLinksOut(noteId: string, linksOut: string[]): Set<string> {
     const linkedIds = new Set<string>()
-    const lowerContent = content.toLowerCase()
-
-    // Check wiki-links [[title]]
-    const wikiLinks = extractWikiLinks(content)
-    for (const linkTitle of wikiLinks) {
-      const targetId = this.titleToId.get(linkTitle.toLowerCase())
+    for (const linkTitle of linksOut) {
+      const targetId = this.titleToId.get(linkTitle)
       if (targetId && targetId !== noteId) {
         linkedIds.add(targetId)
       }
     }
-
-    // Check plain title mentions (title length > 3)
-    for (const [title, id] of this.titleToId) {
-      if (id === noteId) continue
-      if (title.length > 3 && lowerContent.includes(title)) {
-        linkedIds.add(id)
-      }
-    }
-
     return linkedIds
   }
 }

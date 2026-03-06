@@ -26,7 +26,7 @@ import type { Note } from "@/lib/types"
 
 function HealthDot({ note }: { note: Note }) {
   // Derive health from note fields: has content + status != capture = healthy
-  const hasContent = note.content.trim().length > 20
+  const hasContent = note.preview.length > 20
   const isProgressed = note.status !== "capture"
   const healthy = hasContent && isProgressed
 

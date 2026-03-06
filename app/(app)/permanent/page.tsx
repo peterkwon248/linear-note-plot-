@@ -7,7 +7,7 @@ import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
-import { buildBacklinksMap } from "@/lib/backlinks"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import {
   Tooltip,
   TooltipContent,
@@ -69,7 +69,7 @@ export default function PermanentPage() {
   }, [previewId, notes, undoPromote])
 
   const permanentNotes = useMemo(() => getPermanentNotes(notes), [notes])
-  const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])
+  const backlinksMap = useBacklinksIndex()
 
   // Full editor mode
   if (selectedNoteId) {
