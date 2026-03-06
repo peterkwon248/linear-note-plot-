@@ -33,7 +33,26 @@
       "Bash(gh api repos/peterkwon248/plotui/contents/components/editor --jq '.[].name')",
       "Bash(gh api repos/peterkwon248/plotui/contents/components/editor/TipTapEditor.tsx --jq '.content')",
       "Bash(gh pr:*)",
-      "Bash(ls \"C:\\\\Users\\\\kwonkyunghun\\\\Desktop\\\\리니어 노트앱\\\\.claude\\\\worktrees\\\\wizardly-kare\\\\next.config.\"*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell:*)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(del /f \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\focused-williams\\\\.next\\\\dev\\\\lock\")",
+      "Bash($SRC = \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\focused-williams\")",
+      "Bash($DST = \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\")",
+      "Bash(Copy-Item \"$SRC\\\\lib\\\\types.ts\" \"$DST\\\\lib\\\\types.ts\" -Force)",
+      "Bash(Copy-Item \"$SRC\\\\lib\\\\store.ts\" \"$DST\\\\lib\\\\store.ts\" -Force)",
+      "Bash(Copy-Item \"$SRC\\\\components\\\\note-fields.tsx\" \"$DST\\\\components\\\\note-fields.tsx\" -Force)",
+      "Bash(Copy-Item \"$SRC\\\\components\\\\notes-table.tsx\" \"$DST\\\\components\\\\notes-table.tsx\" -Force)",
+      "Bash(Copy-Item \"$SRC\\\\components\\\\note-list.tsx\" \"$DST\\\\components\\\\note-list.tsx\" -Force)",
+      "Bash(Copy-Item \"$SRC\\\\app\\\\\\(app\\)\\\\projects\\\\page.tsx\" \"$DST\\\\app\\\\\\(app\\)\\\\projects\\\\page.tsx\" -Force)",
+      "Bash(Copy-Item \"$SRC\\\\app\\\\\\(app\\)\\\\views\\\\page.tsx\" \"$DST\\\\app\\\\\\(app\\)\\\\views\\\\page.tsx\" -Force)",
+      "Bash(Copy-Item \"$SRC\\\\components\\\\note-detail-panel.tsx\" \"$DST\\\\components\\\\note-detail-panel.tsx\" -Force)",
+      "Bash(Copy-Item \"$SRC\\\\components\\\\note-inspector.tsx\" \"$DST\\\\components\\\\note-inspector.tsx\" -Force)"
     ]
   }
 }
