@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import {
   Plus,
   Filter,
@@ -49,7 +50,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { usePlotStore, filterNotesByRoute } from "@/lib/store"
-import { buildBacklinksMap } from "@/lib/backlinks"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getUnlinkedNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge, PROJECT_LEVEL_CONFIG, ProjectLevelDropdown, ProjectDropdown } from "@/components/note-fields"
 import { format } from "date-fns"
@@ -151,7 +152,7 @@ export function NotesTable({
   const [filters, setFilters] = useState<ActiveFilter[]>([])
   const [activeTab, setActiveTab] = useState<ContextTab>("all")
 
-  const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])
+  const backlinksMap = useBacklinksIndex()
 
   const existingProjects = useMemo(() => {
     const set = new Set<string>()
@@ -218,6 +219,15 @@ export function NotesTable({
     })
     return result
   }, [notes, filters, sortCol, sortDir, backlinksMap, activeTab])
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredNotes.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 41,
+    overscan: 5,
+  })
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
@@ -353,7 +363,7 @@ export function NotesTable({
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
           {/* Column headers */}
           <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
             <div className="flex-1 min-w-0">
@@ -382,30 +392,52 @@ export function NotesTable({
             </div>
           </div>
 
-          {/* Rows */}
-          {filteredNotes.map((note) => (
-            <NoteRow
-              key={note.id}
-              note={note}
-              categories={categories}
-              existingProjects={existingProjects}
-              links={backlinksMap.get(note.id) ?? 0}
-              isActive={activePreviewId === note.id}
-              onOpen={() => onRowClick ? onRowClick(note.id) : openNote(note.id)}
-              onDoubleClick={() => openNote(note.id)}
-              onStatus={(s) => updateNote(note.id, { status: s })}
-              onPriority={(p) => updateNote(note.id, { priority: p })}
-              onProjectLevel={(lvl) => updateNote(note.id, { projectLevel: lvl })}
-              onSetProject={(p) => updateNote(note.id, { project: p, projectLevel: "planning" })}
-              onRemoveProject={() => updateNote(note.id, { project: null, projectLevel: null })}
-              onKeep={() => triageKeep(note.id)}
-              onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
-              onTrash={() => triageTrash(note.id)}
-              onPromote={() => promoteToPermament(note.id)}
-              onDemote={() => undoPromote(note.id)}
-              onMoveBack={() => moveBackToInbox(note.id)}
-            />
-          ))}
+          {/* Virtualized rows */}
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const note = filteredNotes[virtualRow.index]
+              return (
+                <div
+                  key={note.id}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <NoteRow
+                    note={note}
+                    categories={categories}
+                    existingProjects={existingProjects}
+                    links={backlinksMap.get(note.id) ?? 0}
+                    isActive={activePreviewId === note.id}
+                    onOpen={() => onRowClick ? onRowClick(note.id) : openNote(note.id)}
+                    onDoubleClick={() => openNote(note.id)}
+                    onStatus={(s) => updateNote(note.id, { status: s })}
+                    onPriority={(p) => updateNote(note.id, { priority: p })}
+                    onProjectLevel={(lvl) => updateNote(note.id, { projectLevel: lvl })}
+                    onSetProject={(p) => updateNote(note.id, { project: p, projectLevel: "planning" })}
+                    onRemoveProject={() => updateNote(note.id, { project: null, projectLevel: null })}
+                    onKeep={() => triageKeep(note.id)}
+                    onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
+                    onTrash={() => triageTrash(note.id)}
+                    onPromote={() => promoteToPermament(note.id)}
+                    onDemote={() => undoPromote(note.id)}
+                    onMoveBack={() => moveBackToInbox(note.id)}
+                  />
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
     </main>

@@ -173,3 +173,151 @@ export function suggestBacklinks(
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
 }
+
+/**
+ * Incremental backlinks index.
+ * Maintains outlinks and backlinks maps, updated per-note rather than full recompute.
+ * O(k) per update where k = links in the changed note.
+ */
+export class BacklinksIndex {
+  private outlinks = new Map<string, Set<string>>()   // noteId -> Set<linkedNoteId>
+  private backlinks = new Map<string, Set<string>>()   // noteId -> Set<referrerId>
+  private titleToId = new Map<string, string>()        // lowercase title -> noteId
+
+  /** Build the full index from scratch. Call once on init. */
+  buildFromScratch(notes: { id: string; title: string; content: string }[]): void {
+    this.outlinks.clear()
+    this.backlinks.clear()
+    this.titleToId.clear()
+
+    // Build title->id lookup
+    for (const note of notes) {
+      if (note.title.trim()) {
+        this.titleToId.set(note.title.toLowerCase(), note.id)
+      }
+    }
+
+    // Build outlinks for each note
+    for (const note of notes) {
+      const linkedIds = this.parseLinks(note.id, note.content)
+      this.outlinks.set(note.id, linkedIds)
+      // Register backlinks
+      for (const linkedId of linkedIds) {
+        if (!this.backlinks.has(linkedId)) {
+          this.backlinks.set(linkedId, new Set())
+        }
+        this.backlinks.get(linkedId)!.add(note.id)
+      }
+    }
+  }
+
+  /** Update a single note. Diffs old vs new outlinks. */
+  upsert(noteId: string, title: string, content: string): void {
+    // Update title index
+    // Remove old title mapping for this note
+    for (const [t, id] of this.titleToId) {
+      if (id === noteId) {
+        this.titleToId.delete(t)
+        break
+      }
+    }
+    if (title.trim()) {
+      this.titleToId.set(title.toLowerCase(), noteId)
+    }
+
+    const oldLinks = this.outlinks.get(noteId) ?? new Set<string>()
+    const newLinks = this.parseLinks(noteId, content)
+
+    // Remove backlinks for links that no longer exist
+    for (const oldId of oldLinks) {
+      if (!newLinks.has(oldId)) {
+        this.backlinks.get(oldId)?.delete(noteId)
+      }
+    }
+
+    // Add backlinks for new links
+    for (const newId of newLinks) {
+      if (!oldLinks.has(newId)) {
+        if (!this.backlinks.has(newId)) {
+          this.backlinks.set(newId, new Set())
+        }
+        this.backlinks.get(newId)!.add(noteId)
+      }
+    }
+
+    this.outlinks.set(noteId, newLinks)
+  }
+
+  /** Remove a note from the index. */
+  remove(noteId: string): void {
+    // Remove outlinks (and their backlink references)
+    const links = this.outlinks.get(noteId)
+    if (links) {
+      for (const linkedId of links) {
+        this.backlinks.get(linkedId)?.delete(noteId)
+      }
+      this.outlinks.delete(noteId)
+    }
+
+    // Remove backlinks TO this note
+    this.backlinks.delete(noteId)
+
+    // Remove title mapping
+    for (const [t, id] of this.titleToId) {
+      if (id === noteId) {
+        this.titleToId.delete(t)
+        break
+      }
+    }
+  }
+
+  /** Get backlink count for a note. */
+  getBacklinkCount(noteId: string): number {
+    return this.backlinks.get(noteId)?.size ?? 0
+  }
+
+  /** Get all backlink note IDs for a note. */
+  getBacklinkers(noteId: string): Set<string> {
+    return this.backlinks.get(noteId) ?? new Set()
+  }
+
+  /** Get a map of noteId -> backlink count (compatible with old buildBacklinksMap). */
+  toCountMap(): Map<string, number> {
+    const map = new Map<string, number>()
+    for (const [noteId] of this.outlinks) {
+      map.set(noteId, this.getBacklinkCount(noteId))
+    }
+    // Also include notes that have backlinks but may not have outlinks
+    for (const [noteId, refs] of this.backlinks) {
+      if (!map.has(noteId)) {
+        map.set(noteId, refs.size)
+      }
+    }
+    return map
+  }
+
+  /** Parse content to find linked note IDs. */
+  private parseLinks(noteId: string, content: string): Set<string> {
+    const linkedIds = new Set<string>()
+    const lowerContent = content.toLowerCase()
+
+    // Check wiki-links [[title]]
+    const wikiLinks = extractWikiLinks(content)
+    for (const linkTitle of wikiLinks) {
+      const targetId = this.titleToId.get(linkTitle.toLowerCase())
+      if (targetId && targetId !== noteId) {
+        linkedIds.add(targetId)
+      }
+    }
+
+    // Check plain title mentions (title length > 3)
+    for (const [title, id] of this.titleToId) {
+      if (id === noteId) continue
+      if (title.length > 3 && lowerContent.includes(title)) {
+        linkedIds.add(id)
+      }
+    }
+
+    return linkedIds
+  }
+}

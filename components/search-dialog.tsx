@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { usePlotStore } from "@/lib/store"
 import { getSnoozeTime } from "@/lib/queries/notes"
-import { buildBacklinksMap } from "@/lib/backlinks"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { useSearch } from "@/lib/search/use-search"
 import { shortRelative } from "@/lib/format-utils"
 import {
   createNoteFuse,
@@ -175,11 +176,15 @@ export function SearchDialog() {
     [notes],
   )
 
-  // Backlinks map — O(n²) but memoized, recalculated only when notes change
-  const backlinksMap = useMemo(() => buildBacklinksMap(notes), [notes])
+  // Backlinks map — maintained by index hook, recalculated only when notes change
+  const backlinksMap = useBacklinksIndex()
 
-  // Fuse instance – rebuilt only when the searchable notes change
+  // Fuse instance – rebuilt only when the searchable notes change (used for links mode only)
   const fuse = useMemo(() => createNoteFuse(searchableNotes), [searchableNotes])
+
+  // Worker-based search for search mode
+  const searchQuery = commandPaletteMode === "search" ? query : ""
+  const { results: workerResults, isIndexing } = useSearch(searchQuery, 12)
 
   // Recent notes (no query) – unchanged behavior
   const recentNotes = useMemo(
@@ -190,9 +195,9 @@ export function SearchDialog() {
     [searchableNotes],
   )
 
-  // Fuzzy search results (with query)
+  // Fuzzy search results (with query) — links mode only
   const fuzzyResults: FuzzyNoteResult[] = useMemo(() => {
-    if (commandPaletteMode !== "search" && commandPaletteMode !== "links") return []
+    if (commandPaletteMode !== "links") return []
     if (!query.trim()) return []
     return searchNotes(fuse, query).slice(0, 12)
   }, [fuse, query, commandPaletteMode])
@@ -322,7 +327,7 @@ export function SearchDialog() {
       {!thinkingStepInput && (
         <CommandList>
           <CommandEmpty>
-            {commandPaletteMode === "search" && "No notes found."}
+            {commandPaletteMode === "search" && (isIndexing ? "Building search index..." : "No notes found.")}
             {commandPaletteMode === "commands" && "No matching commands."}
             {commandPaletteMode === "links" && "No notes found to link."}
           </CommandEmpty>
@@ -330,35 +335,30 @@ export function SearchDialog() {
           {/* ====== SEARCH MODE ====== */}
           {commandPaletteMode === "search" && (
             <>
-              {/* Fuzzy results (non-empty query) */}
-              {hasFuzzyQuery && fuzzyResults.length > 0 && (
+              {/* Worker-based search results (non-empty query) */}
+              {hasFuzzyQuery && workerResults.length > 0 && (
                 <CommandGroup heading="Results">
-                  {fuzzyResults.map((result) => {
-                    const titleIndices = getTitleIndices(result.matches)
-                    return (
-                      <CommandItem
-                        key={result.note.id}
-                        value={`search-${result.note.id}`}
-                        onSelect={() => handleSearchSelect(result.note.id)}
-                      >
-                        {result.note.pinned ? (
-                          <Pin className="h-4 w-4 shrink-0 self-start mt-0.5" />
-                        ) : (
-                          <FileText className="h-4 w-4 shrink-0 self-start mt-0.5" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate">
-                            {titleIndices
-                              ? highlightMatches(result.note.title || "Untitled", titleIndices)
-                              : result.note.title || "Untitled"}
-                          </div>
-                          <div className="truncate text-xs text-muted-foreground leading-tight">
-                            {noteSublabel(result.note)}
-                          </div>
+                  {workerResults.map((note) => (
+                    <CommandItem
+                      key={note.id}
+                      value={`search-${note.id}`}
+                      onSelect={() => handleSearchSelect(note.id)}
+                    >
+                      {note.pinned ? (
+                        <Pin className="h-4 w-4 shrink-0 self-start mt-0.5" />
+                      ) : (
+                        <FileText className="h-4 w-4 shrink-0 self-start mt-0.5" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate">
+                          {note.title || "Untitled"}
                         </div>
-                      </CommandItem>
-                    )
-                  })}
+                        <div className="truncate text-xs text-muted-foreground leading-tight">
+                          {noteSublabel(note)}
+                        </div>
+                      </div>
+                    </CommandItem>
+                  ))}
                 </CommandGroup>
               )}
 

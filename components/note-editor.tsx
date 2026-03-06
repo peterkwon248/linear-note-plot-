@@ -41,9 +41,11 @@ export function NoteEditor() {
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
   const detailsOpen = usePlotStore((s) => s.detailsOpen)
   const toggleDetailsOpen = usePlotStore((s) => s.toggleDetailsOpen)
+  const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
 
   const note = notes.find((n) => n.id === selectedNoteId) ?? null
+  const focusMode = sidebarCollapsed && !detailsOpen
 
   const [localTitle, setLocalTitle] = useState("")
 
@@ -102,8 +104,20 @@ export function NoteEditor() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background">
+      {/* SURFACE: centered column, constrained in focus mode */}
+      <div
+        className={cn(
+          "flex flex-col flex-1 overflow-hidden w-full mx-auto",
+          focusMode
+            ? "max-w-[880px] transition-[max-width] duration-300"
+            : "max-w-none"
+        )}
+      >
       {/* Editor Header */}
-      <header className="flex items-center justify-between border-b border-border px-4 py-2">
+      <header className={cn(
+        "flex items-center justify-between border-b border-border py-2",
+        focusMode ? "px-6" : "px-4"
+      )}>
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -231,6 +245,7 @@ export function NoteEditor() {
       {/* Content Editor */}
       <div className="flex-1 overflow-hidden px-6 py-4">
         <NoteEditorAdapter note={note} />
+      </div>
       </div>
     </div>
   )
