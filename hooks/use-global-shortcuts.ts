@@ -24,6 +24,12 @@ export function useGlobalShortcuts() {
   const pendingG = useRef(false)
   const gTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  /** Transient ref: layout state captured right before entering Focus Mode. */
+  const preFocusLayout = useRef<{
+    sidebarCollapsed: boolean
+    detailsOpen: boolean
+  } | null>(null)
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
@@ -56,6 +62,50 @@ export function useGlobalShortcuts() {
         e.preventDefault()
         const s = usePlotStore.getState()
         s.setSearchOpen(!s.searchOpen)
+        return
+      }
+
+      // ── 2b. Ctrl/Cmd+Shift+F — toggle Focus Mode ────────────
+      if (
+        (e.key === "f" || e.key === "F") &&
+        e.shiftKey &&
+        (e.metaKey || e.ctrlKey)
+      ) {
+        e.preventDefault()
+        // Block if dialog/popover is open
+        if (
+          target.closest("[role='dialog']") ||
+          target.closest("[data-radix-popper-content-wrapper]")
+        ) {
+          return
+        }
+        const s = usePlotStore.getState()
+        // Block if no note is open
+        if (s.selectedNoteId === null) return
+
+        const isFocusMode = s.sidebarCollapsed && !s.detailsOpen
+
+        if (isFocusMode) {
+          // ── Exit Focus Mode: restore previous layout ──
+          const prev = preFocusLayout.current
+          if (prev) {
+            s.setSidebarCollapsed(prev.sidebarCollapsed)
+            s.setDetailsOpen(prev.detailsOpen)
+            preFocusLayout.current = null
+          } else {
+            // No stored layout — restore defaults
+            s.setSidebarCollapsed(false)
+            s.setDetailsOpen(true)
+          }
+        } else {
+          // ── Enter Focus Mode: save current, then collapse/close ──
+          preFocusLayout.current = {
+            sidebarCollapsed: s.sidebarCollapsed,
+            detailsOpen: s.detailsOpen,
+          }
+          s.setSidebarCollapsed(true)
+          s.setDetailsOpen(false)
+        }
         return
       }
 
