@@ -75,7 +75,7 @@ class SearchClient {
       this.readyResolve = (info: ReadyInfo) => {
         const elapsed = Math.round(performance.now() - initStart)
         if (typeof window !== "undefined") {
-          ;(window as Record<string, unknown>).__SEARCH_INDEX_MS = elapsed
+          ;(window as unknown as Record<string, unknown>).__SEARCH_INDEX_MS = elapsed
         }
         const cacheMsg =
           info.source === "cache"

@@ -27,20 +27,8 @@ import {
   Sparkles,
   Link2,
 } from "lucide-react"
-import { format, formatDistanceToNowStrict } from "date-fns"
 import type { Note } from "@/lib/types"
-
-function shortRelative(dateStr: string): string {
-  const dist = formatDistanceToNowStrict(new Date(dateStr), { addSuffix: false })
-  return dist
-    .replace(/ seconds?/, "s")
-    .replace(/ minutes?/, "m")
-    .replace(/ hours?/, "h")
-    .replace(/ days?/, "d")
-    .replace(/ weeks?/, "w")
-    .replace(/ months?/, "mo")
-    .replace(/ years?/, "y")
-}
+import { shortRelative } from "@/lib/format-utils"
 
 /* ── CapturePage ───────────────────────────────────────── */
 
