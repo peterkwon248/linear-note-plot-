@@ -109,6 +109,8 @@ export function migrate(persistedState: unknown): PlotState {
       }
     }
   }
+  // v19: Alerts — dismissed alert IDs
+  if (!state.dismissedAlertIds) state.dismissedAlertIds = []
   state._viewStateHydrated = false // always reset transient flag
 
   return state as unknown as PlotState

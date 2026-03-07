@@ -143,6 +143,18 @@ export interface ReviewQueueItem {
   score: number
 }
 
+/* ── Alerts ────────────────────────────────────────── */
+
+export type AlertType = "srs-due" | "snooze-expired" | "stale-note"
+
+export interface Alert {
+  id: string            // deterministic: `${type}:${noteId}`
+  type: AlertType
+  noteId: string
+  message: string
+  severity: "info" | "warning" | "urgent"
+}
+
 /* ── Phase 3: Knowledge Maps ───────────────────────── */
 
 export interface KnowledgeMap {

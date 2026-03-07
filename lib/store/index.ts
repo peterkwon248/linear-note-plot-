@@ -14,6 +14,7 @@ import { createCategoriesSlice } from "./slices/categories"
 import { createThinkingSlice } from "./slices/thinking"
 import { createMapsSlice } from "./slices/maps"
 import { createUISlice } from "./slices/ui"
+import { createAlertsSlice } from "./slices/alerts"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
 
@@ -60,11 +61,12 @@ export const usePlotStore = create<PlotState>()(
         ...createThinkingSlice(set, get, appendEvent),
         ...createMapsSlice(set, appendEvent),
         ...createUISlice(set, appendEvent),
+        ...createAlertsSlice(set),
       }
     },
     {
       name: "plot-store",
-      version: 18,
+      version: 19,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

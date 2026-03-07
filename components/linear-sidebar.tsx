@@ -23,10 +23,12 @@ import {
   Shield,
   ClipboardCheck,
   Network,
+  Bell,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getInboxNotes, getCaptureNotes, getPermanentNotes, getReviewQueue } from "@/lib/queries/notes"
+import { computeAlerts } from "@/lib/alerts"
 import { CreateItemDialog } from "@/components/create-dialog"
 
 /* ── Nav primitives ──────────────────────────────────── */
@@ -189,7 +191,7 @@ function TeamLink({
 
 export function LinearSidebar() {
   const pathname = usePathname()
-  const { setSearchOpen, setSelectedNoteId, notes, folders, tags, categories, knowledgeMaps, createFolder, createTag, createCategory, srsStateByNoteId } =
+  const { setSearchOpen, setSelectedNoteId, notes, folders, tags, categories, knowledgeMaps, createFolder, createTag, createCategory, srsStateByNoteId, dismissedAlertIds } =
     usePlotStore()
 
   const backlinks = useBacklinksIndex()
@@ -202,6 +204,10 @@ export function LinearSidebar() {
   const captureCount = useMemo(() => getCaptureNotes(notes).length, [notes])
   const permanentCount = useMemo(() => getPermanentNotes(notes).length, [notes])
   const reviewCount = useMemo(() => getReviewQueue(notes, backlinks, srsStateByNoteId).length, [notes, backlinks, srsStateByNoteId])
+  const alertCount = useMemo(() => {
+    const dismissed = new Set(dismissedAlertIds ?? [])
+    return computeAlerts(notes, srsStateByNoteId, dismissed).length
+  }, [notes, srsStateByNoteId, dismissedAlertIds])
   const pinnedNotes = notes.filter((n) => n.pinned && !n.archived).slice(0, 5)
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
@@ -274,6 +280,24 @@ export function LinearSidebar() {
             {reviewCount > 0 && (
               <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-destructive">
                 {reviewCount}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/alerts"
+            className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
+              isActive("/alerts")
+                ? "bg-sidebar-hover text-sidebar-foreground"
+                : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
+            }`}
+          >
+            <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${isActive("/alerts") ? "" : "text-sidebar-muted"}`}>
+              <Bell className="h-4 w-4" />
+            </span>
+            <span className="flex-1 truncate text-left">Alerts</span>
+            {alertCount > 0 && (
+              <span className="rounded-full bg-chart-3/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-chart-3">
+                {alertCount}
               </span>
             )}
           </Link>
