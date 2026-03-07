@@ -2,46 +2,6 @@
 
 import type { Note } from "./types"
 
-/**
- * Count how many other notes reference a given note via [[wiki-link]].
- * Uses precomputed linksOut field — O(n) where n = number of notes.
- */
-export function countBacklinks(noteId: string, notes: Note[]): number {
-  const note = notes.find((n) => n.id === noteId)
-  if (!note || !note.title.trim()) return 0
-
-  const title = note.title.toLowerCase()
-  let count = 0
-
-  for (const other of notes) {
-    if (other.id === noteId) continue
-    if (other.linksOut.includes(title)) count++
-  }
-
-  return count
-}
-
-/**
- * Build a map of noteId -> backlink count for all notes.
- * Uses precomputed linksOut for fast lookup.
- */
-export function buildBacklinksMap(notes: Note[]): Map<string, number> {
-  const map = new Map<string, number>()
-  for (const note of notes) {
-    map.set(note.id, countBacklinks(note.id, notes))
-  }
-  return map
-}
-
-/**
- * Extract [[wiki-link]] titles from text.
- */
-export function extractWikiLinks(text: string): string[] {
-  const matches = text.match(/\[\[([^\]]+)\]\]/g)
-  if (!matches) return []
-  return matches.map((m) => m.slice(2, -2))
-}
-
 /** Simple English stopwords */
 const STOP_WORDS = new Set([
   "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",

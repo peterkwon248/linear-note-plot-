@@ -29,18 +29,6 @@ import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 
 /* -- helpers -------------------------------------------------- */
 
-function stripMarkdown(text: string): string {
-  return text
-    .replace(/#{1,6}\s?/g, "")
-    .replace(/\*{1,3}(.*?)\*{1,3}/g, "$1")
-    .replace(/_{1,3}(.*?)_{1,3}/g, "$1")
-    .replace(/`{1,3}[^`]*`{1,3}/g, "")
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/[>\-~]/g, "")
-    .replace(/\n+/g, " ")
-    .trim()
-}
-
 type DateGroup = "Today" | "This Week" | "Older"
 
 function getDateGroup(dateStr: string): DateGroup {

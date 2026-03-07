@@ -4,6 +4,8 @@ import type { Note, NoteBody, Folder, Tag, Category, ActiveView, NoteFilter, Not
 import { extractPreview, extractLinksOut } from "./body-helpers"
 import { saveBody as saveBodyToIDB, deleteBody as deleteBodyFromIDB, BODIES_MIGRATED_KEY } from "./note-body-store"
 import { createIDBStorage } from "./idb-storage"
+import type { ViewState, ViewContextKey } from "./view-engine/types"
+import { buildDefaultViewStates, normalizeViewStatesMap } from "./view-engine/defaults"
 
 /** Fire-and-forget IDB body write (guarded for SSR) */
 function persistBody(body: NoteBody) {
@@ -200,6 +202,12 @@ interface PlotState {
   selectedNoteId: string | null
   searchQuery: string
   searchOpen: boolean
+
+  // View Engine state
+  viewStateByContext: Record<ViewContextKey, ViewState>
+  setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
+  _viewStateHydrated: boolean
+
   shortcutOverlayOpen: boolean
 
   createNote: (partial?: Partial<Note>) => string
@@ -287,9 +295,25 @@ export const usePlotStore = create<PlotState>()(
   persist(
     (set, get) => {
       // Private helper for event logging
+      const MAX_EVENTS_PER_NOTE = 1000
       const appendEvent = (noteId: string, type: NoteEventType, meta?: Record<string, unknown>) => {
         const event: NoteEvent = { id: genId(), noteId, type, at: now(), meta }
-        set((state) => ({ noteEvents: [...state.noteEvents, event] }))
+        set((state) => {
+          const updated = [...state.noteEvents, event]
+          const noteEventCount = updated.filter(e => e.noteId === noteId).length
+          if (noteEventCount > MAX_EVENTS_PER_NOTE) {
+            const excess = noteEventCount - MAX_EVENTS_PER_NOTE
+            let removed = 0
+            return { noteEvents: updated.filter(e => {
+              if (e.noteId === noteId && removed < excess) {
+                removed++
+                return false
+              }
+              return true
+            })}
+          }
+          return { noteEvents: updated }
+        })
       }
 
       return {
@@ -317,6 +341,10 @@ export const usePlotStore = create<PlotState>()(
       graphFocusDepth: 0,
       commandPaletteMode: "search" as const,
       knowledgeMaps: [] as KnowledgeMap[],
+
+      // View Engine
+      viewStateByContext: buildDefaultViewStates(),
+      _viewStateHydrated: false,
 
       createNote: (partial) => {
         const id = genId()
@@ -757,6 +785,15 @@ export const usePlotStore = create<PlotState>()(
 
       setCommandPaletteMode: (mode) => set({ commandPaletteMode: mode }),
 
+      setViewState: (ctx, patch) => {
+        set((state) => ({
+          viewStateByContext: {
+            ...state.viewStateByContext,
+            [ctx]: { ...state.viewStateByContext[ctx], ...patch },
+          },
+        }))
+      },
+
       /* ── Phase 3: Knowledge Maps ────────────────────────── */
 
       createKnowledgeMap: (title, description, color) => {
@@ -827,16 +864,16 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 15,
+      version: 16,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, ...rest } = state
         // Always strip body content — bodies are persisted separately in IndexedDB
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
-        }
+        } as unknown as PlotState
       },
       migrate: (persistedState: unknown) => {
         const state = persistedState as Record<string, unknown>
@@ -915,7 +952,21 @@ export const usePlotStore = create<PlotState>()(
         if (state.sidebarLastWidth === undefined) state.sidebarLastWidth = 240
         if (state.sidebarCollapsed === undefined) state.sidebarCollapsed = false
         state.sidebarPeek = false // always reset transient state
+        // v16: ViewState per context
+        if (state.viewStateByContext) {
+          state.viewStateByContext = normalizeViewStatesMap(
+            state.viewStateByContext as Record<string, unknown>
+          )
+        } else {
+          state.viewStateByContext = buildDefaultViewStates()
+        }
+        state._viewStateHydrated = false // always reset transient flag
         return state as unknown as PlotState
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state._viewStateHydrated = true
+        }
       },
     }
   )

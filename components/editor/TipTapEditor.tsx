@@ -25,6 +25,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
 import { Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
+import { CurrentLineHighlightExtension } from "./CurrentLineHighlight"
 import "./EditorStyles.css"
 
 // ── Typewriter Extension ─────────────────────────────────────────────
@@ -118,6 +119,7 @@ export function TipTapEditor({
   const wordWrap = useSettingsStore((s) => s.wordWrap)
   const tabSize = useSettingsStore((s) => s.tabSize)
   const codeFontFamily = useSettingsStore((s) => s.codeFontFamily)
+  const currentLineHighlight = useSettingsStore((s) => s.currentLineHighlight)
 
   // Focus Mode detection for Typewriter Mode
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
@@ -127,6 +129,8 @@ export function TipTapEditor({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const focusModeRef = useRef(false)
   focusModeRef.current = focusMode
+  const currentLineHighlightRef = useRef(false)
+  currentLineHighlightRef.current = currentLineHighlight
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -153,6 +157,9 @@ export function TipTapEditor({
       TypewriterExtension.configure({
         scrollContainerRef,
         focusModeRef,
+      }),
+      CurrentLineHighlightExtension.configure({
+        enabledRef: currentLineHighlightRef,
       }),
     ],
     content: content && Object.keys(content).length > 0 ? content : undefined,

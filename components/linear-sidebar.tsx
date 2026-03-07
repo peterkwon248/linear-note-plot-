@@ -52,10 +52,10 @@ function NavLink({
       className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
-          : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+          : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
       }`}
     >
-      <span className="flex shrink-0 items-center justify-center w-4 h-4">
+      <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${active ? "" : "text-sidebar-muted"}`}>
         {icon}
       </span>
       <span className="flex-1 truncate text-left">{label}</span>
@@ -94,10 +94,10 @@ function NavButton({
       className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
-          : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+          : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
       }`}
     >
-      <span className="flex shrink-0 items-center justify-center w-4 h-4">
+      <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${active ? "" : "text-sidebar-muted"}`}>
         {icon}
       </span>
       <span className="flex-1 truncate text-left">{label}</span>
@@ -170,7 +170,7 @@ function TeamLink({
       className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
-          : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+          : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
       }`}
     >
       <span
@@ -264,10 +264,10 @@ export function LinearSidebar() {
             className={`group flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
               isActive("/review")
                 ? "bg-sidebar-hover text-sidebar-foreground"
-                : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+                : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
             }`}
           >
-            <span className="flex shrink-0 items-center justify-center w-4 h-4">
+            <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${isActive("/review") ? "" : "text-sidebar-muted"}`}>
               <ClipboardCheck className="h-4 w-4" />
             </span>
             <span className="flex-1 truncate text-left">Review</span>

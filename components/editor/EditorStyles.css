@@ -600,6 +600,17 @@
   font-family: var(--font-sans, 'Geist', system-ui, -apple-system, sans-serif);
 }
 
+/* Current Line Highlight */
+.ProseMirror .current-line-highlight {
+  background-color: rgba(94, 106, 210, 0.06);
+  border-radius: 2px;
+  transition: background-color 0.1s ease;
+}
+
+.dark .ProseMirror .current-line-highlight {
+  background-color: rgba(94, 106, 210, 0.08);
+}
+
 /* Scrollbar for code blocks */
 .ProseMirror pre::-webkit-scrollbar {
   height: 6px;

@@ -34,8 +34,8 @@ const STATUS_CONFIG: Record<
 > = {
   inbox: {
     label: "Inbox",
-    color: "#f59e0b",
-    bg: "rgba(245, 158, 11, 0.12)",
+    color: "#06b6d4",
+    bg: "rgba(6, 182, 212, 0.12)",
     icon: <Inbox className="h-3 w-3" />,
   },
   capture: {
