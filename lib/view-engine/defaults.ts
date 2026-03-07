@@ -42,10 +42,20 @@ export function buildDefaultViewStates(): Record<ViewContextKey, ViewState> {
 
 /* ── Shape Normalization (for migrations) ──────────────── */
 
+/** Columns that must always be present, in guaranteed order (last = rightmost) */
+const REQUIRED_TAIL_COLUMNS = ["updatedAt", "createdAt"] as const
+
+function ensureRequiredColumns(columns: string[]): string[] {
+  // Strip required columns from wherever they are, then append in fixed order
+  const filtered = columns.filter((c) => !(REQUIRED_TAIL_COLUMNS as readonly string[]).includes(c))
+  return [...filtered, ...REQUIRED_TAIL_COLUMNS]
+}
+
 /**
  * Normalize a persisted ViewState to ensure all fields are valid.
  * - Invalid sortField/groupBy/viewMode → fallback to default
  * - Unknown column keys → filtered out
+ * - Missing required columns → auto-added
  * - Missing fields → filled from default
  */
 export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey): ViewState {
@@ -60,9 +70,11 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
       : base.sortDirection,
     groupBy: VALID_GROUP_BY.includes(merged.groupBy) ? merged.groupBy : base.groupBy,
     filters: Array.isArray(merged.filters) ? merged.filters : [],
-    visibleColumns: Array.isArray(merged.visibleColumns)
-      ? merged.visibleColumns.filter((c) => VALID_COLUMNS.includes(c))
-      : base.visibleColumns,
+    visibleColumns: ensureRequiredColumns(
+      Array.isArray(merged.visibleColumns)
+        ? merged.visibleColumns.filter((c) => VALID_COLUMNS.includes(c))
+        : base.visibleColumns
+    ),
     showEmptyGroups: typeof merged.showEmptyGroups === "boolean" ? merged.showEmptyGroups : false,
   }
 }
