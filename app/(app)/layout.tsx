@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
 import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts"
 import { Toaster } from "sonner"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 const MIN_WIDTH = 220
 const MAX_WIDTH = 360
@@ -131,7 +132,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           className="flex flex-1 overflow-hidden"
           style={sidebarCollapsed ? { marginLeft: 40 } : undefined}
         >
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </div>
 
         <SearchDialog />
