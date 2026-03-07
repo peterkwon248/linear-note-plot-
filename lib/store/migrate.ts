@@ -94,6 +94,21 @@ export function migrate(persistedState: unknown): PlotState {
   }
   // v17: SRS state map
   if (!state.srsStateByNoteId) state.srsStateByNoteId = {}
+  // v18: Ensure createdAt column is visible
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+    for (const key of Object.keys(vsMap)) {
+      const vs = vsMap[key]
+      if (Array.isArray(vs.visibleColumns) && !vs.visibleColumns.includes("createdAt")) {
+        const updIdx = vs.visibleColumns.indexOf("updatedAt")
+        if (updIdx !== -1) {
+          vs.visibleColumns.splice(updIdx + 1, 0, "createdAt")
+        } else {
+          vs.visibleColumns.push("createdAt")
+        }
+      }
+    }
+  }
   state._viewStateHydrated = false // always reset transient flag
 
   return state as unknown as PlotState
