@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
+import { computeNextStep, INTERVALS, type SRSRating } from "@/lib/srs"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getReviewQueue } from "@/lib/queries/notes"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
@@ -14,6 +15,7 @@ import {
   Link2,
   ClipboardCheck,
   FileText,
+  RotateCcw,
 } from "lucide-react"
 import { format } from "date-fns"
 import type { ReviewReason } from "@/lib/queries/notes"
@@ -48,6 +50,12 @@ const SECTION_CONFIG: Record<
     colorClass: "text-destructive",
     badgeClass: "bg-destructive/10 text-destructive",
   },
+  "srs-due": {
+    label: "SRS — Due for Review",
+    icon: <RotateCcw className="h-3.5 w-3.5" />,
+    colorClass: "text-chart-5",
+    badgeClass: "bg-chart-5/10 text-chart-5",
+  },
 }
 
 const REASON_ORDER: ReviewReason[] = [
@@ -55,6 +63,7 @@ const REASON_ORDER: ReviewReason[] = [
   "snoozed-due",
   "stale-capture",
   "unlinked-permanent",
+  "srs-due",
 ]
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -68,6 +77,7 @@ const REASON_BADGE: Record<ReviewReason, { label: string; className: string }> =
   "snoozed-due": { label: "Snoozed Due", className: "bg-chart-3/10 text-chart-3" },
   "stale-capture": { label: "Stale", className: "bg-chart-3/10 text-chart-3" },
   "unlinked-permanent": { label: "Unlinked", className: "bg-destructive/10 text-destructive" },
+  "srs-due": { label: "SRS Due", className: "bg-chart-5/10 text-chart-5" },
 }
 
 /* ── ReviewPage ──────────────────────────────────────── */
@@ -76,12 +86,14 @@ export default function ReviewPage() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  const reviewSRS = usePlotStore((s) => s.reviewSRS)
 
   const backlinks = useBacklinksIndex()
 
   const [previewId, setPreviewId] = useState<string | null>(null)
 
-  const reviewItems = useMemo(() => getReviewQueue(notes, backlinks), [notes, backlinks])
+  const reviewItems = useMemo(() => getReviewQueue(notes, backlinks, srsStateByNoteId), [notes, backlinks, srsStateByNoteId])
 
   const grouped = useMemo(() => {
     const map = new Map<ReviewReason, typeof reviewItems>()
@@ -91,6 +103,28 @@ export default function ReviewPage() {
     }
     return map
   }, [reviewItems])
+
+  const RATING_LABELS = ["Again", "Hard", "Good", "Easy"] as const
+  const RATING_COLORS = [
+    "text-destructive hover:bg-destructive/10",
+    "text-chart-3 hover:bg-chart-3/10",
+    "text-chart-5 hover:bg-chart-5/10",
+    "text-accent hover:bg-accent/10",
+  ] as const
+
+  const currentReason = useMemo(() => {
+    if (!previewId) return null
+    return reviewItems.find((i) => i.note.id === previewId)?.reason ?? null
+  }, [previewId, reviewItems])
+
+  const goNextSRS = useCallback(() => {
+    const srsItems = reviewItems.filter((i) => i.reason === "srs-due" && i.note.id !== previewId)
+    if (srsItems.length > 0) {
+      setPreviewId(srsItems[0].note.id)
+    } else {
+      setPreviewId(null)
+    }
+  }, [reviewItems, previewId])
 
   // Full editor mode
   if (selectedNoteId) {
@@ -219,6 +253,28 @@ export default function ReviewPage() {
             onTriageAction={() => setPreviewId(null)}
             embedded
           />
+          {/* SRS Rating Bar */}
+          {currentReason === "srs-due" && (
+            <div className="flex shrink-0 items-center gap-2 border-t border-border bg-secondary/20 px-4 py-3">
+              {([0, 1, 2, 3] as const).map((rating) => {
+                const srs = srsStateByNoteId[previewId]
+                const preview = computeNextStep(rating, srs?.step ?? 0)
+                return (
+                  <button
+                    key={rating}
+                    onClick={() => {
+                      reviewSRS(previewId, rating)
+                      goNextSRS()
+                    }}
+                    className={`flex flex-1 flex-col items-center gap-0.5 rounded-md border border-border bg-card px-2 py-2 text-center transition-colors ${RATING_COLORS[rating]}`}
+                  >
+                    <span className="text-[12px] font-medium">{RATING_LABELS[rating]}</span>
+                    <span className="text-[10px] tabular-nums opacity-60">{INTERVALS[preview.step]}d</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </aside>
       )}
     </div>

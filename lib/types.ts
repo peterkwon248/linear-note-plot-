@@ -107,6 +107,7 @@ export type NoteEventType =
   | "link_added" | "link_removed"
   | "thinking_chain_started" | "thinking_chain_step_added" | "thinking_chain_ended"
   | "map_added" | "map_removed"
+  | "srs_reviewed"
 
 export interface NoteEvent {
   id: string

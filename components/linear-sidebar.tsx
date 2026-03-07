@@ -189,7 +189,7 @@ function TeamLink({
 
 export function LinearSidebar() {
   const pathname = usePathname()
-  const { setSearchOpen, setSelectedNoteId, notes, folders, tags, categories, knowledgeMaps, createFolder, createTag, createCategory } =
+  const { setSearchOpen, setSelectedNoteId, notes, folders, tags, categories, knowledgeMaps, createFolder, createTag, createCategory, srsStateByNoteId } =
     usePlotStore()
 
   const backlinks = useBacklinksIndex()
@@ -201,7 +201,7 @@ export function LinearSidebar() {
   const inboxCount = useMemo(() => getInboxNotes(notes, backlinks).length, [notes, backlinks])
   const captureCount = useMemo(() => getCaptureNotes(notes).length, [notes])
   const permanentCount = useMemo(() => getPermanentNotes(notes).length, [notes])
-  const reviewCount = useMemo(() => getReviewQueue(notes, backlinks).length, [notes, backlinks])
+  const reviewCount = useMemo(() => getReviewQueue(notes, backlinks, srsStateByNoteId).length, [notes, backlinks, srsStateByNoteId])
   const pinnedNotes = notes.filter((n) => n.pinned && !n.archived).slice(0, 5)
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")

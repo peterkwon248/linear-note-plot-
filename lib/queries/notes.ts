@@ -1,4 +1,5 @@
 import type { Note, KnowledgeMap } from "@/lib/types"
+import type { SRSState } from "@/lib/srs"
 
 /* ── Inbox Rank ────────────────────────────────────────── */
 
@@ -146,7 +147,7 @@ export function getUnlinkedNotes(allNotes: Note[], backlinks: Map<string, number
 
 /* ── Daily Review Queue ──────────────────────────────── */
 
-export type ReviewReason = "inbox-untriaged" | "snoozed-due" | "stale-capture" | "unlinked-permanent"
+export type ReviewReason = "inbox-untriaged" | "snoozed-due" | "stale-capture" | "unlinked-permanent" | "srs-due"
 
 export interface ReviewItem {
   note: Note
@@ -160,7 +161,7 @@ export interface ReviewItem {
  * 3. Stale capture (7+ days untouched)
  * 4. Unlinked permanent notes
  */
-export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>): ReviewItem[] {
+export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>, srsMap?: Record<string, SRSState>): ReviewItem[] {
   const nowMs = Date.now()
   const items: ReviewItem[] = []
 
@@ -194,6 +195,21 @@ export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>)
         (backlinks.get(n.id) ?? 0) === 0
     )
     .forEach((note) => items.push({ note, reason: "unlinked-permanent" }))
+
+  // 5. SRS due
+  if (srsMap) {
+    const nowISO = new Date().toISOString()
+    const seen = new Set(items.map((i) => i.note.id))
+    for (const note of allNotes) {
+      if (note.status !== "permanent") continue
+      if (note.triageStatus === "trashed") continue
+      if (seen.has(note.id)) continue
+      const srs = srsMap[note.id]
+      if (srs && srs.dueAt <= nowISO) {
+        items.push({ note, reason: "srs-due" })
+      }
+    }
+  }
 
   return items
 }
