@@ -39,6 +39,9 @@ export interface PlotState {
   // SRS
   srsStateByNoteId: Record<string, SRSState>
 
+  // Alerts
+  dismissedAlertIds: string[]
+
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
   updateNote: (id: string, updates: Partial<Note>) => void
@@ -109,6 +112,10 @@ export interface PlotState {
   deleteKnowledgeMap: (id: string) => void
   addNoteToMap: (mapId: string, noteId: string) => void
   removeNoteFromMap: (mapId: string, noteId: string) => void
+
+  // ── Alerts ──
+  dismissAlert: (id: string) => void
+  clearDismissedAlerts: () => void
 
   // ── Internal ──
   _hydrateNoteBodies: (bodies: NoteBody[]) => void
