@@ -197,6 +197,8 @@ export function NoteDetailPanel({
   const knowledgeMaps = usePlotStore((s) => s.knowledgeMaps)
   const removeNoteFromMap = usePlotStore((s) => s.removeNoteFromMap)
   const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  const enrollSRS = usePlotStore((s) => s.enrollSRS)
+  const unenrollSRS = usePlotStore((s) => s.unenrollSRS)
 
   const backlinksIndex = useBacklinksIndex()
 
@@ -596,19 +598,30 @@ export function NoteDetailPanel({
             <MetaRow label="Updated" icon={<Clock className="h-3 w-3" />}>
               {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
             </MetaRow>
-            {srsStateByNoteId[noteId] && (() => {
-              const srs = srsStateByNoteId[noteId]
-              return (
-                <>
-                  <MetaRow label="Next Review" icon={<RotateCcw className="h-3 w-3" />}>
-                    {formatDistanceToNow(new Date(srs.dueAt), { addSuffix: true })}
-                  </MetaRow>
-                  <MetaRow label="Interval" icon={<RotateCcw className="h-3 w-3" />}>
-                    <span className="tabular-nums">{INTERVALS[srs.step]}d</span>
-                  </MetaRow>
-                </>
-              )
-            })()}
+            {note.status === "permanent" && (
+              <MetaRow label="SRS" icon={<RotateCcw className="h-3 w-3" />}>
+                {srsStateByNoteId[noteId] ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground">
+                      {INTERVALS[srsStateByNoteId[noteId].step]}d · {formatDistanceToNow(new Date(srsStateByNoteId[noteId].dueAt), { addSuffix: true })}
+                    </span>
+                    <button
+                      onClick={() => { unenrollSRS(noteId); toast("Removed from SRS") }}
+                      className="rounded px-1.5 py-0.5 text-[10px] text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { enrollSRS(noteId); toast("Enrolled in SRS") }}
+                    className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-foreground hover:bg-secondary transition-colors"
+                  >
+                    Enroll
+                  </button>
+                )}
+              </MetaRow>
+            )}
           </div>
         </PanelSection>
 
