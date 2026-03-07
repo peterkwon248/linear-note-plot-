@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getMapStats } from "@/lib/queries/notes"
-import { KnowledgeMapCanvas } from "@/components/knowledge-map-canvas"
+import { KnowledgeMapCanvas, type MapGraphFilter } from "@/components/knowledge-map-canvas"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   Search,
   Trash2,
+  Filter,
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -42,6 +43,7 @@ export default function MapDetailPage() {
   const [previewId, setPreviewId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [addQuery, setAddQuery] = useState("")
+  const [graphFilter, setGraphFilter] = useState<MapGraphFilter>({ status: "all", linkedOnly: false })
 
   const mapNotes = useMemo(
     () => (map ? notes.filter((n) => map.noteIds.includes(n.id)) : []),
@@ -249,13 +251,50 @@ export default function MapDetailPage() {
           </div>
 
           {/* Graph canvas */}
-          <div className="flex-1 overflow-auto bg-secondary/5 flex items-center justify-center p-4">
-            <KnowledgeMapCanvas
-              map={map}
-              notes={notes}
-              onOpenNote={handleOpenNote}
-              focusNoteId={focusNoteId}
-            />
+          <div className="flex-1 flex flex-col overflow-hidden bg-secondary/5">
+            {/* Filter bar */}
+            <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-2">
+              <Filter className="h-3 w-3 text-muted-foreground" />
+              <select
+                value={graphFilter.status}
+                onChange={(e) => setGraphFilter((f) => ({ ...f, status: e.target.value as MapGraphFilter["status"] }))}
+                className="rounded-md border border-border bg-card px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="all">All statuses</option>
+                <option value="inbox">Inbox</option>
+                <option value="capture">Capture</option>
+                <option value="permanent">Permanent</option>
+                <option value="reference">Reference</option>
+              </select>
+              <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={graphFilter.linkedOnly}
+                  onChange={(e) => setGraphFilter((f) => ({ ...f, linkedOnly: e.target.checked }))}
+                  className="rounded border-border"
+                />
+                Linked only
+              </label>
+              {(graphFilter.status !== "all" || graphFilter.linkedOnly) && (
+                <button
+                  onClick={() => setGraphFilter({ status: "all", linkedOnly: false })}
+                  className="ml-auto text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+
+            {/* Canvas */}
+            <div className="flex-1 overflow-hidden">
+              <KnowledgeMapCanvas
+                map={map}
+                notes={notes}
+                onOpenNote={handleOpenNote}
+                focusNoteId={focusNoteId}
+                filter={graphFilter}
+              />
+            </div>
           </div>
         </div>
       </main>
