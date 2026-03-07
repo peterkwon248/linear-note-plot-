@@ -31,6 +31,7 @@ import {
   Archive as ArchiveIcon,
   MapIcon,
   Network,
+  RotateCcw,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
@@ -39,6 +40,7 @@ import { StatusBadge, PriorityBadge, PROJECT_LEVEL_CONFIG, ProjectDropdown } fro
 import { ConnectionsGraph } from "@/components/connections-graph"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { suggestBacklinks } from "@/lib/backlinks"
+import { INTERVALS } from "@/lib/srs"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import {
   DropdownMenu,
@@ -80,6 +82,7 @@ const EVENT_CONFIG: Record<NoteEventType, { icon: React.ComponentType<{ classNam
   thinking_chain_ended: { icon: Brain, label: "Chain ended" },
   map_added: { icon: MapIcon, label: "Added to map" },
   map_removed: { icon: MapIcon, label: "Removed from map" },
+  srs_reviewed: { icon: RotateCcw, label: "SRS reviewed" },
 }
 
 /* ── Section ───────────────────────────────────────────── */
@@ -193,6 +196,7 @@ export function NoteDetailPanel({
   const addWikiLink = usePlotStore((s) => s.addWikiLink)
   const knowledgeMaps = usePlotStore((s) => s.knowledgeMaps)
   const removeNoteFromMap = usePlotStore((s) => s.removeNoteFromMap)
+  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
 
   const backlinksIndex = useBacklinksIndex()
 
@@ -592,6 +596,19 @@ export function NoteDetailPanel({
             <MetaRow label="Updated" icon={<Clock className="h-3 w-3" />}>
               {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
             </MetaRow>
+            {srsStateByNoteId[noteId] && (() => {
+              const srs = srsStateByNoteId[noteId]
+              return (
+                <>
+                  <MetaRow label="Next Review" icon={<RotateCcw className="h-3 w-3" />}>
+                    {formatDistanceToNow(new Date(srs.dueAt), { addSuffix: true })}
+                  </MetaRow>
+                  <MetaRow label="Interval" icon={<RotateCcw className="h-3 w-3" />}>
+                    <span className="tabular-nums">{INTERVALS[srs.step]}d</span>
+                  </MetaRow>
+                </>
+              )
+            })()}
           </div>
         </PanelSection>
 

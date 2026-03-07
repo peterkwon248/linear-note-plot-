@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { Note, NoteBody, Folder, Tag, Category, ActiveView, NoteFilter, NoteStatus, TriageStatus, NoteEvent, NoteEventType, ThinkingChainSession, ThinkingChainStep, KnowledgeMap } from "./types"
 import { extractPreview, extractLinksOut } from "./body-helpers"
+import { type SRSState, type SRSRating, computeNextStep, dueAtFromStep } from "@/lib/srs"
 import { saveBody as saveBodyToIDB, deleteBody as deleteBodyFromIDB, BODIES_MIGRATED_KEY } from "./note-body-store"
 import { createIDBStorage } from "./idb-storage"
 import type { ViewState, ViewContextKey } from "./view-engine/types"
@@ -265,6 +266,12 @@ interface PlotState {
   setSidebarPeek: (peek: boolean) => void
   restoreSidebar: () => void
 
+  // SRS (Spaced Repetition)
+  srsStateByNoteId: Record<string, SRSState>
+  reviewSRS: (noteId: string, rating: SRSRating) => void
+  enrollSRS: (noteId: string) => void
+  unenrollSRS: (noteId: string) => void
+
   // Phase 2 state
   noteEvents: NoteEvent[]
   thinkingChains: ThinkingChainSession[]
@@ -341,6 +348,12 @@ export const usePlotStore = create<PlotState>()(
       graphFocusDepth: 0,
       commandPaletteMode: "search" as const,
       knowledgeMaps: [] as KnowledgeMap[],
+      // SRS
+      srsStateByNoteId: {} as Record<string, SRSState>,
+
+      // View Engine
+      viewStateByContext: buildDefaultViewStates(),
+      _viewStateHydrated: false,
 
       // View Engine
       viewStateByContext: buildDefaultViewStates(),
@@ -484,6 +497,51 @@ export const usePlotStore = create<PlotState>()(
           ),
         }))
         appendEvent(id, "promoted")
+        // Auto-enroll in SRS when promoted to permanent
+        get().enrollSRS(id)
+      },
+
+      // ── SRS Actions ────────────────────────────────────
+      reviewSRS: (noteId, rating) => {
+        const prev = get().srsStateByNoteId[noteId]
+        if (!prev) return
+        const result = computeNextStep(rating, prev.step)
+        set((state) => ({
+          srsStateByNoteId: {
+            ...state.srsStateByNoteId,
+            [noteId]: {
+              ...prev,
+              step: result.step,
+              dueAt: dueAtFromStep(result.step),
+              lastReviewedAt: now(),
+              lapses: prev.lapses + result.lapseDelta,
+              introducedAt: prev.introducedAt,
+            },
+          },
+        }))
+        appendEvent(noteId, "srs_reviewed", { rating, step: result.step })
+      },
+
+      enrollSRS: (noteId) => {
+        set((state) => ({
+          srsStateByNoteId: {
+            ...state.srsStateByNoteId,
+            [noteId]: {
+              step: 0,
+              dueAt: dueAtFromStep(0),
+              lastReviewedAt: now(),
+              introducedAt: now(),
+              lapses: 0,
+            },
+          },
+        }))
+      },
+
+      unenrollSRS: (noteId) => {
+        set((state) => {
+          const { [noteId]: _, ...rest } = state.srsStateByNoteId
+          return { srsStateByNoteId: rest }
+        })
       },
 
       undoPromote: (id) => {
@@ -864,7 +922,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 16,
+      version: 17,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -960,6 +1018,8 @@ export const usePlotStore = create<PlotState>()(
         } else {
           state.viewStateByContext = buildDefaultViewStates()
         }
+        // v17: SRS state map
+        if (!state.srsStateByNoteId) state.srsStateByNoteId = {}
         state._viewStateHydrated = false // always reset transient flag
         return state as unknown as PlotState
       },
