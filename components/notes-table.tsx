@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, memo } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import {
   Plus,
@@ -14,6 +14,7 @@ import {
   ChevronDown,
   X,
   SlidersHorizontal,
+  Columns3,
   Sparkles,
   Layers,
   Check,
@@ -49,9 +50,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { usePlotStore, filterNotesByRoute } from "@/lib/store"
+import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
-import { getUnlinkedNotes, getSnoozeTime } from "@/lib/queries/notes"
+import { getSnoozeTime } from "@/lib/queries/notes"
+import { useNotesView } from "@/lib/view-engine/use-notes-view"
+import type { ViewContextKey, SortField, SortDirection, GroupBy, FilterRule, NoteGroup } from "@/lib/view-engine/types"
 import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge, PROJECT_LEVEL_CONFIG, ProjectLevelDropdown, ProjectDropdown } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
@@ -63,19 +66,9 @@ function absDate(dateStr: string): string {
   return format(new Date(dateStr), "MMM d")
 }
 
-/* ── Sort ──────────────────────────────────────────────── */
-
-type SortColumn = "title" | "status" | "project" | "links" | "reads" | "priority" | "created" | "updated"
-type SortDirection = "asc" | "desc"
-
-const STATUS_ORDER: Record<NoteStatus, number> = { inbox: 0, capture: 1, reference: 2, permanent: 3 }
-const PRIORITY_ORDER: Record<NotePriority, number> = { none: 0, low: 1, medium: 2, high: 3, urgent: 4 }
-
 /* ── Context tabs ──────────────────────────────────────── */
 
-type ContextTab = "all" | "inbox" | "capture" | "reference" | "permanent" | "unlinked"
-
-const TABS: { id: ContextTab; label: string }[] = [
+const TABS: { id: ViewContextKey; label: string }[] = [
   { id: "all", label: "All Notes" },
   { id: "inbox", label: "Inbox" },
   { id: "capture", label: "Capture" },
@@ -84,14 +77,40 @@ const TABS: { id: ContextTab; label: string }[] = [
   { id: "unlinked", label: "Unlinked" },
 ]
 
-/* ── Filter ────────────────────────────────────────────── */
+/* ── Column + group config ─────────────────────────────── */
 
-type FilterType = "status" | "priority" | "links" | "reads"
+const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField: SortField }[] = [
+  { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
+  { id: "status", label: "Status", width: "w-[100px] shrink-0", align: "text-right", sortField: "status" },
+  { id: "project", label: "Project", width: "w-[80px] shrink-0", align: "text-center", sortField: "project" },
+  { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links" },
+  { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads" },
+  { id: "priority", label: "Priority", width: "w-[72px] shrink-0", align: "text-center", sortField: "priority" },
+  { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt" },
+  { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt" },
+]
 
-interface ActiveFilter {
-  type: FilterType
-  value: string
+const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
+  { value: "none", label: "No grouping" },
+  { value: "status", label: "Status" },
+  { value: "priority", label: "Priority" },
+  { value: "date", label: "Date" },
+  { value: "project", label: "Project" },
+]
+
+/* ── Filter chip display ───────────────────────────────── */
+
+function formatFilterLabel(rule: FilterRule): string {
+  if (rule.field === "links" && rule.operator === "eq" && rule.value === "0") return "Unlinked"
+  if (rule.field === "reads" && rule.operator === "eq" && rule.value === "0") return "Unread"
+  return `${rule.field}: ${rule.value}`
 }
+
+/* ── Virtual item type ─────────────────────────────────── */
+
+type VirtualItem =
+  | { type: "header"; label: string; count: number }
+  | { type: "note"; note: Note }
 
 /* ── Header cell ───────────────────────────────────────── */
 
@@ -104,10 +123,10 @@ function TH({
   className = "",
 }: {
   label: string
-  col: SortColumn
-  sortCol: SortColumn
+  col: SortField
+  sortCol: SortField
   sortDir: SortDirection
-  onSort: (c: SortColumn) => void
+  onSort: (c: SortField) => void
   className?: string
 }) {
   const active = sortCol === col
@@ -147,10 +166,7 @@ export function NotesTable({
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
 
-  const [sortCol, setSortCol] = useState<SortColumn>("updated")
-  const [sortDir, setSortDir] = useState<SortDirection>("desc")
-  const [filters, setFilters] = useState<ActiveFilter[]>([])
-  const [activeTab, setActiveTab] = useState<ContextTab>("all")
+  const [activeTab, setActiveTab] = useState<ViewContextKey>("all")
 
   const backlinksMap = useBacklinksIndex()
 
@@ -160,72 +176,61 @@ export function NotesTable({
     return Array.from(set).sort()
   }, [notes])
 
-  function handleSort(col: SortColumn) {
-    if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-    else { setSortCol(col); setSortDir(col === "title" ? "asc" : "desc") }
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(activeTab, { backlinksMap })
+
+  function handleSort(col: SortField) {
+    if (viewState.sortField === col) {
+      updateViewState({ sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc" })
+    } else {
+      updateViewState({ sortField: col, sortDirection: col === "title" ? "asc" : "desc" })
+    }
   }
 
-  function addFilter(type: FilterType, value: string) {
-    setFilters((prev) => {
-      if (prev.find((f) => f.type === type && f.value === value)) return prev
-      return [...prev, { type, value }]
-    })
+  function addFilter(field: FilterRule["field"], value: string, operator: FilterRule["operator"] = "eq") {
+    const newRule: FilterRule = { field, operator, value }
+    const exists = viewState.filters.some(
+      (f) => f.field === field && f.operator === operator && f.value === value
+    )
+    if (!exists) {
+      updateViewState({ filters: [...viewState.filters, newRule] })
+    }
   }
 
   function removeFilter(idx: number) {
-    setFilters((prev) => prev.filter((_, i) => i !== idx))
+    updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
   }
 
-  const filteredNotes = useMemo(() => {
-    let result = filterNotesByRoute(notes, { type: "all" })
+  function toggleColumn(colId: string) {
+    const cols = viewState.visibleColumns
+    const next = cols.includes(colId)
+      ? cols.filter((c) => c !== colId)
+      : [...cols, colId]
+    updateViewState({ visibleColumns: next })
+  }
 
-    // Tab filter
-    switch (activeTab) {
-      case "inbox":      result = result.filter((n) => n.status === "inbox"); break
-      case "capture":    result = result.filter((n) => n.status === "capture"); break
-      case "reference":  result = result.filter((n) => n.status === "reference"); break
-      case "permanent":  result = result.filter((n) => n.status === "permanent"); break
-      case "unlinked":   result = getUnlinkedNotes(notes, backlinksMap); break
+  const visibleCols = viewState.visibleColumns
+
+  const virtualItems = useMemo((): VirtualItem[] => {
+    if (viewState.groupBy === "none") {
+      return flatNotes.map((note) => ({ type: "note" as const, note }))
     }
-
-    // Chip filters
-    for (const f of filters) {
-      switch (f.type) {
-        case "status":   result = result.filter((n) => n.status === f.value); break
-        case "priority": result = result.filter((n) => n.priority === f.value); break
-        case "links":    if (f.value === "unlinked") result = result.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0); break
-        case "reads":    if (f.value === "unread") result = result.filter((n) => n.reads === 0); break
+    const items: VirtualItem[] = []
+    for (const group of groups) {
+      if (group.notes.length === 0 && !viewState.showEmptyGroups) continue
+      items.push({ type: "header", label: group.label, count: group.notes.length })
+      for (const note of group.notes) {
+        items.push({ type: "note", note })
       }
     }
-
-    // Sort
-    const dir = sortDir === "asc" ? 1 : -1
-    result.sort((a, b) => {
-      switch (sortCol) {
-        case "title":    return dir * a.title.localeCompare(b.title)
-        case "status":   return dir * (STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
-        case "project": {
-          const ap = a.project ?? ""
-          const bp = b.project ?? ""
-          return dir * ap.localeCompare(bp)
-        }
-        case "links":    return dir * ((backlinksMap.get(a.id) ?? 0) - (backlinksMap.get(b.id) ?? 0))
-        case "reads":    return dir * (a.reads - b.reads)
-        case "priority": return dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
-        case "created":  return dir * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-        case "updated":
-        default:         return dir * (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime())
-      }
-    })
-    return result
-  }, [notes, filters, sortCol, sortDir, backlinksMap, activeTab])
+    return items
+  }, [flatNotes, groups, viewState.groupBy, viewState.showEmptyGroups])
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const rowVirtualizer = useVirtualizer({
-    count: filteredNotes.length,
+    count: virtualItems.length,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => 41,
+    estimateSize: (i) => virtualItems[i].type === "header" ? 36 : 41,
     overscan: 5,
   })
 
@@ -297,33 +302,65 @@ export function NotesTable({
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => addFilter("links", "unlinked")}>
+              <DropdownMenuItem onClick={() => addFilter("links", "0")}>
                 <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-[12px]">Unlinked notes</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addFilter("reads", "unread")}>
+              <DropdownMenuItem onClick={() => addFilter("reads", "0")}>
                 <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-[12px]">Unread notes</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <SlidersHorizontal className="h-3 w-3" />
-            Display
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <SlidersHorizontal className="h-3 w-3" />
+                Display
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
+                Group by
+              </DropdownMenuItem>
+              {GROUP_OPTIONS.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.value}
+                  onClick={() => updateViewState({ groupBy: opt.value })}
+                >
+                  {viewState.groupBy === opt.value && <Check className="h-3.5 w-3.5 mr-2 text-accent" />}
+                  {viewState.groupBy !== opt.value && <span className="w-3.5 mr-2 inline-block" />}
+                  <span className="text-[12px]">{opt.label}</span>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
+                Columns
+              </DropdownMenuItem>
+              {COLUMN_DEFS.filter((c) => c.id !== "title").map((col) => (
+                <DropdownMenuItem
+                  key={col.id}
+                  onClick={() => toggleColumn(col.id)}
+                >
+                  {visibleCols.includes(col.id) && <Check className="h-3.5 w-3.5 mr-2 text-accent" />}
+                  {!visibleCols.includes(col.id) && <span className="w-3.5 mr-2 inline-block" />}
+                  <span className="text-[12px]">{col.label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* ── Filter chips ───────────────────────────────── */}
-      {filters.length > 0 && (
+      {viewState.filters.length > 0 && (
         <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
-          {filters.map((f, i) => (
+          {viewState.filters.map((f, i) => (
             <span
               key={i}
               className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-[11px] text-foreground"
             >
-              <span className="text-muted-foreground capitalize">{f.type}:</span>
-              <span className="capitalize">{f.value}</span>
+              <span className="text-muted-foreground">{formatFilterLabel(f)}</span>
               <button
                 onClick={() => removeFilter(i)}
                 className="ml-0.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-foreground"
@@ -333,7 +370,7 @@ export function NotesTable({
             </span>
           ))}
           <button
-            onClick={() => setFilters([])}
+            onClick={() => updateViewState({ filters: [] })}
             className="text-[11px] text-muted-foreground transition-colors hover:text-foreground"
           >
             Clear all
@@ -342,7 +379,7 @@ export function NotesTable({
       )}
 
       {/* ── Unlinked helper ─────────────────────────────── */}
-      {activeTab === "unlinked" && filteredNotes.length > 0 && (
+      {activeTab === "unlinked" && flatNotes.length > 0 && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
           <Link2 className="h-3 w-3 text-muted-foreground" />
           <span className="text-[11px] text-muted-foreground">
@@ -352,13 +389,13 @@ export function NotesTable({
       )}
 
       {/* ── Table ──────────────────────────────────────── */}
-      {filteredNotes.length === 0 ? (
+      {virtualItems.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
             <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
             <p className="text-[13px] text-muted-foreground">No notes found</p>
             <p className="mt-1 text-[12px] text-muted-foreground/60">
-              {filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
+              {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
             </p>
           </div>
         </div>
@@ -366,30 +403,18 @@ export function NotesTable({
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
           {/* Column headers */}
           <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
-            <div className="flex-1 min-w-0">
-              <TH label="Name" col="title" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
-            </div>
-            <div className="w-[100px] shrink-0 text-right">
-              <TH label="Status" col="status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-end" />
-            </div>
-            <div className="w-[80px] shrink-0 text-center">
-              <TH label="Project" col="project" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-center" />
-            </div>
-            <div className="w-[56px] shrink-0 text-center">
-              <TH label="Links" col="links" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-center" />
-            </div>
-            <div className="w-[56px] shrink-0 text-center">
-              <TH label="Reads" col="reads" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-center" />
-            </div>
-            <div className="w-[72px] shrink-0 text-center">
-              <TH label="Priority" col="priority" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-center" />
-            </div>
-            <div className="w-[80px] shrink-0 text-right">
-              <TH label="Created" col="created" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-end" />
-            </div>
-            <div className="w-[80px] shrink-0 text-right">
-              <TH label="Updated" col="updated" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="justify-end" />
-            </div>
+            {COLUMN_DEFS.filter((col) => col.id === "title" || visibleCols.includes(col.id)).map((col) => (
+              <div key={col.id} className={col.width + " " + (col.align ?? "")}>
+                <TH
+                  label={col.label}
+                  col={col.sortField}
+                  sortCol={viewState.sortField}
+                  sortDir={viewState.sortDirection}
+                  onSort={handleSort}
+                  className={col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""}
+                />
+              </div>
+            ))}
           </div>
 
           {/* Virtualized rows */}
@@ -401,10 +426,10 @@ export function NotesTable({
             }}
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const note = filteredNotes[virtualRow.index]
+              const item = virtualItems[virtualRow.index]
               return (
                 <div
-                  key={note.id}
+                  key={virtualRow.index}
                   style={{
                     position: "absolute",
                     top: 0,
@@ -414,26 +439,34 @@ export function NotesTable({
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  <NoteRow
-                    note={note}
-                    categories={categories}
-                    existingProjects={existingProjects}
-                    links={backlinksMap.get(note.id) ?? 0}
-                    isActive={activePreviewId === note.id}
-                    onOpen={() => onRowClick ? onRowClick(note.id) : openNote(note.id)}
-                    onDoubleClick={() => openNote(note.id)}
-                    onStatus={(s) => updateNote(note.id, { status: s })}
-                    onPriority={(p) => updateNote(note.id, { priority: p })}
-                    onProjectLevel={(lvl) => updateNote(note.id, { projectLevel: lvl })}
-                    onSetProject={(p) => updateNote(note.id, { project: p, projectLevel: "planning" })}
-                    onRemoveProject={() => updateNote(note.id, { project: null, projectLevel: null })}
-                    onKeep={() => triageKeep(note.id)}
-                    onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
-                    onTrash={() => triageTrash(note.id)}
-                    onPromote={() => promoteToPermament(note.id)}
-                    onDemote={() => undoPromote(note.id)}
-                    onMoveBack={() => moveBackToInbox(note.id)}
-                  />
+                  {item.type === "header" ? (
+                    <div className="flex items-center gap-2 px-5 py-2 bg-secondary/30 border-b border-border">
+                      <span className="text-[12px] font-semibold text-foreground">{item.label}</span>
+                      <span className="text-[11px] text-muted-foreground">{item.count}</span>
+                    </div>
+                  ) : (
+                    <NoteRow
+                      note={item.note}
+                      categories={categories}
+                      existingProjects={existingProjects}
+                      links={backlinksMap.get(item.note.id) ?? 0}
+                      isActive={activePreviewId === item.note.id}
+                      visibleColumns={visibleCols}
+                      onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
+                      onDoubleClick={() => openNote(item.note.id)}
+                      onStatus={(s) => updateNote(item.note.id, { status: s })}
+                      onPriority={(p) => updateNote(item.note.id, { priority: p })}
+                      onProjectLevel={(lvl) => updateNote(item.note.id, { projectLevel: lvl })}
+                      onSetProject={(p) => updateNote(item.note.id, { project: p, projectLevel: "planning" })}
+                      onRemoveProject={() => updateNote(item.note.id, { project: null, projectLevel: null })}
+                      onKeep={() => triageKeep(item.note.id)}
+                      onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
+                      onTrash={() => triageTrash(item.note.id)}
+                      onPromote={() => promoteToPermament(item.note.id)}
+                      onDemote={() => undoPromote(item.note.id)}
+                      onMoveBack={() => moveBackToInbox(item.note.id)}
+                    />
+                  )}
                 </div>
               )
             })}
@@ -446,31 +479,13 @@ export function NotesTable({
 
 /* ── Row ───────────────────────────────────────────────── */
 
-function NoteRow({
-  note,
-  categories,
-  existingProjects,
-  links,
-  isActive,
-  onOpen,
-  onDoubleClick,
-  onStatus,
-  onPriority,
-  onProjectLevel,
-  onSetProject,
-  onRemoveProject,
-  onKeep,
-  onSnooze,
-  onTrash,
-  onPromote,
-  onDemote,
-  onMoveBack,
-}: {
+interface NoteRowProps {
   note: Note
   categories: { id: string; name: string; color: string }[]
   existingProjects: string[]
   links: number
   isActive?: boolean
+  visibleColumns: string[]
   onOpen: () => void
   onDoubleClick?: () => void
   onStatus: (s: NoteStatus) => void
@@ -484,7 +499,30 @@ function NoteRow({
   onPromote: () => void
   onDemote: () => void
   onMoveBack: () => void
-}) {
+}
+
+function NoteRowInner({
+  note,
+  categories,
+  existingProjects,
+  links,
+  isActive,
+  visibleColumns,
+  onOpen,
+  onDoubleClick,
+  onStatus,
+  onPriority,
+  onProjectLevel,
+  onSetProject,
+  onRemoveProject,
+  onKeep,
+  onSnooze,
+  onTrash,
+  onPromote,
+  onDemote,
+  onMoveBack,
+}: NoteRowProps) {
+  const visibleCols = visibleColumns
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -528,65 +566,79 @@ function NoteRow({
       </div>
 
       {/* Status */}
-      <div className="w-[100px] shrink-0 flex justify-end" onClick={(e) => e.stopPropagation()}>
-        <StatusDropdown value={note.status} onChange={onStatus} variant="inline" />
-      </div>
+      {visibleCols.includes("status") && (
+        <div className="w-[100px] shrink-0 flex justify-end" onClick={(e) => e.stopPropagation()}>
+          <StatusDropdown value={note.status} onChange={onStatus} variant="inline" />
+        </div>
+      )}
 
       {/* Project */}
-      <div className="w-[80px] shrink-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-        {note.project ? (
-          <ProjectLevelDropdown value={note.projectLevel} onChange={onProjectLevel} variant="dot" />
-        ) : (
-          <ProjectDropdown value={null} existingProjects={existingProjects} onChange={onSetProject} variant="table" />
-        )}
-      </div>
+      {visibleCols.includes("project") && (
+        <div className="w-[80px] shrink-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          {note.project ? (
+            <ProjectLevelDropdown value={note.projectLevel} onChange={onProjectLevel} variant="dot" />
+          ) : (
+            <ProjectDropdown value={null} existingProjects={existingProjects} onChange={onSetProject} variant="table" />
+          )}
+        </div>
+      )}
 
       {/* Links */}
-      <div className="w-[56px] shrink-0 text-center">
-        <span className={`text-[12px] tabular-nums ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
-          {links}
-        </span>
-      </div>
+      {visibleCols.includes("links") && (
+        <div className="w-[56px] shrink-0 text-center">
+          <span className={`text-[12px] tabular-nums ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+            {links}
+          </span>
+        </div>
+      )}
 
       {/* Reads */}
-      <div className="w-[56px] shrink-0 text-center">
-        <span className={`text-[12px] tabular-nums ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
-          {note.reads}
-        </span>
-      </div>
+      {visibleCols.includes("reads") && (
+        <div className="w-[56px] shrink-0 text-center">
+          <span className={`text-[12px] tabular-nums ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+            {note.reads}
+          </span>
+        </div>
+      )}
 
       {/* Priority */}
-      <div className="w-[72px] shrink-0 flex justify-center" onClick={(e) => e.stopPropagation()}>
-        <PriorityDropdown value={note.priority} onChange={onPriority} variant="inline" />
-      </div>
+      {visibleCols.includes("priority") && (
+        <div className="w-[72px] shrink-0 flex justify-center" onClick={(e) => e.stopPropagation()}>
+          <PriorityDropdown value={note.priority} onChange={onPriority} variant="inline" />
+        </div>
+      )}
 
       {/* Created - absolute date like Linear */}
-      <div className="w-[80px] shrink-0 text-right">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="text-[12px] tabular-nums text-muted-foreground cursor-default">
-              {absDate(note.createdAt)}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-[11px]">
-            {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
-          </TooltipContent>
-        </Tooltip>
-      </div>
+      {visibleCols.includes("createdAt") && (
+        <div className="w-[80px] shrink-0 text-right">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-[12px] tabular-nums text-muted-foreground cursor-default">
+                {absDate(note.createdAt)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[11px]">
+              {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      )}
 
       {/* Updated - relative time like Linear */}
-      <div className="w-[80px] shrink-0 text-right">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="text-[12px] tabular-nums text-muted-foreground cursor-default">
-              {shortRelative(note.updatedAt)}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-[11px]">
-            {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
-          </TooltipContent>
-        </Tooltip>
-      </div>
+      {visibleCols.includes("updatedAt") && (
+        <div className="w-[80px] shrink-0 text-right">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-[12px] tabular-nums text-muted-foreground cursor-default">
+                {shortRelative(note.updatedAt)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[11px]">
+              {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      )}
         </div>
       </ContextMenuTrigger>
 
@@ -664,3 +716,18 @@ function NoteRow({
     </ContextMenu>
   )
 }
+
+const NoteRow = memo(NoteRowInner, (prev, next) =>
+  prev.note.id === next.note.id &&
+  prev.note.updatedAt === next.note.updatedAt &&
+  prev.note.status === next.note.status &&
+  prev.note.priority === next.note.priority &&
+  prev.note.project === next.note.project &&
+  prev.note.projectLevel === next.note.projectLevel &&
+  prev.note.reads === next.note.reads &&
+  prev.note.title === next.note.title &&
+  prev.note.category === next.note.category &&
+  prev.links === next.links &&
+  prev.isActive === next.isActive &&
+  prev.visibleColumns === next.visibleColumns
+)

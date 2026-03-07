@@ -21,6 +21,8 @@ export default function EditorPage() {
   const setTabSize = useSettingsStore((s) => s.setTabSize)
   const codeFontFamily = useSettingsStore((s) => s.codeFontFamily)
   const setCodeFontFamily = useSettingsStore((s) => s.setCodeFontFamily)
+  const currentLineHighlight = useSettingsStore((s) => s.currentLineHighlight)
+  const setCurrentLineHighlight = useSettingsStore((s) => s.setCurrentLineHighlight)
 
   return (
     <>
@@ -37,6 +39,10 @@ export default function EditorPage() {
         <Divider />
         <SettingRow label="Word wrap" description="Wrap long lines instead of horizontal scroll">
           <Switch checked={wordWrap} onCheckedChange={setWordWrap} />
+        </SettingRow>
+        <Divider />
+        <SettingRow label="Current line highlight" description="Highlight the line where the cursor is located">
+          <Switch checked={currentLineHighlight} onCheckedChange={setCurrentLineHighlight} />
         </SettingRow>
       </SettingsCard>
 

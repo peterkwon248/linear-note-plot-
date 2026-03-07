@@ -55,7 +55,15 @@ export function useBacklinksIndex(): Map<string, number> {
     for (const n of notes) newPrev.set(n.id, n.updatedAt)
     prevNotesRef.current = newPrev
 
-    setCountMap(idx.toCountMap())
+    // Only update React state if actual counts changed
+    const newCountMap = idx.toCountMap()
+    setCountMap((prev) => {
+      if (prev.size !== newCountMap.size) return newCountMap
+      for (const [id, count] of newCountMap) {
+        if (prev.get(id) !== count) return newCountMap
+      }
+      return prev  // same reference → no rerender
+    })
   }, [notes])
 
   return countMap

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { usePlotStore } from "@/lib/store"
@@ -8,13 +8,6 @@ import { getSnoozeTime } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useSearch } from "@/lib/search/use-search"
 import { shortRelative } from "@/lib/format-utils"
-import {
-  createNoteFuse,
-  searchNotes,
-  highlightMatches,
-  getTitleIndices,
-  type FuzzyNoteResult,
-} from "@/lib/fuzzy-search"
 import { toast } from "sonner"
 import {
   CommandDialog,
@@ -55,6 +48,23 @@ import {
   Sun,
   Moon,
 } from "lucide-react"
+
+function highlightQuery(text: string, q: string): ReactNode {
+  if (!q.trim()) return text
+  const lower = text.toLowerCase()
+  const qLower = q.toLowerCase().trim()
+  const idx = lower.indexOf(qLower)
+  if (idx === -1) return text
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-accent/30 text-foreground rounded-sm">
+        {text.slice(idx, idx + qLower.length)}
+      </mark>
+      {text.slice(idx + qLower.length)}
+    </>
+  )
+}
 
 type PaletteMode = "search" | "commands" | "links"
 
@@ -179,11 +189,8 @@ export function SearchDialog() {
   // Backlinks map — maintained by index hook, recalculated only when notes change
   const backlinksMap = useBacklinksIndex()
 
-  // Fuse instance – rebuilt only when the searchable notes change (used for links mode only)
-  const fuse = useMemo(() => createNoteFuse(searchableNotes), [searchableNotes])
-
-  // Worker-based search for search mode
-  const searchQuery = commandPaletteMode === "search" ? query : ""
+  // Worker-based search for search and links modes
+  const searchQuery = commandPaletteMode !== "commands" ? query : ""
   const { results: workerResults, isIndexing } = useSearch(searchQuery, 12)
 
   // Recent notes (no query) – unchanged behavior
@@ -195,14 +202,7 @@ export function SearchDialog() {
     [searchableNotes],
   )
 
-  // Fuzzy search results (with query) — links mode only
-  const fuzzyResults: FuzzyNoteResult[] = useMemo(() => {
-    if (commandPaletteMode !== "links") return []
-    if (!query.trim()) return []
-    return searchNotes(fuse, query).slice(0, 12)
-  }, [fuse, query, commandPaletteMode])
-
-  // Whether we're showing fuzzy results (non-empty query) vs recent notes
+  // Whether we're showing search results (non-empty query) vs recent notes
   const hasFuzzyQuery = query.trim().length > 0
 
   /** Build sublabel text: "Inbox · Updated 2d · 3 backlinks" */
@@ -329,7 +329,7 @@ export function SearchDialog() {
           <CommandEmpty>
             {commandPaletteMode === "search" && (isIndexing ? "Building search index..." : "No notes found.")}
             {commandPaletteMode === "commands" && "No matching commands."}
-            {commandPaletteMode === "links" && "No notes found to link."}
+            {commandPaletteMode === "links" && (isIndexing ? "Building search index..." : "No notes found to link.")}
           </CommandEmpty>
 
           {/* ====== SEARCH MODE ====== */}
@@ -815,33 +815,28 @@ export function SearchDialog() {
           {/* ====== LINKS MODE ====== */}
           {commandPaletteMode === "links" && (
             <>
-              {/* Fuzzy results in Links mode */}
-              {hasFuzzyQuery && fuzzyResults.length > 0 && (
+              {/* Worker search results in Links mode */}
+              {hasFuzzyQuery && workerResults.length > 0 && (
                 <CommandGroup heading="Select a note to link">
-                  {fuzzyResults
-                    .filter((r) => r.note.id !== selectedNoteId)
-                    .map((result) => {
-                      const titleIndices = getTitleIndices(result.matches)
-                      return (
-                        <CommandItem
-                          key={result.note.id}
-                          value={`link-${result.note.id}`}
-                          onSelect={() => handleLinkSelect(result.note)}
-                        >
-                          <Link2 className="h-4 w-4 shrink-0 self-start mt-0.5" />
-                          <div className="flex-1 min-w-0">
-                            <div className="truncate">
-                              {titleIndices
-                                ? highlightMatches(result.note.title || "Untitled", titleIndices)
-                                : result.note.title || "Untitled"}
-                            </div>
-                            <div className="truncate text-xs text-muted-foreground leading-tight">
-                              {noteSublabel(result.note)}
-                            </div>
+                  {workerResults
+                    .filter((n) => n.id !== selectedNoteId)
+                    .map((note) => (
+                      <CommandItem
+                        key={note.id}
+                        value={`link-${note.id}`}
+                        onSelect={() => handleLinkSelect(note)}
+                      >
+                        <Link2 className="h-4 w-4 shrink-0 self-start mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate">
+                            {highlightQuery(note.title || "Untitled", query)}
                           </div>
-                        </CommandItem>
-                      )
-                    })}
+                          <div className="truncate text-xs text-muted-foreground leading-tight">
+                            {noteSublabel(note)}
+                          </div>
+                        </div>
+                      </CommandItem>
+                    ))}
                 </CommandGroup>
               )}
 
