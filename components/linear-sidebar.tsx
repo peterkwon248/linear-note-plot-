@@ -191,14 +191,13 @@ function TeamLink({
 
 export function LinearSidebar() {
   const pathname = usePathname()
-  const { setSearchOpen, setSelectedNoteId, notes, folders, tags, categories, knowledgeMaps, createFolder, createTag, createCategory, srsStateByNoteId, dismissedAlertIds } =
+  const { setSearchOpen, setSelectedNoteId, notes, folders, tags, knowledgeMaps, createFolder, createTag, srsStateByNoteId, dismissedAlertIds } =
     usePlotStore()
 
   const backlinks = useBacklinksIndex()
 
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [createTagOpen, setCreateTagOpen] = useState(false)
-  const [createCategoryOpen, setCreateCategoryOpen] = useState(false)
 
   const inboxCount = useMemo(() => getInboxNotes(notes, backlinks).length, [notes, backlinks])
   const captureCount = useMemo(() => getCaptureNotes(notes).length, [notes])
@@ -329,57 +328,38 @@ export function LinearSidebar() {
             shortcut="G V"
             active={isActive("/views")}
           />
-        </div>
-
-        <Section
-          title="Workspace"
-          action={
-            <button
-              onClick={() => setCreateFolderOpen(true)}
-              className="rounded p-0.5 hover:bg-sidebar-accent transition-colors"
-            >
-              <Plus className="h-3 w-3 text-sidebar-muted" />
-            </button>
-          }
-        >
-          {folders.map((folder) => (
-            <TeamLink
-              key={folder.id}
-              href={`/folder/${folder.id}`}
-              color={folder.color}
-              name={folder.name}
-              active={isActive(`/folder/${folder.id}`)}
-            />
-          ))}
           <NavLink
             href="/archive"
             icon={<Archive className="h-4 w-4" />}
             label="Archive"
             active={isActive("/archive")}
           />
-        </Section>
+        </div>
 
-        <Section
-          title="Categories"
-          action={
-            <button
-              onClick={() => setCreateCategoryOpen(true)}
-              className="rounded p-0.5 hover:bg-sidebar-accent transition-colors"
-            >
-              <Plus className="h-3 w-3 text-sidebar-muted" />
-            </button>
-          }
-        >
-          {categories.map((cat) => (
-            <TeamLink
-              key={cat.id}
-              href={`/category/${cat.id}`}
-              color={cat.color}
-              name={cat.name}
-              active={isActive(`/category/${cat.id}`)}
-            />
-          ))}
-        </Section>
+        {folders.length > 0 && (
+          <Section
+            title="Workspace"
+            defaultOpen={false}
+            action={
+              <button
+                onClick={() => setCreateFolderOpen(true)}
+                className="rounded p-0.5 hover:bg-sidebar-accent transition-colors"
+              >
+                <Plus className="h-3 w-3 text-sidebar-muted" />
+              </button>
+            }
+          >
+            {folders.map((folder) => (
+              <TeamLink
+                key={folder.id}
+                href={`/folder/${folder.id}`}
+                color={folder.color}
+                name={folder.name}
+                active={isActive(`/folder/${folder.id}`)}
+              />
+            ))}
+          </Section>
+        )}
 
         {pinnedNotes.length > 0 && (
           <Section title="Pinned">
@@ -396,6 +376,7 @@ export function LinearSidebar() {
 
         <Section
           title="Tags"
+          defaultOpen={false}
           action={
             <button
               onClick={() => setCreateTagOpen(true)}
@@ -452,12 +433,6 @@ export function LinearSidebar() {
         onOpenChange={setCreateTagOpen}
         title="Create Tag"
         onCreate={createTag}
-      />
-      <CreateItemDialog
-        open={createCategoryOpen}
-        onOpenChange={setCreateCategoryOpen}
-        title="Create Category"
-        onCreate={createCategory}
       />
     </aside>
   )
