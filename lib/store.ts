@@ -355,6 +355,10 @@ export const usePlotStore = create<PlotState>()(
       viewStateByContext: buildDefaultViewStates(),
       _viewStateHydrated: false,
 
+      // View Engine
+      viewStateByContext: buildDefaultViewStates(),
+      _viewStateHydrated: false,
+
       createNote: (partial) => {
         const id = genId()
         const { activeView } = get()
