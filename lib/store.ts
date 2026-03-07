@@ -271,6 +271,7 @@ interface PlotState {
   reviewSRS: (noteId: string, rating: SRSRating) => void
   enrollSRS: (noteId: string) => void
   unenrollSRS: (noteId: string) => void
+  enrollAllPermanentSRS: () => number
 
   // Phase 2 state
   noteEvents: NoteEvent[]
@@ -542,6 +543,27 @@ export const usePlotStore = create<PlotState>()(
           const { [noteId]: _, ...rest } = state.srsStateByNoteId
           return { srsStateByNoteId: rest }
         })
+      },
+
+      enrollAllPermanentSRS: () => {
+        const state = get()
+        const toEnroll = state.notes.filter(
+          (n) => n.status === "permanent" && !n.archived && !state.srsStateByNoteId[n.id]
+        )
+        if (toEnroll.length === 0) return 0
+        const timestamp = now()
+        const newMap = { ...state.srsStateByNoteId }
+        for (const n of toEnroll) {
+          newMap[n.id] = {
+            step: 0,
+            dueAt: dueAtFromStep(0),
+            lastReviewedAt: timestamp,
+            introducedAt: timestamp,
+            lapses: 0,
+          }
+        }
+        set({ srsStateByNoteId: newMap })
+        return toEnroll.length
       },
 
       undoPromote: (id) => {

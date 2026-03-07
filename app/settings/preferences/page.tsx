@@ -1,7 +1,10 @@
 "use client"
 
+import { useMemo } from "react"
 import { Switch } from "@/components/ui/switch"
 import { useSettingsStore } from "@/lib/settings-store"
+import { usePlotStore } from "@/lib/store"
+import { toast } from "sonner"
 import {
   SettingsPageTitle,
   SettingsCard,
@@ -17,6 +20,15 @@ export default function PreferencesPage() {
   const setStartView = useSettingsStore((s) => s.setStartView)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
   const setConfirmDelete = useSettingsStore((s) => s.setConfirmDelete)
+
+  const notes = usePlotStore((s) => s.notes)
+  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  const enrollAllPermanentSRS = usePlotStore((s) => s.enrollAllPermanentSRS)
+
+  const unenrolledCount = useMemo(
+    () => notes.filter((n) => n.status === "permanent" && !n.archived && !srsStateByNoteId[n.id]).length,
+    [notes, srsStateByNoteId]
+  )
 
   return (
     <>
@@ -55,6 +67,28 @@ export default function PreferencesPage() {
           description="Show confirmation dialog when deleting notes"
         >
           <Switch checked={confirmDelete} onCheckedChange={setConfirmDelete} />
+        </SettingRow>
+      </SettingsCard>
+
+      <SettingsCard title="Spaced Repetition">
+        <SettingRow
+          label="Bulk enroll permanent notes"
+          description={`${unenrolledCount} permanent note${unenrolledCount === 1 ? "" : "s"} not yet enrolled in SRS`}
+        >
+          <button
+            onClick={() => {
+              const count = enrollAllPermanentSRS()
+              if (count > 0) {
+                toast(`Enrolled ${count} note${count === 1 ? "" : "s"} into SRS`)
+              } else {
+                toast("All permanent notes are already enrolled")
+              }
+            }}
+            disabled={unenrolledCount === 0}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Enroll All
+          </button>
         </SettingRow>
       </SettingsCard>
     </>
