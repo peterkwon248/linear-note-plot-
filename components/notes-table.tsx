@@ -86,8 +86,8 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
   { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links" },
   { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads" },
   { id: "priority", label: "Priority", width: "w-[72px] shrink-0", align: "text-center", sortField: "priority" },
-  { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt" },
   { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt" },
+  { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt" },
 ]
 
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
@@ -608,22 +608,6 @@ function NoteRowInner({
         </div>
       )}
 
-      {/* Created - absolute date like Linear */}
-      {visibleCols.includes("createdAt") && (
-        <div className="w-[80px] shrink-0 text-right">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-[12px] tabular-nums text-muted-foreground cursor-default">
-                {absDate(note.createdAt)}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-[11px]">
-              {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      )}
-
       {/* Updated - relative time like Linear */}
       {visibleCols.includes("updatedAt") && (
         <div className="w-[80px] shrink-0 text-right">
@@ -635,6 +619,22 @@ function NoteRowInner({
             </TooltipTrigger>
             <TooltipContent side="top" className="text-[11px]">
               {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      )}
+
+      {/* Created - absolute date like Linear */}
+      {visibleCols.includes("createdAt") && (
+        <div className="w-[80px] shrink-0 text-right">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-[12px] tabular-nums text-muted-foreground cursor-default">
+                {absDate(note.createdAt)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[11px]">
+              {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
             </TooltipContent>
           </Tooltip>
         </div>
