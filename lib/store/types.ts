@@ -49,6 +49,7 @@ export interface PlotState {
   duplicateNote: (id: string) => void
   togglePin: (id: string) => void
   toggleArchive: (id: string) => void
+  toggleTrash: (id: string) => void
   touchNote: (id: string) => void
   createChainNote: (parentId: string) => string
 

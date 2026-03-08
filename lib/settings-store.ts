@@ -19,6 +19,7 @@ export interface SettingsState {
   language: string
   startView: "all" | "inbox" | "pinned"
   confirmDelete: boolean
+  viewMode: "list" | "table"
 
   // Actions
   setSpellcheck: (v: boolean) => void
@@ -33,6 +34,7 @@ export interface SettingsState {
   setLanguage: (v: string) => void
   setStartView: (v: "all" | "inbox" | "pinned") => void
   setConfirmDelete: (v: boolean) => void
+  setViewMode: (v: "list" | "table") => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -55,6 +57,7 @@ export const useSettingsStore = create<SettingsState>()(
       language: "en",
       startView: "all",
       confirmDelete: true,
+      viewMode: "table",
 
       // Actions
       setSpellcheck: (v) => set({ spellcheck: v }),
@@ -69,6 +72,7 @@ export const useSettingsStore = create<SettingsState>()(
       setLanguage: (v) => set({ language: v }),
       setStartView: (v) => set({ startView: v }),
       setConfirmDelete: (v) => set({ confirmDelete: v }),
+      setViewMode: (v) => set({ viewMode: v }),
     }),
     { name: "plot-settings" }
   )

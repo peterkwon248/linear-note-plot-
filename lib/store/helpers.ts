@@ -19,7 +19,7 @@ export const now = () => new Date().toISOString()
 /** Default workflow fields for a note */
 export function workflowDefaults(status: NoteStatus = "inbox"): Pick<
   Note,
-  "triageStatus" | "reviewAt" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "archivedAt" | "parentNoteId"
+  "triageStatus" | "reviewAt" | "inboxRank" | "summary" | "source" | "promotedAt" | "lastTouchedAt" | "snoozeCount" | "archivedAt" | "trashedAt" | "parentNoteId"
 > {
   return {
     triageStatus: status === "inbox" ? "untriaged" : "kept",
@@ -31,6 +31,7 @@ export function workflowDefaults(status: NoteStatus = "inbox"): Pick<
     lastTouchedAt: now(),
     snoozeCount: 0,
     archivedAt: null,
+    trashedAt: null,
     parentNoteId: null,
   }
 }

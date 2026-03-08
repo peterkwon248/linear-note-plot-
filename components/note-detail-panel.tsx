@@ -83,6 +83,8 @@ const EVENT_CONFIG: Record<NoteEventType, { icon: React.ComponentType<{ classNam
   map_added: { icon: MapIcon, label: "Added to map" },
   map_removed: { icon: MapIcon, label: "Removed from map" },
   srs_reviewed: { icon: RotateCcw, label: "SRS reviewed" },
+  trashed: { icon: Trash2, label: "Trashed" },
+  untrashed: { icon: Trash2, label: "Restored" },
 }
 
 /* ── Section ───────────────────────────────────────────── */

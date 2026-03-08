@@ -30,6 +30,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         reads: 0,
         pinned: partial?.pinned ?? false,
         archived: false,
+        trashed: false,
         createdAt: now(),
         updatedAt: now(),
         preview: extractPreview(content),
@@ -113,6 +114,19 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       appendEvent(id, wasArchived ? "unarchived" : "archived")
     },
 
+    toggleTrash: (id: string) => {
+      const note = get().notes.find((n: Note) => n.id === id)
+      const wasTrashed = note?.trashed ?? false
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id === id
+            ? { ...n, trashed: !n.trashed, trashedAt: wasTrashed ? null : now(), updatedAt: now(), lastTouchedAt: now() }
+            : n
+        ),
+      }))
+      appendEvent(id, wasTrashed ? "untrashed" : "trashed")
+    },
+
     createChainNote: (parentId: string) => {
       const parent = get().notes.find((n: Note) => n.id === parentId)
       if (!parent) return ""
@@ -132,6 +146,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         reads: 0,
         pinned: false,
         archived: false,
+        trashed: false,
         createdAt: now(),
         updatedAt: now(),
         preview: "",

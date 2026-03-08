@@ -8,32 +8,34 @@ export function getFilteredNotes(state: PlotState): Note[] {
 
   let filtered = notes
 
+  const isActive = (n: Note) => !n.archived && !n.trashed
+
   switch (activeView.type) {
     case "inbox":
-      filtered = filtered.filter((n) => n.status === "inbox" && !n.archived)
+      filtered = filtered.filter((n) => n.status === "inbox" && isActive(n))
       break
     case "all":
-      filtered = filtered.filter((n) => !n.archived)
+      filtered = filtered.filter(isActive)
       break
     case "folder":
       filtered = filtered.filter(
-        (n) => n.folderId === activeView.folderId && !n.archived
+        (n) => n.folderId === activeView.folderId && isActive(n)
       )
       break
     case "archive":
-      filtered = filtered.filter((n) => n.archived)
+      filtered = filtered.filter((n) => n.archived && !n.trashed)
       break
     case "category":
       filtered = filtered.filter(
-        (n) => n.category === activeView.categoryId && !n.archived
+        (n) => n.category === activeView.categoryId && isActive(n)
       )
       break
     case "pinned":
-      filtered = filtered.filter((n) => n.pinned && !n.archived)
+      filtered = filtered.filter((n) => n.pinned && isActive(n))
       break
     case "tag":
       filtered = filtered.filter(
-        (n) => n.tags.includes(activeView.tagId) && !n.archived
+        (n) => n.tags.includes(activeView.tagId) && isActive(n)
       )
       break
     case "map": {
@@ -42,7 +44,7 @@ export function getFilteredNotes(state: PlotState): Note[] {
       break
     }
     default:
-      filtered = filtered.filter((n) => !n.archived)
+      filtered = filtered.filter(isActive)
   }
 
   if (searchQuery.trim()) {
@@ -62,47 +64,52 @@ export function getFilteredNotes(state: PlotState): Note[] {
 /** Route-based filter (used by NoteList via filter prop) */
 export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuery = ""): Note[] {
   let filtered = notes
+  const isActive = (n: Note) => !n.archived && !n.trashed
 
   switch (filter.type) {
     case "inbox":
-      filtered = filtered.filter((n) => n.status === "inbox" && !n.archived)
+      filtered = filtered.filter((n) => n.status === "inbox" && isActive(n))
       break
     case "all":
-      filtered = filtered.filter((n) => !n.archived)
+      filtered = filtered.filter(isActive)
       break
     case "archive":
-      filtered = filtered.filter((n) => n.archived)
+      filtered = filtered.filter((n) => n.archived && !n.trashed)
+      break
+    case "trash":
+      filtered = filtered.filter((n) => n.trashed)
       break
     case "projects":
-      filtered = filtered.filter((n) => n.project != null && n.project !== "" && !n.archived)
+      filtered = filtered.filter((n) => n.project != null && n.project !== "" && isActive(n))
       break
     case "pinned":
-      filtered = filtered.filter((n) => n.pinned && !n.archived)
+      filtered = filtered.filter((n) => n.pinned && isActive(n))
       break
     case "folder":
-      filtered = filtered.filter((n) => n.folderId === filter.folderId && !n.archived)
+      filtered = filtered.filter((n) => n.folderId === filter.folderId && isActive(n))
       break
     case "category":
-      filtered = filtered.filter((n) => n.category === filter.categoryId && !n.archived)
+      filtered = filtered.filter((n) => n.category === filter.categoryId && isActive(n))
       break
     case "tag":
-      filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && !n.archived)
+      filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && isActive(n))
       break
     case "status-inbox":
       filtered = filtered.filter((n) =>
         n.status === "inbox" &&
+        isActive(n) &&
         n.triageStatus !== "trashed" &&
         (n.triageStatus === "untriaged" || (n.triageStatus === "snoozed" && n.reviewAt && new Date(n.reviewAt) <= new Date()))
       )
       break
     case "status-capture":
-      filtered = filtered.filter((n) => n.status === "capture" && n.triageStatus !== "trashed")
+      filtered = filtered.filter((n) => n.status === "capture" && isActive(n) && n.triageStatus !== "trashed")
       break
     case "status-permanent":
-      filtered = filtered.filter((n) => n.status === "permanent" && n.triageStatus !== "trashed")
+      filtered = filtered.filter((n) => n.status === "permanent" && isActive(n) && n.triageStatus !== "trashed")
       break
     default:
-      filtered = filtered.filter((n) => !n.archived)
+      filtered = filtered.filter(isActive)
   }
 
   if (searchQuery.trim()) {
@@ -127,6 +134,8 @@ export function getFilterTitle(filter: NoteFilter, state: PlotState): string {
       return "All Notes"
     case "archive":
       return "Archive"
+    case "trash":
+      return "Trash"
     case "projects":
       return "Projects"
     case "pinned":

@@ -35,6 +35,8 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     lastTouchedAt: now,
     snoozeCount: 0,
     archivedAt: null,
+    trashedAt: null,
+    trashed: false,
     parentNoteId: null,
     preview: '',
     linksOut: [],

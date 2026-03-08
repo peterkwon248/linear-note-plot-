@@ -23,6 +23,7 @@ export interface Note {
   reads: number
   pinned: boolean
   archived: boolean
+  trashed: boolean
   createdAt: string
   updatedAt: string
 
@@ -36,6 +37,7 @@ export interface Note {
   lastTouchedAt: string
   snoozeCount: number
   archivedAt: string | null
+  trashedAt: string | null
 
   /* ── Thinking Chain ──────────────────────────────── */
   parentNoteId: string | null
@@ -89,6 +91,7 @@ export type NoteFilter =
   | { type: "inbox" }
   | { type: "all" }
   | { type: "archive" }
+  | { type: "trash" }
   | { type: "projects" }
   | { type: "pinned" }
   | { type: "folder"; folderId: string }
@@ -102,7 +105,7 @@ export type NoteFilter =
 /* ── Phase 2: Event Log / Timeline ──────────────────── */
 
 export type NoteEventType =
-  | "created" | "updated" | "opened" | "promoted" | "archived" | "unarchived"
+  | "created" | "updated" | "opened" | "promoted" | "archived" | "unarchived" | "trashed" | "untrashed"
   | "triage_keep" | "triage_snooze" | "triage_trash"
   | "link_added" | "link_removed"
   | "thinking_chain_started" | "thinking_chain_step_added" | "thinking_chain_ended"

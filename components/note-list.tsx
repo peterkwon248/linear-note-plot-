@@ -9,7 +9,6 @@ import {
   Pin,
   FileText,
   Calendar,
-  Archive,
   Copy,
   Trash2,
 } from "lucide-react"
@@ -67,7 +66,6 @@ function NoteRow({ note }: { note: Note }) {
     tags,
     updateNote,
     togglePin,
-    toggleArchive,
     duplicateNote,
     deleteNote,
   } = usePlotStore()
@@ -158,15 +156,6 @@ function NoteRow({ note }: { note: Note }) {
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation()
-              toggleArchive(note.id)
-            }}
-          >
-            <Archive className="h-3.5 w-3.5" />
-            {note.archived ? "Unarchive" : "Archive"}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation()
               duplicateNote(note.id)
             }}
           >
@@ -249,6 +238,7 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
               folderId: filter.type === "folder" ? filter.folderId : undefined,
               category: filter.type === "category" ? filter.categoryId : undefined,
               project: filter.type === "projects" ? "New Project" : undefined,
+              pinned: filter.type === "pinned" ? true : undefined,
             })}
           >
             <Plus className="h-3 w-3" />

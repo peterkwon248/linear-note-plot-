@@ -150,9 +150,17 @@ function TH({
 export function NotesTable({
   onRowClick,
   activePreviewId,
+  context,
+  title,
+  showTabs = true,
+  createNoteOverrides,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
+  context?: ViewContextKey
+  title?: string
+  showTabs?: boolean
+  createNoteOverrides?: Partial<import("@/lib/types").Note>
 }) {
   const notes = usePlotStore((s) => s.notes)
   const categories = usePlotStore((s) => s.categories)
@@ -168,6 +176,8 @@ export function NotesTable({
 
   const [activeTab, setActiveTab] = useState<ViewContextKey>("all")
 
+  const effectiveTab = context ?? activeTab
+
   const backlinksMap = useBacklinksIndex()
 
   const existingProjects = useMemo(() => {
@@ -176,7 +186,7 @@ export function NotesTable({
     return Array.from(set).sort()
   }, [notes])
 
-  const { flatNotes, groups, viewState, updateViewState } = useNotesView(activeTab, { backlinksMap })
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap })
 
   function handleSort(col: SortField) {
     if (viewState.sortField === col) {
@@ -238,10 +248,10 @@ export function NotesTable({
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
-        <h1 className="text-base font-semibold text-foreground">Notes</h1>
+        <h1 className="text-base font-semibold text-foreground">{title ?? "Notes"}</h1>
         <button
           className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-          onClick={() => createNote()}
+          onClick={() => createNote(createNoteOverrides ?? {})}
         >
           <Plus className="h-3 w-3" />
           New note
@@ -251,27 +261,26 @@ export function NotesTable({
       {/* ── Context tabs + toolbar ─────────────────────── */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">
         {/* Tabs */}
-        <div className="flex items-center gap-0">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
-                activeTab === tab.id
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-              {activeTab === tab.id && (
-                <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
-              )}
-            </button>
-          ))}
-          <button className="px-2 py-2 text-muted-foreground transition-colors hover:text-foreground">
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        {showTabs && (
+          <div className="flex items-center gap-0">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
+                  effectiveTab === tab.id
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+                {effectiveTab === tab.id && (
+                  <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Right toolbar */}
         <div className="flex items-center gap-1.5">
@@ -379,7 +388,7 @@ export function NotesTable({
       )}
 
       {/* ── Unlinked helper ─────────────────────────────── */}
-      {activeTab === "unlinked" && flatNotes.length > 0 && (
+      {effectiveTab === "unlinked" && flatNotes.length > 0 && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
           <Link2 className="h-3 w-3 text-muted-foreground" />
           <span className="text-[11px] text-muted-foreground">
