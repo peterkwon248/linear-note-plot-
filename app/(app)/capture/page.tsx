@@ -90,14 +90,14 @@ export default function CapturePage() {
         <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
           <div className="flex items-center gap-2">
             <h1 className="text-base font-semibold text-foreground">Capture</h1>
-            <span className="rounded-full bg-chart-2/10 px-2 py-0.5 text-[11px] font-medium tabular-nums text-chart-2">
+            <span className="rounded-full bg-chart-2/10 px-2 py-0.5 text-[12px] font-medium tabular-nums text-chart-2">
               {captureNotes.length}
             </span>
           </div>
         </header>
 
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[12px] text-muted-foreground">
             Notes kept from Inbox. Enrich them to promote to Permanent.
           </span>
         </div>
@@ -106,8 +106,8 @@ export default function CapturePage() {
         {captureNotes.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <FileText className="mb-4 h-12 w-12 text-muted-foreground/20" />
-            <p className="text-[13px] text-muted-foreground">No capture notes</p>
-            <p className="mt-1 text-[12px] text-muted-foreground/60">
+            <p className="text-[15px] text-muted-foreground">No capture notes</p>
+            <p className="mt-1 text-[14px] text-muted-foreground/60">
               Keep notes from Inbox to move them here.
             </p>
           </div>
@@ -116,19 +116,19 @@ export default function CapturePage() {
             {/* Column headers */}
             <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
               <div className="flex-1 min-w-0">
-                <span className="text-[11px] font-medium text-muted-foreground">Name</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Name</span>
               </div>
               <div className="w-[56px] shrink-0 text-center">
-                <span className="text-[11px] font-medium text-muted-foreground">Links</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Links</span>
               </div>
               <div className="w-[56px] shrink-0 text-center">
-                <span className="text-[11px] font-medium text-muted-foreground">Score</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Score</span>
               </div>
               <div className="w-[80px] shrink-0 text-right">
-                <span className="text-[11px] font-medium text-muted-foreground">Updated</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Updated</span>
               </div>
               <div className="w-[100px] shrink-0 text-right">
-                <span className="text-[11px] font-medium text-muted-foreground">Status</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Status</span>
               </div>
             </div>
 
@@ -152,18 +152,18 @@ export default function CapturePage() {
                   >
                     {/* Name */}
                     <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
-                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                      <span className="truncate text-[13px] text-foreground">
+                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+                      <span className="truncate text-[15px] text-foreground">
                         {note.title || "Untitled"}
                       </span>
                       {ready && (
-                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-chart-5/10 px-1.5 py-0.5 text-[10px] font-medium text-chart-5">
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-chart-5/10 px-1.5 py-0.5 text-[11px] font-medium text-chart-5">
                           <Sparkles className="h-2.5 w-2.5" />
                           Ready
                         </span>
                       )}
                       {stale && !staleSuggest && (
-                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-chart-3/10 px-1.5 py-0.5 text-[10px] font-medium text-chart-3">
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-chart-3/10 px-1.5 py-0.5 text-[11px] font-medium text-chart-3">
                           <AlertTriangle className="h-2.5 w-2.5" />
                           Review needed
                         </span>
@@ -172,14 +172,14 @@ export default function CapturePage() {
 
                     {/* Links */}
                     <div className="w-[56px] shrink-0 text-center">
-                      <span className={`text-[12px] tabular-nums ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+                      <span className={`text-[14px] tabular-nums ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
                         {links}
                       </span>
                     </div>
 
                     {/* Ready score */}
                     <div className="w-[56px] shrink-0 text-center">
-                      <span className={`text-[12px] tabular-nums font-medium ${
+                      <span className={`text-[14px] tabular-nums font-medium ${
                         readyScore >= 5 ? "text-chart-5" : readyScore >= 3 ? "text-chart-3" : "text-muted-foreground/50"
                       }`}>
                         {readyScore}/9
@@ -188,7 +188,7 @@ export default function CapturePage() {
 
                     {/* Updated */}
                     <div className="w-[80px] shrink-0 text-right">
-                      <span className="text-[12px] tabular-nums text-muted-foreground">
+                      <span className="text-[14px] tabular-nums text-muted-foreground">
                         {shortRelative(note.updatedAt)}
                       </span>
                     </div>
@@ -201,7 +201,7 @@ export default function CapturePage() {
                             e.stopPropagation()
                             promoteToPermament(note.id)
                           }}
-                          className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-[10px] font-medium text-chart-5 transition-colors hover:bg-chart-5/20"
+                          className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-[11px] font-medium text-chart-5 transition-colors hover:bg-chart-5/20"
                         >
                           <ArrowUp className="h-2.5 w-2.5" />
                           Promote
@@ -213,15 +213,15 @@ export default function CapturePage() {
                   {/* Stale suggestion banner */}
                   {staleSuggest && (
                     <div className="flex items-center justify-between border-b border-border bg-chart-3/5 px-5 py-1.5">
-                      <span className="flex items-center gap-1.5 text-[11px] text-chart-3">
-                        <AlertTriangle className="h-3 w-3" />
+                      <span className="flex items-center gap-1.5 text-[12px] text-chart-3">
+                        <AlertTriangle className="h-3.5 w-3.5" />
                         Untouched for 14+ days. Move back to Inbox?
                       </span>
                       <button
                         onClick={() => moveBackToInbox(note.id)}
-                        className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-[11px] font-medium text-chart-3 transition-colors hover:bg-chart-3/20"
+                        className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-[12px] font-medium text-chart-3 transition-colors hover:bg-chart-3/20"
                       >
-                        <InboxIcon className="h-3 w-3" />
+                        <InboxIcon className="h-3.5 w-3.5" />
                         Move to Inbox
                       </button>
                     </div>
@@ -286,25 +286,25 @@ function CaptureDetailPanel({
       {note.status === "capture" && (
         <div className="shrink-0 border-t border-border bg-secondary/30 px-4 py-3">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[12px] text-muted-foreground">
               Ready score: <span className={`font-medium ${readyScore >= 5 ? "text-chart-5" : "text-muted-foreground"}`}>{readyScore}/9</span>
             </span>
             {ready && (
-              <span className="flex items-center gap-1 text-[11px] font-medium text-chart-5">
-                <Sparkles className="h-3 w-3" />
+              <span className="flex items-center gap-1 text-[12px] font-medium text-chart-5">
+                <Sparkles className="h-3.5 w-3.5" />
                 Ready to promote
               </span>
             )}
           </div>
           <button
             onClick={() => promoteToPermament(noteId)}
-            className={`flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[12px] font-medium transition-colors ${
+            className={`flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[14px] font-medium transition-colors ${
               ready
                 ? "bg-chart-5/10 text-chart-5 hover:bg-chart-5/20"
                 : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
             }`}
           >
-            <ArrowUp className="h-3.5 w-3.5" />
+            <ArrowUp className="h-4 w-4" />
             Promote to Permanent
           </button>
         </div>

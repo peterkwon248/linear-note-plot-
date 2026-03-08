@@ -13,12 +13,14 @@ import {
   FolderOpen,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   ClipboardCheck,
   Network,
   Bell,
   Trash2,
   SquarePen,
   LayoutGrid,
+  Clock,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -47,24 +49,24 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
+      className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
         active
           ? "bg-sidebar-hover text-sidebar-foreground"
           : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
       }`}
     >
-      <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${active ? "" : "text-sidebar-muted"}`}>
+      <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "" : "text-sidebar-muted"}`}>
         {icon}
       </span>
       <span className="truncate text-left">{label}</span>
       {count !== undefined && (
-        <span className="text-[11px] text-sidebar-muted tabular-nums">
+        <span className="text-[12px] text-sidebar-muted tabular-nums">
           {count}
         </span>
       )}
       {badge && badge.count > 0 && (
         <span
-          className="rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums"
+          className="rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums"
           style={{
             backgroundColor: `color-mix(in srgb, ${badge.color} 15%, transparent)`,
             color: badge.color,
@@ -89,19 +91,19 @@ function Section({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <div className="mt-4">
+    <div className="mt-5">
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-1.5 px-2 py-1 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+        className="flex w-full items-center gap-1.5 px-2.5 py-1 text-[12px] font-medium uppercase tracking-wider text-sidebar-muted hover:text-sidebar-foreground transition-colors"
       >
         <span>{title}</span>
         {open ? (
-          <ChevronDown className="h-3 w-3" />
+          <ChevronDown className="h-3.5 w-3.5" />
         ) : (
-          <ChevronRight className="h-3 w-3" />
+          <ChevronRight className="h-3.5 w-3.5" />
         )}
       </button>
-      {open && <div className="mt-0.5 space-y-px">{children}</div>}
+      {open && <div className="mt-1 space-y-px">{children}</div>}
     </div>
   )
 }
@@ -137,36 +139,55 @@ export function LinearSidebar() {
   return (
     <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-3">
-        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-accent-foreground shrink-0">
+      <div className="flex items-center gap-1.5 px-3.5 py-3">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[12px] font-semibold text-accent-foreground shrink-0">
           U
         </div>
-        <span className="flex-1 text-[13px] font-semibold text-sidebar-foreground truncate">
-          User
-        </span>
+        <button
+          onClick={() => router.back()}
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => router.forward()}
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          aria-label="Go forward"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+        <button
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          aria-label="Recently viewed"
+          title="Recently viewed"
+        >
+          <Clock className="h-5 w-5" />
+        </button>
+        <div className="flex-1" />
         <button
           onClick={() => setSearchOpen(true)}
-          className="flex items-center justify-center h-6 w-6 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
           aria-label="Search"
         >
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-5 w-5" />
         </button>
         <button
           onClick={handleCreateNote}
-          className="flex items-center justify-center h-6 w-6 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
           aria-label="New note"
         >
-          <SquarePen className="h-3.5 w-3.5" />
+          <SquarePen className="h-5 w-5" />
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-1">
+      <nav className="flex-1 overflow-y-auto px-2.5 py-3.5">
         {/* ── Action items (no section header) ── */}
         <div className="space-y-px">
           <NavLink
             href="/inbox"
-            icon={<Inbox className="h-4 w-4" />}
+            icon={<Inbox className="h-5 w-5" />}
             label="Inbox"
             shortcut="G I"
             count={inboxCount}
@@ -174,14 +195,14 @@ export function LinearSidebar() {
           />
           <NavLink
             href="/review"
-            icon={<ClipboardCheck className="h-4 w-4" />}
+            icon={<ClipboardCheck className="h-5 w-5" />}
             label="Review"
             badge={reviewCount > 0 ? { count: reviewCount, color: "var(--destructive)" } : undefined}
             active={isActive("/review")}
           />
           <NavLink
             href="/alerts"
-            icon={<Bell className="h-4 w-4" />}
+            icon={<Bell className="h-5 w-5" />}
             label="Alerts"
             badge={alertCount > 0 ? { count: alertCount, color: "var(--chart-3)" } : undefined}
             active={isActive("/alerts")}
@@ -192,7 +213,7 @@ export function LinearSidebar() {
         <Section title="Notes">
           <NavLink
             href="/notes"
-            icon={<FileText className="h-4 w-4" />}
+            icon={<FileText className="h-5 w-5" />}
             label="All Notes"
             count={allNotesCount}
             shortcut="G N"
@@ -200,14 +221,14 @@ export function LinearSidebar() {
           />
           <NavLink
             href="/pinned"
-            icon={<Pin className="h-4 w-4" />}
+            icon={<Pin className="h-5 w-5" />}
             label="Pinned"
             count={pinnedCount > 0 ? pinnedCount : undefined}
             active={isActive("/pinned")}
           />
           <NavLink
             href="/tags"
-            icon={<Hash className="h-4 w-4" />}
+            icon={<Hash className="h-5 w-5" />}
             label="Tags"
             count={tagCount > 0 ? tagCount : undefined}
             active={isActive("/tags")}
@@ -218,21 +239,21 @@ export function LinearSidebar() {
         <Section title="Workspace">
           <NavLink
             href="/projects"
-            icon={<FolderOpen className="h-4 w-4" />}
+            icon={<FolderOpen className="h-5 w-5" />}
             label="Projects"
             shortcut="G P"
             active={isActive("/projects")}
           />
           <NavLink
             href="/views"
-            icon={<LayoutGrid className="h-4 w-4" />}
+            icon={<LayoutGrid className="h-5 w-5" />}
             label="Views"
             shortcut="G V"
             active={isActive("/views")}
           />
           <NavLink
             href="/maps"
-            icon={<Network className="h-4 w-4" />}
+            icon={<Network className="h-5 w-5" />}
             label="Maps"
             count={knowledgeMaps.length > 0 ? knowledgeMaps.length : undefined}
             active={isActive("/maps")}
@@ -241,17 +262,17 @@ export function LinearSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-sidebar-border px-2 py-2 space-y-px">
+      <div className="border-t border-sidebar-border px-2.5 py-2 space-y-px">
         <NavLink
           href="/trash"
-          icon={<Trash2 className="h-4 w-4" />}
+          icon={<Trash2 className="h-5 w-5" />}
           label="Trash"
           count={trashCount > 0 ? trashCount : undefined}
           active={isActive("/trash")}
         />
         <NavLink
           href="/settings"
-          icon={<Settings className="h-4 w-4" />}
+          icon={<Settings className="h-5 w-5" />}
           label="Settings"
           active={isActive("/settings")}
         />

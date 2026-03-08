@@ -10,12 +10,12 @@ export function ShortcutRow({
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-2.5">
-      <span className="text-[13px] text-foreground">{description}</span>
+      <span className="text-[15px] text-foreground">{description}</span>
       <div className="flex items-center gap-1">
         {keys.map((key, i) => (
           <kbd
             key={`${key}-${i}`}
-            className="inline-flex min-w-[24px] items-center justify-center rounded border border-border bg-secondary px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+            className="inline-flex min-w-[24px] items-center justify-center rounded border border-border bg-secondary px-1.5 py-0.5 font-mono text-[12px] text-muted-foreground"
           >
             {key}
           </kbd>

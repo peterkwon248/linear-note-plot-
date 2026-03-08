@@ -371,7 +371,7 @@ export function ConnectionsGraph({
       <div className="flex items-center gap-2 mb-2">
         <button
           onClick={() => setGraphFocusDepth(graphFocusDepth > 0 ? 0 : 1)}
-          className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
+          className={`text-[12px] px-2 py-0.5 rounded-full border transition-colors ${
             graphFocusDepth > 0
               ? "bg-accent/10 text-accent border-accent/30"
               : "bg-secondary text-muted-foreground border-border hover:text-foreground"
@@ -385,7 +385,7 @@ export function ConnectionsGraph({
               <button
                 key={d}
                 onClick={() => setGraphFocusDepth(d)}
-                className={`text-[10px] w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                className={`text-[11px] w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
                   graphFocusDepth === d
                     ? "bg-accent text-accent-foreground"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -400,7 +400,7 @@ export function ConnectionsGraph({
 
       {isEmpty ? (
         <div className="flex items-center justify-center py-6">
-          <p className="text-[12px] text-muted-foreground/60">
+          <p className="text-[14px] text-muted-foreground/60">
             No connections to visualize yet.
           </p>
         </div>

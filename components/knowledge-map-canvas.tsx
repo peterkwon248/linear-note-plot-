@@ -316,8 +316,8 @@ export function KnowledgeMapCanvas({
   if (nodes.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center text-center py-20">
-        <p className="text-[13px] text-muted-foreground">No notes in this map yet.</p>
-        <p className="mt-1 text-[12px] text-muted-foreground/60">
+        <p className="text-[15px] text-muted-foreground">No notes in this map yet.</p>
+        <p className="mt-1 text-[14px] text-muted-foreground/60">
           Add notes from the command palette or note detail panel.
         </p>
       </div>
@@ -509,7 +509,7 @@ export function KnowledgeMapCanvas({
       {/* ── Tooltip ───────────────────────────────────── */}
       {tooltipPos && hoveredId && (
         <div
-          className="pointer-events-none absolute z-50 rounded-md border border-border bg-popover px-2.5 py-1.5 text-[11px] text-popover-foreground shadow-md"
+          className="pointer-events-none absolute z-50 rounded-md border border-border bg-popover px-2.5 py-1.5 text-[12px] text-popover-foreground shadow-md"
           style={{
             left: tooltipPos.x + 12,
             top: tooltipPos.y - 28,
@@ -527,7 +527,7 @@ export function KnowledgeMapCanvas({
       <div className="absolute bottom-3 right-3 flex items-center gap-1">
         {/* Path info */}
         {pathEndpoints && pathNodeIds.size > 0 && (
-          <div className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] text-muted-foreground shadow-sm mr-1">
+          <div className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] text-muted-foreground shadow-sm mr-1">
             <span>
               Path: {pathLength} {pathLength === 1 ? "hop" : "hops"}
             </span>
@@ -536,21 +536,21 @@ export function KnowledgeMapCanvas({
               className="ml-0.5 rounded p-0.5 hover:bg-muted transition-colors"
               title="Clear path"
             >
-              <X className="h-3 w-3" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
 
         {/* Selecting first endpoint indicator */}
         {pathEndpoints && pathEndpoints[0] === pathEndpoints[1] && (
-          <div className="flex items-center gap-1.5 rounded-md border border-accent/30 bg-card px-2.5 py-1.5 text-[11px] text-accent shadow-sm mr-1">
+          <div className="flex items-center gap-1.5 rounded-md border border-accent/30 bg-card px-2.5 py-1.5 text-[12px] text-accent shadow-sm mr-1">
             <span>Shift+click another node</span>
             <button
               onClick={clearPath}
               className="ml-0.5 rounded p-0.5 hover:bg-muted transition-colors"
               title="Cancel"
             >
-              <X className="h-3 w-3" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
@@ -562,14 +562,14 @@ export function KnowledgeMapCanvas({
             className="rounded-l-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             title="Zoom in"
           >
-            <ZoomIn className="h-3.5 w-3.5" />
+            <ZoomIn className="h-4 w-4" />
           </button>
           <button
             onClick={() => zoomBy(-ZOOM_STEP)}
             className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             title="Zoom out"
           >
-            <ZoomOut className="h-3.5 w-3.5" />
+            <ZoomOut className="h-4 w-4" />
           </button>
           <div className="h-4 w-px bg-border" />
           <button
@@ -577,7 +577,7 @@ export function KnowledgeMapCanvas({
             className="rounded-r-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             title="Reset view"
           >
-            <RotateCcw className="h-3.5 w-3.5" />
+            <RotateCcw className="h-4 w-4" />
           </button>
         </div>
       </div>

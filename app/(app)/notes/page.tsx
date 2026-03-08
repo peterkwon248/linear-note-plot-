@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
+import { NotesBoard } from "@/components/notes-board"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
@@ -10,6 +12,7 @@ import { NoteDetailPanel } from "@/components/note-detail-panel"
 export default function NotesPage() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
+  const viewMode = useSettingsStore((s) => s.viewMode)
   const isEditing = selectedNoteId !== null
 
   const [previewId, setPreviewId] = useState<string | null>(null)
@@ -43,10 +46,12 @@ export default function NotesPage() {
     )
   }
 
-  // Table view + optional detail panel
+  // Table/Board view + optional detail panel
+  const ViewComponent = viewMode === "board" ? NotesBoard : NotesTable
+
   return (
     <div className="flex flex-1 overflow-hidden">
-      <NotesTable
+      <ViewComponent
         onRowClick={(noteId) => setPreviewId(noteId)}
         activePreviewId={previewId}
       />

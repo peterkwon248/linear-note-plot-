@@ -22,9 +22,9 @@ import type { AlertType, Alert } from "@/lib/types"
 /* ── Icons per alert type ────────────────────────────── */
 
 const ALERT_ICONS: Record<AlertType, React.ReactNode> = {
-  "srs-due": <RotateCcw className="h-3.5 w-3.5" />,
-  "snooze-expired": <AlarmClock className="h-3.5 w-3.5" />,
-  "stale-note": <AlertTriangle className="h-3.5 w-3.5" />,
+  "srs-due": <RotateCcw className="h-4 w-4" />,
+  "snooze-expired": <AlarmClock className="h-4 w-4" />,
+  "stale-note": <AlertTriangle className="h-4 w-4" />,
 }
 
 const SEVERITY_DOT: Record<string, string> = {
@@ -80,7 +80,7 @@ export default function AlertsPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-base font-semibold text-foreground">Alerts</h1>
             {alerts.length > 0 && (
-              <span className="rounded-full bg-chart-3/10 px-2 py-0.5 text-[11px] font-medium tabular-nums text-chart-3">
+              <span className="rounded-full bg-chart-3/10 px-2 py-0.5 text-[12px] font-medium tabular-nums text-chart-3">
                 {alerts.length}
               </span>
             )}
@@ -88,17 +88,17 @@ export default function AlertsPage() {
           {dismissedAlertIds.length > 0 && (
             <button
               onClick={clearDismissedAlerts}
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
               Clear dismissed
             </button>
           )}
         </header>
 
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
-          <Bell className="h-3 w-3 text-muted-foreground" />
-          <span className="text-[11px] text-muted-foreground">
+          <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-[12px] text-muted-foreground">
             SRS reviews, expired snoozes, and stale notes that need attention.
           </span>
         </div>
@@ -107,8 +107,8 @@ export default function AlertsPage() {
         {alerts.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <Bell className="mb-4 h-12 w-12 text-muted-foreground/20" />
-            <p className="text-[13px] text-muted-foreground">No alerts right now.</p>
-            <p className="mt-1 text-[12px] text-muted-foreground/60">
+            <p className="text-[15px] text-muted-foreground">No alerts right now.</p>
+            <p className="mt-1 text-[14px] text-muted-foreground/60">
               You&apos;ll see alerts when notes need your attention.
             </p>
           </div>
@@ -123,10 +123,10 @@ export default function AlertsPage() {
                   {/* Section header */}
                   <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-background/95 px-5 py-2 backdrop-blur-sm">
                     <span className={config.colorClass}>{ALERT_ICONS[type]}</span>
-                    <span className={`text-[12px] font-medium ${config.colorClass}`}>
+                    <span className={`text-[14px] font-medium ${config.colorClass}`}>
                       {config.label}
                     </span>
-                    <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums ${config.badgeClass}`}>
+                    <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums ${config.badgeClass}`}>
                       {group.length}
                     </span>
                   </div>
@@ -153,21 +153,21 @@ export default function AlertsPage() {
 
                         {/* Content */}
                         <div className="flex flex-1 flex-col gap-0.5 min-w-0 pr-3">
-                          <span className="truncate text-[13px] text-foreground">
+                          <span className="truncate text-[15px] text-foreground">
                             {note.title || "Untitled"}
                           </span>
-                          <span className="truncate text-[11px] text-muted-foreground">
+                          <span className="truncate text-[12px] text-muted-foreground">
                             {alert.message}
                           </span>
                         </div>
 
                         {/* Status badge */}
-                        <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium mr-3 ${config.badgeClass}`}>
+                        <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium mr-3 ${config.badgeClass}`}>
                           {note.status}
                         </span>
 
                         {/* Date */}
-                        <span className="shrink-0 text-[12px] tabular-nums text-muted-foreground mr-2">
+                        <span className="shrink-0 text-[14px] tabular-nums text-muted-foreground mr-2">
                           {format(new Date(note.updatedAt), "MMM d")}
                         </span>
 
@@ -181,7 +181,7 @@ export default function AlertsPage() {
                           className="shrink-0 rounded p-1 opacity-0 group-hover:opacity-100 hover:bg-secondary transition-all"
                           title="Dismiss"
                         >
-                          <X className="h-3 w-3 text-muted-foreground" />
+                          <X className="h-3.5 w-3.5 text-muted-foreground" />
                         </button>
                       </div>
                     )

@@ -26,7 +26,7 @@ export default function ViewsPage() {
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <header className="shrink-0 px-5 pt-5 pb-1">
         <h1 className="text-base font-semibold text-foreground">Views</h1>
-        <p className="mt-1 text-[12px] text-muted-foreground">
+        <p className="mt-1 text-[14px] text-muted-foreground">
           Choose how notes are displayed across the app.
         </p>
       </header>
@@ -48,7 +48,7 @@ export default function ViewsPage() {
               >
                 {active && (
                   <div className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-accent">
-                    <Check className="h-3 w-3 text-accent-foreground" />
+                    <Check className="h-3.5 w-3.5 text-accent-foreground" />
                   </div>
                 )}
                 <div
@@ -61,10 +61,10 @@ export default function ViewsPage() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <span className="text-[13px] font-medium text-foreground">
+                  <span className="text-[15px] font-medium text-foreground">
                     {opt.label}
                   </span>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">
+                  <p className="mt-0.5 text-[12px] text-muted-foreground leading-relaxed">
                     {opt.description}
                   </p>
                 </div>

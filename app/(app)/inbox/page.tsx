@@ -7,18 +7,13 @@ import { getInboxNotes, computeInboxRank, getSnoozeTime } from "@/lib/queries/no
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
+import { RemindPicker } from "@/components/remind-picker"
 import { PriorityBadge } from "@/components/note-fields"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Inbox,
   Check,
@@ -70,8 +65,8 @@ export default function InboxPage() {
   )
 
   const handleSnooze = useCallback(
-    (id: string, option: "3h" | "tomorrow" | "next-week") => {
-      triageSnooze(id, getSnoozeTime(option))
+    (id: string, reviewAt: string) => {
+      triageSnooze(id, reviewAt)
       toast("Snoozed", { description: "Note will reappear later." })
       goNext(id)
     },
@@ -104,7 +99,7 @@ export default function InboxPage() {
           break
         case "s":
           e.preventDefault()
-          handleSnooze(previewId, "tomorrow")
+          handleSnooze(previewId, getSnoozeTime("tomorrow"))
           break
         case "t":
           e.preventDefault()
@@ -138,12 +133,12 @@ export default function InboxPage() {
         <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
           <div className="flex items-center gap-2">
             <h1 className="text-base font-semibold text-foreground">Inbox</h1>
-            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium tabular-nums text-accent">
+            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[12px] font-medium tabular-nums text-accent">
               {inboxNotes.length}
             </span>
           </div>
           <button
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => createNote({ status: "inbox" })}
           >
             + New
@@ -152,8 +147,8 @@ export default function InboxPage() {
 
         {/* Workflow hint */}
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
-          <span className="text-[11px] text-muted-foreground">
-            Triage notes: <kbd className="rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[10px]">K</kbd> Keep <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[10px]">S</kbd> Snooze <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[10px]">T</kbd> Trash
+          <span className="text-[12px] text-muted-foreground">
+            Triage notes: <kbd className="rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[11px]">K</kbd> Keep <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[11px]">S</kbd> Snooze <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[11px]">T</kbd> Trash
           </span>
         </div>
 
@@ -161,13 +156,13 @@ export default function InboxPage() {
         {inboxNotes.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <Inbox className="mb-4 h-12 w-12 text-muted-foreground/20" />
-            <p className="text-[13px] text-muted-foreground">Inbox zero</p>
-            <p className="mt-1 text-[12px] text-muted-foreground/60">
+            <p className="text-[15px] text-muted-foreground">Inbox zero</p>
+            <p className="mt-1 text-[14px] text-muted-foreground/60">
               All notes have been triaged. Create a new note to get started.
             </p>
             <button
               onClick={() => createNote({ status: "inbox" })}
-              className="mt-4 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+              className="mt-4 rounded-md bg-accent px-3 py-1.5 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             >
               New note
             </button>
@@ -244,30 +239,30 @@ function InboxRow({
       <div className="w-8 shrink-0 flex justify-center">
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className={`flex items-center gap-0.5 text-[11px] tabular-nums font-medium ${
+            <span className={`flex items-center gap-0.5 text-[12px] tabular-nums font-medium ${
               rank >= 15 ? "text-accent" : rank >= 10 ? "text-muted-foreground" : "text-muted-foreground/50"
             }`}>
               <Zap className="h-2.5 w-2.5" />
               {rank}
             </span>
           </TooltipTrigger>
-          <TooltipContent side="top" className="text-[11px]">Inbox rank: {rank}</TooltipContent>
+          <TooltipContent side="top" className="text-[12px]">Inbox rank: {rank}</TooltipContent>
         </Tooltip>
       </div>
 
       {/* Title */}
       <div className="flex flex-1 items-center gap-2 min-w-0 pr-3">
-        <span className="truncate text-[13px] text-foreground">
+        <span className="truncate text-[15px] text-foreground">
           {note.title || "Untitled"}
         </span>
         {isSnoozed && (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-chart-3/10 px-1.5 py-0.5 text-[10px] font-medium text-chart-3">
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-chart-3/10 px-1.5 py-0.5 text-[11px] font-medium text-chart-3">
             <Clock className="h-2.5 w-2.5" />
             Snoozed
           </span>
         )}
         {note.source && note.source !== "manual" && (
-          <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+          <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
             {note.source}
           </span>
         )}
@@ -276,11 +271,11 @@ function InboxRow({
       {/* Date */}
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="shrink-0 text-[12px] tabular-nums text-muted-foreground cursor-default">
+          <span className="shrink-0 text-[14px] tabular-nums text-muted-foreground cursor-default">
             {format(new Date(note.createdAt), "MMM d")}
           </span>
         </TooltipTrigger>
-        <TooltipContent side="top" className="text-[11px]">
+        <TooltipContent side="top" className="text-[12px]">
           {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
         </TooltipContent>
       </Tooltip>
@@ -304,7 +299,7 @@ function InboxDetailPanel({
   onOpenNote: (id: string) => void
   onEditNote: () => void
   onKeep: (id: string) => void
-  onSnooze: (id: string, option: "3h" | "tomorrow" | "next-week") => void
+  onSnooze: (id: string, reviewAt: string) => void
   onTrash: (id: string) => void
 }) {
   const notes = usePlotStore((s) => s.notes)
@@ -335,9 +330,9 @@ function InboxDetailPanel({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onKeep(noteId)}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-chart-5/10 px-3 py-2 text-[12px] font-medium text-chart-5 transition-colors hover:bg-chart-5/20"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-chart-5/10 px-3 py-2 text-[14px] font-medium text-chart-5 transition-colors hover:bg-chart-5/20"
                 >
-                  <Check className="h-3.5 w-3.5" />
+                  <Check className="h-4 w-4" />
                   Keep
                   <kbd className="ml-1 rounded border border-chart-5/20 px-1 py-0.5 font-mono text-[9px]">K</kbd>
                 </button>
@@ -346,43 +341,26 @@ function InboxDetailPanel({
             </Tooltip>
 
             {/* Snooze */}
-            <DropdownMenu>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-chart-3/10 px-3 py-2 text-[12px] font-medium text-chart-3 transition-colors hover:bg-chart-3/20">
-                      <Clock className="h-3.5 w-3.5" />
-                      Snooze
-                      <kbd className="ml-1 rounded border border-chart-3/20 px-1 py-0.5 font-mono text-[9px]">S</kbd>
-                    </button>
-                  </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent>Snooze and review later</TooltipContent>
-              </Tooltip>
-              <DropdownMenuContent align="center" className="w-44">
-                <DropdownMenuItem onClick={() => onSnooze(noteId, "3h")}>
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[12px]">In 3 hours</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onSnooze(noteId, "tomorrow")}>
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[12px]">Tomorrow 10am</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onSnooze(noteId, "next-week")}>
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[12px]">Next week</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <RemindPicker
+              onSelect={(date) => onSnooze(noteId, date)}
+              triggerContent={
+                <button className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-chart-3/10 px-3 py-2 text-[14px] font-medium text-chart-3 transition-colors hover:bg-chart-3/20">
+                  <Clock className="h-4 w-4" />
+                  Snooze
+                  <kbd className="ml-1 rounded border border-chart-3/20 px-1 py-0.5 font-mono text-[9px]">S</kbd>
+                </button>
+              }
+              align="center"
+            />
 
             {/* Trash */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onTrash(noteId)}
-                  className="flex items-center justify-center gap-1.5 rounded-md bg-destructive/10 px-3 py-2 text-[12px] font-medium text-destructive transition-colors hover:bg-destructive/20"
+                  className="flex items-center justify-center gap-1.5 rounded-md bg-destructive/10 px-3 py-2 text-[14px] font-medium text-destructive transition-colors hover:bg-destructive/20"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                   <kbd className="rounded border border-destructive/20 px-1 py-0.5 font-mono text-[9px]">T</kbd>
                 </button>
               </TooltipTrigger>

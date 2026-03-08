@@ -76,8 +76,8 @@ export function useNotesView(
 
   // ── Stage 5: Group ────────────────────────────────────
   const groups = useMemo(
-    () => applyGrouping(sorted, viewState.groupBy),
-    [sorted, viewState.groupBy]
+    () => applyGrouping(sorted, viewState.groupBy, { backlinksMap: extras?.backlinksMap }),
+    [sorted, viewState.groupBy, extras?.backlinksMap]
   )
 
   // ── Actions ───────────────────────────────────────────

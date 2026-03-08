@@ -76,6 +76,33 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
       appendEvent(id, "updated", { action: "moveBackToInbox" })
     },
 
+    setReminder: (id: string, reviewAt: string) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id === id ? { ...n, reviewAt, updatedAt: now() } : n
+        ),
+      }))
+      appendEvent(id, "updated", { action: "setReminder", reviewAt })
+    },
+
+    clearReminder: (id: string) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id === id ? { ...n, reviewAt: null, updatedAt: now() } : n
+        ),
+      }))
+      appendEvent(id, "updated", { action: "clearReminder" })
+    },
+
+    batchSetReminder: (ids: string[], reviewAt: string) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          ids.includes(n.id) ? { ...n, reviewAt, updatedAt: now() } : n
+        ),
+      }))
+      ids.forEach((id) => appendEvent(id, "updated", { action: "setReminder", reviewAt }))
+    },
+
     // SRS Actions
     reviewSRS: (noteId: string, rating: SRSRating) => {
       const prev = get().srsStateByNoteId[noteId]

@@ -147,7 +147,7 @@ export function getUnlinkedNotes(allNotes: Note[], backlinks: Map<string, number
 
 /* ── Daily Review Queue ──────────────────────────────── */
 
-export type ReviewReason = "inbox-untriaged" | "snoozed-due" | "stale-capture" | "unlinked-permanent" | "srs-due"
+export type ReviewReason = "inbox-untriaged" | "snoozed-due" | "stale-capture" | "unlinked-permanent" | "srs-due" | "remind-due"
 
 export interface ReviewItem {
   note: Note
@@ -211,6 +211,20 @@ export function getReviewQueue(allNotes: Note[], backlinks: Map<string, number>,
     }
   }
 
+  // 6. Remind-due (non-inbox notes with reviewAt in the past)
+  {
+    const seen = new Set(items.map((i) => i.note.id))
+    allNotes
+      .filter((n) => {
+        if (n.status === "inbox") return false
+        if (n.triageStatus === "trashed") return false
+        if (!n.reviewAt) return false
+        return new Date(n.reviewAt).getTime() <= nowMs
+      })
+      .filter((n) => !seen.has(n.id))
+      .forEach((note) => items.push({ note, reason: "remind-due" }))
+  }
+
   return items
 }
 
@@ -247,7 +261,9 @@ export function suggestLinks(
 
 /* ── Snooze time helpers ──────────────────────────────── */
 
-export function getSnoozeTime(option: "3h" | "tomorrow" | "next-week"): string {
+export type SnoozePreset = "3h" | "tomorrow" | "3-days" | "next-week" | "1-week"
+
+export function getSnoozeTime(option: SnoozePreset): string {
   const d = new Date()
   switch (option) {
     case "3h":
@@ -257,8 +273,16 @@ export function getSnoozeTime(option: "3h" | "tomorrow" | "next-week"): string {
       d.setDate(d.getDate() + 1)
       d.setHours(10, 0, 0, 0)
       return d.toISOString()
+    case "3-days":
+      d.setDate(d.getDate() + 3)
+      d.setHours(10, 0, 0, 0)
+      return d.toISOString()
     case "next-week":
       d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7))
+      d.setHours(10, 0, 0, 0)
+      return d.toISOString()
+    case "1-week":
+      d.setDate(d.getDate() + 7)
       d.setHours(10, 0, 0, 0)
       return d.toISOString()
   }

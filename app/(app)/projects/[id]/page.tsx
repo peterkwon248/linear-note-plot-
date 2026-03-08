@@ -84,14 +84,14 @@ function FocusSelector({ value, onChange }: { value: ProjectFocus; onChange: (f:
           <button
             key={key}
             onClick={() => onChange(active ? null : key)}
-            className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition-all"
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-all"
             style={{
               backgroundColor: active ? bg : "transparent",
               color: active ? color : "var(--muted-foreground)",
               opacity: active ? 1 : 0.4,
             }}
           >
-            <Icon className="h-3 w-3" />
+            <Icon className="h-3.5 w-3.5" />
             {label}
           </button>
         )
@@ -161,7 +161,7 @@ function ProjectDescriptionEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[48px] text-[13px] leading-relaxed",
+          "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[48px] text-[15px] leading-relaxed",
       },
     },
   })
@@ -175,28 +175,28 @@ function ProjectDescriptionEditor({
           isActive={editor?.isActive("bold") ?? false}
           title="Bold"
         >
-          <Bold className="h-3.5 w-3.5" />
+          <Bold className="h-4 w-4" />
         </DescriptionToolbarButton>
         <DescriptionToolbarButton
           onClick={() => editor?.chain().focus().toggleItalic().run()}
           isActive={editor?.isActive("italic") ?? false}
           title="Italic"
         >
-          <Italic className="h-3.5 w-3.5" />
+          <Italic className="h-4 w-4" />
         </DescriptionToolbarButton>
         <DescriptionToolbarButton
           onClick={() => editor?.chain().focus().toggleStrike().run()}
           isActive={editor?.isActive("strike") ?? false}
           title="Strikethrough"
         >
-          <Strikethrough className="h-3.5 w-3.5" />
+          <Strikethrough className="h-4 w-4" />
         </DescriptionToolbarButton>
         <DescriptionToolbarButton
           onClick={() => editor?.chain().focus().toggleCode().run()}
           isActive={editor?.isActive("code") ?? false}
           title="Code"
         >
-          <Code className="h-3.5 w-3.5" />
+          <Code className="h-4 w-4" />
         </DescriptionToolbarButton>
 
         <div className="mx-1 h-4 w-px bg-border" />
@@ -206,14 +206,14 @@ function ProjectDescriptionEditor({
           isActive={editor?.isActive("heading", { level: 1 }) ?? false}
           title="Heading 1"
         >
-          <Heading1 className="h-3.5 w-3.5" />
+          <Heading1 className="h-4 w-4" />
         </DescriptionToolbarButton>
         <DescriptionToolbarButton
           onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
           isActive={editor?.isActive("heading", { level: 2 }) ?? false}
           title="Heading 2"
         >
-          <Heading2 className="h-3.5 w-3.5" />
+          <Heading2 className="h-4 w-4" />
         </DescriptionToolbarButton>
 
         <div className="mx-1 h-4 w-px bg-border" />
@@ -223,21 +223,21 @@ function ProjectDescriptionEditor({
           isActive={editor?.isActive("bulletList") ?? false}
           title="Bullet list"
         >
-          <List className="h-3.5 w-3.5" />
+          <List className="h-4 w-4" />
         </DescriptionToolbarButton>
         <DescriptionToolbarButton
           onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           isActive={editor?.isActive("orderedList") ?? false}
           title="Numbered list"
         >
-          <ListOrdered className="h-3.5 w-3.5" />
+          <ListOrdered className="h-4 w-4" />
         </DescriptionToolbarButton>
         <DescriptionToolbarButton
           onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           isActive={editor?.isActive("blockquote") ?? false}
           title="Quote"
         >
-          <Quote className="h-3.5 w-3.5" />
+          <Quote className="h-4 w-4" />
         </DescriptionToolbarButton>
       </div>
 
@@ -327,16 +327,16 @@ function MiniCalendar({
             onClick={() => setViewMonth(new Date(currentYear - 12, viewMonth.getMonth(), 1))}
             className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-[12px] font-medium text-foreground">
+          <span className="text-[14px] font-medium text-foreground">
             {yearRangeStart} – {yearRangeStart + 11}
           </span>
           <button
             onClick={() => setViewMonth(new Date(currentYear + 12, viewMonth.getMonth(), 1))}
             className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         </div>
         <div className="grid grid-cols-3 gap-1">
@@ -350,7 +350,7 @@ function MiniCalendar({
                   setViewMonth(new Date(y, viewMonth.getMonth(), 1))
                   setView("months")
                 }}
-                className={`flex h-8 items-center justify-center rounded-md text-[12px] transition-colors ${
+                className={`flex h-8 items-center justify-center rounded-md text-[14px] transition-colors ${
                   isViewYear
                     ? "bg-accent text-accent-foreground font-medium"
                     : isCurrent
@@ -376,11 +376,11 @@ function MiniCalendar({
             onClick={() => setViewMonth(new Date(currentYear - 1, viewMonth.getMonth(), 1))}
             className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => setView("years")}
-            className="text-[12px] font-medium text-foreground hover:text-accent transition-colors"
+            className="text-[14px] font-medium text-foreground hover:text-accent transition-colors"
           >
             {currentYear}
           </button>
@@ -388,7 +388,7 @@ function MiniCalendar({
             onClick={() => setViewMonth(new Date(currentYear + 1, viewMonth.getMonth(), 1))}
             className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         </div>
         <div className="grid grid-cols-3 gap-1">
@@ -402,7 +402,7 @@ function MiniCalendar({
                   setViewMonth(new Date(currentYear, i, 1))
                   setView("days")
                 }}
-                className={`flex h-8 items-center justify-center rounded-md text-[12px] transition-colors ${
+                className={`flex h-8 items-center justify-center rounded-md text-[14px] transition-colors ${
                   isViewMonth
                     ? "bg-accent text-accent-foreground font-medium"
                     : isCurrentMonth
@@ -428,11 +428,11 @@ function MiniCalendar({
           onClick={() => setViewMonth(subMonths(viewMonth, 1))}
           className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
         >
-          <ChevronLeft className="h-3.5 w-3.5" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
         <button
           onClick={() => setView("months")}
-          className="text-[12px] font-medium text-foreground hover:text-accent transition-colors"
+          className="text-[14px] font-medium text-foreground hover:text-accent transition-colors"
         >
           {format(viewMonth, "MMMM yyyy")}
         </button>
@@ -440,14 +440,14 @@ function MiniCalendar({
           onClick={() => setViewMonth(addMonths(viewMonth, 1))}
           className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
         >
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-1">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="flex h-7 items-center justify-center text-[10px] font-medium text-muted-foreground/50">
+          <div key={d} className="flex h-7 items-center justify-center text-[11px] font-medium text-muted-foreground/50">
             {d}
           </div>
         ))}
@@ -464,7 +464,7 @@ function MiniCalendar({
             <button
               key={day.toISOString()}
               onClick={() => onSelect(day)}
-              className={`flex h-7 w-full items-center justify-center rounded-md text-[11px] transition-colors ${
+              className={`flex h-7 w-full items-center justify-center rounded-md text-[12px] transition-colors ${
                 isSelected
                   ? "bg-accent text-accent-foreground font-medium"
                   : today
@@ -516,7 +516,7 @@ function TargetDatePicker({
       if (!o) setShowCalendar(false)
     }}>
       <PopoverTrigger asChild>
-        <button className="text-[13px] text-foreground hover:text-accent transition-colors">
+        <button className="text-[15px] text-foreground hover:text-accent transition-colors">
           {value ? format(new Date(value), "MMM d, yyyy") : "Set date..."}
         </button>
       </PopoverTrigger>
@@ -530,9 +530,9 @@ function TargetDatePicker({
             <div className="border-t border-border p-2">
               <button
                 onClick={() => setShowCalendar(false)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
-                <ChevronLeft className="h-3 w-3" />
+                <ChevronLeft className="h-3.5 w-3.5" />
                 Back to presets
               </button>
             </div>
@@ -541,17 +541,17 @@ function TargetDatePicker({
           <div className="p-2 space-y-1">
             {Array.from(groups.entries()).map(([group, items]) => (
               <div key={group}>
-                <div className="px-2 py-1 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                <div className="px-2 py-1 text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
                   {group}
                 </div>
                 {items.map((preset) => (
                   <button
                     key={preset.label}
                     onClick={() => selectDate(preset.date)}
-                    className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[12px] text-foreground transition-colors hover:bg-secondary"
+                    className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary"
                   >
                     <span>{preset.label}</span>
-                    <span className="text-[11px] text-muted-foreground/50">
+                    <span className="text-[12px] text-muted-foreground/50">
                       {format(preset.date, "MMM d")}
                     </span>
                   </button>
@@ -562,9 +562,9 @@ function TargetDatePicker({
             <div className="border-t border-border pt-1 mt-1">
               <button
                 onClick={() => setShowCalendar(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-foreground transition-colors hover:bg-secondary"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary"
               >
-                <CalendarDays className="h-3 w-3 text-muted-foreground/60" />
+                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground/60" />
                 Pick exact date...
               </button>
             </div>
@@ -576,9 +576,9 @@ function TargetDatePicker({
                     onChange(null)
                     setOpen(false)
                   }}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-destructive transition-colors hover:bg-destructive/10"
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[14px] text-destructive transition-colors hover:bg-destructive/10"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                   Clear date
                 </button>
               </div>
@@ -654,10 +654,10 @@ export default function ProjectDetailPage() {
       <main className="flex h-full flex-1 items-center justify-center bg-background">
         <div className="text-center">
           <FolderOpen className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
-          <p className="text-[13px] text-muted-foreground">Project not found</p>
+          <p className="text-[15px] text-muted-foreground">Project not found</p>
           <button
             onClick={() => router.push("/projects")}
-            className="mt-3 text-[12px] text-accent hover:underline"
+            className="mt-3 text-[14px] text-accent hover:underline"
           >
             Back to projects
           </button>
@@ -682,7 +682,7 @@ export default function ProjectDetailPage() {
           <FolderOpen className="h-5 w-5 text-accent" />
           <h1 className="text-base font-semibold text-foreground">{project.name}</h1>
           <span
-            className="rounded-md px-2 py-0.5 text-[11px] font-medium"
+            className="rounded-md px-2 py-0.5 text-[12px] font-medium"
             style={{ backgroundColor: statusCfg.bg, color: statusCfg.color }}
           >
             {statusCfg.label}
@@ -693,7 +693,7 @@ export default function ProjectDetailPage() {
         <div className="flex items-center gap-0 px-5">
           <button
             onClick={() => setActiveTab("overview")}
-            className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
+            className={`relative px-3 py-2 text-[15px] font-medium transition-colors ${
               activeTab === "overview" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -704,12 +704,12 @@ export default function ProjectDetailPage() {
           </button>
           <button
             onClick={() => setActiveTab("notes")}
-            className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
+            className={`relative px-3 py-2 text-[15px] font-medium transition-colors ${
               activeTab === "notes" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Notes
-            <span className="ml-1.5 text-[11px] text-muted-foreground">{stats.total}</span>
+            <span className="ml-1.5 text-[12px] text-muted-foreground">{stats.total}</span>
             {activeTab === "notes" && (
               <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
             )}
@@ -725,10 +725,10 @@ export default function ProjectDetailPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-3.5 w-3.5 text-accent" />
-                  <span className="text-[12px] font-medium text-foreground">Progress</span>
+                  <Sparkles className="h-4 w-4 text-accent" />
+                  <span className="text-[14px] font-medium text-foreground">Progress</span>
                 </div>
-                <span className="text-[12px] tabular-nums text-muted-foreground">
+                <span className="text-[14px] tabular-nums text-muted-foreground">
                   {stats.permanent} of {stats.total} permanent
                 </span>
               </div>
@@ -746,7 +746,7 @@ export default function ProjectDetailPage() {
               <div className="rounded-lg border border-border px-4 py-3 space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusCfg.color }} />
-                  <span className="text-[11px] font-medium text-muted-foreground">Status</span>
+                  <span className="text-[12px] font-medium text-muted-foreground">Status</span>
                 </div>
                 <div onClick={(e) => e.stopPropagation()}>
                   <ProjectStatusDropdown
@@ -762,10 +762,10 @@ export default function ProjectDetailPage() {
                   {(() => {
                     const opt = FOCUS_OPTIONS.find(o => o.key === project.focus)
                     return opt
-                      ? <opt.icon className="h-3.5 w-3.5" style={{ color: opt.color }} />
-                      : <Zap className="h-3.5 w-3.5 text-muted-foreground/40" />
+                      ? <opt.icon className="h-4 w-4" style={{ color: opt.color }} />
+                      : <Zap className="h-4 w-4 text-muted-foreground/40" />
                   })()}
-                  <span className="text-[11px] font-medium text-muted-foreground">Focus</span>
+                  <span className="text-[12px] font-medium text-muted-foreground">Focus</span>
                 </div>
                 <FocusSelector
                   value={project.focus}
@@ -776,8 +776,8 @@ export default function ProjectDetailPage() {
               {/* Target date */}
               <div className="rounded-lg border border-border px-4 py-3 space-y-2">
                 <div className="flex items-center gap-2">
-                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground/60" />
-                  <span className="text-[11px] font-medium text-muted-foreground">Target date</span>
+                  <CalendarDays className="h-4 w-4 text-muted-foreground/60" />
+                  <span className="text-[12px] font-medium text-muted-foreground">Target date</span>
                 </div>
                 <TargetDatePicker
                   value={project.targetDate}
@@ -788,10 +788,10 @@ export default function ProjectDetailPage() {
               {/* Created */}
               <div className="rounded-lg border border-border px-4 py-3 space-y-2">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground/60" />
-                  <span className="text-[11px] font-medium text-muted-foreground">Created</span>
+                  <Clock className="h-4 w-4 text-muted-foreground/60" />
+                  <span className="text-[12px] font-medium text-muted-foreground">Created</span>
                 </div>
-                <span className="text-[13px] text-foreground">
+                <span className="text-[15px] text-foreground">
                   {format(new Date(project.createdAt), "MMM d, yyyy")}
                 </span>
               </div>
@@ -799,8 +799,8 @@ export default function ProjectDetailPage() {
               {/* Description — full width */}
               <div className="col-span-2 rounded-lg border border-border px-4 py-3 space-y-2">
                 <div className="flex items-center gap-2">
-                  <AlignLeft className="h-3.5 w-3.5 text-muted-foreground/60" />
-                  <span className="text-[11px] font-medium text-muted-foreground">Description</span>
+                  <AlignLeft className="h-4 w-4 text-muted-foreground/60" />
+                  <span className="text-[12px] font-medium text-muted-foreground">Description</span>
                 </div>
                 <ProjectDescriptionEditor
                   description={project.description}
@@ -814,12 +814,12 @@ export default function ProjectDetailPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FileText className="h-3.5 w-3.5 text-muted-foreground/60" />
-                    <span className="text-[12px] font-medium text-foreground">Recent notes</span>
+                    <FileText className="h-4 w-4 text-muted-foreground/60" />
+                    <span className="text-[14px] font-medium text-foreground">Recent notes</span>
                   </div>
                   <button
                     onClick={() => setActiveTab("notes")}
-                    className="text-[11px] text-accent hover:underline"
+                    className="text-[12px] text-accent hover:underline"
                   >
                     View all
                   </button>
@@ -831,11 +831,11 @@ export default function ProjectDetailPage() {
                       onClick={() => openNote(note.id)}
                       className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-secondary/30 cursor-pointer"
                     >
-                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
-                      <span className="truncate text-[13px] text-foreground">
+                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+                      <span className="truncate text-[15px] text-foreground">
                         {note.title || "Untitled"}
                       </span>
-                      <span className="ml-auto shrink-0 text-[11px] text-muted-foreground capitalize">
+                      <span className="ml-auto shrink-0 text-[12px] text-muted-foreground capitalize">
                         {note.status}
                       </span>
                     </div>
@@ -849,7 +849,7 @@ export default function ProjectDetailPage() {
           <div>
             {/* Add note button */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-border">
-              <span className="text-[12px] text-muted-foreground">
+              <span className="text-[14px] text-muted-foreground">
                 {stats.total} notes in this project
               </span>
               <div className="flex items-center gap-2">
@@ -858,8 +858,8 @@ export default function ProjectDetailPage() {
                   if (!open) setPickerSearch("")
                 }}>
                   <PopoverTrigger asChild>
-                    <button className="flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-[12px] font-medium text-foreground transition-colors hover:bg-secondary/80">
-                      <Link className="h-3 w-3" />
+                    <button className="flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary/80">
+                      <Link className="h-3.5 w-3.5" />
                       Add existing
                     </button>
                   </PopoverTrigger>
@@ -867,12 +867,12 @@ export default function ProjectDetailPage() {
                     <Command>
                       <CommandInput
                         placeholder="Search notes..."
-                        className="text-[12px]"
+                        className="text-[14px]"
                         value={pickerSearch}
                         onValueChange={setPickerSearch}
                       />
                       <CommandList>
-                        <CommandEmpty className="py-4 text-[12px] text-muted-foreground">
+                        <CommandEmpty className="py-4 text-[14px] text-muted-foreground">
                           No matching notes
                         </CommandEmpty>
                         <CommandGroup>
@@ -885,14 +885,14 @@ export default function ProjectDetailPage() {
                                 setPickerOpen(false)
                                 setPickerSearch("")
                               }}
-                              className="flex items-center justify-between gap-2 text-[12px]"
+                              className="flex items-center justify-between gap-2 text-[14px]"
                             >
                               <div className="flex items-center gap-2 min-w-0">
-                                <FileText className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                                 <span className="truncate">{note.title || "Untitled"}</span>
                               </div>
                               <span
-                                className={`shrink-0 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+                                className={`shrink-0 inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
                                   note.status === "permanent"
                                     ? "bg-[#45d483]/12 text-[#45d483]"
                                     : note.status === "capture"
@@ -908,7 +908,7 @@ export default function ProjectDetailPage() {
                           ))}
                         </CommandGroup>
                         {hasMoreNotes && (
-                          <div className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground/60">
+                          <div className="border-t border-border px-3 py-2 text-[12px] text-muted-foreground/60">
                             {unassignedNotes.length - PICKER_LIMIT} more — type to search
                           </div>
                         )}
@@ -921,9 +921,9 @@ export default function ProjectDetailPage() {
                     const id = createNote({ projectId: project.id })
                     openNote(id)
                   }}
-                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-3.5 w-3.5" />
                   Add note
                 </button>
               </div>
@@ -934,8 +934,8 @@ export default function ProjectDetailPage() {
               <div className="flex items-center justify-center py-20 text-center">
                 <div>
                   <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground/30" />
-                  <p className="text-[13px] text-muted-foreground">No notes in this project</p>
-                  <p className="mt-1 text-[12px] text-muted-foreground/60">
+                  <p className="text-[15px] text-muted-foreground">No notes in this project</p>
+                  <p className="mt-1 text-[14px] text-muted-foreground/60">
                     Add notes to track progress.
                   </p>
                 </div>
@@ -948,14 +948,14 @@ export default function ProjectDetailPage() {
                   className="group flex items-center border-b border-border px-5 py-2.5 transition-colors hover:bg-secondary/30 cursor-pointer"
                 >
                   <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                    <span className="truncate text-[13px] text-foreground">
+                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+                    <span className="truncate text-[15px] text-foreground">
                       {note.title || "Untitled"}
                     </span>
                   </div>
                   <div className="w-[80px] shrink-0 text-right">
                     <span
-                      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+                      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
                         note.status === "permanent"
                           ? "bg-[#45d483]/12 text-[#45d483]"
                           : note.status === "capture"
@@ -976,7 +976,7 @@ export default function ProjectDetailPage() {
                     />
                   </div>
                   <div className="w-[80px] shrink-0 text-right">
-                    <span className="text-[12px] tabular-nums text-muted-foreground">
+                    <span className="text-[14px] tabular-nums text-muted-foreground">
                       {format(new Date(note.updatedAt), "MMM d")}
                     </span>
                   </div>
@@ -989,7 +989,7 @@ export default function ProjectDetailPage() {
                       className="rounded-md p-0.5 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground/60 hover:!text-destructive hover:!bg-destructive/10"
                       title="Remove from project"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

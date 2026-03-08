@@ -65,7 +65,7 @@ export default function BackupPage() {
               a.click()
               URL.revokeObjectURL(url)
             }}
-            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-[13px] text-foreground transition-colors hover:bg-secondary/80"
+            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-[15px] text-foreground transition-colors hover:bg-secondary/80"
           >
             Export JSON
           </button>
@@ -77,7 +77,7 @@ export default function BackupPage() {
         >
           <button
             onClick={handleExportMarkdown}
-            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-[13px] text-foreground transition-colors hover:bg-secondary/80"
+            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-[15px] text-foreground transition-colors hover:bg-secondary/80"
           >
             Export Markdown
           </button>
@@ -92,7 +92,7 @@ export default function BackupPage() {
           <button
             onClick={handleDeleteAll}
             disabled={deleting || notes.length === 0}
-            className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[13px] text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50"
+            className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[15px] text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50"
           >
             {deleting ? "Deleting..." : "Delete All"}
           </button>
