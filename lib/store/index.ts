@@ -53,6 +53,8 @@ export const usePlotStore = create<PlotState>()(
 
         viewStateByContext: buildDefaultViewStates(),
         _viewStateHydrated: false,
+        navigationHistory: [] as string[],
+        navigationIndex: -1,
 
         // ── Slices ──
         ...createNotesSlice(set, get, appendEvent),
@@ -69,7 +71,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 21,
+      version: 22,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

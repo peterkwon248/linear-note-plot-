@@ -18,6 +18,10 @@ export interface PlotState {
   shortcutOverlayOpen: boolean
   detailsOpen: boolean
 
+  // Navigation History
+  navigationHistory: string[]  // stack of note IDs
+  navigationIndex: number      // current position (-1 = empty)
+
   // Sidebar
   sidebarWidth: number
   sidebarLastWidth: number
@@ -102,6 +106,8 @@ export interface PlotState {
   setSidebarCollapsed: (collapsed: boolean) => void
   setSidebarPeek: (peek: boolean) => void
   restoreSidebar: () => void
+  goBack: () => void
+  goForward: () => void
   setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
 
   // ── Thinking Chain ──
