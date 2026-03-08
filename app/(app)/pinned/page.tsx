@@ -47,7 +47,7 @@ export default function PinnedPage() {
         context="pinned"
         title="Pinned"
         showTabs={false}
-        createNoteOverrides={{ pinned: true }}
+        hideCreateButton
         onRowClick={(noteId) => setPreviewId(noteId)}
         activePreviewId={previewId}
       />

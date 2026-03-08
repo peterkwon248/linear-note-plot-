@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
-import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
-import { NoteList } from "@/components/note-list"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
@@ -13,7 +11,6 @@ export default function NotesPage() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
   const isEditing = selectedNoteId !== null
-  const viewMode = useSettingsStore((s) => s.viewMode)
 
   const [previewId, setPreviewId] = useState<string | null>(null)
 
@@ -44,11 +41,6 @@ export default function NotesPage() {
         <NoteInspector />
       </div>
     )
-  }
-
-  // List view
-  if (viewMode === "list") {
-    return <NoteList filter={{ type: "all" }} />
   }
 
   // Table view + optional detail panel
