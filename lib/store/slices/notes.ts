@@ -64,6 +64,20 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       appendEvent(id, "updated")
     },
 
+    batchUpdateNotes: (ids: string[], updates: Partial<Note>) => {
+      const contentUpdates = updates.content !== undefined
+        ? { preview: extractPreview(updates.content), linksOut: extractLinksOut(updates.content) }
+        : {}
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          ids.includes(n.id)
+            ? { ...n, ...updates, ...contentUpdates, updatedAt: now(), lastTouchedAt: now() }
+            : n
+        ),
+      }))
+      ids.forEach((id) => appendEvent(id, "updated"))
+    },
+
     touchNote: (id: string) => {
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>

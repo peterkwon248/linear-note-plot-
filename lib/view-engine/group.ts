@@ -1,5 +1,5 @@
 import { isToday, isThisWeek, isThisMonth } from "date-fns"
-import type { Note, NoteStatus, NotePriority } from "../types"
+import type { Note, NoteStatus, NotePriority, TriageStatus } from "../types"
 import type { GroupBy, NoteGroup } from "./types"
 import { STATUS_ORDER, PRIORITY_ORDER } from "./types"
 
@@ -7,7 +7,7 @@ import { STATUS_ORDER, PRIORITY_ORDER } from "./types"
  * Stage 5: Group sorted notes by the given dimension.
  * Returns groups in a natural display order.
  */
-export function applyGrouping(notes: Note[], groupBy: GroupBy): NoteGroup[] {
+export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backlinksMap?: Map<string, number> }): NoteGroup[] {
   switch (groupBy) {
     case "none":
       return [{ key: "_all", label: "", notes }]
@@ -23,6 +23,12 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy): NoteGroup[] {
 
     case "project":
       return groupByProject(notes)
+
+    case "triage":
+      return groupByTriage(notes)
+
+    case "linkCount":
+      return groupByLinkCount(notes, extras?.backlinksMap)
 
     default:
       return [{ key: "_all", label: "", notes }]
@@ -151,4 +157,75 @@ function groupByProject(notes: Note[]): NoteGroup[] {
   }
 
   return groups
+}
+
+/* ── Triage grouping (Inbox workflow) ────────────────── */
+
+const TRIAGE_LABELS: Record<TriageStatus, string> = {
+  untriaged: "New",
+  kept: "Kept",
+  snoozed: "Snoozed",
+  trashed: "Trashed",
+}
+
+const TRIAGE_KEYS: TriageStatus[] = ["untriaged", "kept", "snoozed", "trashed"]
+
+function groupByTriage(notes: Note[]): NoteGroup[] {
+  const buckets = new Map<TriageStatus, Note[]>()
+  for (const key of TRIAGE_KEYS) buckets.set(key, [])
+
+  for (const note of notes) {
+    const bucket = buckets.get(note.triageStatus)
+    if (bucket) bucket.push(note)
+  }
+
+  return TRIAGE_KEYS
+    .map((key) => ({
+      key,
+      label: TRIAGE_LABELS[key],
+      notes: buckets.get(key) ?? [],
+    }))
+}
+
+/* ── Link count grouping (knowledge maturity) ────────── */
+
+type LinkBucket = "none" | "few" | "well" | "hub"
+
+const LINK_BUCKET_LABELS: Record<LinkBucket, string> = {
+  none: "No Links",
+  few: "1-2 Links",
+  well: "3-5 Links",
+  hub: "6+ Links",
+}
+
+const LINK_BUCKET_KEYS: LinkBucket[] = ["none", "few", "well", "hub"]
+
+function getLinkBucket(totalLinks: number): LinkBucket {
+  if (totalLinks === 0) return "none"
+  if (totalLinks <= 2) return "few"
+  if (totalLinks <= 5) return "well"
+  return "hub"
+}
+
+function groupByLinkCount(notes: Note[], backlinksMap?: Map<string, number>): NoteGroup[] {
+  const buckets: Record<LinkBucket, Note[]> = {
+    none: [],
+    few: [],
+    well: [],
+    hub: [],
+  }
+
+  for (const note of notes) {
+    const outgoing = note.linksOut.length
+    const incoming = backlinksMap?.get(note.id) ?? 0
+    const total = outgoing + incoming
+    buckets[getLinkBucket(total)].push(note)
+  }
+
+  return LINK_BUCKET_KEYS
+    .map((key) => ({
+      key,
+      label: LINK_BUCKET_LABELS[key],
+      notes: buckets[key],
+    }))
 }

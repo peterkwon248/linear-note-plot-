@@ -76,22 +76,22 @@ export default function MapsPage() {
         <div className="flex items-center gap-2">
           <MapIcon className="h-4 w-4 text-muted-foreground" />
           <h1 className="text-base font-semibold text-foreground">Knowledge Maps</h1>
-          <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+          <span className="rounded-full bg-secondary px-2 py-0.5 text-[12px] font-medium tabular-nums text-muted-foreground">
             {knowledgeMaps.length}
           </span>
         </div>
         <button
           onClick={() => setCreating(true)}
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3.5 w-3.5" />
           New Map
         </button>
       </header>
 
       <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
-        <MapIcon className="h-3 w-3 text-muted-foreground" />
-        <span className="text-[11px] text-muted-foreground">
+        <MapIcon className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[12px] text-muted-foreground">
           Conceptual knowledge spaces for organizing related notes.
         </span>
       </div>
@@ -106,26 +106,26 @@ export default function MapsPage() {
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               placeholder="Map title..."
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
             <input
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               placeholder="Description (optional)..."
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-[12px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
             <div className="flex gap-2">
               <button
                 onClick={handleCreate}
                 disabled={!newTitle.trim()}
-                className="rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50"
+                className="rounded-md bg-accent px-3 py-1.5 text-[14px] font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50"
               >
                 Create
               </button>
               <button
                 onClick={() => { setCreating(false); setNewTitle(""); setNewDescription("") }}
-                className="rounded-md border border-border px-3 py-1.5 text-[12px] text-muted-foreground hover:bg-secondary"
+                className="rounded-md border border-border px-3 py-1.5 text-[14px] text-muted-foreground hover:bg-secondary"
               >
                 Cancel
               </button>
@@ -139,15 +139,15 @@ export default function MapsPage() {
         {knowledgeMaps.length === 0 && !creating ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <MapIcon className="mb-4 h-12 w-12 text-muted-foreground/20" />
-            <p className="text-[13px] text-muted-foreground">No knowledge maps yet.</p>
-            <p className="mt-1 text-[12px] text-muted-foreground/60">
+            <p className="text-[15px] text-muted-foreground">No knowledge maps yet.</p>
+            <p className="mt-1 text-[14px] text-muted-foreground/60">
               Create your first map to start organizing notes by conceptual domain.
             </p>
             <button
               onClick={() => setCreating(true)}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-accent-foreground hover:bg-accent/80"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[14px] font-medium text-accent-foreground hover:bg-accent/80"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3.5 w-3.5" />
               Create Map
             </button>
           </div>
@@ -169,7 +169,7 @@ export default function MapsPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <div
-                        className="h-3 w-3 shrink-0 rounded-sm"
+                        className="h-3.5 w-3.5 shrink-0 rounded-sm"
                         style={{ backgroundColor: map.color }}
                       />
                       {isEditing ? (
@@ -179,22 +179,22 @@ export default function MapsPage() {
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
-                            className="w-full rounded border border-border bg-background px-2 py-1 text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-accent"
+                            className="w-full rounded border border-border bg-background px-2 py-1 text-[15px] font-medium focus:outline-none focus:ring-1 focus:ring-accent"
                           />
                           <input
                             value={editDescription}
                             onChange={(e) => setEditDescription(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
                             placeholder="Description..."
-                            className="w-full rounded border border-border bg-background px-2 py-1 text-[12px] focus:outline-none focus:ring-1 focus:ring-accent"
+                            className="w-full rounded border border-border bg-background px-2 py-1 text-[14px] focus:outline-none focus:ring-1 focus:ring-accent"
                           />
                           <div className="flex gap-2">
-                            <button onClick={handleSaveEdit} className="rounded bg-accent px-2 py-1 text-[11px] text-accent-foreground">Save</button>
-                            <button onClick={() => setEditingId(null)} className="rounded border border-border px-2 py-1 text-[11px] text-muted-foreground">Cancel</button>
+                            <button onClick={handleSaveEdit} className="rounded bg-accent px-2 py-1 text-[12px] text-accent-foreground">Save</button>
+                            <button onClick={() => setEditingId(null)} className="rounded border border-border px-2 py-1 text-[12px] text-muted-foreground">Cancel</button>
                           </div>
                         </div>
                       ) : (
-                        <span className="truncate text-[13px] font-medium text-foreground">
+                        <span className="truncate text-[15px] font-medium text-foreground">
                           {map.title}
                         </span>
                       )}
@@ -203,15 +203,15 @@ export default function MapsPage() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                           <button className="rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-secondary">
-                            <MoreHorizontal className="h-3.5 w-3.5" />
+                            <MoreHorizontal className="h-4 w-4" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-36">
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleStartEdit(map) }} className="text-[12px]">
-                            <Pencil className="h-3 w-3 mr-2" /> Edit
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleStartEdit(map) }} className="text-[14px]">
+                            <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(map.id, map.title) }} className="text-[12px] text-destructive">
-                            <Trash2 className="h-3 w-3 mr-2" /> Delete
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(map.id, map.title) }} className="text-[14px] text-destructive">
+                            <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -220,24 +220,24 @@ export default function MapsPage() {
 
                   {/* Description */}
                   {!isEditing && map.description && (
-                    <p className="mb-3 text-[12px] text-muted-foreground line-clamp-2">
+                    <p className="mb-3 text-[14px] text-muted-foreground line-clamp-2">
                       {map.description}
                     </p>
                   )}
 
                   {/* Stats */}
                   {!isEditing && (
-                    <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-4 text-[12px] text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <FileText className="h-3 w-3" />
+                        <FileText className="h-3.5 w-3.5" />
                         {stats.noteCount}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Link2 className="h-3 w-3" />
+                        <Link2 className="h-3.5 w-3.5" />
                         {stats.internalLinks}
                       </span>
                       <span className="flex items-center gap-1">
-                        <BarChart3 className="h-3 w-3" />
+                        <BarChart3 className="h-3.5 w-3.5" />
                         {stats.stages.permanent}p / {stats.stages.capture}c / {stats.stages.inbox}i
                       </span>
                     </div>
@@ -245,7 +245,7 @@ export default function MapsPage() {
 
                   {/* Date */}
                   {!isEditing && (
-                    <div className="mt-2 text-[10px] text-muted-foreground/60">
+                    <div className="mt-2 text-[11px] text-muted-foreground/60">
                       Updated {format(new Date(map.updatedAt), "MMM d, yyyy")}
                     </div>
                   )}

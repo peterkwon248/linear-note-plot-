@@ -46,6 +46,7 @@ export interface PlotState {
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
   updateNote: (id: string, updates: Partial<Note>) => void
+  batchUpdateNotes: (ids: string[], updates: Partial<Note>) => void
   deleteNote: (id: string) => void
   duplicateNote: (id: string) => void
   togglePin: (id: string) => void
@@ -61,6 +62,9 @@ export interface PlotState {
   promoteToPermament: (id: string) => void
   undoPromote: (id: string) => void
   moveBackToInbox: (id: string) => void
+  setReminder: (id: string, reviewAt: string) => void
+  clearReminder: (id: string) => void
+  batchSetReminder: (ids: string[], reviewAt: string) => void
 
   // ── SRS ──
   reviewSRS: (noteId: string, rating: SRSRating) => void

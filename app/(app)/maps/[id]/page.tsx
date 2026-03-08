@@ -103,10 +103,10 @@ export default function MapDetailPage() {
   if (!map) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center">
-        <p className="text-[13px] text-muted-foreground">Map not found.</p>
+        <p className="text-[15px] text-muted-foreground">Map not found.</p>
         <button
           onClick={() => router.push("/maps")}
-          className="mt-2 text-[12px] text-accent hover:underline"
+          className="mt-2 text-[14px] text-accent hover:underline"
         >
           Back to Maps
         </button>
@@ -128,40 +128,40 @@ export default function MapDetailPage() {
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div
-              className="h-3 w-3 shrink-0 rounded-sm"
+              className="h-3.5 w-3.5 shrink-0 rounded-sm"
               style={{ backgroundColor: map.color }}
             />
             <h1 className="text-base font-semibold text-foreground truncate">
               {map.title}
             </h1>
             {map.description && (
-              <span className="text-[12px] text-muted-foreground truncate hidden sm:inline">
+              <span className="text-[14px] text-muted-foreground truncate hidden sm:inline">
                 — {map.description}
               </span>
             )}
           </div>
           <div className="flex items-center gap-2">
             {stats && (
-              <div className="flex items-center gap-3 text-[11px] text-muted-foreground mr-2">
+              <div className="flex items-center gap-3 text-[12px] text-muted-foreground mr-2">
                 <span className="flex items-center gap-1">
-                  <FileText className="h-3 w-3" />
+                  <FileText className="h-3.5 w-3.5" />
                   {stats.noteCount}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Link2 className="h-3 w-3" />
+                  <Link2 className="h-3.5 w-3.5" />
                   {stats.internalLinks}
                 </span>
               </div>
             )}
             <button
               onClick={() => setAdding(!adding)}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[14px] font-medium transition-colors ${
                 adding
                   ? "bg-secondary text-foreground"
                   : "bg-accent text-accent-foreground hover:bg-accent/80"
               }`}
             >
-              {adding ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+              {adding ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
               {adding ? "Done" : "Add Notes"}
             </button>
           </div>
@@ -171,18 +171,18 @@ export default function MapDetailPage() {
         {adding && (
           <div className="shrink-0 border-b border-border bg-secondary/20 px-5 py-3">
             <div className="flex items-center gap-2 mb-3">
-              <Search className="h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="h-4 w-4 text-muted-foreground" />
               <input
                 autoFocus
                 value={addQuery}
                 onChange={(e) => setAddQuery(e.target.value)}
                 placeholder="Search notes to add..."
-                className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
             </div>
             <div className="max-h-48 overflow-y-auto space-y-0.5">
               {addableNotes.length === 0 ? (
-                <p className="text-[12px] text-muted-foreground/60 py-2">
+                <p className="text-[14px] text-muted-foreground/60 py-2">
                   {addQuery ? "No matching notes found." : "All notes are already in this map."}
                 </p>
               ) : (
@@ -192,9 +192,9 @@ export default function MapDetailPage() {
                     className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-secondary/50 cursor-pointer"
                     onClick={() => handleAddNote(note.id)}
                   >
-                    <Plus className="h-3 w-3 text-accent shrink-0" />
-                    <span className="truncate text-[12px] text-foreground">{note.title || "Untitled"}</span>
-                    <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                    <Plus className="h-3.5 w-3.5 text-accent shrink-0" />
+                    <span className="truncate text-[14px] text-foreground">{note.title || "Untitled"}</span>
+                    <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
                       note.status === "inbox" ? "bg-accent/10 text-accent" :
                       note.status === "capture" ? "bg-chart-2/10 text-chart-2" :
                       "bg-chart-5/10 text-chart-5"
@@ -213,13 +213,13 @@ export default function MapDetailPage() {
           {/* Note list sidebar */}
           <div className="w-[240px] shrink-0 border-r border-border overflow-y-auto">
             <div className="px-3 py-2 border-b border-border">
-              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
                 Notes ({mapNotes.length})
               </span>
             </div>
             {mapNotes.length === 0 ? (
               <div className="px-3 py-4">
-                <p className="text-[12px] text-muted-foreground/60">No notes yet. Click "Add Notes" to get started.</p>
+                <p className="text-[14px] text-muted-foreground/60">No notes yet. Click "Add Notes" to get started.</p>
               </div>
             ) : (
               <div className="space-y-px py-1">
@@ -233,8 +233,8 @@ export default function MapDetailPage() {
                     }`}
                     onClick={() => handleOpenNote(note.id)}
                   >
-                    <FileText className="h-3 w-3 shrink-0 text-muted-foreground/40" />
-                    <span className="truncate text-[12px] text-foreground flex-1">
+                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                    <span className="truncate text-[14px] text-foreground flex-1">
                       {note.title || "Untitled"}
                     </span>
                     <button
@@ -242,7 +242,7 @@ export default function MapDetailPage() {
                       className="shrink-0 rounded p-0.5 text-muted-foreground/0 group-hover:text-muted-foreground hover:text-destructive transition-colors"
                       title="Remove from map"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
@@ -254,11 +254,11 @@ export default function MapDetailPage() {
           <div className="flex-1 flex flex-col overflow-hidden bg-secondary/5">
             {/* Filter bar */}
             <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-2">
-              <Filter className="h-3 w-3 text-muted-foreground" />
+              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
               <select
                 value={graphFilter.status}
                 onChange={(e) => setGraphFilter((f) => ({ ...f, status: e.target.value as MapGraphFilter["status"] }))}
-                className="rounded-md border border-border bg-card px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                className="rounded-md border border-border bg-card px-2 py-1 text-[12px] text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
               >
                 <option value="all">All statuses</option>
                 <option value="inbox">Inbox</option>
@@ -266,7 +266,7 @@ export default function MapDetailPage() {
                 <option value="permanent">Permanent</option>
                 <option value="reference">Reference</option>
               </select>
-              <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer">
+              <label className="flex items-center gap-1.5 text-[12px] text-muted-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={graphFilter.linkedOnly}
@@ -278,7 +278,7 @@ export default function MapDetailPage() {
               {(graphFilter.status !== "all" || graphFilter.linkedOnly) && (
                 <button
                   onClick={() => setGraphFilter({ status: "all", linkedOnly: false })}
-                  className="ml-auto text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  className="ml-auto text-[12px] text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Clear filters
                 </button>

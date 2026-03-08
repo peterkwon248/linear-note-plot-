@@ -1,6 +1,20 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
+/* ── Transient UI state (not persisted) ── */
+
+interface UIState {
+  displayPopoverOpen: boolean
+  setDisplayPopoverOpen: (v: boolean) => void
+}
+
+export const useUIStore = create<UIState>()((set) => ({
+  displayPopoverOpen: false,
+  setDisplayPopoverOpen: (v) => set({ displayPopoverOpen: v }),
+}))
+
+/* ── Persisted settings ── */
+
 export interface SettingsState {
   // Editor
   spellcheck: boolean
@@ -19,7 +33,7 @@ export interface SettingsState {
   language: string
   startView: "all" | "inbox" | "pinned"
   confirmDelete: boolean
-  viewMode: "list" | "table"
+  viewMode: "list" | "table" | "board"
 
   // Actions
   setSpellcheck: (v: boolean) => void
@@ -34,7 +48,7 @@ export interface SettingsState {
   setLanguage: (v: string) => void
   setStartView: (v: "all" | "inbox" | "pinned") => void
   setConfirmDelete: (v: boolean) => void
-  setViewMode: (v: "list" | "table") => void
+  setViewMode: (v: "list" | "table" | "board") => void
 }
 
 export const useSettingsStore = create<SettingsState>()(

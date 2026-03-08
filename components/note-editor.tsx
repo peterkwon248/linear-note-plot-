@@ -132,7 +132,7 @@ export function NoteEditor() {
           </Tooltip>
           <span className="mx-1 h-4 w-px bg-border" />
           {currentFolder && (
-            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-[14px] text-muted-foreground">
               <span
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: currentFolder.color }}
@@ -141,10 +141,10 @@ export function NoteEditor() {
             </span>
           )}
           {currentFolder && currentCategory && (
-            <span className="text-[12px] text-muted-foreground/40">/</span>
+            <span className="text-[14px] text-muted-foreground/40">/</span>
           )}
           {currentCategory && (
-            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-[14px] text-muted-foreground">
               <span
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: currentCategory.color }}
@@ -153,7 +153,7 @@ export function NoteEditor() {
             </span>
           )}
           {!currentFolder && !currentCategory && (
-            <span className="text-[12px] text-muted-foreground">
+            <span className="text-[14px] text-muted-foreground">
               {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
             </span>
           )}
@@ -194,7 +194,7 @@ export function NoteEditor() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem onClick={() => duplicateNote(note.id)}>
-                <Copy className="h-3.5 w-3.5" />
+                <Copy className="h-4 w-4" />
                 Duplicate
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -209,7 +209,7 @@ export function NoteEditor() {
                   setSelectedNoteId(null)
                 }}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

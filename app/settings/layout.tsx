@@ -24,7 +24,7 @@ function NavItem({ href, icon, label, active }: NavItemProps) {
   return (
     <Link
       href={href}
-      className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors ${
+      className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
         active
           ? "bg-secondary text-foreground"
           : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
@@ -38,7 +38,7 @@ function NavItem({ href, icon, label, active }: NavItemProps) {
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <div className="px-2.5 pb-1 pt-5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground first:pt-0">
+    <div className="px-2.5 pb-1 pt-5 text-[12px] font-medium uppercase tracking-wider text-muted-foreground first:pt-0">
       {title}
     </div>
   )
@@ -83,7 +83,7 @@ export default function SettingsLayout({
         <div className="px-2 pt-3 pb-2">
           <Link
             href="/"
-            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[15px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to app</span>

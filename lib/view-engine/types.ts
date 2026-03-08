@@ -19,7 +19,7 @@ export type ViewContextKey =
 
 /* ── View State ────────────────────────────────────────── */
 
-export type ViewMode = "list" | "table"
+export type ViewMode = "list" | "table" | "board"
 
 export type SortField =
   | "updatedAt"
@@ -33,12 +33,12 @@ export type SortField =
 
 export type SortDirection = "asc" | "desc"
 
-export type GroupBy = "none" | "status" | "priority" | "date" | "project"
+export type GroupBy = "none" | "status" | "priority" | "date" | "project" | "triage" | "linkCount"
 
 export type FilterOperator = "eq" | "neq" | "gt" | "lt"
 
 export interface FilterRule {
-  field: "status" | "priority" | "links" | "reads"
+  field: "status" | "priority" | "links" | "reads" | "project" | "updatedAt" | "createdAt" | "content" | "tags" | "pinned"
   operator: FilterOperator
   value: string
 }
@@ -105,10 +105,10 @@ export const VALID_SORT_FIELDS: SortField[] = [
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
-  "none", "status", "priority", "date", "project",
+  "none", "status", "priority", "date", "project", "triage", "linkCount",
 ]
 
-export const VALID_VIEW_MODES: ViewMode[] = ["list", "table"]
+export const VALID_VIEW_MODES: ViewMode[] = ["list", "table", "board"]
 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "project", "links", "reads", "priority", "createdAt", "updatedAt",

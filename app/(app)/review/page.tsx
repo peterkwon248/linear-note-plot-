@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
   FileText,
   RotateCcw,
+  Bell,
 } from "lucide-react"
 import { format } from "date-fns"
 import type { ReviewReason } from "@/lib/queries/notes"
@@ -28,33 +29,39 @@ const SECTION_CONFIG: Record<
 > = {
   "inbox-untriaged": {
     label: "Inbox — Needs Triage",
-    icon: <Inbox className="h-3.5 w-3.5" />,
+    icon: <Inbox className="h-4 w-4" />,
     colorClass: "text-accent",
     badgeClass: "bg-accent/10 text-accent",
   },
   "snoozed-due": {
     label: "Snoozed — Due Now",
-    icon: <AlarmClock className="h-3.5 w-3.5" />,
+    icon: <AlarmClock className="h-4 w-4" />,
     colorClass: "text-chart-3",
     badgeClass: "bg-chart-3/10 text-chart-3",
   },
   "stale-capture": {
     label: "Capture — Stale",
-    icon: <AlertTriangle className="h-3.5 w-3.5" />,
+    icon: <AlertTriangle className="h-4 w-4" />,
     colorClass: "text-chart-3",
     badgeClass: "bg-chart-3/10 text-chart-3",
   },
   "unlinked-permanent": {
     label: "Permanent — Unlinked",
-    icon: <Link2 className="h-3.5 w-3.5" />,
+    icon: <Link2 className="h-4 w-4" />,
     colorClass: "text-destructive",
     badgeClass: "bg-destructive/10 text-destructive",
   },
   "srs-due": {
     label: "SRS — Due for Review",
-    icon: <RotateCcw className="h-3.5 w-3.5" />,
+    icon: <RotateCcw className="h-4 w-4" />,
     colorClass: "text-chart-5",
     badgeClass: "bg-chart-5/10 text-chart-5",
+  },
+  "remind-due": {
+    label: "Reminded — Due Now",
+    icon: <Bell className="h-4 w-4" />,
+    colorClass: "text-[#a78bfa]",
+    badgeClass: "bg-[#a78bfa]/10 text-[#a78bfa]",
   },
 }
 
@@ -78,6 +85,7 @@ const REASON_BADGE: Record<ReviewReason, { label: string; className: string }> =
   "stale-capture": { label: "Stale", className: "bg-chart-3/10 text-chart-3" },
   "unlinked-permanent": { label: "Unlinked", className: "bg-destructive/10 text-destructive" },
   "srs-due": { label: "SRS Due", className: "bg-chart-5/10 text-chart-5" },
+  "remind-due": { label: "Reminded", className: "bg-[#a78bfa]/10 text-[#a78bfa]" },
 }
 
 /* ── ReviewPage ──────────────────────────────────────── */
@@ -144,7 +152,7 @@ export default function ReviewPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-base font-semibold text-foreground">Review</h1>
             {reviewItems.length > 0 && (
-              <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium tabular-nums text-destructive">
+              <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[12px] font-medium tabular-nums text-destructive">
                 {reviewItems.length}
               </span>
             )}
@@ -152,8 +160,8 @@ export default function ReviewPage() {
         </header>
 
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
-          <ClipboardCheck className="h-3 w-3 text-muted-foreground" />
-          <span className="text-[11px] text-muted-foreground">
+          <ClipboardCheck className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-[12px] text-muted-foreground">
             Notes requiring your attention, grouped by reason.
           </span>
         </div>
@@ -162,8 +170,8 @@ export default function ReviewPage() {
         {reviewItems.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <ClipboardCheck className="mb-4 h-12 w-12 text-muted-foreground/20" />
-            <p className="text-[13px] text-muted-foreground">All clear — nothing to review.</p>
-            <p className="mt-1 text-[12px] text-muted-foreground/60">
+            <p className="text-[15px] text-muted-foreground">All clear — nothing to review.</p>
+            <p className="mt-1 text-[14px] text-muted-foreground/60">
               Check back later as notes move through your workflow.
             </p>
           </div>
@@ -178,10 +186,10 @@ export default function ReviewPage() {
                   {/* Section header */}
                   <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-background/95 px-5 py-2 backdrop-blur-sm">
                     <span className={config.colorClass}>{config.icon}</span>
-                    <span className={`text-[12px] font-medium ${config.colorClass}`}>
+                    <span className={`text-[14px] font-medium ${config.colorClass}`}>
                       {config.label}
                     </span>
-                    <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums ${config.badgeClass}`}>
+                    <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums ${config.badgeClass}`}>
                       {group.length}
                     </span>
                   </div>
@@ -203,30 +211,30 @@ export default function ReviewPage() {
                       >
                         {/* Icon */}
                         <div className="mr-3 shrink-0">
-                          <FileText className="h-3.5 w-3.5 text-muted-foreground/40" />
+                          <FileText className="h-4 w-4 text-muted-foreground/40" />
                         </div>
 
                         {/* Title */}
                         <div className="flex flex-1 items-center gap-2 min-w-0 pr-3">
-                          <span className="truncate text-[13px] text-foreground">
+                          <span className="truncate text-[15px] text-foreground">
                             {note.title || "Untitled"}
                           </span>
                         </div>
 
                         {/* Stage badge */}
                         {stageBadge && (
-                          <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium mr-2 ${stageBadge.className}`}>
+                          <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium mr-2 ${stageBadge.className}`}>
                             {stageBadge.label}
                           </span>
                         )}
 
                         {/* Reason badge */}
-                        <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium mr-3 ${reasonBadge.className}`}>
+                        <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium mr-3 ${reasonBadge.className}`}>
                           {reasonBadge.label}
                         </span>
 
                         {/* Date */}
-                        <span className="shrink-0 text-[12px] tabular-nums text-muted-foreground">
+                        <span className="shrink-0 text-[14px] tabular-nums text-muted-foreground">
                           {format(new Date(note.updatedAt), "MMM d")}
                         </span>
                       </div>
@@ -268,8 +276,8 @@ export default function ReviewPage() {
                     }}
                     className={`flex flex-1 flex-col items-center gap-0.5 rounded-md border border-border bg-card px-2 py-2 text-center transition-colors ${RATING_COLORS[rating]}`}
                   >
-                    <span className="text-[12px] font-medium">{RATING_LABELS[rating]}</span>
-                    <span className="text-[10px] tabular-nums opacity-60">{INTERVALS[preview.step]}d</span>
+                    <span className="text-[14px] font-medium">{RATING_LABELS[rating]}</span>
+                    <span className="text-[11px] tabular-nums opacity-60">{INTERVALS[preview.step]}d</span>
                   </button>
                 )
               })}

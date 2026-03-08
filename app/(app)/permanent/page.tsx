@@ -77,15 +77,15 @@ export default function PermanentPage() {
         <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
           <div className="flex items-center gap-2">
             <h1 className="text-base font-semibold text-foreground">Permanent</h1>
-            <span className="rounded-full bg-chart-5/10 px-2 py-0.5 text-[11px] font-medium tabular-nums text-chart-5">
+            <span className="rounded-full bg-chart-5/10 px-2 py-0.5 text-[12px] font-medium tabular-nums text-chart-5">
               {permanentNotes.length}
             </span>
           </div>
         </header>
 
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
-          <Shield className="h-3 w-3 text-chart-5" />
-          <span className="text-[11px] text-muted-foreground">
+          <Shield className="h-3.5 w-3.5 text-chart-5" />
+          <span className="text-[12px] text-muted-foreground">
             Fully-enriched, permanent knowledge base notes.
           </span>
         </div>
@@ -94,8 +94,8 @@ export default function PermanentPage() {
         {permanentNotes.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <Shield className="mb-4 h-12 w-12 text-muted-foreground/20" />
-            <p className="text-[13px] text-muted-foreground">No permanent notes yet</p>
-            <p className="mt-1 text-[12px] text-muted-foreground/60">
+            <p className="text-[15px] text-muted-foreground">No permanent notes yet</p>
+            <p className="mt-1 text-[14px] text-muted-foreground/60">
               Promote capture notes when their ready score reaches 5+.
             </p>
           </div>
@@ -104,22 +104,22 @@ export default function PermanentPage() {
             {/* Column headers */}
             <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
               <div className="flex-1 min-w-0">
-                <span className="text-[11px] font-medium text-muted-foreground">Name</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Name</span>
               </div>
               <div className="w-[56px] shrink-0 text-center">
-                <span className="text-[11px] font-medium text-muted-foreground">Links</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Links</span>
               </div>
               <div className="w-[56px] shrink-0 text-center">
-                <span className="text-[11px] font-medium text-muted-foreground">Reads</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Reads</span>
               </div>
               <div className="w-[72px] shrink-0 text-center">
-                <span className="text-[11px] font-medium text-muted-foreground">Priority</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Priority</span>
               </div>
               <div className="w-[80px] shrink-0 text-right">
-                <span className="text-[11px] font-medium text-muted-foreground">Promoted</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Promoted</span>
               </div>
               <div className="w-[80px] shrink-0 text-right">
-                <span className="text-[11px] font-medium text-muted-foreground">Updated</span>
+                <span className="text-[12px] font-medium text-muted-foreground">Updated</span>
               </div>
             </div>
 
@@ -139,33 +139,33 @@ export default function PermanentPage() {
                 >
                   {/* Name */}
                   <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-chart-5/60" />
-                    <span className="truncate text-[13px] text-foreground">
+                    <FileText className="h-4 w-4 shrink-0 text-chart-5/60" />
+                    <span className="truncate text-[15px] text-foreground">
                       {note.title || "Untitled"}
                     </span>
                     {links === 0 && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="flex shrink-0 items-center gap-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+                          <span className="flex shrink-0 items-center gap-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[11px] font-medium text-destructive">
                             <Link2 className="h-2.5 w-2.5" />
                             Orphan
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent className="text-[11px]">Add at least 1 link to reduce orphan notes.</TooltipContent>
+                        <TooltipContent className="text-[12px]">Add at least 1 link to reduce orphan notes.</TooltipContent>
                       </Tooltip>
                     )}
                   </div>
 
                   {/* Links */}
                   <div className="w-[56px] shrink-0 text-center">
-                    <span className={`text-[12px] tabular-nums ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+                    <span className={`text-[14px] tabular-nums ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
                       {links}
                     </span>
                   </div>
 
                   {/* Reads */}
                   <div className="w-[56px] shrink-0 text-center">
-                    <span className={`text-[12px] tabular-nums ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+                    <span className={`text-[14px] tabular-nums ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
                       {note.reads}
                     </span>
                   </div>
@@ -177,14 +177,14 @@ export default function PermanentPage() {
 
                   {/* Promoted date */}
                   <div className="w-[80px] shrink-0 text-right">
-                    <span className="text-[12px] tabular-nums text-muted-foreground">
+                    <span className="text-[14px] tabular-nums text-muted-foreground">
                       {note.promotedAt ? format(new Date(note.promotedAt), "MMM d") : "--"}
                     </span>
                   </div>
 
                   {/* Updated */}
                   <div className="w-[80px] shrink-0 text-right">
-                    <span className="text-[12px] tabular-nums text-muted-foreground">
+                    <span className="text-[14px] tabular-nums text-muted-foreground">
                       {shortRelative(note.updatedAt)}
                     </span>
                   </div>

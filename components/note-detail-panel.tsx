@@ -10,6 +10,7 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
+  Bell,
   CircleDot,
   Signal,
   Eye,
@@ -23,7 +24,6 @@ import {
   ArrowDownLeft,
   AlertTriangle,
   Inbox,
-  ChevronDown,
   GitBranch,
   Plus,
   Pencil,
@@ -37,17 +37,12 @@ import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { StatusBadge, PriorityBadge, PROJECT_STATUS_CONFIG, ProjectDropdown } from "@/components/note-fields"
+import { RemindPicker } from "@/components/remind-picker"
 import { ConnectionsGraph } from "@/components/connections-graph"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { suggestBacklinks } from "@/lib/backlinks"
 import { INTERVALS } from "@/lib/srs"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import type { Note, NoteEvent, NoteEventType, ThinkingChainSession } from "@/lib/types"
 
 /* ── Backlinks helper ──────────────────────────────────── */
@@ -104,11 +99,11 @@ function PanelSection({
     <div className="px-5 py-3">
       <div className="mb-2.5 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
           {title}
         </span>
         {count !== undefined && (
-          <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] tabular-nums font-medium text-muted-foreground">
+          <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[11px] tabular-nums font-medium text-muted-foreground">
             {count}
           </span>
         )}
@@ -131,11 +126,11 @@ function MetaRow({
 }) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <span className="flex items-center gap-2 text-[12px] text-muted-foreground">
+      <span className="flex items-center gap-2 text-[14px] text-muted-foreground">
         {icon}
         {label}
       </span>
-      <span className="text-[12px] text-foreground">{children}</span>
+      <span className="text-[14px] text-foreground">{children}</span>
     </div>
   )
 }
@@ -154,13 +149,13 @@ function NoteLink({
       onClick={() => onOpen(note.id)}
       className="group/link flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50"
     >
-      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+      <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-[12px] text-foreground group-hover/link:text-accent">
+        <span className="truncate text-[14px] text-foreground group-hover/link:text-accent">
           {note.title || "Untitled"}
         </span>
       </div>
-      <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground/0 transition-colors group-hover/link:text-muted-foreground" />
+      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/0 transition-colors group-hover/link:text-muted-foreground" />
     </button>
   )
 }
@@ -201,6 +196,8 @@ export function NoteDetailPanel({
   const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
   const enrollSRS = usePlotStore((s) => s.enrollSRS)
   const unenrollSRS = usePlotStore((s) => s.unenrollSRS)
+  const setReminder = usePlotStore((s) => s.setReminder)
+  const clearReminder = usePlotStore((s) => s.clearReminder)
 
   const backlinksIndex = useBacklinksIndex()
 
@@ -305,8 +302,8 @@ export function NoteDetailPanel({
   }, [triageKeep, noteId, advanceToNext])
 
   const handleSnooze = useCallback(
-    (option: "3h" | "tomorrow" | "next-week") => {
-      triageSnooze(noteId, getSnoozeTime(option))
+    (reviewAt: string) => {
+      triageSnooze(noteId, reviewAt)
       toast("Snoozed")
       advanceToNext()
     },
@@ -344,7 +341,7 @@ export function NoteDetailPanel({
 
       if (note.status === "inbox" && note.triageStatus !== "trashed") {
         if (e.key === "k" || e.key === "K") { e.preventDefault(); handleKeep() }
-        if (e.key === "s" || e.key === "S") { e.preventDefault(); handleSnooze("tomorrow") }
+        if (e.key === "s" || e.key === "S") { e.preventDefault(); handleSnooze(getSnoozeTime("tomorrow")) }
         if (e.key === "t" || e.key === "T") { e.preventDefault(); handleTrash() }
       }
       if (note.status === "capture") {
@@ -374,7 +371,7 @@ export function NoteDetailPanel({
       <header className="flex items-center justify-between border-b border-border px-5 py-3">
         <div className="flex items-center gap-2 min-w-0">
           <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="text-[13px] font-medium text-foreground truncate">
+          <span className="text-[15px] font-medium text-foreground truncate">
             Details
           </span>
         </div>
@@ -384,14 +381,14 @@ export function NoteDetailPanel({
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Open in editor"
           >
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ExternalLink className="h-4 w-4" />
           </button>
           <button
             onClick={onClose}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Close panel"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
       </header>
@@ -401,40 +398,30 @@ export function NoteDetailPanel({
         <div className="flex shrink-0 items-center gap-2 border-b border-border bg-secondary/20 px-4 py-2">
           <button
             onClick={handleKeep}
-            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
-            <Check className="h-3 w-3" />
+            <Check className="h-3.5 w-3.5" />
             Keep
-            <kbd className="ml-1 rounded bg-accent-foreground/10 px-1 py-0.5 text-[10px] font-mono leading-none text-accent-foreground/60">K</kbd>
+            <kbd className="ml-1 rounded bg-accent-foreground/10 px-1 py-0.5 text-[11px] font-mono leading-none text-accent-foreground/60">K</kbd>
           </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-foreground transition-colors hover:bg-secondary">
-                <AlarmClock className="h-3 w-3" />
+          <RemindPicker
+            onSelect={(date) => handleSnooze(date)}
+            triggerContent={
+              <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary">
+                <AlarmClock className="h-3.5 w-3.5" />
                 Snooze
-                <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono leading-none text-muted-foreground">S</kbd>
-                <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+                <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[11px] font-mono leading-none text-muted-foreground">S</kbd>
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44">
-              <DropdownMenuItem onClick={() => handleSnooze("3h")} className="text-[12px]">
-                <AlarmClock className="h-3 w-3 mr-2 text-muted-foreground" /> 3 hours
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSnooze("tomorrow")} className="text-[12px]">
-                <AlarmClock className="h-3 w-3 mr-2 text-muted-foreground" /> Tomorrow 10:00 AM
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSnooze("next-week")} className="text-[12px]">
-                <AlarmClock className="h-3 w-3 mr-2 text-muted-foreground" /> Next week 10:00 AM
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            }
+            align="start"
+          />
           <button
             onClick={handleTrash}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-destructive transition-colors hover:bg-destructive/10"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[14px] font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-3.5 w-3.5" />
             Trash
-            <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono leading-none text-muted-foreground">T</kbd>
+            <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[11px] font-mono leading-none text-muted-foreground">T</kbd>
           </button>
         </div>
       )}
@@ -444,32 +431,41 @@ export function NoteDetailPanel({
           <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
             <button
               onClick={handlePromote}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[14px] font-medium transition-colors ${
                 ready
                   ? "bg-[#45d483] text-[#0a0a0a] hover:bg-[#45d483]/80"
                   : "border border-border bg-card text-foreground hover:bg-secondary"
               }`}
             >
-              <ArrowUpRight className="h-3 w-3" />
+              <ArrowUpRight className="h-3.5 w-3.5" />
               Promote
-              <kbd className="ml-1 rounded bg-foreground/10 px-1 py-0.5 text-[10px] font-mono leading-none opacity-60">P</kbd>
+              <kbd className="ml-1 rounded bg-foreground/10 px-1 py-0.5 text-[11px] font-mono leading-none opacity-60">P</kbd>
             </button>
             <button
               onClick={handleMoveBack}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[14px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              <Inbox className="h-3 w-3" />
+              <Inbox className="h-3.5 w-3.5" />
               Back to Inbox
-              <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono leading-none text-muted-foreground">B</kbd>
+              <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[11px] font-mono leading-none text-muted-foreground">B</kbd>
             </button>
+            <RemindPicker
+              onSelect={(date) => { setReminder(noteId, date); toast("Reminder set", { description: format(new Date(date), "MMM d, h:mm a") }) }}
+              triggerContent={
+                <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary">
+                  <Bell className="h-3.5 w-3.5" />
+                  Remind
+                </button>
+              }
+            />
           </div>
           {staleSuggest && (
             <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
-              <span className="text-[12px] text-destructive">Untouched for 14+ days.</span>
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <span className="text-[14px] text-destructive">Untouched for 14+ days.</span>
               <button
                 onClick={handleMoveBack}
-                className="ml-auto text-[11px] font-medium text-destructive underline underline-offset-2 hover:no-underline"
+                className="ml-auto text-[12px] font-medium text-destructive underline underline-offset-2 hover:no-underline"
               >
                 Move back to Inbox?
               </button>
@@ -477,8 +473,8 @@ export function NoteDetailPanel({
           )}
           {!staleSuggest && stale && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-chart-3" />
-              <span className="text-[12px] text-chart-3">Review needed - untouched for 7+ days.</span>
+              <AlertTriangle className="h-4 w-4 text-chart-3" />
+              <span className="text-[14px] text-chart-3">Review needed - untouched for 7+ days.</span>
             </div>
           )}
         </div>
@@ -489,17 +485,26 @@ export function NoteDetailPanel({
           <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
             <button
               onClick={handleDemote}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[14px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              <ArrowDownLeft className="h-3 w-3" />
+              <ArrowDownLeft className="h-3.5 w-3.5" />
               Demote to Capture
-              <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono leading-none text-muted-foreground">D</kbd>
+              <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[11px] font-mono leading-none text-muted-foreground">D</kbd>
             </button>
+            <RemindPicker
+              onSelect={(date) => { setReminder(noteId, date); toast("Reminder set", { description: format(new Date(date), "MMM d, h:mm a") }) }}
+              triggerContent={
+                <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary">
+                  <Bell className="h-3.5 w-3.5" />
+                  Remind
+                </button>
+              }
+            />
           </div>
           {linkCount === 0 && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
-              <Link2 className="h-3.5 w-3.5 text-chart-3" />
-              <span className="text-[12px] text-chart-3">Unlinked permanent note - add connections to strengthen your knowledge graph.</span>
+              <Link2 className="h-4 w-4 text-chart-3" />
+              <span className="text-[14px] text-chart-3">Unlinked permanent note - add connections to strengthen your knowledge graph.</span>
             </div>
           )}
         </div>
@@ -513,7 +518,7 @@ export function NoteDetailPanel({
             {note.title || "Untitled"}
           </h2>
           {preview && (
-            <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground line-clamp-3">
+            <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground line-clamp-3">
               {preview}
             </p>
           )}
@@ -526,18 +531,18 @@ export function NoteDetailPanel({
           if (!parentNote && !childNote) return null
           return (
             <>
-              <PanelSection title="Thinking Chain" icon={<GitBranch className="h-3.5 w-3.5" />}>
+              <PanelSection title="Thinking Chain" icon={<GitBranch className="h-4 w-4" />}>
                 <div className="space-y-1">
                   {parentNote && (
                     <button onClick={() => onOpenNote(parentNote.id)} className="group/link flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50">
-                      <ArrowLeft className="h-3 w-3 text-muted-foreground" />
-                      <span className="truncate text-[12px] text-foreground">← {parentNote.title || "Untitled"}</span>
+                      <ArrowLeft className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="truncate text-[14px] text-foreground">← {parentNote.title || "Untitled"}</span>
                     </button>
                   )}
                   {childNote && (
                     <button onClick={() => onOpenNote(childNote.id)} className="group/link flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50">
-                      <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                      <span className="truncate text-[12px] text-foreground">{childNote.title || "Untitled"} →</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="truncate text-[14px] text-foreground">{childNote.title || "Untitled"} →</span>
                     </button>
                   )}
                 </div>
@@ -548,18 +553,18 @@ export function NoteDetailPanel({
         })()}
 
         {/* Metadata */}
-        <PanelSection title="Metadata" icon={<CircleDot className="h-3.5 w-3.5" />}>
+        <PanelSection title="Metadata" icon={<CircleDot className="h-4 w-4" />}>
           <div className="space-y-0.5">
-            <MetaRow label="Status" icon={<CircleDot className="h-3 w-3" />}>
+            <MetaRow label="Status" icon={<CircleDot className="h-3.5 w-3.5" />}>
               <StatusBadge status={note.status} />
             </MetaRow>
-            <MetaRow label="Project" icon={<Layers className="h-3 w-3" />}>
+            <MetaRow label="Project" icon={<Layers className="h-3.5 w-3.5" />}>
               {note.projectId ? (() => {
                 const proj = projects.find((p) => p.id === note.projectId)
                 if (!proj) return null
                 const cfg = PROJECT_STATUS_CONFIG[proj.status] ?? PROJECT_STATUS_CONFIG.planning
                 return (
-                  <span className="inline-flex items-center rounded-md px-2 py-1 text-[13px] font-semibold leading-none" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
+                  <span className="inline-flex items-center rounded-md px-2 py-1 text-[15px] font-semibold leading-none" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
                     {cfg.label}
                   </span>
                 )
@@ -572,8 +577,8 @@ export function NoteDetailPanel({
               )}
             </MetaRow>
             {note.status === "capture" && (
-              <MetaRow label="Ready Score" icon={<Sparkles className="h-3 w-3" />}>
-                <span className={`text-[12px] tabular-nums font-medium ${
+              <MetaRow label="Ready Score" icon={<Sparkles className="h-3.5 w-3.5" />}>
+                <span className={`text-[14px] tabular-nums font-medium ${
                   readyScore >= 5 ? "text-chart-5" : readyScore >= 3 ? "text-chart-3" : "text-muted-foreground"
                 }`}>
                   {readyScore}/9
@@ -581,33 +586,47 @@ export function NoteDetailPanel({
                 </span>
               </MetaRow>
             )}
-            <MetaRow label="Priority" icon={<Signal className="h-3 w-3" />}>
+            <MetaRow label="Priority" icon={<Signal className="h-3.5 w-3.5" />}>
               <span className="flex items-center gap-1.5">
                 <PriorityBadge priority={note.priority} />
-                <span className="text-[12px] capitalize text-muted-foreground">
+                <span className="text-[14px] capitalize text-muted-foreground">
                   {note.priority === "none" ? "No priority" : note.priority}
                 </span>
               </span>
             </MetaRow>
-            <MetaRow label="Reads" icon={<Eye className="h-3 w-3" />}>
+            <MetaRow label="Reads" icon={<Eye className="h-3.5 w-3.5" />}>
               <span className="tabular-nums">{note.reads}</span>
             </MetaRow>
-            <MetaRow label="Created" icon={<Calendar className="h-3 w-3" />}>
+            <MetaRow label="Created" icon={<Calendar className="h-3.5 w-3.5" />}>
               {format(new Date(note.createdAt), "MMM d, yyyy")}
             </MetaRow>
-            <MetaRow label="Updated" icon={<Clock className="h-3 w-3" />}>
+            <MetaRow label="Updated" icon={<Clock className="h-3.5 w-3.5" />}>
               {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
             </MetaRow>
+            {note.reviewAt && note.status !== "inbox" && (
+              <div className="flex items-center justify-between py-1.5">
+                <span className="flex items-center gap-2 text-[14px] text-muted-foreground">
+                  <Bell className="h-3.5 w-3.5" />
+                  Reminder
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[14px] text-foreground">{format(new Date(note.reviewAt), "MMM d, h:mm a")}</span>
+                  <button onClick={() => clearReminder(noteId)} className="text-muted-foreground hover:text-destructive transition-colors">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
             {note.status === "permanent" && (
-              <MetaRow label="SRS" icon={<RotateCcw className="h-3 w-3" />}>
+              <MetaRow label="SRS" icon={<RotateCcw className="h-3.5 w-3.5" />}>
                 {srsStateByNoteId[noteId] ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-[12px] text-muted-foreground">
                       {INTERVALS[srsStateByNoteId[noteId].step]}d · {formatDistanceToNow(new Date(srsStateByNoteId[noteId].dueAt), { addSuffix: true })}
                     </span>
                     <button
                       onClick={() => { unenrollSRS(noteId); toast("Removed from SRS") }}
-                      className="rounded px-1.5 py-0.5 text-[10px] text-destructive hover:bg-destructive/10 transition-colors"
+                      className="rounded px-1.5 py-0.5 text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
                     >
                       Remove
                     </button>
@@ -615,7 +634,7 @@ export function NoteDetailPanel({
                 ) : (
                   <button
                     onClick={() => { enrollSRS(noteId); toast("Enrolled in SRS") }}
-                    className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-foreground hover:bg-secondary transition-colors"
+                    className="rounded-md border border-border bg-card px-2 py-0.5 text-[12px] font-medium text-foreground hover:bg-secondary transition-colors"
                   >
                     Enroll
                   </button>
@@ -630,7 +649,7 @@ export function NoteDetailPanel({
         {/* Knowledge Maps */}
         <PanelSection
           title="Maps"
-          icon={<Network className="h-3.5 w-3.5" />}
+          icon={<Network className="h-4 w-4" />}
           count={noteMaps.length}
         >
           {noteMaps.length > 0 ? (
@@ -638,7 +657,7 @@ export function NoteDetailPanel({
               {noteMaps.map((m) => (
                 <div key={m.id} className="group/map flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-secondary/50">
                   <div className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: m.color }} />
-                  <span className="flex-1 truncate text-[12px] text-foreground">{m.title}</span>
+                  <span className="flex-1 truncate text-[14px] text-foreground">{m.title}</span>
                   <button
                     onClick={() => {
                       removeNoteFromMap(m.id, noteId)
@@ -646,13 +665,13 @@ export function NoteDetailPanel({
                     }}
                     className="shrink-0 rounded p-0.5 text-muted-foreground/0 group-hover/map:text-muted-foreground hover:text-destructive transition-colors"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-[12px] text-muted-foreground/60">
+            <p className="text-[14px] text-muted-foreground/60">
               Not in any knowledge map.
             </p>
           )}
@@ -663,7 +682,7 @@ export function NoteDetailPanel({
         {/* Backlinks */}
         <PanelSection
           title="Backlinks"
-          icon={<Link2 className="h-3.5 w-3.5" />}
+          icon={<Link2 className="h-4 w-4" />}
           count={backlinks.length}
         >
           {backlinks.length > 0 ? (
@@ -673,7 +692,7 @@ export function NoteDetailPanel({
               ))}
             </div>
           ) : (
-            <p className="text-[12px] text-muted-foreground/60">
+            <p className="text-[14px] text-muted-foreground/60">
               No other notes reference this note yet.
             </p>
           )}
@@ -684,7 +703,7 @@ export function NoteDetailPanel({
         {/* Connections Graph */}
         <PanelSection
           title="Connections"
-          icon={<Link2 className="h-3.5 w-3.5" />}
+          icon={<Link2 className="h-4 w-4" />}
         >
           <ConnectionsGraph
             noteId={noteId}
@@ -698,15 +717,15 @@ export function NoteDetailPanel({
         {/* Thinking Chain Sessions */}
         <PanelSection
           title="Thinking Chains"
-          icon={<Brain className="h-3.5 w-3.5" />}
+          icon={<Brain className="h-4 w-4" />}
           count={noteChains.length}
         >
           {noteChains.length === 0 && !activeChain ? (
             <button
               onClick={handleStartChain}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium text-foreground transition-colors hover:bg-secondary"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3.5 w-3.5" />
               Start Thinking Chain
             </button>
           ) : (
@@ -722,12 +741,12 @@ export function NoteDetailPanel({
                       className="flex w-full items-center justify-between px-3 py-2 text-left"
                     >
                       <div className="flex items-center gap-2">
-                        <Brain className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-[11px] font-medium text-foreground">
+                        <Brain className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-[12px] font-medium text-foreground">
                           Session {format(new Date(session.startedAt), "MMM d, HH:mm")}
                         </span>
                       </div>
-                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                      <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
                         isActive
                           ? "bg-chart-5/10 text-chart-5"
                           : "bg-muted text-muted-foreground"
@@ -743,11 +762,11 @@ export function NoteDetailPanel({
                           <div className="space-y-1.5">
                             {session.steps.map((step) => (
                               <div key={step.id} className="flex gap-2">
-                                <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground mt-0.5">
+                                <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground mt-0.5">
                                   {format(new Date(step.at), "HH:mm")}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-[12px] text-foreground">{step.text}</p>
+                                  <p className="text-[14px] text-foreground">{step.text}</p>
                                   {step.relatedNoteIds && step.relatedNoteIds.length > 0 && (
                                     <div className="mt-0.5 flex flex-wrap gap-1">
                                       {step.relatedNoteIds.map((rid) => {
@@ -756,7 +775,7 @@ export function NoteDetailPanel({
                                           <button
                                             key={rid}
                                             onClick={() => onOpenNote(rid)}
-                                            className="text-[10px] text-accent hover:underline"
+                                            className="text-[11px] text-accent hover:underline"
                                           >
                                             {rNote.title || "Untitled"}
                                           </button>
@@ -769,7 +788,7 @@ export function NoteDetailPanel({
                             ))}
                           </div>
                         ) : (
-                          <p className="text-[11px] text-muted-foreground/60">No steps yet.</p>
+                          <p className="text-[12px] text-muted-foreground/60">No steps yet.</p>
                         )}
 
                         {/* Active session controls */}
@@ -783,11 +802,11 @@ export function NoteDetailPanel({
                                 if (e.key === "Enter") handleAddStep(session.id)
                               }}
                               placeholder="Add a thinking step..."
-                              className="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent"
+                              className="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent"
                             />
                             <button
                               onClick={() => handleEndChain(session.id)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                             >
                               <Check className="h-2.5 w-2.5" />
                               End Session
@@ -804,9 +823,9 @@ export function NoteDetailPanel({
               {!activeChain && (
                 <button
                   onClick={handleStartChain}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium text-foreground transition-colors hover:bg-secondary"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-3.5 w-3.5" />
                   New Chain
                 </button>
               )}
@@ -819,7 +838,7 @@ export function NoteDetailPanel({
         {/* Backlink Suggestions */}
         <PanelSection
           title="Backlink Suggestions"
-          icon={<Sparkles className="h-3.5 w-3.5" />}
+          icon={<Sparkles className="h-4 w-4" />}
           count={suggestions.length}
         >
           {suggestions.length > 0 ? (
@@ -832,24 +851,24 @@ export function NoteDetailPanel({
                     key={s.noteId}
                     className="group/link flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-secondary/50"
                   >
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <button
                         onClick={() => onOpenNote(candidateNote.id)}
-                        className="truncate text-left text-[12px] text-foreground hover:text-accent"
+                        className="truncate text-left text-[14px] text-foreground hover:text-accent"
                       >
                         {candidateNote.title || "Untitled"}
                       </button>
-                      <span className="truncate text-[10px] text-muted-foreground/60">
+                      <span className="truncate text-[11px] text-muted-foreground/60">
                         {s.reasons.join(" · ")}
                       </span>
                     </div>
-                    <span className="shrink-0 rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] tabular-nums font-medium text-accent">
+                    <span className="shrink-0 rounded-full bg-accent/10 px-1.5 py-0.5 text-[11px] tabular-nums font-medium text-accent">
                       {s.score}
                     </span>
                     <button
                       onClick={() => handleLinkSuggestion(candidateNote.title)}
-                      className="shrink-0 rounded-md border border-border bg-card px-2 py-0.5 text-[10px] font-medium text-foreground transition-colors hover:bg-secondary"
+                      className="shrink-0 rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-secondary"
                     >
                       Link
                     </button>
@@ -858,7 +877,7 @@ export function NoteDetailPanel({
               })}
             </div>
           ) : (
-            <p className="text-[12px] text-muted-foreground/60">
+            <p className="text-[14px] text-muted-foreground/60">
               No suggestions found. Try adding tags or organizing notes into folders.
             </p>
           )}
@@ -869,7 +888,7 @@ export function NoteDetailPanel({
         {/* Timeline */}
         <PanelSection
           title="Timeline"
-          icon={<Clock className="h-3.5 w-3.5" />}
+          icon={<Clock className="h-4 w-4" />}
           count={timelineEvents.length}
         >
           {timelineEvents.length > 0 ? (
@@ -880,9 +899,9 @@ export function NoteDetailPanel({
                 const Icon = config.icon
                 return (
                   <div key={evt.id} className="flex items-center gap-2.5 py-1">
-                    <Icon className="h-3 w-3 shrink-0 text-muted-foreground/60" />
-                    <span className="text-[12px] text-foreground">{config.label}</span>
-                    <span className="ml-auto shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                    <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                    <span className="text-[14px] text-foreground">{config.label}</span>
+                    <span className="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground">
                       {formatDistanceToNow(new Date(evt.at), { addSuffix: true })}
                     </span>
                   </div>
@@ -891,14 +910,14 @@ export function NoteDetailPanel({
               {!showAllTimeline && timelineEvents.length > 30 && (
                 <button
                   onClick={() => setShowAllTimeline(true)}
-                  className="mt-1 text-[11px] font-medium text-accent hover:underline"
+                  className="mt-1 text-[12px] font-medium text-accent hover:underline"
                 >
                   Show all ({timelineEvents.length} events)
                 </button>
               )}
             </div>
           ) : (
-            <p className="text-[12px] text-muted-foreground/60">
+            <p className="text-[14px] text-muted-foreground/60">
               No events recorded yet.
             </p>
           )}

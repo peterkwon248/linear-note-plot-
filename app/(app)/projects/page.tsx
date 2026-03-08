@@ -34,7 +34,7 @@ function FocusBadge({ project }: { project: Project }) {
   const cfg = project.focus ? FOCUS_CONFIG[project.focus] : null
 
   if (!cfg) {
-    return <span className="text-muted-foreground/30 text-[11px]">—</span>
+    return <span className="text-muted-foreground/30 text-[12px]">—</span>
   }
 
   const Icon = cfg.icon
@@ -42,10 +42,10 @@ function FocusBadge({ project }: { project: Project }) {
     <Tooltip>
       <TooltipTrigger asChild>
         <span className="flex items-center gap-1 cursor-default">
-          <Icon className="h-3.5 w-3.5" style={{ color: cfg.color }} />
+          <Icon className="h-4 w-4" style={{ color: cfg.color }} />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="text-[11px]">
+      <TooltipContent side="top" className="text-[12px]">
         {cfg.label}
       </TooltipContent>
     </Tooltip>
@@ -78,10 +78,10 @@ export default function ProjectsPage() {
         <h1 className="text-base font-semibold text-foreground">Projects</h1>
         <div className="flex items-center gap-1.5">
           <button
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => createProject("New Project")}
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3.5 w-3.5" />
             New project
           </button>
         </div>
@@ -90,21 +90,21 @@ export default function ProjectsPage() {
       {/* Tabs + toolbar */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">
         <div className="flex items-center gap-0">
-          <button className="relative px-3 py-2 text-[13px] font-medium text-foreground">
+          <button className="relative px-3 py-2 text-[15px] font-medium text-foreground">
             All projects
             <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
           </button>
-          <button className="px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">
+          <button className="px-3 py-2 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground">
             + New view
           </button>
         </div>
         <div className="flex items-center gap-1.5">
-          <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <Filter className="h-3 w-3" />
+          <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+            <Filter className="h-3.5 w-3.5" />
             Filter
           </button>
-          <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <SlidersHorizontal className="h-3 w-3" />
+          <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+            <SlidersHorizontal className="h-3.5 w-3.5" />
             Display
           </button>
         </div>
@@ -113,19 +113,19 @@ export default function ProjectsPage() {
       {/* Column headers */}
       <div className="flex shrink-0 items-center border-b border-border px-5 py-2">
         <div className="flex-1 min-w-0">
-          <span className="text-[11px] font-medium text-muted-foreground">Name</span>
+          <span className="text-[12px] font-medium text-muted-foreground">Name</span>
         </div>
         <div className="w-[56px] shrink-0 text-center">
-          <span className="text-[11px] font-medium text-muted-foreground">Focus</span>
+          <span className="text-[12px] font-medium text-muted-foreground">Focus</span>
         </div>
         <div className="w-[56px] shrink-0 text-right">
-          <span className="text-[11px] font-medium text-muted-foreground">Notes</span>
+          <span className="text-[12px] font-medium text-muted-foreground">Notes</span>
         </div>
         <div className="w-[90px] shrink-0 text-right">
-          <span className="text-[11px] font-medium text-muted-foreground">Target date</span>
+          <span className="text-[12px] font-medium text-muted-foreground">Target date</span>
         </div>
         <div className="w-[100px] shrink-0 text-right">
-          <span className="text-[11px] font-medium text-muted-foreground">Status</span>
+          <span className="text-[12px] font-medium text-muted-foreground">Status</span>
         </div>
       </div>
 
@@ -135,8 +135,8 @@ export default function ProjectsPage() {
           <div className="flex flex-1 items-center justify-center py-20 text-center">
             <div>
               <FolderOpen className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
-              <p className="text-[13px] text-muted-foreground">No projects yet</p>
-              <p className="mt-1 text-[12px] text-muted-foreground/60">
+              <p className="text-[15px] text-muted-foreground">No projects yet</p>
+              <p className="mt-1 text-[14px] text-muted-foreground/60">
                 Create a project to get started.
               </p>
             </div>
@@ -153,11 +153,11 @@ export default function ProjectsPage() {
                 {/* Name */}
                 <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
                   <FolderOpen className="h-4 w-4 shrink-0 text-accent" />
-                  <span className="truncate text-[13px] text-foreground">
+                  <span className="truncate text-[15px] text-foreground">
                     {project.name}
                   </span>
                   {project.description && (
-                    <span className="truncate text-[12px] text-muted-foreground">
+                    <span className="truncate text-[14px] text-muted-foreground">
                       {project.description}
                     </span>
                   )}
@@ -170,14 +170,14 @@ export default function ProjectsPage() {
 
                 {/* Note count */}
                 <div className="w-[56px] shrink-0 text-right">
-                  <span className="text-[12px] tabular-nums text-muted-foreground">
+                  <span className="text-[14px] tabular-nums text-muted-foreground">
                     {notes.filter((n) => n.projectId === project.id && !n.trashed).length}
                   </span>
                 </div>
 
                 {/* Target date */}
                 <div className="w-[90px] shrink-0 text-right">
-                  <span className="text-[12px] tabular-nums text-muted-foreground">
+                  <span className="text-[14px] tabular-nums text-muted-foreground">
                     {project.targetDate ? format(new Date(project.targetDate), "MMM d") : "—"}
                   </span>
                 </div>

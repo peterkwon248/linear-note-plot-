@@ -39,8 +39,8 @@ export const usePlotStore = create<PlotState>()(
         shortcutOverlayOpen: false,
         detailsOpen: true,
 
-        sidebarWidth: 240,
-        sidebarLastWidth: 240,
+        sidebarWidth: 260,
+        sidebarLastWidth: 260,
         sidebarCollapsed: false,
         sidebarPeek: false,
 

@@ -51,15 +51,15 @@ export default function TagsPage() {
       <header className="flex shrink-0 items-center justify-between border-b border-border px-6 py-4">
         <div>
           <h1 className="text-base font-semibold text-foreground">Tags</h1>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-[14px] text-muted-foreground">
             {tags.length} {tags.length === 1 ? "tag" : "tags"}
           </p>
         </div>
         <button
-          className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+          className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           onClick={() => setShowForm((v) => !v)}
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3.5 w-3.5" />
           <span>New Tag</span>
         </button>
       </header>
@@ -83,7 +83,7 @@ export default function TagsPage() {
                 setShowForm(false)
               }
             }}
-            className="rounded-md border border-border bg-background px-2 py-1 text-[13px] text-foreground outline-none focus:ring-1 focus:ring-accent"
+            className="rounded-md border border-border bg-background px-2 py-1 text-[15px] text-foreground outline-none focus:ring-1 focus:ring-accent"
           />
           <div className="flex items-center gap-1.5">
             {PRESET_COLORS.map((color) => (
@@ -108,13 +108,13 @@ export default function TagsPage() {
               setNewTagColor(PRESET_COLORS[0])
               setShowForm(false)
             }}
-            className="rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md bg-accent px-2 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Create
           </button>
           <button
             onClick={() => setShowForm(false)}
-            className="text-[12px] text-muted-foreground hover:text-foreground"
+            className="text-[14px] text-muted-foreground hover:text-foreground"
           >
             Cancel
           </button>
@@ -126,8 +126,8 @@ export default function TagsPage() {
         {tagStats.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Hash className="h-8 w-8 text-muted-foreground/30 mb-3" />
-            <p className="text-[13px] text-muted-foreground">No tags yet</p>
-            <p className="mt-1 text-[12px] text-muted-foreground/60">
+            <p className="text-[15px] text-muted-foreground">No tags yet</p>
+            <p className="mt-1 text-[14px] text-muted-foreground/60">
               Add tags to notes from the editor
             </p>
           </div>
@@ -143,10 +143,10 @@ export default function TagsPage() {
                   className="h-4 w-4 shrink-0"
                   style={{ color: tag.color }}
                 />
-                <span className="flex-1 text-[13px] text-foreground font-medium">
+                <span className="flex-1 text-[15px] text-foreground font-medium">
                   {tag.name}
                 </span>
-                <span className="text-[12px] text-muted-foreground tabular-nums">
+                <span className="text-[14px] text-muted-foreground tabular-nums">
                   {tag.noteCount} {tag.noteCount === 1 ? "note" : "notes"}
                 </span>
               </Link>
