@@ -7,6 +7,7 @@ import { getInboxNotes, computeInboxRank, getSnoozeTime } from "@/lib/queries/no
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
+import { FloatingActionBar } from "@/components/floating-action-bar"
 import { RemindPicker } from "@/components/remind-picker"
 import { PriorityBadge } from "@/components/note-fields"
 import {
@@ -196,6 +197,16 @@ export default function InboxPage() {
           onKeep={handleKeep}
           onSnooze={handleSnooze}
           onTrash={handleTrash}
+        />
+      )}
+
+      {/* Floating action bar */}
+      {previewId && (
+        <FloatingActionBar
+          selectedIds={new Set([previewId])}
+          effectiveTab="inbox"
+          notes={notes}
+          onClearSelection={() => setPreviewId(null)}
         />
       )}
     </div>
