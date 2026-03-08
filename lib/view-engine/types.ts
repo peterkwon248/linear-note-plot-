@@ -4,6 +4,7 @@ import type { Note, NoteStatus, NotePriority } from "../types"
 
 export type ViewContextKey =
   | "all"        // /notes
+  | "pinned"     // /pinned
   | "inbox"      // /inbox
   | "capture"    // /capture
   | "reference"  // tab filter within /notes
@@ -95,7 +96,7 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
 /* ── Valid Keys (for migration normalization) ──────────── */
 
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
-  "all", "inbox", "capture", "reference", "permanent",
+  "all", "pinned", "inbox", "capture", "reference", "permanent",
   "unlinked", "review", "archive", "folder", "category", "tag", "projects",
 ]
 

@@ -23,8 +23,7 @@ import {
   FileText,
   Pin,
   Plus,
-  Archive,
-  ArchiveRestore,
+  LayoutGrid,
   Link2,
   Brain,
   BrainCircuit,
@@ -43,7 +42,6 @@ import {
   Shield,
   ClipboardCheck,
   FolderOpen,
-  LayoutGrid,
   Settings,
   Sun,
   Moon,
@@ -88,7 +86,6 @@ export function SearchDialog() {
   // Actions
   const createNote = usePlotStore((s) => s.createNote)
   const togglePin = usePlotStore((s) => s.togglePin)
-  const toggleArchive = usePlotStore((s) => s.toggleArchive)
   const startThinkingChain = usePlotStore((s) => s.startThinkingChain)
   const addThinkingStep = usePlotStore((s) => s.addThinkingStep)
   const endThinkingChain = usePlotStore((s) => s.endThinkingChain)
@@ -612,23 +609,6 @@ export function SearchDialog() {
                       <Pin className="h-4 w-4" />
                       <span>{selectedNote.pinned ? "Unpin Note" : "Pin Note"}</span>
                       <CommandShortcut>⌘⇧P</CommandShortcut>
-                    </CommandItem>
-
-                    <CommandItem
-                      value="toggle-archive-note"
-                      onSelect={() =>
-                        execCommand(
-                          () => toggleArchive(selectedNote.id),
-                          selectedNote.archived ? "Unarchived" : "Archived"
-                        )
-                      }
-                    >
-                      {selectedNote.archived ? (
-                        <ArchiveRestore className="h-4 w-4" />
-                      ) : (
-                        <Archive className="h-4 w-4" />
-                      )}
-                      <span>{selectedNote.archived ? "Unarchive" : "Archive"}</span>
                     </CommandItem>
 
                     {/* Thinking Chain */}

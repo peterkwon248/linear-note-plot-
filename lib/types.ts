@@ -1,6 +1,7 @@
 export type NoteStatus = "inbox" | "capture" | "reference" | "permanent"
 export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
-export type ProjectLevel = "planning" | "active" | "review" | "done"
+export type ProjectStatus = "planning" | "active" | "review" | "done" | "canceled"
+export type ProjectFocus = "now" | "soon" | "later" | null
 
 /** Triage status for inbox notes */
 export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
@@ -17,12 +18,12 @@ export interface Note {
   category: string
   tags: string[]
   status: NoteStatus
-  project: string | null
-  projectLevel: ProjectLevel | null
+  projectId: string | null
   priority: NotePriority
   reads: number
   pinned: boolean
   archived: boolean
+  trashed: boolean
   createdAt: string
   updatedAt: string
 
@@ -36,6 +37,7 @@ export interface Note {
   lastTouchedAt: string
   snoozeCount: number
   archivedAt: string | null
+  trashedAt: string | null
 
   /* ── Thinking Chain ──────────────────────────────── */
   parentNoteId: string | null
@@ -89,6 +91,7 @@ export type NoteFilter =
   | { type: "inbox" }
   | { type: "all" }
   | { type: "archive" }
+  | { type: "trash" }
   | { type: "projects" }
   | { type: "pinned" }
   | { type: "folder"; folderId: string }
@@ -102,7 +105,7 @@ export type NoteFilter =
 /* ── Phase 2: Event Log / Timeline ──────────────────── */
 
 export type NoteEventType =
-  | "created" | "updated" | "opened" | "promoted" | "archived" | "unarchived"
+  | "created" | "updated" | "opened" | "promoted" | "archived" | "unarchived" | "trashed" | "untrashed"
   | "triage_keep" | "triage_snooze" | "triage_trash"
   | "link_added" | "link_removed"
   | "thinking_chain_started" | "thinking_chain_step_added" | "thinking_chain_ended"
@@ -153,6 +156,19 @@ export interface Alert {
   noteId: string
   message: string
   severity: "info" | "warning" | "urgent"
+}
+
+/* ── Projects ──────────────────────────────────────── */
+
+export interface Project {
+  id: string
+  name: string
+  status: ProjectStatus
+  focus: ProjectFocus
+  description: string
+  targetDate: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 /* ── Phase 3: Knowledge Maps ───────────────────────── */

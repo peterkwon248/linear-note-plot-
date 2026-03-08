@@ -30,8 +30,8 @@ export function applySort(
         return dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
 
       case "project": {
-        const ap = a.project ?? ""
-        const bp = b.project ?? ""
+        const ap = a.projectId ?? ""
+        const bp = b.projectId ?? ""
         return dir * ap.localeCompare(bp)
       }
 

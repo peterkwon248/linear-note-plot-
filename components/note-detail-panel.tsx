@@ -36,7 +36,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
-import { StatusBadge, PriorityBadge, PROJECT_LEVEL_CONFIG, ProjectDropdown } from "@/components/note-fields"
+import { StatusBadge, PriorityBadge, PROJECT_STATUS_CONFIG, ProjectDropdown } from "@/components/note-fields"
 import { ConnectionsGraph } from "@/components/connections-graph"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { suggestBacklinks } from "@/lib/backlinks"
@@ -83,6 +83,8 @@ const EVENT_CONFIG: Record<NoteEventType, { icon: React.ComponentType<{ classNam
   map_added: { icon: MapIcon, label: "Added to map" },
   map_removed: { icon: MapIcon, label: "Removed from map" },
   srs_reviewed: { icon: RotateCcw, label: "SRS reviewed" },
+  trashed: { icon: Trash2, label: "Trashed" },
+  untrashed: { icon: Trash2, label: "Restored" },
 }
 
 /* ── Section ───────────────────────────────────────────── */
@@ -204,11 +206,7 @@ export function NoteDetailPanel({
 
   const note = notes.find((n) => n.id === noteId)
 
-  const existingProjects = useMemo(() => {
-    const set = new Set<string>()
-    for (const n of notes) if (n.project) set.add(n.project)
-    return Array.from(set).sort()
-  }, [notes])
+  const projects = usePlotStore((s) => s.projects)
 
   const backlinks = useMemo(
     () => (note ? getBacklinkNotes(noteId, notes) : []),
@@ -556,8 +554,10 @@ export function NoteDetailPanel({
               <StatusBadge status={note.status} />
             </MetaRow>
             <MetaRow label="Project" icon={<Layers className="h-3 w-3" />}>
-              {note.project ? (() => {
-                const cfg = PROJECT_LEVEL_CONFIG[note.projectLevel ?? "planning"] ?? PROJECT_LEVEL_CONFIG.planning
+              {note.projectId ? (() => {
+                const proj = projects.find((p) => p.id === note.projectId)
+                if (!proj) return null
+                const cfg = PROJECT_STATUS_CONFIG[proj.status] ?? PROJECT_STATUS_CONFIG.planning
                 return (
                   <span className="inline-flex items-center rounded-md px-2 py-1 text-[13px] font-semibold leading-none" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
                     {cfg.label}
@@ -566,8 +566,8 @@ export function NoteDetailPanel({
               })() : (
                 <ProjectDropdown
                   value={null}
-                  existingProjects={existingProjects}
-                  onChange={(p) => updateNote(noteId, { project: p, projectLevel: "planning" })}
+                  projects={projects}
+                  onChange={(projId) => updateNote(noteId, { projectId: projId })}
                 />
               )}
             </MetaRow>

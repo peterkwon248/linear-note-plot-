@@ -24,12 +24,12 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           (activeView.type === "category" ? activeView.categoryId : ""),
         tags: partial?.tags ?? [],
         status: partial?.status ?? "inbox",
-        project: partial?.project ?? null,
-        projectLevel: partial?.projectLevel ?? null,
+        projectId: partial?.projectId ?? null,
         priority: partial?.priority ?? "none",
         reads: 0,
         pinned: partial?.pinned ?? false,
         archived: false,
+        trashed: false,
         createdAt: now(),
         updatedAt: now(),
         preview: extractPreview(content),
@@ -113,6 +113,19 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       appendEvent(id, wasArchived ? "unarchived" : "archived")
     },
 
+    toggleTrash: (id: string) => {
+      const note = get().notes.find((n: Note) => n.id === id)
+      const wasTrashed = note?.trashed ?? false
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id === id
+            ? { ...n, trashed: !n.trashed, trashedAt: wasTrashed ? null : now(), updatedAt: now(), lastTouchedAt: now() }
+            : n
+        ),
+      }))
+      appendEvent(id, wasTrashed ? "untrashed" : "trashed")
+    },
+
     createChainNote: (parentId: string) => {
       const parent = get().notes.find((n: Note) => n.id === parentId)
       if (!parent) return ""
@@ -126,12 +139,12 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         category: parent.category,
         tags: [...parent.tags],
         status: parent.status,
-        project: parent.project,
-        projectLevel: parent.projectLevel,
+        projectId: parent.projectId,
         priority: "none",
         reads: 0,
         pinned: false,
         archived: false,
+        trashed: false,
         createdAt: now(),
         updatedAt: now(),
         preview: "",

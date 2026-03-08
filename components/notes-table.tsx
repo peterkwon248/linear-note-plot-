@@ -55,10 +55,10 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import type { ViewContextKey, SortField, SortDirection, GroupBy, FilterRule, NoteGroup } from "@/lib/view-engine/types"
-import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge, PROJECT_LEVEL_CONFIG, ProjectLevelDropdown, ProjectDropdown } from "@/components/note-fields"
+import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge, PROJECT_STATUS_CONFIG, ProjectStatusDropdown, ProjectDropdown } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
-import type { Note, NoteStatus, NotePriority, ProjectLevel } from "@/lib/types"
+import type { Note, NoteStatus, NotePriority, Project } from "@/lib/types"
 
 /* ── Helpers ───────────────────────────────────────────── */
 
@@ -150,9 +150,17 @@ function TH({
 export function NotesTable({
   onRowClick,
   activePreviewId,
+  context,
+  title,
+  showTabs = true,
+  createNoteOverrides,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
+  context?: ViewContextKey
+  title?: string
+  showTabs?: boolean
+  createNoteOverrides?: Partial<import("@/lib/types").Note>
 }) {
   const notes = usePlotStore((s) => s.notes)
   const categories = usePlotStore((s) => s.categories)
@@ -168,15 +176,13 @@ export function NotesTable({
 
   const [activeTab, setActiveTab] = useState<ViewContextKey>("all")
 
+  const effectiveTab = context ?? activeTab
+
   const backlinksMap = useBacklinksIndex()
 
-  const existingProjects = useMemo(() => {
-    const set = new Set<string>()
-    for (const n of notes) if (n.project) set.add(n.project)
-    return Array.from(set).sort()
-  }, [notes])
+  const projects = usePlotStore((s) => s.projects)
 
-  const { flatNotes, groups, viewState, updateViewState } = useNotesView(activeTab, { backlinksMap })
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap })
 
   function handleSort(col: SortField) {
     if (viewState.sortField === col) {
@@ -238,10 +244,10 @@ export function NotesTable({
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
-        <h1 className="text-base font-semibold text-foreground">Notes</h1>
+        <h1 className="text-base font-semibold text-foreground">{title ?? "Notes"}</h1>
         <button
           className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-          onClick={() => createNote()}
+          onClick={() => createNote(createNoteOverrides ?? {})}
         >
           <Plus className="h-3 w-3" />
           New note
@@ -251,27 +257,26 @@ export function NotesTable({
       {/* ── Context tabs + toolbar ─────────────────────── */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">
         {/* Tabs */}
-        <div className="flex items-center gap-0">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
-                activeTab === tab.id
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-              {activeTab === tab.id && (
-                <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
-              )}
-            </button>
-          ))}
-          <button className="px-2 py-2 text-muted-foreground transition-colors hover:text-foreground">
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        {showTabs && (
+          <div className="flex items-center gap-0">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative px-3 py-2 text-[13px] font-medium transition-colors ${
+                  effectiveTab === tab.id
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+                {effectiveTab === tab.id && (
+                  <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Right toolbar */}
         <div className="flex items-center gap-1.5">
@@ -379,7 +384,7 @@ export function NotesTable({
       )}
 
       {/* ── Unlinked helper ─────────────────────────────── */}
-      {activeTab === "unlinked" && flatNotes.length > 0 && (
+      {effectiveTab === "unlinked" && flatNotes.length > 0 && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
           <Link2 className="h-3 w-3 text-muted-foreground" />
           <span className="text-[11px] text-muted-foreground">
@@ -448,7 +453,7 @@ export function NotesTable({
                     <NoteRow
                       note={item.note}
                       categories={categories}
-                      existingProjects={existingProjects}
+                      projects={projects}
                       links={backlinksMap.get(item.note.id) ?? 0}
                       isActive={activePreviewId === item.note.id}
                       visibleColumns={visibleCols}
@@ -456,9 +461,8 @@ export function NotesTable({
                       onDoubleClick={() => openNote(item.note.id)}
                       onStatus={(s) => updateNote(item.note.id, { status: s })}
                       onPriority={(p) => updateNote(item.note.id, { priority: p })}
-                      onProjectLevel={(lvl) => updateNote(item.note.id, { projectLevel: lvl })}
-                      onSetProject={(p) => updateNote(item.note.id, { project: p, projectLevel: "planning" })}
-                      onRemoveProject={() => updateNote(item.note.id, { project: null, projectLevel: null })}
+                      onSetProject={(projId) => updateNote(item.note.id, { projectId: projId })}
+                      onRemoveProject={() => updateNote(item.note.id, { projectId: null })}
                       onKeep={() => triageKeep(item.note.id)}
                       onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
                       onTrash={() => triageTrash(item.note.id)}
@@ -482,7 +486,7 @@ export function NotesTable({
 interface NoteRowProps {
   note: Note
   categories: { id: string; name: string; color: string }[]
-  existingProjects: string[]
+  projects: Project[]
   links: number
   isActive?: boolean
   visibleColumns: string[]
@@ -490,8 +494,7 @@ interface NoteRowProps {
   onDoubleClick?: () => void
   onStatus: (s: NoteStatus) => void
   onPriority: (p: NotePriority) => void
-  onProjectLevel: (lvl: ProjectLevel) => void
-  onSetProject: (project: string) => void
+  onSetProject: (projectId: string) => void
   onRemoveProject: () => void
   onKeep: () => void
   onSnooze: (opt: "3h" | "tomorrow" | "next-week") => void
@@ -504,7 +507,7 @@ interface NoteRowProps {
 function NoteRowInner({
   note,
   categories,
-  existingProjects,
+  projects,
   links,
   isActive,
   visibleColumns,
@@ -512,7 +515,6 @@ function NoteRowInner({
   onDoubleClick,
   onStatus,
   onPriority,
-  onProjectLevel,
   onSetProject,
   onRemoveProject,
   onKeep,
@@ -575,10 +577,20 @@ function NoteRowInner({
       {/* Project */}
       {visibleCols.includes("project") && (
         <div className="w-[80px] shrink-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-          {note.project ? (
-            <ProjectLevelDropdown value={note.projectLevel} onChange={onProjectLevel} variant="dot" />
-          ) : (
-            <ProjectDropdown value={null} existingProjects={existingProjects} onChange={onSetProject} variant="table" />
+          {note.projectId ? (() => {
+            const proj = projects.find((p: Project) => p.id === note.projectId)
+            if (!proj) return <span className="text-[12px] text-muted-foreground/30">—</span>
+            const cfg = PROJECT_STATUS_CONFIG[proj.status]
+            return (
+              <span
+                className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-none"
+                style={{ backgroundColor: cfg.bg, color: cfg.color }}
+              >
+                {cfg.label}
+              </span>
+            )
+          })() : (
+            <ProjectDropdown value={null} projects={projects} onChange={onSetProject} variant="table" />
           )}
         </div>
       )}
@@ -722,8 +734,7 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.note.updatedAt === next.note.updatedAt &&
   prev.note.status === next.note.status &&
   prev.note.priority === next.note.priority &&
-  prev.note.project === next.note.project &&
-  prev.note.projectLevel === next.note.projectLevel &&
+  prev.note.projectId === next.note.projectId &&
   prev.note.reads === next.note.reads &&
   prev.note.title === next.note.title &&
   prev.note.category === next.note.category &&

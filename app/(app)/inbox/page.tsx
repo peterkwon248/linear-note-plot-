@@ -146,7 +146,7 @@ export default function InboxPage() {
             className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => createNote({ status: "inbox" })}
           >
-            + Capture
+            + New
           </button>
         </header>
 
@@ -163,13 +163,13 @@ export default function InboxPage() {
             <Inbox className="mb-4 h-12 w-12 text-muted-foreground/20" />
             <p className="text-[13px] text-muted-foreground">Inbox zero</p>
             <p className="mt-1 text-[12px] text-muted-foreground/60">
-              All notes have been triaged. Capture a new thought to get started.
+              All notes have been triaged. Create a new note to get started.
             </p>
             <button
               onClick={() => createNote({ status: "inbox" })}
               className="mt-4 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             >
-              Capture new note
+              New note
             </button>
           </div>
         ) : (

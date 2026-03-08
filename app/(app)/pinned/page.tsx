@@ -2,22 +2,18 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
-import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
-import { NoteList } from "@/components/note-list"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 
-export default function NotesPage() {
+export default function PinnedPage() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
   const isEditing = selectedNoteId !== null
-  const viewMode = useSettingsStore((s) => s.viewMode)
 
   const [previewId, setPreviewId] = useState<string | null>(null)
 
-  // ESC closes preview panel (editor Esc is handled by use-global-shortcuts)
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -36,7 +32,6 @@ export default function NotesPage() {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [handleKeyDown])
 
-  // Full editor mode
   if (isEditing) {
     return (
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
@@ -46,15 +41,13 @@ export default function NotesPage() {
     )
   }
 
-  // List view
-  if (viewMode === "list") {
-    return <NoteList filter={{ type: "all" }} />
-  }
-
-  // Table view + optional detail panel
   return (
     <div className="flex flex-1 overflow-hidden">
       <NotesTable
+        context="pinned"
+        title="Pinned"
+        showTabs={false}
+        createNoteOverrides={{ pinned: true }}
         onRowClick={(noteId) => setPreviewId(noteId)}
         activePreviewId={previewId}
       />

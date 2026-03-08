@@ -52,7 +52,16 @@
       "Bash(Copy-Item \"$SRC\\\\app\\\\\\(app\\)\\\\projects\\\\page.tsx\" \"$DST\\\\app\\\\\\(app\\)\\\\projects\\\\page.tsx\" -Force)",
       "Bash(Copy-Item \"$SRC\\\\app\\\\\\(app\\)\\\\views\\\\page.tsx\" \"$DST\\\\app\\\\\\(app\\)\\\\views\\\\page.tsx\" -Force)",
       "Bash(Copy-Item \"$SRC\\\\components\\\\note-detail-panel.tsx\" \"$DST\\\\components\\\\note-detail-panel.tsx\" -Force)",
-      "Bash(Copy-Item \"$SRC\\\\components\\\\note-inspector.tsx\" \"$DST\\\\components\\\\note-inspector.tsx\" -Force)"
+      "Bash(Copy-Item \"$SRC\\\\components\\\\note-inspector.tsx\" \"$DST\\\\components\\\\note-inspector.tsx\" -Force)",
+      "Bash(npx vitest run)",
+      "Bash(ls /c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/practical-easley/app/\\\\\\(app\\\\\\)/)",
+      "Bash(ls \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/practical-easley/app/\\(app\\)/\")",
+      "Bash(ls \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/practical-easley/app/\\(app\\)/views\")",
+      "Bash(echo \"EXIT: $?\")",
+      "WebFetch(domain:linear.app)",
+      "Bash(npx jest --passWithNoTests)",
+      "Bash(ls \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\practical-easley\\\\app\\\\\\(app\\)\\\\projects\"\")",
+      "Bash(ls \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/practical-easley/app/\\(app\\)/projects/\")"
     ]
   }
 }

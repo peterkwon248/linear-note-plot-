@@ -128,19 +128,19 @@ function groupByProject(notes: Note[]): NoteGroup[] {
   const noProject: Note[] = []
 
   for (const note of notes) {
-    const proj = note.project
-    if (!proj) {
+    const projId = note.projectId
+    if (!projId) {
       noProject.push(note)
       continue
     }
-    const bucket = map.get(proj)
+    const bucket = map.get(projId)
     if (bucket) bucket.push(note)
-    else map.set(proj, [note])
+    else map.set(projId, [note])
   }
 
   const groups: NoteGroup[] = []
 
-  // Sort project names alphabetically
+  // Sort project IDs (stable ordering)
   const sortedKeys = [...map.keys()].sort((a, b) => a.localeCompare(b))
   for (const key of sortedKeys) {
     groups.push({ key, label: key, notes: map.get(key)! })

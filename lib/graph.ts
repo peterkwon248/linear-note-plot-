@@ -1,4 +1,13 @@
 import type { Note } from "./types"
+import {
+  forceSimulation,
+  forceLink,
+  forceManyBody,
+  forceCenter,
+  forceCollide,
+  type SimulationNodeDatum,
+  type SimulationLinkDatum,
+} from "d3-force"
 
 export interface GraphNode {
   id: string
@@ -174,6 +183,7 @@ export function buildFocusGraph(
 /**
  * Build a graph for a Knowledge Map — only notes in the map,
  * with force-directed-like grid layout.
+ * @deprecated Use buildForceGraph instead for better layouts
  */
 export function buildMapGraph(
   mapNoteIds: string[],
@@ -208,7 +218,6 @@ export function buildMapGraph(
       frontier = next
     }
 
-    // Assign depth Infinity to unconnected map notes
     for (const nid of mapNoteIds) {
       if (!depthMap.has(nid)) depthMap.set(nid, 99)
     }
@@ -228,7 +237,6 @@ export function buildMapGraph(
         const n = noteMap.get(ids[0])
         nodes.push({ id: ids[0], label: n?.title || "Untitled", x: cx, y: cy, isCenter: true, depth: 0 })
       } else if (d === 99) {
-        // Disconnected notes: place in a row below
         ids.forEach((nid, i) => {
           const n = noteMap.get(nid)
           const cols = Math.min(ids.length, 6)
@@ -296,4 +304,154 @@ export function buildMapGraph(
   }
 
   return { nodes, edges }
+}
+
+/* ── Force-directed layout ────────────────────────── */
+
+interface ForceNode extends SimulationNodeDatum {
+  id: string
+  label: string
+  isCenter: boolean
+  depth: number
+}
+
+/**
+ * Run d3-force simulation to convergence and return final positions.
+ * Pure computation — no React state updates per tick.
+ */
+export function buildForceGraph(
+  mapNoteIds: string[],
+  notes: Note[],
+  focusNoteId?: string | null,
+): { nodes: GraphNode[]; edges: GraphEdge[] } {
+  if (mapNoteIds.length === 0) return { nodes: [], edges: [] }
+
+  const mapNoteSet = new Set(mapNoteIds)
+  const mapNotes = notes.filter((n) => mapNoteSet.has(n.id))
+  if (mapNotes.length === 0) return { nodes: [], edges: [] }
+
+  const adj = buildAdjacencyList(notes)
+
+  // Build edges within the map
+  const edges: GraphEdge[] = []
+  const edgeSet = new Set<string>()
+  for (const nid of mapNoteIds) {
+    const neighbors = adj.get(nid)
+    if (!neighbors) continue
+    for (const neighbor of neighbors) {
+      if (!mapNoteSet.has(neighbor)) continue
+      const key = [nid, neighbor].sort().join("-")
+      if (!edgeSet.has(key)) {
+        edgeSet.add(key)
+        edges.push({ from: nid, to: neighbor })
+      }
+    }
+  }
+
+  // Build simulation nodes
+  const simNodes: ForceNode[] = mapNotes.map((n) => ({
+    id: n.id,
+    label: n.title || "Untitled",
+    isCenter: n.id === focusNoteId,
+    depth: 0,
+    x: undefined as unknown as number,
+    y: undefined as unknown as number,
+  }))
+
+  const nodeIdxMap = new Map(simNodes.map((n, i) => [n.id, i]))
+
+  // Build simulation links
+  const simLinks: SimulationLinkDatum<ForceNode>[] = edges
+    .map((e) => {
+      const si = nodeIdxMap.get(e.from)
+      const ti = nodeIdxMap.get(e.to)
+      if (si === undefined || ti === undefined) return null
+      return { source: si, target: ti }
+    })
+    .filter(Boolean) as SimulationLinkDatum<ForceNode>[]
+
+  // Configure and run simulation to convergence
+  const nodeCount = simNodes.length
+  const chargeStrength = nodeCount > 30 ? -200 : nodeCount > 15 ? -300 : -400
+  const linkDistance = nodeCount > 30 ? 60 : nodeCount > 15 ? 80 : 100
+
+  const sim = forceSimulation<ForceNode>(simNodes)
+    .force("link", forceLink<ForceNode, SimulationLinkDatum<ForceNode>>(simLinks).distance(linkDistance))
+    .force("charge", forceManyBody().strength(chargeStrength))
+    .force("center", forceCenter(0, 0))
+    .force("collide", forceCollide(24))
+    .stop()
+
+  // Pin focus node at center
+  if (focusNoteId) {
+    const focusNode = simNodes.find((n) => n.id === focusNoteId)
+    if (focusNode) {
+      focusNode.fx = 0
+      focusNode.fy = 0
+    }
+  }
+
+  // Run to convergence
+  const ticks = Math.max(120, Math.min(300, nodeCount * 4))
+  for (let i = 0; i < ticks; i++) sim.tick()
+
+  // Extract final positions
+  const resultNodes: GraphNode[] = simNodes.map((n) => ({
+    id: n.id,
+    label: n.label,
+    x: n.x ?? 0,
+    y: n.y ?? 0,
+    isCenter: n.isCenter,
+    depth: n.depth,
+  }))
+
+  return { nodes: resultNodes, edges }
+}
+
+/* ── Shortest path (BFS) ─────────────────────────── */
+
+/**
+ * Find shortest path between two nodes using BFS.
+ * Returns array of node IDs forming the path, or empty array if no path exists.
+ * Works on filtered subgraph: only considers nodes in `allowedIds`.
+ */
+export function findShortestPath(
+  fromId: string,
+  toId: string,
+  adj: Map<string, Set<string>>,
+  allowedIds: Set<string>,
+): string[] {
+  if (fromId === toId) return [fromId]
+  if (!allowedIds.has(fromId) || !allowedIds.has(toId)) return []
+
+  const visited = new Set<string>([fromId])
+  const parent = new Map<string, string>()
+  let frontier = [fromId]
+
+  while (frontier.length > 0) {
+    const nextFrontier: string[] = []
+    for (const nodeId of frontier) {
+      const neighbors = adj.get(nodeId)
+      if (!neighbors) continue
+      for (const neighbor of neighbors) {
+        if (!allowedIds.has(neighbor)) continue
+        if (visited.has(neighbor)) continue
+        visited.add(neighbor)
+        parent.set(neighbor, nodeId)
+        if (neighbor === toId) {
+          const path: string[] = [toId]
+          let cur = toId
+          while (parent.has(cur)) {
+            cur = parent.get(cur)!
+            path.unshift(cur)
+          }
+          return path
+        }
+        nextFrontier.push(neighbor)
+      }
+    }
+    frontier = nextFrontier
+  }
+
+  return []
 }

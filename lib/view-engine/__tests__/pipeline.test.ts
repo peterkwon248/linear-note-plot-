@@ -18,8 +18,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     category: '',
     tags: [],
     status: 'inbox' as NoteStatus,
-    project: null,
-    projectLevel: null,
+    projectId: null,
     priority: 'none' as NotePriority,
     reads: 0,
     pinned: false,
@@ -35,6 +34,8 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     lastTouchedAt: now,
     snoozeCount: 0,
     archivedAt: null,
+    trashedAt: null,
+    trashed: false,
     parentNoteId: null,
     preview: '',
     linksOut: [],
@@ -275,28 +276,28 @@ describe('applySort', () => {
   })
 
   describe('sort by project', () => {
-    it('should sort by project name ascending, null values first', () => {
+    it('should sort by project id ascending, null values first', () => {
       const notes = [
-        makeNote({ id: '1', project: 'Zebra Project' }),
-        makeNote({ id: '2', project: null }),
-        makeNote({ id: '3', project: 'Alpha Project' }),
+        makeNote({ id: '1', projectId: 'proj-zebra' }),
+        makeNote({ id: '2', projectId: null }),
+        makeNote({ id: '3', projectId: 'proj-alpha' }),
       ]
       const sorted = applySort(notes, 'project', 'asc')
       // null becomes empty string, sorts first
       expect(sorted.map(n => n.id)).toEqual(['2', '3', '1'])
     })
 
-    it('should sort by project name descending', () => {
+    it('should sort by project id descending', () => {
       const notes = [
-        makeNote({ id: '1', project: 'Zebra Project' }),
-        makeNote({ id: '2', project: 'Alpha Project' }),
-        makeNote({ id: '3', project: 'Beta Project' }),
+        makeNote({ id: '1', projectId: 'proj-zebra' }),
+        makeNote({ id: '2', projectId: 'proj-alpha' }),
+        makeNote({ id: '3', projectId: 'proj-beta' }),
       ]
       const sorted = applySort(notes, 'project', 'desc')
-      expect(sorted.map(n => n.project)).toEqual([
-        'Zebra Project',
-        'Beta Project',
-        'Alpha Project',
+      expect(sorted.map(n => n.projectId)).toEqual([
+        'proj-zebra',
+        'proj-beta',
+        'proj-alpha',
       ])
     })
   })
@@ -740,32 +741,32 @@ describe('applyGrouping', () => {
   })
 
   describe('groupBy "project"', () => {
-    it('should group by project name', () => {
+    it('should group by project id', () => {
       const notes = [
-        makeNote({ id: '1', project: 'Project A' }),
-        makeNote({ id: '2', project: 'Project A' }),
-        makeNote({ id: '3', project: 'Project B' }),
+        makeNote({ id: '1', projectId: 'proj-a' }),
+        makeNote({ id: '2', projectId: 'proj-a' }),
+        makeNote({ id: '3', projectId: 'proj-b' }),
       ]
       const groups = applyGrouping(notes, 'project')
       expect(groups).toHaveLength(2)
-      expect(groups.map(g => g.key)).toEqual(['Project A', 'Project B'])
+      expect(groups.map(g => g.key)).toEqual(['proj-a', 'proj-b'])
     })
 
-    it('should sort projects alphabetically', () => {
+    it('should sort project ids alphabetically', () => {
       const notes = [
-        makeNote({ id: '1', project: 'Zebra' }),
-        makeNote({ id: '2', project: 'Apple' }),
-        makeNote({ id: '3', project: 'Banana' }),
+        makeNote({ id: '1', projectId: 'proj-zebra' }),
+        makeNote({ id: '2', projectId: 'proj-apple' }),
+        makeNote({ id: '3', projectId: 'proj-banana' }),
       ]
       const groups = applyGrouping(notes, 'project')
-      expect(groups.map(g => g.key)).toEqual(['Apple', 'Banana', 'Zebra'])
+      expect(groups.map(g => g.key)).toEqual(['proj-apple', 'proj-banana', 'proj-zebra'])
     })
 
     it('should create "No Project" group for null projects', () => {
       const notes = [
-        makeNote({ id: '1', project: 'Project A' }),
-        makeNote({ id: '2', project: null }),
-        makeNote({ id: '3', project: null }),
+        makeNote({ id: '1', projectId: 'proj-a' }),
+        makeNote({ id: '2', projectId: null }),
+        makeNote({ id: '3', projectId: null }),
       ]
       const groups = applyGrouping(notes, 'project')
       expect(groups).toHaveLength(2)
@@ -776,8 +777,8 @@ describe('applyGrouping', () => {
 
     it('should only include "No Project" group if there are null projects', () => {
       const notes = [
-        makeNote({ id: '1', project: 'Project A' }),
-        makeNote({ id: '2', project: 'Project B' }),
+        makeNote({ id: '1', projectId: 'proj-a' }),
+        makeNote({ id: '2', projectId: 'proj-b' }),
       ]
       const groups = applyGrouping(notes, 'project')
       expect(groups).toHaveLength(2)
@@ -786,8 +787,8 @@ describe('applyGrouping', () => {
 
     it('should handle notes with all projects as null', () => {
       const notes = [
-        makeNote({ id: '1', project: null }),
-        makeNote({ id: '2', project: null }),
+        makeNote({ id: '1', projectId: null }),
+        makeNote({ id: '2', projectId: null }),
       ]
       const groups = applyGrouping(notes, 'project')
       expect(groups).toHaveLength(1)

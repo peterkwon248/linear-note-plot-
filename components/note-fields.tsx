@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import type { NoteStatus, NotePriority, ProjectLevel } from "@/lib/types"
+import type { NoteStatus, NotePriority, ProjectStatus, Project } from "@/lib/types"
 
 /* ── Status config ────────────────────────────────────── */
 
@@ -95,19 +95,20 @@ const PRIORITY_CONFIG: Record<
 
 const PRIORITY_OPTIONS: NotePriority[] = ["none", "urgent", "high", "medium", "low"]
 
-/* ── Project Level config ────────────────────────────── */
+/* ── Project Status config ────────────────────────────── */
 
-export const PROJECT_LEVEL_CONFIG: Record<
-  ProjectLevel,
+export const PROJECT_STATUS_CONFIG: Record<
+  ProjectStatus,
   { label: string; color: string; bg: string }
 > = {
   planning: { label: "Planning", color: "#6b6b76", bg: "rgba(107, 107, 118, 0.20)" },
   active: { label: "Active", color: "#5e6ad2", bg: "rgba(94, 106, 210, 0.12)" },
   review: { label: "Review", color: "#f2994a", bg: "rgba(242, 153, 74, 0.12)" },
   done: { label: "Done", color: "#45d483", bg: "rgba(69, 212, 131, 0.12)" },
+  canceled: { label: "Canceled", color: "#e5484d", bg: "rgba(229, 72, 77, 0.12)" },
 }
 
-export const PROJECT_LEVEL_OPTIONS: ProjectLevel[] = ["planning", "active", "review", "done"]
+export const PROJECT_STATUS_OPTIONS: ProjectStatus[] = ["planning", "active", "review", "done", "canceled"]
 
 /* ── StatusBadge ──────────────────────────────────────── */
 
@@ -263,18 +264,18 @@ export function PriorityDropdown({
   )
 }
 
-/* ── ProjectLevelDropdown ────────────────────────────── */
+/* ── ProjectStatusDropdown ────────────────────────────── */
 
-export function ProjectLevelDropdown({
+export function ProjectStatusDropdown({
   value,
   onChange,
   variant = "default",
 }: {
-  value: ProjectLevel | null
-  onChange: (level: ProjectLevel) => void
+  value: ProjectStatus | null
+  onChange: (status: ProjectStatus) => void
   variant?: "dot" | "label" | "default"
 }) {
-  const current = PROJECT_LEVEL_CONFIG[value ?? "planning"] ?? PROJECT_LEVEL_CONFIG.planning
+  const current = PROJECT_STATUS_CONFIG[value ?? "planning"] ?? PROJECT_STATUS_CONFIG.planning
 
   return (
     <DropdownMenu>
@@ -306,14 +307,14 @@ export function ProjectLevelDropdown({
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-40">
-        {PROJECT_LEVEL_OPTIONS.map((lvl) => {
-          const cfg = PROJECT_LEVEL_CONFIG[lvl]
+        {PROJECT_STATUS_OPTIONS.map((status) => {
+          const cfg = PROJECT_STATUS_CONFIG[status]
           return (
             <DropdownMenuItem
-              key={lvl}
+              key={status}
               onClick={(e) => {
                 e.stopPropagation()
-                onChange(lvl)
+                onChange(status)
               }}
               className="flex items-center justify-between"
             >
@@ -321,7 +322,7 @@ export function ProjectLevelDropdown({
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: cfg.color }} />
                 <span className="text-foreground">{cfg.label}</span>
               </span>
-              {value === lvl && <Check className="h-3 w-3 text-muted-foreground" />}
+              {value === status && <Check className="h-3 w-3 text-muted-foreground" />}
             </DropdownMenuItem>
           )
         })}
@@ -334,14 +335,14 @@ export function ProjectLevelDropdown({
 
 export function ProjectDropdown({
   value,
-  existingProjects,
+  projects,
   onChange,
   onRemove,
   variant = "default",
 }: {
   value: string | null
-  existingProjects: string[]
-  onChange: (project: string) => void
+  projects: Project[]
+  onChange: (projectId: string) => void
   onRemove?: () => void
   variant?: "table" | "default"
 }) {
@@ -366,61 +367,37 @@ export function ProjectDropdown({
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48">
-        {existingProjects.length > 0 && (
+        {projects.length > 0 ? (
           <>
-            {existingProjects.map((p) => (
+            {projects.map((p) => (
               <DropdownMenuItem
-                key={p}
+                key={p.id}
                 onClick={(e) => {
                   e.stopPropagation()
-                  onChange(p)
+                  onChange(p.id)
                 }}
                 className="flex items-center gap-2 text-[12px]"
               >
                 <FolderOpen className="h-3 w-3 text-muted-foreground" />
-                <span className="truncate">{p}</span>
-                {value === p && <Check className="ml-auto h-3 w-3 text-muted-foreground" />}
+                <span className="truncate">{p.name}</span>
+                {value === p.id && <Check className="ml-auto h-3 w-3 text-muted-foreground" />}
               </DropdownMenuItem>
             ))}
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                const name = prompt("Project name:")
-                if (name?.trim()) onChange(name.trim())
-              }}
-              className="flex items-center gap-2 text-[12px] text-muted-foreground"
-            >
-              <Plus className="h-3 w-3" />
-              New project...
-            </DropdownMenuItem>
           </>
+        ) : (
+          <div className="px-2 py-1.5 text-[12px] text-muted-foreground">No projects yet</div>
         )}
-        {existingProjects.length === 0 && (
+        {value && onRemove && (
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation()
-              const name = prompt("Project name:")
-              if (name?.trim()) onChange(name.trim())
+              onRemove()
             }}
-            className="flex items-center gap-2 text-[12px]"
+            className="flex items-center gap-2 text-[12px] text-destructive focus:text-destructive"
           >
-            <Plus className="h-3 w-3 text-muted-foreground" />
-            New project...
+            <XIcon className="h-3 w-3" />
+            Remove from project
           </DropdownMenuItem>
-        )}
-        {value && onRemove && (
-          <>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                onRemove()
-              }}
-              className="flex items-center gap-2 text-[12px] text-destructive focus:text-destructive"
-            >
-              <XIcon className="h-3 w-3" />
-              Remove from project
-            </DropdownMenuItem>
-          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
