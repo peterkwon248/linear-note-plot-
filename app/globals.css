@@ -54,7 +54,7 @@
   --secondary: #1c1c1f;
   --secondary-foreground: #e8e8ed;
   --muted: #1c1c1f;
-  --muted-foreground: #6b6b76;
+  --muted-foreground: #9898a0;
   --accent: #5e6ad2;
   --accent-foreground: #e8e8ed;
   --destructive: #e5484d;
@@ -75,7 +75,7 @@
   --sidebar-accent-foreground: #e8e8ed;
   --sidebar-border: #1c1c1f;
   --sidebar-ring: #5e6ad2;
-  --sidebar-muted: #6b6b76;
+  --sidebar-muted: #9898a0;
   --sidebar-hover: #181819;
 }
 

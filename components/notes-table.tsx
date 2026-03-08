@@ -409,7 +409,7 @@ export function NotesTable({
                 }`}
               >
                 {tab.label}
-                <span className="ml-1.5 text-[13px] text-muted-foreground/60 tabular-nums">{tabCounts[tab.id]}</span>
+                <span className="ml-1.5 rounded-[3px] bg-white/15 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">{tabCounts[tab.id]}</span>
                 {effectiveTab === tab.id && (
                   <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
                 )}

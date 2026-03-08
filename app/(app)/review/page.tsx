@@ -6,6 +6,7 @@ import { computeNextStep, INTERVALS, type SRSRating } from "@/lib/srs"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getReviewQueue } from "@/lib/queries/notes"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
+import { FloatingActionBar } from "@/components/floating-action-bar"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import {
@@ -284,6 +285,16 @@ export default function ReviewPage() {
             </div>
           )}
         </aside>
+      )}
+
+      {/* Floating action bar */}
+      {previewId && (
+        <FloatingActionBar
+          selectedIds={new Set([previewId])}
+          effectiveTab="all"
+          notes={notes}
+          onClearSelection={() => setPreviewId(null)}
+        />
       )}
     </div>
   )
