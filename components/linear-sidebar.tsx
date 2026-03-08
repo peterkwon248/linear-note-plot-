@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
@@ -116,7 +116,15 @@ export function LinearSidebar() {
   const { setSearchOpen, createNote, openNote, notes, tags, knowledgeMaps, srsStateByNoteId, dismissedAlertIds } =
     usePlotStore()
 
+  const navigationHistory = usePlotStore((s) => s.navigationHistory)
+  const navigationIndex = usePlotStore((s) => s.navigationIndex)
+  const goBack = usePlotStore((s) => s.goBack)
+  const goForward = usePlotStore((s) => s.goForward)
+
   const backlinks = useBacklinksIndex()
+
+  const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
+  const recentlyViewedRef = useRef<HTMLDivElement>(null)
 
   const inboxCount = useMemo(() => getInboxNotes(notes, backlinks).length, [notes, backlinks])
   const reviewCount = useMemo(() => getReviewQueue(notes, backlinks, srsStateByNoteId).length, [notes, backlinks, srsStateByNoteId])
@@ -128,6 +136,32 @@ export function LinearSidebar() {
   const pinnedCount = useMemo(() => notes.filter((n) => n.pinned && !n.archived && !n.trashed).length, [notes])
   const tagCount = tags.length
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
+
+  const recentlyViewed = useMemo(() => {
+    const seen = new Set<string>()
+    const result: { id: string; title: string }[] = []
+    // Walk backwards from current index to get most recent unique notes
+    for (let i = navigationIndex; i >= 0 && result.length < 10; i--) {
+      const noteId = navigationHistory[i]
+      if (!seen.has(noteId)) {
+        seen.add(noteId)
+        const note = notes.find((n) => n.id === noteId && !n.trashed)
+        if (note) result.push({ id: note.id, title: note.title || "Untitled" })
+      }
+    }
+    return result
+  }, [navigationHistory, navigationIndex, notes])
+
+  useEffect(() => {
+    if (!recentlyViewedOpen) return
+    const handler = (e: MouseEvent) => {
+      if (recentlyViewedRef.current && !recentlyViewedRef.current.contains(e.target as Node)) {
+        setRecentlyViewedOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [recentlyViewedOpen])
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
 
@@ -144,26 +178,61 @@ export function LinearSidebar() {
           U
         </div>
         <button
-          onClick={() => router.back()}
-          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          onClick={() => goBack()}
+          disabled={navigationIndex <= 0}
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
           aria-label="Go back"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <button
-          onClick={() => router.forward()}
-          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          onClick={() => goForward()}
+          disabled={navigationIndex >= navigationHistory.length - 1}
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
           aria-label="Go forward"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
-        <button
-          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
-          aria-label="Recently viewed"
-          title="Recently viewed"
-        >
-          <Clock className="h-5 w-5" />
-        </button>
+        <div className="relative" ref={recentlyViewedRef}>
+          <button
+            onClick={() => setRecentlyViewedOpen(!recentlyViewedOpen)}
+            className={`flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover transition-colors ${
+              recentlyViewedOpen ? "text-sidebar-foreground bg-sidebar-hover" : "text-sidebar-muted hover:text-sidebar-foreground"
+            }`}
+            aria-label="Recently viewed"
+            title="Recently viewed"
+          >
+            <Clock className="h-5 w-5" />
+          </button>
+          {recentlyViewedOpen && (
+            <div className="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border bg-popover shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="px-3 py-2 border-b border-border">
+                <span className="text-[12px] font-medium text-muted-foreground">Recently Viewed</span>
+              </div>
+              {recentlyViewed.length === 0 ? (
+                <div className="px-3 py-4 text-center text-[13px] text-muted-foreground">
+                  No recently viewed notes
+                </div>
+              ) : (
+                <div className="max-h-[320px] overflow-y-auto py-1">
+                  {recentlyViewed.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        openNote(item.id)
+                        setRecentlyViewedOpen(false)
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-secondary/50"
+                    >
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate text-[13px] text-foreground">{item.title}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="flex-1" />
         <button
           onClick={() => setSearchOpen(true)}

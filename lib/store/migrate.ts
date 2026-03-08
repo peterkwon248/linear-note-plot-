@@ -161,6 +161,11 @@ export function migrate(persistedState: unknown): PlotState {
       }
     }
   }
+  // v22: Navigation history
+  if (!state.navigationHistory) {
+    state.navigationHistory = []
+    state.navigationIndex = -1
+  }
   state._viewStateHydrated = false // always reset transient flag
 
   return state as unknown as PlotState
