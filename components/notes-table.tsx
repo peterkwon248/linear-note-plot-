@@ -154,6 +154,7 @@ export function NotesTable({
   title,
   showTabs = true,
   createNoteOverrides,
+  hideCreateButton = false,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -161,6 +162,7 @@ export function NotesTable({
   title?: string
   showTabs?: boolean
   createNoteOverrides?: Partial<import("@/lib/types").Note>
+  hideCreateButton?: boolean
 }) {
   const notes = usePlotStore((s) => s.notes)
   const categories = usePlotStore((s) => s.categories)
@@ -245,13 +247,15 @@ export function NotesTable({
       {/* ── Page title ─────────────────────────────────── */}
       <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
         <h1 className="text-base font-semibold text-foreground">{title ?? "Notes"}</h1>
-        <button
-          className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-          onClick={() => createNote(createNoteOverrides ?? {})}
-        >
-          <Plus className="h-3 w-3" />
-          New note
-        </button>
+        {!hideCreateButton && (
+          <button
+            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            onClick={() => createNote(createNoteOverrides ?? {})}
+          >
+            <Plus className="h-3 w-3" />
+            New note
+          </button>
+        )}
       </header>
 
       {/* ── Context tabs + toolbar ─────────────────────── */}
