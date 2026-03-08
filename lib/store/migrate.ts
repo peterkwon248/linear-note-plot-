@@ -111,6 +111,56 @@ export function migrate(persistedState: unknown): PlotState {
   }
   // v19: Alerts — dismissed alert IDs
   if (!state.dismissedAlertIds) state.dismissedAlertIds = []
+  // v20: Project as independent entity — migrate note.project to projects array
+  if (!state.projects) state.projects = []
+  if (state.notes && Array.isArray(state.notes)) {
+    const noteArr = state.notes as Array<Record<string, unknown>>
+    const projectNames = new Set<string>()
+    for (const n of noteArr) {
+      if (typeof n.project === "string" && n.project !== "") {
+        projectNames.add(n.project)
+      }
+    }
+    // Create Project entities from unique project names
+    const projectMap = new Map<string, string>() // name -> id
+    const projects = state.projects as Array<Record<string, unknown>>
+    for (const name of projectNames) {
+      const id = `proj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      projectMap.set(name, id)
+      projects.push({
+        id,
+        name,
+        status: "planning",
+        focus: null,
+        description: "",
+        targetDate: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    }
+    // Migrate notes: project string -> projectId
+    for (const n of noteArr) {
+      if (typeof n.project === "string" && n.project !== "") {
+        n.projectId = projectMap.get(n.project) ?? null
+      } else {
+        n.projectId = n.projectId ?? null
+      }
+      delete n.project
+      delete n.projectLevel
+    }
+  }
+  // v21: Rename project.health → project.focus (now/soon/later)
+  if (state.projects && Array.isArray(state.projects)) {
+    for (const p of state.projects as Array<Record<string, unknown>>) {
+      if ("health" in p) {
+        p.focus = null // reset old health values — they don't map to new semantics
+        delete p.health
+      }
+      if (!("focus" in p)) {
+        p.focus = null
+      }
+    }
+  }
   state._viewStateHydrated = false // always reset transient flag
 
   return state as unknown as PlotState

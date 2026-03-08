@@ -237,7 +237,6 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
               status: filter.type === "inbox" ? "inbox" as const : undefined,
               folderId: filter.type === "folder" ? filter.folderId : undefined,
               category: filter.type === "category" ? filter.categoryId : undefined,
-              project: filter.type === "projects" ? "New Project" : undefined,
               pinned: filter.type === "pinned" ? true : undefined,
             })}
           >

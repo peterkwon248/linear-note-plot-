@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useState, useMemo, useCallback } from "react"
-import { StatusDropdown, PriorityDropdown, ProjectLevelDropdown, ProjectDropdown, PROJECT_LEVEL_CONFIG } from "@/components/note-fields"
+import { StatusDropdown, PriorityDropdown, ProjectStatusDropdown, ProjectDropdown, PROJECT_STATUS_CONFIG } from "@/components/note-fields"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { Signal, CircleDot } from "lucide-react"
@@ -87,6 +87,7 @@ export function NoteInspector() {
   const tags = usePlotStore((s) => s.tags)
   const categories = usePlotStore((s) => s.categories)
   const updateNote = usePlotStore((s) => s.updateNote)
+  const updateProject = usePlotStore((s) => s.updateProject)
   const addTagToNote = usePlotStore((s) => s.addTagToNote)
   const removeTagFromNote = usePlotStore((s) => s.removeTagFromNote)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -107,11 +108,7 @@ export function NoteInspector() {
 
   const note = notes.find((n) => n.id === selectedNoteId) ?? null
 
-  const existingProjects = useMemo(() => {
-    const set = new Set<string>()
-    for (const n of notes) if (n.project) set.add(n.project)
-    return Array.from(set).sort()
-  }, [notes])
+  const projects = usePlotStore((s) => s.projects)
 
   const headings = useMemo(
     () => (note ? extractHeadings(note.content) : []),
@@ -345,27 +342,30 @@ export function NoteInspector() {
 
         {/* Project */}
         <InspectorSection title="Project" icon={<Layers className="h-3.5 w-3.5" />}>
-          {note.project ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[12px] text-muted-foreground">{note.project}</span>
-                <ProjectLevelDropdown
-                  value={note.projectLevel}
-                  onChange={(lvl) => updateNote(note.id, { projectLevel: lvl })}
-                />
+          {note.projectId ? (() => {
+            const proj = projects.find((p) => p.id === note.projectId)
+            return proj ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] text-muted-foreground">{proj.name}</span>
+                  <ProjectStatusDropdown
+                    value={proj.status}
+                    onChange={(s) => updateProject(proj.id, { status: s })}
+                  />
+                </div>
+                <button
+                  onClick={() => updateNote(note.id, { projectId: null })}
+                  className="text-[11px] text-destructive hover:underline"
+                >
+                  Remove from project
+                </button>
               </div>
-              <button
-                onClick={() => updateNote(note.id, { project: null, projectLevel: null })}
-                className="text-[11px] text-destructive hover:underline"
-              >
-                Remove from project
-              </button>
-            </div>
-          ) : (
+            ) : null
+          })() : (
             <ProjectDropdown
               value={null}
-              existingProjects={existingProjects}
-              onChange={(p) => updateNote(note.id, { project: p, projectLevel: "planning" })}
+              projects={projects}
+              onChange={(projId) => updateNote(note.id, { projectId: projId })}
             />
           )}
         </InspectorSection>

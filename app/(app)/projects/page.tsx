@@ -1,10 +1,10 @@
 "use client"
 
-import { useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
-import { StatusDropdown, PriorityDropdown, PriorityBadge } from "@/components/note-fields"
+import { PROJECT_STATUS_CONFIG, ProjectStatusDropdown } from "@/components/note-fields"
 import {
   Tooltip,
   TooltipContent,
@@ -13,79 +13,54 @@ import {
 import {
   Plus,
   FolderOpen,
-  CheckCircle2,
-  Circle,
+  Zap,
+  Clock3,
+  Coffee,
   SlidersHorizontal,
   Filter,
-  Users,
 } from "lucide-react"
 import { format } from "date-fns"
-import type { Note } from "@/lib/types"
+import type { Project } from "@/lib/types"
 
-/* ── Health badge ──────────────────────────────────────── */
+/* ── Focus badge ──────────────────────────────────────── */
 
-function HealthDot({ note }: { note: Note }) {
-  // Derive health from note fields: has content + status != capture = healthy
-  const hasContent = note.preview.length > 20
-  const isProgressed = note.status !== "capture"
-  const healthy = hasContent && isProgressed
+const FOCUS_CONFIG = {
+  now: { label: "Now", icon: Zap, color: "#e5484d" },
+  soon: { label: "Soon", icon: Clock3, color: "#f2c94c" },
+  later: { label: "Later", icon: Coffee, color: "#5e6ad2" },
+} as const
 
+function FocusBadge({ project }: { project: Project }) {
+  const cfg = project.focus ? FOCUS_CONFIG[project.focus] : null
+
+  if (!cfg) {
+    return <span className="text-muted-foreground/30 text-[11px]">—</span>
+  }
+
+  const Icon = cfg.icon
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="cursor-default">
-          {healthy ? (
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-          ) : (
-            <Circle className="h-4 w-4 text-muted-foreground/30" />
-          )}
+        <span className="flex items-center gap-1 cursor-default">
+          <Icon className="h-3.5 w-3.5" style={{ color: cfg.color }} />
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="text-[11px]">
-        {healthy ? "On track" : "Needs attention"}
+        {cfg.label}
       </TooltipContent>
     </Tooltip>
-  )
-}
-
-/* ── Progress ──────────────────────────────────────────── */
-
-function StatusProgress({ note }: { note: Note }) {
-  const pct =
-    note.status === "capture" ? 0
-    : note.status === "reference" ? 33
-    : note.status === "permanent" ? 66
-    : 100 // project
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className="relative h-1 w-12 overflow-hidden rounded-full bg-secondary">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-accent transition-all"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="text-[11px] tabular-nums text-muted-foreground">{pct}%</span>
-    </div>
   )
 }
 
 /* ── Projects page ─────────────────────────────────────── */
 
 export default function ProjectsPage() {
+  const router = useRouter()
+  const projects = usePlotStore((s) => s.projects)
   const notes = usePlotStore((s) => s.notes)
-  const updateNote = usePlotStore((s) => s.updateNote)
-  const openNote = usePlotStore((s) => s.openNote)
-  const createNote = usePlotStore((s) => s.createNote)
+  const updateProject = usePlotStore((s) => s.updateProject)
+  const createProject = usePlotStore((s) => s.createProject)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
-
-  const projects = useMemo(
-    () =>
-      notes
-        .filter((n) => n.project != null && n.project !== "" && !n.archived)
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
-    [notes]
-  )
 
   if (selectedNoteId) {
     return (
@@ -104,7 +79,7 @@ export default function ProjectsPage() {
         <div className="flex items-center gap-1.5">
           <button
             className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-            onClick={() => createNote({ project: "New Project" })}
+            onClick={() => createProject("New Project")}
           >
             <Plus className="h-3 w-3" />
             New project
@@ -141,18 +116,15 @@ export default function ProjectsPage() {
           <span className="text-[11px] font-medium text-muted-foreground">Name</span>
         </div>
         <div className="w-[56px] shrink-0 text-center">
-          <span className="text-[11px] font-medium text-muted-foreground">Health</span>
+          <span className="text-[11px] font-medium text-muted-foreground">Focus</span>
         </div>
-        <div className="w-[72px] shrink-0 text-center">
-          <span className="text-[11px] font-medium text-muted-foreground">Priority</span>
-        </div>
-        <div className="w-[56px] shrink-0 text-center">
-          <span className="text-[11px] font-medium text-muted-foreground">Lead</span>
+        <div className="w-[56px] shrink-0 text-right">
+          <span className="text-[11px] font-medium text-muted-foreground">Notes</span>
         </div>
         <div className="w-[90px] shrink-0 text-right">
           <span className="text-[11px] font-medium text-muted-foreground">Target date</span>
         </div>
-        <div className="w-[80px] shrink-0 text-right">
+        <div className="w-[100px] shrink-0 text-right">
           <span className="text-[11px] font-medium text-muted-foreground">Status</span>
         </div>
       </div>
@@ -165,60 +137,62 @@ export default function ProjectsPage() {
               <FolderOpen className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
               <p className="text-[13px] text-muted-foreground">No projects yet</p>
               <p className="mt-1 text-[12px] text-muted-foreground/60">
-                Create a note with status "Project" to see it here.
+                Create a project to get started.
               </p>
             </div>
           </div>
         ) : (
-          projects.map((note) => (
-            <div
-              key={note.id}
-              className="group flex items-center border-b border-border px-5 py-2.5 transition-colors hover:bg-secondary/30 cursor-pointer"
-              onClick={() => openNote(note.id)}
-            >
-              {/* Name */}
-              <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
-                <FolderOpen className="h-4 w-4 shrink-0 text-accent" />
-                <span className="truncate text-[13px] text-foreground">
-                  {note.title || "Untitled"}
-                </span>
-              </div>
+          projects.map((project) => {
+            const cfg = PROJECT_STATUS_CONFIG[project.status] ?? PROJECT_STATUS_CONFIG.planning
+            return (
+              <div
+                key={project.id}
+                onClick={() => router.push(`/projects/${project.id}`)}
+                className="group flex items-center border-b border-border px-5 py-2.5 transition-colors hover:bg-secondary/30 cursor-pointer"
+              >
+                {/* Name */}
+                <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
+                  <FolderOpen className="h-4 w-4 shrink-0 text-accent" />
+                  <span className="truncate text-[13px] text-foreground">
+                    {project.name}
+                  </span>
+                  {project.description && (
+                    <span className="truncate text-[12px] text-muted-foreground">
+                      {project.description}
+                    </span>
+                  )}
+                </div>
 
-              {/* Health */}
-              <div className="w-[56px] shrink-0 flex justify-center">
-                <HealthDot note={note} />
-              </div>
+                {/* Focus */}
+                <div className="w-[56px] shrink-0 flex justify-center">
+                  <FocusBadge project={project} />
+                </div>
 
-              {/* Priority */}
-              <div className="w-[72px] shrink-0 flex justify-center text-center" onClick={(e) => e.stopPropagation()}>
-                <PriorityDropdown
-                  value={note.priority}
-                  onChange={(p) => updateNote(note.id, { priority: p })}
-                  variant="inline"
-                />
-              </div>
+                {/* Note count */}
+                <div className="w-[56px] shrink-0 text-right">
+                  <span className="text-[12px] tabular-nums text-muted-foreground">
+                    {notes.filter((n) => n.projectId === project.id && !n.trashed).length}
+                  </span>
+                </div>
 
-              {/* Lead */}
-              <div className="w-[56px] shrink-0 flex justify-center">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full border border-dashed border-muted-foreground/30">
-                  <Users className="h-2.5 w-2.5 text-muted-foreground/40" />
+                {/* Target date */}
+                <div className="w-[90px] shrink-0 text-right">
+                  <span className="text-[12px] tabular-nums text-muted-foreground">
+                    {project.targetDate ? format(new Date(project.targetDate), "MMM d") : "—"}
+                  </span>
+                </div>
+
+                {/* Status */}
+                <div className="w-[100px] shrink-0 flex justify-end" onClick={(e) => e.stopPropagation()}>
+                  <ProjectStatusDropdown
+                    value={project.status}
+                    onChange={(s) => updateProject(project.id, { status: s })}
+                    variant="label"
+                  />
                 </div>
               </div>
-
-              {/* Target date */}
-              <div className="w-[90px] shrink-0 text-right">
-                <span className="text-[12px] tabular-nums text-muted-foreground">
-                  {/* No target date on notes, show dash */}
-                  {"--"}
-                </span>
-              </div>
-
-              {/* Status */}
-              <div className="w-[80px] shrink-0 flex justify-end">
-                <StatusProgress note={note} />
-              </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </main>

@@ -1,10 +1,11 @@
-import type { Note, NoteBody, Folder, Tag, Category, ActiveView, NoteEvent, ThinkingChainSession, KnowledgeMap } from "../types"
+import type { Note, NoteBody, Folder, Tag, Category, ActiveView, NoteEvent, ThinkingChainSession, KnowledgeMap, Project } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 
 export interface PlotState {
   // ── Data ──
   notes: Note[]
+  projects: Project[]
   folders: Folder[]
   tags: Tag[]
   categories: Category[]
@@ -117,6 +118,11 @@ export interface PlotState {
   // ── Alerts ──
   dismissAlert: (id: string) => void
   clearDismissedAlerts: () => void
+
+  // ── Projects ──
+  createProject: (name: string) => string
+  updateProject: (id: string, updates: Partial<Project>) => void
+  deleteProject: (id: string) => void
 
   // ── Internal ──
   _hydrateNoteBodies: (bodies: NoteBody[]) => void

@@ -74,7 +74,7 @@ export function applyContext(
 
     case "projects":
       return notes.filter(
-        (n) => !n.archived && !n.trashed && n.project != null && n.project !== ""
+        (n) => !n.archived && !n.trashed && n.projectId != null
       )
 
     default:

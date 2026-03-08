@@ -80,7 +80,7 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
       filtered = filtered.filter((n) => n.trashed)
       break
     case "projects":
-      filtered = filtered.filter((n) => n.project != null && n.project !== "" && isActive(n))
+      filtered = filtered.filter((n) => n.projectId != null && isActive(n))
       break
     case "pinned":
       filtered = filtered.filter((n) => n.pinned && isActive(n))

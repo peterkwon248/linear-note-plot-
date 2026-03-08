@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, KnowledgeMap } from "../types"
+import type { NoteEvent, KnowledgeMap, Project } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
@@ -15,6 +15,7 @@ import { createThinkingSlice } from "./slices/thinking"
 import { createMapsSlice } from "./slices/maps"
 import { createUISlice } from "./slices/ui"
 import { createAlertsSlice } from "./slices/alerts"
+import { createProjectsSlice } from "./slices/projects"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
 
@@ -26,6 +27,7 @@ export const usePlotStore = create<PlotState>()(
       return {
         // ── Initial State ──
         notes: SEED_NOTES,
+        projects: [] as Project[],
         folders: SEED_FOLDERS,
         tags: SEED_TAGS,
         categories: SEED_CATEGORIES,
@@ -62,11 +64,12 @@ export const usePlotStore = create<PlotState>()(
         ...createMapsSlice(set, appendEvent),
         ...createUISlice(set, appendEvent),
         ...createAlertsSlice(set),
+        ...createProjectsSlice(set),
       }
     },
     {
       name: "plot-store",
-      version: 19,
+      version: 21,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
