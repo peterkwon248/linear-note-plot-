@@ -50,6 +50,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime } from "@/lib/queries/notes"
@@ -321,43 +322,108 @@ export function NotesTable({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <Popover>
+            <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                 <SlidersHorizontal className="h-3 w-3" />
                 Display
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
-                Group by
-              </DropdownMenuItem>
-              {GROUP_OPTIONS.map((opt) => (
-                <DropdownMenuItem
-                  key={opt.value}
-                  onClick={() => updateViewState({ groupBy: opt.value })}
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-4 space-y-4" align="end">
+              {/* Grouping row */}
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] text-muted-foreground">Grouping</span>
+                <select
+                  value={viewState.groupBy}
+                  onChange={(e) => updateViewState({ groupBy: e.target.value as GroupBy })}
+                  className="rounded-md border border-border bg-secondary px-2 py-1 text-[12px] text-foreground outline-none cursor-pointer"
                 >
-                  {viewState.groupBy === opt.value && <Check className="h-3.5 w-3.5 mr-2 text-accent" />}
-                  {viewState.groupBy !== opt.value && <span className="w-3.5 mr-2 inline-block" />}
-                  <span className="text-[12px]">{opt.label}</span>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
-                Columns
-              </DropdownMenuItem>
-              {COLUMN_DEFS.filter((c) => c.id !== "title").map((col) => (
-                <DropdownMenuItem
-                  key={col.id}
-                  onClick={() => toggleColumn(col.id)}
+                  {GROUP_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Ordering row */}
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] text-muted-foreground">Ordering</span>
+                <div className="flex items-center gap-1">
+                  <select
+                    value={viewState.sortField}
+                    onChange={(e) => updateViewState({ sortField: e.target.value as SortField })}
+                    className="rounded-md border border-border bg-secondary px-2 py-1 text-[12px] text-foreground outline-none cursor-pointer"
+                  >
+                    {COLUMN_DEFS.map((col) => {
+                      const labels: Record<string, string> = {
+                        updatedAt: "Updated",
+                        createdAt: "Created",
+                        priority: "Priority",
+                        title: "Title",
+                        status: "Status",
+                        links: "Links",
+                        reads: "Reads",
+                        project: "Project",
+                      }
+                      return (
+                        <option key={col.sortField} value={col.sortField}>
+                          {labels[col.sortField] ?? col.label}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  <button
+                    onClick={() => updateViewState({ sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc" })}
+                    className="flex items-center justify-center rounded-md border border-border bg-secondary p-1 text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-foreground"
+                  >
+                    {viewState.sortDirection === "asc"
+                      ? <ArrowUp className="h-3 w-3" />
+                      : <ArrowDown className="h-3 w-3" />
+                    }
+                  </button>
+                </div>
+              </div>
+
+              {/* Show empty groups toggle */}
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] text-muted-foreground">Show empty groups</span>
+                <button
+                  onClick={() => updateViewState({ showEmptyGroups: !viewState.showEmptyGroups })}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    viewState.showEmptyGroups ? "bg-accent" : "bg-secondary border border-border"
+                  }`}
                 >
-                  {visibleCols.includes(col.id) && <Check className="h-3.5 w-3.5 mr-2 text-accent" />}
-                  {!visibleCols.includes(col.id) && <span className="w-3.5 mr-2 inline-block" />}
-                  <span className="text-[12px]">{col.label}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <span
+                    className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${
+                      viewState.showEmptyGroups ? "translate-x-4" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Display properties section */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Display properties</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {COLUMN_DEFS.filter((c) => c.id !== "title").map((col) => {
+                    const active = visibleCols.includes(col.id)
+                    return (
+                      <button
+                        key={col.id}
+                        onClick={() => toggleColumn(col.id)}
+                        className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                          active
+                            ? "bg-accent text-accent-foreground"
+                            : "border border-border bg-secondary text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {col.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
