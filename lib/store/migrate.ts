@@ -80,8 +80,8 @@ export function migrate(persistedState: unknown): PlotState {
   // v9: Details panel toggle
   if (state.detailsOpen === undefined) state.detailsOpen = true
   // v10: Sidebar resize / collapse
-  if (state.sidebarWidth === undefined) state.sidebarWidth = 260
-  if (state.sidebarLastWidth === undefined) state.sidebarLastWidth = 260
+  if (state.sidebarWidth === undefined) state.sidebarWidth = 220
+  if (state.sidebarLastWidth === undefined) state.sidebarLastWidth = 220
   if (state.sidebarCollapsed === undefined) state.sidebarCollapsed = false
   state.sidebarPeek = false // always reset transient state
   // v16: ViewState per context

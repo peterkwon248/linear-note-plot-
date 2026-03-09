@@ -43,40 +43,42 @@
 }
 
 .dark {
-  --background: #0a0a0b;
-  --foreground: #e8e8ed;
-  --card: #111113;
-  --card-foreground: #e8e8ed;
-  --popover: #111113;
-  --popover-foreground: #e8e8ed;
-  --primary: #e8e8ed;
-  --primary-foreground: #0a0a0b;
-  --secondary: #1c1c1f;
-  --secondary-foreground: #e8e8ed;
-  --muted: #1c1c1f;
-  --muted-foreground: #9898a0;
-  --accent: #5e6ad2;
-  --accent-foreground: #e8e8ed;
-  --destructive: #e5484d;
-  --destructive-foreground: #e8e8ed;
-  --border: #222226;
-  --input: #222226;
-  --ring: #5e6ad2;
-  --chart-1: #5e6ad2;
-  --chart-2: #26b5ce;
-  --chart-3: #f2994a;
-  --chart-4: #e5484d;
-  --chart-5: #45d483;
-  --sidebar-bg: #101012;
-  --sidebar-foreground: #e8e8ed;
-  --sidebar-primary: #5e6ad2;
-  --sidebar-primary-foreground: #e8e8ed;
-  --sidebar-accent: #1c1c1f;
-  --sidebar-accent-foreground: #e8e8ed;
-  --sidebar-border: #1c1c1f;
-  --sidebar-ring: #5e6ad2;
-  --sidebar-muted: #9898a0;
-  --sidebar-hover: #181819;
+  /* App background: zinc-950 */
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #09090b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #6366f1;
+  --accent-foreground: #fafafa;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #6366f1;
+  --chart-1: #6366f1;
+  --chart-2: #22d3ee;
+  --chart-3: #f97316;
+  --chart-4: #ef4444;
+  --chart-5: #22c55e;
+  /* Sidebar: zinc-900/60 with zinc-800 border */
+  --sidebar-bg: rgba(24, 24, 27, 0.6);
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #6366f1;
+  --sidebar-muted: #71717a;
+  --sidebar-hover: #27272a;
 }
 
 @theme inline {
