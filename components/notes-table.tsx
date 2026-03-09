@@ -28,6 +28,7 @@ import {
   Bell,
   Clock,
   Merge,
+  Minus,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -275,20 +276,33 @@ export function NotesTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const lastClickedRef = useRef<number | null>(null)
 
+  // Drag selection
+  const [dragRect, setDragRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
+  const dragStartRef = useRef<{ x: number; y: number; scrollTop: number } | null>(null)
+  const isDraggingRef = useRef(false)
+
   // Clear selection on tab change
   useEffect(() => { setSelectedIds(new Set()) }, [effectiveTab])
 
-  // ESC to clear selection
+  // ESC to clear selection, Ctrl+A to select all
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape" && selectedIds.size > 0) {
         setSelectedIds(new Set())
         e.preventDefault()
       }
+      // Ctrl+A / Cmd+A: select all
+      if ((e.metaKey || e.ctrlKey) && e.key === "a" && flatNotes.length > 0) {
+        // Only if focus is not in an input/textarea/editor
+        const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
+        if (tag === "input" || tag === "textarea" || (e.target as HTMLElement)?.closest('[contenteditable="true"]')) return
+        setSelectedIds(new Set(flatNotes.map(n => n.id)))
+        e.preventDefault()
+      }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [selectedIds.size])
+  }, [selectedIds.size, flatNotes.length])
 
   const handleRowClick = useCallback((noteId: string, rowIndex: number, e: React.MouseEvent) => {
     // Shift+click: range select
@@ -319,6 +333,25 @@ export function NotesTable({
     lastClickedRef.current = rowIndex
     onRowClick?.(noteId)
   }, [flatNotes, onRowClick])
+
+  // ── Drag-to-select ──
+  const DRAG_THRESHOLD = 5
+
+  const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only left button, ignore if on interactive elements
+    if (e.button !== 0) return
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, [role="menuitem"], [data-radix-collection-item], [data-no-drag]')) return
+    // Don't start drag from checkbox area
+    if (target.closest('[data-checkbox]')) return
+
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      scrollTop: scrollContainerRef.current?.scrollTop ?? 0
+    }
+    isDraggingRef.current = false
+  }, [])
 
   function handleSort(col: SortField) {
     if (viewState.sortField === col) {
@@ -380,6 +413,93 @@ export function NotesTable({
     estimateSize: (i) => virtualItems[i].type === "header" ? 36 : 41,
     overscan: 5,
   })
+
+  // Keep latest virtualItems in a ref so the drag mousemove handler always sees current data
+  const virtualItemsRef = useRef(virtualItems)
+  virtualItemsRef.current = virtualItems
+  const rowVirtualizerRef = useRef(rowVirtualizer)
+  rowVirtualizerRef.current = rowVirtualizer
+
+  // ── Drag-to-select mouse tracking ──
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragStartRef.current) return
+      const container = scrollContainerRef.current
+      if (!container) return
+
+      const dx = e.clientX - dragStartRef.current.x
+      const dy = e.clientY - dragStartRef.current.y
+
+      // Check threshold
+      if (!isDraggingRef.current) {
+        if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return
+        isDraggingRef.current = true
+      }
+
+      // Prevent text selection during drag
+      e.preventDefault()
+
+      const containerRect = container.getBoundingClientRect()
+      const scrollTop = container.scrollTop
+      const headerHeight = 41 // sticky header height
+
+      // Calculate rectangle in container-relative coords (accounting for scroll)
+      const startY = dragStartRef.current.y - containerRect.top - headerHeight + dragStartRef.current.scrollTop
+      const currentY = e.clientY - containerRect.top - headerHeight + scrollTop
+
+      const rectTop = Math.min(startY, currentY)
+      const rectBottom = Math.max(startY, currentY)
+      const rectLeft = Math.min(dragStartRef.current.x - containerRect.left, e.clientX - containerRect.left)
+      const rectWidth = Math.abs(e.clientX - dragStartRef.current.x)
+
+      setDragRect({
+        x: rectLeft,
+        y: rectTop,
+        w: rectWidth,
+        h: rectBottom - rectTop,
+      })
+
+      // Find which rows intersect with the drag rectangle
+      const items = virtualItemsRef.current
+      const matchedIds = new Set<string>()
+      for (const vRow of rowVirtualizerRef.current.getVirtualItems()) {
+        const item = items[vRow.index]
+        if (item.type !== "note") continue
+        const rowTop = vRow.start
+        const rowBottom = vRow.start + vRow.size
+        if (rowBottom > rectTop && rowTop < rectBottom) {
+          matchedIds.add(item.note.id)
+        }
+      }
+
+      // Also check non-visible rows by index range
+      const rowHeight = 41
+      const firstVisibleIdx = Math.floor(rectTop / rowHeight)
+      const lastVisibleIdx = Math.ceil(rectBottom / rowHeight)
+      for (let i = Math.max(0, firstVisibleIdx); i < Math.min(items.length, lastVisibleIdx); i++) {
+        const item = items[i]
+        if (item.type === "note") matchedIds.add(item.note.id)
+      }
+
+      setSelectedIds(matchedIds)
+    }
+
+    const handleMouseUp = () => {
+      if (isDraggingRef.current) {
+        // Keep the selection, just clear the visual rect
+        setDragRect(null)
+      }
+      dragStartRef.current = null
+      isDraggingRef.current = false
+    }
+
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, []) // stable — reads latest data via refs
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
@@ -630,9 +750,34 @@ export function NotesTable({
           </div>
         </div>
       ) : (
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+        <div ref={scrollContainerRef} onMouseDown={handleDragMouseDown} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
           {/* Column headers */}
           <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
+            <div className="w-8 shrink-0 flex items-center justify-center mr-0.5">
+              <div
+                className={`h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${
+                  selectedIds.size === flatNotes.length && flatNotes.length > 0
+                    ? "bg-accent border-accent"
+                    : selectedIds.size > 0
+                      ? "bg-accent/50 border-accent"
+                      : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                }`}
+                onClick={() => {
+                  if (selectedIds.size === flatNotes.length && flatNotes.length > 0) {
+                    setSelectedIds(new Set())
+                  } else {
+                    setSelectedIds(new Set(flatNotes.map(n => n.id)))
+                  }
+                }}
+              >
+                {selectedIds.size === flatNotes.length && flatNotes.length > 0 && (
+                  <Check className="h-2.5 w-2.5 text-accent-foreground" />
+                )}
+                {selectedIds.size > 0 && selectedIds.size < flatNotes.length && (
+                  <Minus className="h-2.5 w-2.5 text-accent-foreground" />
+                )}
+              </div>
+            </div>
             {COLUMN_DEFS.filter((col) => col.id === "title" || visibleCols.includes(col.id)).map((col) => (
               <div key={col.id} className={col.width + " " + (col.align ?? "")}>
                 <TH
@@ -708,6 +853,18 @@ export function NotesTable({
                 </div>
               )
             })}
+            {/* Drag selection rectangle */}
+            {dragRect && (
+              <div
+                className="absolute bg-accent/10 border border-accent/30 pointer-events-none z-20 rounded-sm"
+                style={{
+                  left: dragRect.x,
+                  top: dragRect.y,
+                  width: dragRect.w,
+                  height: dragRect.h,
+                }}
+              />
+            )}
           </div>
         </div>
       )}
@@ -796,19 +953,21 @@ function NoteRowInner({
           onDoubleClick={onDoubleClick}
         >
       {/* Checkbox */}
-      <div className={`w-5 shrink-0 flex items-center justify-center mr-1 ${
-        selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
-      }`}>
+      <div
+        data-checkbox
+        className={`w-8 h-8 shrink-0 flex items-center justify-center mr-0.5 cursor-pointer rounded ${
+          selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
+        }`}
+        onClick={(e) => {
+          e.stopPropagation()
+          const syntheticEvent = { ...e, metaKey: true, ctrlKey: true, shiftKey: false } as React.MouseEvent
+          onClick?.(syntheticEvent)
+        }}
+      >
         <div
-          className={`h-4 w-4 rounded border flex items-center justify-center transition-colors ${
+          className={`h-4 w-4 rounded border flex items-center justify-center transition-colors pointer-events-none ${
             isSelected ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
           }`}
-          onClick={(e) => {
-            e.stopPropagation()
-            // Simulate ctrl+click to toggle
-            const syntheticEvent = { ...e, metaKey: true, ctrlKey: true, shiftKey: false } as React.MouseEvent
-            onClick?.(syntheticEvent)
-          }}
         >
           {isSelected && <Check className="h-2.5 w-2.5 text-accent-foreground" />}
         </div>

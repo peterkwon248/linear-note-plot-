@@ -71,7 +71,9 @@
       "Bash(xargs sed -i 's/text-\\\\[11px\\\\]/text-[12px]/g')",
       "Bash(echo \"Step 3 done: 11->12\")",
       "Bash(xargs sed -i 's/text-\\\\[10px\\\\]/text-[11px]/g')",
-      "Bash(echo \"Step 4 done: 10->11\")"
+      "Bash(echo \"Step 4 done: 10->11\")",
+      "Bash(npx vitest run lib/analysis)",
+      "Bash(echo \"EXISTS=$?\")"
     ]
   }
 }
