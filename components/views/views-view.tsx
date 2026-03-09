@@ -5,6 +5,10 @@ import { usePlotStore } from "@/lib/store"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NotesTable } from "@/components/notes-table"
+import { NoteDetailPanel } from "@/components/note-detail-panel"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { runAnalysis } from "@/lib/analysis"
+import type { AnalysisResult } from "@/lib/analysis"
 import {
   Eye,
   Plus,
@@ -15,6 +19,15 @@ import {
   ChevronLeft,
   Save,
   X,
+  Activity,
+  AlertTriangle,
+  Unlink,
+  Clock,
+  Brain,
+  ArrowUpCircle,
+  FileX,
+  CalendarClock,
+  ChevronRight,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -24,6 +37,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { format } from "date-fns"
 import type { SavedView } from "@/lib/types"
 import type { FilterRule, ViewState } from "@/lib/view-engine/types"
 
@@ -41,6 +55,24 @@ function formatFilterLabel(field: string, op: string, value: string): string {
     eq: "is", neq: "is not", gt: ">", lt: "<",
   }
   return `${fieldLabels[field] ?? field} ${opLabels[op] ?? op} ${value}`
+}
+
+/* ── Insight display config ───────────────────────── */
+
+const SEVERITY_STYLES: Record<string, { dot: string; badge: string }> = {
+  critical: { dot: "bg-destructive", badge: "bg-destructive/10 text-destructive" },
+  warning: { dot: "bg-chart-3", badge: "bg-chart-3/10 text-chart-3" },
+  info: { dot: "bg-muted-foreground/40", badge: "bg-muted-foreground/10 text-muted-foreground" },
+}
+
+const RULE_ICONS: Record<string, React.ReactNode> = {
+  "inbox-neglect": <CalendarClock className="h-4 w-4" />,
+  "overdue-srs": <Brain className="h-4 w-4" />,
+  "stale-notes": <Clock className="h-4 w-4" />,
+  "orphan-notes": <Unlink className="h-4 w-4" />,
+  "high-lapse-srs": <AlertTriangle className="h-4 w-4" />,
+  "stuck-capture": <ArrowUpCircle className="h-4 w-4" />,
+  "empty-notes": <FileX className="h-4 w-4" />,
 }
 
 /* ── ViewsView ────────────────────────────────────── */
@@ -97,6 +129,25 @@ export function ViewsView() {
     }
     return counts
   }, [notes, savedViews])
+
+  /* ── Insight mode ── */
+  const [activeInsight, setActiveInsight] = useState<AnalysisResult | null>(null)
+  const [insightPreviewId, setInsightPreviewId] = useState<string | null>(null)
+
+  /* ── Analysis engine ── */
+  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  const openNote = usePlotStore((s) => s.openNote)
+  const backlinks = useBacklinksIndex()
+
+  const analysisResults = useMemo(
+    () => runAnalysis(notes, srsStateByNoteId, backlinks),
+    [notes, srsStateByNoteId, backlinks],
+  )
+
+  const totalInsightCount = useMemo(
+    () => analysisResults.reduce((sum, r) => sum + r.count, 0),
+    [analysisResults],
+  )
 
   /* ── Enter detail mode ── */
   const openView = useCallback((view: SavedView) => {
@@ -198,6 +249,103 @@ export function ViewsView() {
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
         <NoteEditor />
         <NoteInspector />
+      </div>
+    )
+  }
+
+  /* ══════════════════════════════════════════════════
+     INSIGHT DETAIL MODE — Show matched notes for a rule
+     ══════════════════════════════════════════════════ */
+  if (activeInsight) {
+    const matchedNotes = notes.filter((n) => activeInsight.noteIds.includes(n.id))
+    const severity = SEVERITY_STYLES[activeInsight.severity] ?? SEVERITY_STYLES.info
+
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
+          {/* Header */}
+          <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2.5">
+            <button
+              onClick={() => { setActiveInsight(null); setInsightPreviewId(null) }}
+              className="flex items-center gap-1 rounded-md px-1.5 py-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="text-[13px]">Views</span>
+            </button>
+            <span className="text-muted-foreground/40">/</span>
+            <div className="flex items-center gap-2">
+              <span className={severity.dot.replace("bg-", "text-")}>
+                {RULE_ICONS[activeInsight.ruleId] ?? <Activity className="h-4 w-4" />}
+              </span>
+              <span className="text-[14px] font-semibold text-foreground">
+                {activeInsight.label}
+              </span>
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums ${severity.badge}`}>
+                {activeInsight.count}
+              </span>
+            </div>
+          </header>
+
+          <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
+            <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[12px] text-muted-foreground">
+              {activeInsight.description}
+            </span>
+          </div>
+
+          {/* Note rows */}
+          <div className="flex-1 overflow-y-auto">
+            {matchedNotes.map((note) => (
+              <div
+                key={note.id}
+                className={`group flex items-center border-b border-border px-5 py-2.5 transition-colors cursor-pointer ${
+                  insightPreviewId === note.id
+                    ? "bg-accent/8 border-l-2 border-l-accent"
+                    : "hover:bg-secondary/30"
+                }`}
+                onClick={() => setInsightPreviewId(note.id)}
+                onDoubleClick={() => openNote(note.id)}
+              >
+                <div className="mr-3 shrink-0">
+                  <div className={`h-2 w-2 rounded-full ${severity.dot}`} />
+                </div>
+                <div className="flex flex-1 flex-col gap-0.5 min-w-0 pr-3">
+                  <span className="truncate text-[15px] text-foreground">
+                    {note.title || "Untitled"}
+                  </span>
+                  {note.preview && (
+                    <span className="truncate text-[12px] text-muted-foreground">
+                      {note.preview}
+                    </span>
+                  )}
+                </div>
+                <span className="shrink-0 rounded-full bg-secondary/50 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground mr-3">
+                  {note.status}
+                </span>
+                <span className="shrink-0 text-[14px] tabular-nums text-muted-foreground">
+                  {format(new Date(note.updatedAt), "MMM d")}
+                </span>
+              </div>
+            ))}
+          </div>
+        </main>
+
+        {/* Detail panel */}
+        {insightPreviewId && (
+          <aside className="flex h-full w-[420px] shrink-0 flex-col overflow-hidden border-l border-border bg-card animate-in slide-in-from-right-4 fade-in duration-200">
+            <NoteDetailPanel
+              noteId={insightPreviewId}
+              onClose={() => setInsightPreviewId(null)}
+              onOpenNote={(id) => setInsightPreviewId(id)}
+              onEditNote={() => {
+                openNote(insightPreviewId)
+                setInsightPreviewId(null)
+              }}
+              onTriageAction={() => setInsightPreviewId(null)}
+              embedded
+            />
+          </aside>
+        )}
       </div>
     )
   }
@@ -325,28 +473,76 @@ export function ViewsView() {
 
       {/* Content */}
       <ScrollArea className="flex-1">
-        {savedViews.length === 0 ? (
-          /* ── Empty state ── */
-          <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary/50 mb-5">
-              <Eye className="h-10 w-10 text-muted-foreground/30" />
+        {/* ── Insights Section ── */}
+        {analysisResults.length > 0 && (
+          <div className="px-5 pb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              <span className="text-[13px] font-medium text-foreground">Insights</span>
+              <span className="rounded-full bg-chart-3/10 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-chart-3">
+                {totalInsightCount}
+              </span>
             </div>
-            <p className="text-[15px] font-medium text-foreground">
+            <div className="grid grid-cols-2 gap-2">
+              {analysisResults.map((result) => {
+                const severity = SEVERITY_STYLES[result.severity] ?? SEVERITY_STYLES.info
+                return (
+                  <button
+                    key={result.ruleId}
+                    onClick={() => setActiveInsight(result)}
+                    className="group flex flex-col gap-1.5 rounded-lg border border-border bg-card p-3 text-left transition-all hover:border-foreground/20 hover:bg-secondary/30"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={severity.dot.replace("bg-", "text-")}>
+                        {RULE_ICONS[result.ruleId] ?? <Activity className="h-4 w-4" />}
+                      </span>
+                      <span className="flex-1 truncate text-[13px] font-medium text-foreground">
+                        {result.label}
+                      </span>
+                      <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums ${severity.badge}`}>
+                        {result.count}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+                      {result.description}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Saved Views Section ── */}
+        <div className="px-5 pb-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Eye className="h-4 w-4 text-muted-foreground" />
+            <span className="text-[13px] font-medium text-foreground">Saved Views</span>
+          </div>
+        </div>
+
+        {savedViews.length === 0 ? (
+          /* Empty state for saved views */
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/50 mb-4">
+              <Eye className="h-8 w-8 text-muted-foreground/30" />
+            </div>
+            <p className="text-[14px] font-medium text-foreground">
               No saved views yet
             </p>
-            <p className="mt-1.5 max-w-[280px] text-[13px] text-muted-foreground/60 leading-relaxed">
-              Create a view to save custom filter, sort, and grouping combinations for quick access.
+            <p className="mt-1 max-w-[280px] text-[13px] text-muted-foreground/60 leading-relaxed">
+              Create a view to save custom filter, sort, and grouping combinations.
             </p>
             <button
               onClick={handleNewView}
-              className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[13px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[13px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             >
               <Plus className="h-3.5 w-3.5" />
               Create your first view
             </button>
           </div>
         ) : (
-          /* ── Views list ── */
+          /* Views list */
           <div className="px-2">
             {savedViews.map((view) => {
               const matchCount = viewNoteCounts[view.id] ?? 0
