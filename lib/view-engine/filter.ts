@@ -2,13 +2,37 @@ import type { Note } from "../types"
 import type { FilterRule } from "./types"
 
 /**
- * Stage 2: Apply user-defined filter rules (AND logic).
- * Each FilterRule is applied in order; a note must pass ALL rules.
+ * Stage 2: Apply user-defined filter rules.
+ *
+ * Logic:
+ *   - Same field → OR  (e.g. status:inbox + status:capture → inbox OR capture)
+ *   - Different fields → AND  (e.g. status:inbox + priority:high → inbox AND high)
+ *
+ * This matches the standard filter behaviour of Linear, Notion, etc.
  */
 export function applyFilters(notes: Note[], filters: FilterRule[]): Note[] {
   if (filters.length === 0) return notes
 
-  return notes.filter((note) => filters.every((rule) => matchesRule(note, rule)))
+  // Group rules by field name
+  const byField = new Map<string, FilterRule[]>()
+  for (const rule of filters) {
+    let bucket = byField.get(rule.field)
+    if (!bucket) {
+      bucket = []
+      byField.set(rule.field, bucket)
+    }
+    bucket.push(rule)
+  }
+
+  const fieldGroups = Array.from(byField.values())
+
+  return notes.filter((note) =>
+    // AND across different fields
+    fieldGroups.every((fieldRules) =>
+      // OR within the same field
+      fieldRules.some((rule) => matchesRule(note, rule)),
+    ),
+  )
 }
 
 function parseRelativeTime(value: string): number | null {
@@ -105,6 +129,29 @@ function matchesRule(note: Note, rule: FilterRule): boolean {
       const isPinned = note.pinned === true
       const target = value === "true"
       return operator === "eq" ? isPinned === target : isPinned !== target
+    }
+
+    case "source": {
+      const noteSource = note.source ?? ""
+      // "_none" means no source (null or "")
+      if (value === "_none") {
+        return operator === "eq" ? noteSource === "" : noteSource !== ""
+      }
+      return compareString(noteSource, operator, value)
+    }
+
+    case "wordCount": {
+      const words = note.content?.trim().split(/\s+/).filter(Boolean).length ?? 0
+      return compareNumber(words, operator, value)
+    }
+
+    case "title": {
+      const hasTitle = (note.title?.trim().length ?? 0) > 0
+      // "empty" = no title / untitled
+      if (value === "empty") {
+        return operator === "eq" ? !hasTitle : hasTitle
+      }
+      return true
     }
 
     default:

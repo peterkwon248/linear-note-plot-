@@ -166,6 +166,8 @@ export function migrate(persistedState: unknown): PlotState {
     state.navigationHistory = []
     state.navigationIndex = -1
   }
+  // v23: Saved Views
+  if (!state.savedViews) state.savedViews = []
   state._viewStateHydrated = false // always reset transient flag
 
   return state as unknown as PlotState

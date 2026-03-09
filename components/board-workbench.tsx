@@ -58,7 +58,7 @@ export function BoardWorkbench({
   const batchSetReminder = usePlotStore((s) => s.batchSetReminder)
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageTrash = usePlotStore((s) => s.triageTrash)
-  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
 
@@ -115,7 +115,7 @@ export function BoardWorkbench({
 
   const handlePromoteAll = () => {
     const ids = Array.from(selectedIds)
-    ids.forEach((id) => promoteToPermament(id))
+    ids.forEach((id) => promoteToPermanent(id))
     onClearSelection()
     toast(`Promoted ${ids.length} note${ids.length > 1 ? "s" : ""} to Permanent`, {
       action: {

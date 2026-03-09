@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Category, ActiveView, NoteEvent, ThinkingChainSession, KnowledgeMap, Project } from "../types"
+import type { Note, NoteBody, Folder, Tag, Category, ActiveView, NoteEvent, ThinkingChainSession, KnowledgeMap, Project, SavedView } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 
@@ -17,6 +17,14 @@ export interface PlotState {
   searchOpen: boolean
   shortcutOverlayOpen: boolean
   detailsOpen: boolean
+
+  // Merge
+  mergePickerOpen: boolean
+  mergePickerSourceId: string | null
+
+  // Link
+  linkPickerOpen: boolean
+  linkPickerSourceId: string | null
 
   // Navigation History
   navigationHistory: string[]  // stack of note IDs
@@ -41,6 +49,9 @@ export interface PlotState {
   // Phase 3: Knowledge Maps
   knowledgeMaps: KnowledgeMap[]
 
+  // Saved Views
+  savedViews: SavedView[]
+
   // SRS
   srsStateByNoteId: Record<string, SRSState>
 
@@ -53,6 +64,7 @@ export interface PlotState {
   batchUpdateNotes: (ids: string[], updates: Partial<Note>) => void
   deleteNote: (id: string) => void
   duplicateNote: (id: string) => void
+  mergeNotes: (targetId: string, sourceIds: string[]) => void
   togglePin: (id: string) => void
   toggleArchive: (id: string) => void
   toggleTrash: (id: string) => void
@@ -63,7 +75,7 @@ export interface PlotState {
   triageKeep: (id: string) => void
   triageSnooze: (id: string, reviewAt: string) => void
   triageTrash: (id: string) => void
-  promoteToPermament: (id: string) => void
+  promoteToPermanent: (id: string) => void
   undoPromote: (id: string) => void
   moveBackToInbox: (id: string) => void
   setReminder: (id: string, reviewAt: string) => void
@@ -109,6 +121,8 @@ export interface PlotState {
   goBack: () => void
   goForward: () => void
   setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
+  setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
+  setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
 
   // ── Thinking Chain ──
   startThinkingChain: (noteId: string) => string
@@ -128,6 +142,11 @@ export interface PlotState {
   // ── Alerts ──
   dismissAlert: (id: string) => void
   clearDismissedAlerts: () => void
+
+  // ── Saved Views ──
+  createSavedView: (name: string, config?: Partial<SavedView>) => string
+  updateSavedView: (id: string, updates: Partial<SavedView>) => void
+  deleteSavedView: (id: string) => void
 
   // ── Projects ──
   createProject: (name: string) => string

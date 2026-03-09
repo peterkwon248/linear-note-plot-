@@ -1,7 +1,4 @@
-"use client"
-
-import { NoteListPage } from "@/components/note-list-page"
-
+/** Rendering handled by NotesTableView in layout — this page is a route placeholder */
 export default function TrashPage() {
-  return <NoteListPage filter={{ type: "trash" }} />
+  return null
 }

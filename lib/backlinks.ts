@@ -121,17 +121,21 @@ export class BacklinksIndex {
   private outlinks = new Map<string, Set<string>>()   // noteId -> Set<linkedNoteId>
   private backlinks = new Map<string, Set<string>>()   // noteId -> Set<referrerId>
   private titleToId = new Map<string, string>()        // lowercase title -> noteId
+  private idToTitle = new Map<string, string>()        // noteId -> lowercase title (reverse lookup)
 
   /** Build the full index from scratch. Call once on init. */
   buildFromScratch(notes: { id: string; title: string; linksOut: string[] }[]): void {
     this.outlinks.clear()
     this.backlinks.clear()
     this.titleToId.clear()
+    this.idToTitle.clear()
 
     // Build title->id lookup
     for (const note of notes) {
       if (note.title.trim()) {
-        this.titleToId.set(note.title.toLowerCase(), note.id)
+        const lower = note.title.toLowerCase()
+        this.titleToId.set(lower, note.id)
+        this.idToTitle.set(note.id, lower)
       }
     }
 
@@ -151,16 +155,16 @@ export class BacklinksIndex {
 
   /** Update a single note. Diffs old vs new outlinks. */
   upsert(noteId: string, title: string, linksOut: string[]): void {
-    // Update title index
-    // Remove old title mapping for this note
-    for (const [t, id] of this.titleToId) {
-      if (id === noteId) {
-        this.titleToId.delete(t)
-        break
-      }
+    // Update title index — O(1) via reverse map
+    const oldTitle = this.idToTitle.get(noteId)
+    if (oldTitle !== undefined) {
+      this.titleToId.delete(oldTitle)
+      this.idToTitle.delete(noteId)
     }
     if (title.trim()) {
-      this.titleToId.set(title.toLowerCase(), noteId)
+      const lower = title.toLowerCase()
+      this.titleToId.set(lower, noteId)
+      this.idToTitle.set(noteId, lower)
     }
 
     const oldLinks = this.outlinks.get(noteId) ?? new Set<string>()
@@ -200,12 +204,11 @@ export class BacklinksIndex {
     // Remove backlinks TO this note
     this.backlinks.delete(noteId)
 
-    // Remove title mapping
-    for (const [t, id] of this.titleToId) {
-      if (id === noteId) {
-        this.titleToId.delete(t)
-        break
-      }
+    // Remove title mapping — O(1) via reverse map
+    const oldTitle = this.idToTitle.get(noteId)
+    if (oldTitle !== undefined) {
+      this.titleToId.delete(oldTitle)
+      this.idToTitle.delete(noteId)
     }
   }
 

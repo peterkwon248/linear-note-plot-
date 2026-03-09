@@ -26,6 +26,7 @@ import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getInboxNotes, getReviewQueue } from "@/lib/queries/notes"
 import { computeAlerts } from "@/lib/alerts"
+import { ALL_SIDEBAR_ROUTES, setActiveRoute, useActiveRoute } from "@/lib/table-route"
 
 /* ── Nav primitives ──────────────────────────────────── */
 
@@ -46,15 +47,17 @@ function NavLink({
   badge?: { count: number; color: string }
   active?: boolean
 }) {
-  return (
-    <Link
-      href={href}
-      className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
-        active
-          ? "bg-sidebar-hover text-sidebar-foreground"
-          : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
-      }`}
-    >
+  const router = useRouter()
+  const isSidebarRoute = ALL_SIDEBAR_ROUTES.includes(href)
+
+  const className = `nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
+    active
+      ? "bg-sidebar-hover text-sidebar-foreground"
+      : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
+  }`
+
+  const content = (
+    <>
       <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "" : "text-sidebar-muted"}`}>
         {icon}
       </span>
@@ -75,6 +78,32 @@ function NavLink({
           {badge.count}
         </span>
       )}
+    </>
+  )
+
+  // Sidebar routes: update state instantly, then push URL async
+  if (isSidebarRoute) {
+    return (
+      <button
+        onClick={() => {
+          setActiveRoute(href)
+          router.push(href)
+        }}
+        className={className}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  // Fallback routes (settings): use normal Link
+  return (
+    <Link
+      href={href}
+      onClick={() => setActiveRoute(null)}
+      className={className}
+    >
+      {content}
     </Link>
   )
 }
@@ -113,8 +142,14 @@ function Section({
 export function LinearSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { setSearchOpen, createNote, openNote, notes, tags, knowledgeMaps, srsStateByNoteId, dismissedAlertIds } =
-    usePlotStore()
+  const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
+  const createNote = usePlotStore((s) => s.createNote)
+  const openNote = usePlotStore((s) => s.openNote)
+  const notes = usePlotStore((s) => s.notes)
+  const tags = usePlotStore((s) => s.tags)
+  const knowledgeMaps = usePlotStore((s) => s.knowledgeMaps)
+  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
+  const dismissedAlertIds = usePlotStore((s) => s.dismissedAlertIds)
 
   const navigationHistory = usePlotStore((s) => s.navigationHistory)
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
@@ -122,6 +157,12 @@ export function LinearSidebar() {
   const goForward = usePlotStore((s) => s.goForward)
 
   const backlinks = useBacklinksIndex()
+
+  // Prefetch all sidebar routes on mount so first click doesn't trigger "Compiling..."
+  useEffect(() => {
+    const routes = ["/inbox", "/review", "/alerts", "/notes", "/pinned", "/tags", "/projects", "/views", "/maps", "/trash", "/settings"]
+    routes.forEach((r) => router.prefetch(r))
+  }, [router])
 
   const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
   const recentlyViewedRef = useRef<HTMLDivElement>(null)
@@ -163,7 +204,13 @@ export function LinearSidebar() {
     return () => document.removeEventListener("mousedown", handler)
   }, [recentlyViewedOpen])
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
+  const activeRoute = useActiveRoute()
+  const isActive = (href: string) => {
+    // Sidebar routes: use instant state for zero-delay highlight
+    if (ALL_SIDEBAR_ROUTES.includes(href)) return activeRoute === href
+    // Fallback routes (settings): use pathname
+    return pathname === href || pathname.startsWith(href + "/")
+  }
 
   const handleCreateNote = () => {
     const id = createNote()

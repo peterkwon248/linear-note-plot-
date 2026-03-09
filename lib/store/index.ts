@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, KnowledgeMap, Project } from "../types"
+import type { NoteEvent, KnowledgeMap, Project, SavedView } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
@@ -16,6 +16,7 @@ import { createMapsSlice } from "./slices/maps"
 import { createUISlice } from "./slices/ui"
 import { createAlertsSlice } from "./slices/alerts"
 import { createProjectsSlice } from "./slices/projects"
+import { createViewsSlice } from "./slices/views"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
 
@@ -43,12 +44,17 @@ export const usePlotStore = create<PlotState>()(
         sidebarLastWidth: 260,
         sidebarCollapsed: false,
         sidebarPeek: false,
+        mergePickerOpen: false,
+        mergePickerSourceId: null,
+        linkPickerOpen: false,
+        linkPickerSourceId: null,
 
         noteEvents: [] as NoteEvent[],
         thinkingChains: [],
         graphFocusDepth: 0,
         commandPaletteMode: "search" as const,
         knowledgeMaps: [] as KnowledgeMap[],
+        savedViews: [] as SavedView[],
         srsStateByNoteId: {} as Record<string, SRSState>,
 
         viewStateByContext: buildDefaultViewStates(),
@@ -67,15 +73,16 @@ export const usePlotStore = create<PlotState>()(
         ...createUISlice(set, appendEvent),
         ...createAlertsSlice(set),
         ...createProjectsSlice(set),
+        ...createViewsSlice(set),
       }
     },
     {
       name: "plot-store",
-      version: 22,
+      version: 23,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),

@@ -36,7 +36,7 @@ export default function CapturePage() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
-  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
 
   const [previewId, setPreviewId] = useState<string | null>(null)
@@ -53,7 +53,7 @@ export default function CapturePage() {
       switch (e.key.toLowerCase()) {
         case "p":
           e.preventDefault()
-          promoteToPermament(previewId)
+          promoteToPermanent(previewId)
           break
         case "b":
           e.preventDefault()
@@ -68,7 +68,7 @@ export default function CapturePage() {
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [previewId, notes, promoteToPermament, moveBackToInbox])
+  }, [previewId, notes, promoteToPermanent, moveBackToInbox])
 
   const captureNotes = useMemo(() => getCaptureNotes(notes), [notes])
   const backlinksMap = useBacklinksIndex()
@@ -199,7 +199,7 @@ export default function CapturePage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            promoteToPermament(note.id)
+                            promoteToPermanent(note.id)
                           }}
                           className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-[11px] font-medium text-chart-5 transition-colors hover:bg-chart-5/20"
                         >
@@ -263,7 +263,7 @@ function CaptureDetailPanel({
   onEditNote: () => void
 }) {
   const notes = usePlotStore((s) => s.notes)
-  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const note = notes.find((n) => n.id === noteId)
 
   if (!note) return null
@@ -297,7 +297,7 @@ function CaptureDetailPanel({
             )}
           </div>
           <button
-            onClick={() => promoteToPermament(noteId)}
+            onClick={() => promoteToPermanent(noteId)}
             className={`flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[14px] font-medium transition-colors ${
               ready
                 ? "bg-chart-5/10 text-chart-5 hover:bg-chart-5/20"

@@ -507,11 +507,12 @@ export function NotesBoard({
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
-  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
   const setReminder = usePlotStore((s) => s.setReminder)
   const projects = usePlotStore((s) => s.projects)
+  const tags = usePlotStore((s) => s.tags)
 
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
@@ -690,6 +691,7 @@ export function NotesBoard({
             groupBy={viewState.groupBy}
             isSingleStatusTab={isSingleStatusTab}
             projects={projects}
+            tags={tags}
             onToggleFilter={(field, value, op) => {
               const exists = viewState.filters.some(
                 (f) => f.field === field && f.operator === (op ?? "eq") && f.value === value
@@ -809,6 +811,7 @@ export function NotesBoard({
         groupBy={viewState.groupBy}
         isSingleStatusTab={isSingleStatusTab}
         projects={projects}
+        tags={tags}
         onToggleFilter={(field, value, op) => {
           const exists = viewState.filters.some(
             (f) => f.field === field && f.operator === (op ?? "eq") && f.value === value
@@ -875,7 +878,7 @@ export function NotesBoard({
                       onKeep={() => triageKeep(note.id)}
                       onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
                       onTrash={() => triageTrash(note.id)}
-                      onPromote={() => promoteToPermament(note.id)}
+                      onPromote={() => promoteToPermanent(note.id)}
                       onDemote={() => undoPromote(note.id)}
                       onMoveBack={() => moveBackToInbox(note.id)}
                       onRemind={(isoDate) => { setReminder(note.id, isoDate); toast("Reminder set") }}

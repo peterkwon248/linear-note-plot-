@@ -9,6 +9,7 @@ import { KnowledgeMapCanvas, type MapGraphFilter } from "@/components/knowledge-
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
+import { NotePickerDialog } from "@/components/note-picker-dialog"
 import {
   Map as MapIcon,
   FileText,
@@ -32,6 +33,7 @@ export default function MapDetailPage() {
   const knowledgeMaps = usePlotStore((s) => s.knowledgeMaps)
   const addNoteToMap = usePlotStore((s) => s.addNoteToMap)
   const removeNoteFromMap = usePlotStore((s) => s.removeNoteFromMap)
+  const addWikiLink = usePlotStore((s) => s.addWikiLink)
   const openNote = usePlotStore((s) => s.openNote)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -44,6 +46,7 @@ export default function MapDetailPage() {
   const [adding, setAdding] = useState(false)
   const [addQuery, setAddQuery] = useState("")
   const [graphFilter, setGraphFilter] = useState<MapGraphFilter>({ status: "all", linkedOnly: false })
+  const [linkSourceId, setLinkSourceId] = useState<string | null>(null)
 
   const mapNotes = useMemo(
     () => (map ? notes.filter((n) => map.noteIds.includes(n.id)) : []),
@@ -89,6 +92,27 @@ export default function MapDetailPage() {
     if (previewId === noteId) setPreviewId(null)
     if (focusNoteId === noteId) setFocusNoteId(null)
   }, [map, removeNoteFromMap, notes, previewId, focusNoteId])
+
+  // Link: opens NotePickerDialog to choose a target
+  const handleLinkWith = useCallback((sourceId: string) => {
+    setLinkSourceId(sourceId)
+  }, [])
+
+  // Link: directly link two notes (from alt+drag on canvas)
+  const handleLinkNotes = useCallback((sourceId: string, targetId: string) => {
+    const targetNote = notes.find((n) => n.id === targetId)
+    if (!targetNote) return
+    addWikiLink(sourceId, targetNote.title || "Untitled")
+    const sourceNote = notes.find((n) => n.id === sourceId)
+    toast.success(`Linked "${sourceNote?.title || "Untitled"}" → "${targetNote.title || "Untitled"}"`)
+  }, [notes, addWikiLink])
+
+  // Link: NotePickerDialog selection handler
+  const handlePickerLinkSelect = useCallback((targetId: string) => {
+    if (!linkSourceId) return
+    handleLinkNotes(linkSourceId, targetId)
+    setLinkSourceId(null)
+  }, [linkSourceId, handleLinkNotes])
 
   // Full editor mode
   if (selectedNoteId) {
@@ -293,11 +317,23 @@ export default function MapDetailPage() {
                 onOpenNote={handleOpenNote}
                 focusNoteId={focusNoteId}
                 filter={graphFilter}
+                onLinkWith={handleLinkWith}
+                onLinkNotes={handleLinkNotes}
+                onRemoveNote={handleRemoveNote}
               />
             </div>
           </div>
         </div>
       </main>
+
+      {/* Link picker dialog */}
+      <NotePickerDialog
+        open={linkSourceId !== null}
+        onOpenChange={(open) => { if (!open) setLinkSourceId(null) }}
+        title="Link to..."
+        excludeIds={linkSourceId ? [linkSourceId] : []}
+        onSelect={handlePickerLinkSelect}
+      />
 
       {/* Detail panel */}
       {previewId && (

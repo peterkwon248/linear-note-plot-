@@ -1,5 +1,5 @@
 import type { Note, NoteBody, KnowledgeMap } from "../../types"
-import { genId, now, type AppendEventFn } from "../helpers"
+import { genId, now, persistBody, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
 
@@ -31,6 +31,9 @@ export function createMapsSlice(set: Set, appendEvent: AppendEventFn) {
     deleteKnowledgeMap: (id: string) => {
       set((state: any) => ({
         knowledgeMaps: state.knowledgeMaps.filter((m: KnowledgeMap) => m.id !== id),
+        ...(state.activeView?.type === "map" && state.activeView?.mapId === id
+          ? { activeView: { type: "all" } }
+          : {}),
       }))
     },
 
@@ -58,13 +61,22 @@ export function createMapsSlice(set: Set, appendEvent: AppendEventFn) {
 
     _hydrateNoteBodies: (bodies: NoteBody[]) => {
       const bodyMap = new Map(bodies.map((b) => [b.id, b]))
+      const needsPersist: NoteBody[] = []
       set((state: any) => ({
         notes: state.notes.map((n: Note) => {
-          if (n.content) return n
+          if (n.content) {
+            if (!bodyMap.has(n.id)) {
+              needsPersist.push({ id: n.id, content: n.content, contentJson: n.contentJson })
+            }
+            return n
+          }
           const body = bodyMap.get(n.id)
           return body ? { ...n, content: body.content, contentJson: body.contentJson } : n
         }),
       }))
+      for (const body of needsPersist) {
+        persistBody(body)
+      }
     },
   }
 }

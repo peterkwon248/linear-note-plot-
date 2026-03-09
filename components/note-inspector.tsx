@@ -26,6 +26,7 @@ import {
   Inbox,
   AlertTriangle,
   GitBranch,
+  Merge,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -96,9 +97,11 @@ export function NoteInspector() {
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
-  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
+  const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
+  const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
 
   const backlinks = useBacklinksIndex()
 
@@ -239,7 +242,7 @@ export function NoteInspector() {
           <div className="border-b border-border">
             <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
               <button
-                onClick={() => { promoteToPermament(note.id); toast("Promoted to Permanent") }}
+                onClick={() => { promoteToPermanent(note.id); toast("Promoted to Permanent") }}
                 className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium transition-colors ${
                   isReadyToPromote(note, backlinks)
                     ? "bg-[#45d483] text-[#0a0a0a] hover:bg-[#45d483]/80"
@@ -586,6 +589,28 @@ export function NoteInspector() {
         {/* Linked References (placeholder) */}
         <InspectorSection title="References" icon={<Link2 className="h-4 w-4" />}>
           <span className="text-[14px] text-muted-foreground">No linked references</span>
+        </InspectorSection>
+
+        <div className="mx-4 border-b border-border" />
+
+        {/* Actions */}
+        <InspectorSection title="Actions" icon={<Merge className="h-4 w-4" />}>
+          <div className="flex flex-col gap-1.5">
+            <button
+              onClick={() => setMergePickerOpen(true, note.id)}
+              className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <Merge className="h-3.5 w-3.5" />
+              Merge with...
+            </button>
+            <button
+              onClick={() => setLinkPickerOpen(true, note.id)}
+              className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <Link2 className="h-3.5 w-3.5" />
+              Link to...
+            </button>
+          </div>
         </InspectorSection>
 
         <div className="mx-4 border-b border-border" />

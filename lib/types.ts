@@ -171,6 +171,20 @@ export interface Project {
   updatedAt: string
 }
 
+/* ── Saved Views ─────────────────────────────────── */
+
+export interface SavedView {
+  id: string
+  name: string
+  filters: { field: string; operator: string; value: string }[]
+  sortField?: string
+  sortDirection?: "asc" | "desc"
+  groupBy?: string
+  viewMode?: "list" | "table" | "board"
+  createdAt: string
+  updatedAt: string
+}
+
 /* ── Phase 3: Knowledge Maps ───────────────────────── */
 
 export interface KnowledgeMap {

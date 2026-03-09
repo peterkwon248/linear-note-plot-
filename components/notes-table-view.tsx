@@ -1,0 +1,105 @@
+"use client"
+
+import { useState, useCallback, useEffect } from "react"
+import { usePlotStore } from "@/lib/store"
+import { useSettingsStore } from "@/lib/settings-store"
+import { NotesTable } from "@/components/notes-table"
+import { NotesBoard } from "@/components/notes-board"
+import { NoteEditor } from "@/components/note-editor"
+import { NoteInspector } from "@/components/note-inspector"
+import { NoteDetailPanel } from "@/components/note-detail-panel"
+import { useActiveRoute } from "@/lib/table-route"
+import type { ViewContextKey } from "@/lib/view-engine/types"
+import type { Note } from "@/lib/types"
+
+/* ── Route → View Config map ─────────────────────────── */
+
+interface ViewConfig {
+  context?: ViewContextKey
+  title?: string
+  showTabs?: boolean
+  hideCreateButton?: boolean
+  createNoteOverrides?: Partial<Note>
+}
+
+const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
+  "/notes": {},
+  "/pinned": { context: "pinned", title: "Pinned", showTabs: false, hideCreateButton: true },
+  "/trash": { context: "trash", title: "Trash", showTabs: false, hideCreateButton: true },
+}
+
+/* ── NotesTableView (always mounted in layout) ───────── */
+
+export function NotesTableView() {
+  const tableRoute = useActiveRoute()
+  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const openNote = usePlotStore((s) => s.openNote)
+  const viewMode = useSettingsStore((s) => s.viewMode)
+  const isEditing = selectedNoteId !== null
+
+  const [previewId, setPreviewId] = useState<string | null>(null)
+
+  const config = TABLE_VIEW_MAP[tableRoute ?? ""] ?? {}
+
+  // ESC closes preview panel
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        const target = e.target as HTMLElement
+        if (target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
+        if (!isEditing && previewId) {
+          setPreviewId(null)
+        }
+      }
+    },
+    [isEditing, previewId],
+  )
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [handleKeyDown])
+
+  // Clear preview when switching views
+  useEffect(() => {
+    setPreviewId(null)
+  }, [tableRoute])
+
+  // Full editor mode
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <NoteEditor />
+        <NoteInspector />
+      </div>
+    )
+  }
+
+  // Table / Board view + optional detail panel
+  const ViewComponent = viewMode === "board" ? NotesBoard : NotesTable
+
+  return (
+    <div className="flex flex-1 overflow-hidden">
+      <ViewComponent
+        context={config.context}
+        title={config.title}
+        showTabs={config.showTabs}
+        hideCreateButton={config.hideCreateButton}
+        createNoteOverrides={config.createNoteOverrides}
+        onRowClick={(noteId) => setPreviewId(noteId)}
+        activePreviewId={previewId}
+      />
+      {previewId && (
+        <NoteDetailPanel
+          noteId={previewId}
+          onClose={() => setPreviewId(null)}
+          onOpenNote={(id) => setPreviewId(id)}
+          onEditNote={() => {
+            openNote(previewId)
+            setPreviewId(null)
+          }}
+        />
+      )}
+    </div>
+  )
+}

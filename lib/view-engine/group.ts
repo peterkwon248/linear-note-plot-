@@ -216,7 +216,7 @@ function groupByLinkCount(notes: Note[], backlinksMap?: Map<string, number>): No
   }
 
   for (const note of notes) {
-    const outgoing = note.linksOut.length
+    const outgoing = (note.linksOut ?? []).length
     const incoming = backlinksMap?.get(note.id) ?? 0
     const total = outgoing + incoming
     buckets[getLinkBucket(total)].push(note)

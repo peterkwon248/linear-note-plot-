@@ -9,7 +9,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react"
-import { ZoomIn, ZoomOut, RotateCcw, X } from "lucide-react"
+import { ZoomIn, ZoomOut, RotateCcw, X, Link2, FileText, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { buildForceGraph, buildAdjacencyList, findShortestPath } from "@/lib/graph"
@@ -29,6 +29,12 @@ interface KnowledgeMapCanvasProps {
   onOpenNote: (id: string) => void
   focusNoteId?: string | null
   filter?: MapGraphFilter
+  /** Open NotePickerDialog to choose a note to link with */
+  onLinkWith?: (sourceId: string) => void
+  /** Directly link two notes (e.g. from drag-to-link) */
+  onLinkNotes?: (sourceId: string, targetId: string) => void
+  /** Remove a note from this map */
+  onRemoveNote?: (noteId: string) => void
 }
 
 interface Transform {
@@ -87,6 +93,9 @@ export function KnowledgeMapCanvas({
   onOpenNote,
   focusNoteId,
   filter,
+  onLinkWith,
+  onLinkNotes,
+  onRemoveNote,
 }: KnowledgeMapCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -97,6 +106,12 @@ export function KnowledgeMapCanvas({
   const [dragging, setDragging] = useState(false)
   const dragStart = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number; label: string } | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ nodeId: string; x: number; y: number } | null>(null)
+  const [linkDrag, setLinkDrag] = useState<{ sourceId: string; cursorX: number; cursorY: number } | null>(null)
+
+  // Keep a ref to transform for use in callbacks without dependency churn
+  const transformRef = useRef(transform)
+  useEffect(() => { transformRef.current = transform }, [transform])
 
   /* ── Build adjacency list for path finding ─────────── */
   const adj = useMemo(() => buildAdjacencyList(notes), [notes])
@@ -168,16 +183,35 @@ export function KnowledgeMapCanvas({
     setTransform(fit)
   }, [nodes])
 
-  /* ── Keyboard handler (Escape clears path) ─────────── */
+  /* ── Keyboard handler (Escape clears state) ────────── */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         setPathEndpoints(null)
+        setContextMenu(null)
+        setLinkDrag(null)
       }
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [])
+
+  /* ── Close context menu on outside click ───────────── */
+  useEffect(() => {
+    if (!contextMenu) return
+    function onPointerDown(e: PointerEvent) {
+      const target = e.target as Element
+      if (!target.closest("[data-map-context-menu]")) {
+        setContextMenu(null)
+      }
+    }
+    requestAnimationFrame(() => {
+      document.addEventListener("pointerdown", onPointerDown)
+    })
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown)
+    }
+  }, [contextMenu])
 
   /* ── Zoom helpers ──────────────────────────────────── */
   const zoomBy = useCallback(
@@ -225,17 +259,36 @@ export function KnowledgeMapCanvas({
   /* ── Pan (background drag) ─────────────────────────── */
   const handleMouseDown = useCallback(
     (e: ReactMouseEvent<SVGSVGElement>) => {
+      setContextMenu(null)
       // Only start pan if clicking on the SVG background (not a node)
       if ((e.target as Element).closest("[data-graph-node]")) return
+      if (linkDrag) return // Don't pan during link drag
       e.preventDefault()
       dragStart.current = { x: e.clientX, y: e.clientY, tx: transform.x, ty: transform.y }
       setDragging(true)
     },
-    [transform.x, transform.y],
+    [transform.x, transform.y, linkDrag],
   )
 
   const handleMouseMove = useCallback(
     (e: ReactMouseEvent<SVGSVGElement>) => {
+      // Link drag: update cursor position in graph coords
+      if (linkDrag) {
+        const svg = svgRef.current
+        if (!svg) return
+        const rect = svg.getBoundingClientRect()
+        const t = transformRef.current
+        setLinkDrag((prev) =>
+          prev
+            ? {
+                ...prev,
+                cursorX: (e.clientX - rect.left - t.x) / t.scale,
+                cursorY: (e.clientY - rect.top - t.y) / t.scale,
+              }
+            : null,
+        )
+        return
+      }
       if (!dragging || !dragStart.current) return
       const dx = e.clientX - dragStart.current.x
       const dy = e.clientY - dragStart.current.y
@@ -245,18 +298,33 @@ export function KnowledgeMapCanvas({
         y: dragStart.current!.ty + dy,
       }))
     },
-    [dragging],
+    [dragging, linkDrag],
   )
 
-  const handleMouseUp = useCallback(() => {
-    setDragging(false)
-    dragStart.current = null
-  }, [])
+  const handleMouseUp = useCallback(
+    (e: ReactMouseEvent<SVGSVGElement>) => {
+      if (linkDrag) {
+        const nodeEl = (e.target as Element).closest("[data-graph-node]")
+        if (nodeEl) {
+          const targetId = nodeEl.getAttribute("data-node-id")
+          if (targetId && targetId !== linkDrag.sourceId) {
+            onLinkNotes?.(linkDrag.sourceId, targetId)
+          }
+        }
+        setLinkDrag(null)
+        return
+      }
+      setDragging(false)
+      dragStart.current = null
+    },
+    [linkDrag, onLinkNotes],
+  )
 
   /* ── Node click handler ────────────────────────────── */
   const handleNodeClick = useCallback(
     (e: ReactMouseEvent, nodeId: string) => {
       e.stopPropagation()
+      if (linkDrag) return // Don't handle click during link drag
 
       if (e.shiftKey) {
         // Path endpoint selection
@@ -286,7 +354,7 @@ export function KnowledgeMapCanvas({
         onOpenNote(nodeId)
       }
     },
-    [adj, visibleNodeIdSet, onOpenNote],
+    [adj, visibleNodeIdSet, onOpenNote, linkDrag],
   )
 
   /* ── Tooltip handlers ──────────────────────────────── */
@@ -312,6 +380,36 @@ export function KnowledgeMapCanvas({
 
   const clearPath = useCallback(() => setPathEndpoints(null), [])
 
+  /* ── Context menu handler ──────────────────────────── */
+  const handleNodeContextMenu = useCallback(
+    (e: ReactMouseEvent, nodeId: string) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setContextMenu({ nodeId, x: e.clientX, y: e.clientY })
+    },
+    [],
+  )
+
+  /* ── Link drag: Alt+mousedown on node ──────────────── */
+  const handleNodeMouseDown = useCallback(
+    (e: ReactMouseEvent, node: GraphNode) => {
+      if (e.altKey && onLinkNotes) {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = svgRef.current
+        if (!svg) return
+        const rect = svg.getBoundingClientRect()
+        const t = transformRef.current
+        setLinkDrag({
+          sourceId: node.id,
+          cursorX: (e.clientX - rect.left - t.x) / t.scale,
+          cursorY: (e.clientY - rect.top - t.y) / t.scale,
+        })
+      }
+    },
+    [onLinkNotes],
+  )
+
   /* ── Empty state ───────────────────────────────────── */
   if (nodes.length === 0) {
     return (
@@ -332,7 +430,7 @@ export function KnowledgeMapCanvas({
         className="w-full h-full"
         style={{
           minHeight: 400,
-          cursor: dragging ? "grabbing" : "grab",
+          cursor: linkDrag ? "crosshair" : dragging ? "grabbing" : "grab",
           userSelect: "none",
         }}
         onWheel={handleWheel}
@@ -424,11 +522,18 @@ export function KnowledgeMapCanvas({
 
             const fillOpacity = hoverHighlight || isOnPath || isFocused ? 1 : opacity
 
+            // Link drag: valid drop target highlight
+            const isLinkDropTarget = linkDrag && linkDrag.sourceId !== node.id && isHovered
+            const isLinkSource = linkDrag?.sourceId === node.id
+
             return (
               <g
                 key={node.id}
                 data-graph-node
-                style={{ cursor: "pointer" }}
+                data-node-id={node.id}
+                style={{ cursor: linkDrag ? (isLinkSource ? "not-allowed" : "crosshair") : "pointer" }}
+                onContextMenu={(e) => handleNodeContextMenu(e, node.id)}
+                onMouseDown={(e) => handleNodeMouseDown(e, node)}
                 onMouseEnter={(e) => handleNodeHover(e, node)}
                 onMouseMove={(e) => {
                   const svg = svgRef.current
@@ -443,6 +548,20 @@ export function KnowledgeMapCanvas({
                 onMouseLeave={handleNodeLeave}
                 onClick={(e) => handleNodeClick(e, node.id)}
               >
+                {/* Link drop target ring */}
+                {isLinkDropTarget && (
+                  <circle
+                    cx={node.x}
+                    cy={node.y}
+                    r={radius + 6}
+                    fill="none"
+                    stroke="var(--accent)"
+                    strokeWidth={2}
+                    opacity={0.6}
+                    strokeDasharray="4 2"
+                  />
+                )}
+
                 {/* Path endpoint ring */}
                 {isPathEndpoint && (
                   <circle
@@ -474,8 +593,8 @@ export function KnowledgeMapCanvas({
                   cx={node.x}
                   cy={node.y}
                   r={radius}
-                  fill={fillColor}
-                  opacity={fillOpacity}
+                  fill={isLinkSource ? "var(--muted-foreground)" : fillColor}
+                  opacity={isLinkSource ? 0.4 : fillOpacity}
                   style={{ transition: "fill 0.15s, opacity 0.15s" }}
                 />
 
@@ -503,11 +622,30 @@ export function KnowledgeMapCanvas({
               </g>
             )
           })}
+
+          {/* ── Link drag preview line ─────────────────── */}
+          {linkDrag && (() => {
+            const sourceNode = nodeMap.get(linkDrag.sourceId)
+            if (!sourceNode) return null
+            return (
+              <line
+                x1={sourceNode.x}
+                y1={sourceNode.y}
+                x2={linkDrag.cursorX}
+                y2={linkDrag.cursorY}
+                stroke="var(--accent)"
+                strokeWidth={2}
+                strokeDasharray="6 3"
+                opacity={0.7}
+                style={{ pointerEvents: "none" }}
+              />
+            )
+          })()}
         </g>
       </svg>
 
       {/* ── Tooltip ───────────────────────────────────── */}
-      {tooltipPos && hoveredId && (
+      {tooltipPos && hoveredId && !linkDrag && (
         <div
           className="pointer-events-none absolute z-50 rounded-md border border-border bg-popover px-2.5 py-1.5 text-[12px] text-popover-foreground shadow-md"
           style={{
@@ -523,8 +661,61 @@ export function KnowledgeMapCanvas({
         </div>
       )}
 
+      {/* ── Node context menu ──────────────────────────── */}
+      {contextMenu && (
+        <div
+          data-map-context-menu
+          className="fixed z-[100] rounded-lg border border-border bg-popover shadow-lg py-1 min-w-[180px] animate-in fade-in zoom-in-95 duration-100"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+        >
+          <button
+            className="flex w-full items-center gap-2.5 px-3 py-1.5 text-[13px] text-foreground hover:bg-secondary transition-colors text-left"
+            onClick={() => { onOpenNote(contextMenu.nodeId); setContextMenu(null) }}
+          >
+            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            Open Note
+          </button>
+          {onLinkWith && (
+            <button
+              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-[13px] text-foreground hover:bg-secondary transition-colors text-left"
+              onClick={() => { onLinkWith(contextMenu.nodeId); setContextMenu(null) }}
+            >
+              <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+              Link to...
+            </button>
+          )}
+          {onRemoveNote && (
+            <>
+              <div className="h-px bg-border my-1" />
+              <button
+                className="flex w-full items-center gap-2.5 px-3 py-1.5 text-[13px] text-destructive hover:bg-destructive/10 transition-colors text-left"
+                onClick={() => { onRemoveNote(contextMenu.nodeId); setContextMenu(null) }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove from Map
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* ── Controls overlay ──────────────────────────── */}
       <div className="absolute bottom-3 right-3 flex items-center gap-1">
+        {/* Link drag indicator */}
+        {linkDrag && (
+          <div className="flex items-center gap-1.5 rounded-md border border-accent/30 bg-card px-2.5 py-1.5 text-[12px] text-accent shadow-sm mr-1">
+            <Link2 className="h-3.5 w-3.5" />
+            <span>Drop on a note to link</span>
+            <button
+              onClick={() => setLinkDrag(null)}
+              className="ml-0.5 rounded p-0.5 hover:bg-muted transition-colors"
+              title="Cancel"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Path info */}
         {pathEndpoints && pathNodeIds.size > 0 && (
           <div className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] text-muted-foreground shadow-sm mr-1">

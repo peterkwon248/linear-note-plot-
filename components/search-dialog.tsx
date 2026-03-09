@@ -45,6 +45,7 @@ import {
   Settings,
   Sun,
   Moon,
+  Merge,
 } from "lucide-react"
 
 function highlightQuery(text: string, q: string): ReactNode {
@@ -94,10 +95,11 @@ export function SearchDialog() {
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
-  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
   const addNoteToMap = usePlotStore((s) => s.addNoteToMap)
+  const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
 
   const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
@@ -179,7 +181,7 @@ export function SearchDialog() {
 
   // Filtered note pool (non-archived, non-trashed) shared by Search + Links
   const searchableNotes = useMemo(
-    () => notes.filter((n) => !n.archived && n.triageStatus !== "trashed"),
+    () => notes.filter((n) => !n.archived && !n.trashed && n.triageStatus !== "trashed"),
     [notes],
   )
 
@@ -666,6 +668,18 @@ export function SearchDialog() {
                       <CommandShortcut>{"[["}</CommandShortcut>
                     </CommandItem>
 
+                    {/* Merge with */}
+                    <CommandItem
+                      value="merge-with-note"
+                      onSelect={() => {
+                        closePalette()
+                        setMergePickerOpen(true, selectedNote.id)
+                      }}
+                    >
+                      <Merge className="h-4 w-4" />
+                      <span>Merge with...</span>
+                    </CommandItem>
+
                     {/* Add to map */}
                     {knowledgeMaps.length > 0 && (
                       <>
@@ -741,7 +755,7 @@ export function SearchDialog() {
                           value="promote-to-permanent"
                           onSelect={() =>
                             execCommand(
-                              () => promoteToPermament(selectedNote.id),
+                              () => promoteToPermanent(selectedNote.id),
                               "Promoted to Permanent"
                             )
                           }

@@ -95,7 +95,14 @@ class SearchClient {
     const worker = this.ensureWorker()
     const reqId = ++this.reqCounter
     return new Promise<string[]>((resolve) => {
-      this.pendingQueries.set(reqId, resolve)
+      const timeout = setTimeout(() => {
+        this.pendingQueries.delete(reqId)
+        resolve([])
+      }, 5000)
+      this.pendingQueries.set(reqId, (ids) => {
+        clearTimeout(timeout)
+        resolve(ids)
+      })
       worker.postMessage({ type: "QUERY", query, limit, reqId })
     })
   }

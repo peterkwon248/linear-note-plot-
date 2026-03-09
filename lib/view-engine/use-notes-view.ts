@@ -3,6 +3,7 @@
 import { useMemo, useCallback } from "react"
 import { usePlotStore } from "../store"
 import type { ViewState, ViewContextKey, PipelineExtras, NoteGroup } from "./types"
+import { buildViewStateForContext } from "./defaults"
 import { applyContext } from "./context-filter"
 import { applyFilters } from "./filter"
 import { applySearch } from "./search"
@@ -42,7 +43,7 @@ export function useNotesView(
 ): UseNotesViewResult {
   // ── Store selectors (fine-grained subscriptions) ──────
   const notes = usePlotStore((s) => s.notes)
-  const viewState = usePlotStore((s) => s.viewStateByContext[contextKey])
+  const viewState = usePlotStore((s) => s.viewStateByContext[contextKey]) ?? buildViewStateForContext(contextKey)
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setViewState = usePlotStore((s) => s.setViewState)
   const isHydrated = usePlotStore((s) => s._viewStateHydrated)

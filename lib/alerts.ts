@@ -78,7 +78,8 @@ export function computeAlerts(
 }
 
 function alertId(type: AlertType, noteId: string): string {
-  return `${type}:${noteId}`
+  const dateStr = new Date().toISOString().slice(0, 10)
+  return `${type}:${noteId}:${dateStr}`
 }
 
 /* ── Alert display config ─────────────────────────── */

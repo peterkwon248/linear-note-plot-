@@ -36,7 +36,7 @@ export function workflowDefaults(status: NoteStatus = "inbox"): Pick<
   }
 }
 
-const MAX_EVENTS_PER_NOTE = 1000
+const MAX_EVENTS_TOTAL = 10000
 
 /** Create the appendEvent helper bound to a Zustand set function */
 export function createAppendEvent(set: (fn: (state: { noteEvents: NoteEvent[] }) => { noteEvents: NoteEvent[] }) => void) {
@@ -44,17 +44,8 @@ export function createAppendEvent(set: (fn: (state: { noteEvents: NoteEvent[] })
     const event: NoteEvent = { id: genId(), noteId, type, at: now(), meta }
     set((state) => {
       const updated = [...state.noteEvents, event]
-      const noteEventCount = updated.filter(e => e.noteId === noteId).length
-      if (noteEventCount > MAX_EVENTS_PER_NOTE) {
-        const excess = noteEventCount - MAX_EVENTS_PER_NOTE
-        let removed = 0
-        return { noteEvents: updated.filter(e => {
-          if (e.noteId === noteId && removed < excess) {
-            removed++
-            return false
-          }
-          return true
-        })}
+      if (updated.length > MAX_EVENTS_TOTAL) {
+        return { noteEvents: updated.slice(updated.length - MAX_EVENTS_TOTAL) }
       }
       return { noteEvents: updated }
     })
