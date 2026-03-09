@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   Pin,
   Archive,
@@ -9,6 +9,8 @@ import {
   Copy,
   ArrowLeft,
   PanelRight,
+  Merge,
+  Link2,
 } from "lucide-react"
 import {
   Tooltip,
@@ -39,6 +41,8 @@ export function NoteEditor() {
   const toggleArchive = usePlotStore((s) => s.toggleArchive)
   const deleteNote = usePlotStore((s) => s.deleteNote)
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
+  const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
+  const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
   const detailsOpen = usePlotStore((s) => s.detailsOpen)
   const toggleDetailsOpen = usePlotStore((s) => s.toggleDetailsOpen)
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
@@ -48,8 +52,10 @@ export function NoteEditor() {
   const focusMode = sidebarCollapsed && !detailsOpen
 
   const [localTitle, setLocalTitle] = useState("")
+  const noteIdRef = useRef(note?.id)
 
   useEffect(() => {
+    noteIdRef.current = note?.id
     if (note) {
       setLocalTitle(note.title)
     }
@@ -57,9 +63,11 @@ export function NoteEditor() {
 
   useEffect(() => {
     if (!note) return
+    const capturedId = note.id
     const timer = setTimeout(() => {
+      if (noteIdRef.current !== capturedId) return
       if (localTitle !== note.title) {
-        updateNote(note.id, { title: localTitle })
+        updateNote(capturedId, { title: localTitle })
       }
     }, 300)
     return () => clearTimeout(timer)
@@ -196,6 +204,14 @@ export function NoteEditor() {
               <DropdownMenuItem onClick={() => duplicateNote(note.id)}>
                 <Copy className="h-4 w-4" />
                 Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setMergePickerOpen(true, note.id)}>
+                <Merge className="h-4 w-4" />
+                Merge with...
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLinkPickerOpen(true, note.id)}>
+                <Link2 className="h-4 w-4" />
+                Link to...
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

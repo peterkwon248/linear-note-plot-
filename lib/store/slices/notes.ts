@@ -75,6 +75,13 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
             : n
         ),
       }))
+      if (updates.content !== undefined || updates.contentJson !== undefined) {
+        const currentNotes = get().notes
+        for (const id of ids) {
+          const note = currentNotes.find((n: Note) => n.id === id)
+          if (note) persistBody({ id, content: note.content, contentJson: note.contentJson })
+        }
+      }
       ids.forEach((id) => appendEvent(id, "updated"))
     },
 
@@ -87,10 +94,27 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
     },
 
     deleteNote: (id: string) => {
-      set((state: any) => ({
-        notes: state.notes.filter((n: Note) => n.id !== id),
-        selectedNoteId: state.selectedNoteId === id ? null : state.selectedNoteId,
-      }))
+      set((state: any) => {
+        const navigationHistory = (state.navigationHistory as string[]).filter((nId: string) => nId !== id)
+        const navigationIndex = Math.min(state.navigationIndex as number, Math.max(0, navigationHistory.length - 1))
+        const { [id]: _, ...restSRS } = state.srsStateByNoteId
+        return {
+          notes: state.notes
+            .map((n: Note) => n.parentNoteId === id ? { ...n, parentNoteId: null } : n)
+            .filter((n: Note) => n.id !== id),
+          selectedNoteId: state.selectedNoteId === id ? null : state.selectedNoteId,
+          noteEvents: state.noteEvents.filter((e: any) => e.noteId !== id),
+          srsStateByNoteId: restSRS,
+          thinkingChains: state.thinkingChains.filter((c: any) => c.noteId !== id),
+          knowledgeMaps: state.knowledgeMaps.map((m: any) =>
+            m.noteIds.includes(id)
+              ? { ...m, noteIds: m.noteIds.filter((nId: string) => nId !== id) }
+              : m
+          ),
+          navigationHistory,
+          navigationIndex,
+        }
+      })
       removeBody(id)
     },
 
@@ -100,12 +124,116 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       const newId = genId()
       set((state: any) => ({
         notes: [
-          { ...note, id: newId, title: `${note.title} (copy)`, createdAt: now(), updatedAt: now(), lastTouchedAt: now() },
+          {
+            ...note,
+            id: newId,
+            title: `${note.title} (copy)`,
+            createdAt: now(),
+            updatedAt: now(),
+            ...workflowDefaults(note.status),
+            pinned: false,
+            reads: 0,
+            parentNoteId: null,
+          },
           ...state.notes,
         ],
         selectedNoteId: newId,
       }))
       persistBody({ id: newId, content: note.content, contentJson: note.contentJson })
+      appendEvent(newId, "created")
+    },
+
+    mergeNotes: (targetId: string, sourceIds: string[]) => {
+      const state = get()
+      const target = state.notes.find((n: Note) => n.id === targetId)
+      if (!target) return
+      const sources = sourceIds
+        .map((sid: string) => state.notes.find((n: Note) => n.id === sid))
+        .filter(Boolean) as Note[]
+      if (sources.length === 0) return
+
+      // ── 1. Merge content ──
+      const mergedContent = [
+        target.content,
+        ...sources.map(
+          (s: Note) => `\n\n---\n\n## Merged from: ${s.title || "Untitled"}\n\n${s.content}`
+        ),
+      ].join("")
+
+      // ── 2. Merge tags (union) ──
+      const tagSet = new Set([...target.tags, ...sources.flatMap((s: Note) => s.tags)])
+      const mergedTags = Array.from(tagSet)
+
+      // ── 3. Merge reads (sum) ──
+      const mergedReads = target.reads + sources.reduce((sum: number, s: Note) => sum + (s.reads ?? 0), 0)
+
+      // ── 4. Update target note ──
+      const contentUpdates = {
+        preview: extractPreview(mergedContent),
+        linksOut: extractLinksOut(mergedContent),
+      }
+      const sourceIdSet = new Set(sourceIds)
+
+      set((s: any) => ({
+        notes: s.notes.map((n: Note) => {
+          if (n.id === targetId) {
+            return {
+              ...n,
+              content: mergedContent,
+              contentJson: null,  // force markdown re-parse
+              tags: mergedTags,
+              reads: mergedReads,
+              ...contentUpdates,
+              updatedAt: now(),
+              lastTouchedAt: now(),
+            }
+          }
+          // ── 5. Archive source notes ──
+          if (sourceIdSet.has(n.id)) {
+            return {
+              ...n,
+              archived: true,
+              archivedAt: now(),
+              content: `> *This note was merged into [[${target.title || "Untitled"}]]*\n\n${n.content}`,
+              preview: extractPreview(`> *This note was merged into [[${target.title || "Untitled"}]]*\n\n${n.content}`),
+              updatedAt: now(),
+              lastTouchedAt: now(),
+            }
+          }
+          // ── 6. Reparent children of source notes ──
+          if (n.parentNoteId && sourceIdSet.has(n.parentNoteId)) {
+            return { ...n, parentNoteId: targetId }
+          }
+          return n
+        }),
+        // ── 7. Knowledge maps: replace source → target ──
+        knowledgeMaps: s.knowledgeMaps.map((m: any) => {
+          const hasSource = m.noteIds.some((nId: string) => sourceIdSet.has(nId))
+          if (!hasSource) return m
+          const filtered = m.noteIds.filter((nId: string) => !sourceIdSet.has(nId))
+          if (!filtered.includes(targetId)) filtered.push(targetId)
+          return { ...m, noteIds: filtered }
+        }),
+      }))
+
+      // ── 8. Persist bodies (target + sources) ──
+      const updatedNotes = get().notes
+      const updatedTarget = updatedNotes.find((n: Note) => n.id === targetId)
+      if (updatedTarget) {
+        persistBody({ id: targetId, content: updatedTarget.content, contentJson: updatedTarget.contentJson })
+      }
+      for (const source of sources) {
+        const updatedSource = updatedNotes.find((n: Note) => n.id === source.id)
+        if (updatedSource) {
+          persistBody({ id: source.id, content: updatedSource.content, contentJson: updatedSource.contentJson })
+        }
+      }
+
+      // ── 9. Events ──
+      appendEvent(targetId, "updated", { type: "merge", sourceIds })
+      for (const source of sources) {
+        appendEvent(source.id, "archived", { type: "merged_into", targetId })
+      }
     },
 
     togglePin: (id: string) => {
@@ -170,6 +298,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         notes: [newNote, ...state.notes],
         selectedNoteId: id,
       }))
+      persistBody({ id, content: "", contentJson: null })
+      appendEvent(id, "created")
       return id
     },
   }

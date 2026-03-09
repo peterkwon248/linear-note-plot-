@@ -22,10 +22,12 @@ export function createTagsSlice(set: Set) {
     deleteTag: (id: string) => {
       set((state: any) => ({
         tags: state.tags.filter((t: Tag) => t.id !== id),
-        notes: state.notes.map((n: Note) => ({
-          ...n,
-          tags: n.tags.filter((t) => t !== id),
-        })),
+        notes: state.notes.map((n: Note) =>
+          n.tags.includes(id) ? { ...n, tags: n.tags.filter((t) => t !== id) } : n
+        ),
+        ...(state.activeView?.type === "tag" && state.activeView?.tagId === id
+          ? { activeView: { type: "all" } }
+          : {}),
       }))
     },
 

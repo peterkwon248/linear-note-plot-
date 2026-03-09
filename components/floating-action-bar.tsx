@@ -1,13 +1,15 @@
 "use client"
 
-import { useMemo } from "react"
-import { X, Zap, Check, Trash2, ArrowUpRight, ArrowDownLeft, Inbox } from "lucide-react"
+import { useMemo, useState, useCallback } from "react"
+import { X, Zap, Check, Trash2, ArrowUpRight, ArrowDownLeft, Inbox, Merge, Link2 } from "lucide-react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
+import { NotePickerDialog } from "@/components/note-picker-dialog"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note, NoteStatus, NotePriority } from "@/lib/types"
+import { MergeDialog } from "@/components/merge-dialog"
 
 /* ── Props ────────────────────────────────────────────── */
 
@@ -35,13 +37,21 @@ export function FloatingActionBar({
   const batchUpdateNotes = usePlotStore((s) => s.batchUpdateNotes)
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageTrash = usePlotStore((s) => s.triageTrash)
-  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
   const batchSetReminder = usePlotStore((s) => s.batchSetReminder)
 
   const ids = useMemo(() => Array.from(selectedIds), [selectedIds])
   const count = ids.length
+
+  const addWikiLink = usePlotStore((s) => s.addWikiLink)
+  const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
+
+  /* ── Merge ── */
+  const [mergeOpen, setMergeOpen] = useState(false)
+  /* ── Link ── */
+  const [linkOpen, setLinkOpen] = useState(false)
 
   const selectedNotes = useMemo(
     () => notes.filter((n) => selectedIds.has(n.id)),
@@ -78,7 +88,7 @@ export function FloatingActionBar({
   }
 
   const handlePromoteAll = () => {
-    ids.forEach((id) => promoteToPermament(id))
+    ids.forEach((id) => promoteToPermanent(id))
     onClearSelection()
     toast(`Promoted ${count} note${count > 1 ? "s" : ""} to Permanent`, {
       action: { label: "Undo", onClick: () => ids.forEach((id) => undoPromote(id)) },
@@ -255,10 +265,67 @@ export function FloatingActionBar({
           </>
         )}
 
+        {/* Merge */}
+        <Divider />
+        <button
+          onClick={() => {
+            if (count === 1) {
+              setMergePickerOpen(true, ids[0])
+            } else {
+              setMergeOpen(true)
+            }
+          }}
+          className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-[15px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        >
+          <Merge className="h-4 w-4" /> Merge
+        </button>
+
+        {/* Link */}
+        <Divider />
+        <button
+          onClick={() => setLinkOpen(true)}
+          className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-[15px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        >
+          <Link2 className="h-4 w-4" /> Link
+        </button>
+
         {/* Remind */}
         <Divider />
         <RemindPicker onSelect={handleRemind} align="center" />
       </div>
+
+      {/* Merge Dialog */}
+      {mergeOpen && (
+        <MergeDialog
+          open={mergeOpen}
+          onOpenChange={setMergeOpen}
+          noteIds={ids}
+          onComplete={() => {
+            setMergeOpen(false)
+            onClearSelection()
+          }}
+        />
+      )}
+
+      {/* Link Dialog */}
+      <NotePickerDialog
+        open={linkOpen}
+        onOpenChange={setLinkOpen}
+        title="Link to..."
+        excludeIds={ids}
+        onSelect={(targetId) => {
+          const targetNote = notes.find((n) => n.id === targetId)
+          if (!targetNote) return
+          const targetTitle = targetNote.title || "Untitled"
+          ids.forEach((id) => addWikiLink(id, targetTitle))
+          setLinkOpen(false)
+          toast.success(
+            count === 1
+              ? `Linked to "${targetTitle}"`
+              : `Linked ${count} notes to "${targetTitle}"`,
+          )
+        }}
+      />
     </div>
   )
 }

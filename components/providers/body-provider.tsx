@@ -1,13 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { getAllBodies, saveBodiesBatch, BODIES_MIGRATED_KEY } from "@/lib/note-body-store"
 import type { NoteBody } from "@/lib/types"
 
 export function BodyProvider({ children }: { children: React.ReactNode }) {
-  const [ready, setReady] = useState(false)
-
   useEffect(() => {
     async function hydrate() {
       const store = usePlotStore.getState()
@@ -55,20 +53,10 @@ export function BodyProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem(BODIES_MIGRATED_KEY, "1")
         }
       } catch {}
-
-      setReady(true)
     }
 
     hydrate()
   }, [])
-
-  if (!ready) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground animate-pulse">Loading notes...</p>
-      </div>
-    )
-  }
 
   return <>{children}</>
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { NoteEditor } from "@/components/note-editor"
@@ -16,21 +16,11 @@ import {
   Clock3,
   Coffee,
   CalendarDays,
-  Clock,
-  AlignLeft,
-  Sparkles,
   X,
-  Bold,
-  Italic,
-  Strikethrough,
-  List,
-  ListOrdered,
-  Heading1,
-  Heading2,
-  Code,
-  Quote,
   ChevronLeft,
   ChevronRight,
+  Check,
+  SlidersHorizontal,
 } from "lucide-react"
 import {
   format,
@@ -49,10 +39,6 @@ import {
   subMonths,
 } from "date-fns"
 import type { ProjectFocus } from "@/lib/types"
-import { useEditor, EditorContent } from "@tiptap/react"
-import StarterKit from "@tiptap/starter-kit"
-import Placeholder from "@tiptap/extension-placeholder"
-import "@/components/editor/EditorStyles.css"
 import {
   Popover,
   PopoverContent,
@@ -66,6 +52,12 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 /* ── Focus indicator (urgency) ────────────────────────── */
 
@@ -96,153 +88,6 @@ function FocusSelector({ value, onChange }: { value: ProjectFocus; onChange: (f:
           </button>
         )
       })}
-    </div>
-  )
-}
-
-/* ── Description editor (lightweight TipTap) ─────────── */
-
-function DescriptionToolbarButton({
-  onClick,
-  isActive = false,
-  title,
-  children,
-}: {
-  onClick: () => void
-  isActive?: boolean
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={onClick}
-      title={title}
-      className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
-        isActive
-          ? "bg-accent/20 text-foreground"
-          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-      }`}
-    >
-      {children}
-    </button>
-  )
-}
-
-function ProjectDescriptionEditor({
-  description,
-  onUpdate,
-}: {
-  description: string | null
-  onUpdate: (html: string | null) => void
-}) {
-  const debounceRef = useRef<NodeJS.Timeout>(undefined)
-  const [focused, setFocused] = useState(false)
-
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-      }),
-      Placeholder.configure({
-        placeholder: "Add a description...",
-      }),
-    ],
-    content: description || "",
-    onUpdate: ({ editor }) => {
-      clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => {
-        onUpdate(editor.isEmpty ? null : editor.getHTML())
-      }, 300)
-    },
-    onFocus: () => setFocused(true),
-    onBlur: () => setFocused(false),
-    editorProps: {
-      attributes: {
-        class:
-          "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[48px] text-[15px] leading-relaxed",
-      },
-    },
-  })
-
-  return (
-    <div className="space-y-2">
-      {/* Inline toolbar */}
-      <div className={`flex items-center gap-0.5 transition-opacity ${focused ? "opacity-100" : "opacity-0 hover:opacity-60"}`}>
-        <DescriptionToolbarButton
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-          isActive={editor?.isActive("bold") ?? false}
-          title="Bold"
-        >
-          <Bold className="h-4 w-4" />
-        </DescriptionToolbarButton>
-        <DescriptionToolbarButton
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-          isActive={editor?.isActive("italic") ?? false}
-          title="Italic"
-        >
-          <Italic className="h-4 w-4" />
-        </DescriptionToolbarButton>
-        <DescriptionToolbarButton
-          onClick={() => editor?.chain().focus().toggleStrike().run()}
-          isActive={editor?.isActive("strike") ?? false}
-          title="Strikethrough"
-        >
-          <Strikethrough className="h-4 w-4" />
-        </DescriptionToolbarButton>
-        <DescriptionToolbarButton
-          onClick={() => editor?.chain().focus().toggleCode().run()}
-          isActive={editor?.isActive("code") ?? false}
-          title="Code"
-        >
-          <Code className="h-4 w-4" />
-        </DescriptionToolbarButton>
-
-        <div className="mx-1 h-4 w-px bg-border" />
-
-        <DescriptionToolbarButton
-          onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-          isActive={editor?.isActive("heading", { level: 1 }) ?? false}
-          title="Heading 1"
-        >
-          <Heading1 className="h-4 w-4" />
-        </DescriptionToolbarButton>
-        <DescriptionToolbarButton
-          onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-          isActive={editor?.isActive("heading", { level: 2 }) ?? false}
-          title="Heading 2"
-        >
-          <Heading2 className="h-4 w-4" />
-        </DescriptionToolbarButton>
-
-        <div className="mx-1 h-4 w-px bg-border" />
-
-        <DescriptionToolbarButton
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          isActive={editor?.isActive("bulletList") ?? false}
-          title="Bullet list"
-        >
-          <List className="h-4 w-4" />
-        </DescriptionToolbarButton>
-        <DescriptionToolbarButton
-          onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          isActive={editor?.isActive("orderedList") ?? false}
-          title="Numbered list"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </DescriptionToolbarButton>
-        <DescriptionToolbarButton
-          onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-          isActive={editor?.isActive("blockquote") ?? false}
-          title="Quote"
-        >
-          <Quote className="h-4 w-4" />
-        </DescriptionToolbarButton>
-      </div>
-
-      {/* Editor */}
-      <EditorContent editor={editor} />
     </div>
   )
 }
@@ -605,19 +450,49 @@ export default function ProjectDetailPage() {
   const openNote = usePlotStore((s) => s.openNote)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
 
-  const [activeTab, setActiveTab] = useState<"overview" | "notes">("overview")
+  const [noteFilter, setNoteFilter] = useState<"all" | "active" | "done">("all")
+  const [noteSortField, setNoteSortField] = useState<"updatedAt" | "title" | "status" | "priority">("updatedAt")
+  const [noteSortAsc, setNoteSortAsc] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerSearch, setPickerSearch] = useState("")
 
   const project = projects.find((p) => p.id === projectId)
 
-  const projectNotes = useMemo(
-    () =>
-      notes
-        .filter((n) => n.projectId === projectId && !n.trashed)
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
+  const allProjectNotes = useMemo(
+    () => notes.filter((n) => n.projectId === projectId && !n.trashed),
     [notes, projectId]
   )
+
+  const projectNotes = useMemo(() => {
+    let result = [...allProjectNotes]
+
+    if (noteFilter === "active") {
+      result = result.filter((n) => n.status !== "permanent")
+    } else if (noteFilter === "done") {
+      result = result.filter((n) => n.status === "permanent")
+    }
+
+    result.sort((a, b) => {
+      let cmp = 0
+      switch (noteSortField) {
+        case "updatedAt": cmp = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(); break
+        case "title": cmp = (a.title || "").localeCompare(b.title || ""); break
+        case "status": {
+          const ORDER: Record<string, number> = { inbox: 0, capture: 1, reference: 2, permanent: 3 }
+          cmp = (ORDER[a.status] ?? 0) - (ORDER[b.status] ?? 0)
+          break
+        }
+        case "priority": {
+          const ORDER: Record<string, number> = { none: 0, low: 1, medium: 2, high: 3, urgent: 4 }
+          cmp = (ORDER[a.priority] ?? 0) - (ORDER[b.priority] ?? 0)
+          break
+        }
+      }
+      return noteSortAsc ? cmp : -cmp
+    })
+
+    return result
+  }, [allProjectNotes, noteFilter, noteSortField, noteSortAsc])
 
   const unassignedNotes = useMemo(
     () =>
@@ -628,16 +503,15 @@ export default function ProjectDetailPage() {
   )
 
   const PICKER_LIMIT = 15
-  // Show top 15 when idle, all when searching (cmdk filters the rest)
   const displayedNotes = pickerSearch ? unassignedNotes : unassignedNotes.slice(0, PICKER_LIMIT)
   const hasMoreNotes = !pickerSearch && unassignedNotes.length > PICKER_LIMIT
 
   const stats = useMemo(() => {
-    const total = projectNotes.length
-    const permanent = projectNotes.filter((n) => n.status === "permanent").length
-    const pct = total > 0 ? Math.round((permanent / total) * 100) : 0
-    return { total, permanent, pct }
-  }, [projectNotes])
+    const total = allProjectNotes.length
+    const permanent = allProjectNotes.filter((n) => n.status === "permanent").length
+    const active = total - permanent
+    return { total, permanent, active }
+  }, [allProjectNotes])
 
   // If editing a note, show the editor
   if (selectedNoteId) {
@@ -671,8 +545,8 @@ export default function ProjectDetailPage() {
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="shrink-0 border-b border-border">
-        <div className="flex items-center gap-3 px-5 pt-4 pb-3">
+      <header className="shrink-0 border-b border-border px-5 pt-4 pb-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/projects")}
             className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -688,314 +562,273 @@ export default function ProjectDetailPage() {
             {statusCfg.label}
           </span>
         </div>
-
-        {/* Tabs */}
-        <div className="flex items-center gap-0 px-5">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`relative px-3 py-2 text-[15px] font-medium transition-colors ${
-              activeTab === "overview" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Overview
-            {activeTab === "overview" && (
-              <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("notes")}
-            className={`relative px-3 py-2 text-[15px] font-medium transition-colors ${
-              activeTab === "notes" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Notes
-            <span className="ml-1.5 text-[12px] text-muted-foreground">{stats.total}</span>
-            {activeTab === "notes" && (
-              <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
-            )}
-          </button>
-        </div>
       </header>
 
-      {/* Content */}
+      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
-        {activeTab === "overview" ? (
-          <div className="mx-auto max-w-6xl px-6 py-6 space-y-6">
-            {/* Progress */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-accent" />
-                  <span className="text-[14px] font-medium text-foreground">Progress</span>
-                </div>
-                <span className="text-[14px] tabular-nums text-muted-foreground">
-                  {stats.permanent} of {stats.total} permanent
-                </span>
-              </div>
-              <div className="relative h-1.5 overflow-hidden rounded-full bg-secondary">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-accent transition-all duration-500"
-                  style={{ width: `${stats.pct}%` }}
+        {/* Meta section */}
+        <div className="border-b border-border px-5 py-4 space-y-3">
+          {/* Row 1: Status + Focus */}
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3">
+              <span className="text-[12px] font-medium text-muted-foreground w-16">Status</span>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ProjectStatusDropdown
+                  value={project.status}
+                  onChange={(s) => updateProject(project.id, { status: s })}
                 />
               </div>
             </div>
-
-            {/* Properties — 2-column grid */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Status */}
-              <div className="rounded-lg border border-border px-4 py-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusCfg.color }} />
-                  <span className="text-[12px] font-medium text-muted-foreground">Status</span>
-                </div>
-                <div onClick={(e) => e.stopPropagation()}>
-                  <ProjectStatusDropdown
-                    value={project.status}
-                    onChange={(s) => updateProject(project.id, { status: s })}
-                  />
-                </div>
-              </div>
-
-              {/* Focus */}
-              <div className="rounded-lg border border-border px-4 py-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  {(() => {
-                    const opt = FOCUS_OPTIONS.find(o => o.key === project.focus)
-                    return opt
-                      ? <opt.icon className="h-4 w-4" style={{ color: opt.color }} />
-                      : <Zap className="h-4 w-4 text-muted-foreground/40" />
-                  })()}
-                  <span className="text-[12px] font-medium text-muted-foreground">Focus</span>
-                </div>
-                <FocusSelector
-                  value={project.focus}
-                  onChange={(f) => updateProject(project.id, { focus: f })}
-                />
-              </div>
-
-              {/* Target date */}
-              <div className="rounded-lg border border-border px-4 py-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground/60" />
-                  <span className="text-[12px] font-medium text-muted-foreground">Target date</span>
-                </div>
-                <TargetDatePicker
-                  value={project.targetDate}
-                  onChange={(date) => updateProject(project.id, { targetDate: date })}
-                />
-              </div>
-
-              {/* Created */}
-              <div className="rounded-lg border border-border px-4 py-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground/60" />
-                  <span className="text-[12px] font-medium text-muted-foreground">Created</span>
-                </div>
-                <span className="text-[15px] text-foreground">
-                  {format(new Date(project.createdAt), "MMM d, yyyy")}
-                </span>
-              </div>
-
-              {/* Description — full width */}
-              <div className="col-span-2 rounded-lg border border-border px-4 py-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <AlignLeft className="h-4 w-4 text-muted-foreground/60" />
-                  <span className="text-[12px] font-medium text-muted-foreground">Description</span>
-                </div>
-                <ProjectDescriptionEditor
-                  description={project.description}
-                  onUpdate={(html) => updateProject(project.id, { description: html ?? "" })}
-                />
-              </div>
+            <div className="flex items-center gap-3">
+              <span className="text-[12px] font-medium text-muted-foreground w-16">Focus</span>
+              <FocusSelector
+                value={project.focus}
+                onChange={(f) => updateProject(project.id, { focus: f })}
+              />
             </div>
+          </div>
+          {/* Row 2: Description */}
+          <div className="flex items-center gap-3">
+            <span className="text-[12px] font-medium text-muted-foreground w-16">Desc</span>
+            <input
+              value={project.description || ""}
+              onChange={(e) => updateProject(project.id, { description: e.target.value })}
+              placeholder="Add a description..."
+              className="flex-1 bg-transparent text-[14px] text-muted-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:text-foreground"
+            />
+          </div>
+          {/* Row 3: Target date */}
+          <div className="flex items-center gap-3">
+            <span className="text-[12px] font-medium text-muted-foreground w-16">Target</span>
+            <TargetDatePicker
+              value={project.targetDate}
+              onChange={(date) => updateProject(project.id, { targetDate: date })}
+            />
+          </div>
+        </div>
 
-            {/* Recent notes */}
-            {projectNotes.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground/60" />
-                    <span className="text-[14px] font-medium text-foreground">Recent notes</span>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab("notes")}
-                    className="text-[12px] text-accent hover:underline"
+        {/* Notes toolbar */}
+        <div className="flex items-center justify-between border-b border-border px-5 py-2">
+          <div className="flex items-center gap-1">
+            {(["all", "active", "done"] as const).map((tab) => {
+              const count = tab === "all" ? stats.total : tab === "active" ? stats.active : stats.permanent
+              const isActive = noteFilter === tab
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setNoteFilter(tab)}
+                  className={`rounded-md px-2.5 py-1 text-[13px] font-medium transition-colors ${
+                    isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  <span className="ml-1.5 text-[12px] text-muted-foreground">{count}</span>
+                </button>
+              )
+            })}
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Sort dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  Display
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
+                  Sort by
+                </DropdownMenuItem>
+                {([
+                  { field: "updatedAt" as const, label: "Updated" },
+                  { field: "title" as const, label: "Title" },
+                  { field: "status" as const, label: "Status" },
+                  { field: "priority" as const, label: "Priority" },
+                ]).map((opt) => (
+                  <DropdownMenuItem
+                    key={opt.field}
+                    onSelect={(e) => {
+                      e.preventDefault()
+                      if (noteSortField === opt.field) setNoteSortAsc((v) => !v)
+                      else { setNoteSortField(opt.field); setNoteSortAsc(true) }
+                    }}
                   >
-                    View all
-                  </button>
-                </div>
-                <div className="rounded-lg border border-border divide-y divide-border">
-                  {projectNotes.slice(0, 5).map((note) => (
-                    <div
-                      key={note.id}
-                      onClick={() => openNote(note.id)}
-                      className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-secondary/30 cursor-pointer"
-                    >
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground/40" />
-                      <span className="truncate text-[15px] text-foreground">
-                        {note.title || "Untitled"}
+                    <Check className={`h-3.5 w-3.5 shrink-0 ${noteSortField === opt.field ? "text-accent opacity-100" : "opacity-0"}`} />
+                    <span className="text-[14px]">{opt.label}</span>
+                    {noteSortField === opt.field && (
+                      <span className="ml-auto text-[11px] text-muted-foreground">
+                        {noteSortAsc ? "A\u2192Z" : "Z\u2192A"}
                       </span>
-                      <span className="ml-auto shrink-0 text-[12px] text-muted-foreground capitalize">
-                        {note.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Add existing note popover */}
+            <Popover open={pickerOpen} onOpenChange={(open) => {
+              setPickerOpen(open)
+              if (!open) setPickerSearch("")
+            }}>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary/80">
+                  <Link className="h-3.5 w-3.5" />
+                  Add existing
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 p-0" sideOffset={4}>
+                <Command>
+                  <CommandInput
+                    placeholder="Search notes..."
+                    className="text-[14px]"
+                    value={pickerSearch}
+                    onValueChange={setPickerSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty className="py-4 text-[14px] text-muted-foreground">
+                      No matching notes
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {displayedNotes.map((note) => (
+                        <CommandItem
+                          key={note.id}
+                          value={note.title || "Untitled"}
+                          onSelect={() => {
+                            updateNote(note.id, { projectId: project.id })
+                            setPickerOpen(false)
+                            setPickerSearch("")
+                          }}
+                          className="flex items-center justify-between gap-2 text-[14px]"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                            <span className="truncate">{note.title || "Untitled"}</span>
+                          </div>
+                          <span
+                            className={`shrink-0 inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
+                              note.status === "permanent"
+                                ? "bg-[#45d483]/12 text-[#45d483]"
+                                : note.status === "capture"
+                                ? "bg-[#f2994a]/12 text-[#f2994a]"
+                                : note.status === "reference"
+                                ? "bg-[#5e6ad2]/12 text-[#5e6ad2]"
+                                : "bg-[#06b6d4]/12 text-[#06b6d4]"
+                            }`}
+                          >
+                            {note.status.charAt(0).toUpperCase() + note.status.slice(1)}
+                          </span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                    {hasMoreNotes && (
+                      <div className="border-t border-border px-3 py-2 text-[12px] text-muted-foreground/60">
+                        {unassignedNotes.length - PICKER_LIMIT} more — type to search
+                      </div>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {/* Add note button */}
+            <button
+              onClick={() => {
+                const id = createNote({ projectId: project.id })
+                openNote(id)
+              }}
+              className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add note
+            </button>
+          </div>
+        </div>
+
+        {/* Column headers */}
+        <div className="flex items-center border-b border-border px-5 py-2">
+          <div className="flex-1 min-w-0">
+            <span className="text-[12px] font-medium text-muted-foreground">Title</span>
+          </div>
+          <div className="w-[80px] shrink-0 text-right">
+            <span className="text-[12px] font-medium text-muted-foreground">Status</span>
+          </div>
+          <div className="w-[80px] shrink-0 text-right">
+            <span className="text-[12px] font-medium text-muted-foreground">Priority</span>
+          </div>
+          <div className="w-[80px] shrink-0 text-right">
+            <span className="text-[12px] font-medium text-muted-foreground">Updated</span>
+          </div>
+          <div className="w-[32px] shrink-0" />
+        </div>
+
+        {/* Note rows */}
+        {projectNotes.length === 0 ? (
+          <div className="flex items-center justify-center py-20 text-center">
+            <div>
+              <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground/30" />
+              <p className="text-[15px] text-muted-foreground">
+                {noteFilter !== "all" ? "No matching notes" : "No notes in this project"}
+              </p>
+              <p className="mt-1 text-[14px] text-muted-foreground/60">
+                {noteFilter !== "all" ? "Try a different filter." : "Add notes to track progress."}
+              </p>
+            </div>
           </div>
         ) : (
-          /* Notes tab */
-          <div>
-            {/* Add note button */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
-              <span className="text-[14px] text-muted-foreground">
-                {stats.total} notes in this project
-              </span>
-              <div className="flex items-center gap-2">
-                <Popover open={pickerOpen} onOpenChange={(open) => {
-                  setPickerOpen(open)
-                  if (!open) setPickerSearch("")
-                }}>
-                  <PopoverTrigger asChild>
-                    <button className="flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary/80">
-                      <Link className="h-3.5 w-3.5" />
-                      Add existing
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-72 p-0" sideOffset={4}>
-                    <Command>
-                      <CommandInput
-                        placeholder="Search notes..."
-                        className="text-[14px]"
-                        value={pickerSearch}
-                        onValueChange={setPickerSearch}
-                      />
-                      <CommandList>
-                        <CommandEmpty className="py-4 text-[14px] text-muted-foreground">
-                          No matching notes
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {displayedNotes.map((note) => (
-                            <CommandItem
-                              key={note.id}
-                              value={note.title || "Untitled"}
-                              onSelect={() => {
-                                updateNote(note.id, { projectId: project.id })
-                                setPickerOpen(false)
-                                setPickerSearch("")
-                              }}
-                              className="flex items-center justify-between gap-2 text-[14px]"
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                                <span className="truncate">{note.title || "Untitled"}</span>
-                              </div>
-                              <span
-                                className={`shrink-0 inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
-                                  note.status === "permanent"
-                                    ? "bg-[#45d483]/12 text-[#45d483]"
-                                    : note.status === "capture"
-                                    ? "bg-[#f2994a]/12 text-[#f2994a]"
-                                    : note.status === "reference"
-                                    ? "bg-[#5e6ad2]/12 text-[#5e6ad2]"
-                                    : "bg-[#06b6d4]/12 text-[#06b6d4]"
-                                }`}
-                              >
-                                {note.status.charAt(0).toUpperCase() + note.status.slice(1)}
-                              </span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                        {hasMoreNotes && (
-                          <div className="border-t border-border px-3 py-2 text-[12px] text-muted-foreground/60">
-                            {unassignedNotes.length - PICKER_LIMIT} more — type to search
-                          </div>
-                        )}
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <button
-                  onClick={() => {
-                    const id = createNote({ projectId: project.id })
-                    openNote(id)
-                  }}
-                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+          projectNotes.map((note) => (
+            <div
+              key={note.id}
+              onClick={() => openNote(note.id)}
+              className="group flex items-center border-b border-border px-5 py-2.5 transition-colors hover:bg-secondary/30 cursor-pointer"
+            >
+              <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
+                <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+                <span className="truncate text-[15px] text-foreground">
+                  {note.title || "Untitled"}
+                </span>
+              </div>
+              <div className="w-[80px] shrink-0 text-right">
+                <span
+                  className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
+                    note.status === "permanent"
+                      ? "bg-[#45d483]/12 text-[#45d483]"
+                      : note.status === "capture"
+                      ? "bg-[#f2994a]/12 text-[#f2994a]"
+                      : note.status === "reference"
+                      ? "bg-[#5e6ad2]/12 text-[#5e6ad2]"
+                      : "bg-[#06b6d4]/12 text-[#06b6d4]"
+                  }`}
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  Add note
+                  {note.status.charAt(0).toUpperCase() + note.status.slice(1)}
+                </span>
+              </div>
+              <div className="w-[80px] shrink-0 text-right" onClick={(e) => e.stopPropagation()}>
+                <PriorityDropdown
+                  value={note.priority}
+                  onChange={(p) => updateNote(note.id, { priority: p })}
+                  variant="inline"
+                />
+              </div>
+              <div className="w-[80px] shrink-0 text-right">
+                <span className="text-[14px] tabular-nums text-muted-foreground">
+                  {format(new Date(note.updatedAt), "MMM d")}
+                </span>
+              </div>
+              <div className="w-[32px] shrink-0 flex items-center justify-center">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    updateNote(note.id, { projectId: null })
+                  }}
+                  className="rounded-md p-0.5 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground/60 hover:!text-destructive hover:!bg-destructive/10"
+                  title="Remove from project"
+                >
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             </div>
-
-            {/* Note list */}
-            {projectNotes.length === 0 ? (
-              <div className="flex items-center justify-center py-20 text-center">
-                <div>
-                  <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground/30" />
-                  <p className="text-[15px] text-muted-foreground">No notes in this project</p>
-                  <p className="mt-1 text-[14px] text-muted-foreground/60">
-                    Add notes to track progress.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              projectNotes.map((note) => (
-                <div
-                  key={note.id}
-                  onClick={() => openNote(note.id)}
-                  className="group flex items-center border-b border-border px-5 py-2.5 transition-colors hover:bg-secondary/30 cursor-pointer"
-                >
-                  <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
-                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
-                    <span className="truncate text-[15px] text-foreground">
-                      {note.title || "Untitled"}
-                    </span>
-                  </div>
-                  <div className="w-[80px] shrink-0 text-right">
-                    <span
-                      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
-                        note.status === "permanent"
-                          ? "bg-[#45d483]/12 text-[#45d483]"
-                          : note.status === "capture"
-                          ? "bg-[#f2994a]/12 text-[#f2994a]"
-                          : note.status === "reference"
-                          ? "bg-[#5e6ad2]/12 text-[#5e6ad2]"
-                          : "bg-[#06b6d4]/12 text-[#06b6d4]"
-                      }`}
-                    >
-                      {note.status.charAt(0).toUpperCase() + note.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="w-[80px] shrink-0 text-right" onClick={(e) => e.stopPropagation()}>
-                    <PriorityDropdown
-                      value={note.priority}
-                      onChange={(p) => updateNote(note.id, { priority: p })}
-                      variant="inline"
-                    />
-                  </div>
-                  <div className="w-[80px] shrink-0 text-right">
-                    <span className="text-[14px] tabular-nums text-muted-foreground">
-                      {format(new Date(note.updatedAt), "MMM d")}
-                    </span>
-                  </div>
-                  <div className="w-[32px] shrink-0 flex items-center justify-center">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        updateNote(note.id, { projectId: null })
-                      }}
-                      className="rounded-md p-0.5 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground/60 hover:!text-destructive hover:!bg-destructive/10"
-                      title="Remove from project"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          ))
         )}
       </div>
     </main>

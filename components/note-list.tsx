@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useMemo } from "react"
+import { useRef, useMemo, memo } from "react"
 import {
   Plus,
   Filter,
@@ -60,15 +60,13 @@ type FlatItem =
 
 /* -- NoteRow -------------------------------------------------- */
 
-function NoteRow({ note }: { note: Note }) {
-  const {
-    openNote,
-    tags,
-    updateNote,
-    togglePin,
-    duplicateNote,
-    deleteNote,
-  } = usePlotStore()
+const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
+  const openNote = usePlotStore((s) => s.openNote)
+  const tags = usePlotStore((s) => s.tags)
+  const updateNote = usePlotStore((s) => s.updateNote)
+  const togglePin = usePlotStore((s) => s.togglePin)
+  const duplicateNote = usePlotStore((s) => s.duplicateNote)
+  const deleteNote = usePlotStore((s) => s.deleteNote)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
 
   const preview = note.preview
@@ -181,15 +179,20 @@ function NoteRow({ note }: { note: Note }) {
       </DropdownMenu>
     </div>
   )
-}
+})
 
 /* -- NoteList ------------------------------------------------- */
 
 export function NoteList({ filter }: { filter: NoteFilter }) {
-  const state = usePlotStore()
-  const filteredNotes = filterNotesByRoute(state.notes, filter, state.searchQuery)
-  const viewTitle = getFilterTitle(filter, state)
-  const groups = groupNotesByDate(filteredNotes)
+  const notes = usePlotStore((s) => s.notes)
+  const searchQuery = usePlotStore((s) => s.searchQuery)
+  const createNote = usePlotStore((s) => s.createNote)
+  const folders = usePlotStore((s) => s.folders)
+  const categories = usePlotStore((s) => s.categories)
+  const tags = usePlotStore((s) => s.tags)
+  const filteredNotes = useMemo(() => filterNotesByRoute(notes, filter, searchQuery), [notes, filter, searchQuery])
+  const viewTitle = useMemo(() => getFilterTitle(filter, { folders, categories, tags }), [filter, folders, categories, tags])
+  const groups = useMemo(() => groupNotesByDate(filteredNotes), [filteredNotes])
 
   const flatItems = useMemo(() => {
     const items: FlatItem[] = []
@@ -233,7 +236,7 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
           </button>
           <button
             className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-            onClick={() => state.createNote({
+            onClick={() => createNote({
               status: filter.type === "inbox" ? "inbox" as const : undefined,
               folderId: filter.type === "folder" ? filter.folderId : undefined,
               category: filter.type === "category" ? filter.categoryId : undefined,

@@ -27,6 +27,7 @@ import {
   Search,
   Bell,
   Clock,
+  Merge,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -232,10 +233,12 @@ export function NotesTable({
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
-  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
   const setReminder = usePlotStore((s) => s.setReminder)
+  const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
+  const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
 
   const [activeTab, setActiveTab] = useState<ViewContextKey>("all")
 
@@ -256,6 +259,7 @@ export function NotesTable({
   }, [notes, backlinksMap])
 
   const projects = usePlotStore((s) => s.projects)
+  const tags = usePlotStore((s) => s.tags)
 
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
@@ -454,6 +458,7 @@ export function NotesTable({
             groupBy={viewState.groupBy}
             isSingleStatusTab={isSingleStatusTab}
             projects={projects}
+            tags={tags}
             onToggleFilter={toggleFilter}
             onSetFilters={(f) => updateViewState({ filters: f })}
           />
@@ -596,6 +601,7 @@ export function NotesTable({
         groupBy={viewState.groupBy}
         isSingleStatusTab={isSingleStatusTab}
         projects={projects}
+        tags={tags}
         onToggleFilter={toggleFilter}
         onRemoveFilter={removeFilter}
         onClearAll={() => updateViewState({ filters: [] })}
@@ -691,10 +697,12 @@ export function NotesTable({
                       onKeep={() => triageKeep(item.note.id)}
                       onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
                       onTrash={() => triageTrash(item.note.id)}
-                      onPromote={() => promoteToPermament(item.note.id)}
+                      onPromote={() => promoteToPermanent(item.note.id)}
                       onDemote={() => undoPromote(item.note.id)}
                       onMoveBack={() => moveBackToInbox(item.note.id)}
                       onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
+                      onMergeWith={() => setMergePickerOpen(true, item.note.id)}
+                      onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
                     />
                   )}
                 </div>
@@ -742,6 +750,8 @@ interface NoteRowProps {
   onDemote: () => void
   onMoveBack: () => void
   onRemind: (isoDate: string) => void
+  onMergeWith: () => void
+  onLinkWith: () => void
 }
 
 function NoteRowInner({
@@ -767,6 +777,8 @@ function NoteRowInner({
   onDemote,
   onMoveBack,
   onRemind,
+  onMergeWith,
+  onLinkWith,
 }: NoteRowProps) {
   const visibleCols = visibleColumns
   return (
@@ -1025,6 +1037,14 @@ function NoteRowInner({
         <ContextMenuItem onClick={onOpen} className="text-[14px]">
           <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
           Open
+        </ContextMenuItem>
+        <ContextMenuItem onClick={onMergeWith} className="text-[14px]">
+          <Merge className="h-4 w-4 mr-2 text-muted-foreground" />
+          Merge with...
+        </ContextMenuItem>
+        <ContextMenuItem onClick={onLinkWith} className="text-[14px]">
+          <Link2 className="h-4 w-4 mr-2 text-muted-foreground" />
+          Link to...
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

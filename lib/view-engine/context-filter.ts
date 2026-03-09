@@ -77,6 +77,14 @@ export function applyContext(
         (n) => !n.archived && !n.trashed && n.projectId != null
       )
 
+    case "trash":
+      return notes.filter((n) => n.trashed)
+
+    case "savedView":
+      // Saved views apply their own user-filters in stage 2;
+      // context stage just returns all active (non-archived, non-trashed) notes.
+      return notes.filter((n) => !n.archived && !n.trashed)
+
     default:
       return notes.filter((n) => !n.archived && !n.trashed)
   }

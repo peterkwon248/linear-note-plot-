@@ -40,7 +40,7 @@ export function getFilteredNotes(state: PlotState): Note[] {
       break
     case "map": {
       const map = state.knowledgeMaps.find((m: KnowledgeMap) => m.id === activeView.mapId)
-      if (map) filtered = filtered.filter((n) => map.noteIds.includes(n.id))
+      if (map) filtered = filtered.filter((n) => map.noteIds.includes(n.id) && isActive(n))
       break
     }
     default:
@@ -126,7 +126,7 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
   )
 }
 
-export function getFilterTitle(filter: NoteFilter, state: PlotState): string {
+export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folders" | "categories" | "tags">): string {
   switch (filter.type) {
     case "inbox":
       return "Inbox"

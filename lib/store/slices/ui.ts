@@ -16,6 +16,7 @@ export function createUISlice(set: Set, appendEvent: AppendEventFn) {
 
     openNote: (id: string) => {
       set((state: any) => {
+        if (!state.notes.some((n: Note) => n.id === id)) return state
         const updates: any = {
           selectedNoteId: id,
           notes: state.notes.map((n: Note) =>
@@ -87,6 +88,16 @@ export function createUISlice(set: Set, appendEvent: AppendEventFn) {
     setSidebarCollapsed: (collapsed: boolean) => set({ sidebarCollapsed: collapsed, sidebarPeek: false }),
     setSidebarPeek: (peek: boolean) => set({ sidebarPeek: peek }),
     restoreSidebar: () => set((s: any) => ({ sidebarCollapsed: false, sidebarPeek: false, sidebarWidth: s.sidebarLastWidth })),
+
+    // Merge
+    setMergePickerOpen: (open: boolean, sourceId?: string | null) => {
+      set({ mergePickerOpen: open, mergePickerSourceId: open ? (sourceId ?? null) : null })
+    },
+
+    // Link
+    setLinkPickerOpen: (open: boolean, sourceId?: string | null) => {
+      set({ linkPickerOpen: open, linkPickerSourceId: open ? (sourceId ?? null) : null })
+    },
 
     // View Engine
     setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => {

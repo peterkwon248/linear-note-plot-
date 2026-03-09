@@ -32,6 +32,7 @@ import {
   MapIcon,
   Network,
   RotateCcw,
+  Merge,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
@@ -182,7 +183,7 @@ export function NoteDetailPanel({
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
-  const promoteToPermament = usePlotStore((s) => s.promoteToPermament)
+  const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
   const noteEvents = usePlotStore((s) => s.noteEvents)
@@ -198,6 +199,8 @@ export function NoteDetailPanel({
   const unenrollSRS = usePlotStore((s) => s.unenrollSRS)
   const setReminder = usePlotStore((s) => s.setReminder)
   const clearReminder = usePlotStore((s) => s.clearReminder)
+  const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
+  const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
 
   const backlinksIndex = useBacklinksIndex()
 
@@ -317,9 +320,9 @@ export function NoteDetailPanel({
   }, [triageTrash, noteId, advanceToNext])
 
   const handlePromote = useCallback(() => {
-    promoteToPermament(noteId)
+    promoteToPermanent(noteId)
     toast("Promoted to Permanent")
-  }, [promoteToPermament, noteId])
+  }, [promoteToPermanent, noteId])
 
   const handleDemote = useCallback(() => {
     undoPromote(noteId)
@@ -881,6 +884,28 @@ export function NoteDetailPanel({
               No suggestions found. Try adding tags or organizing notes into folders.
             </p>
           )}
+        </PanelSection>
+
+        <div className="mx-5 border-b border-border" />
+
+        {/* Actions */}
+        <PanelSection title="Actions" icon={<Merge className="h-4 w-4" />}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setMergePickerOpen(true, note.id)}
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              <Merge className="h-3.5 w-3.5" />
+              Merge with...
+            </button>
+            <button
+              onClick={() => setLinkPickerOpen(true, note.id)}
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              <Link2 className="h-3.5 w-3.5" />
+              Link to...
+            </button>
+          </div>
         </PanelSection>
 
         <div className="mx-5 border-b border-border" />

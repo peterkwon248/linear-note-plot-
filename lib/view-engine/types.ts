@@ -16,6 +16,8 @@ export type ViewContextKey =
   | "category"   // /category/[id]
   | "tag"        // /tag/[id]
   | "projects"   // /projects
+  | "trash"      // /trash
+  | "savedView"  // /views/[id] — dynamic context for saved view detail
 
 /* ── View State ────────────────────────────────────────── */
 
@@ -37,8 +39,13 @@ export type GroupBy = "none" | "status" | "priority" | "date" | "project" | "tri
 
 export type FilterOperator = "eq" | "neq" | "gt" | "lt"
 
+export type FilterField =
+  | "status" | "priority" | "links" | "reads" | "project"
+  | "updatedAt" | "createdAt" | "content" | "tags" | "pinned"
+  | "source" | "wordCount" | "title"
+
 export interface FilterRule {
-  field: "status" | "priority" | "links" | "reads" | "project" | "updatedAt" | "createdAt" | "content" | "tags" | "pinned"
+  field: FilterField
   operator: FilterOperator
   value: string
 }
@@ -97,7 +104,8 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
 
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "all", "pinned", "inbox", "capture", "reference", "permanent",
-  "unlinked", "review", "archive", "folder", "category", "tag", "projects",
+  "unlinked", "review", "archive", "folder", "category", "tag", "projects", "trash",
+  "savedView",
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [

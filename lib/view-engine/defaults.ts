@@ -24,6 +24,7 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   folder:    { viewMode: "list", sortField: "updatedAt" },
   category:  { viewMode: "list", sortField: "updatedAt" },
   tag:       { viewMode: "list", sortField: "updatedAt" },
+  savedView: { viewMode: "table", sortField: "updatedAt", groupBy: "none" },
 }
 
 /** Build a ViewState for a specific context, merging defaults */

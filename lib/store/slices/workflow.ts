@@ -35,14 +35,14 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === id
-            ? { ...n, triageStatus: "trashed" as const, archivedAt: now(), lastTouchedAt: now(), updatedAt: now() }
+            ? { ...n, triageStatus: "trashed" as const, trashed: true, trashedAt: now(), archivedAt: now(), lastTouchedAt: now(), updatedAt: now() }
             : n
         ),
       }))
       appendEvent(id, "triage_trash")
     },
 
-    promoteToPermament: (id: string) => {
+    promoteToPermanent: (id: string) => {
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === id
@@ -62,6 +62,7 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
             : n
         ),
       }))
+      get().unenrollSRS(id)
       appendEvent(id, "updated", { action: "undoPromote" })
     },
 
@@ -125,6 +126,7 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
     },
 
     enrollSRS: (noteId: string) => {
+      if (get().srsStateByNoteId[noteId]) return
       set((state: any) => ({
         srsStateByNoteId: {
           ...state.srsStateByNoteId,

@@ -83,7 +83,7 @@ Each slice is a function `(set, get?, appendEvent?) => sliceObject`. They are sp
 | Slice file | Responsibility |
 |---|---|
 | `notes.ts` | createNote, updateNote, deleteNote, duplicateNote, togglePin, toggleArchive, touchNote, createChainNote |
-| `workflow.ts` | triageKeep, triageSnooze, triageTrash, promoteToPermament, undoPromote, moveBackToInbox, all SRS actions |
+| `workflow.ts` | triageKeep, triageSnooze, triageTrash, promoteToPermanent, undoPromote, moveBackToInbox, all SRS actions |
 | `folders.ts` | createFolder, updateFolder, deleteFolder |
 | `tags.ts` | createTag, updateTag, deleteTag, addTagToNote, removeTagFromNote |
 | `categories.ts` | createCategory, updateCategory, deleteCategory |
@@ -149,7 +149,7 @@ In `components/notes-table.tsx`, `COLUMN_DEFS` controls header render order. The
 | Route | Context key | Status filter | Key actions |
 |---|---|---|---|
 | `/inbox` | `"inbox"` | `status === "inbox"`, untriaged or snoozed-due | triageKeep, triageSnooze, triageTrash |
-| `/capture` | `"capture"` | `status === "capture"` | promoteToPermament, readyScore |
+| `/capture` | `"capture"` | `status === "capture"` | promoteToPermanent, readyScore |
 | `/permanent` | `"permanent"` | `status === "permanent"` | enrollSRS, reviewSRS, unenrollSRS |
 | `/review` | `"review"` | aggregated queue | `getReviewQueue()` from `lib/queries/notes.ts` |
 | `/alerts` | n/a | derived | `computeAlerts()` from `lib/alerts.ts` |
@@ -158,14 +158,14 @@ In `components/notes-table.tsx`, `COLUMN_DEFS` controls header render order. The
 ### Note Status Lifecycle
 
 ```
-inbox → (triageKeep) → capture → (promoteToPermament) → permanent
+inbox → (triageKeep) → capture → (promoteToPermanent) → permanent
 inbox → (triageSnooze) → inbox (snoozed)
 inbox → (triageTrash) → inbox (trashed, hidden)
 permanent → (undoPromote) → capture
 capture/permanent → (moveBackToInbox) → inbox
 ```
 
-`promoteToPermament` automatically calls `enrollSRS`.
+`promoteToPermanent` automatically calls `enrollSRS`.
 
 ---
 
@@ -245,7 +245,7 @@ Tests use Vitest. There are no mocked IDB calls — SRS engine and view-engine t
 
 **Alert IDs are deterministic.** When checking if an alert is dismissed, always use `${type}:${noteId}`. Do not generate random IDs for alerts.
 
-**`promoteToPermament` (note the typo in the action name) automatically enrolls SRS.** Do not call `enrollSRS` separately after promoting.
+**`promoteToPermanent` (note the typo in the action name) automatically enrolls SRS.** Do not call `enrollSRS` separately after promoting.
 
 ---
 

@@ -46,6 +46,7 @@ export function createThinkingSlice(set: Set, get: Get, appendEvent: AppendEvent
           return {
             ...n,
             content: newContent,
+            contentJson: null,
             linksOut: extractLinksOut(newContent),
             updatedAt: now(),
             lastTouchedAt: now(),
@@ -54,7 +55,7 @@ export function createThinkingSlice(set: Set, get: Get, appendEvent: AppendEvent
       }))
       const note = get().notes.find((n: Note) => n.id === noteId)
       if (note) {
-        persistBody({ id: noteId, content: note.content, contentJson: note.contentJson })
+        persistBody({ id: noteId, content: note.content, contentJson: null })
       }
       appendEvent(noteId, "link_added", { targetTitle })
     },
