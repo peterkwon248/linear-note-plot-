@@ -36,6 +36,7 @@ import {
   Search,
   Clock,
   Bell,
+  FolderOpen,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -59,6 +60,7 @@ import { StatusBadge, PriorityBadge, STATUS_CONFIG, PRIORITY_CONFIG } from "@/co
 import { BoardWorkbench } from "@/components/board-workbench"
 import type { Note, NoteStatus, NotePriority, TriageStatus, Folder } from "@/lib/types"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { setActiveFolderId } from "@/lib/table-route"
 
 /* ── Inline Select (portal-free, works inside Popover) ── */
 
@@ -490,6 +492,7 @@ export function NotesBoard({
   showTabs = true,
   createNoteOverrides,
   hideCreateButton = false,
+  folderId,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -498,6 +501,7 @@ export function NotesBoard({
   showTabs?: boolean
   createNoteOverrides?: Partial<Note>
   hideCreateButton?: boolean
+  folderId?: string
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -527,7 +531,7 @@ export function NotesBoard({
 
   const backlinksMap = useBacklinksIndex()
 
-  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap })
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId })
 
   // Auto-set groupBy: board requires grouping, and single-status tabs need contextual grouping
   const isSingleStatusTab = SINGLE_STATUS_TABS.includes(effectiveTab)
@@ -828,6 +832,23 @@ export function NotesBoard({
         onClearAll={() => updateViewState({ filters: [] })}
         onSetFilters={(filters) => updateViewState({ filters })}
       />
+
+      {/* ── Folder indicator ──────────────────────────────── */}
+      {folderId && (() => {
+        const folderName = folders.find((f) => f.id === folderId)?.name
+        return folderName ? (
+          <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
+            <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[13px] text-foreground">{folderName}</span>
+            <button
+              onClick={() => setActiveFolderId(null)}
+              className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ) : null
+      })()}
 
       {/* Board area */}
       {flatNotes.length === 0 ? (

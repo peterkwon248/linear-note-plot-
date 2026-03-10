@@ -21,35 +21,9 @@ import {
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getInboxNotes } from "@/lib/queries/notes"
-import { ALL_SIDEBAR_ROUTES, setActiveRoute, useActiveRoute } from "@/lib/table-route"
+import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, useActiveRoute, useActiveFolderId } from "@/lib/table-route"
 import type { Note, NoteStatus } from "@/lib/types"
-
-/* ── Status icon ─────────────────────────────────────── */
-
-function StatusIcon({ status }: { status: NoteStatus }) {
-  if (status === "inbox") {
-    return (
-      <span
-        className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm border border-current"
-        style={{ borderWidth: "1.5px" }}
-      />
-    )
-  }
-  if (status === "permanent") {
-    return (
-      <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-current" style={{ borderWidth: "1.5px" }}>
-        <span className="block h-1.5 w-1.5 rounded-none" style={{ background: "currentColor", clipPath: "polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%)" }} />
-      </span>
-    )
-  }
-  // capture or reference: filled square with inner fill
-  return (
-    <span
-      className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm border border-current"
-      style={{ borderWidth: "1.5px", background: "currentColor", opacity: 0.6 }}
-    />
-  )
-}
+import { StatusIcon } from "@/components/status-icon"
 
 /* ── Nav primitives ──────────────────────────────────── */
 
@@ -106,6 +80,7 @@ function NavLink({
     return (
       <button
         onClick={() => {
+          if (href === "/notes") setActiveFolderId(null)
           setActiveRoute(href)
           router.push(href)
         }}
@@ -284,6 +259,12 @@ export function LinearSidebar() {
     ? sortedFolders
     : visibleFolders
 
+  // Pinned notes for sidebar shortcut section
+  const pinnedNotes = useMemo(() =>
+    notes.filter((n) => n.pinned && !n.trashed && !n.archived),
+    [notes]
+  )
+
   // Recent notes: walk backwards from navigationIndex, dedup, exclude trashed, take 5
   const recentNotes = useMemo(() => {
     const seen = new Set<string>()
@@ -302,13 +283,18 @@ export function LinearSidebar() {
   }, [navigationHistory, navigationIndex, notes])
 
   const activeRoute = useActiveRoute()
+  const activeFolderId = useActiveFolderId()
   const isActive = (href: string) => {
-    if (ALL_SIDEBAR_ROUTES.includes(href)) return activeRoute === href
+    if (ALL_SIDEBAR_ROUTES.includes(href)) {
+      // /notes is active only when no folder filter is applied
+      if (href === "/notes") return activeRoute === "/notes" && activeFolderId === null
+      return activeRoute === href
+    }
     return pathname === href || pathname.startsWith(href + "/")
   }
 
   const isFolderActive = (folderId: string) => {
-    return pathname.startsWith("/folder/") && pathname.split("/folder/")[1] === folderId
+    return activeRoute === "/notes" && activeFolderId === folderId
   }
 
   const handleCreateNote = () => {
@@ -476,8 +462,9 @@ export function LinearSidebar() {
                 key={folder.id}
                 onClick={() => {
                   accessFolder(folder.id)
-                  setActiveRoute(null)
-                  router.push(`/folder/${folder.id}`)
+                  setActiveFolderId(folder.id)
+                  setActiveRoute("/notes")
+                  router.push("/notes")
                 }}
                 className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
                   active
@@ -512,6 +499,24 @@ export function LinearSidebar() {
             </button>
           )}
         </Section>
+
+        {/* Pinned section */}
+        {pinnedNotes.length > 0 && (
+          <Section title="Pinned">
+            {pinnedNotes.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => openNote(item.id)}
+                className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
+              >
+                <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                  <StatusIcon status={item.status} />
+                </span>
+                <span className="truncate text-left flex-1">{item.title || "Untitled"}</span>
+              </button>
+            ))}
+          </Section>
+        )}
 
         {/* Recent section */}
         {recentNotes.length > 0 && (

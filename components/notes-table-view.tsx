@@ -8,7 +8,7 @@ import { NotesBoard } from "@/components/notes-board"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
-import { useActiveRoute } from "@/lib/table-route"
+import { useActiveRoute, useActiveFolderId } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
@@ -32,6 +32,7 @@ const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
 
 export function NotesTableView() {
   const tableRoute = useActiveRoute()
+  const activeFolderId = useActiveFolderId()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
   const viewMode = useSettingsStore((s) => s.viewMode)
@@ -39,7 +40,11 @@ export function NotesTableView() {
 
   const [previewId, setPreviewId] = useState<string | null>(null)
 
-  const config = TABLE_VIEW_MAP[tableRoute ?? ""] ?? {}
+  const baseConfig = TABLE_VIEW_MAP[tableRoute ?? ""] ?? {}
+  // When a folder is selected, override context to "folder"
+  const config: ViewConfig = activeFolderId && tableRoute === "/notes"
+    ? { ...baseConfig, context: "folder" }
+    : baseConfig
 
   // ESC closes preview panel
   const handleKeyDown = useCallback(
@@ -86,6 +91,7 @@ export function NotesTableView() {
         showTabs={config.showTabs}
         hideCreateButton={config.hideCreateButton}
         createNoteOverrides={config.createNoteOverrides}
+        folderId={activeFolderId ?? undefined}
         onRowClick={(noteId) => setPreviewId(noteId)}
         activePreviewId={previewId}
       />

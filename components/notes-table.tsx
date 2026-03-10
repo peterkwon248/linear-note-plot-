@@ -29,6 +29,9 @@ import {
   Clock,
   Merge,
   Minus,
+  ChevronsUp,
+  ChevronUp,
+  FolderOpen,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -53,12 +56,14 @@ import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import type { ViewContextKey, SortField, SortDirection, GroupBy, FilterRule, NoteGroup } from "@/lib/view-engine/types"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
+import { StatusIcon } from "@/components/status-icon"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note, NoteStatus, NotePriority, Folder } from "@/lib/types"
 import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { setActiveFolderId } from "@/lib/table-route"
 
 /* ── Inline Select (portal-free, works inside Popover) ── */
 
@@ -217,6 +222,7 @@ export function NotesTable({
   showTabs = true,
   createNoteOverrides,
   hideCreateButton = false,
+  folderId,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -225,6 +231,7 @@ export function NotesTable({
   showTabs?: boolean
   createNoteOverrides?: Partial<import("@/lib/types").Note>
   hideCreateButton?: boolean
+  folderId?: string
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -269,7 +276,7 @@ export function NotesTable({
   const displayPopoverOpen = useUIStore((s) => s.displayPopoverOpen)
   const setDisplayPopoverOpen = useUIStore((s) => s.setDisplayPopoverOpen)
 
-  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap })
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId })
 
   // ── Multi-select state ──
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -727,6 +734,23 @@ export function NotesTable({
         onSetFilters={(filters) => updateViewState({ filters })}
       />
 
+      {/* ── Folder indicator ──────────────────────────────── */}
+      {folderId && (() => {
+        const folderName = folders.find((f) => f.id === folderId)?.name
+        return folderName ? (
+          <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
+            <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[13px] text-foreground">{folderName}</span>
+            <button
+              onClick={() => setActiveFolderId(null)}
+              className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ) : null
+      })()}
+
       {/* ── Unlinked helper ─────────────────────────────── */}
       {effectiveTab === "unlinked" && flatNotes.length > 0 && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-3">
@@ -943,7 +967,7 @@ function NoteRowInner({
               ? "bg-accent/5"
               : isActive
                 ? "bg-accent/8 border-l-2 border-l-accent"
-                : "hover:bg-secondary/30"
+                : "hover:bg-secondary/20"
           }`}
           onClick={onClick ?? onOpen}
           onDoubleClick={onDoubleClick}
@@ -989,21 +1013,19 @@ function NoteRowInner({
 
       {/* Status */}
       {visibleCols.includes("status") && (
-        <div className="w-[100px] shrink-0 flex justify-end" onClick={(e) => e.stopPropagation()}>
-          <StatusDropdown value={note.status} onChange={onStatus} variant="inline" />
+        <div className="w-[100px] shrink-0 flex items-center">
+          <StatusIcon status={note.status} className="text-muted-foreground" />
         </div>
       )}
 
       {/* Folder */}
       {visibleCols.includes("folder") && (
-        <div className="w-[80px] shrink-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+        <div className="w-[80px] shrink-0 flex items-center justify-center">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
             if (!folder) return <span className="text-[15px] text-muted-foreground/30">—</span>
             return (
-              <span className="inline-flex items-center rounded-md bg-secondary px-1.5 py-0.5 text-[11px] font-medium leading-none text-muted-foreground">
-                {folder.name}
-              </span>
+              <span className="text-[12px] text-muted-foreground truncate">{folder.name}</span>
             )
           })() : (
             <span className="text-[15px] text-muted-foreground/30">—</span>
@@ -1031,8 +1053,12 @@ function NoteRowInner({
 
       {/* Priority */}
       {visibleCols.includes("priority") && (
-        <div className="w-[72px] shrink-0 flex justify-center" onClick={(e) => e.stopPropagation()}>
-          <PriorityDropdown value={note.priority} onChange={onPriority} variant="inline" />
+        <div className="w-[72px] shrink-0 flex justify-center">
+          {note.priority === "urgent" && <ChevronsUp className="h-4 w-4 text-red-400" />}
+          {note.priority === "high" && <ChevronUp className="h-4 w-4 text-orange-400" />}
+          {note.priority === "medium" && <Minus className="h-4 w-4 text-yellow-400" />}
+          {note.priority === "low" && <ChevronDown className="h-4 w-4 text-blue-400" />}
+          {(!note.priority || note.priority === "none") && <span className="text-[14px] text-muted-foreground">—</span>}
         </div>
       )}
 

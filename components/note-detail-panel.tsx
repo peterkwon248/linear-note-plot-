@@ -9,13 +9,10 @@ import {
   Link2,
   Sparkles,
   ArrowRight,
-  ArrowLeft,
   Bell,
   CircleDot,
   Signal,
-  Eye,
   ExternalLink,
-  Shield,
   Check,
   AlarmClock,
   Trash2,
@@ -23,13 +20,9 @@ import {
   ArrowDownLeft,
   AlertTriangle,
   Inbox,
-  GitBranch,
   Plus,
   Pencil,
-  Brain,
   Archive as ArchiveIcon,
-  MapIcon,
-  Network,
   RotateCcw,
   Merge,
 } from "lucide-react"
@@ -38,37 +31,11 @@ import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
-import { ConnectionsGraph } from "@/components/connections-graph"
-import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
+import { isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { suggestBacklinks } from "@/lib/backlinks"
-import { INTERVALS } from "@/lib/srs"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
-import type { Note, NoteEvent, NoteEventType, ThinkingChainSession } from "@/lib/types"
-
-/* ── Timeline event icon/label mapping ────────────────── */
-
-const EVENT_CONFIG: Record<NoteEventType, { icon: React.ComponentType<{ className?: string }>; label: string }> = {
-  created: { icon: Plus, label: "Created" },
-  updated: { icon: Pencil, label: "Updated" },
-  opened: { icon: Eye, label: "Opened" },
-  promoted: { icon: ArrowUpRight, label: "Promoted" },
-  archived: { icon: ArchiveIcon, label: "Archived" },
-  unarchived: { icon: ArchiveIcon, label: "Unarchived" },
-  triage_keep: { icon: Check, label: "Kept" },
-  triage_snooze: { icon: AlarmClock, label: "Snoozed" },
-  triage_trash: { icon: Trash2, label: "Trashed" },
-  link_added: { icon: Link2, label: "Link added" },
-  link_removed: { icon: Link2, label: "Link removed" },
-  thinking_chain_started: { icon: Brain, label: "Chain started" },
-  thinking_chain_step_added: { icon: Brain, label: "Step added" },
-  thinking_chain_ended: { icon: Brain, label: "Chain ended" },
-  map_added: { icon: MapIcon, label: "Added to map" },
-  map_removed: { icon: MapIcon, label: "Removed from map" },
-  srs_reviewed: { icon: RotateCcw, label: "SRS reviewed" },
-  trashed: { icon: Trash2, label: "Trashed" },
-  untrashed: { icon: Trash2, label: "Restored" },
-}
+import type { Note } from "@/lib/types"
 
 /* ── Section ───────────────────────────────────────────── */
 
@@ -173,17 +140,7 @@ export function NoteDetailPanel({
   const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
-  const noteEvents = usePlotStore((s) => s.noteEvents)
-  const thinkingChains = usePlotStore((s) => s.thinkingChains)
-  const startThinkingChain = usePlotStore((s) => s.startThinkingChain)
-  const addThinkingStep = usePlotStore((s) => s.addThinkingStep)
-  const endThinkingChain = usePlotStore((s) => s.endThinkingChain)
   const addWikiLink = usePlotStore((s) => s.addWikiLink)
-  const knowledgeMaps = usePlotStore((s) => s.knowledgeMaps)
-  const removeNoteFromMap = usePlotStore((s) => s.removeNoteFromMap)
-  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
-  const enrollSRS = usePlotStore((s) => s.enrollSRS)
-  const unenrollSRS = usePlotStore((s) => s.unenrollSRS)
   const setReminder = usePlotStore((s) => s.setReminder)
   const clearReminder = usePlotStore((s) => s.clearReminder)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
@@ -198,68 +155,6 @@ export function NoteDetailPanel({
   const suggestions = useMemo(
     () => (note ? suggestBacklinks(noteId, notes, { limit: 10 }) : []),
     [noteId, notes, note]
-  )
-
-  const noteChains = useMemo(
-    () => thinkingChains.filter((c) => c.noteId === noteId),
-    [thinkingChains, noteId]
-  )
-
-  const activeChain = useMemo(
-    () => noteChains.find((c) => c.status === "active") ?? null,
-    [noteChains]
-  )
-
-  const noteMaps = useMemo(
-    () => knowledgeMaps.filter((m) => m.noteIds.includes(noteId)),
-    [knowledgeMaps, noteId]
-  )
-
-  const timelineEvents = useMemo(() => {
-    return noteEvents
-      .filter((e) => e.noteId === noteId)
-      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
-  }, [noteEvents, noteId])
-
-  const [thinkingStepInput, setThinkingStepInput] = useState("")
-  const [showAllTimeline, setShowAllTimeline] = useState(false)
-  const [collapsedSessions, setCollapsedSessions] = useState<Set<string>>(new Set())
-
-  const toggleSessionCollapse = useCallback((sessionId: string) => {
-    setCollapsedSessions((prev) => {
-      const next = new Set(prev)
-      if (next.has(sessionId)) next.delete(sessionId)
-      else next.add(sessionId)
-      return next
-    })
-  }, [])
-
-  const handleAddStep = useCallback((chainId: string) => {
-    const text = thinkingStepInput.trim()
-    if (!text) return
-    addThinkingStep(chainId, text)
-    setThinkingStepInput("")
-    toast("Step added")
-  }, [thinkingStepInput, addThinkingStep])
-
-  const handleStartChain = useCallback(() => {
-    startThinkingChain(noteId)
-    toast("Thinking chain started")
-  }, [startThinkingChain, noteId])
-
-  const handleEndChain = useCallback((chainId: string) => {
-    endThinkingChain(chainId)
-    toast("Thinking chain ended")
-  }, [endThinkingChain])
-
-  const handleLinkSuggestion = useCallback((targetTitle: string) => {
-    addWikiLink(noteId, targetTitle)
-    toast("Link added")
-  }, [addWikiLink, noteId])
-
-  const readyScore = useMemo(
-    () => (note ? computeReadyScore(note, backlinksIndex) : 0),
-    [note, backlinksIndex]
   )
 
   const ready = useMemo(
@@ -315,6 +210,11 @@ export function NoteDetailPanel({
     moveBackToInbox(noteId)
     toast("Moved back to Inbox")
   }, [moveBackToInbox, noteId])
+
+  const handleLinkSuggestion = useCallback((targetTitle: string) => {
+    addWikiLink(noteId, targetTitle)
+    toast("Link added")
+  }, [addWikiLink, noteId])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -509,50 +409,12 @@ export function NoteDetailPanel({
           )}
         </div>
 
-        {/* Thinking Chain */}
-        {(() => {
-          const parentNote = notes.find((n) => n.id === note.parentNoteId)
-          const childNote = notes.find((n) => n.parentNoteId === note.id)
-          if (!parentNote && !childNote) return null
-          return (
-            <>
-              <PanelSection title="Thinking Chain" icon={<GitBranch className="h-4 w-4" />}>
-                <div className="space-y-1">
-                  {parentNote && (
-                    <button onClick={() => onOpenNote(parentNote.id)} className="group/link flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50">
-                      <ArrowLeft className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="truncate text-[14px] text-foreground">← {parentNote.title || "Untitled"}</span>
-                    </button>
-                  )}
-                  {childNote && (
-                    <button onClick={() => onOpenNote(childNote.id)} className="group/link flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50">
-                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="truncate text-[14px] text-foreground">{childNote.title || "Untitled"} →</span>
-                    </button>
-                  )}
-                </div>
-              </PanelSection>
-              <div className="mx-5 border-b border-border" />
-            </>
-          )
-        })()}
-
         {/* Metadata */}
         <PanelSection title="Metadata" icon={<CircleDot className="h-4 w-4" />}>
           <div className="space-y-0.5">
             <MetaRow label="Status" icon={<CircleDot className="h-3.5 w-3.5" />}>
               <StatusBadge status={note.status} />
             </MetaRow>
-            {note.status === "capture" && (
-              <MetaRow label="Ready Score" icon={<Sparkles className="h-3.5 w-3.5" />}>
-                <span className={`text-[14px] tabular-nums font-medium ${
-                  readyScore >= 5 ? "text-chart-5" : readyScore >= 3 ? "text-chart-3" : "text-muted-foreground"
-                }`}>
-                  {readyScore}/9
-                  {ready && " - Ready"}
-                </span>
-              </MetaRow>
-            )}
             <MetaRow label="Priority" icon={<Signal className="h-3.5 w-3.5" />}>
               <span className="flex items-center gap-1.5">
                 <PriorityBadge priority={note.priority} />
@@ -560,9 +422,6 @@ export function NoteDetailPanel({
                   {note.priority === "none" ? "No priority" : note.priority}
                 </span>
               </span>
-            </MetaRow>
-            <MetaRow label="Reads" icon={<Eye className="h-3.5 w-3.5" />}>
-              <span className="tabular-nums">{note.reads}</span>
             </MetaRow>
             <MetaRow label="Created" icon={<Calendar className="h-3.5 w-3.5" />}>
               {format(new Date(note.createdAt), "MMM d, yyyy")}
@@ -584,64 +443,7 @@ export function NoteDetailPanel({
                 </div>
               </div>
             )}
-            {note.status === "permanent" && (
-              <MetaRow label="SRS" icon={<RotateCcw className="h-3.5 w-3.5" />}>
-                {srsStateByNoteId[noteId] ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-muted-foreground">
-                      {INTERVALS[srsStateByNoteId[noteId].step]}d · {formatDistanceToNow(new Date(srsStateByNoteId[noteId].dueAt), { addSuffix: true })}
-                    </span>
-                    <button
-                      onClick={() => { unenrollSRS(noteId); toast("Removed from SRS") }}
-                      className="rounded px-1.5 py-0.5 text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => { enrollSRS(noteId); toast("Enrolled in SRS") }}
-                    className="rounded-md border border-border bg-card px-2 py-0.5 text-[12px] font-medium text-foreground hover:bg-secondary transition-colors"
-                  >
-                    Enroll
-                  </button>
-                )}
-              </MetaRow>
-            )}
           </div>
-        </PanelSection>
-
-        <div className="mx-5 border-b border-border" />
-
-        {/* Knowledge Maps */}
-        <PanelSection
-          title="Maps"
-          icon={<Network className="h-4 w-4" />}
-          count={noteMaps.length}
-        >
-          {noteMaps.length > 0 ? (
-            <div className="space-y-0.5">
-              {noteMaps.map((m) => (
-                <div key={m.id} className="group/map flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-secondary/50">
-                  <div className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: m.color }} />
-                  <span className="flex-1 truncate text-[14px] text-foreground">{m.title}</span>
-                  <button
-                    onClick={() => {
-                      removeNoteFromMap(m.id, noteId)
-                      toast("Removed from map")
-                    }}
-                    className="shrink-0 rounded p-0.5 text-muted-foreground/0 group-hover/map:text-muted-foreground hover:text-destructive transition-colors"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[14px] text-muted-foreground/60">
-              Not in any knowledge map.
-            </p>
-          )}
         </PanelSection>
 
         <div className="mx-5 border-b border-border" />
@@ -662,141 +464,6 @@ export function NoteDetailPanel({
             <p className="text-[14px] text-muted-foreground/60">
               No other notes reference this note yet.
             </p>
-          )}
-        </PanelSection>
-
-        <div className="mx-5 border-b border-border" />
-
-        {/* Connections Graph */}
-        <PanelSection
-          title="Connections"
-          icon={<Link2 className="h-4 w-4" />}
-        >
-          <ConnectionsGraph
-            noteId={noteId}
-            notes={notes}
-            onOpenNote={onOpenNote}
-          />
-        </PanelSection>
-
-        <div className="mx-5 border-b border-border" />
-
-        {/* Thinking Chain Sessions */}
-        <PanelSection
-          title="Thinking Chains"
-          icon={<Brain className="h-4 w-4" />}
-          count={noteChains.length}
-        >
-          {noteChains.length === 0 && !activeChain ? (
-            <button
-              onClick={handleStartChain}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Start Thinking Chain
-            </button>
-          ) : (
-            <div className="space-y-3">
-              {noteChains.map((session) => {
-                const isActive = session.status === "active"
-                const isCollapsed = !isActive && collapsedSessions.has(session.id)
-                return (
-                  <div key={session.id} className="rounded-md border border-border bg-secondary/20">
-                    {/* Session header */}
-                    <button
-                      onClick={() => !isActive && toggleSessionCollapse(session.id)}
-                      className="flex w-full items-center justify-between px-3 py-2 text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Brain className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-[12px] font-medium text-foreground">
-                          Session {format(new Date(session.startedAt), "MMM d, HH:mm")}
-                        </span>
-                      </div>
-                      <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
-                        isActive
-                          ? "bg-chart-5/10 text-chart-5"
-                          : "bg-muted text-muted-foreground"
-                      }`}>
-                        {session.status}
-                      </span>
-                    </button>
-
-                    {/* Steps */}
-                    {(!isCollapsed || isActive) && (
-                      <div className="border-t border-border px-3 py-2">
-                        {session.steps.length > 0 ? (
-                          <div className="space-y-1.5">
-                            {session.steps.map((step) => (
-                              <div key={step.id} className="flex gap-2">
-                                <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground mt-0.5">
-                                  {format(new Date(step.at), "HH:mm")}
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-[14px] text-foreground">{step.text}</p>
-                                  {step.relatedNoteIds && step.relatedNoteIds.length > 0 && (
-                                    <div className="mt-0.5 flex flex-wrap gap-1">
-                                      {step.relatedNoteIds.map((rid) => {
-                                        const rNote = notes.find((n) => n.id === rid)
-                                        return rNote ? (
-                                          <button
-                                            key={rid}
-                                            onClick={() => onOpenNote(rid)}
-                                            className="text-[11px] text-accent hover:underline"
-                                          >
-                                            {rNote.title || "Untitled"}
-                                          </button>
-                                        ) : null
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-[12px] text-muted-foreground/60">No steps yet.</p>
-                        )}
-
-                        {/* Active session controls */}
-                        {isActive && (
-                          <div className="mt-2 space-y-2">
-                            <input
-                              type="text"
-                              value={thinkingStepInput}
-                              onChange={(e) => setThinkingStepInput(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleAddStep(session.id)
-                              }}
-                              placeholder="Add a thinking step..."
-                              className="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent"
-                            />
-                            <button
-                              onClick={() => handleEndChain(session.id)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                            >
-                              <Check className="h-2.5 w-2.5" />
-                              End Session
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-
-              {/* Start new chain button if no active session */}
-              {!activeChain && (
-                <button
-                  onClick={handleStartChain}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  New Chain
-                </button>
-              )}
-            </div>
           )}
         </PanelSection>
 
@@ -870,46 +537,6 @@ export function NoteDetailPanel({
               Link to...
             </button>
           </div>
-        </PanelSection>
-
-        <div className="mx-5 border-b border-border" />
-
-        {/* Timeline */}
-        <PanelSection
-          title="Timeline"
-          icon={<Clock className="h-4 w-4" />}
-          count={timelineEvents.length}
-        >
-          {timelineEvents.length > 0 ? (
-            <div className="space-y-1">
-              {(showAllTimeline ? timelineEvents : timelineEvents.slice(0, 30)).map((evt) => {
-                const config = EVENT_CONFIG[evt.type]
-                if (!config) return null
-                const Icon = config.icon
-                return (
-                  <div key={evt.id} className="flex items-center gap-2.5 py-1">
-                    <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                    <span className="text-[14px] text-foreground">{config.label}</span>
-                    <span className="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground">
-                      {formatDistanceToNow(new Date(evt.at), { addSuffix: true })}
-                    </span>
-                  </div>
-                )
-              })}
-              {!showAllTimeline && timelineEvents.length > 30 && (
-                <button
-                  onClick={() => setShowAllTimeline(true)}
-                  className="mt-1 text-[12px] font-medium text-accent hover:underline"
-                >
-                  Show all ({timelineEvents.length} events)
-                </button>
-              )}
-            </div>
-          ) : (
-            <p className="text-[14px] text-muted-foreground/60">
-              No events recorded yet.
-            </p>
-          )}
         </PanelSection>
       </div>
     </Wrapper>

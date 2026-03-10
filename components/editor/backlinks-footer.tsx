@@ -6,30 +6,8 @@ import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { suggestBacklinks } from "@/lib/backlinks"
+import { StatusIcon } from "@/components/status-icon"
 import type { NoteStatus } from "@/lib/types"
-
-// Minimal status icon — matches sidebar pattern
-function StatusIcon({ status, className }: { status: NoteStatus; className?: string }) {
-  // □ inbox, ▣ capture/reference, ☑ permanent
-  if (status === "permanent") {
-    return (
-      <span className={cn("inline-flex items-center justify-center w-3.5 h-3.5 border border-current rounded-[2px] relative", className)}>
-        <svg viewBox="0 0 10 10" className="w-2 h-2 absolute">
-          <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </span>
-    )
-  }
-  if (status === "capture" || status === "reference") {
-    return (
-      <span className={cn("inline-flex items-center justify-center w-3.5 h-3.5 border border-current rounded-[2px]", className)}>
-        <span className="w-1.5 h-1.5 bg-current rounded-[1px]" />
-      </span>
-    )
-  }
-  // inbox
-  return <span className={cn("inline-block w-3.5 h-3.5 border border-current rounded-[2px]", className)} />
-}
 
 // Collapsible section header
 function FooterSection({

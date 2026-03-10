@@ -9,7 +9,7 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   sortDirection: "desc",
   groupBy: "none",
   filters: [],
-  visibleColumns: ["title", "status", "folder", "links", "reads", "priority", "updatedAt", "createdAt"],
+  visibleColumns: ["title", "status", "folder", "links", "priority", "updatedAt"],
   showEmptyGroups: false,
 }
 
