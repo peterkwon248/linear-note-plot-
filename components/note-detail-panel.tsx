@@ -278,8 +278,8 @@ export function NoteDetailPanel({
         </div>
       </header>
 
-      {/* Stage-aware workflow action bar */}
-      {note.status === "inbox" && note.triageStatus !== "trashed" && (
+      {/* Stage-aware workflow action bar — hidden when embedded (parent provides its own triage bar) */}
+      {!embedded && note.status === "inbox" && note.triageStatus !== "trashed" && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border bg-secondary/20 px-4 py-2">
           <button
             onClick={handleKeep}
