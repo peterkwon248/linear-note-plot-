@@ -1,2 +1,2 @@
-/** Rendering handled by always-mounted ViewsView in layout */
-export default function ViewsPage() { return null }
+import { redirect } from "next/navigation"
+export default function ViewsPage() { redirect("/notes") }

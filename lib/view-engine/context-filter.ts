@@ -62,19 +62,9 @@ export function applyContext(
         (n) => !n.archived && !n.trashed && n.folderId === extras?.folderId
       )
 
-    case "category":
-      return notes.filter(
-        (n) => !n.archived && !n.trashed && n.category === extras?.categoryId
-      )
-
     case "tag":
       return notes.filter(
         (n) => !n.archived && !n.trashed && extras?.tagId && n.tags.includes(extras.tagId)
-      )
-
-    case "projects":
-      return notes.filter(
-        (n) => !n.archived && !n.trashed && n.projectId != null
       )
 
     case "trash":

@@ -23,7 +23,7 @@ import { usePlotStore } from "@/lib/store"
 import { StatusDropdown, PriorityDropdown, STATUS_CONFIG } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
 import type { ViewContextKey, GroupBy } from "@/lib/view-engine/types"
-import type { Note, NoteStatus, NotePriority, Project } from "@/lib/types"
+import type { Note, NoteStatus, NotePriority, Folder } from "@/lib/types"
 
 /* ── Props ────────────────────────────────────────────── */
 
@@ -32,7 +32,7 @@ interface BoardWorkbenchProps {
   effectiveTab: ViewContextKey
   groupBy: GroupBy
   notes: Note[]
-  projects: Project[]
+  folders: Folder[]
   backlinksMap: Map<string, number>
   onClearSelection: () => void
   onSelectAll: () => void
@@ -47,7 +47,7 @@ export function BoardWorkbench({
   effectiveTab,
   groupBy,
   notes,
-  projects,
+  folders,
   backlinksMap,
   onClearSelection,
   onSelectAll,
@@ -169,7 +169,7 @@ export function BoardWorkbench({
 
         {/* Batch Actions */}
         <div className="space-y-3">
-          <h4 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
+          <h4 className="text-[12px] font-medium text-muted-foreground">
             Batch Actions
           </h4>
 
@@ -206,7 +206,7 @@ export function BoardWorkbench({
 
         {/* Remind */}
         <div className="mt-4 space-y-3">
-          <h4 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
+          <h4 className="text-[12px] font-medium text-muted-foreground">
             Remind
           </h4>
           <div className="space-y-1">
@@ -239,7 +239,7 @@ export function BoardWorkbench({
       <OverviewContent
         effectiveTab={effectiveTab}
         notes={notes}
-        projects={projects}
+        folders={folders}
         backlinksMap={backlinksMap}
         onSelectAll={onSelectAll}
         onSelectMany={onSelectMany}
@@ -292,7 +292,7 @@ function WorkflowActions({
 
   return (
     <div className="mt-4 space-y-3">
-      <h4 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
+      <h4 className="text-[12px] font-medium text-muted-foreground">
         Workflow
       </h4>
       <div className="space-y-1">
@@ -316,7 +316,7 @@ function WorkflowActions({
 function OverviewContent({
   effectiveTab,
   notes,
-  projects,
+  folders: _folders,
   backlinksMap,
   onSelectAll,
   onSelectMany,
@@ -324,7 +324,7 @@ function OverviewContent({
 }: {
   effectiveTab: ViewContextKey
   notes: Note[]
-  projects: Project[]
+  folders: Folder[]
   backlinksMap: Map<string, number>
   onSelectAll: () => void
   onSelectMany?: (ids: string[]) => void
@@ -420,7 +420,7 @@ function InboxOverview({
 
         {/* Quick Actions */}
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
             Quick Actions
           </h4>
           <div className="space-y-1">
@@ -483,7 +483,7 @@ function CaptureOverview({
 
         {/* Ready to Promote */}
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
             Ready to Promote
           </h4>
           <div className="space-y-1">
@@ -509,7 +509,7 @@ function CaptureOverview({
 
         {/* Quick Actions */}
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
             Quick Actions
           </h4>
           <div className="space-y-1">
@@ -580,7 +580,7 @@ function KnowledgeOverview({
         {/* Least Connected */}
         {leastConnected.length > 0 && (
           <div>
-            <h4 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+            <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
               Least Connected
             </h4>
             <div className="space-y-1">
@@ -603,7 +603,7 @@ function KnowledgeOverview({
 
         {/* Quick Actions */}
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
             Quick Actions
           </h4>
           <div className="space-y-1">
@@ -647,7 +647,7 @@ function DefaultOverview({
         </div>
 
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
             Quick Actions
           </h4>
           <div className="space-y-1">

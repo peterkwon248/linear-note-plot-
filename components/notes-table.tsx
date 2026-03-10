@@ -52,10 +52,10 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import type { ViewContextKey, SortField, SortDirection, GroupBy, FilterRule, NoteGroup } from "@/lib/view-engine/types"
-import { StatusDropdown, PriorityDropdown, StatusBadge, PriorityBadge, PROJECT_STATUS_CONFIG, ProjectStatusDropdown, ProjectDropdown } from "@/components/note-fields"
+import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
-import type { Note, NoteStatus, NotePriority, Project } from "@/lib/types"
+import type { Note, NoteStatus, NotePriority, Folder } from "@/lib/types"
 import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
@@ -141,7 +141,7 @@ const TABS: { id: ViewContextKey; label: string }[] = [
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField: SortField }[] = [
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
   { id: "status", label: "Status", width: "w-[100px] shrink-0", align: "text-right", sortField: "status" },
-  { id: "project", label: "Project", width: "w-[80px] shrink-0", align: "text-center", sortField: "project" },
+  { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder" },
   { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links" },
   { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads" },
   { id: "priority", label: "Priority", width: "w-[72px] shrink-0", align: "text-center", sortField: "priority" },
@@ -154,13 +154,13 @@ const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: "status", label: "Status" },
   { value: "priority", label: "Priority" },
   { value: "date", label: "Date" },
-  { value: "project", label: "Project" },
+  { value: "folder", label: "Folder" },
 ]
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: "title", label: "Title" },
   { value: "status", label: "Status" },
-  { value: "project", label: "Project" },
+  { value: "folder", label: "Folder" },
   { value: "links", label: "Links" },
   { value: "reads", label: "Reads" },
   { value: "priority", label: "Priority" },
@@ -227,7 +227,6 @@ export function NotesTable({
   hideCreateButton?: boolean
 }) {
   const notes = usePlotStore((s) => s.notes)
-  const categories = usePlotStore((s) => s.categories)
   const updateNote = usePlotStore((s) => s.updateNote)
   const openNote = usePlotStore((s) => s.openNote)
   const createNote = usePlotStore((s) => s.createNote)
@@ -259,7 +258,7 @@ export function NotesTable({
     }
   }, [notes, backlinksMap])
 
-  const projects = usePlotStore((s) => s.projects)
+  const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
 
   const searchQuery = usePlotStore((s) => s.searchQuery)
@@ -577,7 +576,7 @@ export function NotesTable({
             filters={viewState.filters}
             groupBy={viewState.groupBy}
             isSingleStatusTab={isSingleStatusTab}
-            projects={projects}
+            folders={folders}
             tags={tags}
             onToggleFilter={toggleFilter}
             onSetFilters={(f) => updateViewState({ filters: f })}
@@ -687,7 +686,7 @@ export function NotesTable({
                   <div className="border-b border-border" />
                   <div>
                     <div className="px-4 pt-3 pb-1.5">
-                      <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Display properties</span>
+                      <span className="text-[12px] font-semibold text-muted-foreground">Display properties</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5 px-4 pb-3">
                       {COLUMN_DEFS.filter((c) => c.id !== "title").map((col) => {
@@ -720,7 +719,7 @@ export function NotesTable({
         filters={viewState.filters}
         groupBy={viewState.groupBy}
         isSingleStatusTab={isSingleStatusTab}
-        projects={projects}
+        folders={folders}
         tags={tags}
         onToggleFilter={toggleFilter}
         onRemoveFilter={removeFilter}
@@ -822,8 +821,7 @@ export function NotesTable({
                   ) : (
                     <NoteRow
                       note={item.note}
-                      categories={categories}
-                      projects={projects}
+                      folders={folders}
                       links={backlinksMap.get(item.note.id) ?? 0}
                       isActive={activePreviewId === item.note.id}
                       isSelected={selectedIds.has(item.note.id)}
@@ -837,8 +835,8 @@ export function NotesTable({
                       onDoubleClick={() => openNote(item.note.id)}
                       onStatus={(s) => updateNote(item.note.id, { status: s })}
                       onPriority={(p) => updateNote(item.note.id, { priority: p })}
-                      onSetProject={(projId) => updateNote(item.note.id, { projectId: projId })}
-                      onRemoveProject={() => updateNote(item.note.id, { projectId: null })}
+                      onSetFolder={(folderId) => updateNote(item.note.id, { folderId })}
+                      onRemoveFolder={() => updateNote(item.note.id, { folderId: null })}
                       onKeep={() => triageKeep(item.note.id)}
                       onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
                       onTrash={() => triageTrash(item.note.id)}
@@ -886,8 +884,7 @@ export function NotesTable({
 
 interface NoteRowProps {
   note: Note
-  categories: { id: string; name: string; color: string }[]
-  projects: Project[]
+  folders: Folder[]
   links: number
   isActive?: boolean
   isSelected?: boolean
@@ -898,8 +895,8 @@ interface NoteRowProps {
   onDoubleClick?: () => void
   onStatus: (s: NoteStatus) => void
   onPriority: (p: NotePriority) => void
-  onSetProject: (projectId: string) => void
-  onRemoveProject: () => void
+  onSetFolder: (folderId: string) => void
+  onRemoveFolder: () => void
   onKeep: () => void
   onSnooze: (opt: SnoozePreset) => void
   onTrash: () => void
@@ -913,8 +910,7 @@ interface NoteRowProps {
 
 function NoteRowInner({
   note,
-  categories,
-  projects,
+  folders,
   links,
   isActive,
   isSelected,
@@ -925,8 +921,8 @@ function NoteRowInner({
   onDoubleClick,
   onStatus,
   onPriority,
-  onSetProject,
-  onRemoveProject,
+  onSetFolder,
+  onRemoveFolder,
   onKeep,
   onSnooze,
   onTrash,
@@ -942,7 +938,7 @@ function NoteRowInner({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
-          className={`group flex items-center border-b border-border px-5 py-3 transition-colors cursor-pointer ${
+          className={`group flex items-center px-5 py-3 transition-colors cursor-pointer ${
             isSelected
               ? "bg-accent/5"
               : isActive
@@ -979,18 +975,6 @@ function NoteRowInner({
         <span className="truncate text-[15px] text-foreground">
           {note.title || "Untitled"}
         </span>
-        {(() => {
-          const cat = categories.find((c) => c.id === note.category)
-          if (!cat) return null
-          return (
-            <span
-              className="shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium"
-              style={{ backgroundColor: `${cat.color}18`, color: cat.color }}
-            >
-              {cat.name}
-            </span>
-          )
-        })()}
         {links === 0 && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -1010,23 +994,19 @@ function NoteRowInner({
         </div>
       )}
 
-      {/* Project */}
-      {visibleCols.includes("project") && (
+      {/* Folder */}
+      {visibleCols.includes("folder") && (
         <div className="w-[80px] shrink-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-          {note.projectId ? (() => {
-            const proj = projects.find((p: Project) => p.id === note.projectId)
-            if (!proj) return <span className="text-[15px] text-muted-foreground/30">—</span>
-            const cfg = PROJECT_STATUS_CONFIG[proj.status]
+          {note.folderId ? (() => {
+            const folder = folders.find((f: Folder) => f.id === note.folderId)
+            if (!folder) return <span className="text-[15px] text-muted-foreground/30">—</span>
             return (
-              <span
-                className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-none"
-                style={{ backgroundColor: cfg.bg, color: cfg.color }}
-              >
-                {cfg.label}
+              <span className="inline-flex items-center rounded-md bg-secondary px-1.5 py-0.5 text-[11px] font-medium leading-none text-muted-foreground">
+                {folder.name}
               </span>
             )
           })() : (
-            <ProjectDropdown value={null} projects={projects} onChange={onSetProject} variant="table" />
+            <span className="text-[15px] text-muted-foreground/30">—</span>
           )}
         </div>
       )}
@@ -1215,10 +1195,9 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.note.updatedAt === next.note.updatedAt &&
   prev.note.status === next.note.status &&
   prev.note.priority === next.note.priority &&
-  prev.note.projectId === next.note.projectId &&
+  prev.note.folderId === next.note.folderId &&
   prev.note.reads === next.note.reads &&
   prev.note.title === next.note.title &&
-  prev.note.category === next.note.category &&
   prev.links === next.links &&
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&

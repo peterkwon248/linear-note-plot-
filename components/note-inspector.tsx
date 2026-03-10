@@ -12,7 +12,6 @@ import {
   FileText,
   Pin,
   Archive,
-  Layers,
   AlignLeft,
   Paperclip,
   Link2,
@@ -39,7 +38,7 @@ import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useState, useMemo, useCallback } from "react"
-import { StatusDropdown, PriorityDropdown, ProjectStatusDropdown, ProjectDropdown, PROJECT_STATUS_CONFIG } from "@/components/note-fields"
+import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { Signal, CircleDot } from "lucide-react"
@@ -60,7 +59,7 @@ function InspectorSection({
     <div className={cn("px-4 py-3", className)}>
       <div className="mb-2 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
-        <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-[12px] font-medium text-muted-foreground">
           {title}
         </span>
       </div>
@@ -86,9 +85,7 @@ export function NoteInspector() {
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
-  const categories = usePlotStore((s) => s.categories)
   const updateNote = usePlotStore((s) => s.updateNote)
-  const updateProject = usePlotStore((s) => s.updateProject)
   const addTagToNote = usePlotStore((s) => s.addTagToNote)
   const removeTagFromNote = usePlotStore((s) => s.removeTagFromNote)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -106,12 +103,9 @@ export function NoteInspector() {
   const backlinks = useBacklinksIndex()
 
   const [folderOpen, setFolderOpen] = useState(false)
-  const [categoryOpen, setCategoryOpen] = useState(false)
   const [tagOpen, setTagOpen] = useState(false)
 
   const note = notes.find((n) => n.id === selectedNoteId) ?? null
-
-  const projects = usePlotStore((s) => s.projects)
 
   const headings = useMemo(
     () => (note ? extractHeadings(note.content) : []),
@@ -132,7 +126,6 @@ export function NoteInspector() {
   const linkCount = backlinks.get(note.id) ?? 0
 
   const currentFolder = folders.find((f) => f.id === note.folderId)
-  const currentCategory = categories.find((c) => c.id === note.category)
   const noteTags = tags.filter((t) => note.tags.includes(t.id))
   const availableTags = tags.filter((t) => !note.tags.includes(t.id))
 
@@ -343,38 +336,6 @@ export function NoteInspector() {
 
         <div className="mx-4 border-b border-border" />
 
-        {/* Project */}
-        <InspectorSection title="Project" icon={<Layers className="h-4 w-4" />}>
-          {note.projectId ? (() => {
-            const proj = projects.find((p) => p.id === note.projectId)
-            return proj ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[14px] text-muted-foreground">{proj.name}</span>
-                  <ProjectStatusDropdown
-                    value={proj.status}
-                    onChange={(s) => updateProject(proj.id, { status: s })}
-                  />
-                </div>
-                <button
-                  onClick={() => updateNote(note.id, { projectId: null })}
-                  className="text-[12px] text-destructive hover:underline"
-                >
-                  Remove from project
-                </button>
-              </div>
-            ) : null
-          })() : (
-            <ProjectDropdown
-              value={null}
-              projects={projects}
-              onChange={(projId) => updateNote(note.id, { projectId: projId })}
-            />
-          )}
-        </InspectorSection>
-
-        <div className="mx-4 border-b border-border" />
-
         {/* Folder */}
         <InspectorSection title="Folder" icon={<FolderOpen className="h-4 w-4" />}>
           <Popover open={folderOpen} onOpenChange={setFolderOpen}>
@@ -422,61 +383,6 @@ export function NoteInspector() {
                     style={{ backgroundColor: folder.color }}
                   />
                   {folder.name}
-                </button>
-              ))}
-            </PopoverContent>
-          </Popover>
-        </InspectorSection>
-
-        <div className="mx-4 border-b border-border" />
-
-        {/* Category */}
-        <InspectorSection title="Category" icon={<Layers className="h-4 w-4" />}>
-          <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
-            <PopoverTrigger asChild>
-              <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary/60">
-                <span className="flex items-center gap-2">
-                  {currentCategory && (
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: currentCategory.color }}
-                    />
-                  )}
-                  {currentCategory?.name ?? "No category"}
-                </span>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-52 p-1">
-              <button
-                onClick={() => {
-                  updateNote(note.id, { category: "" })
-                  setCategoryOpen(false)
-                }}
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[14px] transition-colors hover:bg-secondary",
-                  note.category === "" ? "text-foreground" : "text-muted-foreground"
-                )}
-              >
-                No category
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    updateNote(note.id, { category: cat.id })
-                    setCategoryOpen(false)
-                  }}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[14px] transition-colors hover:bg-secondary",
-                    note.category === cat.id ? "text-foreground" : "text-muted-foreground"
-                  )}
-                >
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: cat.color }}
-                  />
-                  {cat.name}
                 </button>
               ))}
             </PopoverContent>

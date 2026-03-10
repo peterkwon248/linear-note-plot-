@@ -15,10 +15,8 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     content: 'Test content',
     contentJson: null,
     folderId: null,
-    category: '',
     tags: [],
     status: 'inbox' as NoteStatus,
-    projectId: null,
     priority: 'none' as NotePriority,
     reads: 0,
     pinned: false,
@@ -275,29 +273,29 @@ describe('applySort', () => {
     })
   })
 
-  describe('sort by project', () => {
-    it('should sort by project id ascending, null values first', () => {
+  describe('sort by folder', () => {
+    it('should sort by folder id ascending, null values first', () => {
       const notes = [
-        makeNote({ id: '1', projectId: 'proj-zebra' }),
-        makeNote({ id: '2', projectId: null }),
-        makeNote({ id: '3', projectId: 'proj-alpha' }),
+        makeNote({ id: '1', folderId: 'folder-zebra' }),
+        makeNote({ id: '2', folderId: null }),
+        makeNote({ id: '3', folderId: 'folder-alpha' }),
       ]
-      const sorted = applySort(notes, 'project', 'asc')
+      const sorted = applySort(notes, 'folder', 'asc')
       // null becomes empty string, sorts first
       expect(sorted.map(n => n.id)).toEqual(['2', '3', '1'])
     })
 
-    it('should sort by project id descending', () => {
+    it('should sort by folder id descending', () => {
       const notes = [
-        makeNote({ id: '1', projectId: 'proj-zebra' }),
-        makeNote({ id: '2', projectId: 'proj-alpha' }),
-        makeNote({ id: '3', projectId: 'proj-beta' }),
+        makeNote({ id: '1', folderId: 'folder-zebra' }),
+        makeNote({ id: '2', folderId: 'folder-alpha' }),
+        makeNote({ id: '3', folderId: 'folder-beta' }),
       ]
-      const sorted = applySort(notes, 'project', 'desc')
-      expect(sorted.map(n => n.projectId)).toEqual([
-        'proj-zebra',
-        'proj-beta',
-        'proj-alpha',
+      const sorted = applySort(notes, 'folder', 'desc')
+      expect(sorted.map(n => n.folderId)).toEqual([
+        'folder-zebra',
+        'folder-beta',
+        'folder-alpha',
       ])
     })
   })
@@ -740,59 +738,59 @@ describe('applyGrouping', () => {
     })
   })
 
-  describe('groupBy "project"', () => {
-    it('should group by project id', () => {
+  describe('groupBy "folder"', () => {
+    it('should group by folder id', () => {
       const notes = [
-        makeNote({ id: '1', projectId: 'proj-a' }),
-        makeNote({ id: '2', projectId: 'proj-a' }),
-        makeNote({ id: '3', projectId: 'proj-b' }),
+        makeNote({ id: '1', folderId: 'folder-a' }),
+        makeNote({ id: '2', folderId: 'folder-a' }),
+        makeNote({ id: '3', folderId: 'folder-b' }),
       ]
-      const groups = applyGrouping(notes, 'project')
+      const groups = applyGrouping(notes, 'folder')
       expect(groups).toHaveLength(2)
-      expect(groups.map(g => g.key)).toEqual(['proj-a', 'proj-b'])
+      expect(groups.map(g => g.key)).toEqual(['folder-a', 'folder-b'])
     })
 
-    it('should sort project ids alphabetically', () => {
+    it('should sort folder ids alphabetically', () => {
       const notes = [
-        makeNote({ id: '1', projectId: 'proj-zebra' }),
-        makeNote({ id: '2', projectId: 'proj-apple' }),
-        makeNote({ id: '3', projectId: 'proj-banana' }),
+        makeNote({ id: '1', folderId: 'folder-zebra' }),
+        makeNote({ id: '2', folderId: 'folder-apple' }),
+        makeNote({ id: '3', folderId: 'folder-banana' }),
       ]
-      const groups = applyGrouping(notes, 'project')
-      expect(groups.map(g => g.key)).toEqual(['proj-apple', 'proj-banana', 'proj-zebra'])
+      const groups = applyGrouping(notes, 'folder')
+      expect(groups.map(g => g.key)).toEqual(['folder-apple', 'folder-banana', 'folder-zebra'])
     })
 
-    it('should create "No Project" group for null projects', () => {
+    it('should create "No Folder" group for null folders', () => {
       const notes = [
-        makeNote({ id: '1', projectId: 'proj-a' }),
-        makeNote({ id: '2', projectId: null }),
-        makeNote({ id: '3', projectId: null }),
+        makeNote({ id: '1', folderId: 'folder-a' }),
+        makeNote({ id: '2', folderId: null }),
+        makeNote({ id: '3', folderId: null }),
       ]
-      const groups = applyGrouping(notes, 'project')
+      const groups = applyGrouping(notes, 'folder')
       expect(groups).toHaveLength(2)
-      const noProjectGroup = groups.find(g => g.key === '_no_project')!
-      expect(noProjectGroup.label).toBe('No Project')
-      expect(noProjectGroup.notes.map(n => n.id)).toEqual(['2', '3'])
+      const noFolderGroup = groups.find(g => g.key === '_no_folder')!
+      expect(noFolderGroup.label).toBe('No Folder')
+      expect(noFolderGroup.notes.map(n => n.id)).toEqual(['2', '3'])
     })
 
-    it('should only include "No Project" group if there are null projects', () => {
+    it('should only include "No Folder" group if there are null folders', () => {
       const notes = [
-        makeNote({ id: '1', projectId: 'proj-a' }),
-        makeNote({ id: '2', projectId: 'proj-b' }),
+        makeNote({ id: '1', folderId: 'folder-a' }),
+        makeNote({ id: '2', folderId: 'folder-b' }),
       ]
-      const groups = applyGrouping(notes, 'project')
+      const groups = applyGrouping(notes, 'folder')
       expect(groups).toHaveLength(2)
-      expect(groups.every(g => g.key !== '_no_project')).toBe(true)
+      expect(groups.every(g => g.key !== '_no_folder')).toBe(true)
     })
 
-    it('should handle notes with all projects as null', () => {
+    it('should handle notes with all folders as null', () => {
       const notes = [
-        makeNote({ id: '1', projectId: null }),
-        makeNote({ id: '2', projectId: null }),
+        makeNote({ id: '1', folderId: null }),
+        makeNote({ id: '2', folderId: null }),
       ]
-      const groups = applyGrouping(notes, 'project')
+      const groups = applyGrouping(notes, 'folder')
       expect(groups).toHaveLength(1)
-      expect(groups[0].key).toBe('_no_project')
+      expect(groups[0].key).toBe('_no_folder')
       expect(groups[0].notes.map(n => n.id)).toEqual(['1', '2'])
     })
   })

@@ -1,14 +1,12 @@
-import type { Note, NoteBody, Folder, Tag, Category, ActiveView, NoteEvent, ThinkingChainSession, KnowledgeMap, Project, SavedView } from "../types"
+import type { Note, NoteBody, Folder, Tag, ActiveView, NoteEvent, ThinkingChainSession, KnowledgeMap, SavedView } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 
 export interface PlotState {
   // ── Data ──
   notes: Note[]
-  projects: Project[]
   folders: Folder[]
   tags: Tag[]
-  categories: Category[]
 
   // ── UI State ──
   activeView: ActiveView
@@ -89,9 +87,11 @@ export interface PlotState {
   enrollAllPermanentSRS: () => number
 
   // ── Folders ──
-  createFolder: (name: string, color: string) => void
+  createFolder: (name: string, color: string, opts?: Partial<Folder>) => void
   updateFolder: (id: string, updates: Partial<Folder>) => void
   deleteFolder: (id: string) => void
+  accessFolder: (id: string) => void
+  toggleFolderPin: (id: string) => void
 
   // ── Tags ──
   createTag: (name: string, color: string) => void
@@ -99,11 +99,6 @@ export interface PlotState {
   deleteTag: (id: string) => void
   addTagToNote: (noteId: string, tagId: string) => void
   removeTagFromNote: (noteId: string, tagId: string) => void
-
-  // ── Categories ──
-  createCategory: (name: string, color: string) => void
-  updateCategory: (id: string, updates: Partial<Category>) => void
-  deleteCategory: (id: string) => void
 
   // ── UI Actions ──
   setActiveView: (view: ActiveView) => void
@@ -147,11 +142,6 @@ export interface PlotState {
   createSavedView: (name: string, config?: Partial<SavedView>) => string
   updateSavedView: (id: string, updates: Partial<SavedView>) => void
   deleteSavedView: (id: string) => void
-
-  // ── Projects ──
-  createProject: (name: string) => string
-  updateProject: (id: string, updates: Partial<Project>) => void
-  deleteProject: (id: string) => void
 
   // ── Internal ──
   _hydrateNoteBodies: (bodies: NoteBody[]) => void

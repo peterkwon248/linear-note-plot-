@@ -95,12 +95,6 @@ export function suggestBacklinks(
       reasons.push("same folder")
     }
 
-    // (C) Same category
-    if (target.category && other.category === target.category) {
-      score += 2
-      reasons.push("same category")
-    }
-
     if (score > 0) {
       results.push({ noteId: other.id, score, reasons })
     }

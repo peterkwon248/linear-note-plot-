@@ -44,7 +44,6 @@ export function migrate(persistedState: unknown): PlotState {
         archivedAt: n.archivedAt ?? null,
         parentNoteId: n.parentNoteId ?? null,
         contentJson: n.contentJson ?? null,
-        projectLevel: n.projectLevel ?? null,
         // v13: Precomputed fields
         preview: n.preview ?? extractPreview(content),
         linksOut: n.linksOut ?? extractLinksOut(content),
@@ -169,6 +168,137 @@ export function migrate(persistedState: unknown): PlotState {
   // v23: Saved Views
   if (!state.savedViews) state.savedViews = []
   state._viewStateHydrated = false // always reset transient flag
+
+  // v24: Sidebar Surgery — Projects → Folders, Categories → Tags
+  // 1. Expand existing folders with new fields
+  if (state.folders && Array.isArray(state.folders)) {
+    state.folders = (state.folders as Array<Record<string, unknown>>).map(f => ({
+      ...f,
+      parentId: f.parentId ?? null,
+      lastAccessedAt: f.lastAccessedAt ?? null,
+      pinned: f.pinned ?? false,
+      pinnedOrder: f.pinnedOrder ?? 0,
+      createdAt: f.createdAt ?? new Date().toISOString(),
+    }))
+  }
+
+  // 2. Convert Projects → Folders
+  if (state.projects && Array.isArray(state.projects) && (state.projects as unknown[]).length > 0) {
+    const projects = state.projects as Array<Record<string, unknown>>
+    const folders = (state.folders ?? []) as Array<Record<string, unknown>>
+    const existingFolderNames = new Set(folders.map(f => (f.name as string).toLowerCase()))
+
+    for (const proj of projects) {
+      const projName = proj.name as string
+      // Skip if a folder with the same name already exists
+      if (existingFolderNames.has(projName.toLowerCase())) {
+        // Map notes from this project to the existing folder
+        const existingFolder = folders.find(f => (f.name as string).toLowerCase() === projName.toLowerCase())
+        if (existingFolder && state.notes && Array.isArray(state.notes)) {
+          for (const n of state.notes as Array<Record<string, unknown>>) {
+            if (n.projectId === proj.id && !n.folderId) {
+              n.folderId = existingFolder.id
+            }
+          }
+        }
+      } else {
+        // Create new folder from project
+        const folderId = `folder-from-proj-${proj.id}`
+        folders.push({
+          id: folderId,
+          name: projName,
+          color: "#5e6ad2",
+          parentId: null,
+          lastAccessedAt: proj.updatedAt ?? null,
+          pinned: false,
+          pinnedOrder: 0,
+          createdAt: (proj.createdAt as string) ?? new Date().toISOString(),
+        })
+        existingFolderNames.add(projName.toLowerCase())
+
+        // Map notes from this project to new folder
+        if (state.notes && Array.isArray(state.notes)) {
+          for (const n of state.notes as Array<Record<string, unknown>>) {
+            if (n.projectId === proj.id && !n.folderId) {
+              n.folderId = folderId
+            }
+          }
+        }
+      }
+    }
+    state.folders = folders
+    state.projects = [] // Clear projects
+  }
+
+  // 3. Convert Categories → Tags
+  if (state.categories && Array.isArray(state.categories) && (state.categories as unknown[]).length > 0) {
+    const categories = state.categories as Array<Record<string, unknown>>
+    const tags = (state.tags ?? []) as Array<Record<string, unknown>>
+    const existingTagNames = new Set(tags.map(t => (t.name as string).toLowerCase()))
+    const categoryToTagId = new Map<string, string>()
+
+    for (const cat of categories) {
+      const catName = (cat.name as string).toLowerCase()
+      const existingTag = tags.find(t => (t.name as string).toLowerCase() === catName)
+      if (existingTag) {
+        categoryToTagId.set(cat.id as string, existingTag.id as string)
+      } else {
+        const tagId = `tag-from-cat-${cat.id}`
+        categoryToTagId.set(cat.id as string, tagId)
+        tags.push({
+          id: tagId,
+          name: cat.name,
+          color: cat.color,
+        })
+      }
+    }
+    state.tags = tags
+
+    // Migrate note.category → note.tags
+    if (state.notes && Array.isArray(state.notes)) {
+      for (const n of state.notes as Array<Record<string, unknown>>) {
+        if (n.category && typeof n.category === "string" && n.category !== "") {
+          const mappedTagId = categoryToTagId.get(n.category)
+          if (mappedTagId) {
+            const noteTags = (n.tags ?? []) as string[]
+            if (!noteTags.includes(mappedTagId)) {
+              n.tags = [...noteTags, mappedTagId]
+            }
+          }
+        }
+      }
+    }
+    state.categories = [] // Clear categories
+  }
+
+  // 4. Clean up note fields: remove category and projectId
+  if (state.notes && Array.isArray(state.notes)) {
+    for (const n of state.notes as Array<Record<string, unknown>>) {
+      delete n.category
+      delete n.projectId
+    }
+  }
+
+  // 5. Normalize persisted ViewState: "project" → "folder"
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+    for (const key of Object.keys(vsMap)) {
+      const vs = vsMap[key]
+      if (vs.sortField === "project") vs.sortField = "folder"
+      if (vs.groupBy === "project") vs.groupBy = "folder"
+      if (Array.isArray(vs.visibleColumns)) {
+        vs.visibleColumns = (vs.visibleColumns as string[]).map(c => c === "project" ? "folder" : c)
+      }
+      if (Array.isArray(vs.filters)) {
+        vs.filters = (vs.filters as Array<Record<string, unknown>>).map(f =>
+          f.field === "project" ? { ...f, field: "folder" } : f
+        )
+      }
+    }
+    // Remove deprecated context keys
+    delete (vsMap as Record<string, unknown>)["category"]
+    delete (vsMap as Record<string, unknown>)["projects"]
+  }
 
   return state as unknown as PlotState
 }

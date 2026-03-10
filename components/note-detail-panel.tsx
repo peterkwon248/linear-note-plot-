@@ -15,7 +15,6 @@ import {
   Signal,
   Eye,
   ExternalLink,
-  Layers,
   Shield,
   Check,
   AlarmClock,
@@ -37,7 +36,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
-import { StatusBadge, PriorityBadge, PROJECT_STATUS_CONFIG, ProjectDropdown } from "@/components/note-fields"
+import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
 import { ConnectionsGraph } from "@/components/connections-graph"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
@@ -100,7 +99,7 @@ function PanelSection({
     <div className="px-5 py-3">
       <div className="mb-2.5 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
-        <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-[12px] font-medium text-muted-foreground">
           {title}
         </span>
         {count !== undefined && (
@@ -205,8 +204,6 @@ export function NoteDetailPanel({
   const backlinksIndex = useBacklinksIndex()
 
   const note = notes.find((n) => n.id === noteId)
-
-  const projects = usePlotStore((s) => s.projects)
 
   const backlinks = useMemo(
     () => (note ? getBacklinkNotes(noteId, notes) : []),
@@ -560,24 +557,6 @@ export function NoteDetailPanel({
           <div className="space-y-0.5">
             <MetaRow label="Status" icon={<CircleDot className="h-3.5 w-3.5" />}>
               <StatusBadge status={note.status} />
-            </MetaRow>
-            <MetaRow label="Project" icon={<Layers className="h-3.5 w-3.5" />}>
-              {note.projectId ? (() => {
-                const proj = projects.find((p) => p.id === note.projectId)
-                if (!proj) return null
-                const cfg = PROJECT_STATUS_CONFIG[proj.status] ?? PROJECT_STATUS_CONFIG.planning
-                return (
-                  <span className="inline-flex items-center rounded-md px-2 py-1 text-[15px] font-semibold leading-none" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
-                    {cfg.label}
-                  </span>
-                )
-              })() : (
-                <ProjectDropdown
-                  value={null}
-                  projects={projects}
-                  onChange={(projId) => updateNote(noteId, { projectId: projId })}
-                />
-              )}
             </MetaRow>
             {note.status === "capture" && (
               <MetaRow label="Ready Score" icon={<Sparkles className="h-3.5 w-3.5" />}>

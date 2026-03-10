@@ -1,21 +1,19 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, KnowledgeMap, Project, SavedView } from "../types"
+import type { NoteEvent, KnowledgeMap, SavedView } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
-import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_CATEGORIES } from "./seeds"
+import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS } from "./seeds"
 import { createNotesSlice } from "./slices/notes"
 import { createWorkflowSlice } from "./slices/workflow"
 import { createFoldersSlice } from "./slices/folders"
 import { createTagsSlice } from "./slices/tags"
-import { createCategoriesSlice } from "./slices/categories"
 import { createThinkingSlice } from "./slices/thinking"
 import { createMapsSlice } from "./slices/maps"
 import { createUISlice } from "./slices/ui"
 import { createAlertsSlice } from "./slices/alerts"
-import { createProjectsSlice } from "./slices/projects"
 import { createViewsSlice } from "./slices/views"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -28,10 +26,8 @@ export const usePlotStore = create<PlotState>()(
       return {
         // ── Initial State ──
         notes: SEED_NOTES,
-        projects: [] as Project[],
         folders: SEED_FOLDERS,
         tags: SEED_TAGS,
-        categories: SEED_CATEGORIES,
 
         activeView: { type: "all" } as const,
         selectedNoteId: null,
@@ -67,18 +63,16 @@ export const usePlotStore = create<PlotState>()(
         ...createWorkflowSlice(set, get, appendEvent),
         ...createFoldersSlice(set),
         ...createTagsSlice(set),
-        ...createCategoriesSlice(set),
         ...createThinkingSlice(set, get, appendEvent),
         ...createMapsSlice(set, appendEvent),
         ...createUISlice(set, appendEvent),
         ...createAlertsSlice(set),
-        ...createProjectsSlice(set),
         ...createViewsSlice(set),
       }
     },
     {
       name: "plot-store",
-      version: 23,
+      version: 24,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

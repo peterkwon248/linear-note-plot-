@@ -35,7 +35,6 @@ export function NoteEditor() {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
-  const categories = usePlotStore((s) => s.categories)
   const updateNote = usePlotStore((s) => s.updateNote)
   const togglePin = usePlotStore((s) => s.togglePin)
   const toggleArchive = usePlotStore((s) => s.toggleArchive)
@@ -108,7 +107,6 @@ export function NoteEditor() {
   if (!note) return null
 
   const currentFolder = folders.find((f) => f.id === note.folderId)
-  const currentCategory = categories.find((c) => c.id === note.category)
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background">
@@ -148,19 +146,7 @@ export function NoteEditor() {
               {currentFolder.name}
             </span>
           )}
-          {currentFolder && currentCategory && (
-            <span className="text-[14px] text-muted-foreground/40">/</span>
-          )}
-          {currentCategory && (
-            <span className="flex items-center gap-1.5 text-[14px] text-muted-foreground">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: currentCategory.color }}
-              />
-              {currentCategory.name}
-            </span>
-          )}
-          {!currentFolder && !currentCategory && (
+          {!currentFolder && (
             <span className="text-[14px] text-muted-foreground">
               {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
             </span>

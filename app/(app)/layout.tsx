@@ -15,12 +15,6 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { NotesTableView } from "@/components/notes-table-view"
 import { useActiveRoute, syncFromPathname, TABLE_VIEW_ROUTES, VIEW_ROUTES } from "@/lib/table-route"
 import { InboxView } from "@/components/views/inbox-view"
-import { ReviewView } from "@/components/views/review-view"
-import { AlertsView } from "@/components/views/alerts-view"
-import { ProjectsView } from "@/components/views/projects-view"
-import { TagsView } from "@/components/views/tags-view"
-import { ViewsView } from "@/components/views/views-view"
-import { MapsView } from "@/components/views/maps-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 
@@ -177,36 +171,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {(mountedViews.has("/inbox") || activeRoute === "/inbox") && (
             <div className={activeRoute === "/inbox" ? "flex flex-1 overflow-hidden" : "hidden"}>
               <InboxView />
-            </div>
-          )}
-          {(mountedViews.has("/review") || activeRoute === "/review") && (
-            <div className={activeRoute === "/review" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <ReviewView />
-            </div>
-          )}
-          {(mountedViews.has("/alerts") || activeRoute === "/alerts") && (
-            <div className={activeRoute === "/alerts" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <AlertsView />
-            </div>
-          )}
-          {(mountedViews.has("/projects") || activeRoute === "/projects") && (
-            <div className={activeRoute === "/projects" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <ProjectsView />
-            </div>
-          )}
-          {(mountedViews.has("/tags") || activeRoute === "/tags") && (
-            <div className={activeRoute === "/tags" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <TagsView />
-            </div>
-          )}
-          {(mountedViews.has("/views") || activeRoute === "/views") && (
-            <div className={activeRoute === "/views" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <ViewsView />
-            </div>
-          )}
-          {(mountedViews.has("/maps") || activeRoute === "/maps") && (
-            <div className={activeRoute === "/maps" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <MapsView />
             </div>
           )}
 

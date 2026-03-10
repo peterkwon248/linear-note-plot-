@@ -9,7 +9,7 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   sortDirection: "desc",
   groupBy: "none",
   filters: [],
-  visibleColumns: ["title", "status", "project", "links", "reads", "priority", "updatedAt", "createdAt"],
+  visibleColumns: ["title", "status", "folder", "links", "reads", "priority", "updatedAt", "createdAt"],
   showEmptyGroups: false,
 }
 
@@ -22,7 +22,6 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   review:    { viewMode: "list", sortField: "updatedAt", groupBy: "status" },
   archive:   { viewMode: "list", sortField: "updatedAt" },
   folder:    { viewMode: "list", sortField: "updatedAt" },
-  category:  { viewMode: "list", sortField: "updatedAt" },
   tag:       { viewMode: "list", sortField: "updatedAt" },
   savedView: { viewMode: "table", sortField: "updatedAt", groupBy: "none" },
 }
@@ -61,7 +60,16 @@ function ensureRequiredColumns(columns: string[]): string[] {
  */
 export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey): ViewState {
   const base = buildViewStateForContext(ctx)
-  const merged = { ...base, ...raw }
+
+  // Migrate persisted "project" references to "folder"
+  const migrated: Partial<ViewState> = { ...raw }
+  if ((migrated.sortField as string) === "project") migrated.sortField = "folder"
+  if ((migrated.groupBy as string) === "project") migrated.groupBy = "folder"
+  if (Array.isArray(migrated.visibleColumns)) {
+    migrated.visibleColumns = migrated.visibleColumns.map((c) => c === "project" ? "folder" : c)
+  }
+
+  const merged = { ...base, ...migrated }
 
   return {
     viewMode: VALID_VIEW_MODES.includes(merged.viewMode) ? merged.viewMode : base.viewMode,

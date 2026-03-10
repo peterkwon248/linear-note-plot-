@@ -188,10 +188,9 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const createNote = usePlotStore((s) => s.createNote)
   const folders = usePlotStore((s) => s.folders)
-  const categories = usePlotStore((s) => s.categories)
   const tags = usePlotStore((s) => s.tags)
   const filteredNotes = useMemo(() => filterNotesByRoute(notes, filter, searchQuery), [notes, filter, searchQuery])
-  const viewTitle = useMemo(() => getFilterTitle(filter, { folders, categories, tags }), [filter, folders, categories, tags])
+  const viewTitle = useMemo(() => getFilterTitle(filter, { folders, tags }), [filter, folders, tags])
   const groups = useMemo(() => groupNotesByDate(filteredNotes), [filteredNotes])
 
   const flatItems = useMemo(() => {
@@ -239,7 +238,6 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
             onClick={() => createNote({
               status: filter.type === "inbox" ? "inbox" as const : undefined,
               folderId: filter.type === "folder" ? filter.folderId : undefined,
-              category: filter.type === "category" ? filter.categoryId : undefined,
               pinned: filter.type === "pinned" ? true : undefined,
             })}
           >
@@ -286,7 +284,7 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
                   {item.type === "header" ? (
                     <div className="flex items-center gap-2 bg-background/95 backdrop-blur-sm px-3 py-2 border-b border-border">
                       <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
+                      <span className="text-[12px] font-medium text-muted-foreground">
                         {item.label}
                       </span>
                       <span className="text-[12px] text-muted-foreground/60">

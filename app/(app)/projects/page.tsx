@@ -1,4 +1,2 @@
-/** Rendering handled by always-mounted ProjectsView in layout */
-export default function ProjectsPage() {
-  return null
-}
+import { redirect } from "next/navigation"
+export default function ProjectsPage() { redirect("/notes") }

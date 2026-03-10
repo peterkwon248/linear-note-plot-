@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { applyFilters } from "@/lib/view-engine/filter"
-import { FileText, X, Plus, ChevronDown, CircleDot, Signal, FolderOpen, Hash, Check } from "lucide-react"
+import { FileText, X, Plus, ChevronDown, CircleDot, Signal, Hash, Check } from "lucide-react"
 import type { FilterRule, FilterField } from "@/lib/view-engine/types"
 import type { NoteStatus, NotePriority } from "@/lib/types"
 import type { LucideIcon } from "lucide-react"
@@ -115,7 +115,6 @@ export function NotePickerDialog({
   onSelect,
 }: NotePickerDialogProps) {
   const notes = usePlotStore((s) => s.notes)
-  const projects = usePlotStore((s) => s.projects)
   const tags = usePlotStore((s) => s.tags)
 
   // Record<groupKey, Set<selectedValues>>
@@ -129,17 +128,6 @@ export function NotePickerDialog({
   const excludeSet = useMemo(() => new Set(excludeIds), [excludeIds])
 
   // Build dynamic groups from store data
-  const projectGroup: PickerFilterGroup = useMemo(() => ({
-    key: "project",
-    label: "Project",
-    icon: FolderOpen,
-    field: "project" as FilterField,
-    values: [
-      { value: "_none", label: "No project" },
-      ...projects.map((p) => ({ value: p.id, label: p.name })),
-    ],
-  }), [projects])
-
   const tagsGroup: PickerFilterGroup = useMemo(() => ({
     key: "tags",
     label: "Tags",
@@ -152,8 +140,8 @@ export function NotePickerDialog({
   }), [tags])
 
   const allGroups = useMemo<PickerFilterGroup[]>(
-    () => [STATUS_GROUP, PRIORITY_GROUP, projectGroup, tagsGroup],
-    [projectGroup, tagsGroup],
+    () => [STATUS_GROUP, PRIORITY_GROUP, tagsGroup],
+    [tagsGroup],
   )
 
   // Convert activeFilters → FilterRule[] for applyFilters()

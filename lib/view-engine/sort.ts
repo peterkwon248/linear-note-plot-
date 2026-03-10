@@ -29,10 +29,11 @@ export function applySort(
       case "priority":
         return dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
 
-      case "project": {
-        const ap = a.projectId ?? ""
-        const bp = b.projectId ?? ""
-        return dir * ap.localeCompare(bp)
+      case "folder": {
+        // Sort by folderId (null values last)
+        const aFolder = a.folderId ?? ""
+        const bFolder = b.folderId ?? ""
+        return dir * aFolder.localeCompare(bFolder)
       }
 
       case "links": {
