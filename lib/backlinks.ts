@@ -95,6 +95,17 @@ export function suggestBacklinks(
       reasons.push("same folder")
     }
 
+    // (D) Staleness boost: surface old related notes for natural review
+    // Only applies to notes that already have some relevance (score > 0 after above signals)
+    if (score > 0) {
+      const daysSinceTouch = (Date.now() - new Date(other.lastTouchedAt).getTime()) / 86400000
+      if (daysSinceTouch > 14) {
+        const stalenessBonus = Math.min(Math.floor(daysSinceTouch / 7), 8)
+        score += stalenessBonus
+        reasons.push(`${Math.floor(daysSinceTouch)}d since last visit`)
+      }
+    }
+
     if (score > 0) {
       results.push({ noteId: other.id, score, reasons })
     }

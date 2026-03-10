@@ -6,12 +6,8 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import {
   getInboxNotes,
   computeInboxRank,
-  computeReadyScore,
-  getReviewQueue,
   getSnoozeTime,
 } from "@/lib/queries/notes"
-import type { ReviewItem } from "@/lib/queries/notes"
-import { computeAlerts, ALERT_TYPE_CONFIG } from "@/lib/alerts"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
@@ -28,53 +24,11 @@ import {
   Check,
   Clock,
   Trash2,
-  ChevronRight,
-  ChevronDown,
   Zap,
-  FileText,
-  AlertCircle,
-  Bell,
-  X,
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
-import type { Note, Alert } from "@/lib/types"
-
-/* ── Collapsible Section ───────────────────────────────── */
-
-function InboxSection({
-  title,
-  count,
-  children,
-  defaultOpen = true,
-}: {
-  title: string
-  count: number
-  children: React.ReactNode
-  defaultOpen?: boolean
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-
-  return (
-    <div className="border-b border-border last:border-b-0">
-      <button
-        className="flex w-full items-center gap-2 px-5 py-2 text-left hover:bg-secondary/20 transition-colors"
-        onClick={() => setOpen((v) => !v)}
-      >
-        {open ? (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        )}
-        <span className="text-[13px] font-medium text-foreground">{title}</span>
-        <span className="rounded-full bg-accent/10 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-accent">
-          {count}
-        </span>
-      </button>
-      {open && <div>{children}</div>}
-    </div>
-  )
-}
+import type { Note } from "@/lib/types"
 
 /* ── InboxView ─────────────────────────────────────────── */
 
@@ -87,27 +41,12 @@ export function InboxView() {
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
-  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
-  const dismissedAlertIds = usePlotStore((s) => s.dismissedAlertIds)
-  const dismissAlert = usePlotStore((s) => s.dismissAlert)
 
   const backlinks = useBacklinksIndex()
 
   const [previewId, setPreviewId] = useState<string | null>(null)
 
   const inboxNotes = useMemo(() => getInboxNotes(notes, backlinks), [notes, backlinks])
-
-  const reviewQueue = useMemo(
-    () => getReviewQueue(notes, backlinks, srsStateByNoteId),
-    [notes, backlinks, srsStateByNoteId]
-  )
-
-  const alerts = useMemo(() => {
-    const dismissed = new Set(dismissedAlertIds ?? [])
-    return computeAlerts(notes, srsStateByNoteId, dismissed)
-  }, [notes, srsStateByNoteId, dismissedAlertIds])
-
-  const totalCount = inboxNotes.length + reviewQueue.length + alerts.length
 
   // Navigate to next inbox item after triage action
   const goNext = useCallback(
@@ -146,7 +85,7 @@ export function InboxView() {
     [triageTrash, goNext]
   )
 
-  // Keyboard shortcuts (K, S, X) when preview is active
+  // Keyboard shortcuts (K, S, T) when preview is active
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (!previewId) return
@@ -193,13 +132,15 @@ export function InboxView() {
   return (
     <div className="flex flex-1 overflow-hidden">
       <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
-        {/* Title */}
+        {/* Header */}
         <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-3">
           <div className="flex items-center gap-2">
             <h1 className="text-base font-semibold text-foreground">Inbox</h1>
-            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[12px] font-medium tabular-nums text-accent">
-              {totalCount}
-            </span>
+            {inboxNotes.length > 0 && (
+              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[12px] font-medium tabular-nums text-accent">
+                {inboxNotes.length}
+              </span>
+            )}
           </div>
           <button
             className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
@@ -210,12 +151,12 @@ export function InboxView() {
         </header>
 
         {/* Content */}
-        {totalCount === 0 ? (
+        {inboxNotes.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <Inbox className="mb-4 h-12 w-12 text-muted-foreground/20" />
-            <p className="text-[15px] text-muted-foreground">Inbox zero</p>
+            <p className="text-[15px] text-muted-foreground">Inbox zero — all caught up</p>
             <p className="mt-1 text-[14px] text-muted-foreground/60">
-              All notes have been triaged. Create a new note to get started.
+              Create a new note to get started.
             </p>
             <button
               onClick={() => createNote({ status: "inbox" })}
@@ -226,64 +167,16 @@ export function InboxView() {
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
-            {/* Section 1: Triage */}
-            <InboxSection title="Triage" count={inboxNotes.length}>
-              {inboxNotes.length === 0 ? (
-                <div className="px-5 py-4 text-[13px] text-muted-foreground/60">
-                  All triaged
-                </div>
-              ) : (
-                inboxNotes.map((note) => (
-                  <InboxRow
-                    key={note.id}
-                    note={note}
-                    isActive={previewId === note.id}
-                    backlinks={backlinks}
-                    onClick={() => setPreviewId(note.id)}
-                    onDoubleClick={() => openNote(note.id)}
-                  />
-                ))
-              )}
-            </InboxSection>
-
-            {/* Section 2: Review */}
-            <InboxSection title="Review" count={reviewQueue.length}>
-              {reviewQueue.length === 0 ? (
-                <div className="px-5 py-4 text-[13px] text-muted-foreground/60">
-                  No reviews pending
-                </div>
-              ) : (
-                reviewQueue.map((item) => (
-                  <ReviewRow
-                    key={`${item.note.id}-${item.reason}`}
-                    item={item}
-                    backlinks={backlinks}
-                    isActive={previewId === item.note.id}
-                    onClick={() => setPreviewId(item.note.id)}
-                    onDoubleClick={() => openNote(item.note.id)}
-                  />
-                ))
-              )}
-            </InboxSection>
-
-            {/* Section 3: Alerts */}
-            <InboxSection title="Alerts" count={alerts.length}>
-              {alerts.length === 0 ? (
-                <div className="px-5 py-4 text-[13px] text-muted-foreground/60">
-                  No alerts
-                </div>
-              ) : (
-                alerts.map((alert) => (
-                  <AlertRow
-                    key={alert.id}
-                    alert={alert}
-                    isActive={previewId === alert.noteId}
-                    onClick={() => setPreviewId(alert.noteId)}
-                    onDismiss={() => dismissAlert(alert.id)}
-                  />
-                ))
-              )}
-            </InboxSection>
+            {inboxNotes.map((note) => (
+              <InboxRow
+                key={note.id}
+                note={note}
+                isActive={previewId === note.id}
+                backlinks={backlinks}
+                onClick={() => setPreviewId(note.id)}
+                onDoubleClick={() => openNote(note.id)}
+              />
+            ))}
           </div>
         )}
       </main>
@@ -398,155 +291,6 @@ function InboxRow({
   )
 }
 
-/* ── Review Row ────────────────────────────────────────── */
-
-const REVIEW_REASON_LABELS: Record<string, string> = {
-  "inbox-untriaged": "Untriaged inbox note",
-  "snoozed-due": "Snooze expired",
-  "stale-capture": "Stale capture",
-  "unlinked-permanent": "Unlinked permanent",
-  "srs-due": "SRS review due",
-  "remind-due": "Reminder due",
-}
-
-function ReviewRow({
-  item,
-  backlinks,
-  isActive,
-  onClick,
-  onDoubleClick,
-}: {
-  item: ReviewItem
-  backlinks: Map<string, number>
-  isActive: boolean
-  onClick: () => void
-  onDoubleClick: () => void
-}) {
-  const { note, reason } = item
-
-  const score = useMemo(() => {
-    if (note.status === "inbox") return computeInboxRank(note, backlinks)
-    if (note.status === "capture") return computeReadyScore(note, backlinks)
-    return backlinks.get(note.id) ?? 0
-  }, [note, backlinks])
-
-  const reviewAt = note.reviewAt ? new Date(note.reviewAt) : null
-
-  return (
-    <div
-      className={`group flex items-center px-5 py-2.5 transition-colors cursor-pointer ${
-        isActive
-          ? "bg-accent/8 border-l-2 border-l-accent"
-          : "hover:bg-secondary/30"
-      }`}
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
-    >
-      {/* Priority */}
-      <div className="w-7 shrink-0 flex justify-center">
-        <PriorityBadge priority={note.priority} />
-      </div>
-
-      {/* Score indicator */}
-      <div className="w-8 shrink-0 flex justify-center">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className={`flex items-center gap-0.5 text-[12px] tabular-nums font-medium ${
-              score >= 5 ? "text-chart-5" : score >= 2 ? "text-muted-foreground" : "text-muted-foreground/50"
-            }`}>
-              <FileText className="h-2.5 w-2.5" />
-              {score}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-[12px]">Score: {score}</TooltipContent>
-        </Tooltip>
-      </div>
-
-      {/* Title + reason */}
-      <div className="flex flex-1 flex-col min-w-0 pr-3">
-        <span className="truncate text-[15px] text-foreground">
-          {note.title || "Untitled"}
-        </span>
-        <span className="truncate text-[12px] text-muted-foreground/70">
-          {REVIEW_REASON_LABELS[reason] ?? reason}
-        </span>
-      </div>
-
-      {/* Due date */}
-      {reviewAt && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="shrink-0 text-[12px] tabular-nums text-chart-3 cursor-default">
-              {format(reviewAt, "MMM d")}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-[12px]">
-            Due {format(reviewAt, "MMM d, yyyy 'at' h:mm a")}
-          </TooltipContent>
-        </Tooltip>
-      )}
-    </div>
-  )
-}
-
-/* ── Alert Row ─────────────────────────────────────────── */
-
-const SEVERITY_DOT: Record<string, string> = {
-  info: "bg-chart-2",
-  warning: "bg-chart-3",
-  urgent: "bg-destructive",
-}
-
-function AlertRow({
-  alert,
-  isActive,
-  onClick,
-  onDismiss,
-}: {
-  alert: Alert
-  isActive: boolean
-  onClick: () => void
-  onDismiss: () => void
-}) {
-  const config = ALERT_TYPE_CONFIG[alert.type]
-
-  return (
-    <div
-      className={`group flex items-center px-5 py-2.5 transition-colors cursor-pointer ${
-        isActive
-          ? "bg-accent/8 border-l-2 border-l-accent"
-          : "hover:bg-secondary/30"
-      }`}
-      onClick={onClick}
-    >
-      {/* Severity dot */}
-      <div className="w-7 shrink-0 flex justify-center">
-        <span className={`h-2 w-2 rounded-full shrink-0 ${SEVERITY_DOT[alert.severity] ?? "bg-muted-foreground"}`} />
-      </div>
-
-      {/* Message + badge */}
-      <div className="flex flex-1 items-center gap-2 min-w-0 pr-2">
-        <span className="truncate text-[14px] text-foreground">{alert.message}</span>
-        <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${config?.badgeClass ?? "bg-muted text-muted-foreground"}`}>
-          {config?.label ?? alert.type}
-        </span>
-      </div>
-
-      {/* Dismiss button */}
-      <button
-        className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
-        onClick={(e) => {
-          e.stopPropagation()
-          onDismiss()
-        }}
-        aria-label="Dismiss alert"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
-    </div>
-  )
-}
-
 /* ── Inbox Detail Panel (with Triage Bar) ──────────────── */
 
 function InboxDetailPanel({
@@ -576,7 +320,6 @@ function InboxDetailPanel({
 
   return (
     <aside className="flex h-full w-[420px] shrink-0 flex-col overflow-hidden border-l border-border bg-card animate-in slide-in-from-right-4 fade-in duration-200">
-      {/* Scrollable detail content — re-renders NoteDetailPanel's internals */}
       <NoteDetailPanel
         noteId={noteId}
         onClose={onClose}

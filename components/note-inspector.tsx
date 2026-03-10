@@ -41,6 +41,7 @@ import { useState, useMemo, useCallback } from "react"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { Signal, CircleDot } from "lucide-react"
 import { toast } from "sonner"
 
@@ -101,6 +102,7 @@ export function NoteInspector() {
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
 
   const backlinks = useBacklinksIndex()
+  const backlinkNotes = useBacklinksFor(selectedNoteId)
 
   const [folderOpen, setFolderOpen] = useState(false)
   const [tagOpen, setTagOpen] = useState(false)
@@ -492,9 +494,24 @@ export function NoteInspector() {
 
         <div className="mx-4 border-b border-border" />
 
-        {/* Linked References (placeholder) */}
+        {/* Linked References */}
         <InspectorSection title="References" icon={<Link2 className="h-4 w-4" />}>
-          <span className="text-[14px] text-muted-foreground">No linked references</span>
+          {backlinkNotes.length === 0 ? (
+            <span className="text-[14px] text-muted-foreground">No linked references</span>
+          ) : (
+            <div className="space-y-0.5">
+              {backlinkNotes.map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => setSelectedNoteId(n.id)}
+                  className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-[14px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                >
+                  <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                  <span className="truncate">{n.title || "Untitled"}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </InspectorSection>
 
         <div className="mx-4 border-b border-border" />

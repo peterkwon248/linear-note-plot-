@@ -29,6 +29,7 @@ import { format } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
+import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 
 export function NoteEditor() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
@@ -245,8 +246,9 @@ export function NoteEditor() {
       />
 
       {/* Content Editor */}
-      <div className="flex-1 overflow-hidden px-6 py-4">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
         <NoteEditorAdapter note={note} />
+        <BacklinksFooter noteId={note.id} />
       </div>
       </div>
     </div>

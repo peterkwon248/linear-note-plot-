@@ -43,20 +43,8 @@ import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getIn
 import { suggestBacklinks } from "@/lib/backlinks"
 import { INTERVALS } from "@/lib/srs"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import type { Note, NoteEvent, NoteEventType, ThinkingChainSession } from "@/lib/types"
-
-/* ── Backlinks helper ──────────────────────────────────── */
-
-function getBacklinkNotes(noteId: string, notes: Note[]): Note[] {
-  const note = notes.find((n) => n.id === noteId)
-  if (!note || !note.title.trim()) return []
-
-  const title = note.title.toLowerCase()
-  return notes.filter((other) => {
-    if (other.id === noteId) return false
-    return other.linksOut.includes(title)
-  })
-}
 
 /* ── Timeline event icon/label mapping ────────────────── */
 
@@ -205,10 +193,7 @@ export function NoteDetailPanel({
 
   const note = notes.find((n) => n.id === noteId)
 
-  const backlinks = useMemo(
-    () => (note ? getBacklinkNotes(noteId, notes) : []),
-    [noteId, notes, note]
-  )
+  const backlinks = useBacklinksFor(note?.id ?? null)
 
   const suggestions = useMemo(
     () => (note ? suggestBacklinks(noteId, notes, { limit: 10 }) : []),
@@ -817,9 +802,9 @@ export function NoteDetailPanel({
 
         <div className="mx-5 border-b border-border" />
 
-        {/* Backlink Suggestions */}
+        {/* Related Notes */}
         <PanelSection
-          title="Backlink Suggestions"
+          title="Related Notes"
           icon={<Sparkles className="h-4 w-4" />}
           count={suggestions.length}
         >

@@ -129,26 +129,6 @@ export interface ThinkingChainSession {
   status: "active" | "done"
 }
 
-/* ── Phase 2: Review Queue ──────────────────────────── */
-
-export interface ReviewQueueItem {
-  noteId: string
-  reason: string
-  score: number
-}
-
-/* ── Alerts ────────────────────────────────────────── */
-
-export type AlertType = "srs-due" | "snooze-expired" | "stale-note"
-
-export interface Alert {
-  id: string            // deterministic: `${type}:${noteId}`
-  type: AlertType
-  noteId: string
-  message: string
-  severity: "info" | "warning" | "urgent"
-}
-
 /* ── Saved Views ─────────────────────────────────── */
 
 export interface SavedView {

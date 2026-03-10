@@ -11,6 +11,8 @@ import {
   FolderOpen,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
+  Clock,
   Trash2,
   SquarePen,
   Plus,
@@ -18,8 +20,7 @@ import {
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
-import { getInboxNotes, getReviewQueue } from "@/lib/queries/notes"
-import { computeAlerts } from "@/lib/alerts"
+import { getInboxNotes } from "@/lib/queries/notes"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, useActiveRoute } from "@/lib/table-route"
 import type { Note, NoteStatus } from "@/lib/types"
 
@@ -169,17 +170,46 @@ export function LinearSidebar() {
   const createNote = usePlotStore((s) => s.createNote)
   const openNote = usePlotStore((s) => s.openNote)
   const notes = usePlotStore((s) => s.notes)
-  const srsStateByNoteId = usePlotStore((s) => s.srsStateByNoteId)
-  const dismissedAlertIds = usePlotStore((s) => s.dismissedAlertIds)
-
   const folders = usePlotStore((s) => s.folders)
   const createFolder = usePlotStore((s) => s.createFolder)
   const accessFolder = usePlotStore((s) => s.accessFolder)
 
   const navigationHistory = usePlotStore((s) => s.navigationHistory)
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
+  const goBack = usePlotStore((s) => s.goBack)
+  const goForward = usePlotStore((s) => s.goForward)
 
   const backlinks = useBacklinksIndex()
+
+  const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
+  const recentlyViewedRef = useRef<HTMLDivElement>(null)
+
+  // Close recently viewed on outside click
+  useEffect(() => {
+    if (!recentlyViewedOpen) return
+    const handler = (e: MouseEvent) => {
+      if (recentlyViewedRef.current && !recentlyViewedRef.current.contains(e.target as Node)) {
+        setRecentlyViewedOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [recentlyViewedOpen])
+
+  // Recently viewed: walk backwards, dedup, take 10
+  const recentlyViewed = useMemo(() => {
+    const seen = new Set<string>()
+    const result: { id: string; title: string }[] = []
+    for (let i = navigationIndex; i >= 0 && result.length < 10; i--) {
+      const noteId = navigationHistory[i]
+      if (!seen.has(noteId)) {
+        seen.add(noteId)
+        const note = notes.find((n) => n.id === noteId && !n.trashed)
+        if (note) result.push({ id: note.id, title: note.title || "Untitled" })
+      }
+    }
+    return result
+  }, [navigationHistory, navigationIndex, notes])
 
   // Prefetch routes on mount
   useEffect(() => {
@@ -202,15 +232,8 @@ export function LinearSidebar() {
   }, [newFolderOpen])
 
   const inboxCount = useMemo(() => getInboxNotes(notes, backlinks).length, [notes, backlinks])
-  const reviewCount = useMemo(() => getReviewQueue(notes, backlinks, srsStateByNoteId).length, [notes, backlinks, srsStateByNoteId])
-  const alertCount = useMemo(() => {
-    const dismissed = new Set(dismissedAlertIds ?? [])
-    return computeAlerts(notes, srsStateByNoteId, dismissed).length
-  }, [notes, srsStateByNoteId, dismissedAlertIds])
   const allNotesCount = useMemo(() => notes.filter((n) => !n.archived && !n.trashed).length, [notes])
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
-
-  const combinedInboxCount = inboxCount + reviewCount + alertCount
 
   // Sorted folders: pinned first (by pinnedOrder), then unpinned by lastAccessedAt desc (null last)
   const sortedFolders = useMemo(() => {
@@ -316,25 +339,85 @@ export function LinearSidebar() {
 
   return (
     <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-1.5 px-3.5 py-3">
+      {/* Header row 1: Navigation */}
+      <div className="flex items-center gap-1 px-3.5 pt-3 pb-1">
         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[12px] font-semibold text-accent-foreground shrink-0">
           U
         </div>
-        <div className="flex-1" />
+        <button
+          onClick={() => goBack()}
+          disabled={navigationIndex <= 0}
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors disabled:opacity-20 disabled:pointer-events-none"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-4.5 w-4.5" strokeWidth={1.6} />
+        </button>
+        <button
+          onClick={() => goForward()}
+          disabled={navigationIndex >= navigationHistory.length - 1}
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors disabled:opacity-20 disabled:pointer-events-none"
+          aria-label="Go forward"
+        >
+          <ChevronRight className="h-4.5 w-4.5" strokeWidth={1.6} />
+        </button>
+        <div className="relative" ref={recentlyViewedRef}>
+          <button
+            onClick={() => setRecentlyViewedOpen(!recentlyViewedOpen)}
+            className={`flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover transition-colors ${
+              recentlyViewedOpen ? "text-sidebar-foreground bg-sidebar-hover" : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            }`}
+            aria-label="Recently viewed"
+          >
+            <Clock className="h-4 w-4" strokeWidth={1.6} />
+          </button>
+          {recentlyViewedOpen && (
+            <div className="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border bg-popover shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="px-3 py-2 border-b border-border">
+                <span className="text-[12px] font-medium text-muted-foreground">Recently Viewed</span>
+              </div>
+              {recentlyViewed.length === 0 ? (
+                <div className="px-3 py-4 text-center text-[13px] text-muted-foreground">
+                  No recently viewed notes
+                </div>
+              ) : (
+                <div className="max-h-[320px] overflow-y-auto py-1">
+                  {recentlyViewed.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        openNote(item.id)
+                        setRecentlyViewedOpen(false)
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-secondary/50"
+                    >
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.4} />
+                      <span className="truncate text-[13px] text-foreground">{item.title}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Header row 2: Actions */}
+      <div className="flex items-center gap-1 px-3.5 pb-2">
         <button
           onClick={() => setSearchOpen(true)}
-          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          className="flex items-center gap-2 h-7 px-2.5 rounded-md hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors text-[13px]"
           aria-label="Search"
         >
-          <Search className="h-5 w-5" strokeWidth={1.4} />
+          <Search className="h-4 w-4" strokeWidth={1.4} />
+          <span>Search</span>
         </button>
+        <div className="flex-1" />
         <button
           onClick={handleCreateNote}
           className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
           aria-label="New note"
         >
-          <SquarePen className="h-5 w-5" strokeWidth={1.4} />
+          <SquarePen className="h-4.5 w-4.5" strokeWidth={1.4} />
         </button>
       </div>
 
@@ -346,7 +429,7 @@ export function LinearSidebar() {
             href="/inbox"
             icon={<Inbox className="h-5 w-5" strokeWidth={1.4} />}
             label="Inbox"
-            count={combinedInboxCount > 0 ? combinedInboxCount : undefined}
+            count={inboxCount > 0 ? inboxCount : undefined}
             active={isActive("/inbox")}
           />
           <NavLink

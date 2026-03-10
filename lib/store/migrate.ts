@@ -300,5 +300,11 @@ export function migrate(persistedState: unknown): PlotState {
     delete (vsMap as Record<string, unknown>)["projects"]
   }
 
+  // v25: Remove dismissedAlertIds from persisted state
+  if ("dismissedAlertIds" in state) {
+    delete state.dismissedAlertIds
+    console.log("[migrate] v24→v25: removed dismissedAlertIds")
+  }
+
   return state as unknown as PlotState
 }
