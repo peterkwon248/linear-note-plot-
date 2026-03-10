@@ -197,11 +197,11 @@ export function NoteInspector() {
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/10">
             <button
-              onClick={() => { triageKeep(note.id); toast("Moved to Capture"); advanceToNextInbox() }}
+              onClick={() => { triageKeep(note.id); toast("Done — moved to Capture"); advanceToNextInbox() }}
               className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             >
               <Check className="h-3.5 w-3.5" />
-              Keep
+              Done
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

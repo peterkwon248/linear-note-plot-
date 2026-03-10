@@ -175,9 +175,9 @@ export function NoteDetailPanel({
     onTriageAction?.()
   }, [notes, backlinksIndex, noteId, onOpenNote, onClose, onTriageAction])
 
-  const handleKeep = useCallback(() => {
+  const handleDone = useCallback(() => {
     triageKeep(noteId)
-    toast("Moved to Capture")
+    toast("Done — moved to Capture")
     advanceToNext()
   }, [triageKeep, noteId, advanceToNext])
 
@@ -225,7 +225,7 @@ export function NoteDetailPanel({
       if (target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
 
       if (note.status === "inbox" && note.triageStatus !== "trashed") {
-        if (e.key === "k" || e.key === "K") { e.preventDefault(); handleKeep() }
+        if (e.key === "d" || e.key === "D") { e.preventDefault(); handleDone() }
         if (e.key === "s" || e.key === "S") { e.preventDefault(); handleSnooze(getSnoozeTime("tomorrow")) }
         if (e.key === "t" || e.key === "T") { e.preventDefault(); handleTrash() }
       }
@@ -239,7 +239,7 @@ export function NoteDetailPanel({
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [note, handleKeep, handleSnooze, handleTrash, handlePromote, handleDemote, handleMoveBack])
+  }, [note, handleDone, handleSnooze, handleTrash, handlePromote, handleDemote, handleMoveBack])
 
   if (!note) return null
 
@@ -282,12 +282,12 @@ export function NoteDetailPanel({
       {!embedded && note.status === "inbox" && note.triageStatus !== "trashed" && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border bg-secondary/20 px-4 py-2">
           <button
-            onClick={handleKeep}
+            onClick={handleDone}
             className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
             <Check className="h-3.5 w-3.5" />
-            Keep
-            <kbd className="ml-1 rounded bg-accent-foreground/10 px-1 py-0.5 text-[11px] font-mono leading-none text-accent-foreground/60">K</kbd>
+            Done
+            <kbd className="ml-1 rounded bg-accent-foreground/10 px-1 py-0.5 text-[11px] font-mono leading-none text-accent-foreground/60">D</kbd>
           </button>
           <RemindPicker
             onSelect={(date) => handleSnooze(date)}

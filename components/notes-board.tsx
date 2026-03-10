@@ -372,7 +372,7 @@ function BoardCardInner({
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
             <ContextMenuItem onClick={onKeep} className="text-[14px]">
-              <Check className="h-4 w-4 mr-2 text-accent" /> Keep
+              <Check className="h-4 w-4 mr-2 text-accent" /> Done
             </ContextMenuItem>
             <ContextMenuSub>
               <ContextMenuSubTrigger className="text-[14px]">

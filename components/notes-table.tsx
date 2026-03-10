@@ -1102,8 +1102,8 @@ function NoteRowInner({
           <>
             <ContextMenuItem onClick={onKeep} className="text-[14px]">
               <Check className="h-4 w-4 mr-2 text-accent" />
-              Keep
-              <span className="ml-auto text-[11px] text-muted-foreground">K</span>
+              Done
+              <span className="ml-auto text-[11px] text-muted-foreground">D</span>
             </ContextMenuItem>
             <ContextMenuSub>
               <ContextMenuSubTrigger className="text-[14px]">

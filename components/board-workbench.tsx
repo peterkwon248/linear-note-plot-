@@ -270,7 +270,7 @@ function WorkflowActions({
 
   if (effectiveTab === "inbox") {
     actions.push(
-      { icon: <Check className="h-4 w-4 text-accent" />, label: "Keep All", onClick: onKeepAll },
+      { icon: <Check className="h-4 w-4 text-accent" />, label: "Done All", onClick: onKeepAll },
       { icon: <Trash2 className="h-4 w-4 text-accent" />, label: "Trash All", onClick: onTrashAll },
     )
   }

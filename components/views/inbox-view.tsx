@@ -55,10 +55,10 @@ export function InboxView() {
     [inboxNotes]
   )
 
-  const handleKeep = useCallback(
+  const handleDone = useCallback(
     (id: string) => {
       triageKeep(id)
-      toast("Moved to Capture", { description: "Note kept for further processing." })
+      toast("Done — moved to Capture")
       goNext(id)
     },
     [triageKeep, goNext]
@@ -93,9 +93,9 @@ export function InboxView() {
       if (!note || note.status !== "inbox" || note.triageStatus === "trashed") return
 
       switch (e.key.toLowerCase()) {
-        case "k":
+        case "d":
           e.preventDefault()
-          handleKeep(previewId)
+          handleDone(previewId)
           break
         case "s":
           e.preventDefault()
@@ -114,7 +114,7 @@ export function InboxView() {
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [previewId, notes, handleKeep, handleSnooze, handleTrash])
+  }, [previewId, notes, handleDone, handleSnooze, handleTrash])
 
   // Full editor mode
   if (selectedNoteId) {
@@ -187,7 +187,7 @@ export function InboxView() {
             openNote(previewId)
             setPreviewId(null)
           }}
-          onKeep={handleKeep}
+          onDone={handleDone}
           onSnooze={handleSnooze}
           onTrash={handleTrash}
         />
@@ -271,7 +271,7 @@ function InboxDetailPanel({
   onClose,
   onOpenNote,
   onEditNote,
-  onKeep,
+  onDone,
   onSnooze,
   onTrash,
 }: {
@@ -279,7 +279,7 @@ function InboxDetailPanel({
   onClose: () => void
   onOpenNote: (id: string) => void
   onEditNote: () => void
-  onKeep: (id: string) => void
+  onDone: (id: string) => void
   onSnooze: (id: string, reviewAt: string) => void
   onTrash: (id: string) => void
 }) {
@@ -305,19 +305,19 @@ function InboxDetailPanel({
       {showTriageBar && (
         <div className="shrink-0 border-t border-border bg-secondary/30 px-4 py-3">
           <div className="flex items-center gap-2">
-            {/* Keep */}
+            {/* Done */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => onKeep(noteId)}
+                  onClick={() => onDone(noteId)}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-chart-5/10 px-3 py-2 text-[14px] font-medium text-chart-5 transition-colors hover:bg-chart-5/20"
                 >
                   <Check className="h-4 w-4" />
-                  Keep
-                  <kbd className="ml-1 rounded border border-chart-5/20 px-1 py-0.5 font-mono text-[9px]">K</kbd>
+                  Done
+                  <kbd className="ml-1 rounded border border-chart-5/20 px-1 py-0.5 font-mono text-[9px]">D</kbd>
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Move to Capture, review in 3 days</TooltipContent>
+              <TooltipContent>Move to Capture</TooltipContent>
             </Tooltip>
 
             {/* Snooze */}
