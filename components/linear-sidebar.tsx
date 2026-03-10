@@ -333,7 +333,7 @@ export function LinearSidebar() {
         <button
           onClick={() => goBack()}
           disabled={navigationIndex <= 0}
-          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-foreground hover:text-sidebar-foreground transition-colors disabled:opacity-20 disabled:pointer-events-none"
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-foreground hover:text-sidebar-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
           aria-label="Go back"
         >
           <ChevronLeft className="h-4.5 w-4.5" strokeWidth={1.6} />
@@ -341,7 +341,7 @@ export function LinearSidebar() {
         <button
           onClick={() => goForward()}
           disabled={navigationIndex >= navigationHistory.length - 1}
-          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-foreground hover:text-sidebar-foreground transition-colors disabled:opacity-20 disabled:pointer-events-none"
+          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-foreground hover:text-sidebar-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
           aria-label="Go forward"
         >
           <ChevronRight className="h-4.5 w-4.5" strokeWidth={1.6} />
