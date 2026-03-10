@@ -43,6 +43,7 @@ function NavLink({
   active?: boolean
 }) {
   const router = useRouter()
+  const setNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const isSidebarRoute = ALL_SIDEBAR_ROUTES.includes(href)
 
   const className = `nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
@@ -82,6 +83,7 @@ function NavLink({
         onClick={() => {
           if (href === "/notes") setActiveFolderId(null)
           setActiveRoute(href)
+          setNoteId(null)
           router.push(href)
         }}
         className={className}
@@ -150,6 +152,7 @@ export function LinearSidebar() {
   const accessFolder = usePlotStore((s) => s.accessFolder)
 
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const navigationHistory = usePlotStore((s) => s.navigationHistory)
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
   const goBack = usePlotStore((s) => s.goBack)
@@ -465,6 +468,7 @@ export function LinearSidebar() {
                   accessFolder(folder.id)
                   setActiveFolderId(folder.id)
                   setActiveRoute("/notes")
+                  setSelectedNoteId(null)
                   router.push("/notes")
                 }}
                 className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${

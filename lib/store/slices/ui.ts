@@ -44,7 +44,7 @@ export function createUISlice(set: Set, appendEvent: AppendEventFn) {
         const index = state.navigationIndex as number
         // At index 0 with an open note → close editor (return to table/view)
         if (index <= 0 && state.selectedNoteId) {
-          return { selectedNoteId: null }
+          return { selectedNoteId: null, navigationIndex: -1 }
         }
         if (index <= 0) return state
         const newIndex = index - 1
@@ -66,7 +66,7 @@ export function createUISlice(set: Set, appendEvent: AppendEventFn) {
       set((state: any) => {
         const history = state.navigationHistory as string[]
         const index = state.navigationIndex as number
-        if (index >= history.length - 1) return state
+        if (history.length === 0 || index >= history.length - 1) return state
         const newIndex = index + 1
         const noteId = history[newIndex]
         if (!state.notes.some((n: Note) => n.id === noteId && !n.trashed)) {
