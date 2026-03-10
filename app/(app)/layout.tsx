@@ -18,8 +18,8 @@ import { InboxView } from "@/components/views/inbox-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 
-const MIN_WIDTH = 240
-const MAX_WIDTH = 360
+const MIN_WIDTH = 200
+const MAX_WIDTH = 320
 const COLLAPSE_THRESHOLD = 80
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
