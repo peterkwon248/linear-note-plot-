@@ -1,4 +1,2 @@
-/** Rendering handled by always-mounted AlertsView in layout */
-export default function AlertsPage() {
-  return null
-}
+import { redirect } from "next/navigation"
+export default function AlertsPage() { redirect("/inbox") }

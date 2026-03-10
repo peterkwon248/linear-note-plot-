@@ -1,9 +1,18 @@
 "use client"
 
-import { use } from "react"
-import { NoteListPage } from "@/components/note-list-page"
+import { use, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { setActiveFolderId, setActiveRoute } from "@/lib/table-route"
 
 export default function FolderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  return <NoteListPage filter={{ type: "folder", folderId: id }} />
+  const router = useRouter()
+
+  useEffect(() => {
+    setActiveFolderId(id)
+    setActiveRoute("/notes")
+    router.replace("/notes")
+  }, [id, router])
+
+  return null
 }

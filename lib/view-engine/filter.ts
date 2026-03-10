@@ -64,13 +64,13 @@ function matchesRule(note: Note, rule: FilterRule): boolean {
     case "reads":
       return compareNumber(note.reads ?? 0, operator, value)
 
-    case "project": {
-      const pid = note.projectId ?? ""
-      // Special value "_none" means "no project assigned"
+    case "folder": {
+      const fid = note.folderId ?? ""
+      // Special value "_none" means "no folder assigned"
       if (value === "_none") {
-        return operator === "eq" ? pid === "" : pid !== ""
+        return operator === "eq" ? fid === "" : fid !== ""
       }
-      return compareString(pid, operator, value)
+      return compareString(fid, operator, value)
     }
 
     case "updatedAt": {

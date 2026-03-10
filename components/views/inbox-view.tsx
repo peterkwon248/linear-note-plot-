@@ -3,13 +3,15 @@
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
-import { getInboxNotes, computeInboxRank, getSnoozeTime } from "@/lib/queries/notes"
+import {
+  getInboxNotes,
+  getSnoozeTime,
+} from "@/lib/queries/notes"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { RemindPicker } from "@/components/remind-picker"
-import { PriorityBadge } from "@/components/note-fields"
 import {
   Tooltip,
   TooltipContent,
@@ -20,9 +22,6 @@ import {
   Check,
   Clock,
   Trash2,
-  ChevronRight,
-  Zap,
-  FileText,
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -56,10 +55,10 @@ export function InboxView() {
     [inboxNotes]
   )
 
-  const handleKeep = useCallback(
+  const handleDone = useCallback(
     (id: string) => {
       triageKeep(id)
-      toast("Moved to Capture", { description: "Note kept for further processing." })
+      toast("Done — moved to Capture")
       goNext(id)
     },
     [triageKeep, goNext]
@@ -83,7 +82,7 @@ export function InboxView() {
     [triageTrash, goNext]
   )
 
-  // Keyboard shortcuts (K, S, X) when preview is active
+  // Keyboard shortcuts (K, S, T) when preview is active
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (!previewId) return
@@ -94,9 +93,9 @@ export function InboxView() {
       if (!note || note.status !== "inbox" || note.triageStatus === "trashed") return
 
       switch (e.key.toLowerCase()) {
-        case "k":
+        case "d":
           e.preventDefault()
-          handleKeep(previewId)
+          handleDone(previewId)
           break
         case "s":
           e.preventDefault()
@@ -115,7 +114,7 @@ export function InboxView() {
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [previewId, notes, handleKeep, handleSnooze, handleTrash])
+  }, [previewId, notes, handleDone, handleSnooze, handleTrash])
 
   // Full editor mode
   if (selectedNoteId) {
@@ -130,13 +129,15 @@ export function InboxView() {
   return (
     <div className="flex flex-1 overflow-hidden">
       <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
-        {/* Title */}
-        <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
+        {/* Header */}
+        <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-3">
           <div className="flex items-center gap-2">
             <h1 className="text-base font-semibold text-foreground">Inbox</h1>
-            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[12px] font-medium tabular-nums text-accent">
-              {inboxNotes.length}
-            </span>
+            {inboxNotes.length > 0 && (
+              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[12px] font-medium tabular-nums text-accent">
+                {inboxNotes.length}
+              </span>
+            )}
           </div>
           <button
             className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
@@ -146,20 +147,13 @@ export function InboxView() {
           </button>
         </header>
 
-        {/* Workflow hint */}
-        <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
-          <span className="text-[12px] text-muted-foreground">
-            Triage notes: <kbd className="rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[11px]">K</kbd> Keep <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[11px]">S</kbd> Snooze <kbd className="ml-2 rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[11px]">T</kbd> Trash
-          </span>
-        </div>
-
         {/* Content */}
         {inboxNotes.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <Inbox className="mb-4 h-12 w-12 text-muted-foreground/20" />
-            <p className="text-[15px] text-muted-foreground">Inbox zero</p>
+            <p className="text-[15px] text-muted-foreground">Inbox zero — all caught up</p>
             <p className="mt-1 text-[14px] text-muted-foreground/60">
-              All notes have been triaged. Create a new note to get started.
+              Create a new note to get started.
             </p>
             <button
               onClick={() => createNote({ status: "inbox" })}
@@ -175,7 +169,6 @@ export function InboxView() {
                 key={note.id}
                 note={note}
                 isActive={previewId === note.id}
-                backlinks={backlinks}
                 onClick={() => setPreviewId(note.id)}
                 onDoubleClick={() => openNote(note.id)}
               />
@@ -194,7 +187,7 @@ export function InboxView() {
             openNote(previewId)
             setPreviewId(null)
           }}
-          onKeep={handleKeep}
+          onDone={handleDone}
           onSnooze={handleSnooze}
           onTrash={handleTrash}
         />
@@ -218,22 +211,19 @@ export function InboxView() {
 function InboxRow({
   note,
   isActive,
-  backlinks,
   onClick,
   onDoubleClick,
 }: {
   note: Note
   isActive: boolean
-  backlinks: Map<string, number>
   onClick: () => void
   onDoubleClick: () => void
 }) {
-  const rank = computeInboxRank(note, backlinks)
   const isSnoozed = note.triageStatus === "snoozed"
 
   return (
     <div
-      className={`group flex items-center border-b border-border px-5 py-2.5 transition-colors cursor-pointer ${
+      className={`group flex items-center px-5 py-2.5 transition-colors cursor-pointer ${
         isActive
           ? "bg-accent/8 border-l-2 border-l-accent"
           : "hover:bg-secondary/30"
@@ -241,26 +231,6 @@ function InboxRow({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
     >
-      {/* Priority */}
-      <div className="w-7 shrink-0 flex justify-center">
-        <PriorityBadge priority={note.priority} />
-      </div>
-
-      {/* Rank indicator */}
-      <div className="w-8 shrink-0 flex justify-center">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className={`flex items-center gap-0.5 text-[12px] tabular-nums font-medium ${
-              rank >= 15 ? "text-accent" : rank >= 10 ? "text-muted-foreground" : "text-muted-foreground/50"
-            }`}>
-              <Zap className="h-2.5 w-2.5" />
-              {rank}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-[12px]">Inbox rank: {rank}</TooltipContent>
-        </Tooltip>
-      </div>
-
       {/* Title */}
       <div className="flex flex-1 items-center gap-2 min-w-0 pr-3">
         <span className="truncate text-[15px] text-foreground">
@@ -301,7 +271,7 @@ function InboxDetailPanel({
   onClose,
   onOpenNote,
   onEditNote,
-  onKeep,
+  onDone,
   onSnooze,
   onTrash,
 }: {
@@ -309,7 +279,7 @@ function InboxDetailPanel({
   onClose: () => void
   onOpenNote: (id: string) => void
   onEditNote: () => void
-  onKeep: (id: string) => void
+  onDone: (id: string) => void
   onSnooze: (id: string, reviewAt: string) => void
   onTrash: (id: string) => void
 }) {
@@ -323,7 +293,6 @@ function InboxDetailPanel({
 
   return (
     <aside className="flex h-full w-[420px] shrink-0 flex-col overflow-hidden border-l border-border bg-card animate-in slide-in-from-right-4 fade-in duration-200">
-      {/* Scrollable detail content — re-renders NoteDetailPanel's internals */}
       <NoteDetailPanel
         noteId={noteId}
         onClose={onClose}
@@ -336,19 +305,19 @@ function InboxDetailPanel({
       {showTriageBar && (
         <div className="shrink-0 border-t border-border bg-secondary/30 px-4 py-3">
           <div className="flex items-center gap-2">
-            {/* Keep */}
+            {/* Done */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => onKeep(noteId)}
+                  onClick={() => onDone(noteId)}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-chart-5/10 px-3 py-2 text-[14px] font-medium text-chart-5 transition-colors hover:bg-chart-5/20"
                 >
                   <Check className="h-4 w-4" />
-                  Keep
-                  <kbd className="ml-1 rounded border border-chart-5/20 px-1 py-0.5 font-mono text-[9px]">K</kbd>
+                  Done
+                  <kbd className="ml-1 rounded border border-chart-5/20 px-1 py-0.5 font-mono text-[9px]">D</kbd>
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Move to Capture, review in 3 days</TooltipContent>
+              <TooltipContent>Move to Capture</TooltipContent>
             </Tooltip>
 
             {/* Snooze */}
@@ -369,10 +338,11 @@ function InboxDetailPanel({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onTrash(noteId)}
-                  className="flex items-center justify-center gap-1.5 rounded-md bg-destructive/10 px-3 py-2 text-[14px] font-medium text-destructive transition-colors hover:bg-destructive/20"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-destructive/10 px-3 py-2 text-[14px] font-medium text-destructive transition-colors hover:bg-destructive/20"
                 >
                   <Trash2 className="h-4 w-4" />
-                  <kbd className="rounded border border-destructive/20 px-1 py-0.5 font-mono text-[9px]">T</kbd>
+                  Trash
+                  <kbd className="ml-1 rounded border border-destructive/20 px-1 py-0.5 font-mono text-[9px]">T</kbd>
                 </button>
               </TooltipTrigger>
               <TooltipContent>Soft delete this note</TooltipContent>

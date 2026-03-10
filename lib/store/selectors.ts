@@ -25,11 +25,6 @@ export function getFilteredNotes(state: PlotState): Note[] {
     case "archive":
       filtered = filtered.filter((n) => n.archived && !n.trashed)
       break
-    case "category":
-      filtered = filtered.filter(
-        (n) => n.category === activeView.categoryId && isActive(n)
-      )
-      break
     case "pinned":
       filtered = filtered.filter((n) => n.pinned && isActive(n))
       break
@@ -79,17 +74,11 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
     case "trash":
       filtered = filtered.filter((n) => n.trashed)
       break
-    case "projects":
-      filtered = filtered.filter((n) => n.projectId != null && isActive(n))
-      break
     case "pinned":
       filtered = filtered.filter((n) => n.pinned && isActive(n))
       break
     case "folder":
       filtered = filtered.filter((n) => n.folderId === filter.folderId && isActive(n))
-      break
-    case "category":
-      filtered = filtered.filter((n) => n.category === filter.categoryId && isActive(n))
       break
     case "tag":
       filtered = filtered.filter((n) => n.tags.includes(filter.tagId) && isActive(n))
@@ -126,7 +115,7 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
   )
 }
 
-export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folders" | "categories" | "tags">): string {
+export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folders" | "tags">): string {
   switch (filter.type) {
     case "inbox":
       return "Inbox"
@@ -136,8 +125,6 @@ export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folde
       return "Archive"
     case "trash":
       return "Trash"
-    case "projects":
-      return "Projects"
     case "pinned":
       return "Pinned"
     case "status-inbox":
@@ -149,10 +136,6 @@ export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folde
     case "folder": {
       const folder = state.folders.find((f) => f.id === filter.folderId)
       return folder?.name ?? "Folder"
-    }
-    case "category": {
-      const cat = state.categories.find((c) => c.id === filter.categoryId)
-      return cat?.name ?? "Category"
     }
     case "tag": {
       const tag = state.tags.find((t) => t.id === filter.tagId)
@@ -183,10 +166,6 @@ export function getViewTitle(view: ActiveView, state: PlotState): string {
       return "Templates"
     case "insights":
       return "Insights"
-    case "category": {
-      const cat = state.categories.find((c) => c.id === view.categoryId)
-      return cat?.name ?? "Category"
-    }
     case "pinned":
       return "Pinned"
     case "tag": {

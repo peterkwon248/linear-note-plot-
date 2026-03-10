@@ -21,8 +21,8 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
     case "date":
       return groupByDate(notes)
 
-    case "project":
-      return groupByProject(notes)
+    case "folder":
+      return groupByFolder(notes)
 
     case "triage":
       return groupByTriage(notes)
@@ -127,33 +127,33 @@ function groupByDate(notes: Note[]): NoteGroup[] {
     }))
 }
 
-/* ── Project grouping ─────────────────────────────────── */
+/* ── Folder grouping ──────────────────────────────────── */
 
-function groupByProject(notes: Note[]): NoteGroup[] {
+function groupByFolder(notes: Note[]): NoteGroup[] {
   const map = new Map<string, Note[]>()
-  const noProject: Note[] = []
+  const noFolder: Note[] = []
 
   for (const note of notes) {
-    const projId = note.projectId
-    if (!projId) {
-      noProject.push(note)
+    const folderId = note.folderId
+    if (!folderId) {
+      noFolder.push(note)
       continue
     }
-    const bucket = map.get(projId)
+    const bucket = map.get(folderId)
     if (bucket) bucket.push(note)
-    else map.set(projId, [note])
+    else map.set(folderId, [note])
   }
 
   const groups: NoteGroup[] = []
 
-  // Sort project IDs (stable ordering)
+  // Sort folder IDs (stable ordering)
   const sortedKeys = [...map.keys()].sort((a, b) => a.localeCompare(b))
   for (const key of sortedKeys) {
     groups.push({ key, label: key, notes: map.get(key)! })
   }
 
-  if (noProject.length > 0) {
-    groups.push({ key: "_no_project", label: "No Project", notes: noProject })
+  if (noFolder.length > 0) {
+    groups.push({ key: "_no_folder", label: "No Folder", notes: noFolder })
   }
 
   return groups

@@ -128,7 +128,7 @@ export function FloatingActionBar({
               onClick={handleKeepAll}
               className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-[15px] font-medium text-accent hover:bg-accent/20 transition-colors"
             >
-              <Check className="h-4 w-4" /> Keep
+              <Check className="h-4 w-4" /> Done
             </button>
             <button
               onClick={handleTrashAll}
@@ -181,7 +181,7 @@ export function FloatingActionBar({
                   onClick={handleKeepAll}
                   className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-[15px] font-medium text-accent hover:bg-accent/20 transition-colors"
                 >
-                  <Check className="h-4 w-4" /> Keep
+                  <Check className="h-4 w-4" /> Done
                 </button>
                 <button
                   onClick={handleTrashAll}

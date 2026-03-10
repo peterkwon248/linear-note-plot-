@@ -13,9 +13,7 @@ export type ViewContextKey =
   | "review"     // /review
   | "archive"    // /archive
   | "folder"     // /folder/[id]
-  | "category"   // /category/[id]
   | "tag"        // /tag/[id]
-  | "projects"   // /projects
   | "trash"      // /trash
   | "savedView"  // /views/[id] — dynamic context for saved view detail
 
@@ -31,16 +29,16 @@ export type SortField =
   | "status"
   | "links"
   | "reads"
-  | "project"
+  | "folder"
 
 export type SortDirection = "asc" | "desc"
 
-export type GroupBy = "none" | "status" | "priority" | "date" | "project" | "triage" | "linkCount"
+export type GroupBy = "none" | "status" | "priority" | "date" | "folder" | "triage" | "linkCount"
 
 export type FilterOperator = "eq" | "neq" | "gt" | "lt"
 
 export type FilterField =
-  | "status" | "priority" | "links" | "reads" | "project"
+  | "status" | "priority" | "links" | "reads" | "folder"
   | "updatedAt" | "createdAt" | "content" | "tags" | "pinned"
   | "source" | "wordCount" | "title"
 
@@ -79,7 +77,6 @@ export interface PipelineExtras {
   backlinksMap?: Map<string, number>
   searchQuery?: string
   folderId?: string
-  categoryId?: string
   tagId?: string
 }
 
@@ -104,20 +101,20 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
 
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "all", "pinned", "inbox", "capture", "reference", "permanent",
-  "unlinked", "review", "archive", "folder", "category", "tag", "projects", "trash",
+  "unlinked", "review", "archive", "folder", "tag", "trash",
   "savedView",
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
-  "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "project",
+  "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
-  "none", "status", "priority", "date", "project", "triage", "linkCount",
+  "none", "status", "priority", "date", "folder", "triage", "linkCount",
 ]
 
 export const VALID_VIEW_MODES: ViewMode[] = ["list", "table", "board"]
 
 export const VALID_COLUMNS: string[] = [
-  "title", "status", "project", "links", "reads", "priority", "createdAt", "updatedAt",
+  "title", "status", "folder", "links", "reads", "priority", "createdAt", "updatedAt",
 ]

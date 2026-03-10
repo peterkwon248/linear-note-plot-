@@ -1,2 +1,2 @@
-/** Rendering handled by always-mounted TagsView in layout */
-export default function TagsPage() { return null }
+import { redirect } from "next/navigation"
+export default function TagsPage() { redirect("/notes") }

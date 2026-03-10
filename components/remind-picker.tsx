@@ -94,7 +94,7 @@ export function RemindPicker({ onSelect, triggerContent, align = "start" }: Remi
 
         {/* Custom date section */}
         <div>
-          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2">
+          <p className="text-[12px] font-medium text-muted-foreground px-3 mb-2">
             Custom
           </p>
           <Calendar

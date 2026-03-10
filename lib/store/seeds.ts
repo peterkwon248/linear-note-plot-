@@ -1,15 +1,9 @@
-import type { Note, Folder, Tag, Category } from "../types"
+import type { Note, Folder, Tag } from "../types"
 import { workflowDefaults } from "./helpers"
 
-export const SEED_CATEGORIES: Category[] = [
-  { id: "cat-1", name: "Work", color: "#5e6ad2" },
-  { id: "cat-2", name: "Personal", color: "#26b5ce" },
-  { id: "cat-3", name: "Ideas", color: "#f2994a" },
-]
-
 export const SEED_FOLDERS: Folder[] = [
-  { id: "folder-1", name: "Projects", color: "#5e6ad2" },
-  { id: "folder-2", name: "Daily Log", color: "#45d483" },
+  { id: "folder-1", name: "Projects", color: "#5e6ad2", parentId: null, lastAccessedAt: null, pinned: false, pinnedOrder: 0, createdAt: new Date().toISOString() },
+  { id: "folder-2", name: "Daily Log", color: "#45d483", parentId: null, lastAccessedAt: null, pinned: false, pinnedOrder: 0, createdAt: new Date().toISOString() },
 ]
 
 export const SEED_TAGS: Tag[] = [
@@ -25,8 +19,7 @@ export const SEED_NOTES: Note[] = [
       "# Welcome to Plot\n\nThis is your new note-taking app.\n\n- Create notes with **markdown**\n- Organize with folders, categories, and tags\n- Pin important notes\n- Archive when done",
     contentJson: null,
     folderId: null,
-    category: "cat-1",
-    tags: ["tag-2"],
+    tags: ["tag-1", "tag-2"],
     status: "permanent",
     priority: "high",
     reads: 5,
@@ -37,7 +30,6 @@ export const SEED_NOTES: Note[] = [
     updatedAt: new Date(Date.now() - 3600000).toISOString(),
     ...workflowDefaults("permanent"),
     summary: "Introduction to the Plot note-taking app",
-    projectId: null,
     preview: "Welcome to Plot This is your new note-taking app. - Create notes with markdown - Organize with folders, categories, and tags",
     linksOut: [],
   },
@@ -47,10 +39,8 @@ export const SEED_NOTES: Note[] = [
     content: "This is an inbox note - a quick thought captured for later sorting.",
     contentJson: null,
     folderId: null,
-    category: "",
     tags: [],
     status: "inbox",
-    projectId: null,
     priority: "none",
     reads: 1,
     pinned: false,
@@ -68,10 +58,8 @@ export const SEED_NOTES: Note[] = [
     content: "## Q1 Goals\n\n1. Ship v1.0\n2. User testing\n3. Marketing launch",
     contentJson: null,
     folderId: "folder-1",
-    category: "cat-1",
     tags: ["tag-1"],
     status: "capture",
-    projectId: null,
     priority: "urgent",
     reads: 12,
     pinned: false,
@@ -90,10 +78,8 @@ export const SEED_NOTES: Note[] = [
     content: "REST vs GraphQL comparison for our new service.",
     contentJson: null,
     folderId: null,
-    category: "cat-1",
     tags: ["tag-2"],
     status: "reference",
-    projectId: null,
     priority: "medium",
     reads: 3,
     pinned: false,
@@ -113,10 +99,8 @@ export const SEED_NOTES: Note[] = [
     content: "Discussed roadmap for Q2. Action items: finalize spec, assign tasks.",
     contentJson: null,
     folderId: "folder-2",
-    category: "cat-1",
-    tags: [],
+    tags: ["tag-1"],
     status: "inbox",
-    projectId: null,
     priority: "none",
     reads: 0,
     pinned: false,
@@ -134,10 +118,8 @@ export const SEED_NOTES: Note[] = [
     content: "- https://example.com\n- https://another.dev",
     contentJson: null,
     folderId: null,
-    category: "cat-2",
     tags: [],
     status: "inbox",
-    projectId: null,
     priority: "low",
     reads: 0,
     pinned: false,

@@ -36,6 +36,7 @@ import {
   Search,
   Clock,
   Bell,
+  FolderOpen,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -57,8 +58,9 @@ import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import type { ViewContextKey, SortField, GroupBy, NoteGroup, FilterRule } from "@/lib/view-engine/types"
 import { StatusBadge, PriorityBadge, STATUS_CONFIG, PRIORITY_CONFIG } from "@/components/note-fields"
 import { BoardWorkbench } from "@/components/board-workbench"
-import type { Note, NoteStatus, NotePriority, TriageStatus, Project } from "@/lib/types"
+import type { Note, NoteStatus, NotePriority, TriageStatus, Folder } from "@/lib/types"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { setActiveFolderId } from "@/lib/table-route"
 
 /* ── Inline Select (portal-free, works inside Popover) ── */
 
@@ -150,13 +152,13 @@ const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: "triage", label: "Triage" },
   { value: "linkCount", label: "Links" },
   { value: "date", label: "Date" },
-  { value: "project", label: "Project" },
+  { value: "folder", label: "Folder" },
 ]
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: "title", label: "Title" },
   { value: "status", label: "Status" },
-  { value: "project", label: "Project" },
+  { value: "folder", label: "Folder" },
   { value: "links", label: "Links" },
   { value: "reads", label: "Reads" },
   { value: "priority", label: "Priority" },
@@ -249,7 +251,7 @@ function BoardColumn({
 interface BoardCardProps {
   note: Note
   links: number
-  projects: Project[]
+  folders: Folder[]
   isActive?: boolean
   isSelected?: boolean
   isDragOverlay?: boolean
@@ -270,7 +272,7 @@ interface BoardCardProps {
 function BoardCardInner({
   note,
   links,
-  projects,
+  folders,
   isActive,
   isSelected,
   isDragOverlay,
@@ -295,7 +297,7 @@ function BoardCardInner({
     ? { transform: CSS.Transform.toString(transform), opacity: isDragging ? 0.5 : 1, touchAction: "none" as const }
     : { touchAction: "none" as const }
 
-  const proj = note.projectId ? projects.find((p) => p.id === note.projectId) : null
+  const folder = note.folderId ? folders.find((f) => f.id === note.folderId) : null
 
   /* Visual card — no drag refs, just presentation + click */
   const cardVisual = (
@@ -344,9 +346,9 @@ function BoardCardInner({
         {groupBy !== "priority" && note.priority !== "none" && (
           <PriorityBadge priority={note.priority} />
         )}
-        {proj && (
+        {folder && (
           <span className="truncate rounded-sm bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-            {proj.name}
+            {folder.name}
           </span>
         )}
         {links > 0 && (
@@ -370,7 +372,7 @@ function BoardCardInner({
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
             <ContextMenuItem onClick={onKeep} className="text-[14px]">
-              <Check className="h-4 w-4 mr-2 text-accent" /> Keep
+              <Check className="h-4 w-4 mr-2 text-accent" /> Done
             </ContextMenuItem>
             <ContextMenuSub>
               <ContextMenuSubTrigger className="text-[14px]">
@@ -459,7 +461,7 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.note.updatedAt === next.note.updatedAt &&
   prev.note.status === next.note.status &&
   prev.note.priority === next.note.priority &&
-  prev.note.projectId === next.note.projectId &&
+  prev.note.folderId === next.note.folderId &&
   prev.note.title === next.note.title &&
   prev.note.preview === next.note.preview &&
   prev.links === next.links &&
@@ -475,7 +477,7 @@ function getFieldUpdate(groupBy: GroupBy, targetKey: string): Partial<Note> | nu
     case "status": return { status: targetKey as NoteStatus }
     case "priority": return { priority: targetKey as NotePriority }
     case "triage": return { triageStatus: targetKey as TriageStatus }
-    case "project": return { projectId: targetKey === "_no_project" ? null : targetKey }
+    case "folder": return { folderId: targetKey === "_no_folder" ? null : targetKey }
     default: return null
   }
 }
@@ -490,6 +492,7 @@ export function NotesBoard({
   showTabs = true,
   createNoteOverrides,
   hideCreateButton = false,
+  folderId,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -498,6 +501,7 @@ export function NotesBoard({
   showTabs?: boolean
   createNoteOverrides?: Partial<Note>
   hideCreateButton?: boolean
+  folderId?: string
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -511,7 +515,7 @@ export function NotesBoard({
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
   const setReminder = usePlotStore((s) => s.setReminder)
-  const projects = usePlotStore((s) => s.projects)
+  const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
 
   const searchQuery = usePlotStore((s) => s.searchQuery)
@@ -527,7 +531,7 @@ export function NotesBoard({
 
   const backlinksMap = useBacklinksIndex()
 
-  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap })
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId })
 
   // Auto-set groupBy: board requires grouping, and single-status tabs need contextual grouping
   const isSingleStatusTab = SINGLE_STATUS_TABS.includes(effectiveTab)
@@ -619,15 +623,15 @@ export function NotesBoard({
 
   const isDragDisabled = viewState.groupBy === "date" || viewState.groupBy === "linkCount"
 
-  // Resolve project names for project-grouped board
+  // Resolve folder names for folder-grouped board
   const resolvedGroups = useMemo(() => {
-    if (viewState.groupBy !== "project") return groups
+    if (viewState.groupBy !== "folder") return groups
     return groups.map((g) => {
-      if (g.key === "_no_project") return g
-      const proj = projects.find((p) => p.id === g.key)
-      return proj ? { ...g, label: proj.name } : g
+      if (g.key === "_no_folder") return g
+      const folder = folders.find((f) => f.id === g.key)
+      return folder ? { ...g, label: folder.name } : g
     })
-  }, [groups, viewState.groupBy, projects])
+  }, [groups, viewState.groupBy, folders])
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
@@ -690,7 +694,7 @@ export function NotesBoard({
             filters={viewState.filters}
             groupBy={viewState.groupBy}
             isSingleStatusTab={isSingleStatusTab}
-            projects={projects}
+            folders={folders}
             tags={tags}
             onToggleFilter={(field, value, op) => {
               const exists = viewState.filters.some(
@@ -810,7 +814,7 @@ export function NotesBoard({
         filters={viewState.filters}
         groupBy={viewState.groupBy}
         isSingleStatusTab={isSingleStatusTab}
-        projects={projects}
+        folders={folders}
         tags={tags}
         onToggleFilter={(field, value, op) => {
           const exists = viewState.filters.some(
@@ -828,6 +832,23 @@ export function NotesBoard({
         onClearAll={() => updateViewState({ filters: [] })}
         onSetFilters={(filters) => updateViewState({ filters })}
       />
+
+      {/* ── Folder indicator ──────────────────────────────── */}
+      {folderId && (() => {
+        const folderName = folders.find((f) => f.id === folderId)?.name
+        return folderName ? (
+          <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
+            <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[13px] text-foreground">{folderName}</span>
+            <button
+              onClick={() => setActiveFolderId(null)}
+              className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ) : null
+      })()}
 
       {/* Board area */}
       {flatNotes.length === 0 ? (
@@ -864,7 +885,7 @@ export function NotesBoard({
                       key={note.id}
                       note={note}
                       links={backlinksMap.get(note.id) ?? 0}
-                      projects={projects}
+                      folders={folders}
                       isActive={activePreviewId === note.id}
                       isSelected={selectedIds.has(note.id)}
                       groupBy={viewState.groupBy}
@@ -902,7 +923,7 @@ export function NotesBoard({
               effectiveTab={effectiveTab}
               groupBy={viewState.groupBy}
               notes={flatNotes}
-              projects={projects}
+              folders={folders}
               backlinksMap={backlinksMap}
               onClearSelection={() => setSelectedIds(new Set())}
               onSelectAll={() => setSelectedIds(new Set(flatNotes.map((n) => n.id)))}
@@ -926,7 +947,7 @@ export function NotesBoard({
                   <BoardCard
                     note={activeDragNote}
                     links={backlinksMap.get(activeDragNote.id) ?? 0}
-                    projects={projects}
+                    folders={folders}
                     isDragOverlay
                     groupBy={viewState.groupBy}
                     onClick={() => {}}

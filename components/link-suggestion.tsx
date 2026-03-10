@@ -17,7 +17,7 @@ export function LinkSuggestion({
   return (
     <div className="absolute left-0 right-0 z-20 mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
       <div className="px-2 py-1.5">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-[11px] font-medium text-muted-foreground">
           Link to note
         </span>
       </div>

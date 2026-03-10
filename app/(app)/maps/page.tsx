@@ -1,2 +1,2 @@
-/** Rendering handled by always-mounted MapsView in layout */
-export default function MapsPage() { return null }
+import { redirect } from "next/navigation"
+export default function MapsPage() { redirect("/notes") }

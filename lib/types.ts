@@ -1,8 +1,5 @@
 export type NoteStatus = "inbox" | "capture" | "reference" | "permanent"
 export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
-export type ProjectStatus = "planning" | "active" | "review" | "done" | "canceled"
-export type ProjectFocus = "now" | "soon" | "later" | null
-
 /** Triage status for inbox notes */
 export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
 
@@ -15,10 +12,8 @@ export interface Note {
   content: string
   contentJson: Record<string, unknown> | null
   folderId: string | null
-  category: string
   tags: string[]
   status: NoteStatus
-  projectId: string | null
   priority: NotePriority
   reads: number
   pinned: boolean
@@ -58,15 +53,14 @@ export interface Folder {
   id: string
   name: string
   color: string
+  parentId: string | null
+  lastAccessedAt: string | null
+  pinned: boolean
+  pinnedOrder: number
+  createdAt: string
 }
 
 export interface Tag {
-  id: string
-  name: string
-  color: string
-}
-
-export interface Category {
   id: string
   name: string
   color: string
@@ -80,7 +74,6 @@ export type ActiveView =
   | { type: "archive" }
   | { type: "templates" }
   | { type: "insights" }
-  | { type: "category"; categoryId: string }
   | { type: "pinned" }
   | { type: "tag"; tagId: string }
   | { type: "settings" }
@@ -92,10 +85,8 @@ export type NoteFilter =
   | { type: "all" }
   | { type: "archive" }
   | { type: "trash" }
-  | { type: "projects" }
   | { type: "pinned" }
   | { type: "folder"; folderId: string }
-  | { type: "category"; categoryId: string }
   | { type: "tag"; tagId: string }
   | { type: "status-inbox" }
   | { type: "status-capture" }
@@ -136,39 +127,6 @@ export interface ThinkingChainSession {
   endedAt: string | null
   steps: ThinkingChainStep[]
   status: "active" | "done"
-}
-
-/* ── Phase 2: Review Queue ──────────────────────────── */
-
-export interface ReviewQueueItem {
-  noteId: string
-  reason: string
-  score: number
-}
-
-/* ── Alerts ────────────────────────────────────────── */
-
-export type AlertType = "srs-due" | "snooze-expired" | "stale-note"
-
-export interface Alert {
-  id: string            // deterministic: `${type}:${noteId}`
-  type: AlertType
-  noteId: string
-  message: string
-  severity: "info" | "warning" | "urgent"
-}
-
-/* ── Projects ──────────────────────────────────────── */
-
-export interface Project {
-  id: string
-  name: string
-  status: ProjectStatus
-  focus: ProjectFocus
-  description: string
-  targetDate: string | null
-  createdAt: string
-  updatedAt: string
 }
 
 /* ── Saved Views ─────────────────────────────────── */
