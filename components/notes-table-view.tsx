@@ -8,6 +8,7 @@ import { NotesBoard } from "@/components/notes-board"
 import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
+import { InsightsView } from "@/components/insights-view"
 import { useActiveRoute, useActiveFolderId } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
@@ -76,6 +77,15 @@ export function NotesTableView() {
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
         <NoteEditor />
         <NoteInspector />
+      </div>
+    )
+  }
+
+  // Insights view
+  if (viewMode === "insights") {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <InsightsView />
       </div>
     )
   }

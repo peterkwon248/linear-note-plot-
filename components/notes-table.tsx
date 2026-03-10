@@ -32,6 +32,7 @@ import {
   ChevronsUp,
   ChevronUp,
   FolderOpen,
+  Lightbulb,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -136,7 +137,6 @@ const TABS: { id: ViewContextKey; label: string }[] = [
   { id: "all", label: "All Notes" },
   { id: "inbox", label: "Inbox" },
   { id: "capture", label: "Capture" },
-  { id: "reference", label: "Reference" },
   { id: "permanent", label: "Permanent" },
   { id: "unlinked", label: "Unlinked" },
 ]
@@ -259,7 +259,6 @@ export function NotesTable({
       all: active.length,
       inbox: active.filter((n) => n.status === "inbox" && n.triageStatus !== "trashed").length,
       capture: active.filter((n) => n.status === "capture").length,
-      reference: active.filter((n) => n.status === "reference").length,
       permanent: active.filter((n) => n.status === "permanent").length,
       unlinked: active.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0 && (n.linksOut?.length ?? 0) === 0).length,
     }
@@ -384,7 +383,7 @@ export function NotesTable({
     updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
   }
 
-  const isSingleStatusTab = ["inbox", "capture", "reference", "permanent"].includes(effectiveTab)
+  const isSingleStatusTab = ["inbox", "capture", "permanent"].includes(effectiveTab)
 
   function toggleColumn(colId: string) {
     const cols = viewState.visibleColumns
@@ -602,7 +601,7 @@ export function NotesTable({
                 <button
                   onClick={() => setViewMode("table")}
                   className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
-                    viewMode !== "board"
+                    viewMode === "table" || viewMode === "list"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                   }`}
@@ -626,94 +625,109 @@ export function NotesTable({
                   <LayoutGrid className="h-4 w-4" />
                   Board
                 </button>
-              </div>
-
-              {/* Grouping / Columns row */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[15px] text-foreground">{viewMode === "board" ? "Columns" : "Grouping"}</span>
-                </div>
-                <InlineSelect
-                  value={viewState.groupBy}
-                  options={viewMode === "board" ? GROUP_OPTIONS.filter((o) => o.value !== "none") : GROUP_OPTIONS}
-                  onChange={(v) => updateViewState({ groupBy: v })}
-                />
-              </div>
-
-              {/* Ordering row */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[15px] text-foreground">Ordering</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <InlineSelect
-                    value={viewState.sortField}
-                    options={SORT_OPTIONS}
-                    onChange={(v) => updateViewState({ sortField: v })}
-                  />
-                  <button
-                    onClick={() => updateViewState({ sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc" })}
-                    className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                  >
-                    {viewState.sortDirection === "asc"
-                      ? <ArrowUp className="h-3.5 w-3.5" />
-                      : <ArrowDown className="h-3.5 w-3.5" />
-                    }
-                  </button>
-                </div>
-              </div>
-
-              <div className="border-b border-border" />
-
-              {/* Show empty groups/columns */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Columns3 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[15px] text-foreground">{viewMode === "board" ? "Show empty columns" : "Show empty groups"}</span>
-                </div>
                 <button
-                  onClick={() => updateViewState({ showEmptyGroups: !viewState.showEmptyGroups })}
-                  className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full transition-colors duration-200 ${
-                    viewState.showEmptyGroups ? "bg-accent" : "bg-muted-foreground/20"
+                  onClick={() => setViewMode("insights")}
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                    viewMode === "insights"
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                   }`}
                 >
-                  <span
-                    className={`inline-block h-[14px] w-[14px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                      viewState.showEmptyGroups ? "translate-x-[16px]" : "translate-x-[2px]"
-                    }`}
-                  />
+                  <Lightbulb className="h-4 w-4" />
+                  Insights
                 </button>
               </div>
 
-              {/* Display properties (list mode only) */}
-              {viewMode !== "board" && (
+              {viewMode !== "insights" && (
                 <>
-                  <div className="border-b border-border" />
-                  <div>
-                    <div className="px-4 pt-3 pb-1.5">
-                      <span className="text-[12px] font-semibold text-muted-foreground">Display properties</span>
+                  {/* Grouping / Columns row */}
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-[15px] text-foreground">{viewMode === "board" ? "Columns" : "Grouping"}</span>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 px-4 pb-3">
-                      {COLUMN_DEFS.filter((c) => c.id !== "title").map((col) => {
-                        const active = visibleCols.includes(col.id)
-                        return (
-                          <button
-                            key={col.id}
-                            onClick={() => toggleColumn(col.id)}
-                            className={`rounded-md px-2.5 py-1 text-[14px] font-medium transition-colors ${
-                              active
-                                ? "bg-foreground/10 text-foreground border border-foreground/20"
-                                : "border border-border text-muted-foreground/60 hover:text-muted-foreground"
-                            }`}
-                          >
-                            {col.label}
-                          </button>
-                        )
-                      })}
+                    <InlineSelect
+                      value={viewState.groupBy}
+                      options={viewMode === "board" ? GROUP_OPTIONS.filter((o) => o.value !== "none") : GROUP_OPTIONS}
+                      onChange={(v) => updateViewState({ groupBy: v })}
+                    />
+                  </div>
+
+                  {/* Ordering row */}
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-[15px] text-foreground">Ordering</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <InlineSelect
+                        value={viewState.sortField}
+                        options={SORT_OPTIONS}
+                        onChange={(v) => updateViewState({ sortField: v })}
+                      />
+                      <button
+                        onClick={() => updateViewState({ sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc" })}
+                        className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      >
+                        {viewState.sortDirection === "asc"
+                          ? <ArrowUp className="h-3.5 w-3.5" />
+                          : <ArrowDown className="h-3.5 w-3.5" />
+                        }
+                      </button>
                     </div>
                   </div>
+
+                  <div className="border-b border-border" />
+
+                  {/* Show empty groups/columns */}
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Columns3 className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-[15px] text-foreground">{viewMode === "board" ? "Show empty columns" : "Show empty groups"}</span>
+                    </div>
+                    <button
+                      onClick={() => updateViewState({ showEmptyGroups: !viewState.showEmptyGroups })}
+                      className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full transition-colors duration-200 ${
+                        viewState.showEmptyGroups ? "bg-accent" : "bg-muted-foreground/20"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-[14px] w-[14px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                          viewState.showEmptyGroups ? "translate-x-[16px]" : "translate-x-[2px]"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Display properties (list mode only) */}
+                  {viewMode !== "board" && (
+                    <>
+                      <div className="border-b border-border" />
+                      <div>
+                        <div className="px-4 pt-3 pb-1.5">
+                          <span className="text-[12px] font-semibold text-muted-foreground">Display properties</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+                          {COLUMN_DEFS.filter((c) => c.id !== "title").map((col) => {
+                            const active = visibleCols.includes(col.id)
+                            return (
+                              <button
+                                key={col.id}
+                                onClick={() => toggleColumn(col.id)}
+                                className={`rounded-md px-2.5 py-1 text-[14px] font-medium transition-colors ${
+                                  active
+                                    ? "bg-foreground/10 text-foreground border border-foreground/20"
+                                    : "border border-border text-muted-foreground/60 hover:text-muted-foreground"
+                                }`}
+                              >
+                                {col.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </PopoverContent>

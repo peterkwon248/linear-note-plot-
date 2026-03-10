@@ -282,7 +282,7 @@ function WorkflowActions({
     )
   }
 
-  if (effectiveTab === "permanent" || effectiveTab === "reference") {
+  if (effectiveTab === "permanent") {
     actions.push(
       { icon: <ArrowDownLeft className="h-4 w-4 text-accent" />, label: "Demote All", onClick: onDemoteAll },
     )
@@ -348,7 +348,6 @@ function OverviewContent({
           onCardClick={onCardClick}
         />
       )
-    case "reference":
     case "permanent":
       return (
         <KnowledgeOverview
@@ -536,7 +535,7 @@ function KnowledgeOverview({
   onSelectAll,
   onCardClick,
 }: {
-  effectiveTab: "reference" | "permanent"
+  effectiveTab: "permanent"
   notes: Note[]
   backlinksMap: Map<string, number>
   onSelectAll: () => void
@@ -556,17 +555,11 @@ function KnowledgeOverview({
     [notes, backlinksMap],
   )
 
-  const isReference = effectiveTab === "reference"
-
   return (
     <div>
       <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2 mb-4">
-        {isReference ? (
-          <BookOpen className="h-4 w-4 text-[#5e6ad2]" />
-        ) : (
-          <GraduationCap className="h-4 w-4 text-[#45d483]" />
-        )}
-        {isReference ? "Reference" : "Permanent"} Overview
+        <GraduationCap className="h-4 w-4 text-[#45d483]" />
+        Permanent Overview
       </h3>
 
       <div className="space-y-4">

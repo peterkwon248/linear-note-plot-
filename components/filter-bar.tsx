@@ -186,7 +186,7 @@ export function FilterMenuItems({
             <ActiveBadge count={statusCount} />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48">
-            {(["inbox", "capture", "reference", "permanent"] as NoteStatus[]).map((s) => (
+            {(["inbox", "capture", "permanent"] as NoteStatus[]).map((s) => (
               <DropdownMenuItem key={s} onSelect={(e) => { e.preventDefault(); onToggleFilter("status", s) }}>
                 <CheckMark active={hasFilter(filters, "status", s)} />
                 <StatusBadge status={s} />
@@ -511,7 +511,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, onToggleF
     case "status":
       return (
         <>
-          {(["inbox", "capture", "reference", "permanent"] as NoteStatus[]).map((s) => (
+          {(["inbox", "capture", "permanent"] as NoteStatus[]).map((s) => (
             <DropdownMenuItem key={s} onSelect={(e) => { e.preventDefault(); onToggleFilter("status", s) }}>
               <CheckMark active={hasFilter(filters, "status", s)} />
               <StatusBadge status={s} />

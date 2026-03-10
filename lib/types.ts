@@ -1,4 +1,4 @@
-export type NoteStatus = "inbox" | "capture" | "reference" | "permanent"
+export type NoteStatus = "inbox" | "capture" | "permanent"
 export type NotePriority = "none" | "urgent" | "high" | "medium" | "low"
 /** Triage status for inbox notes */
 export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
@@ -138,7 +138,7 @@ export interface SavedView {
   sortField?: string
   sortDirection?: "asc" | "desc"
   groupBy?: string
-  viewMode?: "list" | "table" | "board"
+  viewMode?: "list" | "table" | "board" | "insights"
   createdAt: string
   updatedAt: string
 }

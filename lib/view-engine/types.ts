@@ -7,7 +7,6 @@ export type ViewContextKey =
   | "pinned"     // /pinned
   | "inbox"      // /inbox
   | "capture"    // /capture
-  | "reference"  // tab filter within /notes
   | "permanent"  // /permanent
   | "unlinked"   // tab filter within /notes
   | "review"     // /review
@@ -19,7 +18,7 @@ export type ViewContextKey =
 
 /* ── View State ────────────────────────────────────────── */
 
-export type ViewMode = "list" | "table" | "board"
+export type ViewMode = "list" | "table" | "board" | "insights"
 
 export type SortField =
   | "updatedAt"
@@ -85,8 +84,7 @@ export interface PipelineExtras {
 export const STATUS_ORDER: Record<NoteStatus, number> = {
   inbox: 0,
   capture: 1,
-  reference: 2,
-  permanent: 3,
+  permanent: 2,
 }
 
 export const PRIORITY_ORDER: Record<NotePriority, number> = {
@@ -100,7 +98,7 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
 /* ── Valid Keys (for migration normalization) ──────────── */
 
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
-  "all", "pinned", "inbox", "capture", "reference", "permanent",
+  "all", "pinned", "inbox", "capture", "permanent",
   "unlinked", "review", "archive", "folder", "tag", "trash",
   "savedView",
 ]
@@ -113,7 +111,7 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "none", "status", "priority", "date", "folder", "triage", "linkCount",
 ]
 
-export const VALID_VIEW_MODES: ViewMode[] = ["list", "table", "board"]
+export const VALID_VIEW_MODES: ViewMode[] = ["list", "table", "board", "insights"]
 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "folder", "links", "reads", "priority", "createdAt", "updatedAt",

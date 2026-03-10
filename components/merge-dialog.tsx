@@ -32,7 +32,6 @@ interface MergeDialogProps {
 const STATUS_LABELS: Record<string, string> = {
   inbox: "Inbox",
   capture: "Capture",
-  reference: "Reference",
   permanent: "Permanent",
 }
 

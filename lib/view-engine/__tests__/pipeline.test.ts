@@ -81,18 +81,16 @@ describe('applySort', () => {
   })
 
   describe('sort by status', () => {
-    it('should sort by status order: inbox < capture < reference < permanent', () => {
+    it('should sort by status order: inbox < capture < permanent', () => {
       const notes = [
         makeNote({ id: '1', status: 'permanent' }),
         makeNote({ id: '2', status: 'inbox' }),
-        makeNote({ id: '3', status: 'reference' }),
-        makeNote({ id: '4', status: 'capture' }),
+        makeNote({ id: '3', status: 'capture' }),
       ]
       const sorted = applySort(notes, 'status', 'asc')
       expect(sorted.map(n => n.status)).toEqual([
         'inbox',
         'capture',
-        'reference',
         'permanent',
       ])
     })
@@ -101,13 +99,11 @@ describe('applySort', () => {
       const notes = [
         makeNote({ id: '1', status: 'inbox' }),
         makeNote({ id: '2', status: 'capture' }),
-        makeNote({ id: '3', status: 'reference' }),
-        makeNote({ id: '4', status: 'permanent' }),
+        makeNote({ id: '3', status: 'permanent' }),
       ]
       const sorted = applySort(notes, 'status', 'desc')
       expect(sorted.map(n => n.status)).toEqual([
         'permanent',
-        'reference',
         'capture',
         'inbox',
       ])
@@ -370,13 +366,12 @@ describe('applyFilters', () => {
       const notes = [
         makeNote({ id: '1', status: 'inbox' }),
         makeNote({ id: '2', status: 'capture' }),
-        makeNote({ id: '3', status: 'reference' }),
-        makeNote({ id: '4', status: 'permanent' }),
+        makeNote({ id: '3', status: 'permanent' }),
       ]
       const filtered = applyFilters(notes, [
         { field: 'status', operator: 'neq', value: 'inbox' },
       ])
-      expect(filtered.map(n => n.id)).toEqual(['2', '3', '4'])
+      expect(filtered.map(n => n.id)).toEqual(['2', '3'])
     })
   })
 
@@ -618,19 +613,17 @@ describe('applyGrouping', () => {
   })
 
   describe('groupBy "status"', () => {
-    it('should return 4 groups in status order: inbox, capture, reference, permanent', () => {
+    it('should return 3 groups in status order: inbox, capture, permanent', () => {
       const notes = [
         makeNote({ id: '1', status: 'permanent', title: 'P1' }),
         makeNote({ id: '2', status: 'inbox', title: 'I1' }),
-        makeNote({ id: '3', status: 'reference', title: 'R1' }),
-        makeNote({ id: '4', status: 'capture', title: 'C1' }),
+        makeNote({ id: '3', status: 'capture', title: 'C1' }),
       ]
       const groups = applyGrouping(notes, 'status')
-      expect(groups).toHaveLength(4)
+      expect(groups).toHaveLength(3)
       expect(groups.map(g => g.key)).toEqual([
         'inbox',
         'capture',
-        'reference',
         'permanent',
       ])
     })
@@ -652,17 +645,16 @@ describe('applyGrouping', () => {
       expect(permanentGroup.notes.map(n => n.id)).toEqual(['4'])
     })
 
-    it('should return all 4 status groups even if some are empty', () => {
+    it('should return all 3 status groups even if some are empty', () => {
       const notes = [
         makeNote({ id: '1', status: 'inbox' }),
         makeNote({ id: '2', status: 'inbox' }),
       ]
       const groups = applyGrouping(notes, 'status')
-      expect(groups).toHaveLength(4)
+      expect(groups).toHaveLength(3)
       expect(groups[0].notes.map(n => n.id)).toEqual(['1', '2'])
       expect(groups[1].notes).toEqual([])
       expect(groups[2].notes).toEqual([])
-      expect(groups[3].notes).toEqual([])
     })
 
     it('should have correct labels for status groups', () => {
@@ -670,7 +662,6 @@ describe('applyGrouping', () => {
       expect(groups.map(g => g.label)).toEqual([
         'Inbox',
         'Capture',
-        'Reference',
         'Permanent',
       ])
     })
@@ -821,7 +812,7 @@ describe('applyGrouping', () => {
   describe('edge cases', () => {
     it('should return empty notes groups when empty array passed', () => {
       const groups = applyGrouping([], 'status')
-      expect(groups).toHaveLength(4)
+      expect(groups).toHaveLength(3)
       groups.forEach(group => {
         expect(group.notes).toEqual([])
       })

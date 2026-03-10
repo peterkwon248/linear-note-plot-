@@ -50,7 +50,6 @@ const STATUS_GROUP: PickerFilterGroup = {
   values: [
     { value: "inbox", label: "Inbox" },
     { value: "capture", label: "Capture" },
-    { value: "reference", label: "Reference" },
     { value: "permanent", label: "Permanent" },
   ],
 }

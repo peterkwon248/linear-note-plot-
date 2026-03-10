@@ -166,6 +166,13 @@ export function NoteDetailPanel({
   const staleSuggest = note ? isStaleSuggest(note) : false
   const linkCount = note ? (backlinksIndex.get(note.id) ?? 0) : 0
 
+  // Days since note was created (for capture age nudge)
+  const daysInCapture = note && note.status === "capture"
+    ? Math.floor((Date.now() - new Date(note.createdAt).getTime()) / (24 * 60 * 60 * 1000))
+    : 0
+  // Show capture age nudge only when not already covered by staleSuggest (14d lastTouched check)
+  const showCaptureAgeNudge = note?.status === "capture" && !staleSuggest && daysInCapture >= 14
+
   // Advance to next inbox note after triage action
   const advanceToNext = useCallback(() => {
     const inbox = getInboxNotes(notes, backlinksIndex)
@@ -362,6 +369,14 @@ export function NoteDetailPanel({
               <span className="text-[14px] text-chart-3">Review needed - untouched for 7+ days.</span>
             </div>
           )}
+          {showCaptureAgeNudge && (
+            <div className="flex items-center gap-2 px-4 py-2">
+              <Clock className="h-4 w-4 text-muted-foreground/60" />
+              <span className="text-[13px] text-muted-foreground/70">
+                In capture for {daysInCapture} days. Consider promoting or archiving.
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -389,7 +404,14 @@ export function NoteDetailPanel({
           {linkCount === 0 && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
               <Link2 className="h-4 w-4 text-chart-3" />
-              <span className="text-[14px] text-chart-3">Unlinked permanent note - add connections to strengthen your knowledge graph.</span>
+              <span className="text-[14px] text-chart-3">
+                Unlinked permanent note — add connections to strengthen your knowledge graph.
+                {suggestions.length > 0 && (
+                  <span className="ml-1 text-chart-3/80">
+                    {suggestions.length} suggested {suggestions.length === 1 ? "connection" : "connections"} below.
+                  </span>
+                )}
+              </span>
             </div>
           )}
         </div>

@@ -158,7 +158,6 @@ export function FloatingActionBar({
         )
 
       case "permanent":
-      case "reference":
         return (
           <button
             onClick={handleDemoteAll}
@@ -172,7 +171,7 @@ export function FloatingActionBar({
       case "unlinked": {
         const hasInbox = selectedNotes.some((n) => n.status === "inbox")
         const hasCapture = selectedNotes.some((n) => n.status === "capture")
-        const hasPermanent = selectedNotes.some((n) => n.status === "permanent" || n.status === "reference")
+        const hasPermanent = selectedNotes.some((n) => n.status === "permanent")
         return (
           <>
             {hasInbox && (
