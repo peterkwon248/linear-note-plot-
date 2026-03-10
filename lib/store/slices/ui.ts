@@ -42,6 +42,10 @@ export function createUISlice(set: Set, appendEvent: AppendEventFn) {
     goBack: () => {
       set((state: any) => {
         const index = state.navigationIndex as number
+        // At index 0 with an open note → close editor (return to table/view)
+        if (index <= 0 && state.selectedNoteId) {
+          return { selectedNoteId: null }
+        }
         if (index <= 0) return state
         const newIndex = index - 1
         const noteId = state.navigationHistory[newIndex]

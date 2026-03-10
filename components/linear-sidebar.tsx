@@ -149,6 +149,7 @@ export function LinearSidebar() {
   const createFolder = usePlotStore((s) => s.createFolder)
   const accessFolder = usePlotStore((s) => s.accessFolder)
 
+  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const navigationHistory = usePlotStore((s) => s.navigationHistory)
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
   const goBack = usePlotStore((s) => s.goBack)
@@ -332,7 +333,7 @@ export function LinearSidebar() {
         </div>
         <button
           onClick={() => goBack()}
-          disabled={navigationIndex <= 0}
+          disabled={navigationIndex <= 0 && !selectedNoteId}
           className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-foreground hover:text-sidebar-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
           aria-label="Go back"
         >
