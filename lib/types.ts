@@ -138,7 +138,7 @@ export interface SavedView {
   sortField?: string
   sortDirection?: "asc" | "desc"
   groupBy?: string
-  viewMode?: "list" | "table" | "board"
+  viewMode?: "list" | "table" | "board" | "insights"
   createdAt: string
   updatedAt: string
 }

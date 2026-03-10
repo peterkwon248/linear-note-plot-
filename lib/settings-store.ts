@@ -33,7 +33,7 @@ export interface SettingsState {
   language: string
   startView: "all" | "inbox" | "pinned"
   confirmDelete: boolean
-  viewMode: "list" | "table" | "board"
+  viewMode: "list" | "table" | "board" | "insights"
 
   // Actions
   setSpellcheck: (v: boolean) => void
@@ -48,7 +48,7 @@ export interface SettingsState {
   setLanguage: (v: string) => void
   setStartView: (v: "all" | "inbox" | "pinned") => void
   setConfirmDelete: (v: boolean) => void
-  setViewMode: (v: "list" | "table" | "board") => void
+  setViewMode: (v: "list" | "table" | "board" | "insights") => void
 }
 
 export const useSettingsStore = create<SettingsState>()(

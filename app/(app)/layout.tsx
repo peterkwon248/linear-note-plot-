@@ -10,6 +10,7 @@ import { ShortcutOverlay } from "@/components/shortcut-overlay"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
 import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts"
+import { useAutopilotNudges } from "@/hooks/use-autopilot-nudges"
 import { Toaster } from "sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { NotesTableView } from "@/components/notes-table-view"
@@ -71,6 +72,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Single consolidated global shortcut handler
   useGlobalShortcuts()
+  // Autopilot nudges: inbox triage + SRS review reminders
+  useAutopilotNudges()
 
   // ── Resize handle drag ──────────────────────────────────
   const handlePointerDown = useCallback(

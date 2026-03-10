@@ -18,7 +18,7 @@ export type ViewContextKey =
 
 /* ── View State ────────────────────────────────────────── */
 
-export type ViewMode = "list" | "table" | "board"
+export type ViewMode = "list" | "table" | "board" | "insights"
 
 export type SortField =
   | "updatedAt"
@@ -111,7 +111,7 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "none", "status", "priority", "date", "folder", "triage", "linkCount",
 ]
 
-export const VALID_VIEW_MODES: ViewMode[] = ["list", "table", "board"]
+export const VALID_VIEW_MODES: ViewMode[] = ["list", "table", "board", "insights"]
 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "folder", "links", "reads", "priority", "createdAt", "updatedAt",
