@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import type { FilterRule, FilterField, GroupBy } from "@/lib/view-engine/types"
-import type { NoteStatus, NotePriority, NoteSource, Project, Tag as TagType } from "@/lib/types"
+import type { NoteStatus, NotePriority, NoteSource, Folder, Tag as TagType } from "@/lib/types"
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -36,17 +36,17 @@ function countContentFilters(filters: FilterRule[]) {
   return filters.filter((f) => f.field === "content" || f.field === "wordCount" || f.field === "title" || f.field === "reads").length
 }
 
-export function formatFilterLabel(rule: FilterRule, projectList?: Project[], tagList?: TagType[]): string {
+export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagList?: TagType[]): string {
   // Status
   if (rule.field === "status") return rule.value.charAt(0).toUpperCase() + rule.value.slice(1)
   // Priority
   if (rule.field === "priority" && rule.value === "none") return "No priority"
   if (rule.field === "priority") return rule.value.charAt(0).toUpperCase() + rule.value.slice(1)
-  // Project
-  if (rule.field === "project" && rule.value === "_none") return "No project"
-  if (rule.field === "project" && rule.value !== "_none" && projectList) {
-    const proj = projectList.find((p) => p.id === rule.value)
-    return proj ? proj.name : rule.value
+  // Folder
+  if (rule.field === "folder" && rule.value === "_none") return "No folder"
+  if (rule.field === "folder" && rule.value !== "_none" && folderList) {
+    const folder = folderList.find((f) => f.id === rule.value)
+    return folder ? folder.name : rule.value
   }
   // Tags
   if (rule.field === "tags" && rule.value === "_any") return "Has tags"
@@ -112,7 +112,7 @@ interface FilterMenuProps {
   filters: FilterRule[]
   groupBy: GroupBy
   isSingleStatusTab: boolean
-  projects: Project[]
+  folders: Folder[]
   tags: TagType[]
   onToggleFilter: (field: FilterRule["field"], value: string, operator?: FilterRule["operator"]) => void
   onSetFilters: (filters: FilterRule[]) => void
@@ -122,19 +122,19 @@ export function FilterMenuItems({
   filters,
   groupBy,
   isSingleStatusTab,
-  projects,
+  folders,
   tags,
   onToggleFilter,
   onSetFilters,
 }: FilterMenuProps) {
   const showStatusFilter = groupBy !== "status" && groupBy !== "triage" && !isSingleStatusTab
   const showPriorityFilter = groupBy !== "priority"
-  const showProjectFilter = groupBy !== "project"
+  const showFolderFilter = groupBy !== "folder"
   const showLinksFilter = groupBy !== "linkCount"
 
   const statusCount = countFieldFilters(filters, "status")
   const priorityCount = countFieldFilters(filters, "priority")
-  const projectCount = countFieldFilters(filters, "project")
+  const folderCount = countFieldFilters(filters, "folder")
   const tagCount = countFieldFilters(filters, "tags")
   const sourceCount = countFieldFilters(filters, "source")
   const dateCount = countDateFilters(filters)
@@ -145,7 +145,7 @@ export function FilterMenuItems({
   return (
     <>
       {/* ── Quick Filters (presets) ── */}
-      <DropdownMenuItem className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
+      <DropdownMenuItem className="text-[12px] font-medium text-muted-foreground" disabled>
         <Zap className="h-3.5 w-3.5 mr-1" /> Quick Filters
       </DropdownMenuItem>
       <DropdownMenuItem onSelect={(e) => {
@@ -216,24 +216,24 @@ export function FilterMenuItems({
         </DropdownMenuSub>
       )}
 
-      {/* ── Project ── */}
-      {showProjectFilter && (
+      {/* ── Folder ── */}
+      {showFolderFilter && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            <span className="text-[14px]">Project</span>
-            <ActiveBadge count={projectCount} />
+            <span className="text-[14px]">Folder</span>
+            <ActiveBadge count={folderCount} />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-52">
-            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("project", "_none") }}>
-              <CheckMark active={hasFilter(filters, "project", "_none")} />
-              <span className="text-[14px] text-muted-foreground">No project</span>
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", "_none") }}>
+              <CheckMark active={hasFilter(filters, "folder", "_none")} />
+              <span className="text-[14px] text-muted-foreground">No folder</span>
             </DropdownMenuItem>
-            {projects.length > 0 && <DropdownMenuSeparator />}
-            {projects.map((proj) => (
-              <DropdownMenuItem key={proj.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("project", proj.id) }}>
-                <CheckMark active={hasFilter(filters, "project", proj.id)} />
-                <span className="text-[14px]">{proj.name}</span>
+            {folders.length > 0 && <DropdownMenuSeparator />}
+            {folders.map((folder) => (
+              <DropdownMenuItem key={folder.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", folder.id) }}>
+                <CheckMark active={hasFilter(filters, "folder", folder.id)} />
+                <span className="text-[14px]">{folder.name}</span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuSubContent>
@@ -307,7 +307,7 @@ export function FilterMenuItems({
           <ActiveBadge count={dateCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-52">
-          <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
+          <DropdownMenuItem className="text-[11px] font-medium text-muted-foreground" disabled>
             Updated
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "24h", "gt") }}>
@@ -323,7 +323,7 @@ export function FilterMenuItems({
             <span className="text-[14px]">This month</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
+          <DropdownMenuItem className="text-[11px] font-medium text-muted-foreground" disabled>
             Stale
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "7d", "lt") }}>
@@ -339,7 +339,7 @@ export function FilterMenuItems({
             <span className="text-[14px]">90+ days ago</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
+          <DropdownMenuItem className="text-[11px] font-medium text-muted-foreground" disabled>
             Created
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("createdAt", "24h", "gt") }}>
@@ -417,7 +417,7 @@ export function FilterMenuItems({
             <span className="text-[14px]">Unread</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>
+          <DropdownMenuItem className="text-[11px] font-medium text-muted-foreground" disabled>
             Word Count
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "50", "lt") }}>
@@ -462,12 +462,12 @@ export function FilterMenuItems({
 
 /* ── Filter Grouping (for grouped chips) ──────────────── */
 
-export type FilterGroupKey = "status" | "priority" | "project" | "tags" | "source" | "dates" | "links" | "content" | "pinned"
+export type FilterGroupKey = "status" | "priority" | "folder" | "tags" | "source" | "dates" | "links" | "content" | "pinned"
 
 const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   status: "status",
   priority: "priority",
-  project: "project",
+  folder: "folder",
   tags: "tags",
   source: "source",
   updatedAt: "dates",
@@ -487,7 +487,7 @@ export function getFilterGroupKey(field: FilterField): FilterGroupKey {
 export const FILTER_GROUP_META: Record<FilterGroupKey, { label: string; icon: typeof CircleDot }> = {
   status: { label: "Status", icon: CircleDot },
   priority: { label: "Priority", icon: Signal },
-  project: { label: "Project", icon: FolderOpen },
+  folder: { label: "Folder", icon: FolderOpen },
   tags: { label: "Tags", icon: Hash },
   source: { label: "Source", icon: Globe },
   dates: { label: "Dates", icon: Clock },
@@ -501,12 +501,12 @@ export const FILTER_GROUP_META: Record<FilterGroupKey, { label: string; icon: ty
 interface FilterFieldContentProps {
   groupKey: FilterGroupKey
   filters: FilterRule[]
-  projects: Project[]
+  folders: Folder[]
   tags: TagType[]
   onToggleFilter: (field: FilterRule["field"], value: string, operator?: FilterRule["operator"]) => void
 }
 
-export function FilterFieldContent({ groupKey, filters, projects, tags, onToggleFilter }: FilterFieldContentProps) {
+export function FilterFieldContent({ groupKey, filters, folders, tags, onToggleFilter }: FilterFieldContentProps) {
   switch (groupKey) {
     case "status":
       return (
@@ -531,18 +531,18 @@ export function FilterFieldContent({ groupKey, filters, projects, tags, onToggle
           ))}
         </>
       )
-    case "project":
+    case "folder":
       return (
         <>
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("project", "_none") }}>
-            <CheckMark active={hasFilter(filters, "project", "_none")} />
-            <span className="text-[14px] text-muted-foreground">No project</span>
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", "_none") }}>
+            <CheckMark active={hasFilter(filters, "folder", "_none")} />
+            <span className="text-[14px] text-muted-foreground">No folder</span>
           </DropdownMenuItem>
-          {projects.length > 0 && <DropdownMenuSeparator />}
-          {projects.map((proj) => (
-            <DropdownMenuItem key={proj.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("project", proj.id) }}>
-              <CheckMark active={hasFilter(filters, "project", proj.id)} />
-              <span className="text-[14px]">{proj.name}</span>
+          {folders.length > 0 && <DropdownMenuSeparator />}
+          {folders.map((folder) => (
+            <DropdownMenuItem key={folder.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", folder.id) }}>
+              <CheckMark active={hasFilter(filters, "folder", folder.id)} />
+              <span className="text-[14px]">{folder.name}</span>
             </DropdownMenuItem>
           ))}
         </>
@@ -591,7 +591,7 @@ export function FilterFieldContent({ groupKey, filters, projects, tags, onToggle
     case "dates":
       return (
         <>
-          <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>Updated</DropdownMenuItem>
+          <DropdownMenuItem className="text-[11px] font-medium text-muted-foreground" disabled>Updated</DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "24h", "gt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "24h", "gt")} />
             <span className="text-[14px]">Today</span>
@@ -605,7 +605,7 @@ export function FilterFieldContent({ groupKey, filters, projects, tags, onToggle
             <span className="text-[14px]">This month</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>Stale</DropdownMenuItem>
+          <DropdownMenuItem className="text-[11px] font-medium text-muted-foreground" disabled>Stale</DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "7d", "lt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "7d", "lt")} />
             <span className="text-[14px]">7+ days ago</span>
@@ -619,7 +619,7 @@ export function FilterFieldContent({ groupKey, filters, projects, tags, onToggle
             <span className="text-[14px]">90+ days ago</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>Created</DropdownMenuItem>
+          <DropdownMenuItem className="text-[11px] font-medium text-muted-foreground" disabled>Created</DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("createdAt", "24h", "gt") }}>
             <CheckMark active={hasFilter(filters, "createdAt", "24h", "gt")} />
             <span className="text-[14px]">Today</span>
@@ -676,7 +676,7 @@ export function FilterFieldContent({ groupKey, filters, projects, tags, onToggle
             <span className="text-[14px]">Unread</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" disabled>Word Count</DropdownMenuItem>
+          <DropdownMenuItem className="text-[11px] font-medium text-muted-foreground" disabled>Word Count</DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "50", "lt") }}>
             <CheckMark active={hasFilter(filters, "wordCount", "50", "lt")} />
             <span className="text-[14px]">Short (&lt; 50 words)</span>
@@ -710,7 +710,7 @@ export function FilterFieldContent({ groupKey, filters, projects, tags, onToggle
 /* ── FilterButton (toolbar) ──────────────────────────── */
 
 interface FilterButtonProps extends FilterMenuProps {
-  /* inherits filters, groupBy, isSingleStatusTab, projects, tags, onToggleFilter, onSetFilters */
+  /* inherits filters, groupBy, isSingleStatusTab, folders, tags, onToggleFilter, onSetFilters */
 }
 
 export function FilterButton(props: FilterButtonProps) {
@@ -743,7 +743,7 @@ interface FilterChipBarProps extends FilterMenuProps {
 
 export function FilterChipBar({
   filters,
-  projects,
+  folders,
   tags,
   onRemoveFilter,
   onClearAll,
@@ -759,7 +759,7 @@ export function FilterChipBar({
           key={i}
           className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary/50 px-2 py-0.5 text-[12px] text-foreground"
         >
-          <span className="text-muted-foreground">{formatFilterLabel(f, projects, tags)}</span>
+          <span className="text-muted-foreground">{formatFilterLabel(f, folders, tags)}</span>
           <button
             onClick={() => onRemoveFilter(i)}
             className="ml-0.5 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -777,7 +777,7 @@ export function FilterChipBar({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
-          <FilterMenuItems filters={filters} projects={projects} tags={tags} {...menuProps} />
+          <FilterMenuItems filters={filters} folders={folders} tags={tags} {...menuProps} />
         </DropdownMenuContent>
       </DropdownMenu>
 

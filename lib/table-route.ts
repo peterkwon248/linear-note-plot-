@@ -12,7 +12,7 @@ import { useSyncExternalStore } from "react"
 export const TABLE_VIEW_ROUTES = ["/notes", "/pinned", "/trash"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/inbox", "/review", "/alerts", "/projects", "/tags", "/views", "/maps"]
+export const VIEW_ROUTES = ["/inbox"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
@@ -21,6 +21,7 @@ export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
 
 let _listeners: Array<() => void> = []
 let _activeRoute: string | null = null
+let _activeFolderId: string | null = null
 
 export function getActiveRoute(): string | null {
   return _activeRoute
@@ -29,6 +30,16 @@ export function getActiveRoute(): string | null {
 export function setActiveRoute(route: string | null): void {
   if (_activeRoute === route) return
   _activeRoute = route
+  _listeners.forEach((fn) => fn())
+}
+
+export function getActiveFolderId(): string | null {
+  return _activeFolderId
+}
+
+export function setActiveFolderId(folderId: string | null): void {
+  if (_activeFolderId === folderId) return
+  _activeFolderId = folderId
   _listeners.forEach((fn) => fn())
 }
 
@@ -53,4 +64,9 @@ export function syncFromPathname(pathname: string): void {
 /** Subscribe to the active sidebar route. Returns null for fallback routes. */
 export function useActiveRoute(): string | null {
   return useSyncExternalStore(subscribeActiveRoute, getActiveRoute, () => null)
+}
+
+/** Subscribe to the active folder ID. Returns null when no folder is selected. */
+export function useActiveFolderId(): string | null {
+  return useSyncExternalStore(subscribeActiveRoute, getActiveFolderId, () => null)
 }

@@ -19,12 +19,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         folderId:
           partial?.folderId ??
           (activeView.type === "folder" ? activeView.folderId : null),
-        category:
-          partial?.category ??
-          (activeView.type === "category" ? activeView.categoryId : ""),
         tags: partial?.tags ?? [],
         status: partial?.status ?? "inbox",
-        projectId: partial?.projectId ?? null,
         priority: partial?.priority ?? "none",
         reads: 0,
         pinned: partial?.pinned ?? false,
@@ -278,10 +274,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         content: "",
         contentJson: null,
         folderId: parent.folderId,
-        category: parent.category,
         tags: [...parent.tags],
         status: parent.status,
-        projectId: parent.projectId,
         priority: "none",
         reads: 0,
         pinned: false,

@@ -16,7 +16,7 @@ import { isEditableTarget } from "@/lib/keyboard-utils"
  *                     so "?" can close the overlay when it is already open)
  *   4. ── isEditableTarget guard ── (block remaining keys when typing)
  *   5. /            — open search
- *   6. G-sequence   — navigation (G+I, G+C, G+M, G+N, G+P, G+V)
+ *   6. G-sequence   — navigation (G+I, G+C, G+M, G+N)
  *   7. C            — create new note
  */
 export function useGlobalShortcuts() {
@@ -156,8 +156,6 @@ export function useGlobalShortcuts() {
         if (k === "c") { e.preventDefault(); router.push("/capture"); return }
         if (k === "m") { e.preventDefault(); router.push("/permanent"); return }
         if (k === "n") { e.preventDefault(); router.push("/notes"); return }
-        if (k === "p") { e.preventDefault(); router.push("/projects"); return }
-        if (k === "v") { e.preventDefault(); router.push("/views"); return }
         return
       }
 
