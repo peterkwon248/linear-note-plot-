@@ -5,7 +5,6 @@ import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import {
   getInboxNotes,
-  computeInboxRank,
   getSnoozeTime,
 } from "@/lib/queries/notes"
 import { NoteEditor } from "@/components/note-editor"
@@ -13,7 +12,6 @@ import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { RemindPicker } from "@/components/remind-picker"
-import { PriorityBadge } from "@/components/note-fields"
 import {
   Tooltip,
   TooltipContent,
@@ -24,7 +22,6 @@ import {
   Check,
   Clock,
   Trash2,
-  Zap,
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -172,7 +169,6 @@ export function InboxView() {
                 key={note.id}
                 note={note}
                 isActive={previewId === note.id}
-                backlinks={backlinks}
                 onClick={() => setPreviewId(note.id)}
                 onDoubleClick={() => openNote(note.id)}
               />
@@ -215,17 +211,14 @@ export function InboxView() {
 function InboxRow({
   note,
   isActive,
-  backlinks,
   onClick,
   onDoubleClick,
 }: {
   note: Note
   isActive: boolean
-  backlinks: Map<string, number>
   onClick: () => void
   onDoubleClick: () => void
 }) {
-  const rank = computeInboxRank(note, backlinks)
   const isSnoozed = note.triageStatus === "snoozed"
 
   return (
@@ -238,26 +231,6 @@ function InboxRow({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
     >
-      {/* Priority */}
-      <div className="w-7 shrink-0 flex justify-center">
-        <PriorityBadge priority={note.priority} />
-      </div>
-
-      {/* Rank indicator */}
-      <div className="w-8 shrink-0 flex justify-center">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className={`flex items-center gap-0.5 text-[12px] tabular-nums font-medium ${
-              rank >= 15 ? "text-accent" : rank >= 10 ? "text-muted-foreground" : "text-muted-foreground/50"
-            }`}>
-              <Zap className="h-2.5 w-2.5" />
-              {rank}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-[12px]">Inbox rank: {rank}</TooltipContent>
-        </Tooltip>
-      </div>
-
       {/* Title */}
       <div className="flex flex-1 items-center gap-2 min-w-0 pr-3">
         <span className="truncate text-[15px] text-foreground">
@@ -365,10 +338,11 @@ function InboxDetailPanel({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onTrash(noteId)}
-                  className="flex items-center justify-center gap-1.5 rounded-md bg-destructive/10 px-3 py-2 text-[14px] font-medium text-destructive transition-colors hover:bg-destructive/20"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-destructive/10 px-3 py-2 text-[14px] font-medium text-destructive transition-colors hover:bg-destructive/20"
                 >
                   <Trash2 className="h-4 w-4" />
-                  <kbd className="rounded border border-destructive/20 px-1 py-0.5 font-mono text-[9px]">T</kbd>
+                  Trash
+                  <kbd className="ml-1 rounded border border-destructive/20 px-1 py-0.5 font-mono text-[9px]">T</kbd>
                 </button>
               </TooltipTrigger>
               <TooltipContent>Soft delete this note</TooltipContent>
