@@ -136,7 +136,6 @@ const TABS: { id: ViewContextKey; label: string }[] = [
   { id: "all", label: "All Notes" },
   { id: "inbox", label: "Inbox" },
   { id: "capture", label: "Capture" },
-  { id: "reference", label: "Reference" },
   { id: "permanent", label: "Permanent" },
   { id: "unlinked", label: "Unlinked" },
 ]
@@ -259,7 +258,6 @@ export function NotesTable({
       all: active.length,
       inbox: active.filter((n) => n.status === "inbox" && n.triageStatus !== "trashed").length,
       capture: active.filter((n) => n.status === "capture").length,
-      reference: active.filter((n) => n.status === "reference").length,
       permanent: active.filter((n) => n.status === "permanent").length,
       unlinked: active.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0 && (n.linksOut?.length ?? 0) === 0).length,
     }
@@ -384,7 +382,7 @@ export function NotesTable({
     updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
   }
 
-  const isSingleStatusTab = ["inbox", "capture", "reference", "permanent"].includes(effectiveTab)
+  const isSingleStatusTab = ["inbox", "capture", "permanent"].includes(effectiveTab)
 
   function toggleColumn(colId: string) {
     const cols = viewState.visibleColumns

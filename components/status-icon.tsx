@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils"
 import type { NoteStatus } from "@/lib/types"
 
 /**
- * Shared status icon component — □ inbox, ▣ capture/reference, ☑ permanent.
+ * Shared status icon component — □ inbox, ▣ capture, ☑ permanent.
  * Used across sidebar, editor backlinks footer, and notes table.
  */
 export function StatusIcon({ status, className }: { status: NoteStatus; className?: string }) {
@@ -24,7 +24,7 @@ export function StatusIcon({ status, className }: { status: NoteStatus; classNam
       </span>
     )
   }
-  // capture or reference: filled square with inner fill
+  // capture: filled square with inner fill
   return (
     <span
       className={cn("inline-block h-3.5 w-3.5 shrink-0 rounded-sm border border-current", className)}

@@ -28,11 +28,6 @@ export function applyContext(
         (n) => n.status === "capture" && !n.archived && n.triageStatus !== "trashed" && !n.trashed
       )
 
-    case "reference":
-      return notes.filter(
-        (n) => n.status === "reference" && !n.archived && !n.trashed
-      )
-
     case "permanent":
       return notes.filter(
         (n) => n.status === "permanent" && !n.archived && n.triageStatus !== "trashed" && !n.trashed

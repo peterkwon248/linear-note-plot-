@@ -79,7 +79,7 @@ export const SEED_NOTES: Note[] = [
     contentJson: null,
     folderId: null,
     tags: ["tag-2"],
-    status: "reference",
+    status: "permanent",
     priority: "medium",
     reads: 3,
     pinned: false,

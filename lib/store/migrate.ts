@@ -306,5 +306,23 @@ export function migrate(persistedState: unknown): PlotState {
     console.log("[migrate] v24→v25: removed dismissedAlertIds")
   }
 
+  // v26: Remove "reference" status — merge into "permanent"
+  if (state.notes && Array.isArray(state.notes)) {
+    let migrated = 0
+    for (const n of state.notes as Array<Record<string, unknown>>) {
+      if (n.status === "reference") {
+        n.status = "permanent"
+        migrated++
+      }
+    }
+    if (migrated > 0) {
+      console.log(`[migrate] v25→v26: migrated ${migrated} reference→permanent notes`)
+    }
+  }
+  // Remove "reference" view context
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    delete (state.viewStateByContext as Record<string, unknown>)["reference"]
+  }
+
   return state as unknown as PlotState
 }

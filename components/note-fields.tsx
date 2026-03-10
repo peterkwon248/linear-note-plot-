@@ -40,12 +40,6 @@ export const STATUS_CONFIG: Record<
     bg: "rgba(242, 153, 74, 0.12)",
     icon: <Zap className="h-3.5 w-3.5" />,
   },
-  reference: {
-    label: "Reference",
-    color: "#5e6ad2",
-    bg: "rgba(94, 106, 210, 0.12)",
-    icon: <BookOpen className="h-3.5 w-3.5" />,
-  },
   permanent: {
     label: "Permanent",
     color: "#45d483",
@@ -54,7 +48,7 @@ export const STATUS_CONFIG: Record<
   },
 }
 
-const STATUS_OPTIONS: NoteStatus[] = ["inbox", "capture", "reference", "permanent"]
+const STATUS_OPTIONS: NoteStatus[] = ["inbox", "capture", "permanent"]
 
 /* ── Priority config ──────────────────────────────────── */
 

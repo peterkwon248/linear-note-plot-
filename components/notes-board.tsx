@@ -129,7 +129,6 @@ const TABS: { id: ViewContextKey; label: string }[] = [
   { id: "all", label: "All Notes" },
   { id: "inbox", label: "Inbox" },
   { id: "capture", label: "Capture" },
-  { id: "reference", label: "Reference" },
   { id: "permanent", label: "Permanent" },
   { id: "unlinked", label: "Unlinked" },
 ]
@@ -138,12 +137,11 @@ const TABS: { id: ViewContextKey; label: string }[] = [
 const BOARD_DEFAULT_GROUP: Partial<Record<ViewContextKey, GroupBy>> = {
   inbox: "triage",
   capture: "linkCount",
-  reference: "linkCount",
   permanent: "linkCount",
 }
 
 /** Tabs that filter to a single status — status grouping produces only 1 column */
-const SINGLE_STATUS_TABS: ViewContextKey[] = ["inbox", "capture", "reference", "permanent"]
+const SINGLE_STATUS_TABS: ViewContextKey[] = ["inbox", "capture", "permanent"]
 
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: "none", label: "No grouping" },
