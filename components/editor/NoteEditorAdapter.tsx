@@ -110,6 +110,9 @@ export function NoteEditorAdapter({ note }: NoteEditorAdapterProps) {
             contentJson: pendingRef.current.contentJson,
           })
           pendingRef.current = null
+
+          // Sync inline #hashtags → tags
+          syncHashtagsToTags(noteId, savedContent)
         }
       }, 300)
     },
