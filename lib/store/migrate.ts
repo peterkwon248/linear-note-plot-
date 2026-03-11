@@ -340,5 +340,15 @@ export function migrate(persistedState: unknown): PlotState {
   // v29: Templates
   if (!state.templates) state.templates = []
 
+  // v30: Editor tabs/panels
+  if (!state.editorState) {
+    state.editorState = {
+      panels: [{ id: "panel-left", tabs: [], activeTabId: null }],
+      activePanelId: "panel-left",
+      splitMode: false,
+      splitRatio: 0.5,
+    }
+  }
+
   return state as unknown as PlotState
 }

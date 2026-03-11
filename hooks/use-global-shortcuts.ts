@@ -33,6 +33,48 @@ export function useGlobalShortcuts() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
+      const mod = e.metaKey || e.ctrlKey
+
+      // ── Editor Tab Shortcuts ──────────────────────────────
+      // Cmd+W — close current tab
+      if (mod && e.key === "w") {
+        e.preventDefault()
+        const s = usePlotStore.getState()
+        const es = s.editorState
+        if (!es) return
+        const panel = es.panels.find((p: any) => p.id === es.activePanelId)
+        if (panel?.activeTabId) {
+          s.closeTab(panel.activeTabId, panel.id)
+        }
+        return
+      }
+
+      // Cmd+Alt+Left/Right — switch tabs
+      if (mod && e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        e.preventDefault()
+        const s = usePlotStore.getState()
+        const es = s.editorState
+        if (!es) return
+        const panel = es.panels.find((p: any) => p.id === es.activePanelId)
+        if (!panel || panel.tabs.length < 2) return
+        const currentIdx = panel.tabs.findIndex((t: any) => t.id === panel.activeTabId)
+        if (currentIdx === -1) return
+        const nextIdx = e.key === "ArrowLeft"
+          ? (currentIdx - 1 + panel.tabs.length) % panel.tabs.length
+          : (currentIdx + 1) % panel.tabs.length
+        s.setActiveTab(panel.tabs[nextIdx].id, panel.id)
+        return
+      }
+
+      // Cmd+\ — toggle split
+      if (mod && e.key === "\\") {
+        e.preventDefault()
+        const s = usePlotStore.getState()
+        if (s.selectedNoteId !== null) {
+          s.toggleSplit()
+        }
+        return
+      }
 
       // ── 1. Esc ─────────────────────────────────────────────
       // Two-stage dismissal:

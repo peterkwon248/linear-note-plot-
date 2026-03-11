@@ -15,11 +15,13 @@ import {
   isSameDay,
   parseISO,
 } from "date-fns"
-import { ChevronLeft, ChevronRight, CalendarDays, FileText, Plus, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, CalendarDays, FileText, Plus, X, SlidersHorizontal, LayoutList, LayoutGrid, Lightbulb, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
+import { useSettingsStore } from "@/lib/settings-store"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
@@ -440,6 +442,8 @@ export function CalendarView({
   const labels = usePlotStore((s) => s.labels)
   const createNote = usePlotStore((s) => s.createNote)
   const openNote = usePlotStore((s) => s.openNote)
+  const viewMode = useSettingsStore((s) => s.viewMode)
+  const setViewMode = useSettingsStore((s) => s.setViewMode)
 
   /* ── Calendar grid days ──────────────────────────── */
 
@@ -584,6 +588,64 @@ export function CalendarView({
           >
             <ChevronRight className="h-4 w-4" />
           </button>
+
+          {/* Display menu */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[13px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Display
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0" align="end">
+              <div className="flex gap-1 px-3 py-2.5">
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                    viewMode === "table" || viewMode === "list"
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  <LayoutList className="h-4 w-4" />
+                  List
+                </button>
+                <button
+                  onClick={() => setViewMode("board")}
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                    viewMode === "board"
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  Board
+                </button>
+                <button
+                  onClick={() => setViewMode("insights")}
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                    viewMode === "insights"
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  <Lightbulb className="h-4 w-4" />
+                  Insights
+                </button>
+                <button
+                  onClick={() => setViewMode("calendar")}
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                    viewMode === "calendar"
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  <Calendar className="h-4 w-4" />
+                  Calendar
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* New note button */}
           {!hideCreateButton && (

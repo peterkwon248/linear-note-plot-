@@ -3,10 +3,11 @@ import type { ViewState, ViewContextKey } from "../../view-engine/types"
 import { now, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
+type Get = () => any
 
 const MAX_HISTORY = 100
 
-export function createUISlice(set: Set, appendEvent: AppendEventFn) {
+export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
   // Internal flag to prevent openNote from pushing to history during goBack/goForward
   let _navigating = false
 
@@ -37,6 +38,8 @@ export function createUISlice(set: Set, appendEvent: AppendEventFn) {
         return updates
       })
       appendEvent(id, "opened")
+      // Sync editor tab state
+      get().openNoteInTab(id)
     },
 
     goBack: () => {
