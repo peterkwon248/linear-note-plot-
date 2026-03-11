@@ -350,5 +350,6 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+
   return state as unknown as PlotState
 }

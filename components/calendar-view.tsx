@@ -647,6 +647,7 @@ export function CalendarView({
             </PopoverContent>
           </Popover>
 
+
           {/* New note button */}
           {!hideCreateButton && (
             <button
