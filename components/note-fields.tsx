@@ -32,7 +32,7 @@ const TAG_COLORS = [
   "#5e6ad2", "#9b59b6", "#e91e8c", "#8b5cf6", "#0ea5e9",
 ]
 
-function pickColor(name: string): string {
+export function pickColor(name: string): string {
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0
   return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length]

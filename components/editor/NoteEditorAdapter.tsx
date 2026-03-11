@@ -6,6 +6,8 @@ import { usePlotStore } from "@/lib/store"
 import type { Note } from "@/lib/types"
 import { suggestLinks } from "@/lib/queries/notes"
 import { LinkSuggestion } from "@/components/link-suggestion"
+import { extractHashtags } from "@/lib/body-helpers"
+import { pickColor } from "@/components/note-fields"
 
 interface NoteEditorAdapterProps {
   note: Note
@@ -65,6 +67,29 @@ export function NoteEditorAdapter({ note }: NoteEditorAdapterProps) {
     }
   }, [])
 
+  // Sync #hashtags found in content to the tag system
+  const syncHashtagsToTags = useCallback((noteId: string, content: string) => {
+    const hashtagNames = extractHashtags(content)
+    if (hashtagNames.length === 0) return
+
+    const store = usePlotStore.getState()
+    const currentNote = store.notes.find((n) => n.id === noteId)
+    if (!currentNote) return
+
+    for (const name of hashtagNames) {
+      // Find existing tag (case-insensitive)
+      let tag = store.tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
+      if (!tag) {
+        // Create new tag with deterministic color
+        store.createTag(name, pickColor(name))
+        tag = usePlotStore.getState().tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
+      }
+      if (tag && !currentNote.tags.includes(tag.id)) {
+        store.addTagToNote(noteId, tag.id)
+      }
+    }
+  }, [])
+
   const handleChange = useCallback(
     (json: Record<string, unknown>, plainText: string) => {
       pendingRef.current = { content: plainText, contentJson: json }
@@ -73,11 +98,16 @@ export function NoteEditorAdapter({ note }: NoteEditorAdapterProps) {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       saveTimerRef.current = setTimeout(() => {
         if (pendingRef.current && currentNoteIdRef.current) {
-          updateNote(currentNoteIdRef.current, {
-            content: pendingRef.current.content,
+          const savedContent = pendingRef.current.content
+          const noteId = currentNoteIdRef.current
+          updateNote(noteId, {
+            content: savedContent,
             contentJson: pendingRef.current.contentJson,
           })
           pendingRef.current = null
+
+          // Sync inline #hashtags → tags
+          syncHashtagsToTags(noteId, savedContent)
         }
       }, 300)
     },
