@@ -9,10 +9,10 @@ import { useSyncExternalStore } from "react"
 /* ── Route constants ─────────────────────────────────── */
 
 /** Routes handled by NotesTableView (always-mounted table component) */
-export const TABLE_VIEW_ROUTES = ["/notes", "/pinned", "/trash"]
+export const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/pinned", "/trash"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/inbox", "/activity", "/tags", "/labels"]
+export const VIEW_ROUTES = ["/activity", "/tags", "/labels"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]

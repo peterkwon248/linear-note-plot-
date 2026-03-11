@@ -15,7 +15,6 @@ import { Toaster } from "sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { NotesTableView } from "@/components/notes-table-view"
 import { useActiveRoute, syncFromPathname, TABLE_VIEW_ROUTES, VIEW_ROUTES } from "@/lib/table-route"
-import { InboxView } from "@/components/views/inbox-view"
 import { ActivityView } from "@/components/views/activity-view"
 import { TagsView } from "@/components/views/tags-view"
 import { LabelsView } from "@/components/views/labels-view"
@@ -174,12 +173,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* View routes: mount-once, keep-alive */}
-          {(mountedViews.has("/inbox") || activeRoute === "/inbox") && (
-            <div className={activeRoute === "/inbox" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <InboxView />
-            </div>
-          )}
-
           {(mountedViews.has("/activity") || activeRoute === "/activity") && (
             <div className={activeRoute === "/activity" ? "flex flex-1 overflow-hidden" : "hidden"}>
               <ActivityView />

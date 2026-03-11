@@ -495,6 +495,8 @@ export function NotesBoard({
   folderId,
   tagId,
   labelId,
+  initialTab,
+  onTabChange,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -506,6 +508,8 @@ export function NotesBoard({
   folderId?: string
   tagId?: string
   labelId?: string
+  initialTab?: ViewContextKey
+  onTabChange?: (tab: ViewContextKey) => void
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -530,7 +534,12 @@ export function NotesBoard({
   const displayPopoverOpen = useUIStore((s) => s.displayPopoverOpen)
   const setDisplayPopoverOpen = useUIStore((s) => s.setDisplayPopoverOpen)
 
-  const [activeTab, setActiveTab] = useState<ViewContextKey>("all")
+  const [activeTab, setActiveTab] = useState<ViewContextKey>(initialTab ?? "all")
+
+  useEffect(() => {
+    setActiveTab(initialTab ?? "all")
+  }, [initialTab])
+
   const effectiveTab = context ?? activeTab
 
   const backlinksMap = useBacklinksIndex()
@@ -659,7 +668,7 @@ export function NotesBoard({
             {TABS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => { setActiveTab(tab.id); onTabChange?.(tab.id) }}
                 className={`relative px-3 py-2 text-[15px] font-medium transition-colors ${
                   effectiveTab === tab.id
                     ? "text-foreground"

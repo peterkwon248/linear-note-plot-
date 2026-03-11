@@ -225,6 +225,8 @@ export function NotesTable({
   folderId,
   tagId,
   labelId,
+  initialTab,
+  onTabChange,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -236,6 +238,8 @@ export function NotesTable({
   folderId?: string
   tagId?: string
   labelId?: string
+  initialTab?: ViewContextKey
+  onTabChange?: (tab: ViewContextKey) => void
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -251,7 +255,11 @@ export function NotesTable({
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
 
-  const [activeTab, setActiveTab] = useState<ViewContextKey>("all")
+  const [activeTab, setActiveTab] = useState<ViewContextKey>(initialTab ?? "all")
+
+  useEffect(() => {
+    setActiveTab(initialTab ?? "all")
+  }, [initialTab])
 
   const effectiveTab = context ?? activeTab
 
@@ -535,7 +543,7 @@ export function NotesTable({
             {TABS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => { setActiveTab(tab.id); onTabChange?.(tab.id) }}
                 className={`relative px-3 py-2 text-[15px] font-medium transition-colors ${
                   effectiveTab === tab.id
                     ? "text-foreground"
@@ -792,134 +800,152 @@ export function NotesTable({
       )}
 
       {/* ── Table ──────────────────────────────────────── */}
-      {virtualItems.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center text-center">
-          <div>
-            <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
-            <p className="text-[15px] text-muted-foreground">No notes found</p>
-            <p className="mt-1 text-[14px] text-muted-foreground/60">
-              {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div ref={scrollContainerRef} onMouseDown={handleDragMouseDown} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
-          {/* Column headers */}
-          <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
-            <div className="w-8 shrink-0 flex items-center justify-center mr-0.5">
-              <div
-                className={`h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${
-                  selectedIds.size === flatNotes.length && flatNotes.length > 0
-                    ? "bg-accent border-accent"
-                    : selectedIds.size > 0
-                      ? "bg-accent/50 border-accent"
-                      : "border-muted-foreground/30 hover:border-muted-foreground/50"
-                }`}
-                onClick={() => {
-                  if (selectedIds.size === flatNotes.length && flatNotes.length > 0) {
-                    setSelectedIds(new Set())
-                  } else {
-                    setSelectedIds(new Set(flatNotes.map(n => n.id)))
-                  }
-                }}
-              >
-                {selectedIds.size === flatNotes.length && flatNotes.length > 0 && (
-                  <Check className="h-2.5 w-2.5 text-accent-foreground" />
-                )}
-                {selectedIds.size > 0 && selectedIds.size < flatNotes.length && (
-                  <Minus className="h-2.5 w-2.5 text-accent-foreground" />
-                )}
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div className="flex-1 flex flex-col">
+            {virtualItems.length === 0 ? (
+              <div className="flex flex-1 items-center justify-center text-center">
+                <div>
+                  <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+                  <p className="text-[15px] text-muted-foreground">No notes found</p>
+                  <p className="mt-1 text-[14px] text-muted-foreground/60">
+                    {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
+                  </p>
+                </div>
               </div>
-            </div>
-            {COLUMN_DEFS.filter((col) => col.id === "title" || visibleCols.includes(col.id)).map((col) => (
-              <div key={col.id} className={col.width + " " + (col.align ?? "")}>
-                <TH
-                  label={col.label}
-                  col={col.sortField}
-                  sortCol={viewState.sortField}
-                  sortDir={viewState.sortDirection}
-                  onSort={handleSort}
-                  className={col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""}
-                />
-              </div>
-            ))}
-          </div>
+            ) : (
+              <div ref={scrollContainerRef} onMouseDown={handleDragMouseDown} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
+                {/* Column headers */}
+                <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
+                  <div className="w-8 shrink-0 flex items-center justify-center mr-0.5">
+                    <div
+                      className={`h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${
+                        selectedIds.size === flatNotes.length && flatNotes.length > 0
+                          ? "bg-accent border-accent"
+                          : selectedIds.size > 0
+                            ? "bg-accent/50 border-accent"
+                            : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                      }`}
+                      onClick={() => {
+                        if (selectedIds.size === flatNotes.length && flatNotes.length > 0) {
+                          setSelectedIds(new Set())
+                        } else {
+                          setSelectedIds(new Set(flatNotes.map(n => n.id)))
+                        }
+                      }}
+                    >
+                      {selectedIds.size === flatNotes.length && flatNotes.length > 0 && (
+                        <Check className="h-2.5 w-2.5 text-accent-foreground" />
+                      )}
+                      {selectedIds.size > 0 && selectedIds.size < flatNotes.length && (
+                        <Minus className="h-2.5 w-2.5 text-accent-foreground" />
+                      )}
+                    </div>
+                  </div>
+                  {COLUMN_DEFS.filter((col) => col.id === "title" || visibleCols.includes(col.id)).map((col) => (
+                    <div key={col.id} className={col.width + " " + (col.align ?? "")}>
+                      <TH
+                        label={col.label}
+                        col={col.sortField}
+                        sortCol={viewState.sortField}
+                        sortDir={viewState.sortDirection}
+                        onSort={handleSort}
+                        className={col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""}
+                      />
+                    </div>
+                  ))}
+                </div>
 
-          {/* Virtualized rows */}
-          <div
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-              width: "100%",
-              position: "relative",
-            }}
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const item = virtualItems[virtualRow.index]
-              return (
+                {/* Virtualized rows */}
                 <div
-                  key={virtualRow.index}
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
+                    height: `${rowVirtualizer.getTotalSize()}px`,
                     width: "100%",
-                    height: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
+                    position: "relative",
                   }}
                 >
-                  {item.type === "header" ? (
-                    <div className="flex items-center gap-2 px-5 py-3 bg-secondary/30 border-b border-border">
-                      <span className="text-[14px] font-semibold text-foreground">{item.label}</span>
-                      <span className="text-[12px] text-muted-foreground">{item.count}</span>
-                    </div>
-                  ) : (
-                    <NoteRow
-                      note={item.note}
-                      folders={folders}
-                      links={backlinksMap.get(item.note.id) ?? 0}
-                      isActive={activePreviewId === item.note.id}
-                      isSelected={selectedIds.has(item.note.id)}
-                      selectionActive={selectedIds.size > 0}
-                      visibleColumns={visibleCols}
-                      onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
-                      onClick={(e: React.MouseEvent) => {
-                        const flatIndex = flatNotes.findIndex((n) => n.id === item.note.id)
-                        handleRowClick(item.note.id, flatIndex, e)
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const item = virtualItems[virtualRow.index]
+                    return (
+                      <div
+                        key={virtualRow.index}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        {item.type === "header" ? (
+                          <div className="flex items-center gap-2 px-5 py-3 bg-secondary/30 border-b border-border">
+                            <span className="text-[14px] font-semibold text-foreground">{item.label}</span>
+                            <span className="text-[12px] text-muted-foreground">{item.count}</span>
+                          </div>
+                        ) : (
+                          <NoteRow
+                            note={item.note}
+                            folders={folders}
+                            links={backlinksMap.get(item.note.id) ?? 0}
+                            isActive={activePreviewId === item.note.id}
+                            isSelected={selectedIds.has(item.note.id)}
+                            selectionActive={selectedIds.size > 0}
+                            visibleColumns={visibleCols}
+                            onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
+                            onClick={(e: React.MouseEvent) => {
+                              const flatIndex = flatNotes.findIndex((n) => n.id === item.note.id)
+                              handleRowClick(item.note.id, flatIndex, e)
+                            }}
+                            onDoubleClick={() => openNote(item.note.id)}
+                            onStatus={(s) => updateNote(item.note.id, { status: s })}
+                            onPriority={(p) => updateNote(item.note.id, { priority: p })}
+                            onSetFolder={(folderId) => updateNote(item.note.id, { folderId })}
+                            onRemoveFolder={() => updateNote(item.note.id, { folderId: null })}
+                            onKeep={() => triageKeep(item.note.id)}
+                            onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
+                            onTrash={() => triageTrash(item.note.id)}
+                            onPromote={() => promoteToPermanent(item.note.id)}
+                            onDemote={() => undoPromote(item.note.id)}
+                            onMoveBack={() => moveBackToInbox(item.note.id)}
+                            onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
+                            onMergeWith={() => setMergePickerOpen(true, item.note.id)}
+                            onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                  {/* Drag selection rectangle */}
+                  {dragRect && (
+                    <div
+                      className="absolute bg-accent/10 border border-accent/30 pointer-events-none z-20 rounded-sm"
+                      style={{
+                        left: dragRect.x,
+                        top: dragRect.y,
+                        width: dragRect.w,
+                        height: dragRect.h,
                       }}
-                      onDoubleClick={() => openNote(item.note.id)}
-                      onStatus={(s) => updateNote(item.note.id, { status: s })}
-                      onPriority={(p) => updateNote(item.note.id, { priority: p })}
-                      onSetFolder={(folderId) => updateNote(item.note.id, { folderId })}
-                      onRemoveFolder={() => updateNote(item.note.id, { folderId: null })}
-                      onKeep={() => triageKeep(item.note.id)}
-                      onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
-                      onTrash={() => triageTrash(item.note.id)}
-                      onPromote={() => promoteToPermanent(item.note.id)}
-                      onDemote={() => undoPromote(item.note.id)}
-                      onMoveBack={() => moveBackToInbox(item.note.id)}
-                      onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
-                      onMergeWith={() => setMergePickerOpen(true, item.note.id)}
-                      onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
                     />
                   )}
                 </div>
-              )
-            })}
-            {/* Drag selection rectangle */}
-            {dragRect && (
-              <div
-                className="absolute bg-accent/10 border border-accent/30 pointer-events-none z-20 rounded-sm"
-                style={{
-                  left: dragRect.x,
-                  top: dragRect.y,
-                  width: dragRect.w,
-                  height: dragRect.h,
-                }}
-              />
+              </div>
             )}
           </div>
-        </div>
-      )}
+        </ContextMenuTrigger>
+          <ContextMenuContent className="w-48">
+            <ContextMenuItem
+              onClick={() => {
+                const id = createNote(createNoteOverrides ?? {})
+                openNote(id)
+              }}
+              className="text-[14px]"
+            >
+              <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
+              New note
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
 
       {/* ── Floating Action Bar (multi-select) ──────── */}
       {selectedIds.size > 0 && (

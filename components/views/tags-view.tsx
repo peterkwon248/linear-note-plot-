@@ -1,8 +1,14 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
-import { ArrowLeft, Hash, Search, Trash2, X, Zap } from "lucide-react"
+import { ArrowLeft, Hash, Plus, Search, Trash2, X, Zap } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 
 const ROW_HEIGHT = 40 // py-2.5 ≈ 40px
 const HEADER_HEIGHT = 37 // the header row height
@@ -374,82 +380,97 @@ export function TagsView() {
       </div>
 
       {/* Tag list */}
-      <div
-        ref={scrollContainerRef}
-        className={`relative flex-1 overflow-y-auto ${isDraggingRef.current ? "select-none" : ""} ${checkedTags.size > 0 ? "pb-20" : ""}`}
-        onMouseDown={handleDragMouseDown}
-      >
-        {sortedTags.length === 0 ? (
-          <div className="flex h-32 flex-col items-center justify-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {searchQuery ? "No tags match your search" : "No tags yet"}
-            </span>
-            {!searchQuery && (
-              <span className="text-xs text-muted-foreground">
-                Type #tagname above and press Enter to create
-              </span>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div
+            ref={scrollContainerRef}
+            className={`relative flex-1 overflow-y-auto ${isDraggingRef.current ? "select-none" : ""} ${checkedTags.size > 0 ? "pb-20" : ""}`}
+            onMouseDown={handleDragMouseDown}
+          >
+            {sortedTags.length === 0 ? (
+              <div className="flex h-32 flex-col items-center justify-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {searchQuery ? "No tags match your search" : "No tags yet"}
+                </span>
+                {!searchQuery && (
+                  <span className="text-xs text-muted-foreground">
+                    Type #tagname above and press Enter to create
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div>
+                {/* Header row with select-all checkbox */}
+                <div className="flex items-center gap-3 border-b border-border px-6 py-2 text-[14px] font-medium text-muted-foreground">
+                  <button
+                    onClick={toggleAll}
+                    className="flex h-4 w-4 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
+                  >
+                    {checkedTags.size === sortedTags.length &&
+                      sortedTags.length > 0 && (
+                        <div className="h-2 w-2 rounded-sm bg-accent" />
+                      )}
+                  </button>
+                  <span className="flex-1">Name</span>
+                  <span className="w-16 text-right">Notes</span>
+                </div>
+                {sortedTags.map((tag, index) => (
+                  <div
+                    key={tag.id}
+                    data-tag-index={index}
+                    className={`group flex items-center gap-3 px-6 py-2.5 transition-colors ${
+                      checkedTags.has(tag.id) ? "bg-accent/10" : "hover:bg-secondary/50"
+                    }`}
+                    onClick={(e) => {
+                      // Only handle if click is on the row background (not buttons)
+                      if ((e.target as HTMLElement).closest("button")) return
+                      handleRowClick(tag.id, index, e)
+                    }}
+                  >
+                    <button
+                      onClick={() => toggleCheck(tag.id)}
+                      className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
+                    >
+                      {checkedTags.has(tag.id) && (
+                        <div className="h-2 w-2 rounded-sm bg-accent" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setSelectedTagId(tag.id)}
+                      className="flex-1 text-left text-[15px] text-foreground transition-colors hover:text-accent"
+                    >
+                      <span className="text-muted-foreground">#</span>
+                      {tag.name}
+                    </button>
+                    <span className="w-16 text-right text-[14px] tabular-nums text-muted-foreground">
+                      {tagCounts[tag.id] || 0}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Drag selection rectangle */}
+            {dragRect && (
+              <div
+                className="pointer-events-none absolute z-20 rounded border border-accent/50 bg-accent/10"
+                style={{ left: dragRect.x, top: dragRect.y, width: dragRect.w, height: dragRect.h }}
+              />
             )}
           </div>
-        ) : (
-          <div>
-            {/* Header row with select-all checkbox */}
-            <div className="flex items-center gap-3 border-b border-border px-6 py-2 text-[14px] font-medium text-muted-foreground">
-              <button
-                onClick={toggleAll}
-                className="flex h-4 w-4 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
-              >
-                {checkedTags.size === sortedTags.length &&
-                  sortedTags.length > 0 && (
-                    <div className="h-2 w-2 rounded-sm bg-accent" />
-                  )}
-              </button>
-              <span className="flex-1">Tag</span>
-              <span className="w-16 text-right">Notes</span>
-            </div>
-            {sortedTags.map((tag, index) => (
-              <div
-                key={tag.id}
-                data-tag-index={index}
-                className={`group flex items-center gap-3 px-6 py-2.5 transition-colors ${
-                  checkedTags.has(tag.id) ? "bg-accent/10" : "hover:bg-secondary/50"
-                }`}
-                onClick={(e) => {
-                  // Only handle if click is on the row background (not buttons)
-                  if ((e.target as HTMLElement).closest("button")) return
-                  handleRowClick(tag.id, index, e)
-                }}
-              >
-                <button
-                  onClick={() => toggleCheck(tag.id)}
-                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
-                >
-                  {checkedTags.has(tag.id) && (
-                    <div className="h-2 w-2 rounded-sm bg-accent" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setSelectedTagId(tag.id)}
-                  className="flex-1 text-left text-[15px] text-foreground transition-colors hover:text-accent"
-                >
-                  <span className="text-muted-foreground">#</span>
-                  {tag.name}
-                </button>
-                <span className="w-16 text-right text-[14px] tabular-nums text-muted-foreground">
-                  {tagCounts[tag.id] || 0}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Drag selection rectangle */}
-        {dragRect && (
-          <div
-            className="pointer-events-none absolute z-20 rounded border border-accent/50 bg-accent/10"
-            style={{ left: dragRect.x, top: dragRect.y, width: dragRect.w, height: dragRect.h }}
-          />
-        )}
-      </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          <ContextMenuItem
+            onClick={() => {
+              setTimeout(() => tagInputRef.current?.focus(), 100)
+            }}
+            className="text-[14px]"
+          >
+            <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
+            New tag
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
 
       {/* Floating action bar (bottom) */}
       {checkedTags.size > 0 && (
