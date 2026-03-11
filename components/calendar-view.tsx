@@ -38,6 +38,7 @@ interface CalendarViewProps {
   labelId?: string
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
+  initialTab?: string
 }
 
 /* ── Day-of-week header labels (Mon-first) ───────────── */

@@ -18,14 +18,28 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+import {
   Inbox,
   Check,
   Clock,
   Trash2,
+  Plus,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  ChevronsUp,
+  Minus,
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
-import type { Note } from "@/lib/types"
+import { shortRelative } from "@/lib/format-utils"
+import { StatusBadge } from "@/components/note-fields"
+import type { Note, Folder } from "@/lib/types"
 
 /* ── InboxView ─────────────────────────────────────────── */
 
@@ -38,6 +52,7 @@ export function InboxView() {
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
+  const folders = usePlotStore((s) => s.folders)
 
   const backlinks = useBacklinksIndex()
 
@@ -148,33 +163,66 @@ export function InboxView() {
         </header>
 
         {/* Content */}
-        {inboxNotes.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <Inbox className="mb-4 h-12 w-12 text-muted-foreground/20" />
-            <p className="text-[15px] text-muted-foreground">Inbox zero — all caught up</p>
-            <p className="mt-1 text-[14px] text-muted-foreground/60">
-              Create a new note to get started.
-            </p>
-            <button
-              onClick={() => createNote({ status: "inbox" })}
-              className="mt-4 rounded-md bg-accent px-3 py-1.5 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            <div className="flex-1 flex flex-col">
+              {inboxNotes.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center text-center">
+                  <Inbox className="mb-4 h-12 w-12 text-muted-foreground/20" />
+                  <p className="text-[15px] text-muted-foreground">Inbox zero — all caught up</p>
+                  <p className="mt-1 text-[14px] text-muted-foreground/60">
+                    Create a new note to get started.
+                  </p>
+                  <button
+                    onClick={() => createNote({ status: "inbox" })}
+                    className="mt-4 rounded-md bg-accent px-3 py-1.5 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+                  >
+                    New note
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Column headers */}
+                  <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
+                    <span className="flex-1 min-w-0 text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Name</span>
+                    <span className="w-[100px] shrink-0 text-right text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Status</span>
+                    <span className="w-[80px] shrink-0 text-center text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Folder</span>
+                    <span className="w-[48px] shrink-0 text-center text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Links</span>
+                    <span className="w-[48px] shrink-0 text-center text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Reads</span>
+                    <span className="w-[64px] shrink-0 text-center text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Priority</span>
+                    <span className="w-[72px] shrink-0 text-right text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Updated</span>
+                    <span className="w-[72px] shrink-0 text-right text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Created</span>
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {inboxNotes.map((note) => (
+                      <InboxRow
+                        key={note.id}
+                        note={note}
+                        isActive={previewId === note.id}
+                        onClick={() => setPreviewId(note.id)}
+                        onDoubleClick={() => openNote(note.id)}
+                        folders={folders}
+                        links={backlinks.get(note.id) ?? 0}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </ContextMenuTrigger>
+          <ContextMenuContent className="w-48">
+            <ContextMenuItem
+              onClick={() => {
+                const id = createNote({ status: "inbox" })
+                openNote(id)
+              }}
+              className="text-[14px]"
             >
+              <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
               New note
-            </button>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto">
-            {inboxNotes.map((note) => (
-              <InboxRow
-                key={note.id}
-                note={note}
-                isActive={previewId === note.id}
-                onClick={() => setPreviewId(note.id)}
-                onDoubleClick={() => openNote(note.id)}
-              />
-            ))}
-          </div>
-        )}
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
       </main>
 
       {/* Detail panel with triage bar */}
@@ -213,29 +261,58 @@ function InboxRow({
   isActive,
   onClick,
   onDoubleClick,
+  folders,
+  links,
 }: {
   note: Note
   isActive: boolean
   onClick: () => void
   onDoubleClick: () => void
+  folders: Folder[]
+  links: number
 }) {
   const isSnoozed = note.triageStatus === "snoozed"
+  const labels = usePlotStore((s) => s.labels)
+  const label = note.labelId ? labels.find((l) => l.id === note.labelId) : null
 
   return (
     <div
-      className={`group flex items-center px-5 py-2.5 transition-colors cursor-pointer ${
+      className={`group flex items-center px-5 py-3 transition-colors cursor-pointer ${
         isActive
           ? "bg-accent/8 border-l-2 border-l-accent"
-          : "hover:bg-secondary/30"
+          : "hover:bg-secondary/20"
       }`}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
     >
-      {/* Title */}
-      <div className="flex flex-1 items-center gap-2 min-w-0 pr-3">
+      {/* Name column */}
+      <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
+        <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
         <span className="truncate text-[15px] text-foreground">
           {note.title || "Untitled"}
         </span>
+        {/* Label badge */}
+        {label ? (
+          <span
+            className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium"
+            style={{ backgroundColor: `${label.color}18`, color: label.color }}
+          >
+            {label.name}
+          </span>
+        ) : (
+          <span className="shrink-0 inline-flex items-center rounded-full px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground/70 bg-muted/50">
+            Memo
+          </span>
+        )}
+        {/* Word count */}
+        {note.preview.length > 0 && (
+          <span
+            className="shrink-0 text-[11px] tabular-nums font-medium"
+            style={{ color: note.preview.length >= 80 ? "#45d483" : note.preview.length >= 30 ? "#60a5fa" : "#9ca3af" }}
+          >
+            {note.preview.length >= 120 ? "120+" : note.preview.length}
+          </span>
+        )}
         {isSnoozed && (
           <span className="flex shrink-0 items-center gap-1 rounded-full bg-chart-3/10 px-1.5 py-0.5 text-[11px] font-medium text-chart-3">
             <Clock className="h-2.5 w-2.5" />
@@ -249,17 +326,72 @@ function InboxRow({
         )}
       </div>
 
-      {/* Date */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="shrink-0 text-[14px] tabular-nums text-muted-foreground cursor-default">
-            {format(new Date(note.createdAt), "MMM d")}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="text-[12px]">
-          {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
-        </TooltipContent>
-      </Tooltip>
+      {/* Status */}
+      <div className="w-[100px] shrink-0 flex items-center justify-end">
+        <StatusBadge status={note.status} />
+      </div>
+
+      {/* Folder */}
+      <div className="w-[80px] shrink-0 flex items-center justify-center">
+        {note.folderId ? (() => {
+          const folder = folders.find((f) => f.id === note.folderId)
+          if (!folder) return <span className="text-[15px] text-muted-foreground/30">—</span>
+          return <span className="text-[12px] text-muted-foreground truncate">{folder.name}</span>
+        })() : (
+          <span className="text-[15px] text-muted-foreground/30">—</span>
+        )}
+      </div>
+
+      {/* Links */}
+      <div className="w-[48px] shrink-0 text-center">
+        <span className={`text-[15px] tabular-nums ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+          {links}
+        </span>
+      </div>
+
+      {/* Reads */}
+      <div className="w-[48px] shrink-0 text-center">
+        <span className={`text-[15px] tabular-nums ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+          {note.reads}
+        </span>
+      </div>
+
+      {/* Priority */}
+      <div className="w-[64px] shrink-0 flex justify-center">
+        {note.priority === "urgent" && <ChevronsUp className="h-4 w-4 text-red-400" />}
+        {note.priority === "high" && <ChevronUp className="h-4 w-4 text-orange-400" />}
+        {note.priority === "medium" && <Minus className="h-4 w-4 text-yellow-400" />}
+        {note.priority === "low" && <ChevronDown className="h-4 w-4 text-blue-400" />}
+        {(!note.priority || note.priority === "none") && <span className="text-[14px] text-muted-foreground">—</span>}
+      </div>
+
+      {/* Updated */}
+      <div className="w-[72px] shrink-0 text-right">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-[15px] tabular-nums text-muted-foreground cursor-default">
+              {shortRelative(note.updatedAt)}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-[12px]">
+            {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+
+      {/* Created */}
+      <div className="w-[72px] shrink-0 text-right">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-[15px] tabular-nums text-muted-foreground cursor-default">
+              {format(new Date(note.createdAt), "MMM d")}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-[12px]">
+            {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
+          </TooltipContent>
+        </Tooltip>
+      </div>
     </div>
   )
 }

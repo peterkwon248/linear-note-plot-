@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
@@ -10,7 +11,7 @@ import { EditorSplitView } from "@/components/editor/editor-split-view"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { InsightsView } from "@/components/insights-view"
 import { CalendarView } from "@/components/calendar-view"
-import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
+import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, setActiveRoute } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
@@ -22,10 +23,12 @@ interface ViewConfig {
   showTabs?: boolean
   hideCreateButton?: boolean
   createNoteOverrides?: Partial<Note>
+  initialTab?: ViewContextKey
 }
 
 const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
   "/notes": {},
+  "/inbox": { initialTab: "inbox" },
   "/pinned": { context: "pinned", title: "Pinned", showTabs: false, hideCreateButton: true },
   "/trash": { context: "trash", title: "Trash", showTabs: false, hideCreateButton: true },
 }
@@ -33,6 +36,7 @@ const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
 /* ── NotesTableView (always mounted in layout) ───────── */
 
 export function NotesTableView() {
+  const router = useRouter()
   const tableRoute = useActiveRoute()
   const activeFolderId = useActiveFolderId()
   const activeTagId = useActiveTagId()
@@ -52,6 +56,14 @@ export function NotesTableView() {
     if (activeLabelId) return { ...baseConfig, context: "label" as ViewContextKey }
     return baseConfig
   })()
+
+  // When user switches tabs away from "inbox" while on /inbox route, navigate to /notes
+  const handleTabChange = useCallback((tab: ViewContextKey) => {
+    if (tableRoute === "/inbox" && tab !== "inbox") {
+      setActiveRoute("/notes")
+      router.push("/notes")
+    }
+  }, [tableRoute, router])
 
   // ESC closes preview panel
   const handleKeyDown = useCallback(
@@ -111,6 +123,7 @@ export function NotesTableView() {
           labelId={activeLabelId ?? undefined}
           onRowClick={(noteId) => setPreviewId(noteId)}
           activePreviewId={previewId}
+          initialTab={config.initialTab}
         />
         {previewId && (
           <NoteDetailPanel
@@ -143,6 +156,8 @@ export function NotesTableView() {
         labelId={activeLabelId ?? undefined}
         onRowClick={(noteId) => setPreviewId(noteId)}
         activePreviewId={previewId}
+        initialTab={config.initialTab}
+        onTabChange={handleTabChange}
       />
       {previewId && (
         <NoteDetailPanel

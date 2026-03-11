@@ -22,8 +22,6 @@ import {
   Bookmark,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
-import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
-import { getInboxNotes } from "@/lib/queries/notes"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
 import type { Note, NoteStatus } from "@/lib/types"
 import { StatusIcon } from "@/components/status-icon"
@@ -95,7 +93,7 @@ function NavLink({
     return (
       <button
         onClick={() => {
-          if (href === "/notes") {
+          if (href === "/notes" || href === "/inbox") {
             setActiveFolderId(null)
             setActiveTagId(null)
             setActiveLabelId(null)
@@ -178,8 +176,6 @@ export function LinearSidebar() {
   const goBack = usePlotStore((s) => s.goBack)
   const goForward = usePlotStore((s) => s.goForward)
 
-  const backlinks = useBacklinksIndex()
-
   const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
   const recentlyViewedRef = useRef<HTMLDivElement>(null)
 
@@ -239,7 +235,7 @@ export function LinearSidebar() {
     if (renamingItem) setTimeout(() => renameInputRef.current?.focus(), 0)
   }, [renamingItem])
 
-  const inboxCount = useMemo(() => getInboxNotes(notes, backlinks).length, [notes, backlinks])
+  const inboxCount = useMemo(() => notes.filter((n) => n.status === "inbox" && !n.archived && !n.trashed && n.triageStatus !== "trashed").length, [notes])
   const allNotesCount = useMemo(() => notes.filter((n) => !n.archived && !n.trashed).length, [notes])
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
 
