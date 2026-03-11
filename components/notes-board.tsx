@@ -493,6 +493,8 @@ export function NotesBoard({
   createNoteOverrides,
   hideCreateButton = false,
   folderId,
+  tagId,
+  labelId,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -502,6 +504,8 @@ export function NotesBoard({
   createNoteOverrides?: Partial<Note>
   hideCreateButton?: boolean
   folderId?: string
+  tagId?: string
+  labelId?: string
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -531,7 +535,7 @@ export function NotesBoard({
 
   const backlinksMap = useBacklinksIndex()
 
-  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId })
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId, tagId, labelId })
 
   // Auto-set groupBy: board requires grouping, and single-status tabs need contextual grouping
   const isSingleStatusTab = SINGLE_STATUS_TABS.includes(effectiveTab)

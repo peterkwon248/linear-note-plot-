@@ -223,6 +223,8 @@ export function NotesTable({
   createNoteOverrides,
   hideCreateButton = false,
   folderId,
+  tagId,
+  labelId,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
@@ -232,6 +234,8 @@ export function NotesTable({
   createNoteOverrides?: Partial<import("@/lib/types").Note>
   hideCreateButton?: boolean
   folderId?: string
+  tagId?: string
+  labelId?: string
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -276,7 +280,7 @@ export function NotesTable({
   const displayPopoverOpen = useUIStore((s) => s.displayPopoverOpen)
   const setDisplayPopoverOpen = useUIStore((s) => s.setDisplayPopoverOpen)
 
-  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId })
+  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId, tagId, labelId })
 
   // ── Multi-select state ──
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -1049,7 +1053,7 @@ function NoteRowInner({
             className="shrink-0 text-[11px] tabular-nums font-medium"
             style={{ color: note.preview.length >= 80 ? "#45d483" : note.preview.length >= 30 ? "#60a5fa" : "#9ca3af" }}
           >
-            {note.preview.length >= 120 ? "120+" : note.preview.length}자
+            {note.preview.length >= 120 ? "120+" : note.preview.length}
           </span>
         )}
         {links === 0 && (

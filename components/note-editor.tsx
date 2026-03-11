@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import {
   Pin,
   Archive,
@@ -11,6 +11,7 @@ import {
   PanelRight,
   Merge,
   Link2,
+  X,
 } from "lucide-react"
 import {
   Tooltip,
@@ -30,6 +31,220 @@ import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { BacklinksFooter } from "@/components/editor/backlinks-footer"
+import type { Tag } from "@/lib/types"
+
+interface NoteTagBarProps {
+  noteId: string
+  noteTags: string[]
+}
+
+function NoteTagBar({ noteId, noteTags }: NoteTagBarProps) {
+  const allTags = usePlotStore((s) => s.tags)
+  const createTag = usePlotStore((s) => s.createTag)
+  const addTagToNote = usePlotStore((s) => s.addTagToNote)
+  const removeTagFromNote = usePlotStore((s) => s.removeTagFromNote)
+
+  const [inputValue, setInputValue] = useState("")
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Tags currently assigned to this note
+  const assignedTags = allTags.filter((t) => noteTags.includes(t.id))
+
+  // Raw query without leading #
+  const query = inputValue.startsWith("#") ? inputValue.slice(1) : inputValue
+
+  // Filter suggestions: existing tags not already on note, matching query
+  const suggestions = allTags.filter(
+    (t) =>
+      !noteTags.includes(t.id) &&
+      (query === "" || t.name.toLowerCase().includes(query.toLowerCase()))
+  )
+
+  const commitTag = useCallback(
+    (raw: string) => {
+      const name = raw.trim().replace(/^#+/, "")
+      if (!name) return
+      const existing = allTags.find(
+        (t) => t.name.toLowerCase() === name.toLowerCase()
+      )
+      if (existing) {
+        if (!noteTags.includes(existing.id)) {
+          addTagToNote(noteId, existing.id)
+        }
+      } else {
+        createTag(name, "#888888")
+        // The new tag will be in store after createTag; find it by name
+        // We need a slight trick: createTag is synchronous in zustand
+        // Get updated tags directly from store snapshot
+        const updatedTags = usePlotStore.getState().tags
+        const newTag = updatedTags.find(
+          (t: Tag) => t.name.toLowerCase() === name.toLowerCase()
+        )
+        if (newTag) {
+          addTagToNote(noteId, newTag.id)
+        }
+      }
+    },
+    [allTags, noteTags, noteId, addTagToNote, createTag]
+  )
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setActiveIndex((i) => Math.min(i + 1, suggestions.length - 1))
+      return
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setActiveIndex((i) => Math.max(i - 1, -1))
+      return
+    }
+    if (e.key === "Escape") {
+      setShowDropdown(false)
+      setInputValue("")
+      setActiveIndex(-1)
+      return
+    }
+    if (e.key === "Enter") {
+      e.preventDefault()
+      if (activeIndex >= 0 && activeIndex < suggestions.length) {
+        // Select highlighted suggestion
+        const tag = suggestions[activeIndex]
+        addTagToNote(noteId, tag.id)
+        setInputValue("")
+        setShowDropdown(false)
+        setActiveIndex(-1)
+        return
+      }
+      // Commit typed value — support comma-separated multi-tag input
+      const parts = inputValue
+        .split(/,/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+      parts.forEach((p) => commitTag(p))
+      setInputValue("")
+      setShowDropdown(false)
+      setActiveIndex(-1)
+    }
+  }
+
+  const handleSuggestionClick = (tag: Tag) => {
+    addTagToNote(noteId, tag.id)
+    setInputValue("")
+    setShowDropdown(false)
+    setActiveIndex(-1)
+    inputRef.current?.focus()
+  }
+
+  const handleBlur = () => {
+    // Delay to allow suggestion click to fire first
+    setTimeout(() => {
+      if (!dropdownRef.current?.contains(document.activeElement)) {
+        setShowDropdown(false)
+        // Commit any pending input on blur
+        if (inputValue.trim()) {
+          const parts = inputValue
+            .split(/,/)
+            .map((p) => p.trim())
+            .filter(Boolean)
+          parts.forEach((p) => commitTag(p))
+          setInputValue("")
+        }
+      }
+    }, 150)
+  }
+
+  const visibleSuggestions = showDropdown && query.length >= 0 ? suggestions.slice(0, 8) : []
+
+  return (
+    <div className="relative flex flex-wrap items-center gap-1.5 border-t border-border/50 px-6 py-3">
+      {/* Assigned tag pills */}
+      {assignedTags.map((tag) => (
+        <span
+          key={tag.id}
+          className="group inline-flex items-center gap-0.5 rounded-full bg-secondary px-2 py-0.5 text-[12px] text-muted-foreground"
+        >
+          #{tag.name}
+          <button
+            onClick={() => removeTagFromNote(noteId, tag.id)}
+            className="ml-0.5 rounded-full p-0.5 opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+            aria-label={`Remove tag ${tag.name}`}
+          >
+            <X className="h-2.5 w-2.5" />
+          </button>
+        </span>
+      ))}
+
+      {/* Input */}
+      <div className="relative flex items-center">
+        <span className="text-[12px] text-muted-foreground/50 select-none">#</span>
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue.startsWith("#") ? inputValue.slice(1) : inputValue}
+          onChange={(e) => {
+            const raw = e.target.value
+            // Comma triggers immediate commit of preceding tag(s)
+            if (raw.includes(",")) {
+              const parts = raw.split(",").map((p) => p.trim()).filter(Boolean)
+              // Commit all complete parts (before last comma)
+              // If ends with comma, commit all; otherwise keep last part as input
+              const endsWithComma = raw.trimEnd().endsWith(",")
+              const toCommit = endsWithComma ? parts : parts.slice(0, -1)
+              const remaining = endsWithComma ? "" : parts[parts.length - 1] || ""
+              toCommit.forEach((p) => commitTag(p))
+              setInputValue(remaining)
+              setActiveIndex(-1)
+              setShowDropdown(remaining.length > 0)
+              return
+            }
+            setInputValue(raw)
+            setActiveIndex(-1)
+            setShowDropdown(true)
+          }}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setShowDropdown(true)}
+          onBlur={handleBlur}
+          placeholder={assignedTags.length === 0 ? "Add tags..." : ""}
+          className="w-[80px] min-w-[60px] bg-transparent text-[12px] text-muted-foreground outline-none placeholder:text-muted-foreground/40 focus:w-[120px] transition-[width] duration-150"
+          aria-autocomplete="list"
+          aria-expanded={visibleSuggestions.length > 0}
+        />
+      </div>
+
+      {/* Autocomplete dropdown */}
+      {visibleSuggestions.length > 0 && (
+        <div
+          ref={dropdownRef}
+          className="absolute bottom-full left-6 z-50 mb-1 max-h-40 overflow-y-auto rounded-md border border-border bg-popover shadow-md"
+          role="listbox"
+        >
+          {visibleSuggestions.map((tag, i) => (
+            <button
+              key={tag.id}
+              role="option"
+              aria-selected={i === activeIndex}
+              onMouseDown={(e) => {
+                e.preventDefault()
+                handleSuggestionClick(tag)
+              }}
+              className={cn(
+                "flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-[12px] text-foreground transition-colors hover:bg-secondary",
+                i === activeIndex && "bg-secondary"
+              )}
+            >
+              <span className="text-muted-foreground">#</span>
+              {tag.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface NoteEditorProps {
   noteId?: string
@@ -252,8 +467,11 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       />
 
       {/* Content Editor */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
-        <NoteEditorAdapter note={note} />
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-6 py-4">
+          <NoteEditorAdapter note={note} />
+        </div>
+        <NoteTagBar noteId={note.id} noteTags={note.tags ?? []} />
         <BacklinksFooter noteId={note.id} />
       </div>
       </div>

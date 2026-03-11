@@ -62,6 +62,11 @@ export function applyContext(
         (n) => !n.archived && !n.trashed && extras?.tagId && n.tags.includes(extras.tagId)
       )
 
+    case "label":
+      return notes.filter(
+        (n) => !n.archived && !n.trashed && extras?.labelId && n.labelId === extras.labelId
+      )
+
     case "trash":
       return notes.filter((n) => n.trashed)
 

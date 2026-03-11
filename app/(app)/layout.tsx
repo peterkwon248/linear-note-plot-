@@ -17,6 +17,8 @@ import { NotesTableView } from "@/components/notes-table-view"
 import { useActiveRoute, syncFromPathname, TABLE_VIEW_ROUTES, VIEW_ROUTES } from "@/lib/table-route"
 import { InboxView } from "@/components/views/inbox-view"
 import { ActivityView } from "@/components/views/activity-view"
+import { TagsView } from "@/components/views/tags-view"
+import { LabelsView } from "@/components/views/labels-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 
@@ -181,6 +183,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {(mountedViews.has("/activity") || activeRoute === "/activity") && (
             <div className={activeRoute === "/activity" ? "flex flex-1 overflow-hidden" : "hidden"}>
               <ActivityView />
+            </div>
+          )}
+
+          {(mountedViews.has("/tags") || activeRoute === "/tags") && (
+            <div className={activeRoute === "/tags" ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <TagsView />
+            </div>
+          )}
+
+          {(mountedViews.has("/labels") || activeRoute === "/labels") && (
+            <div className={activeRoute === "/labels" ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <LabelsView />
             </div>
           )}
 

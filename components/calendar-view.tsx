@@ -34,6 +34,8 @@ interface CalendarViewProps {
   hideCreateButton?: boolean
   createNoteOverrides?: Partial<Note>
   folderId?: string
+  tagId?: string
+  labelId?: string
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
 }
@@ -429,6 +431,8 @@ export function CalendarView({
   hideCreateButton,
   createNoteOverrides,
   folderId,
+  tagId,
+  labelId,
   onRowClick,
   activePreviewId,
 }: CalendarViewProps) {
@@ -437,7 +441,7 @@ export function CalendarView({
 
   const viewContext = (context ?? "all") as ViewContextKey
   const backlinksMap = useBacklinksIndex()
-  const { flatNotes } = useNotesView(viewContext, { backlinksMap, folderId })
+  const { flatNotes } = useNotesView(viewContext, { backlinksMap, folderId, tagId, labelId })
 
   const labels = usePlotStore((s) => s.labels)
   const createNote = usePlotStore((s) => s.createNote)

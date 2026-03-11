@@ -1,10 +1,11 @@
 "use client"
 
 import { useRef } from "react"
-import { X, Pin } from "lucide-react"
+import { X, Pin, Columns2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import type { EditorPanel } from "@/lib/store/types"
+import type { EditorPanel, EditorState } from "@/lib/store/types"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface EditorTabBarProps {
   panel: EditorPanel
@@ -16,6 +17,8 @@ export function EditorTabBar({ panel, isActivePanel, onActivatePanel }: EditorTa
   const notes = usePlotStore((s) => s.notes)
   const closeTab = usePlotStore((s) => s.closeTab)
   const setActiveTab = usePlotStore((s) => s.setActiveTab)
+  const toggleSplit = usePlotStore((s) => s.toggleSplit)
+  const splitMode = usePlotStore((s) => (s.editorState as EditorState).splitMode)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   return (
@@ -80,6 +83,31 @@ export function EditorTabBar({ panel, isActivePanel, onActivatePanel }: EditorTa
           )
         })}
       </div>
+
+      {/* Split view toggle */}
+      {panel.id === "panel-left" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className={cn(
+                "mx-1 flex h-7 w-7 shrink-0 items-center justify-center rounded transition-colors",
+                splitMode
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleSplit()
+              }}
+            >
+              <Columns2 className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="text-[12px]">
+            {splitMode ? "Close split view" : "Split editor"} <kbd className="ml-1 rounded bg-secondary px-1 py-0.5 text-[10px]">Ctrl+\</kbd>
+          </TooltipContent>
+        </Tooltip>
+      )}
     </div>
   )
 }
