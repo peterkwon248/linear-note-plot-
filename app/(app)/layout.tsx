@@ -16,6 +16,7 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { NotesTableView } from "@/components/notes-table-view"
 import { useActiveRoute, syncFromPathname, TABLE_VIEW_ROUTES, VIEW_ROUTES } from "@/lib/table-route"
 import { InboxView } from "@/components/views/inbox-view"
+import { ActivityView } from "@/components/views/activity-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 
@@ -174,6 +175,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {(mountedViews.has("/inbox") || activeRoute === "/inbox") && (
             <div className={activeRoute === "/inbox" ? "flex flex-1 overflow-hidden" : "hidden"}>
               <InboxView />
+            </div>
+          )}
+
+          {(mountedViews.has("/activity") || activeRoute === "/activity") && (
+            <div className={activeRoute === "/activity" ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <ActivityView />
             </div>
           )}
 

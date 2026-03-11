@@ -17,6 +17,7 @@ import {
   SquarePen,
   Plus,
   CheckSquare2,
+  History,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -192,7 +193,7 @@ export function LinearSidebar() {
 
   // Prefetch routes on mount
   useEffect(() => {
-    const routes = ["/inbox", "/notes", "/pinned", "/trash", "/settings"]
+    const routes = ["/inbox", "/notes", "/pinned", "/trash", "/settings", "/activity"]
     routes.forEach((r) => router.prefetch(r))
   }, [router])
 
@@ -428,6 +429,12 @@ export function LinearSidebar() {
             label="Notes"
             count={allNotesCount > 0 ? allNotesCount : undefined}
             active={isActive("/notes")}
+          />
+          <NavLink
+            href="/activity"
+            icon={<History className="h-5 w-5" strokeWidth={1.4} />}
+            label="Activity"
+            active={isActive("/activity")}
           />
         </div>
 

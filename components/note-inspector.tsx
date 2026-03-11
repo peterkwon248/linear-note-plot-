@@ -26,6 +26,7 @@ import {
   AlertTriangle,
   GitBranch,
   Merge,
+  History,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -44,6 +45,7 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { Signal, CircleDot } from "lucide-react"
 import { toast } from "sonner"
+import { ActivityTimeline } from "@/components/activity/activity-timeline"
 
 function InspectorSection({
   title,
@@ -555,6 +557,13 @@ export function NoteInspector() {
         {/* Attachments (placeholder) */}
         <InspectorSection title="Attachments" icon={<Paperclip className="h-4 w-4" />}>
           <span className="text-[14px] text-muted-foreground">No attachments</span>
+        </InspectorSection>
+
+        <div className="mx-4 border-b border-border" />
+
+        {/* Activity */}
+        <InspectorSection title="Activity" icon={<History className="h-4 w-4" />}>
+          <ActivityTimeline noteId={note.id} />
         </InspectorSection>
       </div>
     </aside>
