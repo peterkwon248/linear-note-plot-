@@ -13,6 +13,7 @@ export type ViewContextKey =
   | "archive"    // /archive
   | "folder"     // /folder/[id]
   | "tag"        // /tag/[id]
+  | "label"      // /label/[id]
   | "trash"      // /trash
   | "savedView"  // /views/[id] — dynamic context for saved view detail
 
@@ -78,6 +79,7 @@ export interface PipelineExtras {
   searchQuery?: string
   folderId?: string
   tagId?: string
+  labelId?: string
 }
 
 /* ── Sort Order Constants ──────────────────────────────── */
@@ -100,7 +102,7 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
 
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "all", "pinned", "inbox", "capture", "permanent",
-  "unlinked", "review", "archive", "folder", "tag", "trash",
+  "unlinked", "review", "archive", "folder", "tag", "label", "trash",
   "savedView",
 ]
 

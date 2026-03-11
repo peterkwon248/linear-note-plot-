@@ -2,14 +2,14 @@
 
 import { use, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { setActiveTagId, setActiveRoute } from "@/lib/table-route"
+import { setActiveLabelId, setActiveRoute } from "@/lib/table-route"
 
-export default function TagPage({ params }: { params: Promise<{ id: string }> }) {
+export default function LabelPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
 
   useEffect(() => {
-    setActiveTagId(id)
+    setActiveLabelId(id)
     setActiveRoute("/notes")
     router.replace("/notes")
   }, [id, router])

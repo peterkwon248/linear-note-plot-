@@ -27,11 +27,12 @@ import {
   Merge,
   Folder,
   Tag,
+  Type,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
-import { StatusBadge, PriorityBadge, LabelBadge } from "@/components/note-fields"
+import { StatusBadge, PriorityBadge, LabelBadge, TagPicker, LabelPicker } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
 import { isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { suggestBacklinks } from "@/lib/backlinks"
@@ -147,6 +148,11 @@ export function NoteDetailPanel({
   const clearReminder = usePlotStore((s) => s.clearReminder)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
+  const addTagToNote = usePlotStore((s) => s.addTagToNote)
+  const removeTagFromNote = usePlotStore((s) => s.removeTagFromNote)
+  const createTag = usePlotStore((s) => s.createTag)
+  const setNoteLabel = usePlotStore((s) => s.setNoteLabel)
+  const createLabel = usePlotStore((s) => s.createLabel)
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
@@ -462,31 +468,37 @@ export function NoteDetailPanel({
                 </span>
               </MetaRow>
             )}
-            {noteLabel && (
-              <MetaRow label="Label" icon={<Tag className="h-3.5 w-3.5" />}>
-                <LabelBadge label={noteLabel} />
-              </MetaRow>
-            )}
-            {noteTags.length > 0 && (
-              <MetaRow label="Tags" icon={<Tag className="h-3.5 w-3.5" />}>
-                <span className="flex flex-wrap gap-1">
-                  {noteTags.map((t) => (
-                    <span
-                      key={t.id}
-                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
-                      style={{ backgroundColor: `${t.color}18`, color: t.color }}
-                    >
-                      {t.name}
-                    </span>
-                  ))}
-                </span>
-              </MetaRow>
-            )}
+            <MetaRow label="Label" icon={<Tag className="h-3.5 w-3.5" />}>
+              <LabelPicker
+                noteId={noteId}
+                currentLabelId={note.labelId}
+                allLabels={labels}
+                onSetLabel={setNoteLabel}
+                onCreateLabel={createLabel}
+              />
+            </MetaRow>
+            <MetaRow label="Tags" icon={<Tag className="h-3.5 w-3.5" />}>
+              <TagPicker
+                noteId={noteId}
+                selectedTagIds={note.tags}
+                allTags={tags}
+                onAddTag={addTagToNote}
+                onRemoveTag={removeTagFromNote}
+                onCreateTag={createTag}
+              />
+            </MetaRow>
             <MetaRow label="Created" icon={<Calendar className="h-3.5 w-3.5" />}>
               {format(new Date(note.createdAt), "MMM d, yyyy")}
             </MetaRow>
             <MetaRow label="Updated" icon={<Clock className="h-3.5 w-3.5" />}>
               {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
+            </MetaRow>
+            <MetaRow label="Length" icon={<Type className="h-3.5 w-3.5" />}>
+              <span className="tabular-nums">
+                {note.content.length > 0
+                  ? `${note.content.trim().split(/\s+/).filter(Boolean).length} words · ${note.content.length} chars`
+                  : "0 words"}
+              </span>
             </MetaRow>
             {note.reviewAt && note.status !== "inbox" && (
               <div className="flex items-center justify-between py-1.5">

@@ -51,7 +51,7 @@ export function useNotesView(
   // ── Stage 1: Context filter ───────────────────────────
   const contextFiltered = useMemo(
     () => applyContext(notes, contextKey, extras),
-    [notes, contextKey, extras?.backlinksMap, extras?.folderId, extras?.tagId]
+    [notes, contextKey, extras?.backlinksMap, extras?.folderId, extras?.tagId, extras?.labelId]
   )
 
   const totalCount = notes.length

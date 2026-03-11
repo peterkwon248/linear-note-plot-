@@ -10,7 +10,7 @@ import { EditorSplitView } from "@/components/editor/editor-split-view"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { InsightsView } from "@/components/insights-view"
 import { CalendarView } from "@/components/calendar-view"
-import { useActiveRoute, useActiveFolderId } from "@/lib/table-route"
+import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
@@ -35,6 +35,8 @@ const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
 export function NotesTableView() {
   const tableRoute = useActiveRoute()
   const activeFolderId = useActiveFolderId()
+  const activeTagId = useActiveTagId()
+  const activeLabelId = useActiveLabelId()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
   const viewMode = useSettingsStore((s) => s.viewMode)
@@ -43,10 +45,13 @@ export function NotesTableView() {
   const [previewId, setPreviewId] = useState<string | null>(null)
 
   const baseConfig = TABLE_VIEW_MAP[tableRoute ?? ""] ?? {}
-  // When a folder is selected, override context to "folder"
-  const config: ViewConfig = activeFolderId && tableRoute === "/notes"
-    ? { ...baseConfig, context: "folder" }
-    : baseConfig
+  const config: ViewConfig = (() => {
+    if (tableRoute !== "/notes") return baseConfig
+    if (activeFolderId) return { ...baseConfig, context: "folder" as ViewContextKey }
+    if (activeTagId) return { ...baseConfig, context: "tag" as ViewContextKey }
+    if (activeLabelId) return { ...baseConfig, context: "label" as ViewContextKey }
+    return baseConfig
+  })()
 
   // ESC closes preview panel
   const handleKeyDown = useCallback(
@@ -102,6 +107,8 @@ export function NotesTableView() {
           hideCreateButton={config.hideCreateButton}
           createNoteOverrides={config.createNoteOverrides}
           folderId={activeFolderId ?? undefined}
+          tagId={activeTagId ?? undefined}
+          labelId={activeLabelId ?? undefined}
           onRowClick={(noteId) => setPreviewId(noteId)}
           activePreviewId={previewId}
         />
@@ -132,6 +139,8 @@ export function NotesTableView() {
         hideCreateButton={config.hideCreateButton}
         createNoteOverrides={config.createNoteOverrides}
         folderId={activeFolderId ?? undefined}
+        tagId={activeTagId ?? undefined}
+        labelId={activeLabelId ?? undefined}
         onRowClick={(noteId) => setPreviewId(noteId)}
         activePreviewId={previewId}
       />

@@ -18,13 +18,26 @@ import {
   Plus,
   CheckSquare2,
   History,
+  Tag,
+  Bookmark,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getInboxNotes } from "@/lib/queries/notes"
-import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, useActiveRoute, useActiveFolderId } from "@/lib/table-route"
+import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
 import type { Note, NoteStatus } from "@/lib/types"
 import { StatusIcon } from "@/components/status-icon"
+import { ColorPickerGrid } from "@/components/color-picker-grid"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu"
 
 /* ── Nav primitives ──────────────────────────────────── */
 
@@ -82,7 +95,11 @@ function NavLink({
     return (
       <button
         onClick={() => {
-          if (href === "/notes") setActiveFolderId(null)
+          if (href === "/notes") {
+            setActiveFolderId(null)
+            setActiveTagId(null)
+            setActiveLabelId(null)
+          }
           setActiveRoute(href)
           setNoteId(null)
           router.push(href)
@@ -151,6 +168,8 @@ export function LinearSidebar() {
   const folders = usePlotStore((s) => s.folders)
   const createFolder = usePlotStore((s) => s.createFolder)
   const accessFolder = usePlotStore((s) => s.accessFolder)
+  const updateFolder = usePlotStore((s) => s.updateFolder)
+  const deleteFolder = usePlotStore((s) => s.deleteFolder)
 
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -205,11 +224,20 @@ export function LinearSidebar() {
   // Folder collapse state
   const [showAllFolders, setShowAllFolders] = useState(false)
 
+  // Rename state (folders only)
+  const [renamingItem, setRenamingItem] = useState<{ id: string } | null>(null)
+  const [renameValue, setRenameValue] = useState("")
+  const renameInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (newFolderOpen) {
       setTimeout(() => newFolderInputRef.current?.focus(), 0)
     }
   }, [newFolderOpen])
+
+  useEffect(() => {
+    if (renamingItem) setTimeout(() => renameInputRef.current?.focus(), 0)
+  }, [renamingItem])
 
   const inboxCount = useMemo(() => getInboxNotes(notes, backlinks).length, [notes, backlinks])
   const allNotesCount = useMemo(() => notes.filter((n) => !n.archived && !n.trashed).length, [notes])
@@ -289,10 +317,12 @@ export function LinearSidebar() {
 
   const activeRoute = useActiveRoute()
   const activeFolderId = useActiveFolderId()
+  const activeTagId = useActiveTagId()
+  const activeLabelId = useActiveLabelId()
   const isActive = (href: string) => {
     if (ALL_SIDEBAR_ROUTES.includes(href)) {
-      // /notes is active only when no folder filter is applied
-      if (href === "/notes") return activeRoute === "/notes" && activeFolderId === null
+      // /notes is active only when no folder/tag/label filter is applied
+      if (href === "/notes") return activeRoute === "/notes" && activeFolderId === null && activeTagId === null && activeLabelId === null
       return activeRoute === href
     }
     return pathname === href || pathname.startsWith(href + "/")
@@ -323,6 +353,26 @@ export function LinearSidebar() {
       setNewFolderOpen(false)
       setNewFolderName("")
     }
+  }
+
+  const handleRenameSubmit = () => {
+    if (!renamingItem) return
+    const name = renameValue.trim()
+    if (name) updateFolder(renamingItem.id, { name })
+    setRenamingItem(null)
+    setRenameValue("")
+  }
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleRenameSubmit()
+    else if (e.key === "Escape") {
+      setRenamingItem(null)
+      setRenameValue("")
+    }
+  }
+
+  const handleDeleteFolder = (id: string) => {
+    deleteFolder(id)
   }
 
   const notesInFolder = (folderId: string) =>
@@ -436,6 +486,18 @@ export function LinearSidebar() {
             label="Activity"
             active={isActive("/activity")}
           />
+          <NavLink
+            href="/tags"
+            icon={<Tag className="h-5 w-5" strokeWidth={1.4} />}
+            label="Tags"
+            active={isActive("/tags")}
+          />
+          <NavLink
+            href="/labels"
+            icon={<Bookmark className="h-5 w-5" strokeWidth={1.4} />}
+            label="Labels"
+            active={isActive("/labels")}
+          />
         </div>
 
         {/* Folders section */}
@@ -468,30 +530,71 @@ export function LinearSidebar() {
           {displayedFolders.map((folder) => {
             const count = notesInFolder(folder.id)
             const active = isFolderActive(folder.id)
+            const isRenaming = renamingItem?.id === folder.id
             return (
-              <button
-                key={folder.id}
-                onClick={() => {
-                  accessFolder(folder.id)
-                  setActiveFolderId(folder.id)
-                  setActiveRoute("/notes")
-                  setSelectedNoteId(null)
-                  router.push("/notes")
-                }}
-                className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
-                  active
-                    ? "bg-sidebar-hover text-sidebar-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
-                }`}
-              >
-                <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "" : "text-sidebar-muted"}`}>
-                  <FolderOpen className="h-5 w-5" />
-                </span>
-                <span className="truncate text-left flex-1">{folder.name}</span>
-                {count > 0 && (
-                  <span className="text-[12px] text-sidebar-muted tabular-nums">{count}</span>
-                )}
-              </button>
+              <ContextMenu key={folder.id}>
+                <ContextMenuTrigger asChild>
+                  <button
+                    onClick={() => {
+                      accessFolder(folder.id)
+                      setActiveFolderId(folder.id)
+                      setActiveRoute("/notes")
+                      setSelectedNoteId(null)
+                      router.push("/notes")
+                    }}
+                    className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
+                      active
+                        ? "bg-sidebar-hover text-sidebar-foreground"
+                        : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
+                    }`}
+                  >
+                    <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "" : "text-sidebar-muted"}`}>
+                      <FolderOpen className="h-5 w-5" />
+                    </span>
+                    {isRenaming ? (
+                      <input
+                        ref={renameInputRef}
+                        type="text"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={handleRenameKeyDown}
+                        onBlur={handleRenameSubmit}
+                        className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-[14px] text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <span className="truncate text-left flex-1">{folder.name}</span>
+                    )}
+                    {!isRenaming && count > 0 && (
+                      <span className="text-[12px] text-sidebar-muted tabular-nums">{count}</span>
+                    )}
+                  </button>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-48">
+                  <ContextMenuItem onClick={() => {
+                    setRenamingItem({ id: folder.id })
+                    setRenameValue(folder.name)
+                  }}>
+                    Rename
+                  </ContextMenuItem>
+                  <ContextMenuSub>
+                    <ContextMenuSubTrigger>Change color</ContextMenuSubTrigger>
+                    <ContextMenuSubContent className="p-2">
+                      <ColorPickerGrid
+                        value={folder.color}
+                        onChange={(color) => updateFolder(folder.id, { color })}
+                      />
+                    </ContextMenuSubContent>
+                  </ContextMenuSub>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    onClick={() => handleDeleteFolder(folder.id)}
+                    className="text-red-400 focus:text-red-400"
+                  >
+                    Delete
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             )
           })}
           {hiddenFolders.length > 0 && !showAllFolders && (

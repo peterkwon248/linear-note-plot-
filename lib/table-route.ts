@@ -12,7 +12,7 @@ import { useSyncExternalStore } from "react"
 export const TABLE_VIEW_ROUTES = ["/notes", "/pinned", "/trash"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/inbox", "/activity"]
+export const VIEW_ROUTES = ["/inbox", "/activity", "/tags", "/labels"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
@@ -22,6 +22,8 @@ export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
 let _listeners: Array<() => void> = []
 let _activeRoute: string | null = null
 let _activeFolderId: string | null = null
+let _activeTagId: string | null = null
+let _activeLabelId: string | null = null
 
 export function getActiveRoute(): string | null {
   return _activeRoute
@@ -40,6 +42,32 @@ export function getActiveFolderId(): string | null {
 export function setActiveFolderId(folderId: string | null): void {
   if (_activeFolderId === folderId) return
   _activeFolderId = folderId
+  _activeTagId = null
+  _activeLabelId = null
+  _listeners.forEach((fn) => fn())
+}
+
+export function getActiveTagId(): string | null {
+  return _activeTagId
+}
+
+export function setActiveTagId(tagId: string | null): void {
+  if (_activeTagId === tagId) return
+  _activeTagId = tagId
+  _activeFolderId = null
+  _activeLabelId = null
+  _listeners.forEach((fn) => fn())
+}
+
+export function getActiveLabelId(): string | null {
+  return _activeLabelId
+}
+
+export function setActiveLabelId(labelId: string | null): void {
+  if (_activeLabelId === labelId) return
+  _activeLabelId = labelId
+  _activeFolderId = null
+  _activeTagId = null
   _listeners.forEach((fn) => fn())
 }
 
@@ -69,4 +97,14 @@ export function useActiveRoute(): string | null {
 /** Subscribe to the active folder ID. Returns null when no folder is selected. */
 export function useActiveFolderId(): string | null {
   return useSyncExternalStore(subscribeActiveRoute, getActiveFolderId, () => null)
+}
+
+/** Subscribe to the active tag ID. Returns null when no tag is selected. */
+export function useActiveTagId(): string | null {
+  return useSyncExternalStore(subscribeActiveRoute, getActiveTagId, () => null)
+}
+
+/** Subscribe to the active label ID. Returns null when no label is selected. */
+export function useActiveLabelId(): string | null {
+  return useSyncExternalStore(subscribeActiveRoute, getActiveLabelId, () => null)
 }

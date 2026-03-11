@@ -6,12 +6,15 @@ Plot is a local-first knowledge management app. No backend. No API calls. All da
 
 ## Tech Stack
 
-- **Framework**: Next.js (App Router, `"use client"` where needed)
+- **Framework**: Next.js 16 (App Router, `"use client"` where needed)
 - **State**: Zustand 5 with custom IDB persist storage
-- **Editor**: Tiptap 3
-- **UI**: shadcn/ui (Radix UI primitives + Tailwind)
+- **Editor**: Tiptap 3 with multi-tab split view
+- **UI**: shadcn/ui (Radix UI primitives + Tailwind v4)
 - **Testing**: Vitest (`npm run test`)
 - **Search**: FlexSearch in a Web Worker
+- **Charts**: Recharts
+- **Drag & drop**: dnd-kit
+- **Virtualization**: @tanstack/react-virtual
 
 ---
 
@@ -19,11 +22,11 @@ Plot is a local-first knowledge management app. No backend. No API calls. All da
 
 Before making changes, read these in order:
 
-1. `lib/types.ts` — All core types: `Note`, `Folder`, `Tag`, `Category`, `Alert`, `KnowledgeMap`, `NoteEvent`, etc.
-2. `lib/store/types.ts` — `PlotState` interface: every state field and every action
-3. `lib/store/index.ts` — Store composition, persist config, `partialize`, current version (`version: 19`)
-4. `lib/store/migrate.ts` — All migration logic; read before touching store shape
-5. `lib/view-engine/types.ts` — `ViewState`, `ViewContextKey`, `PipelineResult`, sort/group/filter enums
+1. `lib/types.ts` — All core types: `Note`, `Folder`, `Tag`, `Label`, `NoteTemplate`, `AutopilotRule`, `NoteEvent`, etc.
+2. `lib/store/types.ts` — `PlotState` interface: every state field and every action, plus `EditorTab`, `EditorPanel`, `EditorState`
+3. `lib/store/index.ts` — Store composition, persist config, `partialize`, current version (`version: 30`)
+4. `lib/store/migrate.ts` — All migration logic (v6→v30); read before touching store shape
+5. `lib/view-engine/types.ts` — `ViewState`, `ViewContextKey`, `ViewMode`, `PipelineResult`, sort/group/filter enums
 
 ---
 
@@ -35,12 +38,9 @@ These are derived at render time and must never be stored in `PlotState`:
 
 | Value | Where it's computed |
 |---|---|
-| `alerts` | `computeAlerts()` in `lib/alerts.ts` |
 | `backlinks` | `useBacklinksIndex()` in `lib/search/use-backlinks-index.ts` |
 | `readyScore` / `inboxRank` | `lib/queries/notes.ts` |
 | `linksOut` / `preview` | These ARE stored on `Note` as precomputed fields — see below |
-
-The only alert-related field persisted is `dismissedAlertIds: string[]`.
 
 ### 2. `preview` and `linksOut` Are Precomputed, Not Derived at Render
 
@@ -58,11 +58,11 @@ notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null }))
 
 Bodies are loaded async at startup by `components/providers/body-provider.tsx` which calls `store._hydrateNoteBodies()`. The app shows a loading screen until hydration completes.
 
-**Consequence**: Never assume `note.content` is populated in list/table views. It's only available after `BodyProvider` completes, and only when a note is opened for editing.
+**Consequence**: Never assume `note.content` is populated in list/table views. It's only available after `BodyProvider` completes.
 
 ### 4. Every New Store Field Needs Migration
 
-The store version is `19` (in `lib/store/index.ts`). When you add a field to `PlotState`:
+The store version is `30` (in `lib/store/index.ts`). When you add a field to `PlotState`:
 
 1. Add the field to `lib/store/types.ts`
 2. Implement the slice logic in `lib/store/slices/{name}.ts`
@@ -82,15 +82,18 @@ Each slice is a function `(set, get?, appendEvent?) => sliceObject`. They are sp
 
 | Slice file | Responsibility |
 |---|---|
-| `notes.ts` | createNote, updateNote, deleteNote, duplicateNote, togglePin, toggleArchive, touchNote, createChainNote |
-| `workflow.ts` | triageKeep, triageSnooze, triageTrash, promoteToPermanent, undoPromote, moveBackToInbox, all SRS actions |
-| `folders.ts` | createFolder, updateFolder, deleteFolder |
+| `notes.ts` | createNote, updateNote, batchUpdateNotes, deleteNote, duplicateNote, mergeNotes, togglePin, toggleArchive, toggleTrash, touchNote, createChainNote |
+| `workflow.ts` | triageKeep, triageSnooze, triageTrash, promoteToPermanent, undoPromote, moveBackToInbox, setReminder, clearReminder, batchSetReminder, all SRS actions |
+| `folders.ts` | createFolder, updateFolder, deleteFolder, accessFolder, toggleFolderPin |
 | `tags.ts` | createTag, updateTag, deleteTag, addTagToNote, removeTagFromNote |
-| `categories.ts` | createCategory, updateCategory, deleteCategory |
-| `thinking.ts` | startThinkingChain, addThinkingStep, endThinkingChain, addWikiLink |
+| `labels.ts` | createLabel, updateLabel, deleteLabel, setNoteLabel |
+| `thinking.ts` | startThinkingChain, addThinkingStep, endThinkingChain, addWikiLink, setGraphFocusDepth, setCommandPaletteMode |
 | `maps.ts` | createKnowledgeMap, updateKnowledgeMap, deleteKnowledgeMap, addNoteToMap, removeNoteFromMap |
-| `ui.ts` | setActiveView, setSelectedNoteId, openNote, search, sidebar, setViewState |
-| `alerts.ts` | dismissAlert, clearDismissedAlerts |
+| `ui.ts` | setActiveView, setSelectedNoteId, openNote, search, sidebar, navigation history, setViewState, merge/link picker |
+| `views.ts` | createSavedView, updateSavedView, deleteSavedView |
+| `autopilot.ts` | autopilot rule CRUD, runAutopilotOnNote, undoAutopilotAction, clearAutopilotLog |
+| `templates.ts` | template CRUD, toggleTemplatePin, createNoteFromTemplate |
+| `editor.ts` | openNoteInTab, closeTab, closeOtherTabs, setActiveTab, setActivePanel, toggleSplit, moveTabToPanel, togglePinTab, setSplitRatio |
 
 ### Helpers in `lib/store/helpers.ts`
 
@@ -103,6 +106,70 @@ Each slice is a function `(set, get?, appendEvent?) => sliceObject`. They are sp
 ### Event Log
 
 Every meaningful action calls `appendEvent(noteId, type, meta?)`. This appends to `noteEvents: NoteEvent[]`. Capped at 1000 events per note (oldest trimmed first).
+
+---
+
+## Editor System (v30)
+
+Multi-tab, multi-panel editor with VS Code-style split view.
+
+```ts
+EditorState {
+  panels: EditorPanel[]      // up to 2 panels
+  activePanelId: string
+  splitMode: boolean
+  splitRatio: number          // 0.2~0.8, default 0.5
+}
+
+EditorPanel {
+  id: string                  // "panel-left" | "panel-right"
+  tabs: EditorTab[]
+  activeTabId: string | null
+}
+
+EditorTab {
+  id: string                  // nanoid
+  noteId: string
+  isPinned?: boolean
+}
+```
+
+Key components:
+- `components/editor/editor-split-view.tsx` — Split panel layout
+- `components/editor/editor-tab-bar.tsx` — Tab bar with pin/close
+- `components/editor/editor-panel-container.tsx` — Panel wrapper
+- `components/editor/TipTapEditor.tsx` — Core Tiptap rich text editor
+
+---
+
+## Tags & Labels Views
+
+Dedicated full-page views for managing tags and labels, accessible from sidebar NavLinks.
+
+### Tags View (`components/views/tags-view.tsx`)
+- Tag list with `#tagname` format, note counts, alphabetical sort
+- Comma-separated bulk creation input (`tag1, tag2, tag3`)
+- Search filtering
+- Tag detail mode: filtered notes list for selected tag
+- Multi-select: checkboxes, select-all, drag-to-select, shift+click range, ctrl+click toggle
+- Bottom floating action bar for bulk delete (matches `FloatingActionBar` pattern)
+- Tags have NO colors in UI
+
+### Labels View (`components/views/labels-view.tsx`)
+- Label list with colored dots (`rounded-sm`), note counts
+- "New label" creation form with `ColorPickerGrid`
+- Inline edit (name + color) via pencil icon
+- Label detail mode: filtered notes list for selected label
+- Multi-select: checkboxes, select-all, drag-to-select, shift+click range, ctrl+click toggle
+- Bottom floating action bar for bulk delete
+- Labels HAVE colors (from `PRESET_COLORS`)
+
+### Shared Patterns
+- Both use mount-once/keep-alive in `app/(app)/layout.tsx`
+- Route pages (`app/(app)/tags/page.tsx`, `app/(app)/labels/page.tsx`) return null
+- Selection state: `checkedTags`/`checkedLabels` (Set), `dragRect`, `lastClickedRef`
+- ESC clears selection, Ctrl+A selects all
+- `ColorPickerGrid` component in `components/color-picker-grid.tsx` (10 preset colors, 5x2 grid)
 
 ---
 
@@ -122,38 +189,45 @@ Never bypass this pipeline. Each stage is a pure function in `lib/view-engine/`.
 
 In React components, use `useNotesView(contextKey, extras?)` from `lib/view-engine/use-notes-view.ts`. It memoizes each stage independently so changing sort doesn't re-run filtering.
 
-`PipelineExtras` carries `backlinksMap`, `folderId`, `categoryId`, `tagId` — route-specific data the context filter needs.
+`PipelineExtras` carries `backlinksMap`, `searchQuery`, `folderId`, `tagId`, `labelId` — route-specific data the context filter needs.
 
 ### ViewState per Context
 
-Each route has its own `ViewState` stored under `viewStateByContext[contextKey]`. Valid context keys are in `lib/view-engine/types.ts`:
+Each route has its own `ViewState` stored under `viewStateByContext[contextKey]`. Valid context keys:
 
 ```
-"all" | "inbox" | "capture" | "reference" | "permanent" | "unlinked" | "review" | "archive" | "folder" | "category" | "tag" | "projects"
+"all" | "pinned" | "inbox" | "capture" | "permanent" | "unlinked" | "review" | "archive" | "folder" | "tag" | "label" | "trash" | "savedView"
 ```
 
-`viewStateByContext` is persisted. `_viewStateHydrated` is always reset to `false` on persist (it's set to `true` by `onRehydrateStorage`).
-
-### Valid Column IDs
+### View Modes
 
 ```ts
-["title", "status", "project", "links", "reads", "priority", "createdAt", "updatedAt"]
+ViewMode = "list" | "table" | "board" | "insights" | "calendar"
 ```
 
-In `components/notes-table.tsx`, `COLUMN_DEFS` controls header render order. The `NoteRow` component has hardcoded column blocks that must match this order. If you add a column to `COLUMN_DEFS`, you must add a corresponding block in `NoteRow`.
+### Valid Enums (for migration normalization)
+
+```ts
+VALID_SORT_FIELDS: ["updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label"]
+VALID_GROUP_BY: ["none", "status", "priority", "date", "folder", "label", "triage", "linkCount"]
+VALID_COLUMNS: ["title", "status", "folder", "links", "reads", "priority", "createdAt", "updatedAt"]
+```
 
 ---
 
-## Domain Domains
+## Domain Routes
 
 | Route | Context key | Status filter | Key actions |
 |---|---|---|---|
 | `/inbox` | `"inbox"` | `status === "inbox"`, untriaged or snoozed-due | triageKeep, triageSnooze, triageTrash |
 | `/capture` | `"capture"` | `status === "capture"` | promoteToPermanent, readyScore |
 | `/permanent` | `"permanent"` | `status === "permanent"` | enrollSRS, reviewSRS, unenrollSRS |
+| `/notes` | `"all"` | all non-trashed notes | full view engine |
 | `/review` | `"review"` | aggregated queue | `getReviewQueue()` from `lib/queries/notes.ts` |
-| `/alerts` | n/a | derived | `computeAlerts()` from `lib/alerts.ts` |
-| `/maps/[id]` | n/a | explicit noteIds | addNoteToMap, removeNoteFromMap |
+| `/activity` | n/a | n/a | Datalog activity feed/stats/timeline |
+| `/tags` | n/a | n/a | Tag list, bulk create (#tag1,tag2), drag select, detail view |
+| `/labels` | n/a | n/a | Label list with colors, CRUD, drag select, detail view |
+| `/trash` | `"trash"` | `trashed === true` | deleteNote (permanent) |
 
 ### Note Status Lifecycle
 
@@ -169,6 +243,33 @@ capture/permanent → (moveBackToInbox) → inbox
 
 ---
 
+## Autopilot System
+
+Rule-based automation engine. Rules evaluate conditions on notes and apply actions automatically.
+
+- Engine: `lib/autopilot/engine.ts` — `evaluateRule()`, `runAutopilotOnNote()`
+- Conditions: `lib/autopilot/conditions.ts` — field/operator/value matching
+- Defaults: `lib/autopilot/defaults.ts` — `DEFAULT_AUTOPILOT_RULES`
+- Types: `lib/autopilot/types.ts` — `AutopilotContext`, `AutopilotEvalResult`, `AutopilotRunResult`
+
+Condition fields: `status`, `priority`, `content_length`, `word_count`, `reads`, `age_days`, `has_links`, `has_tags`, `has_label`, `has_folder`, `link_count`, `tag_count`, `title_length`, `snooze_count`, `triage_status`
+
+Action types: `set_status`, `set_priority`, `set_label`, `set_triage`, `archive`, `pin`, `add_tag`, `remove_tag`
+
+Store fields: `autopilotEnabled`, `autopilotRules`, `autopilotLog`
+
+---
+
+## Analysis System
+
+Read-only analysis engine producing insights about notes.
+
+- Engine: `lib/analysis/engine.ts` — `runAnalysis()`
+- Rules: `lib/analysis/rules.ts` — 7 built-in rules
+- Types: `lib/analysis/types.ts` — `AnalysisRule`, `AnalysisResult`, `RuleContext`
+
+---
+
 ## SRS System
 
 - Engine: `lib/srs/engine.ts` — pure functions only, no side effects
@@ -181,16 +282,14 @@ capture/permanent → (moveBackToInbox) → inbox
 
 ---
 
-## Alert System
+## Datalog System
 
-- `computeAlerts(notes, srsMap, dismissedIds)` in `lib/alerts.ts` — not stored
-- Alert types: `"srs-due"`, `"snooze-expired"`, `"stale-note"`
-- Deterministic IDs: `` `${type}:${noteId}` ``
-- Only `dismissedAlertIds: string[]` is persisted
-- Severities: `"info"` | `"warning"` | `"urgent"`
-- Display config (labels, colors) in `ALERT_TYPE_CONFIG` and `ALERT_TYPE_ORDER` at bottom of `lib/alerts.ts`
+Activity event logging and analytics.
 
-Stale-note threshold: 7 days. Severity upgrades to `"warning"` at 14 days.
+- Config: `lib/datalog/event-config.ts` — event type definitions
+- Helpers: `lib/datalog/helpers.ts` — event log utilities
+- UI: `components/activity/` — `activity-feed.tsx`, `activity-stats.tsx`, `activity-timeline.tsx`
+- Route: `/activity`
 
 ---
 
@@ -201,15 +300,22 @@ Stale-note threshold: 7 days. Severity upgrades to `"warning"` at 14 days.
 | `lib/body-helpers.ts` | `extractPreview(content)`, `extractLinksOut(content)` |
 | `lib/format-utils.ts` | `shortRelative()` for relative time display |
 | `lib/queries/notes.ts` | `computeInboxRank()`, `computeReadyScore()`, `getReviewQueue()`, `suggestLinks()`, `getSnoozeTime()`, `getMapStats()` |
-| `lib/store/seeds.ts` | Seed notes/folders/tags/categories for first-run |
+| `lib/store/seeds.ts` | Seed notes/folders/tags/labels/templates for first-run |
 | `lib/idb-storage.ts` | Zustand persist storage backed by IDB (debounced 500ms writes) |
 | `lib/note-body-store.ts` | CRUD for note bodies in `plot-note-bodies` IDB |
+| `lib/settings-store.ts` | Separate Zustand store for app settings |
+| `lib/table-route.ts` | Route store: `TABLE_VIEW_ROUTES` (/notes, /pinned, /trash), `VIEW_ROUTES` (/inbox, /activity, /tags, /labels), active folder/tag/label IDs with mutual exclusion |
+| `components/color-picker-grid.tsx` | 10-color preset grid for label color selection |
+| `lib/graph.ts` | Graph data structures for connections visualization |
+| `lib/backlinks.ts` | Backlink computation utilities |
 
 ---
 
 ## Search
 
-Full-text search runs in a Web Worker (`lib/search/search-worker.ts`). The main thread communicates via `lib/search/search-client.ts`. The in-memory view-engine search (`applySearch` in `lib/view-engine/search.ts`) is a simple `toLowerCase().includes()` filter on `title` + `preview` for synchronous list filtering. The worker-based FlexSearch is used for the global search dialog.
+Full-text search runs in a Web Worker (`lib/search/search-worker.ts`). The main thread communicates via `lib/search/search-client.ts`. Search indexes are persisted to IDB via `lib/search/search-index-db.ts`.
+
+The in-memory view-engine search (`applySearch` in `lib/view-engine/search.ts`) is a simple `toLowerCase().includes()` filter on `title` + `preview` for synchronous list filtering. The worker-based FlexSearch is used for the global search dialog.
 
 Backlinks are computed by `useBacklinksIndex()` from `lib/search/use-backlinks-index.ts` — it builds a `Map<noteId, backlink_count>` from `note.linksOut` across all notes.
 
@@ -223,11 +329,13 @@ npm run test:watch  # watch mode
 ```
 
 Test locations:
-- `lib/__tests__/*.test.ts` — body helpers and other lib utilities
-- `lib/srs/__tests__/*.test.ts` — SRS engine logic
-- `lib/view-engine/__tests__/*.test.ts` — pipeline stages
+- `lib/__tests__/body-helpers.test.ts` — preview/link extraction
+- `lib/srs/__tests__/engine.test.ts` — SRS engine logic
+- `lib/analysis/__tests__/engine.test.ts` — analysis rules
+- `lib/autopilot/__tests__/engine.test.ts` — autopilot conditions/actions
+- `lib/view-engine/__tests__/pipeline.test.ts` — pipeline stages
 
-Tests use Vitest. There are no mocked IDB calls — SRS engine and view-engine tests are pure function tests with no side effects.
+Tests use Vitest. No mocked IDB calls — all tests are pure function tests with no side effects.
 
 ---
 
@@ -241,11 +349,11 @@ Tests use Vitest. There are no mocked IDB calls — SRS engine and view-engine t
 
 **Do not use `sidebarPeek` or `_viewStateHydrated` as persistent state.** Both are always reset in `partialize` and `migrate.ts` respectively. They are ephemeral UI flags.
 
-**`triageTrash` does not delete the note.** It sets `triageStatus: "trashed"` and `archivedAt`. Trashed notes are hidden by context filters but remain in state. Use `deleteNote` for permanent deletion.
+**`triageTrash` does not delete the note.** It sets `trashed: true` and `trashedAt`. Trashed notes are hidden by context filters but remain in state. Use `deleteNote` for permanent deletion.
 
-**Alert IDs are deterministic.** When checking if an alert is dismissed, always use `${type}:${noteId}`. Do not generate random IDs for alerts.
+**`promoteToPermanent` automatically enrolls SRS.** Do not call `enrollSRS` separately after promoting.
 
-**`promoteToPermanent` (note the typo in the action name) automatically enrolls SRS.** Do not call `enrollSRS` separately after promoting.
+**EditorState tabs reference noteIds.** When deleting a note, the editor slice automatically closes any tabs referencing that note.
 
 ---
 
@@ -259,3 +367,15 @@ Two separate IDB databases:
 | `plot-note-bodies` | `lib/note-body-store.ts` | Note bodies (content + contentJson) |
 
 The main store is keyed as `"plot-store"` inside `plot-zustand`.
+
+---
+
+## Orphaned Code (pending cleanup)
+
+These entities/routes exist in code but have no active UI path:
+
+- `KnowledgeMap` type + `maps.ts` slice + `/maps` routes — Maps feature hidden from sidebar
+- `SavedView` type + `views.ts` slice + `/views` route — Saved Views hidden from sidebar
+- `/alerts` route — Alerts system removed (dismissedAlertIds removed in v25)
+- `/category/[id]` route — Categories replaced by Tags
+- `/projects` routes — Projects replaced by Folders

@@ -1,6 +1,6 @@
 # Plot
 
-A local-first knowledge management app inspired by Linear's design. Plot helps you capture, develop, and retain ideas through a structured Zettelkasten-inspired workflow — all stored privately in your browser via IndexedDB.
+A local-first knowledge management app inspired by Linear's design quality. Plot helps you capture, develop, and retain ideas through a structured Zettelkasten-inspired workflow — all stored privately in your browser via IndexedDB.
 
 ## The Core Workflow: Inbox → Capture → Permanent
 
@@ -8,7 +8,7 @@ Notes move through three lifecycle stages:
 
 **Inbox** — Quick capture zone. New notes land here unstructured. You triage them: keep, snooze, or trash. Notes are ranked by `inboxRank` score to surface what needs attention first.
 
-**Capture** — Working notes. Notes under active development. You link them, tag them, and build them out. A `readyScore` algorithm monitors maturity — when it hits 5, Plot suggests promoting the note to permanent.
+**Capture** — Working notes under active development. You link them, tag them, and build them out. A `readyScore` algorithm monitors maturity — when it hits 5, Plot suggests promoting the note to permanent.
 
 **Permanent** — Polished, evergreen notes. These are enrolled in the SRS (Spaced Repetition System) to keep knowledge active over the long term.
 
@@ -17,15 +17,20 @@ Notes move through three lifecycle stages:
 - **Triage workflow** — Keep / Snooze / Trash actions for inbox notes
 - **Promotion system** — `readyScore >= 5` triggers a promotion suggestion from capture to permanent
 - **Review Queue** (`/review`) — Aggregates everything needing attention: untriaged inbox notes, snoozed-and-due notes, stale captures, unlinked permanents, and SRS-due reviews
-- **Alerts System** (`/alerts`) — Proactive notifications for SRS due reviews, expired snoozes, and capture notes untouched for 7+ days
 - **Spaced Repetition (SRS)** — Fixed-step intervals [1, 3, 7, 14, 30, 60, 120] days with Again / Hard / Good / Easy ratings
-- **Knowledge Maps** — Named collections of notes with internal link analysis and map-level statistics
-- **Thinking Chains** — Linked-list note sequences for developing ideas across multiple connected notes
 - **Wiki-links** — `[[note title]]` syntax for inter-note linking with incrementally computed backlinks
+- **Thinking Chains** — Linked-list note sequences for developing ideas across multiple connected notes
+- **Multi-tab editor** — VS Code-style tabbed editing with split view support
 - **Rich text editor** — Tiptap-based with tables, images, task lists, text highlighting, color, and more
+- **5 view modes** — List, Table, Board (kanban), Insights (analysis), Calendar
 - **View Engine** — Per-context view state (sort, filter, group, column visibility) for each section
-- **Connections Graph** — SVG visualization of note relationships
-- **Search** — FlexSearch-powered with a web worker for non-blocking indexing
+- **Autopilot rules** — Rule-based automation: conditions on notes trigger actions automatically
+- **Templates** — Pre-configured note templates with placeholders
+- **Labels** — Single-select classification (1:1 per note, complementing N:N tags)
+- **Analysis insights** — 7 built-in rules surface actionable suggestions about your notes
+- **Activity feed** — Datalog-based activity history, stats, and timeline
+- **Connections graph** — SVG visualization of note relationships
+- **Search** — FlexSearch-powered full-text search with web worker for non-blocking indexing
 - **Settings** — Appearance/themes, editor config, keyboard shortcuts, backup/restore, sync
 
 ## Architecture
@@ -34,18 +39,18 @@ Notes move through three lifecycle stages:
 |---------|-----------|
 | Framework | Next.js 16 (App Router) |
 | UI | React 19, shadcn/ui, Radix primitives, Lucide icons, Tailwind v4 |
-| State | Zustand v5 with persist middleware (IndexedDB), schema version 19 |
-| Rich text | Tiptap |
+| State | Zustand v5 with persist middleware (IndexedDB), schema version 30 |
+| Rich text | Tiptap 3 |
 | Search | FlexSearch (web worker) |
 | Lists | @tanstack/react-virtual (virtualized) |
 | Charts | Recharts |
-| Tests | Vitest (113 tests) |
+| Tests | Vitest |
 
-**Store pattern:** Slice-based Zustand store. Each feature lives in `lib/store/slices/` (notes, workflow, folders, tags, categories, thinking, maps, ui, alerts). The store is composed in `lib/store/index.ts`.
+**Store pattern:** Slice-based Zustand store with 12 slices in `lib/store/slices/` (notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor). Composed in `lib/store/index.ts`.
 
 **Body separation:** Note content (`NoteBody`) is stored separately in IndexedDB for performance. The Zustand store holds metadata only.
 
-**View Engine:** `lib/view-engine/` runs a pipeline — context-filter → filter → sort → group → search — to produce the note list for each view.
+**View Engine:** `lib/view-engine/` runs a pipeline — context-filter → filter → search → sort → group — to produce the note list for each view.
 
 ## Project Structure
 
@@ -55,46 +60,48 @@ app/
     inbox/page.tsx          # Inbox triage view
     capture/page.tsx        # Capture stage view
     permanent/page.tsx      # Permanent notes
-    review/page.tsx         # Daily review queue
-    alerts/page.tsx         # Alerts page
-    archive/page.tsx        # Archived notes
-    maps/page.tsx           # Knowledge maps list
-    maps/[id]/page.tsx      # Individual map view
     notes/page.tsx          # All notes
-    projects/page.tsx       # Project notes
+    review/page.tsx         # Daily review queue
+    activity/page.tsx       # Activity feed & analytics
+    trash/page.tsx          # Trashed notes
+    pinned/page.tsx         # Pinned notes
     folder/[id]/page.tsx    # Folder filter
     tag/[id]/page.tsx       # Tag filter
-    category/[id]/page.tsx  # Category filter
-    views/page.tsx          # Custom views
     layout.tsx              # App shell (sidebar + main)
-  settings/                 # Settings pages (appearance, backup, editor, shortcuts, sync, about)
+  settings/                 # Settings pages (preferences, appearance, editor, shortcuts, backup, sync, about)
 
 components/
-  editor/                   # Tiptap editor components
+  editor/                   # Tiptap editor (multi-tab, split view, toolbar)
+  activity/                 # Activity feed, stats, timeline
   ui/                       # shadcn/ui primitives
   linear-sidebar.tsx        # Main navigation sidebar
-  notes-table.tsx           # Table view
-  note-list.tsx             # List view
-  note-detail-panel.tsx     # Side detail panel (420px)
-  note-editor.tsx           # Note editing view
+  notes-table.tsx           # Table view with columns
+  note-list.tsx             # Virtualized list view
+  notes-board.tsx           # Board (kanban) view
+  calendar-view.tsx         # Calendar view
+  insights-view.tsx         # Analysis insights view
+  note-detail-panel.tsx     # Side detail panel
+  note-editor.tsx           # Note editing container
   connections-graph.tsx     # SVG relationship graph
-  knowledge-map-canvas.tsx  # Map visualization
+  filter-bar.tsx            # Filter bar with presets
+  floating-action-bar.tsx   # Batch action bar
   search-dialog.tsx         # Command palette search
 
 lib/
   store/                    # Zustand store
-    slices/                 # Feature slices (notes, workflow, folders, tags, etc.)
-    index.ts                # Store composition
+    slices/                 # 12 feature slices
+    index.ts                # Store composition (version 30)
     types.ts                # PlotState interface
-    migrate.ts              # Version migrations
+    migrate.ts              # Version migrations (v6→v30)
     selectors.ts            # Memoized selectors
     seeds.ts                # Initial seed data
   view-engine/              # Note filtering/sorting pipeline
-  search/                   # FlexSearch integration
+  search/                   # FlexSearch web worker integration
   srs/                      # Spaced repetition engine
+  autopilot/                # Rule-based automation engine
+  analysis/                 # Analysis rules engine
+  datalog/                  # Activity event logging
   queries/notes.ts          # Domain query functions
-  alerts.ts                 # Alert computation
-  backlinks.ts              # Backlink computation
   types.ts                  # Core type definitions
   body-helpers.ts           # Preview and link extraction
 
@@ -107,31 +114,11 @@ docs/                       # Documentation
 Requires Node.js.
 
 ```bash
-# Install dependencies
-npm install
-
-# Start dev server
-npm run dev
-
-# Production build
-npm run build
-
-# Run tests (Vitest)
-npm run test
-
-# Lint
-npm run lint
+npm install        # Install dependencies
+npm run dev        # Start dev server
+npm run build      # Production build
+npm run test       # Run tests (Vitest)
+npm run lint       # Lint
 ```
 
 The app runs entirely in the browser. All data is stored locally in IndexedDB — no backend, no account required.
-
-## Key Dependencies
-
-- `next@16.1.6`, `react@19.2.4`
-- `zustand@5.0.11` — state management with IndexedDB persistence
-- `@tiptap/*` — rich text editor
-- `@tanstack/react-virtual` — virtualized lists
-- `flexsearch` — full-text search
-- `recharts` — charts
-- `date-fns` — date formatting
-- `shadcn/ui` (Radix + Tailwind v4) — component primitives
