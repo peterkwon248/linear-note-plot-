@@ -94,6 +94,11 @@ export function NoteEditorAdapter({ note }: NoteEditorAdapterProps) {
     (json: Record<string, unknown>, plainText: string) => {
       pendingRef.current = { content: plainText, contentJson: json }
 
+      // Sync #hashtags immediately (no debounce — instant like UpNote)
+      if (currentNoteIdRef.current) {
+        syncHashtagsToTags(currentNoteIdRef.current, plainText)
+      }
+
       // Debounce save at 300ms
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       saveTimerRef.current = setTimeout(() => {
@@ -105,13 +110,10 @@ export function NoteEditorAdapter({ note }: NoteEditorAdapterProps) {
             contentJson: pendingRef.current.contentJson,
           })
           pendingRef.current = null
-
-          // Sync inline #hashtags → tags
-          syncHashtagsToTags(noteId, savedContent)
         }
       }, 300)
     },
-    [updateNote]
+    [updateNote, syncHashtagsToTags]
   )
 
   const handleSuggestionSelect = useCallback(
