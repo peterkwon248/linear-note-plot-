@@ -15,11 +15,13 @@ export function extractPreview(content: string, maxLen = 120): string {
 
 /**
  * Extract #hashtag tokens from content.
- * Supports Unicode (Korean, etc). Skips pure-number tags like #123.
+ * Only matches tags followed by whitespace or at end of string,
+ * so IME composition (e.g. Korean) mid-typing won't create partial tags.
+ * Supports Unicode. Skips pure-number tags like #123.
  * Returns unique tag names (preserves original case of first occurrence).
  */
 export function extractHashtags(content: string): string[] {
-  const regex = /#([\p{L}\p{N}_][\p{L}\p{N}_]*)/gu
+  const regex = /#([\p{L}\p{N}_][\p{L}\p{N}_]*)(?=[\s\n,;.!?]|$)/gu
   const seen = new Map<string, string>() // lowercase → original
   let match
   while ((match = regex.exec(content)) !== null) {
