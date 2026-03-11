@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useState, useMemo, useCallback } from "react"
-import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
+import { StatusDropdown, PriorityDropdown, LabelDropdown } from "@/components/note-fields"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
@@ -86,6 +86,8 @@ export function NoteInspector() {
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
+  const setNoteLabel = usePlotStore((s) => s.setNoteLabel)
   const updateNote = usePlotStore((s) => s.updateNote)
   const addTagToNote = usePlotStore((s) => s.addTagToNote)
   const removeTagFromNote = usePlotStore((s) => s.removeTagFromNote)
@@ -389,6 +391,18 @@ export function NoteInspector() {
               ))}
             </PopoverContent>
           </Popover>
+        </InspectorSection>
+
+        <div className="mx-4 border-b border-border" />
+
+        {/* Label */}
+        <InspectorSection title="Label" icon={<Tag className="h-4 w-4" />}>
+          <LabelDropdown
+            value={note.labelId}
+            labels={labels}
+            onChange={(labelId) => setNoteLabel(note.id, labelId)}
+            variant="button"
+          />
         </InspectorSection>
 
         <div className="mx-4 border-b border-border" />

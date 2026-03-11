@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Check,
   Inbox,
+  Tag,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -234,6 +235,97 @@ export function PriorityDropdown({
             </DropdownMenuItem>
           )
         })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/* ── LabelBadge ──────────────────────────────────────── */
+
+export function LabelBadge({ label }: { label: { name: string; color: string } }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium leading-none"
+      style={{ backgroundColor: `${label.color}18`, color: label.color }}
+    >
+      <Tag className="h-2.5 w-2.5" />
+      {label.name}
+    </span>
+  )
+}
+
+/* ── LabelDropdown ───────────────────────────────────── */
+
+export function LabelDropdown({
+  value,
+  labels,
+  onChange,
+  variant = "button",
+}: {
+  value: string | null
+  labels: { id: string; name: string; color: string }[]
+  onChange: (labelId: string | null) => void
+  variant?: "button" | "inline"
+}) {
+  const current = labels.find((l) => l.id === value)
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {variant === "inline" ? (
+          <button
+            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium leading-none transition-colors hover:brightness-125"
+            style={current ? { backgroundColor: `${current.color}18`, color: current.color } : {}}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Tag className="h-2.5 w-2.5" />
+            {current?.name ?? "No label"}
+          </button>
+        ) : (
+          <button
+            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary/60"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="flex items-center gap-2">
+              {current && (
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: current.color }}
+                />
+              )}
+              {current?.name ?? "No label"}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        )}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-44">
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation()
+            onChange(null)
+          }}
+          className="flex items-center justify-between"
+        >
+          <span className="text-muted-foreground">No label</span>
+          {!value && <Check className="h-3.5 w-3.5 text-muted-foreground" />}
+        </DropdownMenuItem>
+        {labels.map((l) => (
+          <DropdownMenuItem
+            key={l.id}
+            onClick={(e) => {
+              e.stopPropagation()
+              onChange(l.id)
+            }}
+            className="flex items-center justify-between"
+          >
+            <span className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
+              <span className="text-foreground">{l.name}</span>
+            </span>
+            {value === l.id && <Check className="h-3.5 w-3.5 text-muted-foreground" />}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   )

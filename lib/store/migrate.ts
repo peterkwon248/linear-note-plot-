@@ -324,5 +324,21 @@ export function migrate(persistedState: unknown): PlotState {
     delete (state.viewStateByContext as Record<string, unknown>)["reference"]
   }
 
+  // v27: Labels — add labelId to notes and labels array to state
+  if (!state.labels) state.labels = []
+  if (state.notes && Array.isArray(state.notes)) {
+    for (const n of state.notes as Array<Record<string, unknown>>) {
+      if (n.labelId === undefined) n.labelId = null
+    }
+  }
+
+  // v28: Autopilot rules
+  if (!state.autopilotRules) state.autopilotRules = []
+  if (state.autopilotEnabled === undefined) state.autopilotEnabled = true
+  if (!state.autopilotLog) state.autopilotLog = []
+
+  // v29: Templates
+  if (!state.templates) state.templates = []
+
   return state as unknown as PlotState
 }

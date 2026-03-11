@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, ActiveView, NoteEvent, ThinkingChainSession, KnowledgeMap, SavedView } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, ThinkingChainSession, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 
@@ -7,6 +7,7 @@ export interface PlotState {
   notes: Note[]
   folders: Folder[]
   tags: Tag[]
+  labels: Label[]
 
   // ── UI State ──
   activeView: ActiveView
@@ -53,6 +54,14 @@ export interface PlotState {
   // SRS
   srsStateByNoteId: Record<string, SRSState>
 
+  // ── Autopilot ──
+  autopilotEnabled: boolean
+  autopilotRules: AutopilotRule[]
+  autopilotLog: AutopilotLogEntry[]
+
+  // ── Templates ──
+  templates: NoteTemplate[]
+
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
   updateNote: (id: string, updates: Partial<Note>) => void
@@ -83,6 +92,23 @@ export interface PlotState {
   unenrollSRS: (noteId: string) => void
   enrollAllPermanentSRS: () => number
 
+  // ── Autopilot ──
+  createAutopilotRule: (rule: Omit<AutopilotRule, "id" | "createdAt" | "updatedAt">) => string
+  updateAutopilotRule: (id: string, updates: Partial<AutopilotRule>) => void
+  deleteAutopilotRule: (id: string) => void
+  toggleAutopilotRule: (id: string) => void
+  setAutopilotEnabled: (enabled: boolean) => void
+  runAutopilotOnNote: (noteId: string) => AutopilotLogEntry | null
+  undoAutopilotAction: (logEntryId: string) => boolean
+  clearAutopilotLog: () => void
+
+  // ── Templates ──
+  createTemplate: (template: Omit<NoteTemplate, "id" | "createdAt" | "updatedAt">) => string
+  updateTemplate: (id: string, updates: Partial<NoteTemplate>) => void
+  deleteTemplate: (id: string) => void
+  toggleTemplatePin: (id: string) => void
+  createNoteFromTemplate: (templateId: string) => string
+
   // ── Folders ──
   createFolder: (name: string, color: string, opts?: Partial<Folder>) => void
   updateFolder: (id: string, updates: Partial<Folder>) => void
@@ -96,6 +122,12 @@ export interface PlotState {
   deleteTag: (id: string) => void
   addTagToNote: (noteId: string, tagId: string) => void
   removeTagFromNote: (noteId: string, tagId: string) => void
+
+  // ── Labels ──
+  createLabel: (name: string, color: string) => void
+  updateLabel: (id: string, updates: Partial<Label>) => void
+  deleteLabel: (id: string) => void
+  setNoteLabel: (noteId: string, labelId: string | null) => void
 
   // ── UI Actions ──
   setActiveView: (view: ActiveView) => void

@@ -18,7 +18,7 @@ export type ViewContextKey =
 
 /* ── View State ────────────────────────────────────────── */
 
-export type ViewMode = "list" | "table" | "board" | "insights"
+export type ViewMode = "list" | "table" | "board" | "insights" | "calendar"
 
 export type SortField =
   | "updatedAt"
@@ -29,15 +29,16 @@ export type SortField =
   | "links"
   | "reads"
   | "folder"
+  | "label"
 
 export type SortDirection = "asc" | "desc"
 
-export type GroupBy = "none" | "status" | "priority" | "date" | "folder" | "triage" | "linkCount"
+export type GroupBy = "none" | "status" | "priority" | "date" | "folder" | "label" | "triage" | "linkCount"
 
 export type FilterOperator = "eq" | "neq" | "gt" | "lt"
 
 export type FilterField =
-  | "status" | "priority" | "links" | "reads" | "folder"
+  | "status" | "priority" | "links" | "reads" | "folder" | "label"
   | "updatedAt" | "createdAt" | "content" | "tags" | "pinned"
   | "source" | "wordCount" | "title"
 
@@ -104,14 +105,14 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
-  "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder",
+  "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
-  "none", "status", "priority", "date", "folder", "triage", "linkCount",
+  "none", "status", "priority", "date", "folder", "label", "triage", "linkCount",
 ]
 
-export const VALID_VIEW_MODES: ViewMode[] = ["list", "table", "board", "insights"]
+export const VALID_VIEW_MODES: ViewMode[] = ["list", "table", "board", "insights", "calendar"]
 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "folder", "links", "reads", "priority", "createdAt", "updatedAt",

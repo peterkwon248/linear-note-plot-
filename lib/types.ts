@@ -13,6 +13,7 @@ export interface Note {
   contentJson: Record<string, unknown> | null
   folderId: string | null
   tags: string[]
+  labelId: string | null
   status: NoteStatus
   priority: NotePriority
   reads: number
@@ -66,6 +67,85 @@ export interface Tag {
   color: string
 }
 
+export interface Label {
+  id: string
+  name: string
+  color: string
+}
+
+/* ── Autopilot Rules ─────────────────────────────── */
+
+export type AutopilotTrigger = "on_save" | "on_open" | "on_interval"
+
+export type AutopilotConditionField =
+  | "status" | "priority" | "content_length" | "word_count"
+  | "reads" | "age_days" | "has_links" | "has_tags" | "has_label"
+  | "has_folder" | "link_count" | "tag_count" | "title_length"
+  | "snooze_count" | "triage_status"
+
+export type AutopilotConditionOperator =
+  | "eq" | "neq" | "gt" | "gte" | "lt" | "lte" | "contains" | "not_contains"
+
+export interface AutopilotCondition {
+  field: AutopilotConditionField
+  operator: AutopilotConditionOperator
+  value: string | number | boolean
+}
+
+export type AutopilotActionType =
+  | "set_status" | "set_priority" | "set_label" | "set_triage"
+  | "archive" | "pin" | "add_tag" | "remove_tag"
+
+export interface AutopilotAction {
+  type: AutopilotActionType
+  value?: string  // status value, priority value, labelId, tagId, etc.
+}
+
+export interface AutopilotRule {
+  id: string
+  name: string
+  description: string
+  enabled: boolean
+  trigger: AutopilotTrigger
+  conditions: AutopilotCondition[]  // AND logic: all must match
+  actions: AutopilotAction[]         // executed sequentially
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AutopilotLogEntry {
+  id: string
+  ruleId: string
+  ruleName: string
+  noteId: string
+  noteTitle: string
+  actions: AutopilotAction[]
+  at: string
+  undone: boolean
+}
+
+/* ── Note Templates ──────────────────────────────── */
+
+export interface NoteTemplate {
+  id: string
+  name: string
+  description: string
+  icon: string           // emoji or lucide icon name
+  color: string          // hex color
+  // Pre-filled fields
+  title: string          // template for title (can contain {date}, {time} placeholders)
+  content: string        // markdown body template
+  status: NoteStatus
+  priority: NotePriority
+  labelId: string | null
+  tags: string[]         // tag IDs
+  folderId: string | null
+  // Meta
+  pinned: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 export type ActiveView =
   | { type: "inbox" }
   | { type: "all" }
@@ -101,7 +181,9 @@ export type NoteEventType =
   | "link_added" | "link_removed"
   | "thinking_chain_started" | "thinking_chain_step_added" | "thinking_chain_ended"
   | "map_added" | "map_removed"
+  | "label_changed"
   | "srs_reviewed"
+  | "autopilot_applied"
 
 export interface NoteEvent {
   id: string

@@ -33,6 +33,7 @@ import {
   ChevronUp,
   FolderOpen,
   Lightbulb,
+  Calendar,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -56,8 +57,7 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import type { ViewContextKey, SortField, SortDirection, GroupBy, FilterRule, NoteGroup } from "@/lib/view-engine/types"
-import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
-import { StatusIcon } from "@/components/status-icon"
+import { StatusDropdown, PriorityDropdown, StatusBadge } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note, NoteStatus, NotePriority, Folder } from "@/lib/types"
@@ -145,7 +145,7 @@ const TABS: { id: ViewContextKey; label: string }[] = [
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField: SortField }[] = [
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
-  { id: "status", label: "Status", width: "w-[100px] shrink-0", align: "text-right", sortField: "status" },
+  { id: "status", label: "Status", width: "w-[120px] shrink-0", align: "text-right", sortField: "status" },
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder" },
   { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links" },
   { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads" },
@@ -265,6 +265,7 @@ export function NotesTable({
   }, [notes, backlinksMap])
 
   const folders = usePlotStore((s) => s.folders)
+  const labels = usePlotStore((s) => s.labels)
   const tags = usePlotStore((s) => s.tags)
 
   const searchQuery = usePlotStore((s) => s.searchQuery)
@@ -636,9 +637,20 @@ export function NotesTable({
                   <Lightbulb className="h-4 w-4" />
                   Insights
                 </button>
+                <button
+                  onClick={() => setViewMode("calendar")}
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                    viewMode === "calendar"
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  <Calendar className="h-4 w-4" />
+                  Calendar
+                </button>
               </div>
 
-              {viewMode !== "insights" && (
+              {viewMode !== "insights" && viewMode !== "calendar" && (
                 <>
                   {/* Grouping / Columns row */}
                   <div className="flex items-center justify-between px-4 py-3">
@@ -972,6 +984,7 @@ function NoteRowInner({
   onLinkWith,
 }: NoteRowProps) {
   const visibleCols = visibleColumns
+  const labels = usePlotStore((s) => s.labels)
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -1013,6 +1026,32 @@ function NoteRowInner({
         <span className="truncate text-[15px] text-foreground">
           {note.title || "Untitled"}
         </span>
+        {(() => {
+          const label = note.labelId ? labels.find((l: { id: string; name: string; color: string }) => l.id === note.labelId) : null
+          if (label) {
+            return (
+              <span
+                className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium"
+                style={{ backgroundColor: `${label.color}18`, color: label.color }}
+              >
+                {label.name}
+              </span>
+            )
+          }
+          return (
+            <span className="shrink-0 inline-flex items-center rounded-full px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground/70 bg-muted/50">
+              Memo
+            </span>
+          )
+        })()}
+        {note.preview.length > 0 && (
+          <span
+            className="shrink-0 text-[11px] tabular-nums font-medium"
+            style={{ color: note.preview.length >= 80 ? "#45d483" : note.preview.length >= 30 ? "#60a5fa" : "#9ca3af" }}
+          >
+            {note.preview.length >= 120 ? "120+" : note.preview.length}자
+          </span>
+        )}
         {links === 0 && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -1027,8 +1066,8 @@ function NoteRowInner({
 
       {/* Status */}
       {visibleCols.includes("status") && (
-        <div className="w-[100px] shrink-0 flex items-center">
-          <StatusIcon status={note.status} className="text-muted-foreground" />
+        <div className="w-[120px] shrink-0 flex items-center justify-end">
+          <StatusBadge status={note.status} />
         </div>
       )}
 
