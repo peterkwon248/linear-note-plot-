@@ -9,6 +9,7 @@ import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { InsightsView } from "@/components/insights-view"
+import { CalendarView } from "@/components/calendar-view"
 import { useActiveRoute, useActiveFolderId } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
@@ -86,6 +87,35 @@ export function NotesTableView() {
     return (
       <div className="flex flex-1 overflow-hidden">
         <InsightsView />
+      </div>
+    )
+  }
+
+  // Calendar view
+  if (viewMode === "calendar") {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <CalendarView
+          context={config.context}
+          title={config.title}
+          showTabs={config.showTabs}
+          hideCreateButton={config.hideCreateButton}
+          createNoteOverrides={config.createNoteOverrides}
+          folderId={activeFolderId ?? undefined}
+          onRowClick={(noteId) => setPreviewId(noteId)}
+          activePreviewId={previewId}
+        />
+        {previewId && (
+          <NoteDetailPanel
+            noteId={previewId}
+            onClose={() => setPreviewId(null)}
+            onOpenNote={(id) => setPreviewId(id)}
+            onEditNote={() => {
+              openNote(previewId)
+              setPreviewId(null)
+            }}
+          />
+        )}
       </div>
     )
   }

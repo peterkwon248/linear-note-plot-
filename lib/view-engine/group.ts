@@ -24,6 +24,9 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
     case "folder":
       return groupByFolder(notes)
 
+    case "label":
+      return groupByLabel(notes)
+
     case "triage":
       return groupByTriage(notes)
 
@@ -153,6 +156,37 @@ function groupByFolder(notes: Note[]): NoteGroup[] {
 
   if (noFolder.length > 0) {
     groups.push({ key: "_no_folder", label: "No Folder", notes: noFolder })
+  }
+
+  return groups
+}
+
+/* ── Label grouping ──────────────────────────────────── */
+
+function groupByLabel(notes: Note[]): NoteGroup[] {
+  const map = new Map<string, Note[]>()
+  const noLabel: Note[] = []
+
+  for (const note of notes) {
+    const labelId = (note as any).labelId as string | null
+    if (!labelId) {
+      noLabel.push(note)
+      continue
+    }
+    const bucket = map.get(labelId)
+    if (bucket) bucket.push(note)
+    else map.set(labelId, [note])
+  }
+
+  const groups: NoteGroup[] = []
+
+  const sortedKeys = [...map.keys()].sort((a, b) => a.localeCompare(b))
+  for (const key of sortedKeys) {
+    groups.push({ key, label: key, notes: map.get(key)! })
+  }
+
+  if (noLabel.length > 0) {
+    groups.push({ key: "_no_label", label: "No Label", notes: noLabel })
   }
 
   return groups

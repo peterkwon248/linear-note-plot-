@@ -36,6 +36,12 @@ export function applySort(
         return dir * aFolder.localeCompare(bFolder)
       }
 
+      case "label": {
+        const aLabel = (a as any).labelId ?? ""
+        const bLabel = (b as any).labelId ?? ""
+        return dir * aLabel.localeCompare(bLabel)
+      }
+
       case "links": {
         const al = backlinksMap?.get(a.id) ?? 0
         const bl = backlinksMap?.get(b.id) ?? 0

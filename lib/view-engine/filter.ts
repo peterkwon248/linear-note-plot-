@@ -73,6 +73,17 @@ function matchesRule(note: Note, rule: FilterRule): boolean {
       return compareString(fid, operator, value)
     }
 
+    case "label": {
+      const lid = (note as any).labelId ?? ""
+      if (value === "_none") {
+        return operator === "eq" ? lid === "" : lid !== ""
+      }
+      if (value === "_any") {
+        return operator === "eq" ? lid !== "" : lid === ""
+      }
+      return compareString(lid, operator, value)
+    }
+
     case "updatedAt": {
       // value is a relative time threshold like "24h", "7d", "30d"
       const ms = parseRelativeTime(value)

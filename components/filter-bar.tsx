@@ -48,6 +48,9 @@ export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagLi
     const folder = folderList.find((f) => f.id === rule.value)
     return folder ? folder.name : rule.value
   }
+  // Label
+  if (rule.field === "label" && rule.value === "_none") return "No label"
+  if (rule.field === "label" && rule.value === "_any") return "Has label"
   // Tags
   if (rule.field === "tags" && rule.value === "_any") return "Has tags"
   if (rule.field === "tags" && rule.value === "_none") return "No tags"
@@ -135,6 +138,7 @@ export function FilterMenuItems({
   const statusCount = countFieldFilters(filters, "status")
   const priorityCount = countFieldFilters(filters, "priority")
   const folderCount = countFieldFilters(filters, "folder")
+  const labelCount = countFieldFilters(filters, "label")
   const tagCount = countFieldFilters(filters, "tags")
   const sourceCount = countFieldFilters(filters, "source")
   const dateCount = countDateFilters(filters)
@@ -236,6 +240,27 @@ export function FilterMenuItems({
                 <span className="text-[14px]">{folder.name}</span>
               </DropdownMenuItem>
             ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      )}
+
+      {/* ── Label ── */}
+      {groupBy !== "label" && (
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Tag className="h-4 w-4 text-muted-foreground" />
+            <span className="text-[14px]">Label</span>
+            <ActiveBadge count={labelCount} />
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-48">
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("label", "_none") }}>
+              <CheckMark active={hasFilter(filters, "label", "_none")} />
+              <span className="text-[14px] text-muted-foreground">No label</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("label", "_any") }}>
+              <CheckMark active={hasFilter(filters, "label", "_any")} />
+              <span className="text-[14px]">Has label</span>
+            </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
       )}
@@ -462,7 +487,7 @@ export function FilterMenuItems({
 
 /* ── Filter Grouping (for grouped chips) ──────────────── */
 
-export type FilterGroupKey = "status" | "priority" | "folder" | "tags" | "source" | "dates" | "links" | "content" | "pinned"
+export type FilterGroupKey = "status" | "priority" | "folder" | "label" | "tags" | "source" | "dates" | "links" | "content" | "pinned"
 
 const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   status: "status",
@@ -477,6 +502,7 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   wordCount: "content",
   title: "content",
   reads: "content",
+  label: "label",
   pinned: "pinned",
 }
 
@@ -488,6 +514,7 @@ export const FILTER_GROUP_META: Record<FilterGroupKey, { label: string; icon: ty
   status: { label: "Status", icon: CircleDot },
   priority: { label: "Priority", icon: Signal },
   folder: { label: "Folder", icon: FolderOpen },
+  label: { label: "Label", icon: Tag },
   tags: { label: "Tags", icon: Hash },
   source: { label: "Source", icon: Globe },
   dates: { label: "Dates", icon: Clock },
@@ -545,6 +572,19 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, onToggleF
               <span className="text-[14px]">{folder.name}</span>
             </DropdownMenuItem>
           ))}
+        </>
+      )
+    case "label":
+      return (
+        <>
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("label", "_none") }}>
+            <CheckMark active={hasFilter(filters, "label", "_none")} />
+            <span className="text-[14px] text-muted-foreground">No label</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("label", "_any") }}>
+            <CheckMark active={hasFilter(filters, "label", "_any")} />
+            <span className="text-[14px]">Has label</span>
+          </DropdownMenuItem>
         </>
       )
     case "tags":

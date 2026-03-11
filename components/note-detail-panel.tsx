@@ -25,11 +25,13 @@ import {
   Archive as ArchiveIcon,
   RotateCcw,
   Merge,
+  Folder,
+  Tag,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
-import { StatusBadge, PriorityBadge } from "@/components/note-fields"
+import { StatusBadge, PriorityBadge, LabelBadge } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
 import { isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { suggestBacklinks } from "@/lib/backlinks"
@@ -145,10 +147,17 @@ export function NoteDetailPanel({
   const clearReminder = usePlotStore((s) => s.clearReminder)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
+  const folders = usePlotStore((s) => s.folders)
+  const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
 
   const backlinksIndex = useBacklinksIndex()
 
   const note = notes.find((n) => n.id === noteId)
+
+  const noteFolder = note ? folders.find((f) => f.id === note.folderId) : null
+  const noteLabel = note ? labels.find((l) => l.id === note.labelId) : null
+  const noteTags = note ? tags.filter((t) => note.tags.includes(t.id)) : []
 
   const backlinks = useBacklinksFor(note?.id ?? null)
 
@@ -445,6 +454,34 @@ export function NoteDetailPanel({
                 </span>
               </span>
             </MetaRow>
+            {noteFolder && (
+              <MetaRow label="Folder" icon={<Folder className="h-3.5 w-3.5" />}>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: noteFolder.color }} />
+                  <span className="text-[14px]">{noteFolder.name}</span>
+                </span>
+              </MetaRow>
+            )}
+            {noteLabel && (
+              <MetaRow label="Label" icon={<Tag className="h-3.5 w-3.5" />}>
+                <LabelBadge label={noteLabel} />
+              </MetaRow>
+            )}
+            {noteTags.length > 0 && (
+              <MetaRow label="Tags" icon={<Tag className="h-3.5 w-3.5" />}>
+                <span className="flex flex-wrap gap-1">
+                  {noteTags.map((t) => (
+                    <span
+                      key={t.id}
+                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                      style={{ backgroundColor: `${t.color}18`, color: t.color }}
+                    >
+                      {t.name}
+                    </span>
+                  ))}
+                </span>
+              </MetaRow>
+            )}
             <MetaRow label="Created" icon={<Calendar className="h-3.5 w-3.5" />}>
               {format(new Date(note.createdAt), "MMM d, yyyy")}
             </MetaRow>

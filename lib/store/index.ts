@@ -1,19 +1,23 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, KnowledgeMap, SavedView } from "../types"
+import type { NoteEvent, KnowledgeMap, SavedView, AutopilotLogEntry } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
-import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS } from "./seeds"
+import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES } from "./seeds"
 import { createNotesSlice } from "./slices/notes"
 import { createWorkflowSlice } from "./slices/workflow"
 import { createFoldersSlice } from "./slices/folders"
 import { createTagsSlice } from "./slices/tags"
+import { createLabelsSlice } from "./slices/labels"
 import { createThinkingSlice } from "./slices/thinking"
 import { createMapsSlice } from "./slices/maps"
 import { createUISlice } from "./slices/ui"
 import { createViewsSlice } from "./slices/views"
+import { createAutopilotSlice } from "./slices/autopilot"
+import { createTemplatesSlice } from "./slices/templates"
+import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
 
@@ -27,6 +31,7 @@ export const usePlotStore = create<PlotState>()(
         notes: SEED_NOTES,
         folders: SEED_FOLDERS,
         tags: SEED_TAGS,
+        labels: SEED_LABELS,
 
         activeView: { type: "all" } as const,
         selectedNoteId: null,
@@ -51,6 +56,10 @@ export const usePlotStore = create<PlotState>()(
         knowledgeMaps: [] as KnowledgeMap[],
         savedViews: [] as SavedView[],
         srsStateByNoteId: {} as Record<string, SRSState>,
+        autopilotEnabled: true,
+        autopilotRules: DEFAULT_AUTOPILOT_RULES,
+        autopilotLog: [] as AutopilotLogEntry[],
+        templates: SEED_TEMPLATES,
 
         viewStateByContext: buildDefaultViewStates(),
         _viewStateHydrated: false,
@@ -62,15 +71,18 @@ export const usePlotStore = create<PlotState>()(
         ...createWorkflowSlice(set, get, appendEvent),
         ...createFoldersSlice(set),
         ...createTagsSlice(set),
+        ...createLabelsSlice(set),
         ...createThinkingSlice(set, get, appendEvent),
         ...createMapsSlice(set, appendEvent),
         ...createUISlice(set, appendEvent),
         ...createViewsSlice(set),
+        ...createAutopilotSlice(set, get, appendEvent),
+        ...createTemplatesSlice(set, get, appendEvent),
       }
     },
     {
       name: "plot-store",
-      version: 26,
+      version: 29,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
