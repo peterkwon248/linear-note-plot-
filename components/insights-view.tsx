@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { AlertCircle, AlertTriangle, Info, ChevronDown, ChevronUp, Lightbulb } from "lucide-react"
+import { AlertCircle, AlertTriangle, Info, ChevronDown, ChevronUp, Lightbulb, SlidersHorizontal, LayoutList, LayoutGrid, Calendar } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
+import { useSettingsStore } from "@/lib/settings-store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { runAnalysis } from "@/lib/analysis/engine"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { AnalysisResult, AnalysisSeverity } from "@/lib/analysis/types"
 
 /* ── Severity helpers ─────────────────────────────────── */
@@ -127,6 +129,8 @@ export function InsightsView() {
   const notes = usePlotStore((s) => s.notes)
   const srsMap = usePlotStore((s) => s.srsStateByNoteId)
   const backlinks = useBacklinksIndex()
+  const viewMode = useSettingsStore((s) => s.viewMode)
+  const setViewMode = useSettingsStore((s) => s.setViewMode)
 
   const results = useMemo(
     () => runAnalysis(notes, srsMap, backlinks),
@@ -149,14 +153,72 @@ export function InsightsView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-        <Lightbulb className="h-5 w-5 text-muted-foreground" />
-        <h2 className="text-[16px] font-semibold text-foreground">Insights</h2>
-        {total > 0 && (
-          <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[12px] font-medium text-muted-foreground">
-            {total} issue{total !== 1 ? "s" : ""}
-          </span>
-        )}
+      <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Lightbulb className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-[16px] font-semibold text-foreground">Insights</h2>
+          {total > 0 && (
+            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[12px] font-medium text-muted-foreground">
+              {total} issue{total !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[13px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Display
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[280px] p-0" align="end">
+            <div className="flex gap-1 px-3 py-2.5">
+              <button
+                onClick={() => setViewMode("table")}
+                className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                  viewMode === "table" || viewMode === "list"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                <LayoutList className="h-4 w-4" />
+                List
+              </button>
+              <button
+                onClick={() => setViewMode("board")}
+                className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                  viewMode === "board"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Board
+              </button>
+              <button
+                onClick={() => setViewMode("insights")}
+                className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                  viewMode === "insights"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                <Lightbulb className="h-4 w-4" />
+                Insights
+              </button>
+              <button
+                onClick={() => setViewMode("calendar")}
+                className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                  viewMode === "calendar"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                Calendar
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Summary chips */}

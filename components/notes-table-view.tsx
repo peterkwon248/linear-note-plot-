@@ -5,8 +5,8 @@ import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
-import { NoteEditor } from "@/components/note-editor"
 import { NoteInspector } from "@/components/note-inspector"
+import { EditorSplitView } from "@/components/editor/editor-split-view"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { InsightsView } from "@/components/insights-view"
 import { CalendarView } from "@/components/calendar-view"
@@ -76,7 +76,7 @@ export function NotesTableView() {
   if (isEditing) {
     return (
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
-        <NoteEditor />
+        <EditorSplitView />
         <NoteInspector />
       </div>
     )

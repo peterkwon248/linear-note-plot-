@@ -2,12 +2,32 @@ import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, Note
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 
+export interface EditorTab {
+  id: string           // nanoid
+  noteId: string
+  isPinned?: boolean
+}
+
+export interface EditorPanel {
+  id: string           // "panel-left" | "panel-right"
+  tabs: EditorTab[]
+  activeTabId: string | null
+}
+
+export interface EditorState {
+  panels: EditorPanel[]
+  activePanelId: string
+  splitMode: boolean
+  splitRatio: number   // 0.2~0.8, default 0.5
+}
+
 export interface PlotState {
   // ── Data ──
   notes: Note[]
   folders: Folder[]
   tags: Tag[]
   labels: Label[]
+  editorState: EditorState
 
   // ── UI State ──
   activeView: ActiveView
@@ -167,6 +187,17 @@ export interface PlotState {
   createSavedView: (name: string, config?: Partial<SavedView>) => string
   updateSavedView: (id: string, updates: Partial<SavedView>) => void
   deleteSavedView: (id: string) => void
+
+  // ── Editor Tabs ──
+  openNoteInTab: (noteId: string, panelId?: string) => void
+  closeTab: (tabId: string, panelId: string) => void
+  closeOtherTabs: (tabId: string, panelId: string) => void
+  setActiveTab: (tabId: string, panelId: string) => void
+  setActivePanel: (panelId: string) => void
+  toggleSplit: () => void
+  moveTabToPanel: (tabId: string, fromPanelId: string, toPanelId: string) => void
+  togglePinTab: (tabId: string, panelId: string) => void
+  setSplitRatio: (ratio: number) => void
 
   // ── Internal ──
   _hydrateNoteBodies: (bodies: NoteBody[]) => void

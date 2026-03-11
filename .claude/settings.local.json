@@ -73,7 +73,15 @@
       "Bash(xargs sed -i 's/text-\\\\[10px\\\\]/text-[11px]/g')",
       "Bash(echo \"Step 4 done: 10->11\")",
       "Bash(npx vitest run lib/analysis)",
-      "Bash(echo \"EXISTS=$?\")"
+      "Bash(echo \"EXISTS=$?\")",
+      "Bash(xargs grep:*)",
+      "Bash(ls -la app/\\\\\\(app\\\\\\)/review/)",
+      "Bash(ls -la app/\\\\\\(app\\\\\\)/alerts/)",
+      "Bash(npx vitest:*)",
+      "Bash(cat '/c/Users/kwonkyunghun/Desktop/리니어 노트앱/.claude/worktrees/angry-easley/app/\\\\\\(app\\\\\\)/layout.tsx')",
+      "Bash(cat 'app/\\(app\\)/layout.tsx')",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(ls -la components/editor/editor-*.tsx lib/store/slices/editor.ts)"
     ]
   }
 }

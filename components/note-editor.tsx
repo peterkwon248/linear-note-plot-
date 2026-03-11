@@ -31,8 +31,14 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 
-export function NoteEditor() {
-  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+interface NoteEditorProps {
+  noteId?: string
+  onClose?: () => void
+}
+
+export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}) {
+  const storeSelectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const activeNoteId = propNoteId ?? storeSelectedNoteId
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
@@ -48,7 +54,7 @@ export function NoteEditor() {
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
 
-  const note = notes.find((n) => n.id === selectedNoteId) ?? null
+  const note = notes.find((n) => n.id === activeNoteId) ?? null
   const focusMode = sidebarCollapsed && !detailsOpen
 
   const [localTitle, setLocalTitle] = useState("")
@@ -97,7 +103,7 @@ export function NoteEditor() {
           if (!ok) return
         }
         deleteNote(note.id)
-        setSelectedNoteId(null)
+        onClose ? onClose() : setSelectedNoteId(null)
         return
       }
     }
@@ -129,7 +135,7 @@ export function NoteEditor() {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={() => setSelectedNoteId(null)}
+                onClick={() => onClose ? onClose() : setSelectedNoteId(null)}
                 className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -209,7 +215,7 @@ export function NoteEditor() {
                     if (!ok) return
                   }
                   deleteNote(note.id)
-                  setSelectedNoteId(null)
+                  onClose ? onClose() : setSelectedNoteId(null)
                 }}
               >
                 <Trash2 className="h-4 w-4" />
