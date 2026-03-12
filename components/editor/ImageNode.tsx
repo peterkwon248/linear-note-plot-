@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
 import {
   MoreHorizontal,
@@ -8,6 +9,9 @@ import {
   Scissors,
   Download,
   Trash2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from "lucide-react"
 
 export function ImageNode({ node, updateAttributes, deleteNode, selected, editor }: NodeViewProps) {
@@ -17,16 +21,19 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
   const imageRef = useRef<HTMLImageElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
   const startX = useRef(0)
   const startWidth = useRef(0)
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, isLeft: false })
 
-  const { src, alt, width } = node.attrs
+  const { src, alt, width, textAlign = "left" } = node.attrs
 
   // Close menu on outside click
   useEffect(() => {
     if (!isMenuOpen) return
     const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node) &&
+          menuBtnRef.current && !menuBtnRef.current.contains(e.target as Node)) {
         setIsMenuOpen(false)
       }
     }
@@ -34,8 +41,37 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
     return () => document.removeEventListener("mousedown", handleClick)
   }, [isMenuOpen])
 
-  // Resize handlers
+  // Update menu position — dropdown opens outside the image container
+  // Right-aligned: dropdown opens to the LEFT; otherwise: to the RIGHT
+  const updateMenuPos = useCallback(() => {
+    if (!wrapperRef.current) return
+    const containerRect = wrapperRef.current.getBoundingClientRect()
+    const btnRect = menuBtnRef.current?.getBoundingClientRect()
+    const topVal = btnRect ? btnRect.top : containerRect.top + 4
+
+    if (textAlign === "right") {
+      // Open to the LEFT of the image
+      setMenuPos({ top: topVal, left: containerRect.left - 6, isLeft: true })
+    } else {
+      // Open to the RIGHT of the image
+      setMenuPos({ top: topVal, left: containerRect.right + 6, isLeft: false })
+    }
+  }, [textAlign])
+
+  useEffect(() => {
+    if (!isMenuOpen) return
+    updateMenuPos()
+    window.addEventListener("scroll", updateMenuPos, true)
+    window.addEventListener("resize", updateMenuPos)
+    return () => {
+      window.removeEventListener("scroll", updateMenuPos, true)
+      window.removeEventListener("resize", updateMenuPos)
+    }
+  }, [isMenuOpen, updateMenuPos])
+
+  // Resize handlers — supports all 4 corners
   const onResizeStart = useCallback(
+    (corner: "top-left" | "top-right" | "bottom-left" | "bottom-right") =>
     (e: React.MouseEvent) => {
       e.preventDefault()
       e.stopPropagation()
@@ -43,8 +79,11 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
       startX.current = e.clientX
       startWidth.current = imageRef.current?.offsetWidth ?? 300
 
+      // Left-side corners: dragging left = wider, right = narrower
+      const sign = corner.includes("left") ? -1 : 1
+
       const onMouseMove = (ev: MouseEvent) => {
-        const diff = ev.clientX - startX.current
+        const diff = (ev.clientX - startX.current) * sign
         const newWidth = Math.max(100, startWidth.current + diff)
         updateAttributes({ width: newWidth })
       }
@@ -104,6 +143,11 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
     <NodeViewWrapper
       className="image-node-wrapper"
       data-drag-handle
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: textAlign === "center" ? "center" : textAlign === "right" ? "flex-end" : "flex-start",
+      }}
     >
       <div
         ref={wrapperRef}
@@ -124,13 +168,37 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
           style={{ width: width ? `${width}px` : undefined }}
         />
 
-        {/* Menu button (top-right) */}
+        {/* Resize handles (invisible hit areas at corners) */}
+        {editor?.isEditable && (
+          <>
+            <div
+              className="image-node-resize-handle image-node-resize-tl"
+              onMouseDown={onResizeStart("top-left")}
+            />
+            <div
+              className="image-node-resize-handle image-node-resize-tr"
+              onMouseDown={onResizeStart("top-right")}
+            />
+            <div
+              className="image-node-resize-handle image-node-resize-bl"
+              onMouseDown={onResizeStart("bottom-left")}
+            />
+            <div
+              className="image-node-resize-handle image-node-resize-br"
+              onMouseDown={onResizeStart("bottom-right")}
+            />
+          </>
+        )}
+
+        {/* Menu button — inside image, top-right (or top-left when right-aligned) */}
         {(isHovered || isMenuOpen || selected) && editor?.isEditable && (
           <button
-            className="image-node-menu-btn"
+            ref={menuBtnRef}
+            className={`image-node-menu-btn ${textAlign === "right" ? "image-node-menu-btn-left" : ""}`}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
+              if (!isMenuOpen) updateMenuPos()
               setIsMenuOpen(!isMenuOpen)
             }}
             onMouseDown={(e) => e.preventDefault()}
@@ -138,10 +206,37 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
             <MoreHorizontal size={16} />
           </button>
         )}
+      </div>
 
-        {/* Dropdown menu */}
-        {isMenuOpen && (
-          <div ref={menuRef} className="image-node-dropdown">
+      {/* Dropdown menu — portal to body so it doesn't get clipped */}
+        {isMenuOpen && createPortal(
+          <div
+            ref={menuRef}
+            className="image-node-dropdown"
+            style={{
+              position: "fixed",
+              top: `${menuPos.top}px`,
+              left: `${menuPos.left}px`,
+              ...(menuPos.isLeft ? { transform: "translateX(-100%)" } : {}),
+            }}
+          >
+            {/* Alignment buttons */}
+            <div className="image-node-align-row">
+              {(["left", "center", "right"] as const).map((align) => (
+                <button
+                  key={align}
+                  className={`image-node-align-btn ${textAlign === align ? "image-node-align-active" : ""}`}
+                  onClick={() => { updateAttributes({ textAlign: align }); setIsMenuOpen(false) }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  title={align === "left" ? "Left" : align === "center" ? "Center" : "Right"}
+                >
+                  {align === "left" && <AlignLeft size={15} />}
+                  {align === "center" && <AlignCenter size={15} />}
+                  {align === "right" && <AlignRight size={15} />}
+                </button>
+              ))}
+            </div>
+            <div className="image-node-dropdown-separator" />
             <button
               className="image-node-dropdown-item"
               onClick={handleCopy}
@@ -175,26 +270,9 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
               <Trash2 size={14} />
               <span>Delete</span>
             </button>
-          </div>
+          </div>,
+          document.body
         )}
-
-        {/* Resize handle (bottom-right) */}
-        {(isHovered || selected || isResizing) && editor?.isEditable && (
-          <div
-            className="image-node-resize-handle"
-            onMouseDown={onResizeStart}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12">
-              <path
-                d="M11 1L1 11M11 5L5 11M11 9L9 11"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-        )}
-      </div>
     </NodeViewWrapper>
   )
 }

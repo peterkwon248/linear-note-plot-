@@ -38,7 +38,12 @@ export function InsertMenu({ editor }: InsertMenuProps) {
     const reader = new FileReader()
     reader.onload = () => {
       const dataUrl = reader.result as string
-      editor.chain().focus().setImage({ src: dataUrl, alt: file.name }).run()
+      // Insert at current cursor position (end of doc if no selection)
+      const pos = editor.state.selection.anchor
+      editor.chain().focus().insertContentAt(pos, {
+        type: "image",
+        attrs: { src: dataUrl, alt: file.name },
+      }).run()
     }
     reader.readAsDataURL(file)
     e.target.value = ""
