@@ -318,11 +318,12 @@
 }
 
 .image-node-selected {
-  outline: 2px solid #5E6AD2;
+  outline: 1.5px solid rgba(94, 106, 210, 0.5);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* Image menu button (top-right "...") */
+/* Image menu button — inside image, top-right */
 .image-node-menu-btn {
   position: absolute;
   top: 8px;
@@ -332,11 +333,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
   border-radius: 6px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
   z-index: 10;
   transition: all 0.15s;
@@ -344,26 +346,30 @@
 }
 
 .image-node-menu-btn:hover {
-  background: rgba(0, 0, 0, 0.8);
-  color: #FFFFFF;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
 }
 
-/* Image dropdown menu */
+/* When image is right-aligned, move button to left side */
+.image-node-menu-btn.image-node-menu-btn-left {
+  right: auto;
+  left: 8px;
+}
+
+/* Image dropdown menu (portaled to body) */
 .image-node-dropdown {
-  position: absolute;
-  top: 40px;
-  right: 8px;
-  min-width: 160px;
+  min-width: 170px;
   background: hsl(var(--popover));
   border: 1px solid hsl(var(--border));
-  border-radius: 8px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 4px;
-  z-index: 20;
+  z-index: 1000;
 }
 
 .dark .image-node-dropdown {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .image-node-dropdown-item {
@@ -393,35 +399,78 @@
   color: #F87171;
 }
 
+/* Image alignment row */
+.image-node-align-row {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  justify-content: center;
+}
+
+.image-node-align-btn {
+  flex: 1;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  outline: none;
+  border-radius: 6px;
+  background: hsl(var(--muted) / 0.4);
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.image-node-align-btn:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+.image-node-align-active {
+  background: rgba(94, 106, 210, 0.15);
+  color: hsl(var(--foreground));
+  border-color: rgba(94, 106, 210, 0.4);
+}
+
 .image-node-dropdown-separator {
   height: 1px;
   background: hsl(var(--border));
   margin: 4px 0;
 }
 
-/* Image resize handle (bottom-right) */
+/* Image resize handles (invisible hit areas at corners) */
 .image-node-resize-handle {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: nwse-resize;
-  z-index: 10;
-  transition: all 0.15s;
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  z-index: 11;
 }
 
-.image-node-resize-handle:hover {
-  background: rgba(0, 0, 0, 0.8);
-  color: #FFFFFF;
+.image-node-resize-tl {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.image-node-resize-tr {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.image-node-resize-bl {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+
+.image-node-resize-br {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
 }
 
 /* Legacy fallback for images outside NodeView */

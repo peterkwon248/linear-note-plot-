@@ -25,6 +25,8 @@ import {
   Redo2,
   Superscript,
   Subscript,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react"
 import { ColorPicker } from "./ColorPicker"
 import { TableMenu } from "./TableMenu"
@@ -32,6 +34,8 @@ import { InsertMenu } from "@/components/insert-menu"
 
 interface FixedToolbarProps {
   editor: Editor | null
+  position?: 'top' | 'bottom'
+  onTogglePosition?: () => void
 }
 
 function ToolbarButton({
@@ -54,9 +58,9 @@ function ToolbarButton({
       disabled={disabled}
       title={title}
       style={{
-        width: "28px",
-        height: "28px",
-        borderRadius: "6px",
+        width: "44px",
+        height: "44px",
+        borderRadius: "8px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -80,7 +84,7 @@ function ToolbarDivider() {
     <div
       style={{
         width: "1px",
-        height: "16px",
+        height: "28px",
         backgroundColor: "color-mix(in srgb, var(--foreground) 10%, transparent)",
         margin: "0 6px",
         flexShrink: 0,
@@ -180,9 +184,9 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
         onMouseDown={handleToggle}
         title="Heading"
         style={{
-          width: "28px",
-          height: "28px",
-          borderRadius: "6px",
+          width: "44px",
+          height: "44px",
+          borderRadius: "8px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -195,7 +199,7 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
         }}
         className="hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
       >
-        <Heading size={15} strokeWidth={1.5} />
+        <Heading size={24} strokeWidth={1.5} />
       </button>
 
       {isOpen &&
@@ -263,7 +267,7 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
   )
 }
 
-export function FixedToolbar({ editor }: FixedToolbarProps) {
+export function FixedToolbar({ editor, position = 'bottom', onTogglePosition }: FixedToolbarProps) {
   const editorState = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -296,16 +300,27 @@ export function FixedToolbar({ editor }: FixedToolbarProps) {
     if (url) editor.chain().focus().setLink({ href: url }).run()
   }
 
+  // Align handler: works for both text blocks and image nodes
+  const handleAlign = (align: "left" | "center" | "right") => {
+    // Check if an image node is selected
+    const { node } = editor.state.selection as any
+    if (node?.type?.name === "image") {
+      editor.chain().focus().updateAttributes("image", { textAlign: align }).run()
+    } else {
+      editor.chain().focus().setTextAlign(align).run()
+    }
+  }
+
   return (
     <div
       className="flex-shrink-0"
       style={{
-        height: "44px",
+        height: "58px",
         display: "flex",
         alignItems: "center",
         gap: "2px",
         padding: "0 16px",
-        borderTop: "1px solid var(--border)",
+        [position === 'top' ? 'borderBottom' : 'borderTop']: "1px solid var(--border)",
         backgroundColor: "transparent",
         overflowX: "auto",
         overflowY: "hidden",
@@ -317,22 +332,22 @@ export function FixedToolbar({ editor }: FixedToolbarProps) {
       <ToolbarDivider />
 
       <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
-        <Bold size={15} strokeWidth={2} />
+        <Bold size={24} strokeWidth={2} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
-        <Italic size={15} strokeWidth={1.5} />
+        <Italic size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
-        <UnderlineIcon size={15} strokeWidth={1.5} />
+        <UnderlineIcon size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="Strikethrough">
-        <Strikethrough size={15} strokeWidth={1.5} />
+        <Strikethrough size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleSuperscript().run()} isActive={editorState.superscript} title="Superscript">
-        <Superscript size={15} strokeWidth={1.5} />
+        <Superscript size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleSubscript().run()} isActive={editorState.subscript} title="Subscript">
-        <Subscript size={15} strokeWidth={1.5} />
+        <Subscript size={24} strokeWidth={1.5} />
       </ToolbarButton>
 
       <ToolbarDivider />
@@ -343,54 +358,62 @@ export function FixedToolbar({ editor }: FixedToolbarProps) {
       <ToolbarDivider />
 
       <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editorState.bulletList} title="Bullet list">
-        <List size={15} strokeWidth={1.5} />
+        <List size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editorState.orderedList} title="Numbered list">
-        <ListOrdered size={15} strokeWidth={1.5} />
+        <ListOrdered size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editorState.taskList} title="Checklist">
-        <ListTodo size={15} strokeWidth={1.5} />
+        <ListTodo size={24} strokeWidth={1.5} />
       </ToolbarButton>
 
       <ToolbarDivider />
 
       <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editorState.blockquote} title="Blockquote">
-        <Quote size={15} strokeWidth={1.5} />
+        <Quote size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editorState.codeBlock} title="Code block">
-        <CodeXml size={15} strokeWidth={1.5} />
+        <CodeXml size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider">
-        <Minus size={15} strokeWidth={1.5} />
+        <Minus size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
-        {editorState.link ? <Unlink size={15} strokeWidth={1.5} /> : <Link2 size={15} strokeWidth={1.5} />}
+        {editorState.link ? <Unlink size={24} strokeWidth={1.5} /> : <Link2 size={24} strokeWidth={1.5} />}
       </ToolbarButton>
       <TableMenu editor={editor} />
 
       <ToolbarDivider />
 
-      <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("left").run()} isActive={editorState.alignLeft} title="Align left">
-        <AlignLeft size={15} strokeWidth={1.5} />
+      <ToolbarButton onClick={() => handleAlign("left")} isActive={editorState.alignLeft} title="Align left">
+        <AlignLeft size={24} strokeWidth={1.5} />
       </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("center").run()} isActive={editorState.alignCenter} title="Align center">
-        <AlignCenter size={15} strokeWidth={1.5} />
+      <ToolbarButton onClick={() => handleAlign("center")} isActive={editorState.alignCenter} title="Align center">
+        <AlignCenter size={24} strokeWidth={1.5} />
       </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("right").run()} isActive={editorState.alignRight} title="Align right">
-        <AlignRight size={15} strokeWidth={1.5} />
+      <ToolbarButton onClick={() => handleAlign("right")} isActive={editorState.alignRight} title="Align right">
+        <AlignRight size={24} strokeWidth={1.5} />
       </ToolbarButton>
 
       <div style={{ flex: 1 }} />
 
       <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editorState.canUndo} title="Undo (Ctrl+Z)">
-        <Undo2 size={15} strokeWidth={1.5} />
+        <Undo2 size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editorState.canRedo} title="Redo (Ctrl+Shift+Z)">
-        <Redo2 size={15} strokeWidth={1.5} />
+        <Redo2 size={24} strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code (Ctrl+E)">
-        <Code size={14} strokeWidth={1.5} />
+        <Code size={23} strokeWidth={1.5} />
       </ToolbarButton>
+      {onTogglePosition && (
+        <>
+          <ToolbarDivider />
+          <ToolbarButton onClick={onTogglePosition} title={position === 'bottom' ? "Move toolbar to top" : "Move toolbar to bottom"}>
+            {position === 'bottom' ? <ArrowUp size={24} strokeWidth={1.5} /> : <ArrowDown size={24} strokeWidth={1.5} />}
+          </ToolbarButton>
+        </>
+      )}
     </div>
   )
 }

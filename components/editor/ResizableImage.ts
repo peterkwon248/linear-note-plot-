@@ -17,6 +17,13 @@ export const ResizableImage = Image.extend({
           return { width: attributes.width }
         },
       },
+      textAlign: {
+        default: "left",
+        parseHTML: (element) => element.getAttribute("data-text-align") || "left",
+        renderHTML: (attributes) => {
+          return { "data-text-align": attributes.textAlign }
+        },
+      },
     }
   },
 
