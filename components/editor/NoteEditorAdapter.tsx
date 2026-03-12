@@ -97,7 +97,8 @@ export function NoteEditorAdapter({ note, hideFixedToolbar, onEditorReady }: Not
     (json: Record<string, unknown>, plainText: string) => {
       pendingRef.current = { content: plainText, contentJson: json }
 
-      // Sync #hashtags immediately (no debounce — instant like UpNote)
+      // Sync #hashtags only when followed by whitespace (Space/Enter confirms tag, like UpNote)
+      // No debounce needed — regex requires whitespace after tag, so mid-typing won't match
       if (currentNoteIdRef.current) {
         syncHashtagsToTags(currentNoteIdRef.current, plainText)
       }
@@ -113,9 +114,6 @@ export function NoteEditorAdapter({ note, hideFixedToolbar, onEditorReady }: Not
             contentJson: pendingRef.current.contentJson,
           })
           pendingRef.current = null
-
-          // Sync inline #hashtags → tags
-          syncHashtagsToTags(noteId, savedContent)
         }
       }, 300)
     },

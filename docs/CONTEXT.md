@@ -134,3 +134,9 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ## TODO: Future Work
 - Settings always-mounted (when settings features implemented)
 - WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
+- 인라인 해시태그 시스템 (UpNote 스타일)
+  - `#` 입력 시 기존 태그 자동완성 드롭다운
+  - 없는 태그면 `+ Create new tag "#name"` 옵션
+  - 선택/Enter → 태그 확정 + 인라인 배지 노드로 렌더링
+  - TipTap Suggestion 플러그인 + 커스텀 태그 노드 필요
+  - 현재: 정규식 평문 추출 → 목표: 인터랙티브 확정 방식
