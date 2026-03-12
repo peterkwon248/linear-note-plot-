@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import {
   Pin,
   Archive,
@@ -29,7 +29,8 @@ import { format } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
-import { BacklinksFooter } from "@/components/editor/backlinks-footer"
+import { FixedToolbar } from "@/components/editor/FixedToolbar"
+import type { Editor } from "@tiptap/react"
 
 interface NoteEditorProps {
   noteId?: string
@@ -59,6 +60,11 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
   const [localTitle, setLocalTitle] = useState("")
   const noteIdRef = useRef(note?.id)
+  const [tipTapEditor, setTipTapEditor] = useState<Editor | null>(null)
+  const [toolbarPosition, setToolbarPosition] = useState<'top' | 'bottom'>('bottom')
+  const handleEditorReady = useCallback((editor: Editor | null) => {
+    setTipTapEditor(editor)
+  }, [])
 
   useEffect(() => {
     noteIdRef.current = note?.id
@@ -242,6 +248,14 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         </div>
       </header>
 
+      {toolbarPosition === 'top' && (
+        <FixedToolbar
+          editor={tipTapEditor}
+          position={toolbarPosition}
+          onTogglePosition={() => setToolbarPosition(p => p === 'top' ? 'bottom' : 'top')}
+        />
+      )}
+
       {/* Title Input */}
       <input
         type="text"
@@ -252,11 +266,23 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       />
 
       {/* Content Editor */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-6 py-4">
-          <NoteEditorAdapter note={note} />
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="px-6 py-4">
+            <NoteEditorAdapter
+              note={note}
+              hideFixedToolbar
+              onEditorReady={handleEditorReady}
+            />
+          </div>
         </div>
-        <BacklinksFooter noteId={note.id} />
+        {toolbarPosition === 'bottom' && (
+          <FixedToolbar
+            editor={tipTapEditor}
+            position={toolbarPosition}
+            onTogglePosition={() => setToolbarPosition(p => p === 'top' ? 'bottom' : 'top')}
+          />
+        )}
       </div>
       </div>
     </div>

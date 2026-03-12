@@ -107,6 +107,8 @@ interface TipTapEditorProps {
   onChange?: (json: Record<string, unknown>, plainText: string) => void
   editable?: boolean
   placeholder?: string
+  hideFixedToolbar?: boolean
+  onEditorReady?: (editor: import("@tiptap/react").Editor | null) => void
 }
 
 export function TipTapEditor({
@@ -114,6 +116,8 @@ export function TipTapEditor({
   onChange,
   editable = true,
   placeholder = "Start writing...",
+  hideFixedToolbar = false,
+  onEditorReady,
 }: TipTapEditorProps) {
   const spellcheck = useSettingsStore((s) => s.spellcheck)
   const wordWrap = useSettingsStore((s) => s.wordWrap)
@@ -199,6 +203,13 @@ export function TipTapEditor({
     editor.setEditable(editable)
   }
 
+  // Notify parent when editor is ready
+  useEffect(() => {
+    if (onEditorReady) {
+      onEditorReady(editor)
+    }
+  }, [editor, onEditorReady])
+
   return (
     <div
       className="flex flex-col h-full"
@@ -210,7 +221,7 @@ export function TipTapEditor({
         <EditorContent editor={editor} className="h-full w-full" />
       </div>
       <EditorToolbar editor={editor} />
-      {editable && <FixedToolbar editor={editor} />}
+      {editable && !hideFixedToolbar && <FixedToolbar editor={editor} />}
     </div>
   )
 }
