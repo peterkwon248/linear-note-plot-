@@ -5,7 +5,12 @@ The user works across **different computers**, so ALL project files must be comm
 
 ## Steps
 
-1. **Update project context**: Check if any major decisions, new features, or architecture changes were made in this session. If so, update `docs/CONTEXT.md` to reflect the current state. This is critical for cross-machine continuity.
+1. **Update project context**: Read `docs/CONTEXT.md` and update it to reflect the current state. This is critical for cross-machine continuity.
+   - **Completed features**: Move items from "Implementation Order" to "Completed Features" section if they were implemented this session.
+   - **New decisions**: Add any new architecture/design decisions made this session.
+   - **Changed plans**: Update or remove plans that are no longer valid.
+   - **Current phase**: Update what the next task is so the other machine knows where to pick up.
+   - The goal: CONTEXT.md should always reflect the **current truth**, not accumulate stale history.
 
 2. **Commit**: Stage **ALL** changed and untracked files. The only exclusions are:
    - `.env`, `.env.*` (secrets)
