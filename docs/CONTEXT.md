@@ -100,13 +100,15 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - 단축키: Cmd+E 토글
 - 난이도: 낮
 
-### 6. 레이아웃 3모드
-- Mode A: 에디터 집중 (현재)
-- Mode B: 탭 (EditorTab[] 이미 있음, UI만)
-- Mode C: 멀티패널 Roam 스타일 (react-resizable-panels)
-- [[링크]] 클릭 → 오른쪽 패널에 열림
-- LayoutMode: 'editor' | 'tabs' | 'panels'
-- 난이도: 중
+### 6. 레이아웃 5모드
+- Mode A: 포커스 — `[사이드바] [에디터]` (현재)
+- Mode B: 3컬럼 — `[사이드바] [노트목록] [에디터]` (UpNote 스타일)
+- Mode C: 탭 — `[사이드바] [탭1|탭2|탭3]` (Obsidian 스타일)
+- Mode D: 멀티패널 — `[사이드바] [에디터|패널1|패널2...]` (Roam 스타일, [[링크]] 클릭→오른쪽 자동 추가)
+- Mode E: 스플릿 — `[사이드바] [에디터|에디터]` 좌우/상하 (VS Code 스타일)
+- LayoutMode: 'focus' | 'three-column' | 'tabs' | 'panels' | 'split'
+- react-resizable-panels 사용
+- 난이도: 중~높
 
 ### 7. 위키링크 hover preview
 - linksOut 재활용
@@ -118,7 +120,7 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 3. Relations
 4. WIKI (isWiki + 전용 뷰)
 5. Reflections + 리뷰 배너
-6. 탭 + 멀티패널 레이아웃
+6. 레이아웃 5모드 (포커스/3컬럼/탭/멀티패널/스플릿)
 7. 위키링크 hover preview
 
 ## Design Decisions
@@ -126,6 +128,8 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - Related Notes(자동)와 Relations(수동)은 한 섹션에 통합
 - WIKI 초성 검색은 후순위
 - Thread의 relatedNoteIds 제거 → Relations에 위임
+- 에디터 FixedToolbar은 항상 화면 최하단 (UpNote 스타일)
+- 레이아웃: Roam/UpNote/Obsidian/VS Code 4가지 스타일 전부 지원
 
 ## TODO: Future Work
 - Settings always-mounted (when settings features implemented)

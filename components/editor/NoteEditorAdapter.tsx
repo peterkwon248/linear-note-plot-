@@ -8,12 +8,15 @@ import { suggestLinks } from "@/lib/queries/notes"
 import { LinkSuggestion } from "@/components/link-suggestion"
 import { extractHashtags } from "@/lib/body-helpers"
 import { pickColor } from "@/components/note-fields"
+import type { Editor } from "@tiptap/react"
 
 interface NoteEditorAdapterProps {
   note: Note
+  hideFixedToolbar?: boolean
+  onEditorReady?: (editor: Editor | null) => void
 }
 
-export function NoteEditorAdapter({ note }: NoteEditorAdapterProps) {
+export function NoteEditorAdapter({ note, hideFixedToolbar, onEditorReady }: NoteEditorAdapterProps) {
   const updateNote = usePlotStore((s) => s.updateNote)
   const notes = usePlotStore((s) => s.notes)
 
@@ -149,6 +152,8 @@ export function NoteEditorAdapter({ note }: NoteEditorAdapterProps) {
         onChange={handleChange}
         editable={true}
         placeholder="Start writing..."
+        hideFixedToolbar={hideFixedToolbar}
+        onEditorReady={onEditorReady}
       />
       <LinkSuggestion
         suggestions={suggestions}
