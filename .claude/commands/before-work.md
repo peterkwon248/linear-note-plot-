@@ -19,8 +19,12 @@ The user works across **different computers**, so this may be a fresh clone or a
 
 5. **Install dependencies**: Run `npm install` to ensure any new packages from the latest pull are installed (different computer may not have them).
 
-6. **Quick health check**: Run `npx next build` or `npx tsc --noEmit` to verify the project builds cleanly after sync. Report any errors.
+6. **Quick health check**: Run `npx tsc --noEmit` to verify the project builds cleanly after sync. Report any errors.
 
 7. **Pop stash** if step 2 stashed changes: `git stash pop` and report any conflicts.
 
-8. Report the result to the user — include what changed (new commits pulled, packages installed, build status).
+8. **Read project context**: Read `docs/CONTEXT.md` to load the latest project decisions, architecture, and current implementation phase. Summarize what phase we're in and what's next.
+
+9. **Sync local memory**: Update the local `MEMORY.md` (in `~/.claude/projects/.../memory/`) with any new info from `docs/CONTEXT.md` if it has diverged.
+
+10. Report the result to the user — include what changed (new commits pulled, packages installed, build status, current phase).
