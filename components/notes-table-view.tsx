@@ -11,9 +11,10 @@ import { EditorSplitView } from "@/components/editor/editor-split-view"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { InsightsView } from "@/components/insights-view"
 import { CalendarView } from "@/components/calendar-view"
+import { ListEditorLayout } from "@/components/layout/list-editor-layout"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, setActiveRoute } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
-import type { Note } from "@/lib/types"
+import type { Note, LayoutMode } from "@/lib/types"
 
 /* ── Route → View Config map ─────────────────────────── */
 
@@ -43,6 +44,7 @@ export function NotesTableView() {
   const activeLabelId = useActiveLabelId()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
+  const layoutMode = usePlotStore((s) => s.layoutMode) as LayoutMode
   const viewMode = useSettingsStore((s) => s.viewMode)
   const isEditing = selectedNoteId !== null
 
@@ -89,21 +91,39 @@ export function NotesTableView() {
     setPreviewId(null)
   }, [tableRoute])
 
-  // Full editor mode
+  // ── Insights (layout-mode agnostic) ──
+  if (viewMode === "insights") {
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <InsightsView />
+      </div>
+    )
+  }
+
+  // ── Three-column / Split: list + editor side-by-side ──
+  if (layoutMode === "three-column" || layoutMode === "split") {
+    return (
+      <ListEditorLayout
+        context={config.context}
+        title={config.title}
+        showTabs={config.showTabs}
+        hideCreateButton={config.hideCreateButton}
+        createNoteOverrides={config.createNoteOverrides}
+        folderId={activeFolderId ?? undefined}
+        tagId={activeTagId ?? undefined}
+        labelId={activeLabelId ?? undefined}
+        initialTab={config.initialTab}
+        onTabChange={handleTabChange}
+      />
+    )
+  }
+
+  // ── Focus / Tabs / Panels: binary list OR editor ──
   if (isEditing) {
     return (
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
         <EditorSplitView />
         <NoteInspector />
-      </div>
-    )
-  }
-
-  // Insights view
-  if (viewMode === "insights") {
-    return (
-      <div className="flex flex-1 overflow-hidden">
-        <InsightsView />
       </div>
     )
   }

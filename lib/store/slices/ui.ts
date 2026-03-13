@@ -1,4 +1,4 @@
-import type { Note, ActiveView } from "../../types"
+import type { Note, ActiveView, LayoutMode } from "../../types"
 import type { ViewState, ViewContextKey } from "../../view-engine/types"
 import { now, type AppendEventFn } from "../helpers"
 
@@ -89,6 +89,35 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     setShortcutOverlayOpen: (open: boolean) => set({ shortcutOverlayOpen: open }),
     setDetailsOpen: (open: boolean) => set({ detailsOpen: open }),
     toggleDetailsOpen: () => set((s: any) => ({ detailsOpen: !s.detailsOpen })),
+
+    // Layout Mode
+    setLayoutMode: (mode: LayoutMode) => {
+      set((state: any) => {
+        const current = state.layoutMode as LayoutMode
+        const updates: Record<string, unknown> = { layoutMode: mode }
+
+        if (mode === "focus" && current !== "focus") {
+          // Save current mode before entering focus
+          updates._preFocusLayoutMode = current
+          updates.sidebarCollapsed = true
+          updates.sidebarPeek = false
+          updates.detailsOpen = false
+        } else if (current === "focus" && mode !== "focus") {
+          // Leaving focus — clear saved mode
+          updates._preFocusLayoutMode = null
+        }
+
+        if (mode === "three-column") {
+          // Force sidebar open in three-column
+          updates.sidebarCollapsed = false
+          updates.sidebarPeek = false
+        }
+
+        return updates
+      })
+    },
+
+    setListPaneWidth: (width: number) => set({ listPaneWidth: Math.max(200, Math.min(500, width)) }),
 
     // Sidebar
     setSidebarWidth: (width: number) => set({ sidebarWidth: width, sidebarLastWidth: width }),

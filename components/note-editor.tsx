@@ -33,6 +33,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
+import { LayoutModeSwitcher } from "@/components/editor/layout-mode-switcher"
 
 interface NoteEditorProps {
   noteId?: string
@@ -54,11 +55,11 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
   const detailsOpen = usePlotStore((s) => s.detailsOpen)
   const toggleDetailsOpen = usePlotStore((s) => s.toggleDetailsOpen)
-  const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
+  const layoutMode = usePlotStore((s) => s.layoutMode)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
-  const focusMode = sidebarCollapsed && !detailsOpen
+  const focusMode = layoutMode === "focus"
 
   const [localTitle, setLocalTitle] = useState("")
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
@@ -257,6 +258,8 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
             </TooltipContent>
           </Tooltip>
 
+          <span className="mx-0.5 h-4 w-px bg-border" />
+          <LayoutModeSwitcher />
           <span className="mx-0.5 h-4 w-px bg-border" />
           <Tooltip>
             <TooltipTrigger asChild>

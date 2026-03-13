@@ -359,5 +359,15 @@ export function migrate(persistedState: unknown): PlotState {
   // v33: Relations
   if (!state.relations) state.relations = []
 
+  // v34: Layout 5 Modes
+  if (!state.layoutMode) state.layoutMode = "tabs"
+  if (!state.listPaneWidth) state.listPaneWidth = 320
+  state._preFocusLayoutMode = null // transient, always reset
+  // Add panelRatios to editorState
+  if (state.editorState && typeof state.editorState === "object") {
+    const es = state.editorState as Record<string, unknown>
+    if (!es.panelRatios) es.panelRatios = [0.5, 0.5]
+  }
+
   return state as unknown as PlotState
 }

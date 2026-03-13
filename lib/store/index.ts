@@ -57,6 +57,9 @@ export const usePlotStore = create<PlotState>()(
         commandPaletteMode: "search" as const,
         knowledgeMaps: [] as KnowledgeMap[],
         relations: [] as Relation[],
+        layoutMode: "tabs" as const,
+        _preFocusLayoutMode: null as any,
+        listPaneWidth: 320,
         savedViews: [] as SavedView[],
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
@@ -87,11 +90,11 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 33,
+      version: 34,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, _preFocusLayoutMode, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),

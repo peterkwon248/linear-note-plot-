@@ -25,6 +25,7 @@ import { usePlotStore, filterNotesByRoute, getFilterTitle } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import type { Note, NoteFilter } from "@/lib/types"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
+import { setNoteDragData } from "@/lib/drag-helpers"
 
 /* -- helpers -------------------------------------------------- */
 
@@ -74,6 +75,8 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
 
   return (
     <div
+      draggable
+      onDragStart={(e) => setNoteDragData(e, note.id)}
       className="note-row group flex items-center gap-3 border-b border-border px-3 transition-colors hover:bg-secondary/50 cursor-pointer"
       onClick={() => openNote(note.id)}
     >

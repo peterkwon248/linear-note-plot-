@@ -244,6 +244,9 @@ export interface KnowledgeMap {
 
 export type RelationType = "related-to" | "inspired-by" | "contradicts" | "extends" | "depends-on"
 
+/** Layout mode for the editor area */
+export type LayoutMode = "focus" | "three-column" | "tabs" | "panels" | "split"
+
 export interface Relation {
   id: string
   sourceNoteId: string

@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry, Relation, RelationType } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 
@@ -19,6 +19,7 @@ export interface EditorState {
   activePanelId: string
   splitMode: boolean
   splitRatio: number   // 0.2~0.8, default 0.5
+  panelRatios: number[]  // for 3-panel mode, e.g. [0.33, 0.33, 0.34]
 }
 
 export interface PlotState {
@@ -70,6 +71,11 @@ export interface PlotState {
 
   // Relations
   relations: Relation[]
+
+  // Layout
+  layoutMode: LayoutMode
+  _preFocusLayoutMode: LayoutMode | null
+  listPaneWidth: number  // three-column/split 모드용, 200~500
 
   // Saved Views
   savedViews: SavedView[]
@@ -168,6 +174,8 @@ export interface PlotState {
   goBack: () => void
   goForward: () => void
   setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
+  setLayoutMode: (mode: LayoutMode) => void
+  setListPaneWidth: (width: number) => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
 
@@ -175,6 +183,7 @@ export interface PlotState {
   startThread: (noteId: string) => string
   addThreadStep: (threadId: string, text: string) => void
   endThread: (threadId: string) => void
+  deleteThread: (threadId: string) => void
   addWikiLink: (noteId: string, targetTitle: string) => void
   setGraphFocusDepth: (depth: number) => void
   setCommandPaletteMode: (mode: "search" | "commands" | "links") => void
@@ -206,6 +215,9 @@ export interface PlotState {
   moveTabToPanel: (tabId: string, fromPanelId: string, toPanelId: string) => void
   togglePinTab: (tabId: string, panelId: string) => void
   setSplitRatio: (ratio: number) => void
+  addPanel: () => void
+  removePanel: (panelId: string) => void
+  setPanelRatios: (ratios: number[]) => void
 
   // ── Internal ──
   _hydrateNoteBodies: (bodies: NoteBody[]) => void
