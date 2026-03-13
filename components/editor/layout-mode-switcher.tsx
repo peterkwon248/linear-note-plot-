@@ -1,6 +1,6 @@
 "use client"
 
-import { Maximize2, Columns3, AppWindow, PanelRight, SplitSquareHorizontal } from "lucide-react"
+import { Maximize2, Columns3, AppWindow, PanelRight, SplitSquareHorizontal, LayoutGrid } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -9,20 +9,17 @@ import type { LayoutMode } from "@/lib/types"
 import { useState } from "react"
 
 const LAYOUT_MODES: { mode: LayoutMode; label: string; shortcut: string; icon: typeof Maximize2 }[] = [
-  { mode: "focus",        label: "Focus",        shortcut: "Ctrl+1", icon: Maximize2 },
-  { mode: "three-column", label: "Three Column", shortcut: "Ctrl+2", icon: Columns3 },
-  { mode: "tabs",         label: "Tabs",         shortcut: "Ctrl+3", icon: AppWindow },
-  { mode: "panels",       label: "Panels",       shortcut: "Ctrl+4", icon: PanelRight },
-  { mode: "split",        label: "Split",        shortcut: "Ctrl+5", icon: SplitSquareHorizontal },
+  { mode: "focus",        label: "Focus",         shortcut: "Ctrl+1", icon: Maximize2 },
+  { mode: "three-column", label: "List + Editor",  shortcut: "Ctrl+2", icon: Columns3 },
+  { mode: "tabs",         label: "Editor",         shortcut: "Ctrl+3", icon: AppWindow },
+  { mode: "panels",       label: "Dual Editor",    shortcut: "Ctrl+4", icon: PanelRight },
+  { mode: "split",        label: "Research",       shortcut: "Ctrl+5", icon: SplitSquareHorizontal },
 ]
 
 export function LayoutModeSwitcher() {
-  const layoutMode = usePlotStore((s) => s.layoutMode)
+  const layoutMode = usePlotStore((s) => s.layoutMode) as LayoutMode
   const setLayoutMode = usePlotStore((s) => s.setLayoutMode)
   const [open, setOpen] = useState(false)
-
-  const current = LAYOUT_MODES.find((m) => m.mode === layoutMode) ?? LAYOUT_MODES[2]
-  const CurrentIcon = current.icon
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -36,12 +33,12 @@ export function LayoutModeSwitcher() {
                 "transition-colors"
               )}
             >
-              <CurrentIcon className="h-4 w-4" />
+              <LayoutGrid className="h-4 w-4" />
             </button>
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">
-          Layout: {current.label}
+          Layout Mode
         </TooltipContent>
       </Tooltip>
 
@@ -59,8 +56,8 @@ export function LayoutModeSwitcher() {
             }}
             className={cn(
               "flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left transition-colors",
-              mode === layoutMode
-                ? "bg-secondary text-foreground"
+              layoutMode === mode
+                ? "bg-secondary/80 text-foreground"
                 : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
             )}
           >

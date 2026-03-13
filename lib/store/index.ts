@@ -19,6 +19,7 @@ import { createAutopilotSlice } from "./slices/autopilot"
 import { createTemplatesSlice } from "./slices/templates"
 import { createRelationsSlice } from "./slices/relations"
 import { createEditorSlice } from "./slices/editor"
+import { createWorkspaceSlice } from "./slices/workspace"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -86,11 +87,12 @@ export const usePlotStore = create<PlotState>()(
         ...createAutopilotSlice(set, get, appendEvent),
         ...createTemplatesSlice(set, get, appendEvent),
         ...createEditorSlice(set, get),
+        ...createWorkspaceSlice(set, get),
       }
     },
     {
       name: "plot-store",
-      version: 34,
+      version: 35,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

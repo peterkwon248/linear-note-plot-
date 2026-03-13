@@ -15,13 +15,15 @@ export function extractPreview(content: string, maxLen = 120): string {
 
 /**
  * Extract #hashtag tokens from content.
- * Only matches tags followed by whitespace or at end of string,
- * so IME composition (e.g. Korean) mid-typing won't create partial tags.
+ * By default, only matches tags followed by whitespace/punctuation (UpNote-style).
+ * Set includeEos=true to also match tags at end of string (for final extraction).
  * Supports Unicode. Skips pure-number tags like #123.
  * Returns unique tag names (preserves original case of first occurrence).
  */
-export function extractHashtags(content: string): string[] {
-  const regex = /#([\p{L}\p{N}_][\p{L}\p{N}_]*)(?=[\s\n,;.!?])/gu
+export function extractHashtags(content: string, { includeEos = false } = {}): string[] {
+  const regex = includeEos
+    ? /#([\p{L}\p{N}_][\p{L}\p{N}_]*)(?=[\s\n,;.!?]|$)/gu
+    : /#([\p{L}\p{N}_][\p{L}\p{N}_]*)(?=[\s\n,;.!?])/gu
   const seen = new Map<string, string>() // lowercase → original
   let match
   while ((match = regex.exec(content)) !== null) {

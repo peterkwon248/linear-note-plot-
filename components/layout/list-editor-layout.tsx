@@ -3,8 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { EditorSplitView } from "@/components/editor/editor-split-view"
 import { NoteInspector } from "@/components/note-inspector"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { CompactNoteList } from "./compact-note-list"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
@@ -20,6 +20,8 @@ interface ListEditorLayoutProps {
   labelId?: string
   initialTab?: ViewContextKey
   onTabChange?: (tab: ViewContextKey) => void
+  /** Replace the default CompactNoteList with custom content (e.g., TagsView) */
+  listContent?: React.ReactNode
 }
 
 export function ListEditorLayout({
@@ -33,6 +35,7 @@ export function ListEditorLayout({
   labelId,
   initialTab,
   onTabChange,
+  listContent,
 }: ListEditorLayoutProps) {
   const listPaneWidth = usePlotStore((s) => s.listPaneWidth)
   const setListPaneWidth = usePlotStore((s) => s.setListPaneWidth)
@@ -77,25 +80,27 @@ export function ListEditorLayout({
       className="flex flex-1 overflow-hidden"
       style={{ cursor: isDragging ? "col-resize" : undefined }}
     >
-      {/* Note List Pane */}
+      {/* List Pane (note list or custom content like Tags/Labels) */}
       <div
         className="flex flex-col overflow-hidden shrink-0 border-r border-border"
         style={{ width: listPaneWidth }}
       >
-        <CompactNoteList
-          context={context}
-          title={title}
-          showTabs={showTabs}
-          hideCreateButton={hideCreateButton}
-          createNoteOverrides={createNoteOverrides}
-          folderId={folderId}
-          tagId={tagId}
-          labelId={labelId}
-          initialTab={initialTab}
-          onTabChange={onTabChange}
-          onNoteClick={(noteId) => openNote(noteId)}
-          activeNoteId={selectedNoteId}
-        />
+        {listContent ?? (
+          <CompactNoteList
+            context={context}
+            title={title}
+            showTabs={showTabs}
+            hideCreateButton={hideCreateButton}
+            createNoteOverrides={createNoteOverrides}
+            folderId={folderId}
+            tagId={tagId}
+            labelId={labelId}
+            initialTab={initialTab}
+            onTabChange={onTabChange}
+            onNoteClick={(noteId) => openNote(noteId)}
+            activeNoteId={selectedNoteId}
+          />
+        )}
       </div>
 
       {/* Resize Divider */}
@@ -111,18 +116,10 @@ export function ListEditorLayout({
         />
       </div>
 
-      {/* Editor Area */}
+      {/* Editor Area — workspace tree handles tabs/splitting */}
       <div className="flex flex-1 overflow-hidden min-w-0">
-        {isEditing ? (
-          <>
-            <EditorSplitView />
-            {detailsOpen && <NoteInspector />}
-          </>
-        ) : (
-          <div className="flex flex-1 items-center justify-center text-muted-foreground/50">
-            <p className="text-sm">Select a note to start editing</p>
-          </div>
-        )}
+        <WorkspaceEditorArea />
+        {isEditing && detailsOpen && <NoteInspector />}
       </div>
     </div>
   )

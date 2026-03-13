@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { isEditableTarget } from "@/lib/keyboard-utils"
+import { findNode } from "@/lib/workspace/tree-utils"
+import { isLeaf } from "@/lib/workspace/types"
 
 /**
  * Single global keydown listener that consolidates all app-wide keyboard
@@ -24,50 +26,50 @@ export function useGlobalShortcuts() {
   const pendingG = useRef(false)
   const gTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // preFocusLayout ref removed — now using store._preFocusLayoutMode
-
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
       const mod = e.metaKey || e.ctrlKey
 
       // ── Editor Tab Shortcuts ──────────────────────────────
-      // Cmd+W — close current tab
+      // Cmd+W — close current tab (workspace)
       if (mod && e.key === "w") {
         e.preventDefault()
         const s = usePlotStore.getState()
-        const es = s.editorState
-        if (!es) return
-        const panel = es.panels.find((p: any) => p.id === es.activePanelId)
-        if (panel?.activeTabId) {
-          s.closeTab(panel.activeTabId, panel.id)
+        if (s.activeLeafId) {
+          const node = findNode(s.workspaceRoot, s.activeLeafId)
+          if (node && isLeaf(node) && node.content.type === "editor" && node.activeTabId) {
+            s.closeTabInLeaf(node.activeTabId, s.activeLeafId)
+          }
         }
         return
       }
 
-      // Cmd+Alt+Left/Right — switch tabs
+      // Cmd+Alt+Left/Right — switch tabs (workspace)
       if (mod && e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
         e.preventDefault()
         const s = usePlotStore.getState()
-        const es = s.editorState
-        if (!es) return
-        const panel = es.panels.find((p: any) => p.id === es.activePanelId)
-        if (!panel || panel.tabs.length < 2) return
-        const currentIdx = panel.tabs.findIndex((t: any) => t.id === panel.activeTabId)
-        if (currentIdx === -1) return
-        const nextIdx = e.key === "ArrowLeft"
-          ? (currentIdx - 1 + panel.tabs.length) % panel.tabs.length
-          : (currentIdx + 1) % panel.tabs.length
-        s.setActiveTab(panel.tabs[nextIdx].id, panel.id)
+        if (s.activeLeafId) {
+          const node = findNode(s.workspaceRoot, s.activeLeafId)
+          if (node && isLeaf(node) && node.content.type === "editor" && node.tabs.length > 1) {
+            const currentIdx = node.tabs.findIndex((t: any) => t.id === node.activeTabId)
+            if (currentIdx !== -1) {
+              const nextIdx = e.key === "ArrowLeft"
+                ? (currentIdx - 1 + node.tabs.length) % node.tabs.length
+                : (currentIdx + 1) % node.tabs.length
+              s.setActiveTabInLeaf(node.tabs[nextIdx].id, s.activeLeafId)
+            }
+          }
+        }
         return
       }
 
-      // Cmd+\ — toggle split
+      // Cmd+\ — split active leaf (workspace)
       if (mod && e.key === "\\") {
         e.preventDefault()
         const s = usePlotStore.getState()
-        if (s.selectedNoteId !== null) {
-          s.toggleSplit()
+        if (s.activeLeafId) {
+          s.splitLeaf(s.activeLeafId, "horizontal", { type: "editor", noteId: null })
         }
         return
       }
@@ -118,9 +120,7 @@ export function useGlobalShortcuts() {
         }
         const s = usePlotStore.getState()
         if (s.selectedNoteId === null) return
-
         if (s.layoutMode === "focus") {
-          // Exit focus → restore previous mode
           s.setLayoutMode(s._preFocusLayoutMode ?? "tabs")
         } else {
           s.setLayoutMode("focus")
@@ -128,11 +128,11 @@ export function useGlobalShortcuts() {
         return
       }
 
-      // ── 2c. Ctrl/Cmd+1~5 — Layout Mode Shortcuts ────────────
+      // ── 2c. Ctrl/Cmd+1~5 — Layout Mode Shortcuts ──
       if (mod && !e.shiftKey && !e.altKey && ["1", "2", "3", "4", "5"].includes(e.key)) {
         const s = usePlotStore.getState()
-        if (s.selectedNoteId === null) return
         e.preventDefault()
+        if (s.selectedNoteId === null) return
         const modes = ["focus", "three-column", "tabs", "panels", "split"] as const
         s.setLayoutMode(modes[parseInt(e.key) - 1])
         return

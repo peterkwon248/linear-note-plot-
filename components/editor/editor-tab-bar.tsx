@@ -126,15 +126,12 @@ export function EditorTabBar({ panel, isActivePanel, onActivatePanel }: EditorTa
             </button>
           )
         })}
-      </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center shrink-0 gap-0.5 mx-1">
-        {/* Add new tab */}
+        {/* Add tab — immediately after last tab */}
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="flex h-9 w-8 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground"
               onClick={handleAddTab}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -144,9 +141,11 @@ export function EditorTabBar({ panel, isActivePanel, onActivatePanel }: EditorTa
             New note <kbd className="ml-1 rounded bg-secondary px-1 py-0.5 text-[10px]">Ctrl+N</kbd>
           </TooltipContent>
         </Tooltip>
+      </div>
 
-        {/* Split view toggle */}
-        {panel.id === "panel-left" && (
+      {/* Split view toggle — pinned right */}
+      {panel.id === "panel-left" && (
+        <div className="shrink-0 mx-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -168,8 +167,8 @@ export function EditorTabBar({ panel, isActivePanel, onActivatePanel }: EditorTa
               {splitMode ? "Close split view" : "Split editor"} <kbd className="ml-1 rounded bg-secondary px-1 py-0.5 text-[10px]">Ctrl+\</kbd>
             </TooltipContent>
           </Tooltip>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

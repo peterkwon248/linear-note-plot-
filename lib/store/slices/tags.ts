@@ -42,13 +42,19 @@ export function createTagsSlice(set: Set) {
     },
 
     removeTagFromNote: (noteId: string, tagId: string) => {
-      set((state: any) => ({
-        notes: state.notes.map((n: Note) =>
+      set((state: any) => {
+        const updatedNotes = state.notes.map((n: Note) =>
           n.id === noteId
-            ? { ...n, tags: n.tags.filter((t) => t !== tagId), updatedAt: now(), lastTouchedAt: now() }
+            ? { ...n, tags: n.tags.filter((t: string) => t !== tagId), updatedAt: now(), lastTouchedAt: now() }
             : n
-        ),
-      }))
+        )
+        // Auto-delete orphaned tag (no notes reference it anymore)
+        const stillUsed = updatedNotes.some((n: Note) => n.tags.includes(tagId))
+        return {
+          notes: updatedNotes,
+          ...(stillUsed ? {} : { tags: state.tags.filter((t: Tag) => t.id !== tagId) }),
+        }
+      })
     },
   }
 }
