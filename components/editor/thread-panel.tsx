@@ -59,7 +59,7 @@ export function ThreadPanel({ noteId }: ThreadPanelProps) {
   const addThreadStep = usePlotStore((s) => s.addThreadStep)
   const endThread = usePlotStore((s) => s.endThread)
 
-  const noteThreads = threads.filter((t) => t.noteId === noteId)
+  const noteThreads = (threads ?? []).filter((t) => t.noteId === noteId)
   const activeThread = noteThreads.find((t) => t.status === "active")
   const doneThreads = noteThreads.filter((t) => t.status === "done")
 

@@ -109,6 +109,9 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
               ? { ...m, noteIds: m.noteIds.filter((nId: string) => nId !== id) }
               : m
           ),
+          relations: state.relations.filter(
+            (r: any) => r.sourceNoteId !== id && r.targetNoteId !== id
+          ),
           navigationHistory,
           navigationIndex,
         }
@@ -211,6 +214,19 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           const filtered = m.noteIds.filter((nId: string) => !sourceIdSet.has(nId))
           if (!filtered.includes(targetId)) filtered.push(targetId)
           return { ...m, noteIds: filtered }
+        }),
+        // ── 7b. Relations: remap source references → target ──
+        relations: s.relations.map((r: any) => {
+          if (sourceIdSet.has(r.sourceNoteId)) return { ...r, sourceNoteId: targetId }
+          if (sourceIdSet.has(r.targetNoteId)) return { ...r, targetNoteId: targetId }
+          return r
+        }).filter((r: any, idx: number, arr: any[]) => {
+          if (r.sourceNoteId === r.targetNoteId) return false
+          return arr.findIndex((x: any) =>
+            x.sourceNoteId === r.sourceNoteId &&
+            x.targetNoteId === r.targetNoteId &&
+            x.type === r.type
+          ) === idx
         }),
       }))
 

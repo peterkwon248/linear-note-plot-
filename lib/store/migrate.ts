@@ -356,5 +356,8 @@ export function migrate(persistedState: unknown): PlotState {
 
   // v31: Rename thinkingChains → threads (handled above in v6 block)
 
+  // v33: Relations
+  if (!state.relations) state.relations = []
+
   return state as unknown as PlotState
 }

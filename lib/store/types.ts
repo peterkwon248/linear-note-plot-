@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry, Relation, RelationType } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 
@@ -67,6 +67,9 @@ export interface PlotState {
 
   // Phase 3: Knowledge Maps
   knowledgeMaps: KnowledgeMap[]
+
+  // Relations
+  relations: Relation[]
 
   // Saved Views
   savedViews: SavedView[]
@@ -182,6 +185,11 @@ export interface PlotState {
   deleteKnowledgeMap: (id: string) => void
   addNoteToMap: (mapId: string, noteId: string) => void
   removeNoteFromMap: (mapId: string, noteId: string) => void
+
+  // ── Relations ──
+  addRelation: (sourceNoteId: string, targetNoteId: string, type: RelationType) => string | null
+  removeRelation: (relationId: string) => void
+  updateRelationType: (relationId: string, newType: RelationType) => void
 
   // ── Saved Views ──
   createSavedView: (name: string, config?: Partial<SavedView>) => string

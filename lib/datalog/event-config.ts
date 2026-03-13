@@ -33,6 +33,8 @@ export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
   label_changed: { icon: Tag, verb: "Label changed", color: "#a855f7" },
   srs_reviewed: { icon: Brain, verb: "Reviewed (SRS)", color: "#06b6d4" },
   autopilot_applied: { icon: Sparkles, verb: "Autopilot applied", color: "#8b5cf6" },
+  relation_added: { icon: Link2, verb: "Relation added", color: "#3b82f6" },
+  relation_removed: { icon: Link2, verb: "Relation removed", color: "#3b82f6" },
 }
 
 // Human-readable event type labels for filter chips
@@ -42,7 +44,7 @@ export const EVENT_TYPE_GROUPS: { label: string; types: NoteEventType[] }[] = [
   { label: "Opened", types: ["opened"] },
   { label: "Status", types: ["promoted", "archived", "unarchived", "trashed", "untrashed"] },
   { label: "Triage", types: ["triage_keep", "triage_snooze", "triage_trash"] },
-  { label: "Links", types: ["link_added", "link_removed", "map_added", "map_removed"] },
+  { label: "Links", types: ["link_added", "link_removed", "map_added", "map_removed", "relation_added", "relation_removed"] },
   { label: "Review", types: ["srs_reviewed"] },
   { label: "Autopilot", types: ["autopilot_applied"] },
 ]

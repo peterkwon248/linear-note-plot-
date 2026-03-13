@@ -187,6 +187,7 @@ export type NoteEventType =
   | "label_changed"
   | "srs_reviewed"
   | "autopilot_applied"
+  | "relation_added" | "relation_removed"
 
 export interface NoteEvent {
   id: string
@@ -237,4 +238,16 @@ export interface KnowledgeMap {
   color: string
   createdAt: string
   updatedAt: string
+}
+
+/* ── Relations ─────────────────────────────────────── */
+
+export type RelationType = "related-to" | "inspired-by" | "contradicts" | "extends" | "depends-on"
+
+export interface Relation {
+  id: string
+  sourceNoteId: string
+  targetNoteId: string
+  type: RelationType
+  createdAt: string
 }

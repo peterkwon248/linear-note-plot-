@@ -45,10 +45,13 @@ import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSn
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { suggestBacklinks } from "@/lib/backlinks"
-import { Signal, CircleDot } from "lucide-react"
+import { Signal, CircleDot, Network } from "lucide-react"
 import { toast } from "sonner"
 import { ActivityTimeline } from "@/components/activity/activity-timeline"
 import { ThreadPanel } from "@/components/editor/thread-panel"
+import { RelationPicker } from "@/components/inspector/relation-picker"
+import type { Relation, RelationType } from "@/lib/types"
+import { RELATION_TYPE_CONFIG, RELATION_TYPES, getRelationLabel } from "@/lib/relation-helpers"
 
 function InspectorSection({
   title,
@@ -86,6 +89,76 @@ function extractHeadings(content: string): { level: number; text: string }[] {
   return headings
 }
 
+function RelationRow({
+  relation,
+  noteTitle,
+  isSource,
+  onNavigate,
+  onRemove,
+  onChangeType,
+}: {
+  relation: Relation
+  noteTitle: string
+  isSource: boolean
+  onNavigate: () => void
+  onRemove: () => void
+  onChangeType: (type: RelationType) => void
+}) {
+  const label = getRelationLabel(relation.type, isSource)
+  const config = RELATION_TYPE_CONFIG[relation.type]
+
+  return (
+    <div className="flex items-center gap-2 w-full px-1 py-0.5 rounded group hover:bg-secondary/50 transition-colors">
+      {isSource ? (
+        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+      ) : (
+        <ArrowDownLeft className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+      )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="text-[11px] px-1.5 py-0.5 rounded-sm font-medium shrink-0"
+            style={{ color: config.color, backgroundColor: `${config.color}15` }}
+          >
+            {label}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[160px]">
+          {RELATION_TYPES.map((t) => (
+            <DropdownMenuItem
+              key={t}
+              onClick={() => onChangeType(t)}
+              className="text-[13px]"
+            >
+              <span
+                className="w-2 h-2 rounded-full mr-2"
+                style={{ backgroundColor: RELATION_TYPE_CONFIG[t].color }}
+              />
+              {getRelationLabel(t, isSource)}
+              {t === relation.type && <Check className="h-3.5 w-3.5 ml-auto" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <button
+        onClick={onNavigate}
+        className="text-[13px] text-muted-foreground hover:text-foreground truncate flex-1 text-left"
+      >
+        {noteTitle || "Untitled"}
+      </button>
+
+      <button
+        onClick={onRemove}
+        className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/10 transition-opacity"
+      >
+        <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+      </button>
+    </div>
+  )
+}
+
 export function NoteInspector() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const notes = usePlotStore((s) => s.notes)
@@ -107,12 +180,17 @@ export function NoteInspector() {
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
+  const relations = usePlotStore((s) => s.relations)
+  const addRelation = usePlotStore((s) => s.addRelation)
+  const removeRelation = usePlotStore((s) => s.removeRelation)
+  const updateRelationType = usePlotStore((s) => s.updateRelationType)
 
   const backlinks = useBacklinksIndex()
   const backlinkNotes = useBacklinksFor(selectedNoteId)
 
   const [folderOpen, setFolderOpen] = useState(false)
   const [tagOpen, setTagOpen] = useState(false)
+  const [relationPickerOpen, setRelationPickerOpen] = useState(false)
 
   const note = notes.find((n) => n.id === selectedNoteId) ?? null
 
@@ -120,6 +198,14 @@ export function NoteInspector() {
     () => (note ? extractHeadings(note.content) : []),
     [note?.content] // eslint-disable-line react-hooks/exhaustive-deps
   )
+
+  const noteRelations = useMemo(() => {
+    if (!selectedNoteId) return { outgoing: [], incoming: [] }
+    return {
+      outgoing: (relations ?? []).filter((r: Relation) => r.sourceNoteId === selectedNoteId),
+      incoming: (relations ?? []).filter((r: Relation) => r.targetNoteId === selectedNoteId),
+    }
+  }, [relations, selectedNoteId])
 
   const related = useMemo(() => {
     if (!selectedNoteId) return []
@@ -565,6 +651,93 @@ export function NoteInspector() {
                 </div>
               )}
             </div>
+          )}
+        </InspectorSection>
+
+        <div className="mx-4 border-b border-border" />
+
+        {/* Relations */}
+        <InspectorSection title="Relations" icon={<Network className="h-4 w-4" />}>
+          {noteRelations.outgoing.length === 0 && noteRelations.incoming.length === 0 && !relationPickerOpen ? (
+            <div className="space-y-2">
+              <span className="text-[13px] text-muted-foreground">No relations</span>
+              <button
+                onClick={() => setRelationPickerOpen(true)}
+                className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add relation
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {noteRelations.outgoing.length > 0 && (
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
+                    Outgoing
+                  </span>
+                  {noteRelations.outgoing.map((rel: Relation) => {
+                    const target = notes.find(n => n.id === rel.targetNoteId)
+                    if (!target) return null
+                    return (
+                      <RelationRow
+                        key={rel.id}
+                        relation={rel}
+                        noteTitle={target.title}
+                        isSource={true}
+                        onNavigate={() => setSelectedNoteId(rel.targetNoteId)}
+                        onRemove={() => removeRelation(rel.id)}
+                        onChangeType={(newType) => updateRelationType(rel.id, newType)}
+                      />
+                    )
+                  })}
+                </div>
+              )}
+
+              {noteRelations.incoming.length > 0 && (
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
+                    Incoming
+                  </span>
+                  {noteRelations.incoming.map((rel: Relation) => {
+                    const source = notes.find(n => n.id === rel.sourceNoteId)
+                    if (!source) return null
+                    return (
+                      <RelationRow
+                        key={rel.id}
+                        relation={rel}
+                        noteTitle={source.title}
+                        isSource={false}
+                        onNavigate={() => setSelectedNoteId(rel.sourceNoteId)}
+                        onRemove={() => removeRelation(rel.id)}
+                        onChangeType={(newType) => updateRelationType(rel.id, newType)}
+                      />
+                    )
+                  })}
+                </div>
+              )}
+
+              {!relationPickerOpen && (
+                <button
+                  onClick={() => setRelationPickerOpen(true)}
+                  className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors mt-1"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add relation
+                </button>
+              )}
+            </div>
+          )}
+
+          {relationPickerOpen && (
+            <RelationPicker
+              sourceNoteId={note.id}
+              onAdd={(targetId, type) => {
+                addRelation(note.id, targetId, type)
+                setRelationPickerOpen(false)
+              }}
+              onClose={() => setRelationPickerOpen(false)}
+            />
           )}
         </InspectorSection>
 

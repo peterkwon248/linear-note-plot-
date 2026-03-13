@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, KnowledgeMap, SavedView, AutopilotLogEntry } from "../types"
+import type { NoteEvent, KnowledgeMap, SavedView, AutopilotLogEntry, Relation } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
@@ -17,6 +17,7 @@ import { createUISlice } from "./slices/ui"
 import { createViewsSlice } from "./slices/views"
 import { createAutopilotSlice } from "./slices/autopilot"
 import { createTemplatesSlice } from "./slices/templates"
+import { createRelationsSlice } from "./slices/relations"
 import { createEditorSlice } from "./slices/editor"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
@@ -55,6 +56,7 @@ export const usePlotStore = create<PlotState>()(
         graphFocusDepth: 0,
         commandPaletteMode: "search" as const,
         knowledgeMaps: [] as KnowledgeMap[],
+        relations: [] as Relation[],
         savedViews: [] as SavedView[],
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
@@ -75,6 +77,7 @@ export const usePlotStore = create<PlotState>()(
         ...createLabelsSlice(set),
         ...createThreadSlice(set, get, appendEvent),
         ...createMapsSlice(set, appendEvent),
+        ...createRelationsSlice(set, get, appendEvent),
         ...createUISlice(set, get, appendEvent),
         ...createViewsSlice(set),
         ...createAutopilotSlice(set, get, appendEvent),
@@ -84,7 +87,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 32,
+      version: 33,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
