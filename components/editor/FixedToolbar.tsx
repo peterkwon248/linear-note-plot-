@@ -315,15 +315,19 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition }: 
     <div
       className="flex-shrink-0"
       style={{
+        position: "sticky",
+        bottom: 0,
+        zIndex: 10,
         height: "58px",
         display: "flex",
         alignItems: "center",
         gap: "2px",
         padding: "0 16px",
         [position === 'top' ? 'borderBottom' : 'borderTop']: "1px solid var(--border)",
-        backgroundColor: "transparent",
+        backgroundColor: "var(--background)",
         overflowX: "auto",
         overflowY: "hidden",
+        minWidth: 0,
       }}
     >
       <InsertMenu editor={editor} />

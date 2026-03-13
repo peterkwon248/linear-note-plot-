@@ -1,41 +1,41 @@
-import type { Note, ThinkingChainSession, ThinkingChainStep } from "../../types"
+import type { Note, Thread, ThreadStep } from "../../types"
 import { extractLinksOut } from "../../body-helpers"
 import { genId, now, persistBody, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
 
-export function createThinkingSlice(set: Set, get: Get, appendEvent: AppendEventFn) {
+export function createThreadSlice(set: Set, get: Get, appendEvent: AppendEventFn) {
   return {
-    startThinkingChain: (noteId: string) => {
+    startThread: (noteId: string) => {
       const id = genId()
-      const session: ThinkingChainSession = {
+      const thread: Thread = {
         id, noteId, startedAt: now(), endedAt: null, steps: [], status: "active"
       }
-      set((state: any) => ({ thinkingChains: [...state.thinkingChains, session] }))
-      appendEvent(noteId, "thinking_chain_started", { chainId: id })
+      set((state: any) => ({ threads: [...state.threads, thread] }))
+      appendEvent(noteId, "thread_started", { threadId: id })
       return id
     },
 
-    addThinkingStep: (chainId: string, text: string, relatedNoteIds?: string[]) => {
-      const step: ThinkingChainStep = { id: genId(), at: now(), text, relatedNoteIds }
+    addThreadStep: (threadId: string, text: string) => {
+      const step: ThreadStep = { id: genId(), at: now(), text }
       set((state: any) => ({
-        thinkingChains: state.thinkingChains.map((c: ThinkingChainSession) =>
-          c.id === chainId ? { ...c, steps: [...c.steps, step] } : c
+        threads: state.threads.map((c: Thread) =>
+          c.id === threadId ? { ...c, steps: [...c.steps, step] } : c
         ),
       }))
-      const chain = get().thinkingChains.find((c: ThinkingChainSession) => c.id === chainId)
-      if (chain) appendEvent(chain.noteId, "thinking_chain_step_added", { chainId, stepId: step.id })
+      const thread = get().threads.find((c: Thread) => c.id === threadId)
+      if (thread) appendEvent(thread.noteId, "thread_step_added", { threadId, stepId: step.id })
     },
 
-    endThinkingChain: (chainId: string) => {
+    endThread: (threadId: string) => {
       set((state: any) => ({
-        thinkingChains: state.thinkingChains.map((c: ThinkingChainSession) =>
-          c.id === chainId ? { ...c, endedAt: now(), status: "done" as const } : c
+        threads: state.threads.map((c: Thread) =>
+          c.id === threadId ? { ...c, endedAt: now(), status: "done" as const } : c
         ),
       }))
-      const chain = get().thinkingChains.find((c: ThinkingChainSession) => c.id === chainId)
-      if (chain) appendEvent(chain.noteId, "thinking_chain_ended", { chainId })
+      const thread = get().threads.find((c: Thread) => c.id === threadId)
+      if (thread) appendEvent(thread.noteId, "thread_ended", { threadId })
     },
 
     addWikiLink: (noteId: string, targetTitle: string) => {

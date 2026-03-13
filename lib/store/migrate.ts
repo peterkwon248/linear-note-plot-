@@ -72,6 +72,9 @@ export function migrate(persistedState: unknown): PlotState {
   // v6: Phase 2 defaults
   if (!state.noteEvents) state.noteEvents = []
   if (!state.thinkingChains) state.thinkingChains = []
+  // v31: Rename thinkingChains → threads
+  if (!state.threads) state.threads = (state.thinkingChains as unknown[]) ?? []
+  delete state.thinkingChains
   if (state.graphFocusDepth === undefined) state.graphFocusDepth = 0
   if (state.commandPaletteMode === undefined) state.commandPaletteMode = "search"
   // v7: Knowledge Maps
@@ -350,6 +353,7 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v31: Rename thinkingChains → threads (handled above in v6 block)
 
   return state as unknown as PlotState
 }

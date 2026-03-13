@@ -11,9 +11,10 @@ import { pickColor } from "@/components/note-fields"
 
 interface NoteEditorAdapterProps {
   note: Note
+  onEditorReady?: (editor: unknown) => void
 }
 
-export function NoteEditorAdapter({ note }: NoteEditorAdapterProps) {
+export function NoteEditorAdapter({ note, onEditorReady }: NoteEditorAdapterProps) {
   const updateNote = usePlotStore((s) => s.updateNote)
   const notes = usePlotStore((s) => s.notes)
 
@@ -142,13 +143,14 @@ export function NoteEditorAdapter({ note }: NoteEditorAdapterProps) {
       : {}
 
   return (
-    <div className="relative h-full">
+    <div className="relative min-w-0 flex-1 flex flex-col">
       <TipTapEditor
         key={note.id}
         content={initialContent}
         onChange={handleChange}
         editable={true}
         placeholder="Start writing..."
+        onEditorReady={onEditorReady}
       />
       <LinkSuggestion
         suggestions={suggestions}

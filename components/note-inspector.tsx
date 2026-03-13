@@ -27,6 +27,7 @@ import {
   GitBranch,
   Merge,
   History,
+  MessageSquare,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -43,9 +44,11 @@ import { StatusDropdown, PriorityDropdown, LabelDropdown } from "@/components/no
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
+import { suggestBacklinks } from "@/lib/backlinks"
 import { Signal, CircleDot } from "lucide-react"
 import { toast } from "sonner"
 import { ActivityTimeline } from "@/components/activity/activity-timeline"
+import { ThreadPanel } from "@/components/editor/thread-panel"
 
 function InspectorSection({
   title,
@@ -117,6 +120,14 @@ export function NoteInspector() {
     () => (note ? extractHeadings(note.content) : []),
     [note?.content] // eslint-disable-line react-hooks/exhaustive-deps
   )
+
+  const related = useMemo(() => {
+    if (!selectedNoteId) return []
+    const backlinkIds = new Set(backlinkNotes.map((n) => n.id))
+    return suggestBacklinks(selectedNoteId, notes, { limit: 5 }).filter(
+      (r) => !backlinkIds.has(r.noteId)
+    )
+  }, [selectedNoteId, notes, backlinkNotes])
 
   const advanceToNextInbox = useCallback(() => {
     if (!note || note.status !== "inbox") return
@@ -512,23 +523,55 @@ export function NoteInspector() {
 
         {/* Linked References */}
         <InspectorSection title="References" icon={<Link2 className="h-4 w-4" />}>
-          {backlinkNotes.length === 0 ? (
+          {backlinkNotes.length === 0 && related.length === 0 ? (
             <span className="text-[14px] text-muted-foreground">No linked references</span>
           ) : (
-            <div className="space-y-0.5">
-              {backlinkNotes.map((n) => (
-                <button
-                  key={n.id}
-                  onClick={() => setSelectedNoteId(n.id)}
-                  className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-[14px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-                >
-                  <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                  <span className="truncate">{n.title || "Untitled"}</span>
-                </button>
-              ))}
+            <div className="space-y-2">
+              {backlinkNotes.length > 0 && (
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">Backlinks</span>
+                  {backlinkNotes.map((n) => (
+                    <button
+                      key={n.id}
+                      onClick={() => setSelectedNoteId(n.id)}
+                      className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-[14px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                    >
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                      <span className="truncate">{n.title || "Untitled"}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {related.length > 0 && (
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">Related</span>
+                  {related.map((r) => {
+                    const rNote = notes.find((n) => n.id === r.noteId)
+                    if (!rNote) return null
+                    return (
+                      <button
+                        key={r.noteId}
+                        onClick={() => setSelectedNoteId(r.noteId)}
+                        className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-[14px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors group"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                        <span className="truncate flex-1">{rNote.title || "Untitled"}</span>
+                        <span className="text-[11px] text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground/60">
+                          {r.reasons[r.reasons.length - 1]}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
         </InspectorSection>
+
+        <div className="mx-4 border-b border-border" />
+
+        {/* Thread */}
+        <ThreadPanel noteId={note.id} />
 
         <div className="mx-4 border-b border-border" />
 

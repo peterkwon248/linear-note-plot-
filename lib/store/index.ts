@@ -11,7 +11,7 @@ import { createWorkflowSlice } from "./slices/workflow"
 import { createFoldersSlice } from "./slices/folders"
 import { createTagsSlice } from "./slices/tags"
 import { createLabelsSlice } from "./slices/labels"
-import { createThinkingSlice } from "./slices/thinking"
+import { createThreadSlice } from "./slices/thinking"
 import { createMapsSlice } from "./slices/maps"
 import { createUISlice } from "./slices/ui"
 import { createViewsSlice } from "./slices/views"
@@ -51,7 +51,7 @@ export const usePlotStore = create<PlotState>()(
         linkPickerSourceId: null,
 
         noteEvents: [] as NoteEvent[],
-        thinkingChains: [],
+        threads: [],
         graphFocusDepth: 0,
         commandPaletteMode: "search" as const,
         knowledgeMaps: [] as KnowledgeMap[],
@@ -73,7 +73,7 @@ export const usePlotStore = create<PlotState>()(
         ...createFoldersSlice(set),
         ...createTagsSlice(set),
         ...createLabelsSlice(set),
-        ...createThinkingSlice(set, get, appendEvent),
+        ...createThreadSlice(set, get, appendEvent),
         ...createMapsSlice(set, appendEvent),
         ...createUISlice(set, get, appendEvent),
         ...createViewsSlice(set),
@@ -84,7 +84,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 30,
+      version: 31,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

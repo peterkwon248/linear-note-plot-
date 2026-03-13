@@ -81,15 +81,15 @@ export function SearchDialog() {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const commandPaletteMode = usePlotStore((s) => s.commandPaletteMode)
   const setCommandPaletteMode = usePlotStore((s) => s.setCommandPaletteMode)
-  const thinkingChains = usePlotStore((s) => s.thinkingChains)
+  const threads = usePlotStore((s) => s.threads)
   const knowledgeMaps = usePlotStore((s) => s.knowledgeMaps)
 
   // Actions
   const createNote = usePlotStore((s) => s.createNote)
   const togglePin = usePlotStore((s) => s.togglePin)
-  const startThinkingChain = usePlotStore((s) => s.startThinkingChain)
-  const addThinkingStep = usePlotStore((s) => s.addThinkingStep)
-  const endThinkingChain = usePlotStore((s) => s.endThinkingChain)
+  const startThread = usePlotStore((s) => s.startThread)
+  const addThreadStep = usePlotStore((s) => s.addThreadStep)
+  const endThread = usePlotStore((s) => s.endThread)
   const addWikiLink = usePlotStore((s) => s.addWikiLink)
   const setGraphFocusDepth = usePlotStore((s) => s.setGraphFocusDepth)
   const triageKeep = usePlotStore((s) => s.triageKeep)
@@ -117,9 +117,9 @@ export function SearchDialog() {
   const activeChain = useMemo(
     () =>
       selectedNoteId
-        ? thinkingChains.find((c) => c.noteId === selectedNoteId && c.status === "active") ?? null
+        ? threads.find((c) => c.noteId === selectedNoteId && c.status === "active") ?? null
         : null,
-    [selectedNoteId, thinkingChains]
+    [selectedNoteId, threads]
   )
 
   // Reset state when dialog closes
@@ -300,7 +300,7 @@ export function SearchDialog() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && thinkingStepText.trim() && activeChain) {
                   e.preventDefault()
-                  addThinkingStep(activeChain.id, thinkingStepText.trim())
+                  addThreadStep(activeChain.id, thinkingStepText.trim())
                   toast.success("Thinking step added")
                   closePalette()
                 }
@@ -619,8 +619,8 @@ export function SearchDialog() {
                         value="start-thinking-chain"
                         onSelect={() =>
                           execCommand(
-                            () => startThinkingChain(selectedNote.id),
-                            "Thinking chain started"
+                            () => startThread(selectedNote.id),
+                            "Thread started"
                           )
                         }
                       >
@@ -644,8 +644,8 @@ export function SearchDialog() {
                           value="end-thinking-chain"
                           onSelect={() =>
                             execCommand(
-                              () => endThinkingChain(activeChain.id),
-                              "Thinking chain ended"
+                              () => endThread(activeChain.id),
+                              "Thread ended"
                             )
                           }
                         >

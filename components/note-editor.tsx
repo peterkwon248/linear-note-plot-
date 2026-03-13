@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import {
   Pin,
   Archive,
@@ -29,7 +29,8 @@ import { format } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
-import { BacklinksFooter } from "@/components/editor/backlinks-footer"
+import { FixedToolbar } from "@/components/editor/FixedToolbar"
+import type { Editor } from "@tiptap/react"
 
 interface NoteEditorProps {
   noteId?: string
@@ -58,7 +59,12 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const focusMode = sidebarCollapsed && !detailsOpen
 
   const [localTitle, setLocalTitle] = useState("")
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
   const noteIdRef = useRef(note?.id)
+
+  const handleEditorReady = useCallback((editor: unknown) => {
+    setEditorInstance(editor as Editor | null)
+  }, [])
 
   useEffect(() => {
     noteIdRef.current = note?.id
@@ -252,13 +258,15 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       />
 
       {/* Content Editor */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-6 py-4">
-          <NoteEditorAdapter note={note} />
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
+        <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
+          <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} />
         </div>
-        <BacklinksFooter noteId={note.id} />
       </div>
       </div>
+
+      {/* FixedToolbar — outside SURFACE, full width */}
+      <FixedToolbar editor={editorInstance} />
     </div>
   )
 }

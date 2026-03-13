@@ -102,7 +102,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           selectedNoteId: state.selectedNoteId === id ? null : state.selectedNoteId,
           noteEvents: state.noteEvents.filter((e: any) => e.noteId !== id),
           srsStateByNoteId: restSRS,
-          thinkingChains: state.thinkingChains.filter((c: any) => c.noteId !== id),
+          threads: state.threads.filter((c: any) => c.noteId !== id),
           knowledgeMaps: state.knowledgeMaps.map((m: any) =>
             m.noteIds.includes(id)
               ? { ...m, noteIds: m.noteIds.filter((nId: string) => nId !== id) }

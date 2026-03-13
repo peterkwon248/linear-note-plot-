@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, ThinkingChainSession, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 
@@ -61,7 +61,7 @@ export interface PlotState {
 
   // Phase 2 state
   noteEvents: NoteEvent[]
-  thinkingChains: ThinkingChainSession[]
+  threads: Thread[]
   graphFocusDepth: number
   commandPaletteMode: "search" | "commands" | "links"
 
@@ -168,10 +168,10 @@ export interface PlotState {
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
 
-  // ── Thinking Chain ──
-  startThinkingChain: (noteId: string) => string
-  addThinkingStep: (chainId: string, text: string, relatedNoteIds?: string[]) => void
-  endThinkingChain: (chainId: string) => void
+  // ── Thread ──
+  startThread: (noteId: string) => string
+  addThreadStep: (threadId: string, text: string) => void
+  endThread: (threadId: string) => void
   addWikiLink: (noteId: string, targetTitle: string) => void
   setGraphFocusDepth: (depth: number) => void
   setCommandPaletteMode: (mode: "search" | "commands" | "links") => void
