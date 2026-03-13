@@ -197,7 +197,7 @@ export function TipTapEditor({
 
   // Expose editor instance to parent
   useEffect(() => {
-    onEditorReady?.(editor)
+    if (editor) onEditorReady?.(editor)
   }, [editor]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync spellcheck dynamically
@@ -230,7 +230,7 @@ export function TipTapEditor({
       <div ref={editorWrapRef} className="flex-1">
         <EditorContent editor={editor} className="w-full" />
       </div>
-      <EditorToolbar editor={editor} />
+      {editable && <EditorToolbar editor={editor} />}
     </div>
   )
 }

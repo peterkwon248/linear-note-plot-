@@ -1,5 +1,9 @@
 /* TipTap ProseMirror Editor Styles */
 
+.ProseMirror[contenteditable="false"] {
+  cursor: default;
+}
+
 .ProseMirror {
   outline: none;
   min-height: 300px;

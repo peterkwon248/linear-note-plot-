@@ -43,6 +43,7 @@ export function migrate(persistedState: unknown): PlotState {
         snoozeCount: n.snoozeCount ?? 0,
         archivedAt: n.archivedAt ?? null,
         parentNoteId: n.parentNoteId ?? null,
+        isWiki: n.isWiki ?? false,
         contentJson: n.contentJson ?? null,
         // v13: Precomputed fields
         preview: n.preview ?? extractPreview(content),

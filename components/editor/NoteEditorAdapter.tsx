@@ -12,9 +12,10 @@ import { pickColor } from "@/components/note-fields"
 interface NoteEditorAdapterProps {
   note: Note
   onEditorReady?: (editor: unknown) => void
+  editable?: boolean
 }
 
-export function NoteEditorAdapter({ note, onEditorReady }: NoteEditorAdapterProps) {
+export function NoteEditorAdapter({ note, onEditorReady, editable = true }: NoteEditorAdapterProps) {
   const updateNote = usePlotStore((s) => s.updateNote)
   const notes = usePlotStore((s) => s.notes)
 
@@ -147,8 +148,8 @@ export function NoteEditorAdapter({ note, onEditorReady }: NoteEditorAdapterProp
       <TipTapEditor
         key={note.id}
         content={initialContent}
-        onChange={handleChange}
-        editable={true}
+        onChange={editable ? handleChange : undefined}
+        editable={editable}
         placeholder="Start writing..."
         onEditorReady={onEditorReady}
       />

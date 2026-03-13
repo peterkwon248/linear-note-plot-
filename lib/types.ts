@@ -38,6 +38,9 @@ export interface Note {
   /* ── Thread ──────────────────────────────────────── */
   parentNoteId: string | null
 
+  /* ── Wiki ──────────────────────────────────────── */
+  isWiki: boolean
+
   /* ── Precomputed (from content, for performance) ── */
   preview: string          // first ~120 chars of plaintext (for list display)
   linksOut: string[]       // extracted [[wiki-link]] targets, lowercased

@@ -11,6 +11,8 @@ import {
   PanelRight,
   Merge,
   Link2,
+  BookOpen,
+  PenLine,
 } from "lucide-react"
 import {
   Tooltip,
@@ -60,6 +62,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
   const [localTitle, setLocalTitle] = useState("")
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
+  const [isReadMode, setIsReadMode] = useState(false)
   const noteIdRef = useRef(note?.id)
 
   const handleEditorReady = useCallback((editor: unknown) => {
@@ -70,6 +73,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
     noteIdRef.current = note?.id
     if (note) {
       setLocalTitle(note.title)
+      setIsReadMode(note.isWiki ?? false)
     }
   }, [note?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -99,6 +103,12 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       if (mod && e.shiftKey && e.key === "P") {
         e.preventDefault()
         togglePin(note.id)
+        return
+      }
+      // Ctrl+Shift+E: toggle read/edit mode
+      if (mod && e.shiftKey && e.key === "E") {
+        e.preventDefault()
+        setIsReadMode((prev) => !prev)
         return
       }
       // Ctrl+Backspace: delete note
@@ -230,6 +240,23 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setIsReadMode((prev) => !prev)}
+                className={cn(
+                  "rounded-md p-1.5 transition-colors hover:bg-secondary",
+                  isReadMode ? "text-[#5e6ad2]" : "text-muted-foreground"
+                )}
+              >
+                {isReadMode ? <BookOpen className="h-4 w-4" /> : <PenLine className="h-4 w-4" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isReadMode ? "Edit mode (Ctrl+Shift+E)" : "Read mode (Ctrl+Shift+E)"}
+            </TooltipContent>
+          </Tooltip>
+
           <span className="mx-0.5 h-4 w-px bg-border" />
           <Tooltip>
             <TooltipTrigger asChild>
@@ -248,25 +275,31 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         </div>
       </header>
 
-      {/* Title Input */}
-      <input
-        type="text"
-        value={localTitle}
-        onChange={(e) => setLocalTitle(e.target.value)}
-        placeholder="Untitled"
-        className="w-full bg-transparent px-6 pt-6 text-[24px] font-semibold text-foreground outline-none placeholder:text-muted-foreground/40"
-      />
+      {/* Title */}
+      {isReadMode ? (
+        <h1 className="w-full bg-transparent px-6 pt-6 text-[24px] font-semibold text-foreground">
+          {localTitle || "Untitled"}
+        </h1>
+      ) : (
+        <input
+          type="text"
+          value={localTitle}
+          onChange={(e) => setLocalTitle(e.target.value)}
+          placeholder="Untitled"
+          className="w-full bg-transparent px-6 pt-6 text-[24px] font-semibold text-foreground outline-none placeholder:text-muted-foreground/40"
+        />
+      )}
 
       {/* Content Editor */}
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
         <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
-          <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} />
+          <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
         </div>
       </div>
       </div>
 
-      {/* FixedToolbar — outside SURFACE, full width */}
-      <FixedToolbar editor={editorInstance} />
+      {/* FixedToolbar — outside SURFACE, full width (hidden in read mode) */}
+      {!isReadMode && <FixedToolbar editor={editorInstance} />}
     </div>
   )
 }

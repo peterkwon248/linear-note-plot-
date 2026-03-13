@@ -31,6 +31,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         labelId: partial?.labelId ?? null,
         preview: extractPreview(content),
         linksOut: extractLinksOut(content),
+        isWiki: partial?.isWiki ?? false,
         ...workflowDefaults(partial?.status ?? "inbox"),
         ...(partial?.source != null ? { source: partial.source } : {}),
       }
@@ -289,6 +290,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         linksOut: [],
         ...workflowDefaults(parent.status),
         parentNoteId: parentId,
+        isWiki: false,
       }
       set((state: any) => ({
         notes: [newNote, ...state.notes],

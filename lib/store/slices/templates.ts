@@ -83,6 +83,7 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         preview: extractPreview(content),
         linksOut: extractLinksOut(content),
         ...workflowDefaults(template.status),
+        isWiki: false,
         source: "manual",
       }
 
