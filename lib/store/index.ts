@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, KnowledgeMap, SavedView, AutopilotLogEntry } from "../types"
+import type { NoteEvent, KnowledgeMap, SavedView, AutopilotLogEntry, Relation } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
@@ -11,12 +11,13 @@ import { createWorkflowSlice } from "./slices/workflow"
 import { createFoldersSlice } from "./slices/folders"
 import { createTagsSlice } from "./slices/tags"
 import { createLabelsSlice } from "./slices/labels"
-import { createThinkingSlice } from "./slices/thinking"
+import { createThreadSlice } from "./slices/thinking"
 import { createMapsSlice } from "./slices/maps"
 import { createUISlice } from "./slices/ui"
 import { createViewsSlice } from "./slices/views"
 import { createAutopilotSlice } from "./slices/autopilot"
 import { createTemplatesSlice } from "./slices/templates"
+import { createRelationsSlice } from "./slices/relations"
 import { createEditorSlice } from "./slices/editor"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
@@ -51,10 +52,14 @@ export const usePlotStore = create<PlotState>()(
         linkPickerSourceId: null,
 
         noteEvents: [] as NoteEvent[],
-        thinkingChains: [],
+        threads: [],
         graphFocusDepth: 0,
         commandPaletteMode: "search" as const,
         knowledgeMaps: [] as KnowledgeMap[],
+        relations: [] as Relation[],
+        layoutMode: "tabs" as const,
+        _preFocusLayoutMode: null as any,
+        listPaneWidth: 320,
         savedViews: [] as SavedView[],
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
@@ -73,8 +78,9 @@ export const usePlotStore = create<PlotState>()(
         ...createFoldersSlice(set),
         ...createTagsSlice(set),
         ...createLabelsSlice(set),
-        ...createThinkingSlice(set, get, appendEvent),
+        ...createThreadSlice(set, get, appendEvent),
         ...createMapsSlice(set, appendEvent),
+        ...createRelationsSlice(set, get, appendEvent),
         ...createUISlice(set, get, appendEvent),
         ...createViewsSlice(set),
         ...createAutopilotSlice(set, get, appendEvent),
@@ -84,11 +90,11 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 30,
+      version: 34,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, _preFocusLayoutMode, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),

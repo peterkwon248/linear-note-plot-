@@ -31,6 +31,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         labelId: partial?.labelId ?? null,
         preview: extractPreview(content),
         linksOut: extractLinksOut(content),
+        isWiki: partial?.isWiki ?? false,
         ...workflowDefaults(partial?.status ?? "inbox"),
         ...(partial?.source != null ? { source: partial.source } : {}),
       }
@@ -102,11 +103,14 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           selectedNoteId: state.selectedNoteId === id ? null : state.selectedNoteId,
           noteEvents: state.noteEvents.filter((e: any) => e.noteId !== id),
           srsStateByNoteId: restSRS,
-          thinkingChains: state.thinkingChains.filter((c: any) => c.noteId !== id),
+          threads: state.threads.filter((c: any) => c.noteId !== id),
           knowledgeMaps: state.knowledgeMaps.map((m: any) =>
             m.noteIds.includes(id)
               ? { ...m, noteIds: m.noteIds.filter((nId: string) => nId !== id) }
               : m
+          ),
+          relations: state.relations.filter(
+            (r: any) => r.sourceNoteId !== id && r.targetNoteId !== id
           ),
           navigationHistory,
           navigationIndex,
@@ -211,6 +215,19 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           if (!filtered.includes(targetId)) filtered.push(targetId)
           return { ...m, noteIds: filtered }
         }),
+        // ── 7b. Relations: remap source references → target ──
+        relations: s.relations.map((r: any) => {
+          if (sourceIdSet.has(r.sourceNoteId)) return { ...r, sourceNoteId: targetId }
+          if (sourceIdSet.has(r.targetNoteId)) return { ...r, targetNoteId: targetId }
+          return r
+        }).filter((r: any, idx: number, arr: any[]) => {
+          if (r.sourceNoteId === r.targetNoteId) return false
+          return arr.findIndex((x: any) =>
+            x.sourceNoteId === r.sourceNoteId &&
+            x.targetNoteId === r.targetNoteId &&
+            x.type === r.type
+          ) === idx
+        }),
       }))
 
       // ── 8. Persist bodies (target + sources) ──
@@ -289,6 +306,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         linksOut: [],
         ...workflowDefaults(parent.status),
         parentNoteId: parentId,
+        isWiki: false,
       }
       set((state: any) => ({
         notes: [newNote, ...state.notes],

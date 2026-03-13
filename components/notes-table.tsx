@@ -65,6 +65,7 @@ import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
 import { setActiveFolderId } from "@/lib/table-route"
+import { setNoteDragData } from "@/lib/drag-helpers"
 
 /* ── Inline Select (portal-free, works inside Popover) ── */
 
@@ -1019,6 +1020,8 @@ function NoteRowInner({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
+          draggable
+          onDragStart={(e) => setNoteDragData(e, note.id)}
           className={`group flex items-center px-5 py-3 transition-colors cursor-pointer ${
             isSelected
               ? "bg-accent/5"

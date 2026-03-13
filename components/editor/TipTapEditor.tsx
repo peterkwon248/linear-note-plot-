@@ -20,7 +20,6 @@ import { TableCell } from "@tiptap/extension-table-cell"
 import { TableHeader } from "@tiptap/extension-table-header"
 import { ResizableImage } from "./ResizableImage"
 import { EditorToolbar } from "./EditorToolbar"
-import { FixedToolbar } from "./FixedToolbar"
 import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
 import { Extension } from "@tiptap/core"
@@ -107,8 +106,7 @@ interface TipTapEditorProps {
   onChange?: (json: Record<string, unknown>, plainText: string) => void
   editable?: boolean
   placeholder?: string
-  hideFixedToolbar?: boolean
-  onEditorReady?: (editor: import("@tiptap/react").Editor | null) => void
+  onEditorReady?: (editor: ReturnType<typeof useEditor>) => void
 }
 
 export function TipTapEditor({
@@ -116,7 +114,6 @@ export function TipTapEditor({
   onChange,
   editable = true,
   placeholder = "Start writing...",
-  hideFixedToolbar = false,
   onEditorReady,
 }: TipTapEditorProps) {
   const spellcheck = useSettingsStore((s) => s.spellcheck)
@@ -130,11 +127,26 @@ export function TipTapEditor({
   const detailsOpen = usePlotStore((s) => s.detailsOpen)
   const focusMode = sidebarCollapsed && !detailsOpen
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const editorWrapRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const focusModeRef = useRef(false)
   focusModeRef.current = focusMode
   const currentLineHighlightRef = useRef(false)
   currentLineHighlightRef.current = currentLineHighlight
+
+  // Find the nearest scrollable ancestor for typewriter mode
+  useEffect(() => {
+    if (!editorWrapRef.current) return
+    let el: HTMLElement | null = editorWrapRef.current.parentElement
+    while (el) {
+      const style = getComputedStyle(el)
+      if (style.overflowY === "auto" || style.overflowY === "scroll") {
+        scrollContainerRef.current = el as HTMLDivElement
+        return
+      }
+      el = el.parentElement
+    }
+  }, [])
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -183,6 +195,11 @@ export function TipTapEditor({
     },
   })
 
+  // Expose editor instance to parent
+  useEffect(() => {
+    if (editor) onEditorReady?.(editor)
+  }, [editor]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Sync spellcheck dynamically
   useEffect(() => {
     if (editor) {
@@ -203,25 +220,17 @@ export function TipTapEditor({
     editor.setEditable(editable)
   }
 
-  // Notify parent when editor is ready
-  useEffect(() => {
-    if (onEditorReady) {
-      onEditorReady(editor)
-    }
-  }, [editor, onEditorReady])
-
   return (
     <div
-      className="flex flex-col h-full"
+      className="flex flex-col min-w-0 flex-1"
       data-word-wrap={wordWrap ? "on" : "off"}
       data-tab-size={tabSize}
       data-code-font={codeFontFamily}
     >
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
-        <EditorContent editor={editor} className="h-full w-full" />
+      <div ref={editorWrapRef} className="flex-1">
+        <EditorContent editor={editor} className="w-full" />
       </div>
-      <EditorToolbar editor={editor} />
-      {editable && !hideFixedToolbar && <FixedToolbar editor={editor} />}
+      {editable && <EditorToolbar editor={editor} />}
     </div>
   )
 }

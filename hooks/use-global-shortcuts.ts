@@ -24,11 +24,7 @@ export function useGlobalShortcuts() {
   const pendingG = useRef(false)
   const gTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  /** Transient ref: layout state captured right before entering Focus Mode. */
-  const preFocusLayout = useRef<{
-    sidebarCollapsed: boolean
-    detailsOpen: boolean
-  } | null>(null)
+  // preFocusLayout ref removed — now using store._preFocusLayoutMode
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -114,7 +110,6 @@ export function useGlobalShortcuts() {
         (e.metaKey || e.ctrlKey)
       ) {
         e.preventDefault()
-        // Block if dialog/popover is open
         if (
           target.closest("[role='dialog']") ||
           target.closest("[data-radix-popper-content-wrapper]")
@@ -122,32 +117,24 @@ export function useGlobalShortcuts() {
           return
         }
         const s = usePlotStore.getState()
-        // Block if no note is open
         if (s.selectedNoteId === null) return
 
-        const isFocusMode = s.sidebarCollapsed && !s.detailsOpen
-
-        if (isFocusMode) {
-          // ── Exit Focus Mode: restore previous layout ──
-          const prev = preFocusLayout.current
-          if (prev) {
-            s.setSidebarCollapsed(prev.sidebarCollapsed)
-            s.setDetailsOpen(prev.detailsOpen)
-            preFocusLayout.current = null
-          } else {
-            // No stored layout — restore defaults
-            s.setSidebarCollapsed(false)
-            s.setDetailsOpen(true)
-          }
+        if (s.layoutMode === "focus") {
+          // Exit focus → restore previous mode
+          s.setLayoutMode(s._preFocusLayoutMode ?? "tabs")
         } else {
-          // ── Enter Focus Mode: save current, then collapse/close ──
-          preFocusLayout.current = {
-            sidebarCollapsed: s.sidebarCollapsed,
-            detailsOpen: s.detailsOpen,
-          }
-          s.setSidebarCollapsed(true)
-          s.setDetailsOpen(false)
+          s.setLayoutMode("focus")
         }
+        return
+      }
+
+      // ── 2c. Ctrl/Cmd+1~5 — Layout Mode Shortcuts ────────────
+      if (mod && !e.shiftKey && !e.altKey && ["1", "2", "3", "4", "5"].includes(e.key)) {
+        const s = usePlotStore.getState()
+        if (s.selectedNoteId === null) return
+        e.preventDefault()
+        const modes = ["focus", "three-column", "tabs", "panels", "split"] as const
+        s.setLayoutMode(modes[parseInt(e.key) - 1])
         return
       }
 

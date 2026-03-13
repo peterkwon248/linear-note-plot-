@@ -34,6 +34,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     archivedAt: null,
     trashedAt: null,
     parentNoteId: null,
+    isWiki: false,
     preview: "This is a test note with some preview text for testing",
     linksOut: [],
     ...overrides,

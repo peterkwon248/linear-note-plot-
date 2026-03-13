@@ -43,6 +43,7 @@ export function migrate(persistedState: unknown): PlotState {
         snoozeCount: n.snoozeCount ?? 0,
         archivedAt: n.archivedAt ?? null,
         parentNoteId: n.parentNoteId ?? null,
+        isWiki: n.isWiki ?? false,
         contentJson: n.contentJson ?? null,
         // v13: Precomputed fields
         preview: n.preview ?? extractPreview(content),
@@ -72,6 +73,9 @@ export function migrate(persistedState: unknown): PlotState {
   // v6: Phase 2 defaults
   if (!state.noteEvents) state.noteEvents = []
   if (!state.thinkingChains) state.thinkingChains = []
+  // v31: Rename thinkingChains → threads
+  if (!state.threads) state.threads = (state.thinkingChains as unknown[]) ?? []
+  delete state.thinkingChains
   if (state.graphFocusDepth === undefined) state.graphFocusDepth = 0
   if (state.commandPaletteMode === undefined) state.commandPaletteMode = "search"
   // v7: Knowledge Maps
@@ -350,6 +354,20 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v31: Rename thinkingChains → threads (handled above in v6 block)
+
+  // v33: Relations
+  if (!state.relations) state.relations = []
+
+  // v34: Layout 5 Modes
+  if (!state.layoutMode) state.layoutMode = "tabs"
+  if (!state.listPaneWidth) state.listPaneWidth = 320
+  state._preFocusLayoutMode = null // transient, always reset
+  // Add panelRatios to editorState
+  if (state.editorState && typeof state.editorState === "object") {
+    const es = state.editorState as Record<string, unknown>
+    if (!es.panelRatios) es.panelRatios = [0.5, 0.5]
+  }
 
   return state as unknown as PlotState
 }

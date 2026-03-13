@@ -9,6 +9,7 @@ export const DEFAULT_EDITOR_STATE: EditorState = {
   activePanelId: "panel-left",
   splitMode: false,
   splitRatio: 0.5,
+  panelRatios: [0.5, 0.5],
 }
 
 export function createEditorSlice(set: Set, get: Get) {
@@ -233,6 +234,70 @@ export function createEditorSlice(set: Set, get: Get) {
         editorState: {
           ...state.editorState,
           splitRatio: Math.max(0.2, Math.min(0.8, ratio)),
+        },
+      }))
+    },
+
+    addPanel: () => {
+      set((state: any) => {
+        if (state.layoutMode !== "panels") return state
+        const es: EditorState = { ...state.editorState }
+        es.panels = es.panels.map((p: EditorPanel) => ({ ...p, tabs: [...p.tabs] }))
+
+        // Max 3 panels
+        if (es.panels.length >= 3) return state
+
+        const panelIds = ["panel-left", "panel-center", "panel-right"]
+        const existingIds = new Set(es.panels.map((p: EditorPanel) => p.id))
+        const newId = panelIds.find(id => !existingIds.has(id))
+        if (!newId) return state
+
+        es.panels.push({ id: newId, tabs: [], activeTabId: null })
+        // Sort panels in canonical order
+        es.panels.sort((a: EditorPanel, b: EditorPanel) =>
+          panelIds.indexOf(a.id) - panelIds.indexOf(b.id)
+        )
+        es.splitMode = true
+        es.panelRatios = es.panels.map(() => 1 / es.panels.length)
+
+        return { editorState: es }
+      })
+    },
+
+    removePanel: (panelId: string) => {
+      set((state: any) => {
+        const es: EditorState = { ...state.editorState }
+        es.panels = es.panels.map((p: EditorPanel) => ({ ...p, tabs: [...p.tabs] }))
+
+        if (es.panels.length <= 1) return state
+
+        const panel = es.panels.find((p: EditorPanel) => p.id === panelId)
+        if (!panel) return state
+
+        // Merge tabs into panel-left
+        const target = es.panels.find((p: EditorPanel) => p.id !== panelId)
+        if (target) {
+          for (const tab of panel.tabs) {
+            if (!target.tabs.some((t: EditorTab) => t.noteId === tab.noteId)) {
+              target.tabs.push(tab)
+            }
+          }
+        }
+
+        es.panels = es.panels.filter((p: EditorPanel) => p.id !== panelId)
+        es.activePanelId = es.panels[0]?.id ?? "panel-left"
+        es.splitMode = es.panels.length > 1
+        es.panelRatios = es.panels.map(() => 1 / es.panels.length)
+
+        return { editorState: es }
+      })
+    },
+
+    setPanelRatios: (ratios: number[]) => {
+      set((state: any) => ({
+        editorState: {
+          ...state.editorState,
+          panelRatios: ratios,
         },
       }))
     },

@@ -35,8 +35,11 @@ export interface Note {
   archivedAt: string | null
   trashedAt: string | null
 
-  /* ── Thinking Chain ──────────────────────────────── */
+  /* ── Thread ──────────────────────────────────────── */
   parentNoteId: string | null
+
+  /* ── Wiki ──────────────────────────────────────── */
+  isWiki: boolean
 
   /* ── Precomputed (from content, for performance) ── */
   preview: string          // first ~120 chars of plaintext (for list display)
@@ -179,11 +182,12 @@ export type NoteEventType =
   | "created" | "updated" | "opened" | "promoted" | "archived" | "unarchived" | "trashed" | "untrashed"
   | "triage_keep" | "triage_snooze" | "triage_trash"
   | "link_added" | "link_removed"
-  | "thinking_chain_started" | "thinking_chain_step_added" | "thinking_chain_ended"
+  | "thread_started" | "thread_step_added" | "thread_ended"
   | "map_added" | "map_removed"
   | "label_changed"
   | "srs_reviewed"
   | "autopilot_applied"
+  | "relation_added" | "relation_removed"
 
 export interface NoteEvent {
   id: string
@@ -193,21 +197,20 @@ export interface NoteEvent {
   meta?: Record<string, unknown>
 }
 
-/* ── Phase 2: Thinking Chain ────────────────────────── */
+/* ── Phase 2: Thread ────────────────────────────────── */
 
-export interface ThinkingChainStep {
+export interface ThreadStep {
   id: string
   at: string
   text: string
-  relatedNoteIds?: string[]
 }
 
-export interface ThinkingChainSession {
+export interface Thread {
   id: string
   noteId: string
   startedAt: string
   endedAt: string | null
-  steps: ThinkingChainStep[]
+  steps: ThreadStep[]
   status: "active" | "done"
 }
 
@@ -235,4 +238,19 @@ export interface KnowledgeMap {
   color: string
   createdAt: string
   updatedAt: string
+}
+
+/* ── Relations ─────────────────────────────────────── */
+
+export type RelationType = "related-to" | "inspired-by" | "contradicts" | "extends" | "depends-on"
+
+/** Layout mode for the editor area */
+export type LayoutMode = "focus" | "three-column" | "tabs" | "panels" | "split"
+
+export interface Relation {
+  id: string
+  sourceNoteId: string
+  targetNoteId: string
+  type: RelationType
+  createdAt: string
 }

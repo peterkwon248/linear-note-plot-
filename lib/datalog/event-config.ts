@@ -25,14 +25,16 @@ export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
   triage_trash: { icon: Trash2, verb: "Triaged to trash", color: "#ef4444" },
   link_added: { icon: Link2, verb: "Linked", color: "#5e6ad2" },
   link_removed: { icon: Link2, verb: "Unlinked", color: "#5e6ad2" },
-  thinking_chain_started: { icon: Brain, verb: "Started thinking", color: "#06b6d4" },
-  thinking_chain_step_added: { icon: Brain, verb: "Added thought", color: "#06b6d4" },
-  thinking_chain_ended: { icon: Brain, verb: "Ended thinking", color: "#06b6d4" },
+  thread_started: { icon: Brain, verb: "Started thread", color: "#06b6d4" },
+  thread_step_added: { icon: Brain, verb: "Added thread step", color: "#06b6d4" },
+  thread_ended: { icon: Brain, verb: "Ended thread", color: "#06b6d4" },
   map_added: { icon: Link2, verb: "Added to map", color: "#5e6ad2" },
   map_removed: { icon: Link2, verb: "Removed from map", color: "#5e6ad2" },
   label_changed: { icon: Tag, verb: "Label changed", color: "#a855f7" },
   srs_reviewed: { icon: Brain, verb: "Reviewed (SRS)", color: "#06b6d4" },
   autopilot_applied: { icon: Sparkles, verb: "Autopilot applied", color: "#8b5cf6" },
+  relation_added: { icon: Link2, verb: "Relation added", color: "#3b82f6" },
+  relation_removed: { icon: Link2, verb: "Relation removed", color: "#3b82f6" },
 }
 
 // Human-readable event type labels for filter chips
@@ -42,7 +44,7 @@ export const EVENT_TYPE_GROUPS: { label: string; types: NoteEventType[] }[] = [
   { label: "Opened", types: ["opened"] },
   { label: "Status", types: ["promoted", "archived", "unarchived", "trashed", "untrashed"] },
   { label: "Triage", types: ["triage_keep", "triage_snooze", "triage_trash"] },
-  { label: "Links", types: ["link_added", "link_removed", "map_added", "map_removed"] },
+  { label: "Links", types: ["link_added", "link_removed", "map_added", "map_removed", "relation_added", "relation_removed"] },
   { label: "Review", types: ["srs_reviewed"] },
   { label: "Autopilot", types: ["autopilot_applied"] },
 ]

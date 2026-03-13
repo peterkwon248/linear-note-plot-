@@ -11,6 +11,8 @@ import {
   PanelRight,
   Merge,
   Link2,
+  BookOpen,
+  PenLine,
 } from "lucide-react"
 import {
   Tooltip,
@@ -31,6 +33,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
+import { LayoutModeSwitcher } from "@/components/editor/layout-mode-switcher"
 
 interface NoteEditorProps {
   noteId?: string
@@ -52,24 +55,26 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
   const detailsOpen = usePlotStore((s) => s.detailsOpen)
   const toggleDetailsOpen = usePlotStore((s) => s.toggleDetailsOpen)
-  const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
+  const layoutMode = usePlotStore((s) => s.layoutMode)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
-  const focusMode = sidebarCollapsed && !detailsOpen
+  const focusMode = layoutMode === "focus"
 
   const [localTitle, setLocalTitle] = useState("")
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
+  const [isReadMode, setIsReadMode] = useState(false)
   const noteIdRef = useRef(note?.id)
-  const [tipTapEditor, setTipTapEditor] = useState<Editor | null>(null)
-  const [toolbarPosition, setToolbarPosition] = useState<'top' | 'bottom'>('bottom')
-  const handleEditorReady = useCallback((editor: Editor | null) => {
-    setTipTapEditor(editor)
+
+  const handleEditorReady = useCallback((editor: unknown) => {
+    setEditorInstance(editor as Editor | null)
   }, [])
 
   useEffect(() => {
     noteIdRef.current = note?.id
     if (note) {
       setLocalTitle(note.title)
+      setIsReadMode(note.isWiki ?? false)
     }
   }, [note?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -99,6 +104,12 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       if (mod && e.shiftKey && e.key === "P") {
         e.preventDefault()
         togglePin(note.id)
+        return
+      }
+      // Ctrl+Shift+E: toggle read/edit mode
+      if (mod && e.shiftKey && e.key === "E") {
+        e.preventDefault()
+        setIsReadMode((prev) => !prev)
         return
       }
       // Ctrl+Backspace: delete note
@@ -230,6 +241,25 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setIsReadMode((prev) => !prev)}
+                className={cn(
+                  "rounded-md p-1.5 transition-colors hover:bg-secondary",
+                  isReadMode ? "text-[#5e6ad2]" : "text-muted-foreground"
+                )}
+              >
+                {isReadMode ? <BookOpen className="h-4 w-4" /> : <PenLine className="h-4 w-4" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isReadMode ? "Edit mode (Ctrl+Shift+E)" : "Read mode (Ctrl+Shift+E)"}
+            </TooltipContent>
+          </Tooltip>
+
+          <span className="mx-0.5 h-4 w-px bg-border" />
+          <LayoutModeSwitcher />
           <span className="mx-0.5 h-4 w-px bg-border" />
           <Tooltip>
             <TooltipTrigger asChild>
@@ -248,43 +278,31 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         </div>
       </header>
 
-      {toolbarPosition === 'top' && (
-        <FixedToolbar
-          editor={tipTapEditor}
-          position={toolbarPosition}
-          onTogglePosition={() => setToolbarPosition(p => p === 'top' ? 'bottom' : 'top')}
+      {/* Title */}
+      {isReadMode ? (
+        <h1 className="w-full bg-transparent px-6 pt-6 text-[24px] font-semibold text-foreground">
+          {localTitle || "Untitled"}
+        </h1>
+      ) : (
+        <input
+          type="text"
+          value={localTitle}
+          onChange={(e) => setLocalTitle(e.target.value)}
+          placeholder="Untitled"
+          className="w-full bg-transparent px-6 pt-6 text-[24px] font-semibold text-foreground outline-none placeholder:text-muted-foreground/40"
         />
       )}
 
-      {/* Title Input */}
-      <input
-        type="text"
-        value={localTitle}
-        onChange={(e) => setLocalTitle(e.target.value)}
-        placeholder="Untitled"
-        className="w-full bg-transparent px-6 pt-6 text-[24px] font-semibold text-foreground outline-none placeholder:text-muted-foreground/40"
-      />
-
       {/* Content Editor */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="px-6 py-4">
-            <NoteEditorAdapter
-              note={note}
-              hideFixedToolbar
-              onEditorReady={handleEditorReady}
-            />
-          </div>
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
+        <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
+          <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
         </div>
-        {toolbarPosition === 'bottom' && (
-          <FixedToolbar
-            editor={tipTapEditor}
-            position={toolbarPosition}
-            onTogglePosition={() => setToolbarPosition(p => p === 'top' ? 'bottom' : 'top')}
-          />
-        )}
       </div>
       </div>
+
+      {/* FixedToolbar — outside SURFACE, full width (hidden in read mode) */}
+      {!isReadMode && <FixedToolbar editor={editorInstance} />}
     </div>
   )
 }

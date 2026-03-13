@@ -8,15 +8,14 @@ import { suggestLinks } from "@/lib/queries/notes"
 import { LinkSuggestion } from "@/components/link-suggestion"
 import { extractHashtags } from "@/lib/body-helpers"
 import { pickColor } from "@/components/note-fields"
-import type { Editor } from "@tiptap/react"
 
 interface NoteEditorAdapterProps {
   note: Note
-  hideFixedToolbar?: boolean
-  onEditorReady?: (editor: Editor | null) => void
+  onEditorReady?: (editor: unknown) => void
+  editable?: boolean
 }
 
-export function NoteEditorAdapter({ note, hideFixedToolbar, onEditorReady }: NoteEditorAdapterProps) {
+export function NoteEditorAdapter({ note, onEditorReady, editable = true }: NoteEditorAdapterProps) {
   const updateNote = usePlotStore((s) => s.updateNote)
   const notes = usePlotStore((s) => s.notes)
 
@@ -97,8 +96,7 @@ export function NoteEditorAdapter({ note, hideFixedToolbar, onEditorReady }: Not
     (json: Record<string, unknown>, plainText: string) => {
       pendingRef.current = { content: plainText, contentJson: json }
 
-      // Sync #hashtags only when followed by whitespace (Space/Enter confirms tag, like UpNote)
-      // No debounce needed — regex requires whitespace after tag, so mid-typing won't match
+      // Sync #hashtags immediately (no debounce — instant like UpNote)
       if (currentNoteIdRef.current) {
         syncHashtagsToTags(currentNoteIdRef.current, plainText)
       }
@@ -114,6 +112,9 @@ export function NoteEditorAdapter({ note, hideFixedToolbar, onEditorReady }: Not
             contentJson: pendingRef.current.contentJson,
           })
           pendingRef.current = null
+
+          // Sync inline #hashtags → tags
+          syncHashtagsToTags(noteId, savedContent)
         }
       }, 300)
     },
@@ -143,14 +144,13 @@ export function NoteEditorAdapter({ note, hideFixedToolbar, onEditorReady }: Not
       : {}
 
   return (
-    <div className="relative h-full">
+    <div className="relative min-w-0 flex-1 flex flex-col">
       <TipTapEditor
         key={note.id}
         content={initialContent}
-        onChange={handleChange}
-        editable={true}
+        onChange={editable ? handleChange : undefined}
+        editable={editable}
         placeholder="Start writing..."
-        hideFixedToolbar={hideFixedToolbar}
         onEditorReady={onEditorReady}
       />
       <LinkSuggestion

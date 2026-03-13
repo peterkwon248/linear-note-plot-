@@ -35,6 +35,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     trashedAt: null,
     trashed: false,
     parentNoteId: null,
+    isWiki: false,
     labelId: null,
     preview: '',
     linksOut: [],
