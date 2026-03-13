@@ -21,7 +21,7 @@ export function extractPreview(content: string, maxLen = 120): string {
  * Returns unique tag names (preserves original case of first occurrence).
  */
 export function extractHashtags(content: string): string[] {
-  const regex = /#([\p{L}\p{N}_][\p{L}\p{N}_]*)(?=[\s\n,;.!?]|$)/gu
+  const regex = /#([\p{L}\p{N}_][\p{L}\p{N}_]*)(?=[\s\n,;.!?])/gu
   const seen = new Map<string, string>() // lowercase → original
   let match
   while ((match = regex.exec(content)) !== null) {
