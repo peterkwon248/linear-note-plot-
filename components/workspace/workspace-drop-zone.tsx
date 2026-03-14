@@ -8,9 +8,11 @@ import {
   hasLeafDragData,
   hasViewDragData,
   hasNoteDragData,
+  hasTabDragData,
   getLeafDragData,
   getViewDragData,
   getNoteDragData,
+  getTabDragData,
 } from "@/lib/drag-helpers"
 
 interface WorkspaceDropZoneProps {
@@ -41,12 +43,13 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
   const splitLeaf = usePlotStore((s) => s.splitLeaf)
   const setLeafContent = usePlotStore((s) => s.setLeafContent)
   const openNoteInLeaf = usePlotStore((s) => s.openNoteInLeaf)
+  const moveTabToLeaf = usePlotStore((s) => s.moveTabToLeaf)
 
   const [activeZone, setActiveZone] = useState<DropZone | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    if (!hasLeafDragData(e) && !hasViewDragData(e) && !hasNoteDragData(e)) return
+    if (!hasLeafDragData(e) && !hasViewDragData(e) && !hasNoteDragData(e) && !hasTabDragData(e)) return
     e.preventDefault()
     e.dataTransfer.dropEffect = "move"
 
@@ -74,7 +77,14 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
       return
     }
 
-    // 2. View drag — set or split with new content
+    // 2. Tab drag — move tab to this leaf
+    const tabData = getTabDragData(e)
+    if (tabData && tabData.panelId !== leafId) {
+      moveTabToLeaf(tabData.tabId, tabData.panelId, leafId)
+      return
+    }
+
+    // 3. View drag — set or split with new content
     const viewData = getViewDragData(e)
     if (viewData && viewData.type) {
       const content = viewData as unknown as PanelContent
@@ -88,7 +98,7 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
       return
     }
 
-    // 3. Note drag — open note in this leaf
+    // 4. Note drag — open note in this leaf
     const noteId = getNoteDragData(e)
     if (noteId) {
       if (zone === "center") {
@@ -100,7 +110,7 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
       }
       return
     }
-  }, [activeZone, leafId, moveLeaf, splitLeaf, setLeafContent, openNoteInLeaf])
+  }, [activeZone, leafId, moveLeaf, moveTabToLeaf, splitLeaf, setLeafContent, openNoteInLeaf])
 
   return (
     <div

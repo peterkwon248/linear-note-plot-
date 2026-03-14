@@ -7,6 +7,7 @@ import { usePlotStore } from "@/lib/store"
 import { NoteEditor } from "@/components/note-editor"
 import type { WorkspaceLeaf, WorkspaceTab } from "@/lib/workspace/types"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { setTabDragData } from "@/lib/drag-helpers"
 
 interface WorkspaceEditorLeafProps {
   leaf: WorkspaceLeaf
@@ -68,6 +69,8 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
               return (
                 <button
                   key={tab.id}
+                  draggable
+                  onDragStart={(e) => setTabDragData(e, tab.id, leaf.id)}
                   className={cn(
                     "group relative flex h-9 shrink-0 items-center gap-1.5 border-r border-border/60 px-3 text-[13px] transition-colors",
                     tab.isPinned ? "w-9 justify-center px-0" : "max-w-[180px]",
