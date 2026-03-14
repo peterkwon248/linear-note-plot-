@@ -55,11 +55,9 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
   const detailsOpen = usePlotStore((s) => s.detailsOpen)
   const toggleDetailsOpen = usePlotStore((s) => s.toggleDetailsOpen)
-  const layoutMode = usePlotStore((s) => s.layoutMode)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
-  const focusMode = layoutMode === "focus"
 
   const [localTitle, setLocalTitle] = useState("")
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
@@ -134,19 +132,11 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background">
-      {/* SURFACE: centered column, constrained in focus mode */}
-      <div
-        className={cn(
-          "flex flex-col flex-1 overflow-hidden w-full mx-auto",
-          focusMode
-            ? "max-w-[880px] transition-[max-width] duration-300"
-            : "max-w-none"
-        )}
-      >
+      {/* SURFACE: full-width column */}
+      <div className="flex flex-col flex-1 overflow-hidden w-full">
       {/* Editor Header */}
       <header className={cn(
-        "flex items-center justify-between border-b border-border py-2",
-        focusMode ? "px-6" : "px-4"
+        "flex items-center justify-between border-b border-border py-2 px-4"
       )}>
         <div className="flex items-center gap-2">
           <Tooltip>

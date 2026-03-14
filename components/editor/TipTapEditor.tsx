@@ -194,6 +194,32 @@ export function TipTapEditor({
         class:
           "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-[15px] leading-[1.75] text-foreground",
       },
+      handleDOMEvents: {
+        dragover: (_view, event) => {
+          const types = event.dataTransfer?.types ?? []
+          if (
+            types.includes("application/x-plot-view") ||
+            types.includes("application/x-plot-note") ||
+            types.includes("application/x-plot-tab") ||
+            types.includes("application/x-plot-leaf")
+          ) {
+            return true // skip ProseMirror, let WorkspaceDropZone handle
+          }
+          return false
+        },
+        drop: (_view, event) => {
+          const types = event.dataTransfer?.types ?? []
+          if (
+            types.includes("application/x-plot-view") ||
+            types.includes("application/x-plot-note") ||
+            types.includes("application/x-plot-tab") ||
+            types.includes("application/x-plot-leaf")
+          ) {
+            return true
+          }
+          return false
+        },
+      },
     },
   })
 
@@ -211,6 +237,32 @@ export function TipTapEditor({
             spellcheck: spellcheck ? "true" : "false",
             class:
               "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-[15px] leading-[1.75] text-foreground",
+          },
+          handleDOMEvents: {
+            dragover: (_view, event) => {
+              const types = event.dataTransfer?.types ?? []
+              if (
+                types.includes("application/x-plot-view") ||
+                types.includes("application/x-plot-note") ||
+                types.includes("application/x-plot-tab") ||
+                types.includes("application/x-plot-leaf")
+              ) {
+                return true
+              }
+              return false
+            },
+            drop: (_view, event) => {
+              const types = event.dataTransfer?.types ?? []
+              if (
+                types.includes("application/x-plot-view") ||
+                types.includes("application/x-plot-note") ||
+                types.includes("application/x-plot-tab") ||
+                types.includes("application/x-plot-leaf")
+              ) {
+                return true
+              }
+              return false
+            },
           },
         },
       })

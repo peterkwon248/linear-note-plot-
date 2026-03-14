@@ -44,8 +44,10 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
   const setLeafContent = usePlotStore((s) => s.setLeafContent)
   const openNoteInLeaf = usePlotStore((s) => s.openNoteInLeaf)
   const moveTabToLeaf = usePlotStore((s) => s.moveTabToLeaf)
+  const splitTabToNewLeaf = usePlotStore((s) => s.splitTabToNewLeaf)
 
   const [activeZone, setActiveZone] = useState<DropZone | null>(null)
+  const activeZoneRef = useRef<DropZone | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -55,20 +57,24 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
 
     if (!ref.current) return
     const rect = ref.current.getBoundingClientRect()
-    setActiveZone(detectZone(e, rect))
+    const zone = detectZone(e, rect)
+    setActiveZone(zone)
+    activeZoneRef.current = zone
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     // Only clear if leaving the container entirely
     if (ref.current && !ref.current.contains(e.relatedTarget as Node)) {
       setActiveZone(null)
+      activeZoneRef.current = null
     }
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
-    const zone = activeZone ?? "center"
+    const zone = activeZoneRef.current ?? "center"
     setActiveZone(null)
+    activeZoneRef.current = null
 
     // 1. Leaf drag — rearrange panels
     const sourceLeafId = getLeafDragData(e)
@@ -77,10 +83,18 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
       return
     }
 
-    // 2. Tab drag — move tab to this leaf
+    // 2. Tab drag — move to leaf (center) or split (edge)
     const tabData = getTabDragData(e)
-    if (tabData && tabData.panelId !== leafId) {
-      moveTabToLeaf(tabData.tabId, tabData.panelId, leafId)
+    if (tabData) {
+      if (zone === "center" && tabData.panelId !== leafId) {
+        // Center drop: move tab to existing leaf
+        moveTabToLeaf(tabData.tabId, tabData.panelId, leafId)
+      } else if (zone !== "center") {
+        // Edge drop: split tab into new leaf
+        const direction = (zone === "left" || zone === "right") ? "horizontal" : "vertical"
+        const position = (zone === "left" || zone === "top") ? "before" : "after"
+        splitTabToNewLeaf(tabData.tabId, tabData.panelId, leafId, direction, position)
+      }
       return
     }
 
@@ -110,7 +124,7 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
       }
       return
     }
-  }, [activeZone, leafId, moveLeaf, moveTabToLeaf, splitLeaf, setLeafContent, openNoteInLeaf])
+  }, [leafId, moveLeaf, moveTabToLeaf, splitTabToNewLeaf, splitLeaf, setLeafContent, openNoteInLeaf])
 
   return (
     <div

@@ -134,6 +134,29 @@ export function splitLeaf(
   return replaceNode(root, leafId, branch)
 }
 
+/** Like splitLeaf but also returns the new leaf's ID for deterministic lookup */
+export function splitLeafWithId(
+  root: WorkspaceNode,
+  leafId: string,
+  direction: SplitDirection,
+  newContent: PanelContent,
+  position: "before" | "after" = "after",
+): { root: WorkspaceNode; newLeafId: string | null } {
+  if (treeDepth(root) >= MAX_DEPTH) return { root, newLeafId: null }
+
+  const newLeaf = createLeaf(newContent)
+  const originalNode = findNode(root, leafId)
+  if (!originalNode) return { root, newLeafId: null }
+
+  const children: [WorkspaceNode, WorkspaceNode] =
+    position === "before"
+      ? [newLeaf, originalNode]
+      : [originalNode, newLeaf]
+
+  const branch = createBranch(direction, children, 0.5)
+  return { root: replaceNode(root, leafId, branch), newLeafId: newLeaf.id }
+}
+
 /* ── Query ─────────────────────────────────────────────── */
 
 /** Get all leaves as flat array (DFS, left-to-right) */

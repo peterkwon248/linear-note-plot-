@@ -233,6 +233,7 @@ export interface PlotState {
   closeTabInLeaf: (tabId: string, leafId: string) => void
   setActiveTabInLeaf: (tabId: string, leafId: string) => void
   moveTabToLeaf: (tabId: string, fromLeafId: string, toLeafId: string) => void
+  splitTabToNewLeaf: (tabId: string, fromLeafId: string, targetLeafId: string, direction: SplitDirection, position: "before" | "after") => void
   moveLeaf: (leafId: string, targetLeafId: string, zone: DropZone) => void
   applyPreset: (preset: WorkspacePreset) => void
 

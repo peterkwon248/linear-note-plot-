@@ -2,13 +2,20 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect, memo } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { Search, X, Plus, ArrowUpDown, SlidersHorizontal } from "lucide-react"
+import { Search, X, Plus, ArrowUpDown, SlidersHorizontal, Trash2, Pin, Archive } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { STATUS_CONFIG, PRIORITY_CONFIG } from "@/components/note-fields"
 import { setNoteDragData } from "@/lib/drag-helpers"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
@@ -60,6 +67,9 @@ export function CompactNoteList({
   const openNote = usePlotStore((s) => s.openNote)
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
+  const togglePin = usePlotStore((s) => s.togglePin)
+  const toggleArchive = usePlotStore((s) => s.toggleArchive)
+  const deleteNote = usePlotStore((s) => s.deleteNote)
 
   // Resolve dynamic title from context
   const resolvedTitle = useMemo(() => {
@@ -255,6 +265,9 @@ export function CompactNoteList({
                   note={note}
                   isActive={note.id === activeNoteId}
                   onClick={() => handleRowClick(note.id)}
+                  onDelete={() => deleteNote(note.id)}
+                  onTogglePin={() => togglePin(note.id)}
+                  onToggleArchive={() => toggleArchive(note.id)}
                 />
               </div>
             )
@@ -277,63 +290,96 @@ const CompactRow = memo(function CompactRow({
   note,
   isActive,
   onClick,
+  onDelete,
+  onTogglePin,
+  onToggleArchive,
 }: {
   note: Note
   isActive: boolean
   onClick: () => void
+  onDelete?: () => void
+  onTogglePin?: () => void
+  onToggleArchive?: () => void
 }) {
   const statusCfg = STATUS_CONFIG[note.status] ?? STATUS_CONFIG.capture
   const priorityCfg = note.priority !== "none" ? PRIORITY_CONFIG[note.priority] : null
 
   return (
-    <div
-      draggable
-      onDragStart={(e) => setNoteDragData(e, note.id)}
-      onClick={onClick}
-      className={cn(
-        "flex items-start gap-2 px-3 py-2 cursor-pointer transition-colors border-b border-border/50",
-        isActive
-          ? "bg-accent/10 border-l-2 border-l-accent"
-          : "hover:bg-secondary/30 border-l-2 border-l-transparent"
-      )}
-    >
-      {/* Status dot */}
-      <span
-        className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-        style={{ backgroundColor: statusCfg.color }}
-        title={statusCfg.label}
-      />
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          draggable
+          onDragStart={(e) => setNoteDragData(e, note.id)}
+          onClick={onClick}
+          className={cn(
+            "flex items-start gap-2 px-3 py-2 cursor-pointer transition-colors border-b border-border/50",
+            isActive
+              ? "bg-accent/10 border-l-2 border-l-accent"
+              : "hover:bg-secondary/30 border-l-2 border-l-transparent"
+          )}
+        >
+          {/* Status dot */}
+          <span
+            className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+            style={{ backgroundColor: statusCfg.color }}
+            title={statusCfg.label}
+          />
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1">
-          <span className={cn(
-            "truncate text-[13px] font-medium",
-            isActive ? "text-foreground" : "text-foreground/90"
-          )}>
-            {note.title || "Untitled"}
-          </span>
-          {note.pinned && (
-            <span className="text-[#f2994a] text-[10px]">*</span>
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1">
+              <span className={cn(
+                "truncate text-[13px] font-medium",
+                isActive ? "text-foreground" : "text-foreground/90"
+              )}>
+                {note.title || "Untitled"}
+              </span>
+              {note.pinned && (
+                <span className="text-[#f2994a] text-[10px]">*</span>
+              )}
+            </div>
+            {note.preview && (
+              <p className="truncate text-[11px] text-muted-foreground/70 mt-0.5 leading-tight">
+                {note.preview}
+              </p>
+            )}
+          </div>
+
+          {/* Priority icon */}
+          {priorityCfg && (
+            <span
+              className="mt-1 shrink-0"
+              style={{ color: priorityCfg.color }}
+              title={priorityCfg.label}
+            >
+              {priorityCfg.icon}
+            </span>
           )}
         </div>
-        {note.preview && (
-          <p className="truncate text-[11px] text-muted-foreground/70 mt-0.5 leading-tight">
-            {note.preview}
-          </p>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        {onTogglePin && (
+          <ContextMenuItem onClick={onTogglePin}>
+            <Pin className="mr-2 h-4 w-4" />
+            {note.pinned ? "Unpin" : "Pin"}
+          </ContextMenuItem>
         )}
-      </div>
-
-      {/* Priority icon */}
-      {priorityCfg && (
-        <span
-          className="mt-1 shrink-0"
-          style={{ color: priorityCfg.color }}
-          title={priorityCfg.label}
-        >
-          {priorityCfg.icon}
-        </span>
-      )}
-    </div>
+        {onToggleArchive && (
+          <ContextMenuItem onClick={onToggleArchive}>
+            <Archive className="mr-2 h-4 w-4" />
+            {note.archived ? "Unarchive" : "Archive"}
+          </ContextMenuItem>
+        )}
+        {(onTogglePin || onToggleArchive) && onDelete && (
+          <ContextMenuSeparator />
+        )}
+        {onDelete && (
+          <ContextMenuItem variant="destructive" onClick={onDelete}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </ContextMenuItem>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
   )
 })

@@ -25,7 +25,7 @@ import { usePlotStore } from "@/lib/store"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
 import type { Note, NoteStatus } from "@/lib/types"
 import type { PanelContent } from "@/lib/workspace/types"
-import { setViewDragData } from "@/lib/drag-helpers"
+import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
 import { StatusIcon } from "@/components/status-icon"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import {
@@ -649,6 +649,8 @@ export function LinearSidebar() {
             {recentNotes.map((item) => (
               <button
                 key={item.id}
+                draggable
+                onDragStart={(e) => setNoteDragData(e, item.id)}
                 onClick={() => openNote(item.id)}
                 className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
               >

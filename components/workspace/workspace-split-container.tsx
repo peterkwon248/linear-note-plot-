@@ -61,7 +61,7 @@ export function WorkspaceSplitContainer({ branch }: WorkspaceSplitContainerProps
     >
       {/* First child */}
       <div
-        className="overflow-hidden"
+        className="flex flex-col overflow-hidden"
         style={isHorizontal
           ? { width: firstPercent, minWidth: 120 }
           : { height: firstPercent, minHeight: 80 }
@@ -75,8 +75,8 @@ export function WorkspaceSplitContainer({ branch }: WorkspaceSplitContainerProps
         className={cn(
           "group relative flex shrink-0 items-center justify-center",
           isHorizontal
-            ? "w-0 cursor-col-resize"
-            : "h-0 cursor-row-resize"
+            ? "w-1 cursor-col-resize"
+            : "h-1 cursor-row-resize"
         )}
         onMouseDown={handleMouseDown}
       >
@@ -95,7 +95,7 @@ export function WorkspaceSplitContainer({ branch }: WorkspaceSplitContainerProps
 
       {/* Second child */}
       <div
-        className="overflow-hidden"
+        className="flex flex-col overflow-hidden"
         style={isHorizontal
           ? { width: secondPercent, minWidth: 120 }
           : { height: secondPercent, minHeight: 80 }

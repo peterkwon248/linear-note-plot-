@@ -15,6 +15,7 @@ import {
   replaceNode,
   removeLeaf,
   splitLeaf as splitLeafUtil,
+  splitLeafWithId,
   updateLeafContent,
   updateLeafTabs,
   updateBranchRatio,
@@ -174,6 +175,27 @@ export function createWorkspaceSlice(set: Set, get: Get) {
         }
 
         const newRoot = updateLeafTabs(state.workspaceRoot, leafId, newTabs, newActiveTabId)
+
+        // Auto-close empty editor leaf (unless it's the only leaf)
+        if (newTabs.length === 0) {
+          const afterRemove = removeLeaf(newRoot, leafId)
+          if (afterRemove) {
+            // Activate first editor leaf or first available leaf
+            let activeLeafId = state.activeLeafId
+            if (activeLeafId === leafId) {
+              const editorLeaf = findFirstEditorLeaf(afterRemove)
+              const allLeaves = getAllLeaves(afterRemove)
+              const newActive = editorLeaf ?? allLeaves[0]
+              activeLeafId = newActive?.id ?? null
+              if (newActive && isLeaf(newActive) && newActive.content.type === "editor") {
+                const activeTab = newActive.tabs.find((t: WorkspaceTab) => t.id === newActive.activeTabId)
+                selectedNoteId = activeTab?.noteId ?? null
+              }
+            }
+            return { workspaceRoot: afterRemove, activeLeafId, selectedNoteId }
+          }
+        }
+
         return { workspaceRoot: newRoot, selectedNoteId }
       })
     },
@@ -224,7 +246,74 @@ export function createWorkspaceSlice(set: Set, get: Get) {
         let root = updateLeafTabs(state.workspaceRoot, fromLeafId, fromTabs, fromActiveTabId)
         root = updateLeafTabs(root, toLeafId, toTabs, toActiveTabId)
 
-        return { workspaceRoot: root, selectedNoteId: tab.noteId }
+        // Auto-close empty source leaf
+        if (fromTabs.length === 0) {
+          const cleaned = removeLeaf(root, fromLeafId)
+          if (cleaned) root = cleaned
+        }
+
+        let activeLeafId = state.activeLeafId
+        if (fromTabs.length === 0 && activeLeafId === fromLeafId) {
+          activeLeafId = toLeafId
+        }
+
+        return { workspaceRoot: root, activeLeafId, selectedNoteId: tab.noteId }
+      })
+    },
+
+    splitTabToNewLeaf: (
+      tabId: string,
+      fromLeafId: string,
+      targetLeafId: string,
+      direction: SplitDirection,
+      position: "before" | "after",
+    ) => {
+      set((state: any) => {
+        const from = findNode(state.workspaceRoot, fromLeafId)
+        if (!from || !isLeaf(from) || from.content.type !== "editor") return state
+
+        const tab = from.tabs.find((t: WorkspaceTab) => t.id === tabId)
+        if (!tab) return state
+
+        // Guard: dragging the only tab onto its own edge is a no-op
+        if (fromLeafId === targetLeafId && from.tabs.length === 1) {
+          return state
+        }
+
+        // 1. Remove tab from source leaf
+        const fromTabs = from.tabs.filter((t: WorkspaceTab) => t.id !== tabId)
+        const fromActiveTabId = from.activeTabId === tabId
+          ? (fromTabs[0]?.id ?? null)
+          : from.activeTabId
+
+        let root = updateLeafTabs(state.workspaceRoot, fromLeafId, fromTabs, fromActiveTabId)
+
+        // 2. If source is now empty, remove it
+        if (fromTabs.length === 0) {
+          const cleaned = removeLeaf(root, fromLeafId)
+          if (cleaned) root = cleaned
+        }
+
+        // 3. Split target leaf to create new leaf
+        const actualTarget = findNode(root, targetLeafId)
+        if (!actualTarget) {
+          // Target gone (same leaf + last tab case) — no-op
+          return state
+        }
+
+        const splitResult = splitLeafWithId(root, targetLeafId, direction, { type: "editor", noteId: tab.noteId }, position)
+        root = splitResult.root
+
+        // 4. Place the tab in the newly created leaf (deterministic ID lookup)
+        if (splitResult.newLeafId) {
+          root = updateLeafTabs(root, splitResult.newLeafId, [tab], tab.id)
+        }
+
+        return {
+          workspaceRoot: root,
+          activeLeafId: splitResult.newLeafId ?? state.activeLeafId,
+          selectedNoteId: tab.noteId,
+        }
       })
     },
 
@@ -288,30 +377,16 @@ export function createWorkspaceSlice(set: Set, get: Get) {
 
     applyPreset: (preset: WorkspacePreset) => {
       set((state: any) => {
-        const newRoot = buildPreset(preset)
+        let newRoot = buildPreset(preset)
 
-        // Try to preserve the current note in the first editor leaf
+        // Populate ALL editor leaves with the current note
         const currentNoteId = state.selectedNoteId
         if (currentNoteId) {
-          const editorLeaf = findFirstEditorLeaf(newRoot)
-          if (editorLeaf) {
+          const allLeaves = getAllLeaves(newRoot)
+          const editorLeaves = allLeaves.filter((l) => l.content.type === "editor")
+          for (const leaf of editorLeaves) {
             const tab: WorkspaceTab = { id: nanoid(), noteId: currentNoteId }
-            const updated = updateLeafTabs(newRoot, editorLeaf.id, [tab], tab.id)
-            const firstLeaf = findFirstEditorLeaf(updated)
-
-            // Handle focus preset: collapse sidebar
-            if (preset === "focus") {
-              return {
-                workspaceRoot: updated,
-                activeLeafId: firstLeaf?.id ?? null,
-                sidebarCollapsed: true,
-              }
-            }
-
-            return {
-              workspaceRoot: updated,
-              activeLeafId: firstLeaf?.id ?? null,
-            }
+            newRoot = updateLeafTabs(newRoot, leaf.id, [tab], tab.id)
           }
         }
 

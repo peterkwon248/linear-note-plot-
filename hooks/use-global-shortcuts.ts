@@ -121,19 +121,19 @@ export function useGlobalShortcuts() {
         const s = usePlotStore.getState()
         if (s.selectedNoteId === null) return
         if (s.layoutMode === "focus") {
-          s.setLayoutMode(s._preFocusLayoutMode ?? "tabs")
+          s.setLayoutMode(s._preFocusLayoutMode ?? "three-column")
         } else {
           s.setLayoutMode("focus")
         }
         return
       }
 
-      // ── 2c. Ctrl/Cmd+1~5 — Layout Mode Shortcuts ──
-      if (mod && !e.shiftKey && !e.altKey && ["1", "2", "3", "4", "5"].includes(e.key)) {
+      // ── 2c. Ctrl/Cmd+1~3 — Layout Mode Shortcuts ──
+      if (mod && !e.shiftKey && !e.altKey && ["1", "2", "3"].includes(e.key)) {
         const s = usePlotStore.getState()
         e.preventDefault()
         if (s.selectedNoteId === null) return
-        const modes = ["focus", "three-column", "tabs", "panels", "split"] as const
+        const modes = ["focus", "three-column", "split"] as const
         s.setLayoutMode(modes[parseInt(e.key) - 1])
         return
       }
