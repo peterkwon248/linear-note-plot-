@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { useEditor, EditorContent } from "@tiptap/react"
+import { useEditor, EditorContent, useEditorState } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import TaskList from "@tiptap/extension-task-list"
@@ -18,6 +18,16 @@ import { Table } from "@tiptap/extension-table"
 import { TableRow } from "@tiptap/extension-table-row"
 import { TableCell } from "@tiptap/extension-table-cell"
 import { TableHeader } from "@tiptap/extension-table-header"
+import Typography from "@tiptap/extension-typography"
+import Dropcursor from "@tiptap/extension-dropcursor"
+import CharacterCount from "@tiptap/extension-character-count"
+import FontFamily from "@tiptap/extension-font-family"
+import Youtube from "@tiptap/extension-youtube"
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight"
+import { common, createLowlight } from "lowlight"
+import { Details, DetailsSummary, DetailsContent } from "@tiptap/extension-details"
+import Mathematics from "@tiptap/extension-mathematics"
+import "katex/dist/katex.min.css"
 import { ResizableImage } from "./ResizableImage"
 import { EditorToolbar } from "./EditorToolbar"
 import { useSettingsStore } from "@/lib/settings-store"
@@ -26,7 +36,11 @@ import { Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 import { CurrentLineHighlightExtension } from "./CurrentLineHighlight"
 import { HashtagSuggestion } from "./HashtagSuggestion"
+import { SlashCommandExtension } from "./SlashCommand"
 import "./EditorStyles.css"
+
+// ── Lowlight (syntax highlighting for code blocks) ──────────────────
+const lowlight = createLowlight(common)
 
 // ── Typewriter Extension ─────────────────────────────────────────────
 // Scroll-based typewriter mode: keeps the caret vertically centred
@@ -154,8 +168,16 @@ export function TipTapEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4, 5, 6] },
+        dropcursor: false,
+        codeBlock: false,
       }),
-      Placeholder.configure({ placeholder }),
+      Placeholder.configure({
+        placeholder: ({ node }: { node: { type: { name: string } } }) => {
+          if (node.type.name === "heading") return "Heading"
+          if (node.type.name === "codeBlock") return "Write code..."
+          return placeholder
+        },
+      }),
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
@@ -171,6 +193,16 @@ export function TipTapEditor({
       TableCell,
       TableHeader,
       ResizableImage.configure({ inline: false, allowBase64: true }),
+      CodeBlockLowlight.configure({ lowlight }),
+      Typography,
+      Dropcursor.configure({ color: "#5E6AD2", width: 2, class: "drop-cursor" }),
+      CharacterCount,
+      FontFamily,
+      Youtube.configure({ inline: false, allowFullscreen: true, HTMLAttributes: { class: "youtube-embed" } }),
+      Details.configure({ HTMLAttributes: { class: "details-block" } }),
+      DetailsSummary,
+      DetailsContent,
+      Mathematics,
       TypewriterExtension.configure({
         scrollContainerRef,
         focusModeRef,
@@ -179,6 +211,7 @@ export function TipTapEditor({
         enabledRef: currentLineHighlightRef,
       }),
       HashtagSuggestion,
+      SlashCommandExtension,
     ],
     content: content && Object.keys(content).length > 0 ? content : undefined,
     editable,
@@ -274,6 +307,17 @@ export function TipTapEditor({
     editor.setEditable(editable)
   }
 
+  const counts = useEditorState({
+    editor,
+    selector: ({ editor: e }) => {
+      if (!e) return { chars: 0, words: 0 }
+      return {
+        chars: e.storage.characterCount.characters(),
+        words: e.storage.characterCount.words(),
+      }
+    },
+  })
+
   return (
     <div
       className="flex flex-col min-w-0 flex-1"
@@ -284,6 +328,24 @@ export function TipTapEditor({
       <div ref={editorWrapRef} className="flex-1">
         <EditorContent editor={editor} className="w-full" />
       </div>
+      {editor && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            padding: "4px 16px",
+            fontSize: "11px",
+            color: "var(--muted-foreground)",
+            opacity: 0.6,
+            userSelect: "none",
+            flexShrink: 0,
+          }}
+        >
+          <span>{counts?.words ?? 0} words</span>
+          <span>{counts?.chars ?? 0} chars</span>
+        </div>
+      )}
       {editable && <EditorToolbar editor={editor} />}
     </div>
   )

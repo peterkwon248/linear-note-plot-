@@ -97,6 +97,14 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-48">
+        {/* Switch to editor */}
+        <ContextMenuItem
+          onSelect={() => handleSwitchView({ type: "editor", noteId: null })}
+        >
+          <FileText className="mr-2 h-4 w-4" />
+          Editor
+        </ContextMenuItem>
+        <ContextMenuSeparator />
         {/* Switch to view */}
         {SWITCHABLE_VIEWS.map((view) => {
           const ViewIcon = view.icon
@@ -105,7 +113,7 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
             <ContextMenuItem
               key={view.type}
               disabled={isCurrent}
-              onClick={() => handleSwitchView({ type: view.type } as PanelContent)}
+              onSelect={() => handleSwitchView({ type: view.type } as PanelContent)}
             >
               <ViewIcon className="mr-2 h-4 w-4" />
               {view.label}
@@ -122,13 +130,13 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-44">
             <ContextMenuItem
-              onClick={() => handleSwitchView({ type: "note-list", context: "all" })}
+              onSelect={() => handleSwitchView({ type: "note-list", context: "all" })}
             >
               <List className="mr-2 h-4 w-4" />
               All Notes
             </ContextMenuItem>
             <ContextMenuItem
-              onClick={() => handleSwitchView({ type: "note-list", context: "inbox" })}
+              onSelect={() => handleSwitchView({ type: "note-list", context: "inbox" })}
             >
               <Inbox className="mr-2 h-4 w-4" />
               Inbox
@@ -137,7 +145,7 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
             {folders.map((folder) => (
               <ContextMenuItem
                 key={folder.id}
-                onClick={() => handleSwitchView({ type: "note-list", context: "folder", folderId: folder.id })}
+                onSelect={() => handleSwitchView({ type: "note-list", context: "folder", folderId: folder.id })}
               >
                 <FolderOpen className="mr-2 h-4 w-4" />
                 <span className="truncate">{folder.name}</span>
@@ -147,11 +155,11 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
         </ContextMenuSub>
         {/* Split options */}
         <ContextMenuSeparator />
-        <ContextMenuItem onClick={() => splitLeaf(leafId, "horizontal", { type: "editor", noteId: null }, "after")}>
+        <ContextMenuItem onSelect={() => splitLeaf(leafId, "horizontal", { type: "editor", noteId: null }, "after")}>
           <SplitSquareHorizontal className="mr-2 h-4 w-4" />
           Split Right
         </ContextMenuItem>
-        <ContextMenuItem onClick={() => splitLeaf(leafId, "vertical", { type: "editor", noteId: null }, "after")}>
+        <ContextMenuItem onSelect={() => splitLeaf(leafId, "vertical", { type: "editor", noteId: null }, "after")}>
           <ArrowDownFromLine className="mr-2 h-4 w-4" />
           Split Down
         </ContextMenuItem>
@@ -159,7 +167,7 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
         {canClose && (
           <>
             <ContextMenuSeparator />
-            <ContextMenuItem onClick={() => closeLeaf(leafId)}>
+            <ContextMenuItem onSelect={() => closeLeaf(leafId)}>
               <X className="mr-2 h-4 w-4" />
               Close Panel
             </ContextMenuItem>
