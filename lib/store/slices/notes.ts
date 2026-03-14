@@ -41,6 +41,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       }))
       persistBody({ id, content, contentJson: partial?.contentJson ?? null })
       appendEvent(id, "created")
+      // Sync workspace editor tab
+      get().openNoteInLeaf(id)
       return id
     },
 

@@ -1,5 +1,6 @@
 import type { Note, ActiveView, LayoutMode } from "../../types"
 import type { ViewState, ViewContextKey } from "../../view-engine/types"
+import { layoutModeToPreset } from "../../workspace/presets"
 import { now, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
@@ -38,8 +39,11 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
         return updates
       })
       appendEvent(id, "opened")
-      // Sync editor tab state
-      get().openNoteInTab(id)
+      // Sync workspace editor tab state
+      const state = get()
+      state.openNoteInLeaf(id)
+      // Also sync legacy editor state for backward compat
+      state.openNoteInTab(id)
     },
 
     goBack: () => {
@@ -103,8 +107,10 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
           updates.sidebarPeek = false
           updates.detailsOpen = false
         } else if (current === "focus" && mode !== "focus") {
-          // Leaving focus — clear saved mode
+          // Leaving focus — restore sidebar and details
           updates._preFocusLayoutMode = null
+          updates.sidebarCollapsed = false
+          updates.detailsOpen = true
         }
 
         if (mode === "three-column") {
@@ -115,6 +121,9 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
 
         return updates
       })
+      // Rebuild workspace tree to match the new layout mode
+      const preset = layoutModeToPreset(mode)
+      get().applyPreset(preset)
     },
 
     setListPaneWidth: (width: number) => set({ listPaneWidth: Math.max(200, Math.min(500, width)) }),

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react"
-import { ChevronDown, ChevronRight, Plus, Check, MessageSquare } from "lucide-react"
+import { ChevronDown, ChevronRight, Plus, Check, MessageSquare, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { format } from "date-fns"
@@ -13,26 +13,35 @@ interface ThreadPanelProps {
 
 function DoneThreadItem({ thread }: { thread: Thread }) {
   const [expanded, setExpanded] = useState(false)
+  const deleteThread = usePlotStore((s) => s.deleteThread)
 
   return (
-    <div className="border border-border/50 rounded-md overflow-hidden">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-secondary/30 transition-colors"
-      >
-        {expanded ? (
-          <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
-        ) : (
-          <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-        )}
-        <Check className="h-3 w-3 text-green-500 shrink-0" />
-        <span className="text-xs text-muted-foreground">
-          {format(new Date(thread.startedAt), "MMM d, h:mm a")}
-        </span>
-        <span className="text-xs text-muted-foreground ml-auto">
-          {thread.steps.length} step{thread.steps.length !== 1 ? "s" : ""}
-        </span>
-      </button>
+    <div className="group/done border border-border/50 rounded-md overflow-hidden">
+      <div className="flex w-full items-center hover:bg-secondary/30 transition-colors">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex flex-1 items-center gap-2 px-3 py-2 text-left"
+        >
+          {expanded ? (
+            <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+          ) : (
+            <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+          )}
+          <Check className="h-3 w-3 text-green-500 shrink-0" />
+          <span className="text-xs text-muted-foreground">
+            {format(new Date(thread.startedAt), "MMM d, h:mm a")}
+          </span>
+          <span className="text-xs text-muted-foreground ml-auto">
+            {thread.steps.length} step{thread.steps.length !== 1 ? "s" : ""}
+          </span>
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); deleteThread(thread.id) }}
+          className="opacity-0 group-hover/done:opacity-100 flex items-center justify-center px-2 py-2 text-muted-foreground hover:text-destructive transition-colors"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
 
       {expanded && thread.steps.length > 0 && (
         <div className="px-3 pb-3 pt-1">
@@ -58,6 +67,7 @@ export function ThreadPanel({ noteId }: ThreadPanelProps) {
   const startThread = usePlotStore((s) => s.startThread)
   const addThreadStep = usePlotStore((s) => s.addThreadStep)
   const endThread = usePlotStore((s) => s.endThread)
+  const deleteThread = usePlotStore((s) => s.deleteThread)
 
   const noteThreads = (threads ?? []).filter((t) => t.noteId === noteId)
   const activeThread = noteThreads.find((t) => t.status === "active")
@@ -168,8 +178,15 @@ export function ThreadPanel({ noteId }: ThreadPanelProps) {
                 />
               </div>
 
-              {/* End Thread button */}
-              <div className="flex justify-end">
+              {/* End Thread / Delete button */}
+              <div className="flex justify-end gap-1">
+                <button
+                  onClick={() => { deleteThread(activeThread.id) }}
+                  className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Delete
+                </button>
                 <button
                   onClick={handleEndThread}
                   className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"

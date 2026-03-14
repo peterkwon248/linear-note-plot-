@@ -182,7 +182,7 @@ export type NoteEventType =
   | "created" | "updated" | "opened" | "promoted" | "archived" | "unarchived" | "trashed" | "untrashed"
   | "triage_keep" | "triage_snooze" | "triage_trash"
   | "link_added" | "link_removed"
-  | "thread_started" | "thread_step_added" | "thread_ended"
+  | "thread_started" | "thread_step_added" | "thread_ended" | "thread_deleted"
   | "map_added" | "map_removed"
   | "label_changed"
   | "srs_reviewed"

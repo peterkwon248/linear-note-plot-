@@ -30,18 +30,22 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const currentNoteIdRef = useRef(note.id)
 
-  // Flush pending save immediately
+  // Flush pending save immediately (note switch / unmount)
   const flushSave = useCallback(() => {
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current)
       saveTimerRef.current = null
     }
     if (pendingRef.current && currentNoteIdRef.current) {
-      updateNote(currentNoteIdRef.current, {
-        content: pendingRef.current.content,
+      const noteId = currentNoteIdRef.current
+      const content = pendingRef.current.content
+      updateNote(noteId, {
+        content,
         contentJson: pendingRef.current.contentJson,
       })
       pendingRef.current = null
+      // Final extraction: include end-of-string tags since user is leaving the note
+      syncHashtagsToTags(noteId, content, true)
     }
   }, [updateNote])
 
@@ -53,41 +57,75 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     }
   }, [note.id, flushSave])
 
-  // Cleanup on unmount
+  // Cleanup on unmount — flush save + final hashtag extraction
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      // Flush on unmount
       if (pendingRef.current && currentNoteIdRef.current) {
-        // Can't use updateNote in cleanup reliably, but try
+        const noteId = currentNoteIdRef.current
+        const content = pendingRef.current.content
         const store = usePlotStore.getState()
-        store.updateNote(currentNoteIdRef.current, {
-          content: pendingRef.current.content,
+        store.updateNote(noteId, {
+          content,
           contentJson: pendingRef.current.contentJson,
         })
+        // Final extraction with end-of-string support
+        const hashtagNames = extractHashtags(content, { includeEos: true })
+        if (hashtagNames.length > 0) {
+          const currentNote = store.notes.find((n) => n.id === noteId)
+          if (currentNote) {
+            for (const name of hashtagNames) {
+              let tag = store.tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
+              if (!tag) {
+                store.createTag(name, pickColor(name))
+                tag = usePlotStore.getState().tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
+              }
+              if (tag && !currentNote.tags.includes(tag.id)) {
+                store.addTagToNote(noteId, tag.id)
+              }
+            }
+          }
+        }
       }
     }
   }, [])
 
-  // Sync #hashtags found in content to the tag system
-  const syncHashtagsToTags = useCallback((noteId: string, content: string) => {
-    const hashtagNames = extractHashtags(content)
-    if (hashtagNames.length === 0) return
+  // Bidirectional sync: #hashtags in content ↔ tag associations on note
+  // includeEos=true on flush (note switch/unmount) to catch end-of-string tags
+  const syncHashtagsToTags = useCallback((noteId: string, content: string, includeEos = false) => {
+    const hashtagNames = extractHashtags(content, { includeEos })
+    const hashtagLower = new Set(hashtagNames.map((n) => n.toLowerCase()))
 
     const store = usePlotStore.getState()
     const currentNote = store.notes.find((n) => n.id === noteId)
     if (!currentNote) return
 
+    // Forward: add tags found in content
     for (const name of hashtagNames) {
-      // Find existing tag (case-insensitive)
       let tag = store.tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
       if (!tag) {
-        // Create new tag with deterministic color
         store.createTag(name, pickColor(name))
         tag = usePlotStore.getState().tags.find((t) => t.name.toLowerCase() === name.toLowerCase())
       }
       if (tag && !currentNote.tags.includes(tag.id)) {
         store.addTagToNote(noteId, tag.id)
+      }
+    }
+
+    // Reverse: remove tag associations for hashtags no longer in content
+    for (const tagId of currentNote.tags) {
+      const tag = store.tags.find((t) => t.id === tagId)
+      if (!tag) continue
+      // Only auto-remove if the tag name looks like it came from inline hashtag
+      // (i.e., the tag name exists as a potential hashtag match)
+      if (!hashtagLower.has(tag.name.toLowerCase())) {
+        // Check if #tagName was ever in this content (heuristic: tag was auto-added)
+        // We can't perfectly distinguish manual vs inline, so only remove if
+        // the content has NO reference to this tag at all (not even as #partial)
+        const hasAnyRef = content.includes(`#${tag.name}`)
+        if (!hasAnyRef) {
+          store.removeTagFromNote(noteId, tagId)
+        }
       }
     }
   }, [])
@@ -96,25 +134,19 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     (json: Record<string, unknown>, plainText: string) => {
       pendingRef.current = { content: plainText, contentJson: json }
 
-      // Sync #hashtags immediately (no debounce — instant like UpNote)
-      if (currentNoteIdRef.current) {
-        syncHashtagsToTags(currentNoteIdRef.current, plainText)
-      }
-
       // Debounce save at 300ms
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       saveTimerRef.current = setTimeout(() => {
         if (pendingRef.current && currentNoteIdRef.current) {
-          const savedContent = pendingRef.current.content
           const noteId = currentNoteIdRef.current
+          const content = pendingRef.current.content
           updateNote(noteId, {
-            content: savedContent,
+            content,
             contentJson: pendingRef.current.contentJson,
           })
           pendingRef.current = null
-
-          // Sync inline #hashtags → tags
-          syncHashtagsToTags(noteId, savedContent)
+          // UpNote-style: only extract tags confirmed by whitespace (no end-of-string)
+          syncHashtagsToTags(noteId, content)
         }
       }, 300)
     },

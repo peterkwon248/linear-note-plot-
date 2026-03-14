@@ -38,6 +38,14 @@ export function createThreadSlice(set: Set, get: Get, appendEvent: AppendEventFn
       if (thread) appendEvent(thread.noteId, "thread_ended", { threadId })
     },
 
+    deleteThread: (threadId: string) => {
+      const thread = get().threads.find((c: Thread) => c.id === threadId)
+      set((state: any) => ({
+        threads: state.threads.filter((c: Thread) => c.id !== threadId),
+      }))
+      if (thread) appendEvent(thread.noteId, "thread_deleted", { threadId })
+    },
+
     addWikiLink: (noteId: string, targetTitle: string) => {
       set((state: any) => ({
         notes: state.notes.map((n: Note) => {

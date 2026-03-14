@@ -24,6 +24,8 @@ import {
 import { usePlotStore } from "@/lib/store"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
 import type { Note, NoteStatus } from "@/lib/types"
+import type { PanelContent } from "@/lib/workspace/types"
+import { setViewDragData } from "@/lib/drag-helpers"
 import { StatusIcon } from "@/components/status-icon"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import {
@@ -46,6 +48,7 @@ function NavLink({
   count,
   badge,
   active,
+  dragContent,
 }: {
   href: string
   icon: React.ReactNode
@@ -53,6 +56,7 @@ function NavLink({
   count?: number
   badge?: { count: number; color: string }
   active?: boolean
+  dragContent?: PanelContent
 }) {
   const router = useRouter()
   const setNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -89,6 +93,11 @@ function NavLink({
     </>
   )
 
+  const dragProps = dragContent ? {
+    draggable: true,
+    onDragStart: (e: React.DragEvent) => setViewDragData(e, dragContent as unknown as Record<string, unknown>),
+  } : {}
+
   if (isSidebarRoute) {
     return (
       <button
@@ -103,6 +112,7 @@ function NavLink({
           router.push(href)
         }}
         className={className}
+        {...dragProps}
       >
         {content}
       </button>
@@ -114,6 +124,7 @@ function NavLink({
       href={href}
       onClick={() => setActiveRoute(null)}
       className={className}
+      {...dragProps}
     >
       {content}
     </Link>
@@ -481,18 +492,21 @@ export function LinearSidebar() {
             icon={<History className="h-5 w-5" strokeWidth={1.4} />}
             label="Activity"
             active={isActive("/activity")}
+            dragContent={{ type: "activity" }}
           />
           <NavLink
             href="/tags"
             icon={<Tag className="h-5 w-5" strokeWidth={1.4} />}
             label="Tags"
             active={isActive("/tags")}
+            dragContent={{ type: "tags" }}
           />
           <NavLink
             href="/labels"
             icon={<Bookmark className="h-5 w-5" strokeWidth={1.4} />}
             label="Labels"
             active={isActive("/labels")}
+            dragContent={{ type: "labels" }}
           />
         </div>
 

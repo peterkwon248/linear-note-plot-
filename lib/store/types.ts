@@ -1,6 +1,7 @@
 import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
+import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone } from "../workspace/types"
 
 export interface EditorTab {
   id: string           // nanoid
@@ -218,6 +219,22 @@ export interface PlotState {
   addPanel: () => void
   removePanel: (panelId: string) => void
   setPanelRatios: (ratios: number[]) => void
+
+  // ── Workspace ──
+  workspaceRoot: WorkspaceNode
+  activeLeafId: string | null
+  setWorkspaceRoot: (root: WorkspaceNode) => void
+  setActiveLeaf: (leafId: string) => void
+  setLeafContent: (leafId: string, content: PanelContent) => void
+  splitLeaf: (leafId: string, direction: SplitDirection, content: PanelContent, position?: "before" | "after") => void
+  closeLeaf: (leafId: string) => void
+  setBranchRatio: (branchId: string, ratio: number) => void
+  openNoteInLeaf: (noteId: string, leafId?: string) => void
+  closeTabInLeaf: (tabId: string, leafId: string) => void
+  setActiveTabInLeaf: (tabId: string, leafId: string) => void
+  moveTabToLeaf: (tabId: string, fromLeafId: string, toLeafId: string) => void
+  moveLeaf: (leafId: string, targetLeafId: string, zone: DropZone) => void
+  applyPreset: (preset: WorkspacePreset) => void
 
   // ── Internal ──
   _hydrateNoteBodies: (bodies: NoteBody[]) => void

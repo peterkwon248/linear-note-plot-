@@ -1,6 +1,10 @@
 import type { NoteBody } from "../types"
+import { nanoid } from "nanoid"
 import { extractPreview, extractLinksOut } from "../body-helpers"
 import { buildDefaultViewStates, normalizeViewStatesMap } from "../view-engine/defaults"
+import { buildPreset, layoutModeToPreset } from "../workspace/presets"
+import { createLeaf, createBranch, updateLeafTabs, findFirstEditorLeaf } from "../workspace/tree-utils"
+import type { WorkspaceNode, WorkspaceTab } from "../workspace/types"
 import type { PlotState } from "./types"
 
 export function migrate(persistedState: unknown): PlotState {
@@ -367,6 +371,45 @@ export function migrate(persistedState: unknown): PlotState {
   if (state.editorState && typeof state.editorState === "object") {
     const es = state.editorState as Record<string, unknown>
     if (!es.panelRatios) es.panelRatios = [0.5, 0.5]
+  }
+
+  // v35: Workspace — convert EditorState + LayoutMode → workspace tree
+  if (!state.workspaceRoot) {
+    const layoutMode = (state.layoutMode as string) ?? "tabs"
+    const preset = layoutModeToPreset(layoutMode)
+    let root: WorkspaceNode = buildPreset(preset)
+
+    // Transfer existing editor tabs into the workspace tree
+    if (state.editorState && typeof state.editorState === "object") {
+      const es = state.editorState as Record<string, unknown>
+      const panels = (es.panels ?? []) as Array<Record<string, unknown>>
+      if (panels.length > 0) {
+        const firstPanel = panels[0]
+        const tabs = (firstPanel.tabs ?? []) as WorkspaceTab[]
+        const activeTabId = (firstPanel.activeTabId as string) ?? null
+        if (tabs.length > 0) {
+          const editorLeaf = findFirstEditorLeaf(root)
+          if (editorLeaf) {
+            root = updateLeafTabs(root, editorLeaf.id, tabs, activeTabId)
+          }
+        }
+      }
+    }
+
+    state.workspaceRoot = root
+    state.activeLeafId = findFirstEditorLeaf(root as WorkspaceNode)?.id ?? null
+    // Keep original layoutMode — workspace tree is used within editor area, not as a layout mode
+  }
+
+  // v35b: Ensure activeLeafId is set when workspaceRoot exists
+  if (state.workspaceRoot && !state.activeLeafId) {
+    const leaf = findFirstEditorLeaf(state.workspaceRoot as WorkspaceNode)
+    if (leaf) state.activeLeafId = leaf.id
+  }
+
+  // v35c: "workspace" is no longer a valid layoutMode — revert to "tabs"
+  if (state.layoutMode === "workspace") {
+    state.layoutMode = "tabs"
   }
 
   return state as unknown as PlotState

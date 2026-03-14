@@ -25,6 +25,7 @@ import { usePlotStore } from "@/lib/store"
 import { Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 import { CurrentLineHighlightExtension } from "./CurrentLineHighlight"
+import { HashtagSuggestion } from "./HashtagSuggestion"
 import "./EditorStyles.css"
 
 // ── Typewriter Extension ─────────────────────────────────────────────
@@ -177,6 +178,7 @@ export function TipTapEditor({
       CurrentLineHighlightExtension.configure({
         enabledRef: currentLineHighlightRef,
       }),
+      HashtagSuggestion,
     ],
     content: content && Object.keys(content).length > 0 ? content : undefined,
     editable,

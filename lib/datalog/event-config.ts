@@ -28,6 +28,7 @@ export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
   thread_started: { icon: Brain, verb: "Started thread", color: "#06b6d4" },
   thread_step_added: { icon: Brain, verb: "Added thread step", color: "#06b6d4" },
   thread_ended: { icon: Brain, verb: "Ended thread", color: "#06b6d4" },
+  thread_deleted: { icon: Trash2, verb: "Deleted thread", color: "#ef4444" },
   map_added: { icon: Link2, verb: "Added to map", color: "#5e6ad2" },
   map_removed: { icon: Link2, verb: "Removed from map", color: "#5e6ad2" },
   label_changed: { icon: Tag, verb: "Label changed", color: "#a855f7" },

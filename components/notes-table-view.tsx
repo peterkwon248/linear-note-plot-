@@ -7,8 +7,8 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
 import { NoteInspector } from "@/components/note-inspector"
-import { EditorSplitView } from "@/components/editor/editor-split-view"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { InsightsView } from "@/components/insights-view"
 import { CalendarView } from "@/components/calendar-view"
 import { ListEditorLayout } from "@/components/layout/list-editor-layout"
@@ -118,11 +118,11 @@ export function NotesTableView() {
     )
   }
 
-  // ── Focus / Tabs / Panels: binary list OR editor ──
+  // ── Focus / Tabs / Panels: workspace editor area ──
   if (isEditing) {
     return (
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
-        <EditorSplitView />
+        <WorkspaceEditorArea />
         <NoteInspector />
       </div>
     )
