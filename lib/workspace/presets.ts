@@ -40,7 +40,7 @@ export function layoutModeToPreset(mode: string): WorkspacePreset {
   switch (mode) {
     case "focus": return "focus"
     case "three-column": return "list-editor"
-    case "tabs": return "editor-only"
+    case "tabs": return "focus"  // "tabs" merged into "focus"
     case "panels": return "dual-editor"
     case "split": return "research"
     default: return "editor-only"

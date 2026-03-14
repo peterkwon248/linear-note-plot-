@@ -1,6 +1,6 @@
 "use client"
 
-import { Maximize2, Columns3, AppWindow, PanelRight, SplitSquareHorizontal, LayoutGrid } from "lucide-react"
+import { Maximize2, Columns3, SplitSquareHorizontal, LayoutGrid } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -11,9 +11,7 @@ import { useState } from "react"
 const LAYOUT_MODES: { mode: LayoutMode; label: string; shortcut: string; icon: typeof Maximize2 }[] = [
   { mode: "focus",        label: "Focus",         shortcut: "Ctrl+1", icon: Maximize2 },
   { mode: "three-column", label: "List + Editor",  shortcut: "Ctrl+2", icon: Columns3 },
-  { mode: "tabs",         label: "Editor",         shortcut: "Ctrl+3", icon: AppWindow },
-  { mode: "panels",       label: "Dual Editor",    shortcut: "Ctrl+4", icon: PanelRight },
-  { mode: "split",        label: "Research",       shortcut: "Ctrl+5", icon: SplitSquareHorizontal },
+  { mode: "split",        label: "Research",       shortcut: "Ctrl+3", icon: SplitSquareHorizontal },
 ]
 
 export function LayoutModeSwitcher() {
