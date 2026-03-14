@@ -11,6 +11,9 @@ import {
   Minus,
   Code,
   Plus,
+  Play,
+  ChevronRight,
+  Sigma,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -83,6 +86,25 @@ export function InsertMenu({ editor }: InsertMenuProps) {
     editor.chain().focus().toggleCodeBlock().run()
   }
 
+  const handleYoutube = () => {
+    const url = window.prompt("Enter YouTube URL:")
+    if (url) {
+      editor.chain().focus().setYoutubeVideo({ src: url }).run()
+    }
+  }
+
+  const handleToggle = () => {
+    editor.chain().focus().setDetails().run()
+  }
+
+  const handleInlineMath = () => {
+    editor.chain().focus().insertContent("$E = mc^2$").run()
+  }
+
+  const handleBlockMath = () => {
+    editor.chain().focus().insertContent("$$\n\\sum_{i=1}^{n} x_i\n$$").run()
+  }
+
   return (
     <>
       <input
@@ -153,6 +175,24 @@ export function InsertMenu({ editor }: InsertMenuProps) {
         >
           <Image size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Image</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onSelect={handleYoutube}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "6px 10px",
+            borderRadius: "6px",
+            cursor: "pointer",
+            color: "var(--muted-foreground)",
+            fontSize: "13px",
+          }}
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+        >
+          <Play size={14} strokeWidth={1.5} />
+          <span style={{ flex: 1 }}>YouTube</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -247,6 +287,62 @@ export function InsertMenu({ editor }: InsertMenuProps) {
         >
           <Code size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Code Block</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onSelect={handleToggle}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "6px 10px",
+            borderRadius: "6px",
+            cursor: "pointer",
+            color: "var(--muted-foreground)",
+            fontSize: "13px",
+          }}
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+        >
+          <ChevronRight size={14} strokeWidth={1.5} />
+          <span style={{ flex: 1 }}>Toggle</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator style={{ backgroundColor: "var(--border)", margin: "4px 0" }} />
+
+        <DropdownMenuItem
+          onSelect={handleInlineMath}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "6px 10px",
+            borderRadius: "6px",
+            cursor: "pointer",
+            color: "var(--muted-foreground)",
+            fontSize: "13px",
+          }}
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+        >
+          <Sigma size={14} strokeWidth={1.5} />
+          <span style={{ flex: 1 }}>Inline Math</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onSelect={handleBlockMath}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "6px 10px",
+            borderRadius: "6px",
+            cursor: "pointer",
+            color: "var(--muted-foreground)",
+            fontSize: "13px",
+          }}
+          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+        >
+          <Sigma size={14} strokeWidth={1.5} />
+          <span style={{ flex: 1 }}>Block Math</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

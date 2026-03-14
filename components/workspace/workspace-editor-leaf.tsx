@@ -3,7 +3,7 @@
 import { useRef } from "react"
 import {
   X, Pin, Plus, GripVertical, SplitSquareHorizontal, ArrowDownFromLine,
-  Tag, Calendar, BarChart3, Activity, Bookmark, List, Inbox, FolderOpen,
+  Tag, Calendar, BarChart3, Activity, Bookmark, List, Inbox, FolderOpen, FileText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
@@ -138,35 +138,35 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                         </button>
                       </ContextMenuTrigger>
                       <ContextMenuContent>
-                        <ContextMenuItem onClick={() => splitTabToNewLeaf(tab.id, leaf.id, leaf.id, "horizontal", "after")}>
+                        <ContextMenuItem onSelect={() => splitTabToNewLeaf(tab.id, leaf.id, leaf.id, "horizontal", "after")}>
                           <SplitSquareHorizontal className="mr-2 h-4 w-4" />
                           Split Right
                         </ContextMenuItem>
-                        <ContextMenuItem onClick={() => splitTabToNewLeaf(tab.id, leaf.id, leaf.id, "vertical", "after")}>
+                        <ContextMenuItem onSelect={() => splitTabToNewLeaf(tab.id, leaf.id, leaf.id, "vertical", "after")}>
                           <ArrowDownFromLine className="mr-2 h-4 w-4" />
                           Split Down
                         </ContextMenuItem>
                         <ContextMenuSeparator />
-                        <ContextMenuItem onClick={() => splitLeaf(leaf.id, "horizontal", { type: "tags" }, "after")}>
+                        <ContextMenuItem onSelect={() => splitLeaf(leaf.id, "horizontal", { type: "tags" }, "after")}>
                           <Tag className="mr-2 h-4 w-4" />
                           Tags Panel
                         </ContextMenuItem>
-                        <ContextMenuItem onClick={() => splitLeaf(leaf.id, "horizontal", { type: "calendar" }, "after")}>
+                        <ContextMenuItem onSelect={() => splitLeaf(leaf.id, "horizontal", { type: "calendar" }, "after")}>
                           <Calendar className="mr-2 h-4 w-4" />
                           Calendar Panel
                         </ContextMenuItem>
-                        <ContextMenuItem onClick={() => splitLeaf(leaf.id, "horizontal", { type: "insights" }, "after")}>
+                        <ContextMenuItem onSelect={() => splitLeaf(leaf.id, "horizontal", { type: "insights" }, "after")}>
                           <BarChart3 className="mr-2 h-4 w-4" />
                           Insights Panel
                         </ContextMenuItem>
-                        <ContextMenuItem onClick={() => splitLeaf(leaf.id, "horizontal", { type: "activity" }, "after")}>
+                        <ContextMenuItem onSelect={() => splitLeaf(leaf.id, "horizontal", { type: "activity" }, "after")}>
                           <Activity className="mr-2 h-4 w-4" />
                           Activity Panel
                         </ContextMenuItem>
                         {!tab.isPinned && (
                           <>
                             <ContextMenuSeparator />
-                            <ContextMenuItem onClick={() => closeTabInLeaf(tab.id, leaf.id)}>
+                            <ContextMenuItem onSelect={() => closeTabInLeaf(tab.id, leaf.id)}>
                               <X className="mr-2 h-4 w-4" />
                               Close Tab
                             </ContextMenuItem>
@@ -193,23 +193,28 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
           </ContextMenuTrigger>
           {/* Tab bar background context menu — switch this leaf to a different view */}
           <ContextMenuContent className="w-48">
-            <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "tags" })}>
+            <ContextMenuItem onSelect={() => { const id = createNote({}); openNoteInLeaf(id, leaf.id); setActiveLeaf(leaf.id) }}>
+              <FileText className="mr-2 h-4 w-4" />
+              New Note
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "tags" })}>
               <Tag className="mr-2 h-4 w-4" />
               Tags
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "labels" })}>
+            <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "labels" })}>
               <Bookmark className="mr-2 h-4 w-4" />
               Labels
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "activity" })}>
+            <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "activity" })}>
               <Activity className="mr-2 h-4 w-4" />
               Activity
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "calendar" })}>
+            <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "calendar" })}>
               <Calendar className="mr-2 h-4 w-4" />
               Calendar
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "insights" })}>
+            <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "insights" })}>
               <BarChart3 className="mr-2 h-4 w-4" />
               Insights
             </ContextMenuItem>
@@ -221,13 +226,13 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
               </ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-44">
                 <ContextMenuItem
-                  onClick={() => setLeafContent(leaf.id, { type: "note-list", context: "all" })}
+                  onSelect={() => setLeafContent(leaf.id, { type: "note-list", context: "all" })}
                 >
                   <List className="mr-2 h-4 w-4" />
                   All Notes
                 </ContextMenuItem>
                 <ContextMenuItem
-                  onClick={() => setLeafContent(leaf.id, { type: "note-list", context: "inbox" })}
+                  onSelect={() => setLeafContent(leaf.id, { type: "note-list", context: "inbox" })}
                 >
                   <Inbox className="mr-2 h-4 w-4" />
                   Inbox
@@ -236,7 +241,7 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                 {folders.map((folder) => (
                   <ContextMenuItem
                     key={folder.id}
-                    onClick={() => setLeafContent(leaf.id, { type: "note-list", context: "folder", folderId: folder.id })}
+                    onSelect={() => setLeafContent(leaf.id, { type: "note-list", context: "folder", folderId: folder.id })}
                   >
                     <FolderOpen className="mr-2 h-4 w-4" />
                     <span className="truncate">{folder.name}</span>
@@ -245,11 +250,11 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
               </ContextMenuSubContent>
             </ContextMenuSub>
             <ContextMenuSeparator />
-            <ContextMenuItem onClick={() => splitLeaf(leaf.id, "horizontal", { type: "editor", noteId: null }, "after")}>
+            <ContextMenuItem onSelect={() => splitLeaf(leaf.id, "horizontal", { type: "editor", noteId: null }, "after")}>
               <SplitSquareHorizontal className="mr-2 h-4 w-4" />
               Split Right
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => splitLeaf(leaf.id, "vertical", { type: "editor", noteId: null }, "after")}>
+            <ContextMenuItem onSelect={() => splitLeaf(leaf.id, "vertical", { type: "editor", noteId: null }, "after")}>
               <ArrowDownFromLine className="mr-2 h-4 w-4" />
               Split Down
             </ContextMenuItem>
@@ -269,23 +274,28 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
               </div>
             </ContextMenuTrigger>
             <ContextMenuContent className="w-48">
-              <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "tags" })}>
+              <ContextMenuItem onSelect={() => { const id = createNote({}); openNoteInLeaf(id, leaf.id); setActiveLeaf(leaf.id) }}>
+                <FileText className="mr-2 h-4 w-4" />
+                New Note
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+              <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "tags" })}>
                 <Tag className="mr-2 h-4 w-4" />
                 Tags
               </ContextMenuItem>
-              <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "labels" })}>
+              <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "labels" })}>
                 <Bookmark className="mr-2 h-4 w-4" />
                 Labels
               </ContextMenuItem>
-              <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "activity" })}>
+              <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "activity" })}>
                 <Activity className="mr-2 h-4 w-4" />
                 Activity
               </ContextMenuItem>
-              <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "calendar" })}>
+              <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "calendar" })}>
                 <Calendar className="mr-2 h-4 w-4" />
                 Calendar
               </ContextMenuItem>
-              <ContextMenuItem onClick={() => setLeafContent(leaf.id, { type: "insights" })}>
+              <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "insights" })}>
                 <BarChart3 className="mr-2 h-4 w-4" />
                 Insights
               </ContextMenuItem>
@@ -297,13 +307,13 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                 </ContextMenuSubTrigger>
                 <ContextMenuSubContent className="w-44">
                   <ContextMenuItem
-                    onClick={() => setLeafContent(leaf.id, { type: "note-list", context: "all" })}
+                    onSelect={() => setLeafContent(leaf.id, { type: "note-list", context: "all" })}
                   >
                     <List className="mr-2 h-4 w-4" />
                     All Notes
                   </ContextMenuItem>
                   <ContextMenuItem
-                    onClick={() => setLeafContent(leaf.id, { type: "note-list", context: "inbox" })}
+                    onSelect={() => setLeafContent(leaf.id, { type: "note-list", context: "inbox" })}
                   >
                     <Inbox className="mr-2 h-4 w-4" />
                     Inbox
@@ -312,7 +322,7 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                   {folders.map((folder) => (
                     <ContextMenuItem
                       key={folder.id}
-                      onClick={() => setLeafContent(leaf.id, { type: "note-list", context: "folder", folderId: folder.id })}
+                      onSelect={() => setLeafContent(leaf.id, { type: "note-list", context: "folder", folderId: folder.id })}
                     >
                       <FolderOpen className="mr-2 h-4 w-4" />
                       <span className="truncate">{folder.name}</span>
@@ -321,11 +331,11 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                 </ContextMenuSubContent>
               </ContextMenuSub>
               <ContextMenuSeparator />
-              <ContextMenuItem onClick={() => splitLeaf(leaf.id, "horizontal", { type: "editor", noteId: null }, "after")}>
+              <ContextMenuItem onSelect={() => splitLeaf(leaf.id, "horizontal", { type: "editor", noteId: null }, "after")}>
                 <SplitSquareHorizontal className="mr-2 h-4 w-4" />
                 Split Right
               </ContextMenuItem>
-              <ContextMenuItem onClick={() => splitLeaf(leaf.id, "vertical", { type: "editor", noteId: null }, "after")}>
+              <ContextMenuItem onSelect={() => splitLeaf(leaf.id, "vertical", { type: "editor", noteId: null }, "after")}>
                 <ArrowDownFromLine className="mr-2 h-4 w-4" />
                 Split Down
               </ContextMenuItem>
