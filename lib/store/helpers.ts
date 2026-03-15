@@ -1,5 +1,7 @@
 import type { NoteBody, NoteStatus, Note, NoteEvent, NoteEventType } from "../types"
 import { saveBody as saveBodyToIDB, deleteBody as deleteBodyFromIDB } from "../note-body-store"
+import { saveBlob as saveBlobToIDB, deleteBlob as deleteBlobFromIDB } from "../attachment-store"
+import type { AttachmentBlob } from "../attachment-store"
 
 /** Fire-and-forget IDB body write (guarded for SSR) */
 export function persistBody(body: NoteBody) {
@@ -11,6 +13,18 @@ export function persistBody(body: NoteBody) {
 export function removeBody(id: string) {
   if (typeof indexedDB === "undefined") return
   deleteBodyFromIDB(id).catch((err) => console.warn("[Plot] Body delete failed:", err))
+}
+
+/** Fire-and-forget IDB attachment blob write (guarded for SSR) */
+export function persistAttachmentBlob(blob: AttachmentBlob) {
+  if (typeof indexedDB === "undefined") return
+  saveBlobToIDB(blob).catch((err) => console.warn("[Plot] Attachment blob save failed:", err))
+}
+
+/** Fire-and-forget IDB attachment blob delete (guarded for SSR) */
+export function removeAttachmentBlob(id: string) {
+  if (typeof indexedDB === "undefined") return
+  deleteBlobFromIDB(id).catch((err) => console.warn("[Plot] Attachment blob delete failed:", err))
 }
 
 export const genId = () => crypto.randomUUID()

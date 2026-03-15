@@ -1,6 +1,6 @@
 import {
   FilePlus, Pencil, Eye, ArrowUpCircle, Archive, Trash2,
-  Check, Clock, Tag, Brain, Sparkles, Link2,
+  Check, Clock, Tag, Brain, Sparkles, Link2, FileText, Paperclip,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import type { NoteEventType } from "@/lib/types"
@@ -36,6 +36,10 @@ export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
   autopilot_applied: { icon: Sparkles, verb: "Autopilot applied", color: "#8b5cf6" },
   relation_added: { icon: Link2, verb: "Relation added", color: "#3b82f6" },
   relation_removed: { icon: Link2, verb: "Relation removed", color: "#3b82f6" },
+  alias_changed: { icon: Tag, verb: "changed aliases", color: "text-blue-400" },
+  wiki_converted: { icon: FileText, verb: "converted to wiki", color: "text-purple-400" },
+  attachment_added: { icon: Paperclip, verb: "attached file", color: "text-green-400" },
+  attachment_removed: { icon: Paperclip, verb: "removed attachment", color: "text-red-400" },
 }
 
 // Human-readable event type labels for filter chips

@@ -1,4 +1,4 @@
-import type { Note, NoteBody, ActiveView } from "../../types"
+import type { Note, NoteBody, ActiveView, WikiInfoboxEntry } from "../../types"
 import { extractPreview, extractLinksOut } from "../../body-helpers"
 import { genId, now, workflowDefaults, persistBody, removeBody, type AppendEventFn } from "../helpers"
 
@@ -32,6 +32,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         preview: extractPreview(content),
         linksOut: extractLinksOut(content),
         isWiki: partial?.isWiki ?? false,
+        aliases: partial?.aliases ?? [],
+        wikiInfobox: partial?.wikiInfobox ?? [],
         ...workflowDefaults(partial?.status ?? "inbox"),
         ...(partial?.source != null ? { source: partial.source } : {}),
       }
@@ -114,6 +116,12 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           relations: state.relations.filter(
             (r: any) => r.sourceNoteId !== id && r.targetNoteId !== id
           ),
+          attachments: state.attachments.filter(
+            (a: any) => a.noteId !== id
+          ),
+          relationSuggestions: state.relationSuggestions.filter(
+            (s: any) => s.sourceNoteId !== id && s.targetNoteId !== id
+          ),
           navigationHistory,
           navigationIndex,
         }
@@ -137,6 +145,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
             pinned: false,
             reads: 0,
             parentNoteId: null,
+            aliases: [],
+            wikiInfobox: [...(note.wikiInfobox ?? [])],
           },
           ...state.notes,
         ],
@@ -309,6 +319,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         ...workflowDefaults(parent.status),
         parentNoteId: parentId,
         isWiki: false,
+        aliases: [],
+        wikiInfobox: [],
       }
       set((state: any) => ({
         notes: [newNote, ...state.notes],
@@ -317,6 +329,83 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       persistBody({ id, content: "", contentJson: null })
       appendEvent(id, "created")
       return id
+    },
+
+    setNoteAliases: (noteId: string, aliases: string[]) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id === noteId
+            ? { ...n, aliases, updatedAt: now(), lastTouchedAt: now() }
+            : n
+        ),
+      }))
+      appendEvent(noteId, "alias_changed", { aliases })
+    },
+
+    setWikiInfobox: (noteId: string, infobox: WikiInfoboxEntry[]) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id === noteId
+            ? { ...n, wikiInfobox: infobox, updatedAt: now(), lastTouchedAt: now() }
+            : n
+        ),
+      }))
+      appendEvent(noteId, "updated", { field: "wikiInfobox" })
+    },
+
+    createWikiStub: (title: string, aliases?: string[]) => {
+      const id = genId()
+      const newNote: Note = {
+        id,
+        title,
+        content: "",
+        contentJson: null,
+        folderId: null,
+        tags: [],
+        status: "inbox",
+        priority: "none",
+        reads: 0,
+        pinned: false,
+        archived: false,
+        trashed: false,
+        createdAt: now(),
+        updatedAt: now(),
+        labelId: null,
+        preview: "",
+        linksOut: [],
+        isWiki: true,
+        aliases: aliases ?? [],
+        wikiInfobox: [],
+        ...workflowDefaults("inbox"),
+      }
+      set((state: any) => ({
+        notes: [newNote, ...state.notes],
+      }))
+      persistBody({ id, content: "", contentJson: null })
+      appendEvent(id, "created", { isWikiStub: true })
+      return id
+    },
+
+    convertToWiki: (noteId: string) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id === noteId
+            ? { ...n, isWiki: true, updatedAt: now(), lastTouchedAt: now() }
+            : n
+        ),
+      }))
+      appendEvent(noteId, "wiki_converted")
+    },
+
+    revertFromWiki: (noteId: string) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id === noteId
+            ? { ...n, isWiki: false, updatedAt: now(), lastTouchedAt: now() }
+            : n
+        ),
+      }))
+      appendEvent(noteId, "wiki_converted", { reverted: true })
     },
   }
 }

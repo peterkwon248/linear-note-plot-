@@ -37,6 +37,8 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     isWiki: false,
     preview: "This is a test note with some preview text for testing",
     linksOut: [],
+    aliases: [],
+    wikiInfobox: [],
     ...overrides,
   }
 }

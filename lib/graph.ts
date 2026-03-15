@@ -1,4 +1,4 @@
-import type { Note } from "./types"
+import type { Note, NoteStatus, Relation, RelationType } from "./types"
 import {
   forceSimulation,
   forceLink,
@@ -32,6 +32,15 @@ export function buildAdjacencyList(notes: Note[]): Map<string, Set<string>> {
   for (const note of notes) {
     if (note.title.trim()) {
       titleToId.set(note.title.toLowerCase(), note.id)
+    }
+    // Register aliases
+    if (note.aliases) {
+      for (const alias of note.aliases) {
+        const aliasLower = alias.toLowerCase()
+        if (!titleToId.has(aliasLower)) {
+          titleToId.set(aliasLower, note.id)
+        }
+      }
     }
   }
 
@@ -454,4 +463,150 @@ export function findShortestPath(
   }
 
   return []
+}
+
+/* ── Ontology graph ──────────────────────────────── */
+
+export type OntologyEdgeKind = RelationType | "wikilink"
+
+export interface OntologyEdge {
+  source: string
+  target: string
+  kind: OntologyEdgeKind
+}
+
+export interface OntologyNode {
+  id: string
+  label: string
+  x: number
+  y: number
+  connectionCount: number
+  status: NoteStatus
+  labelId: string | null
+}
+
+export interface OntologyGraph {
+  nodes: OntologyNode[]
+  edges: OntologyEdge[]
+}
+
+interface OntologyForceNode extends SimulationNodeDatum {
+  id: string
+  label: string
+  connectionCount: number
+  status: NoteStatus
+  labelId: string | null
+}
+
+/**
+ * Build ontology graph from all notes + relations.
+ * Edges include both typed relations and wiki-link connections.
+ * Uses d3-force for layout.
+ */
+export function buildOntologyGraph(
+  notes: Note[],
+  relations: Relation[],
+): OntologyGraph {
+  if (notes.length === 0) return { nodes: [], edges: [] }
+
+  const noteIdSet = new Set(notes.map((n) => n.id))
+  const noteMap = new Map(notes.map((n) => [n.id, n]))
+
+  // Track existing edges to deduplicate (sorted key)
+  const edgePairSet = new Set<string>()
+  const edges: OntologyEdge[] = []
+
+  // 1. Relation edges (directed, typed)
+  for (const rel of relations) {
+    if (!noteIdSet.has(rel.sourceNoteId) || !noteIdSet.has(rel.targetNoteId)) continue
+    const key = [rel.sourceNoteId, rel.targetNoteId].sort().join("-")
+    edgePairSet.add(key)
+    edges.push({ source: rel.sourceNoteId, target: rel.targetNoteId, kind: rel.type })
+  }
+
+  // 2. Wiki-link edges (skip pairs already covered by relations)
+  const titleToId = new Map<string, string>()
+  for (const note of notes) {
+    if (note.title.trim()) {
+      titleToId.set(note.title.toLowerCase(), note.id)
+    }
+    // Register aliases
+    if (note.aliases) {
+      for (const alias of note.aliases) {
+        const aliasLower = alias.toLowerCase()
+        if (!titleToId.has(aliasLower)) {
+          titleToId.set(aliasLower, note.id)
+        }
+      }
+    }
+  }
+
+  for (const note of notes) {
+    for (const linkTitle of note.linksOut) {
+      const targetId = titleToId.get(linkTitle)
+      if (!targetId || targetId === note.id || !noteIdSet.has(targetId)) continue
+      const key = [note.id, targetId].sort().join("-")
+      if (edgePairSet.has(key)) continue
+      edgePairSet.add(key)
+      edges.push({ source: note.id, target: targetId, kind: "wikilink" })
+    }
+  }
+
+  // 3. Count connections per node
+  const connectionCount = new Map<string, number>()
+  for (const edge of edges) {
+    connectionCount.set(edge.source, (connectionCount.get(edge.source) ?? 0) + 1)
+    connectionCount.set(edge.target, (connectionCount.get(edge.target) ?? 0) + 1)
+  }
+
+  // 4. Build simulation nodes
+  const simNodes: OntologyForceNode[] = notes.map((n) => ({
+    id: n.id,
+    label: n.title || "Untitled",
+    connectionCount: connectionCount.get(n.id) ?? 0,
+    status: n.status,
+    labelId: n.labelId,
+    x: undefined as unknown as number,
+    y: undefined as unknown as number,
+  }))
+
+  const nodeIdxMap = new Map(simNodes.map((n, i) => [n.id, i]))
+
+  // 5. Build simulation links
+  const simLinks: SimulationLinkDatum<OntologyForceNode>[] = edges
+    .map((e) => {
+      const si = nodeIdxMap.get(e.source)
+      const ti = nodeIdxMap.get(e.target)
+      if (si === undefined || ti === undefined) return null
+      return { source: si, target: ti }
+    })
+    .filter(Boolean) as SimulationLinkDatum<OntologyForceNode>[]
+
+  // 6. Run d3-force simulation
+  const nodeCount = simNodes.length
+  const chargeStrength = nodeCount > 30 ? -200 : nodeCount > 15 ? -300 : -400
+  const linkDistance = nodeCount > 30 ? 60 : nodeCount > 15 ? 80 : 100
+
+  const sim = forceSimulation<OntologyForceNode>(simNodes)
+    .force("link", forceLink<OntologyForceNode, SimulationLinkDatum<OntologyForceNode>>(simLinks).distance(linkDistance))
+    .force("charge", forceManyBody().strength(chargeStrength))
+    .force("center", forceCenter(0, 0))
+    .force("collide", forceCollide(24))
+    .stop()
+
+  const ticks = Math.max(120, Math.min(300, nodeCount * 4))
+  for (let i = 0; i < ticks; i++) sim.tick()
+
+  // 7. Extract final positions
+  const resultNodes: OntologyNode[] = simNodes.map((n) => ({
+    id: n.id,
+    label: n.label,
+    x: n.x ?? 0,
+    y: n.y ?? 0,
+    connectionCount: n.connectionCount,
+    status: n.status,
+    labelId: n.labelId,
+  }))
+
+  return { nodes: resultNodes, edges }
 }

@@ -8,6 +8,7 @@ import { TagsView } from "@/components/views/tags-view"
 import { LabelsView } from "@/components/views/labels-view"
 import { ActivityView } from "@/components/views/activity-view"
 import { NoteInspector } from "@/components/note-inspector"
+import { OntologyView } from "@/components/views/ontology-view"
 
 interface WorkspaceViewDispatchProps {
   leaf: WorkspaceLeaf
@@ -60,6 +61,9 @@ export function WorkspaceViewDispatch({ leaf }: WorkspaceViewDispatchProps) {
           <p className="text-sm">Insights View</p>
         </div>
       )
+
+    case "ontology":
+      return <OntologyView />
 
     case "empty":
       return (

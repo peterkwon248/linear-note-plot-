@@ -6,6 +6,11 @@ export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
 /** Source of note creation */
 export type NoteSource = "manual" | "webclip" | "import" | "share" | "api" | null
 
+export interface WikiInfoboxEntry {
+  key: string
+  value: string
+}
+
 export interface Note {
   id: string
   title: string
@@ -40,6 +45,8 @@ export interface Note {
 
   /* ── Wiki ──────────────────────────────────────── */
   isWiki: boolean
+  aliases: string[]
+  wikiInfobox: WikiInfoboxEntry[]
 
   /* ── Precomputed (from content, for performance) ── */
   preview: string          // first ~120 chars of plaintext (for list display)
@@ -188,6 +195,7 @@ export type NoteEventType =
   | "srs_reviewed"
   | "autopilot_applied"
   | "relation_added" | "relation_removed"
+  | "alias_changed" | "wiki_converted" | "attachment_added" | "attachment_removed"
 
 export interface NoteEvent {
   id: string
@@ -252,5 +260,40 @@ export interface Relation {
   sourceNoteId: string
   targetNoteId: string
   type: RelationType
+  createdAt: string
+}
+
+/* ── Attachments ──────────────────────────────────── */
+
+export type AttachmentType = "image" | "url" | "file"
+
+export interface Attachment {
+  id: string
+  noteId: string
+  name: string
+  type: AttachmentType
+  url: string
+  mimeType: string
+  size: number
+  createdAt: string
+}
+
+/* ── Ontology Data ────────────────────────────────── */
+
+export interface CoOccurrence {
+  conceptA: string
+  conceptB: string
+  count: number
+  noteIds: string[]
+}
+
+export interface RelationSuggestion {
+  id: string
+  sourceNoteId: string
+  targetNoteId: string
+  suggestedType: RelationType
+  coOccurrenceCount: number
+  reason: string
+  status: "pending" | "accepted" | "dismissed"
   createdAt: string
 }

@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone } from "../workspace/types"
@@ -72,6 +72,9 @@ export interface PlotState {
 
   // Relations
   relations: Relation[]
+  attachments: Attachment[]
+  coOccurrences: CoOccurrence[]
+  relationSuggestions: RelationSuggestion[]
 
   // Layout
   layoutMode: LayoutMode
@@ -200,6 +203,23 @@ export interface PlotState {
   addRelation: (sourceNoteId: string, targetNoteId: string, type: RelationType) => string | null
   removeRelation: (relationId: string) => void
   updateRelationType: (relationId: string, newType: RelationType) => void
+
+  // Attachments
+  addAttachment: (partial: Omit<Attachment, "id" | "createdAt">) => string
+  removeAttachment: (attachmentId: string) => void
+
+  // Wiki
+  setNoteAliases: (noteId: string, aliases: string[]) => void
+  setWikiInfobox: (noteId: string, infobox: WikiInfoboxEntry[]) => void
+  createWikiStub: (title: string, aliases?: string[]) => string
+  convertToWiki: (noteId: string) => void
+  revertFromWiki: (noteId: string) => void
+
+  // Ontology
+  updateCoOccurrences: (items: CoOccurrence[]) => void
+  addRelationSuggestion: (partial: Omit<RelationSuggestion, "id" | "createdAt" | "status">) => string
+  acceptRelationSuggestion: (id: string) => void
+  dismissRelationSuggestion: (id: string) => void
 
   // ── Saved Views ──
   createSavedView: (name: string, config?: Partial<SavedView>) => string

@@ -85,6 +85,8 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         ...workflowDefaults(template.status),
         isWiki: false,
         source: "manual",
+        aliases: [],
+        wikiInfobox: [],
       }
 
       set((s: any) => ({

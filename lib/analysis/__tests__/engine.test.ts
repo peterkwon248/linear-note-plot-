@@ -45,6 +45,8 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     labelId: null,
     preview: "",
     linksOut: [],
+    aliases: [],
+    wikiInfobox: [],
     ...overrides,
   }
 }

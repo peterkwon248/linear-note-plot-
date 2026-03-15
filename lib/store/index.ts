@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { NoteEvent, KnowledgeMap, SavedView, AutopilotLogEntry, Relation } from "../types"
+import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
@@ -20,6 +21,8 @@ import { createTemplatesSlice } from "./slices/templates"
 import { createRelationsSlice } from "./slices/relations"
 import { createEditorSlice } from "./slices/editor"
 import { createWorkspaceSlice } from "./slices/workspace"
+import { createAttachmentsSlice } from "./slices/attachments"
+import { createOntologySlice } from "./slices/ontology"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -58,6 +61,9 @@ export const usePlotStore = create<PlotState>()(
         commandPaletteMode: "search" as const,
         knowledgeMaps: [] as KnowledgeMap[],
         relations: [] as Relation[],
+        attachments: [] as Attachment[],
+        coOccurrences: [] as CoOccurrence[],
+        relationSuggestions: [] as RelationSuggestion[],
         layoutMode: "tabs" as const,
         _preFocusLayoutMode: null as any,
         listPaneWidth: 320,
@@ -88,11 +94,13 @@ export const usePlotStore = create<PlotState>()(
         ...createTemplatesSlice(set, get, appendEvent),
         ...createEditorSlice(set, get),
         ...createWorkspaceSlice(set, get),
+        ...createAttachmentsSlice(set, get, appendEvent),
+        ...createOntologySlice(set, get, appendEvent),
       }
     },
     {
       name: "plot-store",
-      version: 35,
+      version: 36,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

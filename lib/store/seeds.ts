@@ -113,6 +113,8 @@ export const SEED_NOTES: Note[] = [
     summary: "Introduction to the Plot note-taking app",
     preview: "Welcome to Plot This is your new note-taking app. - Create notes with markdown - Organize with folders, categories, and tags",
     linksOut: [],
+    aliases: [],
+    wikiInfobox: [],
   },
   {
     id: "note-2",
@@ -134,6 +136,8 @@ export const SEED_NOTES: Note[] = [
     isWiki: false,
     preview: "This is an inbox note - a quick thought captured for later sorting.",
     linksOut: [],
+    aliases: [],
+    wikiInfobox: [],
   },
   {
     id: "note-3",
@@ -156,6 +160,8 @@ export const SEED_NOTES: Note[] = [
     triageStatus: "kept",
     preview: "Q1 Goals 1. Ship v1.0 2. User testing 3. Marketing launch",
     linksOut: [],
+    aliases: [],
+    wikiInfobox: [],
   },
   {
     id: "note-4",
@@ -179,6 +185,8 @@ export const SEED_NOTES: Note[] = [
     summary: "Comparison of REST and GraphQL approaches",
     preview: "REST vs GraphQL comparison for our new service.",
     linksOut: [],
+    aliases: [],
+    wikiInfobox: [],
   },
   {
     id: "note-5",
@@ -200,6 +208,8 @@ export const SEED_NOTES: Note[] = [
     isWiki: false,
     preview: "Discussed roadmap for Q2. Action items: finalize spec, assign tasks.",
     linksOut: [],
+    aliases: [],
+    wikiInfobox: [],
   },
   {
     id: "note-6",
@@ -222,5 +232,7 @@ export const SEED_NOTES: Note[] = [
     source: "webclip",
     preview: "- https://example.com - https://another.dev",
     linksOut: [],
+    aliases: [],
+    wikiInfobox: [],
   },
 ]
