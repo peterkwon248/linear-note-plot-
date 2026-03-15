@@ -216,6 +216,8 @@ export interface PlotState {
   revertFromWiki: (noteId: string) => void
 
   // Ontology
+  ontologyPositions: Record<string, { x: number; y: number }>
+  updateOntologyPositions: (positions: Record<string, { x: number; y: number }>) => void
   updateCoOccurrences: (items: CoOccurrence[]) => void
   addRelationSuggestion: (partial: Omit<RelationSuggestion, "id" | "createdAt" | "status">) => string
   acceptRelationSuggestion: (id: string) => void

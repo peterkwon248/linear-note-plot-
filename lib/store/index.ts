@@ -64,6 +64,7 @@ export const usePlotStore = create<PlotState>()(
         attachments: [] as Attachment[],
         coOccurrences: [] as CoOccurrence[],
         relationSuggestions: [] as RelationSuggestion[],
+        ontologyPositions: {} as Record<string, { x: number; y: number }>,
         layoutMode: "tabs" as const,
         _preFocusLayoutMode: null as any,
         listPaneWidth: 320,
@@ -100,7 +101,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 36,
+      version: 37,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

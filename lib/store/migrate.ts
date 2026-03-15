@@ -419,5 +419,8 @@ export function migrate(persistedState: unknown): PlotState {
   if (!(state as any).coOccurrences) (state as any).coOccurrences = []
   if (!(state as any).relationSuggestions) (state as any).relationSuggestions = []
 
+  // v37: Ontology graph position persistence
+  if (!state.ontologyPositions) state.ontologyPositions = {}
+
   return state as unknown as PlotState
 }

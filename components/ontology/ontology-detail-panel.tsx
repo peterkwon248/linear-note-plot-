@@ -1,8 +1,10 @@
 "use client"
 
+import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
+import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import type { Relation, RelationType } from "@/lib/types"
 import { X, ExternalLink } from "lucide-react"
 
@@ -18,10 +20,16 @@ export function OntologyDetailPanel({
   onOpenNote,
 }: OntologyDetailPanelProps) {
   const note = usePlotStore((s) => s.notes.find((n) => n.id === noteId))
+  const notes = usePlotStore((s) => s.notes)
   const relations = usePlotStore((s) => s.relations || [])
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
+  const addWikiLink = usePlotStore((s) => s.addWikiLink)
   const backlinks = useBacklinksFor(noteId)
+
+  const unlinkedMentions = useMemo(() => {
+    return detectUnlinkedMentions(noteId, notes)
+  }, [noteId, notes])
 
   if (!note) return null
 
@@ -137,6 +145,33 @@ export function OntologyDetailPanel({
               >
                 <span className="text-muted-foreground">←</span>
                 <span className="truncate text-foreground">{backlink.title}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Unlinked Mentions */}
+      {unlinkedMentions.length > 0 && (
+        <div>
+          <div className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
+            Unlinked Mentions ({unlinkedMentions.length})
+          </div>
+          <div className="space-y-0.5">
+            {unlinkedMentions.map((m) => (
+              <div
+                key={m.noteId + m.title}
+                className="px-4 py-1 text-xs hover:bg-secondary/50 rounded flex items-center gap-1 group"
+              >
+                <span className="text-muted-foreground/60">⚡</span>
+                <span className="truncate flex-1 text-foreground">{m.title}</span>
+                <span className="text-[10px] text-muted-foreground/40 shrink-0">{m.count}×</span>
+                <button
+                  onClick={() => addWikiLink(noteId, m.title)}
+                  className="shrink-0 text-[10px] text-[#5e6ad2] opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                >
+                  Link
+                </button>
               </div>
             ))}
           </div>
