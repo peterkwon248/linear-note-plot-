@@ -10,7 +10,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react"
-import { ZoomIn, ZoomOut, RotateCcw, Search, X } from "lucide-react"
+import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
 import {
   forceSimulation,
   forceLink,
@@ -43,6 +43,7 @@ interface OntologyGraphCanvasProps {
   labels: Label[]
   notes?: Array<{ id: string; title: string; preview: string; status: string; tags: string[] }>
   tags?: Array<{ id: string; name: string; color: string }>
+  searchMatchIds: Set<string> | null
   selectedNodeId: string | null
   onSelectNode: (id: string | null) => void
   onOpenNote: (noteId: string) => void
@@ -193,6 +194,7 @@ export function OntologyGraphCanvas({
   labels,
   notes,
   tags,
+  searchMatchIds,
   selectedNodeId,
   onSelectNode,
   onOpenNote,
@@ -206,14 +208,6 @@ export function OntologyGraphCanvas({
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [panning, setPanning] = useState(false)
   const panStart = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null)
-
-  /* ── Search state (Feature 2) ─────────────────────── */
-  const [searchQuery, setSearchQuery] = useState("")
-  const searchMatchIds = useMemo(() => {
-    if (!searchQuery.trim()) return null
-    const q = searchQuery.toLowerCase()
-    return new Set(graph.nodes.filter((n) => n.label.toLowerCase().includes(q)).map((n) => n.id))
-  }, [searchQuery, graph.nodes])
 
   /* ── Tooltip state (Feature 3) ──────────────────── */
   const [tooltip, setTooltip] = useState<{
@@ -876,33 +870,6 @@ export function OntologyGraphCanvas({
           />
         )}
       </svg>
-
-      {/* ── Search overlay (Feature 2) ────────────────── */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
-        <div className="flex items-center bg-card/90 backdrop-blur-sm border border-border rounded-md shadow-sm px-2.5 py-1.5">
-          <Search className="w-3.5 h-3.5 text-muted-foreground mr-1.5 shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search nodes…"
-            className="bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none w-40"
-          />
-          {searchMatchIds !== null && (
-            <span className="text-[11px] text-muted-foreground/60 ml-2 shrink-0">
-              {searchMatchIds.size}
-            </span>
-          )}
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="ml-1 text-muted-foreground/40 hover:text-muted-foreground shrink-0"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-      </div>
 
       {/* ── Controls overlay ────────────────────────── */}
       <div className="absolute bottom-3 right-3 flex items-center gap-0.5 rounded-md border border-border bg-card shadow-sm">

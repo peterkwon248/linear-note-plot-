@@ -31,6 +31,7 @@ export function OntologyView() {
   const [filters, setFilters] = useState<OntologyFilters>(DEFAULT_FILTERS)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [graph, setGraph] = useState<OntologyGraph | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const notes = usePlotStore((s) => s.notes)
   const relations = usePlotStore((s) => s.relations)
@@ -108,6 +109,13 @@ export function OntologyView() {
     [],
   )
 
+  // Search match IDs
+  const searchMatchIds = useMemo(() => {
+    if (!searchQuery.trim() || !graph) return null
+    const q = searchQuery.toLowerCase()
+    return new Set(graph.nodes.filter((n) => n.label.toLowerCase().includes(q)).map((n) => n.id))
+  }, [searchQuery, graph])
+
   // Cleanup worker on unmount
   useEffect(() => {
     return () => ontologyLayoutClient.destroy()
@@ -125,6 +133,9 @@ export function OntologyView() {
         onChange={setFilters}
         tags={tags}
         labels={labels}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchMatchCount={searchMatchIds ? searchMatchIds.size : null}
       />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {graph ? (
@@ -134,6 +145,7 @@ export function OntologyView() {
             labels={labels}
             notes={filteredNotes.map((n) => ({ id: n.id, title: n.title, preview: n.preview, status: n.status, tags: n.tags }))}
             tags={tags.map((t) => ({ id: t.id, name: t.name, color: t.color }))}
+            searchMatchIds={searchMatchIds}
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
             onOpenNote={(noteId) => openNoteInLeaf(noteId)}

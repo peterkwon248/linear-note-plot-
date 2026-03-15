@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Search, X } from "lucide-react"
 import { RELATION_TYPE_CONFIG, RELATION_TYPES } from "@/lib/relation-helpers"
 import type { OntologyFilters } from "./ontology-graph-canvas"
 import type { Tag, Label, RelationType } from "@/lib/types"
@@ -11,6 +11,9 @@ interface OntologyFilterBarProps {
   onChange: (filters: OntologyFilters) => void
   tags: Tag[]
   labels: Label[]
+  searchQuery: string
+  onSearchChange: (query: string) => void
+  searchMatchCount: number | null
 }
 
 export function OntologyFilterBar({
@@ -18,6 +21,9 @@ export function OntologyFilterBar({
   onChange,
   tags,
   labels,
+  searchQuery,
+  onSearchChange,
+  searchMatchCount,
 }: OntologyFilterBarProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -219,6 +225,33 @@ export function OntologyFilterBar({
       >
         Wiki
       </button>
+
+      {/* Search — right-aligned */}
+      <div className="ml-auto flex items-center gap-1.5">
+        <div className="flex items-center bg-secondary/50 rounded-md px-2 py-1">
+          <Search className="w-3.5 h-3.5 text-muted-foreground mr-1.5 shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search nodes…"
+            className="bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none w-36"
+          />
+          {searchMatchCount !== null && (
+            <span className="text-[11px] text-muted-foreground/60 ml-1.5 shrink-0">
+              {searchMatchCount}
+            </span>
+          )}
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange("")}
+              className="ml-1 text-muted-foreground/40 hover:text-muted-foreground shrink-0"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
