@@ -11,6 +11,8 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
 import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts"
 import { useAutopilotNudges } from "@/hooks/use-autopilot-nudges"
+import { useCoOccurrences } from "@/hooks/use-co-occurrences"
+import { useRelationSuggestions } from "@/hooks/use-relation-suggestions"
 import { Toaster } from "sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { NotesTableView } from "@/components/notes-table-view"
@@ -80,6 +82,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useGlobalShortcuts()
   // Autopilot nudges: inbox triage + SRS review reminders
   useAutopilotNudges()
+  // Co-occurrence engine: recompute on notes change (2s debounce)
+  useCoOccurrences()
+  // Relation suggestions: auto-generate from co-occurrences
+  useRelationSuggestions()
 
   // ── Resize handle drag ──────────────────────────────────
   const handlePointerDown = useCallback(

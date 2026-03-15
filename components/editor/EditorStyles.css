@@ -838,3 +838,42 @@
   border: none;
   border-radius: 10px;
 }
+
+/* ── Wikilink Decorations ─────────────────────────────────────────── */
+
+.ProseMirror .wikilink {
+  border-radius: 2px;
+  padding: 0 1px;
+  transition: all 0.15s;
+}
+
+/* Existing note — blue link */
+.ProseMirror .wikilink-exists {
+  color: #7B8CDE;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(123, 140, 222, 0.3);
+  text-underline-offset: 2px;
+}
+
+.ProseMirror .wikilink-exists:hover {
+  color: #9AA8E8;
+  text-decoration-color: rgba(123, 140, 222, 0.6);
+  background-color: rgba(123, 140, 222, 0.08);
+}
+
+/* Dangling/non-existent note — red dashed link */
+.ProseMirror .wikilink-dangling {
+  color: #E57373;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: rgba(229, 115, 115, 0.4);
+  text-underline-offset: 2px;
+}
+
+.ProseMirror .wikilink-dangling:hover {
+  color: #EF9A9A;
+  text-decoration-color: rgba(229, 115, 115, 0.7);
+  background-color: rgba(229, 115, 115, 0.08);
+}

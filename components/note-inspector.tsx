@@ -52,6 +52,7 @@ import { ThreadPanel } from "@/components/editor/thread-panel"
 import { RelationPicker } from "@/components/inspector/relation-picker"
 import type { Relation, RelationType } from "@/lib/types"
 import { RELATION_TYPE_CONFIG, RELATION_TYPES, getRelationLabel } from "@/lib/relation-helpers"
+import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 
 function InspectorSection({
   title,
@@ -184,6 +185,10 @@ export function NoteInspector() {
   const addRelation = usePlotStore((s) => s.addRelation)
   const removeRelation = usePlotStore((s) => s.removeRelation)
   const updateRelationType = usePlotStore((s) => s.updateRelationType)
+  const addWikiLink = usePlotStore((s) => s.addWikiLink)
+  const relationSuggestions = usePlotStore((s) => s.relationSuggestions)
+  const acceptRelationSuggestion = usePlotStore((s) => s.acceptRelationSuggestion)
+  const dismissRelationSuggestion = usePlotStore((s) => s.dismissRelationSuggestion)
 
   const backlinks = useBacklinksIndex()
   const backlinkNotes = useBacklinksFor(selectedNoteId)
@@ -214,6 +219,19 @@ export function NoteInspector() {
       (r) => !backlinkIds.has(r.noteId)
     )
   }, [selectedNoteId, notes, backlinkNotes])
+
+  const unlinkedMentions = useMemo(() => {
+    if (!selectedNoteId) return []
+    return detectUnlinkedMentions(selectedNoteId, notes)
+  }, [selectedNoteId, notes])
+
+  const pendingSuggestions = useMemo(() => {
+    if (!selectedNoteId) return []
+    return (relationSuggestions ?? []).filter(
+      (s) => s.status === "pending" &&
+      (s.sourceNoteId === selectedNoteId || s.targetNoteId === selectedNoteId)
+    )
+  }, [relationSuggestions, selectedNoteId])
 
   const advanceToNextInbox = useCallback(() => {
     if (!note || note.status !== "inbox") return
@@ -654,6 +672,41 @@ export function NoteInspector() {
           )}
         </InspectorSection>
 
+        {/* Unlinked Mentions */}
+        {unlinkedMentions.length > 0 && (
+          <>
+            <div className="mx-4 border-b border-border" />
+            <InspectorSection title="Unlinked Mentions" icon={<AlertTriangle className="h-4 w-4" />}>
+              <div className="space-y-0.5">
+                {unlinkedMentions.map((m) => {
+                  const mNote = notes.find((n) => n.id === m.noteId)
+                  if (!mNote) return null
+                  return (
+                    <div
+                      key={m.noteId + m.title}
+                      className="flex items-center gap-2 group px-1 py-0.5 rounded hover:bg-secondary/50 transition-colors"
+                    >
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                      <span className="truncate flex-1 text-[14px] text-muted-foreground">
+                        {m.title}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground/40">
+                        {m.count}×
+                      </span>
+                      <button
+                        onClick={() => addWikiLink(note!.id, m.title)}
+                        className="shrink-0 text-[11px] text-[#5e6ad2] opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                      >
+                        Link
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </InspectorSection>
+          </>
+        )}
+
         <div className="mx-4 border-b border-border" />
 
         {/* Relations */}
@@ -712,6 +765,46 @@ export function NoteInspector() {
                         onRemove={() => removeRelation(rel.id)}
                         onChangeType={(newType) => updateRelationType(rel.id, newType)}
                       />
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Relation Suggestions */}
+              {pendingSuggestions.length > 0 && (
+                <div className="space-y-0.5 mt-2">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
+                    Suggestions
+                  </span>
+                  {pendingSuggestions.map((s) => {
+                    const otherId = s.sourceNoteId === selectedNoteId ? s.targetNoteId : s.sourceNoteId
+                    const otherNote = notes.find((n) => n.id === otherId)
+                    if (!otherNote) return null
+                    return (
+                      <div
+                        key={s.id}
+                        className="flex items-center gap-2 px-1 py-0.5 rounded group hover:bg-secondary/50 transition-colors"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-500/60" />
+                        <span className="truncate flex-1 text-[14px] text-muted-foreground">
+                          {otherNote.title}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground/40 shrink-0">
+                          {s.reason}
+                        </span>
+                        <button
+                          onClick={() => acceptRelationSuggestion(s.id)}
+                          className="shrink-0 text-[11px] text-green-500 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => dismissRelationSuggestion(s.id)}
+                          className="shrink-0 text-[11px] text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                        >
+                          Skip
+                        </button>
+                      </div>
                     )
                   })}
                 </div>
