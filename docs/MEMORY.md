@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 13-slice Zustand store with versioned migration (currently v35)
+- **Store**: `lib/store/index.ts` — 15-slice Zustand store with versioned migration (currently v36)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only, "reference" removed in v26)
 
 ## Architecture Decisions
@@ -25,6 +25,8 @@
 - **Separate map pattern**: `srsStateByNoteId`, `viewStateByContext`, `backlinksIndex` — avoid polluting Note type
 - **Store migration**: Bump version, add migration block in `migrate()` function
 - **Event system**: `noteEvents` with `NoteEventType` union, bounded to MAX_EVENTS_PER_NOTE=1000
+- **Attachment IDB**: Binary blob data in separate IDB (`plot-attachments`), metadata in Zustand persist
+- **Alias resolution**: BacklinksIndex + graph.ts register note aliases in `titleToId` Map (no-clobber)
 - **Search**: Worker-based FlexSearch with IDB persistence (fuse.js removed in PR #14)
 - **Triage**: UI label "Done" (store action `triageKeep`)
 - **Body separation**: Note content in separate IDB (`plot-note-bodies`), meta in Zustand persist
@@ -33,8 +35,8 @@
 - **Workspace**: Binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types, drag & drop, tab split to new leaf, right-click context menus for view switching, NoteList integrated as workspace leaf (not fixed panel)
 - **TipTap Editor**: 24+ extensions — StarterKit, Placeholder (per-block), TaskList/Item, Highlight, Link, Underline, TextAlign, Color, TextStyle, Super/Subscript, Table, ResizableImage, CodeBlockLowlight (lowlight), Typography, Dropcursor, CharacterCount, FontFamily, YouTube, Details/Summary/Content, Mathematics (KaTeX), SlashCommand (custom), Typewriter, CurrentLineHighlight, HashtagSuggestion
 
-## Store Slices (13 total)
-notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace
+## Store Slices (15 total)
+notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology
 
 ## Completed PRs
 - **PR #14**: noteEvents bounding, fuse.js removal, dead code cleanup
@@ -54,16 +56,28 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #53**: Workspace v35 — binary tree layout system, 5 presets, 9 view types, D&D
 - **PR #54**: Workspace completion — tab split to new leaf, auto-cleanup, context menus, sidebar D&D fix
 - **PR #55**: docs/MEMORY.md added to repo
-- **WIP**: NoteList를 workspace 트리로 통합, 에디터 없을 때 풀 테이블 자동 폴백
+- **PR #56 (WIP)**: NoteList를 workspace 트리로 통합, 에디터 없을 때 풀 테이블 자동 폴백
+- **WIP**: Ontology Engine Phase 4-A — 데이터 기반 공사 (v36), Ontology View (그래프 시각화)
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
 
+## Ontology Engine
+- **Phase 4-A (DONE)**: 데이터 기반 공사 — types, store v36, IDB attachment store, backlinks alias support, graph alias support
+  - Types: `WikiInfoboxEntry`, `Attachment`, `CoOccurrence`, `RelationSuggestion`
+  - Note 확장: `aliases: string[]`, `wikiInfobox: WikiInfoboxEntry[]`
+  - Slices: `attachments` (CRUD + IDB blob), `ontology` (co-occurrence + relation suggestions)
+  - Wiki actions: `setNoteAliases`, `setWikiInfobox`, `createWikiStub`, `convertToWiki`, `revertFromWiki`
+- **Phase 4-B (NEXT)**: 엔진 코어 — Auto-linking TipTap Extension, WIKI stub 자동생성, Unlinked Mentions, Co-occurrence engine
+- **Phase 4-C**: WIKI View (나무위키 스타일) — WikiInfobox, WikiTOC, redirect, link 색상
+- **Phase 4-D**: Context Panel + Enhanced Graph View
+- **Ontology View**: SVG force-directed graph (d3-force), filter bar, detail panel, workspace 통합
+
 ## Current Direction (as of 2026-03-15)
 - **REDESIGN PHASE 1 COMPLETE** — see [redesign-plan.md](./redesign-plan.md)
 - Core idea: "기능 13개의 80점 → 기능 5개의 98점"
-- **Done**: Project/Category/Alerts 삭제, sidebar 정리, NoteRow 리디자인, Detail Panel 축소, "reference" status 제거, Insights view mode, Autopilot, Calendar, Labels, Templates, multi-tab editor, Datalog, Layout 5 Modes, Workspace v35, TipTap 10 plugins, NoteList workspace 통합
-- **In progress**: Context menu 정리, workspace 안정화
-- **Remaining**: Phosphor Icons + design tokens, surface polish (위키링크, 검색), orphaned code cleanup
+- **Done**: Project/Category/Alerts 삭제, sidebar 정리, NoteRow 리디자인, Detail Panel 축소, "reference" status 제거, Insights view mode, Autopilot, Calendar, Labels, Templates, multi-tab editor, Datalog, Layout 5 Modes, Workspace v35, TipTap 10 plugins, NoteList workspace 통합, Ontology Engine Phase 4-A
+- **In progress**: Ontology Engine Phase 4-B (엔진 코어)
+- **Remaining**: Phosphor Icons + design tokens, surface polish, orphaned code cleanup
 - **Deferred**: Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
 - Orphaned in code: KnowledgeMap type + maps slice, SavedView type + views slice, alerts/category/projects routes

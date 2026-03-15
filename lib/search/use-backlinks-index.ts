@@ -18,7 +18,7 @@ export function useBacklinksIndex(): Map<string, number> {
     // Initialize on first run
     if (!indexRef.current) {
       const idx = new BacklinksIndex()
-      idx.buildFromScratch(notes.map(n => ({ id: n.id, title: n.title, linksOut: n.linksOut })))
+      idx.buildFromScratch(notes.map(n => ({ id: n.id, title: n.title, linksOut: n.linksOut, aliases: n.aliases })))
       indexRef.current = idx
 
       // Build initial prev map
@@ -39,7 +39,7 @@ export function useBacklinksIndex(): Map<string, number> {
       currentIds.add(note.id)
       const oldUpdated = prev.get(note.id)
       if (!oldUpdated || oldUpdated !== note.updatedAt) {
-        idx.upsert(note.id, note.title, note.linksOut)
+        idx.upsert(note.id, note.title, note.linksOut, note.aliases)
       }
     }
 

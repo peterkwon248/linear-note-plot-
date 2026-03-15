@@ -20,6 +20,7 @@ import {
   History,
   Tag,
   Bookmark,
+  Network,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
@@ -507,6 +508,13 @@ export function LinearSidebar() {
             label="Labels"
             active={isActive("/labels")}
             dragContent={{ type: "labels" }}
+          />
+          <NavLink
+            href="/ontology"
+            icon={<Network className="h-5 w-5" strokeWidth={1.4} />}
+            label="Ontology"
+            active={isActive("/ontology")}
+            dragContent={{ type: "ontology" }}
           />
         </div>
 

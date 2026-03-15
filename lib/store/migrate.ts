@@ -48,6 +48,8 @@ export function migrate(persistedState: unknown): PlotState {
         archivedAt: n.archivedAt ?? null,
         parentNoteId: n.parentNoteId ?? null,
         isWiki: n.isWiki ?? false,
+        aliases: (n as any).aliases ?? [],
+        wikiInfobox: (n as any).wikiInfobox ?? [],
         contentJson: n.contentJson ?? null,
         // v13: Precomputed fields
         preview: n.preview ?? extractPreview(content),
@@ -411,6 +413,11 @@ export function migrate(persistedState: unknown): PlotState {
   if (state.layoutMode === "workspace") {
     state.layoutMode = "tabs"
   }
+
+  // v36: Ontology Engine data layer
+  if (!(state as any).attachments) (state as any).attachments = []
+  if (!(state as any).coOccurrences) (state as any).coOccurrences = []
+  if (!(state as any).relationSuggestions) (state as any).relationSuggestions = []
 
   return state as unknown as PlotState
 }

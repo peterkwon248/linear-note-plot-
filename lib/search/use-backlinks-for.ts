@@ -19,8 +19,9 @@ export function useBacklinksFor(noteId: string | null): Note[] {
     const targetTitle = target.title.toLowerCase()
     if (!targetTitle) return []
 
+    const targetTitles = [targetTitle, ...(target.aliases?.map((a: string) => a.toLowerCase()) ?? [])]
     return notes.filter(
-      (n) => n.id !== noteId && !n.trashed && n.linksOut.includes(targetTitle)
+      (n) => n.id !== noteId && !n.trashed && n.linksOut.some((l: string) => targetTitles.includes(l))
     )
   }, [noteId, notes])
 }

@@ -18,6 +18,7 @@ import { useActiveRoute, syncFromPathname, TABLE_VIEW_ROUTES, VIEW_ROUTES } from
 import { ActivityView } from "@/components/views/activity-view"
 import { TagsView } from "@/components/views/tags-view"
 import { LabelsView } from "@/components/views/labels-view"
+import { OntologyView } from "@/components/views/ontology-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 import { ListEditorLayout } from "@/components/layout/list-editor-layout"
@@ -199,6 +200,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               ) : (
                 <LabelsView />
               )}
+            </div>
+          )}
+
+          {(mountedViews.has("/ontology") || activeRoute === "/ontology") && (
+            <div className={activeRoute === "/ontology" ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <OntologyView />
             </div>
           )}
 

@@ -77,9 +77,21 @@ export function suggestBacklinks(
 
     // (B2) Target preview mentions other's title (potential unlinked mention)
     const otherTitle = other.title.toLowerCase()
+    const otherPreview = other.preview.toLowerCase()
     if (!existingLinks.has(otherTitle) && otherTitle.length > 3 && target.preview.toLowerCase().includes(otherTitle)) {
       score += 15
       reasons.push("this note mentions their title")
+    }
+
+    // (B3) Alias mentions in other's preview
+    if ((target as any).aliases) {
+      for (const alias of (target as any).aliases as string[]) {
+        const aliasLower = alias.toLowerCase()
+        if (aliasLower.length > 3 && otherPreview.includes(aliasLower)) {
+          score += 10
+          break
+        }
+      }
     }
 
     // (C) Shared tags
@@ -127,13 +139,15 @@ export class BacklinksIndex {
   private backlinks = new Map<string, Set<string>>()   // noteId -> Set<referrerId>
   private titleToId = new Map<string, string>()        // lowercase title -> noteId
   private idToTitle = new Map<string, string>()        // noteId -> lowercase title (reverse lookup)
+  private aliasesById = new Map<string, string[]>()
 
   /** Build the full index from scratch. Call once on init. */
-  buildFromScratch(notes: { id: string; title: string; linksOut: string[] }[]): void {
+  buildFromScratch(notes: { id: string; title: string; linksOut: string[]; aliases?: string[] }[]): void {
     this.outlinks.clear()
     this.backlinks.clear()
     this.titleToId.clear()
     this.idToTitle.clear()
+    this.aliasesById.clear()
 
     // Build title->id lookup
     for (const note of notes) {
@@ -141,6 +155,16 @@ export class BacklinksIndex {
         const lower = note.title.toLowerCase()
         this.titleToId.set(lower, note.id)
         this.idToTitle.set(note.id, lower)
+      }
+      // Register aliases
+      if (note.aliases) {
+        const aliasLowers = note.aliases.map(a => a.toLowerCase())
+        this.aliasesById.set(note.id, aliasLowers)
+        for (const aliasLower of aliasLowers) {
+          if (!this.titleToId.has(aliasLower)) {
+            this.titleToId.set(aliasLower, note.id)
+          }
+        }
       }
     }
 
@@ -159,17 +183,36 @@ export class BacklinksIndex {
   }
 
   /** Update a single note. Diffs old vs new outlinks. */
-  upsert(noteId: string, title: string, linksOut: string[]): void {
+  upsert(noteId: string, title: string, linksOut: string[], aliases?: string[]): void {
     // Update title index — O(1) via reverse map
     const oldTitle = this.idToTitle.get(noteId)
     if (oldTitle !== undefined) {
       this.titleToId.delete(oldTitle)
       this.idToTitle.delete(noteId)
     }
+    // Clean up old aliases
+    const oldAliases = this.aliasesById.get(noteId) ?? []
+    for (const oldAlias of oldAliases) {
+      if (this.titleToId.get(oldAlias) === noteId) {
+        this.titleToId.delete(oldAlias)
+      }
+    }
     if (title.trim()) {
       const lower = title.toLowerCase()
       this.titleToId.set(lower, noteId)
       this.idToTitle.set(noteId, lower)
+    }
+    // Register new aliases
+    if (aliases && aliases.length > 0) {
+      const newAliasLowers = aliases.map(a => a.toLowerCase())
+      this.aliasesById.set(noteId, newAliasLowers)
+      for (const aliasLower of newAliasLowers) {
+        if (!this.titleToId.has(aliasLower)) {
+          this.titleToId.set(aliasLower, noteId)
+        }
+      }
+    } else {
+      this.aliasesById.delete(noteId)
     }
 
     const oldLinks = this.outlinks.get(noteId) ?? new Set<string>()
@@ -215,6 +258,14 @@ export class BacklinksIndex {
       this.titleToId.delete(oldTitle)
       this.idToTitle.delete(noteId)
     }
+    // Clean up aliases
+    const oldAliases = this.aliasesById.get(noteId) ?? []
+    for (const oldAlias of oldAliases) {
+      if (this.titleToId.get(oldAlias) === noteId) {
+        this.titleToId.delete(oldAlias)
+      }
+    }
+    this.aliasesById.delete(noteId)
   }
 
   /** Get backlink count for a note. */

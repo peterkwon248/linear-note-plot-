@@ -12,6 +12,7 @@ export type PanelContent =
   | { type: "inspector"; noteId: string; followActive?: boolean }
   | { type: "calendar" }
   | { type: "insights" }
+  | { type: "ontology" }
   | { type: "empty" }
 
 /* ── Workspace Tree ────────────────────────────────────── */
