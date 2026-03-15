@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 15-slice Zustand store with versioned migration (currently v36)
+- **Store**: `lib/store/index.ts` — 15-slice Zustand store with versioned migration (currently v37)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only, "reference" removed in v26)
 
 ## Architecture Decisions
@@ -56,8 +56,10 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #53**: Workspace v35 — binary tree layout system, 5 presets, 9 view types, D&D
 - **PR #54**: Workspace completion — tab split to new leaf, auto-cleanup, context menus, sidebar D&D fix
 - **PR #55**: docs/MEMORY.md added to repo
-- **PR #56 (WIP)**: NoteList를 workspace 트리로 통합, 에디터 없을 때 풀 테이블 자동 폴백
-- **WIP**: Ontology Engine Phase 4-A — 데이터 기반 공사 (v36), Ontology View (그래프 시각화)
+- **PR #56**: NoteList를 workspace 트리로 통합, 에디터 없을 때 풀 테이블 자동 폴백
+- **PR #58**: Ontology Engine Phase 4-A — 데이터 기반 공사 (v36), Ontology View (그래프 시각화)
+- **PR #59**: Ontology Engine Phase 4-B + Phase 5 — 위키링크, 공기어, 관계 제안, 프리미엄 그래프 뷰 (v37)
+- **PR #60**: 온톨로지 그래프 force 파라미터 조정 — compact 레이아웃
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -68,16 +70,26 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
   - Note 확장: `aliases: string[]`, `wikiInfobox: WikiInfoboxEntry[]`
   - Slices: `attachments` (CRUD + IDB blob), `ontology` (co-occurrence + relation suggestions)
   - Wiki actions: `setNoteAliases`, `setWikiInfobox`, `createWikiStub`, `convertToWiki`, `revertFromWiki`
-- **Phase 4-B (NEXT)**: 엔진 코어 — Auto-linking TipTap Extension, WIKI stub 자동생성, Unlinked Mentions, Co-occurrence engine
+- **Phase 4-B (DONE)**: 엔진 코어 — WikilinkDecoration, WikilinkSuggestion, Co-occurrence engine, Unlinked Mentions, Relation Suggestions
+- **Phase 5 (DONE)**: Ontology Graph Premium Upgrade (v37)
+  - Web Worker 레이아웃 (`ontology-layout-worker.ts` + `ontology-layout-client.ts`)
+  - 실시간 d3-force 시뮬 + 노드 드래그 (rAF 루프, fx/fy)
+  - Bezier 곡선 엣지 + 엣지 라벨 + 평행 엣지 fan-out
+  - Ambient Dim 검색 (비매칭 노드/엣지 페이드)
+  - 호버 Tooltip (300ms 딜레이, 제목/프리뷰/status/tags)
+  - LOD Zoom (줌아웃 시 라벨 숨김) + Viewport Culling
+  - Status/Label 기반 노드 컬러, 도트 그리드 배경, 선택 pulse
+  - 포지션 영속화 (ontologyPositions in store v37)
+  - 미링크 멘션 UI (Ontology Detail Panel)
+  - 관계 타입 자동 추론 (inferRelationType heuristic)
 - **Phase 4-C**: WIKI View (나무위키 스타일) — WikiInfobox, WikiTOC, redirect, link 색상
-- **Phase 4-D**: Context Panel + Enhanced Graph View
+- **Phase 4-D**: Context Panel
 - **Ontology View**: SVG force-directed graph (d3-force), filter bar, detail panel, workspace 통합
 
-## Current Direction (as of 2026-03-15)
+## Current Direction (as of 2026-03-16)
 - **REDESIGN PHASE 1 COMPLETE** — see [redesign-plan.md](./redesign-plan.md)
 - Core idea: "기능 13개의 80점 → 기능 5개의 98점"
-- **Done**: Project/Category/Alerts 삭제, sidebar 정리, NoteRow 리디자인, Detail Panel 축소, "reference" status 제거, Insights view mode, Autopilot, Calendar, Labels, Templates, multi-tab editor, Datalog, Layout 5 Modes, Workspace v35, TipTap 10 plugins, NoteList workspace 통합, Ontology Engine Phase 4-A
-- **In progress**: Ontology Engine Phase 4-B (엔진 코어)
-- **Remaining**: Phosphor Icons + design tokens, surface polish, orphaned code cleanup
+- **Done**: Project/Category/Alerts 삭제, sidebar 정리, NoteRow 리디자인, Detail Panel 축소, "reference" status 제거, Insights view mode, Autopilot, Calendar, Labels, Templates, multi-tab editor, Datalog, Layout 5 Modes, Workspace v35, TipTap 10 plugins, NoteList workspace 통합, Ontology Engine Phase 4-A/4-B, Ontology Phase 5 Premium Graph
+- **Remaining**: Phase 4-C (Wiki View), Phase 4-D (Context Panel), Phosphor Icons + design tokens, surface polish, orphaned code cleanup
 - **Deferred**: Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
 - Orphaned in code: KnowledgeMap type + maps slice, SavedView type + views slice, alerts/category/projects routes
