@@ -36,6 +36,8 @@ import { Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 import { CurrentLineHighlightExtension } from "./CurrentLineHighlight"
 import { HashtagSuggestion } from "./HashtagSuggestion"
+import { WikilinkSuggestion } from "./WikilinkSuggestion"
+import { WikilinkDecorationExtension } from "./WikilinkDecoration"
 import { SlashCommandExtension } from "./SlashCommand"
 import "./EditorStyles.css"
 
@@ -211,6 +213,8 @@ export function TipTapEditor({
         enabledRef: currentLineHighlightRef,
       }),
       HashtagSuggestion,
+      WikilinkSuggestion,
+      WikilinkDecorationExtension,
       SlashCommandExtension,
     ],
     content: content && Object.keys(content).length > 0 ? content : undefined,
