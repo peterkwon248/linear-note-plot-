@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
@@ -11,8 +11,9 @@ import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { InsightsView } from "@/components/insights-view"
 import { CalendarView } from "@/components/calendar-view"
-import { ListEditorLayout } from "@/components/layout/list-editor-layout"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, setActiveRoute } from "@/lib/table-route"
+import { findLeafByContentType } from "@/lib/workspace/tree-utils"
+import { layoutModeToPreset } from "@/lib/workspace/presets"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note, LayoutMode } from "@/lib/types"
 
@@ -45,10 +46,13 @@ export function NotesTableView() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
   const layoutMode = usePlotStore((s) => s.layoutMode) as LayoutMode
+  const workspaceRoot = usePlotStore((s) => s.workspaceRoot)
+  const applyPreset = usePlotStore((s) => s.applyPreset)
   const viewMode = useSettingsStore((s) => s.viewMode)
   const isEditing = selectedNoteId !== null
 
   const [previewId, setPreviewId] = useState<string | null>(null)
+  const hasMigrated = useRef(false)
 
   const baseConfig = TABLE_VIEW_MAP[tableRoute ?? ""] ?? {}
   const config: ViewConfig = (() => {
@@ -91,6 +95,16 @@ export function NotesTableView() {
     setPreviewId(null)
   }, [tableRoute])
 
+  // Auto-migrate: if in list/split mode but workspace has no note-list leaf, apply new preset once
+  useEffect(() => {
+    if (hasMigrated.current) return
+    if ((layoutMode === "three-column" || layoutMode === "split") &&
+        !findLeafByContentType(workspaceRoot, "note-list")) {
+      hasMigrated.current = true
+      applyPreset(layoutModeToPreset(layoutMode))
+    }
+  }, [layoutMode, workspaceRoot, applyPreset])
+
   // ── Insights (layout-mode agnostic) ──
   if (viewMode === "insights") {
     return (
@@ -100,21 +114,14 @@ export function NotesTableView() {
     )
   }
 
-  // ── Three-column / Split: list + editor side-by-side ──
-  if (layoutMode === "three-column" || layoutMode === "split") {
+  // ── Three-column / Split: note-list + editor inside workspace tree ──
+  // When not editing, fall through to full NotesTable below
+  if ((layoutMode === "three-column" || layoutMode === "split") && isEditing) {
     return (
-      <ListEditorLayout
-        context={config.context}
-        title={config.title}
-        showTabs={config.showTabs}
-        hideCreateButton={config.hideCreateButton}
-        createNoteOverrides={config.createNoteOverrides}
-        folderId={activeFolderId ?? undefined}
-        tagId={activeTagId ?? undefined}
-        labelId={activeLabelId ?? undefined}
-        initialTab={config.initialTab}
-        onTabChange={handleTabChange}
-      />
+      <div className="flex flex-1 overflow-hidden">
+        <WorkspaceEditorArea />
+        <NoteInspector />
+      </div>
     )
   }
 

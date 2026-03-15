@@ -107,35 +107,54 @@ export function createWorkspaceSlice(set: Set, get: Get) {
 
     openNoteInLeaf: (noteId: string, leafId?: string) => {
       set((state: any) => {
-        const targetId = leafId ?? state.activeLeafId
+        let targetId = leafId ?? state.activeLeafId
         if (!targetId) return state
 
         const node = findNode(state.workspaceRoot, targetId)
         if (!node || !isLeaf(node)) return state
 
-        // If leaf is not an editor, convert it
+        // If target leaf is not an editor, find the first editor leaf instead
         if (node.content.type !== "editor") {
-          const newTab: WorkspaceTab = { id: nanoid(), noteId }
-          const newRoot = replaceNode(state.workspaceRoot, targetId, {
-            ...node,
-            content: { type: "editor", noteId },
-            tabs: [newTab],
-            activeTabId: newTab.id,
-          })
-          return { workspaceRoot: newRoot, selectedNoteId: noteId }
+          const editorLeaf = findFirstEditorLeaf(state.workspaceRoot)
+          if (editorLeaf) {
+            targetId = editorLeaf.id
+          } else {
+            // No editor leaf exists — split current leaf to create editor beside it
+            const { root: splitRoot, newLeafId } = splitLeafWithId(
+              state.workspaceRoot, targetId, "horizontal",
+              { type: "editor", noteId }, "after",
+            )
+            if (newLeafId) {
+              const newTab: WorkspaceTab = { id: nanoid(), noteId }
+              const root = updateLeafTabs(splitRoot, newLeafId, [newTab], newTab.id)
+              return { workspaceRoot: root, selectedNoteId: noteId, activeLeafId: newLeafId }
+            }
+            // Fallback if split failed (max depth): convert current leaf
+            const newTab: WorkspaceTab = { id: nanoid(), noteId }
+            const newRoot = replaceNode(state.workspaceRoot, targetId, {
+              ...node,
+              content: { type: "editor", noteId },
+              tabs: [newTab],
+              activeTabId: newTab.id,
+            })
+            return { workspaceRoot: newRoot, selectedNoteId: noteId, activeLeafId: targetId }
+          }
         }
 
-        // Already an editor — check if note is open
-        const existingTab = node.tabs.find((t: WorkspaceTab) => t.noteId === noteId)
+        // Target is now an editor leaf
+        const editorNode = findNode(state.workspaceRoot, targetId) as WorkspaceLeaf
+
+        // Check if note is already open in a tab
+        const existingTab = editorNode.tabs.find((t: WorkspaceTab) => t.noteId === noteId)
         if (existingTab) {
-          const newRoot = updateLeafTabs(state.workspaceRoot, targetId, node.tabs, existingTab.id)
-          return { workspaceRoot: newRoot, selectedNoteId: noteId }
+          const newRoot = updateLeafTabs(state.workspaceRoot, targetId, editorNode.tabs, existingTab.id)
+          return { workspaceRoot: newRoot, selectedNoteId: noteId, activeLeafId: targetId }
         }
 
         // Create new tab after active tab
         const newTab: WorkspaceTab = { id: nanoid(), noteId }
-        const tabs = [...node.tabs]
-        const activeIdx = tabs.findIndex((t: WorkspaceTab) => t.id === node.activeTabId)
+        const tabs = [...editorNode.tabs]
+        const activeIdx = tabs.findIndex((t: WorkspaceTab) => t.id === editorNode.activeTabId)
         if (activeIdx >= 0) {
           tabs.splice(activeIdx + 1, 0, newTab)
         } else {
@@ -143,7 +162,7 @@ export function createWorkspaceSlice(set: Set, get: Get) {
         }
 
         const newRoot = updateLeafTabs(state.workspaceRoot, targetId, tabs, newTab.id)
-        return { workspaceRoot: newRoot, selectedNoteId: noteId }
+        return { workspaceRoot: newRoot, selectedNoteId: noteId, activeLeafId: targetId }
       })
     },
 

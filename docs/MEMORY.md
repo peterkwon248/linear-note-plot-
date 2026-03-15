@@ -30,7 +30,7 @@
 - **Body separation**: Note content in separate IDB (`plot-note-bodies`), meta in Zustand persist
 - **Multi-tab editor**: EditorState with panels/tabs/split (v30, legacy — replaced by workspace)
 - **Autopilot**: Rule-based automation with conditions/actions on notes (v28)
-- **Workspace**: Binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types, drag & drop, tab split to new leaf, right-click context menus for view switching
+- **Workspace**: Binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types, drag & drop, tab split to new leaf, right-click context menus for view switching, NoteList integrated as workspace leaf (not fixed panel)
 - **TipTap Editor**: 24+ extensions — StarterKit, Placeholder (per-block), TaskList/Item, Highlight, Link, Underline, TextAlign, Color, TextStyle, Super/Subscript, Table, ResizableImage, CodeBlockLowlight (lowlight), Typography, Dropcursor, CharacterCount, FontFamily, YouTube, Details/Summary/Content, Mathematics (KaTeX), SlashCommand (custom), Typewriter, CurrentLineHighlight, HashtagSuggestion
 
 ## Store Slices (13 total)
@@ -54,7 +54,7 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #53**: Workspace v35 — binary tree layout system, 5 presets, 9 view types, D&D
 - **PR #54**: Workspace completion — tab split to new leaf, auto-cleanup, context menus, sidebar D&D fix
 - **PR #55**: docs/MEMORY.md added to repo
-- **WIP**: TipTap editor plugin expansion (10 extensions) + context menu fixes + Editor option in context menus
+- **WIP**: NoteList를 workspace 트리로 통합, 에디터 없을 때 풀 테이블 자동 폴백
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -62,8 +62,8 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 ## Current Direction (as of 2026-03-15)
 - **REDESIGN PHASE 1 COMPLETE** — see [redesign-plan.md](./redesign-plan.md)
 - Core idea: "기능 13개의 80점 → 기능 5개의 98점"
-- **Done**: Project/Category/Alerts 삭제, sidebar 정리, NoteRow 리디자인, Detail Panel 축소, "reference" status 제거, Insights view mode, Autopilot, Calendar, Labels, Templates, multi-tab editor, Datalog, Layout 5 Modes, Workspace v35
-- **In progress**: TipTap 에디터 플러그인 확장 — 10개 확장 추가 완료 (Typography, Dropcursor, CharacterCount, FontFamily, CodeBlockLowlight, Details, Mathematics/KaTeX, YouTube, SlashCommand, Placeholder per-block)
+- **Done**: Project/Category/Alerts 삭제, sidebar 정리, NoteRow 리디자인, Detail Panel 축소, "reference" status 제거, Insights view mode, Autopilot, Calendar, Labels, Templates, multi-tab editor, Datalog, Layout 5 Modes, Workspace v35, TipTap 10 plugins, NoteList workspace 통합
+- **In progress**: Context menu 정리, workspace 안정화
 - **Remaining**: Phosphor Icons + design tokens, surface polish (위키링크, 검색), orphaned code cleanup
 - **Deferred**: Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
 - Orphaned in code: KnowledgeMap type + maps slice, SavedView type + views slice, alerts/category/projects routes

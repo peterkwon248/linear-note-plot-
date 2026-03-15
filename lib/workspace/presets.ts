@@ -13,8 +13,11 @@ export function buildPreset(preset: WorkspacePreset): WorkspaceNode {
       return createLeaf({ type: "editor", noteId: null })
 
     case "list-editor":
-      // Single editor (note list is provided by page structure)
-      return createLeaf({ type: "editor", noteId: null })
+      // Note list (30%) + editor (70%) — note list is inside the workspace tree
+      return createBranch("horizontal", [
+        createLeaf({ type: "note-list", context: "all" }),
+        createLeaf({ type: "editor", noteId: null }),
+      ], 0.3)
 
     case "dual-editor":
       // Horizontal: editor (50%) + editor (50%)
@@ -24,11 +27,14 @@ export function buildPreset(preset: WorkspacePreset): WorkspaceNode {
       ], 0.5)
 
     case "research":
-      // Vertical: editor (65%) + tags (35%) — note list is provided by page structure
-      return createBranch("vertical", [
-        createLeaf({ type: "editor", noteId: null }),
-        createLeaf({ type: "tags" }),
-      ], 0.65)
+      // Note list (25%) + [ editor (65%) / tags (35%) ]
+      return createBranch("horizontal", [
+        createLeaf({ type: "note-list", context: "all" }),
+        createBranch("vertical", [
+          createLeaf({ type: "editor", noteId: null }),
+          createLeaf({ type: "tags" }),
+        ], 0.65),
+      ], 0.25)
 
     default:
       return createLeaf({ type: "editor", noteId: null })
