@@ -38,6 +38,8 @@ export function OntologyView() {
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
   const openNoteInLeaf = usePlotStore((s) => s.openNoteInLeaf)
+  const ontologyPositions = usePlotStore((s) => s.ontologyPositions)
+  const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
 
   const filteredNotes = useMemo(() => applyFilters(notes, filters), [notes, filters])
 
@@ -47,8 +49,10 @@ export function OntologyView() {
     [filteredNotes, relations],
   )
 
-  // Previous positions for warm-start
-  const prevPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map())
+  // Previous positions for warm-start (initialized from persisted store)
+  const prevPositionsRef = useRef<Map<string, { x: number; y: number }>>(
+    new Map(Object.entries(ontologyPositions))
+  )
 
   // Layout via Web Worker (async)
   useEffect(() => {
@@ -86,6 +90,7 @@ export function OntologyView() {
           newPosMap.set(n.id, { x: n.x, y: n.y })
         }
         prevPositionsRef.current = newPosMap
+        updateOntologyPositions(Object.fromEntries(newPosMap))
 
         setGraph({ nodes, edges: graphData.edges })
       })
@@ -105,8 +110,9 @@ export function OntologyView() {
   const handlePositionsUpdate = useCallback(
     (positions: Map<string, { x: number; y: number }>) => {
       prevPositionsRef.current = positions
+      updateOntologyPositions(Object.fromEntries(positions))
     },
-    [],
+    [updateOntologyPositions],
   )
 
   // Search match IDs

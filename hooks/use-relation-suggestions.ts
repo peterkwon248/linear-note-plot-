@@ -2,6 +2,40 @@
 
 import { useEffect, useRef } from "react"
 import { usePlotStore } from "@/lib/store"
+import type { RelationType, Note } from "@/lib/types"
+
+function inferRelationType(
+  noteA: Note | undefined,
+  noteB: Note | undefined,
+): { type: RelationType; reason: string; sourceId?: string; targetId?: string } {
+  if (!noteA || !noteB) return { type: "related-to", reason: "Co-occurrence" }
+
+  // Check if one note links to the other (directional)
+  const aLinksB = noteA.linksOut?.includes(noteB.title.toLowerCase()) ?? false
+  const bLinksA = noteB.linksOut?.includes(noteA.title.toLowerCase()) ?? false
+
+  // Same tags → extends (builds on similar concepts)
+  const sharedTags = noteA.tags.filter((t) => noteB.tags.includes(t))
+  if (sharedTags.length >= 2) {
+    return { type: "extends", reason: `${sharedTags.length} shared tags` }
+  }
+
+  // One-directional link → depends-on (keep directionality: source references target)
+  if (aLinksB && !bLinksA) {
+    return { type: "depends-on", reason: "A references B", sourceId: noteA.id, targetId: noteB.id }
+  }
+  if (bLinksA && !aLinksB) {
+    return { type: "depends-on", reason: "B references A", sourceId: noteB.id, targetId: noteA.id }
+  }
+
+  // Same folder → related-to (default but with better reason)
+  if (noteA.folderId && noteA.folderId === noteB.folderId) {
+    return { type: "related-to", reason: "Same folder" }
+  }
+
+  // Default
+  return { type: "related-to", reason: "Co-occurrence" }
+}
 
 /**
  * Watches co-occurrences and auto-generates RelationSuggestions
@@ -57,12 +91,16 @@ export function useRelationSuggestions() {
       const pair = canonicalPair(noteAId, noteBId)
       if (existingPairs.has(pair)) continue
 
+      const noteA = notes.find((n) => n.id === noteAId)
+      const noteB = notes.find((n) => n.id === noteBId)
+      const { type, reason, sourceId, targetId } = inferRelationType(noteA, noteB)
+
       addRelationSuggestion({
-        sourceNoteId: noteAId,
-        targetNoteId: noteBId,
-        suggestedType: "related-to",
+        sourceNoteId: sourceId ?? noteAId,
+        targetNoteId: targetId ?? noteBId,
+        suggestedType: type,
         coOccurrenceCount: co.count,
-        reason: `Co-occur in ${co.count} notes`,
+        reason: `${reason} (${co.count} co-occurrences)`,
       })
       existingPairs.add(pair)
       added++

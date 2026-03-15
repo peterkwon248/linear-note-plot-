@@ -9,6 +9,10 @@ const MAX_SUGGESTIONS = 100
 
 export function createOntologySlice(set: Set, get: Get, _appendEvent: AppendEventFn) {
   return {
+    updateOntologyPositions: (positions: Record<string, { x: number; y: number }>) => {
+      set({ ontologyPositions: positions })
+    },
+
     updateCoOccurrences: (items: CoOccurrence[]) => {
       set({ coOccurrences: items.slice(0, MAX_COOCCURRENCES) })
     },
