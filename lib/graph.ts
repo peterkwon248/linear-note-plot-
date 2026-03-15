@@ -381,14 +381,14 @@ export function buildForceGraph(
 
   // Configure and run simulation to convergence
   const nodeCount = simNodes.length
-  const chargeStrength = nodeCount > 30 ? -200 : nodeCount > 15 ? -300 : nodeCount > 8 ? -400 : -600
-  const linkDistance = nodeCount > 30 ? 60 : nodeCount > 15 ? 80 : nodeCount > 8 ? 100 : 140
+  const chargeStrength = nodeCount > 100 ? -80 : nodeCount > 30 ? -120 : nodeCount > 15 ? -180 : -250
+  const linkDistance = nodeCount > 100 ? 40 : nodeCount > 30 ? 50 : nodeCount > 15 ? 60 : 80
 
   const sim = forceSimulation<ForceNode>(simNodes)
     .force("link", forceLink<ForceNode, SimulationLinkDatum<ForceNode>>(simLinks).distance(linkDistance))
     .force("charge", forceManyBody().strength(chargeStrength))
     .force("center", forceCenter(0, 0))
-    .force("collide", forceCollide(nodeCount > 15 ? 28 : 40))
+    .force("collide", forceCollide(nodeCount > 30 ? 20 : nodeCount > 15 ? 25 : 30))
     .stop()
 
   // Pin focus node at center
@@ -584,14 +584,14 @@ export function buildOntologyGraph(
 
   // 6. Run d3-force simulation
   const nodeCount = simNodes.length
-  const chargeStrength = nodeCount > 30 ? -200 : nodeCount > 15 ? -300 : nodeCount > 8 ? -400 : -600
-  const linkDistance = nodeCount > 30 ? 60 : nodeCount > 15 ? 80 : nodeCount > 8 ? 100 : 140
+  const chargeStrength = nodeCount > 100 ? -80 : nodeCount > 30 ? -120 : nodeCount > 15 ? -180 : -250
+  const linkDistance = nodeCount > 100 ? 40 : nodeCount > 30 ? 50 : nodeCount > 15 ? 60 : 80
 
   const sim = forceSimulation<OntologyForceNode>(simNodes)
     .force("link", forceLink<OntologyForceNode, SimulationLinkDatum<OntologyForceNode>>(simLinks).distance(linkDistance))
     .force("charge", forceManyBody().strength(chargeStrength))
     .force("center", forceCenter(0, 0))
-    .force("collide", forceCollide(nodeCount > 15 ? 28 : 40))
+    .force("collide", forceCollide(nodeCount > 30 ? 20 : nodeCount > 15 ? 25 : 30))
     .stop()
 
   const ticks = Math.max(120, Math.min(300, nodeCount * 4))
@@ -630,9 +630,9 @@ export interface OntologyGraphData {
  * Compute force simulation parameters based on node count.
  */
 export function computeForceConfig(nodeCount: number): ForceConfig {
-  const chargeStrength = nodeCount > 30 ? -200 : nodeCount > 15 ? -300 : nodeCount > 8 ? -400 : -600
-  const linkDistance = nodeCount > 30 ? 60 : nodeCount > 15 ? 80 : nodeCount > 8 ? 100 : 140
-  const collisionRadius = nodeCount > 15 ? 28 : 40
+  const chargeStrength = nodeCount > 100 ? -80 : nodeCount > 30 ? -120 : nodeCount > 15 ? -180 : -250
+  const linkDistance = nodeCount > 100 ? 40 : nodeCount > 30 ? 50 : nodeCount > 15 ? 60 : 80
+  const collisionRadius = nodeCount > 30 ? 20 : nodeCount > 15 ? 25 : 30
   const ticks = Math.max(120, Math.min(300, nodeCount * 4))
   return { chargeStrength, linkDistance, collisionRadius, ticks }
 }
