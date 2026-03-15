@@ -226,8 +226,8 @@ export function OntologyFilterBar({
         Wiki
       </button>
 
-      {/* Search — right-aligned */}
-      <div className="ml-auto flex items-center gap-1.5">
+      {/* Search — next to Wiki */}
+      <div className="flex items-center">
         <div className="flex items-center bg-secondary/50 rounded-md px-2 py-1">
           <Search className="w-3.5 h-3.5 text-muted-foreground mr-1.5 shrink-0" />
           <input
