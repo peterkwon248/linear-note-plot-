@@ -83,12 +83,12 @@ export function OntologyFilterBar({
       : filters.status.charAt(0).toUpperCase() + filters.status.slice(1)
 
   return (
-    <div ref={dropdownRef} className="flex items-center gap-2 h-9 px-2 bg-card border-b border-border">
+    <div ref={dropdownRef} className="flex items-center gap-3 h-10 px-5 border-b border-border">
       {/* Tags Dropdown */}
       <div className="relative">
         <button
           onClick={() => setOpenDropdown(openDropdown === "tags" ? null : "tags")}
-          className="flex items-center gap-1 text-xs px-2 py-1 rounded hover:bg-secondary transition-colors"
+          className="flex items-center gap-1 text-[13px] px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedTag}
           <ChevronDown className="w-3 h-3" />
@@ -96,12 +96,12 @@ export function OntologyFilterBar({
         {openDropdown === "tags" && (
           <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max">
             {tags.length === 0 ? (
-              <div className="px-2 py-1 text-xs text-muted-foreground">No tags</div>
+              <div className="px-2 py-1 text-[13px] text-muted-foreground">No tags</div>
             ) : (
               tags.map((tag) => (
                 <label
                   key={tag.id}
-                  className="flex items-center gap-2 px-2 py-1 text-xs hover:bg-secondary rounded cursor-pointer"
+                  className="flex items-center gap-2 px-2 py-1 text-[13px] hover:bg-secondary rounded cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -121,7 +121,7 @@ export function OntologyFilterBar({
       <div className="relative">
         <button
           onClick={() => setOpenDropdown(openDropdown === "label" ? null : "label")}
-          className="flex items-center gap-1 text-xs px-2 py-1 rounded hover:bg-secondary transition-colors"
+          className="flex items-center gap-1 text-[13px] px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedLabel}
           <ChevronDown className="w-3 h-3" />
@@ -130,7 +130,7 @@ export function OntologyFilterBar({
           <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max">
             <button
               onClick={() => handleLabelSelect(null)}
-              className={`block w-full text-left px-2 py-1 text-xs rounded hover:bg-secondary ${
+              className={`block w-full text-left px-2 py-1 text-[13px] rounded hover:bg-secondary ${
                 filters.labelId === null ? "bg-secondary" : ""
               }`}
             >
@@ -140,7 +140,7 @@ export function OntologyFilterBar({
               <button
                 key={label.id}
                 onClick={() => handleLabelSelect(label.id)}
-                className={`block w-full text-left px-2 py-1 text-xs rounded hover:bg-secondary ${
+                className={`block w-full text-left px-2 py-1 text-[13px] rounded hover:bg-secondary ${
                   filters.labelId === label.id ? "bg-secondary" : ""
                 }`}
               >
@@ -155,7 +155,7 @@ export function OntologyFilterBar({
       <div className="relative">
         <button
           onClick={() => setOpenDropdown(openDropdown === "status" ? null : "status")}
-          className="flex items-center gap-1 text-xs px-2 py-1 rounded hover:bg-secondary transition-colors"
+          className="flex items-center gap-1 text-[13px] px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedStatus}
           <ChevronDown className="w-3 h-3" />
@@ -166,7 +166,7 @@ export function OntologyFilterBar({
               <button
                 key={status}
                 onClick={() => handleStatusSelect(status)}
-                className={`block w-full text-left px-2 py-1 text-xs rounded hover:bg-secondary ${
+                className={`block w-full text-left px-2 py-1 text-[13px] rounded hover:bg-secondary ${
                   filters.status === status ? "bg-secondary" : ""
                 }`}
               >
@@ -193,7 +193,7 @@ export function OntologyFilterBar({
               key={type}
               onClick={() => handleRelationTypeToggle(type)}
               title={config.label}
-              className={`w-2.5 h-2.5 rounded-full transition-colors ${
+              className={`w-3 h-3 rounded-full transition-colors ${
                 isActive
                   ? "border-0"
                   : "border-2"
@@ -210,7 +210,7 @@ export function OntologyFilterBar({
       {/* Wikilinks Toggle */}
       <button
         onClick={handleWikilinksToggle}
-        className={`text-xs px-2 py-1 rounded transition-colors ${
+        className={`text-[13px] px-2.5 py-1 rounded transition-colors ${
           filters.showWikilinks
             ? "bg-secondary hover:bg-secondary/80"
             : "hover:bg-secondary/50"
