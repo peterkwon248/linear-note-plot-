@@ -41,11 +41,17 @@ export function createRelationsSlice(set: Set, get: Get, appendEvent: AppendEven
     },
 
     updateRelationType: (relationId: string, newType: RelationType) => {
+      const relation = (get().relations as Relation[]).find(r => r.id === relationId)
+      if (!relation) return
+      const oldType = relation.type
       set((state: any) => ({
         relations: state.relations.map((r: Relation) =>
           r.id === relationId ? { ...r, type: newType } : r
         ),
       }))
+      appendEvent(relation.sourceNoteId, "relation_type_changed", {
+        relationId, targetNoteId: relation.targetNoteId, oldType, newType
+      })
     },
   }
 }

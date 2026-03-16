@@ -46,24 +46,12 @@ inbox → capture → permanent → WIKI (planned)
 - Labels → 노트 타입 (무엇인가): 메모, 리서치, 아이디어
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
-## Completed Features
-1. Labels — note labeling system
-2. Autopilot Rules — rule-based automation (v28)
-3. Templates — note templates with seed data + TipTap 리치텍스트 에디터 (v38)
-4. Calendar View — monthly grid
-5. Multi-Tab + Split View → Workspace binary tree (v35)
-6. Datalog — Activity history & analytics (NoteEvent)
-7. Tags & Labels sidebar views
-8. Inbox unified with Notes design
-9. Inline #hashtag → tag auto-sync
-10. SRS engine (fixed-step review, 4-button rating)
-11. Knowledge map force-directed layout
-12. Analysis engine + Insights UI
-13. Sidebar redesign (custom LinearSidebar, 4 nav items)
-14. Ontology Engine Phase 4-A/4-B/5 (위키링크, 공기어, 관계 제안, 프리미엄 그래프)
-15. Responsive NotesTable (CompactNoteList 제거, ResizeObserver 기반)
+## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 16. NoteList를 workspace 트리로 통합
-17. Dead code cleanup — Activity view, 10 orphan components, 9 orphan routes, legacy editor system, stale command palette items, TemplatesView double-mount fix
+17. Dead code cleanup — Activity view, orphan components/routes, legacy editor
+18. Relations 완성 — relation_type_changed 이벤트 로깅, 제안 수락 시 타입 선택 UX
+19. Wiki 기초 UI — Convert/Revert, WikiTOC, WikiInfobox, isWiki 필터, aliases, 위키 배지
+20. Templates/Tags/Labels 헤더 스타일 통일
 
 ## Three Axes — Core Design Philosophy
 
@@ -75,14 +63,21 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## Implementation Order (최신, 2026-03-16 업데이트)
 
-1. ~~Activity 삭제~~ ✅ 완료
-2. ~~Thread~~ ✅ 이미 구현됨 (thinking slice + ThreadPanel)
-3. ~~읽기/편집 뷰모드 토글~~ ✅ 이미 구현됨 (Ctrl+Shift+E)
-4. **Relations** (refutes/extends/related, 수동+자동 통합)
-5. **Wiki 리빌드** — 나무위키식 (내부링크 + 백링크 + TOC + 읽기모드 기본)
+### Tier 1: Wiki 고도화 (Phase 4-C 완성)
+1. **Red/Blue 링크 색상 분기** — WikilinkDecoration에서 존재하면 파랑, 없으면 빨강
+2. **빨간 링크 클릭 → 위키 자동 생성** — 없는 문서 클릭 시 isWiki=true 노트 생성
+3. **사이드바 TOC** — 읽기 모드에서 TOC를 좌측 sticky sidebar로
+4. **위키 읽기 타이포그래피** — 본문 폭 제한, 줄간격, 제목 스타일 CSS
+5. **하단 분류 표시** — 기존 tags를 위키 하단에 "분류: A | B | C"로 표시
+
+### Tier 2: 기존 기능 마무리
 6. **Reflections** (시간축, 쌓임만 가능한 회고)
-7. **Insights 뷰** (Activity 대체, 행동 분석 대시보드)
-8. **Ontology View 고도화** (Relations 구현 후)
+7. **Insights 뷰 고도화** (Activity 대체, 행동 분석 대시보드)
+8. **Ontology View 고도화** (클러스터링, 미니맵, 인터랙션 개선)
+
+### Tier 3: 디자인 폴리시
+9. **디자인 토큰 통일** (typography/spacing/transitions)
+10. **고아 코드 정리** (KnowledgeMap, SavedView, alerts 등 미사용 타입/슬라이스 제거)
 
 ## Key Design Decisions (최신)
 
@@ -108,5 +103,4 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ## TODO: Future Work
 - Settings always-mounted (when settings features implemented)
 - WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
-- Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
-- Orphaned store data: KnowledgeMap type + maps slice, SavedView type + views slice, legacy editor slice
+- Phase 4-D: Context Panel

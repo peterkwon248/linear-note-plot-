@@ -13,6 +13,7 @@ import {
   Link2,
   BookOpen,
   PenLine,
+  Globe,
 } from "lucide-react"
 import {
   Tooltip,
@@ -35,6 +36,8 @@ import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 import type { Editor } from "@tiptap/react"
 import { LayoutModeSwitcher } from "@/components/editor/layout-mode-switcher"
+import { WikiTOC } from "@/components/editor/wiki-toc"
+import { WikiInfobox } from "@/components/editor/wiki-infobox"
 
 interface NoteEditorProps {
   noteId?: string
@@ -57,6 +60,8 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const detailsOpen = usePlotStore((s) => s.detailsOpen)
   const toggleDetailsOpen = usePlotStore((s) => s.toggleDetailsOpen)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
+  const convertToWiki = usePlotStore((s) => s.convertToWiki)
+  const revertFromWiki = usePlotStore((s) => s.revertFromWiki)
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
 
@@ -166,6 +171,12 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
               {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
             </span>
           )}
+          {note.isWiki && (
+            <span className="flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-400">
+              <Globe className="h-3 w-3" />
+              Wiki
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-0.5">
           <Tooltip>
@@ -214,6 +225,17 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
                 <Link2 className="h-4 w-4" />
                 Link to...
               </DropdownMenuItem>
+              {note.isWiki ? (
+                <DropdownMenuItem onClick={() => revertFromWiki(note.id)}>
+                  <Globe className="h-4 w-4" />
+                  Revert from Wiki
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => convertToWiki(note.id)}>
+                  <Globe className="h-4 w-4" />
+                  Convert to Wiki
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
@@ -284,8 +306,44 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         />
       )}
 
+      {/* Wiki aliases */}
+      {note.isWiki && note.aliases && note.aliases.length > 0 && (
+        <div className="flex items-center gap-1.5 px-6 pt-1">
+          <span className="text-[12px] text-muted-foreground/60">Also known as:</span>
+          {note.aliases.map((alias, i) => (
+            <span
+              key={i}
+              className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground"
+            >
+              {alias}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Content Editor */}
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
+        {note.isWiki && isReadMode && (
+          <div className="flex gap-4 px-6 pt-4">
+            <WikiTOC content={note.content} className="w-full" />
+            <WikiInfobox
+              noteId={note.id}
+              entries={note.wikiInfobox ?? []}
+              editable={false}
+              className="shrink-0 w-[220px]"
+            />
+          </div>
+        )}
+        {note.isWiki && !isReadMode && (
+          <div className="px-6 pt-4">
+            <WikiInfobox
+              noteId={note.id}
+              entries={note.wikiInfobox ?? []}
+              editable={true}
+              className="max-w-[400px]"
+            />
+          </div>
+        )}
         <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
           <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
           <BacklinksFooter noteId={note.id} />

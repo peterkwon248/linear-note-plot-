@@ -195,7 +195,7 @@ export type NoteEventType =
   | "label_changed"
   | "srs_reviewed"
   | "autopilot_applied"
-  | "relation_added" | "relation_removed"
+  | "relation_added" | "relation_removed" | "relation_type_changed"
   | "alias_changed" | "wiki_converted" | "attachment_added" | "attachment_removed"
 
 export interface NoteEvent {

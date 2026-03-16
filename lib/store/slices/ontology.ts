@@ -1,4 +1,4 @@
-import type { CoOccurrence, RelationSuggestion } from "../../types"
+import type { CoOccurrence, RelationSuggestion, RelationType } from "../../types"
 import { genId, now, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
@@ -39,12 +39,12 @@ export function createOntologySlice(set: Set, get: Get, _appendEvent: AppendEven
       return id
     },
 
-    acceptRelationSuggestion: (suggestionId: string) => {
+    acceptRelationSuggestion: (suggestionId: string, typeOverride?: RelationType) => {
       const suggestion = (get().relationSuggestions as RelationSuggestion[]).find(
         (s) => s.id === suggestionId
       )
       if (!suggestion || suggestion.status !== "pending") return
-      get().addRelation(suggestion.sourceNoteId, suggestion.targetNoteId, suggestion.suggestedType)
+      get().addRelation(suggestion.sourceNoteId, suggestion.targetNoteId, typeOverride ?? suggestion.suggestedType)
       set((state: any) => ({
         relationSuggestions: state.relationSuggestions.map((s: RelationSuggestion) =>
           s.id === suggestionId ? { ...s, status: "accepted" as const } : s

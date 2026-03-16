@@ -62,6 +62,7 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #60**: 온톨로지 그래프 force 파라미터 조정 — compact 레이아웃
 - **PR #62**: 템플릿 시스템 Phase 2 — UpNote 스타일 TipTap 에디터 (v38)
 - **PR #63**: 반응형 NotesTable 통합 — CompactNoteList 제거, ResizeObserver 기반 컬럼 숨김
+- **PR #64**: Activity 삭제 + dead code cleanup (-3,258줄), Relations 완성, Wiki 기초 UI, 헤더 스타일 통일
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -84,50 +85,39 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
   - 포지션 영속화 (ontologyPositions in store v37)
   - 미링크 멘션 UI (Ontology Detail Panel)
   - 관계 타입 자동 추론 (inferRelationType heuristic)
-- **Phase 4-C**: WIKI View (나무위키 스타일) — WikiInfobox, WikiTOC, redirect, link 색상
+- **Phase 4-C (IN PROGRESS)**: Wiki View 나무위키 스타일
+  - ✅ Done: Convert/Revert buttons, WikiTOC, WikiInfobox, isWiki filter, aliases, wiki badge, read mode layout
+  - TODO: Red/Blue 링크 색상, 빨간 링크→자동 생성, 사이드바 TOC, 위키 타이포그래피, 하단 분류
 - **Phase 4-D**: Context Panel
 - **Ontology View**: SVG force-directed graph (d3-force), filter bar, detail panel, workspace 통합
 
 ## Current Direction (as of 2026-03-16)
 
-### 완료된 작업 (이번 세션)
-- **반응형 NotesTable 통합**: CompactNoteList 제거, ONE grid for all sizes
-  - COLUMN_DEFS에 minWidth 추가, ResizeObserver로 컨테이너 너비 측정
-  - effectiveVisibleCols로 좁을 때 자동 컬럼 숨김
-  - isCompact (< 480px)로 패딩/텍스트 축소
-- **ListEditorLayout 개선**: NotesTable 사용 + 리사이즈 핸들 (280-800px)
-- **workspace-view-dispatch**: note-list 리프도 NotesTable로 교체
-- **사이드바 뷰 전환 수정**: Tags/Labels 클릭 시 해당 뷰가 풀와이드로 정상 렌더
+### 핵심 설계 결정
+- **Insights ≠ Ontology** → 별개 뷰로 유지
+  - Insights = 행동 분석 (How) — 편집 빈도, 방치 노트, inbox 체류일, 트렌드
+  - Ontology = 구조 시각화 (What) — 노트 간 관계/연결 그래프
+- **Wiki = 나무위키식** — 노트 시스템 안에 통합, Obsidian/Logseq 방식
 
-### 뷰 라우팅 구조 (확정)
-- **layout.tsx**: Tags, Labels, Templates, Ontology → 항상 풀와이드 렌더 (레이아웃 모드 무관)
-- **ListEditorLayout**: Notes 전용 (three-column/split 모드)
-- Tags/Labels: 자체 디테일 모드 (태그 이름 클릭 → 풀와이드 노트 목록)
+### 향후 작업 순서
 
-### 설계 결정 (이번 세션)
-1. **Activity 삭제 완료** → Insights 뷰에 통합. 현재 Activity는 로그 덤프에 불과, 유용한 인사이트 없음
-2. **Insights ≠ Ontology** → 별개 뷰로 유지
-   - Insights = 행동 분석 (How) — 편집 빈도, 방치 노트, inbox 체류일, 트렌드
-   - Ontology = 구조 시각화 (What) — 노트 간 관계/연결 그래프
-   - 접점: 온톨로지 노드 색상을 인사이트 데이터로 레이어링 가능
-3. **Wiki = 나무위키식 데이터베이스** (단순 isWiki 플래그 X)
-   - 노트 시스템 안에 통합 (Approach A)
-   - `[[내부링크]]` 클릭 → 해당 문서로 이동, 없으면 자동 생성
-   - 백링크 (이 문서를 참조하는 문서들)
-   - 목차 자동생성 (헤딩 기반 TOC)
-   - 에디터는 같은 TipTap, 위키 모드일 때 기능 확장
-   - Obsidian/Logseq 방식
+#### Tier 1: Wiki 고도화 (Phase 4-C 완성) — 최우선
+1. Red/Blue 링크 색상 분기 (WikilinkDecoration)
+2. 빨간 링크 클릭 → 위키 자동 생성
+3. 사이드바 TOC (좌측 sticky sidebar)
+4. 위키 읽기 타이포그래피 (본문 폭 제한, 줄간격, CSS)
+5. 하단 분류 표시 (tags → "분류: A | B | C")
 
-### 향후 작업 순서 (최신)
-1. ~~Activity 삭제~~ ✅ 완료
-2. ~~Thread~~ ✅ 이미 구현됨 (thinking slice + ThreadPanel)
-3. ~~읽기/편집 뷰모드 토글~~ ✅ 이미 구현됨 (Ctrl+Shift+E in note-editor.tsx)
-4. **Relations** (refutes/extends/related, 수동+자동 통합)
-5. **Wiki 리빌드** — 나무위키식 (내부링크 + 백링크 + TOC + 읽기모드 기본)
-6. **Reflections** (시간축, 쌓임만 가능한 회고)
-7. **Insights 뷰** (Activity 대체, 행동 분석 대시보드)
-8. **Ontology View 고도화** (Relations 구현 후)
+#### Tier 2: 기존 기능 마무리
+6. Reflections (시간축, 회고)
+7. Insights 뷰 고도화
+8. Ontology View 고도화 (클러스터링, 미니맵)
+
+#### Tier 3: 디자인 폴리시
+9. 디자인 토큰 통일 (typography/spacing/transitions)
+10. 고아 코드 정리 (KnowledgeMap, SavedView, legacy editor slice)
 
 ### Deferred
-- Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
-- Orphaned store data: KnowledgeMap type + maps slice, SavedView type + views slice, legacy editor slice
+- Phosphor Icons
+- Phase 4-D: Context Panel
+- WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
