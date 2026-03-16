@@ -6,7 +6,7 @@ type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
 
 /** Expand placeholders in template strings */
-function expandPlaceholders(template: string): string {
+export function expandPlaceholders(template: string): string {
   const d = new Date()
   return template
     .replace(/\{date\}/g, d.toISOString().split("T")[0])
@@ -68,7 +68,7 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         id,
         title,
         content,
-        contentJson: null,
+        contentJson: template.contentJson ?? null,
         folderId: template.folderId ?? (activeView.type === "folder" ? activeView.folderId : null),
         tags: [...template.tags],
         labelId: template.labelId,
@@ -93,8 +93,10 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         notes: [newNote, ...s.notes],
         selectedNoteId: id,
       }))
-      persistBody({ id, content, contentJson: null })
+      persistBody({ id, content, contentJson: template.contentJson ?? null })
       appendEvent(id, "created", { templateId, templateName: template.name })
+      // Open in workspace editor (same pattern as addNote)
+      get().openNoteInLeaf(id)
       return id
     },
   }

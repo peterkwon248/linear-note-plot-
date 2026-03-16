@@ -22,7 +22,11 @@ import {
   Table,
   ChevronRight,
   Sigma,
+  LayoutTemplate,
 } from "lucide-react"
+import { usePlotStore } from "@/lib/store"
+import { expandPlaceholders } from "@/lib/store/slices/templates"
+import type { NoteTemplate } from "@/lib/types"
 
 interface CommandItem {
   title: string
@@ -274,9 +278,26 @@ export const SlashCommandExtension = Extension.create({
           props.command({ editor, range })
         },
         items: ({ query }: { query: string }) => {
-          return COMMANDS.filter((item) =>
-            item.title.toLowerCase().includes(query.toLowerCase())
+          const q = query.toLowerCase()
+          const baseItems = COMMANDS.filter((item) =>
+            item.title.toLowerCase().includes(q)
           )
+
+          // Dynamically add template items from the store
+          const templates = (usePlotStore.getState().templates ?? []) as NoteTemplate[]
+          const templateItems: CommandItem[] = templates
+            .filter((t) => t.name.toLowerCase().includes(q) || "template".includes(q))
+            .map((t) => ({
+              title: `Template: ${t.name}`,
+              description: t.description || "Insert template content",
+              icon: LayoutTemplate,
+              command: ({ editor, range }: { editor: Editor; range: Range }) => {
+                const expanded = expandPlaceholders(t.content)
+                editor.chain().focus().deleteRange(range).insertContent(expanded).run()
+              },
+            }))
+
+          return [...baseItems, ...templateItems]
         },
         render: () => {
           let component: ReactRenderer<CommandListRef> | null = null

@@ -4,7 +4,7 @@ import { useCallback } from "react"
 import {
   X, GripVertical, FileText, List, Tag, Bookmark, Activity,
   Eye, Calendar, BarChart3, LayoutGrid, Inbox, FolderOpen,
-  SplitSquareHorizontal, ArrowDownFromLine, Network,
+  SplitSquareHorizontal, ArrowDownFromLine, Network, LayoutTemplate,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
@@ -37,6 +37,7 @@ const CONTENT_META: Record<PanelContent["type"], { icon: typeof FileText; label:
   "calendar": { icon: Calendar, label: "Calendar" },
   "insights": { icon: BarChart3, label: "Insights" },
   "ontology": { icon: Network, label: "Ontology" },
+  "templates": { icon: LayoutTemplate, label: "Templates" },
   "empty": { icon: LayoutGrid, label: "Empty" },
 }
 
@@ -48,6 +49,7 @@ const SWITCHABLE_VIEWS: { type: PanelContent["type"]; icon: typeof FileText; lab
   { type: "calendar", icon: Calendar, label: "Calendar" },
   { type: "insights", icon: BarChart3, label: "Insights" },
   { type: "ontology", icon: Network, label: "Ontology" },
+  { type: "templates", icon: LayoutTemplate, label: "Templates" },
 ]
 
 export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProps) {

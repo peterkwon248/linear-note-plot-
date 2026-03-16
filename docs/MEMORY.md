@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 15-slice Zustand store with versioned migration (currently v37)
+- **Store**: `lib/store/index.ts` — 15-slice Zustand store with versioned migration (currently v38)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only, "reference" removed in v26)
 
 ## Architecture Decisions
@@ -60,6 +60,12 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #58**: Ontology Engine Phase 4-A — 데이터 기반 공사 (v36), Ontology View (그래프 시각화)
 - **PR #59**: Ontology Engine Phase 4-B + Phase 5 — 위키링크, 공기어, 관계 제안, 프리미엄 그래프 뷰 (v37)
 - **PR #60**: 온톨로지 그래프 force 파라미터 조정 — compact 레이아웃
+- **WIP**: 템플릿 시스템 Phase 2 — UpNote 스타일 에디터 (v38)
+  - TipTap 리치텍스트 에디터 (노트 에디터 동일), FixedToolbar
+  - 3가지 뷰모드 (Focus / List+Editor / Grid)
+  - 플레이스홀더 변수 삽입 UI ({date}, {time}, {datetime}, {year}, {month}, {day})
+  - contentJson 필드 추가 (v38 마이그레이션), debounced 자동저장
+  - 라우트: `app/(app)/templates/page.tsx` (Always-Mounted)
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -89,7 +95,7 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 ## Current Direction (as of 2026-03-16)
 - **REDESIGN PHASE 1 COMPLETE** — see [redesign-plan.md](./redesign-plan.md)
 - Core idea: "기능 13개의 80점 → 기능 5개의 98점"
-- **Done**: Project/Category/Alerts 삭제, sidebar 정리, NoteRow 리디자인, Detail Panel 축소, "reference" status 제거, Insights view mode, Autopilot, Calendar, Labels, Templates, multi-tab editor, Datalog, Layout 5 Modes, Workspace v35, TipTap 10 plugins, NoteList workspace 통합, Ontology Engine Phase 4-A/4-B, Ontology Phase 5 Premium Graph
+- **Done**: Project/Category/Alerts 삭제, sidebar 정리, NoteRow 리디자인, Detail Panel 축소, "reference" status 제거, Insights view mode, Autopilot, Calendar, Labels, Templates, multi-tab editor, Datalog, Layout 5 Modes, Workspace v35, TipTap 10 plugins, NoteList workspace 통합, Ontology Engine Phase 4-A/4-B, Ontology Phase 5 Premium Graph, Template Editor Phase 2 (UpNote 스타일 TipTap + 플레이스홀더 변수)
 - **Remaining**: Phase 4-C (Wiki View), Phase 4-D (Context Panel), Phosphor Icons + design tokens, surface polish, orphaned code cleanup
 - **Deferred**: Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
 - Orphaned in code: KnowledgeMap type + maps slice, SavedView type + views slice, alerts/category/projects routes

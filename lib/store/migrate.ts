@@ -350,6 +350,14 @@ export function migrate(persistedState: unknown): PlotState {
   // v29: Templates
   if (!state.templates) state.templates = []
 
+  // v38: Template contentJson
+  if (state.templates && Array.isArray(state.templates)) {
+    state.templates = (state.templates as Record<string, unknown>[]).map((t) => ({
+      ...t,
+      contentJson: t.contentJson ?? null,
+    }))
+  }
+
   // v30: Editor tabs/panels
   if (!state.editorState) {
     state.editorState = {
