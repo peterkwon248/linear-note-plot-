@@ -165,6 +165,12 @@ function matchesRule(note: Note, rule: FilterRule): boolean {
       return true
     }
 
+    case "isWiki": {
+      const isWiki = note.isWiki === true
+      const target = value === "true"
+      return operator === "eq" ? isWiki === target : isWiki !== target
+    }
+
     default:
       return true
   }

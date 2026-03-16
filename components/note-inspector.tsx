@@ -50,7 +50,7 @@ import { toast } from "sonner"
 import { ActivityTimeline } from "@/components/activity/activity-timeline"
 import { ThreadPanel } from "@/components/editor/thread-panel"
 import { RelationPicker } from "@/components/inspector/relation-picker"
-import type { Relation, RelationType } from "@/lib/types"
+import type { Relation, RelationType, RelationSuggestion } from "@/lib/types"
 import { RELATION_TYPE_CONFIG, RELATION_TYPES, getRelationLabel } from "@/lib/relation-helpers"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 
@@ -155,6 +155,71 @@ function RelationRow({
         className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/10 transition-opacity"
       >
         <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+      </button>
+    </div>
+  )
+}
+
+function SuggestionRow({
+  suggestion,
+  noteTitle,
+  onAccept,
+  onDismiss,
+}: {
+  suggestion: RelationSuggestion
+  noteTitle: string
+  onAccept: (type: RelationType) => void
+  onDismiss: () => void
+}) {
+  const [selectedType, setSelectedType] = useState<RelationType>(suggestion.suggestedType)
+  const config = RELATION_TYPE_CONFIG[selectedType]
+
+  return (
+    <div className="flex items-center gap-2 px-1 py-0.5 rounded group hover:bg-secondary/50 transition-colors">
+      <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-500/60" />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="text-[11px] px-1.5 py-0.5 rounded-sm font-medium shrink-0"
+            style={{ color: config.color, backgroundColor: `${config.color}15` }}
+          >
+            {RELATION_TYPE_CONFIG[selectedType].label}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[160px]">
+          {RELATION_TYPES.map((t) => (
+            <DropdownMenuItem
+              key={t}
+              onClick={() => setSelectedType(t)}
+              className="text-[13px]"
+            >
+              <span
+                className="w-2 h-2 rounded-full mr-2"
+                style={{ backgroundColor: RELATION_TYPE_CONFIG[t].color }}
+              />
+              {RELATION_TYPE_CONFIG[t].label}
+              {t === selectedType && <Check className="h-3.5 w-3.5 ml-auto" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <span className="truncate flex-1 text-[13px] text-muted-foreground">
+        {noteTitle || "Untitled"}
+      </span>
+      <span className="text-[11px] text-muted-foreground/40 shrink-0">
+        {suggestion.reason}
+      </span>
+      <button
+        onClick={() => onAccept(selectedType)}
+        className="shrink-0 text-[11px] text-green-500 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+      >
+        Accept
+      </button>
+      <button
+        onClick={() => onDismiss()}
+        className="shrink-0 text-[11px] text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+      >
+        Skip
       </button>
     </div>
   )
@@ -781,30 +846,13 @@ export function NoteInspector() {
                     const otherNote = notes.find((n) => n.id === otherId)
                     if (!otherNote) return null
                     return (
-                      <div
+                      <SuggestionRow
                         key={s.id}
-                        className="flex items-center gap-2 px-1 py-0.5 rounded group hover:bg-secondary/50 transition-colors"
-                      >
-                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-500/60" />
-                        <span className="truncate flex-1 text-[14px] text-muted-foreground">
-                          {otherNote.title}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground/40 shrink-0">
-                          {s.reason}
-                        </span>
-                        <button
-                          onClick={() => acceptRelationSuggestion(s.id)}
-                          className="shrink-0 text-[11px] text-green-500 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
-                        >
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => dismissRelationSuggestion(s.id)}
-                          className="shrink-0 text-[11px] text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
-                        >
-                          Skip
-                        </button>
-                      </div>
+                        suggestion={s}
+                        noteTitle={otherNote.title}
+                        onAccept={(type) => acceptRelationSuggestion(s.id, type)}
+                        onDismiss={() => dismissRelationSuggestion(s.id)}
+                      />
                     )
                   })}
                 </div>

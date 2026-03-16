@@ -93,7 +93,9 @@
       "WebFetch(domain:help.obsidian.md)",
       "WebFetch(domain:www.notion.com)",
       "WebFetch(domain:silentvoid13.github.io)",
-      "WebFetch(domain:facedragons.com)"
+      "WebFetch(domain:facedragons.com)",
+      "Bash(grep -l \"noteEvents\\\\|addEvent\" lib/store/slices/*.ts)",
+      "Bash(~/.claude/.omc-worklog/latest.md:*)"
     ]
   }
 }

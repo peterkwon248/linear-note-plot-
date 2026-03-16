@@ -41,7 +41,7 @@ export type FilterOperator = "eq" | "neq" | "gt" | "lt"
 export type FilterField =
   | "status" | "priority" | "links" | "reads" | "folder" | "label"
   | "updatedAt" | "createdAt" | "content" | "tags" | "pinned"
-  | "source" | "wordCount" | "title"
+  | "source" | "wordCount" | "title" | "isWiki"
 
 export interface FilterRule {
   field: FilterField

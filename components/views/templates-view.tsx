@@ -654,7 +654,7 @@ export function TemplatesView() {
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [viewMode, setViewMode] = useState<TemplateViewMode>("list-editor")
+  const [viewMode, setViewMode] = useState<TemplateViewMode>("grid")
 
   // Sorted: pinned first, then by updatedAt desc
   const sortedTemplates = useMemo(() => {
@@ -731,10 +731,9 @@ export function TemplatesView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-2 border-b border-border px-4 py-3 shrink-0">
-          <LayoutTemplate className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.4} />
-          <span className="text-sm font-semibold text-foreground">Templates</span>
-          <span className="text-xs text-muted-foreground">({templates.length})</span>
+        <div className="flex items-center gap-3 border-b border-border px-6 py-4 shrink-0">
+          <h1 className="text-base font-semibold text-foreground">Templates</h1>
+          <span className="text-[14px] text-muted-foreground">({templates.length})</span>
           <div className="flex-1" />
           <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
           <button
@@ -845,10 +844,9 @@ export function TemplatesView() {
       {/* ── Left Panel: Template List ──────────────────── */}
       <div className="flex flex-col w-[280px] min-w-[280px] border-r border-border overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-2 border-b border-border px-4 py-3 shrink-0">
-          <LayoutTemplate className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.4} />
-          <span className="text-sm font-semibold text-foreground">Templates</span>
-          <span className="text-xs text-muted-foreground">({templates.length})</span>
+        <div className="flex items-center gap-3 border-b border-border px-6 py-4 shrink-0">
+          <h1 className="text-base font-semibold text-foreground">Templates</h1>
+          <span className="text-[14px] text-muted-foreground">({templates.length})</span>
           <div className="flex-1" />
           <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
           <button

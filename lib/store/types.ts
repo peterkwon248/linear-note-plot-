@@ -220,7 +220,7 @@ export interface PlotState {
   updateOntologyPositions: (positions: Record<string, { x: number; y: number }>) => void
   updateCoOccurrences: (items: CoOccurrence[]) => void
   addRelationSuggestion: (partial: Omit<RelationSuggestion, "id" | "createdAt" | "status">) => string
-  acceptRelationSuggestion: (id: string) => void
+  acceptRelationSuggestion: (id: string, typeOverride?: RelationType) => void
   dismissRelationSuggestion: (id: string) => void
 
   // ── Saved Views ──

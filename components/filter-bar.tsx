@@ -504,6 +504,7 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   reads: "content",
   label: "label",
   pinned: "pinned",
+  isWiki: "content",
 }
 
 export function getFilterGroupKey(field: FilterField): FilterGroupKey {
