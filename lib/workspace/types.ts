@@ -8,7 +8,6 @@ export type PanelContent =
   | { type: "note-list"; context: ViewContextKey; folderId?: string; tagId?: string; labelId?: string }
   | { type: "tags" }
   | { type: "labels" }
-  | { type: "activity" }
   | { type: "inspector"; noteId: string; followActive?: boolean }
   | { type: "calendar" }
   | { type: "insights" }

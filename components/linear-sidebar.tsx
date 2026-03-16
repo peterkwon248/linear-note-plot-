@@ -17,7 +17,6 @@ import {
   SquarePen,
   Plus,
   CheckSquare2,
-  History,
   Tag,
   Bookmark,
   Network,
@@ -221,7 +220,7 @@ export function LinearSidebar() {
 
   // Prefetch routes on mount
   useEffect(() => {
-    const routes = ["/inbox", "/notes", "/pinned", "/trash", "/settings", "/activity"]
+    const routes = ["/inbox", "/notes", "/pinned", "/trash", "/settings"]
     routes.forEach((r) => router.prefetch(r))
   }, [router])
 
@@ -488,13 +487,6 @@ export function LinearSidebar() {
             label="Notes"
             count={allNotesCount > 0 ? allNotesCount : undefined}
             active={isActive("/notes")}
-          />
-          <NavLink
-            href="/activity"
-            icon={<History className="h-5 w-5" strokeWidth={1.4} />}
-            label="Activity"
-            active={isActive("/activity")}
-            dragContent={{ type: "activity" }}
           />
           <NavLink
             href="/tags"

@@ -3,7 +3,7 @@
 import { useRef } from "react"
 import {
   X, Pin, Plus, GripVertical, SplitSquareHorizontal, ArrowDownFromLine,
-  Tag, Calendar, BarChart3, Activity, Bookmark, List, Inbox, FolderOpen, FileText,
+  Tag, Calendar, BarChart3, Bookmark, List, Inbox, FolderOpen, FileText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
@@ -159,10 +159,6 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                           <BarChart3 className="mr-2 h-4 w-4" />
                           Insights Panel
                         </ContextMenuItem>
-                        <ContextMenuItem onSelect={() => splitLeaf(leaf.id, "horizontal", { type: "activity" }, "after")}>
-                          <Activity className="mr-2 h-4 w-4" />
-                          Activity Panel
-                        </ContextMenuItem>
                         {!tab.isPinned && (
                           <>
                             <ContextMenuSeparator />
@@ -205,10 +201,6 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
             <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "labels" })}>
               <Bookmark className="mr-2 h-4 w-4" />
               Labels
-            </ContextMenuItem>
-            <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "activity" })}>
-              <Activity className="mr-2 h-4 w-4" />
-              Activity
             </ContextMenuItem>
             <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "calendar" })}>
               <Calendar className="mr-2 h-4 w-4" />
@@ -286,10 +278,6 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
               <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "labels" })}>
                 <Bookmark className="mr-2 h-4 w-4" />
                 Labels
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "activity" })}>
-                <Activity className="mr-2 h-4 w-4" />
-                Activity
               </ContextMenuItem>
               <ContextMenuItem onSelect={() => setLeafContent(leaf.id, { type: "calendar" })}>
                 <Calendar className="mr-2 h-4 w-4" />
