@@ -47,12 +47,12 @@ export function OntologyDetailPanel({
     .filter(Boolean)
 
   return (
-    <div className="w-80 border-l border-border bg-card flex flex-col h-full overflow-y-auto">
+    <div className="w-72 border-l border-border bg-card flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-start justify-between gap-2">
+      <div className="px-3 py-2.5 border-b border-border flex items-start justify-between gap-2">
         <div className="flex-1">
-          <h2 className="text-sm font-bold line-clamp-2">{note.title}</h2>
-          <div className="flex items-center gap-2 mt-2">
+          <h2 className="text-[13px] font-semibold line-clamp-2">{note.title}</h2>
+          <div className="flex items-center gap-1.5 mt-1.5">
             {label && (
               <div className="flex items-center gap-1">
                 <div
@@ -64,22 +64,22 @@ export function OntologyDetailPanel({
                 </span>
               </div>
             )}
-            <span className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
+            <span className="text-[9px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded capitalize">
               {note.status}
             </span>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-muted-foreground hover:text-foreground p-1"
+          className="text-muted-foreground hover:text-foreground p-0.5"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Preview */}
       {note.preview && (
-        <div className="px-4 py-2 text-xs text-muted-foreground italic">
+        <div className="px-3 py-2 text-[11px] text-muted-foreground italic">
           {note.preview.substring(0, 150)}
           {note.preview.length > 150 ? "..." : ""}
         </div>
@@ -88,10 +88,10 @@ export function OntologyDetailPanel({
       {/* Relations */}
       {relationsInvolving.length > 0 && (
         <div>
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
+          <div className="text-[9px] font-semibold uppercase text-muted-foreground tracking-wider px-3 pt-2.5 pb-1">
             Relations ({relationsInvolving.length})
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-px">
             {relationsInvolving.map((rel: Relation) => {
               const isSource = rel.sourceNoteId === noteId
               const otherNoteId = isSource ? rel.targetNoteId : rel.sourceNoteId
@@ -107,17 +107,17 @@ export function OntologyDetailPanel({
               return (
                 <div
                   key={rel.id}
-                  className="px-4 py-1 text-xs hover:bg-secondary/50 rounded cursor-pointer flex items-center gap-1"
+                  className="px-3 py-1 text-[11px] hover:bg-secondary/50 rounded cursor-pointer flex items-center gap-1"
                   onClick={() => onOpenNote(otherNoteId)}
                 >
                   <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: config.color }}
                   />
-                  <span className="text-muted-foreground flex-shrink-0">
+                  <span className="text-muted-foreground flex-shrink-0 text-[10px]">
                     {isSource ? "→" : "←"}
                   </span>
-                  <span className="text-muted-foreground flex-shrink-0">
+                  <span className="text-muted-foreground flex-shrink-0 text-[10px]">
                     {label}
                   </span>
                   <span className="truncate text-foreground">
@@ -133,17 +133,17 @@ export function OntologyDetailPanel({
       {/* Backlinks */}
       {backlinks.length > 0 && (
         <div>
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
+          <div className="text-[9px] font-semibold uppercase text-muted-foreground tracking-wider px-3 pt-2.5 pb-1">
             Backlinks ({backlinks.length})
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-px">
             {backlinks.map((backlink) => (
               <div
                 key={backlink.id}
-                className="px-4 py-1 text-xs hover:bg-secondary/50 rounded cursor-pointer flex items-center gap-1"
+                className="px-3 py-1 text-[11px] hover:bg-secondary/50 rounded cursor-pointer flex items-center gap-1"
                 onClick={() => onOpenNote(backlink.id)}
               >
-                <span className="text-muted-foreground">←</span>
+                <span className="text-muted-foreground text-[10px]">←</span>
                 <span className="truncate text-foreground">{backlink.title}</span>
               </div>
             ))}
@@ -154,21 +154,21 @@ export function OntologyDetailPanel({
       {/* Unlinked Mentions */}
       {unlinkedMentions.length > 0 && (
         <div>
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
+          <div className="text-[9px] font-semibold uppercase text-muted-foreground tracking-wider px-3 pt-2.5 pb-1">
             Unlinked Mentions ({unlinkedMentions.length})
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-px">
             {unlinkedMentions.map((m) => (
               <div
                 key={m.noteId + m.title}
-                className="px-4 py-1 text-xs hover:bg-secondary/50 rounded flex items-center gap-1 group"
+                className="px-3 py-1 text-[11px] hover:bg-secondary/50 rounded flex items-center gap-1 group"
               >
-                <span className="text-muted-foreground/60">⚡</span>
+                <span className="text-muted-foreground/60 text-[10px]">⚡</span>
                 <span className="truncate flex-1 text-foreground">{m.title}</span>
-                <span className="text-[10px] text-muted-foreground/40 shrink-0">{m.count}×</span>
+                <span className="text-[9px] text-muted-foreground/40 shrink-0">{m.count}×</span>
                 <button
                   onClick={() => addWikiLink(noteId, m.title)}
-                  className="shrink-0 text-[10px] text-[#5e6ad2] opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                  className="shrink-0 text-[9px] text-[#5e6ad2] opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
                 >
                   Link
                 </button>
@@ -181,14 +181,14 @@ export function OntologyDetailPanel({
       {/* Tags */}
       {noteTags.length > 0 && (
         <div>
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
+          <div className="text-[9px] font-semibold uppercase text-muted-foreground tracking-wider px-3 pt-2.5 pb-1">
             Tags
           </div>
-          <div className="px-4 py-2 flex flex-wrap gap-1">
+          <div className="px-3 py-1.5 flex flex-wrap gap-1">
             {noteTags.map((tag) => (
               <div
                 key={tag!.id}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded bg-secondary"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] rounded bg-secondary"
               >
                 <div
                   className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -204,7 +204,7 @@ export function OntologyDetailPanel({
       {/* Open Note Button */}
       <button
         onClick={() => onOpenNote(noteId)}
-        className="mx-4 mb-4 mt-auto px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 flex items-center justify-center gap-1 transition-colors"
+        className="mx-3 mb-3 mt-auto px-2.5 py-1 text-[11px] bg-primary text-primary-foreground rounded hover:bg-primary/90 flex items-center justify-center gap-1 transition-colors"
       >
         <ExternalLink className="w-3 h-3" />
         Open Note

@@ -1194,48 +1194,48 @@ export function OntologyGraphCanvas({
       </svg>
 
       {/* ── Controls overlay ────────────────────────── */}
-      <div className="absolute bottom-3 right-3 flex items-center gap-0.5 rounded-md border border-border bg-card shadow-sm">
+      <div className="absolute bottom-3 right-3 flex items-center gap-px rounded-md border border-border/60 bg-card/95 backdrop-blur-sm shadow-sm">
         <button
           tabIndex={-1}
           onClick={() => adjustSpread("cluster")}
-          className="rounded-l-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="rounded-l-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Cluster nodes"
         >
-          <Minimize2 className="h-4 w-4" />
+          <Minimize2 className="h-3.5 w-3.5" />
         </button>
         <button
           tabIndex={-1}
           onClick={() => adjustSpread("spread")}
-          className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Spread nodes"
         >
-          <Maximize2 className="h-4 w-4" />
+          <Maximize2 className="h-3.5 w-3.5" />
         </button>
-        <div className="h-4 w-px bg-border" />
+        <div className="h-3.5 w-px bg-border/60" />
         <button
           tabIndex={-1}
           onClick={() => zoomBy(ZOOM_STEP)}
-          className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Zoom in"
         >
-          <ZoomIn className="h-4 w-4" />
+          <ZoomIn className="h-3.5 w-3.5" />
         </button>
         <button
           tabIndex={-1}
           onClick={() => zoomBy(-ZOOM_STEP)}
-          className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Zoom out"
         >
-          <ZoomOut className="h-4 w-4" />
+          <ZoomOut className="h-3.5 w-3.5" />
         </button>
-        <div className="h-4 w-px bg-border" />
+        <div className="h-3.5 w-px bg-border/60" />
         <button
           tabIndex={-1}
           onClick={resetView}
-          className="rounded-r-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="rounded-r-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Reset view"
         >
-          <RotateCcw className="h-4 w-4" />
+          <RotateCcw className="h-3.5 w-3.5" />
         </button>
       </div>
 
@@ -1249,27 +1249,27 @@ export function OntologyGraphCanvas({
         return (
           <div
             className="fixed z-50 pointer-events-none"
-            style={{ left: tooltip.screenX + 16, top: tooltip.screenY - 8 }}
+            style={{ left: tooltip.screenX + 12, top: tooltip.screenY - 6 }}
           >
-            <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-3 max-w-[240px]">
-              <p className="text-[13px] font-medium text-foreground line-clamp-2">{note.title}</p>
+            <div className="bg-popover/95 backdrop-blur-sm border border-border/60 rounded-md shadow-lg p-2.5 max-w-[220px]">
+              <p className="text-[12px] font-medium text-foreground line-clamp-2">{note.title}</p>
               {note.preview && (
-                <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{note.preview}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{note.preview}</p>
               )}
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground capitalize">
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground capitalize">
                   {note.status}
                 </span>
                 {nodeData && (
-                  <span className="text-[10px] text-muted-foreground/60">
+                  <span className="text-[9px] text-muted-foreground/60">
                     {nodeData.connectionCount} links
                   </span>
                 )}
               </div>
               {noteTags.length > 0 && (
-                <div className="flex gap-1 mt-1.5 flex-wrap">
+                <div className="flex gap-1 mt-1 flex-wrap">
                   {noteTags.slice(0, 4).map((t: any) => (
-                    <span key={t.id} className="flex items-center gap-0.5 text-[9px] px-1 py-0.5 rounded bg-secondary/70">
+                    <span key={t.id} className="flex items-center gap-0.5 text-[8px] px-1 py-0.5 rounded bg-secondary/70">
                       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
                       {t.name}
                     </span>
@@ -1310,11 +1310,11 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
     return () => observer.disconnect()
   }, [svgRef])
 
-  const rowHeight = 18
+  const rowHeight = 16
   const totalRows = legendRelationTypes.length + (hasWikilinkEdges ? 1 : 0)
-  const legendH = totalRows * rowHeight + 16
-  const legendW = 130
-  const pad = 16
+  const legendH = totalRows * rowHeight + 12
+  const legendW = 110
+  const pad = 12
 
   const tx = pad
   const ty = svgSize.height > 0 ? svgSize.height - legendH - pad : pad
@@ -1323,20 +1323,20 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
 
   return (
     <g transform={`translate(${tx},${ty})`} style={{ pointerEvents: "none" }}>
-      <rect x={0} y={0} width={legendW} height={legendH} rx={6} ry={6} fill="rgba(0,0,0,0.55)" />
+      <rect x={0} y={0} width={legendW} height={legendH} rx={4} ry={4} fill="hsl(var(--card) / 0.9)" stroke="hsl(var(--border) / 0.5)" strokeWidth={1} />
       {legendRelationTypes.map(([type, config], i) => (
-        <g key={type} transform={`translate(10, ${10 + i * rowHeight})`}>
-          <line x1={0} y1={6} x2={20} y2={6} stroke={config.color} strokeWidth={1.5} />
-          <polygon points="16 3.5, 20 6, 16 8.5" fill={config.color} />
-          <text x={26} y={10} fill="rgba(255,255,255,0.75)" fontSize={10} fontFamily="var(--font-sans)">
+        <g key={type} transform={`translate(8, ${8 + i * rowHeight})`}>
+          <line x1={0} y1={5} x2={16} y2={5} stroke={config.color} strokeWidth={1.5} />
+          <polygon points="13 2.5, 16 5, 13 7.5" fill={config.color} />
+          <text x={22} y={8} fill="hsl(var(--muted-foreground))" fontSize={9} fontFamily="var(--font-sans)">
             {config.label}
           </text>
         </g>
       ))}
       {hasWikilinkEdges && (
-        <g transform={`translate(10, ${10 + legendRelationTypes.length * rowHeight})`}>
-          <line x1={0} y1={6} x2={20} y2={6} stroke="#6b7280" strokeWidth={1} strokeDasharray="4 2" />
-          <text x={26} y={10} fill="rgba(255,255,255,0.6)" fontSize={10} fontFamily="var(--font-sans)">
+        <g transform={`translate(8, ${8 + legendRelationTypes.length * rowHeight})`}>
+          <line x1={0} y1={5} x2={16} y2={5} stroke="hsl(var(--muted-foreground))" strokeWidth={1} strokeDasharray="3 2" />
+          <text x={22} y={8} fill="hsl(var(--muted-foreground) / 0.7)" fontSize={9} fontFamily="var(--font-sans)">
             Wiki-link
           </text>
         </g>
