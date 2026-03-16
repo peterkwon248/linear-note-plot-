@@ -16,7 +16,7 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     setActiveView: (view: ActiveView) => set({ activeView: view, selectedNoteId: null }),
     setSelectedNoteId: (id: string | null) => set({ selectedNoteId: id }),
 
-    openNote: (id: string) => {
+    openNote: (id: string, opts?: { forceNewTab?: boolean }) => {
       set((state: any) => {
         if (!state.notes.some((n: Note) => n.id === id)) return state
         const updates: any = {
@@ -41,7 +41,7 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
       appendEvent(id, "opened")
       // Sync workspace editor tab state
       const state = get()
-      state.openNoteInLeaf(id)
+      state.openNoteInLeaf(id, undefined, opts?.forceNewTab)
       // Also sync legacy editor state for backward compat
       state.openNoteInTab(id)
     },

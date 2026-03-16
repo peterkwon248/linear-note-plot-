@@ -433,8 +433,8 @@ export function LinearSidebar() {
                   {recentlyViewed.map((item) => (
                     <button
                       key={item.id}
-                      onClick={() => {
-                        openNote(item.id)
+                      onClick={(e) => {
+                        openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })
                         setRecentlyViewedOpen(false)
                       }}
                       className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-secondary/50"
@@ -639,7 +639,9 @@ export function LinearSidebar() {
             {pinnedNotes.map((item) => (
               <button
                 key={item.id}
-                onClick={() => openNote(item.id)}
+                draggable
+                onDragStart={(e) => setNoteDragData(e, item.id)}
+                onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
                 className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
@@ -659,7 +661,7 @@ export function LinearSidebar() {
                 key={item.id}
                 draggable
                 onDragStart={(e) => setNoteDragData(e, item.id)}
-                onClick={() => openNote(item.id)}
+                onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
                 className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">

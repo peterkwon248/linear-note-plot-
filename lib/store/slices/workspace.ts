@@ -105,7 +105,7 @@ export function createWorkspaceSlice(set: Set, get: Get) {
 
     /* ── Editor tab management (for editor leaves) ─────── */
 
-    openNoteInLeaf: (noteId: string, leafId?: string) => {
+    openNoteInLeaf: (noteId: string, leafId?: string, forceNewTab?: boolean) => {
       set((state: any) => {
         let targetId = leafId ?? state.activeLeafId
         if (!targetId) return state
@@ -144,11 +144,13 @@ export function createWorkspaceSlice(set: Set, get: Get) {
         // Target is now an editor leaf
         const editorNode = findNode(state.workspaceRoot, targetId) as WorkspaceLeaf
 
-        // Check if note is already open in a tab
-        const existingTab = editorNode.tabs.find((t: WorkspaceTab) => t.noteId === noteId)
-        if (existingTab) {
-          const newRoot = updateLeafTabs(state.workspaceRoot, targetId, editorNode.tabs, existingTab.id)
-          return { workspaceRoot: newRoot, selectedNoteId: noteId, activeLeafId: targetId }
+        // Check if note is already open in a tab (skip if forceNewTab)
+        if (!forceNewTab) {
+          const existingTab = editorNode.tabs.find((t: WorkspaceTab) => t.noteId === noteId)
+          if (existingTab) {
+            const newRoot = updateLeafTabs(state.workspaceRoot, targetId, editorNode.tabs, existingTab.id)
+            return { workspaceRoot: newRoot, selectedNoteId: noteId, activeLeafId: targetId }
+          }
         }
 
         // Create new tab after active tab

@@ -31,7 +31,7 @@
 - **Triage**: UI label "Done" (store action `triageKeep`)
 - **Body separation**: Note content in separate IDB (`plot-note-bodies`), meta in Zustand persist
 - **Autopilot**: Rule-based automation with conditions/actions on notes (v28)
-- **Workspace**: Binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types, drag & drop, tab split to new leaf, right-click context menus for view switching, NoteList integrated as workspace leaf (not fixed panel)
+- **Workspace**: Binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types, drag & drop, tab split to new leaf, right-click context menus for view switching, NoteList integrated as workspace leaf (not fixed panel), "+" dropdown note picker, Ctrl+click=new tab, Pinned/Recent drag to editor
 - **Responsive NotesTable**: ONE grid component for all sizes — ResizeObserver + minWidth thresholds on COLUMN_DEFS. CompactNoteList 삭제됨 (모든 곳에서 NotesTable로 교체)
 - **TipTap Editor**: 24+ extensions — StarterKit, Placeholder (per-block), TaskList/Item, Highlight, Link, Underline, TextAlign, Color, TextStyle, Super/Subscript, Table, ResizableImage, CodeBlockLowlight (lowlight), Typography, Dropcursor, CharacterCount, FontFamily, YouTube, Details/Summary/Content, Mathematics (KaTeX), SlashCommand (custom), Typewriter, CurrentLineHighlight, HashtagSuggestion
 
@@ -63,6 +63,7 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #62**: 템플릿 시스템 Phase 2 — UpNote 스타일 TipTap 에디터 (v38)
 - **PR #63**: 반응형 NotesTable 통합 — CompactNoteList 제거, ResizeObserver 기반 컬럼 숨김
 - **PR #64**: Activity 삭제 + dead code cleanup (-3,258줄), Relations 완성, Wiki 기초 UI, 헤더 스타일 통일
+- **PR #65**: 반응형 NotesTable + 뷰 라우팅 수정 + docs 최신화
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
