@@ -81,7 +81,19 @@
       "Bash(cat '/c/Users/kwonkyunghun/Desktop/리니어 노트앱/.claude/worktrees/angry-easley/app/\\\\\\(app\\\\\\)/layout.tsx')",
       "Bash(cat 'app/\\(app\\)/layout.tsx')",
       "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
-      "Bash(ls -la components/editor/editor-*.tsx lib/store/slices/editor.ts)"
+      "Bash(ls -la components/editor/editor-*.tsx lib/store/slices/editor.ts)",
+      "Bash(npm ls:*)",
+      "WebSearch",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:docs.n8n.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:community.n8n.io)",
+      "WebFetch(domain:vueflow.dev)",
+      "WebFetch(domain:help.getupnote.com)",
+      "WebFetch(domain:help.obsidian.md)",
+      "WebFetch(domain:www.notion.com)",
+      "WebFetch(domain:silentvoid13.github.io)",
+      "WebFetch(domain:facedragons.com)"
     ]
   }
 }

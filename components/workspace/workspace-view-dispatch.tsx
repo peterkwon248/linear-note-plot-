@@ -3,7 +3,7 @@
 import { usePlotStore } from "@/lib/store"
 import type { WorkspaceLeaf } from "@/lib/workspace/types"
 import { WorkspaceEditorLeaf } from "./workspace-editor-leaf"
-import { CompactNoteList } from "@/components/layout/compact-note-list"
+import { NotesTable } from "@/components/notes-table"
 import { TagsView } from "@/components/views/tags-view"
 import { LabelsView } from "@/components/views/labels-view"
 import { ActivityView } from "@/components/views/activity-view"
@@ -25,13 +25,13 @@ export function WorkspaceViewDispatch({ leaf }: WorkspaceViewDispatchProps) {
 
     case "note-list":
       return (
-        <CompactNoteList
+        <NotesTable
           context={leaf.content.context}
           folderId={leaf.content.folderId}
           tagId={leaf.content.tagId}
           labelId={leaf.content.labelId}
-          onNoteClick={(noteId) => openNote(noteId)}
-          activeNoteId={selectedNoteId}
+          onRowClick={(noteId) => openNote(noteId)}
+          activePreviewId={selectedNoteId}
         />
       )
 
