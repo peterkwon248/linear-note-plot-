@@ -42,8 +42,8 @@ export function LayoutModeSwitcher() {
 
       <PopoverContent
         align="end"
-        className="w-52 p-1"
-        sideOffset={8}
+        className="w-44 p-1"
+        sideOffset={6}
       >
         {LAYOUT_MODES.map(({ mode, label, shortcut, icon: Icon }) => (
           <button
@@ -53,14 +53,14 @@ export function LayoutModeSwitcher() {
               setOpen(false)
             }}
             className={cn(
-              "flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left transition-colors",
+              "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left transition-colors",
               layoutMode === mode
                 ? "bg-secondary/80 text-foreground"
                 : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
             )}
           >
             <Icon className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-xs font-medium">{label}</span>
+            <span className="flex-1 text-[12px] font-medium">{label}</span>
             <kbd className="text-[10px] text-muted-foreground/60 font-mono">{shortcut}</kbd>
           </button>
         ))}

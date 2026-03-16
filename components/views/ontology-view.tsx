@@ -130,8 +130,8 @@ export function OntologyView() {
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
-      <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-2">
-        <h1 className="text-lg font-semibold text-foreground">Ontology</h1>
+      <header className="flex shrink-0 items-center justify-between px-4 pt-4 pb-2">
+        <h1 className="text-[15px] font-semibold text-foreground">Ontology</h1>
       </header>
 
       <OntologyFilterBar

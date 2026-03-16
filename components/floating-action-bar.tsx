@@ -23,7 +23,7 @@ interface FloatingActionBarProps {
 /* ── Divider ──────────────────────────────────────────── */
 
 function Divider() {
-  return <div className="h-7 w-px bg-border mx-1.5" />
+  return <div className="h-5 w-px bg-border mx-1" />
 }
 
 /* ── FloatingActionBar ────────────────────────────────── */
@@ -126,15 +126,15 @@ export function FloatingActionBar({
           <>
             <button
               onClick={handleKeepAll}
-              className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-[15px] font-medium text-accent hover:bg-accent/20 transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2.5 py-1 text-[13px] font-medium text-accent hover:bg-accent/20 transition-colors"
             >
-              <Check className="h-4 w-4" /> Done
+              <Check className="h-3.5 w-3.5" /> Done
             </button>
             <button
               onClick={handleTrashAll}
-              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-[15px] font-medium text-destructive hover:bg-destructive/20 transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2.5 py-1 text-[13px] font-medium text-destructive hover:bg-destructive/20 transition-colors"
             >
-              <Trash2 className="h-4 w-4" /> Trash
+              <Trash2 className="h-3.5 w-3.5" /> Trash
             </button>
           </>
         )
@@ -144,15 +144,15 @@ export function FloatingActionBar({
           <>
             <button
               onClick={handlePromoteAll}
-              className="inline-flex items-center gap-1 rounded-md bg-[rgba(69,212,131,0.1)] px-3 py-2 text-[15px] font-medium text-[#45d483] hover:bg-[rgba(69,212,131,0.2)] transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-[rgba(69,212,131,0.1)] px-2.5 py-1 text-[13px] font-medium text-[#45d483] hover:bg-[rgba(69,212,131,0.2)] transition-colors"
             >
-              <ArrowUpRight className="h-4 w-4" /> Promote
+              <ArrowUpRight className="h-3.5 w-3.5" /> Promote
             </button>
             <button
               onClick={handleMoveBackAll}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-[15px] font-medium text-muted-foreground hover:bg-secondary transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-2.5 py-1 text-[13px] font-medium text-muted-foreground hover:bg-secondary transition-colors"
             >
-              <Inbox className="h-4 w-4" /> Back to Inbox
+              <Inbox className="h-3.5 w-3.5" /> Back to Inbox
             </button>
           </>
         )
@@ -161,9 +161,9 @@ export function FloatingActionBar({
         return (
           <button
             onClick={handleDemoteAll}
-            className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-[15px] font-medium text-muted-foreground hover:bg-secondary transition-colors"
+            className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-2.5 py-1 text-[13px] font-medium text-muted-foreground hover:bg-secondary transition-colors"
           >
-            <ArrowDownLeft className="h-4 w-4" /> Demote
+            <ArrowDownLeft className="h-3.5 w-3.5" /> Demote
           </button>
         )
 
@@ -178,32 +178,32 @@ export function FloatingActionBar({
               <>
                 <button
                   onClick={handleKeepAll}
-                  className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-[15px] font-medium text-accent hover:bg-accent/20 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2.5 py-1 text-[13px] font-medium text-accent hover:bg-accent/20 transition-colors"
                 >
-                  <Check className="h-4 w-4" /> Done
+                  <Check className="h-3.5 w-3.5" /> Done
                 </button>
                 <button
                   onClick={handleTrashAll}
-                  className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-[15px] font-medium text-destructive hover:bg-destructive/20 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2.5 py-1 text-[13px] font-medium text-destructive hover:bg-destructive/20 transition-colors"
                 >
-                  <Trash2 className="h-4 w-4" /> Trash
+                  <Trash2 className="h-3.5 w-3.5" /> Trash
                 </button>
               </>
             )}
             {hasCapture && (
               <button
                 onClick={handlePromoteAll}
-                className="inline-flex items-center gap-1 rounded-md bg-[rgba(69,212,131,0.1)] px-3 py-2 text-[15px] font-medium text-[#45d483] hover:bg-[rgba(69,212,131,0.2)] transition-colors"
+                className="inline-flex items-center gap-1 rounded-md bg-[rgba(69,212,131,0.1)] px-2.5 py-1 text-[13px] font-medium text-[#45d483] hover:bg-[rgba(69,212,131,0.2)] transition-colors"
               >
-                <ArrowUpRight className="h-4 w-4" /> Promote
+                <ArrowUpRight className="h-3.5 w-3.5" /> Promote
               </button>
             )}
             {hasPermanent && (
               <button
                 onClick={handleDemoteAll}
-                className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-[15px] font-medium text-muted-foreground hover:bg-secondary transition-colors"
+                className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-2.5 py-1 text-[13px] font-medium text-muted-foreground hover:bg-secondary transition-colors"
               >
-                <ArrowDownLeft className="h-4 w-4" /> Demote
+                <ArrowDownLeft className="h-3.5 w-3.5" /> Demote
               </button>
             )}
           </>
@@ -218,19 +218,19 @@ export function FloatingActionBar({
   const workflowContent = renderWorkflowButtons()
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 rounded-xl border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
-      <div className="flex items-center gap-1 px-4 py-2.5">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 rounded-lg border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
+      <div className="flex items-center gap-1 px-3 py-2">
         {/* Selection info */}
-        <div className="flex items-center gap-1.5 px-1.5">
-          <Zap className="h-4 w-4 text-accent" />
-          <span className="text-[15px] font-medium text-foreground whitespace-nowrap">
+        <div className="flex items-center gap-1.5 px-1">
+          <Zap className="h-3.5 w-3.5 text-accent" />
+          <span className="text-[13px] font-medium text-foreground whitespace-nowrap">
             {count} selected
           </span>
           <button
             onClick={onClearSelection}
             className="rounded-md p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
 
@@ -274,18 +274,18 @@ export function FloatingActionBar({
               setMergeOpen(true)
             }
           }}
-          className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-[15px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-2.5 py-1 text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
         >
-          <Merge className="h-4 w-4" /> Merge
+          <Merge className="h-3.5 w-3.5" /> Merge
         </button>
 
         {/* Link */}
         <Divider />
         <button
           onClick={() => setLinkOpen(true)}
-          className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-[15px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-2.5 py-1 text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
         >
-          <Link2 className="h-4 w-4" /> Link
+          <Link2 className="h-3.5 w-3.5" /> Link
         </button>
 
         {/* Remind */}
