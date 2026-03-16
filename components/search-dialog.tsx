@@ -23,7 +23,6 @@ import {
   FileText,
   Pin,
   Plus,
-  LayoutGrid,
   Link2,
   Brain,
   BrainCircuit,
@@ -40,8 +39,6 @@ import {
   Network,
   Layers,
   Shield,
-  ClipboardCheck,
-  FolderOpen,
   Settings,
   Sun,
   Moon,
@@ -472,42 +469,12 @@ export function SearchDialog() {
                   <CommandShortcut>G M</CommandShortcut>
                 </CommandItem>
                 <CommandItem
-                  value="go-to-review"
-                  onSelect={() => { router.push("/review"); closePalette() }}
-                >
-                  <ClipboardCheck className="h-4 w-4" />
-                  <span>Go to Review</span>
-                </CommandItem>
-                <CommandItem
-                  value="go-to-maps"
-                  onSelect={() => { router.push("/maps"); closePalette() }}
-                >
-                  <Network className="h-4 w-4" />
-                  <span>Go to Maps</span>
-                </CommandItem>
-                <CommandItem
                   value="go-to-all-notes"
                   onSelect={() => { router.push("/notes"); closePalette() }}
                 >
                   <FileText className="h-4 w-4" />
                   <span>Go to All Notes</span>
                   <CommandShortcut>G N</CommandShortcut>
-                </CommandItem>
-                <CommandItem
-                  value="go-to-projects"
-                  onSelect={() => { router.push("/projects"); closePalette() }}
-                >
-                  <FolderOpen className="h-4 w-4" />
-                  <span>Go to Projects</span>
-                  <CommandShortcut>G P</CommandShortcut>
-                </CommandItem>
-                <CommandItem
-                  value="go-to-views"
-                  onSelect={() => { router.push("/views"); closePalette() }}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                  <span>Go to Views</span>
-                  <CommandShortcut>G V</CommandShortcut>
                 </CommandItem>
                 <CommandItem
                   value="go-to-settings"

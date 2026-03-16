@@ -2,7 +2,7 @@
 
 import { useCallback } from "react"
 import {
-  X, GripVertical, FileText, List, Tag, Bookmark, Activity,
+  X, GripVertical, FileText, List, Tag, Bookmark,
   Eye, Calendar, BarChart3, LayoutGrid, Inbox, FolderOpen,
   SplitSquareHorizontal, ArrowDownFromLine, Network, LayoutTemplate,
 } from "lucide-react"
@@ -32,7 +32,6 @@ const CONTENT_META: Record<PanelContent["type"], { icon: typeof FileText; label:
   "note-list": { icon: List, label: "Notes" },
   "tags": { icon: Tag, label: "Tags" },
   "labels": { icon: Bookmark, label: "Labels" },
-  "activity": { icon: Activity, label: "Activity" },
   "inspector": { icon: Eye, label: "Inspector" },
   "calendar": { icon: Calendar, label: "Calendar" },
   "insights": { icon: BarChart3, label: "Insights" },
@@ -45,7 +44,6 @@ const CONTENT_META: Record<PanelContent["type"], { icon: typeof FileText; label:
 const SWITCHABLE_VIEWS: { type: PanelContent["type"]; icon: typeof FileText; label: string }[] = [
   { type: "tags", icon: Tag, label: "Tags" },
   { type: "labels", icon: Bookmark, label: "Labels" },
-  { type: "activity", icon: Activity, label: "Activity" },
   { type: "calendar", icon: Calendar, label: "Calendar" },
   { type: "insights", icon: BarChart3, label: "Insights" },
   { type: "ontology", icon: Network, label: "Ontology" },

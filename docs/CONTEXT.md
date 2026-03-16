@@ -13,7 +13,7 @@ Plot = 노트 + 개인 위키 + 지식 관계망
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (15): notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology
+- Slices (16): notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology, relations
 - Store version: 38
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
@@ -63,6 +63,7 @@ inbox → capture → permanent → WIKI (planned)
 14. Ontology Engine Phase 4-A/4-B/5 (위키링크, 공기어, 관계 제안, 프리미엄 그래프)
 15. Responsive NotesTable (CompactNoteList 제거, ResizeObserver 기반)
 16. NoteList를 workspace 트리로 통합
+17. Dead code cleanup — Activity view, 10 orphan components, 9 orphan routes, legacy editor system, stale command palette items, TemplatesView double-mount fix
 
 ## Three Axes — Core Design Philosophy
 
@@ -72,11 +73,11 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ```
 
-## Implementation Order (최신, 2026-03-16 확정)
+## Implementation Order (최신, 2026-03-16 업데이트)
 
-1. **Activity 삭제** — 사이드바에서 제거, ActivityView 컴포넌트 정리
-2. **Thread** (ThinkingChain rename + 에디터 하단 접이식 패널 UI)
-3. **읽기/편집 뷰모드 토글** (TipTap `editable` prop, Cmd+E)
+1. ~~Activity 삭제~~ ✅ 완료
+2. ~~Thread~~ ✅ 이미 구현됨 (thinking slice + ThreadPanel)
+3. ~~읽기/편집 뷰모드 토글~~ ✅ 이미 구현됨 (Ctrl+Shift+E)
 4. **Relations** (refutes/extends/related, 수동+자동 통합)
 5. **Wiki 리빌드** — 나무위키식 (내부링크 + 백링크 + TOC + 읽기모드 기본)
 6. **Reflections** (시간축, 쌓임만 가능한 회고)
@@ -90,7 +91,7 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - Thread의 relatedNoteIds 제거 → Relations에 위임
 - 에디터 FixedToolbar은 항상 화면 최하단 (UpNote 스타일)
 - 레이아웃 5모드 + Workspace binary tree (v35) ✅ 구현 완료
-- **Activity 삭제 예정** → Insights 뷰에 통합. 현재 Activity는 로그 덤프에 불과
+- **Activity 삭제 완료** → Insights 뷰에 통합. 현재 Activity는 로그 덤프에 불과
 - **Insights ≠ Ontology** → 별개 뷰로 유지
   - Insights = 행동 분석 (How) — 편집 빈도, 방치 노트, inbox 체류일, 트렌드
   - Ontology = 구조 시각화 (What) — 노트 간 관계/연결 그래프
@@ -108,5 +109,4 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - Settings always-mounted (when settings features implemented)
 - WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
 - Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
-- Orphaned code cleanup: KnowledgeMap type + maps slice, SavedView type + views slice
-- CompactNoteList 파일 삭제 (더 이상 import 안 됨)
+- Orphaned store data: KnowledgeMap type + maps slice, SavedView type + views slice, legacy editor slice

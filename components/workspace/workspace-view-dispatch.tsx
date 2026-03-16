@@ -6,7 +6,6 @@ import { WorkspaceEditorLeaf } from "./workspace-editor-leaf"
 import { NotesTable } from "@/components/notes-table"
 import { TagsView } from "@/components/views/tags-view"
 import { LabelsView } from "@/components/views/labels-view"
-import { ActivityView } from "@/components/views/activity-view"
 import { NoteInspector } from "@/components/note-inspector"
 import { OntologyView } from "@/components/views/ontology-view"
 import { TemplatesView } from "@/components/views/templates-view"
@@ -40,9 +39,6 @@ export function WorkspaceViewDispatch({ leaf }: WorkspaceViewDispatchProps) {
 
     case "labels":
       return <LabelsView />
-
-    case "activity":
-      return <ActivityView />
 
     case "inspector":
       return <NoteInspector />

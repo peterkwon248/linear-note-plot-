@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 15-slice Zustand store with versioned migration (currently v38)
+- **Store**: `lib/store/index.ts` — 16-slice Zustand store with versioned migration (currently v38)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only, "reference" removed in v26)
 
 ## Architecture Decisions
@@ -30,14 +30,13 @@
 - **Search**: Worker-based FlexSearch with IDB persistence (fuse.js removed in PR #14)
 - **Triage**: UI label "Done" (store action `triageKeep`)
 - **Body separation**: Note content in separate IDB (`plot-note-bodies`), meta in Zustand persist
-- **Multi-tab editor**: EditorState with panels/tabs/split (v30, legacy — replaced by workspace)
 - **Autopilot**: Rule-based automation with conditions/actions on notes (v28)
 - **Workspace**: Binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types, drag & drop, tab split to new leaf, right-click context menus for view switching, NoteList integrated as workspace leaf (not fixed panel)
 - **Responsive NotesTable**: ONE grid component for all sizes — ResizeObserver + minWidth thresholds on COLUMN_DEFS. CompactNoteList 삭제됨 (모든 곳에서 NotesTable로 교체)
 - **TipTap Editor**: 24+ extensions — StarterKit, Placeholder (per-block), TaskList/Item, Highlight, Link, Underline, TextAlign, Color, TextStyle, Super/Subscript, Table, ResizableImage, CodeBlockLowlight (lowlight), Typography, Dropcursor, CharacterCount, FontFamily, YouTube, Details/Summary/Content, Mathematics (KaTeX), SlashCommand (custom), Typewriter, CurrentLineHighlight, HashtagSuggestion
 
-## Store Slices (15 total)
-notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology
+## Store Slices (16 total)
+notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology, relations
 
 ## Completed PRs
 - **PR #14**: noteEvents bounding, fuse.js removal, dead code cleanup
@@ -61,13 +60,8 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #58**: Ontology Engine Phase 4-A — 데이터 기반 공사 (v36), Ontology View (그래프 시각화)
 - **PR #59**: Ontology Engine Phase 4-B + Phase 5 — 위키링크, 공기어, 관계 제안, 프리미엄 그래프 뷰 (v37)
 - **PR #60**: 온톨로지 그래프 force 파라미터 조정 — compact 레이아웃
-- **WIP**: 템플릿 시스템 Phase 2 — UpNote 스타일 에디터 (v38)
-  - TipTap 리치텍스트 에디터 (노트 에디터 동일), FixedToolbar
-  - 3가지 뷰모드 (Focus / List+Editor / Grid)
-  - 플레이스홀더 변수 삽입 UI ({date}, {time}, {datetime}, {year}, {month}, {day})
-  - contentJson 필드 추가 (v38 마이그레이션), debounced 자동저장
-  - 라우트: `app/(app)/templates/page.tsx` (Always-Mounted)
-- **WIP**: 반응형 NotesTable 통합 — CompactNoteList 제거, ResizeObserver 기반 컬럼 숨김, ListEditorLayout 리사이즈 핸들 (280-800px)
+- **PR #62**: 템플릿 시스템 Phase 2 — UpNote 스타일 TipTap 에디터 (v38)
+- **PR #63**: 반응형 NotesTable 통합 — CompactNoteList 제거, ResizeObserver 기반 컬럼 숨김
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -111,7 +105,7 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - Tags/Labels: 자체 디테일 모드 (태그 이름 클릭 → 풀와이드 노트 목록)
 
 ### 설계 결정 (이번 세션)
-1. **Activity 삭제 예정** → Insights 뷰에 통합. 현재 Activity는 로그 덤프에 불과, 유용한 인사이트 없음
+1. **Activity 삭제 완료** → Insights 뷰에 통합. 현재 Activity는 로그 덤프에 불과, 유용한 인사이트 없음
 2. **Insights ≠ Ontology** → 별개 뷰로 유지
    - Insights = 행동 분석 (How) — 편집 빈도, 방치 노트, inbox 체류일, 트렌드
    - Ontology = 구조 시각화 (What) — 노트 간 관계/연결 그래프
@@ -125,9 +119,9 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
    - Obsidian/Logseq 방식
 
 ### 향후 작업 순서 (최신)
-1. **Activity 삭제** — 사이드바에서 제거, ActivityView 컴포넌트 정리
-2. **Thread** (ThinkingChain rename + 에디터 하단 접이식 패널 UI)
-3. **읽기/편집 뷰모드 토글** (TipTap `editable` prop, Cmd+E)
+1. ~~Activity 삭제~~ ✅ 완료
+2. ~~Thread~~ ✅ 이미 구현됨 (thinking slice + ThreadPanel)
+3. ~~읽기/편집 뷰모드 토글~~ ✅ 이미 구현됨 (Ctrl+Shift+E in note-editor.tsx)
 4. **Relations** (refutes/extends/related, 수동+자동 통합)
 5. **Wiki 리빌드** — 나무위키식 (내부링크 + 백링크 + TOC + 읽기모드 기본)
 6. **Reflections** (시간축, 쌓임만 가능한 회고)
@@ -136,5 +130,4 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 
 ### Deferred
 - Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
-- Orphaned code cleanup: KnowledgeMap type + maps slice, SavedView type + views slice
-- CompactNoteList 파일 삭제 (더 이상 import 안 됨)
+- Orphaned store data: KnowledgeMap type + maps slice, SavedView type + views slice, legacy editor slice
