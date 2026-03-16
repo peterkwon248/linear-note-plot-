@@ -2,33 +2,54 @@ import { cn } from "@/lib/utils"
 import type { NoteStatus } from "@/lib/types"
 
 /**
- * Shared status icon component — □ inbox, ▣ capture, ☑ permanent.
- * Used across sidebar, editor backlinks footer, and notes table.
+ * Linear-style status indicator — colored circles with distinct states.
+ * - inbox: hollow gray circle (pending)
+ * - capture: half-filled amber circle (in progress)
+ * - permanent: solid green circle (complete)
  */
+
+const STATUS_COLORS = {
+  inbox: "#6b7280",     // gray-500
+  capture: "#f59e0b",   // amber-500
+  permanent: "#22c55e", // green-500
+}
+
 export function StatusIcon({ status, className }: { status: NoteStatus; className?: string }) {
+  const color = STATUS_COLORS[status]
+  
   if (status === "inbox") {
+    // Hollow circle
     return (
       <span
-        className={cn("inline-block h-3.5 w-3.5 shrink-0 rounded-sm border border-current", className)}
-        style={{ borderWidth: "1.5px" }}
+        className={cn("inline-block h-3 w-3 shrink-0 rounded-full", className)}
+        style={{ 
+          border: `1.5px solid ${color}`,
+          opacity: 0.7
+        }}
       />
     )
   }
-  if (status === "permanent") {
+  
+  if (status === "capture") {
+    // Half-filled circle (gradient effect)
     return (
       <span
-        className={cn("inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-current", className)}
-        style={{ borderWidth: "1.5px" }}
-      >
-        <span className="block h-1.5 w-1.5 rounded-none" style={{ background: "currentColor", clipPath: "polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%)" }} />
-      </span>
+        className={cn("inline-block h-3 w-3 shrink-0 rounded-full", className)}
+        style={{ 
+          border: `1.5px solid ${color}`,
+          background: `linear-gradient(to top, ${color} 50%, transparent 50%)`
+        }}
+      />
     )
   }
-  // capture: filled square with inner fill
+  
+  // permanent: solid filled circle
   return (
     <span
-      className={cn("inline-block h-3.5 w-3.5 shrink-0 rounded-sm border border-current", className)}
-      style={{ borderWidth: "1.5px", background: "currentColor", opacity: 0.6 }}
+      className={cn("inline-block h-3 w-3 shrink-0 rounded-full", className)}
+      style={{ 
+        backgroundColor: color,
+      }}
     />
   )
 }

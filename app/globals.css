@@ -43,42 +43,42 @@
 }
 
 .dark {
-  /* Dark theme - Linear inspired */
+  /* Dark theme - Linear inspired (more subtle) */
   --background: #0a0a0b;
-  --foreground: #eeeeef;
-  --card: #151516;
-  --card-foreground: #eeeeef;
-  --popover: #1a1a1b;
-  --popover-foreground: #eeeeef;
-  --primary: #eeeeef;
+  --foreground: #e8e8e9;
+  --card: #121213;
+  --card-foreground: #e8e8e9;
+  --popover: #161617;
+  --popover-foreground: #e8e8e9;
+  --primary: #e8e8e9;
   --primary-foreground: #0a0a0b;
-  --secondary: #1f1f20;
-  --secondary-foreground: #eeeeef;
-  --muted: #1f1f20;
-  --muted-foreground: #8b8b8d;
-  --accent: #6366f1;
-  --accent-foreground: #eeeeef;
-  --destructive: #ef4444;
-  --destructive-foreground: #eeeeef;
-  --border: #2a2a2b;
-  --input: #2a2a2b;
-  --ring: #6366f1;
-  --chart-1: #6366f1;
+  --secondary: #1a1a1b;
+  --secondary-foreground: #e8e8e9;
+  --muted: #1a1a1b;
+  --muted-foreground: #707073;
+  --accent: #5e6ad2;
+  --accent-foreground: #e8e8e9;
+  --destructive: #e5484d;
+  --destructive-foreground: #e8e8e9;
+  --border: #1f1f21;
+  --input: #1f1f21;
+  --ring: #5e6ad2;
+  --chart-1: #5e6ad2;
   --chart-2: #22d3ee;
   --chart-3: #f97316;
-  --chart-4: #ef4444;
+  --chart-4: #e5484d;
   --chart-5: #22c55e;
-  /* Sidebar - slightly darker for depth */
-  --sidebar-bg: rgba(17, 17, 18, 0.7);
-  --sidebar-foreground: #eeeeef;
-  --sidebar-primary: #6366f1;
-  --sidebar-primary-foreground: #eeeeef;
-  --sidebar-accent: #252526;
-  --sidebar-accent-foreground: #eeeeef;
-  --sidebar-border: #2a2a2b;
-  --sidebar-ring: #6366f1;
-  --sidebar-muted: #6b6b6d;
-  --sidebar-hover: #252526;
+  /* Sidebar - deeper for visual hierarchy */
+  --sidebar-bg: #0d0d0e;
+  --sidebar-foreground: #e8e8e9;
+  --sidebar-primary: #5e6ad2;
+  --sidebar-primary-foreground: #e8e8e9;
+  --sidebar-accent: #1a1a1b;
+  --sidebar-accent-foreground: #e8e8e9;
+  --sidebar-border: #1a1a1b;
+  --sidebar-ring: #5e6ad2;
+  --sidebar-muted: #5a5a5d;
+  --sidebar-hover: rgba(255, 255, 255, 0.04);
 }
 
 @theme inline {
@@ -129,7 +129,18 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+  
+  /* Linear-style fast transitions */
+  button, a, [role="button"] {
+    transition: background-color 0.1s ease, color 0.1s ease, opacity 0.1s ease, transform 0.1s ease;
+  }
+  
+  /* Subtle focus rings */
+  :focus-visible {
+    outline: 1px solid hsl(var(--ring) / 0.5);
+    outline-offset: 1px;
   }
 }
 
