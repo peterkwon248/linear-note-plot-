@@ -165,7 +165,7 @@ export interface PlotState {
   // ── UI Actions ──
   setActiveView: (view: ActiveView) => void
   setSelectedNoteId: (id: string | null) => void
-  openNote: (id: string) => void
+  openNote: (id: string, opts?: { forceNewTab?: boolean }) => void
   setSearchQuery: (query: string) => void
   setSearchOpen: (open: boolean) => void
   setShortcutOverlayOpen: (open: boolean) => void
@@ -251,7 +251,7 @@ export interface PlotState {
   splitLeaf: (leafId: string, direction: SplitDirection, content: PanelContent, position?: "before" | "after") => void
   closeLeaf: (leafId: string) => void
   setBranchRatio: (branchId: string, ratio: number) => void
-  openNoteInLeaf: (noteId: string, leafId?: string) => void
+  openNoteInLeaf: (noteId: string, leafId?: string, forceNewTab?: boolean) => void
   closeTabInLeaf: (tabId: string, leafId: string) => void
   setActiveTabInLeaf: (tabId: string, leafId: string) => void
   moveTabToLeaf: (tabId: string, fromLeafId: string, toLeafId: string) => void

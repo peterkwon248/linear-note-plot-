@@ -1,9 +1,9 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useCallback, useState, useMemo } from "react"
 import {
   X, Pin, Plus, GripVertical, SplitSquareHorizontal, ArrowDownFromLine,
-  Tag, Calendar, BarChart3, Bookmark, List, Inbox, FolderOpen, FileText,
+  Tag, Calendar, BarChart3, Bookmark, List, Inbox, FolderOpen, FileText, Search,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
@@ -20,6 +20,12 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { setTabDragData, setLeafDragData } from "@/lib/drag-helpers"
 import { countLeaves } from "@/lib/workspace/tree-utils"
 
@@ -58,12 +64,33 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
     closeTabInLeaf(tabId, leaf.id)
   }
 
-  const handleAddTab = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleAddTab = () => {
     const noteId = createNote({})
     openNoteInLeaf(noteId, leaf.id)
     setActiveLeaf(leaf.id)
   }
+
+  // Note picker for "Open Note..." dropdown option
+  const [notePickerOpen, setNotePickerOpen] = useState(false)
+  const [notePickerQuery, setNotePickerQuery] = useState("")
+  const notePickerInputRef = useRef<HTMLInputElement>(null)
+
+  const openTabNoteIds = new Set(leaf.tabs.map((t) => t.noteId))
+  const pickerNotes = useMemo(() => {
+    const q = notePickerQuery.toLowerCase()
+    return notes
+      .filter((n) => !n.trashed && !n.archived)
+      .filter((n) => !q || (n.title || "").toLowerCase().includes(q))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 12)
+  }, [notes, notePickerQuery])
+
+  const handlePickNote = useCallback((noteId: string) => {
+    openNoteInLeaf(noteId, leaf.id, true)
+    setActiveLeaf(leaf.id)
+    setNotePickerOpen(false)
+    setNotePickerQuery("")
+  }, [openNoteInLeaf, setActiveLeaf, leaf.id])
 
   const hasTabs = leaf.tabs.length > 0
 
@@ -173,17 +200,62 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                   )
                 })}
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
+                <DropdownMenu open={notePickerOpen} onOpenChange={(open) => { setNotePickerOpen(open); if (!open) setNotePickerQuery("") }}>
+                  <DropdownMenuTrigger asChild>
                     <button
                       className="flex h-9 w-8 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground"
-                      onClick={handleAddTab}
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-[12px]">New note</TooltipContent>
-                </Tooltip>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64 p-0">
+                    <DropdownMenuItem onSelect={handleAddTab} className="gap-2 px-3 py-2">
+                      <Plus className="h-4 w-4" />
+                      New Note
+                    </DropdownMenuItem>
+                    <div className="border-t border-border">
+                      <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+                        <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <input
+                          ref={notePickerInputRef}
+                          type="text"
+                          value={notePickerQuery}
+                          onChange={(e) => setNotePickerQuery(e.target.value)}
+                          placeholder="Open note..."
+                          className="flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground/50"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && pickerNotes.length > 0) {
+                              handlePickNote(pickerNotes[0].id)
+                            }
+                            e.stopPropagation()
+                          }}
+                        />
+                      </div>
+                      <div className="max-h-[240px] overflow-y-auto py-1">
+                        {pickerNotes.map((n) => (
+                          <button
+                            key={n.id}
+                            onClick={() => handlePickNote(n.id)}
+                            className={cn(
+                              "flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] transition-colors hover:bg-secondary/50",
+                              openTabNoteIds.has(n.id) ? "text-muted-foreground" : "text-foreground"
+                            )}
+                          >
+                            <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.4} />
+                            <span className="truncate">{n.title || "Untitled"}</span>
+                            {openTabNoteIds.has(n.id) && (
+                              <span className="ml-auto text-[11px] text-muted-foreground/50 shrink-0">open</span>
+                            )}
+                          </button>
+                        ))}
+                        {pickerNotes.length === 0 && (
+                          <div className="px-3 py-2 text-[12px] text-muted-foreground">No notes found</div>
+                        )}
+                      </div>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </ContextMenuTrigger>
