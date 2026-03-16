@@ -205,6 +205,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
+          {(mountedViews.has("/templates") || activeRoute === "/templates") && (
+            <div className={activeRoute === "/templates" ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <TemplatesView />
+            </div>
+          )}
+
           {(mountedViews.has("/ontology") || activeRoute === "/ontology") && (
             <div className={activeRoute === "/ontology" ? "flex flex-1 overflow-hidden" : "hidden"}>
               <OntologyView />
