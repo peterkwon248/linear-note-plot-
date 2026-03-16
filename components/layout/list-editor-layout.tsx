@@ -1,13 +1,25 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
+import { FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { NoteInspector } from "@/components/note-inspector"
+import { NoteEditor } from "@/components/note-editor"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
-import { CompactNoteList } from "./compact-note-list"
+import { NotesTable } from "@/components/notes-table"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
+
+const MIN_LIST_WIDTH = 280
+const MAX_LIST_WIDTH = 800
+const DEFAULT_LIST_WIDTH = 360
 
 interface ListEditorLayoutProps {
   context?: ViewContextKey
@@ -20,7 +32,7 @@ interface ListEditorLayoutProps {
   labelId?: string
   initialTab?: ViewContextKey
   onTabChange?: (tab: ViewContextKey) => void
-  /** Replace the default CompactNoteList with custom content (e.g., TagsView) */
+  /** Replace the default list with custom content (e.g., TagsView) */
   listContent?: React.ReactNode
 }
 
@@ -37,12 +49,12 @@ export function ListEditorLayout({
   onTabChange,
   listContent,
 }: ListEditorLayoutProps) {
-  const listPaneWidth = usePlotStore((s) => s.listPaneWidth)
-  const setListPaneWidth = usePlotStore((s) => s.setListPaneWidth)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
+  const createNote = usePlotStore((s) => s.createNote)
   const detailsOpen = usePlotStore((s) => s.detailsOpen)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [listWidth, setListWidth] = useState(DEFAULT_LIST_WIDTH)
   const [isDragging, setIsDragging] = useState(false)
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -56,8 +68,8 @@ export function ListEditorLayout({
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
-      const newWidth = e.clientX - rect.left
-      setListPaneWidth(newWidth)
+      const newWidth = Math.max(MIN_LIST_WIDTH, Math.min(MAX_LIST_WIDTH, e.clientX - rect.left))
+      setListWidth(newWidth)
     }
 
     const handleMouseUp = () => {
@@ -70,7 +82,7 @@ export function ListEditorLayout({
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [isDragging, setListPaneWidth])
+  }, [isDragging])
 
   const isEditing = selectedNoteId !== null
 
@@ -80,13 +92,13 @@ export function ListEditorLayout({
       className="flex flex-1 overflow-hidden"
       style={{ cursor: isDragging ? "col-resize" : undefined }}
     >
-      {/* List Pane (note list or custom content like Tags/Labels) */}
+      {/* List Pane — resizable, uses NotesTable (responsive) */}
       <div
         className="flex flex-col overflow-hidden shrink-0 border-r border-border"
-        style={{ width: listPaneWidth }}
+        style={{ width: listWidth }}
       >
         {listContent ?? (
-          <CompactNoteList
+          <NotesTable
             context={context}
             title={title}
             showTabs={showTabs}
@@ -97,8 +109,8 @@ export function ListEditorLayout({
             labelId={labelId}
             initialTab={initialTab}
             onTabChange={onTabChange}
-            onNoteClick={(noteId) => openNote(noteId)}
-            activeNoteId={selectedNoteId}
+            onRowClick={(noteId) => openNote(noteId)}
+            activePreviewId={selectedNoteId}
           />
         )}
       </div>
@@ -116,9 +128,34 @@ export function ListEditorLayout({
         />
       </div>
 
-      {/* Editor Area — workspace tree handles tabs/splitting */}
+      {/* Editor Area */}
       <div className="flex flex-1 overflow-hidden min-w-0">
-        <WorkspaceEditorArea />
+        {listContent ? (
+          /* Custom list (Tags/Labels): render NoteEditor directly, skip workspace tree */
+          selectedNoteId ? (
+            <NoteEditor noteId={selectedNoteId} />
+          ) : (
+            <ContextMenu>
+              <ContextMenuTrigger asChild>
+                <div className="flex flex-1 items-center justify-center text-muted-foreground/30">
+                  <p className="text-sm">Select a note to start editing</p>
+                </div>
+              </ContextMenuTrigger>
+              <ContextMenuContent className="w-48">
+                <ContextMenuItem onSelect={() => {
+                  const id = createNote({})
+                  openNote(id)
+                }}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  New Note
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+          )
+        ) : (
+          /* Default (Notes): use full workspace tree */
+          <WorkspaceEditorArea />
+        )}
         {isEditing && detailsOpen && <NoteInspector />}
       </div>
     </div>

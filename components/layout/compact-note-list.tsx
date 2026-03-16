@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect, memo } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { Search, X, Plus, ArrowUpDown, SlidersHorizontal, Trash2, Pin, Archive } from "lucide-react"
+import { Search, X, Plus, Trash2, Pin, Archive } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -19,7 +19,7 @@ import {
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
-/* ── Tabs ──────────────────────────────────────────────── */
+/* ── Constants ─────────────────────────────────────────── */
 
 const TABS: { id: ViewContextKey; label: string }[] = [
   { id: "all", label: "All" },
@@ -27,6 +27,9 @@ const TABS: { id: ViewContextKey; label: string }[] = [
   { id: "capture", label: "Cap" },
   { id: "permanent", label: "Perm" },
 ]
+
+/** Width threshold: above this → table mode, below → compact mode */
+const TABLE_BREAKPOINT = 480
 
 /* ── CompactNoteList ─────────────────────────────────── */
 
@@ -104,7 +107,6 @@ export function CompactNoteList({
   const tabCounts = useMemo((): Record<string, number> => {
     let active = notes.filter((n) => !n.archived && !n.trashed)
 
-    // Apply folder/tag/label context filtering before counting
     if (folderId) {
       active = active.filter((n) => n.folderId === folderId)
     }
@@ -125,11 +127,28 @@ export function CompactNoteList({
 
   const { flatNotes } = useNotesView(effectiveTab, { backlinksMap, folderId, tagId, labelId })
 
+  // Detect table vs compact mode via container width
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [isTableMode, setIsTableMode] = useState(false)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? 0
+      setIsTableMode(w > TABLE_BREAKPOINT)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const rowHeight = isTableMode ? 36 : 52
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const rowVirtualizer = useVirtualizer({
     count: flatNotes.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 52,
+    estimateSize: () => rowHeight,
     overscan: 8,
   })
 
@@ -142,7 +161,7 @@ export function CompactNoteList({
   }, [onNoteClick, openNote])
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
+    <div ref={containerRef} className="flex flex-1 flex-col overflow-hidden">
       {/* ── Header ──────────────────────────────────── */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -238,6 +257,18 @@ export function CompactNoteList({
         </div>
       )}
 
+      {/* ── Column header (table mode only) ─────────── */}
+      {isTableMode && (
+        <div className="flex items-center gap-2 px-3 py-1 border-b border-border text-[10px] text-muted-foreground/50 font-medium uppercase tracking-wider">
+          <span className="w-2.5 shrink-0" />
+          <span className="flex-1 min-w-0">Title</span>
+          <span className="w-12 text-right shrink-0">Priority</span>
+          <span className="w-16 shrink-0 truncate">Tag</span>
+          <span className="w-16 shrink-0 truncate">Folder</span>
+          <span className="w-14 text-right shrink-0">Date</span>
+        </div>
+      )}
+
       {/* ── Note list (virtualized) ─────────────────── */}
       <div
         ref={scrollRef}
@@ -264,6 +295,7 @@ export function CompactNoteList({
                 <CompactRow
                   note={note}
                   isActive={note.id === activeNoteId}
+                  isTableMode={isTableMode}
                   onClick={() => handleRowClick(note.id)}
                   onDelete={() => deleteNote(note.id)}
                   onTogglePin={() => togglePin(note.id)}
@@ -284,11 +316,26 @@ export function CompactNoteList({
   )
 }
 
+/* ── relativeDate helper ────────────────────────────────── */
+
+function relativeDate(iso: string): string {
+  const d = new Date(iso)
+  const now = new Date()
+  const diffMs = now.getTime() - d.getTime()
+  const diffDays = Math.floor(diffMs / 86400000)
+  if (diffDays === 0) return "Today"
+  if (diffDays === 1) return "Yesterday"
+  if (diffDays < 7) return `${diffDays}d ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
+  return d.toLocaleDateString("en", { month: "short", day: "numeric" })
+}
+
 /* ── CompactRow ────────────────────────────────────────── */
 
 const CompactRow = memo(function CompactRow({
   note,
   isActive,
+  isTableMode,
   onClick,
   onDelete,
   onTogglePin,
@@ -296,13 +343,21 @@ const CompactRow = memo(function CompactRow({
 }: {
   note: Note
   isActive: boolean
+  isTableMode: boolean
   onClick: () => void
   onDelete?: () => void
   onTogglePin?: () => void
   onToggleArchive?: () => void
 }) {
+  const folders = usePlotStore((s) => s.folders)
+  const tags = usePlotStore((s) => s.tags)
+
   const statusCfg = STATUS_CONFIG[note.status] ?? STATUS_CONFIG.capture
   const priorityCfg = note.priority !== "none" ? PRIORITY_CONFIG[note.priority] : null
+
+  const dateStr = note.updatedAt ? relativeDate(note.updatedAt) : note.createdAt ? relativeDate(note.createdAt) : null
+  const folderName = note.folderId ? (folders.find((f) => f.id === note.folderId)?.name ?? null) : null
+  const firstTagName = note.tags?.length ? (tags.find((t) => t.id === note.tags![0])?.name ?? null) : null
 
   return (
     <ContextMenu>
@@ -312,7 +367,8 @@ const CompactRow = memo(function CompactRow({
           onDragStart={(e) => setNoteDragData(e, note.id)}
           onClick={onClick}
           className={cn(
-            "flex items-start gap-2 px-3 py-2 cursor-pointer transition-colors border-b border-border/50",
+            "flex gap-2 px-3 cursor-pointer transition-colors border-b border-border/50",
+            isTableMode ? "items-center py-1" : "items-start py-2",
             isActive
               ? "bg-accent/10 border-l-2 border-l-accent"
               : "hover:bg-secondary/30 border-l-2 border-l-transparent"
@@ -320,40 +376,66 @@ const CompactRow = memo(function CompactRow({
         >
           {/* Status dot */}
           <span
-            className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+            className={cn("h-2.5 w-2.5 shrink-0 rounded-full", !isTableMode && "mt-1.5")}
             style={{ backgroundColor: statusCfg.color }}
             title={statusCfg.label}
           />
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1">
-              <span className={cn(
-                "truncate text-[13px] font-medium",
-                isActive ? "text-foreground" : "text-foreground/90"
-              )}>
-                {note.title || "Untitled"}
+          {isTableMode ? (
+            /* ── Table mode: single-line with aligned columns ── */
+            <>
+              <span className="flex-1 min-w-0 flex items-center gap-1">
+                <span className={cn("truncate text-[13px] font-medium", isActive ? "text-foreground" : "text-foreground/90")}>
+                  {note.title || "Untitled"}
+                </span>
+                {note.pinned && <span className="text-[#f2994a] text-[10px] shrink-0">*</span>}
               </span>
-              {note.pinned && (
-                <span className="text-[#f2994a] text-[10px]">*</span>
-              )}
-            </div>
-            {note.preview && (
-              <p className="truncate text-[11px] text-muted-foreground/70 mt-0.5 leading-tight">
-                {note.preview}
-              </p>
-            )}
-          </div>
+              <span className="w-12 text-right shrink-0">
+                {priorityCfg && (
+                  <span style={{ color: priorityCfg.color }} title={priorityCfg.label}>{priorityCfg.icon}</span>
+                )}
+              </span>
+              <span className="w-16 shrink-0 text-[10px] text-muted-foreground/50 truncate">{firstTagName ?? ""}</span>
+              <span className="w-16 shrink-0 text-[10px] text-muted-foreground/40 truncate">{folderName ?? ""}</span>
+              <span className="w-14 text-right shrink-0 text-[10px] text-muted-foreground/50">{dateStr ?? ""}</span>
+            </>
+          ) : (
+            /* ── Compact mode: title + preview, 2 lines ── */
+            <>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1">
+                  <span className={cn(
+                    "truncate text-[13px] font-medium",
+                    isActive ? "text-foreground" : "text-foreground/90"
+                  )}>
+                    {note.title || "Untitled"}
+                  </span>
+                  {note.pinned && (
+                    <span className="text-[#f2994a] text-[10px] shrink-0">*</span>
+                  )}
+                </div>
+                {/* Line 2: date + first tag */}
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {dateStr && (
+                    <span className="text-[10px] text-muted-foreground/50 shrink-0">{dateStr}</span>
+                  )}
+                  {firstTagName && (
+                    <span className="text-[10px] text-muted-foreground/50 truncate">{firstTagName}</span>
+                  )}
+                </div>
+              </div>
 
-          {/* Priority icon */}
-          {priorityCfg && (
-            <span
-              className="mt-1 shrink-0"
-              style={{ color: priorityCfg.color }}
-              title={priorityCfg.label}
-            >
-              {priorityCfg.icon}
-            </span>
+              {/* Priority icon (right side) */}
+              {priorityCfg && (
+                <span
+                  className="mt-1 shrink-0"
+                  style={{ color: priorityCfg.color }}
+                  title={priorityCfg.label}
+                >
+                  {priorityCfg.icon}
+                </span>
+              )}
+            </>
           )}
         </div>
       </ContextMenuTrigger>

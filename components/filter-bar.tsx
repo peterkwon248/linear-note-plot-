@@ -751,15 +751,16 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, onToggleF
 
 interface FilterButtonProps extends FilterMenuProps {
   /* inherits filters, groupBy, isSingleStatusTab, folders, tags, onToggleFilter, onSetFilters */
+  hideLabel?: boolean
 }
 
-export function FilterButton(props: FilterButtonProps) {
+export function FilterButton({ hideLabel, ...props }: FilterButtonProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
           <Filter className="h-4 w-4" />
-          Filter
+          {!hideLabel && "Filter"}
           {props.filters.length > 0 && (
             <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/15 px-1 text-[11px] font-medium text-accent">
               {props.filters.length}

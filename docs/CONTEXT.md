@@ -13,25 +13,28 @@ Plot = 노트 + 개인 위키 + 지식 관계망
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices: `lib/store/slices/` (notes, editor, folders, labels, tags, templates, thinking, ui, views, workflow, autopilot, maps)
-- Store version: 30
+- Slices (15): notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology
+- Store version: 38
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
 - Always-mounted views via `lib/table-route.ts` + `app/(app)/layout.tsx`
 - Mount-once keep-alive pattern (CSS display toggle)
 - ViewModes: list | table | board | insights | calendar
+- Tags, Labels, Templates, Ontology → 항상 풀와이드 렌더 (레이아웃 모드 무관)
+- ListEditorLayout: Notes 전용 (three-column/split 모드)
+- Responsive NotesTable: ONE grid for all sizes (ResizeObserver + minWidth thresholds)
 
 ### Editor
-- TipTap editor (`components/editor/TipTapEditor.tsx`)
-- Multi-tab support: `EditorState` in store (panels[], tabs, splitMode)
-- Components: editor-tab-bar, editor-panel-container, editor-split-view
+- TipTap 3 editor (`components/editor/TipTapEditor.tsx`)
+- 24+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, etc.)
+- Workspace: binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types
 - Wiki-links: `[[title]]` extracted to `Note.linksOut`
 
 ### Knowledge System
-- Backlinks: `lib/backlinks.ts` (incremental index, keyword/tag scoring)
-- Search: FlexSearch worker-based (`lib/search/`)
-- KnowledgeMaps: force-directed graph visualization
+- Backlinks: `lib/backlinks.ts` (incremental index, keyword/tag scoring, alias support)
+- Search: FlexSearch worker-based (`lib/search/`) with IDB persistence
+- Ontology: co-occurrence engine, relation suggestions, wiki infobox, premium graph view (d3-force worker)
 
 ### Note Lifecycle
 ```
@@ -43,100 +46,67 @@ inbox → capture → permanent → WIKI (planned)
 - Labels → 노트 타입 (무엇인가): 메모, 리서치, 아이디어
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
-## Completed Features (v2)
+## Completed Features
 1. Labels — note labeling system
-2. Autopilot Rules — rule-based automation
-3. Templates — note templates with seed data
+2. Autopilot Rules — rule-based automation (v28)
+3. Templates — note templates with seed data + TipTap 리치텍스트 에디터 (v38)
 4. Calendar View — monthly grid
-5. Multi-Tab + Split View — VS Code style tabs
+5. Multi-Tab + Split View → Workspace binary tree (v35)
 6. Datalog — Activity history & analytics (NoteEvent)
-7. Tags & Labels sidebar views (#42)
-8. Inbox unified with Notes design (#43)
-9. Inline #hashtag → tag auto-sync (#44, #45, #46)
+7. Tags & Labels sidebar views
+8. Inbox unified with Notes design
+9. Inline #hashtag → tag auto-sync
+10. SRS engine (fixed-step review, 4-button rating)
+11. Knowledge map force-directed layout
+12. Analysis engine + Insights UI
+13. Sidebar redesign (custom LinearSidebar, 4 nav items)
+14. Ontology Engine Phase 4-A/4-B/5 (위키링크, 공기어, 관계 제안, 프리미엄 그래프)
+15. Responsive NotesTable (CompactNoteList 제거, ResizeObserver 기반)
+16. NoteList를 workspace 트리로 통합
 
-## Three Axes — Next Major Features (confirmed 2026-03-12)
+## Three Axes — Core Design Philosophy
 
-### Concept
 ```
 Thread        → 깊이축  (지금 이 생각을 파고드는 실시간 전개)
 Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ```
 
-### 1. Thread (깊이축)
-- ThinkingChainSession → Thread (rename)
-- Store: `lib/store/slices/thinking.ts` already has start/addStep/end
-- UI: 에디터 하단 접이식 패널
-- relatedNoteIds 제거 → Relations에 역할 위임
-- 난이도: 낮
+## Implementation Order (최신, 2026-03-16 확정)
 
-### 2. Relations (공간축)
-- 3 types fixed: refutes(반박) / extends(파생) / related(관련)
-- PlotState에 `relations: NoteRelation[]` 추가
-- 기존 "Related Notes" 자동추천과 수동 Relations를 한 섹션에 통합
-- Backlinks 패턴 참고
-- 난이도: 중
+1. **Activity 삭제** — 사이드바에서 제거, ActivityView 컴포넌트 정리
+2. **Thread** (ThinkingChain rename + 에디터 하단 접이식 패널 UI)
+3. **읽기/편집 뷰모드 토글** (TipTap `editable` prop, Cmd+E)
+4. **Relations** (refutes/extends/related, 수동+자동 통합)
+5. **Wiki 리빌드** — 나무위키식 (내부링크 + 백링크 + TOC + 읽기모드 기본)
+6. **Reflections** (시간축, 쌓임만 가능한 회고)
+7. **Insights 뷰** (Activity 대체, 행동 분석 대시보드)
+8. **Ontology View 고도화** (Relations 구현 후)
 
-### 3. Reflections (시간축)
-- PlotState에 `reflections: Reflection[]` 추가 (수정/삭제 불가, 쌓임만)
-- reviewAt 재활용 (이미 setReminder/clearReminder 있음)
-- 앱 시작 리뷰 배너: reviewAt <= now 필터링
-- 디테일 패널에 REFLECTIONS 섹션
-- TipTap ❌, 단순 textarea
-- 난이도: 중
+## Key Design Decisions (최신)
 
-### 4. WIKI (개인 위키)
-- Note에 `isWiki: boolean` 플래그 추가 (별도 타입 아님)
-- isWiki=true → 기본 읽기모드, status 워크플로우 무시, "이 항목의 노트" 섹션
-- "이 항목의 노트" = useBacklinksFor() + 같은 태그 노트
-- 사이드바 WIKI 목록 + 검색 + 태그별 분류
-- 일반 노트 → WIKI 승격 가능 (우클릭 or 디테일 패널)
-- 난이도: 중
-
-### 5. 읽기/편집 뷰모드 토글
-- EditorState에 viewMode: 'edit' | 'read' 추가
-- TipTap `editable` prop 활용
-- WIKI는 기본 read, 일반 노트는 기본 edit
-- 단축키: Cmd+E 토글
-- 난이도: 낮
-
-### 6. 레이아웃 5모드
-- Mode A: 포커스 — `[사이드바] [에디터]` (현재)
-- Mode B: 3컬럼 — `[사이드바] [노트목록] [에디터]` (UpNote 스타일)
-- Mode C: 탭 — `[사이드바] [탭1|탭2|탭3]` (Obsidian 스타일)
-- Mode D: 멀티패널 — `[사이드바] [에디터|패널1|패널2...]` (Roam 스타일, [[링크]] 클릭→오른쪽 자동 추가)
-- Mode E: 스플릿 — `[사이드바] [에디터|에디터]` 좌우/상하 (VS Code 스타일)
-- LayoutMode: 'focus' | 'three-column' | 'tabs' | 'panels' | 'split'
-- react-resizable-panels 사용
-- 난이도: 중~높
-
-### 7. 위키링크 hover preview
-- linksOut 재활용
-- 난이도: 낮
-
-## Implementation Order (confirmed)
-1. Thread (rename + UI)
-2. 읽기/편집 뷰모드 토글
-3. Relations
-4. WIKI (isWiki + 전용 뷰)
-5. Reflections + 리뷰 배너
-6. 레이아웃 5모드 (포커스/3컬럼/탭/멀티패널/스플릿)
-7. 위키링크 hover preview
-
-## Design Decisions
 - SQL 테이블 아님 → Zustand 슬라이스로 구현
 - Related Notes(자동)와 Relations(수동)은 한 섹션에 통합
-- WIKI 초성 검색은 후순위
 - Thread의 relatedNoteIds 제거 → Relations에 위임
 - 에디터 FixedToolbar은 항상 화면 최하단 (UpNote 스타일)
-- 레이아웃: Roam/UpNote/Obsidian/VS Code 4가지 스타일 전부 지원
+- 레이아웃 5모드 + Workspace binary tree (v35) ✅ 구현 완료
+- **Activity 삭제 예정** → Insights 뷰에 통합. 현재 Activity는 로그 덤프에 불과
+- **Insights ≠ Ontology** → 별개 뷰로 유지
+  - Insights = 행동 분석 (How) — 편집 빈도, 방치 노트, inbox 체류일, 트렌드
+  - Ontology = 구조 시각화 (What) — 노트 간 관계/연결 그래프
+  - 접점: 온톨로지 노드 색상을 인사이트 데이터로 레이어링 가능
+- **Wiki = 나무위키식 데이터베이스** (단순 isWiki 플래그 X)
+  - 노트 시스템 안에 통합
+  - `[[내부링크]]` 클릭 → 해당 문서로 이동, 없으면 자동 생성
+  - 백링크 (이 문서를 참조하는 문서들)
+  - 목차 자동생성 (헤딩 기반 TOC)
+  - 에디터는 같은 TipTap, 위키 모드일 때 기능 확장
+  - Obsidian/Logseq 방식
+- **Tags/Labels** → 항상 풀와이드 렌더 (list+editor 모드 아님)
 
 ## TODO: Future Work
 - Settings always-mounted (when settings features implemented)
 - WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
-- 인라인 해시태그 시스템 (UpNote 스타일)
-  - `#` 입력 시 기존 태그 자동완성 드롭다운
-  - 없는 태그면 `+ Create new tag "#name"` 옵션
-  - 선택/Enter → 태그 확정 + 인라인 배지 노드로 렌더링
-  - TipTap Suggestion 플러그인 + 커스텀 태그 노드 필요
-  - 현재: 정규식 평문 추출 → 목표: 인터랙티브 확정 방식
+- Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
+- Orphaned code cleanup: KnowledgeMap type + maps slice, SavedView type + views slice
+- CompactNoteList 파일 삭제 (더 이상 import 안 됨)

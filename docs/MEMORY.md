@@ -33,6 +33,7 @@
 - **Multi-tab editor**: EditorState with panels/tabs/split (v30, legacy — replaced by workspace)
 - **Autopilot**: Rule-based automation with conditions/actions on notes (v28)
 - **Workspace**: Binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types, drag & drop, tab split to new leaf, right-click context menus for view switching, NoteList integrated as workspace leaf (not fixed panel)
+- **Responsive NotesTable**: ONE grid component for all sizes — ResizeObserver + minWidth thresholds on COLUMN_DEFS. CompactNoteList 삭제됨 (모든 곳에서 NotesTable로 교체)
 - **TipTap Editor**: 24+ extensions — StarterKit, Placeholder (per-block), TaskList/Item, Highlight, Link, Underline, TextAlign, Color, TextStyle, Super/Subscript, Table, ResizableImage, CodeBlockLowlight (lowlight), Typography, Dropcursor, CharacterCount, FontFamily, YouTube, Details/Summary/Content, Mathematics (KaTeX), SlashCommand (custom), Typewriter, CurrentLineHighlight, HashtagSuggestion
 
 ## Store Slices (15 total)
@@ -66,6 +67,7 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
   - 플레이스홀더 변수 삽입 UI ({date}, {time}, {datetime}, {year}, {month}, {day})
   - contentJson 필드 추가 (v38 마이그레이션), debounced 자동저장
   - 라우트: `app/(app)/templates/page.tsx` (Always-Mounted)
+- **WIP**: 반응형 NotesTable 통합 — CompactNoteList 제거, ResizeObserver 기반 컬럼 숨김, ListEditorLayout 리사이즈 핸들 (280-800px)
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -93,9 +95,46 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **Ontology View**: SVG force-directed graph (d3-force), filter bar, detail panel, workspace 통합
 
 ## Current Direction (as of 2026-03-16)
-- **REDESIGN PHASE 1 COMPLETE** — see [redesign-plan.md](./redesign-plan.md)
-- Core idea: "기능 13개의 80점 → 기능 5개의 98점"
-- **Done**: Project/Category/Alerts 삭제, sidebar 정리, NoteRow 리디자인, Detail Panel 축소, "reference" status 제거, Insights view mode, Autopilot, Calendar, Labels, Templates, multi-tab editor, Datalog, Layout 5 Modes, Workspace v35, TipTap 10 plugins, NoteList workspace 통합, Ontology Engine Phase 4-A/4-B, Ontology Phase 5 Premium Graph, Template Editor Phase 2 (UpNote 스타일 TipTap + 플레이스홀더 변수)
-- **Remaining**: Phase 4-C (Wiki View), Phase 4-D (Context Panel), Phosphor Icons + design tokens, surface polish, orphaned code cleanup
-- **Deferred**: Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
-- Orphaned in code: KnowledgeMap type + maps slice, SavedView type + views slice, alerts/category/projects routes
+
+### 완료된 작업 (이번 세션)
+- **반응형 NotesTable 통합**: CompactNoteList 제거, ONE grid for all sizes
+  - COLUMN_DEFS에 minWidth 추가, ResizeObserver로 컨테이너 너비 측정
+  - effectiveVisibleCols로 좁을 때 자동 컬럼 숨김
+  - isCompact (< 480px)로 패딩/텍스트 축소
+- **ListEditorLayout 개선**: NotesTable 사용 + 리사이즈 핸들 (280-800px)
+- **workspace-view-dispatch**: note-list 리프도 NotesTable로 교체
+- **사이드바 뷰 전환 수정**: Tags/Labels 클릭 시 해당 뷰가 풀와이드로 정상 렌더
+
+### 뷰 라우팅 구조 (확정)
+- **layout.tsx**: Tags, Labels, Templates, Ontology → 항상 풀와이드 렌더 (레이아웃 모드 무관)
+- **ListEditorLayout**: Notes 전용 (three-column/split 모드)
+- Tags/Labels: 자체 디테일 모드 (태그 이름 클릭 → 풀와이드 노트 목록)
+
+### 설계 결정 (이번 세션)
+1. **Activity 삭제 예정** → Insights 뷰에 통합. 현재 Activity는 로그 덤프에 불과, 유용한 인사이트 없음
+2. **Insights ≠ Ontology** → 별개 뷰로 유지
+   - Insights = 행동 분석 (How) — 편집 빈도, 방치 노트, inbox 체류일, 트렌드
+   - Ontology = 구조 시각화 (What) — 노트 간 관계/연결 그래프
+   - 접점: 온톨로지 노드 색상을 인사이트 데이터로 레이어링 가능
+3. **Wiki = 나무위키식 데이터베이스** (단순 isWiki 플래그 X)
+   - 노트 시스템 안에 통합 (Approach A)
+   - `[[내부링크]]` 클릭 → 해당 문서로 이동, 없으면 자동 생성
+   - 백링크 (이 문서를 참조하는 문서들)
+   - 목차 자동생성 (헤딩 기반 TOC)
+   - 에디터는 같은 TipTap, 위키 모드일 때 기능 확장
+   - Obsidian/Logseq 방식
+
+### 향후 작업 순서 (최신)
+1. **Activity 삭제** — 사이드바에서 제거, ActivityView 컴포넌트 정리
+2. **Thread** (ThinkingChain rename + 에디터 하단 접이식 패널 UI)
+3. **읽기/편집 뷰모드 토글** (TipTap `editable` prop, Cmd+E)
+4. **Relations** (refutes/extends/related, 수동+자동 통합)
+5. **Wiki 리빌드** — 나무위키식 (내부링크 + 백링크 + TOC + 읽기모드 기본)
+6. **Reflections** (시간축, 쌓임만 가능한 회고)
+7. **Insights 뷰** (Activity 대체, 행동 분석 대시보드)
+8. **Ontology View 고도화** (Relations 구현 후)
+
+### Deferred
+- Phosphor Icons, 디자인 토큰 (typography/spacing/transitions)
+- Orphaned code cleanup: KnowledgeMap type + maps slice, SavedView type + views slice
+- CompactNoteList 파일 삭제 (더 이상 import 안 됨)

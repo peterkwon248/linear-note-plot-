@@ -24,15 +24,12 @@ import { OntologyView } from "@/components/views/ontology-view"
 import { TemplatesView } from "@/components/views/templates-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
-import { ListEditorLayout } from "@/components/layout/list-editor-layout"
-import type { LayoutMode } from "@/lib/types"
 
 const MIN_WIDTH = 200
 const MAX_WIDTH = 320
 const COLLAPSE_THRESHOLD = 80
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const layoutMode = usePlotStore((s) => s.layoutMode) as LayoutMode
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const sidebarWidth = usePlotStore((s) => s.sidebarWidth)
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
@@ -192,21 +189,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           {(mountedViews.has("/tags") || activeRoute === "/tags") && (
             <div className={activeRoute === "/tags" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              {(layoutMode === "three-column" || layoutMode === "split") ? (
-                <ListEditorLayout listContent={<TagsView />} />
-              ) : (
-                <TagsView />
-              )}
+              <TagsView />
             </div>
           )}
 
           {(mountedViews.has("/labels") || activeRoute === "/labels") && (
             <div className={activeRoute === "/labels" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              {(layoutMode === "three-column" || layoutMode === "split") ? (
-                <ListEditorLayout listContent={<LabelsView />} />
-              ) : (
-                <LabelsView />
-              )}
+              <LabelsView />
+            </div>
+          )}
+
+          {(mountedViews.has("/templates") || activeRoute === "/templates") && (
+            <div className={activeRoute === "/templates" ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <TemplatesView />
             </div>
           )}
 

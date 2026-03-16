@@ -144,15 +144,15 @@ const TABS: { id: ViewContextKey; label: string }[] = [
 
 /* ── Column + group config ─────────────────────────────── */
 
-const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField: SortField }[] = [
+const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField: SortField; minWidth?: number }[] = [
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
-  { id: "status", label: "Status", width: "w-[120px] shrink-0", align: "text-right", sortField: "status" },
-  { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder" },
-  { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links" },
-  { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads" },
-  { id: "priority", label: "Priority", width: "w-[72px] shrink-0", align: "text-center", sortField: "priority" },
-  { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt" },
-  { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt" },
+  { id: "status", label: "Status", width: "w-[120px] shrink-0", align: "text-right", sortField: "status", minWidth: 400 },
+  { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
+  { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links", minWidth: 640 },
+  { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
+  { id: "priority", label: "Priority", width: "w-[72px] shrink-0", align: "text-center", sortField: "priority", minWidth: 480 },
+  { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
+  { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt", minWidth: 800 },
 ]
 
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
@@ -409,6 +409,31 @@ export function NotesTable({
 
   const visibleCols = viewState.visibleColumns
 
+  // ── Container width tracking (for responsive column hiding) ──
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(1200)
+
+  useEffect(() => {
+    const el = tableContainerRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? 1200
+      setContainerWidth(w)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const effectiveVisibleCols = useMemo(() => {
+    return visibleCols.filter((colId) => {
+      const def = COLUMN_DEFS.find((c) => c.id === colId)
+      if (!def || !def.minWidth) return true // title always visible
+      return containerWidth >= def.minWidth
+    })
+  }, [visibleCols, containerWidth])
+
+  const isCompact = containerWidth < 480
+
   const virtualItems = useMemo((): VirtualItem[] => {
     if (viewState.groupBy === "none") {
       return flatNotes.map((note) => ({ type: "note" as const, note }))
@@ -521,7 +546,7 @@ export function NotesTable({
   }, []) // stable — reads latest data via refs
 
   return (
-    <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
+    <main ref={tableContainerRef} className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
         <h1 className="text-base font-semibold text-foreground">{title ?? "Notes"}</h1>
@@ -531,7 +556,7 @@ export function NotesTable({
             onClick={() => createNote(createNoteOverrides ?? {})}
           >
             <Plus className="h-3.5 w-3.5" />
-            New note
+            {!isCompact && "New note"}
           </button>
         )}
       </header>
@@ -600,13 +625,14 @@ export function NotesTable({
             tags={tags}
             onToggleFilter={toggleFilter}
             onSetFilters={(f) => updateViewState({ filters: f })}
+            hideLabel={isCompact}
           />
 
           <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                 <SlidersHorizontal className="h-4 w-4" />
-                Display
+                {!isCompact && "Display"}
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-[320px] p-0" align="end">
@@ -843,7 +869,7 @@ export function NotesTable({
                       )}
                     </div>
                   </div>
-                  {COLUMN_DEFS.filter((col) => col.id === "title" || visibleCols.includes(col.id)).map((col) => (
+                  {COLUMN_DEFS.filter((col) => col.id === "title" || effectiveVisibleCols.includes(col.id)).map((col) => (
                     <div key={col.id} className={col.width + " " + (col.align ?? "")}>
                       <TH
                         label={col.label}
@@ -851,7 +877,7 @@ export function NotesTable({
                         sortCol={viewState.sortField}
                         sortDir={viewState.sortDirection}
                         onSort={handleSort}
-                        className={col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""}
+                        className={`${col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""} ${isCompact ? "!text-[12px]" : ""}`}
                       />
                     </div>
                   ))}
@@ -892,7 +918,8 @@ export function NotesTable({
                             isActive={activePreviewId === item.note.id}
                             isSelected={selectedIds.has(item.note.id)}
                             selectionActive={selectedIds.size > 0}
-                            visibleColumns={visibleCols}
+                            visibleColumns={effectiveVisibleCols}
+                            isCompact={isCompact}
                             onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
                             onClick={(e: React.MouseEvent) => {
                               const flatIndex = flatNotes.findIndex((n) => n.id === item.note.id)
@@ -970,6 +997,7 @@ interface NoteRowProps {
   isActive?: boolean
   isSelected?: boolean
   selectionActive?: boolean
+  isCompact?: boolean
   visibleColumns: string[]
   onOpen: () => void
   onClick?: (e: React.MouseEvent) => void
@@ -996,6 +1024,7 @@ function NoteRowInner({
   isActive,
   isSelected,
   selectionActive,
+  isCompact,
   visibleColumns,
   onOpen,
   onClick,
@@ -1022,7 +1051,9 @@ function NoteRowInner({
         <div
           draggable
           onDragStart={(e) => setNoteDragData(e, note.id)}
-          className={`group flex items-center px-5 py-3 transition-colors cursor-pointer ${
+          className={`group flex items-center transition-colors cursor-pointer ${
+            isCompact ? "px-3 py-1.5" : "px-5 py-3"
+          } ${
             isSelected
               ? "bg-accent/5"
               : isActive
@@ -1035,7 +1066,9 @@ function NoteRowInner({
       {/* Checkbox */}
       <div
         data-checkbox
-        className={`w-8 h-8 shrink-0 flex items-center justify-center mr-0.5 cursor-pointer rounded ${
+        className={`shrink-0 flex items-center justify-center mr-0.5 cursor-pointer rounded ${
+          isCompact ? "w-6 h-6" : "w-8 h-8"
+        } ${
           selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
         }`}
         onClick={(e) => {
@@ -1045,18 +1078,20 @@ function NoteRowInner({
         }}
       >
         <div
-          className={`h-4 w-4 rounded border flex items-center justify-center transition-colors pointer-events-none ${
+          className={`rounded border flex items-center justify-center transition-colors pointer-events-none ${
+            isCompact ? "h-3 w-3" : "h-4 w-4"
+          } ${
             isSelected ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
           }`}
         >
-          {isSelected && <Check className="h-2.5 w-2.5 text-accent-foreground" />}
+          {isSelected && <Check className={`text-accent-foreground ${isCompact ? "h-2 w-2" : "h-2.5 w-2.5"}`} />}
         </div>
       </div>
 
       {/* Name */}
       <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
-        <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
-        <span className="truncate text-[15px] text-foreground">
+        <FileText className={`shrink-0 text-muted-foreground/60 ${isCompact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+        <span className={`truncate text-foreground ${isCompact ? "text-[13px]" : "text-[15px]"}`}>
           {note.title || "Untitled"}
         </span>
         {(() => {
@@ -1122,7 +1157,7 @@ function NoteRowInner({
       {/* Links */}
       {visibleCols.includes("links") && (
         <div className="w-[56px] shrink-0 text-center">
-          <span className={`text-[15px] tabular-nums ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+          <span className={`tabular-nums ${isCompact ? "text-[13px]" : "text-[15px]"} ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
             {links}
           </span>
         </div>
@@ -1131,7 +1166,7 @@ function NoteRowInner({
       {/* Reads */}
       {visibleCols.includes("reads") && (
         <div className="w-[56px] shrink-0 text-center">
-          <span className={`text-[15px] tabular-nums ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+          <span className={`tabular-nums ${isCompact ? "text-[13px]" : "text-[15px]"} ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
             {note.reads}
           </span>
         </div>
@@ -1153,7 +1188,7 @@ function NoteRowInner({
         <div className="w-[80px] shrink-0 text-right">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-[15px] tabular-nums text-muted-foreground cursor-default">
+              <span className={`tabular-nums text-muted-foreground cursor-default ${isCompact ? "text-[13px]" : "text-[15px]"}`}>
                 {shortRelative(note.updatedAt)}
               </span>
             </TooltipTrigger>
@@ -1169,7 +1204,7 @@ function NoteRowInner({
         <div className="w-[80px] shrink-0 text-right">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-[15px] tabular-nums text-muted-foreground cursor-default">
+              <span className={`tabular-nums text-muted-foreground cursor-default ${isCompact ? "text-[13px]" : "text-[15px]"}`}>
                 {absDate(note.createdAt)}
               </span>
             </TooltipTrigger>
@@ -1314,5 +1349,6 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
   prev.selectionActive === next.selectionActive &&
+  prev.isCompact === next.isCompact &&
   prev.visibleColumns === next.visibleColumns
 )
