@@ -13,6 +13,7 @@ export type PanelContent =
   | { type: "calendar" }
   | { type: "insights" }
   | { type: "ontology" }
+  | { type: "templates" }
   | { type: "empty" }
 
 /* ── Workspace Tree ────────────────────────────────────── */

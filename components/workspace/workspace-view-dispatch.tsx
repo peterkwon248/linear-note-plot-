@@ -9,6 +9,7 @@ import { LabelsView } from "@/components/views/labels-view"
 import { ActivityView } from "@/components/views/activity-view"
 import { NoteInspector } from "@/components/note-inspector"
 import { OntologyView } from "@/components/views/ontology-view"
+import { TemplatesView } from "@/components/views/templates-view"
 
 interface WorkspaceViewDispatchProps {
   leaf: WorkspaceLeaf
@@ -64,6 +65,9 @@ export function WorkspaceViewDispatch({ leaf }: WorkspaceViewDispatchProps) {
 
     case "ontology":
       return <OntologyView />
+
+    case "templates":
+      return <TemplatesView />
 
     case "empty":
       return (

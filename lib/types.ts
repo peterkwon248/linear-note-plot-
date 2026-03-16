@@ -145,6 +145,7 @@ export interface NoteTemplate {
   // Pre-filled fields
   title: string          // template for title (can contain {date}, {time} placeholders)
   content: string        // markdown body template
+  contentJson: Record<string, unknown> | null  // TipTap JSON content
   status: NoteStatus
   priority: NotePriority
   labelId: string | null

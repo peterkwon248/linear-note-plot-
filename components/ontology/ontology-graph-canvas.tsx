@@ -10,7 +10,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react"
-import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
+import { ZoomIn, ZoomOut, RotateCcw, Minimize2, Maximize2 } from "lucide-react"
 import {
   forceSimulation,
   forceLink,
@@ -136,7 +136,7 @@ function computeEdgePath(
 
   let offset: number
   if (totalEdges <= 1) {
-    offset = dist * 0.05 // slight curve for visual appeal
+    offset = dist * 0.12 // elegant curve for visual appeal
   } else {
     const spreadFactor = 20
     const offsetIndex = edgeIndex - (totalEdges - 1) / 2
@@ -157,6 +157,23 @@ function computeEdgePath(
   }
 }
 
+/* ── Node base color (for gradient palette) ──────────── */
+
+const STATUS_COLORS: Record<string, string> = {
+  inbox: "#f59e0b",
+  capture: "#3b82f6",
+  permanent: "#22c55e",
+}
+const DEFAULT_NODE_COLOR = "hsl(var(--muted-foreground))"
+
+function getNodeBaseColor(node: OntologyNode, labels: Label[]): string {
+  if (node.labelId) {
+    const label = labels.find((l) => l.id === node.labelId)
+    if (label?.color) return label.color
+  }
+  return STATUS_COLORS[node.status] ?? DEFAULT_NODE_COLOR
+}
+
 /* ── Node fill color by status/label ──────────────────── */
 
 function getNodeFill(
@@ -166,24 +183,10 @@ function getNodeFill(
   isHovered: boolean,
   isConnected: boolean,
 ): string {
-  if (isSelected) return "hsl(var(--accent))"
-  if (isHovered || isConnected) return "hsl(var(--accent) / 0.7)"
-
-  if (node.labelId) {
-    const label = labels.find((l) => l.id === node.labelId)
-    if (label?.color) return label.color
-  }
-
-  switch (node.status) {
-    case "inbox":
-      return "#f59e0b"
-    case "capture":
-      return "#3b82f6"
-    case "permanent":
-      return "#22c55e"
-    default:
-      return "hsl(var(--muted-foreground))"
-  }
+  // Always use the node's own color — never replace with accent
+  const base = getNodeBaseColor(node, labels)
+  if (isSelected || isHovered || isConnected) return base
+  return base
 }
 
 /* ── Component ─────────────────────────────────────────── */
@@ -207,6 +210,7 @@ export function OntologyGraphCanvas({
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [panning, setPanning] = useState(false)
+  const [isPanMode, setIsPanMode] = useState(false) // Space hold = pan mode
   const panStart = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null)
 
   /* ── Tooltip state (Feature 3) ──────────────────── */
@@ -220,12 +224,23 @@ export function OntologyGraphCanvas({
   /* ── Live positions (source of truth during simulation) ── */
   const positionsRef = useRef<Map<string, { x: number; y: number }>>(new Map())
 
+  /* ── Multi-select state ───────────────────────────── */
+  const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set())
+  const multiSelectedIdsRef = useRef<Set<string>>(multiSelectedIds)
+  useEffect(() => { multiSelectedIdsRef.current = multiSelectedIds }, [multiSelectedIds])
+  const [selectionRect, setSelectionRect] = useState<{
+    startX: number; startY: number; endX: number; endY: number
+  } | null>(null)
+  const marqueeStartRef = useRef<{ graphX: number; graphY: number } | null>(null)
+
   /* ── Simulation refs ───────────────────────────────── */
   const simRef = useRef<Simulation<SimNode, SimulationLinkDatum<SimNode>> | null>(null)
   const simActiveRef = useRef(false)
   const rafRef = useRef<number>(0)
   const dragNodeIdRef = useRef<string | null>(null)
   const didClickDrag = useRef(false)
+  const didMarquee = useRef(false)
+  const dragStartPositions = useRef<Map<string, { x: number; y: number }>>(new Map())
 
   /* ── Initialize positions from graph prop ───────────── */
   const graphIdRef = useRef<string>("")
@@ -356,11 +371,89 @@ export function OntologyGraphCanvas({
     }
   }, [])
 
+  // Space key = pan mode (n8n style) + Arrow keys = pan viewport
+  const PAN_STEP = 60
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && !e.repeat) {
+        e.preventDefault()
+        setIsPanMode(true)
+        return
+      }
+      // Arrow keys: pan viewport (skip if input/textarea focused)
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === "INPUT" || tag === "TEXTAREA") return
+      const arrowDeltas: Record<string, [number, number]> = {
+        ArrowUp: [0, PAN_STEP],
+        ArrowDown: [0, -PAN_STEP],
+        ArrowLeft: [PAN_STEP, 0],
+        ArrowRight: [-PAN_STEP, 0],
+      }
+      const delta = arrowDeltas[e.code]
+      if (delta) {
+        e.preventDefault()
+        setTransform((prev) => ({ ...prev, x: prev.x + delta[0], y: prev.y + delta[1] }))
+        return
+      }
+      // Escape: clear all selection
+      if (e.code === "Escape") {
+        setMultiSelectedIds(new Set())
+        multiSelectedIdsRef.current = new Set()
+      }
+    }
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault()
+        setIsPanMode(false)
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    window.addEventListener("keyup", onKeyUp)
+    return () => {
+      window.removeEventListener("keydown", onKeyDown)
+      window.removeEventListener("keyup", onKeyUp)
+    }
+  }, [])
+
   /* ── Derived: visible edges ────────────────────────── */
   const visibleEdges = useMemo(
     () => graph.edges.filter((e) => isEdgeVisible(e, filters)),
     [graph.edges, filters],
   )
+
+  /* ── Node lookup map — O(1) instead of O(n) find ──── */
+  const nodeMap = useMemo(() => {
+    const m = new Map<string, OntologyNode>()
+    for (const n of graph.nodes) m.set(n.id, n)
+    return m
+  }, [graph.nodes])
+
+  /* ── Gradient palette: status-pair combos (max ~16) ── */
+  const gradientPalette = useMemo(() => {
+    const allColors = new Set<string>()
+    for (const n of graph.nodes) {
+      allColors.add(getNodeBaseColor(n, labels))
+    }
+    const colorArr = Array.from(allColors)
+    const palette: { id: string; from: string; to: string }[] = []
+    for (const from of colorArr) {
+      for (const to of colorArr) {
+        if (from === to) continue
+        const id = `eg-${palette.length}`
+        palette.push({ id, from, to })
+      }
+    }
+    return palette
+  }, [graph.nodes, labels])
+
+  /* ── Gradient lookup: color-pair → gradient id ─────── */
+  const gradientLookup = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const g of gradientPalette) {
+      m.set(`${g.from}||${g.to}`, g.id)
+    }
+    return m
+  }, [gradientPalette])
 
   /* ── Parallel edge map for fan-out (Feature 1) ────── */
   const edgePairMap = useMemo(() => {
@@ -425,64 +518,166 @@ export function OntologyGraphCanvas({
     setTransform(computeFitTransform(positionsRef.current, rect.width, rect.height))
   }, [])
 
-  /* ── Mouse handlers (pan + node drag) ──────────────── */
+  /* ── Cluster / Spread: scale positions toward/away from centroid ── */
+  const adjustSpread = useCallback((direction: "cluster" | "spread") => {
+    const positions = positionsRef.current
+    if (positions.size === 0) return
+
+    const factor = direction === "cluster" ? 0.7 : 1.4
+
+    // Compute centroid
+    let cx = 0, cy = 0
+    for (const { x, y } of positions.values()) { cx += x; cy += y }
+    cx /= positions.size
+    cy /= positions.size
+
+    // Scale all positions toward/away from centroid
+    for (const [id, pos] of positions) {
+      positions.set(id, {
+        x: cx + (pos.x - cx) * factor,
+        y: cy + (pos.y - cy) * factor,
+      })
+    }
+
+    // Sync simulation nodes
+    const sim = simRef.current
+    if (sim) {
+      for (const simNode of sim.nodes()) {
+        const p = positions.get(simNode.id)
+        if (p) { simNode.x = p.x; simNode.y = p.y }
+      }
+    }
+
+    if (onPositionsUpdate) onPositionsUpdate(new Map(positions))
+    forceRender()
+  }, [onPositionsUpdate])
+
+  /* ── Helper: screen coords → graph coords ─────────── */
+  const screenToGraph = useCallback(
+    (clientX: number, clientY: number) => {
+      const svg = svgRef.current
+      if (!svg) return { x: 0, y: 0 }
+      const rect = svg.getBoundingClientRect()
+      return {
+        x: (clientX - rect.left - transform.x) / transform.scale,
+        y: (clientY - rect.top - transform.y) / transform.scale,
+      }
+    },
+    [transform.x, transform.y, transform.scale],
+  )
+
+  /* ── Mouse handlers (pan + node drag + marquee) ───── */
+  const handleNodeMouseDown = useCallback(
+    (e: ReactMouseEvent, nodeId: string) => {
+      e.preventDefault()
+      e.stopPropagation()
+      dragNodeIdRef.current = nodeId
+      didClickDrag.current = false
+      setHoveredId(null)
+      setTooltip(null)
+      if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
+
+      // If this node is in multi-selection, prepare group drag
+      // If not (and no Ctrl/Cmd), start fresh single drag
+      // Compute new set synchronously so we can update the ref immediately
+      const prev = multiSelectedIdsRef.current
+      let nextSet: Set<string>
+      if (e.ctrlKey || e.metaKey) {
+        nextSet = new Set(prev)
+        nextSet.add(nodeId)
+      } else if (prev.has(nodeId) && prev.size > 1) {
+        nextSet = prev // keep multi-selection for group drag
+      } else {
+        nextSet = new Set([nodeId])
+      }
+      multiSelectedIdsRef.current = nextSet // sync ref immediately for handleMouseMove
+      setMultiSelectedIds(nextSet)
+
+      // Snapshot positions for group drag offset
+      dragStartPositions.current = new Map(positionsRef.current)
+
+      const sim = simRef.current
+      if (sim) {
+        const simNode = sim.nodes().find((n) => n.id === nodeId)
+        if (simNode) {
+          simNode.fx = simNode.x
+          simNode.fy = simNode.y
+        }
+      }
+    },
+    [],
+  )
+
   const handleMouseDown = useCallback(
     (e: ReactMouseEvent<SVGSVGElement>) => {
-      const nodeEl = (e.target as Element).closest("[data-graph-node]")
+      if (dragNodeIdRef.current) return
 
-      if (nodeEl) {
-        // --- Node drag start ---
-        const nodeId = nodeEl.getAttribute("data-node-id")
-        if (!nodeId) return
-        e.preventDefault()
-        e.stopPropagation()
-        dragNodeIdRef.current = nodeId
-        didClickDrag.current = false
-        setTooltip(null)
-        if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
+      e.preventDefault()
 
-        const sim = simRef.current
-        if (sim) {
-          const simNode = sim.nodes().find((n) => n.id === nodeId)
-          if (simNode) {
-            simNode.fx = simNode.x
-            simNode.fy = simNode.y
-          }
-          sim.alphaTarget(0.3).restart()
-          sim.alpha(0.3)
-          startSimLoop()
-        }
+      // Shift+drag = marquee selection
+      if (e.shiftKey) {
+        didMarquee.current = false
+        const gp = screenToGraph(e.clientX, e.clientY)
+        marqueeStartRef.current = { graphX: gp.x, graphY: gp.y }
+        setSelectionRect({ startX: gp.x, startY: gp.y, endX: gp.x, endY: gp.y })
         return
       }
 
-      // --- Pan start ---
-      e.preventDefault()
+      // Default: pan (click & drag empty space)
       panStart.current = { x: e.clientX, y: e.clientY, tx: transform.x, ty: transform.y }
       setPanning(true)
     },
-    [transform.x, transform.y, startSimLoop],
+    [transform.x, transform.y, screenToGraph, isPanMode],
   )
 
   const handleMouseMove = useCallback(
     (e: ReactMouseEvent<SVGSVGElement>) => {
-      // --- Node dragging ---
-      if (dragNodeIdRef.current) {
-        const svg = svgRef.current
-        if (!svg) return
-        const rect = svg.getBoundingClientRect()
-        const graphX = (e.clientX - rect.left - transform.x) / transform.scale
-        const graphY = (e.clientY - rect.top - transform.y) / transform.scale
+      // --- Marquee selection ---
+      if (marqueeStartRef.current && selectionRect) {
+        const gp = screenToGraph(e.clientX, e.clientY)
+        setSelectionRect((prev) => prev ? { ...prev, endX: gp.x, endY: gp.y } : null)
+        return
+      }
 
+      // --- Node dragging (single or multi) ---
+      if (dragNodeIdRef.current) {
+        const gp = screenToGraph(e.clientX, e.clientY)
+        const dragId = dragNodeIdRef.current
+        const selectedIds = multiSelectedIdsRef.current
+        const startPos = dragStartPositions.current.get(dragId)
+        if (!startPos) {
+          positionsRef.current.set(dragId, { x: gp.x, y: gp.y })
+        } else {
+          const dx = gp.x - startPos.x
+          const dy = gp.y - startPos.y
+
+          // Move all selected nodes by the same delta (read from ref for latest value)
+          for (const id of selectedIds) {
+            const orig = dragStartPositions.current.get(id)
+            if (orig) {
+              positionsRef.current.set(id, { x: orig.x + dx, y: orig.y + dy })
+            }
+          }
+          // Also ensure the drag node itself moves (in case not in set)
+          positionsRef.current.set(dragId, { x: startPos.x + dx, y: startPos.y + dy })
+        }
+
+        // Sync simulation
         const sim = simRef.current
         if (sim) {
-          const simNode = sim.nodes().find((n) => n.id === dragNodeIdRef.current)
-          if (simNode) {
-            simNode.fx = graphX
-            simNode.fy = graphY
+          for (const simNode of sim.nodes()) {
+            const p = positionsRef.current.get(simNode.id)
+            if (p && (simNode.id === dragId || selectedIds.has(simNode.id))) {
+              simNode.x = p.x
+              simNode.y = p.y
+              simNode.fx = p.x
+              simNode.fy = p.y
+            }
           }
         }
 
         didClickDrag.current = true
+        forceRender()
         return
       }
 
@@ -490,41 +685,76 @@ export function OntologyGraphCanvas({
       if (!panning || !panStart.current) return
       const dx = e.clientX - panStart.current.x
       const dy = e.clientY - panStart.current.y
+      const startTx = panStart.current.tx
+      const startTy = panStart.current.ty
       setTransform((prev) => ({
         ...prev,
-        x: panStart.current!.tx + dx,
-        y: panStart.current!.ty + dy,
+        x: startTx + dx,
+        y: startTy + dy,
       }))
     },
-    [panning, transform.x, transform.y, transform.scale],
+    [panning, transform.x, transform.y, transform.scale, screenToGraph, selectionRect],
   )
 
   const handleMouseUp = useCallback(() => {
+    // --- End marquee selection ---
+    if (marqueeStartRef.current && selectionRect) {
+      const minX = Math.min(selectionRect.startX, selectionRect.endX)
+      const maxX = Math.max(selectionRect.startX, selectionRect.endX)
+      const minY = Math.min(selectionRect.startY, selectionRect.endY)
+      const maxY = Math.max(selectionRect.startY, selectionRect.endY)
+
+      // Find all nodes inside the rectangle
+      const selected = new Set<string>()
+      for (const [id, pos] of positionsRef.current) {
+        if (pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY) {
+          selected.add(id)
+        }
+      }
+      setMultiSelectedIds(selected)
+      multiSelectedIdsRef.current = selected
+      marqueeStartRef.current = null
+      setSelectionRect(null)
+      didMarquee.current = true // prevent click handler from clearing selection
+      return
+    }
+
     // --- End node drag ---
     if (dragNodeIdRef.current) {
+      // Release simulation fx/fy for all dragged nodes
       const sim = simRef.current
       if (sim) {
-        const simNode = sim.nodes().find((n) => n.id === dragNodeIdRef.current)
-        if (simNode) {
-          simNode.fx = null
-          simNode.fy = null
+        const selectedIds = multiSelectedIdsRef.current
+        for (const simNode of sim.nodes()) {
+          if (simNode.id === dragNodeIdRef.current || selectedIds.has(simNode.id)) {
+            simNode.fx = null
+            simNode.fy = null
+          }
         }
-        sim.alphaTarget(0)
       }
+      // Persist positions
+      if (onPositionsUpdate) onPositionsUpdate(new Map(positionsRef.current))
       dragNodeIdRef.current = null
+      dragStartPositions.current.clear()
       return
     }
 
     // --- End pan ---
     setPanning(false)
     panStart.current = null
-  }, [])
+  }, [selectionRect, onPositionsUpdate])
 
   /* ── Click on background: deselect ─────────────────── */
   const handleSvgClick = useCallback(
     (e: ReactMouseEvent<SVGSVGElement>) => {
       if ((e.target as Element).closest("[data-graph-node]")) return
+      // Don't clear selection if we just finished a marquee or drag
+      if (didMarquee.current) { didMarquee.current = false; return }
+      if (didClickDrag.current) return
       onSelectNode(null)
+      const empty = new Set<string>()
+      setMultiSelectedIds(empty)
+      multiSelectedIdsRef.current = empty
     },
     [onSelectNode],
   )
@@ -534,6 +764,20 @@ export function OntologyGraphCanvas({
     (e: ReactMouseEvent, nodeId: string) => {
       if (didClickDrag.current) return // was a drag, not a click
       e.stopPropagation()
+
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl/Cmd+click: toggle node in multi-selection
+        setMultiSelectedIds((prev) => {
+          const next = new Set(prev)
+          if (next.has(nodeId)) next.delete(nodeId)
+          else next.add(nodeId)
+          return next
+        })
+        return
+      }
+
+      // Regular click: single select (clear multi)
+      setMultiSelectedIds(new Set())
       onSelectNode(nodeId === selectedNodeId ? null : nodeId)
     },
     [onSelectNode, selectedNodeId],
@@ -641,8 +885,18 @@ export function OntologyGraphCanvas({
         onMouseLeave={handleMouseUp}
         onClick={handleSvgClick}
       >
-        {/* ── Arrow marker defs ──────────────────────── */}
+        {/* ── SVG defs: markers, filters, gradients ── */}
         <defs>
+          {/* Edge glow filter */}
+          <filter id="edge-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Arrow markers — slightly larger for visibility */}
           {Object.entries(RELATION_TYPE_CONFIG).map(([type, config]) => (
             <marker
               key={type}
@@ -650,13 +904,35 @@ export function OntologyGraphCanvas({
               viewBox="0 0 10 7"
               refX="10"
               refY="3.5"
-              markerWidth="8"
-              markerHeight="6"
+              markerWidth="10"
+              markerHeight="7"
               orient="auto-start-reverse"
             >
-              <polygon points="0 0, 10 3.5, 0 7" fill={config.color} />
+              <polygon
+                points="0 0, 10 3.5, 0 7"
+                fill={config.color}
+                style={{ transition: "opacity 0.2s" }}
+              />
             </marker>
           ))}
+
+          {/* Status-pair gradient palette (max ~16 combos, not per-edge) */}
+          {gradientPalette.map(({ id, from, to }) => (
+            <linearGradient key={id} id={id} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={from} />
+              <stop offset="100%" stopColor={to} />
+            </linearGradient>
+          ))}
+
+          {/* Wikilink animated dash style */}
+          <style>{`
+            @keyframes dash-flow {
+              to { stroke-dashoffset: -18; }
+            }
+            .wikilink-edge-animated {
+              animation: dash-flow 3s linear infinite;
+            }
+          `}</style>
         </defs>
 
         <g transform={`translate(${transform.x},${transform.y}) scale(${transform.scale})`}>
@@ -664,7 +940,7 @@ export function OntologyGraphCanvas({
           {culledEdges.map((edge, i) => {
             const sp = getPos(edge.source)
             const tp = getPos(edge.target)
-            const targetNode = graph.nodes.find((n) => n.id === edge.target)
+            const targetNode = nodeMap.get(edge.target)
             if (!targetNode) return null
 
             const isConnectedToHover =
@@ -673,6 +949,7 @@ export function OntologyGraphCanvas({
             const isConnectedToSelected =
               selectedNodeId !== null &&
               (edge.source === selectedNodeId || edge.target === selectedNodeId)
+            const isHighlighted = isConnectedToHover || isConnectedToSelected
 
             const isWikilink = edge.kind === "wikilink"
             const targetR = nodeRadius(targetNode.connectionCount) + 4
@@ -687,12 +964,8 @@ export function OntologyGraphCanvas({
               sp.x, sp.y, tp.x, tp.y, edgeIdx, totalInPair, isWikilink ? 0 : targetR,
             )
 
-            const searchEdgeDimmed = searchMatchIds !== null && !searchMatchIds.has(edge.source) && !searchMatchIds.has(edge.target)
-            const dimmed =
-              searchEdgeDimmed ||
-              ((hoveredId !== null || selectedNodeId !== null) &&
-              !isConnectedToHover &&
-              !isConnectedToSelected)
+            // n8n style: no dimming on hover/select — only search dimming
+            const dimmed = searchMatchIds !== null && !searchMatchIds.has(edge.source) && !searchMatchIds.has(edge.target)
 
             if (isWikilink) {
               return (
@@ -700,26 +973,50 @@ export function OntologyGraphCanvas({
                   <path
                     d={path}
                     fill="none"
-                    stroke="#6b7280"
-                    strokeDasharray="6 3"
-                    strokeWidth={1}
-                    opacity={dimmed ? 0.15 : isConnectedToHover || isConnectedToSelected ? 0.8 : 0.4}
-                    style={{ transition: "opacity 0.15s" }}
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeDasharray="8 4"
+                    strokeWidth={1.2}
+                    opacity={dimmed ? 0.3 : isHighlighted ? 0.8 : 0.4}
+                    className={isHighlighted ? "wikilink-edge-animated" : undefined}
+                    filter={isHighlighted ? "url(#edge-glow)" : undefined}
+                    style={{ transition: "opacity 0.2s" }}
                   />
                 </g>
               )
             }
 
+            const edgeColor = RELATION_TYPE_CONFIG[edge.kind as RelationType]?.color ?? "#6b7280"
+            // Gradient stroke: lookup by source→target color pair
+            const srcNode = nodeMap.get(edge.source)
+            const srcColor = srcNode ? getNodeBaseColor(srcNode, labels) : edgeColor
+            const tgtColor = getNodeBaseColor(targetNode, labels)
+            const gradId = gradientLookup.get(`${srcColor}||${tgtColor}`)
+            const strokeRef = gradId ? `url(#${gradId})` : edgeColor
+
             return (
               <g key={`e-${i}`}>
+                {/* Shadow / halo — only on highlighted edges */}
+                {isHighlighted && (
+                  <path
+                    d={path}
+                    fill="none"
+                    stroke={edgeColor}
+                    strokeWidth={5}
+                    opacity={0.15}
+                    strokeLinecap="round"
+                    style={{ pointerEvents: "none" }}
+                  />
+                )}
+                {/* Main edge with gradient stroke */}
                 <path
                   d={path}
                   fill="none"
-                  stroke={RELATION_TYPE_CONFIG[edge.kind as RelationType]?.color ?? "#6b7280"}
-                  strokeWidth={1.5}
-                  opacity={dimmed ? 0.15 : isConnectedToHover || isConnectedToSelected ? 1 : 0.7}
+                  stroke={strokeRef}
+                  strokeWidth={isHighlighted ? 2 : 1.5}
+                  opacity={dimmed ? 0.3 : isHighlighted ? 1 : 0.7}
                   markerEnd={`url(#arrow-${edge.kind})`}
-                  style={{ transition: "opacity 0.15s" }}
+                  filter={isHighlighted ? "url(#edge-glow)" : undefined}
+                  style={{ transition: "opacity 0.2s" }}
                 />
                 {showEdgeLabels && (
                   <text
@@ -729,7 +1026,7 @@ export function OntologyGraphCanvas({
                     dominantBaseline="middle"
                     fontSize={9}
                     fill="var(--muted-foreground)"
-                    opacity={dimmed ? 0.1 : 0.5}
+                    opacity={dimmed ? 0.25 : 0.5}
                     style={{ pointerEvents: "none" }}
                     fontFamily="var(--font-sans)"
                   >
@@ -744,18 +1041,13 @@ export function OntologyGraphCanvas({
           {culledNodes.map((node) => {
             const pos = getPos(node.id)
             const isSelected = selectedNodeId === node.id
+            const isMultiSelected = multiSelectedIds.has(node.id)
             const isHovered = hoveredId === node.id
             const isConnected = connectedToHovered(node.id)
-            const isHighlighted = isHovered || isConnected || isSelected
+            const isHighlighted = isHovered || isConnected || isSelected || isMultiSelected
 
-            const searchDimmed = searchMatchIds !== null && !searchMatchIds.has(node.id)
-            const dimmed =
-              searchDimmed ||
-              (hoveredId !== null && !isHighlighted) ||
-              (selectedNodeId !== null &&
-                !isSelected &&
-                !connectedToHovered(node.id) &&
-                selectedNodeId !== node.id)
+            // n8n style: no dimming on hover/select — only search dimming
+            const dimmed = searchMatchIds !== null && !searchMatchIds.has(node.id)
 
             const r = nodeRadius(node.connectionCount)
             const fill = getNodeFill(node, labels, isSelected, isHovered, isConnected)
@@ -767,6 +1059,7 @@ export function OntologyGraphCanvas({
                 data-graph-node
                 data-node-id={node.id}
                 style={{ cursor: isDragging ? "grabbing" : "pointer" }}
+                onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                 onMouseEnter={() => {
                   if (!dragNodeIdRef.current) {
                     setHoveredId(node.id)
@@ -803,9 +1096,9 @@ export function OntologyGraphCanvas({
                     cy={pos.y}
                     r={r + 5}
                     fill="none"
-                    stroke="hsl(var(--accent))"
-                    strokeWidth={1.5}
-                    opacity={0.4}
+                    stroke={fill}
+                    strokeWidth={2}
+                    opacity={0.6}
                     key={`sel-${node.id}`}
                   >
                     <animate
@@ -825,15 +1118,29 @@ export function OntologyGraphCanvas({
                   </circle>
                 )}
 
+                {/* Multi-selection ring */}
+                {isMultiSelected && !isSelected && (
+                  <circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={r + 4}
+                    fill="none"
+                    stroke={fill}
+                    strokeWidth={1.5}
+                    strokeDasharray="4 3"
+                    opacity={0.7}
+                  />
+                )}
+
                 {/* Node circle */}
                 <circle
                   cx={pos.x}
                   cy={pos.y}
                   r={r}
                   fill={fill}
-                  stroke="hsl(var(--border))"
-                  strokeWidth={1.5}
-                  opacity={dimmed ? 0.25 : 1}
+                  stroke={isMultiSelected ? fill : "hsl(var(--border))"}
+                  strokeWidth={isMultiSelected ? 2.5 : 1.5}
+                  opacity={dimmed ? 0.65 : 1}
                   style={{ transition: "fill 0.15s, opacity 0.15s" }}
                 />
 
@@ -847,7 +1154,7 @@ export function OntologyGraphCanvas({
                     fontSize={11}
                     fontFamily="var(--font-sans)"
                     fontWeight={isSelected ? 600 : 400}
-                    opacity={dimmed ? 0.3 : isHighlighted ? 1 : 0.75}
+                    opacity={dimmed ? 0.55 : isHighlighted ? 1 : 0.75}
                     style={{
                       transition: "fill 0.15s, opacity 0.15s",
                       pointerEvents: "none",
@@ -859,6 +1166,21 @@ export function OntologyGraphCanvas({
               </g>
             )
           })}
+
+          {/* ── Marquee selection rectangle ───────── */}
+          {selectionRect && (
+            <rect
+              x={Math.min(selectionRect.startX, selectionRect.endX)}
+              y={Math.min(selectionRect.startY, selectionRect.endY)}
+              width={Math.abs(selectionRect.endX - selectionRect.startX)}
+              height={Math.abs(selectionRect.endY - selectionRect.startY)}
+              fill="rgba(59, 130, 246, 0.08)"
+              stroke="rgba(59, 130, 246, 0.5)"
+              strokeWidth={1 / transform.scale}
+              strokeDasharray={`${4 / transform.scale} ${3 / transform.scale}`}
+              style={{ pointerEvents: "none" }}
+            />
+          )}
         </g>
 
         {/* ── Legend (fixed position, bottom-left) ────── */}
@@ -874,13 +1196,32 @@ export function OntologyGraphCanvas({
       {/* ── Controls overlay ────────────────────────── */}
       <div className="absolute bottom-3 right-3 flex items-center gap-0.5 rounded-md border border-border bg-card shadow-sm">
         <button
-          onClick={() => zoomBy(ZOOM_STEP)}
+          tabIndex={-1}
+          onClick={() => adjustSpread("cluster")}
           className="rounded-l-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Cluster nodes"
+        >
+          <Minimize2 className="h-4 w-4" />
+        </button>
+        <button
+          tabIndex={-1}
+          onClick={() => adjustSpread("spread")}
+          className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Spread nodes"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </button>
+        <div className="h-4 w-px bg-border" />
+        <button
+          tabIndex={-1}
+          onClick={() => zoomBy(ZOOM_STEP)}
+          className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Zoom in"
         >
           <ZoomIn className="h-4 w-4" />
         </button>
         <button
+          tabIndex={-1}
           onClick={() => zoomBy(-ZOOM_STEP)}
           className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Zoom out"
@@ -889,6 +1230,7 @@ export function OntologyGraphCanvas({
         </button>
         <div className="h-4 w-px bg-border" />
         <button
+          tabIndex={-1}
           onClick={resetView}
           className="rounded-r-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Reset view"
