@@ -197,7 +197,7 @@ export function TipTapEditor({
       ResizableImage.configure({ inline: false, allowBase64: true }),
       CodeBlockLowlight.configure({ lowlight }),
       Typography,
-      Dropcursor.configure({ color: "#5E6AD2", width: 2, class: "drop-cursor" }),
+      Dropcursor.configure({ color: "var(--accent)", width: 2, class: "drop-cursor" }),
       CharacterCount,
       FontFamily,
       Youtube.configure({ inline: false, allowFullscreen: true, HTMLAttributes: { class: "youtube-embed" } }),

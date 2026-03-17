@@ -8,6 +8,7 @@ export interface ForceConfig {
 export interface LayoutNodeInput {
   id: string
   connectionCount: number
+  labelId: string | null
   prevX?: number
   prevY?: number
 }

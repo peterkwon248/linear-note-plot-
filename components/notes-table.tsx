@@ -104,7 +104,7 @@ function InlineSelect<T extends string>({
         <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-100">
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-150">
           {options.map((opt) => {
             const active = opt.value === value
             return (
@@ -549,7 +549,7 @@ export function NotesTable({
     <main ref={tableContainerRef} className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
-        <h1 className="text-base font-semibold text-foreground">{title ?? "Notes"}</h1>
+        <h1 className="text-[15px] font-semibold text-foreground">{title ?? "Notes"}</h1>
         {!hideCreateButton && (
           <button
             className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
@@ -1263,7 +1263,7 @@ function NoteRowInner({
         {note.status === "capture" && (
           <>
             <ContextMenuItem onClick={onPromote} className="text-[14px]">
-              <ArrowUpRight className="h-4 w-4 mr-2 text-[#45d483]" />
+              <ArrowUpRight className="h-4 w-4 mr-2 text-chart-5" />
               Promote to Permanent
               <span className="ml-auto text-[11px] text-muted-foreground">P</span>
             </ContextMenuItem>

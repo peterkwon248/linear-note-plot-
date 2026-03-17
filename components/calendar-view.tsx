@@ -85,7 +85,7 @@ function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillPr
         onClick()
       }}
       className={cn(
-        "group flex w-full items-center gap-1.5 rounded-[5px] px-2 py-[3px] text-left transition-all duration-100",
+        "group flex w-full items-center gap-1.5 rounded-[5px] px-2 py-[3px] text-left transition-all duration-150",
         "hover:bg-secondary/80",
         isActive
           ? "bg-accent/15 ring-1 ring-accent/40 hover:bg-accent/20"
@@ -163,7 +163,7 @@ function DayCell({
   return (
     <div
       className={cn(
-        "group/cell relative flex min-h-[120px] flex-col gap-0.5 border-b border-r border-border p-1.5 transition-colors duration-100 cursor-pointer",
+        "group/cell relative flex min-h-[120px] flex-col gap-0.5 border-b border-r border-border p-1.5 transition-colors duration-150 cursor-pointer",
         isCurrentMonth ? "bg-background" : "bg-secondary/10",
         isWeekend && isCurrentMonth && "bg-secondary/5",
         isSelected && "ring-inset ring-1 ring-accent/50",
@@ -199,7 +199,7 @@ function DayCell({
               e.stopPropagation()
               onCreateNote(day)
             }}
-            className="flex h-4 w-4 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-all duration-100 hover:bg-secondary hover:text-foreground group-hover/cell:opacity-100"
+            className="flex h-4 w-4 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-all duration-150 hover:bg-secondary hover:text-foreground group-hover/cell:opacity-100"
           >
             <Plus className="h-2.5 w-2.5" />
           </button>
@@ -356,7 +356,7 @@ function DayDashboard({
                   key={note.id}
                   onClick={() => isActive ? onEditNote(note.id) : onNoteClick(note.id)}
                   className={cn(
-                    "group w-full rounded-lg border border-border/40 px-3 py-2.5 text-left transition-all duration-100",
+                    "group w-full rounded-lg border border-border/40 px-3 py-2.5 text-left transition-all duration-150",
                     "hover:border-border/70 hover:bg-secondary/50",
                     isActive
                       ? "border-accent/30 bg-accent/10 ring-1 ring-accent/25 hover:bg-accent/15"
@@ -684,7 +684,7 @@ export function CalendarView({
       <div className="min-h-0 flex-1 overflow-y-auto">
         {flatNotes.length === 0 && (
           /* Empty state overlay — subtle, doesn't disrupt the calendar grid */
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2 opacity-0 transition-opacity duration-300 [.has-no-notes_&]:pointer-events-auto [.has-no-notes_&]:opacity-100">
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2 opacity-0 transition-opacity duration-200 [.has-no-notes_&]:pointer-events-auto [.has-no-notes_&]:opacity-100">
             <FileText className="h-8 w-8 text-muted-foreground/30" />
             <p className="text-[14px] text-muted-foreground/50">No notes this month</p>
           </div>

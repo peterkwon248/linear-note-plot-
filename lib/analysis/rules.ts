@@ -5,8 +5,8 @@ const DAY_MS = 24 * 60 * 60 * 1000
 export const PRESET_RULES: AnalysisRule[] = [
   {
     id: "inbox-neglect",
-    label: "inbox에 30일 이상 방치된 노트",
-    description: "30일 넘게 inbox에 머물러 있는 노트",
+    label: "Inbox neglected 30+ days",
+    description: "Notes sitting in inbox for over 30 days",
     severity: "critical",
     match: (ctx) =>
       ctx.notes
@@ -20,8 +20,8 @@ export const PRESET_RULES: AnalysisRule[] = [
 
   {
     id: "overdue-srs",
-    label: "SRS 복습 7일 초과 노트",
-    description: "복습 기한이 7일 이상 지난 SRS 노트",
+    label: "SRS overdue 7+ days",
+    description: "SRS notes past due date by more than 7 days",
     severity: "critical",
     match: (ctx) =>
       ctx.notes
@@ -35,8 +35,8 @@ export const PRESET_RULES: AnalysisRule[] = [
 
   {
     id: "stale-notes",
-    label: "7일 이상 안 열린 노트",
-    description: "7일 이상 편집되지 않은 capture/permanent 노트",
+    label: "Stale notes (7+ days)",
+    description: "Capture/permanent notes not touched in over 7 days",
     severity: "warning",
     match: (ctx) =>
       ctx.notes
@@ -52,8 +52,8 @@ export const PRESET_RULES: AnalysisRule[] = [
 
   {
     id: "orphan-notes",
-    label: "링크 없는 고아 노트",
-    description: "다른 노트에서 링크되지 않고 나가는 링크도 없는 permanent 노트",
+    label: "Orphan notes",
+    description: "Permanent notes with no inbound or outbound links",
     severity: "warning",
     match: (ctx) =>
       ctx.notes
@@ -68,8 +68,8 @@ export const PRESET_RULES: AnalysisRule[] = [
 
   {
     id: "high-lapse-srs",
-    label: "SRS 실패 횟수 높은 노트",
-    description: "Again(실패) 3회 이상인 SRS 노트",
+    label: "High-lapse SRS notes",
+    description: "SRS notes with 3+ Again (fail) ratings",
     severity: "warning",
     match: (ctx) =>
       ctx.notes
@@ -82,8 +82,8 @@ export const PRESET_RULES: AnalysisRule[] = [
 
   {
     id: "stuck-capture",
-    label: "승격되지 않은 오래된 capture 노트",
-    description: "14일 이상 capture 단계에 머물러 있는 노트",
+    label: "Stuck in capture",
+    description: "Notes in capture stage for over 14 days without promotion",
     severity: "info",
     match: (ctx) =>
       ctx.notes
@@ -98,8 +98,8 @@ export const PRESET_RULES: AnalysisRule[] = [
 
   {
     id: "empty-notes",
-    label: "내용 없는 빈 노트",
-    description: "제목만 있고 본문이 비어있는 노트",
+    label: "Empty notes",
+    description: "Notes with title only — no body content",
     severity: "info",
     match: (ctx) =>
       ctx.notes

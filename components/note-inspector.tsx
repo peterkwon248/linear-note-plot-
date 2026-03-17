@@ -49,6 +49,7 @@ import { Signal, CircleDot, Network } from "lucide-react"
 import { toast } from "sonner"
 import { ActivityTimeline } from "@/components/activity/activity-timeline"
 import { ThreadPanel } from "@/components/editor/thread-panel"
+import { ReflectionPanel } from "@/components/editor/reflection-panel"
 import { RelationPicker } from "@/components/inspector/relation-picker"
 import type { Relation, RelationType, RelationSuggestion } from "@/lib/types"
 import { RELATION_TYPE_CONFIG, RELATION_TYPES, getRelationLabel } from "@/lib/relation-helpers"
@@ -339,7 +340,7 @@ export function NoteInspector() {
         {/* Status Badges */}
         <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
           {note.pinned && (
-            <span className="flex items-center gap-1 rounded-md bg-[#f2994a]/10 px-2 py-0.5 text-[12px] font-medium text-[#f2994a]">
+            <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-[12px] font-medium text-chart-3">
               <Pin className="h-3.5 w-3.5" />
               Pinned
             </span>
@@ -355,16 +356,16 @@ export function NoteInspector() {
             note.status === "inbox"
               ? "bg-accent/10 text-accent"
               : note.status === "capture"
-              ? "bg-[#26b5ce]/10 text-[#26b5ce]"
+              ? "bg-chart-2/10 text-chart-2"
               : note.status === "permanent"
-              ? "bg-[#45d483]/10 text-[#45d483]"
+              ? "bg-chart-5/10 text-chart-5"
               : "bg-accent/10 text-accent"
           }`}>
             {note.status === "permanent" && <Shield className="h-3.5 w-3.5" />}
             {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Inbox"}
           </span>
           {note.status === "capture" && isReadyToPromote(note, backlinks) && (
-            <span className="flex items-center gap-1 rounded-md bg-[#45d483]/10 px-2 py-0.5 text-[12px] font-medium text-[#45d483]">
+            <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-[12px] font-medium text-chart-5">
               <Sparkles className="h-3.5 w-3.5" />
               Ready to promote
             </span>
@@ -424,7 +425,7 @@ export function NoteInspector() {
                 onClick={() => { promoteToPermanent(note.id); toast("Promoted to Permanent") }}
                 className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium transition-colors ${
                   isReadyToPromote(note, backlinks)
-                    ? "bg-[#45d483] text-[#0a0a0a] hover:bg-[#45d483]/80"
+                    ? "bg-chart-5 text-primary-foreground hover:bg-chart-5/80"
                     : "border border-border bg-card text-foreground hover:bg-secondary"
                 }`}
               >
@@ -760,7 +761,7 @@ export function NoteInspector() {
                       </span>
                       <button
                         onClick={() => addWikiLink(note!.id, m.title)}
-                        className="shrink-0 text-[11px] text-[#5e6ad2] opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                        className="shrink-0 text-[11px] text-accent opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
                       >
                         Link
                       </button>
@@ -886,6 +887,11 @@ export function NoteInspector() {
 
         {/* Thread */}
         <ThreadPanel noteId={note.id} />
+
+        <div className="mx-4 border-b border-border" />
+
+        {/* Reflections */}
+        <ReflectionPanel noteId={note.id} />
 
         <div className="mx-4 border-b border-border" />
 

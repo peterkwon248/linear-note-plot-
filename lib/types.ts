@@ -160,7 +160,6 @@ export interface NoteTemplate {
 export type ActiveView =
   | { type: "inbox" }
   | { type: "all" }
-  | { type: "views" }
   | { type: "folder"; folderId: string }
   | { type: "archive" }
   | { type: "templates" }
@@ -168,7 +167,6 @@ export type ActiveView =
   | { type: "pinned" }
   | { type: "tag"; tagId: string }
   | { type: "settings" }
-  | { type: "map"; mapId: string }
 
 /** Route-based note filter, used by each page route */
 export type NoteFilter =
@@ -182,7 +180,6 @@ export type NoteFilter =
   | { type: "status-inbox" }
   | { type: "status-capture" }
   | { type: "status-permanent" }
-  | { type: "map"; mapId: string }
 
 /* ── Phase 2: Event Log / Timeline ──────────────────── */
 
@@ -191,12 +188,12 @@ export type NoteEventType =
   | "triage_keep" | "triage_snooze" | "triage_trash"
   | "link_added" | "link_removed"
   | "thread_started" | "thread_step_added" | "thread_ended" | "thread_deleted"
-  | "map_added" | "map_removed"
   | "label_changed"
   | "srs_reviewed"
   | "autopilot_applied"
   | "relation_added" | "relation_removed" | "relation_type_changed"
   | "alias_changed" | "wiki_converted" | "attachment_added" | "attachment_removed"
+  | "reflection_added"
 
 export interface NoteEvent {
   id: string
@@ -223,30 +220,13 @@ export interface Thread {
   status: "active" | "done"
 }
 
-/* ── Saved Views ─────────────────────────────────── */
+/* ── Phase 2: Reflection ───────────────────────────── */
 
-export interface SavedView {
+export interface Reflection {
   id: string
-  name: string
-  filters: { field: string; operator: string; value: string }[]
-  sortField?: string
-  sortDirection?: "asc" | "desc"
-  groupBy?: string
-  viewMode?: "list" | "table" | "board" | "insights"
+  noteId: string
+  text: string
   createdAt: string
-  updatedAt: string
-}
-
-/* ── Phase 3: Knowledge Maps ───────────────────────── */
-
-export interface KnowledgeMap {
-  id: string
-  title: string
-  description: string
-  noteIds: string[]
-  color: string
-  createdAt: string
-  updatedAt: string
 }
 
 /* ── Relations ─────────────────────────────────────── */

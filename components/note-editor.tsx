@@ -38,6 +38,7 @@ import type { Editor } from "@tiptap/react"
 import { LayoutModeSwitcher } from "@/components/editor/layout-mode-switcher"
 import { WikiTOC } from "@/components/editor/wiki-toc"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
+import { WikiCategories } from "@/components/editor/wiki-categories"
 
 interface NoteEditorProps {
   noteId?: string
@@ -62,6 +63,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
   const convertToWiki = usePlotStore((s) => s.convertToWiki)
   const revertFromWiki = usePlotStore((s) => s.revertFromWiki)
+  const allTags = usePlotStore((s) => s.tags)
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
 
@@ -185,7 +187,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
                 onClick={() => togglePin(note.id)}
                 className={cn(
                   "rounded-md p-1.5 transition-colors hover:bg-secondary",
-                  note.pinned ? "text-[#f2994a]" : "text-muted-foreground"
+                  note.pinned ? "text-chart-3" : "text-muted-foreground"
                 )}
               >
                 <Pin className="h-4 w-4" />
@@ -260,7 +262,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
                 onClick={() => setIsReadMode((prev) => !prev)}
                 className={cn(
                   "rounded-md p-1.5 transition-colors hover:bg-secondary",
-                  isReadMode ? "text-[#5e6ad2]" : "text-muted-foreground"
+                  isReadMode ? "text-accent" : "text-muted-foreground"
                 )}
               >
                 {isReadMode ? <BookOpen className="h-4 w-4" /> : <PenLine className="h-4 w-4" />}
@@ -322,33 +324,58 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       )}
 
       {/* Content Editor */}
-      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
-        {note.isWiki && isReadMode && (
-          <div className="flex gap-4 px-6 pt-4">
-            <WikiTOC content={note.content} className="w-full" />
-            <WikiInfobox
-              noteId={note.id}
-              entries={note.wikiInfobox ?? []}
-              editable={false}
-              className="shrink-0 w-[220px]"
-            />
+      {note.isWiki && isReadMode ? (
+        /* Wiki read mode: sidebar TOC + constrained typography */
+        <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
+          {/* Left: Sticky TOC sidebar */}
+          <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border p-4">
+            <div className="sticky top-0">
+              <WikiTOC content={note.content} className="w-full" />
+            </div>
+          </aside>
+
+          {/* Right: Content area */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="wiki-read-content px-8 py-4">
+              {/* Infobox float right */}
+              {(note.wikiInfobox ?? []).length > 0 && (
+                <div className="float-right ml-6 mb-4">
+                  <WikiInfobox
+                    noteId={note.id}
+                    entries={note.wikiInfobox ?? []}
+                    editable={false}
+                    className="w-[220px]"
+                  />
+                </div>
+              )}
+              <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={false} />
+              {/* Wiki categories (분류) */}
+              {note.tags.length > 0 && (
+                <WikiCategories noteTagIds={note.tags} allTags={allTags} />
+              )}
+              <BacklinksFooter noteId={note.id} />
+            </div>
           </div>
-        )}
-        {note.isWiki && !isReadMode && (
-          <div className="px-6 pt-4">
-            <WikiInfobox
-              noteId={note.id}
-              entries={note.wikiInfobox ?? []}
-              editable={true}
-              className="max-w-[400px]"
-            />
-          </div>
-        )}
-        <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
-          <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
-          <BacklinksFooter noteId={note.id} />
         </div>
-      </div>
+      ) : (
+        /* Normal mode / wiki edit mode */
+        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
+          {note.isWiki && !isReadMode && (
+            <div className="px-6 pt-4">
+              <WikiInfobox
+                noteId={note.id}
+                entries={note.wikiInfobox ?? []}
+                editable={true}
+                className="max-w-[400px]"
+              />
+            </div>
+          )}
+          <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
+            <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
+            <BacklinksFooter noteId={note.id} />
+          </div>
+        </div>
+      )}
       </div>
 
       {/* FixedToolbar — outside SURFACE, full width (hidden in read mode) */}

@@ -239,7 +239,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                       justifyContent: "center",
                       cursor: "pointer",
                       border: isColorActive
-                        ? "2px solid #5E6AD2"
+                        ? "2px solid var(--accent)"
                         : "1px solid var(--border)",
                       backgroundColor: "transparent",
                       transition: "all 0.1s",
@@ -266,7 +266,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                             left: "-2px",
                             right: "-2px",
                             height: "1px",
-                            backgroundColor: "#EF4444",
+                            backgroundColor: "var(--destructive)",
                             transform: "rotate(-45deg)",
                           }}
                         />

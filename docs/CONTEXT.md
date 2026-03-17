@@ -13,8 +13,8 @@ Plot = 노트 + 개인 위키 + 지식 관계망
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (16): notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology, relations
-- Store version: 38
+- Slices (17): notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology, relations, reflections
+- Store version: 39
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -47,11 +47,12 @@ inbox → capture → permanent → WIKI (planned)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-16. NoteList를 workspace 트리로 통합
-17. Dead code cleanup — Activity view, orphan components/routes, legacy editor
 18. Relations 완성 — relation_type_changed 이벤트 로깅, 제안 수락 시 타입 선택 UX
 19. Wiki 기초 UI — Convert/Revert, WikiTOC, WikiInfobox, isWiki 필터, aliases, 위키 배지
 20. Templates/Tags/Labels 헤더 스타일 통일
+21. Reflections — 시간축 회고 시스템 (append-only, 타임라인 UI, reflection_added 이벤트)
+22. Insights 뷰 고도화 — Activity 대시보드(Today/Week/Month, 7일 차트, Most Opened, Lifecycle) + Health 이슈
+23. Ontology View 고도화 — 미니맵, 위키 노드 배지, 라벨 기반 클러스터링(forceX/Y + convex hull)
 
 ## Three Axes — Core Design Philosophy
 
@@ -63,17 +64,17 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## Implementation Order (최신, 2026-03-16 업데이트)
 
-### Tier 1: Wiki 고도화 (Phase 4-C 완성)
-1. **Red/Blue 링크 색상 분기** — WikilinkDecoration에서 존재하면 파랑, 없으면 빨강
-2. **빨간 링크 클릭 → 위키 자동 생성** — 없는 문서 클릭 시 isWiki=true 노트 생성
-3. **사이드바 TOC** — 읽기 모드에서 TOC를 좌측 sticky sidebar로
-4. **위키 읽기 타이포그래피** — 본문 폭 제한, 줄간격, 제목 스타일 CSS
-5. **하단 분류 표시** — 기존 tags를 위키 하단에 "분류: A | B | C"로 표시
+### Tier 1: Wiki 고도화 (Phase 4-C 완성) ✅ DONE
+1. ~~Red/Blue 링크 색상 분기~~ ✅ (WikilinkDecoration.ts + EditorStyles.css)
+2. ~~빨간 링크 클릭 → 위키 자동 생성~~ ✅ (createWikiStub on dangling click)
+3. ~~사이드바 TOC~~ ✅ (wiki-toc.tsx, 좌측 w-[200px] sticky sidebar)
+4. ~~위키 읽기 타이포그래피~~ ✅ (wiki-read-content CSS: max-width 720px, line-height 1.85, heading border-bottom)
+5. ~~하단 분류 표시~~ ✅ (WikiCategories 컴포넌트, "분류: A | B | C" 렌더링)
 
-### Tier 2: 기존 기능 마무리
-6. **Reflections** (시간축, 쌓임만 가능한 회고)
-7. **Insights 뷰 고도화** (Activity 대체, 행동 분석 대시보드)
-8. **Ontology View 고도화** (클러스터링, 미니맵, 인터랙션 개선)
+### Tier 2: 기존 기능 마무리 ✅ DONE
+6. ~~Reflections~~ ✅
+7. ~~Insights 뷰 고도화~~ ✅
+8. ~~Ontology View 고도화~~ ✅
 
 ### Tier 3: 디자인 폴리시
 9. **디자인 토큰 통일** (typography/spacing/transitions)

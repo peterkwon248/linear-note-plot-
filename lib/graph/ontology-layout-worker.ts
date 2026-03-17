@@ -5,6 +5,8 @@ import {
   forceManyBody,
   forceCenter,
   forceCollide,
+  forceX,
+  forceY,
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from "d3-force"
@@ -12,6 +14,7 @@ import {
 interface WorkerNode extends SimulationNodeDatum {
   id: string
   connectionCount: number
+  labelId: string | null
 }
 
 interface WorkerEdge {
@@ -28,7 +31,7 @@ interface ForceConfig {
 
 type InMessage = {
   type: "LAYOUT"
-  nodes: Array<{ id: string; connectionCount: number; prevX?: number; prevY?: number }>
+  nodes: Array<{ id: string; connectionCount: number; labelId: string | null; prevX?: number; prevY?: number }>
   edges: Array<{ source: string; target: string }>
   config: ForceConfig
 }
@@ -45,6 +48,7 @@ self.onmessage = (e: MessageEvent<InMessage>) => {
       const simNodes: WorkerNode[] = msg.nodes.map((n) => ({
         id: n.id,
         connectionCount: n.connectionCount,
+        labelId: n.labelId,
         x: n.prevX ?? undefined,
         y: n.prevY ?? undefined,
       }))
@@ -63,6 +67,21 @@ self.onmessage = (e: MessageEvent<InMessage>) => {
 
       const { chargeStrength, linkDistance, collisionRadius, ticks } = msg.config
 
+      // Compute cluster targets based on labelId
+      // Assign each unique label a position on a circle
+      const labelIds = [...new Set(simNodes.map((n) => n.labelId).filter(Boolean))] as string[]
+      const clusterTargets = new Map<string, { x: number; y: number }>()
+      const clusterRadius = Math.max(150, simNodes.length * 3)
+      labelIds.forEach((lid, i) => {
+        const angle = (2 * Math.PI * i) / Math.max(labelIds.length, 1)
+        clusterTargets.set(lid, {
+          x: Math.cos(angle) * clusterRadius,
+          y: Math.sin(angle) * clusterRadius,
+        })
+      })
+
+      const hasLabels = labelIds.length >= 2
+
       const sim = forceSimulation<WorkerNode>(simNodes)
         .force(
           "link",
@@ -71,7 +90,21 @@ self.onmessage = (e: MessageEvent<InMessage>) => {
         .force("charge", forceManyBody().strength(chargeStrength))
         .force("center", forceCenter(0, 0))
         .force("collide", forceCollide(collisionRadius))
-        .stop()
+
+      // Add clustering forces only when multiple labels exist
+      if (hasLabels) {
+        sim
+          .force("clusterX", forceX<WorkerNode>((d) => {
+            const target = d.labelId ? clusterTargets.get(d.labelId) : null
+            return target?.x ?? 0
+          }).strength(0.15))
+          .force("clusterY", forceY<WorkerNode>((d) => {
+            const target = d.labelId ? clusterTargets.get(d.labelId) : null
+            return target?.y ?? 0
+          }).strength(0.15))
+      }
+
+      sim.stop()
 
       // Run to convergence
       for (let i = 0; i < ticks; i++) sim.tick()

@@ -101,7 +101,7 @@ function InlineSelect<T extends string>({
         <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-100">
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-150">
           {options.map((opt) => {
             const active = opt.value === value
             return (
@@ -395,7 +395,7 @@ function BoardCardInner({
         {note.status === "capture" && (
           <>
             <ContextMenuItem onClick={onPromote} className="text-[14px]">
-              <ArrowUpRight className="h-4 w-4 mr-2 text-[#45d483]" /> Promote to Permanent
+              <ArrowUpRight className="h-4 w-4 mr-2 text-chart-5" /> Promote to Permanent
             </ContextMenuItem>
             <ContextMenuItem onClick={onMoveBack} className="text-[14px]">
               <InboxIcon className="h-4 w-4 mr-2 text-muted-foreground" /> Back to Inbox

@@ -21,6 +21,7 @@ import {
   Bookmark,
   Network,
   LayoutTemplate,
+  Lightbulb,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
@@ -65,18 +66,18 @@ function NavLink({
 
   const className = `nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
     active
-      ? "bg-sidebar-hover text-sidebar-foreground"
-      : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
+      ? "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.93)]"
+      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
   }`
 
   const content = (
     <>
-      <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "opacity-100" : "text-sidebar-muted opacity-60"}`}>
+      <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-[rgba(255,255,255,0.93)]" : "text-sidebar-muted group-hover:text-[rgba(255,255,255,0.65)]"}`}>
         {icon}
       </span>
       <span className="truncate text-left flex-1">{label}</span>
       {count !== undefined && (
-        <span className="text-[12px] text-sidebar-muted tabular-nums">
+        <span className="text-[12px] text-[rgba(255,255,255,0.35)] tabular-nums">
           {count}
         </span>
       )}
@@ -396,28 +397,28 @@ export function LinearSidebar() {
         <button
           onClick={() => goBack()}
           disabled={navigationIndex <= 0 && !selectedNoteId}
-          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-foreground hover:text-sidebar-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
+          className="flex items-center justify-center h-8 w-8 rounded hover:bg-sidebar-hover text-sidebar-foreground hover:text-sidebar-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
           aria-label="Go back"
         >
-          <ChevronLeft className="h-4.5 w-4.5" strokeWidth={1.6} />
+          <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
         </button>
         <button
           onClick={() => goForward()}
           disabled={navigationIndex >= navigationHistory.length - 1}
-          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-foreground hover:text-sidebar-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
+          className="flex items-center justify-center h-8 w-8 rounded hover:bg-sidebar-hover text-sidebar-foreground hover:text-sidebar-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
           aria-label="Go forward"
         >
-          <ChevronRight className="h-4.5 w-4.5" strokeWidth={1.6} />
+          <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
         </button>
         <div className="relative" ref={recentlyViewedRef}>
           <button
             onClick={() => setRecentlyViewedOpen(!recentlyViewedOpen)}
-            className={`flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover transition-colors ${
+            className={`flex items-center justify-center h-8 w-8 rounded hover:bg-sidebar-hover transition-colors ${
               recentlyViewedOpen ? "text-sidebar-foreground bg-sidebar-hover" : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
             }`}
             aria-label="Recently viewed"
           >
-            <Clock className="h-4 w-4" strokeWidth={1.6} />
+            <Clock className="h-5 w-5" strokeWidth={1.5} />
           </button>
           {recentlyViewedOpen && (
             <div className="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border bg-popover shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
@@ -439,7 +440,7 @@ export function LinearSidebar() {
                       }}
                       className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-secondary/50"
                     >
-                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.4} />
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
                       <span className="truncate text-[13px] text-foreground">{item.title}</span>
                     </button>
                   ))}
@@ -457,16 +458,16 @@ export function LinearSidebar() {
           className="flex items-center gap-2 h-7 px-2.5 rounded-md hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors text-[13px]"
           aria-label="Search"
         >
-          <Search className="h-4 w-4" strokeWidth={1.4} />
-          <span>Search</span>
+          <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
+          <span className="text-[14px]">Search</span>
         </button>
         <div className="flex-1" />
         <button
           onClick={handleCreateNote}
-          className="flex items-center justify-center h-7 w-7 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          className="flex items-center justify-center h-8 w-8 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
           aria-label="New note"
         >
-          <SquarePen className="h-4.5 w-4.5" strokeWidth={1.4} />
+          <SquarePen className="h-5 w-5" strokeWidth={1.5} />
         </button>
       </div>
 
@@ -476,45 +477,52 @@ export function LinearSidebar() {
         <div className="space-y-px">
           <NavLink
             href="/inbox"
-            icon={<Inbox className="h-5 w-5" strokeWidth={1.4} />}
+            icon={<Inbox className="h-5 w-5" strokeWidth={1.5} />}
             label="Inbox"
             count={inboxCount > 0 ? inboxCount : undefined}
             active={isActive("/inbox")}
           />
           <NavLink
             href="/notes"
-            icon={<FileText className="h-5 w-5" strokeWidth={1.4} />}
+            icon={<FileText className="h-5 w-5" strokeWidth={1.5} />}
             label="Notes"
             count={allNotesCount > 0 ? allNotesCount : undefined}
             active={isActive("/notes")}
           />
           <NavLink
             href="/tags"
-            icon={<Tag className="h-5 w-5" strokeWidth={1.4} />}
+            icon={<Tag className="h-5 w-5" strokeWidth={1.5} />}
             label="Tags"
             active={isActive("/tags")}
             dragContent={{ type: "tags" }}
           />
           <NavLink
             href="/labels"
-            icon={<Bookmark className="h-5 w-5" strokeWidth={1.4} />}
+            icon={<Bookmark className="h-5 w-5" strokeWidth={1.5} />}
             label="Labels"
             active={isActive("/labels")}
             dragContent={{ type: "labels" }}
           />
           <NavLink
             href="/templates"
-            icon={<LayoutTemplate className="h-5 w-5" strokeWidth={1.4} />}
+            icon={<LayoutTemplate className="h-5 w-5" strokeWidth={1.5} />}
             label="Templates"
             active={isActive("/templates")}
             dragContent={{ type: "templates" }}
           />
           <NavLink
             href="/ontology"
-            icon={<Network className="h-5 w-5" strokeWidth={1.4} />}
+            icon={<Network className="h-5 w-5" strokeWidth={1.5} />}
             label="Ontology"
             active={isActive("/ontology")}
             dragContent={{ type: "ontology" }}
+          />
+          <NavLink
+            href="/insights"
+            icon={<Lightbulb className="h-5 w-5" strokeWidth={1.5} />}
+            label="Insights"
+            active={isActive("/insights")}
+            dragContent={{ type: "insights" }}
           />
         </div>
 
@@ -562,11 +570,11 @@ export function LinearSidebar() {
                     }}
                     className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
                       active
-                        ? "bg-sidebar-hover text-sidebar-foreground"
-                        : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
+                        ? "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.93)]"
+                        : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
                     }`}
                   >
-                    <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "" : "text-sidebar-muted"}`}>
+                    <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-[rgba(255,255,255,0.93)]" : "text-sidebar-muted group-hover:text-[rgba(255,255,255,0.65)]"}`}>
                       <FolderOpen className="h-5 w-5" />
                     </span>
                     {isRenaming ? (
@@ -584,7 +592,7 @@ export function LinearSidebar() {
                       <span className="truncate text-left flex-1">{folder.name}</span>
                     )}
                     {!isRenaming && count > 0 && (
-                      <span className="text-[12px] text-sidebar-muted tabular-nums">{count}</span>
+                      <span className="text-[12px] text-[rgba(255,255,255,0.35)] tabular-nums">{count}</span>
                     )}
                   </button>
                 </ContextMenuTrigger>
@@ -642,7 +650,7 @@ export function LinearSidebar() {
                 draggable
                 onDragStart={(e) => setNoteDragData(e, item.id)}
                 onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
+                className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
                   <StatusIcon status={item.status} />
@@ -662,7 +670,7 @@ export function LinearSidebar() {
                 draggable
                 onDragStart={(e) => setNoteDragData(e, item.id)}
                 onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground"
+                className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
                   <StatusIcon status={item.status} />
@@ -678,14 +686,14 @@ export function LinearSidebar() {
       <div className="border-t border-sidebar-border px-2.5 py-2 space-y-px">
         <NavLink
           href="/trash"
-          icon={<Trash2 className="h-5 w-5" strokeWidth={1.4} />}
+          icon={<Trash2 className="h-5 w-5" strokeWidth={1.5} />}
           label="Trash"
           count={trashCount > 0 ? trashCount : undefined}
           active={isActive("/trash")}
         />
         <NavLink
           href="/settings"
-          icon={<Settings className="h-5 w-5" strokeWidth={1.4} />}
+          icon={<Settings className="h-5 w-5" strokeWidth={1.5} />}
           label="Settings"
           active={isActive("/settings")}
         />

@@ -7,7 +7,7 @@ import { OntologyGraphCanvas, type OntologyFilters } from "@/components/ontology
 import { OntologyFilterBar } from "@/components/ontology/ontology-filter-bar"
 import { OntologyDetailPanel } from "@/components/ontology/ontology-detail-panel"
 import { ontologyLayoutClient } from "@/lib/graph/ontology-layout-client"
-import type { Note } from "@/lib/types"
+import type { Note, RelationType } from "@/lib/types"
 
 const DEFAULT_FILTERS: OntologyFilters = {
   tagIds: [],
@@ -65,6 +65,7 @@ export function OntologyView() {
     const layoutNodes = graphData.nodeData.map((n) => ({
       id: n.id,
       connectionCount: n.connectionCount,
+      labelId: n.labelId,
       prevX: prevPos.get(n.id)?.x,
       prevY: prevPos.get(n.id)?.y,
     }))
@@ -115,6 +116,19 @@ export function OntologyView() {
     [updateOntologyPositions],
   )
 
+  // Count edges per relation type
+  const relationTypeCounts = useMemo(() => {
+    const counts = new Map<RelationType, number>()
+    if (!graph) return counts
+    for (const edge of graph.edges) {
+      if (edge.kind !== "wikilink") {
+        const t = edge.kind as RelationType
+        counts.set(t, (counts.get(t) ?? 0) + 1)
+      }
+    }
+    return counts
+  }, [graph])
+
   // Search match IDs
   const searchMatchIds = useMemo(() => {
     if (!searchQuery.trim() || !graph) return null
@@ -131,7 +145,7 @@ export function OntologyView() {
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-2">
-        <h1 className="text-lg font-semibold text-foreground">Ontology</h1>
+        <h1 className="text-[15px] font-semibold text-foreground">Ontology</h1>
       </header>
 
       <OntologyFilterBar
@@ -142,6 +156,7 @@ export function OntologyView() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         searchMatchCount={searchMatchIds ? searchMatchIds.size : null}
+        relationTypeCounts={relationTypeCounts}
       />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {graph ? (

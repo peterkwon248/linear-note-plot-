@@ -36,7 +36,6 @@ import {
   Focus,
   Search,
   Terminal,
-  Network,
   Layers,
   Shield,
   Settings,
@@ -79,7 +78,6 @@ export function SearchDialog() {
   const commandPaletteMode = usePlotStore((s) => s.commandPaletteMode)
   const setCommandPaletteMode = usePlotStore((s) => s.setCommandPaletteMode)
   const threads = usePlotStore((s) => s.threads)
-  const knowledgeMaps = usePlotStore((s) => s.knowledgeMaps)
 
   // Actions
   const createNote = usePlotStore((s) => s.createNote)
@@ -95,7 +93,6 @@ export function SearchDialog() {
   const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
-  const addNoteToMap = usePlotStore((s) => s.addNoteToMap)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
 
   const router = useRouter()
@@ -647,29 +644,6 @@ export function SearchDialog() {
                       <span>Merge with...</span>
                     </CommandItem>
 
-                    {/* Add to map */}
-                    {knowledgeMaps.length > 0 && (
-                      <>
-                        {knowledgeMaps.map((map) => {
-                          const isInMap = map.noteIds.includes(selectedNoteId!)
-                          if (isInMap) return null
-                          return (
-                            <CommandItem
-                              key={map.id}
-                              value={`add-to-map-${map.id}-${map.title}`}
-                              onSelect={() => {
-                                addNoteToMap(map.id, selectedNoteId!)
-                                toast.success(`Added to "${map.title}"`)
-                                closePalette()
-                              }}
-                            >
-                              <Network className="h-4 w-4" />
-                              <span>Add to map: {map.title}</span>
-                            </CommandItem>
-                          )
-                        })}
-                      </>
-                    )}
                   </CommandGroup>
 
                   {/* Stage-Specific Commands */}

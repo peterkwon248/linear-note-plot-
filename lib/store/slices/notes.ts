@@ -108,11 +108,6 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           noteEvents: state.noteEvents.filter((e: any) => e.noteId !== id),
           srsStateByNoteId: restSRS,
           threads: state.threads.filter((c: any) => c.noteId !== id),
-          knowledgeMaps: state.knowledgeMaps.map((m: any) =>
-            m.noteIds.includes(id)
-              ? { ...m, noteIds: m.noteIds.filter((nId: string) => nId !== id) }
-              : m
-          ),
           relations: state.relations.filter(
             (r: any) => r.sourceNoteId !== id && r.targetNoteId !== id
           ),
@@ -219,15 +214,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           }
           return n
         }),
-        // ── 7. Knowledge maps: replace source → target ──
-        knowledgeMaps: s.knowledgeMaps.map((m: any) => {
-          const hasSource = m.noteIds.some((nId: string) => sourceIdSet.has(nId))
-          if (!hasSource) return m
-          const filtered = m.noteIds.filter((nId: string) => !sourceIdSet.has(nId))
-          if (!filtered.includes(targetId)) filtered.push(targetId)
-          return { ...m, noteIds: filtered }
-        }),
-        // ── 7b. Relations: remap source references → target ──
+        // ── 7. Relations: remap source references → target ──
         relations: s.relations.map((r: any) => {
           if (sourceIdSet.has(r.sourceNoteId)) return { ...r, sourceNoteId: targetId }
           if (sourceIdSet.has(r.targetNoteId)) return { ...r, targetNoteId: targetId }

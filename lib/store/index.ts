@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, KnowledgeMap, SavedView, AutopilotLogEntry, Relation } from "../types"
+import type { NoteEvent, AutopilotLogEntry, Relation, Reflection } from "../types"
 import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
@@ -15,7 +15,6 @@ import { createLabelsSlice } from "./slices/labels"
 import { createThreadSlice } from "./slices/thinking"
 import { createMapsSlice } from "./slices/maps"
 import { createUISlice } from "./slices/ui"
-import { createViewsSlice } from "./slices/views"
 import { createAutopilotSlice } from "./slices/autopilot"
 import { createTemplatesSlice } from "./slices/templates"
 import { createRelationsSlice } from "./slices/relations"
@@ -23,6 +22,7 @@ import { createEditorSlice } from "./slices/editor"
 import { createWorkspaceSlice } from "./slices/workspace"
 import { createAttachmentsSlice } from "./slices/attachments"
 import { createOntologySlice } from "./slices/ontology"
+import { createReflectionsSlice } from "./slices/reflections"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -59,7 +59,7 @@ export const usePlotStore = create<PlotState>()(
         threads: [],
         graphFocusDepth: 0,
         commandPaletteMode: "search" as const,
-        knowledgeMaps: [] as KnowledgeMap[],
+        reflections: [] as Reflection[],
         relations: [] as Relation[],
         attachments: [] as Attachment[],
         coOccurrences: [] as CoOccurrence[],
@@ -68,7 +68,6 @@ export const usePlotStore = create<PlotState>()(
         layoutMode: "tabs" as const,
         _preFocusLayoutMode: null as any,
         listPaneWidth: 320,
-        savedViews: [] as SavedView[],
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
         autopilotRules: DEFAULT_AUTOPILOT_RULES,
@@ -87,21 +86,21 @@ export const usePlotStore = create<PlotState>()(
         ...createTagsSlice(set),
         ...createLabelsSlice(set),
         ...createThreadSlice(set, get, appendEvent),
-        ...createMapsSlice(set, appendEvent),
+        ...createMapsSlice(set),
         ...createRelationsSlice(set, get, appendEvent),
         ...createUISlice(set, get, appendEvent),
-        ...createViewsSlice(set),
         ...createAutopilotSlice(set, get, appendEvent),
         ...createTemplatesSlice(set, get, appendEvent),
         ...createEditorSlice(set, get),
         ...createWorkspaceSlice(set, get),
         ...createAttachmentsSlice(set, get, appendEvent),
         ...createOntologySlice(set, get, appendEvent),
+        ...createReflectionsSlice(set, get, appendEvent),
       }
     },
     {
       name: "plot-store",
-      version: 38,
+      version: 39,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

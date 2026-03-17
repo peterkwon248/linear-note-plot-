@@ -168,7 +168,7 @@ export function OntologyDetailPanel({
                 <span className="text-[10px] text-muted-foreground/40 shrink-0">{m.count}×</span>
                 <button
                   onClick={() => addWikiLink(noteId, m.title)}
-                  className="shrink-0 text-[10px] text-[#5e6ad2] opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                  className="shrink-0 text-[10px] text-accent opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
                 >
                   Link
                 </button>

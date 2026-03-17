@@ -340,7 +340,7 @@ export function NoteDetailPanel({
               onClick={handlePromote}
               className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[14px] font-medium transition-colors ${
                 ready
-                  ? "bg-[#45d483] text-[#0a0a0a] hover:bg-[#45d483]/80"
+                  ? "bg-chart-5 text-primary-foreground hover:bg-chart-5/80"
                   : "border border-border bg-card text-foreground hover:bg-secondary"
               }`}
             >

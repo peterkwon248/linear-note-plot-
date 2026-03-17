@@ -283,7 +283,7 @@ export function TagsView() {
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <h1 className="text-base font-semibold text-foreground">
+          <h1 className="text-[15px] font-semibold text-foreground">
             #{selectedTag.name}
           </h1>
           <span className="text-[14px] text-muted-foreground">
@@ -339,7 +339,7 @@ export function TagsView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-        <h1 className="text-base font-semibold text-foreground">Tags</h1>
+        <h1 className="text-[15px] font-semibold text-foreground">Tags</h1>
         <span className="text-[14px] text-muted-foreground">({tags.length})</span>
         <div className="flex-1" />
         {/* Tag creation input */}
