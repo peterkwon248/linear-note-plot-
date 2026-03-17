@@ -283,10 +283,10 @@ export function TagsView() {
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <h1 className="text-[15px] font-semibold text-foreground">
+          <h1 className="text-ui font-semibold text-foreground">
             #{selectedTag.name}
           </h1>
-          <span className="text-[14px] text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             {tagNotes.length} notes
           </span>
           <div className="flex-1" />
@@ -316,13 +316,13 @@ export function TagsView() {
                   onClick={() => openNote(note.id)}
                   className="flex w-full items-center gap-4 px-6 py-3 text-left transition-colors hover:bg-secondary/50"
                 >
-                  <span className="flex-1 truncate text-[15px] text-foreground">
+                  <span className="flex-1 truncate text-ui text-foreground">
                     {note.title || "Untitled"}
                   </span>
-                  <span className="text-[14px] capitalize text-muted-foreground">
+                  <span className="text-sm capitalize text-muted-foreground">
                     {note.status}
                   </span>
-                  <span className="text-[14px] tabular-nums text-muted-foreground">
+                  <span className="text-sm tabular-nums text-muted-foreground">
                     {formatRelativeTime(note.updatedAt)}
                   </span>
                 </button>
@@ -339,8 +339,8 @@ export function TagsView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-        <h1 className="text-[15px] font-semibold text-foreground">Tags</h1>
-        <span className="text-[14px] text-muted-foreground">({tags.length})</span>
+        <h1 className="text-ui font-semibold text-foreground">Tags</h1>
+        <span className="text-sm text-muted-foreground">({tags.length})</span>
         <div className="flex-1" />
         {/* Tag creation input */}
         <div className="relative flex items-center">
@@ -401,7 +401,7 @@ export function TagsView() {
             ) : (
               <div>
                 {/* Header row with select-all checkbox */}
-                <div className="flex items-center gap-3 border-b border-border px-6 py-2 text-[14px] font-medium text-muted-foreground">
+                <div className="flex items-center gap-3 border-b border-border px-6 py-2 text-sm font-medium text-muted-foreground">
                   <button
                     onClick={toggleAll}
                     className="flex h-4 w-4 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
@@ -437,12 +437,12 @@ export function TagsView() {
                     </button>
                     <button
                       onClick={() => setSelectedTagId(tag.id)}
-                      className="flex-1 text-left text-[15px] text-foreground transition-colors hover:text-accent"
+                      className="flex-1 text-left text-ui text-foreground transition-colors hover:text-accent"
                     >
                       <span className="text-muted-foreground">#</span>
                       {tag.name}
                     </button>
-                    <span className="w-16 text-right text-[14px] tabular-nums text-muted-foreground">
+                    <span className="w-16 text-right text-sm tabular-nums text-muted-foreground">
                       {tagCounts[tag.id] || 0}
                     </span>
                   </div>
@@ -464,7 +464,7 @@ export function TagsView() {
             onClick={() => {
               setTimeout(() => tagInputRef.current?.focus(), 100)
             }}
-            className="text-[14px]"
+            className="text-sm"
           >
             <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
             New tag
@@ -478,7 +478,7 @@ export function TagsView() {
           <div className="flex items-center gap-1 px-4 py-2.5">
             <div className="flex items-center gap-1.5 px-1.5">
               <Zap className="h-4 w-4 text-accent" />
-              <span className="text-[15px] font-medium text-foreground whitespace-nowrap">
+              <span className="text-ui font-medium text-foreground whitespace-nowrap">
                 {checkedTags.size} selected
               </span>
               <button
@@ -491,7 +491,7 @@ export function TagsView() {
             <div className="mx-1.5 h-7 w-px bg-border" />
             <button
               onClick={handleDeleteChecked}
-              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-[15px] font-medium text-destructive transition-colors hover:bg-destructive/20"
+              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive transition-colors hover:bg-destructive/20"
             >
               <Trash2 className="h-4 w-4" /> Delete
             </button>

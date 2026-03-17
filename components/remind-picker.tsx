@@ -81,10 +81,10 @@ export function RemindPicker({ onSelect, triggerContent, align = "start" }: Remi
               key={key}
               type="button"
               onClick={() => handlePresetClick(iso)}
-              className="w-full flex items-center justify-between px-3 py-2 text-[14px] rounded-md hover:bg-secondary transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors"
             >
               <span className="text-foreground font-medium">{label}</span>
-              <span className="text-muted-foreground text-[12px]">{formatted}</span>
+              <span className="text-muted-foreground text-xs">{formatted}</span>
             </button>
           ))}
         </div>
@@ -94,7 +94,7 @@ export function RemindPicker({ onSelect, triggerContent, align = "start" }: Remi
 
         {/* Custom date section */}
         <div>
-          <p className="text-[12px] font-medium text-muted-foreground px-3 mb-2">
+          <p className="text-xs font-medium text-muted-foreground px-3 mb-2">
             Custom
           </p>
           <Calendar
@@ -110,13 +110,13 @@ export function RemindPicker({ onSelect, triggerContent, align = "start" }: Remi
               type="time"
               defaultValue={selectedTime}
               onChange={(e) => setSelectedTime(e.target.value)}
-              className="h-8 w-full rounded-md border border-border bg-background px-2 text-[14px] focus:outline-none focus:ring-1 focus:ring-ring"
+              className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
             />
             <button
               type="button"
               onClick={handleSetCustom}
               disabled={!selectedDate}
-              className="bg-accent text-accent-foreground text-[14px] font-medium rounded-md px-3 py-1.5 hover:bg-accent/80 disabled:opacity-50 whitespace-nowrap transition-colors"
+              className="bg-accent text-accent-foreground text-sm font-medium rounded-md px-3 py-1.5 hover:bg-accent/80 disabled:opacity-50 whitespace-nowrap transition-colors"
             >
               Set
             </button>

@@ -82,7 +82,7 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
         >
           <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/50 cursor-grab" />
           <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="flex-1 truncate text-[12px] font-medium text-muted-foreground">
+          <span className="flex-1 truncate text-xs font-medium text-muted-foreground">
             {meta.label}
           </span>
           {canClose && (

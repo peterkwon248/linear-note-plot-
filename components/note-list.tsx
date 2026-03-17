@@ -94,11 +94,11 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
 
       {/* Content area */}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-[15px] font-medium text-foreground">
+        <span className="truncate text-ui font-medium text-foreground">
           {note.title || "Untitled"}
         </span>
         {preview && (
-          <span className="truncate text-[14px] text-muted-foreground">
+          <span className="truncate text-sm text-muted-foreground">
             {preview}
           </span>
         )}
@@ -117,7 +117,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
           {noteTags.map((tag) => (
             <span
               key={tag.id}
-              className="shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium"
+              className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
               style={{
                 backgroundColor: `${tag.color}18`,
                 color: tag.color,
@@ -130,7 +130,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
       )}
 
       {/* Date */}
-      <span className="shrink-0 text-[12px] text-muted-foreground">
+      <span className="shrink-0 text-xs text-muted-foreground">
         {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
       </span>
 
@@ -220,24 +220,24 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border px-3 py-3">
         <div className="flex items-center gap-2">
-          <h1 className="text-[15px] font-semibold text-foreground">
+          <h1 className="text-ui font-semibold text-foreground">
             {viewTitle}
           </h1>
-          <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[12px] tabular-nums text-muted-foreground">
+          <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground">
             {filteredNotes.length}
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+          <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
             <Filter className="h-3.5 w-3.5" />
             Filter
           </button>
-          <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+          <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
             <ArrowUpDown className="h-3.5 w-3.5" />
             Sort
           </button>
           <button
-            className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => createNote({
               status: filter.type === "inbox" ? "inbox" as const : undefined,
               folderId: filter.type === "folder" ? filter.folderId : undefined,
@@ -255,8 +255,8 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
             <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-[15px] text-muted-foreground">No notes yet</p>
-            <p className="text-[14px] text-muted-foreground mt-1">
+            <p className="text-ui text-muted-foreground">No notes yet</p>
+            <p className="text-sm text-muted-foreground mt-1">
               Create your first note to get started.
             </p>
           </div>
@@ -287,10 +287,10 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
                   {item.type === "header" ? (
                     <div className="flex items-center gap-2 bg-background/95 backdrop-blur-sm px-3 py-2 border-b border-border">
                       <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-[12px] font-medium text-muted-foreground">
+                      <span className="text-xs font-medium text-muted-foreground">
                         {item.label}
                       </span>
-                      <span className="text-[12px] text-muted-foreground/60">
+                      <span className="text-xs text-muted-foreground/60">
                         {item.count}
                       </span>
                     </div>

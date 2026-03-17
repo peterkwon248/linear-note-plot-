@@ -28,7 +28,7 @@ export default function SyncPage() {
           label="Storage location"
           description="Where your notes are stored"
         >
-          <span className="text-[15px] text-muted-foreground">Local (browser)</span>
+          <span className="text-ui text-muted-foreground">Local (browser)</span>
         </SettingRow>
       </SettingsCard>
     </>

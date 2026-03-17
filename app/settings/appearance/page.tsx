@@ -30,7 +30,7 @@ export default function AppearancePage() {
 
       <SettingsCard title="Interface and theme">
         <div className="px-4 py-4">
-          <span className="mb-3 block text-[15px] font-medium text-foreground">
+          <span className="mb-3 block text-ui font-medium text-foreground">
             Theme
           </span>
           <div className="flex gap-2">
@@ -38,7 +38,7 @@ export default function AppearancePage() {
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
-                className={`flex flex-1 flex-col items-center gap-2 rounded-lg border px-4 py-3 text-[14px] transition-colors ${
+                className={`flex flex-1 flex-col items-center gap-2 rounded-lg border px-4 py-3 text-sm transition-colors ${
                   theme === t.id
                     ? "border-accent bg-accent/10 text-foreground"
                     : "border-border bg-secondary/50 text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground"

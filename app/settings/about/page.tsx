@@ -12,17 +12,17 @@ export default function AboutPage() {
 
       <SettingsCard title="Plot">
         <SettingRow label="Version" description="Current application version">
-          <span className="font-mono text-[15px] text-muted-foreground">0.1.0</span>
+          <span className="font-mono text-ui text-muted-foreground">0.1.0</span>
         </SettingRow>
         <Divider />
         <SettingRow label="Built with" description="Framework and tools">
-          <span className="text-[15px] text-muted-foreground">
+          <span className="text-ui text-muted-foreground">
             Next.js, Tailwind CSS, Zustand
           </span>
         </SettingRow>
         <Divider />
         <SettingRow label="License" description="Open source license">
-          <span className="text-[15px] text-muted-foreground">MIT</span>
+          <span className="text-ui text-muted-foreground">MIT</span>
         </SettingRow>
       </SettingsCard>
     </>

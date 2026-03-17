@@ -179,7 +179,7 @@ function DayCell({
       <div className="mb-0.5 flex items-center justify-between">
         <span
           className={cn(
-            "flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold leading-none transition-colors",
+            "flex h-5 w-5 items-center justify-center rounded-full text-2xs font-semibold leading-none transition-colors",
             isTodayDate
               ? "bg-accent text-accent-foreground"
               : isCurrentMonth
@@ -291,9 +291,9 @@ function DayDashboard({
       {/* Dashboard header */}
       <div className="flex items-center justify-between border-b border-border/60 px-4 py-2.5">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-semibold text-foreground">{formattedDate}</span>
+          <span className="text-note font-semibold text-foreground">{formattedDate}</span>
           {noteCount > 0 && (
-            <span className="text-[12px] text-muted-foreground/60">
+            <span className="text-xs text-muted-foreground/60">
               · {noteCount} {noteCount === 1 ? "note" : "notes"}
             </span>
           )}
@@ -326,11 +326,11 @@ function DayDashboard({
               <CalendarDays className="h-4 w-4 text-muted-foreground/40" />
             </div>
             <div>
-              <p className="text-[13px] text-muted-foreground/70">No notes on this day</p>
+              <p className="text-note text-muted-foreground/70">No notes on this day</p>
             </div>
             <button
               onClick={() => onCreateNote(date)}
-              className="mt-0.5 flex items-center gap-1.5 rounded-md bg-secondary px-3 py-1.5 text-[12px] font-medium text-foreground/80 transition-colors hover:bg-secondary/80 hover:text-foreground"
+              className="mt-0.5 flex items-center gap-1.5 rounded-md bg-secondary px-3 py-1.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary/80 hover:text-foreground"
             >
               <Plus className="h-3 w-3" />
               Create note
@@ -370,7 +370,7 @@ function DayDashboard({
                       style={{ backgroundColor: dot }}
                     />
 
-                    <span className="flex-1 truncate text-[13px] font-medium text-foreground/90 group-hover:text-foreground">
+                    <span className="flex-1 truncate text-note font-medium text-foreground/90 group-hover:text-foreground">
                       {note.title || "Untitled"}
                     </span>
 
@@ -378,7 +378,7 @@ function DayDashboard({
                       {/* Status badge */}
                       {statusInfo && (
                         <span
-                          className="text-[11px] font-medium"
+                          className="text-2xs font-medium"
                           style={{ color: statusInfo.color }}
                         >
                           {statusInfo.text}
@@ -400,7 +400,7 @@ function DayDashboard({
 
                       {/* Time */}
                       {timeStr && (
-                        <span className="text-[11px] tabular-nums text-muted-foreground/50">
+                        <span className="text-2xs tabular-nums text-muted-foreground/50">
                           {timeStr}
                         </span>
                       )}
@@ -556,11 +556,11 @@ export function CalendarView({
         <div className="flex items-center gap-3">
           <CalendarDays className="h-4 w-4 text-muted-foreground/60" />
           <div className="flex items-baseline gap-2">
-            <h1 className="text-[15px] font-semibold text-foreground">
+            <h1 className="text-ui font-semibold text-foreground">
               {format(currentMonth, "MMMM yyyy")}
             </h1>
             {currentMonthCount > 0 && (
-              <span className="text-[12px] text-muted-foreground/60">
+              <span className="text-xs text-muted-foreground/60">
                 {currentMonthCount} {currentMonthCount === 1 ? "note" : "notes"}
               </span>
             )}
@@ -572,7 +572,7 @@ export function CalendarView({
           {!isCurrentMonth && (
             <button
               onClick={goToToday}
-              className="mr-1 rounded-md px-2.5 py-1 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="mr-1 rounded-md px-2.5 py-1 text-note font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               Today
             </button>
@@ -597,7 +597,7 @@ export function CalendarView({
           {/* Display menu */}
           <Popover>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[13px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Display
               </button>
@@ -606,7 +606,7 @@ export function CalendarView({
               <div className="flex gap-1 px-3 py-2.5">
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-note font-medium transition-colors ${
                     viewMode === "table" || viewMode === "list"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -617,7 +617,7 @@ export function CalendarView({
                 </button>
                 <button
                   onClick={() => setViewMode("board")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-note font-medium transition-colors ${
                     viewMode === "board"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -628,7 +628,7 @@ export function CalendarView({
                 </button>
                 <button
                   onClick={() => setViewMode("insights")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-note font-medium transition-colors ${
                     viewMode === "insights"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -639,7 +639,7 @@ export function CalendarView({
                 </button>
                 <button
                   onClick={() => setViewMode("calendar")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-note font-medium transition-colors ${
                     viewMode === "calendar"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -656,7 +656,7 @@ export function CalendarView({
           {/* New note button */}
           {!hideCreateButton && (
             <button
-              className="ml-1 flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[13px] font-medium text-accent-foreground transition-colors hover:bg-accent/85"
+              className="ml-1 flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors hover:bg-accent/85"
               onClick={() => createNote(createNoteOverrides ?? {})}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -673,7 +673,7 @@ export function CalendarView({
             key={label}
             className="border-r border-border px-2 py-2 last:border-r-0"
           >
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground/50">
               {label}
             </span>
           </div>
@@ -686,7 +686,7 @@ export function CalendarView({
           /* Empty state overlay — subtle, doesn't disrupt the calendar grid */
           <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2 opacity-0 transition-opacity duration-200 [.has-no-notes_&]:pointer-events-auto [.has-no-notes_&]:opacity-100">
             <FileText className="h-8 w-8 text-muted-foreground/30" />
-            <p className="text-[14px] text-muted-foreground/50">No notes this month</p>
+            <p className="text-sm text-muted-foreground/50">No notes this month</p>
           </div>
         )}
 
@@ -725,8 +725,8 @@ export function CalendarView({
               <CalendarDays className="h-5 w-5 text-muted-foreground/50" />
             </div>
             <div>
-              <p className="text-[14px] font-medium text-muted-foreground">No notes yet</p>
-              <p className="mt-0.5 text-[13px] text-muted-foreground/60">
+              <p className="text-sm font-medium text-muted-foreground">No notes yet</p>
+              <p className="mt-0.5 text-note text-muted-foreground/60">
                 Click any day to create a note, or use New note above.
               </p>
             </div>

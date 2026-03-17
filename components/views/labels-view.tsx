@@ -283,8 +283,8 @@ export function LabelsView() {
             className="w-3 h-3 rounded-sm shrink-0"
             style={{ backgroundColor: selectedLabel.color }}
           />
-          <h1 className="text-[15px] font-semibold text-foreground">{selectedLabel.name}</h1>
-          <span className="text-[14px] text-muted-foreground">{labelNotes.length} notes</span>
+          <h1 className="text-ui font-semibold text-foreground">{selectedLabel.name}</h1>
+          <span className="text-sm text-muted-foreground">{labelNotes.length} notes</span>
           <div className="flex-1" />
           <button
             onClick={() => {
@@ -312,13 +312,13 @@ export function LabelsView() {
                   onClick={() => openNote(note.id)}
                   className="flex w-full items-center gap-4 px-6 py-3 text-left hover:bg-secondary/50 transition-colors"
                 >
-                  <span className="flex-1 truncate text-[15px] text-foreground">
+                  <span className="flex-1 truncate text-ui text-foreground">
                     {note.title || "Untitled"}
                   </span>
-                  <span className="text-[14px] text-muted-foreground capitalize">
+                  <span className="text-sm text-muted-foreground capitalize">
                     {note.status}
                   </span>
-                  <span className="text-[14px] text-muted-foreground tabular-nums">
+                  <span className="text-sm text-muted-foreground tabular-nums">
                     {formatRelativeTime(note.updatedAt)}
                   </span>
                 </button>
@@ -335,8 +335,8 @@ export function LabelsView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-        <h1 className="text-[15px] font-semibold text-foreground">Labels</h1>
-        <span className="text-[14px] text-muted-foreground">({labels.length})</span>
+        <h1 className="text-ui font-semibold text-foreground">Labels</h1>
+        <span className="text-sm text-muted-foreground">({labels.length})</span>
         <div className="flex-1" />
         <button
           onClick={() => setCreating(true)}
@@ -395,7 +395,7 @@ export function LabelsView() {
             ) : (
               <div>
                 {/* Header row */}
-                <div className="flex items-center gap-3 px-6 py-2 text-[14px] font-medium text-muted-foreground border-b border-border">
+                <div className="flex items-center gap-3 px-6 py-2 text-sm font-medium text-muted-foreground border-b border-border">
                   <button
                     onClick={toggleAll}
                     className="flex h-4 w-4 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50 shrink-0"
@@ -453,14 +453,14 @@ export function LabelsView() {
                       ) : (
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedLabelId(label.id) }}
-                          className="flex-1 text-left text-[15px] text-foreground hover:text-accent transition-colors"
+                          className="flex-1 text-left text-ui text-foreground hover:text-accent transition-colors"
                         >
                           {label.name}
                         </button>
                       )}
                       {!isEditing && (
                         <>
-                          <span className="w-16 text-right text-[14px] text-muted-foreground tabular-nums self-center">
+                          <span className="w-16 text-right text-sm text-muted-foreground tabular-nums self-center">
                             {labelCounts[label.id] || 0}
                           </span>
                           <div className="w-16 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -504,7 +504,7 @@ export function LabelsView() {
             onClick={() => {
               setCreating(true)
             }}
-            className="text-[14px]"
+            className="text-sm"
           >
             <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
             New label
@@ -518,7 +518,7 @@ export function LabelsView() {
           <div className="flex items-center gap-1 px-4 py-2.5">
             <div className="flex items-center gap-1.5 px-1.5">
               <Zap className="h-4 w-4 text-accent" />
-              <span className="text-[15px] font-medium text-foreground whitespace-nowrap">
+              <span className="text-ui font-medium text-foreground whitespace-nowrap">
                 {checkedLabels.size} selected
               </span>
               <button
@@ -531,7 +531,7 @@ export function LabelsView() {
             <div className="mx-1.5 h-7 w-px bg-border" />
             <button
               onClick={handleDeleteChecked}
-              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-[15px] font-medium text-destructive transition-colors hover:bg-destructive/20"
+              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive transition-colors hover:bg-destructive/20"
             >
               <Trash2 className="h-4 w-4" /> Delete
             </button>

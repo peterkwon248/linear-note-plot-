@@ -64,7 +64,7 @@ function NavLink({
   const setNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const isSidebarRoute = ALL_SIDEBAR_ROUTES.includes(href)
 
-  const className = `nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
+  const className = `nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
     active
       ? "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.93)]"
       : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
@@ -77,13 +77,13 @@ function NavLink({
       </span>
       <span className="truncate text-left flex-1">{label}</span>
       {count !== undefined && (
-        <span className="text-[12px] text-[rgba(255,255,255,0.35)] tabular-nums">
+        <span className="text-xs text-[rgba(255,255,255,0.35)] tabular-nums">
           {count}
         </span>
       )}
       {badge && badge.count > 0 && (
         <span
-          className="rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums"
+          className="rounded-full px-1.5 py-0.5 text-2xs font-medium tabular-nums"
           style={{
             backgroundColor: `color-mix(in srgb, ${badge.color} 15%, transparent)`,
             color: badge.color,
@@ -151,7 +151,7 @@ function Section({
       <div className="flex w-full items-center gap-1.5 px-2.5 py-1">
         <button
           onClick={() => setOpen(!open)}
-          className="flex flex-1 items-center gap-1.5 text-[12px] font-medium text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          className="flex flex-1 items-center gap-1.5 text-xs font-medium text-sidebar-muted hover:text-sidebar-foreground transition-colors"
         >
           <span>{title}</span>
           {open ? (
@@ -391,7 +391,7 @@ export function LinearSidebar() {
     <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
       {/* Header row 1: Navigation */}
       <div className="flex items-center gap-1 px-3.5 pt-3 pb-1">
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[12px] font-semibold text-accent-foreground shrink-0">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground shrink-0">
           U
         </div>
         <button
@@ -423,10 +423,10 @@ export function LinearSidebar() {
           {recentlyViewedOpen && (
             <div className="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border bg-popover shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="px-3 py-2 border-b border-border">
-                <span className="text-[12px] font-medium text-muted-foreground">Recently Viewed</span>
+                <span className="text-xs font-medium text-muted-foreground">Recently Viewed</span>
               </div>
               {recentlyViewed.length === 0 ? (
-                <div className="px-3 py-4 text-center text-[13px] text-muted-foreground">
+                <div className="px-3 py-4 text-center text-note text-muted-foreground">
                   No recently viewed notes
                 </div>
               ) : (
@@ -441,7 +441,7 @@ export function LinearSidebar() {
                       className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-secondary/50"
                     >
                       <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
-                      <span className="truncate text-[13px] text-foreground">{item.title}</span>
+                      <span className="truncate text-note text-foreground">{item.title}</span>
                     </button>
                   ))}
                 </div>
@@ -455,11 +455,11 @@ export function LinearSidebar() {
       <div className="flex items-center gap-1 px-3.5 pb-2">
         <button
           onClick={() => setSearchOpen(true)}
-          className="flex items-center gap-2 h-7 px-2.5 rounded-md hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors text-[13px]"
+          className="flex items-center gap-2 h-7 px-2.5 rounded-md hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors text-note"
           aria-label="Search"
         >
           <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
-          <span className="text-[14px]">Search</span>
+          <span className="text-sm">Search</span>
         </button>
         <div className="flex-1" />
         <button
@@ -549,7 +549,7 @@ export function LinearSidebar() {
                 onKeyDown={handleNewFolderKeyDown}
                 onBlur={handleNewFolderSubmit}
                 placeholder="Folder name"
-                className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-[14px] text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
+                className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-sm text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
               />
             </div>
           )}
@@ -568,7 +568,7 @@ export function LinearSidebar() {
                       setSelectedNoteId(null)
                       router.push("/notes")
                     }}
-                    className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors ${
+                    className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
                       active
                         ? "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.93)]"
                         : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
@@ -585,14 +585,14 @@ export function LinearSidebar() {
                         onChange={(e) => setRenameValue(e.target.value)}
                         onKeyDown={handleRenameKeyDown}
                         onBlur={handleRenameSubmit}
-                        className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-[14px] text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                        className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-sm text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                         onClick={(e) => e.stopPropagation()}
                       />
                     ) : (
                       <span className="truncate text-left flex-1">{folder.name}</span>
                     )}
                     {!isRenaming && count > 0 && (
-                      <span className="text-[12px] text-[rgba(255,255,255,0.35)] tabular-nums">{count}</span>
+                      <span className="text-xs text-[rgba(255,255,255,0.35)] tabular-nums">{count}</span>
                     )}
                   </button>
                 </ContextMenuTrigger>
@@ -626,7 +626,7 @@ export function LinearSidebar() {
           {hiddenFolders.length > 0 && !showAllFolders && (
             <button
               onClick={() => setShowAllFolders(true)}
-              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
             >
               {hiddenFolders.length} more
             </button>
@@ -634,7 +634,7 @@ export function LinearSidebar() {
           {showAllFolders && hiddenFolders.length > 0 && (
             <button
               onClick={() => setShowAllFolders(false)}
-              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
             >
               Show less
             </button>
@@ -650,7 +650,7 @@ export function LinearSidebar() {
                 draggable
                 onDragStart={(e) => setNoteDragData(e, item.id)}
                 onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
                   <StatusIcon status={item.status} />
@@ -670,7 +670,7 @@ export function LinearSidebar() {
                 draggable
                 onDragStart={(e) => setNoteDragData(e, item.id)}
                 onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[15px] transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
               >
                 <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
                   <StatusIcon status={item.status} />

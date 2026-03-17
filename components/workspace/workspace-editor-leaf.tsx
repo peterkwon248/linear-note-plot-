@@ -132,7 +132,7 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                           draggable
                           onDragStart={(e) => setTabDragData(e, tab.id, leaf.id)}
                           className={cn(
-                            "group relative flex h-9 shrink-0 items-center gap-1.5 border-r border-border/60 px-3 text-[13px] transition-colors",
+                            "group relative flex h-9 shrink-0 items-center gap-1.5 border-r border-border/60 px-3 text-note transition-colors",
                             tab.isPinned ? "w-9 justify-center px-0" : "max-w-[180px]",
                             isActive
                               ? "bg-background text-foreground"
@@ -153,7 +153,7 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                             <Pin className="h-3 w-3 shrink-0" />
                           ) : (
                             <>
-                              <span className="truncate text-[12px]">{title}</span>
+                              <span className="truncate text-xs">{title}</span>
                               <span
                                 className="ml-auto shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-secondary group-hover:opacity-100"
                                 onClick={(e) => handleCloseTab(e, tab.id)}
@@ -222,7 +222,7 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                           value={notePickerQuery}
                           onChange={(e) => setNotePickerQuery(e.target.value)}
                           placeholder="Open note..."
-                          className="flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground/50"
+                          className="flex-1 bg-transparent text-note text-foreground outline-none placeholder:text-muted-foreground/50"
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && pickerNotes.length > 0) {
@@ -238,19 +238,19 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                             key={n.id}
                             onClick={() => handlePickNote(n.id)}
                             className={cn(
-                              "flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] transition-colors hover:bg-secondary/50",
+                              "flex w-full items-center gap-2 px-3 py-1.5 text-left text-note transition-colors hover:bg-secondary/50",
                               openTabNoteIds.has(n.id) ? "text-muted-foreground" : "text-foreground"
                             )}
                           >
                             <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
                             <span className="truncate">{n.title || "Untitled"}</span>
                             {openTabNoteIds.has(n.id) && (
-                              <span className="ml-auto text-[11px] text-muted-foreground/50 shrink-0">open</span>
+                              <span className="ml-auto text-2xs text-muted-foreground/50 shrink-0">open</span>
                             )}
                           </button>
                         ))}
                         {pickerNotes.length === 0 && (
-                          <div className="px-3 py-2 text-[12px] text-muted-foreground">No notes found</div>
+                          <div className="px-3 py-2 text-xs text-muted-foreground">No notes found</div>
                         )}
                       </div>
                     </div>

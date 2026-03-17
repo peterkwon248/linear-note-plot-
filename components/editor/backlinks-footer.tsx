@@ -60,7 +60,7 @@ function NoteLink({
       <StatusIcon status={status} className="text-muted-foreground/50 flex-shrink-0" />
       <span className="truncate flex-1">{title || "Untitled"}</span>
       {reason && (
-        <span className="text-[11px] text-muted-foreground/40 flex-shrink-0 group-hover:text-muted-foreground/60">
+        <span className="text-2xs text-muted-foreground/40 flex-shrink-0 group-hover:text-muted-foreground/60">
           {reason}
         </span>
       )}

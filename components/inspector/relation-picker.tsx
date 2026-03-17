@@ -41,7 +41,7 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
     <div className="mt-2 rounded-md border border-border bg-popover p-2 space-y-2">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-[12px] font-medium text-muted-foreground">Add Relation</span>
+        <span className="text-xs font-medium text-muted-foreground">Add Relation</span>
         <button onClick={onClose} className="p-0.5 rounded hover:bg-secondary">
           <X className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
@@ -54,7 +54,7 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
             key={t}
             onClick={() => setSelectedType(t)}
             className={cn(
-              "text-[11px] px-2 py-0.5 rounded-full border transition-colors",
+              "text-2xs px-2 py-0.5 rounded-full border transition-colors",
               t === selectedType
                 ? "border-foreground/30 bg-secondary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -73,20 +73,20 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search notes..."
-          className="w-full pl-7 pr-2 py-1.5 text-[13px] bg-secondary/50 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
+          className="w-full pl-7 pr-2 py-1.5 text-note bg-secondary/50 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>
 
       {/* Results */}
       <div className="max-h-[200px] overflow-y-auto space-y-0.5">
         {filtered.length === 0 ? (
-          <span className="text-[13px] text-muted-foreground px-1 py-2 block">No matching notes</span>
+          <span className="text-note text-muted-foreground px-1 py-2 block">No matching notes</span>
         ) : (
           filtered.map(n => (
             <button
               key={n.id}
               onClick={() => onAdd(n.id, selectedType)}
-              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded text-[13px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
             >
               <span className="truncate">{n.title || "Untitled"}</span>
             </button>

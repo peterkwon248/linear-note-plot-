@@ -88,11 +88,11 @@ export function MergeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm gap-0 p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5 pb-3">
-          <DialogTitle className="flex items-center gap-2 text-[15px]">
+          <DialogTitle className="flex items-center gap-2 text-ui">
             <Merge className="h-4 w-4" />
             Merge Notes
           </DialogTitle>
-          <DialogDescription className="text-[13px]">
+          <DialogDescription className="text-note">
             Select the target note. {sourceCount > 0 && `${sourceCount} source note${sourceCount > 1 ? "s" : ""} will be archived.`}
           </DialogDescription>
         </DialogHeader>
@@ -111,11 +111,11 @@ export function MergeDialog({
               >
                 <RadioGroupItem value={note.id} />
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-[14px] text-foreground">
+                  <p className="truncate text-sm text-foreground">
                     {note.title || "Untitled"}
                   </p>
                 </div>
-                <span className="shrink-0 text-[11px] text-muted-foreground/50">
+                <span className="shrink-0 text-2xs text-muted-foreground/50">
                   {STATUS_LABELS[note.status] ?? note.status}
                 </span>
               </label>
@@ -126,7 +126,7 @@ export function MergeDialog({
         {/* Info */}
         <div className="mx-5 mb-3 flex items-center gap-2 rounded-md bg-secondary/30 px-3 py-2">
           <Archive className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-          <p className="text-[12px] text-muted-foreground/70 leading-relaxed">
+          <p className="text-xs text-muted-foreground/70 leading-relaxed">
             Source notes will be archived, not deleted. Content, tags, and reads will be merged into the target.
           </p>
         </div>
@@ -136,14 +136,14 @@ export function MergeDialog({
             variant="ghost"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="text-[13px]"
+            className="text-note"
           >
             Cancel
           </Button>
           <Button
             size="sm"
             onClick={handleMerge}
-            className="text-[13px]"
+            className="text-note"
           >
             <Merge className="h-3.5 w-3.5" />
             Merge into &ldquo;{targetLabel}&rdquo;

@@ -77,7 +77,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
     return (
       <div className="z-50 min-w-[200px] max-w-[300px] overflow-hidden rounded-md border border-border bg-popover shadow-md">
         <div className="px-2 py-1 border-b border-border/50">
-          <span className="text-[11px] font-medium text-muted-foreground">
+          <span className="text-2xs font-medium text-muted-foreground">
             Notes
           </span>
         </div>
@@ -87,7 +87,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
               key={item.id}
               onClick={() => selectItem(index)}
               className={[
-                "flex w-full items-center gap-2 px-2 py-1.5 text-left text-[13px] transition-colors",
+                "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",
                 index === selectedIndex
                   ? "bg-secondary text-foreground"
                   : "text-foreground hover:bg-secondary/50",
@@ -95,7 +95,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
             >
               {item.isNew ? (
                 <>
-                  <span className="text-muted-foreground text-[12px]">+</span>
+                  <span className="text-muted-foreground text-xs">+</span>
                   <span className="text-muted-foreground">
                     Create wiki{" "}
                     <span className="font-medium text-foreground">
@@ -108,7 +108,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                   <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="truncate">{item.title}</span>
                   {item.isAlias && (
-                    <span className="shrink-0 text-[11px] italic text-muted-foreground">
+                    <span className="shrink-0 text-2xs italic text-muted-foreground">
                       (alias)
                     </span>
                   )}

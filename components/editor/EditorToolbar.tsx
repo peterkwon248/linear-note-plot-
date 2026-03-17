@@ -15,34 +15,11 @@ import {
   Highlighter,
   X,
 } from "lucide-react"
+import { TEXT_COLORS, HIGHLIGHT_COLORS } from "@/lib/editor-colors"
 
 interface EditorToolbarProps {
   editor: Editor | null
 }
-
-const TEXT_COLORS = [
-  { label: "Default", value: "", swatch: "#E2E2E2" },
-  { label: "Red", value: "#EF4444", swatch: "#EF4444" },
-  { label: "Orange", value: "#F97316", swatch: "#F97316" },
-  { label: "Yellow", value: "#EAB308", swatch: "#EAB308" },
-  { label: "Green", value: "#22C55E", swatch: "#22C55E" },
-  { label: "Blue", value: "#3B82F6", swatch: "#3B82F6" },
-  { label: "Purple", value: "#A855F7", swatch: "#A855F7" },
-  { label: "Pink", value: "#EC4899", swatch: "#EC4899" },
-  { label: "Cyan", value: "#06B6D4", swatch: "#06B6D4" },
-]
-
-const HIGHLIGHT_COLORS = [
-  { label: "None", value: "", swatch: "transparent" },
-  { label: "Red", value: "rgba(239,68,68,0.25)", swatch: "#EF4444" },
-  { label: "Orange", value: "rgba(249,115,22,0.25)", swatch: "#F97316" },
-  { label: "Yellow", value: "rgba(234,179,8,0.3)", swatch: "#EAB308" },
-  { label: "Green", value: "rgba(34,197,94,0.25)", swatch: "#22C55E" },
-  { label: "Blue", value: "rgba(59,130,246,0.25)", swatch: "#3B82F6" },
-  { label: "Purple", value: "rgba(168,85,247,0.25)", swatch: "#A855F7" },
-  { label: "Pink", value: "rgba(236,72,153,0.25)", swatch: "#EC4899" },
-  { label: "Cyan", value: "rgba(6,182,212,0.25)", swatch: "#06B6D4" },
-]
 
 function BubbleButton({ onClick, isActive = false, title, children }: { onClick: () => void; isActive?: boolean; title: string; children: React.ReactNode }) {
   return (
@@ -176,7 +153,6 @@ function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
             style={{
               width: "100%",
               padding: "6px 12px",
-              fontSize: "13px",
               textAlign: "left",
               border: "none",
               outline: "none",
@@ -185,7 +161,7 @@ function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
               backgroundColor: !isAnyHeadingActive ? "rgba(94,106,210,0.2)" : "transparent",
               color: !isAnyHeadingActive ? "var(--foreground)" : "var(--muted-foreground)",
             }}
-            className="hover:bg-foreground/[0.06]"
+            className="text-note hover:bg-foreground/[0.06]"
           >
             Normal
           </button>

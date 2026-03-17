@@ -247,10 +247,10 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
                 <Icon size={15} strokeWidth={1.5} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "13px", fontWeight: 500, lineHeight: 1.3 }}>
+                <div className="text-note" style={{ fontWeight: 500, lineHeight: 1.3 }}>
                   {item.title}
                 </div>
-                <div style={{ fontSize: "11px", opacity: 0.6, lineHeight: 1.3, marginTop: "1px" }}>
+                <div className="text-2xs" style={{ opacity: 0.6, lineHeight: 1.3, marginTop: "1px" }}>
                   {item.description}
                 </div>
               </div>

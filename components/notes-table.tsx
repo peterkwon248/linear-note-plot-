@@ -34,6 +34,7 @@ import {
   FolderOpen,
   Lightbulb,
   Calendar,
+  RotateCcw,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -66,6 +67,7 @@ import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
 import { setActiveFolderId } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
+import { pushUndo } from "@/lib/undo-manager"
 
 /* ── Inline Select (portal-free, works inside Popover) ── */
 
@@ -98,20 +100,20 @@ function InlineSelect<T extends string>({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary"
+        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
       >
         {current?.label ?? value}
         <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
           {options.map((opt) => {
             const active = opt.value === value
             return (
               <button
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setOpen(false) }}
-                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-[14px] transition-colors hover:bg-accent hover:text-accent-foreground ${
+                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
@@ -200,7 +202,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
@@ -246,6 +248,8 @@ export function NotesTable({
   const updateNote = usePlotStore((s) => s.updateNote)
   const openNote = usePlotStore((s) => s.openNote)
   const createNote = usePlotStore((s) => s.createNote)
+  const toggleTrash = usePlotStore((s) => s.toggleTrash)
+  const deleteNote = usePlotStore((s) => s.deleteNote)
   const triageKeep = usePlotStore((s) => s.triageKeep)
   const triageSnooze = usePlotStore((s) => s.triageSnooze)
   const triageTrash = usePlotStore((s) => s.triageTrash)
@@ -549,10 +553,10 @@ export function NotesTable({
     <main ref={tableContainerRef} className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
-        <h1 className="text-[15px] font-semibold text-foreground">{title ?? "Notes"}</h1>
+        <h1 className="text-ui font-semibold text-foreground">{title ?? "Notes"}</h1>
         {!hideCreateButton && (
           <button
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => createNote(createNoteOverrides ?? {})}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -570,14 +574,14 @@ export function NotesTable({
               <button
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id); onTabChange?.(tab.id) }}
-                className={`relative px-3 py-2 text-[15px] font-medium transition-colors ${
+                className={`relative px-3 py-2 text-ui font-medium transition-colors ${
                   effectiveTab === tab.id
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {tab.label}
-                <span className="ml-1.5 rounded-[3px] bg-white/15 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">{tabCounts[tab.id]}</span>
+                <span className="ml-1.5 rounded-[3px] bg-white/15 px-1.5 py-0.5 text-2xs font-medium tabular-nums text-white">{tabCounts[tab.id]}</span>
                 {effectiveTab === tab.id && (
                   <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
                 )}
@@ -596,7 +600,7 @@ export function NotesTable({
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[120px] bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground/60 outline-none"
+              className="w-[120px] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery("")} className="text-muted-foreground hover:text-foreground">
@@ -608,11 +612,11 @@ export function NotesTable({
           {viewState.groupBy !== "none" && (
             <button
               onClick={() => updateViewState({ groupBy: "none" })}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               title="Remove grouping"
             >
               <Layers className="h-4 w-4" />
-              <span className="text-[13px]">{GROUP_OPTIONS.find(o => o.value === viewState.groupBy)?.label}</span>
+              <span className="text-note">{GROUP_OPTIONS.find(o => o.value === viewState.groupBy)?.label}</span>
               <X className="h-3 w-3" />
             </button>
           )}
@@ -630,7 +634,7 @@ export function NotesTable({
 
           <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                 <SlidersHorizontal className="h-4 w-4" />
                 {!isCompact && "Display"}
               </button>
@@ -640,7 +644,7 @@ export function NotesTable({
               <div className="flex gap-1 border-b border-border px-3 py-2.5">
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
                     viewMode === "table" || viewMode === "list"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -656,7 +660,7 @@ export function NotesTable({
                       updateViewState({ groupBy: "status" })
                     }
                   }}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
                     viewMode === "board"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -667,7 +671,7 @@ export function NotesTable({
                 </button>
                 <button
                   onClick={() => setViewMode("insights")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
                     viewMode === "insights"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -678,7 +682,7 @@ export function NotesTable({
                 </button>
                 <button
                   onClick={() => setViewMode("calendar")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
                     viewMode === "calendar"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -695,7 +699,7 @@ export function NotesTable({
                   <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Layers className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-[15px] text-foreground">{viewMode === "board" ? "Columns" : "Grouping"}</span>
+                      <span className="text-ui text-foreground">{viewMode === "board" ? "Columns" : "Grouping"}</span>
                     </div>
                     <InlineSelect
                       value={viewState.groupBy}
@@ -708,7 +712,7 @@ export function NotesTable({
                   <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-2">
                       <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-[15px] text-foreground">Ordering</span>
+                      <span className="text-ui text-foreground">Ordering</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <InlineSelect
@@ -734,7 +738,7 @@ export function NotesTable({
                   <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Columns3 className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-[15px] text-foreground">{viewMode === "board" ? "Show empty columns" : "Show empty groups"}</span>
+                      <span className="text-ui text-foreground">{viewMode === "board" ? "Show empty columns" : "Show empty groups"}</span>
                     </div>
                     <button
                       onClick={() => updateViewState({ showEmptyGroups: !viewState.showEmptyGroups })}
@@ -756,7 +760,7 @@ export function NotesTable({
                       <div className="border-b border-border" />
                       <div>
                         <div className="px-4 pt-3 pb-1.5">
-                          <span className="text-[12px] font-semibold text-muted-foreground">Display properties</span>
+                          <span className="text-xs font-semibold text-muted-foreground">Display properties</span>
                         </div>
                         <div className="flex flex-wrap gap-1.5 px-4 pb-3">
                           {COLUMN_DEFS.filter((c) => c.id !== "title").map((col) => {
@@ -765,7 +769,7 @@ export function NotesTable({
                               <button
                                 key={col.id}
                                 onClick={() => toggleColumn(col.id)}
-                                className={`rounded-md px-2.5 py-1 text-[14px] font-medium transition-colors ${
+                                className={`rounded-md px-2.5 py-1 text-sm font-medium transition-colors ${
                                   active
                                     ? "bg-foreground/10 text-foreground border border-foreground/20"
                                     : "border border-border text-muted-foreground/60 hover:text-muted-foreground"
@@ -805,7 +809,7 @@ export function NotesTable({
         return folderName ? (
           <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
             <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-[13px] text-foreground">{folderName}</span>
+            <span className="text-note text-foreground">{folderName}</span>
             <button
               onClick={() => setActiveFolderId(null)}
               className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
@@ -820,7 +824,7 @@ export function NotesTable({
       {effectiveTab === "unlinked" && flatNotes.length > 0 && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-3">
           <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-[12px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             These notes have no links. Add <span className="font-mono text-foreground/70">[[wiki-links]]</span> to connect them to your knowledge graph.
           </span>
         </div>
@@ -834,9 +838,15 @@ export function NotesTable({
               <div className="flex flex-1 items-center justify-center text-center">
                 <div>
                   <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
-                  <p className="text-[15px] text-muted-foreground">No notes found</p>
-                  <p className="mt-1 text-[14px] text-muted-foreground/60">
-                    {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
+                  <p className="text-ui text-muted-foreground">
+                    {context === "trash" ? "Trash is empty" : "No notes found"}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground/60">
+                    {context === "trash"
+                      ? "Deleted notes will appear here."
+                      : viewState.filters.length > 0
+                        ? "Try adjusting your filters."
+                        : "Create your first note to get started."}
                   </p>
                 </div>
               </div>
@@ -877,7 +887,7 @@ export function NotesTable({
                         sortCol={viewState.sortField}
                         sortDir={viewState.sortDirection}
                         onSort={handleSort}
-                        className={`${col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""} ${isCompact ? "!text-[12px]" : ""}`}
+                        className={`${col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""} ${isCompact ? "!text-xs" : ""}`}
                       />
                     </div>
                   ))}
@@ -907,8 +917,8 @@ export function NotesTable({
                       >
                         {item.type === "header" ? (
                           <div className="flex items-center gap-2 px-5 py-3 bg-secondary/30 border-b border-border">
-                            <span className="text-[14px] font-semibold text-foreground">{item.label}</span>
-                            <span className="text-[12px] text-muted-foreground">{item.count}</span>
+                            <span className="text-sm font-semibold text-foreground">{item.label}</span>
+                            <span className="text-xs text-muted-foreground">{item.count}</span>
                           </div>
                         ) : (
                           <NoteRow
@@ -930,12 +940,12 @@ export function NotesTable({
                             onPriority={(p) => updateNote(item.note.id, { priority: p })}
                             onSetFolder={(folderId) => updateNote(item.note.id, { folderId })}
                             onRemoveFolder={() => updateNote(item.note.id, { folderId: null })}
-                            onKeep={() => triageKeep(item.note.id)}
+                            onKeep={() => { triageKeep(item.note.id); pushUndo("Triage to Capture", () => moveBackToInbox(item.note.id)) }}
                             onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
-                            onTrash={() => triageTrash(item.note.id)}
-                            onPromote={() => promoteToPermanent(item.note.id)}
-                            onDemote={() => undoPromote(item.note.id)}
-                            onMoveBack={() => moveBackToInbox(item.note.id)}
+                            onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id)) }}
+                            onPromote={() => { promoteToPermanent(item.note.id); pushUndo("Promote to Permanent", () => undoPromote(item.note.id)) }}
+                            onDemote={() => { undoPromote(item.note.id); pushUndo("Demote to Capture", () => promoteToPermanent(item.note.id)) }}
+                            onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Inbox", () => triageKeep(item.note.id)) }}
                             onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
                             onMergeWith={() => setMergePickerOpen(true, item.note.id)}
                             onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
@@ -962,16 +972,48 @@ export function NotesTable({
           </div>
         </ContextMenuTrigger>
           <ContextMenuContent className="w-48">
-            <ContextMenuItem
-              onClick={() => {
-                const id = createNote(createNoteOverrides ?? {})
-                openNote(id)
-              }}
-              className="text-[14px]"
-            >
-              <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
-              New note
-            </ContextMenuItem>
+            {context === "trash" ? (
+              <>
+                <ContextMenuItem
+                  onClick={() => {
+                    const noteIds = flatNotes.map((n) => n.id)
+                    flatNotes.forEach((n) => toggleTrash(n.id))
+                    pushUndo(`Restore ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`, () => noteIds.forEach((id) => toggleTrash(id)))
+                    toast(`Restored ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`)
+                  }}
+                  disabled={flatNotes.length === 0}
+                  className="text-sm"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2 text-muted-foreground" />
+                  Restore all
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem
+                  onClick={() => {
+                    if (window.confirm(`Permanently delete ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}? This cannot be undone.`)) {
+                      flatNotes.forEach((n) => deleteNote(n.id))
+                      toast(`Permanently deleted ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`)
+                    }
+                  }}
+                  disabled={flatNotes.length === 0}
+                  className="text-sm text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Empty trash
+                </ContextMenuItem>
+              </>
+            ) : (
+              <ContextMenuItem
+                onClick={() => {
+                  const id = createNote(createNoteOverrides ?? {})
+                  openNote(id)
+                }}
+                className="text-sm"
+              >
+                <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
+                New note
+              </ContextMenuItem>
+            )}
           </ContextMenuContent>
         </ContextMenu>
 
@@ -1091,7 +1133,7 @@ function NoteRowInner({
       {/* Name */}
       <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
         <FileText className={`shrink-0 text-muted-foreground/60 ${isCompact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
-        <span className={`truncate text-foreground ${isCompact ? "text-[13px]" : "text-[15px]"}`}>
+        <span className={`truncate text-foreground ${isCompact ? "text-note" : "text-ui"}`}>
           {note.title || "Untitled"}
         </span>
         {(() => {
@@ -1099,7 +1141,7 @@ function NoteRowInner({
           if (label) {
             return (
               <span
-                className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium"
+                className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-2xs font-medium"
                 style={{ backgroundColor: `${label.color}18`, color: label.color }}
               >
                 {label.name}
@@ -1107,14 +1149,14 @@ function NoteRowInner({
             )
           }
           return (
-            <span className="shrink-0 inline-flex items-center rounded-full px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground/70 bg-muted/50">
+            <span className="shrink-0 inline-flex items-center rounded-full px-1.5 py-0.5 text-2xs font-medium text-muted-foreground/70 bg-muted/50">
               Memo
             </span>
           )
         })()}
         {note.preview.length > 0 && (
           <span
-            className="shrink-0 text-[11px] tabular-nums font-medium"
+            className="shrink-0 text-2xs tabular-nums font-medium"
             style={{ color: note.preview.length >= 80 ? "#45d483" : note.preview.length >= 30 ? "#60a5fa" : "#9ca3af" }}
           >
             {note.preview.length >= 120 ? "120+" : note.preview.length}
@@ -1123,11 +1165,11 @@ function NoteRowInner({
         {links === 0 && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="shrink-0 flex items-center gap-0.5 text-[11px] text-muted-foreground/50">
+              <span className="shrink-0 flex items-center gap-0.5 text-2xs text-muted-foreground/50">
                 <Link2 className="h-2.5 w-2.5" />
               </span>
             </TooltipTrigger>
-            <TooltipContent className="text-[12px]">Add at least 1 link to reduce orphan notes.</TooltipContent>
+            <TooltipContent className="text-xs">Add at least 1 link to reduce orphan notes.</TooltipContent>
           </Tooltip>
         )}
       </div>
@@ -1144,12 +1186,12 @@ function NoteRowInner({
         <div className="w-[80px] shrink-0 flex items-center justify-center">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
-            if (!folder) return <span className="text-[15px] text-muted-foreground/30">—</span>
+            if (!folder) return <span className="text-ui text-muted-foreground/30">—</span>
             return (
-              <span className="text-[12px] text-muted-foreground truncate">{folder.name}</span>
+              <span className="text-xs text-muted-foreground truncate">{folder.name}</span>
             )
           })() : (
-            <span className="text-[15px] text-muted-foreground/30">—</span>
+            <span className="text-ui text-muted-foreground/30">—</span>
           )}
         </div>
       )}
@@ -1157,7 +1199,7 @@ function NoteRowInner({
       {/* Links */}
       {visibleCols.includes("links") && (
         <div className="w-[56px] shrink-0 text-center">
-          <span className={`tabular-nums ${isCompact ? "text-[13px]" : "text-[15px]"} ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+          <span className={`tabular-nums ${isCompact ? "text-note" : "text-ui"} ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
             {links}
           </span>
         </div>
@@ -1166,7 +1208,7 @@ function NoteRowInner({
       {/* Reads */}
       {visibleCols.includes("reads") && (
         <div className="w-[56px] shrink-0 text-center">
-          <span className={`tabular-nums ${isCompact ? "text-[13px]" : "text-[15px]"} ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+          <span className={`tabular-nums ${isCompact ? "text-note" : "text-ui"} ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
             {note.reads}
           </span>
         </div>
@@ -1179,7 +1221,7 @@ function NoteRowInner({
           {note.priority === "high" && <ChevronUp className="h-4 w-4 text-orange-400" />}
           {note.priority === "medium" && <Minus className="h-4 w-4 text-yellow-400" />}
           {note.priority === "low" && <ChevronDown className="h-4 w-4 text-blue-400" />}
-          {(!note.priority || note.priority === "none") && <span className="text-[14px] text-muted-foreground">—</span>}
+          {(!note.priority || note.priority === "none") && <span className="text-sm text-muted-foreground">—</span>}
         </div>
       )}
 
@@ -1188,11 +1230,11 @@ function NoteRowInner({
         <div className="w-[80px] shrink-0 text-right">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className={`tabular-nums text-muted-foreground cursor-default ${isCompact ? "text-[13px]" : "text-[15px]"}`}>
+              <span className={`tabular-nums text-muted-foreground cursor-default ${isCompact ? "text-note" : "text-ui"}`}>
                 {shortRelative(note.updatedAt)}
               </span>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-[12px]">
+            <TooltipContent side="top" className="text-xs">
               {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
             </TooltipContent>
           </Tooltip>
@@ -1204,11 +1246,11 @@ function NoteRowInner({
         <div className="w-[80px] shrink-0 text-right">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className={`tabular-nums text-muted-foreground cursor-default ${isCompact ? "text-[13px]" : "text-[15px]"}`}>
+              <span className={`tabular-nums text-muted-foreground cursor-default ${isCompact ? "text-note" : "text-ui"}`}>
                 {absDate(note.createdAt)}
               </span>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-[12px]">
+            <TooltipContent side="top" className="text-xs">
               {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
             </TooltipContent>
           </Tooltip>
@@ -1221,39 +1263,39 @@ function NoteRowInner({
         {/* Inbox actions */}
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
-            <ContextMenuItem onClick={onKeep} className="text-[14px]">
+            <ContextMenuItem onClick={onKeep} className="text-sm">
               <Check className="h-4 w-4 mr-2 text-accent" />
               Done
-              <span className="ml-auto text-[11px] text-muted-foreground">D</span>
+              <span className="ml-auto text-2xs text-muted-foreground">D</span>
             </ContextMenuItem>
             <ContextMenuSub>
-              <ContextMenuSubTrigger className="text-[14px]">
+              <ContextMenuSubTrigger className="text-sm">
                 <AlarmClock className="h-4 w-4 mr-2 text-muted-foreground" />
                 Snooze
-                <span className="ml-auto text-[11px] text-muted-foreground">S</span>
+                <span className="ml-auto text-2xs text-muted-foreground">S</span>
               </ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-44">
-                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-[14px]">
+                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-sm">
                   3 hours
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-[14px]">
+                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-sm">
                   Tomorrow 10:00 AM
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-[14px]">
+                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-sm">
                   In 3 days
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-[14px]">
+                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-sm">
                   Next week 10:00 AM
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-[14px]">
+                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-sm">
                   In 1 week
                 </ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
-            <ContextMenuItem onClick={onTrash} className="text-[14px] text-destructive focus:text-destructive">
+            <ContextMenuItem onClick={onTrash} className="text-sm text-destructive focus:text-destructive">
               <Trash2 className="h-4 w-4 mr-2" />
               Trash
-              <span className="ml-auto text-[11px]">T</span>
+              <span className="ml-auto text-2xs">T</span>
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -1262,15 +1304,15 @@ function NoteRowInner({
         {/* Capture actions */}
         {note.status === "capture" && (
           <>
-            <ContextMenuItem onClick={onPromote} className="text-[14px]">
+            <ContextMenuItem onClick={onPromote} className="text-sm">
               <ArrowUpRight className="h-4 w-4 mr-2 text-chart-5" />
               Promote to Permanent
-              <span className="ml-auto text-[11px] text-muted-foreground">P</span>
+              <span className="ml-auto text-2xs text-muted-foreground">P</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={onMoveBack} className="text-[14px]">
+            <ContextMenuItem onClick={onMoveBack} className="text-sm">
               <Inbox className="h-4 w-4 mr-2 text-muted-foreground" />
               Back to Inbox
-              <span className="ml-auto text-[11px] text-muted-foreground">B</span>
+              <span className="ml-auto text-2xs text-muted-foreground">B</span>
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -1279,10 +1321,10 @@ function NoteRowInner({
         {/* Permanent actions */}
         {note.status === "permanent" && (
           <>
-            <ContextMenuItem onClick={onDemote} className="text-[14px]">
+            <ContextMenuItem onClick={onDemote} className="text-sm">
               <ArrowDownLeft className="h-4 w-4 mr-2 text-muted-foreground" />
               Demote to Capture
-              <span className="ml-auto text-[11px] text-muted-foreground">D</span>
+              <span className="ml-auto text-2xs text-muted-foreground">D</span>
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -1290,28 +1332,28 @@ function NoteRowInner({
 
         {/* Remind me (all notes) */}
         <ContextMenuSub>
-          <ContextMenuSubTrigger className="text-[14px]">
+          <ContextMenuSubTrigger className="text-sm">
             <Bell className="h-4 w-4 mr-2 text-muted-foreground" />
             Remind me
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-48">
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>Later today</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>Tomorrow</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>In 3 days</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>Next week</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>In 1 week</span>
             </ContextMenuItem>
@@ -1320,15 +1362,15 @@ function NoteRowInner({
         <ContextMenuSeparator />
 
         {/* Common actions */}
-        <ContextMenuItem onClick={onOpen} className="text-[14px]">
+        <ContextMenuItem onClick={onOpen} className="text-sm">
           <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
           Open
         </ContextMenuItem>
-        <ContextMenuItem onClick={onMergeWith} className="text-[14px]">
+        <ContextMenuItem onClick={onMergeWith} className="text-sm">
           <Merge className="h-4 w-4 mr-2 text-muted-foreground" />
           Merge with...
         </ContextMenuItem>
-        <ContextMenuItem onClick={onLinkWith} className="text-[14px]">
+        <ContextMenuItem onClick={onLinkWith} className="text-sm">
           <Link2 className="h-4 w-4 mr-2 text-muted-foreground" />
           Link to...
         </ContextMenuItem>

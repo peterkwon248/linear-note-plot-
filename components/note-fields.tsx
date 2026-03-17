@@ -107,7 +107,7 @@ export function StatusBadge({ status }: { status: NoteStatus }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.capture
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] font-medium leading-none"
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium leading-none"
       style={{ backgroundColor: cfg.bg, color: cfg.color }}
     >
       {cfg.icon}
@@ -122,7 +122,7 @@ export function PriorityBadge({ priority }: { priority: NotePriority }) {
   const cfg = PRIORITY_CONFIG[priority]
   return (
     <span
-      className="inline-flex items-center gap-1 text-[14px]"
+      className="inline-flex items-center gap-1 text-sm"
       style={{ color: cfg.color }}
     >
       {cfg.icon}
@@ -148,7 +148,7 @@ export function StatusDropdown({
       <DropdownMenuTrigger asChild>
         {variant === "inline" ? (
           <button
-            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] font-medium leading-none transition-colors hover:brightness-125"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium leading-none transition-colors hover:brightness-125"
             style={{ backgroundColor: current.bg, color: current.color }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -157,7 +157,7 @@ export function StatusDropdown({
           </button>
         ) : (
           <button
-            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary/60"
+            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary/60"
             onClick={(e) => e.stopPropagation()}
           >
             <span className="flex items-center gap-2" style={{ color: current.color }}>
@@ -219,7 +219,7 @@ export function PriorityDropdown({
           </button>
         ) : (
           <button
-            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary/60"
+            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary/60"
             onClick={(e) => e.stopPropagation()}
           >
             <span className="flex items-center gap-2" style={{ color: current.color }}>
@@ -260,7 +260,7 @@ export function PriorityDropdown({
 export function LabelBadge({ label }: { label: { name: string; color: string } }) {
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium leading-none"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-none"
       style={{ backgroundColor: `${label.color}18`, color: label.color }}
     >
       <Tag className="h-2.5 w-2.5" />
@@ -289,7 +289,7 @@ export function LabelDropdown({
       <DropdownMenuTrigger asChild>
         {variant === "inline" ? (
           <button
-            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium leading-none transition-colors hover:brightness-125"
+            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-none transition-colors hover:brightness-125"
             style={current ? { backgroundColor: `${current.color}18`, color: current.color } : {}}
             onClick={(e) => e.stopPropagation()}
           >
@@ -298,7 +298,7 @@ export function LabelDropdown({
           </button>
         ) : (
           <button
-            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary/60"
+            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary/60"
             onClick={(e) => e.stopPropagation()}
           >
             <span className="flex items-center gap-2">
@@ -390,7 +390,7 @@ export function TagPicker({
         {selectedTags.map((t) => (
           <span
             key={t.id}
-            className="group/tag inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-medium"
+            className="group/tag inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-2xs font-medium"
             style={{ backgroundColor: `${t.color}18`, color: t.color }}
           >
             {t.name}
@@ -419,7 +419,7 @@ export function TagPicker({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search or create tag..."
-              className="w-full bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none"
+              className="w-full bg-transparent text-note text-foreground placeholder:text-muted-foreground/50 outline-none"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && showCreate) {
                   e.preventDefault()
@@ -435,7 +435,7 @@ export function TagPicker({
               return (
                 <button
                   key={t.id}
-                  className="flex w-full items-center justify-between px-3 py-1.5 text-[13px] transition-colors hover:bg-secondary/50"
+                  className="flex w-full items-center justify-between px-3 py-1.5 text-note transition-colors hover:bg-secondary/50"
                   onClick={(e) => {
                     e.stopPropagation()
                     if (isSelected) onRemoveTag(noteId, t.id)
@@ -452,7 +452,7 @@ export function TagPicker({
             })}
             {showCreate && (
               <button
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-accent transition-colors hover:bg-secondary/50"
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-accent transition-colors hover:bg-secondary/50"
                 onClick={(e) => {
                   e.stopPropagation()
                   onCreateTag(search.trim(), pickColor(search.trim()))
@@ -464,7 +464,7 @@ export function TagPicker({
               </button>
             )}
             {filtered.length === 0 && !showCreate && (
-              <p className="px-3 py-2 text-[13px] text-muted-foreground/60">No tags found.</p>
+              <p className="px-3 py-2 text-note text-muted-foreground/60">No tags found.</p>
             )}
           </div>
         </PopoverContent>
@@ -513,7 +513,7 @@ export function LabelPicker({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium leading-none transition-colors hover:bg-secondary"
+          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-none transition-colors hover:bg-secondary"
           style={current ? { backgroundColor: `${current.color}18`, color: current.color } : {}}
           onClick={(e) => e.stopPropagation()}
         >
@@ -534,7 +534,7 @@ export function LabelPicker({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search or create label..."
-            className="w-full bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none"
+            className="w-full bg-transparent text-note text-foreground placeholder:text-muted-foreground/50 outline-none"
             onKeyDown={(e) => {
               if (e.key === "Enter" && showCreate) {
                 e.preventDefault()
@@ -547,7 +547,7 @@ export function LabelPicker({
         <div className="max-h-48 overflow-y-auto py-1">
           {currentLabelId && (
             <button
-              className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-secondary/50"
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-muted-foreground transition-colors hover:bg-secondary/50"
               onClick={(e) => {
                 e.stopPropagation()
                 onSetLabel(noteId, null)
@@ -561,7 +561,7 @@ export function LabelPicker({
           {filtered.map((l) => (
             <button
               key={l.id}
-              className="flex w-full items-center justify-between px-3 py-1.5 text-[13px] transition-colors hover:bg-secondary/50"
+              className="flex w-full items-center justify-between px-3 py-1.5 text-note transition-colors hover:bg-secondary/50"
               onClick={(e) => {
                 e.stopPropagation()
                 onSetLabel(noteId, l.id)
@@ -577,7 +577,7 @@ export function LabelPicker({
           ))}
           {showCreate && (
             <button
-              className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-accent transition-colors hover:bg-secondary/50"
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-accent transition-colors hover:bg-secondary/50"
               onClick={(e) => {
                 e.stopPropagation()
                 onCreateLabel(search.trim(), pickColor(search.trim()))
@@ -589,7 +589,7 @@ export function LabelPicker({
             </button>
           )}
           {filtered.length === 0 && !showCreate && (
-            <p className="px-3 py-2 text-[13px] text-muted-foreground/60">No labels found.</p>
+            <p className="px-3 py-2 text-note text-muted-foreground/60">No labels found.</p>
           )}
         </div>
       </PopoverContent>
