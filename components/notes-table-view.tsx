@@ -96,11 +96,12 @@ export function NotesTableView() {
   }, [tableRoute])
 
   // Auto-migrate: if in list/split mode but workspace has no note-list leaf, apply new preset once
+  // hasMigrated is set unconditionally on first run so closing the list pane won't re-trigger
   useEffect(() => {
     if (hasMigrated.current) return
+    hasMigrated.current = true
     if ((layoutMode === "three-column" || layoutMode === "split") &&
         !findLeafByContentType(workspaceRoot, "note-list")) {
-      hasMigrated.current = true
       applyPreset(layoutModeToPreset(layoutMode))
     }
   }, [layoutMode, workspaceRoot, applyPreset])

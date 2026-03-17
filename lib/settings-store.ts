@@ -69,7 +69,7 @@ export const useSettingsStore = create<SettingsState>()(
 
       // Preferences defaults
       language: "en",
-      startView: "all",
+      startView: "inbox",
       confirmDelete: true,
       viewMode: "table",
 

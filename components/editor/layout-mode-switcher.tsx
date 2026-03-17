@@ -106,7 +106,7 @@ export function LayoutModeSwitcher() {
       </Tooltip>
 
       <PopoverContent
-        align="end"
+        align="start"
         className="w-56 p-1.5"
         sideOffset={8}
       >

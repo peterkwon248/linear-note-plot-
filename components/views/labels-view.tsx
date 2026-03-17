@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react"
-import { ArrowLeft, Plus, Trash2, Pencil, X, Zap } from "lucide-react"
+import { ArrowLeft, ArrowUp, ArrowDown, ArrowUpDown, Plus, Trash2, Pencil, X, Zap, SlidersHorizontal, Layers, ChevronDown, Check, EyeOff } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import {
   ContextMenu,
@@ -9,8 +9,96 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 import { ColorPickerGrid, PRESET_COLORS } from "@/components/color-picker-grid"
+import { useNotesView } from "@/lib/view-engine/use-notes-view"
+import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import type { Label } from "@/lib/types"
+
+/* ── Sort/Group options for detail view ─────────────────── */
+
+const SORT_OPTIONS: { value: SortField; label: string }[] = [
+  { value: "updatedAt", label: "Updated" },
+  { value: "createdAt", label: "Created" },
+  { value: "title", label: "Title" },
+  { value: "status", label: "Status" },
+  { value: "priority", label: "Priority" },
+  { value: "links", label: "Links" },
+]
+
+const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
+  { value: "none", label: "No grouping" },
+  { value: "status", label: "Status" },
+  { value: "priority", label: "Priority" },
+  { value: "folder", label: "Folder" },
+]
+
+/* ── Inline Select (portal-free, works inside Popover) ── */
+
+function InlineSelect<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (v: T) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [open])
+
+  const current = options.find((o) => o.value === value)
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
+      >
+        {current?.label ?? value}
+        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
+          {options.map((opt) => {
+            const active = opt.value === value
+            return (
+              <button
+                key={opt.value}
+                onClick={() => { onChange(opt.value); setOpen(false) }}
+                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                  active ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <Check className={`h-3.5 w-3.5 shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} />
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const DRAG_THRESHOLD = 5
 const ROW_HEIGHT = 40
@@ -19,6 +107,8 @@ const HEADER_HEIGHT = 37
 export function LabelsView() {
   const labels = usePlotStore((s) => s.labels)
   const notes = usePlotStore((s) => s.notes)
+  const folders = usePlotStore((s) => s.folders)
+  const tags = usePlotStore((s) => s.tags)
   const createLabel = usePlotStore((s) => s.createLabel)
   const deleteLabel = usePlotStore((s) => s.deleteLabel)
   const updateLabel = usePlotStore((s) => s.updateLabel)
@@ -34,6 +124,28 @@ export function LabelsView() {
   const [editColor, setEditColor] = useState("")
   const nameInputRef = useRef<HTMLInputElement>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
+  const [displayPopoverOpen, setDisplayPopoverOpen] = useState(false)
+  const [labelSortBy, setLabelSortBy] = useState<"name-asc" | "name-desc" | "count-desc" | "count-asc">("name-asc")
+  const [hideEmptyLabels, setHideEmptyLabels] = useState(false)
+
+  // View engine for label detail mode (must be called unconditionally)
+  const labelExtras = useMemo(() => ({ labelId: selectedLabelId ?? undefined }), [selectedLabelId])
+  const { flatNotes: labelNotes, flatCount: labelNoteCount, viewState: labelViewState, updateViewState: updateLabelView } = useNotesView("label", labelExtras)
+
+  // Toggle filter for label detail
+  const toggleFilter = useCallback((field: FilterRule["field"], value: string, operator?: FilterRule["operator"]) => {
+    const op = operator ?? "eq"
+    const exists = labelViewState.filters.some(f => f.field === field && f.operator === op && f.value === value)
+    if (exists) {
+      updateLabelView({ filters: labelViewState.filters.filter(f => !(f.field === field && f.operator === op && f.value === value)) })
+    } else {
+      updateLabelView({ filters: [...labelViewState.filters, { field, operator: op, value }] })
+    }
+  }, [labelViewState.filters, updateLabelView])
+
+  const removeFilter = useCallback((idx: number) => {
+    updateLabelView({ filters: labelViewState.filters.filter((_, i) => i !== idx) })
+  }, [labelViewState.filters, updateLabelView])
 
   // Selection state
   const [checkedLabels, setCheckedLabels] = useState<Set<string>>(new Set())
@@ -42,8 +154,7 @@ export function LabelsView() {
   const dragStartRef = useRef<{ x: number; y: number; scrollTop: number } | null>(null)
   const isDraggingRef = useRef(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const labelsRef = useRef(labels)
-  labelsRef.current = labels
+  const labelsRef = useRef<typeof labels>(labels)
 
   // Active notes
   const activeNotes = useMemo(() =>
@@ -60,13 +171,22 @@ export function LabelsView() {
     return counts
   }, [labels, activeNotes])
 
-  // Notes for selected label
-  const labelNotes = useMemo(() => {
-    if (!selectedLabelId) return []
-    return activeNotes
-      .filter((n) => n.labelId === selectedLabelId)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-  }, [selectedLabelId, activeNotes])
+  // Sort and filter labels for list mode
+  const sortedLabels = useMemo(() => {
+    let result = [...labels]
+    if (hideEmptyLabels) {
+      result = result.filter(l => (labelCounts[l.id] || 0) > 0)
+    }
+    switch (labelSortBy) {
+      case "name-asc": return result.sort((a, b) => a.name.localeCompare(b.name))
+      case "name-desc": return result.sort((a, b) => b.name.localeCompare(a.name))
+      case "count-desc": return result.sort((a, b) => (labelCounts[b.id] || 0) - (labelCounts[a.id] || 0))
+      case "count-asc": return result.sort((a, b) => (labelCounts[a.id] || 0) - (labelCounts[b.id] || 0))
+      default: return result
+    }
+  }, [labels, labelSortBy, hideEmptyLabels, labelCounts])
+
+  labelsRef.current = sortedLabels
 
   const selectedLabel = labels.find((l) => l.id === selectedLabelId)
 
@@ -142,10 +262,10 @@ export function LabelsView() {
   }
 
   const toggleAll = () => {
-    if (checkedLabels.size === labels.length) {
+    if (checkedLabels.size === sortedLabels.length) {
       setCheckedLabels(new Set())
     } else {
-      setCheckedLabels(new Set(labels.map(l => l.id)))
+      setCheckedLabels(new Set(sortedLabels.map(l => l.id)))
     }
   }
 
@@ -284,7 +404,7 @@ export function LabelsView() {
             style={{ backgroundColor: selectedLabel.color }}
           />
           <h1 className="text-ui font-semibold text-foreground">{selectedLabel.name}</h1>
-          <span className="text-sm text-muted-foreground">{labelNotes.length} notes</span>
+          <span className="text-sm text-muted-foreground">{labelNoteCount} notes</span>
           <div className="flex-1" />
           <button
             onClick={() => {
@@ -297,6 +417,78 @@ export function LabelsView() {
             Delete label
           </button>
         </div>
+
+        {/* Toolbar: Filter + Display */}
+        <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
+          <FilterButton
+            filters={labelViewState.filters}
+            groupBy={labelViewState.groupBy}
+            isSingleStatusTab={false}
+            folders={folders}
+            tags={tags}
+            onToggleFilter={toggleFilter}
+            onSetFilters={(f) => updateLabelView({ filters: f })}
+          />
+          <div className="flex-1" />
+          <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <SlidersHorizontal className="h-4 w-4" />
+                Display
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] p-0" align="end">
+              {/* Grouping */}
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-ui text-foreground">Grouping</span>
+                </div>
+                <InlineSelect
+                  value={labelViewState.groupBy}
+                  options={GROUP_OPTIONS}
+                  onChange={(v) => updateLabelView({ groupBy: v })}
+                />
+              </div>
+              {/* Ordering */}
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-ui text-foreground">Ordering</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <InlineSelect
+                    value={labelViewState.sortField}
+                    options={SORT_OPTIONS}
+                    onChange={(v) => updateLabelView({ sortField: v })}
+                  />
+                  <button
+                    onClick={() => updateLabelView({ sortDirection: labelViewState.sortDirection === "asc" ? "desc" : "asc" })}
+                    className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  >
+                    {labelViewState.sortDirection === "asc"
+                      ? <ArrowUp className="h-3.5 w-3.5" />
+                      : <ArrowDown className="h-3.5 w-3.5" />
+                    }
+                  </button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Filter chips */}
+        <FilterChipBar
+          filters={labelViewState.filters}
+          groupBy={labelViewState.groupBy}
+          isSingleStatusTab={false}
+          folders={folders}
+          tags={tags}
+          onToggleFilter={toggleFilter}
+          onRemoveFilter={removeFilter}
+          onClearAll={() => updateLabelView({ filters: [] })}
+          onSetFilters={(f) => updateLabelView({ filters: f })}
+        />
 
         {/* Notes list */}
         <div className="flex-1 overflow-y-auto">
@@ -344,6 +536,42 @@ export function LabelsView() {
         >
           <Plus className="h-3.5 w-3.5" />
           New label
+        </button>
+      </div>
+
+      {/* Sort & Filter toolbar */}
+      <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <ArrowUpDown className="h-3.5 w-3.5" />
+              {labelSortBy === "name-asc" ? "Name A-Z" : labelSortBy === "name-desc" ? "Name Z-A" : labelSortBy === "count-desc" ? "Most notes" : "Fewest notes"}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {([
+              ["name-asc", "Name A-Z"],
+              ["name-desc", "Name Z-A"],
+              ["count-desc", "Most notes"],
+              ["count-asc", "Fewest notes"],
+            ] as const).map(([value, label]) => (
+              <DropdownMenuItem key={value} onClick={() => setLabelSortBy(value)}>
+                <Check className={cn("h-3.5 w-3.5 mr-2 shrink-0", labelSortBy === value ? "opacity-100" : "opacity-0")} />
+                {label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <div className="flex-1" />
+        <button
+          onClick={() => setHideEmptyLabels(!hideEmptyLabels)}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-colors",
+            hideEmptyLabels ? "bg-accent/15 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+          )}
+        >
+          <EyeOff className="h-3.5 w-3.5" />
+          Hide empty
         </button>
       </div>
 
@@ -400,7 +628,7 @@ export function LabelsView() {
                     onClick={toggleAll}
                     className="flex h-4 w-4 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50 shrink-0"
                   >
-                    {checkedLabels.size === labels.length && labels.length > 0 && (
+                    {checkedLabels.size === sortedLabels.length && sortedLabels.length > 0 && (
                       <div className="h-2 w-2 rounded-sm bg-accent" />
                     )}
                   </button>
@@ -410,7 +638,7 @@ export function LabelsView() {
                   <span className="w-16" />
                 </div>
 
-                {labels.map((label, index) => {
+                {sortedLabels.map((label, index) => {
                   const isEditing = editingId === label.id
                   return (
                     <div

@@ -28,6 +28,7 @@ import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, 
 import type { Note, NoteStatus } from "@/lib/types"
 import type { PanelContent } from "@/lib/workspace/types"
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
+import { LayoutModeSwitcher } from "@/components/editor/layout-mode-switcher"
 import { StatusIcon } from "@/components/status-icon"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import {
@@ -449,6 +450,8 @@ export function LinearSidebar() {
             </div>
           )}
         </div>
+        <div className="flex-1" />
+        {selectedNoteId && <LayoutModeSwitcher />}
       </div>
 
       {/* Header row 2: Actions */}
