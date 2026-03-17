@@ -292,7 +292,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
       {/* Title */}
       {isReadMode ? (
-        <h1 className="w-full bg-transparent px-6 pt-6 text-[24px] font-semibold text-foreground">
+        <h1 className="w-full bg-transparent px-6 pt-6 text-[28px] font-semibold text-foreground">
           {localTitle || "Untitled"}
         </h1>
       ) : (
@@ -301,7 +301,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
           placeholder="Untitled"
-          className="w-full bg-transparent px-6 pt-6 text-[24px] font-semibold text-foreground outline-none placeholder:text-muted-foreground/40"
+          className="w-full bg-transparent px-6 pt-6 text-[28px] font-semibold text-foreground outline-none placeholder:text-muted-foreground/40"
         />
       )}
 

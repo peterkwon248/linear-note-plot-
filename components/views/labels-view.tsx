@@ -426,6 +426,7 @@ export function LabelsView() {
             isSingleStatusTab={false}
             folders={folders}
             tags={tags}
+            labels={labels}
             onToggleFilter={toggleFilter}
             onSetFilters={(f) => updateLabelView({ filters: f })}
           />
@@ -484,6 +485,7 @@ export function LabelsView() {
           isSingleStatusTab={false}
           folders={folders}
           tags={tags}
+          labels={labels}
           onToggleFilter={toggleFilter}
           onRemoveFilter={removeFilter}
           onClearAll={() => updateLabelView({ filters: [] })}

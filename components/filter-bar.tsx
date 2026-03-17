@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Filter, Plus, X, Check, Zap, Clock, Link2, Eye, FileQuestion, FolderOpen,
   Tag, Pin, CircleDot, Signal, Globe, FileText, Type, ALargeSmall, Hash,
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import type { FilterRule, FilterField, GroupBy } from "@/lib/view-engine/types"
-import type { NoteStatus, NotePriority, NoteSource, Folder, Tag as TagType } from "@/lib/types"
+import type { NoteStatus, NotePriority, NoteSource, Folder, Tag as TagType, Label } from "@/lib/types"
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -36,7 +37,7 @@ function countContentFilters(filters: FilterRule[]) {
   return filters.filter((f) => f.field === "content" || f.field === "wordCount" || f.field === "title" || f.field === "reads").length
 }
 
-export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagList?: TagType[]): string {
+export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagList?: TagType[], labelList?: Label[]): string {
   // Status
   if (rule.field === "status") return rule.value.charAt(0).toUpperCase() + rule.value.slice(1)
   // Priority
@@ -51,6 +52,10 @@ export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagLi
   // Label
   if (rule.field === "label" && rule.value === "_none") return "No label"
   if (rule.field === "label" && rule.value === "_any") return "Has label"
+  if (rule.field === "label" && labelList) {
+    const label = labelList.find((l) => l.id === rule.value)
+    return label ? label.name : rule.value
+  }
   // Tags
   if (rule.field === "tags" && rule.value === "_any") return "Has tags"
   if (rule.field === "tags" && rule.value === "_none") return "No tags"
@@ -117,6 +122,7 @@ interface FilterMenuProps {
   isSingleStatusTab: boolean
   folders: Folder[]
   tags: TagType[]
+  labels?: Label[]
   onToggleFilter: (field: FilterRule["field"], value: string, operator?: FilterRule["operator"]) => void
   onSetFilters: (filters: FilterRule[]) => void
 }
@@ -127,9 +133,13 @@ export function FilterMenuItems({
   isSingleStatusTab,
   folders,
   tags,
+  labels = [],
   onToggleFilter,
   onSetFilters,
 }: FilterMenuProps) {
+  const [labelSearch, setLabelSearch] = useState("")
+  const [tagSearch, setTagSearch] = useState("")
+
   const showStatusFilter = groupBy !== "status" && groupBy !== "triage" && !isSingleStatusTab
   const showPriorityFilter = groupBy !== "priority"
   const showFolderFilter = groupBy !== "folder"
@@ -252,7 +262,7 @@ export function FilterMenuItems({
             <span className="text-sm">Label</span>
             <ActiveBadge count={labelCount} />
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-48">
+          <DropdownMenuSubContent className="w-48 max-h-80 overflow-y-auto">
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("label", "_none") }}>
               <CheckMark active={hasFilter(filters, "label", "_none")} />
               <span className="text-sm text-muted-foreground">No label</span>
@@ -261,6 +271,29 @@ export function FilterMenuItems({
               <CheckMark active={hasFilter(filters, "label", "_any")} />
               <span className="text-sm">Has label</span>
             </DropdownMenuItem>
+            {labels.length > 0 && <DropdownMenuSeparator />}
+            {labels.length >= 10 && (
+              <div className="px-2 py-1.5">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  value={labelSearch}
+                  onChange={(e) => setLabelSearch(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                />
+              </div>
+            )}
+            {labels
+              .filter((label) => !labelSearch || label.name.toLowerCase().includes(labelSearch.toLowerCase()))
+              .map((label) => (
+                <DropdownMenuItem key={label.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("label", label.id) }}>
+                  <CheckMark active={hasFilter(filters, "label", label.id)} />
+                  <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: label.color }} />
+                  <span className="text-sm">{label.name}</span>
+                </DropdownMenuItem>
+              ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
       )}
@@ -272,7 +305,7 @@ export function FilterMenuItems({
           <span className="text-sm">Tags</span>
           <ActiveBadge count={tagCount} />
         </DropdownMenuSubTrigger>
-        <DropdownMenuSubContent className="w-52">
+        <DropdownMenuSubContent className="w-52 max-h-80 overflow-y-auto">
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_any") }}>
             <CheckMark active={hasFilter(filters, "tags", "_any")} />
             <Tag className="h-4 w-4 text-muted-foreground" />
@@ -284,16 +317,31 @@ export function FilterMenuItems({
             <span className="text-sm">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
-          {tags.map((tag) => (
-            <DropdownMenuItem key={tag.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", tag.id) }}>
-              <CheckMark active={hasFilter(filters, "tags", tag.id)} />
-              <span
-                className="h-2.5 w-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: tag.color }}
+          {tags.length >= 10 && (
+            <div className="px-2 py-1.5">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                value={tagSearch}
+                onChange={(e) => setTagSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
               />
-              <span className="text-sm">{tag.name}</span>
-            </DropdownMenuItem>
-          ))}
+            </div>
+          )}
+          {tags
+            .filter((tag) => !tagSearch || tag.name.toLowerCase().includes(tagSearch.toLowerCase()))
+            .map((tag) => (
+              <DropdownMenuItem key={tag.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", tag.id) }}>
+                <CheckMark active={hasFilter(filters, "tags", tag.id)} />
+                <span
+                  className="h-2.5 w-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: tag.color }}
+                />
+                <span className="text-sm">{tag.name}</span>
+              </DropdownMenuItem>
+            ))}
         </DropdownMenuSubContent>
       </DropdownMenuSub>
 
@@ -531,10 +579,14 @@ interface FilterFieldContentProps {
   filters: FilterRule[]
   folders: Folder[]
   tags: TagType[]
+  labels?: Label[]
   onToggleFilter: (field: FilterRule["field"], value: string, operator?: FilterRule["operator"]) => void
 }
 
-export function FilterFieldContent({ groupKey, filters, folders, tags, onToggleFilter }: FilterFieldContentProps) {
+export function FilterFieldContent({ groupKey, filters, folders, tags, labels = [], onToggleFilter }: FilterFieldContentProps) {
+  const [labelSearch, setLabelSearch] = useState("")
+  const [tagSearch, setTagSearch] = useState("")
+
   switch (groupKey) {
     case "status":
       return (
@@ -586,6 +638,29 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, onToggleF
             <CheckMark active={hasFilter(filters, "label", "_any")} />
             <span className="text-sm">Has label</span>
           </DropdownMenuItem>
+          {labels.length > 0 && <DropdownMenuSeparator />}
+          {labels.length >= 10 && (
+            <div className="px-2 py-1.5">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                value={labelSearch}
+                onChange={(e) => setLabelSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
+          )}
+          {labels
+            .filter((label) => !labelSearch || label.name.toLowerCase().includes(labelSearch.toLowerCase()))
+            .map((label) => (
+              <DropdownMenuItem key={label.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("label", label.id) }}>
+                <CheckMark active={hasFilter(filters, "label", label.id)} />
+                <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: label.color }} />
+                <span className="text-sm">{label.name}</span>
+              </DropdownMenuItem>
+            ))}
         </>
       )
     case "tags":
@@ -602,13 +677,28 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, onToggleF
             <span className="text-sm">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
-          {tags.map((tag) => (
-            <DropdownMenuItem key={tag.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", tag.id) }}>
-              <CheckMark active={hasFilter(filters, "tags", tag.id)} />
-              <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
-              <span className="text-sm">{tag.name}</span>
-            </DropdownMenuItem>
-          ))}
+          {tags.length >= 10 && (
+            <div className="px-2 py-1.5">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                value={tagSearch}
+                onChange={(e) => setTagSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
+          )}
+          {tags
+            .filter((tag) => !tagSearch || tag.name.toLowerCase().includes(tagSearch.toLowerCase()))
+            .map((tag) => (
+              <DropdownMenuItem key={tag.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", tag.id) }}>
+                <CheckMark active={hasFilter(filters, "tags", tag.id)} />
+                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                <span className="text-sm">{tag.name}</span>
+              </DropdownMenuItem>
+            ))}
         </>
       )
     case "source": {
@@ -787,6 +877,7 @@ export function FilterChipBar({
   filters,
   folders,
   tags,
+  labels = [],
   onRemoveFilter,
   onClearAll,
   ...menuProps
@@ -801,7 +892,7 @@ export function FilterChipBar({
           key={i}
           className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary/50 px-2 py-0.5 text-xs text-foreground"
         >
-          <span className="text-muted-foreground">{formatFilterLabel(f, folders, tags)}</span>
+          <span className="text-muted-foreground">{formatFilterLabel(f, folders, tags, labels)}</span>
           <button
             onClick={() => onRemoveFilter(i)}
             className="ml-0.5 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -819,7 +910,7 @@ export function FilterChipBar({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
-          <FilterMenuItems filters={filters} folders={folders} tags={tags} {...menuProps} />
+          <FilterMenuItems filters={filters} folders={folders} tags={tags} labels={labels} {...menuProps} />
         </DropdownMenuContent>
       </DropdownMenu>
 

@@ -525,6 +525,7 @@ export function NotesBoard({
   const setReminder = usePlotStore((s) => s.setReminder)
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
 
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
@@ -709,6 +710,7 @@ export function NotesBoard({
             isSingleStatusTab={isSingleStatusTab}
             folders={folders}
             tags={tags}
+            labels={labels}
             onToggleFilter={(field, value, op) => {
               const exists = viewState.filters.some(
                 (f) => f.field === field && f.operator === (op ?? "eq") && f.value === value
@@ -851,6 +853,7 @@ export function NotesBoard({
         isSingleStatusTab={isSingleStatusTab}
         folders={folders}
         tags={tags}
+        labels={labels}
         onToggleFilter={(field, value, op) => {
           const exists = viewState.filters.some(
             (f) => f.field === field && f.operator === (op ?? "eq") && f.value === value

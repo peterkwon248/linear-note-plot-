@@ -105,6 +105,7 @@ const DRAG_THRESHOLD = 5
 
 export function TagsView() {
   const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
   const createTag = usePlotStore((s) => s.createTag)
@@ -423,6 +424,7 @@ export function TagsView() {
             isSingleStatusTab={false}
             folders={folders}
             tags={tags}
+            labels={labels}
             onToggleFilter={toggleFilter}
             onSetFilters={(f) => updateTagView({ filters: f })}
           />
@@ -481,6 +483,7 @@ export function TagsView() {
           isSingleStatusTab={false}
           folders={folders}
           tags={tags}
+          labels={labels}
           onToggleFilter={toggleFilter}
           onRemoveFilter={removeFilter}
           onClearAll={() => updateTagView({ filters: [] })}
