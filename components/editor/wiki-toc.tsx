@@ -58,7 +58,7 @@ export function WikiTOC({ content, onScrollTo, className }: WikiTOCProps) {
     <div className={cn("rounded-lg border border-border bg-card/50 p-3", className)}>
       <button
         onClick={() => setCollapsed((c) => !c)}
-        className="flex w-full items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+        className="flex w-full items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
       >
         {collapsed ? (
           <ChevronRight className="h-3.5 w-3.5" />
@@ -67,7 +67,7 @@ export function WikiTOC({ content, onScrollTo, className }: WikiTOCProps) {
         )}
         <List className="h-3.5 w-3.5" />
         Contents
-        <span className="ml-auto text-[11px] font-normal tabular-nums text-muted-foreground/60">
+        <span className="ml-auto text-2xs font-normal tabular-nums text-muted-foreground/60">
           {headings.length}
         </span>
       </button>
@@ -79,7 +79,7 @@ export function WikiTOC({ content, onScrollTo, className }: WikiTOCProps) {
               key={h.id}
               onClick={() => handleClick(h)}
               className={cn(
-                "flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-[13px] transition-colors",
+                "flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-note transition-colors",
                 activeIndex === h.index
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",

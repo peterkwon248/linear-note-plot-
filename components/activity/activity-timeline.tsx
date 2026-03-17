@@ -23,7 +23,7 @@ export function ActivityTimeline({ noteId }: { noteId: string }) {
 
   if (noteEvents.length === 0) {
     return (
-      <p className="text-[12px] text-muted-foreground/50">No activity yet</p>
+      <p className="text-xs text-muted-foreground/50">No activity yet</p>
     )
   }
 
@@ -35,7 +35,7 @@ export function ActivityTimeline({ noteId }: { noteId: string }) {
       {hasMore && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          className="mt-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          className="mt-1 text-2xs text-muted-foreground hover:text-foreground transition-colors"
         >
           Show all {noteEvents.length} events
         </button>
@@ -56,10 +56,10 @@ function TimelineRow({ event }: { event: NoteEvent }) {
         className="h-1.5 w-1.5 shrink-0 rounded-full"
         style={{ backgroundColor: config.color }}
       />
-      <span className="text-[12px] text-muted-foreground">
+      <span className="text-xs text-muted-foreground">
         {config.verb}
       </span>
-      <span className="ml-auto text-[11px] text-muted-foreground/50 shrink-0">
+      <span className="ml-auto text-2xs text-muted-foreground/50 shrink-0">
         {timeAgo}
       </span>
     </div>

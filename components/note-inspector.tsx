@@ -70,7 +70,7 @@ function InspectorSection({
     <div className={cn("px-4 py-3", className)}>
       <div className="mb-2 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
-        <span className="text-[12px] font-medium text-muted-foreground">
+        <span className="text-xs font-medium text-muted-foreground">
           {title}
         </span>
       </div>
@@ -120,7 +120,7 @@ function RelationRow({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="text-[11px] px-1.5 py-0.5 rounded-sm font-medium shrink-0"
+            className="text-2xs px-1.5 py-0.5 rounded-sm font-medium shrink-0"
             style={{ color: config.color, backgroundColor: `${config.color}15` }}
           >
             {label}
@@ -131,7 +131,7 @@ function RelationRow({
             <DropdownMenuItem
               key={t}
               onClick={() => onChangeType(t)}
-              className="text-[13px]"
+              className="text-note"
             >
               <span
                 className="w-2 h-2 rounded-full mr-2"
@@ -146,7 +146,7 @@ function RelationRow({
 
       <button
         onClick={onNavigate}
-        className="text-[13px] text-muted-foreground hover:text-foreground truncate flex-1 text-left"
+        className="text-note text-muted-foreground hover:text-foreground truncate flex-1 text-left"
       >
         {noteTitle || "Untitled"}
       </button>
@@ -181,7 +181,7 @@ function SuggestionRow({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="text-[11px] px-1.5 py-0.5 rounded-sm font-medium shrink-0"
+            className="text-2xs px-1.5 py-0.5 rounded-sm font-medium shrink-0"
             style={{ color: config.color, backgroundColor: `${config.color}15` }}
           >
             {RELATION_TYPE_CONFIG[selectedType].label}
@@ -192,7 +192,7 @@ function SuggestionRow({
             <DropdownMenuItem
               key={t}
               onClick={() => setSelectedType(t)}
-              className="text-[13px]"
+              className="text-note"
             >
               <span
                 className="w-2 h-2 rounded-full mr-2"
@@ -204,21 +204,21 @@ function SuggestionRow({
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      <span className="truncate flex-1 text-[13px] text-muted-foreground">
+      <span className="truncate flex-1 text-note text-muted-foreground">
         {noteTitle || "Untitled"}
       </span>
-      <span className="text-[11px] text-muted-foreground/40 shrink-0">
+      <span className="text-2xs text-muted-foreground/40 shrink-0">
         {suggestion.reason}
       </span>
       <button
         onClick={() => onAccept(selectedType)}
-        className="shrink-0 text-[11px] text-green-500 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+        className="shrink-0 text-2xs text-green-500 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
       >
         Accept
       </button>
       <button
         onClick={() => onDismiss()}
-        className="shrink-0 text-[11px] text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+        className="shrink-0 text-2xs text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
       >
         Skip
       </button>
@@ -326,7 +326,7 @@ export function NoteInspector() {
     <aside className="flex h-full w-[320px] shrink-0 flex-col overflow-hidden border-l border-border bg-card">
       {/* Inspector Header */}
       <header className="flex items-center justify-between border-b border-border px-4 py-2.5">
-        <span className="text-[15px] font-medium text-foreground">Details</span>
+        <span className="text-ui font-medium text-foreground">Details</span>
         <button
           onClick={() => setDetailsOpen(false)}
           className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -340,19 +340,19 @@ export function NoteInspector() {
         {/* Status Badges */}
         <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
           {note.pinned && (
-            <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-[12px] font-medium text-chart-3">
+            <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-xs font-medium text-chart-3">
               <Pin className="h-3.5 w-3.5" />
               Pinned
             </span>
           )}
           {note.archived && (
-            <span className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[12px] font-medium text-muted-foreground">
+            <span className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
               <Archive className="h-3.5 w-3.5" />
               Archived
             </span>
           )}
           {/* Stage badge */}
-          <span className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] font-medium ${
+          <span className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${
             note.status === "inbox"
               ? "bg-accent/10 text-accent"
               : note.status === "capture"
@@ -365,13 +365,13 @@ export function NoteInspector() {
             {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Inbox"}
           </span>
           {note.status === "capture" && isReadyToPromote(note, backlinks) && (
-            <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-[12px] font-medium text-chart-5">
+            <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-xs font-medium text-chart-5">
               <Sparkles className="h-3.5 w-3.5" />
               Ready to promote
             </span>
           )}
           {note.parentNoteId && (
-            <span className="flex items-center gap-1 rounded-md bg-chart-1/10 px-2 py-0.5 text-[12px] font-medium text-chart-1">
+            <span className="flex items-center gap-1 rounded-md bg-chart-1/10 px-2 py-0.5 text-xs font-medium text-chart-1">
               <GitBranch className="h-3.5 w-3.5" />
               Chain
             </span>
@@ -383,34 +383,34 @@ export function NoteInspector() {
           <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/10">
             <button
               onClick={() => { triageKeep(note.id); toast("Done — moved to Capture"); advanceToNextInbox() }}
-              className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+              className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             >
               <Check className="h-3.5 w-3.5" />
               Done
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[12px] font-medium text-foreground transition-colors hover:bg-secondary">
+                <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
                   <AlarmClock className="h-3.5 w-3.5" />
                   Snooze
                   <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-44">
-                <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("3h")); toast("Snoozed"); advanceToNextInbox() }} className="text-[14px]">
+                <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("3h")); toast("Snoozed"); advanceToNextInbox() }} className="text-sm">
                   3 hours
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("tomorrow")); toast("Snoozed"); advanceToNextInbox() }} className="text-[14px]">
+                <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("tomorrow")); toast("Snoozed"); advanceToNextInbox() }} className="text-sm">
                   Tomorrow 10:00 AM
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("next-week")); toast("Snoozed"); advanceToNextInbox() }} className="text-[14px]">
+                <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("next-week")); toast("Snoozed"); advanceToNextInbox() }} className="text-sm">
                   Next week 10:00 AM
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <button
               onClick={() => { triageTrash(note.id); toast("Trashed"); advanceToNextInbox() }}
-              className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[12px] font-medium text-destructive transition-colors hover:bg-destructive/10"
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Trash
@@ -423,7 +423,7 @@ export function NoteInspector() {
             <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
               <button
                 onClick={() => { promoteToPermanent(note.id); toast("Promoted to Permanent") }}
-                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium transition-colors ${
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                   isReadyToPromote(note, backlinks)
                     ? "bg-chart-5 text-primary-foreground hover:bg-chart-5/80"
                     : "border border-border bg-card text-foreground hover:bg-secondary"
@@ -434,7 +434,7 @@ export function NoteInspector() {
               </button>
               <button
                 onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
-                className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <Inbox className="h-3.5 w-3.5" />
                 Back to Inbox
@@ -443,10 +443,10 @@ export function NoteInspector() {
             {staleSuggest && (
               <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />
-                <span className="text-[12px] text-destructive">14+ days untouched.</span>
+                <span className="text-xs text-destructive">14+ days untouched.</span>
                 <button
                   onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
-                  className="ml-auto text-[11px] font-medium text-destructive underline underline-offset-2 hover:no-underline"
+                  className="ml-auto text-2xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
                 >
                   Move to Inbox?
                 </button>
@@ -455,7 +455,7 @@ export function NoteInspector() {
             {!staleSuggest && stale && (
               <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-chart-3" />
-                <span className="text-[12px] text-chart-3">Review needed - 7+ days untouched.</span>
+                <span className="text-xs text-chart-3">Review needed - 7+ days untouched.</span>
               </div>
             )}
           </div>
@@ -466,7 +466,7 @@ export function NoteInspector() {
             <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
               <button
                 onClick={() => { undoPromote(note.id); toast("Demoted to Capture") }}
-                className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <ArrowDownLeft className="h-3.5 w-3.5" />
                 Demote to Capture
@@ -475,7 +475,7 @@ export function NoteInspector() {
             {linkCount === 0 && (
               <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
                 <Link2 className="h-3.5 w-3.5 shrink-0 text-chart-3" />
-                <span className="text-[12px] text-chart-3">Unlinked - add connections to strengthen graph.</span>
+                <span className="text-xs text-chart-3">Unlinked - add connections to strengthen graph.</span>
               </div>
             )}
           </div>
@@ -485,14 +485,14 @@ export function NoteInspector() {
         <InspectorSection title="Dates" icon={<Calendar className="h-4 w-4" />}>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[14px] text-muted-foreground">Created</span>
-              <span className="text-[14px] text-foreground">
+              <span className="text-sm text-muted-foreground">Created</span>
+              <span className="text-sm text-foreground">
                 {format(new Date(note.createdAt), "MMM d, yyyy")}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[14px] text-muted-foreground">Updated</span>
-              <span className="text-[14px] text-foreground">
+              <span className="text-sm text-muted-foreground">Updated</span>
+              <span className="text-sm text-foreground">
                 {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
               </span>
             </div>
@@ -527,7 +527,7 @@ export function NoteInspector() {
         <InspectorSection title="Folder" icon={<FolderOpen className="h-4 w-4" />}>
           <Popover open={folderOpen} onOpenChange={setFolderOpen}>
             <PopoverTrigger asChild>
-              <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary/60">
+              <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary/60">
                 <span className="flex items-center gap-2">
                   {currentFolder && (
                     <span
@@ -547,7 +547,7 @@ export function NoteInspector() {
                   setFolderOpen(false)
                 }}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[14px] transition-colors hover:bg-secondary",
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary",
                   !note.folderId ? "text-foreground" : "text-muted-foreground"
                 )}
               >
@@ -561,7 +561,7 @@ export function NoteInspector() {
                     setFolderOpen(false)
                   }}
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[14px] transition-colors hover:bg-secondary",
+                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary",
                     note.folderId === folder.id ? "text-foreground" : "text-muted-foreground"
                   )}
                 >
@@ -596,7 +596,7 @@ export function NoteInspector() {
             {noteTags.map((tag) => (
               <span
                 key={tag.id}
-                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium"
+                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
                 style={{
                   backgroundColor: `${tag.color}18`,
                   color: tag.color,
@@ -614,7 +614,7 @@ export function NoteInspector() {
             {availableTags.length > 0 && (
               <Popover open={tagOpen} onOpenChange={setTagOpen}>
                 <PopoverTrigger asChild>
-                  <button className="flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-[12px] text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
+                  <button className="flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
                     <Plus className="h-2.5 w-2.5" />
                     Add
                   </button>
@@ -627,7 +627,7 @@ export function NoteInspector() {
                         addTagToNote(note.id, tag.id)
                         setTagOpen(false)
                       }}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[14px] text-muted-foreground transition-colors hover:bg-secondary"
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary"
                     >
                       <span
                         className="h-2 w-2 rounded-full"
@@ -640,7 +640,7 @@ export function NoteInspector() {
               </Popover>
             )}
             {noteTags.length === 0 && availableTags.length === 0 && (
-              <span className="text-[14px] text-muted-foreground">No tags available</span>
+              <span className="text-sm text-muted-foreground">No tags available</span>
             )}
           </div>
         </InspectorSection>
@@ -654,10 +654,10 @@ export function NoteInspector() {
               {headings.map((h, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-1.5 text-[14px] text-muted-foreground transition-colors hover:text-foreground cursor-default"
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-default"
                   style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
                 >
-                  <span className="shrink-0 text-[11px] font-mono text-muted-foreground/50">
+                  <span className="shrink-0 text-2xs font-mono text-muted-foreground/50">
                     {"H" + h.level}
                   </span>
                   <span className="truncate">{h.text}</span>
@@ -665,7 +665,7 @@ export function NoteInspector() {
               ))}
             </div>
           ) : (
-            <span className="text-[14px] text-muted-foreground">No headings found</span>
+            <span className="text-sm text-muted-foreground">No headings found</span>
           )}
         </InspectorSection>
 
@@ -675,16 +675,16 @@ export function NoteInspector() {
         <InspectorSection title="Properties" icon={<FileText className="h-4 w-4" />}>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[14px] text-muted-foreground">Words</span>
-              <span className="text-[14px] tabular-nums text-foreground">{wordCount}</span>
+              <span className="text-sm text-muted-foreground">Words</span>
+              <span className="text-sm tabular-nums text-foreground">{wordCount}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[14px] text-muted-foreground">Characters</span>
-              <span className="text-[14px] tabular-nums text-foreground">{charCount}</span>
+              <span className="text-sm text-muted-foreground">Characters</span>
+              <span className="text-sm tabular-nums text-foreground">{charCount}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[14px] text-muted-foreground">Headings</span>
-              <span className="text-[14px] tabular-nums text-foreground">{headings.length}</span>
+              <span className="text-sm text-muted-foreground">Headings</span>
+              <span className="text-sm tabular-nums text-foreground">{headings.length}</span>
             </div>
           </div>
         </InspectorSection>
@@ -694,17 +694,17 @@ export function NoteInspector() {
         {/* Linked References */}
         <InspectorSection title="References" icon={<Link2 className="h-4 w-4" />}>
           {backlinkNotes.length === 0 && related.length === 0 ? (
-            <span className="text-[14px] text-muted-foreground">No linked references</span>
+            <span className="text-sm text-muted-foreground">No linked references</span>
           ) : (
             <div className="space-y-2">
               {backlinkNotes.length > 0 && (
                 <div className="space-y-0.5">
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">Backlinks</span>
+                  <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60 px-1">Backlinks</span>
                   {backlinkNotes.map((n) => (
                     <button
                       key={n.id}
                       onClick={() => setSelectedNoteId(n.id)}
-                      className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-[14px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                      className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
                     >
                       <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                       <span className="truncate">{n.title || "Untitled"}</span>
@@ -714,7 +714,7 @@ export function NoteInspector() {
               )}
               {related.length > 0 && (
                 <div className="space-y-0.5">
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">Related</span>
+                  <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60 px-1">Related</span>
                   {related.map((r) => {
                     const rNote = notes.find((n) => n.id === r.noteId)
                     if (!rNote) return null
@@ -722,11 +722,11 @@ export function NoteInspector() {
                       <button
                         key={r.noteId}
                         onClick={() => setSelectedNoteId(r.noteId)}
-                        className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-[14px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors group"
+                        className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors group"
                       >
                         <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
                         <span className="truncate flex-1">{rNote.title || "Untitled"}</span>
-                        <span className="text-[11px] text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground/60">
+                        <span className="text-2xs text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground/60">
                           {r.reasons[r.reasons.length - 1]}
                         </span>
                       </button>
@@ -753,15 +753,15 @@ export function NoteInspector() {
                       className="flex items-center gap-2 group px-1 py-0.5 rounded hover:bg-secondary/50 transition-colors"
                     >
                       <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                      <span className="truncate flex-1 text-[14px] text-muted-foreground">
+                      <span className="truncate flex-1 text-sm text-muted-foreground">
                         {m.title}
                       </span>
-                      <span className="text-[11px] text-muted-foreground/40">
+                      <span className="text-2xs text-muted-foreground/40">
                         {m.count}×
                       </span>
                       <button
                         onClick={() => addWikiLink(note!.id, m.title)}
-                        className="shrink-0 text-[11px] text-accent opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                        className="shrink-0 text-2xs text-accent opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
                       >
                         Link
                       </button>
@@ -779,10 +779,10 @@ export function NoteInspector() {
         <InspectorSection title="Relations" icon={<Network className="h-4 w-4" />}>
           {noteRelations.outgoing.length === 0 && noteRelations.incoming.length === 0 && !relationPickerOpen ? (
             <div className="space-y-2">
-              <span className="text-[13px] text-muted-foreground">No relations</span>
+              <span className="text-note text-muted-foreground">No relations</span>
               <button
                 onClick={() => setRelationPickerOpen(true)}
-                className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add relation
@@ -792,7 +792,7 @@ export function NoteInspector() {
             <div className="space-y-2">
               {noteRelations.outgoing.length > 0 && (
                 <div className="space-y-0.5">
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
+                  <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
                     Outgoing
                   </span>
                   {noteRelations.outgoing.map((rel: Relation) => {
@@ -815,7 +815,7 @@ export function NoteInspector() {
 
               {noteRelations.incoming.length > 0 && (
                 <div className="space-y-0.5">
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
+                  <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
                     Incoming
                   </span>
                   {noteRelations.incoming.map((rel: Relation) => {
@@ -839,7 +839,7 @@ export function NoteInspector() {
               {/* Relation Suggestions */}
               {pendingSuggestions.length > 0 && (
                 <div className="space-y-0.5 mt-2">
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
+                  <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
                     Suggestions
                   </span>
                   {pendingSuggestions.map((s) => {
@@ -862,7 +862,7 @@ export function NoteInspector() {
               {!relationPickerOpen && (
                 <button
                   onClick={() => setRelationPickerOpen(true)}
-                  className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors mt-1"
+                  className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors mt-1"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Add relation
@@ -900,14 +900,14 @@ export function NoteInspector() {
           <div className="flex flex-col gap-1.5">
             <button
               onClick={() => setMergePickerOpen(true, note.id)}
-              className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <Merge className="h-3.5 w-3.5" />
               Merge with...
             </button>
             <button
               onClick={() => setLinkPickerOpen(true, note.id)}
-              className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <Link2 className="h-3.5 w-3.5" />
               Link to...
@@ -919,7 +919,7 @@ export function NoteInspector() {
 
         {/* Attachments (placeholder) */}
         <InspectorSection title="Attachments" icon={<Paperclip className="h-4 w-4" />}>
-          <span className="text-[14px] text-muted-foreground">No attachments</span>
+          <span className="text-sm text-muted-foreground">No attachments</span>
         </InspectorSection>
 
         <div className="mx-4 border-b border-border" />

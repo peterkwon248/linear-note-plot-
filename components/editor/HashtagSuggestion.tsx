@@ -76,7 +76,7 @@ const HashtagList = forwardRef<HashtagListRef, HashtagListProps>(
     return (
       <div className="z-50 min-w-[160px] max-w-[240px] overflow-hidden rounded-md border border-border bg-popover shadow-md">
         <div className="px-2 py-1 border-b border-border/50">
-          <span className="text-[11px] font-medium text-muted-foreground">
+          <span className="text-2xs font-medium text-muted-foreground">
             Tags
           </span>
         </div>
@@ -86,7 +86,7 @@ const HashtagList = forwardRef<HashtagListRef, HashtagListProps>(
               key={item.id}
               onClick={() => selectItem(index)}
               className={[
-                "flex w-full items-center gap-2 px-2 py-1.5 text-left text-[13px] transition-colors",
+                "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",
                 index === selectedIndex
                   ? "bg-secondary text-foreground"
                   : "text-foreground hover:bg-secondary/50",
@@ -94,7 +94,7 @@ const HashtagList = forwardRef<HashtagListRef, HashtagListProps>(
             >
               {item.isNew ? (
                 <>
-                  <span className="text-muted-foreground text-[12px]">+</span>
+                  <span className="text-muted-foreground text-xs">+</span>
                   <span className="text-muted-foreground">
                     Create{" "}
                     <span className="font-medium text-foreground">

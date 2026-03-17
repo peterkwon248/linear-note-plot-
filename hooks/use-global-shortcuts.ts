@@ -2,10 +2,12 @@
 
 import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { isEditableTarget } from "@/lib/keyboard-utils"
 import { findNode } from "@/lib/workspace/tree-utils"
 import { isLeaf } from "@/lib/workspace/types"
+import { popUndo } from "@/lib/undo-manager"
 
 /**
  * Single global keydown listener that consolidates all app-wide keyboard
@@ -102,6 +104,18 @@ export function useGlobalShortcuts() {
         e.preventDefault()
         const s = usePlotStore.getState()
         s.setSearchOpen(!s.searchOpen)
+        return
+      }
+
+      // ── 2a. Ctrl/Cmd+Z — global undo ──────────────────────────
+      if (e.key === "z" && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+        // Let editable targets handle their own undo
+        if (isEditableTarget(target)) return
+        e.preventDefault()
+        const label = popUndo()
+        if (label) {
+          toast(`Undone: ${label}`)
+        }
         return
       }
 

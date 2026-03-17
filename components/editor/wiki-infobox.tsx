@@ -58,7 +58,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
         <div className={cn("rounded-lg border border-dashed border-border p-3", className)}>
           <button
             onClick={handleStartEdit}
-            className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors"
           >
             <Plus className="h-3.5 w-3.5" />
             Add infobox
@@ -70,7 +70,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
     return (
       <div className={cn("rounded-lg border border-border bg-card/50 overflow-hidden", className)}>
         <div className="flex items-center justify-between border-b border-border bg-secondary/30 px-3 py-2">
-          <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Info
           </span>
           {editable && (
@@ -85,10 +85,10 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
         <div className="divide-y divide-border">
           {entries.map((entry, i) => (
             <div key={i} className="flex gap-3 px-3 py-2">
-              <span className="shrink-0 text-[13px] font-medium text-muted-foreground min-w-[80px]">
+              <span className="shrink-0 text-note font-medium text-muted-foreground min-w-[80px]">
                 {entry.key}
               </span>
-              <span className="text-[13px] text-foreground break-words">{entry.value}</span>
+              <span className="text-note text-foreground break-words">{entry.value}</span>
             </div>
           ))}
         </div>
@@ -100,7 +100,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
   return (
     <div className={cn("rounded-lg border border-primary/30 bg-card/50 overflow-hidden", className)}>
       <div className="flex items-center justify-between border-b border-border bg-secondary/30 px-3 py-2">
-        <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Edit Infobox
         </span>
         <div className="flex items-center gap-1">
@@ -125,13 +125,13 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
               value={entry.key}
               onChange={(e) => handleChange(i, "key", e.target.value)}
               placeholder="Key"
-              className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[13px] outline-none focus:ring-1 focus:ring-ring"
+              className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-note outline-none focus:ring-1 focus:ring-ring"
             />
             <input
               value={entry.value}
               onChange={(e) => handleChange(i, "value", e.target.value)}
               placeholder="Value"
-              className="flex-1 rounded border border-border bg-background px-2 py-1 text-[13px] outline-none focus:ring-1 focus:ring-ring"
+              className="flex-1 rounded border border-border bg-background px-2 py-1 text-note outline-none focus:ring-1 focus:ring-ring"
             />
             <button
               onClick={() => handleRemove(i)}
@@ -143,7 +143,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
         ))}
         <button
           onClick={handleAdd}
-          className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
           Add field

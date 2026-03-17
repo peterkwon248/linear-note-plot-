@@ -139,10 +139,9 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             border: "none",
             outline: "none",
             padding: "0 8px",
-            fontSize: "13px",
             fontWeight: 500,
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
         >
           <Plus size={14} strokeWidth={2} />
           <span>Insert</span>
@@ -169,9 +168,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Image size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Image</span>
@@ -187,9 +185,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Play size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>YouTube</span>
@@ -205,9 +202,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Paperclip size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>File</span>
@@ -225,9 +221,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Table size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Table</span>
@@ -243,9 +238,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <CalendarDays size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Date</span>
@@ -263,9 +257,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Minus size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Divider</span>
@@ -281,9 +274,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Code size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Code Block</span>
@@ -299,9 +291,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <ChevronRight size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Toggle</span>
@@ -319,9 +310,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Sigma size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Inline Math</span>
@@ -337,9 +327,8 @@ export function InsertMenu({ editor }: InsertMenuProps) {
             borderRadius: "6px",
             cursor: "pointer",
             color: "var(--muted-foreground)",
-            fontSize: "13px",
           }}
-          className="hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
+          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
           <Sigma size={14} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>Block Math</span>

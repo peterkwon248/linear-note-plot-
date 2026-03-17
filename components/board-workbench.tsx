@@ -154,13 +154,13 @@ export function BoardWorkbench({
         {/* Header */}
         <div className="mb-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
+            <h3 className="text-ui font-semibold text-foreground flex items-center gap-2">
               <Zap className="h-4 w-4 text-accent" />
               {selectedIds.size} note{selectedIds.size > 1 ? "s" : ""} selected
             </h3>
             <button
               onClick={onClearSelection}
-              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               Deselect
             </button>
@@ -169,13 +169,13 @@ export function BoardWorkbench({
 
         {/* Batch Actions */}
         <div className="space-y-3">
-          <h4 className="text-[12px] font-medium text-muted-foreground">
+          <h4 className="text-xs font-medium text-muted-foreground">
             Batch Actions
           </h4>
 
           {/* Status */}
           <div className="flex items-center justify-between">
-            <span className="text-[14px] text-muted-foreground">Status</span>
+            <span className="text-sm text-muted-foreground">Status</span>
             <StatusDropdown
               value={commonStatus ?? "inbox"}
               onChange={(s) => batchUpdateNotes(Array.from(selectedIds), { status: s })}
@@ -185,7 +185,7 @@ export function BoardWorkbench({
 
           {/* Priority */}
           <div className="flex items-center justify-between">
-            <span className="text-[14px] text-muted-foreground">Priority</span>
+            <span className="text-sm text-muted-foreground">Priority</span>
             <PriorityDropdown
               value={commonPriority ?? "none"}
               onChange={(p) => batchUpdateNotes(Array.from(selectedIds), { priority: p })}
@@ -206,7 +206,7 @@ export function BoardWorkbench({
 
         {/* Remind */}
         <div className="mt-4 space-y-3">
-          <h4 className="text-[12px] font-medium text-muted-foreground">
+          <h4 className="text-xs font-medium text-muted-foreground">
             Remind
           </h4>
           <div className="space-y-1">
@@ -217,7 +217,7 @@ export function BoardWorkbench({
                 toast(`Reminder set for ${selectedIds.size} note${selectedIds.size > 1 ? "s" : ""}`)
               }}
               triggerContent={
-                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary">
+                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
                   <Bell className="h-4 w-4 text-accent" />
                   Remind
                 </button>
@@ -292,7 +292,7 @@ function WorkflowActions({
 
   return (
     <div className="mt-4 space-y-3">
-      <h4 className="text-[12px] font-medium text-muted-foreground">
+      <h4 className="text-xs font-medium text-muted-foreground">
         Workflow
       </h4>
       <div className="space-y-1">
@@ -300,7 +300,7 @@ function WorkflowActions({
           <button
             key={a.label}
             onClick={a.onClick}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
           >
             {a.icon}
             {a.label}
@@ -394,7 +394,7 @@ function InboxOverview({
 
   return (
     <div>
-      <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2 mb-4">
+      <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
         <InboxIcon className="h-4 w-4 text-chart-2" />
         Inbox Overview
       </h3>
@@ -402,8 +402,8 @@ function InboxOverview({
       <div className="space-y-4">
         {/* Stats */}
         <div className="rounded-md bg-background border border-border p-3">
-          <div className="text-[20px] font-bold text-foreground">{notes.length}</div>
-          <div className="text-[12px] text-muted-foreground">notes to process</div>
+          <div className="text-xl font-bold text-foreground">{notes.length}</div>
+          <div className="text-xs text-muted-foreground">notes to process</div>
 
           {/* Progress bar */}
           <div className="mt-3 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
@@ -412,20 +412,20 @@ function InboxOverview({
               style={{ width: `${processedPercent}%` }}
             />
           </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
+          <div className="mt-1 text-2xs text-muted-foreground">
             {processedCount} of {notes.length} processed
           </div>
         </div>
 
         {/* Quick Actions */}
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">
             Quick Actions
           </h4>
           <div className="space-y-1">
             <button
               onClick={onSelectAll}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
               <MousePointerClick className="h-4 w-4" />
               Select All
@@ -433,7 +433,7 @@ function InboxOverview({
             {untriagedNotes.length > 0 && (
               <button
                 onClick={selectUntriaged}
-                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 Select Untriaged ({untriagedNotes.length})
@@ -469,35 +469,35 @@ function CaptureOverview({
 
   return (
     <div>
-      <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2 mb-4">
+      <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
         <Pencil className="h-4 w-4 text-chart-3" />
         Capture Overview
       </h3>
 
       <div className="space-y-4">
         <div className="rounded-md bg-background border border-border p-3">
-          <div className="text-[20px] font-bold text-foreground">{notes.length}</div>
-          <div className="text-[12px] text-muted-foreground">notes in capture</div>
+          <div className="text-xl font-bold text-foreground">{notes.length}</div>
+          <div className="text-xs text-muted-foreground">notes in capture</div>
         </div>
 
         {/* Ready to Promote */}
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">
             Ready to Promote
           </h4>
           <div className="space-y-1">
             {readyNotes.length === 0 ? (
-              <p className="text-[12px] text-muted-foreground/60 py-2">No notes with 3+ links yet</p>
+              <p className="text-xs text-muted-foreground/60 py-2">No notes with 3+ links yet</p>
             ) : (
               readyNotes.slice(0, 5).map((note) => (
                 <button
                   key={note.id}
                   onClick={() => onCardClick?.(note.id)}
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-[14px] transition-colors hover:bg-secondary"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors hover:bg-secondary"
                 >
                   <Link2 className="h-3.5 w-3.5 text-accent shrink-0" />
                   <span className="truncate text-foreground">{note.title || "Untitled"}</span>
-                  <span className="ml-auto text-[11px] text-muted-foreground shrink-0">
+                  <span className="ml-auto text-2xs text-muted-foreground shrink-0">
                     {backlinksMap.get(note.id) ?? 0} links
                   </span>
                 </button>
@@ -508,13 +508,13 @@ function CaptureOverview({
 
         {/* Quick Actions */}
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">
             Quick Actions
           </h4>
           <div className="space-y-1">
             <button
               onClick={onSelectAll}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
               <MousePointerClick className="h-4 w-4" />
               Select All
@@ -557,15 +557,15 @@ function KnowledgeOverview({
 
   return (
     <div>
-      <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2 mb-4">
+      <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
         <GraduationCap className="h-4 w-4 text-chart-5" />
         Permanent Overview
       </h3>
 
       <div className="space-y-4">
         <div className="rounded-md bg-background border border-border p-3">
-          <div className="text-[20px] font-bold text-foreground">{notes.length}</div>
-          <div className="text-[12px] text-muted-foreground">
+          <div className="text-xl font-bold text-foreground">{notes.length}</div>
+          <div className="text-xs text-muted-foreground">
             notes &middot; avg {avgLinks} links
           </div>
         </div>
@@ -573,7 +573,7 @@ function KnowledgeOverview({
         {/* Least Connected */}
         {leastConnected.length > 0 && (
           <div>
-            <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
+            <h4 className="text-xs font-medium text-muted-foreground mb-2">
               Least Connected
             </h4>
             <div className="space-y-1">
@@ -581,11 +581,11 @@ function KnowledgeOverview({
                 <button
                   key={note.id}
                   onClick={() => onCardClick?.(note.id)}
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-[14px] transition-colors hover:bg-secondary"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors hover:bg-secondary"
                 >
                   <AlertCircle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   <span className="truncate text-foreground">{note.title || "Untitled"}</span>
-                  <span className="ml-auto text-[11px] text-muted-foreground shrink-0">
+                  <span className="ml-auto text-2xs text-muted-foreground shrink-0">
                     {backlinksMap.get(note.id) ?? 0} links
                   </span>
                 </button>
@@ -596,13 +596,13 @@ function KnowledgeOverview({
 
         {/* Quick Actions */}
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">
             Quick Actions
           </h4>
           <div className="space-y-1">
             <button
               onClick={onSelectAll}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
               <MousePointerClick className="h-4 w-4" />
               Select All
@@ -629,24 +629,24 @@ function DefaultOverview({
 
   return (
     <div>
-      <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2 mb-4">
+      <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
         {tabLabel} Overview
       </h3>
 
       <div className="space-y-4">
         <div className="rounded-md bg-background border border-border p-3">
-          <div className="text-[20px] font-bold text-foreground">{notes.length}</div>
-          <div className="text-[12px] text-muted-foreground">total notes</div>
+          <div className="text-xl font-bold text-foreground">{notes.length}</div>
+          <div className="text-xs text-muted-foreground">total notes</div>
         </div>
 
         <div>
-          <h4 className="text-[12px] font-medium text-muted-foreground mb-2">
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">
             Quick Actions
           </h4>
           <div className="space-y-1">
             <button
               onClick={onSelectAll}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
               <MousePointerClick className="h-4 w-4" />
               Select All

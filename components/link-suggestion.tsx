@@ -17,7 +17,7 @@ export function LinkSuggestion({
   return (
     <div className="absolute left-0 right-0 z-20 mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
       <div className="px-2 py-1.5">
-        <span className="text-[11px] font-medium text-muted-foreground">
+        <span className="text-2xs font-medium text-muted-foreground">
           Link to note
         </span>
       </div>
@@ -25,11 +25,11 @@ export function LinkSuggestion({
         <button
           key={note.id}
           onClick={() => onSelect(note)}
-          className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-[14px] text-foreground transition-colors hover:bg-secondary/50"
+          className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-secondary/50"
         >
           <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
           <span className="truncate">{note.title}</span>
-          <span className="ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[11px] text-muted-foreground bg-secondary">
+          <span className="ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-2xs text-muted-foreground bg-secondary">
             {note.status}
           </span>
         </button>

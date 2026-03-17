@@ -266,7 +266,7 @@ export function NotePickerDialog({
           return (
             <DropdownMenu key={groupKey}>
               <DropdownMenuTrigger asChild>
-                <button className="shrink-0 inline-flex items-center gap-1 rounded-md border border-accent/25 bg-accent/5 px-1.5 py-0.5 text-[11px] text-foreground transition-colors hover:bg-accent/10">
+                <button className="shrink-0 inline-flex items-center gap-1 rounded-md border border-accent/25 bg-accent/5 px-1.5 py-0.5 text-2xs text-foreground transition-colors hover:bg-accent/10">
                   <GroupIcon className="h-3 w-3 text-accent/70" />
                   <span className="font-medium">{group.label}:</span>
                   <span className="max-w-[120px] truncate text-muted-foreground">{summary}</span>
@@ -285,7 +285,7 @@ export function NotePickerDialog({
                     ) : groupKey === "priority" ? (
                       <>
                         <PriorityBadge priority={value as NotePriority} />
-                        <span className="ml-1 text-[14px]">{label}</span>
+                        <span className="ml-1 text-sm">{label}</span>
                       </>
                     ) : groupKey === "tags" && value !== "_none" ? (
                       <>
@@ -295,10 +295,10 @@ export function NotePickerDialog({
                             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
                           ) : null
                         })()}
-                        <span className="text-[14px]">{label}</span>
+                        <span className="text-sm">{label}</span>
                       </>
                     ) : (
-                      <span className="text-[14px]">{label}</span>
+                      <span className="text-sm">{label}</span>
                     )}
                   </DropdownMenuItem>
                 ))}
@@ -306,13 +306,13 @@ export function NotePickerDialog({
                 <div className="flex items-center justify-between px-2 py-1">
                   <button
                     onClick={() => selectAllInGroup(groupKey)}
-                    className="text-[12px] text-muted-foreground hover:text-foreground"
+                    className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Select all
                   </button>
                   <button
                     onClick={() => clearGroup(groupKey)}
-                    className="text-[12px] text-muted-foreground hover:text-foreground"
+                    className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Clear
                   </button>
@@ -334,7 +334,7 @@ export function NotePickerDialog({
           <button
             key={group.key}
             onClick={() => activateGroup(group.key)}
-            className="shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             <Plus className="h-3 w-3" />
             {group.label}
@@ -343,13 +343,13 @@ export function NotePickerDialog({
 
         {/* Right side */}
         <div className="shrink-0 flex items-center gap-1.5 ml-auto">
-          <span className="text-[11px] tabular-nums text-muted-foreground/50">
+          <span className="text-2xs tabular-nums text-muted-foreground/50">
             {candidates.length}/{baseCandidates.length}
           </span>
           {activeGroupKeys.length > 0 && (
             <button
               onClick={() => setActiveFilters({})}
-              className="text-[11px] text-muted-foreground hover:text-foreground"
+              className="text-2xs text-muted-foreground hover:text-foreground"
             >
               Clear all
             </button>
@@ -361,11 +361,11 @@ export function NotePickerDialog({
         <CommandEmpty>
           <div className="flex flex-col items-center gap-1.5 py-2">
             <FileText className="h-8 w-8 text-muted-foreground/30" />
-            <p className="text-[13px] text-muted-foreground">No notes found</p>
+            <p className="text-note text-muted-foreground">No notes found</p>
             {activeGroupKeys.length > 0 && (
               <button
                 onClick={() => setActiveFilters({})}
-                className="text-[12px] text-accent hover:underline"
+                className="text-xs text-accent hover:underline"
               >
                 Clear filters
               </button>
@@ -382,18 +382,18 @@ export function NotePickerDialog({
             >
               <FileText className="h-4 w-4 shrink-0 text-muted-foreground/40" />
               <div className="flex-1 min-w-0">
-                <span className="truncate text-[14px] font-medium text-foreground block">
+                <span className="truncate text-sm font-medium text-foreground block">
                   {note.title || "Untitled"}
                 </span>
                 {note.preview && (
-                  <p className="truncate text-[12px] text-muted-foreground/50 mt-0.5">
+                  <p className="truncate text-xs text-muted-foreground/50 mt-0.5">
                     {note.preview}
                   </p>
                 )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <StatusBadge status={note.status} />
-                <span className="text-[11px] tabular-nums text-muted-foreground/40">
+                <span className="text-2xs tabular-nums text-muted-foreground/40">
                   {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
                 </span>
               </div>

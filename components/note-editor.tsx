@@ -160,7 +160,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
           </Tooltip>
           <span className="mx-1 h-4 w-px bg-border" />
           {currentFolder && (
-            <span className="flex items-center gap-1.5 text-[14px] text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <span
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: currentFolder.color }}
@@ -169,12 +169,12 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
             </span>
           )}
           {!currentFolder && (
-            <span className="text-[14px] text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
             </span>
           )}
           {note.isWiki && (
-            <span className="flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-400">
+            <span className="flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-2xs font-medium text-purple-400">
               <Globe className="h-3 w-3" />
               Wiki
             </span>
@@ -311,11 +311,11 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       {/* Wiki aliases */}
       {note.isWiki && note.aliases && note.aliases.length > 0 && (
         <div className="flex items-center gap-1.5 px-6 pt-1">
-          <span className="text-[12px] text-muted-foreground/60">Also known as:</span>
+          <span className="text-xs text-muted-foreground/60">Also known as:</span>
           {note.aliases.map((alias, i) => (
             <span
               key={i}
-              className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground"
+              className="rounded-full bg-secondary px-2 py-0.5 text-2xs text-muted-foreground"
             >
               {alias}
             </span>

@@ -229,7 +229,7 @@ export function TipTapEditor({
       attributes: {
         spellcheck: spellcheck ? "true" : "false",
         class:
-          "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-[15px] leading-[1.75] text-foreground",
+          "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-ui leading-[1.75] text-foreground",
       },
       handleDOMEvents: {
         dragover: (_view, event) => {
@@ -273,7 +273,7 @@ export function TipTapEditor({
           attributes: {
             spellcheck: spellcheck ? "true" : "false",
             class:
-              "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-[15px] leading-[1.75] text-foreground",
+              "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-ui leading-[1.75] text-foreground",
           },
           handleDOMEvents: {
             dragover: (_view, event) => {
@@ -334,12 +334,12 @@ export function TipTapEditor({
       </div>
       {editor && (
         <div
+          className="text-2xs"
           style={{
             display: "flex",
             justifyContent: "flex-end",
             gap: "12px",
             padding: "4px 16px",
-            fontSize: "11px",
             color: "var(--muted-foreground)",
             opacity: 0.6,
             userSelect: "none",

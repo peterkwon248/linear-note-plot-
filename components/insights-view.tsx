@@ -4,8 +4,11 @@ import { useState, useMemo } from "react"
 import {
   AlertCircle, AlertTriangle, Info, ChevronDown, ChevronUp,
   Lightbulb, Activity, TrendingUp, FileText, Eye,
+  SlidersHorizontal, LayoutList, LayoutGrid, Calendar,
 } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { usePlotStore } from "@/lib/store"
+import { useSettingsStore } from "@/lib/settings-store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { runAnalysis } from "@/lib/analysis/engine"
 import { computeActivityStats } from "@/lib/datalog/helpers"
@@ -57,7 +60,7 @@ function StatCard({ label, value, icon: Icon, accent }: {
       </div>
       <div>
         <p className="text-[22px] font-semibold text-foreground leading-none">{value}</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">{label}</p>
+        <p className="text-2xs text-muted-foreground mt-0.5">{label}</p>
       </div>
     </div>
   )
@@ -72,7 +75,7 @@ function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
         <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[12px] font-medium text-muted-foreground">7-Day Activity</span>
+        <span className="text-xs font-medium text-muted-foreground">7-Day Activity</span>
       </div>
       <div className="flex items-end gap-1.5 h-16">
         {data.map((d) => {
@@ -114,7 +117,7 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-2.5">
         <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[12px] font-medium text-muted-foreground">Most Opened</span>
+        <span className="text-xs font-medium text-muted-foreground">Most Opened</span>
       </div>
       <div className="space-y-0.5">
         {items.map((item, i) => (
@@ -123,10 +126,10 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
             onClick={() => openNote(item.noteId)}
             className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors hover:bg-secondary"
           >
-            <span className="text-[11px] text-muted-foreground/50 w-4 text-right">{i + 1}</span>
+            <span className="text-2xs text-muted-foreground/50 w-4 text-right">{i + 1}</span>
             <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
-            <span className="flex-1 truncate text-[13px] text-foreground/80">{item.title}</span>
-            <span className="text-[11px] text-muted-foreground">{item.count}×</span>
+            <span className="flex-1 truncate text-note text-foreground/80">{item.title}</span>
+            <span className="text-2xs text-muted-foreground">{item.count}×</span>
           </button>
         ))}
       </div>
@@ -147,7 +150,7 @@ function LifecycleStats({ notes }: { notes: any[] }) {
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
         <Activity className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[12px] font-medium text-muted-foreground">Note Lifecycle</span>
+        <span className="text-xs font-medium text-muted-foreground">Note Lifecycle</span>
       </div>
       <div className="grid grid-cols-4 gap-2">
         {[
@@ -194,12 +197,12 @@ function InsightCard({ result }: { result: AnalysisResult }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="text-[14px] font-semibold text-foreground">{result.label}</span>
-            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${config.badge}`}>
+            <span className="text-sm font-semibold text-foreground">{result.label}</span>
+            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-2xs font-medium ${config.badge}`}>
               {result.count}
             </span>
           </div>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">{result.description}</p>
+          <p className="mt-0.5 text-note text-muted-foreground">{result.description}</p>
         </div>
 
         {/* Expand toggle */}
@@ -218,7 +221,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
             <button
               key={note.id}
               onClick={() => openNote(note.id)}
-              className="block w-full truncate rounded px-2 py-1 text-left text-[13px] text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+              className="block w-full truncate rounded px-2 py-1 text-left text-note text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
             >
               {note.title || "Untitled"}
             </button>
@@ -226,7 +229,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
           {!expanded && remaining > 0 && (
             <button
               onClick={() => setExpanded(true)}
-              className="px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+              className="px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               Show {remaining} more...
             </button>
@@ -239,7 +242,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
         <div className="mt-3 pl-5">
           <button
             onClick={() => setExpanded(true)}
-            className="flex items-center gap-1 px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <ChevronDown className="h-3 w-3" />
             Show {matchedNotes.length} notes...
@@ -253,6 +256,8 @@ function InsightCard({ result }: { result: AnalysisResult }) {
 /* ── InsightsView ─────────────────────────────────────── */
 
 export function InsightsView() {
+  const setViewMode = useSettingsStore((s) => s.setViewMode)
+  const [displayOpen, setDisplayOpen] = useState(false)
   const notes = usePlotStore((s) => s.notes)
   const noteEvents = usePlotStore((s) => s.noteEvents)
   const srsMap = usePlotStore((s) => s.srsStateByNoteId)
@@ -287,17 +292,55 @@ export function InsightsView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-3">
-          <Lightbulb className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-[15px] font-semibold text-foreground">Insights</h2>
-        </div>
+        <h2 className="text-ui font-semibold text-foreground">Insights</h2>
+
+        {/* Display popover — view mode switcher */}
+        <Popover open={displayOpen} onOpenChange={setDisplayOpen}>
+          <PopoverTrigger asChild>
+            <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <SlidersHorizontal className="h-4 w-4" />
+              Display
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[320px] p-0" align="end">
+            <div className="flex gap-1 border-b border-border px-3 py-2.5">
+              <button
+                onClick={() => { setViewMode("table"); setDisplayOpen(false) }}
+                className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              >
+                <LayoutList className="h-4 w-4" />
+                List
+              </button>
+              <button
+                onClick={() => { setViewMode("board"); setDisplayOpen(false) }}
+                className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Board
+              </button>
+              <button
+                className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors bg-secondary text-foreground"
+              >
+                <Lightbulb className="h-4 w-4" />
+                Insights
+              </button>
+              <button
+                onClick={() => { setViewMode("calendar"); setDisplayOpen(false) }}
+                className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              >
+                <Calendar className="h-4 w-4" />
+                Calendar
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
         {/* ── Activity Dashboard ────────────────────── */}
         <section>
-          <h3 className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-3">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60 mb-3">
             Activity
           </h3>
 
@@ -334,7 +377,7 @@ export function InsightsView() {
         {/* ── Health Issues ─────────────────────────── */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground/60">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60">
               Health
             </h3>
             {total > 0 && (
@@ -364,8 +407,8 @@ export function InsightsView() {
           {total === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-secondary/30 py-10 text-center">
               <Lightbulb className="mb-3 h-8 w-8 text-muted-foreground/30" />
-              <p className="text-[14px] font-medium text-foreground/70">All good!</p>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">No issues detected.</p>
+              <p className="text-sm font-medium text-foreground/70">All good!</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">No issues detected.</p>
             </div>
           ) : (
             <div className="space-y-3">

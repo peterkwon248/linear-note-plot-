@@ -14,9 +14,9 @@ export function SettingRow({
   return (
     <div className="flex items-center justify-between gap-4 px-4 py-3">
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-[15px] font-medium text-foreground">{label}</span>
+        <span className="text-ui font-medium text-foreground">{label}</span>
         {description && (
-          <span className="text-[14px] text-muted-foreground">{description}</span>
+          <span className="text-sm text-muted-foreground">{description}</span>
         )}
       </div>
       <div className="flex shrink-0 items-center">{children}</div>
@@ -37,7 +37,7 @@ export function SettingsCard({
 }) {
   return (
     <div className="mb-6">
-      <h3 className="mb-2 text-[15px] font-semibold text-foreground">{title}</h3>
+      <h3 className="mb-2 text-ui font-semibold text-foreground">{title}</h3>
       <div className="rounded-lg border border-border bg-card">{children}</div>
     </div>
   )
@@ -57,7 +57,7 @@ export function SelectControl({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none rounded-md border border-border bg-secondary px-3 py-1.5 pr-7 text-[15px] text-foreground outline-none transition-colors hover:border-muted-foreground/30 focus:border-accent"
+        className="appearance-none rounded-md border border-border bg-secondary px-3 py-1.5 pr-7 text-ui text-foreground outline-none transition-colors hover:border-muted-foreground/30 focus:border-accent"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>

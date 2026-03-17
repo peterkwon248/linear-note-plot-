@@ -114,8 +114,8 @@ export function TableMenu({ editor }: TableMenuProps) {
             {!isInsideTable ? (
               <>
                 <div
+                  className="text-2xs"
                   style={{
-                    fontSize: "11px",
                     fontWeight: 600,
                     color: "var(--muted-foreground)",
                     marginBottom: "8px",
@@ -151,13 +151,13 @@ export function TableMenu({ editor }: TableMenuProps) {
                     )
                   })}
                 </div>
-                <div style={{ fontSize: "11px", color: "var(--muted-foreground)", textAlign: "center" }}>
+                <div className="text-2xs" style={{ color: "var(--muted-foreground)", textAlign: "center" }}>
                   {hoverRow > 0 && hoverCol > 0 ? `${hoverRow} x ${hoverCol}` : "Select size"}
                 </div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted-foreground)", marginBottom: "8px", padding: "0 2px" }}>
+                <div className="text-2xs" style={{ fontWeight: 600, color: "var(--muted-foreground)", marginBottom: "8px", padding: "0 2px" }}>
                   Edit table
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
@@ -190,7 +190,6 @@ function TableAction({ icon, label, onClick, danger = false }: { icon: React.Rea
         gap: "8px",
         padding: "5px 6px",
         borderRadius: "5px",
-        fontSize: "12px",
         fontWeight: 500,
         color: danger ? "var(--destructive)" : "var(--foreground)",
         backgroundColor: "transparent",
@@ -200,7 +199,7 @@ function TableAction({ icon, label, onClick, danger = false }: { icon: React.Rea
         width: "100%",
         textAlign: "left",
       }}
-      className="hover:bg-foreground/[0.06]"
+      className="text-xs hover:bg-foreground/[0.06]"
     >
       {icon}
       {label}

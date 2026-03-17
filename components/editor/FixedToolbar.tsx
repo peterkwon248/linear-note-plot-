@@ -247,7 +247,6 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
               style={{
                 width: "100%",
                 padding: "6px 12px",
-                fontSize: "13px",
                 textAlign: "left",
                 border: "none",
                 outline: "none",
@@ -256,7 +255,7 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
                 backgroundColor: !isAnyHeadingActive ? "rgba(94,106,210,0.2)" : "transparent",
                 color: !isAnyHeadingActive ? "var(--foreground)" : "var(--muted-foreground)",
               }}
-              className="hover:bg-foreground/[0.06]"
+              className="text-note hover:bg-foreground/[0.06]"
             >
               Normal
             </button>

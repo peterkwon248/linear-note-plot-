@@ -92,7 +92,7 @@ function TemplateViewSwitcher({
           <CurrentIcon className="h-4 w-4" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-48 p-1" sideOffset={8}>
+      <PopoverContent align="end" className="w-56 p-1.5" sideOffset={8}>
         {VIEW_MODES.map(({ mode, label, icon: Icon }) => (
           <button
             key={mode}
@@ -101,14 +101,14 @@ function TemplateViewSwitcher({
               setOpen(false)
             }}
             className={cn(
-              "flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left transition-colors",
+              "flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors",
               viewMode === mode
                 ? "bg-secondary/80 text-foreground"
                 : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
             )}
           >
-            <Icon className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-xs font-medium">{label}</span>
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="flex-1 text-note font-medium">{label}</span>
           </button>
         ))}
       </PopoverContent>
@@ -146,7 +146,7 @@ function TemplateFormDialog({
       <div className="w-full max-w-lg rounded-xl border border-border bg-card shadow-xl animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="text-[15px] font-semibold text-foreground">{dialogTitle}</h2>
+          <h2 className="text-ui font-semibold text-foreground">{dialogTitle}</h2>
           <button
             onClick={onCancel}
             className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
@@ -732,8 +732,8 @@ export function TemplatesView() {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border px-6 py-4 shrink-0">
-          <h1 className="text-[15px] font-semibold text-foreground">Templates</h1>
-          <span className="text-[14px] text-muted-foreground">({templates.length})</span>
+          <h1 className="text-ui font-semibold text-foreground">Templates</h1>
+          <span className="text-sm text-muted-foreground">({templates.length})</span>
           <div className="flex-1" />
           <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
           <button
@@ -845,8 +845,8 @@ export function TemplatesView() {
       <div className="flex flex-col w-[280px] min-w-[280px] border-r border-border overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border px-6 py-4 shrink-0">
-          <h1 className="text-[15px] font-semibold text-foreground">Templates</h1>
-          <span className="text-[14px] text-muted-foreground">({templates.length})</span>
+          <h1 className="text-ui font-semibold text-foreground">Templates</h1>
+          <span className="text-sm text-muted-foreground">({templates.length})</span>
           <div className="flex-1" />
           <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
           <button

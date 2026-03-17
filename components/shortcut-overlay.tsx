@@ -25,7 +25,7 @@ function ShortcutSection({
 }) {
   return (
     <div>
-      <h4 className="mb-2 text-[15px] font-semibold text-foreground">
+      <h4 className="mb-2 text-ui font-semibold text-foreground">
         {title}
       </h4>
       <div className="rounded-lg border border-border bg-card">
@@ -78,13 +78,13 @@ export function ShortcutOverlay() {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-center gap-1.5 border-t border-border px-6 py-3 text-[14px] text-muted-foreground">
+        <div className="flex items-center justify-center gap-1.5 border-t border-border px-6 py-3 text-sm text-muted-foreground">
           Press{" "}
-          <kbd className="inline-flex min-w-[20px] items-center justify-center rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[12px] text-muted-foreground">
+          <kbd className="inline-flex min-w-[20px] items-center justify-center rounded border border-border bg-secondary px-1 py-0.5 font-mono text-xs text-muted-foreground">
             ?
           </kbd>{" "}
           or{" "}
-          <kbd className="inline-flex min-w-[20px] items-center justify-center rounded border border-border bg-secondary px-1 py-0.5 font-mono text-[12px] text-muted-foreground">
+          <kbd className="inline-flex min-w-[20px] items-center justify-center rounded border border-border bg-secondary px-1 py-0.5 font-mono text-xs text-muted-foreground">
             Esc
           </kbd>{" "}
           to close

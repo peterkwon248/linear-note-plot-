@@ -869,8 +869,8 @@ export function OntologyGraphCanvas({
           backgroundSize: "20px 20px",
         }}
       >
-        <p className="text-[15px] text-muted-foreground">No notes to display.</p>
-        <p className="mt-1 text-[13px] text-muted-foreground/60 max-w-sm">
+        <p className="text-ui text-muted-foreground">No notes to display.</p>
+        <p className="mt-1 text-note text-muted-foreground/60 max-w-sm">
           Create relations between notes or use wiki-links to build your ontology.
         </p>
       </div>
@@ -1371,9 +1371,9 @@ export function OntologyGraphCanvas({
             style={{ left: tooltip.screenX + 16, top: tooltip.screenY - 8 }}
           >
             <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-3 max-w-[240px]">
-              <p className="text-[13px] font-medium text-foreground line-clamp-2">{note.title}</p>
+              <p className="text-note font-medium text-foreground line-clamp-2">{note.title}</p>
               {note.preview && (
-                <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{note.preview}</p>
+                <p className="text-2xs text-muted-foreground mt-1 line-clamp-2">{note.preview}</p>
               )}
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground capitalize">

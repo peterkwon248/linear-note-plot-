@@ -95,20 +95,20 @@ function InlineSelect<T extends string>({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-[14px] text-foreground transition-colors hover:bg-secondary"
+        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
       >
         {current?.label ?? value}
         <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
           {options.map((opt) => {
             const active = opt.value === value
             return (
               <button
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setOpen(false) }}
-                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-[14px] transition-colors hover:bg-accent hover:text-accent-foreground ${
+                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
@@ -229,12 +229,12 @@ function BoardColumn({
         {headerColor && (
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: headerColor.color }} />
         )}
-        <span className="text-[14px] font-semibold text-foreground">{group.label}</span>
-        <span className="text-[12px] text-muted-foreground">{group.notes.length}</span>
+        <span className="text-sm font-semibold text-foreground">{group.label}</span>
+        <span className="text-xs text-muted-foreground">{group.notes.length}</span>
       </div>
       {/* Drop feedback banner */}
       {isOver && activeDragId && (
-        <div className="mx-1.5 mb-1 rounded-md bg-accent/10 px-2.5 py-1.5 text-center text-[12px] font-medium text-accent animate-in fade-in duration-150">
+        <div className="mx-1.5 mb-1 rounded-md bg-accent/10 px-2.5 py-1.5 text-center text-xs font-medium text-accent animate-in fade-in duration-150">
           Move {dragCount && dragCount > 1 ? `${dragCount} notes` : "here"}
         </div>
       )}
@@ -329,14 +329,14 @@ function BoardCardInner({
         {groupBy !== "status" && (
           <StatusBadge status={note.status} />
         )}
-        <span className="flex-1 truncate text-[15px] font-medium text-foreground leading-snug">
+        <span className="flex-1 truncate text-ui font-medium text-foreground leading-snug">
           {note.title || "Untitled"}
         </span>
       </div>
 
       {/* Preview text */}
       {note.preview && (
-        <p className="mt-1 line-clamp-1 text-[12px] text-muted-foreground leading-relaxed">
+        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground leading-relaxed">
           {note.preview}
         </p>
       )}
@@ -347,12 +347,12 @@ function BoardCardInner({
           <PriorityBadge priority={note.priority} />
         )}
         {folder && (
-          <span className="truncate rounded-sm bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+          <span className="truncate rounded-sm bg-secondary px-1.5 py-0.5 text-2xs font-medium text-muted-foreground">
             {folder.name}
           </span>
         )}
         {links > 0 && (
-          <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-0.5 text-2xs text-muted-foreground">
             <Link2 className="h-2.5 w-2.5" />
             {links}
           </span>
@@ -371,22 +371,22 @@ function BoardCardInner({
       <ContextMenuContent className="w-52">
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
-            <ContextMenuItem onClick={onKeep} className="text-[14px]">
+            <ContextMenuItem onClick={onKeep} className="text-sm">
               <Check className="h-4 w-4 mr-2 text-accent" /> Done
             </ContextMenuItem>
             <ContextMenuSub>
-              <ContextMenuSubTrigger className="text-[14px]">
+              <ContextMenuSubTrigger className="text-sm">
                 <AlarmClock className="h-4 w-4 mr-2 text-muted-foreground" /> Snooze
               </ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-44">
-                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-[14px]">3 hours</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-[14px]">Tomorrow 10:00 AM</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-[14px]">In 3 days</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-[14px]">Next week 10:00 AM</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-[14px]">In 1 week</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-sm">3 hours</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-sm">Tomorrow 10:00 AM</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-sm">In 3 days</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-sm">Next week 10:00 AM</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-sm">In 1 week</ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
-            <ContextMenuItem onClick={onTrash} className="text-[14px] text-destructive focus:text-destructive">
+            <ContextMenuItem onClick={onTrash} className="text-sm text-destructive focus:text-destructive">
               <Trash2 className="h-4 w-4 mr-2" /> Trash
             </ContextMenuItem>
             <ContextMenuSeparator />
@@ -394,10 +394,10 @@ function BoardCardInner({
         )}
         {note.status === "capture" && (
           <>
-            <ContextMenuItem onClick={onPromote} className="text-[14px]">
+            <ContextMenuItem onClick={onPromote} className="text-sm">
               <ArrowUpRight className="h-4 w-4 mr-2 text-chart-5" /> Promote to Permanent
             </ContextMenuItem>
-            <ContextMenuItem onClick={onMoveBack} className="text-[14px]">
+            <ContextMenuItem onClick={onMoveBack} className="text-sm">
               <InboxIcon className="h-4 w-4 mr-2 text-muted-foreground" /> Back to Inbox
             </ContextMenuItem>
             <ContextMenuSeparator />
@@ -405,7 +405,7 @@ function BoardCardInner({
         )}
         {note.status === "permanent" && (
           <>
-            <ContextMenuItem onClick={onDemote} className="text-[14px]">
+            <ContextMenuItem onClick={onDemote} className="text-sm">
               <ArrowDownLeft className="h-4 w-4 mr-2 text-muted-foreground" /> Demote to Capture
             </ContextMenuItem>
             <ContextMenuSeparator />
@@ -413,28 +413,28 @@ function BoardCardInner({
         )}
         {/* Remind me (all notes) */}
         <ContextMenuSub>
-          <ContextMenuSubTrigger className="text-[14px]">
+          <ContextMenuSubTrigger className="text-sm">
             <Bell className="h-4 w-4 mr-2 text-muted-foreground" />
             Remind me
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-48">
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>Later today</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>Tomorrow</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>In 3 days</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>Next week</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-[14px]">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-sm">
               <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>In 1 week</span>
             </ContextMenuItem>
@@ -442,7 +442,7 @@ function BoardCardInner({
         </ContextMenuSub>
         <ContextMenuSeparator />
 
-        <ContextMenuItem onClick={onClick} className="text-[14px]">
+        <ContextMenuItem onClick={onClick} className="text-sm">
           <FileText className="h-4 w-4 mr-2 text-muted-foreground" /> Open
         </ContextMenuItem>
       </ContextMenuContent>
@@ -653,7 +653,7 @@ export function NotesBoard({
         <h1 className="text-base font-semibold text-foreground">{title ?? "Notes"}</h1>
         {!hideCreateButton && (
           <button
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[14px] font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
             onClick={() => createNote(createNoteOverrides ?? {})}
           >
             <Plus className="h-3.5 w-3.5" /> New note
@@ -669,7 +669,7 @@ export function NotesBoard({
               <button
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id); onTabChange?.(tab.id) }}
-                className={`relative px-3 py-2 text-[15px] font-medium transition-colors ${
+                className={`relative px-3 py-2 text-ui font-medium transition-colors ${
                   effectiveTab === tab.id
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -694,7 +694,7 @@ export function NotesBoard({
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[120px] bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground/60 outline-none"
+              className="w-[120px] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery("")} className="text-muted-foreground hover:text-foreground">
@@ -727,7 +727,7 @@ export function NotesBoard({
           {/* Display popover with List/Board toggle */}
           <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                 <SlidersHorizontal className="h-4 w-4" /> Display
               </button>
             </PopoverTrigger>
@@ -736,7 +736,7 @@ export function NotesBoard({
               <div className="flex gap-1 border-b border-border px-3 py-2.5">
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
                     viewMode !== "board"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -747,7 +747,7 @@ export function NotesBoard({
                 </button>
                 <button
                   onClick={() => setViewMode("board")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
                     viewMode === "board"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -758,7 +758,7 @@ export function NotesBoard({
                 </button>
                 <button
                   onClick={() => setViewMode("insights")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
                     viewMode === "insights"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -769,7 +769,7 @@ export function NotesBoard({
                 </button>
                 <button
                   onClick={() => setViewMode("calendar")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
                     viewMode === "calendar"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -784,7 +784,7 @@ export function NotesBoard({
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Layers className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[15px] text-foreground">Columns</span>
+                  <span className="text-ui text-foreground">Columns</span>
                 </div>
                 <InlineSelect
                   value={viewState.groupBy}
@@ -799,7 +799,7 @@ export function NotesBoard({
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[15px] text-foreground">Ordering</span>
+                  <span className="text-ui text-foreground">Ordering</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <InlineSelect
@@ -825,7 +825,7 @@ export function NotesBoard({
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Columns3 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[15px] text-foreground">Show empty columns</span>
+                  <span className="text-ui text-foreground">Show empty columns</span>
                 </div>
                 <button
                   onClick={() => updateViewState({ showEmptyGroups: !viewState.showEmptyGroups })}
@@ -874,7 +874,7 @@ export function NotesBoard({
         return folderName ? (
           <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
             <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-[13px] text-foreground">{folderName}</span>
+            <span className="text-note text-foreground">{folderName}</span>
             <button
               onClick={() => setActiveFolderId(null)}
               className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
@@ -890,8 +890,8 @@ export function NotesBoard({
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
             <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
-            <p className="text-[15px] text-muted-foreground">No notes found</p>
-            <p className="mt-1 text-[14px] text-muted-foreground/60">
+            <p className="text-ui text-muted-foreground">No notes found</p>
+            <p className="mt-1 text-sm text-muted-foreground/60">
               {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
             </p>
           </div>
@@ -943,7 +943,7 @@ export function NotesBoard({
                   {!isExpanded && hiddenCount > 0 && (
                     <button
                       onClick={() => setExpandedColumns((prev) => new Set([...prev, group.key]))}
-                      className="mx-1.5 mb-1.5 rounded-md py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      className="mx-1.5 mb-1.5 rounded-md py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                     >
                       + {hiddenCount} more
                     </button>
@@ -998,7 +998,7 @@ export function NotesBoard({
                   />
                   {/* Count badge */}
                   {dragCount > 1 && (
-                    <div className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-accent-foreground shadow-sm">
+                    <div className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-2xs font-bold text-accent-foreground shadow-sm">
                       {dragCount}
                     </div>
                   )}
