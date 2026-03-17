@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
-import { ArrowLeft, Hash, Plus, Search, Trash2, X, Zap } from "lucide-react"
+import { ArrowLeft, ArrowUp, ArrowDown, ArrowUpDown, Hash, Plus, Search, Trash2, X, Zap, SlidersHorizontal, Layers, ChevronDown, Check, EyeOff } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import {
   ContextMenu,
@@ -9,6 +9,95 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
+import { useNotesView } from "@/lib/view-engine/use-notes-view"
+import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
+
+/* ── Sort/Group options for detail view ─────────────────── */
+
+const SORT_OPTIONS: { value: SortField; label: string }[] = [
+  { value: "updatedAt", label: "Updated" },
+  { value: "createdAt", label: "Created" },
+  { value: "title", label: "Title" },
+  { value: "status", label: "Status" },
+  { value: "priority", label: "Priority" },
+  { value: "links", label: "Links" },
+]
+
+const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
+  { value: "none", label: "No grouping" },
+  { value: "status", label: "Status" },
+  { value: "priority", label: "Priority" },
+  { value: "folder", label: "Folder" },
+  { value: "label", label: "Label" },
+]
+
+/* ── Inline Select (portal-free, works inside Popover) ── */
+
+function InlineSelect<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (v: T) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [open])
+
+  const current = options.find((o) => o.value === value)
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
+      >
+        {current?.label ?? value}
+        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
+          {options.map((opt) => {
+            const active = opt.value === value
+            return (
+              <button
+                key={opt.value}
+                onClick={() => { onChange(opt.value); setOpen(false) }}
+                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                  active ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <Check className={`h-3.5 w-3.5 shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} />
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const ROW_HEIGHT = 40 // py-2.5 ≈ 40px
 const HEADER_HEIGHT = 37 // the header row height
@@ -17,6 +106,7 @@ const DRAG_THRESHOLD = 5
 export function TagsView() {
   const tags = usePlotStore((s) => s.tags)
   const notes = usePlotStore((s) => s.notes)
+  const folders = usePlotStore((s) => s.folders)
   const createTag = usePlotStore((s) => s.createTag)
   const deleteTag = usePlotStore((s) => s.deleteTag)
   const openNote = usePlotStore((s) => s.openNote)
@@ -27,6 +117,28 @@ export function TagsView() {
   const [tagInput, setTagInput] = useState("")
   const [checkedTags, setCheckedTags] = useState<Set<string>>(new Set())
   const tagInputRef = useRef<HTMLInputElement>(null)
+  const [displayPopoverOpen, setDisplayPopoverOpen] = useState(false)
+  const [tagSortBy, setTagSortBy] = useState<"name-asc" | "name-desc" | "count-desc" | "count-asc">("name-asc")
+  const [hideEmptyTags, setHideEmptyTags] = useState(false)
+
+  // View engine for tag detail mode (must be called unconditionally)
+  const tagExtras = useMemo(() => ({ tagId: selectedTagId ?? undefined }), [selectedTagId])
+  const { flatNotes: tagNotes, flatCount: tagNoteCount, viewState: tagViewState, updateViewState: updateTagView } = useNotesView("tag", tagExtras)
+
+  // Toggle filter for tag detail
+  const toggleFilter = useCallback((field: FilterRule["field"], value: string, operator?: FilterRule["operator"]) => {
+    const op = operator ?? "eq"
+    const exists = tagViewState.filters.some(f => f.field === field && f.operator === op && f.value === value)
+    if (exists) {
+      updateTagView({ filters: tagViewState.filters.filter(f => !(f.field === field && f.operator === op && f.value === value)) })
+    } else {
+      updateTagView({ filters: [...tagViewState.filters, { field, operator: op, value }] })
+    }
+  }, [tagViewState.filters, updateTagView])
+
+  const removeFilter = useCallback((idx: number) => {
+    updateTagView({ filters: tagViewState.filters.filter((_, i) => i !== idx) })
+  }, [tagViewState.filters, updateTagView])
 
   // Drag-to-select state
   const lastClickedRef = useRef<number | null>(null)
@@ -59,19 +171,20 @@ export function TagsView() {
     return tags.filter((t) => t.name.toLowerCase().includes(q))
   }, [tags, searchQuery])
 
-  // Sort tags by name (alphabetical)
-  const sortedTags = useMemo(
-    () => [...filteredTags].sort((a, b) => a.name.localeCompare(b.name)),
-    [filteredTags],
-  )
-
-  // Notes for selected tag
-  const tagNotes = useMemo(() => {
-    if (!selectedTagId) return []
-    return activeNotes
-      .filter((n) => n.tags.includes(selectedTagId))
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-  }, [selectedTagId, activeNotes])
+  // Sort and filter tags
+  const sortedTags = useMemo(() => {
+    let result = [...filteredTags]
+    if (hideEmptyTags) {
+      result = result.filter(t => (tagCounts[t.id] || 0) > 0)
+    }
+    switch (tagSortBy) {
+      case "name-asc": return result.sort((a, b) => a.name.localeCompare(b.name))
+      case "name-desc": return result.sort((a, b) => b.name.localeCompare(a.name))
+      case "count-desc": return result.sort((a, b) => (tagCounts[b.id] || 0) - (tagCounts[a.id] || 0))
+      case "count-asc": return result.sort((a, b) => (tagCounts[a.id] || 0) - (tagCounts[b.id] || 0))
+      default: return result
+    }
+  }, [filteredTags, tagSortBy, hideEmptyTags, tagCounts])
 
   const selectedTag = tags.find((t) => t.id === selectedTagId)
 
@@ -287,7 +400,7 @@ export function TagsView() {
             #{selectedTag.name}
           </h1>
           <span className="text-sm text-muted-foreground">
-            {tagNotes.length} notes
+            {tagNoteCount} notes
           </span>
           <div className="flex-1" />
           <button
@@ -301,6 +414,78 @@ export function TagsView() {
             Delete tag
           </button>
         </div>
+
+        {/* Toolbar: Filter + Display */}
+        <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
+          <FilterButton
+            filters={tagViewState.filters}
+            groupBy={tagViewState.groupBy}
+            isSingleStatusTab={false}
+            folders={folders}
+            tags={tags}
+            onToggleFilter={toggleFilter}
+            onSetFilters={(f) => updateTagView({ filters: f })}
+          />
+          <div className="flex-1" />
+          <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <SlidersHorizontal className="h-4 w-4" />
+                Display
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] p-0" align="end">
+              {/* Grouping */}
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-ui text-foreground">Grouping</span>
+                </div>
+                <InlineSelect
+                  value={tagViewState.groupBy}
+                  options={GROUP_OPTIONS}
+                  onChange={(v) => updateTagView({ groupBy: v })}
+                />
+              </div>
+              {/* Ordering */}
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-ui text-foreground">Ordering</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <InlineSelect
+                    value={tagViewState.sortField}
+                    options={SORT_OPTIONS}
+                    onChange={(v) => updateTagView({ sortField: v })}
+                  />
+                  <button
+                    onClick={() => updateTagView({ sortDirection: tagViewState.sortDirection === "asc" ? "desc" : "asc" })}
+                    className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  >
+                    {tagViewState.sortDirection === "asc"
+                      ? <ArrowUp className="h-3.5 w-3.5" />
+                      : <ArrowDown className="h-3.5 w-3.5" />
+                    }
+                  </button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Filter chips */}
+        <FilterChipBar
+          filters={tagViewState.filters}
+          groupBy={tagViewState.groupBy}
+          isSingleStatusTab={false}
+          folders={folders}
+          tags={tags}
+          onToggleFilter={toggleFilter}
+          onRemoveFilter={removeFilter}
+          onClearAll={() => updateTagView({ filters: [] })}
+          onSetFilters={(f) => updateTagView({ filters: f })}
+        />
 
         {/* Notes list */}
         <div className="flex-1 overflow-y-auto">
@@ -377,6 +562,42 @@ export function TagsView() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Sort & Filter toolbar */}
+      <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <ArrowUpDown className="h-3.5 w-3.5" />
+              {tagSortBy === "name-asc" ? "Name A-Z" : tagSortBy === "name-desc" ? "Name Z-A" : tagSortBy === "count-desc" ? "Most notes" : "Fewest notes"}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {([
+              ["name-asc", "Name A-Z"],
+              ["name-desc", "Name Z-A"],
+              ["count-desc", "Most notes"],
+              ["count-asc", "Fewest notes"],
+            ] as const).map(([value, label]) => (
+              <DropdownMenuItem key={value} onClick={() => setTagSortBy(value)}>
+                <Check className={cn("h-3.5 w-3.5 mr-2 shrink-0", tagSortBy === value ? "opacity-100" : "opacity-0")} />
+                {label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <div className="flex-1" />
+        <button
+          onClick={() => setHideEmptyTags(!hideEmptyTags)}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-colors",
+            hideEmptyTags ? "bg-accent/15 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+          )}
+        >
+          <EyeOff className="h-3.5 w-3.5" />
+          Hide empty
+        </button>
       </div>
 
       {/* Tag list */}

@@ -35,7 +35,6 @@ import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 import type { Editor } from "@tiptap/react"
-import { LayoutModeSwitcher } from "@/components/editor/layout-mode-switcher"
 import { WikiTOC } from "@/components/editor/wiki-toc"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { WikiCategories } from "@/components/editor/wiki-categories"
@@ -273,8 +272,6 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
             </TooltipContent>
           </Tooltip>
 
-          <span className="mx-0.5 h-4 w-px bg-border" />
-          <LayoutModeSwitcher />
           <span className="mx-0.5 h-4 w-px bg-border" />
           <Tooltip>
             <TooltipTrigger asChild>

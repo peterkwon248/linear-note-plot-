@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import {
   Plus, Trash2, Pin, PinOff, LayoutTemplate, X, FileText,
-  Maximize2, Columns3, LayoutGrid, ArrowLeft,
+  Maximize2, Columns3, LayoutGrid, ArrowLeft, ArrowUpDown, Check,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import {
@@ -15,6 +15,12 @@ import {
 } from "@/components/ui/context-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { NoteTemplate, NoteStatus, NotePriority } from "@/lib/types"
 import { TipTapEditor } from "@/components/editor/TipTapEditor"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
@@ -641,6 +647,43 @@ function TemplateCard({
   )
 }
 
+/* ── Template Sort Dropdown ────────────────────────────── */
+
+const TEMPLATE_SORT_OPTIONS = [
+  { value: "name-asc" as const, label: "Name A-Z" },
+  { value: "name-desc" as const, label: "Name Z-A" },
+  { value: "updated-desc" as const, label: "Updated (newest)" },
+  { value: "updated-asc" as const, label: "Updated (oldest)" },
+  { value: "created-desc" as const, label: "Created (newest)" },
+]
+
+function TemplateSortDropdown({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (v: "name-asc" | "name-desc" | "updated-desc" | "updated-asc" | "created-desc") => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+          <ArrowUpDown className="h-3.5 w-3.5" />
+          {TEMPLATE_SORT_OPTIONS.find((o) => o.value === value)?.label ?? "Sort"}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        {TEMPLATE_SORT_OPTIONS.map(({ value: v, label }) => (
+          <DropdownMenuItem key={v} onClick={() => onChange(v)}>
+            <Check className={cn("h-3.5 w-3.5 mr-2 shrink-0", value === v ? "opacity-100" : "opacity-0")} />
+            {label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 /* ── Templates View ───────────────────────────────────── */
 
 export function TemplatesView() {
@@ -655,13 +698,24 @@ export function TemplatesView() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [viewMode, setViewMode] = useState<TemplateViewMode>("grid")
+  const [templateSortBy, setTemplateSortBy] = useState<"name-asc" | "name-desc" | "updated-desc" | "updated-asc" | "created-desc">("updated-desc")
 
-  // Sorted: pinned first, then by updatedAt desc
+  // Sorted: pinned first, then by selected sort
   const sortedTemplates = useMemo(() => {
-    const pinned = templates.filter((t) => t.pinned).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    const unpinned = templates.filter((t) => !t.pinned).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    return [...pinned, ...unpinned]
-  }, [templates])
+    const pinned = templates.filter((t) => t.pinned)
+    const unpinned = templates.filter((t) => !t.pinned)
+    const sortFn = (a: NoteTemplate, b: NoteTemplate) => {
+      switch (templateSortBy) {
+        case "name-asc": return a.name.localeCompare(b.name)
+        case "name-desc": return b.name.localeCompare(a.name)
+        case "updated-desc": return b.updatedAt.localeCompare(a.updatedAt)
+        case "updated-asc": return a.updatedAt.localeCompare(b.updatedAt)
+        case "created-desc": return b.createdAt.localeCompare(a.createdAt)
+        default: return 0
+      }
+    }
+    return [...pinned.sort(sortFn), ...unpinned.sort(sortFn)]
+  }, [templates, templateSortBy])
 
   const selectedTemplate = selectedTemplateId ? templates.find((t) => t.id === selectedTemplateId) ?? null : null
 
@@ -735,6 +789,7 @@ export function TemplatesView() {
           <h1 className="text-ui font-semibold text-foreground">Templates</h1>
           <span className="text-sm text-muted-foreground">({templates.length})</span>
           <div className="flex-1" />
+          <TemplateSortDropdown value={templateSortBy} onChange={setTemplateSortBy} />
           <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
           <button
             onClick={() => setShowCreateDialog(true)}
@@ -848,6 +903,7 @@ export function TemplatesView() {
           <h1 className="text-ui font-semibold text-foreground">Templates</h1>
           <span className="text-sm text-muted-foreground">({templates.length})</span>
           <div className="flex-1" />
+          <TemplateSortDropdown value={templateSortBy} onChange={setTemplateSortBy} />
           <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
           <button
             onClick={() => setShowCreateDialog(true)}
