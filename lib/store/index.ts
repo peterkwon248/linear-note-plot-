@@ -67,6 +67,7 @@ export const usePlotStore = create<PlotState>()(
         ontologyPositions: {} as Record<string, { x: number; y: number }>,
         layoutMode: "tabs" as const,
         _preFocusLayoutMode: null as any,
+        researchPreset: "left-right2" as const,
         listPaneWidth: 320,
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
@@ -100,7 +101,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 39,
+      version: 40,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

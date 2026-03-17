@@ -1,4 +1,4 @@
-import type { WorkspaceNode, WorkspacePreset } from "./types"
+import type { WorkspaceNode, WorkspacePreset, ResearchPreset } from "./types"
 import { createLeaf, createBranch } from "./tree-utils"
 
 /** Build a workspace tree for a given preset */
@@ -78,4 +78,88 @@ export const PRESET_SHORTCUTS: WorkspacePreset[] = [
   "editor-only",
   "dual-editor",
   "research",
+]
+
+/* ── Research Sub-Presets ─────────────────────────────── */
+
+/** Build a workspace tree for a given research sub-preset */
+export function buildResearchPreset(preset: ResearchPreset): WorkspaceNode {
+  switch (preset) {
+    case "two-cols":
+      return createBranch("horizontal", [
+        createLeaf({ type: "empty" }),
+        createLeaf({ type: "empty" }),
+      ], 0.5)
+
+    case "three-cols":
+      return createBranch("horizontal", [
+        createLeaf({ type: "empty" }),
+        createBranch("horizontal", [
+          createLeaf({ type: "empty" }),
+          createLeaf({ type: "empty" }),
+        ], 0.5),
+      ], 0.333)
+
+    case "two-rows":
+      return createBranch("vertical", [
+        createLeaf({ type: "empty" }),
+        createLeaf({ type: "empty" }),
+      ], 0.5)
+
+    case "left-right2":
+      return createBranch("horizontal", [
+        createLeaf({ type: "empty" }),
+        createBranch("vertical", [
+          createLeaf({ type: "empty" }),
+          createLeaf({ type: "empty" }),
+        ], 0.5),
+      ], 0.5)
+
+    case "left2-right":
+      return createBranch("horizontal", [
+        createBranch("vertical", [
+          createLeaf({ type: "empty" }),
+          createLeaf({ type: "empty" }),
+        ], 0.5),
+        createLeaf({ type: "empty" }),
+      ], 0.5)
+
+    case "grid-2x2":
+      return createBranch("horizontal", [
+        createBranch("vertical", [
+          createLeaf({ type: "empty" }),
+          createLeaf({ type: "empty" }),
+        ], 0.5),
+        createBranch("vertical", [
+          createLeaf({ type: "empty" }),
+          createLeaf({ type: "empty" }),
+        ], 0.5),
+      ], 0.5)
+
+    default:
+      return createBranch("horizontal", [
+        createLeaf({ type: "empty" }),
+        createLeaf({ type: "empty" }),
+      ], 0.5)
+  }
+}
+
+/** Human-readable names for research sub-presets */
+export const RESEARCH_PRESET_LABELS: Record<ResearchPreset, string> = {
+  "two-cols": "2 Columns",
+  "three-cols": "3 Columns",
+  "two-rows": "2 Rows",
+  "left-right2": "1 + 2 Stack",
+  "left2-right": "2 Stack + 1",
+  "grid-2x2": "2x2 Grid",
+}
+
+/** All research presets in display order */
+export const RESEARCH_PRESETS: ResearchPreset[] = [
+  "two-cols",
+  "three-cols",
+  "two-rows",
+  "left-right2",
+  "left2-right",
+  "grid-2x2",
 ]

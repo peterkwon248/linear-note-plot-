@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import {
   X, GripVertical, FileText, List, Tag, Bookmark,
   Eye, Calendar, BarChart3, LayoutGrid, Inbox, FolderOpen,
@@ -11,6 +11,7 @@ import { usePlotStore } from "@/lib/store"
 import type { PanelContent } from "@/lib/workspace/types"
 import { countLeaves } from "@/lib/workspace/tree-utils"
 import { setLeafDragData } from "@/lib/drag-helpers"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -40,7 +41,20 @@ const CONTENT_META: Record<PanelContent["type"], { icon: typeof FileText; label:
   "empty": { icon: LayoutGrid, label: "Empty" },
 }
 
-/** Quick-switch views (non-note-list) */
+/** All content types available in the quick-switch popover */
+const ALL_CONTENT_OPTIONS: { type: PanelContent["type"]; icon: typeof FileText; label: string; content: PanelContent }[] = [
+  { type: "editor", icon: FileText, label: "Editor", content: { type: "editor", noteId: null } },
+  { type: "note-list", icon: List, label: "All Notes", content: { type: "note-list", context: "all" } },
+  { type: "tags", icon: Tag, label: "Tags", content: { type: "tags" } },
+  { type: "labels", icon: Bookmark, label: "Labels", content: { type: "labels" } },
+  { type: "calendar", icon: Calendar, label: "Calendar", content: { type: "calendar" } },
+  { type: "insights", icon: BarChart3, label: "Insights", content: { type: "insights" } },
+  { type: "ontology", icon: Network, label: "Ontology", content: { type: "ontology" } },
+  { type: "templates", icon: LayoutTemplate, label: "Templates", content: { type: "templates" } },
+  { type: "inspector", icon: Eye, label: "Inspector", content: { type: "inspector", noteId: "", followActive: true } },
+]
+
+/** Quick-switch views (non-note-list) for context menu */
 const SWITCHABLE_VIEWS: { type: PanelContent["type"]; icon: typeof FileText; label: string }[] = [
   { type: "tags", icon: Tag, label: "Tags" },
   { type: "labels", icon: Bookmark, label: "Labels" },
@@ -56,6 +70,7 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
   const splitLeaf = usePlotStore((s) => s.splitLeaf)
   const workspaceRoot = usePlotStore((s) => s.workspaceRoot)
   const folders = usePlotStore((s) => s.folders)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const handleDragStart = useCallback((e: React.DragEvent) => {
     setLeafDragData(e, leafId)
@@ -81,10 +96,56 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
           onDragStart={handleDragStart}
         >
           <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/50 cursor-grab" />
-          <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="flex-1 truncate text-xs font-medium text-muted-foreground">
-            {meta.label}
-          </span>
+
+          {/* Click to open content picker popover */}
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className="flex flex-1 items-center gap-1.5 min-w-0 rounded px-1 -mx-1 hover:bg-secondary/60 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPickerOpen(true)
+                }}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span className="flex-1 truncate text-xs font-medium text-muted-foreground text-left">
+                  {meta.label}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              className="w-44 p-1"
+              sideOffset={4}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {ALL_CONTENT_OPTIONS.map((opt) => {
+                const OptIcon = opt.icon
+                const isCurrent = content.type === opt.type
+                return (
+                  <button
+                    key={opt.type}
+                    disabled={isCurrent}
+                    onClick={() => {
+                      handleSwitchView(opt.content)
+                      setPickerOpen(false)
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
+                      isCurrent
+                        ? "bg-secondary/80 text-foreground"
+                        : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                    )}
+                  >
+                    <OptIcon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="font-medium">{opt.label}</span>
+                    {isCurrent && <span className="ml-auto text-[10px] text-muted-foreground/60">Current</span>}
+                  </button>
+                )
+              })}
+            </PopoverContent>
+          </Popover>
+
           {canClose && (
             <button
               onClick={() => closeLeaf(leafId)}

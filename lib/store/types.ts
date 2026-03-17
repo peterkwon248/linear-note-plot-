@@ -1,7 +1,7 @@
 import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
-import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone } from "../workspace/types"
+import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone, ResearchPreset } from "../workspace/types"
 
 export interface EditorTab {
   id: string           // nanoid
@@ -79,6 +79,7 @@ export interface PlotState {
   // Layout
   layoutMode: LayoutMode
   _preFocusLayoutMode: LayoutMode | null
+  researchPreset: ResearchPreset
   listPaneWidth: number  // three-column/split 모드용, 200~500
 
   // SRS
@@ -176,6 +177,7 @@ export interface PlotState {
   goForward: () => void
   setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
   setLayoutMode: (mode: LayoutMode) => void
+  setResearchPreset: (preset: ResearchPreset) => void
   setListPaneWidth: (width: number) => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void

@@ -107,7 +107,7 @@ export function removeLeaf(
   return root
 }
 
-const MAX_DEPTH = 4
+const MAX_DEPTH = 5
 
 /** Split a leaf: replace it with a branch containing the original + a new leaf.
  *  Respects MAX_DEPTH cap — if tree is already at max depth, returns unchanged. */

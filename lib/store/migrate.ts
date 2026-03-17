@@ -429,5 +429,8 @@ export function migrate(persistedState: unknown): PlotState {
   // v39: Reflections (time-axis review, append-only)
   if (!(state as any).reflections) (state as any).reflections = []
 
+  // v40: Research sub-preset
+  if (!state.researchPreset) state.researchPreset = "left-right2"
+
   return state as unknown as PlotState
 }
