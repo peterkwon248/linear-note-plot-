@@ -70,6 +70,8 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #69**: Trash 복원 시 Inbox 카운트 안 돌아오는 버그 수정
 - **PR #70**: Research 모드 레이아웃 프리셋 시스템 + 패널 UX 개선
 - **PR #71**: 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선 — Tags/Labels/Templates Sort/Filter/Display, LayoutModeSwitcher 사이드바 이동, 리스트 패널 닫기 버그 수정, 기본 시작뷰 inbox
+- **PR #72**: docs: CONTEXT.md, MEMORY.md, CLAUDE.md 최신화
+- **PR #73**: docs: 코드베이스 검증 후 docs 정확도 수정
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -127,11 +129,12 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 11. ~~뷰 필터/디스플레이~~ ✅ (PR #71)
 12. ~~레이아웃 스위처 사이드바 이동~~ ✅ (PR #71)
 
-#### 다음 작업
-- Thread (ThinkingChain rename + UI)
-- 읽기/편집 뷰모드 토글
+#### 완료된 기능 (docs 미반영이었던 것)
+- ~~Thread (ThinkingChain → thread rename + ThreadPanel)~~ ✅ — thinking slice → thread slice, components/editor/thread-panel.tsx
+- ~~읽기/편집 뷰모드 토글~~ ✅ — isReadMode state + Ctrl+Shift+E in note-editor.tsx
 
-### Deferred
-- Phosphor Icons
+#### 다음 작업 (Deferred에서 승격 가능)
 - Phase 4-D: Context Panel
+- Phosphor Icons 적용
 - WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
+- Settings always-mounted

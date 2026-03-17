@@ -63,16 +63,19 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## Implementation Order (최신, 2026-03-17 업데이트)
 
-### Tier 3: 디자인 폴리시 (진행 중)
-9. ~~디자인 토큰 통일~~ ✅ (PR #68)
-10. ~~고아 코드 정리~~ ✅ (PR #68)
-11. ~~뷰 필터/디스플레이 추가~~ ✅ (PR #71 — Tags/Labels/Templates)
-12. ~~레이아웃 스위처 사이드바 이동~~ ✅ (PR #71)
+### 모든 Tier 완료 ✅
+- Tier 1: Wiki Phase 4-C ✅ (PR #65-67)
+- Tier 2: Reflections + Insights + Ontology 고도화 ✅ (PR #67)
+- Tier 3: 디자인 토큰 + 뷰 필터/디스플레이 ✅ (PR #68, #71)
+- Thread (thinking→thread rename + ThreadPanel) ✅ 기존 구현
+- 읽기/편집 뷰모드 토글 (isReadMode + Ctrl+Shift+E) ✅ 기존 구현
+- Research 모드 레이아웃 프리셋 ✅ (PR #70)
 
-### 다음 작업
-- Thread (ThinkingChain rename + UI)
-- 읽기/편집 뷰모드 토글
-- Relations → WIKI → Reflections → 온톨로지 뷰
+### 다음 작업 후보 (Deferred)
+- Phase 4-D: Context Panel
+- Phosphor Icons 적용
+- WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
+- Settings always-mounted
 
 ## Key Design Decisions (최신)
 
