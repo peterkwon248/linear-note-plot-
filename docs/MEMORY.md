@@ -72,6 +72,8 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #71**: 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선 — Tags/Labels/Templates Sort/Filter/Display, LayoutModeSwitcher 사이드바 이동, 리스트 패널 닫기 버그 수정, 기본 시작뷰 inbox
 - **PR #72**: docs: CONTEXT.md, MEMORY.md, CLAUDE.md 최신화
 - **PR #73**: docs: 코드베이스 검증 후 docs 정확도 수정
+- **PR #74**: docs: DESIGN-TOKENS.md 생성 + docs 최신화 + AGENTS.md Design Quality
+- **PR #75**: feat: 필터 UX(Label 개별선택/검색) + Source 아이콘/Inspector + workspace 버그 수정(3컬럼/Research/empty/탭닫기) + 디자인 폴리시(타이틀28px/탭15px/Activity삭제)
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
