@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 16-slice Zustand store with versioned migration (currently v38)
+- **Store**: `lib/store/index.ts` — 17-slice Zustand store with versioned migration (currently v39)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only, "reference" removed in v26)
 
 ## Architecture Decisions
@@ -35,8 +35,8 @@
 - **Responsive NotesTable**: ONE grid component for all sizes — ResizeObserver + minWidth thresholds on COLUMN_DEFS. CompactNoteList 삭제됨 (모든 곳에서 NotesTable로 교체)
 - **TipTap Editor**: 24+ extensions — StarterKit, Placeholder (per-block), TaskList/Item, Highlight, Link, Underline, TextAlign, Color, TextStyle, Super/Subscript, Table, ResizableImage, CodeBlockLowlight (lowlight), Typography, Dropcursor, CharacterCount, FontFamily, YouTube, Details/Summary/Content, Mathematics (KaTeX), SlashCommand (custom), Typewriter, CurrentLineHighlight, HashtagSuggestion
 
-## Store Slices (16 total)
-notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology, relations
+## Store Slices (17 total)
+notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology, relations, reflections
 
 ## Completed PRs
 - **PR #14**: noteEvents bounding, fuse.js removal, dead code cleanup
@@ -64,6 +64,7 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #63**: 반응형 NotesTable 통합 — CompactNoteList 제거, ResizeObserver 기반 컬럼 숨김
 - **PR #64**: Activity 삭제 + dead code cleanup (-3,258줄), Relations 완성, Wiki 기초 UI, 헤더 스타일 통일
 - **PR #65**: 반응형 NotesTable + 뷰 라우팅 수정 + docs 최신화
+- **PR #66**: Tier 2 완료 — Reflections (v39), Insights 뷰 고도화, Ontology View 고도화 (미니맵/위키배지/클러스터링), 온톨로지 필터바 드롭다운, analysis rules 영어 번역
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -86,9 +87,10 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
   - 포지션 영속화 (ontologyPositions in store v37)
   - 미링크 멘션 UI (Ontology Detail Panel)
   - 관계 타입 자동 추론 (inferRelationType heuristic)
-- **Phase 4-C (IN PROGRESS)**: Wiki View 나무위키 스타일
-  - ✅ Done: Convert/Revert buttons, WikiTOC, WikiInfobox, isWiki filter, aliases, wiki badge, read mode layout
-  - TODO: Red/Blue 링크 색상, 빨간 링크→자동 생성, 사이드바 TOC, 위키 타이포그래피, 하단 분류
+- **Phase 4-C (DONE)**: Wiki View 나무위키 스타일
+  - Convert/Revert, WikiTOC (좌측 sidebar), WikiInfobox, isWiki filter, aliases, wiki badge
+  - Red/Blue 링크 색상 (WikilinkDecoration), 빨간 링크→자동 생성 (createWikiStub)
+  - 위키 타이포그래피 (wiki-read-content CSS), 하단 분류 (WikiCategories)
 - **Phase 4-D**: Context Panel
 - **Ontology View**: SVG force-directed graph (d3-force), filter bar, detail panel, workspace 통합
 
@@ -102,17 +104,17 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 
 ### 향후 작업 순서
 
-#### Tier 1: Wiki 고도화 (Phase 4-C 완성) — 최우선
-1. Red/Blue 링크 색상 분기 (WikilinkDecoration)
-2. 빨간 링크 클릭 → 위키 자동 생성
-3. 사이드바 TOC (좌측 sticky sidebar)
-4. 위키 읽기 타이포그래피 (본문 폭 제한, 줄간격, CSS)
-5. 하단 분류 표시 (tags → "분류: A | B | C")
+#### Tier 1: Wiki 고도화 (Phase 4-C 완성) ✅ DONE
+1. ~~Red/Blue 링크 색상 분기~~ ✅
+2. ~~빨간 링크 클릭 → 위키 자동 생성~~ ✅
+3. ~~사이드바 TOC~~ ✅
+4. ~~위키 읽기 타이포그래피~~ ✅
+5. ~~하단 분류 표시~~ ✅
 
-#### Tier 2: 기존 기능 마무리
-6. Reflections (시간축, 회고)
-7. Insights 뷰 고도화
-8. Ontology View 고도화 (클러스터링, 미니맵)
+#### Tier 2: 기존 기능 마무리 ✅ DONE
+6. ~~Reflections~~ ✅ — append-only 회고 패널, 타임라인 UI, reflection_added 이벤트
+7. ~~Insights 뷰 고도화~~ ✅ — Activity 대시보드 + Health 이슈 통합
+8. ~~Ontology View 고도화~~ ✅ — Canvas 미니맵, 위키 노드 배지(이중링+W), 라벨 기반 클러스터링(forceX/Y + convex hull)
 
 #### Tier 3: 디자인 폴리시
 9. 디자인 토큰 통일 (typography/spacing/transitions)

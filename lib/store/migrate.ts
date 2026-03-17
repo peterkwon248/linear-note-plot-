@@ -84,8 +84,6 @@ export function migrate(persistedState: unknown): PlotState {
   delete state.thinkingChains
   if (state.graphFocusDepth === undefined) state.graphFocusDepth = 0
   if (state.commandPaletteMode === undefined) state.commandPaletteMode = "search"
-  // v7: Knowledge Maps
-  if (!state.knowledgeMaps) state.knowledgeMaps = []
   // v9: Details panel toggle
   if (state.detailsOpen === undefined) state.detailsOpen = true
   // v10: Sidebar resize / collapse
@@ -175,8 +173,6 @@ export function migrate(persistedState: unknown): PlotState {
     state.navigationHistory = []
     state.navigationIndex = -1
   }
-  // v23: Saved Views
-  if (!state.savedViews) state.savedViews = []
   state._viewStateHydrated = false // always reset transient flag
 
   // v24: Sidebar Surgery — Projects → Folders, Categories → Tags
@@ -429,6 +425,9 @@ export function migrate(persistedState: unknown): PlotState {
 
   // v37: Ontology graph position persistence
   if (!state.ontologyPositions) state.ontologyPositions = {}
+
+  // v39: Reflections (time-axis review, append-only)
+  if (!(state as any).reflections) (state as any).reflections = []
 
   return state as unknown as PlotState
 }

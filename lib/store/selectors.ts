@@ -1,4 +1,4 @@
-import type { Note, ActiveView, NoteFilter, KnowledgeMap } from "../types"
+import type { Note, ActiveView, NoteFilter } from "../types"
 import type { PlotState } from "./types"
 
 /* ── Selectors / Filters ──────────────────────────────── */
@@ -33,11 +33,6 @@ export function getFilteredNotes(state: PlotState): Note[] {
         (n) => n.tags.includes(activeView.tagId) && isActive(n)
       )
       break
-    case "map": {
-      const map = state.knowledgeMaps.find((m: KnowledgeMap) => m.id === activeView.mapId)
-      if (map) filtered = filtered.filter((n) => map.noteIds.includes(n.id) && isActive(n))
-      break
-    }
     default:
       filtered = filtered.filter(isActive)
   }
@@ -141,8 +136,6 @@ export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folde
       const tag = state.tags.find((t) => t.id === filter.tagId)
       return tag ? `#${tag.name}` : "Tag"
     }
-    case "map":
-      return "Knowledge Map"
     default:
       return "Notes"
   }
@@ -154,8 +147,6 @@ export function getViewTitle(view: ActiveView, state: PlotState): string {
       return "Inbox"
     case "all":
       return "All Notes"
-    case "views":
-      return "Views"
     case "folder": {
       const folder = state.folders.find((f) => f.id === view.folderId)
       return folder?.name ?? "Folder"
@@ -174,10 +165,6 @@ export function getViewTitle(view: ActiveView, state: PlotState): string {
     }
     case "settings":
       return "Settings"
-    case "map": {
-      const map = state.knowledgeMaps.find((m: KnowledgeMap) => m.id === view.mapId)
-      return map?.title ?? "Knowledge Map"
-    }
     default:
       return "Notes"
   }

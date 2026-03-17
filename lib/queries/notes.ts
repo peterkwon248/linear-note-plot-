@@ -1,4 +1,4 @@
-import type { Note, KnowledgeMap } from "@/lib/types"
+import type { Note } from "@/lib/types"
 import type { SRSState } from "@/lib/srs"
 
 /* ── Inbox Rank ────────────────────────────────────────── */
@@ -288,64 +288,3 @@ export function getSnoozeTime(option: SnoozePreset): string {
   }
 }
 
-/* ── Knowledge Map queries ───────────────────────────── */
-
-/**
- * Get map statistics for a Knowledge Map.
- */
-export function getMapStats(map: KnowledgeMap, allNotes: Note[], backlinks: Map<string, number>) {
-  const mapNotes = allNotes.filter((n) => map.noteIds.includes(n.id))
-  const totalLinks = mapNotes.reduce((sum, n) => sum + (backlinks.get(n.id) ?? 0), 0)
-  // Count internal links within the map using precomputed linksOut
-  const mapNoteSet = new Set(map.noteIds)
-  const titleToId = new Map<string, string>()
-  for (const n of mapNotes) {
-    if (n.title.trim()) titleToId.set(n.title.toLowerCase(), n.id)
-  }
-  const internalLinks = mapNotes.reduce((sum, n) => {
-    let count = 0
-    for (const linkTitle of n.linksOut) {
-      const targetId = titleToId.get(linkTitle)
-      if (targetId && targetId !== n.id && mapNoteSet.has(targetId)) {
-        count++
-      }
-    }
-    return sum + count
-  }, 0)
-  const unlinkedCount = mapNotes.filter((n) => (backlinks.get(n.id) ?? 0) === 0).length
-  const avgReads = mapNotes.length > 0 ? Math.round(mapNotes.reduce((s, n) => s + n.reads, 0) / mapNotes.length) : 0
-
-  return {
-    noteCount: mapNotes.length,
-    totalLinks,
-    internalLinks,
-    unlinkedCount,
-    avgReads,
-    stages: {
-      inbox: mapNotes.filter((n) => n.status === "inbox").length,
-      capture: mapNotes.filter((n) => n.status === "capture").length,
-      permanent: mapNotes.filter((n) => n.status === "permanent").length,
-    },
-  }
-}
-
-/**
- * Get notes in a map that need attention:
- * - Unlinked within the map
- * - Stale (not touched in 7+ days)
- */
-export function getMapReviewItems(map: KnowledgeMap, allNotes: Note[], backlinks: Map<string, number>): ReviewItem[] {
-  const items: ReviewItem[] = []
-  const mapNotes = allNotes.filter((n) => map.noteIds.includes(n.id))
-
-  for (const note of mapNotes) {
-    if (needsReview(note)) {
-      items.push({ note, reason: "stale-capture" })
-    }
-    if (note.status === "permanent" && (backlinks.get(note.id) ?? 0) === 0) {
-      items.push({ note, reason: "unlinked-permanent" })
-    }
-  }
-
-  return items
-}

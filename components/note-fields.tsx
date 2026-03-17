@@ -46,20 +46,20 @@ export const STATUS_CONFIG: Record<
 > = {
   inbox: {
     label: "Inbox",
-    color: "#06b6d4",
-    bg: "rgba(6, 182, 212, 0.12)",
+    color: "var(--chart-2)",
+    bg: "color-mix(in srgb, var(--chart-2) 12%, transparent)",
     icon: <Inbox className="h-3.5 w-3.5" />,
   },
   capture: {
     label: "Capture",
-    color: "#f2994a",
-    bg: "rgba(242, 153, 74, 0.12)",
+    color: "var(--chart-3)",
+    bg: "color-mix(in srgb, var(--chart-3) 12%, transparent)",
     icon: <Zap className="h-3.5 w-3.5" />,
   },
   permanent: {
     label: "Permanent",
-    color: "#45d483",
-    bg: "rgba(69, 212, 131, 0.12)",
+    color: "var(--chart-5)",
+    bg: "color-mix(in srgb, var(--chart-5) 12%, transparent)",
     icon: <ArchiveIcon className="h-3.5 w-3.5" />,
   },
 }
@@ -74,27 +74,27 @@ export const PRIORITY_CONFIG: Record<
 > = {
   none: {
     label: "No priority",
-    color: "#6b6b76",
+    color: "var(--muted-foreground)",
     icon: <Minus className="h-3.5 w-3.5" />,
   },
   urgent: {
     label: "Urgent",
-    color: "#e5484d",
+    color: "var(--chart-4)",
     icon: <AlertTriangle className="h-3.5 w-3.5" />,
   },
   high: {
     label: "High",
-    color: "#f2994a",
+    color: "var(--chart-3)",
     icon: <ArrowUp className="h-3.5 w-3.5" />,
   },
   medium: {
     label: "Medium",
-    color: "#f2c94c",
+    color: "var(--chart-3)",
     icon: <ArrowRight className="h-3.5 w-3.5" />,
   },
   low: {
     label: "Low",
-    color: "#5e6ad2",
+    color: "var(--accent)",
     icon: <ArrowDown className="h-3.5 w-3.5" />,
   },
 }

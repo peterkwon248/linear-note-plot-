@@ -466,6 +466,66 @@ export function OntologyGraphCanvas({
     return map
   }, [visibleEdges])
 
+  /* ── Label cluster hulls ─────────────────────────────── */
+  const clusterHulls = useMemo(() => {
+    // Group nodes by labelId (skip null)
+    const groups = new Map<string, { x: number; y: number }[]>()
+    for (const node of graph.nodes) {
+      if (!node.labelId) continue
+      const pos = positionsRef.current.get(node.id)
+      if (!pos) continue
+      if (!groups.has(node.labelId)) groups.set(node.labelId, [])
+      groups.get(node.labelId)!.push(pos)
+    }
+
+    const hulls: { labelId: string; color: string; path: string }[] = []
+    for (const [labelId, points] of groups) {
+      if (points.length < 3) continue // Need at least 3 points for a hull
+
+      const label = labels.find((l) => l.id === labelId)
+      const color = label?.color ?? "hsl(var(--muted-foreground))"
+
+      // Compute convex hull (Graham scan)
+      const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y)
+      const cross = (o: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }) =>
+        (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+
+      const lower: { x: number; y: number }[] = []
+      for (const p of sorted) {
+        while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop()
+        lower.push(p)
+      }
+      const upper: { x: number; y: number }[] = []
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        const p = sorted[i]
+        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop()
+        upper.push(p)
+      }
+      upper.pop()
+      lower.pop()
+      const hull = lower.concat(upper)
+      if (hull.length < 3) continue
+
+      // Expand hull outward by padding
+      const pad = 25
+      const cx = hull.reduce((s, p) => s + p.x, 0) / hull.length
+      const cy = hull.reduce((s, p) => s + p.y, 0) / hull.length
+      const expanded = hull.map((p) => {
+        const dx = p.x - cx, dy = p.y - cy
+        const d = Math.sqrt(dx * dx + dy * dy) || 1
+        return { x: p.x + (dx / d) * pad, y: p.y + (dy / d) * pad }
+      })
+
+      // Build smooth closed path with rounded corners
+      const pathParts = expanded.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`))
+      pathParts.push("Z")
+
+      hulls.push({ labelId, color, path: pathParts.join(" ") })
+    }
+
+    return hulls
+  }, [graph.nodes, labels, positionsRef.current])
+
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(
     (nodeId: string): boolean => {
@@ -936,6 +996,21 @@ export function OntologyGraphCanvas({
         </defs>
 
         <g transform={`translate(${transform.x},${transform.y}) scale(${transform.scale})`}>
+          {/* ── Cluster hull backgrounds ──────────── */}
+          {clusterHulls.map((hull) => (
+            <path
+              key={`hull-${hull.labelId}`}
+              d={hull.path}
+              fill={hull.color}
+              fillOpacity={0.06}
+              stroke={hull.color}
+              strokeOpacity={0.15}
+              strokeWidth={1}
+              strokeDasharray="6 4"
+              style={{ pointerEvents: "none" }}
+            />
+          ))}
+
           {/* ── Edges (bezier curves) ─────────────── */}
           {culledEdges.map((edge, i) => {
             const sp = getPos(edge.source)
@@ -975,7 +1050,7 @@ export function OntologyGraphCanvas({
                     fill="none"
                     stroke="hsl(var(--muted-foreground))"
                     strokeDasharray="8 4"
-                    strokeWidth={1.2}
+                    strokeWidth={1.5}
                     opacity={dimmed ? 0.3 : isHighlighted ? 0.8 : 0.4}
                     className={isHighlighted ? "wikilink-edge-animated" : undefined}
                     filter={isHighlighted ? "url(#edge-glow)" : undefined}
@@ -1144,6 +1219,38 @@ export function OntologyGraphCanvas({
                   style={{ transition: "fill 0.15s, opacity 0.15s" }}
                 />
 
+                {/* Wiki badge — double ring + "W" */}
+                {node.isWiki && (
+                  <>
+                    <circle
+                      cx={pos.x}
+                      cy={pos.y}
+                      r={r + 3}
+                      fill="none"
+                      stroke={fill}
+                      strokeWidth={1.2}
+                      strokeDasharray="3 2"
+                      opacity={dimmed ? 0.4 : 0.7}
+                      style={{ pointerEvents: "none" }}
+                    />
+                    {transform.scale >= 0.6 && (
+                      <text
+                        x={pos.x + r - 2}
+                        y={pos.y - r + 2}
+                        textAnchor="middle"
+                        fill="var(--foreground)"
+                        fontSize={8}
+                        fontFamily="var(--font-sans)"
+                        fontWeight={700}
+                        opacity={dimmed ? 0.4 : 0.85}
+                        style={{ pointerEvents: "none" }}
+                      >
+                        W
+                      </text>
+                    )}
+                  </>
+                )}
+
                 {/* Label — LOD: hide at low zoom */}
                 {showLabels && (
                   <text
@@ -1192,6 +1299,18 @@ export function OntologyGraphCanvas({
           />
         )}
       </svg>
+
+      {/* ── Minimap ──────────────────────────────────── */}
+      <MiniMap
+        positions={positionsRef}
+        transform={transform}
+        svgRef={svgRef}
+        nodes={graph.nodes}
+        edges={graph.edges}
+        labels={labels}
+        selectedNodeId={selectedNodeId}
+        onNavigate={(t) => setTransform(t)}
+      />
 
       {/* ── Controls overlay ────────────────────────── */}
       <div className="absolute bottom-3 right-3 flex items-center gap-0.5 rounded-md border border-border bg-card shadow-sm">
@@ -1284,6 +1403,282 @@ export function OntologyGraphCanvas({
   )
 }
 
+/* ── MiniMap sub-component ──────────────────────────────── */
+
+const MINIMAP_W = 200
+const MINIMAP_H = 130
+const MINIMAP_PAD = 20
+
+interface MiniMapProps {
+  positions: React.RefObject<Map<string, { x: number; y: number }>>
+  transform: Transform
+  svgRef: React.RefObject<SVGSVGElement | null>
+  nodes: OntologyNode[]
+  edges: OntologyEdge[]
+  labels: Label[]
+  selectedNodeId: string | null
+  onNavigate: (t: Transform) => void
+}
+
+function MiniMap({ positions, transform, svgRef, nodes, edges, labels, selectedNodeId, onNavigate }: MiniMapProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const isDraggingRef = useRef(false)
+
+  // Compute graph bounds
+  const getBounds = useCallback(() => {
+    const pos = positions.current
+    if (!pos || pos.size === 0) return null
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    for (const p of pos.values()) {
+      if (p.x < minX) minX = p.x
+      if (p.y < minY) minY = p.y
+      if (p.x > maxX) maxX = p.x
+      if (p.y > maxY) maxY = p.y
+    }
+    const pad = MINIMAP_PAD
+    return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad }
+  }, [positions])
+
+  // Compute dynamic minimap bounds — viewport-linked (B-style)
+  // Shows ~2.5x the viewport so the viewport rect fills ~40% of minimap
+  const getViewBounds = useCallback(() => {
+    const svg = svgRef.current
+    if (!svg) return null
+    const rect = svg.getBoundingClientRect()
+
+    // Current viewport in graph coords
+    const vpLeft = -transform.x / transform.scale
+    const vpTop = -transform.y / transform.scale
+    const vpW = rect.width / transform.scale
+    const vpH = rect.height / transform.scale
+    const vpCx = vpLeft + vpW / 2
+    const vpCy = vpTop + vpH / 2
+
+    // Graph bounds (for clamping)
+    const graphBounds = getBounds()
+
+    // Minimap shows 2.5x viewport, but at least covers the full graph when zoomed out
+    const expand = 2.5
+    let showW = vpW * expand
+    let showH = vpH * expand
+
+    // If graph bounds are available and smaller than expanded viewport, use graph bounds
+    if (graphBounds) {
+      const gW = graphBounds.maxX - graphBounds.minX
+      const gH = graphBounds.maxY - graphBounds.minY
+      showW = Math.max(showW, gW)
+      showH = Math.max(showH, gH)
+    }
+
+    // Maintain minimap aspect ratio
+    const aspect = MINIMAP_W / MINIMAP_H
+    if (showW / showH > aspect) {
+      showH = showW / aspect
+    } else {
+      showW = showH * aspect
+    }
+
+    return {
+      minX: vpCx - showW / 2,
+      minY: vpCy - showH / 2,
+      maxX: vpCx + showW / 2,
+      maxY: vpCy + showH / 2,
+    }
+  }, [svgRef, transform, getBounds])
+
+  // Draw minimap
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const svg = svgRef.current
+    if (!canvas || !svg) return
+
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = MINIMAP_W * dpr
+    canvas.height = MINIMAP_H * dpr
+    ctx.scale(dpr, dpr)
+
+    // Clear
+    ctx.clearRect(0, 0, MINIMAP_W, MINIMAP_H)
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)"
+    ctx.fillRect(0, 0, MINIMAP_W, MINIMAP_H)
+
+    const viewBounds = getViewBounds()
+    if (!viewBounds) return
+
+    const vbW = viewBounds.maxX - viewBounds.minX || 1
+    const vbH = viewBounds.maxY - viewBounds.minY || 1
+    const s = Math.min(MINIMAP_W / vbW, MINIMAP_H / vbH)
+    const offX = (MINIMAP_W - vbW * s) / 2
+    const offY = (MINIMAP_H - vbH * s) / 2
+
+    const toMini = (gx: number, gy: number) => ({
+      mx: (gx - viewBounds.minX) * s + offX,
+      my: (gy - viewBounds.minY) * s + offY,
+    })
+
+    // Draw edges (thin translucent lines for cluster structure)
+    const pos = positions.current
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"
+    ctx.lineWidth = 0.5
+    for (const edge of edges) {
+      const sp = pos?.get(edge.source)
+      const tp = pos?.get(edge.target)
+      if (!sp || !tp) continue
+      const s1 = toMini(sp.x, sp.y)
+      const t1 = toMini(tp.x, tp.y)
+      // Skip edges fully outside minimap
+      if (s1.mx < -10 && t1.mx < -10) continue
+      if (s1.mx > MINIMAP_W + 10 && t1.mx > MINIMAP_W + 10) continue
+      if (s1.my < -10 && t1.my < -10) continue
+      if (s1.my > MINIMAP_H + 10 && t1.my > MINIMAP_H + 10) continue
+      ctx.beginPath()
+      ctx.moveTo(s1.mx, s1.my)
+      ctx.lineTo(t1.mx, t1.my)
+      ctx.stroke()
+    }
+
+    // Draw nodes with label colors
+    for (const node of nodes) {
+      const p = pos?.get(node.id)
+      if (!p) continue
+      const { mx, my } = toMini(p.x, p.y)
+      // Skip nodes outside minimap
+      if (mx < -5 || mx > MINIMAP_W + 5 || my < -5 || my > MINIMAP_H + 5) continue
+      const isSelected = node.id === selectedNodeId
+      ctx.beginPath()
+      ctx.arc(mx, my, isSelected ? 3 : 2, 0, Math.PI * 2)
+      if (isSelected) {
+        ctx.fillStyle = "rgba(94, 106, 210, 1)"
+      } else {
+        const color = getNodeBaseColor(node, labels)
+        ctx.fillStyle = color
+        ctx.globalAlpha = 0.75
+      }
+      ctx.fill()
+      ctx.globalAlpha = 1
+    }
+
+    // Draw viewport rectangle
+    const rect = svg.getBoundingClientRect()
+    const vpLeft = -transform.x / transform.scale
+    const vpTop = -transform.y / transform.scale
+    const vpW = rect.width / transform.scale
+    const vpH = rect.height / transform.scale
+
+    const tl = toMini(vpLeft, vpTop)
+    const br = toMini(vpLeft + vpW, vpTop + vpH)
+    const vpMW = br.mx - tl.mx
+    const vpMH = br.my - tl.my
+
+    // Dim area outside viewport
+    ctx.fillStyle = "rgba(0, 0, 0, 0.3)"
+    ctx.fillRect(0, 0, MINIMAP_W, Math.max(0, tl.my))
+    ctx.fillRect(0, Math.min(MINIMAP_H, tl.my + vpMH), MINIMAP_W, MINIMAP_H)
+    ctx.fillRect(0, Math.max(0, tl.my), Math.max(0, tl.mx), Math.min(vpMH, MINIMAP_H))
+    ctx.fillRect(Math.min(MINIMAP_W, tl.mx + vpMW), Math.max(0, tl.my), MINIMAP_W, Math.min(vpMH, MINIMAP_H))
+
+    // Viewport border
+    ctx.strokeStyle = "rgba(94, 106, 210, 0.85)"
+    ctx.lineWidth = 1.5
+    ctx.strokeRect(tl.mx, tl.my, vpMW, vpMH)
+  })
+
+  // Navigate on click/drag
+  const navigateToPoint = useCallback((clientX: number, clientY: number) => {
+    const canvas = canvasRef.current
+    const svg = svgRef.current
+    if (!canvas || !svg) return
+
+    const canvasRect = canvas.getBoundingClientRect()
+    const mx = clientX - canvasRect.left
+    const my = clientY - canvasRect.top
+
+    const viewBounds = getViewBounds()
+    if (!viewBounds) return
+
+    const vbW = viewBounds.maxX - viewBounds.minX || 1
+    const vbH = viewBounds.maxY - viewBounds.minY || 1
+    const s = Math.min(MINIMAP_W / vbW, MINIMAP_H / vbH)
+    const offX = (MINIMAP_W - vbW * s) / 2
+    const offY = (MINIMAP_H - vbH * s) / 2
+
+    // Convert minimap coords back to graph coords
+    const gx = (mx - offX) / s + viewBounds.minX
+    const gy = (my - offY) / s + viewBounds.minY
+
+    // Center the main viewport on this graph point
+    const svgRect = svg.getBoundingClientRect()
+    const newX = -gx * transform.scale + svgRect.width / 2
+    const newY = -gy * transform.scale + svgRect.height / 2
+
+    onNavigate({ ...transform, x: newX, y: newY })
+  }, [getViewBounds, svgRef, transform, onNavigate])
+
+  const handleMouseDown = useCallback((e: ReactMouseEvent) => {
+    e.stopPropagation()
+    isDraggingRef.current = true
+    navigateToPoint(e.clientX, e.clientY)
+  }, [navigateToPoint])
+
+  const handleMouseMove = useCallback((e: ReactMouseEvent) => {
+    if (!isDraggingRef.current) return
+    e.stopPropagation()
+    navigateToPoint(e.clientX, e.clientY)
+  }, [navigateToPoint])
+
+  const handleMouseUp = useCallback(() => {
+    isDraggingRef.current = false
+  }, [])
+
+  // Zoom via scroll wheel on minimap
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+
+    const canvas = canvasRef.current
+    const svg = svgRef.current
+    if (!canvas || !svg) return
+
+    // Compute zoom center in graph coordinates (center of current viewport)
+    const svgRect = svg.getBoundingClientRect()
+    const vpCenterGx = (-transform.x + svgRect.width / 2) / transform.scale
+    const vpCenterGy = (-transform.y + svgRect.height / 2) / transform.scale
+
+    // Apply zoom
+    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP
+    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, transform.scale + delta))
+    if (newScale === transform.scale) return
+
+    // Keep viewport centered on same graph point
+    const newX = -vpCenterGx * newScale + svgRect.width / 2
+    const newY = -vpCenterGy * newScale + svgRect.height / 2
+
+    onNavigate({ x: newX, y: newY, scale: newScale })
+  }, [svgRef, transform, onNavigate])
+
+  return (
+    <div
+      className="absolute top-3 right-3 rounded-md border border-border overflow-hidden shadow-sm"
+      style={{ width: MINIMAP_W, height: MINIMAP_H }}
+    >
+      <canvas
+        ref={canvasRef}
+        width={MINIMAP_W}
+        height={MINIMAP_H}
+        style={{ width: MINIMAP_W, height: MINIMAP_H, cursor: "crosshair" }}
+        onMouseDown={handleMouseDown as any}
+        onMouseMove={handleMouseMove as any}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onWheel={handleWheel as any}
+      />
+    </div>
+  )
+}
+
 /* ── Legend sub-component ───────────────────────────────── */
 
 interface LegendOverlayProps {
@@ -1335,7 +1730,7 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
       ))}
       {hasWikilinkEdges && (
         <g transform={`translate(10, ${10 + legendRelationTypes.length * rowHeight})`}>
-          <line x1={0} y1={6} x2={20} y2={6} stroke="#6b7280" strokeWidth={1} strokeDasharray="4 2" />
+          <line x1={0} y1={6} x2={20} y2={6} stroke="#6b7280" strokeWidth={1.5} strokeDasharray="4 2" />
           <text x={26} y={10} fill="rgba(255,255,255,0.6)" fontSize={10} fontFamily="var(--font-sans)">
             Wiki-link
           </text>

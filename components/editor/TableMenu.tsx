@@ -192,7 +192,7 @@ function TableAction({ icon, label, onClick, danger = false }: { icon: React.Rea
         borderRadius: "5px",
         fontSize: "12px",
         fontWeight: 500,
-        color: danger ? "#EF4444" : "var(--foreground)",
+        color: danger ? "var(--destructive)" : "var(--foreground)",
         backgroundColor: "transparent",
         border: "none",
         cursor: "pointer",

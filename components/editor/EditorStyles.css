@@ -877,3 +877,63 @@
   text-decoration-color: rgba(229, 115, 115, 0.7);
   background-color: rgba(229, 115, 115, 0.08);
 }
+
+/* ── Wiki Read Mode Typography ────────────────────────────────────── */
+
+.wiki-read-content .ProseMirror {
+  max-width: 720px;
+  line-height: 1.85;
+}
+
+.wiki-read-content .ProseMirror h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid hsl(var(--border));
+  margin-top: 1.2em;
+}
+
+.wiki-read-content .ProseMirror h3 {
+  margin-top: 1em;
+}
+
+.wiki-read-content .ProseMirror p {
+  margin-bottom: 0.5em;
+  margin-top: 0.5em;
+}
+
+/* ── Wiki Categories ──────────────────────────────────────────────── */
+
+.wiki-categories {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid hsl(var(--border));
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.wiki-categories-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.wiki-categories button {
+  color: hsl(var(--accent));
+  cursor: pointer;
+  transition: color 0.15s;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.wiki-categories button:hover {
+  text-decoration: underline;
+}
+
+.wiki-categories .wiki-cat-sep {
+  color: hsl(var(--muted-foreground) / 0.4);
+  margin: 0 2px;
+}

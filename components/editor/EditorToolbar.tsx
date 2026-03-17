@@ -233,7 +233,7 @@ function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "
         >
           {!color.value ? (
             <div style={{ width: "12px", height: "12px", borderRadius: "2px", position: "relative", overflow: "hidden", border: "1px solid var(--border)" }}>
-              <div style={{ position: "absolute", top: "50%", left: "-2px", right: "-2px", height: "1px", backgroundColor: "#EF4444", transform: "rotate(-45deg)" }} />
+              <div style={{ position: "absolute", top: "50%", left: "-2px", right: "-2px", height: "1px", backgroundColor: "var(--destructive)", transform: "rotate(-45deg)" }} />
             </div>
           ) : (
             <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: color.swatch, opacity: mode === "highlight" ? 0.7 : 1 }} />

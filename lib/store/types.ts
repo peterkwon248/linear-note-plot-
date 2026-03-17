@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, KnowledgeMap, SavedView, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone } from "../workspace/types"
@@ -67,8 +67,8 @@ export interface PlotState {
   graphFocusDepth: number
   commandPaletteMode: "search" | "commands" | "links"
 
-  // Phase 3: Knowledge Maps
-  knowledgeMaps: KnowledgeMap[]
+  // Reflections
+  reflections: Reflection[]
 
   // Relations
   relations: Relation[]
@@ -80,9 +80,6 @@ export interface PlotState {
   layoutMode: LayoutMode
   _preFocusLayoutMode: LayoutMode | null
   listPaneWidth: number  // three-column/split 모드용, 200~500
-
-  // Saved Views
-  savedViews: SavedView[]
 
   // SRS
   srsStateByNoteId: Record<string, SRSState>
@@ -183,6 +180,9 @@ export interface PlotState {
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
 
+  // ── Reflections ──
+  addReflection: (noteId: string, text: string) => string
+
   // ── Thread ──
   startThread: (noteId: string) => string
   addThreadStep: (threadId: string, text: string) => void
@@ -191,13 +191,6 @@ export interface PlotState {
   addWikiLink: (noteId: string, targetTitle: string) => void
   setGraphFocusDepth: (depth: number) => void
   setCommandPaletteMode: (mode: "search" | "commands" | "links") => void
-
-  // ── Knowledge Maps ──
-  createKnowledgeMap: (title: string, description?: string, color?: string) => string
-  updateKnowledgeMap: (id: string, updates: Partial<KnowledgeMap>) => void
-  deleteKnowledgeMap: (id: string) => void
-  addNoteToMap: (mapId: string, noteId: string) => void
-  removeNoteFromMap: (mapId: string, noteId: string) => void
 
   // ── Relations ──
   addRelation: (sourceNoteId: string, targetNoteId: string, type: RelationType) => string | null
@@ -222,11 +215,6 @@ export interface PlotState {
   addRelationSuggestion: (partial: Omit<RelationSuggestion, "id" | "createdAt" | "status">) => string
   acceptRelationSuggestion: (id: string, typeOverride?: RelationType) => void
   dismissRelationSuggestion: (id: string) => void
-
-  // ── Saved Views ──
-  createSavedView: (name: string, config?: Partial<SavedView>) => string
-  updateSavedView: (id: string, updates: Partial<SavedView>) => void
-  deleteSavedView: (id: string) => void
 
   // ── Editor Tabs ──
   openNoteInTab: (noteId: string, panelId?: string) => void

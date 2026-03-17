@@ -283,7 +283,7 @@ export function LabelsView() {
             className="w-3 h-3 rounded-sm shrink-0"
             style={{ backgroundColor: selectedLabel.color }}
           />
-          <h1 className="text-base font-semibold text-foreground">{selectedLabel.name}</h1>
+          <h1 className="text-[15px] font-semibold text-foreground">{selectedLabel.name}</h1>
           <span className="text-[14px] text-muted-foreground">{labelNotes.length} notes</span>
           <div className="flex-1" />
           <button
@@ -335,7 +335,7 @@ export function LabelsView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-        <h1 className="text-base font-semibold text-foreground">Labels</h1>
+        <h1 className="text-[15px] font-semibold text-foreground">Labels</h1>
         <span className="text-[14px] text-muted-foreground">({labels.length})</span>
         <div className="flex-1" />
         <button

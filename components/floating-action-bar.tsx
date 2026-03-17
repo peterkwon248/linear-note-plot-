@@ -144,7 +144,7 @@ export function FloatingActionBar({
           <>
             <button
               onClick={handlePromoteAll}
-              className="inline-flex items-center gap-1 rounded-md bg-[rgba(69,212,131,0.1)] px-3 py-2 text-[15px] font-medium text-[#45d483] hover:bg-[rgba(69,212,131,0.2)] transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-[15px] font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
             >
               <ArrowUpRight className="h-4 w-4" /> Promote
             </button>
@@ -193,7 +193,7 @@ export function FloatingActionBar({
             {hasCapture && (
               <button
                 onClick={handlePromoteAll}
-                className="inline-flex items-center gap-1 rounded-md bg-[rgba(69,212,131,0.1)] px-3 py-2 text-[15px] font-medium text-[#45d483] hover:bg-[rgba(69,212,131,0.2)] transition-colors"
+                className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-[15px] font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
               >
                 <ArrowUpRight className="h-4 w-4" /> Promote
               </button>

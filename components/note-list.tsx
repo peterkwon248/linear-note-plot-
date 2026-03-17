@@ -89,7 +89,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
 
       {/* Pin icon */}
       {note.pinned && (
-        <Pin className="h-3.5 w-3.5 shrink-0 text-[#f2994a] fill-[#f2994a]" />
+        <Pin className="h-3.5 w-3.5 shrink-0 text-chart-3 fill-chart-3" />
       )}
 
       {/* Content area */}

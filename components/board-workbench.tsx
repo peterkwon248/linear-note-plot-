@@ -395,7 +395,7 @@ function InboxOverview({
   return (
     <div>
       <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2 mb-4">
-        <InboxIcon className="h-4 w-4 text-[#06b6d4]" />
+        <InboxIcon className="h-4 w-4 text-chart-2" />
         Inbox Overview
       </h3>
 
@@ -470,7 +470,7 @@ function CaptureOverview({
   return (
     <div>
       <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2 mb-4">
-        <Pencil className="h-4 w-4 text-[#f2994a]" />
+        <Pencil className="h-4 w-4 text-chart-3" />
         Capture Overview
       </h3>
 
@@ -558,7 +558,7 @@ function KnowledgeOverview({
   return (
     <div>
       <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2 mb-4">
-        <GraduationCap className="h-4 w-4 text-[#45d483]" />
+        <GraduationCap className="h-4 w-4 text-chart-5" />
         Permanent Overview
       </h3>
 

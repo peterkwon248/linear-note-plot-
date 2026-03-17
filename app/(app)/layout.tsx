@@ -21,6 +21,7 @@ import { TagsView } from "@/components/views/tags-view"
 import { LabelsView } from "@/components/views/labels-view"
 import { OntologyView } from "@/components/views/ontology-view"
 import { TemplatesView } from "@/components/views/templates-view"
+import { InsightsView } from "@/components/insights-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 
@@ -201,6 +202,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {(mountedViews.has("/ontology") || activeRoute === "/ontology") && (
             <div className={activeRoute === "/ontology" ? "flex flex-1 overflow-hidden" : "hidden"}>
               <OntologyView />
+            </div>
+          )}
+
+          {(mountedViews.has("/insights") || activeRoute === "/insights") && (
+            <div className={activeRoute === "/insights" ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <InsightsView />
             </div>
           )}
 

@@ -14,6 +14,7 @@ interface OntologyFilterBarProps {
   searchQuery: string
   onSearchChange: (query: string) => void
   searchMatchCount: number | null
+  relationTypeCounts: Map<RelationType, number>
 }
 
 export function OntologyFilterBar({
@@ -24,6 +25,7 @@ export function OntologyFilterBar({
   searchQuery,
   onSearchChange,
   searchMatchCount,
+  relationTypeCounts,
 }: OntologyFilterBarProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -87,6 +89,15 @@ export function OntologyFilterBar({
     filters.status === "all"
       ? "Status"
       : filters.status.charAt(0).toUpperCase() + filters.status.slice(1)
+
+  const activeRelationCount =
+    filters.relationTypes === "all"
+      ? RELATION_TYPES.length
+      : (filters.relationTypes as RelationType[]).length
+  const selectedRelations =
+    activeRelationCount < RELATION_TYPES.length
+      ? `Relations (${activeRelationCount})`
+      : "Relations"
 
   return (
     <div ref={dropdownRef} className="flex items-center gap-3 h-10 px-5 border-b border-border">
@@ -186,31 +197,44 @@ export function OntologyFilterBar({
       {/* Separator */}
       <div className="w-px h-5 bg-border" />
 
-      {/* Relation Type Toggles */}
-      <div className="flex items-center gap-1">
-        {RELATION_TYPES.map((type) => {
-          const isActive =
-            filters.relationTypes === "all" ||
-            (filters.relationTypes as RelationType[]).includes(type)
-          const config = RELATION_TYPE_CONFIG[type]
+      {/* Relations Dropdown */}
+      <div className="relative">
+        <button
+          onClick={() => setOpenDropdown(openDropdown === "relations" ? null : "relations")}
+          className="flex items-center gap-1 text-[13px] px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
+        >
+          {selectedRelations}
+          <ChevronDown className="w-3 h-3" />
+        </button>
+        {openDropdown === "relations" && (
+          <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max">
+            {RELATION_TYPES.map((type) => {
+              const isActive =
+                filters.relationTypes === "all" ||
+                (filters.relationTypes as RelationType[]).includes(type)
+              const config = RELATION_TYPE_CONFIG[type]
+              const count = relationTypeCounts.get(type) ?? 0
 
-          return (
-            <button
-              key={type}
-              onClick={() => handleRelationTypeToggle(type)}
-              title={config.label}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                isActive
-                  ? "border-0"
-                  : "border-2"
-              }`}
-              style={{
-                backgroundColor: isActive ? config.color : "transparent",
-                borderColor: isActive ? "transparent" : config.color,
-              }}
-            />
-          )
-        })}
+              return (
+                <button
+                  key={type}
+                  onClick={() => handleRelationTypeToggle(type)}
+                  className="flex items-center gap-2 w-full text-left px-2 py-1 text-[13px] rounded hover:bg-secondary cursor-pointer"
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{
+                      backgroundColor: isActive ? config.color : "transparent",
+                      border: `1.5px solid ${config.color}`,
+                    }}
+                  />
+                  <span className={isActive ? "" : "text-muted-foreground"}>{config.label}</span>
+                  <span className="ml-auto text-[11px] text-muted-foreground/50">{count}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Wikilinks Toggle */}

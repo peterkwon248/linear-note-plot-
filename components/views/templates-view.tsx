@@ -146,7 +146,7 @@ function TemplateFormDialog({
       <div className="w-full max-w-lg rounded-xl border border-border bg-card shadow-xl animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="text-base font-semibold text-foreground">{dialogTitle}</h2>
+          <h2 className="text-[15px] font-semibold text-foreground">{dialogTitle}</h2>
           <button
             onClick={onCancel}
             className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
@@ -732,7 +732,7 @@ export function TemplatesView() {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border px-6 py-4 shrink-0">
-          <h1 className="text-base font-semibold text-foreground">Templates</h1>
+          <h1 className="text-[15px] font-semibold text-foreground">Templates</h1>
           <span className="text-[14px] text-muted-foreground">({templates.length})</span>
           <div className="flex-1" />
           <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
@@ -749,7 +749,7 @@ export function TemplatesView() {
         <div className="flex-1 overflow-y-auto">
           {templates.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 gap-2 px-4">
-              <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" strokeWidth={1} />
+              <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" strokeWidth={1.5} />
               <span className="text-xs text-muted-foreground text-center">No templates yet</span>
               <button
                 onClick={() => setShowCreateDialog(true)}
@@ -814,7 +814,7 @@ export function TemplatesView() {
         ) : (
           // Fallback: no template selected in focus mode
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
-            <LayoutTemplate className="h-12 w-12 text-muted-foreground/30" strokeWidth={1} />
+            <LayoutTemplate className="h-12 w-12 text-muted-foreground/30" strokeWidth={1.5} />
             <p className="text-sm font-medium text-muted-foreground">No template selected</p>
             <button
               onClick={() => setViewMode("list-editor")}
@@ -845,7 +845,7 @@ export function TemplatesView() {
       <div className="flex flex-col w-[280px] min-w-[280px] border-r border-border overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border px-6 py-4 shrink-0">
-          <h1 className="text-base font-semibold text-foreground">Templates</h1>
+          <h1 className="text-[15px] font-semibold text-foreground">Templates</h1>
           <span className="text-[14px] text-muted-foreground">({templates.length})</span>
           <div className="flex-1" />
           <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
@@ -862,7 +862,7 @@ export function TemplatesView() {
         <div className="flex-1 overflow-y-auto py-1">
           {templates.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 gap-2 px-4">
-              <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" strokeWidth={1} />
+              <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" strokeWidth={1.5} />
               <span className="text-xs text-muted-foreground text-center">No templates yet</span>
               <button
                 onClick={() => setShowCreateDialog(true)}
@@ -952,7 +952,7 @@ export function TemplatesView() {
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
-            <LayoutTemplate className="h-12 w-12 text-muted-foreground/30" strokeWidth={1} />
+            <LayoutTemplate className="h-12 w-12 text-muted-foreground/30" strokeWidth={1.5} />
             <p className="text-sm font-medium text-muted-foreground">Select a template to edit</p>
             <p className="text-xs text-muted-foreground/60 max-w-xs">
               Choose a template from the list on the left, or create a new one to get started.

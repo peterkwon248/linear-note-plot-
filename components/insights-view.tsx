@@ -1,12 +1,15 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { AlertCircle, AlertTriangle, Info, ChevronDown, ChevronUp, Lightbulb, SlidersHorizontal, LayoutList, LayoutGrid, Calendar } from "lucide-react"
+import {
+  AlertCircle, AlertTriangle, Info, ChevronDown, ChevronUp,
+  Lightbulb, Activity, TrendingUp, FileText, Eye,
+} from "lucide-react"
 import { usePlotStore } from "@/lib/store"
-import { useSettingsStore } from "@/lib/settings-store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { runAnalysis } from "@/lib/analysis/engine"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { computeActivityStats } from "@/lib/datalog/helpers"
+import { format, subDays } from "date-fns"
 import type { AnalysisResult, AnalysisSeverity } from "@/lib/analysis/types"
 
 /* ── Severity helpers ─────────────────────────────────── */
@@ -37,6 +40,130 @@ const SEVERITY_CONFIG: Record<AnalysisSeverity, {
     badge: "bg-blue-500/15 text-blue-400 border-blue-500/20",
     icon: Info,
   },
+}
+
+/* ── StatCard ─────────────────────────────────────────── */
+
+function StatCard({ label, value, icon: Icon, accent }: {
+  label: string
+  value: number
+  icon: typeof Activity
+  accent: string
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-secondary/30 px-4 py-3">
+      <div className={`flex h-8 w-8 items-center justify-center rounded-md ${accent}`}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div>
+        <p className="text-[22px] font-semibold text-foreground leading-none">{value}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">{label}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ── MiniBarChart (7-day activity) ────────────────────── */
+
+function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
+  const max = Math.max(...data.map((d) => d.count), 1)
+
+  return (
+    <div className="rounded-lg border border-border bg-secondary/30 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[12px] font-medium text-muted-foreground">7-Day Activity</span>
+      </div>
+      <div className="flex items-end gap-1.5 h-16">
+        {data.map((d) => {
+          const height = max > 0 ? (d.count / max) * 100 : 0
+          const date = new Date(d.date)
+          const dayLabel = format(date, "EEE")
+          const isToday = format(new Date(), "yyyy-MM-dd") === d.date
+
+          return (
+            <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+              <div className="w-full flex items-end justify-center" style={{ height: 48 }}>
+                <div
+                  className={`w-full max-w-[24px] rounded-sm transition-all ${
+                    isToday ? "bg-accent" : "bg-muted-foreground/20"
+                  }`}
+                  style={{ height: `${Math.max(height, 4)}%` }}
+                  title={`${d.count} events`}
+                />
+              </div>
+              <span className={`text-[9px] ${isToday ? "text-accent font-medium" : "text-muted-foreground/60"}`}>
+                {dayLabel}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ── MostOpened ───────────────────────────────────────── */
+
+function MostOpenedList({ items }: { items: { noteId: string; title: string; count: number }[] }) {
+  const openNote = usePlotStore((s) => s.openNote)
+
+  if (items.length === 0) return null
+
+  return (
+    <div className="rounded-lg border border-border bg-secondary/30 p-4">
+      <div className="flex items-center gap-2 mb-2.5">
+        <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[12px] font-medium text-muted-foreground">Most Opened</span>
+      </div>
+      <div className="space-y-0.5">
+        {items.map((item, i) => (
+          <button
+            key={item.noteId}
+            onClick={() => openNote(item.noteId)}
+            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors hover:bg-secondary"
+          >
+            <span className="text-[11px] text-muted-foreground/50 w-4 text-right">{i + 1}</span>
+            <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+            <span className="flex-1 truncate text-[13px] text-foreground/80">{item.title}</span>
+            <span className="text-[11px] text-muted-foreground">{item.count}×</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── LifecycleStats ───────────────────────────────────── */
+
+function LifecycleStats({ notes }: { notes: any[] }) {
+  const active = notes.filter((n) => !n.trashedAt && !n.archivedAt)
+  const inbox = active.filter((n) => n.status === "inbox").length
+  const capture = active.filter((n) => n.status === "capture").length
+  const permanent = active.filter((n) => n.status === "permanent").length
+  const wiki = active.filter((n) => n.isWiki).length
+
+  return (
+    <div className="rounded-lg border border-border bg-secondary/30 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[12px] font-medium text-muted-foreground">Note Lifecycle</span>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { label: "Inbox", value: inbox, color: "text-chart-3" },
+          { label: "Capture", value: capture, color: "text-chart-2" },
+          { label: "Permanent", value: permanent, color: "text-chart-5" },
+          { label: "Wiki", value: wiki, color: "text-accent" },
+        ].map((s) => (
+          <div key={s.label} className="text-center">
+            <p className={`text-[18px] font-semibold ${s.color}`}>{s.value}</p>
+            <p className="text-[10px] text-muted-foreground">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 /* ── InsightCard ──────────────────────────────────────── */
@@ -127,11 +254,17 @@ function InsightCard({ result }: { result: AnalysisResult }) {
 
 export function InsightsView() {
   const notes = usePlotStore((s) => s.notes)
+  const noteEvents = usePlotStore((s) => s.noteEvents)
   const srsMap = usePlotStore((s) => s.srsStateByNoteId)
   const backlinks = useBacklinksIndex()
-  const viewMode = useSettingsStore((s) => s.viewMode)
-  const setViewMode = useSettingsStore((s) => s.setViewMode)
 
+  // Activity stats
+  const activityStats = useMemo(
+    () => computeActivityStats(noteEvents ?? [], notes),
+    [noteEvents, notes],
+  )
+
+  // Analysis results
   const results = useMemo(
     () => runAnalysis(notes, srsMap, backlinks),
     [notes, srsMap, backlinks],
@@ -156,110 +289,92 @@ export function InsightsView() {
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <div className="flex items-center gap-3">
           <Lightbulb className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-[16px] font-semibold text-foreground">Insights</h2>
-          {total > 0 && (
-            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[12px] font-medium text-muted-foreground">
-              {total} issue{total !== 1 ? "s" : ""}
-            </span>
-          )}
+          <h2 className="text-[15px] font-semibold text-foreground">Insights</h2>
         </div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[13px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              Display
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[280px] p-0" align="end">
-            <div className="flex gap-1 px-3 py-2.5">
-              <button
-                onClick={() => setViewMode("table")}
-                className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
-                  viewMode === "table" || viewMode === "list"
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                }`}
-              >
-                <LayoutList className="h-4 w-4" />
-                List
-              </button>
-              <button
-                onClick={() => setViewMode("board")}
-                className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
-                  viewMode === "board"
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                }`}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Board
-              </button>
-              <button
-                onClick={() => setViewMode("insights")}
-                className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
-                  viewMode === "insights"
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                }`}
-              >
-                <Lightbulb className="h-4 w-4" />
-                Insights
-              </button>
-              <button
-                onClick={() => setViewMode("calendar")}
-                className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-[13px] font-medium transition-colors ${
-                  viewMode === "calendar"
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                }`}
-              >
-                <Calendar className="h-4 w-4" />
-                Calendar
-              </button>
-            </div>
-          </PopoverContent>
-        </Popover>
       </div>
 
-      {/* Summary chips */}
-      {total > 0 && (
-        <div className="flex items-center gap-2 border-b border-border px-6 py-3">
-          {counts.critical > 0 && (
-            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium ${SEVERITY_CONFIG.critical.badge}`}>
-              <span className={`h-2 w-2 rounded-full ${SEVERITY_CONFIG.critical.dot}`} />
-              {counts.critical} critical
-            </span>
-          )}
-          {counts.warning > 0 && (
-            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium ${SEVERITY_CONFIG.warning.badge}`}>
-              <span className={`h-2 w-2 rounded-full ${SEVERITY_CONFIG.warning.dot}`} />
-              {counts.warning} warning{counts.warning !== 1 ? "s" : ""}
-            </span>
-          )}
-          {counts.info > 0 && (
-            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium ${SEVERITY_CONFIG.info.badge}`}>
-              <span className={`h-2 w-2 rounded-full ${SEVERITY_CONFIG.info.dot}`} />
-              {counts.info} info
-            </span>
-          )}
-        </div>
-      )}
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        {/* ── Activity Dashboard ────────────────────── */}
+        <section>
+          <h3 className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-3">
+            Activity
+          </h3>
 
-      {/* Card list */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
-        {total === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Lightbulb className="mb-3 h-10 w-10 text-muted-foreground/30" />
-            <p className="text-[15px] font-medium text-foreground/70">All good! No issues detected.</p>
-            <p className="mt-1 text-[13px] text-muted-foreground">Your notes are in great shape.</p>
+          {/* Stat cards */}
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            <StatCard
+              label="Today"
+              value={activityStats.todayCount}
+              icon={Activity}
+              accent="bg-chart-5/15 text-chart-5"
+            />
+            <StatCard
+              label="This Week"
+              value={activityStats.weekCount}
+              icon={TrendingUp}
+              accent="bg-chart-2/15 text-chart-2"
+            />
+            <StatCard
+              label="This Month"
+              value={activityStats.monthCount}
+              icon={FileText}
+              accent="bg-accent/15 text-accent"
+            />
           </div>
-        ) : (
-          <div className="space-y-3">
-            {sorted.map((result) => (
-              <InsightCard key={result.ruleId} result={result} />
-            ))}
+
+          {/* 7-day chart + Most Opened + Lifecycle */}
+          <div className="grid grid-cols-3 gap-3">
+            <MiniBarChart data={activityStats.dailyActivity} />
+            <MostOpenedList items={activityStats.mostOpened} />
+            <LifecycleStats notes={notes} />
           </div>
-        )}
+        </section>
+
+        {/* ── Health Issues ─────────────────────────── */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground/60">
+              Health
+            </h3>
+            {total > 0 && (
+              <div className="flex items-center gap-1.5">
+                {counts.critical > 0 && (
+                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${SEVERITY_CONFIG.critical.badge}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${SEVERITY_CONFIG.critical.dot}`} />
+                    {counts.critical}
+                  </span>
+                )}
+                {counts.warning > 0 && (
+                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${SEVERITY_CONFIG.warning.badge}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${SEVERITY_CONFIG.warning.dot}`} />
+                    {counts.warning}
+                  </span>
+                )}
+                {counts.info > 0 && (
+                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${SEVERITY_CONFIG.info.badge}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${SEVERITY_CONFIG.info.dot}`} />
+                    {counts.info}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {total === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-secondary/30 py-10 text-center">
+              <Lightbulb className="mb-3 h-8 w-8 text-muted-foreground/30" />
+              <p className="text-[14px] font-medium text-foreground/70">All good!</p>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">No issues detected.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sorted.map((result) => (
+                <InsightCard key={result.ruleId} result={result} />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

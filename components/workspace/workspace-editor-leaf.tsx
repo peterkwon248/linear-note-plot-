@@ -242,7 +242,7 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                               openTabNoteIds.has(n.id) ? "text-muted-foreground" : "text-foreground"
                             )}
                           >
-                            <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.4} />
+                            <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
                             <span className="truncate">{n.title || "Untitled"}</span>
                             {openTabNoteIds.has(n.id) && (
                               <span className="ml-auto text-[11px] text-muted-foreground/50 shrink-0">open</span>

@@ -1,6 +1,6 @@
 import {
   FilePlus, Pencil, Eye, ArrowUpCircle, Archive, Trash2,
-  Check, Clock, Tag, Brain, Sparkles, Link2, FileText, Paperclip,
+  Check, Clock, Tag, Brain, Sparkles, Link2, FileText, Paperclip, BookOpen,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import type { NoteEventType } from "@/lib/types"
@@ -29,8 +29,6 @@ export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
   thread_step_added: { icon: Brain, verb: "Added thread step", color: "#06b6d4" },
   thread_ended: { icon: Brain, verb: "Ended thread", color: "#06b6d4" },
   thread_deleted: { icon: Trash2, verb: "Deleted thread", color: "#ef4444" },
-  map_added: { icon: Link2, verb: "Added to map", color: "#5e6ad2" },
-  map_removed: { icon: Link2, verb: "Removed from map", color: "#5e6ad2" },
   label_changed: { icon: Tag, verb: "Label changed", color: "#a855f7" },
   srs_reviewed: { icon: Brain, verb: "Reviewed (SRS)", color: "#06b6d4" },
   autopilot_applied: { icon: Sparkles, verb: "Autopilot applied", color: "#8b5cf6" },
@@ -41,6 +39,7 @@ export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
   wiki_converted: { icon: FileText, verb: "converted to wiki", color: "text-purple-400" },
   attachment_added: { icon: Paperclip, verb: "attached file", color: "text-green-400" },
   attachment_removed: { icon: Paperclip, verb: "removed attachment", color: "text-red-400" },
+  reflection_added: { icon: BookOpen, verb: "Added reflection", color: "#f59e0b" },
 }
 
 // Human-readable event type labels for filter chips
@@ -50,7 +49,7 @@ export const EVENT_TYPE_GROUPS: { label: string; types: NoteEventType[] }[] = [
   { label: "Opened", types: ["opened"] },
   { label: "Status", types: ["promoted", "archived", "unarchived", "trashed", "untrashed"] },
   { label: "Triage", types: ["triage_keep", "triage_snooze", "triage_trash"] },
-  { label: "Links", types: ["link_added", "link_removed", "map_added", "map_removed", "relation_added", "relation_removed", "relation_type_changed"] },
+  { label: "Links", types: ["link_added", "link_removed", "relation_added", "relation_removed", "relation_type_changed"] },
   { label: "Review", types: ["srs_reviewed"] },
   { label: "Autopilot", types: ["autopilot_applied"] },
 ]
