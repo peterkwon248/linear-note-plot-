@@ -24,7 +24,7 @@
 
 ### Stack
 - Next.js 16, React 19, TypeScript, Zustand 5, TipTap 3, Tailwind v4
-- Store: `lib/store/index.ts` — 16-slice, versioned migration (check current version in code)
+- Store: `lib/store/index.ts` — 17-slice, versioned migration (v39)
 
 ### Conventions
 - Korean communication (casual tone)
