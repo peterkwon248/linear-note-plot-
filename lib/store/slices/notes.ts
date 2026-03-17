@@ -274,7 +274,16 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === id
-            ? { ...n, trashed: !n.trashed, trashedAt: wasTrashed ? null : now(), updatedAt: now(), lastTouchedAt: now() }
+            ? {
+                ...n,
+                trashed: !n.trashed,
+                trashedAt: wasTrashed ? null : now(),
+                // When restoring from trash, clear triageStatus="trashed" so note
+                // returns to its original inbox/capture/permanent bucket
+                ...(wasTrashed && n.triageStatus === "trashed" ? { triageStatus: "kept" as const } : {}),
+                updatedAt: now(),
+                lastTouchedAt: now(),
+              }
             : n
         ),
       }))
