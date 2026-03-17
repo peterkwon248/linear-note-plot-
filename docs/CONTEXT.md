@@ -47,12 +47,11 @@ inbox → capture → permanent → WIKI (planned)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-18. Relations 완성 — relation_type_changed 이벤트 로깅, 제안 수락 시 타입 선택 UX
-19. Wiki 기초 UI — Convert/Revert, WikiTOC, WikiInfobox, isWiki 필터, aliases, 위키 배지
-20. Templates/Tags/Labels 헤더 스타일 통일
 21. Reflections — 시간축 회고 시스템 (append-only, 타임라인 UI, reflection_added 이벤트)
 22. Insights 뷰 고도화 — Activity 대시보드(Today/Week/Month, 7일 차트, Most Opened, Lifecycle) + Health 이슈
 23. Ontology View 고도화 — 미니맵, 위키 노드 배지, 라벨 기반 클러스터링(forceX/Y + convex hull)
+24. Tier 3 디자인 토큰 통일 + Trash UX 개선 + Ctrl+Z 글로벌 Undo
+25. 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선 — Tags/Labels/Templates에 Sort/Filter/Display 추가, LayoutModeSwitcher 사이드바 이동(노트 열림 시만 표시), 리스트 패널 닫기 버그 수정, 기본 시작뷰 inbox
 
 ## Three Axes — Core Design Philosophy
 
@@ -62,23 +61,18 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ```
 
-## Implementation Order (최신, 2026-03-16 업데이트)
+## Implementation Order (최신, 2026-03-17 업데이트)
 
-### Tier 1: Wiki 고도화 (Phase 4-C 완성) ✅ DONE
-1. ~~Red/Blue 링크 색상 분기~~ ✅ (WikilinkDecoration.ts + EditorStyles.css)
-2. ~~빨간 링크 클릭 → 위키 자동 생성~~ ✅ (createWikiStub on dangling click)
-3. ~~사이드바 TOC~~ ✅ (wiki-toc.tsx, 좌측 w-[200px] sticky sidebar)
-4. ~~위키 읽기 타이포그래피~~ ✅ (wiki-read-content CSS: max-width 720px, line-height 1.85, heading border-bottom)
-5. ~~하단 분류 표시~~ ✅ (WikiCategories 컴포넌트, "분류: A | B | C" 렌더링)
+### Tier 3: 디자인 폴리시 (진행 중)
+9. ~~디자인 토큰 통일~~ ✅ (PR #68)
+10. ~~고아 코드 정리~~ ✅ (PR #68)
+11. ~~뷰 필터/디스플레이 추가~~ ✅ (PR #71 — Tags/Labels/Templates)
+12. ~~레이아웃 스위처 사이드바 이동~~ ✅ (PR #71)
 
-### Tier 2: 기존 기능 마무리 ✅ DONE
-6. ~~Reflections~~ ✅
-7. ~~Insights 뷰 고도화~~ ✅
-8. ~~Ontology View 고도화~~ ✅
-
-### Tier 3: 디자인 폴리시
-9. **디자인 토큰 통일** (typography/spacing/transitions)
-10. **고아 코드 정리** (KnowledgeMap, SavedView, alerts 등 미사용 타입/슬라이스 제거)
+### 다음 작업
+- Thread (ThinkingChain rename + UI)
+- 읽기/편집 뷰모드 토글
+- Relations → WIKI → Reflections → 온톨로지 뷰
 
 ## Key Design Decisions (최신)
 
@@ -100,6 +94,8 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
   - 에디터는 같은 TipTap, 위키 모드일 때 기능 확장
   - Obsidian/Logseq 방식
 - **Tags/Labels** → 항상 풀와이드 렌더 (list+editor 모드 아님)
+- **LayoutModeSwitcher** → 사이드바 헤더에 위치 (노트 열린 상태에서만 표시, Grid 상태에서 숨김)
+- **기본 시작 뷰** → inbox (settings-store startView 기본값)
 
 ## TODO: Future Work
 - Settings always-mounted (when settings features implemented)

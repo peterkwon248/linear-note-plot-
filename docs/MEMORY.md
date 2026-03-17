@@ -65,6 +65,11 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #64**: Activity 삭제 + dead code cleanup (-3,258줄), Relations 완성, Wiki 기초 UI, 헤더 스타일 통일
 - **PR #65**: 반응형 NotesTable + 뷰 라우팅 수정 + docs 최신화
 - **PR #66**: Tier 2 완료 — Reflections (v39), Insights 뷰 고도화, Ontology View 고도화 (미니맵/위키배지/클러스터링), 온톨로지 필터바 드롭다운, analysis rules 영어 번역
+- **PR #67**: Tier 2 확인 + Tier 1 확인 + 고아 코드 정리
+- **PR #68**: Tier 3 디자인 토큰 통일 + Trash UX 개선 + Ctrl+Z 글로벌 Undo
+- **PR #69**: Trash 복원 시 Inbox 카운트 안 돌아오는 버그 수정
+- **PR #70**: Research 모드 레이아웃 프리셋 시스템 + 패널 UX 개선
+- **PR #71**: 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선 — Tags/Labels/Templates Sort/Filter/Display, LayoutModeSwitcher 사이드바 이동, 리스트 패널 닫기 버그 수정, 기본 시작뷰 inbox
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -94,7 +99,7 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **Phase 4-D**: Context Panel
 - **Ontology View**: SVG force-directed graph (d3-force), filter bar, detail panel, workspace 통합
 
-## Current Direction (as of 2026-03-16)
+## Current Direction (as of 2026-03-17)
 
 ### 핵심 설계 결정
 - **Insights ≠ Ontology** → 별개 뷰로 유지
@@ -116,9 +121,15 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 7. ~~Insights 뷰 고도화~~ ✅ — Activity 대시보드 + Health 이슈 통합
 8. ~~Ontology View 고도화~~ ✅ — Canvas 미니맵, 위키 노드 배지(이중링+W), 라벨 기반 클러스터링(forceX/Y + convex hull)
 
-#### Tier 3: 디자인 폴리시
-9. 디자인 토큰 통일 (typography/spacing/transitions)
-10. 고아 코드 정리 (KnowledgeMap, SavedView, legacy editor slice)
+#### Tier 3: 디자인 폴리시 ✅ DONE
+9. ~~디자인 토큰 통일~~ ✅ (PR #68)
+10. ~~고아 코드 정리~~ ✅ (PR #68)
+11. ~~뷰 필터/디스플레이~~ ✅ (PR #71)
+12. ~~레이아웃 스위처 사이드바 이동~~ ✅ (PR #71)
+
+#### 다음 작업
+- Thread (ThinkingChain rename + UI)
+- 읽기/편집 뷰모드 토글
 
 ### Deferred
 - Phosphor Icons
