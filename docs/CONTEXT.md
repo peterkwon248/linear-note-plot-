@@ -47,11 +47,11 @@ inbox → capture → permanent → WIKI (planned)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-21. Reflections — 시간축 회고 시스템 (append-only, 타임라인 UI, reflection_added 이벤트)
-22. Insights 뷰 고도화 — Activity 대시보드(Today/Week/Month, 7일 차트, Most Opened, Lifecycle) + Health 이슈
 23. Ontology View 고도화 — 미니맵, 위키 노드 배지, 라벨 기반 클러스터링(forceX/Y + convex hull)
 24. Tier 3 디자인 토큰 통일 + Trash UX 개선 + Ctrl+Z 글로벌 Undo
-25. 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선 — Tags/Labels/Templates에 Sort/Filter/Display 추가, LayoutModeSwitcher 사이드바 이동(노트 열림 시만 표시), 리스트 패널 닫기 버그 수정, 기본 시작뷰 inbox
+25. 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선
+26. DESIGN-TOKENS.md + 디자인 스킬 11종 설치 + AGENTS.md Design Quality (PR #74)
+27. 필터 UX(Label 개별선택/검색) + Source 아이콘/Inspector + workspace 버그 수정(3컬럼/Research/empty/탭닫기) + 디자인 폴리시 (PR #75)
 
 ## Three Axes — Core Design Philosophy
 
@@ -99,6 +99,10 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **Tags/Labels** → 항상 풀와이드 렌더 (list+editor 모드 아님)
 - **LayoutModeSwitcher** → 사이드바 헤더에 위치 (노트 열린 상태에서만 표시, Grid 상태에서 숨김)
 - **기본 시작 뷰** → inbox (settings-store startView 기본값)
+- **Source 표시** → 테이블 Name 셀에 아이콘(manual=Pencil, webclip=Globe 등) + Inspector Properties에 행 추가
+- **Inspector Activity 삭제** → Opened 반복만 보여 무의미. noteEvents 인프라는 유지
+- **Workspace empty leaf** → 마지막 탭 닫으면 empty 패널(EmptyPanelPicker)로 전환. Editor 클릭 시 새 노트 즉시 생성
+- **Label 필터** → Tags와 동일하게 개별 라벨 선택 + 10개 이상 시 검색 input
 
 ## TODO: Future Work
 - Settings always-mounted (when settings features implemented)
