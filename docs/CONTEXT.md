@@ -13,8 +13,8 @@ Plot = 노트 + 개인 위키 + 지식 관계망
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (17): notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology, relations, reflections
-- Store version: 39
+- Slices (16): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections
+- Store version: 40
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System

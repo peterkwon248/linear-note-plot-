@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 17-slice Zustand store with versioned migration (currently v39)
+- **Store**: `lib/store/index.ts` — 16-slice Zustand store with versioned migration (currently v40)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only, "reference" removed in v26)
 
 ## Architecture Decisions
@@ -35,8 +35,8 @@
 - **Responsive NotesTable**: ONE grid component for all sizes — ResizeObserver + minWidth thresholds on COLUMN_DEFS. CompactNoteList 삭제됨 (모든 곳에서 NotesTable로 교체)
 - **TipTap Editor**: 24+ extensions — StarterKit, Placeholder (per-block), TaskList/Item, Highlight, Link, Underline, TextAlign, Color, TextStyle, Super/Subscript, Table, ResizableImage, CodeBlockLowlight (lowlight), Typography, Dropcursor, CharacterCount, FontFamily, YouTube, Details/Summary/Content, Mathematics (KaTeX), SlashCommand (custom), Typewriter, CurrentLineHighlight, HashtagSuggestion
 
-## Store Slices (17 total)
-notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, templates, editor, workspace, attachments, ontology, relations, reflections
+## Store Slices (16 total)
+notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections
 
 ## Completed PRs
 - **PR #14**: noteEvents bounding, fuse.js removal, dead code cleanup
@@ -62,10 +62,10 @@ notes, workflow, folders, tags, labels, thinking, maps, ui, views, autopilot, te
 - **PR #60**: 온톨로지 그래프 force 파라미터 조정 — compact 레이아웃
 - **PR #62**: 템플릿 시스템 Phase 2 — UpNote 스타일 TipTap 에디터 (v38)
 - **PR #63**: 반응형 NotesTable 통합 — CompactNoteList 제거, ResizeObserver 기반 컬럼 숨김
-- **PR #64**: Activity 삭제 + dead code cleanup (-3,258줄), Relations 완성, Wiki 기초 UI, 헤더 스타일 통일
-- **PR #65**: 반응형 NotesTable + 뷰 라우팅 수정 + docs 최신화
-- **PR #66**: Tier 2 완료 — Reflections (v39), Insights 뷰 고도화, Ontology View 고도화 (미니맵/위키배지/클러스터링), 온톨로지 필터바 드롭다운, analysis rules 영어 번역
-- **PR #67**: Tier 2 확인 + Tier 1 확인 + 고아 코드 정리
+- **PR #64**: dead code cleanup — Activity 삭제 + 고아 파일 22개 + 버그 수정
+- **PR #65**: Relations 완성 + Wiki 기초 UI + 헤더 스타일 통일
+- **PR #66**: 탭 시스템 강화 — 기존 노트 새 탭 열기
+- **PR #67**: Tier 2 완료 + 고아 코드 정리 (-1151줄)
 - **PR #68**: Tier 3 디자인 토큰 통일 + Trash UX 개선 + Ctrl+Z 글로벌 Undo
 - **PR #69**: Trash 복원 시 Inbox 카운트 안 돌아오는 버그 수정
 - **PR #70**: Research 모드 레이아웃 프리셋 시스템 + 패널 UX 개선
