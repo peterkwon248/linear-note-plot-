@@ -1,6 +1,8 @@
 import type { Note, ActiveView, LayoutMode } from "../../types"
 import type { ViewState, ViewContextKey } from "../../view-engine/types"
-import { layoutModeToPreset } from "../../workspace/presets"
+import type { ResearchPreset } from "../../workspace/types"
+import { layoutModeToPreset, buildResearchPreset } from "../../workspace/presets"
+import { getAllLeaves, findFirstEditorLeaf } from "../../workspace/tree-utils"
 import { now, type AppendEventFn } from "../helpers"
 
 type Set = (fn: ((state: any) => any) | any) => void
@@ -121,9 +123,28 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
 
         return updates
       })
-      // Rebuild workspace tree to match the new layout mode
-      const preset = layoutModeToPreset(mode)
-      get().applyPreset(preset)
+
+      // For "split" (Research) mode, use the research sub-preset
+      if (mode === "split") {
+        const researchPreset = (get() as any).researchPreset as ResearchPreset ?? "left-right2"
+        const newRoot = buildResearchPreset(researchPreset)
+        const leaves = getAllLeaves(newRoot)
+        const activeLeaf = findFirstEditorLeaf(newRoot) ?? leaves[0]
+        set({ workspaceRoot: newRoot, activeLeafId: activeLeaf?.id ?? null })
+      } else {
+        // Rebuild workspace tree to match the new layout mode
+        const preset = layoutModeToPreset(mode)
+        get().applyPreset(preset)
+      }
+    },
+
+    // Research sub-preset
+    setResearchPreset: (preset: ResearchPreset) => {
+      set({ researchPreset: preset })
+      const newRoot = buildResearchPreset(preset)
+      const leaves = getAllLeaves(newRoot)
+      const activeLeaf = findFirstEditorLeaf(newRoot) ?? leaves[0]
+      set({ workspaceRoot: newRoot, activeLeafId: activeLeaf?.id ?? null, layoutMode: "split" as LayoutMode })
     },
 
     setListPaneWidth: (width: number) => set({ listPaneWidth: Math.max(200, Math.min(500, width)) }),

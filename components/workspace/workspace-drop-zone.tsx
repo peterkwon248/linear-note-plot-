@@ -20,21 +20,12 @@ interface WorkspaceDropZoneProps {
   children: React.ReactNode
 }
 
-/** Detect which of the 5 zones the cursor is in.
- *  Center = 40%, edges = 20% each (top/bottom/left/right) */
-function detectZone(
-  e: React.DragEvent,
-  rect: DOMRect,
-): DropZone {
+/** Simplified 3-zone detection: left / right / center
+ *  x < 0.35 → left, x > 0.65 → right, else → center */
+function detectZone(e: React.DragEvent, rect: DOMRect): DropZone {
   const x = (e.clientX - rect.left) / rect.width
-  const y = (e.clientY - rect.top) / rect.height
-
-  // Edges take priority when cursor is clearly in the margin
-  if (y < 0.2) return "top"
-  if (y > 0.8) return "bottom"
-  if (x < 0.2) return "left"
-  if (x > 0.8) return "right"
-
+  if (x < 0.35) return "left"
+  if (x > 0.65) return "right"
   return "center"
 }
 
@@ -58,15 +49,18 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
     if (!ref.current) return
     const rect = ref.current.getBoundingClientRect()
     const zone = detectZone(e, rect)
-    setActiveZone(zone)
-    activeZoneRef.current = zone
+
+    // Only update state when zone actually changes — avoid 60fps setState
+    if (zone !== activeZoneRef.current) {
+      activeZoneRef.current = zone
+      setActiveZone(zone)
+    }
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    // Only clear if leaving the container entirely
     if (ref.current && !ref.current.contains(e.relatedTarget as Node)) {
-      setActiveZone(null)
       activeZoneRef.current = null
+      setActiveZone(null)
     }
   }, [])
 
@@ -87,10 +81,8 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
     const tabData = getTabDragData(e)
     if (tabData) {
       if (zone === "center" && tabData.panelId !== leafId) {
-        // Center drop: move tab to existing leaf
         moveTabToLeaf(tabData.tabId, tabData.panelId, leafId)
       } else if (zone !== "center") {
-        // Edge drop: split tab into new leaf
         const direction = (zone === "left" || zone === "right") ? "horizontal" : "vertical"
         const position = (zone === "left" || zone === "top") ? "before" : "after"
         splitTabToNewLeaf(tabData.tabId, tabData.panelId, leafId, direction, position)
@@ -139,31 +131,25 @@ export function WorkspaceDropZone({ leafId, children }: WorkspaceDropZoneProps) 
       {/* Drop zone overlay */}
       {activeZone && (
         <div className="pointer-events-none absolute inset-0 z-20">
-          {/* Top */}
-          <div className={cn(
-            "absolute left-0 right-0 top-0 h-[20%] rounded-t border-2 transition-colors",
-            activeZone === "top" ? "border-primary bg-primary/10" : "border-transparent"
-          )} />
-          {/* Bottom */}
-          <div className={cn(
-            "absolute bottom-0 left-0 right-0 h-[20%] rounded-b border-2 transition-colors",
-            activeZone === "bottom" ? "border-primary bg-primary/10" : "border-transparent"
-          )} />
-          {/* Left */}
-          <div className={cn(
-            "absolute bottom-[20%] left-0 top-[20%] w-[20%] rounded-l border-2 transition-colors",
-            activeZone === "left" ? "border-primary bg-primary/10" : "border-transparent"
-          )} />
-          {/* Right */}
-          <div className={cn(
-            "absolute bottom-[20%] right-0 top-[20%] w-[20%] rounded-r border-2 transition-colors",
-            activeZone === "right" ? "border-primary bg-primary/10" : "border-transparent"
-          )} />
-          {/* Center */}
-          <div className={cn(
-            "absolute bottom-[20%] left-[20%] right-[20%] top-[20%] rounded border-2 transition-colors",
-            activeZone === "center" ? "border-primary bg-primary/10" : "border-transparent"
-          )} />
+          {activeZone === "left" && (
+            <>
+              {/* Left half highlight */}
+              <div className="absolute inset-y-0 left-0 w-[35%] rounded-l bg-primary/10 ring-1 ring-inset ring-primary/40" />
+              {/* Dashed split-point preview line */}
+              <div className="absolute inset-y-2 left-[35%] w-px border-l-2 border-dashed border-primary/60" />
+            </>
+          )}
+          {activeZone === "right" && (
+            <>
+              {/* Dashed split-point preview line */}
+              <div className="absolute inset-y-2 left-[65%] w-px border-l-2 border-dashed border-primary/60" />
+              {/* Right half highlight */}
+              <div className="absolute inset-y-0 right-0 w-[35%] rounded-r bg-primary/10 ring-1 ring-inset ring-primary/40" />
+            </>
+          )}
+          {activeZone === "center" && (
+            <div className="absolute inset-2 rounded-lg bg-primary/8 ring-2 ring-primary/30" />
+          )}
         </div>
       )}
     </div>
