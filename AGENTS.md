@@ -379,3 +379,17 @@ These entities/routes exist in code but have no active UI path:
 - `/alerts` route — Alerts system removed (dismissedAlertIds removed in v25)
 - `/category/[id]` route — Categories replaced by Tags
 - `/projects` routes — Projects replaced by Folders
+
+---
+
+## Design Quality
+
+See `docs/DESIGN-TOKENS.md` for all design token standards (colors, typography, icons, spacing, transitions, border-radius, scrollbar).
+
+The `design-quality-gate` skill auto-activates on UI changes and enforces:
+- **Icons**: strokeWidth 1.5 only, size scale h-2/h-3.5/h-4/h-5
+- **Colors**: No hardcoded hex — CSS variables only (`text-accent`, `bg-chart-*`, etc.)
+- **Typography**: Fixed scale (11/12/13/14/15/24px)
+- **Transitions**: Only duration-75/150/200 allowed
+- **Spacing**: 4px grid, density-aware padding
+- **WCAG**: AccessLint contrast verification on color changes
