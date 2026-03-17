@@ -35,6 +35,11 @@ import {
   Lightbulb,
   Calendar,
   RotateCcw,
+  Globe,
+  Download,
+  Share2,
+  Zap,
+  Pencil,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -61,7 +66,7 @@ import type { ViewContextKey, SortField, SortDirection, GroupBy, FilterRule, Not
 import { StatusDropdown, PriorityDropdown, StatusBadge } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
-import type { Note, NoteStatus, NotePriority, Folder } from "@/lib/types"
+import type { Note, NoteStatus, NotePriority, Folder, NoteSource } from "@/lib/types"
 import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
@@ -627,6 +632,7 @@ export function NotesTable({
             isSingleStatusTab={isSingleStatusTab}
             folders={folders}
             tags={tags}
+            labels={labels}
             onToggleFilter={toggleFilter}
             onSetFilters={(f) => updateViewState({ filters: f })}
             hideLabel={isCompact}
@@ -797,6 +803,7 @@ export function NotesTable({
         isSingleStatusTab={isSingleStatusTab}
         folders={folders}
         tags={tags}
+        labels={labels}
         onToggleFilter={toggleFilter}
         onRemoveFilter={removeFilter}
         onClearAll={() => updateViewState({ filters: [] })}
@@ -1059,6 +1066,18 @@ interface NoteRowProps {
   onLinkWith: () => void
 }
 
+function SourceIcon({ source }: { source: NoteSource }) {
+  const Icon = {
+    manual: Pencil,
+    webclip: Globe,
+    import: Download,
+    share: Share2,
+    api: Zap,
+  }[source ?? "manual"]
+  if (!Icon) return null
+  return <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={1.5} />
+}
+
 function NoteRowInner({
   note,
   folders,
@@ -1154,6 +1173,7 @@ function NoteRowInner({
             </span>
           )
         })()}
+        <SourceIcon source={note.source} />
         {note.preview.length > 0 && (
           <span
             className="shrink-0 text-2xs tabular-nums font-medium"

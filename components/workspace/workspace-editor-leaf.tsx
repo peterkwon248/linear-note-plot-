@@ -132,8 +132,8 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                           draggable
                           onDragStart={(e) => setTabDragData(e, tab.id, leaf.id)}
                           className={cn(
-                            "group relative flex h-9 shrink-0 items-center gap-1.5 border-r border-border/60 px-3 text-note transition-colors",
-                            tab.isPinned ? "w-9 justify-center px-0" : "max-w-[180px]",
+                            "group relative flex h-10 shrink-0 items-center gap-1.5 border-r border-border/60 px-3 text-note transition-colors",
+                            tab.isPinned ? "w-10 justify-center px-0" : "max-w-[200px]",
                             isActive
                               ? "bg-background text-foreground"
                               : "bg-card text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
@@ -153,7 +153,7 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
                             <Pin className="h-3 w-3 shrink-0" />
                           ) : (
                             <>
-                              <span className="truncate text-xs">{title}</span>
+                              <span className="truncate text-[15px]">{title}</span>
                               <span
                                 className="ml-auto shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-secondary group-hover:opacity-100"
                                 onClick={(e) => handleCloseTab(e, tab.id)}
@@ -333,8 +333,11 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
         ) : (
           <ContextMenu>
             <ContextMenuTrigger asChild>
-              <div className="flex flex-1 items-center justify-center text-muted-foreground/50">
-                <p className="text-sm">Select a note to start editing</p>
+              <div
+                className="flex flex-1 items-center justify-center text-muted-foreground/50 cursor-pointer hover:text-muted-foreground/70 transition-colors duration-150"
+                onClick={() => { const id = createNote({}); openNoteInLeaf(id, leaf.id); setActiveLeaf(leaf.id) }}
+              >
+                <p className="text-sm">Click to create a new note</p>
               </div>
             </ContextMenuTrigger>
             <ContextMenuContent className="w-48">

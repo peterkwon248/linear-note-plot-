@@ -91,7 +91,7 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
-          className="flex h-9 shrink-0 items-center gap-1.5 border-b border-border bg-card px-2"
+          className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border bg-card px-2.5"
           draggable
           onDragStart={handleDragStart}
         >
@@ -108,7 +108,7 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
                 }}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span className="flex-1 truncate text-xs font-medium text-muted-foreground text-left">
+                <span className="flex-1 truncate text-[15px] font-medium text-muted-foreground text-left">
                   {meta.label}
                 </span>
               </button>

@@ -686,6 +686,10 @@ export function NoteInspector() {
               <span className="text-sm text-muted-foreground">Headings</span>
               <span className="text-sm tabular-nums text-foreground">{headings.length}</span>
             </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Source</span>
+              <span className="text-sm text-foreground capitalize">{note.source ?? "manual"}</span>
+            </div>
           </div>
         </InspectorSection>
 
@@ -922,12 +926,6 @@ export function NoteInspector() {
           <span className="text-sm text-muted-foreground">No attachments</span>
         </InspectorSection>
 
-        <div className="mx-4 border-b border-border" />
-
-        {/* Activity */}
-        <InspectorSection title="Activity" icon={<History className="h-4 w-4" />}>
-          <ActivityTimeline noteId={note.id} />
-        </InspectorSection>
       </div>
     </aside>
   )

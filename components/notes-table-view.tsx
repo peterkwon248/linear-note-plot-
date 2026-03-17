@@ -116,8 +116,8 @@ export function NotesTableView() {
   }
 
   // ── Three-column / Split: note-list + editor inside workspace tree ──
-  // When not editing, fall through to full NotesTable below
-  if ((layoutMode === "three-column" || layoutMode === "split") && isEditing) {
+  // Always render workspace in these modes (workspace handles empty editor state)
+  if (layoutMode === "three-column" || layoutMode === "split") {
     return (
       <div className="flex flex-1 overflow-hidden">
         <WorkspaceEditorArea />

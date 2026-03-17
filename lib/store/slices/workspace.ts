@@ -115,6 +115,18 @@ export function createWorkspaceSlice(set: Set, get: Get) {
 
         // If target leaf is not an editor, find the first editor leaf instead
         if (node.content.type !== "editor") {
+          // empty leaf → convert directly to editor
+          if (node.content.type === "empty") {
+            const newTab: WorkspaceTab = { id: nanoid(), noteId }
+            const newRoot = replaceNode(state.workspaceRoot, targetId, {
+              ...node,
+              content: { type: "editor", noteId },
+              tabs: [newTab],
+              activeTabId: newTab.id,
+            })
+            return { workspaceRoot: newRoot, selectedNoteId: noteId, activeLeafId: targetId }
+          }
+
           const editorLeaf = findFirstEditorLeaf(state.workspaceRoot)
           if (editorLeaf) {
             targetId = editorLeaf.id
@@ -197,24 +209,15 @@ export function createWorkspaceSlice(set: Set, get: Get) {
 
         const newRoot = updateLeafTabs(state.workspaceRoot, leafId, newTabs, newActiveTabId)
 
-        // Auto-close empty editor leaf (unless it's the only leaf)
+        // Convert to empty panel when last tab is closed (shows EmptyPanelPicker)
         if (newTabs.length === 0) {
-          const afterRemove = removeLeaf(newRoot, leafId)
-          if (afterRemove) {
-            // Activate first editor leaf or first available leaf
-            let activeLeafId = state.activeLeafId
-            if (activeLeafId === leafId) {
-              const editorLeaf = findFirstEditorLeaf(afterRemove)
-              const allLeaves = getAllLeaves(afterRemove)
-              const newActive = editorLeaf ?? allLeaves[0]
-              activeLeafId = newActive?.id ?? null
-              if (newActive && isLeaf(newActive) && newActive.content.type === "editor") {
-                const activeTab = newActive.tabs.find((t: WorkspaceTab) => t.id === newActive.activeTabId)
-                selectedNoteId = activeTab?.noteId ?? null
-              }
-            }
-            return { workspaceRoot: afterRemove, activeLeafId, selectedNoteId }
-          }
+          const emptyRoot = replaceNode(newRoot, leafId, {
+            ...node,
+            content: { type: "empty" },
+            tabs: [],
+            activeTabId: null,
+          })
+          return { workspaceRoot: emptyRoot, selectedNoteId, activeLeafId: leafId }
         }
 
         return { workspaceRoot: newRoot, selectedNoteId }

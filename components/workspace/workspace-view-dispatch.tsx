@@ -1,7 +1,9 @@
 "use client"
 
+import { useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { WorkspaceLeaf, PanelContent } from "@/lib/workspace/types"
+import { findFirstEditorLeaf } from "@/lib/workspace/tree-utils"
 import { WorkspaceEditorLeaf } from "./workspace-editor-leaf"
 import { NotesTable } from "@/components/notes-table"
 import { TagsView } from "@/components/views/tags-view"
@@ -36,6 +38,20 @@ const EMPTY_PICKER_OPTIONS: { icon: typeof FileText; label: string; content: Pan
 
 function EmptyPanelPicker({ leafId }: { leafId: string }) {
   const setLeafContent = usePlotStore((s) => s.setLeafContent)
+  const createNote = usePlotStore((s) => s.createNote)
+  const openNoteInLeaf = usePlotStore((s) => s.openNoteInLeaf)
+  const setActiveLeaf = usePlotStore((s) => s.setActiveLeaf)
+
+  const handlePick = useCallback((opt: typeof EMPTY_PICKER_OPTIONS[number]) => {
+    if (opt.content.type === "editor") {
+      // Editor: create a new note and open it immediately
+      const id = createNote({})
+      openNoteInLeaf(id, leafId)
+      setActiveLeaf(leafId)
+    } else {
+      setLeafContent(leafId, opt.content)
+    }
+  }, [leafId, setLeafContent, createNote, openNoteInLeaf, setActiveLeaf])
 
   return (
     <div className="flex flex-1 items-center justify-center p-4">
@@ -45,7 +61,7 @@ function EmptyPanelPicker({ leafId }: { leafId: string }) {
           return (
             <button
               key={opt.label}
-              onClick={() => setLeafContent(leafId, opt.content)}
+              onClick={() => handlePick(opt)}
               className={cn(
                 "flex flex-col items-center gap-1.5 rounded-lg px-3 py-3",
                 "border border-border/50 bg-card/50",
@@ -66,6 +82,12 @@ function EmptyPanelPicker({ leafId }: { leafId: string }) {
 export function WorkspaceViewDispatch({ leaf }: WorkspaceViewDispatchProps) {
   const openNote = usePlotStore((s) => s.openNoteInLeaf)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const workspaceRoot = usePlotStore((s) => s.workspaceRoot)
+
+  const handleNoteListClick = useCallback((noteId: string) => {
+    const editorLeaf = findFirstEditorLeaf(workspaceRoot)
+    openNote(noteId, editorLeaf?.id)
+  }, [openNote, workspaceRoot])
 
   switch (leaf.content.type) {
     case "editor":
@@ -78,7 +100,7 @@ export function WorkspaceViewDispatch({ leaf }: WorkspaceViewDispatchProps) {
           folderId={leaf.content.folderId}
           tagId={leaf.content.tagId}
           labelId={leaf.content.labelId}
-          onRowClick={(noteId) => openNote(noteId)}
+          onRowClick={handleNoteListClick}
           activePreviewId={selectedNoteId}
         />
       )
