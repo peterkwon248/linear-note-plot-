@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
-import { ArrowLeft, ArrowUp, ArrowDown, ArrowUpDown, Hash, Plus, Search, Trash2, X, Zap, SlidersHorizontal, Layers, ChevronDown, Check, EyeOff } from "lucide-react"
+import { ArrowLeft, ArrowUp, ArrowDown, ArrowUpDown, Hash, Tag, Plus, Trash2, X, Zap, SlidersHorizontal, Layers, ChevronDown, Check, EyeOff } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import {
   ContextMenu,
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { ViewHeader } from "@/components/view-header"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
@@ -525,47 +526,28 @@ export function TagsView() {
   // ── Tag List Mode ──
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-        <h1 className="text-ui font-semibold text-foreground">Tags</h1>
-        <span className="text-sm text-muted-foreground">({tags.length})</span>
-        <div className="flex-1" />
-        {/* Tag creation input */}
-        <div className="relative flex items-center">
-          <Hash className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
-          <input
-            ref={tagInputRef}
-            type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={handleTagInputKeyDown}
-            placeholder="tag1, tag2, tag3"
-            className="h-8 w-56 rounded-md border border-border bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-          />
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="border-b border-border px-6 py-3">
-        <div className="relative flex items-center">
-          <Search className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search tags..."
-            className="h-8 w-full rounded-md border border-border bg-background pl-8 pr-8 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
+      <ViewHeader
+        icon={<Tag className="h-5 w-5" strokeWidth={1.5} />}
+        title="Tags"
+        count={filteredTags.length}
+        searchPlaceholder="Search tags..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        actions={
+          <div className="relative flex items-center">
+            <Hash className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              ref={tagInputRef}
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagInputKeyDown}
+              placeholder="tag1, tag2, tag3"
+              className="h-8 w-56 rounded-md border border-border bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+          </div>
+        }
+      />
 
       {/* Sort & Filter toolbar */}
       <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">

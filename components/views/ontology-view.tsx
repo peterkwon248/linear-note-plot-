@@ -8,6 +8,8 @@ import { OntologyFilterBar } from "@/components/ontology/ontology-filter-bar"
 import { OntologyDetailPanel } from "@/components/ontology/ontology-detail-panel"
 import { ontologyLayoutClient } from "@/lib/graph/ontology-layout-client"
 import type { Note, RelationType } from "@/lib/types"
+import { ViewHeader } from "@/components/view-header"
+import { Network } from "lucide-react"
 
 const DEFAULT_FILTERS: OntologyFilters = {
   tagIds: [],
@@ -143,21 +145,21 @@ export function OntologyView() {
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
-      {/* ── Page title ─────────────────────────────────── */}
-      <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-2">
-        <h1 className="text-ui font-semibold text-foreground">Ontology</h1>
-      </header>
-
-      <OntologyFilterBar
-        filters={filters}
-        onChange={setFilters}
-        tags={tags}
-        labels={labels}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchMatchCount={searchMatchIds ? searchMatchIds.size : null}
-        relationTypeCounts={relationTypeCounts}
-      />
+      <ViewHeader
+        icon={<Network className="h-5 w-5" strokeWidth={1.5} />}
+        title="Ontology"
+      >
+        <OntologyFilterBar
+          filters={filters}
+          onChange={setFilters}
+          tags={tags}
+          labels={labels}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchMatchCount={searchMatchIds ? searchMatchIds.size : null}
+          relationTypeCounts={relationTypeCounts}
+        />
+      </ViewHeader>
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {graph ? (
           <OntologyGraphCanvas

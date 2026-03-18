@@ -76,14 +76,29 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
     setLeafDragData(e, leafId)
   }, [leafId])
 
+  const createNote = usePlotStore((s) => s.createNote)
+  const openNoteInLeaf = usePlotStore((s) => s.openNoteInLeaf)
+  const setActiveLeaf = usePlotStore((s) => s.setActiveLeaf)
+
   const handleSwitchView = useCallback((newContent: PanelContent) => {
-    setLeafContent(leafId, newContent)
-  }, [leafId, setLeafContent])
+    if (newContent.type === "editor" && !newContent.noteId) {
+      const id = createNote({})
+      openNoteInLeaf(id, leafId)
+      setActiveLeaf(leafId)
+    } else {
+      setLeafContent(leafId, newContent)
+    }
+  }, [leafId, setLeafContent, createNote, openNoteInLeaf, setActiveLeaf])
 
   // Don't show header for editor (it has its own tab bar)
   if (content.type === "editor") return null
 
-  const canClose = countLeaves(workspaceRoot) > 1
+  const leafCount = countLeaves(workspaceRoot)
+
+  // Hide header when there's only 1 leaf (no drag/resize needed)
+  if (leafCount <= 1) return null
+
+  const canClose = leafCount > 1
   const meta = CONTENT_META[content.type]
   const Icon = meta.icon
 

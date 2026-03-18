@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useCallback, useState, useMemo } from "react"
+import { useRef, useCallback, useState, useMemo, useEffect } from "react"
 import {
   X, Pin, Plus, GripVertical, SplitSquareHorizontal, ArrowDownFromLine,
   Tag, Calendar, BarChart3, Bookmark, List, Inbox, FolderOpen, FileText, Search,
@@ -53,6 +53,13 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
   const isActiveLeaf = activeLeafId === leaf.id
   const activeTab = leaf.tabs.find((t) => t.id === leaf.activeTabId)
   const activeNote = activeTab ? notes.find((n) => n.id === activeTab.noteId) : null
+
+  // Auto-convert to empty launcher when editor has no tabs
+  useEffect(() => {
+    if (leaf.tabs.length === 0) {
+      setLeafContent(leaf.id, { type: "empty" })
+    }
+  }, [leaf.tabs.length, leaf.id, setLeafContent])
 
   const handleTabClick = (tabId: string) => {
     setActiveLeaf(leaf.id)
