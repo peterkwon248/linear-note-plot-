@@ -2,11 +2,12 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { BookOpen, Search, Plus, FileQuestion, ExternalLink, X, ArrowUpDown } from "lucide-react"
+import { BookOpen, Plus, FileQuestion, ExternalLink, ArrowUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import type { Note } from "@/lib/types"
+import { ViewHeader } from "@/components/view-header"
 
 type WikiTab = "articles" | "redlinks"
 type ArticleSortBy = "title" | "updatedAt"
@@ -128,84 +129,62 @@ export function WikiView() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex h-14 items-center gap-3 border-b border-border bg-card px-4">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-muted-foreground" />
-          <h1 className="text-xl font-semibold text-foreground">Wiki</h1>
+      <ViewHeader
+        icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
+        title="Wiki"
+        searchPlaceholder="Search wiki..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        actions={
+          <button
+            onClick={handleCreateWiki}
+            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground hover:bg-accent/90"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Wiki
+          </button>
+        }
+      >
+        {/* Tabs */}
+        <div className="flex items-center gap-0 border-b border-border px-4">
+          <button
+            onClick={() => setActiveTab("articles")}
+            className={cn(
+              "flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm transition-colors",
+              activeTab === "articles"
+                ? "border-primary font-medium text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            Articles ({articlesCount})
+          </button>
+          <button
+            onClick={() => setActiveTab("redlinks")}
+            className={cn(
+              "flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm transition-colors",
+              activeTab === "redlinks"
+                ? "border-primary font-medium text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <FileQuestion className="h-3.5 w-3.5" />
+            Red Links
+            {redLinksCount > 0 && (
+              <span
+                className={cn(
+                  "rounded-full px-1.5 py-0.5 text-xs tabular-nums",
+                  activeTab === "redlinks"
+                    ? "bg-destructive/15 text-destructive"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                {redLinksCount}
+              </span>
+            )}
+          </button>
         </div>
-
-        <div className="flex-1" />
-
-        {/* Search */}
-        <div className="relative flex items-center">
-          <Search className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search wiki..."
-            className="h-8 w-52 rounded-md border border-border bg-background pl-8 pr-7 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-
-        {/* New Wiki button */}
-        <button
-          onClick={handleCreateWiki}
-          className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          New Wiki
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-0 border-b border-border px-4">
-        <button
-          onClick={() => setActiveTab("articles")}
-          className={cn(
-            "flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm transition-colors",
-            activeTab === "articles"
-              ? "border-primary font-medium text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <BookOpen className="h-3.5 w-3.5" />
-          Articles ({articlesCount})
-        </button>
-        <button
-          onClick={() => setActiveTab("redlinks")}
-          className={cn(
-            "flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm transition-colors",
-            activeTab === "redlinks"
-              ? "border-primary font-medium text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <FileQuestion className="h-3.5 w-3.5" />
-          Red Links
-          {redLinksCount > 0 && (
-            <span
-              className={cn(
-                "rounded-full px-1.5 py-0.5 text-xs tabular-nums",
-                activeTab === "redlinks"
-                  ? "bg-destructive/15 text-destructive"
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              {redLinksCount}
-            </span>
-          )}
-        </button>
-      </div>
+      </ViewHeader>
 
       {/* Tab content */}
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -267,7 +246,7 @@ function ArticlesTab({
         </div>
         <button
           onClick={onCreateWiki}
-          className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
         >
           <Plus className="h-4 w-4" />
           Create your first wiki

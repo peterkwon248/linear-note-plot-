@@ -20,6 +20,12 @@ import {
   CommandShortcut,
 } from "@/components/ui/command"
 import {
+  setActiveRoute,
+  setActiveFolderId,
+  setActiveTagId,
+  setActiveLabelId,
+} from "@/lib/table-route"
+import {
   FileText,
   Pin,
   Plus,
@@ -42,6 +48,10 @@ import {
   Sun,
   Moon,
   Merge,
+  Tag,
+  Bookmark,
+  LayoutTemplate,
+  FolderOpen,
 } from "lucide-react"
 
 function highlightQuery(text: string, q: string): ReactNode {
@@ -78,6 +88,10 @@ export function SearchDialog() {
   const commandPaletteMode = usePlotStore((s) => s.commandPaletteMode)
   const setCommandPaletteMode = usePlotStore((s) => s.setCommandPaletteMode)
   const threads = usePlotStore((s) => s.threads)
+  const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
+  const templates = usePlotStore((s) => s.templates)
+  const folders = usePlotStore((s) => s.folders)
 
   // Actions
   const createNote = usePlotStore((s) => s.createNote)
@@ -198,6 +212,45 @@ export function SearchDialog() {
   // Whether we're showing search results (non-empty query) vs recent notes
   const hasFuzzyQuery = query.trim().length > 0
 
+  // ---------- Entity search (synchronous, for non-note types) ----------
+  const matchedTags = useMemo(() => {
+    if (!hasFuzzyQuery || commandPaletteMode !== "search") return []
+    const q = query.toLowerCase().trim()
+    return tags.filter((t) => t.name.toLowerCase().includes(q)).slice(0, 5)
+  }, [tags, query, hasFuzzyQuery, commandPaletteMode])
+
+  const matchedLabels = useMemo(() => {
+    if (!hasFuzzyQuery || commandPaletteMode !== "search") return []
+    const q = query.toLowerCase().trim()
+    return labels.filter((l) => l.name.toLowerCase().includes(q)).slice(0, 5)
+  }, [labels, query, hasFuzzyQuery, commandPaletteMode])
+
+  const matchedTemplates = useMemo(() => {
+    if (!hasFuzzyQuery || commandPaletteMode !== "search") return []
+    const q = query.toLowerCase().trim()
+    return templates.filter(
+      (t) => t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
+    ).slice(0, 5)
+  }, [templates, query, hasFuzzyQuery, commandPaletteMode])
+
+  const matchedFolders = useMemo(() => {
+    if (!hasFuzzyQuery || commandPaletteMode !== "search") return []
+    const q = query.toLowerCase().trim()
+    return folders.filter((f) => f.name.toLowerCase().includes(q)).slice(0, 5)
+  }, [folders, query, hasFuzzyQuery, commandPaletteMode])
+
+  // Count notes per tag for sublabel
+  const tagNoteCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const note of notes) {
+      if (note.trashed || note.archived) continue
+      for (const tagName of note.tags ?? []) {
+        counts.set(tagName, (counts.get(tagName) ?? 0) + 1)
+      }
+    }
+    return counts
+  }, [notes])
+
   /** Build sublabel text: "Inbox · Updated 2d · 3 backlinks" */
   function noteSublabel(note: { id: string; status: string; updatedAt: string; createdAt: string }): string {
     const stageLabel = note.status.charAt(0).toUpperCase() + note.status.slice(1)
@@ -217,6 +270,33 @@ export function SearchDialog() {
 
   function handleSearchSelect(noteId: string) {
     setSelectedNoteId(noteId)
+    router.push("/notes")
+    closePalette()
+  }
+
+  function handleTagSelect(tagId: string) {
+    setActiveTagId(tagId)
+    setActiveRoute("/notes")
+    router.push("/notes")
+    closePalette()
+  }
+
+  function handleLabelSelect2(labelId: string) {
+    setActiveLabelId(labelId)
+    setActiveRoute("/notes")
+    router.push("/notes")
+    closePalette()
+  }
+
+  function handleTemplateSelect(_templateId: string) {
+    setActiveRoute("/templates")
+    router.push("/templates")
+    closePalette()
+  }
+
+  function handleFolderSelect(folderId: string) {
+    setActiveFolderId(folderId)
+    setActiveRoute("/notes")
     router.push("/notes")
     closePalette()
   }
@@ -242,7 +322,7 @@ export function SearchDialog() {
   const dialogDescription = useMemo(() => {
     switch (commandPaletteMode) {
       case "search":
-        return 'Search notes. Type ">" for commands, "[[" to link.'
+        return 'Search notes, tags, labels, and more. Type ">" for commands, "[[" to link.'
       case "commands":
         return "Run a command. Backspace to go back."
       case "links":
@@ -253,7 +333,7 @@ export function SearchDialog() {
   const inputPlaceholder = useMemo(() => {
     switch (commandPaletteMode) {
       case "search":
-        return "Search notes..."
+        return "Search..."
       case "commands":
         return "Type a command..."
       case "links":
@@ -373,6 +453,95 @@ export function SearchDialog() {
                         <div className="truncate">{note.title || "Untitled"}</div>
                         <div className="truncate text-xs text-muted-foreground leading-tight">
                           {noteSublabel(note)}
+                        </div>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {/* Entity results (non-empty query) */}
+              {hasFuzzyQuery && matchedTags.length > 0 && (
+                <CommandGroup heading="Tags">
+                  {matchedTags.map((tag) => (
+                    <CommandItem
+                      key={`tag-${tag.id}`}
+                      value={`tag-${tag.id}-${tag.name}`}
+                      onSelect={() => handleTagSelect(tag.id)}
+                    >
+                      <Tag className="h-4 w-4 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate">
+                          {highlightQuery(`#${tag.name}`, query)}
+                        </div>
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {tagNoteCounts.get(tag.name) ?? 0}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {hasFuzzyQuery && matchedLabels.length > 0 && (
+                <CommandGroup heading="Labels">
+                  {matchedLabels.map((label) => (
+                    <CommandItem
+                      key={`label-${label.id}`}
+                      value={`label-${label.id}-${label.name}`}
+                      onSelect={() => handleLabelSelect2(label.id)}
+                    >
+                      <Bookmark className="h-4 w-4 shrink-0" />
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: label.color || "#6b7280" }}
+                        />
+                        <span className="truncate">
+                          {highlightQuery(label.name, query)}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {hasFuzzyQuery && matchedTemplates.length > 0 && (
+                <CommandGroup heading="Templates">
+                  {matchedTemplates.map((tmpl) => (
+                    <CommandItem
+                      key={`tmpl-${tmpl.id}`}
+                      value={`tmpl-${tmpl.id}-${tmpl.name}`}
+                      onSelect={() => handleTemplateSelect(tmpl.id)}
+                    >
+                      <span className="text-sm shrink-0">{tmpl.icon || "📄"}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate">
+                          {highlightQuery(tmpl.name, query)}
+                        </div>
+                        {tmpl.description && (
+                          <div className="truncate text-xs text-muted-foreground leading-tight">
+                            {tmpl.description}
+                          </div>
+                        )}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {hasFuzzyQuery && matchedFolders.length > 0 && (
+                <CommandGroup heading="Folders">
+                  {matchedFolders.map((folder) => (
+                    <CommandItem
+                      key={`folder-${folder.id}`}
+                      value={`folder-${folder.id}-${folder.name}`}
+                      onSelect={() => handleFolderSelect(folder.id)}
+                    >
+                      <FolderOpen className="h-4 w-4 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate">
+                          {highlightQuery(folder.name, query)}
                         </div>
                       </div>
                     </CommandItem>

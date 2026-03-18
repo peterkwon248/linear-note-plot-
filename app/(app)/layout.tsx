@@ -23,6 +23,7 @@ import { OntologyView } from "@/components/views/ontology-view"
 import { TemplatesView } from "@/components/views/templates-view"
 import { InsightsView } from "@/components/insights-view"
 import { WikiView } from "@/components/views/wiki-view"
+import { SearchView } from "@/components/views/search-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 
@@ -215,6 +216,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {(mountedViews.has("/wiki") || activeRoute === "/wiki") && (
             <div className={activeRoute === "/wiki" ? "flex flex-1 overflow-hidden" : "hidden"}>
               <WikiView />
+            </div>
+          )}
+
+          {(mountedViews.has("/search") || activeRoute === "/search") && (
+            <div className={activeRoute === "/search" ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <SearchView />
             </div>
           )}
 

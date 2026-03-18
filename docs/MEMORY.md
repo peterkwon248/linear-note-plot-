@@ -73,6 +73,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #72**: docs: CONTEXT.md, MEMORY.md, CLAUDE.md 최신화
 - **PR #73**: docs: 코드베이스 검증 후 docs 정확도 수정
 - **PR #74**: Wiki 섹션 + List 레이아웃 + Back 네비게이션 — WikiView (Articles/Red Links), LayoutMode "list" 추가, 에디터 Back 버튼 이전 화면 복귀, workspace leaf onClose 전달, 패널 헤더 X 버튼 위치 수정, docs/sidebar-wiki-redesign.md 설계 문서
+- **PR #78**: Linear식 풀페이지 SearchView + 글로벌 엔티티 검색 — SearchView (Notes/Tags/Labels/Templates/Folders 탭 검색), Wiki ViewHeader 전환, ViewHeader 드롭다운 자동완성, Templates 버튼 통일, SearchDialog 엔티티 검색, Cmd+K/사이드바 → 풀페이지 검색
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -102,7 +103,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Phase 4-D**: Context Panel
 - **Ontology View**: SVG force-directed graph (d3-force), filter bar, detail panel, workspace 통합
 
-## Current Direction (as of 2026-03-18)
+## Current Direction (as of 2026-03-19)
 
 ### 핵심 설계 결정
 - **Insights ≠ Ontology** → 별개 뷰로 유지
@@ -134,10 +135,15 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - ~~Thread (ThinkingChain → thread rename + ThreadPanel)~~ ✅ — thinking slice → thread slice, components/editor/thread-panel.tsx
 - ~~읽기/편집 뷰모드 토글~~ ✅ — isReadMode state + Ctrl+Shift+E in note-editor.tsx
 
-#### Tier 4: 사이드바 재구성 + 위키 고도화 (진행 중)
+#### Tier 4: 사이드바 재구성 + 위키 고도화 + 검색 (진행 중)
 - ✅ Wiki 사이드바 섹션 추가 (WikiView, Articles + Red Links)
 - ✅ LayoutMode "list" 추가 + Back 네비게이션 개선
 - ✅ 사이드바/위키 재설계 브레인스토밍 + 설계 문서 (docs/sidebar-wiki-redesign.md)
+- ✅ Linear식 풀페이지 SearchView (PR #78) — 노트+태그+라벨+템플릿+폴더 검색, Cmd+K/사이드바 연결
+- ✅ Wiki ViewHeader 전환 + 버튼 bg-accent 통일
+- ✅ ViewHeader 드롭다운 자동완성 (로컬 검색 + 노트 드롭다운)
+- ✅ SearchDialog 엔티티 검색 (태그/라벨/템플릿/폴더)
+- TODO: SearchDialog 모달 축소 (커맨드/링크 모드만 유지)
 - TODO: 사이드바 재구성 (Views/Folders/Tools)
 - TODO: 위키 수집함 + 자동 배치 블록 구조
 - TODO: 커스텀 뷰 시스템

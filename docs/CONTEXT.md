@@ -48,11 +48,11 @@ inbox → capture → permanent → WIKI (planned)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-23. Ontology View 고도화 — 미니맵, 위키 노드 배지, 라벨 기반 클러스터링(forceX/Y + convex hull)
-24. Tier 3 디자인 토큰 통일 + Trash UX 개선 + Ctrl+Z 글로벌 Undo
-25. 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선 — Tags/Labels/Templates에 Sort/Filter/Display 추가, LayoutModeSwitcher 사이드바 이동(노트 열림 시만 표시), 리스트 패널 닫기 버그 수정, 기본 시작뷰 inbox
-26. Wiki 사이드바 섹션 추가 — WikiView (Articles + Red Links 탭), 사이드바 NavLink, Always-mounted 패턴
-27. LayoutMode "list" 추가 + Back 네비게이션 개선 — 에디터 Back 버튼이 이전 화면으로 복귀, focus 모드에서 list로 자동 전환, workspace leaf에서 onClose 전달
+25. 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선
+26. Wiki 사이드바 섹션 추가 — WikiView (Articles + Red Links 탭)
+27. LayoutMode "list" 추가 + Back 네비게이션 개선
+28. ViewHeader 통일 — Wiki ViewHeader 전환, 드롭다운 자동완성, Templates 버튼 bg-accent 통일, ring-accent focus
+29. Linear식 풀페이지 SearchView — Notes/Tags/Labels/Templates/Folders 탭 검색, Cmd+K/사이드바 → 풀페이지, SearchDialog 엔티티 검색
 
 ## Three Axes — Core Design Philosophy
 
@@ -62,7 +62,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ```
 
-## Implementation Order (최신, 2026-03-17 업데이트)
+## Implementation Order (최신, 2026-03-19 업데이트)
 
 ### 모든 Tier 완료 ✅
 - Tier 1: Wiki Phase 4-C ✅ (PR #65-67)
@@ -104,8 +104,15 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **Tags/Labels** → 항상 풀와이드 렌더 (list+editor 모드 아님)
 - **LayoutModeSwitcher** → 사이드바 헤더에 위치 (노트 열린 상태에서만 표시, Grid 상태에서 숨김)
 - **기본 시작 뷰** → inbox (settings-store startView 기본값)
+- **글로벌 검색 = 풀페이지** (Linear 스타일) — 사이드바 Search/Cmd+K → /search 뷰로 이동, 모달 아님
+  - 빈 쿼리 → Recent Notes 8개만 (1만개 노트 기준 성능 고려)
+  - 타이핑 → FlexSearch(노트) + 동기 필터(태그/라벨/템플릿/폴더)
+  - 탭: All | Notes | Tags | Labels | Templates | Folders
+- **로컬 검색 ≠ 글로벌 검색** — 각 뷰 헤더 검색은 해당 뷰 내 필터링, 글로벌은 사이드바/Cmd+K
+- **ViewHeader 드롭다운** — 로컬 검색 input 아래에 매칭 노트 드롭다운 표시
 
 ## TODO: Future Work
+- SearchDialog 모달 축소 (커맨드/링크 모드만 유지, search 모드 제거)
 - 사이드바 재구성 (Views/Folders/Tools) — docs/sidebar-wiki-redesign.md
 - 위키 수집함 + 자동 배치 블록 구조 (나무위키 스타일)
 - 커스텀 뷰 시스템 (Linear 방식 View 관리 페이지)
