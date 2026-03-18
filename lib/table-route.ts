@@ -12,7 +12,7 @@ import { useSyncExternalStore } from "react"
 export const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/pinned", "/trash"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/tags", "/labels", "/templates", "/ontology", "/insights"]
+export const VIEW_ROUTES = ["/tags", "/labels", "/templates", "/ontology", "/insights", "/wiki"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]

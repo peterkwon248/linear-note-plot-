@@ -27,9 +27,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { usePlotStore } from "@/lib/store"
+import { setActiveRoute } from "@/lib/table-route"
+import { getPreviousRoute } from "@/lib/store/slices/ui"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
@@ -48,7 +51,9 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const storeSelectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const activeNoteId = propNoteId ?? storeSelectedNoteId
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const setLayoutMode = usePlotStore((s) => s.setLayoutMode)
   const notes = usePlotStore((s) => s.notes)
+  const router = useRouter()
   const folders = usePlotStore((s) => s.folders)
   const updateNote = usePlotStore((s) => s.updateNote)
   const togglePin = usePlotStore((s) => s.togglePin)
@@ -149,13 +154,20 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={() => onClose ? onClose() : setSelectedNoteId(null)}
+                onClick={() => {
+                  if (onClose) { onClose(); return }
+                  // Navigate back to previous screen
+                  const prev = getPreviousRoute() ?? "/notes"
+                  setSelectedNoteId(null)
+                  setActiveRoute(prev)
+                  router.push(prev)
+                }}
                 className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>Back to list</TooltipContent>
+            <TooltipContent>Back</TooltipContent>
           </Tooltip>
           <span className="mx-1 h-4 w-px bg-border" />
           {currentFolder && (

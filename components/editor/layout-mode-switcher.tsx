@@ -1,6 +1,6 @@
 "use client"
 
-import { Maximize2, Columns3, SplitSquareHorizontal, LayoutGrid, ChevronRight } from "lucide-react"
+import { List, Maximize2, Columns3, SplitSquareHorizontal, LayoutGrid, ChevronRight } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -11,9 +11,10 @@ import { RESEARCH_PRESETS, RESEARCH_PRESET_LABELS } from "@/lib/workspace/preset
 import { useState } from "react"
 
 const LAYOUT_MODES: { mode: LayoutMode; label: string; shortcut: string; icon: typeof Maximize2 }[] = [
-  { mode: "focus",        label: "Focus",         shortcut: "Ctrl+1", icon: Maximize2 },
-  { mode: "three-column", label: "List + Editor",  shortcut: "Ctrl+2", icon: Columns3 },
-  { mode: "split",        label: "Research",       shortcut: "Ctrl+3", icon: SplitSquareHorizontal },
+  { mode: "list",         label: "List",           shortcut: "Ctrl+1", icon: List },
+  { mode: "focus",        label: "Focus",          shortcut: "Ctrl+2", icon: Maximize2 },
+  { mode: "three-column", label: "List + Editor",  shortcut: "Ctrl+3", icon: Columns3 },
+  { mode: "split",        label: "Multi Panel",    shortcut: "Ctrl+4", icon: SplitSquareHorizontal },
 ]
 
 /** Mini layout icon for research sub-presets */
@@ -24,14 +25,14 @@ function ResearchPresetIcon({ preset, className }: { preset: ResearchPreset; cla
   switch (preset) {
     case "two-cols":
       return (
-        <div className={cn("flex gap-[2px] w-5 h-3.5", base, "p-[2px]", className)}>
+        <div className={cn("flex gap-[2px] w-6 h-4", base, "p-[2px]", className)}>
           <div className={cn(cell, "flex-1")} />
           <div className={cn(cell, "flex-1")} />
         </div>
       )
     case "three-cols":
       return (
-        <div className={cn("flex gap-[2px] w-5 h-3.5", base, "p-[2px]", className)}>
+        <div className={cn("flex gap-[2px] w-6 h-4", base, "p-[2px]", className)}>
           <div className={cn(cell, "flex-1")} />
           <div className={cn(cell, "flex-1")} />
           <div className={cn(cell, "flex-1")} />
@@ -39,14 +40,14 @@ function ResearchPresetIcon({ preset, className }: { preset: ResearchPreset; cla
       )
     case "two-rows":
       return (
-        <div className={cn("flex flex-col gap-[2px] w-5 h-3.5", base, "p-[2px]", className)}>
+        <div className={cn("flex flex-col gap-[2px] w-6 h-4", base, "p-[2px]", className)}>
           <div className={cn(cell, "flex-1")} />
           <div className={cn(cell, "flex-1")} />
         </div>
       )
     case "left-right2":
       return (
-        <div className={cn("flex gap-[2px] w-5 h-3.5", base, "p-[2px]", className)}>
+        <div className={cn("flex gap-[2px] w-6 h-4", base, "p-[2px]", className)}>
           <div className={cn(cell, "flex-1")} />
           <div className="flex flex-1 flex-col gap-[2px]">
             <div className={cn(cell, "flex-1")} />
@@ -56,7 +57,7 @@ function ResearchPresetIcon({ preset, className }: { preset: ResearchPreset; cla
       )
     case "left2-right":
       return (
-        <div className={cn("flex gap-[2px] w-5 h-3.5", base, "p-[2px]", className)}>
+        <div className={cn("flex gap-[2px] w-6 h-4", base, "p-[2px]", className)}>
           <div className="flex flex-1 flex-col gap-[2px]">
             <div className={cn(cell, "flex-1")} />
             <div className={cn(cell, "flex-1")} />
@@ -66,7 +67,7 @@ function ResearchPresetIcon({ preset, className }: { preset: ResearchPreset; cla
       )
     case "grid-2x2":
       return (
-        <div className={cn("grid grid-cols-2 gap-[2px] w-5 h-3.5", base, "p-[2px]", className)}>
+        <div className={cn("grid grid-cols-2 gap-[2px] w-6 h-4", base, "p-[2px]", className)}>
           <div className={cn(cell)} />
           <div className={cn(cell)} />
           <div className={cn(cell)} />
@@ -131,9 +132,9 @@ export function LayoutModeSwitcher() {
                       : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                   )}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="flex-1 text-note font-medium">{label}</span>
-                  <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                  <Icon className="h-[18px] w-[18px] shrink-0" />
+                  <span className="flex-1 text-sm font-medium">{label}</span>
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                 </button>
 
                 {/* Research sub-presets panel */}
@@ -157,8 +158,8 @@ export function LayoutModeSwitcher() {
                             : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                         )}
                       >
-                        <ResearchPresetIcon preset={rp} />
-                        <span className="text-xs font-medium">{RESEARCH_PRESET_LABELS[rp]}</span>
+                        <ResearchPresetIcon preset={rp} className="!w-6 !h-4" />
+                        <span className="text-[13px] font-medium">{RESEARCH_PRESET_LABELS[rp]}</span>
                       </button>
                     ))}
                   </div>
@@ -182,8 +183,8 @@ export function LayoutModeSwitcher() {
                   : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="flex-1 text-note font-medium">{label}</span>
+              <Icon className="h-[18px] w-[18px] shrink-0" />
+              <span className="flex-1 text-sm font-medium">{label}</span>
               <kbd className="text-2xs text-muted-foreground/60 font-mono">{shortcut}</kbd>
             </button>
           )

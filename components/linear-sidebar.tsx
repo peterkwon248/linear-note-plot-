@@ -22,6 +22,7 @@ import {
   Network,
   LayoutTemplate,
   Lightbulb,
+  BookOpen,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
@@ -252,6 +253,7 @@ export function LinearSidebar() {
   const inboxCount = useMemo(() => notes.filter((n) => n.status === "inbox" && !n.archived && !n.trashed && n.triageStatus !== "trashed").length, [notes])
   const allNotesCount = useMemo(() => notes.filter((n) => !n.archived && !n.trashed).length, [notes])
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
+  const wikiCount = useMemo(() => notes.filter((n) => n.isWiki && !n.trashed).length, [notes])
 
   // Sorted folders: pinned first (by pinnedOrder), then unpinned by lastAccessedAt desc (null last)
   const sortedFolders = useMemo(() => {
@@ -491,6 +493,13 @@ export function LinearSidebar() {
             label="Notes"
             count={allNotesCount > 0 ? allNotesCount : undefined}
             active={isActive("/notes")}
+          />
+          <NavLink
+            href="/wiki"
+            icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
+            label="Wiki"
+            count={wikiCount > 0 ? wikiCount : undefined}
+            active={isActive("/wiki")}
           />
           <NavLink
             href="/tags"

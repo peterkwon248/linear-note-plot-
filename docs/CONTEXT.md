@@ -29,6 +29,7 @@ Plot = 노트 + 개인 위키 + 지식 관계망
 - TipTap 3 editor (`components/editor/TipTapEditor.tsx`)
 - 24+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, etc.)
 - Workspace: binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types
+- LayoutMode: list | focus | three-column | tabs | panels | split (6 modes)
 - Wiki-links: `[[title]]` extracted to `Note.linksOut`
 
 ### Knowledge System
@@ -47,11 +48,11 @@ inbox → capture → permanent → WIKI (planned)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-21. Reflections — 시간축 회고 시스템 (append-only, 타임라인 UI, reflection_added 이벤트)
-22. Insights 뷰 고도화 — Activity 대시보드(Today/Week/Month, 7일 차트, Most Opened, Lifecycle) + Health 이슈
 23. Ontology View 고도화 — 미니맵, 위키 노드 배지, 라벨 기반 클러스터링(forceX/Y + convex hull)
 24. Tier 3 디자인 토큰 통일 + Trash UX 개선 + Ctrl+Z 글로벌 Undo
 25. 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선 — Tags/Labels/Templates에 Sort/Filter/Display 추가, LayoutModeSwitcher 사이드바 이동(노트 열림 시만 표시), 리스트 패널 닫기 버그 수정, 기본 시작뷰 inbox
+26. Wiki 사이드바 섹션 추가 — WikiView (Articles + Red Links 탭), 사이드바 NavLink, Always-mounted 패턴
+27. LayoutMode "list" 추가 + Back 네비게이션 개선 — 에디터 Back 버튼이 이전 화면으로 복귀, focus 모드에서 list로 자동 전환, workspace leaf에서 onClose 전달
 
 ## Three Axes — Core Design Philosophy
 
@@ -72,6 +73,10 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - Research 모드 레이아웃 프리셋 ✅ (PR #70)
 
 ### 다음 작업 후보 (Deferred)
+- 사이드바 재구성 (Views/Folders/Tools 섹션화) — docs/sidebar-wiki-redesign.md 참조
+- 위키 전용 대시보드/인터페이스 (나무위키 블록 구조, 수집함 + 자동 배치)
+- Filter/Display에 Layout 통합 + 사이드바 레이아웃 스위처 제거
+- 커스텀 뷰 시스템 (Save as View, 시스템/커스텀 뷰 관리)
 - Phase 4-D: Context Panel
 - Phosphor Icons 적용
 - WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
@@ -101,6 +106,10 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **기본 시작 뷰** → inbox (settings-store startView 기본값)
 
 ## TODO: Future Work
-- Settings always-mounted (when settings features implemented)
+- 사이드바 재구성 (Views/Folders/Tools) — docs/sidebar-wiki-redesign.md
+- 위키 수집함 + 자동 배치 블록 구조 (나무위키 스타일)
+- 커스텀 뷰 시스템 (Linear 방식 View 관리 페이지)
+- Filter/Display Layout 통합
+- Settings always-mounted
 - WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
 - Phase 4-D: Context Panel

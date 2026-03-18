@@ -101,14 +101,14 @@ export function WorkspaceLeafHeader({ leafId, content }: WorkspaceLeafHeaderProp
           <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
             <PopoverTrigger asChild>
               <button
-                className="flex flex-1 items-center gap-1.5 min-w-0 rounded px-1 -mx-1 hover:bg-secondary/60 transition-colors"
+                className="flex items-center gap-1.5 min-w-0 rounded px-1 -mx-1 hover:bg-secondary/60 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation()
                   setPickerOpen(true)
                 }}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span className="flex-1 truncate text-[15px] font-medium text-muted-foreground text-left">
+                <span className="truncate text-[15px] font-medium text-muted-foreground text-left">
                   {meta.label}
                 </span>
               </button>

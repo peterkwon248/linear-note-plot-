@@ -4,11 +4,16 @@ import type { ResearchPreset } from "../../workspace/types"
 import { layoutModeToPreset, buildResearchPreset } from "../../workspace/presets"
 import { getAllLeaves, findFirstEditorLeaf } from "../../workspace/tree-utils"
 import { now, type AppendEventFn } from "../helpers"
+import { getActiveRoute } from "../../table-route"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
 
 const MAX_HISTORY = 100
+
+/** Route before opening editor — used by "Back" button to return to previous screen */
+let _previousRoute: string | null = null
+export function getPreviousRoute(): string | null { return _previousRoute }
 
 export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
   // Internal flag to prevent openNote from pushing to history during goBack/goForward
@@ -19,6 +24,11 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     setSelectedNoteId: (id: string | null) => set({ selectedNoteId: id }),
 
     openNote: (id: string, opts?: { forceNewTab?: boolean }) => {
+      // Save current route before opening editor (for "Back" navigation)
+      const currentRoute = getActiveRoute()
+      if (currentRoute && !_navigating) {
+        _previousRoute = currentRoute
+      }
       set((state: any) => {
         if (!state.notes.some((n: Note) => n.id === id)) return state
         const updates: any = {
@@ -53,7 +63,15 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
         const index = state.navigationIndex as number
         // At index 0 with an open note → close editor (return to table/view)
         if (index <= 0 && state.selectedNoteId) {
-          return { selectedNoteId: null, navigationIndex: -1 }
+          const updates: Record<string, unknown> = { selectedNoteId: null, navigationIndex: -1 }
+          // If in focus mode, switch to list mode so user sees the note list
+          if (state.layoutMode === "focus") {
+            updates.layoutMode = "list"
+            updates._preFocusLayoutMode = null
+            updates.sidebarCollapsed = false
+            updates.detailsOpen = false
+          }
+          return updates
         }
         if (index <= 0) return state
         const newIndex = index - 1
@@ -113,6 +131,14 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
           updates._preFocusLayoutMode = null
           updates.sidebarCollapsed = false
           updates.detailsOpen = true
+        }
+
+        if (mode === "list") {
+          // List mode: show note list only, deselect note, restore sidebar
+          updates.selectedNoteId = null
+          updates.sidebarCollapsed = false
+          updates.detailsOpen = false
+          updates._preFocusLayoutMode = null
         }
 
         if (mode === "three-column") {

@@ -142,12 +142,11 @@ export function useGlobalShortcuts() {
         return
       }
 
-      // ── 2c. Ctrl/Cmd+1~3 — Layout Mode Shortcuts ──
-      if (mod && !e.shiftKey && !e.altKey && ["1", "2", "3"].includes(e.key)) {
+      // ── 2c. Ctrl/Cmd+1~4 — Layout Mode Shortcuts ──
+      if (mod && !e.shiftKey && !e.altKey && ["1", "2", "3", "4"].includes(e.key)) {
         const s = usePlotStore.getState()
         e.preventDefault()
-        if (s.selectedNoteId === null) return
-        const modes = ["focus", "three-column", "split"] as const
+        const modes = ["list", "focus", "three-column", "split"] as const
         s.setLayoutMode(modes[parseInt(e.key) - 1])
         return
       }
