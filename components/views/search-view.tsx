@@ -88,6 +88,25 @@ export function SearchView() {
     [notes],
   )
 
+  // Synchronous title-based fallback (covers FlexSearch init delay + short queries)
+  const titleMatchedNotes = useMemo(() => {
+    if (!query.trim()) return []
+    const q = query.toLowerCase().trim()
+    return searchableNotes
+      .filter((n) => (n.title || "Untitled").toLowerCase().includes(q))
+      .slice(0, 20)
+  }, [searchableNotes, query])
+
+  // Merge: FlexSearch results + title fallback (deduplicated, FlexSearch first)
+  const noteResults = useMemo(() => {
+    if (workerResults.length > 0) {
+      const ids = new Set(workerResults.map((n) => n.id))
+      const extra = titleMatchedNotes.filter((n) => !ids.has(n.id))
+      return [...workerResults, ...extra].slice(0, 20)
+    }
+    return titleMatchedNotes
+  }, [workerResults, titleMatchedNotes])
+
   // Recent notes for empty-query state
   const recentNotes = useMemo(
     () =>
@@ -192,7 +211,7 @@ export function SearchView() {
 
   const hasNoResults =
     hasFuzzyQuery &&
-    workerResults.length === 0 &&
+    noteResults.length === 0 &&
     matchedTags.length === 0 &&
     matchedLabels.length === 0 &&
     matchedTemplates.length === 0 &&
@@ -290,13 +309,13 @@ export function SearchView() {
             <div className="space-y-6">
               {/* Notes */}
               {(activeTab === "all" || activeTab === "notes") &&
-                workerResults.length > 0 && (
+                noteResults.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Notes
                     </h3>
                     <div className="space-y-0.5">
-                      {workerResults.map((note) => (
+                      {noteResults.map((note) => (
                         <button
                           key={note.id}
                           onClick={() => handleNoteSelect(note.id)}
