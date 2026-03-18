@@ -801,10 +801,10 @@ export function TemplatesView() {
               <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
               <button
                 onClick={() => setShowCreateDialog(true)}
-                title="New template"
-                className="flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground hover:bg-accent/90"
               >
                 <Plus className="h-3.5 w-3.5" />
+                New
               </button>
             </>
           }
@@ -921,10 +921,10 @@ export function TemplatesView() {
               <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
               <button
                 onClick={() => setShowCreateDialog(true)}
-                title="New template"
-                className="flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground hover:bg-accent/90"
               >
                 <Plus className="h-3.5 w-3.5" />
+                New
               </button>
             </>
           }

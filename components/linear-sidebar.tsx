@@ -475,7 +475,10 @@ export function LinearSidebar() {
       {/* Header row 2: Actions */}
       <div className="flex items-center gap-1 px-3.5 pb-2">
         <button
-          onClick={() => setSearchOpen(true)}
+          onClick={() => {
+            setActiveRoute("/search")
+            router.push("/search")
+          }}
           className="flex items-center gap-2 h-7 px-2.5 rounded-md hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors text-note"
           aria-label="Search"
         >

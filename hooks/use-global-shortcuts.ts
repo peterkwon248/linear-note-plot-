@@ -8,6 +8,7 @@ import { isEditableTarget } from "@/lib/keyboard-utils"
 import { findNode } from "@/lib/workspace/tree-utils"
 import { isLeaf } from "@/lib/workspace/types"
 import { popUndo } from "@/lib/undo-manager"
+import { setActiveRoute } from "@/lib/table-route"
 
 /**
  * Single global keydown listener that consolidates all app-wide keyboard
@@ -102,8 +103,8 @@ export function useGlobalShortcuts() {
       // ── 2. Ctrl/Cmd+K ──────────────────────────────────────
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        const s = usePlotStore.getState()
-        s.setSearchOpen(!s.searchOpen)
+        setActiveRoute("/search")
+        router.push("/search")
         return
       }
 
@@ -176,7 +177,7 @@ export function useGlobalShortcuts() {
       // ── 5. / — open search ─────────────────────────────────
       if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
         e.preventDefault()
-        usePlotStore.getState().setSearchOpen(true)
+        setActiveRoute("/search")
         return
       }
 
