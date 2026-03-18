@@ -329,7 +329,10 @@ export function WorkspaceEditorLeaf({ leaf }: WorkspaceEditorLeafProps) {
       {/* Editor content */}
       <div className="flex flex-1 overflow-hidden min-w-0">
         {activeNote ? (
-          <NoteEditor noteId={activeNote.id} />
+          <NoteEditor
+            noteId={activeNote.id}
+            onClose={activeTab ? () => closeTabInLeaf(activeTab.id, leaf.id) : undefined}
+          />
         ) : (
           <ContextMenu>
             <ContextMenuTrigger asChild>
