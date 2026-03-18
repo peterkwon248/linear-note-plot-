@@ -9,8 +9,8 @@ export function buildPreset(preset: WorkspacePreset): WorkspaceNode {
       return createLeaf({ type: "editor", noteId: null })
 
     case "editor-only":
-      // Single editor with tab support (same structure as focus, different sidebar behavior)
-      return createLeaf({ type: "editor", noteId: null })
+      // Single empty launcher — user picks what to open
+      return createLeaf({ type: "empty" })
 
     case "list-editor":
       // Note list (30%) + editor (70%) — note list is inside the workspace tree

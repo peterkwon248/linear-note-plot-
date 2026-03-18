@@ -23,6 +23,7 @@ import {
   LayoutTemplate,
   Lightbulb,
   BookOpen,
+  Home,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
@@ -453,7 +454,22 @@ export function LinearSidebar() {
           )}
         </div>
         <div className="flex-1" />
-        {selectedNoteId && <LayoutModeSwitcher />}
+        <LayoutModeSwitcher />
+        <button
+          onClick={() => {
+            // Reset workspace to empty launcher + focus mode
+            const { applyPreset, setSelectedNoteId, setLayoutMode } = usePlotStore.getState()
+            applyPreset("editor-only")
+            setSelectedNoteId(null)
+            setLayoutMode("focus")
+            setActiveRoute(null)
+            router.push("/")
+          }}
+          className="flex items-center justify-center h-8 w-8 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          aria-label="Home"
+        >
+          <Home className="h-5 w-5" strokeWidth={1.5} />
+        </button>
       </div>
 
       {/* Header row 2: Actions */}

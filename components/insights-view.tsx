@@ -7,6 +7,7 @@ import {
   SlidersHorizontal, LayoutList, LayoutGrid, Calendar,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ViewHeader } from "@/components/view-header"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -291,50 +292,51 @@ export function InsightsView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <h2 className="text-ui font-semibold text-foreground">Insights</h2>
-
-        {/* Display popover — view mode switcher */}
-        <Popover open={displayOpen} onOpenChange={setDisplayOpen}>
-          <PopoverTrigger asChild>
-            <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              <SlidersHorizontal className="h-4 w-4" />
-              Display
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[320px] p-0" align="end">
-            <div className="flex gap-1 border-b border-border px-3 py-2.5">
-              <button
-                onClick={() => { setViewMode("table"); setDisplayOpen(false) }}
-                className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              >
-                <LayoutList className="h-4 w-4" />
-                List
+      <ViewHeader
+        icon={<Lightbulb className="h-5 w-5" strokeWidth={1.5} />}
+        title="Insights"
+        actions={
+          <Popover open={displayOpen} onOpenChange={setDisplayOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <SlidersHorizontal className="h-4 w-4" />
+                Display
               </button>
-              <button
-                onClick={() => { setViewMode("board"); setDisplayOpen(false) }}
-                className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Board
-              </button>
-              <button
-                className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors bg-secondary text-foreground"
-              >
-                <Lightbulb className="h-4 w-4" />
-                Insights
-              </button>
-              <button
-                onClick={() => { setViewMode("calendar"); setDisplayOpen(false) }}
-                className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              >
-                <Calendar className="h-4 w-4" />
-                Calendar
-              </button>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] p-0" align="end">
+              <div className="flex gap-1 border-b border-border px-3 py-2.5">
+                <button
+                  onClick={() => { setViewMode("table"); setDisplayOpen(false) }}
+                  className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                >
+                  <LayoutList className="h-4 w-4" />
+                  List
+                </button>
+                <button
+                  onClick={() => { setViewMode("board"); setDisplayOpen(false) }}
+                  className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  Board
+                </button>
+                <button
+                  className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors bg-secondary text-foreground"
+                >
+                  <Lightbulb className="h-4 w-4" />
+                  Insights
+                </button>
+                <button
+                  onClick={() => { setViewMode("calendar"); setDisplayOpen(false) }}
+                  className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Calendar
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        }
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">

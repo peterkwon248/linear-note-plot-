@@ -25,6 +25,7 @@ import type { NoteTemplate, NoteStatus, NotePriority } from "@/lib/types"
 import { TipTapEditor } from "@/components/editor/TipTapEditor"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
+import { ViewHeader } from "@/components/view-header"
 
 /* ── Constants ─────────────────────────────────────────── */
 
@@ -699,11 +700,14 @@ export function TemplatesView() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [viewMode, setViewMode] = useState<TemplateViewMode>("grid")
   const [templateSortBy, setTemplateSortBy] = useState<"name-asc" | "name-desc" | "updated-desc" | "updated-asc" | "created-desc">("updated-desc")
+  const [search, setSearch] = useState("")
 
-  // Sorted: pinned first, then by selected sort
+  // Sorted: pinned first, then by selected sort, then filtered by search
   const sortedTemplates = useMemo(() => {
-    const pinned = templates.filter((t) => t.pinned)
-    const unpinned = templates.filter((t) => !t.pinned)
+    const q = search.trim().toLowerCase()
+    const filtered = q ? templates.filter((t) => t.name.toLowerCase().includes(q)) : templates
+    const pinned = filtered.filter((t) => t.pinned)
+    const unpinned = filtered.filter((t) => !t.pinned)
     const sortFn = (a: NoteTemplate, b: NoteTemplate) => {
       switch (templateSortBy) {
         case "name-asc": return a.name.localeCompare(b.name)
@@ -715,7 +719,7 @@ export function TemplatesView() {
       }
     }
     return [...pinned.sort(sortFn), ...unpinned.sort(sortFn)]
-  }, [templates, templateSortBy])
+  }, [templates, templateSortBy, search])
 
   const selectedTemplate = selectedTemplateId ? templates.find((t) => t.id === selectedTemplateId) ?? null : null
 
@@ -784,21 +788,27 @@ export function TemplatesView() {
   if (viewMode === "grid") {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center gap-3 border-b border-border px-6 py-4 shrink-0">
-          <h1 className="text-ui font-semibold text-foreground">Templates</h1>
-          <span className="text-sm text-muted-foreground">({templates.length})</span>
-          <div className="flex-1" />
-          <TemplateSortDropdown value={templateSortBy} onChange={setTemplateSortBy} />
-          <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
-          <button
-            onClick={() => setShowCreateDialog(true)}
-            title="New template"
-            className="flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <ViewHeader
+          icon={<LayoutTemplate className="h-5 w-5" strokeWidth={1.5} />}
+          title="Templates"
+          count={templates.length}
+          searchPlaceholder="Search templates..."
+          searchValue={search}
+          onSearchChange={setSearch}
+          actions={
+            <>
+              <TemplateSortDropdown value={templateSortBy} onChange={setTemplateSortBy} />
+              <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
+              <button
+                onClick={() => setShowCreateDialog(true)}
+                title="New template"
+                className="flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </>
+          }
+        />
 
         {/* Grid */}
         <div className="flex-1 overflow-y-auto">
@@ -898,21 +908,27 @@ export function TemplatesView() {
     <div className="flex flex-1 flex-row overflow-hidden">
       {/* ── Left Panel: Template List ──────────────────── */}
       <div className="flex flex-col w-[280px] min-w-[280px] border-r border-border overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center gap-3 border-b border-border px-6 py-4 shrink-0">
-          <h1 className="text-ui font-semibold text-foreground">Templates</h1>
-          <span className="text-sm text-muted-foreground">({templates.length})</span>
-          <div className="flex-1" />
-          <TemplateSortDropdown value={templateSortBy} onChange={setTemplateSortBy} />
-          <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
-          <button
-            onClick={() => setShowCreateDialog(true)}
-            title="New template"
-            className="flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <ViewHeader
+          icon={<LayoutTemplate className="h-5 w-5" strokeWidth={1.5} />}
+          title="Templates"
+          count={templates.length}
+          searchPlaceholder="Search templates..."
+          searchValue={search}
+          onSearchChange={setSearch}
+          actions={
+            <>
+              <TemplateSortDropdown value={templateSortBy} onChange={setTemplateSortBy} />
+              <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
+              <button
+                onClick={() => setShowCreateDialog(true)}
+                title="New template"
+                className="flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </>
+          }
+        />
 
         {/* List */}
         <div className="flex-1 overflow-y-auto py-1">

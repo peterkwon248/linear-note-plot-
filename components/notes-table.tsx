@@ -70,6 +70,7 @@ import type { Note, NoteStatus, NotePriority, Folder, NoteSource } from "@/lib/t
 import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { ViewHeader } from "@/components/view-header"
 import { setActiveFolderId } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
 import { pushUndo } from "@/lib/undo-manager"
@@ -557,18 +558,21 @@ export function NotesTable({
   return (
     <main ref={tableContainerRef} className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
-      <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
-        <h1 className="text-ui font-semibold text-foreground">{title ?? "Notes"}</h1>
-        {!hideCreateButton && (
-          <button
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-            onClick={() => createNote(createNoteOverrides ?? {})}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            {!isCompact && "New note"}
-          </button>
-        )}
-      </header>
+      <ViewHeader
+        icon={<FileText className="h-5 w-5" strokeWidth={1.5} />}
+        title={title ?? "Notes"}
+        actions={
+          !hideCreateButton && (
+            <button
+              className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+              onClick={() => createNote(createNoteOverrides ?? {})}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {!isCompact && "New note"}
+            </button>
+          )
+        }
+      />
 
       {/* ── Context tabs + toolbar ─────────────────────── */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">

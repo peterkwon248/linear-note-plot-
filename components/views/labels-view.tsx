@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react"
-import { ArrowLeft, ArrowUp, ArrowDown, ArrowUpDown, Plus, Trash2, Pencil, X, Zap, SlidersHorizontal, Layers, ChevronDown, Check, EyeOff } from "lucide-react"
+import { ArrowLeft, ArrowUp, ArrowDown, ArrowUpDown, Plus, Trash2, Pencil, X, Zap, SlidersHorizontal, Layers, ChevronDown, Check, EyeOff, Bookmark } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import {
   ContextMenu,
@@ -22,6 +22,7 @@ import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import type { Label } from "@/lib/types"
+import { ViewHeader } from "@/components/view-header"
 
 /* ── Sort/Group options for detail view ─────────────────── */
 
@@ -114,6 +115,9 @@ export function LabelsView() {
   const updateLabel = usePlotStore((s) => s.updateLabel)
   const openNote = usePlotStore((s) => s.openNote)
 
+  // Search state
+  const [search, setSearch] = useState("")
+
   // View state
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
@@ -177,6 +181,9 @@ export function LabelsView() {
     if (hideEmptyLabels) {
       result = result.filter(l => (labelCounts[l.id] || 0) > 0)
     }
+    if (search) {
+      result = result.filter(l => l.name.toLowerCase().includes(search.toLowerCase()))
+    }
     switch (labelSortBy) {
       case "name-asc": return result.sort((a, b) => a.name.localeCompare(b.name))
       case "name-desc": return result.sort((a, b) => b.name.localeCompare(a.name))
@@ -184,7 +191,7 @@ export function LabelsView() {
       case "count-asc": return result.sort((a, b) => (labelCounts[a.id] || 0) - (labelCounts[b.id] || 0))
       default: return result
     }
-  }, [labels, labelSortBy, hideEmptyLabels, labelCounts])
+  }, [labels, labelSortBy, hideEmptyLabels, labelCounts, search])
 
   labelsRef.current = sortedLabels
 
@@ -527,19 +534,23 @@ export function LabelsView() {
   // ── Label List Mode ──
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-        <h1 className="text-ui font-semibold text-foreground">Labels</h1>
-        <span className="text-sm text-muted-foreground">({labels.length})</span>
-        <div className="flex-1" />
-        <button
-          onClick={() => setCreating(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          New label
-        </button>
-      </div>
+      <ViewHeader
+        icon={<Bookmark className="h-5 w-5" strokeWidth={1.5} />}
+        title="Labels"
+        count={labels.length}
+        searchPlaceholder="Search labels..."
+        searchValue={search}
+        onSearchChange={setSearch}
+        actions={
+          <button
+            onClick={() => setCreating(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New label
+          </button>
+        }
+      />
 
       {/* Sort & Filter toolbar */}
       <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">

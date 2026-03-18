@@ -55,7 +55,7 @@ function EmptyPanelPicker({ leafId }: { leafId: string }) {
 
   return (
     <div className="flex flex-1 items-center justify-center p-4">
-      <div className="grid grid-cols-3 gap-2 max-w-[280px]">
+      <div className="grid grid-cols-3 gap-3 max-w-[420px]">
         {EMPTY_PICKER_OPTIONS.map((opt) => {
           const OptIcon = opt.icon
           return (
@@ -63,14 +63,14 @@ function EmptyPanelPicker({ leafId }: { leafId: string }) {
               key={opt.label}
               onClick={() => handlePick(opt)}
               className={cn(
-                "flex flex-col items-center gap-1.5 rounded-lg px-3 py-3",
+                "flex flex-col items-center gap-2.5 rounded-xl px-5 py-5",
                 "border border-border/50 bg-card/50",
                 "text-muted-foreground hover:text-foreground hover:bg-secondary/60 hover:border-border",
                 "transition-all duration-150"
               )}
             >
-              <OptIcon className="h-5 w-5" />
-              <span className="text-[11px] font-medium leading-tight text-center">{opt.label}</span>
+              <OptIcon className="h-7 w-7" />
+              <span className="text-[13px] font-medium leading-tight text-center">{opt.label}</span>
             </button>
           )
         })}
