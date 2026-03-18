@@ -12,7 +12,7 @@ export function applySearch(notes: Note[], query: string): Note[] {
   const lower = trimmed.toLowerCase()
 
   return notes.filter((note) => {
-    if (note.title.toLowerCase().includes(lower)) return true
+    if ((note.title || "Untitled").toLowerCase().includes(lower)) return true
     if (note.preview && note.preview.toLowerCase().includes(lower)) return true
     return false
   })

@@ -41,7 +41,7 @@ export function getFilteredNotes(state: PlotState): Note[] {
     const q = searchQuery.toLowerCase()
     filtered = filtered.filter(
       (n) =>
-        n.title.toLowerCase().includes(q) ||
+        (n.title || "Untitled").toLowerCase().includes(q) ||
         n.preview.toLowerCase().includes(q)
     )
   }
@@ -100,7 +100,7 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
     const q = searchQuery.toLowerCase()
     filtered = filtered.filter(
       (n) =>
-        n.title.toLowerCase().includes(q) ||
+        (n.title || "Untitled").toLowerCase().includes(q) ||
         n.preview.toLowerCase().includes(q)
     )
   }
