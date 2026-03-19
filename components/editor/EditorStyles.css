@@ -883,6 +883,31 @@
   cursor: text;
 }
 
+/* Edit mode: underline on hover to hint the popover is available */
+.ProseMirror[contenteditable="true"] .wikilink-exists:hover {
+  text-decoration: underline;
+  text-decoration-color: rgba(123, 140, 222, 0.6);
+  cursor: text;
+}
+
+/* Read mode: pointer cursor so links feel clickable */
+.ProseMirror[contenteditable="false"] .wikilink-exists {
+  cursor: pointer;
+}
+
+.ProseMirror[contenteditable="false"] .wikilink-exists:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror[contenteditable="false"] .wikilink-dangling {
+  cursor: pointer;
+}
+
+.ProseMirror[contenteditable="false"] .wikilink-dangling:hover {
+  cursor: pointer;
+}
+
 /* ── Wikilink Hover Popover ───────────────────────────────────────── */
 
 .wikilink-popover {

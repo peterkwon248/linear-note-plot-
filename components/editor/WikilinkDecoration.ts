@@ -285,7 +285,7 @@ export const WikilinkDecorationExtension = Extension.create({
               showTimer = setTimeout(() => {
                 showPopover(target, title, isDangling)
                 showTimer = null
-              }, 300)
+              }, 150)
 
               return false
             },

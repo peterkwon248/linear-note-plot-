@@ -14,7 +14,7 @@ import React, {
   forwardRef,
 } from "react"
 import { usePlotStore } from "@/lib/store"
-import { FileText } from "lucide-react"
+import { FileText, BookOpen } from "lucide-react"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -23,9 +23,8 @@ interface WikilinkItem {
   title: string
   status: string
   isAlias?: boolean
-  isNew?: boolean       // create as wiki stub
-  isNewNote?: boolean   // create as regular note
-  _wikiMode?: boolean   // triggered via [[[ (wiki-only mode)
+  isWiki?: boolean
+  isNewNote?: boolean
 }
 
 interface WikilinkListProps {
@@ -80,7 +79,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
       <div className="z-50 min-w-[200px] max-w-[300px] overflow-hidden rounded-md border border-border bg-popover shadow-md">
         <div className="px-2 py-1 border-b border-border/50">
           <span className="text-2xs font-medium text-muted-foreground">
-            {items[0]?._wikiMode ? "Wiki" : "Notes"}
+            Link to...
           </span>
         </div>
         <div className="max-h-[240px] overflow-y-auto py-1">
@@ -95,17 +94,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                   : "text-foreground hover:bg-secondary/50",
               ].join(" ")}
             >
-              {item.isNew ? (
-                <>
-                  <span className="text-muted-foreground text-xs">+</span>
-                  <span className="text-muted-foreground">
-                    Create as Wiki{" "}
-                    <span className="font-medium text-foreground">
-                      [[{item.title}]]
-                    </span>
-                  </span>
-                </>
-              ) : item.isNewNote ? (
+              {item.isNewNote ? (
                 <>
                   <span className="text-muted-foreground text-xs">+</span>
                   <span className="text-muted-foreground">
@@ -117,11 +106,20 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                 </>
               ) : (
                 <>
-                  <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  {item.isWiki ? (
+                    <BookOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  )}
                   <span className="truncate">{item.title}</span>
                   {item.isAlias && (
                     <span className="shrink-0 text-2xs italic text-muted-foreground">
                       (alias)
+                    </span>
+                  )}
+                  {item.isWiki && (
+                    <span className="shrink-0 text-2xs font-medium text-muted-foreground bg-secondary rounded px-1 py-0.5">
+                      Wiki
                     </span>
                   )}
                   <span className="ml-auto shrink-0 rounded px-1 py-0.5 text-[10px] font-medium bg-secondary text-muted-foreground">
@@ -157,29 +155,24 @@ export const WikilinkSuggestion = Extension.create({
 
         items: ({ query }: { query: string }) => {
           const notes = usePlotStore.getState().notes
-
-          // Detect wiki mode: [[[ triggers [[ with query starting with "["
-          const isWikiMode = query.startsWith("[")
-          const q = (isWikiMode ? query.slice(1) : query).toLowerCase().trim()
+          const q = query.toLowerCase().trim()
 
           // Empty query: show recent 8 notes/wikis
           if (q.length === 0) {
             const pool = notes.filter((n) => !n.archived && !n.trashed && n.title.trim())
-            const filtered = isWikiMode ? pool.filter((n) => n.isWiki) : pool
-            return filtered
+            return pool
               .sort(
                 (a, b) =>
                   new Date(b.updatedAt).getTime() -
                   new Date(a.updatedAt).getTime()
               )
               .slice(0, 8)
-              .map((n) => ({ id: n.id, title: n.title, status: n.status, _wikiMode: isWikiMode }))
+              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.isWiki ?? false }))
           }
 
           // Title matches: exact > startsWith > contains, then by length
           const pool = notes.filter((n) => !n.archived && !n.trashed)
-          const searchPool = isWikiMode ? pool.filter((n) => n.isWiki) : pool
-          const titleMatches = searchPool
+          const titleMatches = pool
             .filter(
               (n) =>
                 n.title.trim() &&
@@ -197,7 +190,7 @@ export const WikilinkSuggestion = Extension.create({
 
           // Alias matches
           const titleIds = new Set(titleMatches.map((n) => n.id))
-          const aliasMatches = searchPool
+          const aliasMatches = pool
             .filter(
               (n) =>
                 !titleIds.has(n.id)
@@ -210,47 +203,29 @@ export const WikilinkSuggestion = Extension.create({
               title: n.title,
               status: n.status,
               isAlias: true,
-              _wikiMode: isWikiMode,
+              isWiki: n.isWiki ?? false,
             }))
 
           const combined: WikilinkItem[] = [
             ...titleMatches
               .slice(0, 6)
-              .map((n) => ({ id: n.id, title: n.title, status: n.status, _wikiMode: isWikiMode })),
+              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.isWiki ?? false })),
             ...aliasMatches.slice(0, 2),
           ].slice(0, 8)
 
-          // "Create" options if no exact match
-          const hasExact = searchPool.some(
+          // "Create as Note" option if no exact match
+          const hasExact = pool.some(
             (n) =>
               n.title.toLowerCase() === q ||
               n.aliases?.some((a) => a.toLowerCase() === q)
           )
           if (!hasExact && q.length > 0) {
-            if (isWikiMode) {
-              // Wiki mode: only "Create as Wiki"
-              combined.push({
-                id: `__new_wiki__${q}`,
-                title: q,
-                status: "inbox",
-                isNew: true,
-                _wikiMode: true,
-              })
-            } else {
-              // Note mode: both options
-              combined.push({
-                id: `__new_note__${q}`,
-                title: q,
-                status: "inbox",
-                isNewNote: true,
-              })
-              combined.push({
-                id: `__new_wiki__${q}`,
-                title: q,
-                status: "inbox",
-                isNew: true,
-              })
-            }
+            combined.push({
+              id: `__new_note__${q}`,
+              title: q,
+              status: "inbox",
+              isNewNote: true,
+            })
           }
 
           return combined
@@ -350,13 +325,7 @@ export const WikilinkSuggestion = Extension.create({
           props: WikilinkItem
         }) => {
           const store = usePlotStore.getState()
-          if (props.isNew) {
-            // Create wiki stub
-            const exists = store.notes.some(
-              (n) => n.title.toLowerCase() === props.title.toLowerCase()
-            )
-            if (!exists) store.createWikiStub(props.title)
-          } else if (props.isNewNote) {
+          if (props.isNewNote) {
             // Create regular note
             const exists = store.notes.some(
               (n) => n.title.toLowerCase() === props.title.toLowerCase()
@@ -364,16 +333,10 @@ export const WikilinkSuggestion = Extension.create({
             if (!exists) store.createNote({ title: props.title })
           }
 
-          // In wiki mode ([[[), the range starts at [[ but we typed [[[
-          // so we need to also delete the extra [ before the range
-          const deleteRange = props._wikiMode
-            ? { from: range.from - 1, to: range.to }
-            : range
-
           editor
             .chain()
             .focus()
-            .deleteRange(deleteRange)
+            .deleteRange(range)
             .insertContent("[[" + props.title + "]] ")
             .run()
         },
