@@ -267,6 +267,31 @@ export const WikilinkDecorationExtension = Extension.create({
           },
 
           handleDOMEvents: {
+            click(_view: EditorView, event: MouseEvent) {
+              const target = event.target as HTMLElement
+              if (!target.classList?.contains("wikilink-nav-icon")) return false
+
+              const title = target.getAttribute("data-wikilink-nav")
+              if (!title) return false
+
+              const store = usePlotStore.getState()
+              const note = store.notes.find(
+                (n) =>
+                  !n.archived &&
+                  !n.trashed &&
+                  (n.title.toLowerCase() === title.toLowerCase() ||
+                    n.aliases?.some((a) => a.toLowerCase() === title.toLowerCase()))
+              )
+
+              if (note) {
+                store.setSidePeekNoteId(note.id)
+              }
+
+              event.preventDefault()
+              event.stopPropagation()
+              return true
+            },
+
             mouseover(view: EditorView, event: MouseEvent) {
               // Only show popover in edit mode
               if (!view.editable) return false
@@ -355,6 +380,18 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
           "data-wikilink": innerTitle,
         })
       )
+
+      if (exists) {
+        const icon = document.createElement("span")
+        icon.className = "wikilink-nav-icon"
+        icon.setAttribute("data-wikilink-nav", innerTitle)
+        icon.textContent = "↗"
+        icon.title = "Open"
+
+        decorations.push(
+          Decoration.widget(to, icon, { side: 1 })
+        )
+      }
     }
   })
 

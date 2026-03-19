@@ -996,6 +996,25 @@
   color: #EF9A9A;
 }
 
+/* ── Wikilink Navigation Icon ─────────────────────────────────────── */
+
+.wikilink-nav-icon {
+  display: inline;
+  margin-left: 2px;
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.3;
+  transition: opacity 0.15s;
+  cursor: pointer;
+  color: #7B8CDE;
+  user-select: none;
+  vertical-align: super;
+}
+
+.wikilink-nav-icon:hover {
+  opacity: 1;
+}
+
 /* ── Wiki Read Mode Typography ────────────────────────────────────── */
 
 .wiki-read-content .ProseMirror {

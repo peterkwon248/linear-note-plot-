@@ -155,7 +155,9 @@ export const WikilinkSuggestion = Extension.create({
 
         items: ({ query }: { query: string }) => {
           const notes = usePlotStore.getState().notes
-          const q = query.toLowerCase().trim()
+
+          // Strip trailing ] characters (user typed closing brackets before suggestion resolves)
+          const q = query.replace(/\]+$/, '').toLowerCase().trim()
 
           // Empty query: show recent 8 notes/wikis
           if (q.length === 0) {
