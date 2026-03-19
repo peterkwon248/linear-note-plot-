@@ -107,54 +107,39 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 
 ## Current Direction (as of 2026-03-19)
 
-### 핵심 설계 결정
+### Architecture Redesign v2 (확정, 구현 대기)
+
+> 상세 문서: `docs/architecture-redesign-v2.md`
+
+**사상**: 팔란티어 × 제텔카스텐. Layer 1(Raw Data) → Layer 2(Ontology) → Layer 3(Wiki, 표현) → Layer 4(Insights, 분석). LLM/API 사용 안 함.
+
+#### 핵심 설계 결정 (기존 유지 + 신규)
 - **Insights ≠ Ontology** → 별개 뷰로 유지
-- **Wiki = Plot 제텔카스텐의 출력물 중 하나** — 특별 취급 X, 기존 노트/태그/온톨로지 인프라 재활용
-- **위키 = 내가 정리한 신뢰할 수 있는 참고자료** — 다른 글 쓸 때 내부 참조
-- **`[[` 통합** — 노트/위키 구분 없이 하나로 검색, 대상이 타입 결정
-- **Side Peek** — 위키링크 클릭 → 우측 패널 슬라이드 (레이아웃 모드 안 바뀜)
-- **소프트 삭제** — 태그/라벨/템플릿 삭제 시 노트 연결 유지, 복구 가능
+- **`[[` 통합** — 노트/위키 구분 없이 하나로 검색
+- **Side Peek** — 위키링크 클릭 → 우측 패널 슬라이드
+- **소프트 삭제** — 태그/라벨/템플릿 삭제 시 노트 연결 유지
+- **Activity Bar** — Tier 1 (Inbox/Notes/Wiki/Ontology), Settings 하단. Search는 상단 유틸리티 바 (Linear 스타일)
+- **2-Level Routing** — `activeSpace` + `activeRoute`, `inferSpace()` 하위호환
+- **LayoutMode 삭제** → `WorkspaceMode = "default" | "zen" | "research"` 3개로 수렴. default 모드 auto-collapse
+- **Wiki 병렬 라이프사이클** — `status`(inbox/capture/permanent)와 `wikiStatus`(stub/draft/complete) 독립. 어느 시점에서든 위키 진입 가능
+- **Wiki 자동 등재** — 신호 기반 (red link refCount>=2, 태그 3+, backlinks>=3). 높은 확신=자동, 낮은 확신=제안. 기존 노트 있으면 convert, 없으면 create stub
+- **Breadcrumb** — NoteEditor Back 버튼 → 브레드크럼 (`activeSpace > folder > title`)
+- **Inbox = 워크플로우** (필터 아님). NotesTable 상태 탭 제거, FilterBar status 필터로 대체
+- **New Note = 액션** (상태 아님). Editor는 항상 noteId를 가짐
 
-### 향후 작업 순서
+#### 구현 Phase (7단계)
+1. **Foundation** — v41 (wikiStatus), v42 (workspaceMode), table-route.ts (activeSpace)
+2. **Layout Automation** — setWorkspaceMode(), auto-collapse, Cmd+0/1/2
+3. **Activity Bar + Top Utility Bar** — activity-bar.tsx, top-utility-bar.tsx
+4. **Sidebar Refactor** — 컨텍스트 반응형, Tier 3 섹션, 상태 탭 제거
+5. **Breadcrumb** — editor-breadcrumb.tsx, Back 버튼 교체
+6. **Wiki Evolution** — 자동 등재 엔진, wikiStatus UI, 초성 인덱스
+7. **Wiki Collection** — wiki-collection-design.md Phase A~F
 
-#### Tier 1: Wiki 고도화 (Phase 4-C 완성) ✅ DONE
-1. ~~Red/Blue 링크 색상 분기~~ ✅
-2. ~~빨간 링크 클릭 → 위키 자동 생성~~ ✅
-3. ~~사이드바 TOC~~ ✅
-4. ~~위키 읽기 타이포그래피~~ ✅
-5. ~~하단 분류 표시~~ ✅
+추천 순서: 1→2→3→4→5 (인프라 먼저), 6은 독립적으로 언제든
 
-#### Tier 2: 기존 기능 마무리 ✅ DONE
-6. ~~Reflections~~ ✅ — append-only 회고 패널, 타임라인 UI, reflection_added 이벤트
-7. ~~Insights 뷰 고도화~~ ✅ — Activity 대시보드 + Health 이슈 통합
-8. ~~Ontology View 고도화~~ ✅ — Canvas 미니맵, 위키 노드 배지(이중링+W), 라벨 기반 클러스터링(forceX/Y + convex hull)
-
-#### Tier 3: 디자인 폴리시 ✅ DONE
-9. ~~디자인 토큰 통일~~ ✅ (PR #68)
-10. ~~고아 코드 정리~~ ✅ (PR #68)
-11. ~~뷰 필터/디스플레이~~ ✅ (PR #71)
-12. ~~레이아웃 스위처 사이드바 이동~~ ✅ (PR #71)
-
-#### 완료된 기능 (docs 미반영이었던 것)
-- ~~Thread (ThinkingChain → thread rename + ThreadPanel)~~ ✅ — thinking slice → thread slice, components/editor/thread-panel.tsx
-- ~~읽기/편집 뷰모드 토글~~ ✅ — isReadMode state + Ctrl+Shift+E in note-editor.tsx
-
-#### Tier 4: 사이드바 재구성 + 위키 고도화 + 검색 (진행 중)
-- ✅ Wiki 사이드바 섹션 추가 (WikiView, Articles + Red Links)
-- ✅ LayoutMode "list" 추가 + Back 네비게이션 개선
-- ✅ 사이드바/위키 재설계 브레인스토밍 + 설계 문서 (docs/sidebar-wiki-redesign.md)
-- ✅ Linear식 풀페이지 SearchView (PR #78) — 노트+태그+라벨+템플릿+폴더 검색, Cmd+K/사이드바 연결
-- ✅ Wiki ViewHeader 전환 + 버튼 bg-accent 통일
-- ✅ ViewHeader 드롭다운 자동완성 (로컬 검색 + 노트 드롭다운)
-- ✅ SearchDialog 엔티티 검색 (태그/라벨/템플릿/폴더)
-- TODO: SearchDialog 모달 축소 (커맨드/링크 모드만 유지)
-- TODO: 사이드바 재구성 (Views/Folders/Tools)
-- TODO: 위키 수집함 + 자동 배치 블록 구조
-- TODO: 커스텀 뷰 시스템
-- TODO: Filter/Display Layout 통합
-
-#### 다음 작업 (Deferred에서 승격 가능)
+#### 다음 작업 (Deferred)
 - Phase 4-D: Context Panel
 - Phosphor Icons 적용
-- WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
+- 커스텀 뷰 시스템 (Phase 4 이후)
 - Settings always-mounted
