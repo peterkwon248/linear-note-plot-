@@ -15,16 +15,20 @@ export function WikiCategories({ noteTagIds, allTags }: WikiCategoriesProps) {
   if (resolved.length === 0) return null
 
   return (
-    <div className="wiki-categories">
-      <span className="wiki-categories-label">분류:</span>
-      {resolved.map((tag, i) => (
-        <span key={tag.id}>
-          {i > 0 && <span className="wiki-cat-sep">|</span>}
-          <button type="button" title={tag.name}>
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+        Categories
+      </h4>
+      <div className="flex flex-wrap gap-1.5">
+        {resolved.map((tag) => (
+          <span
+            key={tag.id}
+            className="rounded-full bg-accent/10 text-accent px-2.5 py-0.5 text-xs font-medium"
+          >
             {tag.name}
-          </button>
-        </span>
-      ))}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }

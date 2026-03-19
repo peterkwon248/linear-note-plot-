@@ -1,124 +1,61 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ChevronRight } from "lucide-react"
+import { FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
-import { suggestBacklinks } from "@/lib/backlinks"
-import { StatusIcon } from "@/components/status-icon"
-import type { NoteStatus } from "@/lib/types"
+import { shortRelative } from "@/lib/format-utils"
 
-// Collapsible section header
-function FooterSection({
-  title,
-  count,
-  defaultOpen = true,
-  children,
-}: {
-  title: string
-  count: number
-  defaultOpen?: boolean
-  children: React.ReactNode
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-
-  return (
-    <div>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
-      >
-        <ChevronRight className={cn("h-3 w-3 transition-transform", open && "rotate-90")} />
-        <span>{title}</span>
-        <span className="text-muted-foreground/60">({count})</span>
-      </button>
-      {open && <div className="ml-4 space-y-0.5">{children}</div>}
-    </div>
-  )
-}
-
-// Single note link row
-function NoteLink({
-  noteId,
-  title,
-  status,
-  reason,
-  onClick,
-}: {
-  noteId: string
-  title: string
-  status: NoteStatus
-  reason?: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors group"
-    >
-      <StatusIcon status={status} className="text-muted-foreground/50 flex-shrink-0" />
-      <span className="truncate flex-1">{title || "Untitled"}</span>
-      {reason && (
-        <span className="text-2xs text-muted-foreground/40 flex-shrink-0 group-hover:text-muted-foreground/60">
-          {reason}
-        </span>
-      )}
-    </button>
-  )
-}
+const DEFAULT_VISIBLE = 4
 
 export function BacklinksFooter({ noteId }: { noteId: string }) {
   const notes = usePlotStore((s) => s.notes)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const [showAll, setShowAll] = useState(false)
 
   const backlinks = useBacklinksFor(noteId)
 
-  const related = useMemo(() => {
-    const backlinkIds = new Set(backlinks.map((n) => n.id))
-    return suggestBacklinks(noteId, notes, { limit: 5 }).filter(
-      (r) => !backlinkIds.has(r.noteId)
-    )
-  }, [noteId, notes, backlinks])
+  // Sort by updatedAt descending
+  const sorted = useMemo(
+    () => [...backlinks].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
+    [backlinks],
+  )
 
-  // Hide entirely if nothing to show
-  if (backlinks.length === 0 && related.length === 0) return null
+  if (sorted.length === 0) return null
+
+  const visible = showAll ? sorted : sorted.slice(0, DEFAULT_VISIBLE)
+  const remaining = sorted.length - DEFAULT_VISIBLE
 
   return (
-    <div className="border-t border-border/50 mt-8 pt-4 pb-8 space-y-3">
-      {backlinks.length > 0 && (
-        <FooterSection title="Backlinks" count={backlinks.length}>
-          {backlinks.map((note) => (
-            <NoteLink
-              key={note.id}
-              noteId={note.id}
-              title={note.title}
-              status={note.status}
-              onClick={() => setSelectedNoteId(note.id)}
-            />
-          ))}
-        </FooterSection>
-      )}
-
-      {related.length > 0 && (
-        <FooterSection title="Related" count={related.length}>
-          {related.map((r) => {
-            const note = notes.find((n) => n.id === r.noteId)
-            if (!note) return null
-            // Pick the most descriptive reason
-            const reason = r.reasons[r.reasons.length - 1]
-            return (
-              <NoteLink
-                key={r.noteId}
-                noteId={r.noteId}
-                title={note.title}
-                status={note.status}
-                reason={reason}
-                onClick={() => setSelectedNoteId(note.id)}
-              />
-            )
-          })}
-        </FooterSection>
+    <div className="border-t border-border mt-8 pt-6 pb-8">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        Notes referencing this article ({sorted.length})
+      </h3>
+      <div className="space-y-1">
+        {visible.map((note) => (
+          <button
+            key={note.id}
+            onClick={() => setSelectedNoteId(note.id)}
+            className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150 group"
+          >
+            <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" strokeWidth={1.5} />
+            <span className="truncate flex-1 text-foreground/80 group-hover:text-foreground">
+              {note.title || "Untitled"}
+            </span>
+            <span className="text-2xs text-muted-foreground/50 shrink-0">
+              {shortRelative(note.updatedAt)}
+            </span>
+          </button>
+        ))}
+      </div>
+      {!showAll && remaining > 0 && (
+        <button
+          onClick={() => setShowAll(true)}
+          className="mt-2 px-2 text-sm text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-150"
+        >
+          + {remaining} more
+        </button>
       )}
     </div>
   )
