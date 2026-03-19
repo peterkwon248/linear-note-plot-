@@ -20,7 +20,7 @@
 | 📥 | Inbox | `/inbox` (전용 triage 뷰) |
 | 📝 | Notes | `/notes` (NotesTable) |
 | 📖 | Wiki | `/wiki` (WikiView) |
-| 🔗 | Ontology | `/ontology` (OntologyView) |
+| 🔗 | Graph | `/graph` (GraphView, 구 OntologyView) |
 
 **Tier 2 (하단):**
 | 아이콘 | 기능 |
@@ -237,6 +237,22 @@ interface Note {
 자동 등재 시 기존 노트가 있으면 `convertToWiki()`, 없으면 `createWikiStub()`.
 Red link는 stub로 자동 전환되면 소멸 (자기 조절 메커니즘).
 
+### Stub 생성 이유 추적
+
+```typescript
+// stub 생성 시 이유를 기록
+stubSource: "red-link" | "tag" | "backlink" | "manual"
+```
+
+위키 사이드바에서 이유 기반으로 분류:
+```
+Stubs (38)
+├── Red link에서 생성 (12) — 다른 문서에서 참조하는데 없는 것 → 긴급
+├── 태그에서 생성 (15) — 자주 쓰이는 태그 → 중간
+├── Backlink 기반 (8) — 많이 참조되는 노트 → 상황 따라
+└── 수동 생성 (3) — 내가 직접 만든 것
+```
+
 ### 자동 등재 트리거
 
 배치 방식: 앱 시작 시 한 번 + 이후 10분마다 재실행.
@@ -340,9 +356,55 @@ noteId 없는 빈 상태는 `{ type: "empty" }`.
 
 매일 여는 뷰가 아님. 문제 감지 → 구체적 액션 제안. 핵심 넛지는 에디터 Context Panel로 흘려보냄.
 
-### Ontology = 엔진 (뷰가 아님)
+### Ontology = 엔진, Graph = 시각화
 
-독립 뷰(그래프)는 유지하되, 본질은 데이터 레이어. Wiki, Insights, Context Panel이 Ontology 엔진의 데이터를 소비.
+팔란티어 참조: Ontology는 데이터 모델(엔진), Graph Analysis는 시각화(뷰). Plot도 동일하게 분리.
+
+- **Ontology Engine** (내부, 코드): `lib/store/slices/ontology.ts` — 관계, 분류, 공기어 데이터
+- **Graph** (유저 대면, UI): 그래프 시각화 뷰 — Ontology 엔진 데이터를 시각적으로 탐색
+- Activity Bar 레이블: "Graph" (not "Ontology")
+- 라우트: `/graph` (구 `/ontology`)
+- Wiki, Insights, Context Panel도 Ontology 엔진의 데이터를 소비
+
+### Graph 노드 시각 구분
+
+| 노드 타입 | 형태 | 스타일 |
+|----------|------|--------|
+| 일반 노트 | ● 원형 | 실선, fill + stroke |
+| 위키 complete | ⬡ 육각형 (큐브 와이어프레임) | 실선, fill, accent 테두리, 크기 약간 큼 |
+| 위키 draft | ⬡ 육각형 | 실선, 약간 투명 |
+| 위키 stub | ⬡ 육각형 | 점선 테두리 |
+| 태그 노드 | ◇◇ 이중 다이아몬드 | 작은 크기, 태그 컬러, 이탤릭 라벨 |
+
+### Graph 태그 노드
+
+- 조건: 5+ 노트에서 사용된 태그만 노드로 표시
+- 필터 연동: `OntologyFilterBar`에 "Show tag nodes" 토글
+- 태그 노드는 연결된 노트들의 **클러스터 허브** 역할
+
+### Graph 엣지 계층
+
+| 엣지 타입 | 두께 | 투명도 | 의미 |
+|----------|:----:|:------:|------|
+| relation | 두꺼움 (2.0) | 1.0 | 유저가 직접 만든 관계 (가장 강한 신호) |
+| wikilink | 중간 (1.2) | 1.0 | `[[링크]]` 작성 (중간 신호) |
+| tag | 얇음 (0.8) | 0.35 | 공유 태그 (암묵적 약한 연결) |
+
+원칙: "약한 연결은 시각적으로도 약해야 한다." Tag 엣지가 relation과 같은 두께면 거미줄이 됨.
+
+### Graph 10K 노드 성능
+
+| 최적화 | 현재 | 추가 필요 |
+|--------|:----:|:---------:|
+| Web Worker 레이아웃 | ✅ | - |
+| Viewport Culling | ✅ | - |
+| LOD Zoom | ✅ | - |
+| 포지션 영속화 | ✅ | - |
+| **필터링 (전체 안 보여줌)** | 부분 | ✅ |
+| **클러스터 LOD** | ❌ | ✅ |
+| **증분 레이아웃** | ❌ | ✅ |
+
+핵심: 10K 노드를 한 번에 다 보여줄 필요 없음. 필터링으로 200~500개만 표시.
 
 ---
 
@@ -444,7 +506,7 @@ Phase 3 (Activity Bar)이 가장 임팩트 큼 — 앱 인상이 확 바뀜.
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | Note 타입 sub-object 분리 | 보류 | 방향 동의, 시기 미정 |
-| Ontology 그래프 뷰 구체 강화 | 열림 | 엔진 역할 확정 후 |
+| Graph 시각 구분 (노드 형태/엣지 계층) | Phase 2-3에 포함 | 노드: 원형/육각형/다이아몬드, 엣지: 3단계 두께 |
 | Insights 넛지의 에디터 연결 | 열림 | Context Panel 설계와 같이 |
 | Phase 4-D: Context Panel | 열림 | 별도 설계 필요 |
 | Phosphor Icons | 보류 | |
@@ -461,3 +523,4 @@ Phase 3 (Activity Bar)이 가장 임팩트 큼 — 앱 인상이 확 바뀜.
 - `docs/WIKI-REDESIGN-INSTRUCTIONS.md` — 위키 리디자인 실행 지시문 (Phase 1-3 완료)
 - `docs/CONTEXT.md` — 현재 프로젝트 상태
 - `docs/MEMORY.md` — 전체 PR 히스토리 + 아키텍처 상세
+- `docs/plot-mockup-v3.jsx` — 전체 UI 목업 (Activity Bar, Graph 시각 구분, Wiki 대시보드, Inbox Triage)

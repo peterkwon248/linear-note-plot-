@@ -8,8 +8,44 @@
 Plot = 노트 + 개인 위키 + 지식 관계망
 - 겉은 Apple Notes, 속은 Zettelkasten
 - 유저는 노트만 쓰고 앱이 알아서 제텔카스텐
+- 사상: 팔란티어 × 제텔카스텐 — 개인 지식을 디지털 모델로 만들고 분석/사고/글쓰기를 돕는다
 
-## Current Architecture
+## Architecture Redesign v2 (확정, 구현 대기)
+
+> 상세: `docs/architecture-redesign-v2.md` | 목업: `docs/plot-mockup-v3.jsx`
+
+### 핵심 구조 변경
+
+| 영역 | 현재 | 변경 후 |
+|------|------|---------|
+| 네비게이션 | 사이드바 의존 | Activity Bar (Inbox/Notes/Wiki/Graph) + 상단 유틸리티 바 |
+| 라우팅 | 1-level (setActiveRoute) | 2-level (activeSpace + activeRoute) |
+| 레이아웃 | LayoutMode 6개 | WorkspaceMode 3개 (default/zen/research) |
+| 위키 상태 | isWiki boolean | isWiki + wikiStatus (stub/draft/complete) |
+| 위키 등재 | 수동만 | 신호 기반 자동 + 수동 |
+| 그래프 이름 | Ontology View | Graph (Ontology = 엔진, Graph = 시각화) |
+| 에디터 헤더 | ← Back 버튼 | 브레드크럼 (space > folder > title) |
+
+### 4-Layer Architecture
+
+```
+Layer 1 — Raw Data:    노트, 태그, 라벨, 폴더, 템플릿
+Layer 2 — Ontology:    관계, 분류, co-occurrence (엔진)
+Layer 3 — Wiki:        표현 계층 (정리된 참고자료)
+Layer 4 — Insights:    패턴 발견 (건강검진)
+```
+
+### 구현 Phase (7단계, 추천순서: 1→2→3→4→5, 6은 독립적)
+
+1. Foundation (v41 wikiStatus, v42 workspaceMode, activeSpace)
+2. Layout Automation (WorkspaceMode, auto-collapse)
+3. Activity Bar + Top Utility Bar (가장 임팩트 큼)
+4. Sidebar Refactor (컨텍스트 반응형)
+5. Breadcrumb
+6. Wiki Evolution (자동 등재 엔진, stubSource, 초성 인덱스)
+7. Wiki Collection (수집함, WikiQuote, Extract as Note)
+
+## Current Architecture (현재 코드 기준)
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
@@ -20,27 +56,27 @@ Plot = 노트 + 개인 위키 + 지식 관계망
 ### View System
 - Always-mounted views via `lib/table-route.ts` + `app/(app)/layout.tsx`
 - Mount-once keep-alive pattern (CSS display toggle)
-- ViewModes: list | table | board | insights | calendar
-- Tags, Labels, Templates, Ontology → 항상 풀와이드 렌더 (레이아웃 모드 무관)
-- ListEditorLayout: Notes 전용 (three-column/split 모드)
 - Responsive NotesTable: ONE grid for all sizes (ResizeObserver + minWidth thresholds)
 
 ### Editor
 - TipTap 3 editor (`components/editor/TipTapEditor.tsx`)
-- 24+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, etc.)
-- Workspace: binary tree layout system (v35) — WorkspaceNode = Leaf | Branch, 5 presets, 9 view types
-- LayoutMode: list | focus | three-column | tabs | panels | split (6 modes)
+- 24+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, etc.)
+- Workspace: binary tree layout system (v35) — WorkspaceNode = Leaf | Branch
+- LayoutMode: list | focus | three-column | tabs | panels | split (6 modes) → WorkspaceMode 3개로 수렴 예정
 - Wiki-links: `[[title]]` extracted to `Note.linksOut`
 
 ### Knowledge System
 - Backlinks: `lib/backlinks.ts` (incremental index, keyword/tag scoring, alias support)
 - Search: FlexSearch worker-based (`lib/search/`) with IDB persistence
-- Ontology: co-occurrence engine, relation suggestions, wiki infobox, premium graph view (d3-force worker)
+- Ontology Engine: co-occurrence engine, relation suggestions, wiki infobox, graph view (d3-force worker, Canvas rendering)
+- Graph: `ontology-graph-canvas.tsx` — Canvas 기반, Web Worker 레이아웃, viewport culling, LOD zoom
 
-### Note Lifecycle
+### Note Lifecycle (병렬 트랙)
+
 ```
-inbox → capture → permanent → WIKI (planned)
-(흘러감)                       (쌓임)
+노트 워크플로우:  inbox → capture → permanent   (처리 상태)
+                    ↕        ↕        ↕         (어느 시점에서든 진입 가능)
+위키 품질 트랙:   stub  →  draft  → complete    (완성도)
 ```
 
 ### Labels vs Tags
@@ -48,11 +84,11 @@ inbox → capture → permanent → WIKI (planned)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-29. Linear식 풀페이지 SearchView — 엔티티 검색, SearchDialog search 모드 제거
+29. Linear식 풀페이지 SearchView — 엔티티 검색
 30. Wiki 홈 대시보드 + WikiView 내부 문서 읽기 3단 레이아웃 (TOC/본문/Infobox)
-31. Side Peek 패널 — 위키링크 아이콘 클릭 → Peek/Open 드롭다운, 패널 내 읽기↔편집 토글
-32. Tags/Labels/Templates 소프트 삭제 — Trash 뷰 탭 필터 (All/Notes/Wiki/Tags/Labels/Templates)
-33. 위키링크 UX 통합 — `[[[` 제거, `[[` 하나로 노트+위키 통합, 브래킷 숨김, Import Note
+31. Side Peek 패널 — 위키링크 아이콘 클릭 → Peek/Open 드롭다운
+32. Tags/Labels/Templates 소프트 삭제 — Trash 뷰 탭 필터
+33. 위키링크 UX 통합 — `[[` 하나로 노트+위키 통합, 브래킷 숨김, Import Note
 
 ## Three Axes — Core Design Philosophy
 
@@ -62,65 +98,29 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ```
 
-## Implementation Order (최신, 2026-03-19 업데이트)
+## Key Design Decisions
 
-### 모든 Tier 완료 ✅
-- Tier 1: Wiki Phase 4-C ✅ (PR #65-67)
-- Tier 2: Reflections + Insights + Ontology 고도화 ✅ (PR #67)
-- Tier 3: 디자인 토큰 + 뷰 필터/디스플레이 ✅ (PR #68, #71)
-- Thread (thinking→thread rename + ThreadPanel) ✅ 기존 구현
-- 읽기/편집 뷰모드 토글 (isReadMode + Ctrl+Shift+E) ✅ 기존 구현
-- Research 모드 레이아웃 프리셋 ✅ (PR #70)
-
-### 다음 작업 후보 (Deferred)
-- 사이드바 재구성 (Views/Folders/Tools 섹션화) — docs/sidebar-wiki-redesign.md 참조
-- 위키 전용 대시보드/인터페이스 (나무위키 블록 구조, 수집함 + 자동 배치)
-- Filter/Display에 Layout 통합 + 사이드바 레이아웃 스위처 제거
-- 커스텀 뷰 시스템 (Save as View, 시스템/커스텀 뷰 관리)
-- Phase 4-D: Context Panel
-- Phosphor Icons 적용
-- WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
-- Settings always-mounted
-
-## Key Design Decisions (최신)
-
-- SQL 테이블 아님 → Zustand 슬라이스로 구현
-- Related Notes(자동)와 Relations(수동)은 한 섹션에 통합
-- Thread의 relatedNoteIds 제거 → Relations에 위임
-- 에디터 FixedToolbar은 항상 화면 최하단 (UpNote 스타일)
-- 레이아웃 5모드 + Workspace binary tree (v35) ✅ 구현 완료
-- **Activity 삭제 완료** → Insights 뷰에 통합. 현재 Activity는 로그 덤프에 불과
+- **LLM/API 사용 안 함** — 전부 규칙 기반 + 통계 기반 + 그래프 알고리즘. 오프라인, 프라이버시, 비용 0
 - **Insights ≠ Ontology** → 별개 뷰로 유지
-  - Insights = 행동 분석 (How) — 편집 빈도, 방치 노트, inbox 체류일, 트렌드
-  - Ontology = 구조 시각화 (What) — 노트 간 관계/연결 그래프
-  - 접점: 온톨로지 노드 색상을 인사이트 데이터로 레이어링 가능
-- **Wiki = 나무위키식 데이터베이스** (단순 isWiki 플래그 X)
-  - 노트 시스템 안에 통합
-  - `[[내부링크]]` 클릭 → 해당 문서로 이동, 없으면 자동 생성
-  - 백링크 (이 문서를 참조하는 문서들)
-  - 목차 자동생성 (헤딩 기반 TOC)
-  - 에디터는 같은 TipTap, 위키 모드일 때 기능 확장
-  - Obsidian/Logseq 방식
-- **Tags/Labels** → 항상 풀와이드 렌더 (list+editor 모드 아님)
-- **LayoutModeSwitcher** → 사이드바 헤더에 위치 (노트 열린 상태에서만 표시, Grid 상태에서 숨김)
-- **기본 시작 뷰** → inbox (settings-store startView 기본값)
-- **글로벌 검색 = 풀페이지** (Linear 스타일) — 사이드바 Search/Cmd+K → /search 뷰로 이동, 모달 아님
-  - 빈 쿼리 → Recent Notes 8개만 (1만개 노트 기준 성능 고려)
-  - 타이핑 → FlexSearch(노트) + 동기 필터(태그/라벨/템플릿/폴더)
-  - 탭: All | Notes | Tags | Labels | Templates | Folders
-- **로컬 검색 ≠ 글로벌 검색** — 각 뷰 헤더 검색은 해당 뷰 내 필터링, 글로벌은 사이드바/Cmd+K
-- **ViewHeader 드롭다운** — 로컬 검색 input 아래에 매칭 노트 드롭다운 표시
+- **`[[` 통합** — 노트/위키 구분 없이 하나로 검색
+- **Side Peek** — 위키링크 클릭 → 우측 패널 슬라이드
+- **소프트 삭제** — 태그/라벨/템플릿 삭제 시 노트 연결 유지
+- **글로벌 검색 = 풀페이지** (Linear 스타일) — Cmd+K → 모달(커맨드), 상단 🔍 → 풀페이지
+- **로컬 검색 ≠ 글로벌 검색** — 뷰 헤더 = 로컬 필터, 사이드바/Cmd+K = 글로벌
 
 ## TODO: Future Work
-- 위키 수집함 시스템 Step 1-7 (설계 문서 완료: docs/wiki-collection-design.md)
-  - Step 1: WikiView 내부 편집 모드 전환
-  - Step 2-3: Collect 사이드바 (Related + Collected + Red Links)
-  - Step 4: WikiQuote 인용 블록 (TipTap 커스텀 노드)
-  - Step 5: Extract as Note (위키 → 노트 추출)
-  - Step 6-7: 자동 개념 감지 (공기어 + 태그 + 키워드)
-- 사이드바 재구성 (Views/Folders/Tools) — docs/sidebar-wiki-redesign.md
-- 커스텀 뷰 시스템 (Linear 방식 View 관리 페이지)
-- Filter/Display Layout 통합
-- Settings always-mounted
-- WIKI 초성 검색 (ㄱㄴㄷ 인덱싱)
+
+- **Architecture Redesign v2 Phase 1~7 구현** (docs/architecture-redesign-v2.md)
+- 위키 수집함 시스템 (docs/wiki-collection-design.md)
+- 커스텀 뷰 시스템 (Phase 4 이후)
 - Phase 4-D: Context Panel
+- Phosphor Icons 적용
+- Settings always-mounted
+
+## 참조 문서
+
+- `docs/architecture-redesign-v2.md` — v2 아키텍처 전체 설계
+- `docs/plot-mockup-v3.jsx` — UI 목업 (Activity Bar, Graph, Wiki, Inbox)
+- `docs/wiki-collection-design.md` — 위키 수집함 상세 설계
+- `docs/sidebar-wiki-redesign.md` — 사이드바/위키 브레인스토밍
+- `docs/MEMORY.md` — 전체 PR 히스토리 + 아키텍처 상세

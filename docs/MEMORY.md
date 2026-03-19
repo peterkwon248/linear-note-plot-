@@ -7,7 +7,8 @@
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only, "reference" removed in v26)
 
 ## Architecture Decisions
-- See [architecture.md](./architecture.md) for detailed decisions
+- See [architecture-redesign-v2.md](./architecture-redesign-v2.md) for v2 아키텍처 전체 설계
+- See [architecture.md](./architecture.md) for legacy decisions
 - See [srs.md](./srs.md) for SRS implementation details
 
 ## User Preferences
@@ -118,7 +119,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **`[[` 통합** — 노트/위키 구분 없이 하나로 검색
 - **Side Peek** — 위키링크 클릭 → 우측 패널 슬라이드
 - **소프트 삭제** — 태그/라벨/템플릿 삭제 시 노트 연결 유지
-- **Activity Bar** — Tier 1 (Inbox/Notes/Wiki/Ontology), Settings 하단. Search는 상단 유틸리티 바 (Linear 스타일)
+- **Activity Bar** — Tier 1 (Inbox/Notes/Wiki/Graph), Settings 하단. Search는 상단 유틸리티 바 (Linear 스타일)
 - **2-Level Routing** — `activeSpace` + `activeRoute`, `inferSpace()` 하위호환
 - **LayoutMode 삭제** → `WorkspaceMode = "default" | "zen" | "research"` 3개로 수렴. default 모드 auto-collapse
 - **Wiki 병렬 라이프사이클** — `status`(inbox/capture/permanent)와 `wikiStatus`(stub/draft/complete) 독립. 어느 시점에서든 위키 진입 가능
@@ -126,6 +127,10 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Breadcrumb** — NoteEditor Back 버튼 → 브레드크럼 (`activeSpace > folder > title`)
 - **Inbox = 워크플로우** (필터 아님). NotesTable 상태 탭 제거, FilterBar status 필터로 대체
 - **New Note = 액션** (상태 아님). Editor는 항상 noteId를 가짐
+- **Ontology → Graph 네이밍 분리** — Ontology = 엔진(내부), Graph = 시각화(유저 대면). 팔란티어 참조
+- **Graph 노드 시각 구분** — 일반=원형, 위키=육각형, stub=점선, 태그=이중다이아몬드
+- **Graph 엣지 계층** — relation(두꺼움) > wikilink(중간) > tag(얇음). 태그 5+ 노트만 노드로 표시
+- **Stub 이유 추적** — `stubSource: "red-link" | "tag" | "backlink" | "manual"`. 이유 기반 분류
 
 #### 구현 Phase (7단계)
 1. **Foundation** — v41 (wikiStatus), v42 (workspaceMode), table-route.ts (activeSpace)
