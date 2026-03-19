@@ -74,6 +74,8 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #73**: docs: 코드베이스 검증 후 docs 정확도 수정
 - **PR #74**: Wiki 섹션 + List 레이아웃 + Back 네비게이션 — WikiView (Articles/Red Links), LayoutMode "list" 추가, 에디터 Back 버튼 이전 화면 복귀, workspace leaf onClose 전달, 패널 헤더 X 버튼 위치 수정, docs/sidebar-wiki-redesign.md 설계 문서
 - **PR #78**: Linear식 풀페이지 SearchView + 글로벌 엔티티 검색 — SearchView (Notes/Tags/Labels/Templates/Folders 탭 검색), Wiki ViewHeader 전환, ViewHeader 드롭다운 자동완성, Templates 버튼 통일, SearchDialog 엔티티 검색, Cmd+K/사이드바 → 풀페이지 검색
+- **PR #80**: Wiki system + Side Peek + soft-delete trash — Wiki 홈 대시보드 (나무위키 스타일), WikiView 내부 3단 읽기 레이아웃, Side Peek 패널, SearchView Wiki 탭, Tags/Labels/Templates 소프트 삭제 + Trash 탭 필터
+- **PR #81**: 위키링크 UX 통합 — `[[[` 제거 → `[[` 통합, 브래킷 숨김 (font-size:0), 아이콘 클릭 드롭다운 (Peek/Open), Import Note, Side Peek 편집 토글, 사이드바 닫기 버튼, 라인 하이라이트 제거, 자기 자신 필터
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -107,9 +109,11 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 
 ### 핵심 설계 결정
 - **Insights ≠ Ontology** → 별개 뷰로 유지
-  - Insights = 행동 분석 (How) — 편집 빈도, 방치 노트, inbox 체류일, 트렌드
-  - Ontology = 구조 시각화 (What) — 노트 간 관계/연결 그래프
-- **Wiki = 나무위키식** — 노트 시스템 안에 통합, Obsidian/Logseq 방식
+- **Wiki = Plot 제텔카스텐의 출력물 중 하나** — 특별 취급 X, 기존 노트/태그/온톨로지 인프라 재활용
+- **위키 = 내가 정리한 신뢰할 수 있는 참고자료** — 다른 글 쓸 때 내부 참조
+- **`[[` 통합** — 노트/위키 구분 없이 하나로 검색, 대상이 타입 결정
+- **Side Peek** — 위키링크 클릭 → 우측 패널 슬라이드 (레이아웃 모드 안 바뀜)
+- **소프트 삭제** — 태그/라벨/템플릿 삭제 시 노트 연결 유지, 복구 가능
 
 ### 향후 작업 순서
 

@@ -36,16 +36,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const sidebarWidth = usePlotStore((s) => s.sidebarWidth)
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
-  const sidebarPeek = usePlotStore((s) => s.sidebarPeek)
-  const sidebarLastWidth = usePlotStore((s) => s.sidebarLastWidth)
   const setSidebarWidth = usePlotStore((s) => s.setSidebarWidth)
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
-  const setSidebarPeek = usePlotStore((s) => s.setSidebarPeek)
   const restoreSidebar = usePlotStore((s) => s.restoreSidebar)
   const { resolvedTheme } = useTheme()
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
-  const sidebarRef = useRef<HTMLDivElement>(null)
 
   // Sync active-route store from pathname (handles direct URL, back/forward)
   useEffect(() => {
@@ -130,7 +126,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {sidebarCollapsed && (
           <div
             className="absolute left-0 top-0 z-50 flex h-full w-[40px] flex-col"
-            onMouseEnter={() => setSidebarPeek(true)}
           >
             <button
               onClick={restoreSidebar}
@@ -139,20 +134,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <PanelLeft className="h-4 w-4" />
             </button>
-          </div>
-        )}
-
-        {/* ── Peek overlay sidebar ── */}
-        {sidebarCollapsed && sidebarPeek && (
-          <div
-            ref={sidebarRef}
-            className="absolute left-0 top-0 z-40 h-full animate-in slide-in-from-left-2 duration-150"
-            style={{ width: sidebarLastWidth }}
-            onMouseLeave={() => setSidebarPeek(false)}
-          >
-            <div className="h-full shadow-xl border-r border-border">
-              <LinearSidebar />
-            </div>
           </div>
         )}
 

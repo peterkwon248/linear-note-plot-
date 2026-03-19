@@ -48,11 +48,11 @@ inbox → capture → permanent → WIKI (planned)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-25. 뷰 필터/디스플레이 + 레이아웃 스위처 UX 개선
-26. Wiki 사이드바 섹션 추가 — WikiView (Articles + Red Links 탭)
-27. LayoutMode "list" 추가 + Back 네비게이션 개선
-28. ViewHeader 통일 — Wiki ViewHeader 전환, 드롭다운 자동완성, Templates 버튼 bg-accent 통일, ring-accent focus
-29. Linear식 풀페이지 SearchView — Notes/Tags/Labels/Templates/Folders 탭 검색, Cmd+K/사이드바 → 풀페이지, SearchDialog 엔티티 검색
+29. Linear식 풀페이지 SearchView — 엔티티 검색, SearchDialog search 모드 제거
+30. Wiki 홈 대시보드 + WikiView 내부 문서 읽기 3단 레이아웃 (TOC/본문/Infobox)
+31. Side Peek 패널 — 위키링크 아이콘 클릭 → Peek/Open 드롭다운, 패널 내 읽기↔편집 토글
+32. Tags/Labels/Templates 소프트 삭제 — Trash 뷰 탭 필터 (All/Notes/Wiki/Tags/Labels/Templates)
+33. 위키링크 UX 통합 — `[[[` 제거, `[[` 하나로 노트+위키 통합, 브래킷 숨김, Import Note
 
 ## Three Axes — Core Design Philosophy
 
@@ -112,9 +112,13 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **ViewHeader 드롭다운** — 로컬 검색 input 아래에 매칭 노트 드롭다운 표시
 
 ## TODO: Future Work
-- SearchDialog 모달 축소 (커맨드/링크 모드만 유지, search 모드 제거)
+- 위키 수집함 시스템 Step 1-7 (설계 문서 완료: docs/wiki-collection-design.md)
+  - Step 1: WikiView 내부 편집 모드 전환
+  - Step 2-3: Collect 사이드바 (Related + Collected + Red Links)
+  - Step 4: WikiQuote 인용 블록 (TipTap 커스텀 노드)
+  - Step 5: Extract as Note (위키 → 노트 추출)
+  - Step 6-7: 자동 개념 감지 (공기어 + 태그 + 키워드)
 - 사이드바 재구성 (Views/Folders/Tools) — docs/sidebar-wiki-redesign.md
-- 위키 수집함 + 자동 배치 블록 구조 (나무위키 스타일)
 - 커스텀 뷰 시스템 (Linear 방식 View 관리 페이지)
 - Filter/Display Layout 통합
 - Settings always-mounted

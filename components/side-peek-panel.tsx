@@ -1,14 +1,17 @@
 "use client"
 
-import { X, ExternalLink, Pencil, Globe } from "lucide-react"
+import { useState } from "react"
+import { X, ExternalLink, Pencil, Eye, Globe } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
+import { setActiveRoute } from "@/lib/table-route"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 
 export function SidePeekPanel() {
   const sidePeekNoteId = usePlotStore((s) => s.sidePeekNoteId)
   const setSidePeekNoteId = usePlotStore((s) => s.setSidePeekNoteId)
-  const openNoteInTab = usePlotStore((s) => s.openNoteInTab)
+  const openNote = usePlotStore((s) => s.openNote)
   const notes = usePlotStore((s) => s.notes)
+  const [editing, setEditing] = useState(false)
 
   if (!sidePeekNoteId) return null
 
@@ -16,17 +19,18 @@ export function SidePeekPanel() {
   if (!note) return null
 
   const handleOpenInTab = () => {
-    openNoteInTab(sidePeekNoteId)
+    setActiveRoute("/notes")
+    openNote(sidePeekNoteId)
     setSidePeekNoteId(null)
   }
 
-  const handleEdit = () => {
-    openNoteInTab(sidePeekNoteId)
-    setSidePeekNoteId(null)
+  const handleToggleEdit = () => {
+    setEditing((prev) => !prev)
   }
 
   const handleClose = () => {
     setSidePeekNoteId(null)
+    setEditing(false)
   }
 
   return (
@@ -51,12 +55,18 @@ export function SidePeekPanel() {
             <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
           </button>
           <button
-            onClick={handleEdit}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label="Edit"
-            title="Edit"
+            onClick={handleToggleEdit}
+            className={`rounded-md p-1.5 transition-colors hover:bg-secondary hover:text-foreground ${
+              editing ? "text-accent" : "text-muted-foreground"
+            }`}
+            aria-label={editing ? "View" : "Edit"}
+            title={editing ? "Switch to View" : "Switch to Edit"}
           >
-            <Pencil className="h-4 w-4" strokeWidth={1.5} />
+            {editing ? (
+              <Eye className="h-4 w-4" strokeWidth={1.5} />
+            ) : (
+              <Pencil className="h-4 w-4" strokeWidth={1.5} />
+            )}
           </button>
           <button
             onClick={handleClose}
@@ -69,12 +79,12 @@ export function SidePeekPanel() {
         </div>
       </header>
 
-      {/* Content (read-only) */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 py-4">
         <NoteEditorAdapter
-          key={note.id}
+          key={`${note.id}-${editing}`}
           note={note}
-          editable={false}
+          editable={editing}
         />
       </div>
     </aside>

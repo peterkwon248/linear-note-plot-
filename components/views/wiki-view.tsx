@@ -16,6 +16,8 @@ import {
   Check,
   Pencil,
   Trash2,
+  ArrowUpFromLine,
+  FileText,
 } from "lucide-react"
 import {
   ContextMenu,
@@ -24,6 +26,11 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
@@ -50,6 +57,11 @@ export function WikiView() {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Import Note popover state
+  const [importOpen, setImportOpen] = useState(false)
+  const [importQuery, setImportQuery] = useState("")
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   // Article reader state
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
@@ -119,6 +131,30 @@ export function WikiView() {
   const wikiNotes = useMemo(
     () => notes.filter((n) => n.isWiki && !n.trashed),
     [notes]
+  )
+
+  // Non-wiki, non-trashed, non-archived notes available to import
+  const importableNotes = useMemo(() => {
+    const q = importQuery.toLowerCase().trim()
+    return notes
+      .filter((n) => !n.isWiki && !n.trashed && !n.archived)
+      .filter((n) =>
+        q.length === 0
+          ? true
+          : (n.title || "Untitled").toLowerCase().includes(q)
+      )
+      .slice(0, 12)
+  }, [notes, importQuery])
+
+  const handleImportNote = useCallback(
+    (noteId: string) => {
+      usePlotStore.getState().updateNote(noteId, { isWiki: true })
+      setImportOpen(false)
+      setImportQuery("")
+      // Open the freshly promoted article
+      setSelectedArticleId(noteId)
+    },
+    []
   )
 
   // Reset selectedArticleId if note was deleted
@@ -328,13 +364,68 @@ export function WikiView() {
         title="Wiki"
         count={stats.articles}
         actions={
-          <button
-            onClick={handleCreateWiki}
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
-          >
-            <Plus className="h-3.5 w-3.5" strokeWidth={1.5} />
-            New Article
-          </button>
+          <div className="flex items-center gap-2">
+            <Popover open={importOpen} onOpenChange={(o) => {
+              setImportOpen(o)
+              if (!o) setImportQuery("")
+              else setTimeout(() => importInputRef.current?.focus(), 50)
+            }}>
+              <PopoverTrigger asChild>
+                <button
+                  className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-secondary"
+                >
+                  <ArrowUpFromLine className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Import Note
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 p-0">
+                <div className="border-b border-border px-3 py-2">
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      ref={importInputRef}
+                      type="text"
+                      value={importQuery}
+                      onChange={(e) => setImportQuery(e.target.value)}
+                      placeholder="Search notes..."
+                      className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-60 overflow-y-auto py-1">
+                  {importableNotes.length === 0 ? (
+                    <p className="px-3 py-4 text-center text-xs text-muted-foreground">
+                      {importQuery.trim() ? "No matching notes" : "No notes to import"}
+                    </p>
+                  ) : (
+                    importableNotes.map((note) => (
+                      <button
+                        key={note.id}
+                        onClick={() => handleImportNote(note.id)}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                      >
+                        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+                        <span className="min-w-0 flex-1 truncate">
+                          {note.title || "Untitled"}
+                        </span>
+                        <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground capitalize">
+                          {note.status}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <button
+              onClick={handleCreateWiki}
+              className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
+            >
+              <Plus className="h-3.5 w-3.5" strokeWidth={1.5} />
+              New Article
+            </button>
+          </div>
         }
       />
 
