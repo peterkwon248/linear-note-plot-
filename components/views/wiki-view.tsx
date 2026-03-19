@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   BookOpen,
@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   PenLine,
+  Check,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
@@ -42,6 +43,12 @@ export function WikiView() {
 
   // Article reader state
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
+  const [isEditingArticle, setIsEditingArticle] = useState(false)
+
+  // Reset edit mode whenever we navigate to a different article
+  useEffect(() => {
+    setIsEditingArticle(false)
+  }, [selectedArticleId])
 
   // Navigate to notes view (for non-wiki notes)
   const navigateToNote = useCallback(
@@ -86,13 +93,15 @@ export function WikiView() {
   )
 
   const handleEditArticle = useCallback(() => {
-    if (!selectedArticleId) return
-    openNote(selectedArticleId)
-    setActiveRoute("/notes")
-    router.push("/notes")
-  }, [selectedArticleId, openNote, router])
+    setIsEditingArticle(true)
+  }, [])
+
+  const handleDoneEditing = useCallback(() => {
+    setIsEditingArticle(false)
+  }, [])
 
   const handleBack = useCallback(() => {
+    setIsEditingArticle(false)
     setSelectedArticleId(null)
   }, [])
 
@@ -260,13 +269,23 @@ export function WikiView() {
           title={selectedNote.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleEditArticle}
-                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
-              >
-                <PenLine className="h-3.5 w-3.5" strokeWidth={1.5} />
-                Edit
-              </button>
+              {isEditingArticle ? (
+                <button
+                  onClick={handleDoneEditing}
+                  className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
+                >
+                  <Check className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Done
+                </button>
+              ) : (
+                <button
+                  onClick={handleEditArticle}
+                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
+                >
+                  <PenLine className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Edit
+                </button>
+              )}
             </div>
           }
         >
@@ -285,6 +304,7 @@ export function WikiView() {
         <WikiArticleReader
           noteId={selectedArticleId}
           onNavigate={handleNavigate}
+          isEditing={isEditingArticle}
         />
       </div>
     )
@@ -589,9 +609,11 @@ export function WikiView() {
 function WikiArticleReader({
   noteId,
   onNavigate,
+  isEditing = false,
 }: {
   noteId: string
   onNavigate: (id: string) => void
+  isEditing?: boolean
 }) {
   const notes = usePlotStore((s) => s.notes)
   const allTags = usePlotStore((s) => s.tags)
@@ -606,6 +628,20 @@ function WikiArticleReader({
     (r) => r.sourceNoteId === noteId || r.targetNoteId === noteId
   ).length
 
+  // Edit mode: single-column full-width editor
+  if (isEditing) {
+    return (
+      <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-8 py-6 max-w-[780px]">
+            <NoteEditorAdapter note={note} editable={true} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Read mode: 3-column layout
   return (
     <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
       {/* Left: TOC sidebar */}
