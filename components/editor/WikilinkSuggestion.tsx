@@ -159,7 +159,7 @@ export const WikilinkSuggestion = Extension.create({
           const currentNoteId = store.selectedNoteId
 
           // Strip trailing ] characters (user typed closing brackets before suggestion resolves)
-          const q = query.replace(/\]+$/, '').toLowerCase().trim()
+          const q = query.trim().replace(/[\]]+$/g, '').toLowerCase().trim()
 
           // Empty query: show recent 8 notes/wikis
           if (q.length === 0) {
