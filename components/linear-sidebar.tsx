@@ -24,6 +24,7 @@ import {
   Lightbulb,
   BookOpen,
   Home,
+  PanelLeftClose,
 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
@@ -191,6 +192,8 @@ export function LinearSidebar() {
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
   const goBack = usePlotStore((s) => s.goBack)
   const goForward = usePlotStore((s) => s.goForward)
+
+  const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
 
   const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
   const recentlyViewedRef = useRef<HTMLDivElement>(null)
@@ -457,11 +460,10 @@ export function LinearSidebar() {
         <LayoutModeSwitcher />
         <button
           onClick={() => {
-            // Reset workspace to empty launcher + focus mode
-            const { applyPreset, setSelectedNoteId, setLayoutMode } = usePlotStore.getState()
+            // Reset workspace to empty launcher (no sidebar collapse)
+            const { applyPreset, setSelectedNoteId } = usePlotStore.getState()
             applyPreset("editor-only")
             setSelectedNoteId(null)
-            setLayoutMode("focus")
             setActiveRoute(null)
             router.push("/")
           }}
@@ -469,6 +471,13 @@ export function LinearSidebar() {
           aria-label="Home"
         >
           <Home className="h-5 w-5" strokeWidth={1.5} />
+        </button>
+        <button
+          onClick={() => setSidebarCollapsed(true)}
+          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Close sidebar"
+        >
+          <PanelLeftClose className="h-4 w-4" strokeWidth={1.5} />
         </button>
       </div>
 

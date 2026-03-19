@@ -8,214 +8,62 @@ import { setActiveRoute } from "@/lib/table-route"
 
 const wikilinkDecoKey = new PluginKey("wikilinkDecoration")
 
-// ── Popover singleton ────────────────────────────────────────────────
+// ── Dropdown singleton ────────────────────────────────────────────────
 
-let popoverEl: HTMLDivElement | null = null
-let hideTimer: ReturnType<typeof setTimeout> | null = null
-let showTimer: ReturnType<typeof setTimeout> | null = null
+let dropdownEl: HTMLDivElement | null = null
 
-function getPopover(): HTMLDivElement {
-  if (!popoverEl) {
-    popoverEl = document.createElement("div")
-    popoverEl.className = "wikilink-popover"
-    popoverEl.style.cssText = [
-      "position: fixed",
-      "z-index: 9999",
-      "display: none",
-      "pointer-events: auto",
-    ].join(";")
+function hideDropdown() {
+  if (dropdownEl) {
+    dropdownEl.style.display = "none"
+  }
+}
 
-    // Keep popover visible when mouse is over it
-    popoverEl.addEventListener("mouseenter", () => {
-      if (hideTimer) {
-        clearTimeout(hideTimer)
-        hideTimer = null
+function showNavDropdown(anchor: HTMLElement, noteId: string) {
+  if (!dropdownEl) {
+    dropdownEl = document.createElement("div")
+    dropdownEl.className = "wikilink-dropdown"
+    document.body.appendChild(dropdownEl)
+
+    // Close on outside click
+    document.addEventListener("mousedown", (e) => {
+      if (dropdownEl && !dropdownEl.contains(e.target as Node)) {
+        hideDropdown()
       }
     })
-    popoverEl.addEventListener("mouseleave", () => {
-      scheduleHide()
-    })
-
-    document.body.appendChild(popoverEl)
-  }
-  return popoverEl
-}
-
-function scheduleHide() {
-  if (hideTimer) clearTimeout(hideTimer)
-  hideTimer = setTimeout(() => {
-    if (popoverEl) popoverEl.style.display = "none"
-    hideTimer = null
-  }, 200)
-}
-
-function cancelHide() {
-  if (hideTimer) {
-    clearTimeout(hideTimer)
-    hideTimer = null
-  }
-}
-
-function cancelShow() {
-  if (showTimer) {
-    clearTimeout(showTimer)
-    showTimer = null
-  }
-}
-
-function extractPlainText(note: { content?: string; contentJson?: Record<string, unknown> | null }): string {
-  // Try contentJson first — extract text nodes recursively
-  if (note.contentJson) {
-    const texts: string[] = []
-    function walk(node: unknown) {
-      if (!node || typeof node !== "object") return
-      const n = node as Record<string, unknown>
-      if (n.type === "text" && typeof n.text === "string") {
-        texts.push(n.text)
-      }
-      if (Array.isArray(n.content)) {
-        for (const child of n.content) walk(child)
-      }
-    }
-    walk(note.contentJson)
-    return texts.join(" ").trim()
-  }
-  return (note.content ?? "").trim()
-}
-
-function showPopover(target: HTMLElement, title: string, isDangling: boolean) {
-  const store = usePlotStore.getState()
-  const popover = getPopover()
-
-  cancelHide()
-
-  // Find note (title or alias)
-  const note = isDangling
-    ? null
-    : store.notes.find(
-        (n) =>
-          !n.archived &&
-          !n.trashed &&
-          (n.title.toLowerCase() === title.toLowerCase() ||
-            n.aliases?.some((a) => a.toLowerCase() === title.toLowerCase()))
-      )
-
-  // Build preview text
-  const previewText = note ? extractPlainText(note) : ""
-  const previewLines = previewText
-    .split(/\n/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .slice(0, 2)
-    .join(" ")
-  const preview =
-    previewLines.length > 100 ? previewLines.slice(0, 100) + "…" : previewLines
-
-  // Render popover content with direct event listeners
-  popover.innerHTML = ""
-  const inner = document.createElement("div")
-  inner.className = "wikilink-popover-inner"
-
-  const titleEl = document.createElement("div")
-  titleEl.className = `wikilink-popover-title${isDangling ? " wikilink-popover-title-dangling" : ""}`
-  titleEl.textContent = title
-  inner.appendChild(titleEl)
-
-  if (preview) {
-    const previewEl = document.createElement("div")
-    previewEl.className = "wikilink-popover-preview"
-    previewEl.textContent = preview
-    inner.appendChild(previewEl)
   }
 
-  const actions = document.createElement("div")
-  actions.className = "wikilink-popover-actions"
+  dropdownEl.innerHTML = ""
 
-  if (isDangling) {
-    const createBtn = document.createElement("button")
-    createBtn.className = "wikilink-popover-btn wikilink-popover-btn-create"
-    createBtn.textContent = "Create Wiki"
-    createBtn.addEventListener("click", (e) => {
-      e.stopPropagation()
-      const s = usePlotStore.getState()
-      const newId = s.createWikiStub(title)
-      if (newId) {
-        setActiveRoute("/notes")
-        s.openNoteInTab(newId)
-      }
-      popover.style.display = "none"
-    })
-    actions.appendChild(createBtn)
-  } else if (note) {
-    const peekBtn = document.createElement("button")
-    peekBtn.className = "wikilink-popover-btn"
-    peekBtn.textContent = "Peek"
-    peekBtn.addEventListener("click", (e) => {
-      e.stopPropagation()
-      usePlotStore.getState().setSidePeekNoteId(note.id)
-      popover.style.display = "none"
-    })
-    actions.appendChild(peekBtn)
+  const peekBtn = document.createElement("button")
+  peekBtn.className = "wikilink-dropdown-btn"
+  peekBtn.textContent = "Peek"
+  peekBtn.addEventListener("click", (e) => {
+    e.stopPropagation()
+    usePlotStore.getState().setSidePeekNoteId(noteId)
+    hideDropdown()
+  })
 
-    const openBtn = document.createElement("button")
-    openBtn.className = "wikilink-popover-btn"
-    openBtn.textContent = "Open"
-    openBtn.addEventListener("click", (e) => {
-      e.stopPropagation()
-      setActiveRoute("/notes")
-      usePlotStore.getState().openNoteInTab(note.id)
-      popover.style.display = "none"
-    })
-    actions.appendChild(openBtn)
-  }
+  const openBtn = document.createElement("button")
+  openBtn.className = "wikilink-dropdown-btn"
+  openBtn.textContent = "Open"
+  openBtn.addEventListener("click", (e) => {
+    e.stopPropagation()
+    setActiveRoute("/notes")
+    usePlotStore.getState().openNoteInTab(noteId)
+    hideDropdown()
+  })
 
-  inner.appendChild(actions)
-  popover.appendChild(inner)
+  dropdownEl.appendChild(peekBtn)
+  dropdownEl.appendChild(openBtn)
 
-  // Position below the wikilink element
-  const rect = target.getBoundingClientRect()
-  popover.style.display = "block"
-  // Temporarily show off-screen to measure
-  popover.style.visibility = "hidden"
-  popover.style.left = "0"
-  popover.style.top = "0"
-
-  const popRect = popover.getBoundingClientRect()
-  const vw = window.innerWidth
-  const vh = window.innerHeight
-
-  let left = rect.left
-  let top = rect.bottom + 6
-
-  // Clamp horizontally
-  if (left + popRect.width > vw - 8) {
-    left = vw - popRect.width - 8
-  }
-  if (left < 8) left = 8
-
-  // Flip above if not enough room below
-  if (top + popRect.height > vh - 8) {
-    top = rect.top - popRect.height - 6
-  }
-
-  popover.style.left = left + "px"
-  popover.style.top = top + "px"
-  popover.style.visibility = "visible"
+  // Position below icon
+  const rect = anchor.getBoundingClientRect()
+  dropdownEl.style.display = "flex"
+  dropdownEl.style.position = "fixed"
+  dropdownEl.style.zIndex = "9999"
+  dropdownEl.style.left = `${rect.left}px`
+  dropdownEl.style.top = `${rect.bottom + 4}px`
 }
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-}
-
-function escapeAttr(s: string): string {
-  return s.replace(/"/g, "&quot;").replace(/'/g, "&#39;")
-}
-
-// No global click handler needed — buttons have direct event listeners
 
 // ── Extension ────────────────────────────────────────────────────────
 
@@ -247,7 +95,7 @@ export const WikilinkDecorationExtension = Extension.create({
             const title = target.getAttribute("data-wikilink")
             if (!title) return false
 
-            // In edit mode, let cursor placement happen — popover handles navigation
+            // In edit mode, let cursor placement happen
             if (view.editable) return false
 
             // Read mode: navigate directly
@@ -285,68 +133,28 @@ export const WikilinkDecorationExtension = Extension.create({
 
           handleDOMEvents: {
             click(_view: EditorView, event: MouseEvent) {
-              const target = event.target as HTMLElement
-              if (!target.classList?.contains("wikilink-nav-icon")) return false
+              const navIcon = (event.target as HTMLElement).closest(".wikilink-nav-icon") as HTMLElement | null
+              if (navIcon) {
+                const title = navIcon.getAttribute("data-wikilink-nav")
+                if (!title) return false
 
-              const title = target.getAttribute("data-wikilink-nav")
-              if (!title) return false
+                const store = usePlotStore.getState()
+                const note = store.notes.find(
+                  (n) =>
+                    !n.archived &&
+                    !n.trashed &&
+                    (n.title.toLowerCase() === title.toLowerCase() ||
+                      n.aliases?.some((a) => a.toLowerCase() === title.toLowerCase()))
+                )
+                if (!note) return false
 
-              const store = usePlotStore.getState()
-              const note = store.notes.find(
-                (n) =>
-                  !n.archived &&
-                  !n.trashed &&
-                  (n.title.toLowerCase() === title.toLowerCase() ||
-                    n.aliases?.some((a) => a.toLowerCase() === title.toLowerCase()))
-              )
-
-              if (note) {
-                store.setSidePeekNoteId(note.id)
+                // Show dropdown menu at icon position
+                showNavDropdown(navIcon, note.id)
+                event.preventDefault()
+                event.stopPropagation()
+                return true
               }
 
-              event.preventDefault()
-              event.stopPropagation()
-              return true
-            },
-
-            mouseover(view: EditorView, event: MouseEvent) {
-              // Only show popover in edit mode
-              if (!view.editable) return false
-
-              const target = (event.target as HTMLElement).closest(".wikilink") as HTMLElement | null
-              if (!target) return false
-
-              const title = target.getAttribute("data-wikilink")
-              if (!title) return false
-
-              const isDangling = target.classList.contains("wikilink-dangling")
-
-              cancelShow()
-              cancelHide()
-
-              showTimer = setTimeout(() => {
-                showPopover(target, title, isDangling)
-                showTimer = null
-              }, 150)
-
-              return false
-            },
-
-            mouseout(view: EditorView, event: MouseEvent) {
-              if (!view.editable) return false
-
-              const target = event.target as HTMLElement
-              if (!target.classList?.contains("wikilink")) return false
-
-              // Don't hide if mouse moved to popover
-              const related = event.relatedTarget as HTMLElement | null
-              if (related && popoverEl && popoverEl.contains(related)) {
-                cancelShow()
-                return false
-              }
-
-              cancelShow()
-              scheduleHide()
               return false
             },
           },
