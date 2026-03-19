@@ -49,7 +49,7 @@ function showNavDropdown(anchor: HTMLElement, noteId: string) {
   openBtn.addEventListener("click", (e) => {
     e.stopPropagation()
     setActiveRoute("/notes")
-    usePlotStore.getState().openNoteInTab(noteId)
+    usePlotStore.getState().openNote(noteId)
     hideDropdown()
   })
 

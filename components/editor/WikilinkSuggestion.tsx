@@ -154,14 +154,16 @@ export const WikilinkSuggestion = Extension.create({
         pluginKey: wikilinkSuggestionKey,
 
         items: ({ query }: { query: string }) => {
-          const notes = usePlotStore.getState().notes
+          const store = usePlotStore.getState()
+          const notes = store.notes
+          const currentNoteId = store.selectedNoteId
 
           // Strip trailing ] characters (user typed closing brackets before suggestion resolves)
           const q = query.replace(/\]+$/, '').toLowerCase().trim()
 
           // Empty query: show recent 8 notes/wikis
           if (q.length === 0) {
-            const pool = notes.filter((n) => !n.archived && !n.trashed && n.title.trim())
+            const pool = notes.filter((n) => !n.archived && !n.trashed && n.title.trim() && n.id !== currentNoteId)
             return pool
               .sort(
                 (a, b) =>
@@ -173,7 +175,7 @@ export const WikilinkSuggestion = Extension.create({
           }
 
           // Title matches: exact > startsWith > contains, then by length
-          const pool = notes.filter((n) => !n.archived && !n.trashed)
+          const pool = notes.filter((n) => !n.archived && !n.trashed && n.id !== currentNoteId)
           const titleMatches = pool
             .filter(
               (n) =>

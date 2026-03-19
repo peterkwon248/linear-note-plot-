@@ -653,15 +653,9 @@
   font-family: var(--font-sans, 'Geist', system-ui, -apple-system, sans-serif);
 }
 
-/* Current Line Highlight */
+/* Current Line Highlight — disabled */
 .ProseMirror .current-line-highlight {
-  background-color: color-mix(in srgb, var(--accent) 6%, transparent);
-  border-radius: 2px;
-  transition: background-color 0.1s ease;
-}
-
-.dark .ProseMirror .current-line-highlight {
-  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+  background-color: transparent;
 }
 
 /* Scrollbar for code blocks */
