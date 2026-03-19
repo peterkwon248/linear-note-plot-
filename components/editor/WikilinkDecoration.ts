@@ -4,6 +4,7 @@ import type { EditorState } from "@tiptap/pm/state"
 import { Decoration, DecorationSet } from "@tiptap/pm/view"
 import type { EditorView } from "@tiptap/pm/view"
 import { usePlotStore } from "@/lib/store"
+import { setActiveRoute } from "@/lib/table-route"
 
 const wikilinkDecoKey = new PluginKey("wikilinkDecoration")
 
@@ -187,7 +188,10 @@ function ensurePopoverClickHandler() {
       if (noteId) store.setSidePeekNoteId(noteId)
     } else if (action === "open") {
       const noteId = btn.getAttribute("data-wikilink-noteid")
-      if (noteId) store.openNoteInTab(noteId)
+      if (noteId) {
+        setActiveRoute("/notes")
+        store.openNoteInTab(noteId)
+      }
     } else if (action === "create") {
       const title = btn.getAttribute("data-wikilink-title") ?? ""
       if (title) {
@@ -245,6 +249,7 @@ export const WikilinkDecorationExtension = Extension.create({
                 !n.trashed
             )
             if (note) {
+              setActiveRoute("/notes")
               store.openNoteInTab(note.id)
               return true
             }
@@ -256,6 +261,7 @@ export const WikilinkDecorationExtension = Extension.create({
                 n.aliases?.some((a) => a.toLowerCase() === title.toLowerCase())
             )
             if (aliasNote) {
+              setActiveRoute("/notes")
               store.openNoteInTab(aliasNote.id)
               return true
             }
