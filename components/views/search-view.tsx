@@ -7,15 +7,16 @@ import { useSearch } from "@/lib/search/use-search"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { shortRelative } from "@/lib/format-utils"
 import { setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId } from "@/lib/table-route"
-import { Search, FileText, Pin, Tag, Bookmark, LayoutTemplate, FolderOpen, X } from "lucide-react"
+import { Search, FileText, Pin, Tag, Bookmark, LayoutTemplate, FolderOpen, X, BookOpen, CircleAlert } from "lucide-react"
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-type TabKey = "all" | "notes" | "tags" | "labels" | "templates" | "folders"
+type TabKey = "all" | "notes" | "wiki" | "tags" | "labels" | "templates" | "folders"
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "all", label: "All" },
   { key: "notes", label: "Notes" },
+  { key: "wiki", label: "Wiki" },
   { key: "tags", label: "Tags" },
   { key: "labels", label: "Labels" },
   { key: "templates", label: "Templates" },
@@ -53,6 +54,7 @@ export function SearchView() {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
   const setCommandPaletteMode = usePlotStore((s) => s.setCommandPaletteMode)
+  const createWikiStub = usePlotStore((s) => s.createWikiStub)
 
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -145,6 +147,47 @@ export function SearchView() {
     return folders.filter((f) => f.name.toLowerCase().includes(q)).slice(0, 10)
   }, [folders, query, hasFuzzyQuery])
 
+  // All non-trashed wiki notes
+  const wikiNotes = useMemo(
+    () => notes.filter((n) => !n.trashed && n.isWiki),
+    [notes],
+  )
+
+  // Red links: [[link]] targets that don't match any existing note title/alias
+  const redLinks = useMemo(() => {
+    const wikiTitleSet = new Set(wikiNotes.map((n) => n.title.toLowerCase()))
+    wikiNotes.forEach((n) => {
+      if (n.aliases) n.aliases.forEach((a: string) => wikiTitleSet.add(a.toLowerCase()))
+    })
+    const linkRefs = new Map<string, Set<string>>()
+    for (const note of notes) {
+      if (note.trashed) continue
+      for (const link of note.linksOut ?? []) {
+        const normalized = link.toLowerCase()
+        if (!wikiTitleSet.has(normalized)) {
+          if (!linkRefs.has(link)) linkRefs.set(link, new Set())
+          linkRefs.get(link)!.add(note.id)
+        }
+      }
+    }
+    return Array.from(linkRefs.entries())
+      .map(([title, refs]) => ({ title, refCount: refs.size }))
+      .sort((a, b) => b.refCount - a.refCount || a.title.localeCompare(b.title))
+  }, [notes, wikiNotes])
+
+  // Filtered wiki notes and red links by search query
+  const matchedWikiNotes = useMemo(() => {
+    if (!hasFuzzyQuery) return wikiNotes.slice(0, 10)
+    const q = query.toLowerCase().trim()
+    return wikiNotes.filter((n) => (n.title || "Untitled").toLowerCase().includes(q)).slice(0, 10)
+  }, [wikiNotes, query, hasFuzzyQuery])
+
+  const matchedRedLinks = useMemo(() => {
+    if (!hasFuzzyQuery) return redLinks.slice(0, 10)
+    const q = query.toLowerCase().trim()
+    return redLinks.filter((r) => r.title.toLowerCase().includes(q)).slice(0, 10)
+  }, [redLinks, query, hasFuzzyQuery])
+
   // Note count per tag name (for display)
   const tagNoteCounts = useMemo(() => {
     const counts = new Map<string, number>()
@@ -188,6 +231,19 @@ export function SearchView() {
     router.push("/notes")
   }
 
+  function handleWikiSelect(noteId: string) {
+    setSelectedNoteId(noteId)
+    setActiveRoute("/wiki")
+    router.push("/wiki")
+  }
+
+  function handleCreateWikiFromQuery(title: string) {
+    const id = createWikiStub(title)
+    setSelectedNoteId(id)
+    setActiveRoute("/wiki")
+    router.push("/wiki")
+  }
+
   // ── Sublabel for note rows ─────────────────────────────────────────────────
 
   function noteSublabel(note: {
@@ -208,6 +264,8 @@ export function SearchView() {
   const hasNoResults =
     hasFuzzyQuery &&
     noteResults.length === 0 &&
+    matchedWikiNotes.length === 0 &&
+    matchedRedLinks.length === 0 &&
     matchedTags.length === 0 &&
     matchedLabels.length === 0 &&
     matchedTemplates.length === 0 &&
@@ -303,6 +361,74 @@ export function SearchView() {
           {/* With query: filtered results */}
           {hasFuzzyQuery && (
             <div className="space-y-6">
+              {/* Wiki Articles */}
+              {(activeTab === "all" || activeTab === "wiki") &&
+                matchedWikiNotes.length > 0 && (
+                  <section>
+                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Wiki Articles
+                    </h3>
+                    <div className="space-y-0.5">
+                      {matchedWikiNotes.map((note) => (
+                        <button
+                          key={note.id}
+                          onClick={() => handleWikiSelect(note.id)}
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                        >
+                          <BookOpen className="h-4 w-4 shrink-0 text-accent" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate text-foreground">
+                                {highlightQuery(note.title || "Untitled", query)}
+                              </span>
+                              <span className="shrink-0 rounded-sm bg-accent/20 px-1.5 py-0.5 text-[10px] font-medium text-accent">
+                                Wiki
+                              </span>
+                            </div>
+                            <div className="truncate text-sm text-muted-foreground">
+                              {noteSublabel(note)}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+              {/* Red Links */}
+              {(activeTab === "all" || activeTab === "wiki") &&
+                matchedRedLinks.length > 0 && (
+                  <section>
+                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Red Links
+                    </h3>
+                    <div className="space-y-0.5">
+                      {matchedRedLinks.map((rl) => (
+                        <div
+                          key={rl.title}
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-secondary"
+                        >
+                          <CircleAlert className="h-4 w-4 shrink-0 text-destructive" />
+                          <div className="min-w-0 flex-1">
+                            <span className="truncate text-destructive">
+                              {highlightQuery(rl.title, query)}
+                            </span>
+                            <div className="truncate text-sm text-muted-foreground">
+                              {rl.refCount} mention{rl.refCount !== 1 ? "s" : ""}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleCreateWikiFromQuery(rl.title)}
+                            className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                          >
+                            + Create
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
               {/* Notes */}
               {(activeTab === "all" || activeTab === "notes") &&
                 noteResults.length > 0 && (
@@ -462,6 +588,22 @@ export function SearchView() {
                     : `No results for "${query}"`}
                 </div>
               )}
+
+              {/* Create as wiki article */}
+              {hasFuzzyQuery &&
+                !wikiNotes.some(
+                  (n) => (n.title || "").toLowerCase() === query.toLowerCase().trim(),
+                ) && (
+                  <div className="border-t border-border pt-4">
+                    <button
+                      onClick={() => handleCreateWikiFromQuery(query.trim())}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                    >
+                      <BookOpen className="h-4 w-4 shrink-0" />
+                      Create &apos;{query.trim()}&apos; as wiki article
+                    </button>
+                  </div>
+                )}
             </div>
           )}
         </div>
