@@ -9,9 +9,10 @@ import { shortRelative } from "@/lib/format-utils"
 
 const DEFAULT_VISIBLE = 4
 
-export function BacklinksFooter({ noteId }: { noteId: string }) {
+export function BacklinksFooter({ noteId, onNavigate }: { noteId: string; onNavigate?: (noteId: string) => void }) {
   const notes = usePlotStore((s) => s.notes)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const handleNavigate = onNavigate ?? setSelectedNoteId
   const [showAll, setShowAll] = useState(false)
 
   const backlinks = useBacklinksFor(noteId)
@@ -36,7 +37,7 @@ export function BacklinksFooter({ noteId }: { noteId: string }) {
         {visible.map((note) => (
           <button
             key={note.id}
-            onClick={() => setSelectedNoteId(note.id)}
+            onClick={() => handleNavigate(note.id)}
             className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150 group"
           >
             <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" strokeWidth={1.5} />

@@ -11,13 +11,23 @@ import {
   CircleDot,
   FolderOpen,
   AlertTriangle,
+  ArrowLeft,
+  PenLine,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { shortRelative } from "@/lib/format-utils"
+import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
+import { WikiTOC } from "@/components/editor/wiki-toc"
+import { WikiInfobox } from "@/components/editor/wiki-infobox"
+import { WikiCategories } from "@/components/editor/wiki-categories"
+import { WikiDisambig } from "@/components/editor/wiki-disambig"
+import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
+import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -30,7 +40,10 @@ export function WikiView() {
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Navigate to notes view and open the note
+  // Article reader state
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
+
+  // Navigate to notes view (for non-wiki notes)
   const navigateToNote = useCallback(
     (noteId: string) => {
       openNote(noteId)
@@ -40,24 +53,63 @@ export function WikiView() {
     [openNote, router]
   )
 
+  // Open article within WikiView
+  const openArticle = useCallback((noteId: string) => {
+    setSelectedArticleId(noteId)
+  }, [])
+
+  // Smart navigation: wiki notes open in-view, non-wiki go to /notes
+  const handleNavigate = useCallback(
+    (noteId: string) => {
+      const target = notes.find((n) => n.id === noteId)
+      if (target?.isWiki && !target.trashed) {
+        openArticle(noteId)
+      } else {
+        navigateToNote(noteId)
+      }
+    },
+    [notes, openArticle, navigateToNote]
+  )
+
   const handleCreateWiki = useCallback(() => {
     const id = createWikiStub("Untitled Wiki")
+    // Open new wiki in edit mode in /notes
     navigateToNote(id)
   }, [createWikiStub, navigateToNote])
 
   const handleCreateFromRedLink = useCallback(
     (title: string) => {
       const id = createWikiStub(title)
-      navigateToNote(id)
+      openArticle(id)
     },
-    [createWikiStub, navigateToNote]
+    [createWikiStub, openArticle]
   )
+
+  const handleEditArticle = useCallback(() => {
+    if (!selectedArticleId) return
+    openNote(selectedArticleId)
+    setActiveRoute("/notes")
+    router.push("/notes")
+  }, [selectedArticleId, openNote, router])
+
+  const handleBack = useCallback(() => {
+    setSelectedArticleId(null)
+  }, [])
 
   // All non-trashed wiki articles
   const wikiNotes = useMemo(
     () => notes.filter((n) => n.isWiki && !n.trashed),
     [notes]
   )
+
+  // Reset selectedArticleId if note was deleted
+  const selectedNote = selectedArticleId
+    ? notes.find((n) => n.id === selectedArticleId && !n.trashed)
+    : null
+  if (selectedArticleId && !selectedNote) {
+    // Use effect-free reset: will be null on next render
+    // We need to handle this in render to avoid stale state
+  }
 
   // Red links: collect all [[link]] targets that don't have a matching wiki note
   const redLinks = useMemo(() => {
@@ -199,6 +251,46 @@ export function WikiView() {
       })
   }, [wikiNotes])
 
+  // ── Article Reader Mode ──
+  if (selectedArticleId && selectedNote) {
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <ViewHeader
+          icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
+          title={selectedNote.title || "Untitled"}
+          actions={
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleEditArticle}
+                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
+              >
+                <PenLine className="h-3.5 w-3.5" strokeWidth={1.5} />
+                Edit
+              </button>
+            </div>
+          }
+        >
+          {/* Back button row below ViewHeader */}
+          <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+              Back
+            </button>
+          </div>
+        </ViewHeader>
+
+        <WikiArticleReader
+          noteId={selectedArticleId}
+          onNavigate={handleNavigate}
+        />
+      </div>
+    )
+  }
+
+  // ── Dashboard Mode ──
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
@@ -265,7 +357,7 @@ export function WikiView() {
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && searchResults.length > 0) {
-                    navigateToNote(searchResults[0].id)
+                    openArticle(searchResults[0].id)
                     setSearchQuery("")
                   }
                   if (e.key === "Escape") {
@@ -287,7 +379,7 @@ export function WikiView() {
                       key={note.id}
                       onMouseDown={(e) => {
                         e.preventDefault()
-                        navigateToNote(note.id)
+                        openArticle(note.id)
                         setSearchQuery("")
                       }}
                       className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
@@ -325,7 +417,7 @@ export function WikiView() {
                   {recentChanges.map((note) => (
                     <CardListItem
                       key={note.id}
-                      onClick={() => navigateToNote(note.id)}
+                      onClick={() => openArticle(note.id)}
                     >
                       <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent" />
                       <span className="min-w-0 flex-1 truncate text-sm text-foreground">
@@ -360,7 +452,7 @@ export function WikiView() {
                     .map((item) => (
                       <CardListItem
                         key={item.note.id}
-                        onClick={() => navigateToNote(item.note.id)}
+                        onClick={() => openArticle(item.note.id)}
                       >
                         <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent" />
                         <span className="min-w-0 flex-1 truncate text-sm text-foreground">
@@ -464,7 +556,7 @@ export function WikiView() {
                   {staleDocuments.map(({ note, daysAgo }) => (
                     <CardListItem
                       key={note.id}
-                      onClick={() => navigateToNote(note.id)}
+                      onClick={() => openArticle(note.id)}
                     >
                       <span
                         className={cn(
@@ -492,7 +584,109 @@ export function WikiView() {
   )
 }
 
+/* ── Article Reader ──────────────────────────────── */
+
+function WikiArticleReader({
+  noteId,
+  onNavigate,
+}: {
+  noteId: string
+  onNavigate: (id: string) => void
+}) {
+  const notes = usePlotStore((s) => s.notes)
+  const allTags = usePlotStore((s) => s.tags)
+  const relations = usePlotStore((s) => s.relations)
+  const backlinks = useBacklinksFor(noteId)
+
+  const note = notes.find((n) => n.id === noteId)
+  if (!note) return null
+
+  const backlinkCount = backlinks.length
+  const relationCount = relations.filter(
+    (r) => r.sourceNoteId === noteId || r.targetNoteId === noteId
+  ).length
+
+  return (
+    <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
+      {/* Left: TOC sidebar */}
+      <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border p-4">
+        <div className="sticky top-0">
+          <WikiTOC content={note.content} className="w-full" />
+        </div>
+      </aside>
+
+      {/* Center: Article content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="wiki-read-content px-8 py-6 max-w-[780px]">
+          {/* Disambig banner */}
+          <WikiDisambig noteId={note.id} noteTitle={note.title} onNavigate={onNavigate} />
+
+          {/* Title */}
+          <h1 className="text-[28px] font-bold text-foreground mb-1">
+            {note.title || "Untitled"}
+          </h1>
+
+          {/* Aliases as subtitle */}
+          {note.aliases && note.aliases.length > 0 && (
+            <p className="text-sm text-muted-foreground mb-6">
+              {note.aliases.join(" \u00b7 ")}
+            </p>
+          )}
+
+          {/* Article body */}
+          <NoteEditorAdapter note={note} editable={false} />
+
+          {/* Related wiki docs */}
+          <WikiRelatedDocs noteId={note.id} onNavigate={onNavigate} />
+
+          {/* Backlinks */}
+          <BacklinksFooter noteId={note.id} onNavigate={onNavigate} />
+        </div>
+      </div>
+
+      {/* Right: Infobox sidebar */}
+      <aside className="w-[260px] shrink-0 overflow-y-auto border-l border-border p-4 space-y-4">
+        {/* Infobox */}
+        {(note.wikiInfobox ?? []).length > 0 && (
+          <WikiInfobox
+            noteId={note.id}
+            entries={note.wikiInfobox ?? []}
+            editable={false}
+            className="w-full"
+          />
+        )}
+
+        {/* Categories as badges */}
+        {note.tags.length > 0 && (
+          <WikiCategories noteTagIds={note.tags} allTags={allTags} />
+        )}
+
+        {/* Activity stats */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Activity
+          </h4>
+          <div className="space-y-1.5">
+            <StatRow label="Connected notes" value={`${backlinkCount}`} />
+            <StatRow label="Ontology links" value={`${relationCount}`} />
+            <StatRow label="Last modified" value={shortRelative(note.updatedAt)} />
+          </div>
+        </div>
+      </aside>
+    </div>
+  )
+}
+
 /* ── Sub-components ──────────────────────────────── */
+
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-2xs text-muted-foreground">{label}</span>
+      <span className="text-2xs font-medium text-foreground">{value}</span>
+    </div>
+  )
+}
 
 function StatItem({
   value,

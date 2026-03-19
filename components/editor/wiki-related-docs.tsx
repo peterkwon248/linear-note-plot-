@@ -5,11 +5,14 @@ import { usePlotStore } from "@/lib/store"
 
 interface WikiRelatedDocsProps {
   noteId: string
+  /** Optional navigation callback. Falls back to store setSelectedNoteId. */
+  onNavigate?: (noteId: string) => void
 }
 
-export function WikiRelatedDocs({ noteId }: WikiRelatedDocsProps) {
+export function WikiRelatedDocs({ noteId, onNavigate }: WikiRelatedDocsProps) {
   const notes = usePlotStore((s) => s.notes)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const handleNavigate = onNavigate ?? setSelectedNoteId
 
   const relatedWikiDocs = useMemo(() => {
     const note = notes.find((n) => n.id === noteId)
@@ -39,7 +42,7 @@ export function WikiRelatedDocs({ noteId }: WikiRelatedDocsProps) {
         {relatedWikiDocs.map((doc) => (
           <button
             key={doc.id}
-            onClick={() => setSelectedNoteId(doc.id)}
+            onClick={() => handleNavigate(doc.id)}
             className="flex items-center gap-2 rounded-md bg-secondary border border-border px-3 py-1.5 text-sm cursor-pointer transition-colors duration-150 hover:bg-secondary/80"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
