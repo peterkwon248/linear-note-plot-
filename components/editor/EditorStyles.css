@@ -841,71 +841,44 @@
 
 /* ── Wikilink Decorations ─────────────────────────────────────────── */
 
-.ProseMirror .wikilink {
-  border-radius: 2px;
-  padding: 0 1px;
-  transition: all 0.15s;
+/* Hidden brackets [[ and ]] */
+.ProseMirror .wikilink-bracket {
+  font-size: 0;
+  letter-spacing: 0;
+  color: transparent;
+  user-select: none;
 }
 
 /* Existing note — blue link */
 .ProseMirror .wikilink-exists {
   color: #7B8CDE;
-  cursor: pointer;
   text-decoration: underline;
-  text-decoration-color: rgba(123, 140, 222, 0.3);
+  text-decoration-color: rgba(123, 140, 222, 0.4);
   text-underline-offset: 2px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
 .ProseMirror .wikilink-exists:hover {
-  color: #9AA8E8;
-  text-decoration-color: rgba(123, 140, 222, 0.6);
-  background-color: rgba(123, 140, 222, 0.08);
+  text-decoration-color: rgba(123, 140, 222, 0.8);
+  background: rgba(123, 140, 222, 0.08);
 }
 
 /* Dangling/non-existent note — red dashed link */
 .ProseMirror .wikilink-dangling {
-  color: #E57373;
-  cursor: pointer;
+  color: #e06c75;
   text-decoration: underline;
   text-decoration-style: dashed;
-  text-decoration-color: rgba(229, 115, 115, 0.4);
+  text-decoration-color: rgba(224, 108, 117, 0.4);
   text-underline-offset: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
 .ProseMirror .wikilink-dangling:hover {
-  color: #EF9A9A;
-  text-decoration-color: rgba(229, 115, 115, 0.7);
-  background-color: rgba(229, 115, 115, 0.08);
-}
-
-/* Edit mode: cursor behaves like normal text (caret), not pointer */
-.ProseMirror[contenteditable="true"] .wikilink {
-  cursor: text;
-}
-
-/* Edit mode: underline on hover to hint the popover is available */
-.ProseMirror[contenteditable="true"] .wikilink-exists:hover {
-  text-decoration: underline;
-  text-decoration-color: rgba(123, 140, 222, 0.6);
-  cursor: text;
-}
-
-/* Read mode: pointer cursor so links feel clickable */
-.ProseMirror[contenteditable="false"] .wikilink-exists {
-  cursor: pointer;
-}
-
-.ProseMirror[contenteditable="false"] .wikilink-exists:hover {
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.ProseMirror[contenteditable="false"] .wikilink-dangling {
-  cursor: pointer;
-}
-
-.ProseMirror[contenteditable="false"] .wikilink-dangling:hover {
-  cursor: pointer;
+  text-decoration-color: rgba(224, 108, 117, 0.8);
+  background: rgba(224, 108, 117, 0.08);
 }
 
 /* ── Wikilink Navigation Dropdown ─────────────────────────────────── */
@@ -949,20 +922,26 @@
 /* ── Wikilink Navigation Icon ─────────────────────────────────────── */
 
 .wikilink-nav-icon {
-  display: inline;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-left: 2px;
-  font-size: 10px;
+  width: 16px;
+  height: 16px;
+  font-size: 12px;
   line-height: 1;
-  opacity: 0.3;
+  opacity: 0.5;
   transition: opacity 0.15s;
   cursor: pointer;
   color: #7B8CDE;
   user-select: none;
-  vertical-align: super;
+  vertical-align: text-bottom;
+  border-radius: 3px;
 }
 
 .wikilink-nav-icon:hover {
   opacity: 1;
+  background: rgba(123, 140, 222, 0.15);
 }
 
 /* ── Wiki Read Mode Typography ────────────────────────────────────── */

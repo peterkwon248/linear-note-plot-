@@ -197,12 +197,30 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
       const innerTitle = match[1]
       const exists = titleSet.has(innerTitle.toLowerCase())
 
+      const bracketClass = "wikilink-bracket"
+      const linkClass = exists
+        ? "wikilink wikilink-exists"
+        : "wikilink wikilink-dangling"
+
+      // [[ bracket — visually hidden
       decorations.push(
-        Decoration.inline(from, to, {
-          class: exists
-            ? "wikilink wikilink-exists"
-            : "wikilink wikilink-dangling",
+        Decoration.inline(from, from + 2, {
+          class: bracketClass,
+        })
+      )
+
+      // title text — styled as link
+      decorations.push(
+        Decoration.inline(from + 2, to - 2, {
+          class: linkClass,
           "data-wikilink": innerTitle,
+        })
+      )
+
+      // ]] bracket — visually hidden
+      decorations.push(
+        Decoration.inline(to - 2, to, {
+          class: bracketClass,
         })
       )
 
@@ -212,8 +230,8 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
             const icon = document.createElement("span")
             icon.className = "wikilink-nav-icon"
             icon.setAttribute("data-wikilink-nav", innerTitle)
-            icon.textContent = "↗"
-            icon.title = "Open"
+            icon.innerHTML = "⎘"
+            icon.title = "Open link"
             return icon
           }, { side: 1 })
         )
