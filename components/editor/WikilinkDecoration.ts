@@ -111,23 +111,66 @@ function showPopover(target: HTMLElement, title: string, isDangling: boolean) {
   const preview =
     previewLines.length > 100 ? previewLines.slice(0, 100) + "…" : previewLines
 
-  // Render popover content
-  popover.innerHTML = `
-    <div class="wikilink-popover-inner">
-      <div class="wikilink-popover-title ${isDangling ? "wikilink-popover-title-dangling" : ""}">
-        ${escapeHtml(title)}
-      </div>
-      ${preview ? `<div class="wikilink-popover-preview">${escapeHtml(preview)}</div>` : ""}
-      <div class="wikilink-popover-actions">
-        ${
-          isDangling
-            ? `<button class="wikilink-popover-btn wikilink-popover-btn-create" data-wikilink-action="create" data-wikilink-title="${escapeAttr(title)}">Create Wiki</button>`
-            : `<button class="wikilink-popover-btn" data-wikilink-action="peek" data-wikilink-noteid="${note ? escapeAttr(note.id) : ""}">Peek</button>
-               <button class="wikilink-popover-btn" data-wikilink-action="open" data-wikilink-noteid="${note ? escapeAttr(note.id) : ""}">Open</button>`
-        }
-      </div>
-    </div>
-  `
+  // Render popover content with direct event listeners
+  popover.innerHTML = ""
+  const inner = document.createElement("div")
+  inner.className = "wikilink-popover-inner"
+
+  const titleEl = document.createElement("div")
+  titleEl.className = `wikilink-popover-title${isDangling ? " wikilink-popover-title-dangling" : ""}`
+  titleEl.textContent = title
+  inner.appendChild(titleEl)
+
+  if (preview) {
+    const previewEl = document.createElement("div")
+    previewEl.className = "wikilink-popover-preview"
+    previewEl.textContent = preview
+    inner.appendChild(previewEl)
+  }
+
+  const actions = document.createElement("div")
+  actions.className = "wikilink-popover-actions"
+
+  if (isDangling) {
+    const createBtn = document.createElement("button")
+    createBtn.className = "wikilink-popover-btn wikilink-popover-btn-create"
+    createBtn.textContent = "Create Wiki"
+    createBtn.addEventListener("click", (e) => {
+      e.stopPropagation()
+      const s = usePlotStore.getState()
+      const newId = s.createWikiStub(title)
+      if (newId) {
+        setActiveRoute("/notes")
+        s.openNoteInTab(newId)
+      }
+      popover.style.display = "none"
+    })
+    actions.appendChild(createBtn)
+  } else if (note) {
+    const peekBtn = document.createElement("button")
+    peekBtn.className = "wikilink-popover-btn"
+    peekBtn.textContent = "Peek"
+    peekBtn.addEventListener("click", (e) => {
+      e.stopPropagation()
+      usePlotStore.getState().setSidePeekNoteId(note.id)
+      popover.style.display = "none"
+    })
+    actions.appendChild(peekBtn)
+
+    const openBtn = document.createElement("button")
+    openBtn.className = "wikilink-popover-btn"
+    openBtn.textContent = "Open"
+    openBtn.addEventListener("click", (e) => {
+      e.stopPropagation()
+      setActiveRoute("/notes")
+      usePlotStore.getState().openNoteInTab(note.id)
+      popover.style.display = "none"
+    })
+    actions.appendChild(openBtn)
+  }
+
+  inner.appendChild(actions)
+  popover.appendChild(inner)
 
   // Position below the wikilink element
   const rect = target.getBoundingClientRect()
@@ -172,37 +215,7 @@ function escapeAttr(s: string): string {
   return s.replace(/"/g, "&quot;").replace(/'/g, "&#39;")
 }
 
-// Global click handler for popover buttons (attached once)
-let popoverClickBound = false
-function ensurePopoverClickHandler() {
-  if (popoverClickBound) return
-  popoverClickBound = true
-  document.addEventListener("click", (e) => {
-    const btn = (e.target as HTMLElement).closest("[data-wikilink-action]") as HTMLElement | null
-    if (!btn) return
-    const action = btn.getAttribute("data-wikilink-action")
-    const store = usePlotStore.getState()
-
-    if (action === "peek") {
-      const noteId = btn.getAttribute("data-wikilink-noteid")
-      if (noteId) store.setSidePeekNoteId(noteId)
-    } else if (action === "open") {
-      const noteId = btn.getAttribute("data-wikilink-noteid")
-      if (noteId) {
-        setActiveRoute("/notes")
-        store.openNoteInTab(noteId)
-      }
-    } else if (action === "create") {
-      const title = btn.getAttribute("data-wikilink-title") ?? ""
-      if (title) {
-        const newId = store.createWikiStub(title)
-        if (newId) store.openNoteInTab(newId)
-      }
-    }
-
-    if (popoverEl) popoverEl.style.display = "none"
-  })
-}
+// No global click handler needed — buttons have direct event listeners
 
 // ── Extension ────────────────────────────────────────────────────────
 
@@ -210,8 +223,6 @@ export const WikilinkDecorationExtension = Extension.create({
   name: "wikilinkDecoration",
 
   addProseMirrorPlugins() {
-    ensurePopoverClickHandler()
-
     return [
       new Plugin({
         key: wikilinkDecoKey,
