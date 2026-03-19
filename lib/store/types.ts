@@ -65,7 +65,7 @@ export interface PlotState {
   noteEvents: NoteEvent[]
   threads: Thread[]
   graphFocusDepth: number
-  commandPaletteMode: "search" | "commands" | "links"
+  commandPaletteMode: "commands" | "links"
 
   // Reflections
   reflections: Reflection[]
@@ -192,7 +192,7 @@ export interface PlotState {
   deleteThread: (threadId: string) => void
   addWikiLink: (noteId: string, targetTitle: string) => void
   setGraphFocusDepth: (depth: number) => void
-  setCommandPaletteMode: (mode: "search" | "commands" | "links") => void
+  setCommandPaletteMode: (mode: "commands" | "links") => void
 
   // ── Relations ──
   addRelation: (sourceNoteId: string, targetNoteId: string, type: RelationType) => string | null

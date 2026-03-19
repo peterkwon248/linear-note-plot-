@@ -58,7 +58,7 @@ export const usePlotStore = create<PlotState>()(
         noteEvents: [] as NoteEvent[],
         threads: [],
         graphFocusDepth: 0,
-        commandPaletteMode: "search" as const,
+        commandPaletteMode: "commands" as const,
         reflections: [] as Reflection[],
         relations: [] as Relation[],
         attachments: [] as Attachment[],

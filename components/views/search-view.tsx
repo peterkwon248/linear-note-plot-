@@ -65,13 +65,9 @@ export function SearchView() {
     inputRef.current?.focus()
   }, [])
 
-  // Handle > and [[ prefixes to switch to command/link mode
+  // Handle [[ prefix to switch to links mode in SearchDialog
   useEffect(() => {
-    if (query === ">") {
-      setQuery("")
-      setCommandPaletteMode("commands")
-      setSearchOpen(true)
-    } else if (query === "[[") {
+    if (query === "[[") {
       setQuery("")
       setCommandPaletteMode("links")
       setSearchOpen(true)

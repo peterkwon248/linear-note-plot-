@@ -83,7 +83,7 @@ export function migrate(persistedState: unknown): PlotState {
   if (!state.threads) state.threads = (state.thinkingChains as unknown[]) ?? []
   delete state.thinkingChains
   if (state.graphFocusDepth === undefined) state.graphFocusDepth = 0
-  if (state.commandPaletteMode === undefined) state.commandPaletteMode = "search"
+  if (state.commandPaletteMode === undefined || state.commandPaletteMode === "search") state.commandPaletteMode = "commands"
   // v9: Details panel toggle
   if (state.detailsOpen === undefined) state.detailsOpen = true
   // v10: Sidebar resize / collapse

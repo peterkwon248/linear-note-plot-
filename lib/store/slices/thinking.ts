@@ -70,6 +70,6 @@ export function createThreadSlice(set: Set, get: Get, appendEvent: AppendEventFn
 
     setGraphFocusDepth: (depth: number) => set({ graphFocusDepth: depth }),
 
-    setCommandPaletteMode: (mode: "search" | "commands" | "links") => set({ commandPaletteMode: mode }),
+    setCommandPaletteMode: (mode: "commands" | "links") => set({ commandPaletteMode: mode }),
   }
 }

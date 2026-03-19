@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plot Wiki — 전체 플로우 목업</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter','Noto Sans KR',-apple-system,system-ui,sans-serif;background:#09090b;color:#fafafa;line-height:1.7}
+
+  .app{display:flex;height:100vh;overflow:hidden}
+
+  /* ── Page Switcher (top bar) ── */
+  .page-switcher{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:center;gap:4px;
+    padding:8px;background:rgba(9,9,11,0.95);backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .page-btn{
+    padding:6px 16px;border-radius:6px;font-size:13px;font-weight:500;
+    border:none;cursor:pointer;transition:all 150ms;
+    background:none;color:rgba(255,255,255,0.45);
+  }
+  .page-btn:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.80)}
+  .page-btn.active{background:rgba(99,102,241,0.15);color:#818cf8}
+
+  .page{display:none;height:100vh;padding-top:44px}
+  .page.active{display:flex}
+
+  /* ── Sidebar ── */
+  .sidebar{
+    width:260px;background:#1c1c20;border-right:1px solid rgba(255,255,255,0.06);
+    flex-shrink:0;padding:16px 12px;overflow-y:auto;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:6px;
+    cursor:pointer;font-size:15px;color:rgba(255,255,255,0.55);transition:all 150ms;
+  }
+  .nav-item:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85)}
+  .nav-item.active{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.93)}
+  .nav-item .ic{width:20px;text-align:center;opacity:0.5;font-size:14px}
+  .nav-item.active .ic{opacity:1}
+  .sec-title{font-size:11px;font-weight:600;color:rgba(255,255,255,0.25);padding:20px 10px 6px;letter-spacing:0.05em;text-transform:uppercase}
+  .nav-count{margin-left:auto;font-size:12px;color:rgba(255,255,255,0.25);font-variant-numeric:tabular-nums}
+
+  /* ── Common ── */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#09090b}
+  .wikilink{color:#818cf8;text-decoration:none;border-bottom:1px solid rgba(129,140,248,0.3);transition:all 120ms}
+  .wikilink:hover{color:#a5b4fc;border-bottom-color:#a5b4fc}
+  .wikilink.red{color:#f87171;border-bottom-color:rgba(248,113,113,0.3)}
+  .wikilink.red:hover{color:#fca5a5}
+  .badge{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500;cursor:pointer;transition:all 120ms}
+  .badge-purple{background:rgba(99,102,241,0.10);color:#818cf8}
+  .badge-purple:hover{background:rgba(99,102,241,0.20)}
+  .badge-green{background:rgba(34,197,94,0.10);color:#4ade80}
+  .badge-red{background:rgba(239,68,68,0.10);color:#f87171}
+  .badge-amber{background:rgba(245,158,11,0.10);color:#fbbf24}
+
+  *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent}
+
+  /* ═══════════════════════════════════════════════ */
+  /*  PAGE 1: WIKI HOME                             */
+  /* ═══════════════════════════════════════════════ */
+
+  .home-content{flex:1;overflow-y:auto;padding:40px}
+
+  .home-hero{text-align:center;padding:40px 0 48px}
+  .home-hero h1{font-size:32px;font-weight:700;letter-spacing:-0.03em;margin-bottom:6px}
+  .home-hero p{font-size:15px;color:rgba(255,255,255,0.40)}
+  .home-hero .stat-bar{display:flex;justify-content:center;gap:24px;margin-top:16px}
+  .home-hero .stat{font-size:13px;color:rgba(255,255,255,0.35)}
+  .home-hero .stat strong{color:rgba(255,255,255,0.70);font-weight:600}
+
+  .home-search-wrap{max-width:560px;margin:0 auto 48px;position:relative}
+  .home-search{
+    width:100%;padding:14px 20px 14px 48px;border-radius:12px;font-size:16px;
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+    color:#fafafa;outline:none;font-family:inherit;transition:all 200ms;
+  }
+  .home-search:focus{border-color:rgba(99,102,241,0.4);background:rgba(255,255,255,0.06)}
+  .home-search::placeholder{color:rgba(255,255,255,0.25)}
+  .home-search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.25);font-size:18px}
+
+  .home-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;max-width:960px;margin:0 auto}
+
+  .home-card{
+    background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);
+    border-radius:10px;padding:20px;transition:all 200ms;
+  }
+  .home-card:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.10)}
+  .home-card-title{font-size:14px;font-weight:600;color:rgba(255,255,255,0.50);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .home-card-title .emoji{font-size:16px}
+
+  .wiki-list-item{
+    display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;
+    cursor:pointer;transition:all 120ms;
+  }
+  .wiki-list-item:hover{background:rgba(255,255,255,0.04)}
+  .wiki-list-item .title{font-size:14px;color:rgba(255,255,255,0.70);flex:1}
+  .wiki-list-item .meta{font-size:12px;color:rgba(255,255,255,0.25)}
+  .wiki-list-item .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .dot-blue{background:#6366f1}
+  .dot-green{background:#22c55e}
+  .dot-red{background:#f87171}
+  .dot-amber{background:#fbbf24}
+
+  .red-link-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 10px;border-radius:6px;cursor:pointer;transition:all 120ms;
+  }
+  .red-link-item:hover{background:rgba(255,255,255,0.04)}
+  .red-link-item .name{font-size:14px;color:#f87171}
+  .red-link-item .count{font-size:12px;color:rgba(255,255,255,0.25)}
+  .red-link-item .create-btn{
+    font-size:11px;padding:3px 10px;border-radius:4px;
+    background:rgba(248,113,113,0.10);color:#f87171;border:none;cursor:pointer;
+    opacity:0;transition:all 120ms;
+  }
+  .red-link-item:hover .create-btn{opacity:1}
+
+  .cat-section{display:flex;flex-wrap:wrap;gap:8px}
+
+  /* ═══════════════════════════════════════════════ */
+  /*  PAGE 2: SEARCH                                */
+  /* ═══════════════════════════════════════════════ */
+
+  .search-content{flex:1;overflow-y:auto;padding:40px}
+
+  .search-hero{max-width:640px;margin:0 auto 32px}
+  .search-input-wrap{position:relative;margin-bottom:16px}
+  .search-input{
+    width:100%;padding:14px 20px 14px 48px;border-radius:12px;font-size:16px;
+    background:rgba(255,255,255,0.06);border:2px solid rgba(99,102,241,0.4);
+    color:#fafafa;outline:none;font-family:inherit;
+  }
+  .search-input-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#6366f1;font-size:18px}
+  .search-hint{font-size:12px;color:rgba(255,255,255,0.25);text-align:right}
+
+  .search-dropdown{
+    max-width:640px;margin:0 auto;
+    background:rgba(24,24,27,0.95);border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;overflow:hidden;
+  }
+  .search-section-title{
+    padding:10px 16px 6px;font-size:11px;font-weight:600;
+    color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:0.05em;
+  }
+  .search-result{
+    display:flex;align-items:center;gap:12px;padding:10px 16px;
+    cursor:pointer;transition:all 120ms;
+  }
+  .search-result:hover{background:rgba(255,255,255,0.05)}
+  .search-result.highlighted{background:rgba(99,102,241,0.08)}
+  .search-result .icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+  .search-result .icon.wiki{background:rgba(99,102,241,0.10);color:#818cf8}
+  .search-result .icon.note{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.40)}
+  .search-result .icon.tag{background:rgba(34,197,94,0.10);color:#4ade80}
+  .search-result .icon.red{background:rgba(248,113,113,0.10);color:#f87171}
+  .search-result .info{flex:1;min-width:0}
+  .search-result .name{font-size:14px;color:rgba(255,255,255,0.80);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search-result .name mark{background:rgba(99,102,241,0.30);color:#fafafa;border-radius:2px;padding:0 2px}
+  .search-result .desc{font-size:12px;color:rgba(255,255,255,0.30);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search-result .arrow{color:rgba(255,255,255,0.15);font-size:14px}
+  .search-divider{height:1px;background:rgba(255,255,255,0.04);margin:4px 16px}
+  .search-footer{padding:10px 16px;text-align:center;font-size:12px;color:rgba(255,255,255,0.25)}
+  .search-footer a{color:#818cf8;text-decoration:none}
+  .search-footer a:hover{text-decoration:underline}
+
+  .search-tabs{display:flex;gap:4px;max-width:640px;margin:0 auto 16px}
+  .search-tab{
+    padding:5px 14px;border-radius:6px;font-size:13px;font-weight:500;
+    color:rgba(255,255,255,0.40);cursor:pointer;transition:all 120ms;
+    border:none;background:none;
+  }
+  .search-tab:hover{color:rgba(255,255,255,0.70)}
+  .search-tab.active{background:rgba(99,102,241,0.12);color:#818cf8}
+
+  /* ═══════════════════════════════════════════════ */
+  /*  PAGE 3: ARTICLE                               */
+  /* ═══════════════════════════════════════════════ */
+
+  .wiki-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 24px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;
+  }
+  .breadcrumb{font-size:13px;color:rgba(255,255,255,0.40)}
+  .breadcrumb a{color:#6366f1;text-decoration:none}
+  .breadcrumb a:hover{text-decoration:underline}
+  .actions{display:flex;gap:6px}
+  .btn{
+    padding:5px 12px;border-radius:6px;font-size:13px;font-weight:500;
+    border:1px solid rgba(255,255,255,0.10);background:none;
+    color:rgba(255,255,255,0.60);cursor:pointer;transition:all 150ms;
+  }
+  .btn:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.90)}
+  .btn.primary{background:#6366f1;border-color:#6366f1;color:#fff}
+  .btn.primary:hover{background:#5558e6}
+
+  .wiki-body{flex:1;display:flex;overflow:hidden}
+
+  .toc-sidebar{width:200px;flex-shrink:0;padding:24px 16px;border-right:1px solid rgba(255,255,255,0.04);overflow-y:auto}
+  .toc-title{font-size:11px;font-weight:600;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+  .toc-item{display:block;padding:4px 8px;font-size:13px;color:rgba(255,255,255,0.40);border-radius:4px;cursor:pointer;transition:all 120ms;border-left:2px solid transparent;text-decoration:none}
+  .toc-item:hover{color:rgba(255,255,255,0.75);background:rgba(255,255,255,0.03)}
+  .toc-item.active{color:#6366f1;border-left-color:#6366f1;background:rgba(99,102,241,0.05)}
+  .toc-item.sub{padding-left:20px;font-size:12px}
+
+  .article-scroll{flex:1;overflow-y:auto;padding:32px 40px 80px;max-width:780px}
+  .disambig{background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);border-radius:8px;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:24px}
+  .disambig a{color:#818cf8;text-decoration:none}
+  .disambig a:hover{text-decoration:underline}
+  .article-title{font-size:28px;font-weight:700;color:#fafafa;margin-bottom:4px;letter-spacing:-0.02em}
+  .article-subtitle{font-size:14px;color:rgba(255,255,255,0.40);margin-bottom:24px}
+  .section-h2{font-size:20px;font-weight:600;color:#fafafa;margin:36px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:8px}
+  .section-h2 .num{color:#6366f1;font-weight:700;font-size:16px}
+  .section-h3{font-size:16px;font-weight:600;color:rgba(255,255,255,0.85);margin:24px 0 8px}
+  .section-h3 .num{color:rgba(99,102,241,0.7);font-weight:600;font-size:14px}
+  .body-text{font-size:15px;color:rgba(255,255,255,0.70);line-height:1.8;margin-bottom:16px}
+  .formula{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:16px 20px;font-size:18px;font-weight:600;text-align:center;margin:16px 0;font-family:'Inter',monospace}
+  .footnote-ref{color:#6366f1;font-size:11px;vertical-align:super;cursor:pointer;font-weight:600}
+
+  .related-section{margin-top:40px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06)}
+  .related-title{font-size:14px;font-weight:600;color:rgba(255,255,255,0.45);margin-bottom:12px}
+  .related-grid{display:flex;flex-wrap:wrap;gap:8px}
+  .related-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-size:13px;color:rgba(255,255,255,0.60);cursor:pointer;transition:all 150ms;text-decoration:none}
+  .related-chip:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.90)}
+  .related-chip .dot{width:6px;height:6px;border-radius:50%;background:#6366f1}
+
+  .backlinks-section{margin-top:32px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06)}
+  .backlink-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;transition:all 150ms}
+  .backlink-item:hover{background:rgba(255,255,255,0.04)}
+  .backlink-item .icon{color:rgba(255,255,255,0.30)}
+  .backlink-item .bl-title{font-size:14px;color:rgba(255,255,255,0.70);flex:1}
+  .backlink-item .date{font-size:12px;color:rgba(255,255,255,0.25)}
+
+  .footnotes-section{margin-top:32px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04)}
+  .footnote-item{font-size:12px;color:rgba(255,255,255,0.35);padding:2px 0}
+  .footnote-item span{color:#6366f1;font-weight:600;margin-right:6px}
+
+  .infobox{width:240px;flex-shrink:0;padding:24px 16px;overflow-y:auto}
+  .infobox-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden}
+  .infobox-header{padding:12px 14px;font-size:14px;font-weight:600;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(99,102,241,0.06)}
+  .infobox-row{display:flex;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.03)}
+  .infobox-row:last-child{border-bottom:none}
+  .infobox-label{width:70px;flex-shrink:0;font-size:12px;color:rgba(255,255,255,0.30);font-weight:500}
+  .infobox-value{font-size:13px;color:rgba(255,255,255,0.65)}
+  .infobox-value a{color:#818cf8;text-decoration:none}
+  .infobox-value a:hover{text-decoration:underline}
+  .categories{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding:0 2px}
+  .infobox-stats{padding:10px 14px;display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,255,255,0.04);margin-top:12px}
+  .stats-title{font-size:11px;color:rgba(255,255,255,0.20);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+  .stat-row{display:flex;justify-content:space-between;font-size:12px}
+  .stat-row .label{color:rgba(255,255,255,0.25)}
+  .stat-row .value{color:rgba(255,255,255,0.55);font-weight:500}
+</style>
+</head>
+<body>
+
+<!-- ═══ Page Switcher ═══ -->
+<div class="page-switcher">
+  <button class="page-btn active" onclick="showPage('home')">① 위키 홈</button>
+  <button class="page-btn" onclick="showPage('search')">② 검색 중</button>
+  <button class="page-btn" onclick="showPage('article')">③ 위키 문서</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!--  PAGE 1: WIKI HOME                             -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+  <aside class="sidebar">
+    <div class="nav-item"><span class="ic">📥</span> Inbox <span class="nav-count">3</span></div>
+    <div class="nav-item"><span class="ic">📄</span> Notes <span class="nav-count">847</span></div>
+    <div class="nav-item active"><span class="ic">📖</span> Wiki <span class="nav-count">42</span></div>
+    <div class="nav-item"><span class="ic">🔍</span> Search</div>
+    <div class="sec-title">Folders</div>
+    <div class="nav-item"><span class="ic">📁</span> 투자 리서치 <span class="nav-count">23</span></div>
+    <div class="nav-item"><span class="ic">📁</span> 사주 연구 <span class="nav-count">15</span></div>
+    <div class="sec-title">Tools</div>
+    <div class="nav-item"><span class="ic">#</span> Tags</div>
+    <div class="nav-item"><span class="ic">🏷</span> Labels</div>
+    <div class="nav-item"><span class="ic">🔮</span> Ontology</div>
+    <div class="nav-item"><span class="ic">💡</span> Insights</div>
+  </aside>
+  <div class="main">
+    <div class="home-content">
+
+      <!-- Hero -->
+      <div class="home-hero">
+        <h1>📖 Plot Wiki</h1>
+        <p>내 지식의 백과사전</p>
+        <div class="stat-bar">
+          <div class="stat"><strong>42</strong> 문서</div>
+          <div class="stat"><strong>7</strong> 빨간 링크</div>
+          <div class="stat"><strong>156</strong> 내부 링크</div>
+          <div class="stat"><strong>847</strong> 연결된 노트</div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="home-search-wrap">
+        <span class="home-search-icon">🔍</span>
+        <input class="home-search" placeholder="위키 검색... (문서, 태그, 개념)" />
+      </div>
+
+      <!-- Grid -->
+      <div class="home-grid">
+
+        <!-- 최근 변경 -->
+        <div class="home-card">
+          <div class="home-card-title"><span class="emoji">📝</span> 최근 변경</div>
+          <div class="wiki-list-item"><span class="dot dot-blue"></span><span class="title">주가수익비율 (PER)</span><span class="meta">3분 전</span></div>
+          <div class="wiki-list-item"><span class="dot dot-blue"></span><span class="title">가치투자</span><span class="meta">어제</span></div>
+          <div class="wiki-list-item"><span class="dot dot-blue"></span><span class="title">무한매수법</span><span class="meta">3일 전</span></div>
+          <div class="wiki-list-item"><span class="dot dot-blue"></span><span class="title">사주명리학</span><span class="meta">5일 전</span></div>
+          <div class="wiki-list-item"><span class="dot dot-green"></span><span class="title">밸류리밸런싱</span><span class="meta">1주 전</span></div>
+        </div>
+
+        <!-- 인기 문서 (가장 많이 연결된) -->
+        <div class="home-card">
+          <div class="home-card-title"><span class="emoji">🔥</span> 가장 연결 많은 문서</div>
+          <div class="wiki-list-item"><span class="dot dot-blue"></span><span class="title">PER (주가수익비율)</span><span class="meta">15개 노트</span></div>
+          <div class="wiki-list-item"><span class="dot dot-blue"></span><span class="title">가치투자</span><span class="meta">12개 노트</span></div>
+          <div class="wiki-list-item"><span class="dot dot-blue"></span><span class="title">삼성전자</span><span class="meta">9개 노트</span></div>
+          <div class="wiki-list-item"><span class="dot dot-blue"></span><span class="title">일주론 (사주)</span><span class="meta">8개 노트</span></div>
+          <div class="wiki-list-item"><span class="dot dot-blue"></span><span class="title">임인일주</span><span class="meta">7개 노트</span></div>
+        </div>
+
+        <!-- 빨간 링크 (아직 안 만든 개념) -->
+        <div class="home-card">
+          <div class="home-card-title"><span class="emoji">🔴</span> 아직 안 만든 개념</div>
+          <div class="red-link-item">
+            <span class="name">PBR (주가순자산비율)</span>
+            <span class="count">12회 언급</span>
+            <button class="create-btn">+ 생성</button>
+          </div>
+          <div class="red-link-item">
+            <span class="name">ROE (자기자본이익률)</span>
+            <span class="count">8회 언급</span>
+            <button class="create-btn">+ 생성</button>
+          </div>
+          <div class="red-link-item">
+            <span class="name">경쟁우위 (Moat)</span>
+            <span class="count">5회 언급</span>
+            <button class="create-btn">+ 생성</button>
+          </div>
+          <div class="red-link-item">
+            <span class="name">배당수익률</span>
+            <span class="count">4회 언급</span>
+            <button class="create-btn">+ 생성</button>
+          </div>
+          <div class="red-link-item">
+            <span class="name">DCF (현금흐름할인)</span>
+            <span class="count">3회 언급</span>
+            <button class="create-btn">+ 생성</button>
+          </div>
+        </div>
+
+        <!-- 카테고리별 -->
+        <div class="home-card" style="grid-column: span 2">
+          <div class="home-card-title"><span class="emoji">📂</span> 카테고리</div>
+          <div class="cat-section">
+            <span class="badge badge-purple">투자지표 (8)</span>
+            <span class="badge badge-purple">투자전략 (5)</span>
+            <span class="badge badge-purple">기업분석 (4)</span>
+            <span class="badge badge-purple">사주명리 (6)</span>
+            <span class="badge badge-purple">십성 (3)</span>
+            <span class="badge badge-purple">프로그래밍 (3)</span>
+            <span class="badge badge-purple">이커머스 (2)</span>
+            <span class="badge badge-purple">디자인 (2)</span>
+            <span class="badge badge-amber">미분류 (9)</span>
+          </div>
+        </div>
+
+        <!-- 방치 경고 (Insight 레이어링) -->
+        <div class="home-card">
+          <div class="home-card-title"><span class="emoji">⚠️</span> 방치 문서</div>
+          <div class="wiki-list-item"><span class="dot dot-red"></span><span class="title">DCF 가치평가</span><span class="meta">30일 전</span></div>
+          <div class="wiki-list-item"><span class="dot dot-red"></span><span class="title">사주 기초이론</span><span class="meta">21일 전</span></div>
+          <div class="wiki-list-item"><span class="dot dot-amber"></span><span class="title">FFmpeg 명령어</span><span class="meta">14일 전</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!--  PAGE 2: SEARCH                                -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-search">
+  <aside class="sidebar">
+    <div class="nav-item"><span class="ic">📥</span> Inbox <span class="nav-count">3</span></div>
+    <div class="nav-item"><span class="ic">📄</span> Notes <span class="nav-count">847</span></div>
+    <div class="nav-item active"><span class="ic">📖</span> Wiki <span class="nav-count">42</span></div>
+    <div class="nav-item"><span class="ic">🔍</span> Search</div>
+    <div class="sec-title">Folders</div>
+    <div class="nav-item"><span class="ic">📁</span> 투자 리서치</div>
+    <div class="nav-item"><span class="ic">📁</span> 사주 연구</div>
+    <div class="sec-title">Tools</div>
+    <div class="nav-item"><span class="ic">#</span> Tags</div>
+    <div class="nav-item"><span class="ic">🏷</span> Labels</div>
+    <div class="nav-item"><span class="ic">🔮</span> Ontology</div>
+  </aside>
+  <div class="main">
+    <div class="search-content">
+
+      <div class="search-hero">
+        <div class="search-input-wrap">
+          <span class="search-input-icon">🔍</span>
+          <input class="search-input" value="PER" />
+        </div>
+      </div>
+
+      <div class="search-tabs">
+        <button class="search-tab active">전체 (12)</button>
+        <button class="search-tab">위키 (3)</button>
+        <button class="search-tab">노트 (7)</button>
+        <button class="search-tab">태그 (1)</button>
+        <button class="search-tab">폴더 (1)</button>
+      </div>
+
+      <div class="search-dropdown">
+
+        <div class="search-section-title">위키 문서</div>
+        <div class="search-result highlighted">
+          <div class="icon wiki">📖</div>
+          <div class="info">
+            <div class="name">주가수익비율 (<mark>PER</mark>)</div>
+            <div class="desc">주가를 주당순이익(EPS)으로 나눈 지표 · 15개 노트 연결</div>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+        <div class="search-result">
+          <div class="icon wiki">📖</div>
+          <div class="info">
+            <div class="name"><mark>PER</mark> 밸류에이션 방법론</div>
+            <div class="desc">Forward PER, Trailing PER, Shiller CAPE · 3개 노트 연결</div>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+        <div class="search-result">
+          <div class="icon red">🔴</div>
+          <div class="info">
+            <div class="name" style="color:#f87171">PEG (<mark>PER</mark> 기반 성장 지표)</div>
+            <div class="desc">아직 생성되지 않음 · 5회 언급됨</div>
+          </div>
+          <span class="arrow" style="color:#f87171">+ 생성</span>
+        </div>
+
+        <div class="search-divider"></div>
+        <div class="search-section-title">내 노트</div>
+        <div class="search-result">
+          <div class="icon note">📄</div>
+          <div class="info">
+            <div class="name">삼성전자 <mark>PER</mark> 분석 — 2024년 4분기 기준</div>
+            <div class="desc">현재 PER 12.3배, 5년 평균 대비 저평가... · 어제</div>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+        <div class="search-result">
+          <div class="icon note">📄</div>
+          <div class="info">
+            <div class="name">밸류에이션 방법론 비교 (<mark>PER</mark> vs DCF vs EV/EBITDA)</div>
+            <div class="desc">각 방법론의 장단점 정리... · 3일 전</div>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+        <div class="search-result">
+          <div class="icon note">📄</div>
+          <div class="info">
+            <div class="name">2024 투자 포트폴리오 리밸런싱 — 저<mark>PER</mark> 종목 선별</div>
+            <div class="desc">코스피 저PER 20종목 스크리닝 결과... · 2주 전</div>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+
+        <div class="search-divider"></div>
+        <div class="search-section-title">태그</div>
+        <div class="search-result">
+          <div class="icon tag">#</div>
+          <div class="info">
+            <div class="name">#<mark>PER</mark>분석</div>
+            <div class="desc">7개 노트</div>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+
+        <div class="search-footer">
+          <a href="#">"PER"로 새 위키 문서 만들기</a> · <a href="#">"PER"로 새 노트 만들기</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!--  PAGE 3: ARTICLE                               -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-article">
+  <aside class="sidebar">
+    <div class="nav-item"><span class="ic">📥</span> Inbox <span class="nav-count">3</span></div>
+    <div class="nav-item"><span class="ic">📄</span> Notes <span class="nav-count">847</span></div>
+    <div class="nav-item active"><span class="ic">📖</span> Wiki <span class="nav-count">42</span></div>
+    <div class="nav-item"><span class="ic">🔍</span> Search</div>
+    <div class="sec-title">Folders</div>
+    <div class="nav-item"><span class="ic">📁</span> 투자 리서치</div>
+    <div class="nav-item"><span class="ic">📁</span> 사주 연구</div>
+    <div class="sec-title">Tools</div>
+    <div class="nav-item"><span class="ic">#</span> Tags</div>
+    <div class="nav-item"><span class="ic">🏷</span> Labels</div>
+    <div class="nav-item"><span class="ic">🔮</span> Ontology</div>
+  </aside>
+  <div class="main">
+    <div class="wiki-header">
+      <div class="breadcrumb"><a href="#">Wiki</a> / <a href="#">투자지표</a> / 주가수익비율</div>
+      <div class="actions">
+        <button class="btn">히스토리</button>
+        <button class="btn primary">편집</button>
+      </div>
+    </div>
+    <div class="wiki-body">
+      <nav class="toc-sidebar">
+        <div class="toc-title">목차</div>
+        <a class="toc-item active">1. 개요</a>
+        <a class="toc-item">2. 계산법</a>
+        <a class="toc-item sub">2.1. 기본 공식</a>
+        <a class="toc-item sub">2.2. Forward PER</a>
+        <a class="toc-item">3. 활용</a>
+        <a class="toc-item">4. 한계</a>
+        <a class="toc-item">5. 투자대가들의 조언</a>
+        <a class="toc-item">6. 관련 문서</a>
+        <a class="toc-item">7. 각주</a>
+      </nav>
+      <div class="article-scroll">
+        <div class="disambig">
+          <strong>PER</strong>은(는) 여기로 연결됩니다. 농구의 PER에 대한 내용은 <a href="#">PER(APBR메트릭스)</a> 문서를 참고하십시오.
+        </div>
+        <h1 class="article-title">주가수익비율</h1>
+        <p class="article-subtitle">株價收益比率 · Price-to-Earnings Ratio · PER</p>
+
+        <h2 class="section-h2"><span class="num">1.</span> 개요</h2>
+        <p class="body-text">
+          <a class="wikilink" href="#">주가</a>를 <a class="wikilink" href="#">주당순이익</a>(EPS)으로 나눈 값으로,
+          주식이 이익 대비 고평가인지 저평가인지 판단하는 <a class="wikilink" href="#">시장가치비율</a>이다.
+          국내에서는 보통 PER로 표시하지만, 서구권에서는 P/E로 주로 표시한다.<span class="footnote-ref">[1]</span>
+        </p>
+        <p class="body-text">
+          PER가 낮을 경우 해당 회사가 거둔 이익에 비해 주가가 낮고, 기업의 가치에 비해 <strong>저평가</strong>되어 있다는 의미로 볼 수 있다.
+        </p>
+
+        <h2 class="section-h2"><span class="num">2.</span> 계산법</h2>
+        <h3 class="section-h3"><span class="num">2.1.</span> 기본 공식</h3>
+        <div class="formula">PER = 주가 ÷ <a class="wikilink" href="#">EPS</a>(주당순이익)</div>
+        <p class="body-text">
+          더 간단하게 <a class="wikilink" href="#">시가총액</a> ÷ <a class="wikilink" href="#">당기순이익</a>으로 구할 수도 있다.
+        </p>
+
+        <h3 class="section-h3"><span class="num">2.2.</span> Forward PER</h3>
+        <p class="body-text">
+          <a class="wikilink" href="#">애널리스트</a>들의 다음 분기 예상 수익을 이용해 PER를 계산한 것이다.
+        </p>
+
+        <h2 class="section-h2"><span class="num">3.</span> 활용</h2>
+        <p class="body-text">
+          일반적으로 동종업계 내에서<span class="footnote-ref">[2]</span> PER이 낮으면 저평가, 높으면 고평가로 평가한다.
+          <a class="wikilink" href="#">제레미 시겔</a> 교수에 따르면 저PER 종목군은 고PER 종목군보다 높은 수익률을 기록해왔다.
+        </p>
+
+        <h2 class="section-h2"><span class="num">4.</span> 한계</h2>
+        <p class="body-text">
+          저PER주를 매수하는 것이 좋다고 주식관련서적에 나타나 있지만, 개별 기업에 적용하기에는 위험하다.
+          이 단점을 보완하기 위해 <a class="wikilink" href="#">Forward PER</a>이란 것도 있다.
+        </p>
+
+        <h2 class="section-h2"><span class="num">5.</span> 투자대가들의 조언</h2>
+        <p class="body-text">
+          <a class="wikilink" href="#">피터 린치</a>는 <a class="wikilink" href="#">PEG</a>를 고안했다.
+          <a class="wikilink" href="#">워런 버핏</a>은 PER보다 <a class="wikilink" href="#">ROE</a>와
+          <a class="wikilink red" href="#">경쟁우위</a>를 더 중시하는 것으로 알려져 있다.
+        </p>
+
+        <div class="related-section">
+          <div class="related-title">관련 문서</div>
+          <div class="related-grid">
+            <a class="related-chip" href="#"><span class="dot"></span>PBR</a>
+            <a class="related-chip" href="#"><span class="dot"></span>ROE</a>
+            <a class="related-chip" href="#"><span class="dot"></span>EPS</a>
+            <a class="related-chip" href="#"><span class="dot"></span>PEG</a>
+            <a class="related-chip" href="#"><span class="dot"></span>FCF 가치평가</a>
+            <a class="related-chip" href="#"><span class="dot"></span>밸류에이션</a>
+          </div>
+        </div>
+
+        <div class="backlinks-section">
+          <div class="related-title">이 문서를 참조하는 노트 (8)</div>
+          <div class="backlink-item"><span class="icon">📄</span><span class="bl-title">삼성전자 PER 분석 — 2024년 4분기</span><span class="date">어제</span></div>
+          <div class="backlink-item"><span class="icon">📄</span><span class="bl-title">밸류에이션 방법론 비교</span><span class="date">3일 전</span></div>
+          <div class="backlink-item"><span class="icon">📄</span><span class="bl-title">2024 투자 포트폴리오 리밸런싱</span><span class="date">2주 전</span></div>
+          <div class="backlink-item"><span class="icon">📄</span><span class="bl-title">가치투자 핵심 원칙 정리</span><span class="date">1개월 전</span></div>
+          <div style="color:rgba(255,255,255,0.25);font-size:13px;padding:6px 12px 6px 46px;cursor:pointer">+ 4개 더 보기</div>
+        </div>
+
+        <div class="footnotes-section">
+          <div class="related-title">각주</div>
+          <div class="footnote-item"><span>[1]</span> 미국에서도 'P-E-R' 또는 '퍼'로 읽는다.</div>
+          <div class="footnote-item"><span>[2]</span> 서로 같은 업종이어야 비교에 의미가 있다.</div>
+        </div>
+      </div>
+
+      <aside class="infobox">
+        <div class="infobox-card">
+          <div class="infobox-header">주가수익비율 (PER)</div>
+          <div class="infobox-row"><div class="infobox-label">영문</div><div class="infobox-value">Price-to-Earnings Ratio</div></div>
+          <div class="infobox-row"><div class="infobox-label">약칭</div><div class="infobox-value">PER, P/E</div></div>
+          <div class="infobox-row"><div class="infobox-label">분류</div><div class="infobox-value"><a href="#">시장가치비율</a></div></div>
+          <div class="infobox-row"><div class="infobox-label">관련</div><div class="infobox-value"><a href="#">PBR</a>, <a href="#">ROE</a>, <a href="#">EPS</a></div></div>
+          <div class="infobox-row"><div class="infobox-label">공식</div><div class="infobox-value" style="font-family:monospace;font-size:12px">주가 ÷ EPS</div></div>
+        </div>
+        <div class="categories">
+          <span class="badge badge-purple">투자지표</span>
+          <span class="badge badge-purple">밸류에이션</span>
+          <span class="badge badge-purple">주식</span>
+        </div>
+        <div class="infobox-stats">
+          <div class="stats-title">활동</div>
+          <div class="stat-row"><span class="label">연결된 노트</span><span class="value">15개</span></div>
+          <div class="stat-row"><span class="label">최근 7일 편집</span><span class="value">5회</span></div>
+          <div class="stat-row"><span class="label">온톨로지 연결</span><span class="value">12개 관계</span></div>
+          <div class="stat-row"><span class="label">최종 수정</span><span class="value">어제</span></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
