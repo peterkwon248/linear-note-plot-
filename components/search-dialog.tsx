@@ -21,9 +21,6 @@ import {
 } from "@/components/ui/command"
 import {
   setActiveRoute,
-  setActiveFolderId,
-  setActiveTagId,
-  setActiveLabelId,
 } from "@/lib/table-route"
 import {
   FileText,
@@ -40,7 +37,6 @@ import {
   ArrowDownCircle,
   Inbox,
   Focus,
-  Search,
   Terminal,
   Layers,
   Shield,
@@ -48,10 +44,6 @@ import {
   Sun,
   Moon,
   Merge,
-  Tag,
-  Bookmark,
-  LayoutTemplate,
-  FolderOpen,
 } from "lucide-react"
 
 function highlightQuery(text: string, q: string): ReactNode {
@@ -71,10 +63,9 @@ function highlightQuery(text: string, q: string): ReactNode {
   )
 }
 
-type PaletteMode = "search" | "commands" | "links"
+type PaletteMode = "commands" | "links"
 
 const MODE_LABELS: Record<PaletteMode, string> = {
-  search: "Search",
   commands: "Commands",
   links: "Link to...",
 }
@@ -88,10 +79,6 @@ export function SearchDialog() {
   const commandPaletteMode = usePlotStore((s) => s.commandPaletteMode)
   const setCommandPaletteMode = usePlotStore((s) => s.setCommandPaletteMode)
   const threads = usePlotStore((s) => s.threads)
-  const tags = usePlotStore((s) => s.tags)
-  const labels = usePlotStore((s) => s.labels)
-  const templates = usePlotStore((s) => s.templates)
-  const folders = usePlotStore((s) => s.folders)
 
   // Actions
   const createNote = usePlotStore((s) => s.createNote)
@@ -134,7 +121,7 @@ export function SearchDialog() {
   useEffect(() => {
     if (!searchOpen) {
       setQuery("")
-      setCommandPaletteMode("search")
+      setCommandPaletteMode("commands")
       setThinkingStepInput(false)
       setThinkingStepText("")
       prevQueryRef.current = ""
@@ -143,12 +130,7 @@ export function SearchDialog() {
 
   // Mode switching via input prefixes
   useEffect(() => {
-    if (commandPaletteMode === "search") {
-      if (query === ">") {
-        setCommandPaletteMode("commands")
-        setQuery("")
-        return
-      }
+    if (commandPaletteMode === "commands") {
       if (query === "[[") {
         if (selectedNoteId) {
           setCommandPaletteMode("links")
@@ -164,12 +146,12 @@ export function SearchDialog() {
     prevQueryRef.current = query
   }, [query, commandPaletteMode, setCommandPaletteMode, selectedNoteId])
 
-  // Handle backspace on empty input to go back to search
+  // Handle backspace on empty input to go back to commands mode
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Backspace" && query === "" && commandPaletteMode !== "search") {
+      if (e.key === "Backspace" && query === "" && commandPaletteMode === "links") {
         e.preventDefault()
-        setCommandPaletteMode("search")
+        setCommandPaletteMode("commands")
       }
     },
     [query, commandPaletteMode, setCommandPaletteMode]
@@ -180,14 +162,14 @@ export function SearchDialog() {
   function closePalette() {
     setSearchOpen(false)
     setQuery("")
-    setCommandPaletteMode("search")
+    setCommandPaletteMode("commands")
     setThinkingStepInput(false)
     setThinkingStepText("")
   }
 
-  // ---------- Search Mode ----------
+  // ---------- Links Mode Data ----------
 
-  // Filtered note pool (non-archived, non-trashed) shared by Search + Links
+  // Filtered note pool (non-archived, non-trashed)
   const searchableNotes = useMemo(
     () => notes.filter((n) => !n.archived && !n.trashed && n.triageStatus !== "trashed"),
     [notes],
@@ -196,11 +178,11 @@ export function SearchDialog() {
   // Backlinks map — maintained by index hook, recalculated only when notes change
   const backlinksMap = useBacklinksIndex()
 
-  // Worker-based search for search and links modes
-  const searchQuery = commandPaletteMode !== "commands" ? query : ""
+  // Worker-based search for links mode
+  const searchQuery = commandPaletteMode === "links" ? query : ""
   const { results: workerResults, isIndexing } = useSearch(searchQuery, 12)
 
-  // Recent notes (no query) – unchanged behavior
+  // Recent notes (no query) – for links mode
   const recentNotes = useMemo(
     () =>
       [...searchableNotes]
@@ -212,45 +194,6 @@ export function SearchDialog() {
   // Whether we're showing search results (non-empty query) vs recent notes
   const hasFuzzyQuery = query.trim().length > 0
 
-  // ---------- Entity search (synchronous, for non-note types) ----------
-  const matchedTags = useMemo(() => {
-    if (!hasFuzzyQuery || commandPaletteMode !== "search") return []
-    const q = query.toLowerCase().trim()
-    return tags.filter((t) => t.name.toLowerCase().includes(q)).slice(0, 5)
-  }, [tags, query, hasFuzzyQuery, commandPaletteMode])
-
-  const matchedLabels = useMemo(() => {
-    if (!hasFuzzyQuery || commandPaletteMode !== "search") return []
-    const q = query.toLowerCase().trim()
-    return labels.filter((l) => l.name.toLowerCase().includes(q)).slice(0, 5)
-  }, [labels, query, hasFuzzyQuery, commandPaletteMode])
-
-  const matchedTemplates = useMemo(() => {
-    if (!hasFuzzyQuery || commandPaletteMode !== "search") return []
-    const q = query.toLowerCase().trim()
-    return templates.filter(
-      (t) => t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
-    ).slice(0, 5)
-  }, [templates, query, hasFuzzyQuery, commandPaletteMode])
-
-  const matchedFolders = useMemo(() => {
-    if (!hasFuzzyQuery || commandPaletteMode !== "search") return []
-    const q = query.toLowerCase().trim()
-    return folders.filter((f) => f.name.toLowerCase().includes(q)).slice(0, 5)
-  }, [folders, query, hasFuzzyQuery, commandPaletteMode])
-
-  // Count notes per tag for sublabel
-  const tagNoteCounts = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const note of notes) {
-      if (note.trashed || note.archived) continue
-      for (const tagName of note.tags ?? []) {
-        counts.set(tagName, (counts.get(tagName) ?? 0) + 1)
-      }
-    }
-    return counts
-  }, [notes])
-
   /** Build sublabel text: "Inbox · Updated 2d · 3 backlinks" */
   function noteSublabel(note: { id: string; status: string; updatedAt: string; createdAt: string }): string {
     const stageLabel = note.status.charAt(0).toUpperCase() + note.status.slice(1)
@@ -260,46 +203,13 @@ export function SearchDialog() {
     return `${stageLabel} · Updated ${relTime}${blSuffix}`
   }
 
-  // Disable cmdk's internal filter for Search/Links so Fuse controls ordering.
+  // Disable cmdk's internal filter for Links mode so Fuse controls ordering.
   // For Commands mode, let cmdk handle its own filtering (return undefined).
   const cmdkFilter = useMemo(
     () =>
       commandPaletteMode === "commands" ? undefined : () => 1,
     [commandPaletteMode],
   )
-
-  function handleSearchSelect(noteId: string) {
-    setSelectedNoteId(noteId)
-    router.push("/notes")
-    closePalette()
-  }
-
-  function handleTagSelect(tagId: string) {
-    setActiveTagId(tagId)
-    setActiveRoute("/notes")
-    router.push("/notes")
-    closePalette()
-  }
-
-  function handleLabelSelect2(labelId: string) {
-    setActiveLabelId(labelId)
-    setActiveRoute("/notes")
-    router.push("/notes")
-    closePalette()
-  }
-
-  function handleTemplateSelect(_templateId: string) {
-    setActiveRoute("/templates")
-    router.push("/templates")
-    closePalette()
-  }
-
-  function handleFolderSelect(folderId: string) {
-    setActiveFolderId(folderId)
-    setActiveRoute("/notes")
-    router.push("/notes")
-    closePalette()
-  }
 
   // ---------- Links Mode ----------
 
@@ -321,10 +231,8 @@ export function SearchDialog() {
   // Determine dialog description based on mode
   const dialogDescription = useMemo(() => {
     switch (commandPaletteMode) {
-      case "search":
-        return 'Search notes, tags, labels, and more. Type ">" for commands, "[[" to link.'
       case "commands":
-        return "Run a command. Backspace to go back."
+        return 'Run a command. Type "[[" to link a note. Backspace to go back.'
       case "links":
         return "Search for a note to link to."
     }
@@ -332,8 +240,6 @@ export function SearchDialog() {
 
   const inputPlaceholder = useMemo(() => {
     switch (commandPaletteMode) {
-      case "search":
-        return "Search..."
       case "commands":
         return "Type a command..."
       case "links":
@@ -353,16 +259,14 @@ export function SearchDialog() {
       filter={cmdkFilter}
     >
       <div className="relative">
-        {/* Mode badge */}
-        {commandPaletteMode !== "search" && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center">
-            <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
-              {commandPaletteMode === "commands" && <Terminal className="h-3.5 w-3.5" />}
-              {commandPaletteMode === "links" && <Link2 className="h-3.5 w-3.5" />}
-              {MODE_LABELS[commandPaletteMode]}
-            </span>
-          </div>
-        )}
+        {/* Mode badge — always shown */}
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center">
+          <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+            {commandPaletteMode === "commands" && <Terminal className="h-3.5 w-3.5" />}
+            {commandPaletteMode === "links" && <Link2 className="h-3.5 w-3.5" />}
+            {MODE_LABELS[commandPaletteMode]}
+          </span>
+        </div>
         {thinkingStepInput ? (
           <div className="flex h-12 items-center gap-2 border-b px-3">
             <BrainCircuit className="h-4 w-4 shrink-0 opacity-50" />
@@ -392,7 +296,7 @@ export function SearchDialog() {
             value={query}
             onValueChange={setQuery}
             onKeyDown={handleKeyDown}
-            className={commandPaletteMode !== "search" ? "pl-24" : undefined}
+            className="pl-24"
           />
         )}
       </div>
@@ -400,210 +304,9 @@ export function SearchDialog() {
       {!thinkingStepInput && (
         <CommandList>
           <CommandEmpty>
-            {commandPaletteMode === "search" && (isIndexing ? "Building search index..." : "No notes found.")}
             {commandPaletteMode === "commands" && "No matching commands."}
             {commandPaletteMode === "links" && (isIndexing ? "Building search index..." : "No notes found to link.")}
           </CommandEmpty>
-
-          {/* ====== SEARCH MODE ====== */}
-          {commandPaletteMode === "search" && (
-            <>
-              {/* Worker-based search results (non-empty query) */}
-              {hasFuzzyQuery && workerResults.length > 0 && (
-                <CommandGroup heading="Results">
-                  {workerResults.map((note) => (
-                    <CommandItem
-                      key={note.id}
-                      value={`search-${note.id}`}
-                      onSelect={() => handleSearchSelect(note.id)}
-                    >
-                      {note.pinned ? (
-                        <Pin className="h-4 w-4 shrink-0 self-start mt-0.5" />
-                      ) : (
-                        <FileText className="h-4 w-4 shrink-0 self-start mt-0.5" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate">
-                          {note.title || "Untitled"}
-                        </div>
-                        <div className="truncate text-xs text-muted-foreground leading-tight">
-                          {noteSublabel(note)}
-                        </div>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-
-              {/* Recent notes (empty query) */}
-              {!hasFuzzyQuery && recentNotes.length > 0 && (
-                <CommandGroup heading="Recent Notes">
-                  {recentNotes.map((note) => (
-                    <CommandItem
-                      key={note.id}
-                      value={`search-${note.id}-${note.title || "Untitled"}`}
-                      onSelect={() => handleSearchSelect(note.id)}
-                    >
-                      {note.pinned ? (
-                        <Pin className="h-4 w-4 shrink-0 self-start mt-0.5" />
-                      ) : (
-                        <FileText className="h-4 w-4 shrink-0 self-start mt-0.5" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate">{note.title || "Untitled"}</div>
-                        <div className="truncate text-xs text-muted-foreground leading-tight">
-                          {noteSublabel(note)}
-                        </div>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-
-              {/* Entity results (non-empty query) */}
-              {hasFuzzyQuery && matchedTags.length > 0 && (
-                <CommandGroup heading="Tags">
-                  {matchedTags.map((tag) => (
-                    <CommandItem
-                      key={`tag-${tag.id}`}
-                      value={`tag-${tag.id}-${tag.name}`}
-                      onSelect={() => handleTagSelect(tag.id)}
-                    >
-                      <Tag className="h-4 w-4 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate">
-                          {highlightQuery(`#${tag.name}`, query)}
-                        </div>
-                      </div>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {tagNoteCounts.get(tag.name) ?? 0}
-                      </span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-
-              {hasFuzzyQuery && matchedLabels.length > 0 && (
-                <CommandGroup heading="Labels">
-                  {matchedLabels.map((label) => (
-                    <CommandItem
-                      key={`label-${label.id}`}
-                      value={`label-${label.id}-${label.name}`}
-                      onSelect={() => handleLabelSelect2(label.id)}
-                    >
-                      <Bookmark className="h-4 w-4 shrink-0" />
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span
-                          className="h-2.5 w-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: label.color || "#6b7280" }}
-                        />
-                        <span className="truncate">
-                          {highlightQuery(label.name, query)}
-                        </span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-
-              {hasFuzzyQuery && matchedTemplates.length > 0 && (
-                <CommandGroup heading="Templates">
-                  {matchedTemplates.map((tmpl) => (
-                    <CommandItem
-                      key={`tmpl-${tmpl.id}`}
-                      value={`tmpl-${tmpl.id}-${tmpl.name}`}
-                      onSelect={() => handleTemplateSelect(tmpl.id)}
-                    >
-                      <span className="text-sm shrink-0">{tmpl.icon || "📄"}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate">
-                          {highlightQuery(tmpl.name, query)}
-                        </div>
-                        {tmpl.description && (
-                          <div className="truncate text-xs text-muted-foreground leading-tight">
-                            {tmpl.description}
-                          </div>
-                        )}
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-
-              {hasFuzzyQuery && matchedFolders.length > 0 && (
-                <CommandGroup heading="Folders">
-                  {matchedFolders.map((folder) => (
-                    <CommandItem
-                      key={`folder-${folder.id}`}
-                      value={`folder-${folder.id}-${folder.name}`}
-                      onSelect={() => handleFolderSelect(folder.id)}
-                    >
-                      <FolderOpen className="h-4 w-4 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate">
-                          {highlightQuery(folder.name, query)}
-                        </div>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-
-              {/* Quick actions (empty query only) */}
-              {!hasFuzzyQuery && (
-                <>
-                  <CommandSeparator />
-                  <CommandGroup heading="Quick Actions">
-                    <CommandItem
-                      value="quick-go-to-inbox"
-                      onSelect={() => {
-                        router.push("/inbox")
-                        closePalette()
-                      }}
-                    >
-                      <Inbox className="h-4 w-4" />
-                      <span>Go to Inbox</span>
-                      <CommandShortcut>G I</CommandShortcut>
-                    </CommandItem>
-                    <CommandItem
-                      value="quick-go-to-settings"
-                      onSelect={() => {
-                        router.push("/settings")
-                        closePalette()
-                      }}
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Go to Settings</span>
-                    </CommandItem>
-                    <CommandItem
-                      value="switch-to-commands"
-                      onSelect={() => {
-                        setCommandPaletteMode("commands")
-                        setQuery("")
-                      }}
-                    >
-                      <Terminal className="h-4 w-4" />
-                      <span>Open Commands</span>
-                      <CommandShortcut>{">"}</CommandShortcut>
-                    </CommandItem>
-                    {selectedNoteId && (
-                      <CommandItem
-                        value="switch-to-links"
-                        onSelect={() => {
-                          setCommandPaletteMode("links")
-                          setQuery("")
-                        }}
-                      >
-                        <Link2 className="h-4 w-4" />
-                        <span>Link to note...</span>
-                        <CommandShortcut>{"[["}</CommandShortcut>
-                      </CommandItem>
-                    )}
-                  </CommandGroup>
-                </>
-              )}
-            </>
-          )}
 
           {/* ====== COMMANDS MODE ====== */}
           {commandPaletteMode === "commands" && (

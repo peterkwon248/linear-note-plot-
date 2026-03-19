@@ -1,92 +1,144 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { BookOpen, Plus, FileQuestion, ExternalLink, ArrowUpDown } from "lucide-react"
+import {
+  BookOpen,
+  Plus,
+  Search,
+  Clock,
+  TrendingUp,
+  CircleDot,
+  FolderOpen,
+  AlertTriangle,
+  ArrowLeft,
+  PenLine,
+  Check,
+  Pencil,
+  Trash2,
+} from "lucide-react"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
-import type { Note } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
-
-type WikiTab = "articles" | "redlinks"
-type ArticleSortBy = "title" | "updatedAt"
-
-// Simple relative time
-function relativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return "now"
-  if (mins < 60) return `${mins}m`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d`
-  const months = Math.floor(days / 30)
-  return `${months}mo`
-}
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
+import { shortRelative } from "@/lib/format-utils"
+import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
+import { WikiTOC } from "@/components/editor/wiki-toc"
+import { WikiInfobox } from "@/components/editor/wiki-infobox"
+import { WikiCategories } from "@/components/editor/wiki-categories"
+import { WikiDisambig } from "@/components/editor/wiki-disambig"
+import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
+import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
   const createWikiStub = usePlotStore((s) => s.createWikiStub)
+  const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const router = useRouter()
+  const backlinkCounts = useBacklinksIndex()
 
-  const [activeTab, setActiveTab] = useState<WikiTab>("articles")
   const [searchQuery, setSearchQuery] = useState("")
-  const [sortBy, setSortBy] = useState<ArticleSortBy>("title")
+  const [searchFocused, setSearchFocused] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Navigate to notes view and open the note
-  const navigateToNote = (noteId: string) => {
-    openNote(noteId)
-    setActiveRoute("/notes")
-    router.push("/notes")
-  }
+  // Article reader state
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
+  const [isEditingArticle, setIsEditingArticle] = useState(false)
+
+  // Reset edit mode whenever we navigate to a different article
+  useEffect(() => {
+    setIsEditingArticle(false)
+  }, [selectedArticleId])
+
+  // Navigate to notes view (for non-wiki notes)
+  const navigateToNote = useCallback(
+    (noteId: string) => {
+      openNote(noteId)
+      setActiveRoute("/notes")
+      router.push("/notes")
+    },
+    [openNote, router]
+  )
+
+  // Open article within WikiView
+  const openArticle = useCallback((noteId: string) => {
+    setSelectedArticleId(noteId)
+  }, [])
+
+  // Smart navigation: wiki notes open in-view, non-wiki go to /notes
+  const handleNavigate = useCallback(
+    (noteId: string) => {
+      const target = notes.find((n) => n.id === noteId)
+      if (target?.isWiki && !target.trashed) {
+        openArticle(noteId)
+      } else {
+        navigateToNote(noteId)
+      }
+    },
+    [notes, openArticle, navigateToNote]
+  )
+
+  const handleCreateWiki = useCallback(() => {
+    const id = createWikiStub("Untitled Wiki")
+    // Open new wiki in edit mode in /notes
+    navigateToNote(id)
+  }, [createWikiStub, navigateToNote])
+
+  const handleCreateFromRedLink = useCallback(
+    (title: string) => {
+      const id = createWikiStub(title)
+      openArticle(id)
+    },
+    [createWikiStub, openArticle]
+  )
+
+  const handleEditArticle = useCallback(() => {
+    setIsEditingArticle(true)
+  }, [])
+
+  const handleDoneEditing = useCallback(() => {
+    setIsEditingArticle(false)
+  }, [])
+
+  const handleBack = useCallback(() => {
+    setIsEditingArticle(false)
+    setSelectedArticleId(null)
+  }, [])
 
   // All non-trashed wiki articles
-  const wikiArticles = useMemo(
+  const wikiNotes = useMemo(
     () => notes.filter((n) => n.isWiki && !n.trashed),
     [notes]
   )
 
-  // Filtered articles (by search)
-  const filteredArticles = useMemo(() => {
-    if (!searchQuery.trim()) return wikiArticles
-    const q = searchQuery.toLowerCase()
-    return wikiArticles.filter(
-      (n) =>
-        n.title.toLowerCase().includes(q) ||
-        n.aliases.some((a) => a.toLowerCase().includes(q))
-    )
-  }, [wikiArticles, searchQuery])
+  // Reset selectedArticleId if note was deleted
+  const selectedNote = selectedArticleId
+    ? notes.find((n) => n.id === selectedArticleId && !n.trashed)
+    : null
+  if (selectedArticleId && !selectedNote) {
+    // Use effect-free reset: will be null on next render
+    // We need to handle this in render to avoid stale state
+  }
 
-  // Sorted articles
-  const sortedArticles = useMemo(() => {
-    const result = [...filteredArticles]
-    if (sortBy === "title") {
-      return result.sort((a, b) =>
-        (a.title || "Untitled").localeCompare(b.title || "Untitled")
-      )
-    }
-    return result.sort(
-      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    )
-  }, [filteredArticles, sortBy])
-
-  // Red links: collect all [[link]] targets from all notes, find ones without a matching wiki note
+  // Red links: collect all [[link]] targets that don't have a matching wiki note
   const redLinks = useMemo(() => {
-    // Build a set of all wiki titles (lowercased) for quick lookup
     const wikiTitleSet = new Set(
-      notes
-        .filter((n) => n.isWiki && !n.trashed)
-        .map((n) => n.title.toLowerCase())
+      wikiNotes.map((n) => n.title.toLowerCase())
     )
-    // Also include aliases
-    notes
-      .filter((n) => n.isWiki && !n.trashed)
-      .forEach((n) => n.aliases.forEach((a) => wikiTitleSet.add(a.toLowerCase())))
+    wikiNotes.forEach((n) =>
+      n.aliases.forEach((a) => wikiTitleSet.add(a.toLowerCase()))
+    )
 
-    // Collect link target -> Set of source note ids
     const linkRefs = new Map<string, Set<string>>()
     for (const note of notes) {
       if (note.trashed) continue
@@ -101,316 +153,707 @@ export function WikiView() {
       }
     }
 
-    // Convert to sorted array
     return Array.from(linkRefs.entries())
       .map(([title, refs]) => ({ title, refCount: refs.size }))
       .sort((a, b) => b.refCount - a.refCount || a.title.localeCompare(b.title))
-  }, [notes])
+  }, [notes, wikiNotes])
 
-  // Filtered red links
-  const filteredRedLinks = useMemo(() => {
-    if (!searchQuery.trim()) return redLinks
+  // Stats
+  const stats = useMemo(() => {
+    const articleCount = wikiNotes.length
+    const redLinkCount = redLinks.length
+    const internalLinkCount = wikiNotes.reduce(
+      (sum, n) => sum + (n.linksOut?.length ?? 0),
+      0
+    )
+
+    // Connected notes: unique non-wiki notes that have backlinks TO wiki notes
+    const wikiIds = new Set(wikiNotes.map((n) => n.id))
+    const connectedNoteIds = new Set<string>()
+    for (const note of notes) {
+      if (note.trashed || wikiIds.has(note.id)) continue
+      for (const link of note.linksOut) {
+        const normalized = link.toLowerCase()
+        const hasMatch = wikiNotes.some(
+          (w) =>
+            w.title.toLowerCase() === normalized ||
+            w.aliases.some((a) => a.toLowerCase() === normalized)
+        )
+        if (hasMatch) {
+          connectedNoteIds.add(note.id)
+          break
+        }
+      }
+    }
+
+    return {
+      articles: articleCount,
+      redLinks: redLinkCount,
+      internalLinks: internalLinkCount,
+      connectedNotes: connectedNoteIds.size,
+    }
+  }, [wikiNotes, redLinks, notes])
+
+  // Search results (simple title/alias filter)
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
     const q = searchQuery.toLowerCase()
-    return redLinks.filter((r) => r.title.toLowerCase().includes(q))
-  }, [redLinks, searchQuery])
+    return wikiNotes
+      .filter(
+        (n) =>
+          n.title.toLowerCase().includes(q) ||
+          n.aliases.some((a) => a.toLowerCase().includes(q))
+      )
+      .slice(0, 8)
+  }, [wikiNotes, searchQuery])
 
-  const handleCreateWiki = () => {
-    const id = createWikiStub("Untitled Wiki")
-    navigateToNote(id)
+  const showSearchDropdown =
+    searchFocused && searchQuery.trim().length > 0 && searchResults.length > 0
+
+  // Card data: recent changes
+  const recentChanges = useMemo(
+    () =>
+      [...wikiNotes]
+        .sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        )
+        .slice(0, 5),
+    [wikiNotes]
+  )
+
+  // Card data: most connected (by backlink count)
+  const mostConnected = useMemo(() => {
+    return [...wikiNotes]
+      .map((n) => ({ note: n, count: backlinkCounts.get(n.id) ?? 0 }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+  }, [wikiNotes, backlinkCounts])
+
+  // Card data: categories (tags used on wiki notes)
+  const categories = useMemo(() => {
+    const tagCounts = new Map<string, number>()
+    let uncategorized = 0
+    for (const n of wikiNotes) {
+      if (n.tags.length === 0) {
+        uncategorized++
+      } else {
+        for (const tag of n.tags) {
+          tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1)
+        }
+      }
+    }
+    return {
+      tags: Array.from(tagCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, count]) => ({ name, count })),
+      uncategorized,
+    }
+  }, [wikiNotes])
+
+  // Card data: stale documents (14+ days since update)
+  const staleDocuments = useMemo(() => {
+    const now = Date.now()
+    const DAY = 86400000
+    return wikiNotes
+      .filter((n) => now - new Date(n.updatedAt).getTime() > 14 * DAY)
+      .sort(
+        (a, b) =>
+          new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
+      )
+      .slice(0, 5)
+      .map((n) => {
+        const daysAgo = Math.floor(
+          (now - new Date(n.updatedAt).getTime()) / DAY
+        )
+        return { note: n, daysAgo }
+      })
+  }, [wikiNotes])
+
+  // ── Article Reader Mode ──
+  if (selectedArticleId && selectedNote) {
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <ViewHeader
+          icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
+          title={selectedNote.title || "Untitled"}
+          actions={
+            <div className="flex items-center gap-2">
+              {isEditingArticle ? (
+                <button
+                  onClick={handleDoneEditing}
+                  className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
+                >
+                  <Check className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Done
+                </button>
+              ) : (
+                <button
+                  onClick={handleEditArticle}
+                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
+                >
+                  <PenLine className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Edit
+                </button>
+              )}
+            </div>
+          }
+        >
+          {/* Back button row below ViewHeader */}
+          <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+              Back
+            </button>
+          </div>
+        </ViewHeader>
+
+        <WikiArticleReader
+          noteId={selectedArticleId}
+          onNavigate={handleNavigate}
+          isEditing={isEditingArticle}
+        />
+      </div>
+    )
   }
 
-  const handleCreateFromRedLink = (title: string) => {
-    const id = createWikiStub(title)
-    navigateToNote(id)
-  }
-
-  const articlesCount = wikiArticles.length
-  const redLinksCount = redLinks.length
-
+  // ── Dashboard Mode ──
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
         title="Wiki"
-        searchPlaceholder="Search wiki..."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
+        count={stats.articles}
         actions={
           <button
             onClick={handleCreateWiki}
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground hover:bg-accent/90"
+            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
           >
-            <Plus className="h-3.5 w-3.5" />
-            New Wiki
+            <Plus className="h-3.5 w-3.5" strokeWidth={1.5} />
+            New Article
           </button>
         }
+      />
+
+      {/* Scrollable dashboard */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-12 py-10">
+          {/* Hero Section */}
+          <div className="mb-10 text-center">
+            <div className="mb-3 flex items-center justify-center gap-2.5">
+              <BookOpen
+                className="h-6 w-6 text-accent"
+                strokeWidth={1.5}
+              />
+              <h2 className="text-xl font-semibold text-foreground">
+                Plot Wiki
+              </h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Your personal encyclopedia
+            </p>
+
+            {/* Stat bar */}
+            <div className="mt-5 flex items-center justify-center gap-6">
+              <StatItem value={stats.articles} label="Articles" />
+              <StatDivider />
+              <StatItem
+                value={stats.redLinks}
+                label="Red Links"
+                valueColor="text-destructive"
+              />
+              <StatDivider />
+              <StatItem value={stats.internalLinks} label="Internal Links" />
+              <StatDivider />
+              <StatItem value={stats.connectedNotes} label="Connected Notes" />
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative mx-auto mb-10 max-w-[640px]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => {
+                  setTimeout(() => setSearchFocused(false), 150)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && searchResults.length > 0) {
+                    openArticle(searchResults[0].id)
+                    setSearchQuery("")
+                  }
+                  if (e.key === "Escape") {
+                    setSearchQuery("")
+                    searchInputRef.current?.blur()
+                  }
+                }}
+                placeholder="Search wiki articles..."
+                className="h-11 w-full rounded-xl border border-border bg-secondary/50 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+            </div>
+
+            {/* Search dropdown */}
+            {showSearchDropdown && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-popover shadow-md">
+                <div className="max-h-64 overflow-y-auto py-1">
+                  {searchResults.map((note) => (
+                    <button
+                      key={note.id}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        openArticle(note.id)
+                        setSearchQuery("")
+                      }}
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                    >
+                      <BookOpen
+                        className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                        strokeWidth={1.5}
+                      />
+                      <span className="truncate">
+                        {note.title || "Untitled"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Card Grid */}
+          <div className="grid grid-cols-3 gap-5 mt-2">
+            {/* Card 1: Recent Changes */}
+            <DashboardCard
+              icon={
+                <Clock
+                  className="h-4 w-4 text-muted-foreground"
+                  strokeWidth={1.5}
+                />
+              }
+              title="Recent Changes"
+            >
+              {recentChanges.length === 0 ? (
+                <EmptyCardMessage>No changes yet</EmptyCardMessage>
+              ) : (
+                <ul className="space-y-0.5">
+                  {recentChanges.map((note) => (
+                    <CardListItem
+                      key={note.id}
+                      onClick={() => openArticle(note.id)}
+                      onEdit={() => openArticle(note.id)}
+                      onDelete={() => toggleTrash(note.id)}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent" />
+                      <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                        {note.title || "Untitled"}
+                      </span>
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {shortRelative(note.updatedAt)}
+                      </span>
+                    </CardListItem>
+                  ))}
+                </ul>
+              )}
+            </DashboardCard>
+
+            {/* Card 2: Most Connected */}
+            <DashboardCard
+              icon={
+                <TrendingUp
+                  className="h-4 w-4 text-muted-foreground"
+                  strokeWidth={1.5}
+                />
+              }
+              title="Most Connected"
+            >
+              {mostConnected.length === 0 ||
+              mostConnected[0].count === 0 ? (
+                <EmptyCardMessage>No connected articles</EmptyCardMessage>
+              ) : (
+                <ul className="space-y-0.5">
+                  {mostConnected
+                    .filter((item) => item.count > 0)
+                    .map((item) => (
+                      <CardListItem
+                        key={item.note.id}
+                        onClick={() => openArticle(item.note.id)}
+                        onEdit={() => openArticle(item.note.id)}
+                        onDelete={() => toggleTrash(item.note.id)}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent" />
+                        <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                          {item.note.title || "Untitled"}
+                        </span>
+                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                          {item.count} notes
+                        </span>
+                      </CardListItem>
+                    ))}
+                </ul>
+              )}
+            </DashboardCard>
+
+            {/* Card 3: Red Links (missing concepts) */}
+            <DashboardCard
+              icon={
+                <CircleDot
+                  className="h-4 w-4 text-destructive"
+                  strokeWidth={1.5}
+                />
+              }
+              title="Missing Concepts"
+              titleColor="text-destructive"
+            >
+              {redLinks.length === 0 ? (
+                <EmptyCardMessage>No red links</EmptyCardMessage>
+              ) : (
+                <ul className="space-y-0.5">
+                  {redLinks.slice(0, 5).map((item) => (
+                    <li key={item.title} className="group">
+                      <button
+                        onClick={() => handleCreateFromRedLink(item.title)}
+                        className="flex w-full items-center gap-2.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 hover:bg-secondary"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-destructive" />
+                        <span className="min-w-0 flex-1 truncate text-sm text-destructive">
+                          {item.title}
+                        </span>
+                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground group-hover:hidden">
+                          {item.refCount} mentions
+                        </span>
+                        <span className="hidden shrink-0 items-center gap-1 text-xs font-medium text-accent group-hover:flex">
+                          <Plus className="h-3 w-3" strokeWidth={1.5} />
+                          Create
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </DashboardCard>
+
+            {/* Card 4: Categories (col-span-2) */}
+            <DashboardCard
+              icon={
+                <FolderOpen
+                  className="h-4 w-4 text-muted-foreground"
+                  strokeWidth={1.5}
+                />
+              }
+              title="Categories"
+              className="col-span-2"
+            >
+              {categories.tags.length === 0 &&
+              categories.uncategorized === 0 ? (
+                <EmptyCardMessage>No tags</EmptyCardMessage>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {categories.tags.map((tag) => (
+                    <span
+                      key={tag.name}
+                      className="rounded-full bg-accent/10 text-accent px-2.5 py-0.5 text-xs font-medium"
+                    >
+                      {tag.name} ({tag.count})
+                    </span>
+                  ))}
+                  {categories.uncategorized > 0 && (
+                    <span className="rounded-full bg-yellow-500/10 text-yellow-500 px-2.5 py-0.5 text-xs font-medium">
+                      Uncategorized ({categories.uncategorized})
+                    </span>
+                  )}
+                </div>
+              )}
+            </DashboardCard>
+
+            {/* Card 5: Stale Documents */}
+            <DashboardCard
+              icon={
+                <AlertTriangle
+                  className="h-4 w-4 text-muted-foreground"
+                  strokeWidth={1.5}
+                />
+              }
+              title="Stale Articles"
+            >
+              {staleDocuments.length === 0 ? (
+                <EmptyCardMessage>No stale articles</EmptyCardMessage>
+              ) : (
+                <ul className="space-y-0.5">
+                  {staleDocuments.map(({ note, daysAgo }) => (
+                    <CardListItem
+                      key={note.id}
+                      onClick={() => openArticle(note.id)}
+                      onEdit={() => openArticle(note.id)}
+                      onDelete={() => toggleTrash(note.id)}
+                    >
+                      <span
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full shrink-0",
+                          daysAgo >= 30
+                            ? "bg-destructive"
+                            : "bg-yellow-500"
+                        )}
+                      />
+                      <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                        {note.title || "Untitled"}
+                      </span>
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {shortRelative(note.updatedAt)}
+                      </span>
+                    </CardListItem>
+                  ))}
+                </ul>
+              )}
+            </DashboardCard>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Article Reader ──────────────────────────────── */
+
+function WikiArticleReader({
+  noteId,
+  onNavigate,
+  isEditing = false,
+}: {
+  noteId: string
+  onNavigate: (id: string) => void
+  isEditing?: boolean
+}) {
+  const notes = usePlotStore((s) => s.notes)
+  const allTags = usePlotStore((s) => s.tags)
+  const relations = usePlotStore((s) => s.relations)
+  const backlinks = useBacklinksFor(noteId)
+
+  const note = notes.find((n) => n.id === noteId)
+  if (!note) return null
+
+  const backlinkCount = backlinks.length
+  const relationCount = relations.filter(
+    (r) => r.sourceNoteId === noteId || r.targetNoteId === noteId
+  ).length
+
+  // Edit mode: single-column full-width editor
+  if (isEditing) {
+    return (
+      <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-8 py-6 max-w-[780px]">
+            <NoteEditorAdapter note={note} editable={true} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Read mode: 3-column layout
+  return (
+    <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
+      {/* Left: TOC sidebar */}
+      <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border p-4">
+        <div className="sticky top-0">
+          <WikiTOC content={note.content} className="w-full" />
+        </div>
+      </aside>
+
+      {/* Center: Article content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="wiki-read-content px-8 py-6 max-w-[780px]">
+          {/* Disambig banner */}
+          <WikiDisambig noteId={note.id} noteTitle={note.title} onNavigate={onNavigate} />
+
+          {/* Title */}
+          <h1 className="text-[28px] font-bold text-foreground mb-1">
+            {note.title || "Untitled"}
+          </h1>
+
+          {/* Aliases as subtitle */}
+          {note.aliases && note.aliases.length > 0 && (
+            <p className="text-sm text-muted-foreground mb-6">
+              {note.aliases.join(" \u00b7 ")}
+            </p>
+          )}
+
+          {/* Article body */}
+          <NoteEditorAdapter note={note} editable={false} />
+
+          {/* Related wiki docs */}
+          <WikiRelatedDocs noteId={note.id} onNavigate={onNavigate} />
+
+          {/* Backlinks */}
+          <BacklinksFooter noteId={note.id} onNavigate={onNavigate} />
+        </div>
+      </div>
+
+      {/* Right: Infobox sidebar */}
+      <aside className="w-[260px] shrink-0 overflow-y-auto border-l border-border p-4 space-y-4">
+        {/* Infobox */}
+        {(note.wikiInfobox ?? []).length > 0 && (
+          <WikiInfobox
+            noteId={note.id}
+            entries={note.wikiInfobox ?? []}
+            editable={false}
+            className="w-full"
+          />
+        )}
+
+        {/* Categories as badges */}
+        {note.tags.length > 0 && (
+          <WikiCategories noteTagIds={note.tags} allTags={allTags.filter((t) => !t.trashed)} />
+        )}
+
+        {/* Activity stats */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Activity
+          </h4>
+          <div className="space-y-1.5">
+            <StatRow label="Connected notes" value={`${backlinkCount}`} />
+            <StatRow label="Ontology links" value={`${relationCount}`} />
+            <StatRow label="Last modified" value={shortRelative(note.updatedAt)} />
+          </div>
+        </div>
+      </aside>
+    </div>
+  )
+}
+
+/* ── Sub-components ──────────────────────────────── */
+
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-2xs text-muted-foreground">{label}</span>
+      <span className="text-2xs font-medium text-foreground">{value}</span>
+    </div>
+  )
+}
+
+function StatItem({
+  value,
+  label,
+  valueColor,
+}: {
+  value: number
+  label: string
+  valueColor?: string
+}) {
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <span
+        className={cn(
+          "text-lg font-semibold tabular-nums",
+          valueColor ?? "text-foreground"
+        )}
       >
-        {/* Tabs */}
-        <div className="flex items-center gap-0 border-b border-border px-4">
-          <button
-            onClick={() => setActiveTab("articles")}
-            className={cn(
-              "flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm transition-colors",
-              activeTab === "articles"
-                ? "border-primary font-medium text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <BookOpen className="h-3.5 w-3.5" />
-            Articles ({articlesCount})
-          </button>
-          <button
-            onClick={() => setActiveTab("redlinks")}
-            className={cn(
-              "flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm transition-colors",
-              activeTab === "redlinks"
-                ? "border-primary font-medium text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <FileQuestion className="h-3.5 w-3.5" />
-            Red Links
-            {redLinksCount > 0 && (
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.5 text-xs tabular-nums",
-                  activeTab === "redlinks"
-                    ? "bg-destructive/15 text-destructive"
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                {redLinksCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </ViewHeader>
-
-      {/* Tab content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {activeTab === "articles" && (
-          <ArticlesTab
-            articles={sortedArticles}
-            totalCount={articlesCount}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-            searchQuery={searchQuery}
-            onOpenNote={navigateToNote}
-            onCreateWiki={handleCreateWiki}
-          />
-        )}
-        {activeTab === "redlinks" && (
-          <RedLinksTab
-            redLinks={filteredRedLinks}
-            searchQuery={searchQuery}
-            onCreateFromRedLink={handleCreateFromRedLink}
-          />
-        )}
-      </div>
+        {value}
+      </span>
+      <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   )
 }
 
-/* ── Articles Tab ────────────────────────────────── */
-
-interface ArticlesTabProps {
-  articles: Note[]
-  totalCount: number
-  sortBy: ArticleSortBy
-  onSortChange: (s: ArticleSortBy) => void
-  searchQuery: string
-  onOpenNote: (id: string) => void
-  onCreateWiki: () => void
-}
-
-function ArticlesTab({
-  articles,
-  totalCount,
-  sortBy,
-  onSortChange,
-  searchQuery,
-  onOpenNote,
-  onCreateWiki,
-}: ArticlesTabProps) {
-  if (totalCount === 0) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-          <BookOpen className="h-7 w-7 text-muted-foreground" />
-        </div>
-        <div className="text-center">
-          <p className="font-medium text-foreground">No wiki articles yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Build your personal knowledge base
-          </p>
-        </div>
-        <button
-          onClick={onCreateWiki}
-          className="flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
-        >
-          <Plus className="h-4 w-4" />
-          Create your first wiki
-        </button>
-      </div>
-    )
-  }
-
-  if (articles.length === 0 && searchQuery) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        No articles match &ldquo;{searchQuery}&rdquo;
-      </div>
-    )
-  }
-
+function StatDivider() {
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Sort toolbar */}
-      <div className="flex items-center gap-2 border-b border-border px-4 py-1.5">
-        <span className="text-xs text-muted-foreground">
-          {articles.length} article{articles.length !== 1 ? "s" : ""}
-        </span>
-        <div className="flex-1" />
-        <button
-          onClick={() => onSortChange(sortBy === "title" ? "updatedAt" : "title")}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground"
-        >
-          <ArrowUpDown className="h-3 w-3" />
-          {sortBy === "title" ? "A–Z" : "Recently updated"}
-        </button>
-      </div>
-
-      {/* Table header */}
-      <div className="grid grid-cols-[1fr_180px_80px_64px] items-center border-b border-border px-4 py-2 text-xs font-medium text-muted-foreground">
-        <span>Title</span>
-        <span>Aliases</span>
-        <span>Tags</span>
-        <span className="text-right">Updated</span>
-      </div>
-
-      {/* Article rows */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="divide-y divide-border/50">
-          {articles.map((note) => (
-            <button
-              key={note.id}
-              onClick={() => onOpenNote(note.id)}
-              className="grid w-full grid-cols-[1fr_180px_80px_64px] items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-secondary/40"
-            >
-              {/* Title */}
-              <span className="truncate text-sm font-medium text-foreground">
-                {note.title || "Untitled"}
-              </span>
-
-              {/* Aliases */}
-              <span className="truncate text-xs text-muted-foreground">
-                {note.aliases.length > 0
-                  ? note.aliases.join(", ")
-                  : null}
-              </span>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1 overflow-hidden">
-                {note.tags.slice(0, 2).map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground"
-                  >
-                    {tag}
-                  </span>
-                ))}
-                {note.tags.length > 2 && (
-                  <span className="text-xs text-muted-foreground">
-                    +{note.tags.length - 2}
-                  </span>
-                )}
-              </div>
-
-              {/* Updated */}
-              <span className="text-right text-xs tabular-nums text-muted-foreground">
-                {relativeTime(note.updatedAt)}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+    <span className="text-sm text-muted-foreground/40 select-none">
+      ·
+    </span>
   )
 }
 
-/* ── Red Links Tab ───────────────────────────────── */
-
-interface RedLinkItem {
+function DashboardCard({
+  icon,
+  title,
+  titleColor,
+  className,
+  children,
+}: {
+  icon: React.ReactNode
   title: string
-  refCount: number
-}
-
-interface RedLinksTabProps {
-  redLinks: RedLinkItem[]
-  searchQuery: string
-  onCreateFromRedLink: (title: string) => void
-}
-
-function RedLinksTab({ redLinks, searchQuery, onCreateFromRedLink }: RedLinksTabProps) {
-  if (redLinks.length === 0) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-          <FileQuestion className="h-7 w-7 text-muted-foreground" />
-        </div>
-        <div className="text-center">
-          <p className="font-medium text-foreground">No red links</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {searchQuery
-              ? `No missing links match "${searchQuery}"`
-              : "All [[wiki links]] have matching articles"}
-          </p>
-        </div>
-      </div>
-    )
-  }
-
+  titleColor?: string
+  className?: string
+  children: React.ReactNode
+}) {
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Description */}
-      <div className="border-b border-border bg-destructive/5 px-4 py-2.5">
-        <p className="text-xs text-muted-foreground">
-          These wiki links are referenced in your notes but don&apos;t have a corresponding article.
-          Click to create a stub.
-        </p>
+    <div
+      className={cn(
+        "rounded-lg border border-border bg-card p-5 min-h-[160px] transition-colors duration-150 hover:bg-card/80",
+        className
+      )}
+    >
+      <div
+        className={cn(
+          "text-sm font-semibold mb-3 flex items-center gap-2",
+          titleColor ?? "text-muted-foreground"
+        )}
+      >
+        {icon}
+        {title}
       </div>
-
-      {/* Table header */}
-      <div className="grid grid-cols-[1fr_120px] items-center border-b border-border px-4 py-2 text-xs font-medium text-muted-foreground">
-        <span>Missing article</span>
-        <span className="text-right">Referenced by</span>
-      </div>
-
-      {/* Red link rows */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="divide-y divide-border/50">
-          {redLinks.map((item) => (
-            <button
-              key={item.title}
-              onClick={() => onCreateFromRedLink(item.title)}
-              className="group grid w-full grid-cols-[1fr_120px] items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-secondary/40"
-            >
-              {/* Title — styled red-ish to signal missing */}
-              <div className="flex items-center gap-2 overflow-hidden">
-                <span className="truncate text-sm text-red-400/90 group-hover:text-red-400">
-                  {item.title}
-                </span>
-                <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-              </div>
-
-              {/* Ref count */}
-              <span className="text-right text-xs tabular-nums text-muted-foreground">
-                {item.refCount} note{item.refCount !== 1 ? "s" : ""}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {children}
     </div>
+  )
+}
+
+function CardListItem({
+  onClick,
+  onEdit,
+  onDelete,
+  children,
+}: {
+  onClick: () => void
+  onEdit?: () => void
+  onDelete?: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <li>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <button
+            onClick={onClick}
+            className="flex w-full items-center gap-2.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 hover:bg-secondary"
+          >
+            {children}
+          </button>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          <ContextMenuItem onClick={onClick}>
+            <BookOpen className="mr-2 h-3.5 w-3.5" strokeWidth={1.5} />
+            Read
+          </ContextMenuItem>
+          {onEdit && (
+            <ContextMenuItem onClick={onEdit}>
+              <Pencil className="mr-2 h-3.5 w-3.5" strokeWidth={1.5} />
+              Edit
+            </ContextMenuItem>
+          )}
+          <ContextMenuSeparator />
+          {onDelete && (
+            <ContextMenuItem onClick={onDelete} className="text-red-500 focus:text-red-500">
+              <Trash2 className="mr-2 h-3.5 w-3.5" strokeWidth={1.5} />
+              Delete
+            </ContextMenuItem>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
+    </li>
+  )
+}
+
+function EmptyCardMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs text-muted-foreground py-2">{children}</p>
   )
 }

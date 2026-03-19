@@ -181,6 +181,9 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     setSidebarPeek: (peek: boolean) => set({ sidebarPeek: peek }),
     restoreSidebar: () => set((s: any) => ({ sidebarCollapsed: false, sidebarPeek: false, sidebarWidth: s.sidebarLastWidth })),
 
+    // Side Peek
+    setSidePeekNoteId: (id: string | null) => set({ sidePeekNoteId: id }),
+
     // Merge
     setMergePickerOpen: (open: boolean, sourceId?: string | null) => {
       set({ mergePickerOpen: open, mergePickerSourceId: open ? (sourceId ?? null) : null })

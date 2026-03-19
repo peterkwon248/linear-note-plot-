@@ -38,9 +38,14 @@ import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 import type { Editor } from "@tiptap/react"
+import type { Note, Relation, Tag } from "@/lib/types"
 import { WikiTOC } from "@/components/editor/wiki-toc"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { WikiCategories } from "@/components/editor/wiki-categories"
+import { WikiDisambig } from "@/components/editor/wiki-disambig"
+import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
+import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
+import { shortRelative } from "@/lib/format-utils"
 
 interface NoteEditorProps {
   noteId?: string
@@ -68,6 +73,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const convertToWiki = usePlotStore((s) => s.convertToWiki)
   const revertFromWiki = usePlotStore((s) => s.revertFromWiki)
   const allTags = usePlotStore((s) => s.tags)
+  const relations = usePlotStore((s) => s.relations)
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
 
@@ -317,8 +323,8 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         />
       )}
 
-      {/* Wiki aliases */}
-      {note.isWiki && note.aliases && note.aliases.length > 0 && (
+      {/* Wiki aliases — only shown outside of wiki read mode */}
+      {note.isWiki && !isReadMode && note.aliases && note.aliases.length > 0 && (
         <div className="flex items-center gap-1.5 px-6 pt-1">
           <span className="text-xs text-muted-foreground/60">Also known as:</span>
           {note.aliases.map((alias, i) => (
@@ -334,38 +340,12 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
       {/* Content Editor */}
       {note.isWiki && isReadMode ? (
-        /* Wiki read mode: sidebar TOC + constrained typography */
-        <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
-          {/* Left: Sticky TOC sidebar */}
-          <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border p-4">
-            <div className="sticky top-0">
-              <WikiTOC content={note.content} className="w-full" />
-            </div>
-          </aside>
-
-          {/* Right: Content area */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="wiki-read-content px-8 py-4">
-              {/* Infobox float right */}
-              {(note.wikiInfobox ?? []).length > 0 && (
-                <div className="float-right ml-6 mb-4">
-                  <WikiInfobox
-                    noteId={note.id}
-                    entries={note.wikiInfobox ?? []}
-                    editable={false}
-                    className="w-[220px]"
-                  />
-                </div>
-              )}
-              <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={false} />
-              {/* Wiki categories (분류) */}
-              {note.tags.length > 0 && (
-                <WikiCategories noteTagIds={note.tags} allTags={allTags} />
-              )}
-              <BacklinksFooter noteId={note.id} />
-            </div>
-          </div>
-        </div>
+        <WikiReadLayout
+          note={note}
+          allTags={allTags}
+          relations={relations}
+          onEditorReady={handleEditorReady}
+        />
       ) : (
         /* Normal mode / wiki edit mode */
         <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
@@ -389,6 +369,101 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
       {/* FixedToolbar — outside SURFACE, full width (hidden in read mode) */}
       {!isReadMode && <FixedToolbar editor={editorInstance} />}
+    </div>
+  )
+}
+
+/* ── Wiki Read Mode: 3-column layout ──────────────────────── */
+
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-2xs text-muted-foreground">{label}</span>
+      <span className="text-2xs font-medium text-foreground">{value}</span>
+    </div>
+  )
+}
+
+function WikiReadLayout({
+  note,
+  allTags,
+  relations,
+  onEditorReady,
+}: {
+  note: Note
+  allTags: Tag[]
+  relations: Relation[]
+  onEditorReady: (editor: unknown) => void
+}) {
+  const backlinks = useBacklinksFor(note.id)
+
+  const backlinkCount = backlinks.length
+  const relationCount = relations.filter(
+    (r) => r.sourceNoteId === note.id || r.targetNoteId === note.id
+  ).length
+
+  return (
+    <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
+      {/* Left: TOC sidebar */}
+      <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border p-4">
+        <div className="sticky top-0">
+          <WikiTOC content={note.content} className="w-full" />
+        </div>
+      </aside>
+
+      {/* Center: Article content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="wiki-read-content px-8 py-6 max-w-[780px]">
+          {/* Disambig banner */}
+          <WikiDisambig noteId={note.id} noteTitle={note.title} />
+
+          {/* Aliases as subtitle */}
+          {note.aliases && note.aliases.length > 0 && (
+            <p className="text-sm text-muted-foreground mb-6">
+              {note.aliases.join(" · ")}
+            </p>
+          )}
+
+          {/* Article body */}
+          <NoteEditorAdapter note={note} onEditorReady={onEditorReady} editable={false} />
+
+          {/* Related wiki docs */}
+          <WikiRelatedDocs noteId={note.id} />
+
+          {/* Backlinks */}
+          <BacklinksFooter noteId={note.id} />
+        </div>
+      </div>
+
+      {/* Right: Infobox sidebar */}
+      <aside className="w-[260px] shrink-0 overflow-y-auto border-l border-border p-4 space-y-4">
+        {/* Infobox */}
+        {(note.wikiInfobox ?? []).length > 0 && (
+          <WikiInfobox
+            noteId={note.id}
+            entries={note.wikiInfobox ?? []}
+            editable={false}
+            className="w-full"
+          />
+        )}
+
+        {/* Categories as badges */}
+        {note.tags.length > 0 && (
+          <WikiCategories noteTagIds={note.tags} allTags={allTags} />
+        )}
+
+        {/* Activity stats */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Activity
+          </h4>
+          <div className="space-y-1.5">
+            <StatRow label="Connected notes" value={`${backlinkCount}`} />
+            <StatRow label="Ontology links" value={`${relationCount}`} />
+            <StatRow label="Last modified" value={shortRelative(note.updatedAt)} />
+          </div>
+        </div>
+      </aside>
     </div>
   )
 }

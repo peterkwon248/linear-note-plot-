@@ -54,11 +54,12 @@ export const usePlotStore = create<PlotState>()(
         mergePickerSourceId: null,
         linkPickerOpen: false,
         linkPickerSourceId: null,
+        sidePeekNoteId: null,
 
         noteEvents: [] as NoteEvent[],
         threads: [],
         graphFocusDepth: 0,
-        commandPaletteMode: "search" as const,
+        commandPaletteMode: "commands" as const,
         reflections: [] as Reflection[],
         relations: [] as Relation[],
         attachments: [] as Attachment[],
@@ -105,7 +106,7 @@ export const usePlotStore = create<PlotState>()(
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, _preFocusLayoutMode, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, _preFocusLayoutMode, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePeekNoteId, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),

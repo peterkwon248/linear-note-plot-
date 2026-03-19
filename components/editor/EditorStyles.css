@@ -878,6 +878,99 @@
   background-color: rgba(229, 115, 115, 0.08);
 }
 
+/* Edit mode: cursor behaves like normal text (caret), not pointer */
+.ProseMirror[contenteditable="true"] .wikilink {
+  cursor: text;
+}
+
+/* ── Wikilink Hover Popover ───────────────────────────────────────── */
+
+.wikilink-popover {
+  min-width: 200px;
+  max-width: 280px;
+}
+
+.wikilink-popover-inner {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dark .wikilink-popover-inner {
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.wikilink-popover-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.wikilink-popover-title-dangling {
+  color: #E57373;
+}
+
+.wikilink-popover-preview {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.wikilink-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+.wikilink-popover-btn {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--secondary));
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+
+.wikilink-popover-btn:hover {
+  background: hsl(var(--accent) / 0.15);
+  border-color: hsl(var(--accent) / 0.4);
+  color: hsl(var(--foreground));
+}
+
+.wikilink-popover-btn-create {
+  color: #E57373;
+  border-color: rgba(229, 115, 115, 0.3);
+  background: rgba(229, 115, 115, 0.06);
+}
+
+.wikilink-popover-btn-create:hover {
+  background: rgba(229, 115, 115, 0.14);
+  border-color: rgba(229, 115, 115, 0.5);
+  color: #EF9A9A;
+}
+
 /* ── Wiki Read Mode Typography ────────────────────────────────────── */
 
 .wiki-read-content .ProseMirror {

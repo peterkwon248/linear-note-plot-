@@ -26,6 +26,7 @@ import { WikiView } from "@/components/views/wiki-view"
 import { SearchView } from "@/components/views/search-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
+import { SidePeekPanel } from "@/components/side-peek-panel"
 
 const MIN_WIDTH = 200
 const MAX_WIDTH = 320
@@ -231,6 +232,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               {children}
             </ErrorBoundary>
           </div>
+
+          {/* Side Peek panel — slides in from right on wikilink peek */}
+          <SidePeekPanel />
         </div>
 
         <SearchDialog />

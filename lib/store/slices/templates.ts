@@ -42,6 +42,22 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
 
     deleteTemplate: (id: string) => {
       set((state: any) => ({
+        templates: state.templates.map((t: NoteTemplate) =>
+          t.id === id ? { ...t, trashed: true, trashedAt: new Date().toISOString() } : t
+        ),
+      }))
+    },
+
+    restoreTemplate: (id: string) => {
+      set((state: any) => ({
+        templates: state.templates.map((t: NoteTemplate) =>
+          t.id === id ? { ...t, trashed: false, trashedAt: null } : t
+        ),
+      }))
+    },
+
+    permanentlyDeleteTemplate: (id: string) => {
+      set((state: any) => ({
         templates: state.templates.filter((t: NoteTemplate) => t.id !== id),
       }))
     },

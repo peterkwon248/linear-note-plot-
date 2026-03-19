@@ -66,7 +66,7 @@ import type { ViewContextKey, SortField, SortDirection, GroupBy, FilterRule, Not
 import { StatusDropdown, PriorityDropdown, StatusBadge } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
-import type { Note, NoteStatus, NotePriority, Folder, NoteSource } from "@/lib/types"
+import type { Note, NoteStatus, NotePriority, Folder, NoteSource, Tag, Label, NoteTemplate } from "@/lib/types"
 import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
@@ -150,6 +150,19 @@ const TABS: { id: ViewContextKey; label: string }[] = [
   { id: "unlinked", label: "Unlinked" },
 ]
 
+/* ── Trash sub-filter tabs ────────────────────────────── */
+
+type TrashFilter = "all" | "notes" | "wiki" | "tags" | "labels" | "templates"
+
+const TRASH_TABS: { id: TrashFilter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "notes", label: "Notes" },
+  { id: "wiki", label: "Wiki" },
+  { id: "tags", label: "Tags" },
+  { id: "labels", label: "Labels" },
+  { id: "templates", label: "Templates" },
+]
+
 /* ── Column + group config ─────────────────────────────── */
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField: SortField; minWidth?: number }[] = [
@@ -221,6 +234,100 @@ function TH({
   )
 }
 
+/* ── TrashEntityList ───────────────────────────────────── */
+
+function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
+  const store = usePlotStore()
+
+  const items: (Tag | Label | NoteTemplate)[] = type === "tags"
+    ? (store.tags || []).filter((t: Tag) => t.trashed)
+    : type === "labels"
+    ? (store.labels || []).filter((l: Label) => l.trashed)
+    : (store.templates || []).filter((t: NoteTemplate) => t.trashed)
+
+  const handleRestore = (id: string) => {
+    if (type === "tags") store.restoreTag(id)
+    else if (type === "labels") store.restoreLabel(id)
+    else store.restoreTemplate(id)
+    toast(`Restored ${type.slice(0, -1)}`)
+  }
+
+  const handleDelete = (id: string, name: string) => {
+    if (!window.confirm(`Permanently delete "${name}"? This cannot be undone.`)) return
+    if (type === "tags") store.permanentlyDeleteTag(id)
+    else if (type === "labels") store.permanentlyDeleteLabel(id)
+    else store.permanentlyDeleteTemplate(id)
+    toast(`Deleted ${type.slice(0, -1)}`)
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-1 items-center justify-center text-center">
+        <div>
+          <Trash2 className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+          <p className="text-ui text-muted-foreground">No trashed {type}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      {/* Header row */}
+      <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
+        <div className="flex-1 text-sm font-medium text-muted-foreground">Name</div>
+        <div className="w-16 shrink-0 text-center text-sm font-medium text-muted-foreground">Color</div>
+        <div className="w-32 shrink-0 text-right text-sm font-medium text-muted-foreground">Trashed</div>
+        <div className="w-32 shrink-0 text-right text-sm font-medium text-muted-foreground">Actions</div>
+      </div>
+      {items.map((item) => {
+        const color = (item as Tag).color ?? ""
+        const trashedAt = (item as Tag).trashedAt ?? null
+        return (
+          <div
+            key={item.id}
+            className="flex items-center border-b border-border px-5 py-2.5 hover:bg-secondary/30 transition-colors"
+          >
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-medium text-foreground truncate">{item.name}</span>
+            </div>
+            <div className="w-16 shrink-0 flex items-center justify-center">
+              {color ? (
+                <span
+                  className="h-3.5 w-3.5 rounded-full shrink-0"
+                  style={{ backgroundColor: color }}
+                />
+              ) : (
+                <span className="text-xs text-muted-foreground">—</span>
+              )}
+            </div>
+            <div className="w-32 shrink-0 text-right text-sm text-muted-foreground">
+              {trashedAt ? shortRelative(trashedAt) : "—"}
+            </div>
+            <div className="w-32 shrink-0 flex items-center justify-end gap-1.5">
+              <button
+                onClick={() => handleRestore(item.id)}
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                title="Restore"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Restore
+              </button>
+              <button
+                onClick={() => handleDelete(item.id, item.name)}
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                title="Delete permanently"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 /* ── NotesTable ────────────────────────────────────────── */
 
 export function NotesTable({
@@ -267,12 +374,14 @@ export function NotesTable({
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
 
   const [activeTab, setActiveTab] = useState<ViewContextKey>(initialTab ?? "all")
+  const [trashFilter, setTrashFilter] = useState<TrashFilter>("all")
 
   useEffect(() => {
     setActiveTab(initialTab ?? "all")
   }, [initialTab])
 
   const effectiveTab = context ?? activeTab
+  const isTrashView = effectiveTab === "trash"
 
   const backlinksMap = useBacklinksIndex()
 
@@ -299,7 +408,43 @@ export function NotesTable({
   const displayPopoverOpen = useUIStore((s) => s.displayPopoverOpen)
   const setDisplayPopoverOpen = useUIStore((s) => s.setDisplayPopoverOpen)
 
-  const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId, tagId, labelId })
+  const { flatNotes: rawFlatNotes, groups: rawGroups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId, tagId, labelId })
+
+  // ── Trash sub-filter ──
+  const storeTemplates = usePlotStore((s) => s.templates)
+  const trashTabCounts = useMemo((): Record<TrashFilter, number> => {
+    if (!isTrashView) return { all: 0, notes: 0, wiki: 0, tags: 0, labels: 0, templates: 0 }
+    const trashed = notes.filter((n) => n.trashed)
+    const trashedTags = tags.filter((t) => t.trashed)
+    const trashedLabels = labels.filter((l) => l.trashed)
+    const trashedTemplates = storeTemplates.filter((t) => t.trashed)
+    return {
+      all: trashed.length + trashedTags.length + trashedLabels.length + trashedTemplates.length,
+      notes: trashed.filter((n) => !n.isWiki).length,
+      wiki: trashed.filter((n) => n.isWiki).length,
+      tags: trashedTags.length,
+      labels: trashedLabels.length,
+      templates: trashedTemplates.length,
+    }
+  }, [notes, isTrashView, tags, labels, storeTemplates])
+
+  const trashFilterFn = useCallback((note: Note): boolean => {
+    if (!isTrashView || trashFilter === "all") return true
+    if (trashFilter === "wiki") return note.isWiki === true
+    return !note.isWiki
+  }, [isTrashView, trashFilter])
+
+  const flatNotes = useMemo(
+    () => rawFlatNotes.filter(trashFilterFn),
+    [rawFlatNotes, trashFilterFn]
+  )
+
+  const groups = useMemo(
+    () => isTrashView && trashFilter !== "all"
+      ? rawGroups.map((g) => ({ ...g, notes: g.notes.filter(trashFilterFn) }))
+      : rawGroups,
+    [rawGroups, isTrashView, trashFilter, trashFilterFn]
+  )
 
   // ── Multi-select state ──
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -577,7 +722,7 @@ export function NotesTable({
       {/* ── Context tabs + toolbar ─────────────────────── */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">
         {/* Tabs */}
-        {showTabs && (
+        {showTabs && !isTrashView && (
           <div className="flex items-center gap-0">
             {TABS.map((tab) => (
               <button
@@ -592,6 +737,28 @@ export function NotesTable({
                 {tab.label}
                 <span className="ml-1.5 rounded-[3px] bg-white/15 px-1.5 py-0.5 text-2xs font-medium tabular-nums text-white">{tabCounts[tab.id]}</span>
                 {effectiveTab === tab.id && (
+                  <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+        {/* Trash sub-filter tabs */}
+        {isTrashView && (
+          <div className="flex items-center gap-0">
+            {TRASH_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setTrashFilter(tab.id)}
+                className={`relative px-3 py-2 text-ui font-medium transition-colors ${
+                  trashFilter === tab.id
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+                <span className="ml-1.5 rounded-[3px] bg-white/15 px-1.5 py-0.5 text-2xs font-medium tabular-nums text-white">{trashTabCounts[tab.id]}</span>
+                {trashFilter === tab.id && (
                   <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
                 )}
               </button>
@@ -635,8 +802,8 @@ export function NotesTable({
             groupBy={viewState.groupBy}
             isSingleStatusTab={isSingleStatusTab}
             folders={folders}
-            tags={tags}
-            labels={labels}
+            tags={tags.filter((t) => !t.trashed)}
+            labels={labels.filter((l) => !l.trashed)}
             onToggleFilter={toggleFilter}
             onSetFilters={(f) => updateViewState({ filters: f })}
             hideLabel={isCompact}
@@ -806,8 +973,8 @@ export function NotesTable({
         groupBy={viewState.groupBy}
         isSingleStatusTab={isSingleStatusTab}
         folders={folders}
-        tags={tags}
-        labels={labels}
+        tags={tags.filter((t) => !t.trashed)}
+        labels={labels.filter((l) => !l.trashed)}
         onToggleFilter={toggleFilter}
         onRemoveFilter={removeFilter}
         onClearAll={() => updateViewState({ filters: [] })}
@@ -841,7 +1008,10 @@ export function NotesTable({
         </div>
       )}
 
-      {/* ── Table ──────────────────────────────────────── */}
+      {/* ── Entity trash list OR Note table ────────────── */}
+      {isTrashView && (trashFilter === "tags" || trashFilter === "labels" || trashFilter === "templates") ? (
+        <TrashEntityList type={trashFilter} />
+      ) : (
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div className="flex-1 flex flex-col">
@@ -982,7 +1152,7 @@ export function NotesTable({
             )}
           </div>
         </ContextMenuTrigger>
-          <ContextMenuContent className="w-48">
+        <ContextMenuContent className="w-48">
             {context === "trash" ? (
               <>
                 <ContextMenuItem
@@ -1027,6 +1197,7 @@ export function NotesTable({
             )}
           </ContextMenuContent>
         </ContextMenu>
+      )}
 
       {/* ── Floating Action Bar (multi-select) ──────── */}
       {selectedIds.size > 0 && (

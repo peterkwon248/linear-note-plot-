@@ -75,12 +75,16 @@ export interface Tag {
   id: string
   name: string
   color: string
+  trashed?: boolean
+  trashedAt?: string | null
 }
 
 export interface Label {
   id: string
   name: string
   color: string
+  trashed?: boolean
+  trashedAt?: string | null
 }
 
 /* ── Autopilot Rules ─────────────────────────────── */
@@ -153,6 +157,8 @@ export interface NoteTemplate {
   folderId: string | null
   // Meta
   pinned: boolean
+  trashed?: boolean
+  trashedAt?: string | null
   createdAt: string
   updatedAt: string
 }

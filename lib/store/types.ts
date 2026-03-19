@@ -47,6 +47,9 @@ export interface PlotState {
   linkPickerOpen: boolean
   linkPickerSourceId: string | null
 
+  // Side Peek
+  sidePeekNoteId: string | null
+
   // Navigation History
   navigationHistory: string[]  // stack of note IDs
   navigationIndex: number      // current position (-1 = empty)
@@ -65,7 +68,7 @@ export interface PlotState {
   noteEvents: NoteEvent[]
   threads: Thread[]
   graphFocusDepth: number
-  commandPaletteMode: "search" | "commands" | "links"
+  commandPaletteMode: "commands" | "links"
 
   // Reflections
   reflections: Reflection[]
@@ -137,6 +140,8 @@ export interface PlotState {
   createTemplate: (template: Omit<NoteTemplate, "id" | "createdAt" | "updatedAt">) => string
   updateTemplate: (id: string, updates: Partial<NoteTemplate>) => void
   deleteTemplate: (id: string) => void
+  restoreTemplate: (id: string) => void
+  permanentlyDeleteTemplate: (id: string) => void
   toggleTemplatePin: (id: string) => void
   createNoteFromTemplate: (templateId: string) => string
 
@@ -151,6 +156,8 @@ export interface PlotState {
   createTag: (name: string, color: string) => void
   updateTag: (id: string, updates: Partial<Tag>) => void
   deleteTag: (id: string) => void
+  restoreTag: (id: string) => void
+  permanentlyDeleteTag: (id: string) => void
   addTagToNote: (noteId: string, tagId: string) => void
   removeTagFromNote: (noteId: string, tagId: string) => void
 
@@ -158,6 +165,8 @@ export interface PlotState {
   createLabel: (name: string, color: string) => void
   updateLabel: (id: string, updates: Partial<Label>) => void
   deleteLabel: (id: string) => void
+  restoreLabel: (id: string) => void
+  permanentlyDeleteLabel: (id: string) => void
   setNoteLabel: (noteId: string, labelId: string | null) => void
 
   // ── UI Actions ──
@@ -179,6 +188,7 @@ export interface PlotState {
   setLayoutMode: (mode: LayoutMode) => void
   setResearchPreset: (preset: ResearchPreset) => void
   setListPaneWidth: (width: number) => void
+  setSidePeekNoteId: (id: string | null) => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
 
@@ -192,7 +202,7 @@ export interface PlotState {
   deleteThread: (threadId: string) => void
   addWikiLink: (noteId: string, targetTitle: string) => void
   setGraphFocusDepth: (depth: number) => void
-  setCommandPaletteMode: (mode: "search" | "commands" | "links") => void
+  setCommandPaletteMode: (mode: "commands" | "links") => void
 
   // ── Relations ──
   addRelation: (sourceNoteId: string, targetNoteId: string, type: RelationType) => string | null

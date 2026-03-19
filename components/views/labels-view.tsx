@@ -175,9 +175,9 @@ export function LabelsView() {
     return counts
   }, [labels, activeNotes])
 
-  // Sort and filter labels for list mode
+  // Sort and filter labels for list mode (excluding trashed)
   const sortedLabels = useMemo(() => {
-    let result = [...labels]
+    let result = labels.filter((l) => !l.trashed)
     if (hideEmptyLabels) {
       result = result.filter(l => (labelCounts[l.id] || 0) > 0)
     }
@@ -314,16 +314,16 @@ export function LabelsView() {
         setCheckedLabels(new Set())
         e.preventDefault()
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === "a" && labels.length > 0) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "a" && sortedLabels.length > 0) {
         const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
         if (tag === "input" || tag === "textarea") return
-        setCheckedLabels(new Set(labels.map(l => l.id)))
+        setCheckedLabels(new Set(sortedLabels.map(l => l.id)))
         e.preventDefault()
       }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [checkedLabels.size, labels])
+  }, [checkedLabels.size, sortedLabels])
 
   // Drag-to-select mousedown handler
   const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
@@ -537,7 +537,7 @@ export function LabelsView() {
       <ViewHeader
         icon={<Bookmark className="h-5 w-5" strokeWidth={1.5} />}
         title="Labels"
-        count={labels.length}
+        count={labels.filter((l) => !l.trashed).length}
         searchPlaceholder="Search labels..."
         searchValue={search}
         onSearchChange={setSearch}
