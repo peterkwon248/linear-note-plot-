@@ -47,6 +47,9 @@ export interface PlotState {
   linkPickerOpen: boolean
   linkPickerSourceId: string | null
 
+  // Side Peek
+  sidePeekNoteId: string | null
+
   // Navigation History
   navigationHistory: string[]  // stack of note IDs
   navigationIndex: number      // current position (-1 = empty)
@@ -179,6 +182,7 @@ export interface PlotState {
   setLayoutMode: (mode: LayoutMode) => void
   setResearchPreset: (preset: ResearchPreset) => void
   setListPaneWidth: (width: number) => void
+  setSidePeekNoteId: (id: string | null) => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
 

@@ -23,7 +23,9 @@ interface WikilinkItem {
   title: string
   status: string
   isAlias?: boolean
-  isNew?: boolean
+  isNew?: boolean       // create as wiki stub
+  isNewNote?: boolean   // create as regular note
+  _wikiMode?: boolean   // triggered via [[[ (wiki-only mode)
 }
 
 interface WikilinkListProps {
@@ -78,7 +80,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
       <div className="z-50 min-w-[200px] max-w-[300px] overflow-hidden rounded-md border border-border bg-popover shadow-md">
         <div className="px-2 py-1 border-b border-border/50">
           <span className="text-2xs font-medium text-muted-foreground">
-            Notes
+            {items[0]?._wikiMode ? "Wiki" : "Notes"}
           </span>
         </div>
         <div className="max-h-[240px] overflow-y-auto py-1">
@@ -97,7 +99,17 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                 <>
                   <span className="text-muted-foreground text-xs">+</span>
                   <span className="text-muted-foreground">
-                    Create wiki{" "}
+                    Create as Wiki{" "}
+                    <span className="font-medium text-foreground">
+                      [[{item.title}]]
+                    </span>
+                  </span>
+                </>
+              ) : item.isNewNote ? (
+                <>
+                  <span className="text-muted-foreground text-xs">+</span>
+                  <span className="text-muted-foreground">
+                    Create as Note{" "}
                     <span className="font-medium text-foreground">
                       [[{item.title}]]
                     </span>
@@ -145,27 +157,31 @@ export const WikilinkSuggestion = Extension.create({
 
         items: ({ query }: { query: string }) => {
           const notes = usePlotStore.getState().notes
-          const q = query.toLowerCase().trim()
 
-          // Empty query: show recent 8 notes (sorted by updatedAt desc)
+          // Detect wiki mode: [[[ triggers [[ with query starting with "["
+          const isWikiMode = query.startsWith("[")
+          const q = (isWikiMode ? query.slice(1) : query).toLowerCase().trim()
+
+          // Empty query: show recent 8 notes/wikis
           if (q.length === 0) {
-            return notes
-              .filter((n) => !n.archived && !n.trashed && n.title.trim())
+            const pool = notes.filter((n) => !n.archived && !n.trashed && n.title.trim())
+            const filtered = isWikiMode ? pool.filter((n) => n.isWiki) : pool
+            return filtered
               .sort(
                 (a, b) =>
                   new Date(b.updatedAt).getTime() -
                   new Date(a.updatedAt).getTime()
               )
               .slice(0, 8)
-              .map((n) => ({ id: n.id, title: n.title, status: n.status }))
+              .map((n) => ({ id: n.id, title: n.title, status: n.status, _wikiMode: isWikiMode }))
           }
 
           // Title matches: exact > startsWith > contains, then by length
-          const titleMatches = notes
+          const pool = notes.filter((n) => !n.archived && !n.trashed)
+          const searchPool = isWikiMode ? pool.filter((n) => n.isWiki) : pool
+          const titleMatches = searchPool
             .filter(
               (n) =>
-                !n.archived &&
-                !n.trashed &&
                 n.title.trim() &&
                 n.title.toLowerCase().includes(q)
             )
@@ -181,10 +197,10 @@ export const WikilinkSuggestion = Extension.create({
 
           // Alias matches
           const titleIds = new Set(titleMatches.map((n) => n.id))
-          const aliasMatches = notes
+          const aliasMatches = searchPool
             .filter(
               (n) =>
-                !n.archived && !n.trashed && !titleIds.has(n.id)
+                !titleIds.has(n.id)
             )
             .filter((n) =>
               n.aliases?.some((a) => a.toLowerCase().includes(q))
@@ -194,30 +210,47 @@ export const WikilinkSuggestion = Extension.create({
               title: n.title,
               status: n.status,
               isAlias: true,
+              _wikiMode: isWikiMode,
             }))
 
           const combined: WikilinkItem[] = [
             ...titleMatches
               .slice(0, 6)
-              .map((n) => ({ id: n.id, title: n.title, status: n.status })),
+              .map((n) => ({ id: n.id, title: n.title, status: n.status, _wikiMode: isWikiMode })),
             ...aliasMatches.slice(0, 2),
           ].slice(0, 8)
 
-          // "Create wiki" option if no exact match
-          const hasExact = notes.some(
+          // "Create" options if no exact match
+          const hasExact = searchPool.some(
             (n) =>
-              !n.archived &&
-              !n.trashed &&
-              (n.title.toLowerCase() === q ||
-                n.aliases?.some((a) => a.toLowerCase() === q))
+              n.title.toLowerCase() === q ||
+              n.aliases?.some((a) => a.toLowerCase() === q)
           )
           if (!hasExact && q.length > 0) {
-            combined.push({
-              id: `__new__${q}`,
-              title: q,
-              status: "inbox",
-              isNew: true,
-            })
+            if (isWikiMode) {
+              // Wiki mode: only "Create as Wiki"
+              combined.push({
+                id: `__new_wiki__${q}`,
+                title: q,
+                status: "inbox",
+                isNew: true,
+                _wikiMode: true,
+              })
+            } else {
+              // Note mode: both options
+              combined.push({
+                id: `__new_note__${q}`,
+                title: q,
+                status: "inbox",
+                isNewNote: true,
+              })
+              combined.push({
+                id: `__new_wiki__${q}`,
+                title: q,
+                status: "inbox",
+                isNew: true,
+              })
+            }
           }
 
           return combined
@@ -316,17 +349,31 @@ export const WikilinkSuggestion = Extension.create({
           range: import("@tiptap/core").Range
           props: WikilinkItem
         }) => {
+          const store = usePlotStore.getState()
           if (props.isNew) {
-            const store = usePlotStore.getState()
+            // Create wiki stub
             const exists = store.notes.some(
               (n) => n.title.toLowerCase() === props.title.toLowerCase()
             )
             if (!exists) store.createWikiStub(props.title)
+          } else if (props.isNewNote) {
+            // Create regular note
+            const exists = store.notes.some(
+              (n) => n.title.toLowerCase() === props.title.toLowerCase()
+            )
+            if (!exists) store.createNote({ title: props.title })
           }
+
+          // In wiki mode ([[[), the range starts at [[ but we typed [[[
+          // so we need to also delete the extra [ before the range
+          const deleteRange = props._wikiMode
+            ? { from: range.from - 1, to: range.to }
+            : range
+
           editor
             .chain()
             .focus()
-            .deleteRange(range)
+            .deleteRange(deleteRange)
             .insertContent("[[" + props.title + "]] ")
             .run()
         },
