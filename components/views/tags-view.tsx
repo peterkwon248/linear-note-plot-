@@ -166,11 +166,12 @@ export function TagsView() {
     return counts
   }, [tags, activeNotes])
 
-  // Filtered tags (by search)
+  // Filtered tags (by search, excluding trashed)
   const filteredTags = useMemo(() => {
-    if (!searchQuery.trim()) return tags
+    const activeTags = tags.filter((t) => !t.trashed)
+    if (!searchQuery.trim()) return activeTags
     const q = searchQuery.toLowerCase()
-    return tags.filter((t) => t.name.toLowerCase().includes(q))
+    return activeTags.filter((t) => t.name.toLowerCase().includes(q))
   }, [tags, searchQuery])
 
   // Sort and filter tags

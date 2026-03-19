@@ -21,6 +21,22 @@ export function createLabelsSlice(set: Set) {
 
     deleteLabel: (id: string) => {
       set((state: any) => ({
+        labels: state.labels.map((l: Label) =>
+          l.id === id ? { ...l, trashed: true, trashedAt: new Date().toISOString() } : l
+        ),
+      }))
+    },
+
+    restoreLabel: (id: string) => {
+      set((state: any) => ({
+        labels: state.labels.map((l: Label) =>
+          l.id === id ? { ...l, trashed: false, trashedAt: null } : l
+        ),
+      }))
+    },
+
+    permanentlyDeleteLabel: (id: string) => {
+      set((state: any) => ({
         labels: state.labels.filter((l: Label) => l.id !== id),
         notes: state.notes.map((n: Note) =>
           n.labelId === id ? { ...n, labelId: null } : n

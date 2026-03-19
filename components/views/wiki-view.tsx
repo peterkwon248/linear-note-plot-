@@ -14,7 +14,16 @@ import {
   ArrowLeft,
   PenLine,
   Check,
+  Pencil,
+  Trash2,
 } from "lucide-react"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
@@ -34,6 +43,7 @@ export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
   const createWikiStub = usePlotStore((s) => s.createWikiStub)
+  const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const router = useRouter()
   const backlinkCounts = useBacklinksIndex()
 
@@ -438,6 +448,8 @@ export function WikiView() {
                     <CardListItem
                       key={note.id}
                       onClick={() => openArticle(note.id)}
+                      onEdit={() => openArticle(note.id)}
+                      onDelete={() => toggleTrash(note.id)}
                     >
                       <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent" />
                       <span className="min-w-0 flex-1 truncate text-sm text-foreground">
@@ -473,6 +485,8 @@ export function WikiView() {
                       <CardListItem
                         key={item.note.id}
                         onClick={() => openArticle(item.note.id)}
+                        onEdit={() => openArticle(item.note.id)}
+                        onDelete={() => toggleTrash(item.note.id)}
                       >
                         <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-accent" />
                         <span className="min-w-0 flex-1 truncate text-sm text-foreground">
@@ -577,6 +591,8 @@ export function WikiView() {
                     <CardListItem
                       key={note.id}
                       onClick={() => openArticle(note.id)}
+                      onEdit={() => openArticle(note.id)}
+                      onDelete={() => toggleTrash(note.id)}
                     >
                       <span
                         className={cn(
@@ -694,7 +710,7 @@ function WikiArticleReader({
 
         {/* Categories as badges */}
         {note.tags.length > 0 && (
-          <WikiCategories noteTagIds={note.tags} allTags={allTags} />
+          <WikiCategories noteTagIds={note.tags} allTags={allTags.filter((t) => !t.trashed)} />
         )}
 
         {/* Activity stats */}
@@ -792,19 +808,46 @@ function DashboardCard({
 
 function CardListItem({
   onClick,
+  onEdit,
+  onDelete,
   children,
 }: {
   onClick: () => void
+  onEdit?: () => void
+  onDelete?: () => void
   children: React.ReactNode
 }) {
   return (
     <li>
-      <button
-        onClick={onClick}
-        className="flex w-full items-center gap-2.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 hover:bg-secondary"
-      >
-        {children}
-      </button>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <button
+            onClick={onClick}
+            className="flex w-full items-center gap-2.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 hover:bg-secondary"
+          >
+            {children}
+          </button>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          <ContextMenuItem onClick={onClick}>
+            <BookOpen className="mr-2 h-3.5 w-3.5" strokeWidth={1.5} />
+            Read
+          </ContextMenuItem>
+          {onEdit && (
+            <ContextMenuItem onClick={onEdit}>
+              <Pencil className="mr-2 h-3.5 w-3.5" strokeWidth={1.5} />
+              Edit
+            </ContextMenuItem>
+          )}
+          <ContextMenuSeparator />
+          {onDelete && (
+            <ContextMenuItem onClick={onDelete} className="text-red-500 focus:text-red-500">
+              <Trash2 className="mr-2 h-3.5 w-3.5" strokeWidth={1.5} />
+              Delete
+            </ContextMenuItem>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
     </li>
   )
 }

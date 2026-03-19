@@ -21,13 +21,26 @@ export function createTagsSlice(set: Set) {
 
     deleteTag: (id: string) => {
       set((state: any) => ({
-        tags: state.tags.filter((t: Tag) => t.id !== id),
-        notes: state.notes.map((n: Note) =>
-          n.tags.includes(id) ? { ...n, tags: n.tags.filter((t) => t !== id) } : n
+        tags: state.tags.map((t: Tag) =>
+          t.id === id ? { ...t, trashed: true, trashedAt: new Date().toISOString() } : t
         ),
         ...(state.activeView?.type === "tag" && state.activeView?.tagId === id
           ? { activeView: { type: "all" } }
           : {}),
+      }))
+    },
+
+    restoreTag: (id: string) => {
+      set((state: any) => ({
+        tags: state.tags.map((t: Tag) =>
+          t.id === id ? { ...t, trashed: false, trashedAt: null } : t
+        ),
+      }))
+    },
+
+    permanentlyDeleteTag: (id: string) => {
+      set((state: any) => ({
+        tags: state.tags.filter((t: Tag) => t.id !== id),
       }))
     },
 
@@ -48,11 +61,13 @@ export function createTagsSlice(set: Set) {
             ? { ...n, tags: n.tags.filter((t: string) => t !== tagId), updatedAt: now(), lastTouchedAt: now() }
             : n
         )
-        // Auto-delete orphaned tag (no notes reference it anymore)
+        // Auto-remove orphaned tag (no notes reference it anymore)
         const stillUsed = updatedNotes.some((n: Note) => n.tags.includes(tagId))
         return {
           notes: updatedNotes,
-          ...(stillUsed ? {} : { tags: state.tags.filter((t: Tag) => t.id !== tagId) }),
+          ...(stillUsed ? {} : {
+            tags: state.tags.filter((t: Tag) => t.id !== tagId),
+          }),
         }
       })
     },

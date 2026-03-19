@@ -702,10 +702,11 @@ export function TemplatesView() {
   const [templateSortBy, setTemplateSortBy] = useState<"name-asc" | "name-desc" | "updated-desc" | "updated-asc" | "created-desc">("updated-desc")
   const [search, setSearch] = useState("")
 
-  // Sorted: pinned first, then by selected sort, then filtered by search
+  // Sorted: pinned first, then by selected sort, then filtered by search (excluding trashed)
   const sortedTemplates = useMemo(() => {
     const q = search.trim().toLowerCase()
-    const filtered = q ? templates.filter((t) => t.name.toLowerCase().includes(q)) : templates
+    const activeTemplates = templates.filter((t) => !t.trashed)
+    const filtered = q ? activeTemplates.filter((t) => t.name.toLowerCase().includes(q)) : activeTemplates
     const pinned = filtered.filter((t) => t.pinned)
     const unpinned = filtered.filter((t) => !t.pinned)
     const sortFn = (a: NoteTemplate, b: NoteTemplate) => {

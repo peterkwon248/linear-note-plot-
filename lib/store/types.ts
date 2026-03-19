@@ -140,6 +140,8 @@ export interface PlotState {
   createTemplate: (template: Omit<NoteTemplate, "id" | "createdAt" | "updatedAt">) => string
   updateTemplate: (id: string, updates: Partial<NoteTemplate>) => void
   deleteTemplate: (id: string) => void
+  restoreTemplate: (id: string) => void
+  permanentlyDeleteTemplate: (id: string) => void
   toggleTemplatePin: (id: string) => void
   createNoteFromTemplate: (templateId: string) => string
 
@@ -154,6 +156,8 @@ export interface PlotState {
   createTag: (name: string, color: string) => void
   updateTag: (id: string, updates: Partial<Tag>) => void
   deleteTag: (id: string) => void
+  restoreTag: (id: string) => void
+  permanentlyDeleteTag: (id: string) => void
   addTagToNote: (noteId: string, tagId: string) => void
   removeTagFromNote: (noteId: string, tagId: string) => void
 
@@ -161,6 +165,8 @@ export interface PlotState {
   createLabel: (name: string, color: string) => void
   updateLabel: (id: string, updates: Partial<Label>) => void
   deleteLabel: (id: string) => void
+  restoreLabel: (id: string) => void
+  permanentlyDeleteLabel: (id: string) => void
   setNoteLabel: (noteId: string, labelId: string | null) => void
 
   // ── UI Actions ──

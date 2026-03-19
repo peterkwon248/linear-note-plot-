@@ -313,8 +313,8 @@ export function NoteInspector() {
   const linkCount = backlinks.get(note.id) ?? 0
 
   const currentFolder = folders.find((f) => f.id === note.folderId)
-  const noteTags = tags.filter((t) => note.tags.includes(t.id))
-  const availableTags = tags.filter((t) => !note.tags.includes(t.id))
+  const noteTags = tags.filter((t) => note.tags.includes(t.id) && !t.trashed)
+  const availableTags = tags.filter((t) => !note.tags.includes(t.id) && !t.trashed)
 
   const wordCount = note.content
     .trim()
@@ -582,7 +582,7 @@ export function NoteInspector() {
         <InspectorSection title="Label" icon={<Tag className="h-4 w-4" />}>
           <LabelDropdown
             value={note.labelId}
-            labels={labels}
+            labels={labels.filter((l) => !l.trashed)}
             onChange={(labelId) => setNoteLabel(note.id, labelId)}
             variant="button"
           />
