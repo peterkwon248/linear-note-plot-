@@ -207,14 +207,15 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
       )
 
       if (exists) {
-        const icon = document.createElement("span")
-        icon.className = "wikilink-nav-icon"
-        icon.setAttribute("data-wikilink-nav", innerTitle)
-        icon.textContent = "↗"
-        icon.title = "Open"
-
         decorations.push(
-          Decoration.widget(to, icon, { side: 1 })
+          Decoration.widget(to, () => {
+            const icon = document.createElement("span")
+            icon.className = "wikilink-nav-icon"
+            icon.setAttribute("data-wikilink-nav", innerTitle)
+            icon.textContent = "↗"
+            icon.title = "Open"
+            return icon
+          }, { side: 1 })
         )
       }
     }
