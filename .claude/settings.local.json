@@ -108,7 +108,13 @@
       "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/ui -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
       "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/providers -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
       "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); errors=[x for x in data if x.get\\(''''type''''\\)==''''error'''']; print\\(f''''Total errors: {len\\(errors\\)}''''\\); [print\\(x[''''text''''][:200]\\) for x in errors[:5]]\")",
-      "Bash(ls \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\loving-chatterjee\\\\app\\\\\\(app\\)\\\\calendar\")"
+      "Bash(ls \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\loving-chatterjee\\\\app\\\\\\(app\\)\\\\calendar\")",
+      "Bash(ls \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\loving-chatterjee\\\\app\\\\\\(app\\)\"\")",
+      "Bash(ls \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/loving-chatterjee/app/\\(app\\)/\")",
+      "Bash(rm docs/architecture-redesign-v2.md docs/wiki-collection-design.md docs/sidebar-wiki-redesign.md docs/WIKI-REDESIGN-INSTRUCTIONS.md docs/ontology-view-design.md)",
+      "Bash(rm -rf docs/search)",
+      "Bash(rm docs/plot-wiki-full-flow.html)",
+      "Bash(rm -rf docs/.pdca-snapshots docs/.pdca-status.json docs/.bkit-memory.json)"
     ]
   }
 }

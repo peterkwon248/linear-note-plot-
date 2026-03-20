@@ -23,6 +23,22 @@ export interface WikiInfoboxEntry {
   value: string
 }
 
+/** Item in a wiki article's collection (staging area for related material) */
+export interface WikiCollectionItem {
+  id: string
+  type: 'note' | 'url' | 'image' | 'text'
+  /** Referenced note ID (for type='note') */
+  sourceNoteId?: string
+  /** URL reference (for type='url') */
+  url?: string
+  /** Title for URL or display name */
+  urlTitle?: string
+  /** Freeform text (for type='text') */
+  text?: string
+  /** When the item was added */
+  addedAt: string
+}
+
 export interface Note {
   id: string
   title: string

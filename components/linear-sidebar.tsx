@@ -808,7 +808,7 @@ export function LinearSidebar() {
               <NavLink
                 href="/ontology"
                 icon={<IconOntology size={20} />}
-                label="All Nodes"
+                label="Graph"
                 count={allNotesCount > 0 ? allNotesCount : undefined}
                 active={isActive("/ontology")}
                 dragContent={{ type: "ontology" }}
@@ -830,6 +830,90 @@ export function LinearSidebar() {
                   </div>
                 ))}
               </div>
+            </Section>
+
+            {/* Graph Health */}
+            <Section title="Health">
+              {(() => {
+                const nonTrashedNotes = notes.filter((n) => !n.trashed)
+                const totalNodes = nonTrashedNotes.length
+
+                // Orphan nodes: notes with no linksOut and no backlinks (isolated)
+                const orphanCount = nonTrashedNotes.filter((n) => {
+                  const hasOutLinks = n.linksOut && n.linksOut.length > 0
+                  const hasInLinks = nonTrashedNotes.some((other) =>
+                    other.id !== n.id && other.linksOut?.some((link) => {
+                      const normalized = link.toLowerCase()
+                      return n.title.toLowerCase() === normalized ||
+                             n.aliases.some((a) => a.toLowerCase() === normalized)
+                    })
+                  )
+                  return !hasOutLinks && !hasInLinks
+                }).length
+
+                // Hub nodes: notes with 5+ connections (linksOut + backlinks)
+                const hubCount = nonTrashedNotes.filter((n) => {
+                  const outCount = n.linksOut?.length ?? 0
+                  const inCount = nonTrashedNotes.filter((other) =>
+                    other.id !== n.id && other.linksOut?.some((link) => {
+                      const normalized = link.toLowerCase()
+                      return n.title.toLowerCase() === normalized ||
+                             n.aliases.some((a) => a.toLowerCase() === normalized)
+                    })
+                  ).length
+                  return (outCount + inCount) >= 5
+                }).length
+
+                // Total edges (links between notes)
+                const totalEdges = nonTrashedNotes.reduce((sum, n) => sum + (n.linksOut?.length ?? 0), 0)
+
+                // Density: edges / max possible edges
+                const maxEdges = totalNodes * (totalNodes - 1)
+                const density = maxEdges > 0 ? Math.round((totalEdges / maxEdges) * 100) : 0
+
+                // Wiki coverage: wiki notes / total notes
+                const wikiCount = nonTrashedNotes.filter((n) => n.isWiki).length
+                const wikiPercent = totalNodes > 0 ? Math.round((wikiCount / totalNodes) * 100) : 0
+
+                return (
+                  <div className="flex flex-col gap-2 px-2.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sidebar-muted">Nodes</span>
+                      <span className="text-sidebar-foreground tabular-nums">{totalNodes}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sidebar-muted">Edges</span>
+                      <span className="text-sidebar-foreground tabular-nums">{totalEdges}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sidebar-muted">Orphans</span>
+                      <span className={`tabular-nums ${orphanCount > 0 ? "text-[#f5a623]" : "text-sidebar-foreground"}`}>{orphanCount}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sidebar-muted">Hubs (5+)</span>
+                      <span className="text-sidebar-foreground tabular-nums">{hubCount}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sidebar-muted">Density</span>
+                      <span className="text-sidebar-foreground tabular-nums">{density}%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sidebar-muted">Wiki Coverage</span>
+                      <span className="text-sidebar-foreground tabular-nums">{wikiPercent}%</span>
+                    </div>
+                  </div>
+                )
+              })()}
+            </Section>
+
+            {/* More */}
+            <Section title="More">
+              <NavLink
+                href="/graph-insights"
+                icon={<IconInsight size={20} />}
+                label="Insights"
+                active={isActive("/graph-insights")}
+              />
             </Section>
           </>
         )}

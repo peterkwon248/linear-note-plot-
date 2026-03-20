@@ -39,6 +39,7 @@ import { HashtagSuggestion } from "./HashtagSuggestion"
 import { WikilinkSuggestion } from "./WikilinkSuggestion"
 import { WikilinkDecorationExtension } from "./WikilinkDecoration"
 import { SlashCommandExtension } from "./SlashCommand"
+import { WikiQuoteExtension } from "./WikiQuoteExtension"
 import "./EditorStyles.css"
 
 // ── Lowlight (syntax highlighting for code blocks) ──────────────────
@@ -216,6 +217,7 @@ export function TipTapEditor({
       WikilinkSuggestion,
       WikilinkDecorationExtension,
       SlashCommandExtension,
+      WikiQuoteExtension,
     ],
     content: content && Object.keys(content).length > 0 ? content : undefined,
     editable,

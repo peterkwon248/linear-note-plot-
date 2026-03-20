@@ -26,6 +26,7 @@ import { InsightsView } from "@/components/insights-view"
 import { WikiView } from "@/components/views/wiki-view"
 import { CalendarView } from "@/components/calendar-view"
 import { SearchView } from "@/components/views/search-view"
+import { GraphInsightsView } from "@/components/views/graph-insights-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 import { SidePeekPanel } from "@/components/side-peek-panel"
@@ -201,6 +202,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {(mountedViews.has("/calendar") || activeRoute === "/calendar") && (
               <div className={activeRoute === "/calendar" ? "flex flex-1 overflow-hidden" : "hidden"}>
                 <CalendarView title="Calendar" />
+              </div>
+            )}
+
+            {(mountedViews.has("/graph-insights") || activeRoute === "/graph-insights") && (
+              <div className={activeRoute === "/graph-insights" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                <GraphInsightsView />
               </div>
             )}
 
