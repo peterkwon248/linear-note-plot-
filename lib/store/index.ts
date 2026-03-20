@@ -23,6 +23,7 @@ import { createWorkspaceSlice } from "./slices/workspace"
 import { createAttachmentsSlice } from "./slices/attachments"
 import { createOntologySlice } from "./slices/ontology"
 import { createReflectionsSlice } from "./slices/reflections"
+import { createWikiCollectionsSlice } from "./slices/wiki-collections"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -66,6 +67,7 @@ export const usePlotStore = create<PlotState>()(
         coOccurrences: [] as CoOccurrence[],
         relationSuggestions: [] as RelationSuggestion[],
         ontologyPositions: {} as Record<string, { x: number; y: number }>,
+        wikiCollections: {} as Record<string, import("../types").WikiCollectionItem[]>,
         layoutMode: "three-column" as const,  // @deprecated — use workspaceMode
         _preFocusLayoutMode: null as any,
         workspaceMode: "default" as const,
@@ -100,11 +102,12 @@ export const usePlotStore = create<PlotState>()(
         ...createAttachmentsSlice(set, get, appendEvent),
         ...createOntologySlice(set, get, appendEvent),
         ...createReflectionsSlice(set, get, appendEvent),
+        ...createWikiCollectionsSlice(set, get),
       }
     },
     {
       name: "plot-store",
-      version: 42,
+      version: 43,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

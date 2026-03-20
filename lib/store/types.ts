@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, WorkspaceMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, WorkspaceMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone, ResearchPreset } from "../workspace/types"
@@ -98,6 +98,9 @@ export interface PlotState {
 
   // ── Templates ──
   templates: NoteTemplate[]
+
+  // ── Wiki Collections ──
+  wikiCollections: Record<string, WikiCollectionItem[]>  // key = wikiNoteId
 
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
@@ -224,6 +227,12 @@ export interface PlotState {
   convertToWiki: (noteId: string, stubSource?: StubSource) => void
   revertFromWiki: (noteId: string) => void
   setWikiStatus: (noteId: string, wikiStatus: WikiStatus) => void
+
+  // Wiki Collections
+  addToCollection: (wikiNoteId: string, item: Omit<WikiCollectionItem, 'id' | 'addedAt'>) => void
+  removeFromCollection: (wikiNoteId: string, itemId: string) => void
+  reorderCollection: (wikiNoteId: string, itemIds: string[]) => void
+  clearCollection: (wikiNoteId: string) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

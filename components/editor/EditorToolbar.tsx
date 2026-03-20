@@ -14,8 +14,11 @@ import {
   Type,
   Highlighter,
   X,
+  FileOutput,
 } from "lucide-react"
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from "@/lib/editor-colors"
+import { usePlotStore } from "@/lib/store"
+import { toast } from "sonner"
 
 interface EditorToolbarProps {
   editor: Editor | null
@@ -228,6 +231,7 @@ function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "
 }
 
 export function EditorToolbar({ editor }: EditorToolbarProps) {
+  const createNote = usePlotStore((s) => s.createNote)
   const menuRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -287,6 +291,28 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
   if (!editor || !editorState) return null
 
+  const handleExtractAsNote = useCallback(() => {
+    if (!editor) return
+    const { from, to, empty } = editor.state.selection
+    if (empty) return
+
+    const selectedText = editor.state.doc.textBetween(from, to, "\n")
+    if (!selectedText.trim()) return
+
+    const firstLine = selectedText.split("\n")[0].trim()
+    const title = firstLine.length > 50 ? firstLine.slice(0, 50) + "…" : firstLine
+
+    createNote({
+      title,
+      content: selectedText,
+      status: "inbox",
+    })
+
+    editor.chain().focus().deleteSelection().insertContent(`[[${title}]]`).run()
+
+    toast.success(`Extracted as note: "${title}"`, { duration: 2000 })
+  }, [editor, createNote])
+
   const handleSetLink = () => {
     if (editorState.link) { editor.chain().unsetLink().run(); return }
     const url = window.prompt("Enter URL:")
@@ -340,6 +366,10 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <BubbleDivider />
           <BubbleButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
             {editorState.link ? <Unlink size={14} strokeWidth={1.5} /> : <Link2 size={14} strokeWidth={1.5} />}
+          </BubbleButton>
+          <BubbleDivider />
+          <BubbleButton onClick={handleExtractAsNote} title="Extract as Note">
+            <FileOutput size={14} strokeWidth={1.5} />
           </BubbleButton>
         </>
       ) : (

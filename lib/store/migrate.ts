@@ -450,5 +450,8 @@ export function migrate(persistedState: unknown): PlotState {
     state.workspaceMode = old === "focus" ? "zen" : old === "split" ? "research" : "default"
   }
 
+  // v43: wikiCollections (wiki article staging area)
+  if (!state.wikiCollections) state.wikiCollections = {}
+
   return state as unknown as PlotState
 }

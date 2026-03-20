@@ -43,6 +43,7 @@ import { WikiCategories } from "@/components/editor/wiki-categories"
 import { WikiDisambig } from "@/components/editor/wiki-disambig"
 import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
 import { BacklinksFooter } from "@/components/editor/backlinks-footer"
+import { WikiCollectionSidebar } from "@/components/editor/wiki-collection-sidebar"
 import { toast } from "sonner"
 
 export function WikiView() {
@@ -1057,6 +1058,7 @@ function WikiArticleReader({
   const relations = usePlotStore((s) => s.relations)
   const setWikiStatus = usePlotStore((s) => s.setWikiStatus)
   const backlinks = useBacklinksFor(noteId)
+  const editorRef = useRef<any>(null)
 
   const note = notes.find((n) => n.id === noteId)
   if (!note) return null
@@ -1066,15 +1068,45 @@ function WikiArticleReader({
     (r) => r.sourceNoteId === noteId || r.targetNoteId === noteId
   ).length
 
-  // Edit mode: single-column full-width editor
+  // Edit mode: editor + collection sidebar
   if (isEditing) {
     return (
       <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
         <div className="flex-1 overflow-y-auto">
           <div className="px-8 py-6 max-w-[780px]">
-            <NoteEditorAdapter note={note} editable={true} />
+            <NoteEditorAdapter
+              note={note}
+              editable={true}
+              onEditorReady={(ed) => { editorRef.current = ed }}
+            />
           </div>
         </div>
+        <WikiCollectionSidebar
+          noteId={noteId}
+          onNavigate={onNavigate}
+          onInsertLink={(title: string) => {
+            const editor = editorRef.current
+            if (editor) {
+              editor.chain().focus().insertContent(`[[${title}]]`).run()
+              toast.success(`Inserted [[${title}]]`, { duration: 1500 })
+            }
+          }}
+          onInsertQuote={(sourceNoteId: string, sourceTitle: string, quotedText: string) => {
+            const editor = editorRef.current
+            if (editor) {
+              editor.chain().focus().insertContent({
+                type: "wikiQuote",
+                attrs: {
+                  sourceNoteId,
+                  sourceTitle,
+                  quotedText,
+                  quotedAt: new Date().toISOString(),
+                },
+              }).run()
+              toast.success(`Quote from "${sourceTitle}" inserted`, { duration: 1500 })
+            }
+          }}
+        />
       </div>
     )
   }
