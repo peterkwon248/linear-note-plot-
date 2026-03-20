@@ -8,8 +8,6 @@ import { NotesBoard } from "@/components/notes-board"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
-import { InsightsView } from "@/components/insights-view"
-import { CalendarView } from "@/components/calendar-view"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
 import { findLeafByContentType } from "@/lib/workspace/tree-utils"
 import type { ViewContextKey } from "@/lib/view-engine/types"
@@ -93,51 +91,12 @@ export function NotesTableView() {
     }
   }, [workspaceMode, workspaceRoot, applyPreset])
 
-  // ── Insights (layout-mode agnostic) ──
-  if (viewMode === "insights") {
-    return (
-      <div className="flex flex-1 overflow-hidden">
-        <InsightsView />
-      </div>
-    )
-  }
-
   // ── Workspace editor area: show when editing in any layout mode ──
   if (isEditing) {
     return (
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
         <WorkspaceEditorArea />
         <NoteInspector />
-      </div>
-    )
-  }
-
-  // Calendar view
-  if (viewMode === "calendar") {
-    return (
-      <div className="flex flex-1 overflow-hidden">
-        <CalendarView
-          context={config.context}
-          title={config.title}
-          hideCreateButton={config.hideCreateButton}
-          createNoteOverrides={config.createNoteOverrides}
-          folderId={activeFolderId ?? undefined}
-          tagId={activeTagId ?? undefined}
-          labelId={activeLabelId ?? undefined}
-          onRowClick={(noteId) => setPreviewId(noteId)}
-          activePreviewId={previewId}
-        />
-        {previewId && (
-          <NoteDetailPanel
-            noteId={previewId}
-            onClose={() => setPreviewId(null)}
-            onOpenNote={(id) => setPreviewId(id)}
-            onEditNote={() => {
-              openNote(previewId)
-              setPreviewId(null)
-            }}
-          />
-        )}
       </div>
     )
   }

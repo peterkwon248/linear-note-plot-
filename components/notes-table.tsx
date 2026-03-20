@@ -32,8 +32,6 @@ import {
   ChevronsUp,
   ChevronUp,
   FolderOpen,
-  Lightbulb,
-  Calendar,
   RotateCcw,
   Globe,
   Download,
@@ -792,32 +790,9 @@ export function NotesTable({
                   <LayoutGrid className="h-4 w-4" />
                   Board
                 </button>
-                <button
-                  onClick={() => setViewMode("insights")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
-                    viewMode === "insights"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <Lightbulb className="h-4 w-4" />
-                  Insights
-                </button>
-                <button
-                  onClick={() => setViewMode("calendar")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
-                    viewMode === "calendar"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <Calendar className="h-4 w-4" />
-                  Calendar
-                </button>
               </div>
 
-              {viewMode !== "insights" && viewMode !== "calendar" && (
-                <>
+              <>
                   {/* Grouping / Columns row */}
                   <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -907,7 +882,6 @@ export function NotesTable({
                     </>
                   )}
                 </>
-              )}
             </PopoverContent>
           </Popover>
         </div>

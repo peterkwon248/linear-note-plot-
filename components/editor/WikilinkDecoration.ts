@@ -126,7 +126,7 @@ export const WikilinkDecorationExtension = Extension.create({
             }
 
             // Dangling link in read mode: create stub and navigate
-            const newId = store.createWikiStub(title)
+            const newId = store.createWikiStub(title, [], "red-link")
             if (newId) store.openNoteInTab(newId)
             return true
           },

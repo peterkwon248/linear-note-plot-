@@ -15,7 +15,7 @@ import {
   isSameDay,
   parseISO,
 } from "date-fns"
-import { ChevronLeft, ChevronRight, CalendarDays, FileText, Plus, X, SlidersHorizontal, LayoutList, LayoutGrid, Lightbulb, Calendar } from "lucide-react"
+import { ChevronLeft, ChevronRight, CalendarDays, FileText, Plus, X, SlidersHorizontal, LayoutList, LayoutGrid } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
@@ -622,28 +622,6 @@ export function CalendarView({
                 >
                   <LayoutGrid className="h-4 w-4" />
                   Board
-                </button>
-                <button
-                  onClick={() => setViewMode("insights")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-note font-medium transition-colors ${
-                    viewMode === "insights"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <Lightbulb className="h-4 w-4" />
-                  Insights
-                </button>
-                <button
-                  onClick={() => setViewMode("calendar")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-note font-medium transition-colors ${
-                    viewMode === "calendar"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <Calendar className="h-4 w-4" />
-                  Calendar
                 </button>
               </div>
             </PopoverContent>

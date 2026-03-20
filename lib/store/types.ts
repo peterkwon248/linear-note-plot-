@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, WorkspaceMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, WorkspaceMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone, ResearchPreset } from "../workspace/types"
@@ -220,9 +220,10 @@ export interface PlotState {
   // Wiki
   setNoteAliases: (noteId: string, aliases: string[]) => void
   setWikiInfobox: (noteId: string, infobox: WikiInfoboxEntry[]) => void
-  createWikiStub: (title: string, aliases?: string[]) => string
-  convertToWiki: (noteId: string) => void
+  createWikiStub: (title: string, aliases?: string[], stubSource?: StubSource) => string
+  convertToWiki: (noteId: string, stubSource?: StubSource) => void
   revertFromWiki: (noteId: string) => void
+  setWikiStatus: (noteId: string, wikiStatus: WikiStatus) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

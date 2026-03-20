@@ -8,6 +8,7 @@ import {
   IconInbox,
   IconNotes,
   IconWiki,
+  IconCalendar,
   IconOntology,
   IconFolder,
   IconTag,
@@ -188,6 +189,8 @@ export function LinearSidebar() {
 
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
 
+  const tags = usePlotStore((s) => s.tags)
+
   const activeSpace = useActiveSpace()
 
   const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
@@ -255,7 +258,6 @@ export function LinearSidebar() {
   const permanentCount = useMemo(() => notes.filter((n) => n.status === "permanent" && !n.archived && !n.trashed).length, [notes])
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
   const wikiCount = useMemo(() => notes.filter((n) => n.isWiki && !n.trashed).length, [notes])
-  const wikiStubCount = useMemo(() => notes.filter((n) => n.isWiki && n.wikiStatus === "stub" && !n.trashed).length, [notes])
 
   // Sorted folders: pinned first (by pinnedOrder), then unpinned by lastAccessedAt desc (null last)
   const sortedFolders = useMemo(() => {
@@ -673,28 +675,101 @@ export function LinearSidebar() {
               <NavLink
                 href="/wiki"
                 icon={<IconWiki size={20} />}
-                label="All Articles"
+                label="Overview"
                 count={wikiCount > 0 ? wikiCount : undefined}
                 active={isActive("/wiki")}
               />
-              <NavLink
-                href="/wiki"
-                icon={<span className="h-2 w-2 rounded-full bg-[#f5a623]" />}
-                label="Stubs"
-                count={wikiStubCount > 0 ? wikiStubCount : undefined}
-                active={false}
-              />
             </div>
 
+            {/* Wiki categories (tags used by wiki notes) */}
+            {(() => {
+              const wikiNotes = notes.filter((n) => n.isWiki && !n.trashed)
+              const allTags = tags.filter((t) => !t.trashed)
+              const cats = allTags
+                .map((tag) => ({
+                  ...tag,
+                  count: wikiNotes.filter((n) => n.tags.includes(tag.id)).length,
+                }))
+                .filter((c) => c.count > 0)
+                .sort((a, b) => b.count - a.count)
+              const uncategorized = wikiNotes.filter((n) => n.tags.length === 0).length
+
+              return (cats.length > 0 || uncategorized > 0) ? (
+                <Section title="Categories">
+                  {cats.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setActiveRoute("/wiki")
+                        setSelectedNoteId(null)
+                        router.push("/wiki")
+                      }}
+                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                    >
+                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: cat.color || "rgba(255,255,255,0.3)" }}
+                        />
+                      </span>
+                      <span className="truncate text-left flex-1">{cat.name}</span>
+                      <span className="text-xs text-[rgba(255,255,255,0.35)] tabular-nums">
+                        {cat.count}
+                      </span>
+                    </button>
+                  ))}
+                  {uncategorized > 0 && (
+                    <button
+                      onClick={() => {
+                        setActiveRoute("/wiki")
+                        setSelectedNoteId(null)
+                        router.push("/wiki")
+                      }}
+                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                    >
+                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                        <span className="h-2 w-2 rounded-full bg-[rgba(255,255,255,0.2)]" />
+                      </span>
+                      <span className="truncate text-left flex-1 text-sidebar-muted">Uncategorized</span>
+                      <span className="text-xs text-[rgba(255,255,255,0.35)] tabular-nums">
+                        {uncategorized}
+                      </span>
+                    </button>
+                  )}
+                </Section>
+              ) : null
+            })()}
+
+            {/* Pinned wiki articles */}
+            {(() => {
+              const pinnedWiki = notes.filter((n) => n.isWiki && !n.trashed && n.pinned)
+              return pinnedWiki.length > 0 ? (
+                <Section title="Pinned">
+                  {pinnedWiki.map((note) => (
+                    <button
+                      key={note.id}
+                      onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
+                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                    >
+                      <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                        <IconDoc size={14} />
+                      </span>
+                      <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
+                    </button>
+                  ))}
+                </Section>
+              ) : null
+            })()}
+
             {/* Recent wiki articles */}
-            {recentNotes.length > 0 && (
-              <Section title="Recent">
-                {recentNotes
-                  .filter((item) => {
-                    const note = notes.find((n) => n.id === item.id)
-                    return note?.isWiki
-                  })
-                  .map((item) => (
+            {(() => {
+              const recentWiki = recentNotes.filter((item) => {
+                const note = notes.find((n) => n.id === item.id)
+                return note?.isWiki
+              })
+              return recentWiki.length > 0 ? (
+                <Section title="Recent">
+                  {recentWiki.map((item) => (
                     <button
                       key={item.id}
                       onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
@@ -706,8 +781,23 @@ export function LinearSidebar() {
                       <span className="truncate text-left flex-1">{item.title}</span>
                     </button>
                   ))}
-              </Section>
-            )}
+                </Section>
+              ) : null
+            })()}
+          </>
+        )}
+
+        {/* ── Calendar Context ──────────────────────── */}
+        {activeSpace === "calendar" && (
+          <>
+            <div className="space-y-px">
+              <NavLink
+                href="/calendar"
+                icon={<IconCalendar size={20} />}
+                label="Calendar"
+                active={isActive("/calendar")}
+              />
+            </div>
           </>
         )}
 
@@ -770,13 +860,6 @@ export function LinearSidebar() {
                 label="Untriaged"
                 count={inboxCount > 0 ? inboxCount : undefined}
                 active={isActive("/inbox")}
-              />
-              <NavLink
-                href="/notes"
-                icon={<IconNotes size={20} />}
-                label="All Notes"
-                count={allNotesCount > 0 ? allNotesCount : undefined}
-                active={isActive("/notes")}
               />
             </div>
           </>

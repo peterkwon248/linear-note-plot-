@@ -13,7 +13,7 @@ export type WikiStatus = "stub" | "draft" | "complete"
 export type StubSource = "red-link" | "tag" | "backlink" | "manual"
 
 /** Activity Bar spaces — top-level navigation */
-export type ActivitySpace = "inbox" | "notes" | "wiki" | "ontology"
+export type ActivitySpace = "inbox" | "notes" | "wiki" | "calendar" | "ontology"
 
 /** Workspace layout mode (replaces LayoutMode in Phase 2) */
 export type WorkspaceMode = "default" | "zen" | "research"
