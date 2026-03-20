@@ -30,7 +30,6 @@ import type { Note } from "@/lib/types"
 interface CalendarViewProps {
   context?: string
   title?: string
-  showTabs?: boolean
   hideCreateButton?: boolean
   createNoteOverrides?: Partial<Note>
   folderId?: string
@@ -38,7 +37,6 @@ interface CalendarViewProps {
   labelId?: string
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
-  initialTab?: string
 }
 
 /* ── Day-of-week header labels (Mon-first) ───────────── */
@@ -428,7 +426,6 @@ function DayDashboard({
 export function CalendarView({
   context,
   title,
-  showTabs,
   hideCreateButton,
   createNoteOverrides,
   folderId,

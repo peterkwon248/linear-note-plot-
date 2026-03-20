@@ -119,6 +119,8 @@ export const SEED_NOTES: Note[] = [
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
+    wikiStatus: null,
+    stubSource: null,
   },
   {
     id: "note-2",
@@ -142,6 +144,8 @@ export const SEED_NOTES: Note[] = [
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
+    wikiStatus: null,
+    stubSource: null,
   },
   {
     id: "note-3",
@@ -166,6 +170,8 @@ export const SEED_NOTES: Note[] = [
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
+    wikiStatus: null,
+    stubSource: null,
   },
   {
     id: "note-4",
@@ -191,6 +197,8 @@ export const SEED_NOTES: Note[] = [
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
+    wikiStatus: null,
+    stubSource: null,
   },
   {
     id: "note-5",
@@ -214,6 +222,8 @@ export const SEED_NOTES: Note[] = [
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
+    wikiStatus: null,
+    stubSource: null,
   },
   {
     id: "note-6",
@@ -238,5 +248,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
+    wikiStatus: null,
+    stubSource: null,
   },
 ]

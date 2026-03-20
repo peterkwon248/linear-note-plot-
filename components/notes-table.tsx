@@ -140,16 +140,6 @@ function absDate(dateStr: string): string {
   return format(new Date(dateStr), "MMM d")
 }
 
-/* ── Context tabs ──────────────────────────────────────── */
-
-const TABS: { id: ViewContextKey; label: string }[] = [
-  { id: "all", label: "All Notes" },
-  { id: "inbox", label: "Inbox" },
-  { id: "capture", label: "Capture" },
-  { id: "permanent", label: "Permanent" },
-  { id: "unlinked", label: "Unlinked" },
-]
-
 /* ── Trash sub-filter tabs ────────────────────────────── */
 
 type TrashFilter = "all" | "notes" | "wiki" | "tags" | "labels" | "templates"
@@ -335,27 +325,21 @@ export function NotesTable({
   activePreviewId,
   context,
   title,
-  showTabs = true,
   createNoteOverrides,
   hideCreateButton = false,
   folderId,
   tagId,
   labelId,
-  initialTab,
-  onTabChange,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
   context?: ViewContextKey
   title?: string
-  showTabs?: boolean
   createNoteOverrides?: Partial<import("@/lib/types").Note>
   hideCreateButton?: boolean
   folderId?: string
   tagId?: string
   labelId?: string
-  initialTab?: ViewContextKey
-  onTabChange?: (tab: ViewContextKey) => void
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -373,28 +357,12 @@ export function NotesTable({
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
 
-  const [activeTab, setActiveTab] = useState<ViewContextKey>(initialTab ?? "all")
   const [trashFilter, setTrashFilter] = useState<TrashFilter>("all")
 
-  useEffect(() => {
-    setActiveTab(initialTab ?? "all")
-  }, [initialTab])
-
-  const effectiveTab = context ?? activeTab
+  const effectiveTab = context ?? "all"
   const isTrashView = effectiveTab === "trash"
 
   const backlinksMap = useBacklinksIndex()
-
-  const tabCounts = useMemo((): Record<string, number> => {
-    const active = notes.filter((n) => !n.archived && !n.trashed)
-    return {
-      all: active.length,
-      inbox: active.filter((n) => n.status === "inbox" && n.triageStatus !== "trashed").length,
-      capture: active.filter((n) => n.status === "capture").length,
-      permanent: active.filter((n) => n.status === "permanent").length,
-      unlinked: active.filter((n) => (backlinksMap.get(n.id) ?? 0) === 0 && (n.linksOut?.length ?? 0) === 0).length,
-    }
-  }, [notes, backlinksMap])
 
   const folders = usePlotStore((s) => s.folders)
   const labels = usePlotStore((s) => s.labels)
@@ -719,30 +687,8 @@ export function NotesTable({
         }
       />
 
-      {/* ── Context tabs + toolbar ─────────────────────── */}
+      {/* ── Toolbar ─────────────────────────────────────── */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">
-        {/* Tabs */}
-        {showTabs && !isTrashView && (
-          <div className="flex items-center gap-0">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => { setActiveTab(tab.id); onTabChange?.(tab.id) }}
-                className={`relative px-3 py-2 text-ui font-medium transition-colors ${
-                  effectiveTab === tab.id
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-                <span className="ml-1.5 rounded-[3px] bg-white/15 px-1.5 py-0.5 text-2xs font-medium tabular-nums text-white">{tabCounts[tab.id]}</span>
-                {effectiveTab === tab.id && (
-                  <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
         {/* Trash sub-filter tabs */}
         {isTrashView && (
           <div className="flex items-center gap-0">

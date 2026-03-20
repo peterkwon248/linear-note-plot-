@@ -34,6 +34,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         isWiki: partial?.isWiki ?? false,
         aliases: partial?.aliases ?? [],
         wikiInfobox: partial?.wikiInfobox ?? [],
+        wikiStatus: partial?.wikiStatus ?? null,
+        stubSource: partial?.stubSource ?? null,
         ...workflowDefaults(partial?.status ?? "inbox"),
         ...(partial?.source != null ? { source: partial.source } : {}),
       }
@@ -317,6 +319,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         isWiki: false,
         aliases: [],
         wikiInfobox: [],
+        wikiStatus: null,
+        stubSource: null,
       }
       set((state: any) => ({
         notes: [newNote, ...state.notes],
@@ -372,6 +376,8 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         isWiki: true,
         aliases: aliases ?? [],
         wikiInfobox: [],
+        wikiStatus: "stub",
+        stubSource: "manual",
         ...workflowDefaults("inbox"),
       }
       set((state: any) => ({
@@ -386,7 +392,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === noteId
-            ? { ...n, isWiki: true, updatedAt: now(), lastTouchedAt: now() }
+            ? { ...n, isWiki: true, wikiStatus: "draft" as const, stubSource: null, updatedAt: now(), lastTouchedAt: now() }
             : n
         ),
       }))
@@ -397,7 +403,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === noteId
-            ? { ...n, isWiki: false, updatedAt: now(), lastTouchedAt: now() }
+            ? { ...n, isWiki: false, wikiStatus: null, stubSource: null, updatedAt: now(), lastTouchedAt: now() }
             : n
         ),
       }))

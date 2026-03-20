@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, LayoutMode, WorkspaceMode, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone, ResearchPreset } from "../workspace/types"
@@ -80,8 +80,11 @@ export interface PlotState {
   relationSuggestions: RelationSuggestion[]
 
   // Layout
+  /** @deprecated Use workspaceMode instead. Kept for migration backward compat. */
   layoutMode: LayoutMode
   _preFocusLayoutMode: LayoutMode | null
+  workspaceMode: WorkspaceMode  // Phase 2 will replace layoutMode with this
+  _preZenWorkspaceMode: WorkspaceMode | null  // saved mode before entering zen
   researchPreset: ResearchPreset
   listPaneWidth: number  // three-column/split 모드용, 200~500
 
@@ -186,6 +189,7 @@ export interface PlotState {
   goForward: () => void
   setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
   setLayoutMode: (mode: LayoutMode) => void
+  setWorkspaceMode: (mode: WorkspaceMode) => void
   setResearchPreset: (preset: ResearchPreset) => void
   setListPaneWidth: (width: number) => void
   setSidePeekNoteId: (id: string | null) => void

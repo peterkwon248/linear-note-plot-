@@ -6,6 +6,18 @@ export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
 /** Source of note creation */
 export type NoteSource = "manual" | "webclip" | "import" | "share" | "api" | null
 
+/** Wiki quality track — independent of workflow status */
+export type WikiStatus = "stub" | "draft" | "complete"
+
+/** Reason a wiki stub was auto-created */
+export type StubSource = "red-link" | "tag" | "backlink" | "manual"
+
+/** Activity Bar spaces — top-level navigation */
+export type ActivitySpace = "inbox" | "notes" | "wiki" | "ontology"
+
+/** Workspace layout mode (replaces LayoutMode in Phase 2) */
+export type WorkspaceMode = "default" | "zen" | "research"
+
 export interface WikiInfoboxEntry {
   key: string
   value: string
@@ -47,6 +59,8 @@ export interface Note {
   isWiki: boolean
   aliases: string[]
   wikiInfobox: WikiInfoboxEntry[]
+  wikiStatus: WikiStatus | null       // null = not wiki, stub/draft/complete = wiki quality
+  stubSource: StubSource | null       // reason for stub creation (null if not a stub)
 
   /* ── Precomputed (from content, for performance) ── */
   preview: string          // first ~120 chars of plaintext (for list display)
@@ -239,7 +253,7 @@ export interface Reflection {
 
 export type RelationType = "related-to" | "inspired-by" | "contradicts" | "extends" | "depends-on"
 
-/** Layout mode for the editor area */
+/** @deprecated Use WorkspaceMode instead */
 export type LayoutMode = "list" | "focus" | "three-column" | "tabs" | "panels" | "split"
 
 export interface Relation {

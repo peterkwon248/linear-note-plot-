@@ -96,7 +96,8 @@
       "WebFetch(domain:facedragons.com)",
       "Bash(grep -l \"noteEvents\\\\|addEvent\" lib/store/slices/*.ts)",
       "Bash(~/.claude/.omc-worklog/latest.md:*)",
-      "Bash(ls /c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/pensive-bouman/app/\\\\\\(app\\\\\\)/search/)"
+      "Bash(ls /c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/pensive-bouman/app/\\\\\\(app\\\\\\)/search/)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

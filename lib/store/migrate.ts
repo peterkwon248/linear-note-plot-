@@ -32,6 +32,13 @@ export function migrate(persistedState: unknown): PlotState {
       // v13: Precompute preview and linksOut from content
       const content = typeof rest.content === "string" ? rest.content as string : ""
 
+      // v41: wikiStatus + stubSource
+      const isWiki = n.isWiki ?? false
+      let wikiStatus = n.wikiStatus ?? null
+      if (wikiStatus === null && isWiki) {
+        wikiStatus = (content?.trim()) ? "draft" : "stub"
+      }
+
       return {
         ...rest,
         status: mergedStatus,
@@ -47,9 +54,11 @@ export function migrate(persistedState: unknown): PlotState {
         snoozeCount: n.snoozeCount ?? 0,
         archivedAt: n.archivedAt ?? null,
         parentNoteId: n.parentNoteId ?? null,
-        isWiki: n.isWiki ?? false,
+        isWiki: isWiki,
         aliases: (n as any).aliases ?? [],
         wikiInfobox: (n as any).wikiInfobox ?? [],
+        wikiStatus,
+        stubSource: n.stubSource ?? null,
         contentJson: n.contentJson ?? null,
         // v13: Precomputed fields
         preview: n.preview ?? extractPreview(content),
@@ -373,6 +382,7 @@ export function migrate(persistedState: unknown): PlotState {
   if (!state.layoutMode) state.layoutMode = "tabs"
   if (!state.listPaneWidth) state.listPaneWidth = 320
   state._preFocusLayoutMode = null // transient, always reset
+  state._preZenWorkspaceMode = null // transient, always reset
   // Add panelRatios to editorState
   if (state.editorState && typeof state.editorState === "object") {
     const es = state.editorState as Record<string, unknown>
@@ -431,6 +441,14 @@ export function migrate(persistedState: unknown): PlotState {
 
   // v40: Research sub-preset
   if (!state.researchPreset) state.researchPreset = "left-right2"
+
+  // v41: wikiStatus + stubSource (handled in note-level migration above)
+
+  // v42: workspaceMode (coexists with layoutMode until Phase 2 removes it)
+  if (!state.workspaceMode) {
+    const old = state.layoutMode as string | undefined
+    state.workspaceMode = old === "focus" ? "zen" : old === "split" ? "research" : "default"
+  }
 
   return state as unknown as PlotState
 }

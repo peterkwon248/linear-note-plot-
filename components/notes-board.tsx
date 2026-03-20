@@ -127,14 +127,6 @@ const COLUMN_CARD_LIMIT = 10
 
 /* ── Constants ─────────────────────────────────────────── */
 
-const TABS: { id: ViewContextKey; label: string }[] = [
-  { id: "all", label: "All Notes" },
-  { id: "inbox", label: "Inbox" },
-  { id: "capture", label: "Capture" },
-  { id: "permanent", label: "Permanent" },
-  { id: "unlinked", label: "Unlinked" },
-]
-
 /** Default groupBy per context tab for board mode */
 const BOARD_DEFAULT_GROUP: Partial<Record<ViewContextKey, GroupBy>> = {
   inbox: "triage",
@@ -489,27 +481,21 @@ export function NotesBoard({
   activePreviewId,
   context,
   title,
-  showTabs = true,
   createNoteOverrides,
   hideCreateButton = false,
   folderId,
   tagId,
   labelId,
-  initialTab,
-  onTabChange,
 }: {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
   context?: ViewContextKey
   title?: string
-  showTabs?: boolean
   createNoteOverrides?: Partial<Note>
   hideCreateButton?: boolean
   folderId?: string
   tagId?: string
   labelId?: string
-  initialTab?: ViewContextKey
-  onTabChange?: (tab: ViewContextKey) => void
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
@@ -535,13 +521,7 @@ export function NotesBoard({
   const displayPopoverOpen = useUIStore((s) => s.displayPopoverOpen)
   const setDisplayPopoverOpen = useUIStore((s) => s.setDisplayPopoverOpen)
 
-  const [activeTab, setActiveTab] = useState<ViewContextKey>(initialTab ?? "all")
-
-  useEffect(() => {
-    setActiveTab(initialTab ?? "all")
-  }, [initialTab])
-
-  const effectiveTab = context ?? activeTab
+  const effectiveTab = context ?? "all"
 
   const backlinksMap = useBacklinksIndex()
 
@@ -662,30 +642,8 @@ export function NotesBoard({
         )}
       </header>
 
-      {/* Tabs + toolbar */}
+      {/* Toolbar */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">
-        {showTabs && (
-          <div className="flex items-center gap-0">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => { setActiveTab(tab.id); onTabChange?.(tab.id) }}
-                className={`relative px-3 py-2 text-ui font-medium transition-colors ${
-                  effectiveTab === tab.id
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-                {effectiveTab === tab.id && (
-                  <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Toolbar */}
         <div className="flex items-center gap-1.5">
           {/* Search input */}
           <div className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 transition-colors focus-within:border-accent">
