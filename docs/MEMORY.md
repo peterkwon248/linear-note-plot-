@@ -77,6 +77,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #78**: Linear식 풀페이지 SearchView + 글로벌 엔티티 검색 — SearchView (Notes/Tags/Labels/Templates/Folders 탭 검색), Wiki ViewHeader 전환, ViewHeader 드롭다운 자동완성, Templates 버튼 통일, SearchDialog 엔티티 검색, Cmd+K/사이드바 → 풀페이지 검색
 - **PR #80**: Wiki system + Side Peek + soft-delete trash — Wiki 홈 대시보드 (나무위키 스타일), WikiView 내부 3단 읽기 레이아웃, Side Peek 패널, SearchView Wiki 탭, Tags/Labels/Templates 소프트 삭제 + Trash 탭 필터
 - **PR #81**: 위키링크 UX 통합 — `[[[` 제거 → `[[` 통합, 브래킷 숨김 (font-size:0), 아이콘 클릭 드롭다운 (Peek/Open), Import Note, Side Peek 편집 토글, 사이드바 닫기 버튼, 라인 하이라이트 제거, 자기 자신 필터
+- **PR #84**: Architecture Redesign v2 Phase 1~5 구현 — Activity Bar, Top Utility Bar, Sidebar 컨텍스트 반응형, PlotIcons 시스템, Breadcrumb, NotesTable 상태 탭 제거, WorkspaceMode 3개, 2-level routing, 테마 토글
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details
@@ -106,7 +107,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Phase 4-D**: Context Panel
 - **Ontology View**: SVG force-directed graph (d3-force), filter bar, detail panel, workspace 통합
 
-## Current Direction (as of 2026-03-19)
+## Current Direction (as of 2026-03-20)
 
 ### Architecture Redesign v2 (확정, 구현 대기)
 
@@ -119,7 +120,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **`[[` 통합** — 노트/위키 구분 없이 하나로 검색
 - **Side Peek** — 위키링크 클릭 → 우측 패널 슬라이드
 - **소프트 삭제** — 태그/라벨/템플릿 삭제 시 노트 연결 유지
-- **Activity Bar** — Tier 1 (Inbox/Notes/Wiki/Graph), Settings 하단. Search는 상단 유틸리티 바 (Linear 스타일)
+- **Activity Bar** — Tier 1 (Inbox/Notes/Wiki/Graph), 하단 테마 토글(Sun/Moon). Settings는 사이드바 Footer. Search는 상단 유틸리티 바 (Linear 스타일). 같은 아이콘 재클릭=사이드바 토글 (VS Code 방식)
 - **2-Level Routing** — `activeSpace` + `activeRoute`, `inferSpace()` 하위호환
 - **LayoutMode 삭제** → `WorkspaceMode = "default" | "zen" | "research"` 3개로 수렴. default 모드 auto-collapse
 - **Wiki 병렬 라이프사이클** — `status`(inbox/capture/permanent)와 `wikiStatus`(stub/draft/complete) 독립. 어느 시점에서든 위키 진입 가능
@@ -133,11 +134,11 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Stub 이유 추적** — `stubSource: "red-link" | "tag" | "backlink" | "manual"`. 이유 기반 분류
 
 #### 구현 Phase (7단계)
-1. **Foundation** — v41 (wikiStatus), v42 (workspaceMode), table-route.ts (activeSpace)
-2. **Layout Automation** — setWorkspaceMode(), auto-collapse, Cmd+0/1/2
-3. **Activity Bar + Top Utility Bar** — activity-bar.tsx, top-utility-bar.tsx
-4. **Sidebar Refactor** — 컨텍스트 반응형, Tier 3 섹션, 상태 탭 제거
-5. **Breadcrumb** — editor-breadcrumb.tsx, Back 버튼 교체
+1. **Foundation** — v41 (wikiStatus), v42 (workspaceMode), table-route.ts (activeSpace) ✅
+2. **Layout Automation** — setWorkspaceMode(), auto-collapse, Cmd+0/1/2 ✅
+3. **Activity Bar + Top Utility Bar** — activity-bar.tsx, top-utility-bar.tsx ✅
+4. **Sidebar Refactor** — 컨텍스트 반응형, Tier 3 섹션, 상태 탭 제거 ✅
+5. **Breadcrumb** — editor-breadcrumb.tsx, Back 버튼 교체 ✅
 6. **Wiki Evolution** — 자동 등재 엔진, wikiStatus UI, 초성 인덱스
 7. **Wiki Collection** — wiki-collection-design.md Phase A~F
 

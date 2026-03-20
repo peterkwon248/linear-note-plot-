@@ -1,20 +1,19 @@
 "use client"
 
-import { List, Maximize2, Columns3, SplitSquareHorizontal, LayoutGrid, ChevronRight } from "lucide-react"
+import { Maximize2, Columns3, SplitSquareHorizontal, ChevronRight } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import type { LayoutMode } from "@/lib/types"
+import type { WorkspaceMode } from "@/lib/types"
 import type { ResearchPreset } from "@/lib/workspace/types"
 import { RESEARCH_PRESETS, RESEARCH_PRESET_LABELS } from "@/lib/workspace/presets"
 import { useState } from "react"
 
-const LAYOUT_MODES: { mode: LayoutMode; label: string; shortcut: string; icon: typeof Maximize2 }[] = [
-  { mode: "list",         label: "List",           shortcut: "Ctrl+1", icon: List },
-  { mode: "focus",        label: "Focus",          shortcut: "Ctrl+2", icon: Maximize2 },
-  { mode: "three-column", label: "List + Editor",  shortcut: "Ctrl+3", icon: Columns3 },
-  { mode: "split",        label: "Multi Panel",    shortcut: "Ctrl+4", icon: SplitSquareHorizontal },
+const WORKSPACE_MODES: { mode: WorkspaceMode; label: string; shortcut: string; icon: typeof Maximize2 }[] = [
+  { mode: "default",  label: "Default",   shortcut: "Ctrl+0", icon: Columns3 },
+  { mode: "zen",      label: "Zen",       shortcut: "Ctrl+1", icon: Maximize2 },
+  { mode: "research", label: "Research",  shortcut: "Ctrl+2", icon: SplitSquareHorizontal },
 ]
 
 /** Mini layout icon for research sub-presets */
@@ -78,9 +77,9 @@ function ResearchPresetIcon({ preset, className }: { preset: ResearchPreset; cla
 }
 
 export function LayoutModeSwitcher() {
-  const layoutMode = usePlotStore((s) => s.layoutMode) as LayoutMode
+  const workspaceMode = usePlotStore((s) => s.workspaceMode) as WorkspaceMode
   const researchPreset = usePlotStore((s) => s.researchPreset) as ResearchPreset
-  const setLayoutMode = usePlotStore((s) => s.setLayoutMode)
+  const setWorkspaceMode = usePlotStore((s) => s.setWorkspaceMode)
   const setResearchPreset = usePlotStore((s) => s.setResearchPreset)
   const [open, setOpen] = useState(false)
   const [showResearchSub, setShowResearchSub] = useState(false)
@@ -97,7 +96,7 @@ export function LayoutModeSwitcher() {
                 "transition-colors"
               )}
             >
-              <LayoutGrid className="h-4 w-4" />
+              <Columns3 className="h-4 w-4" />
             </button>
           </PopoverTrigger>
         </TooltipTrigger>
@@ -111,9 +110,9 @@ export function LayoutModeSwitcher() {
         className="w-56 p-1.5"
         sideOffset={8}
       >
-        {LAYOUT_MODES.map(({ mode, label, shortcut, icon: Icon }) => {
-          const isResearch = mode === "split"
-          const isActive = layoutMode === mode
+        {WORKSPACE_MODES.map(({ mode, label, shortcut, icon: Icon }) => {
+          const isResearch = mode === "research"
+          const isActive = workspaceMode === mode
 
           if (isResearch) {
             return (
@@ -121,7 +120,7 @@ export function LayoutModeSwitcher() {
                 <button
                   onMouseEnter={() => setShowResearchSub(true)}
                   onClick={() => {
-                    setLayoutMode(mode)
+                    setWorkspaceMode(mode)
                     setOpen(false)
                     setShowResearchSub(false)
                   }}
@@ -153,7 +152,7 @@ export function LayoutModeSwitcher() {
                         }}
                         className={cn(
                           "flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left transition-colors",
-                          layoutMode === "split" && researchPreset === rp
+                          workspaceMode === "research" && researchPreset === rp
                             ? "bg-secondary/80 text-foreground"
                             : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                         )}
@@ -173,7 +172,7 @@ export function LayoutModeSwitcher() {
               key={mode}
               onMouseEnter={() => setShowResearchSub(false)}
               onClick={() => {
-                setLayoutMode(mode)
+                setWorkspaceMode(mode)
                 setOpen(false)
               }}
               className={cn(

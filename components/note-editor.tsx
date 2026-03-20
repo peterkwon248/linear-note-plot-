@@ -7,7 +7,6 @@ import {
   Trash2,
   MoreHorizontal,
   Copy,
-  ArrowLeft,
   PanelRight,
   Merge,
   Link2,
@@ -27,12 +26,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
 import { usePlotStore } from "@/lib/store"
-import { setActiveRoute } from "@/lib/table-route"
-import { getPreviousRoute } from "@/lib/store/slices/ui"
+import { EditorBreadcrumb } from "@/components/editor-breadcrumb"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
@@ -56,10 +52,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const storeSelectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const activeNoteId = propNoteId ?? storeSelectedNoteId
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
-  const setLayoutMode = usePlotStore((s) => s.setLayoutMode)
   const notes = usePlotStore((s) => s.notes)
-  const router = useRouter()
-  const folders = usePlotStore((s) => s.folders)
   const updateNote = usePlotStore((s) => s.updateNote)
   const togglePin = usePlotStore((s) => s.togglePin)
   const toggleArchive = usePlotStore((s) => s.toggleArchive)
@@ -146,8 +139,6 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
   if (!note) return null
 
-  const currentFolder = folders.find((f) => f.id === note.folderId)
-
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background">
       {/* SURFACE: full-width column */}
@@ -156,42 +147,10 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       <header className={cn(
         "flex items-center justify-between border-b border-border py-2 px-4"
       )}>
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => {
-                  if (onClose) { onClose(); return }
-                  // Navigate back to previous screen
-                  const prev = getPreviousRoute() ?? "/notes"
-                  setSelectedNoteId(null)
-                  setActiveRoute(prev)
-                  router.push(prev)
-                }}
-                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Back</TooltipContent>
-          </Tooltip>
-          <span className="mx-1 h-4 w-px bg-border" />
-          {currentFolder && (
-            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: currentFolder.color }}
-              />
-              {currentFolder.name}
-            </span>
-          )}
-          {!currentFolder && (
-            <span className="text-sm text-muted-foreground">
-              {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
-            </span>
-          )}
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <EditorBreadcrumb note={note} onClose={onClose} />
           {note.isWiki && (
-            <span className="flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-2xs font-medium text-purple-400">
+            <span className="flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-2xs font-medium text-purple-400 shrink-0">
               <Globe className="h-3 w-3" />
               Wiki
             </span>

@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { PanelLeft } from "lucide-react"
 import { LinearSidebar } from "@/components/linear-sidebar"
+import { ActivityBar } from "@/components/activity-bar"
+import { TopUtilityBar } from "@/components/top-utility-bar"
 import { SearchDialog } from "@/components/search-dialog"
 import { ShortcutOverlay } from "@/components/shortcut-overlay"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -38,7 +39,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
   const setSidebarWidth = usePlotStore((s) => s.setSidebarWidth)
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
-  const restoreSidebar = usePlotStore((s) => s.restoreSidebar)
   const { resolvedTheme } = useTheme()
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
@@ -121,101 +121,92 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <TooltipProvider>
-      <div className="relative flex h-screen overflow-hidden bg-background">
-        {/* ── Collapsed toggle button ── */}
-        {sidebarCollapsed && (
-          <div
-            className="absolute left-0 top-0 z-50 flex h-full w-[40px] flex-col"
-          >
-            <button
-              onClick={restoreSidebar}
-              className="m-1.5 mt-2.5 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              aria-label="Expand sidebar"
-            >
-              <PanelLeft className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+      <div className="flex h-screen flex-col overflow-hidden bg-background">
+        {/* ── Top Utility Bar ── */}
+        <TopUtilityBar />
 
-        {/* ── Normal sidebar ── */}
-        {!sidebarCollapsed && (
-          <div
-            className="relative shrink-0 h-full"
-            style={{ width: sidebarWidth }}
-          >
-            <LinearSidebar />
-            {/* Resize handle */}
+        {/* ── Body: Activity Bar + Sidebar + Content ── */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* ── Activity Bar (always visible) ── */}
+          <ActivityBar />
+
+          {/* ── Sidebar (collapsible) ── */}
+          {!sidebarCollapsed && (
             <div
-              onPointerDown={handlePointerDown}
-              className="absolute right-0 top-0 z-10 h-full w-[4px] cursor-col-resize transition-colors hover:bg-primary/20 active:bg-primary/30"
-              role="separator"
-              aria-orientation="vertical"
-            />
+              className="relative shrink-0 h-full"
+              style={{ width: sidebarWidth }}
+            >
+              <LinearSidebar />
+              {/* Resize handle */}
+              <div
+                onPointerDown={handlePointerDown}
+                className="absolute right-0 top-0 z-10 h-full w-[4px] cursor-col-resize transition-colors hover:bg-primary/20 active:bg-primary/30"
+                role="separator"
+                aria-orientation="vertical"
+              />
+            </div>
+          )}
+
+          {/* ── Main content ── */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* Table views (notes/pinned/trash): always mounted */}
+            <div className={isTableView ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <NotesTableView />
+            </div>
+
+            {/* View routes: mount-once, keep-alive */}
+            {(mountedViews.has("/tags") || activeRoute === "/tags") && (
+              <div className={activeRoute === "/tags" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                <TagsView />
+              </div>
+            )}
+
+            {(mountedViews.has("/labels") || activeRoute === "/labels") && (
+              <div className={activeRoute === "/labels" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                <LabelsView />
+              </div>
+            )}
+
+            {(mountedViews.has("/templates") || activeRoute === "/templates") && (
+              <div className={activeRoute === "/templates" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                <TemplatesView />
+              </div>
+            )}
+
+            {(mountedViews.has("/ontology") || activeRoute === "/ontology") && (
+              <div className={activeRoute === "/ontology" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                <OntologyView />
+              </div>
+            )}
+
+            {(mountedViews.has("/insights") || activeRoute === "/insights") && (
+              <div className={activeRoute === "/insights" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                <InsightsView />
+              </div>
+            )}
+
+            {(mountedViews.has("/wiki") || activeRoute === "/wiki") && (
+              <div className={activeRoute === "/wiki" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                <WikiView />
+              </div>
+            )}
+
+            {(mountedViews.has("/search") || activeRoute === "/search") && (
+              <div className={activeRoute === "/search" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                <SearchView />
+              </div>
+            )}
+
+            {/* Fallback: param routes (/projects/[id], /maps/[id], etc.) */}
+            <div className={isFallback ? "flex flex-1 overflow-hidden" : "hidden"}>
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
+            </div>
+
+            {/* Side Peek panel — slides in from right on wikilink peek */}
+            <SidePeekPanel />
           </div>
-        )}
-
-        {/* ── Main content ── */}
-        <div
-          className="flex flex-1 overflow-hidden"
-          style={sidebarCollapsed ? { marginLeft: 40 } : undefined}
-        >
-          {/* Table views (notes/pinned/trash): always mounted */}
-          <div className={isTableView ? "flex flex-1 overflow-hidden" : "hidden"}>
-            <NotesTableView />
-          </div>
-
-          {/* View routes: mount-once, keep-alive */}
-          {(mountedViews.has("/tags") || activeRoute === "/tags") && (
-            <div className={activeRoute === "/tags" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <TagsView />
-            </div>
-          )}
-
-          {(mountedViews.has("/labels") || activeRoute === "/labels") && (
-            <div className={activeRoute === "/labels" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <LabelsView />
-            </div>
-          )}
-
-          {(mountedViews.has("/templates") || activeRoute === "/templates") && (
-            <div className={activeRoute === "/templates" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <TemplatesView />
-            </div>
-          )}
-
-          {(mountedViews.has("/ontology") || activeRoute === "/ontology") && (
-            <div className={activeRoute === "/ontology" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <OntologyView />
-            </div>
-          )}
-
-          {(mountedViews.has("/insights") || activeRoute === "/insights") && (
-            <div className={activeRoute === "/insights" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <InsightsView />
-            </div>
-          )}
-
-          {(mountedViews.has("/wiki") || activeRoute === "/wiki") && (
-            <div className={activeRoute === "/wiki" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <WikiView />
-            </div>
-          )}
-
-          {(mountedViews.has("/search") || activeRoute === "/search") && (
-            <div className={activeRoute === "/search" ? "flex flex-1 overflow-hidden" : "hidden"}>
-              <SearchView />
-            </div>
-          )}
-
-          {/* Fallback: param routes (/projects/[id], /maps/[id], etc.) */}
-          <div className={isFallback ? "flex flex-1 overflow-hidden" : "hidden"}>
-            <ErrorBoundary>
-              {children}
-            </ErrorBoundary>
-          </div>
-
-          {/* Side Peek panel — slides in from right on wikilink peek */}
-          <SidePeekPanel />
         </div>
 
         <SearchDialog />

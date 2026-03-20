@@ -120,7 +120,7 @@ export function useGlobalShortcuts() {
         return
       }
 
-      // ── 2b. Ctrl/Cmd+Shift+F — toggle Focus Mode ────────────
+      // ── 2b. Ctrl/Cmd+Shift+F — toggle Zen Mode ────────────
       if (
         (e.key === "f" || e.key === "F") &&
         e.shiftKey &&
@@ -135,20 +135,20 @@ export function useGlobalShortcuts() {
         }
         const s = usePlotStore.getState()
         if (s.selectedNoteId === null) return
-        if (s.layoutMode === "focus") {
-          s.setLayoutMode(s._preFocusLayoutMode ?? "three-column")
+        if (s.workspaceMode === "zen") {
+          s.setWorkspaceMode("default")
         } else {
-          s.setLayoutMode("focus")
+          s.setWorkspaceMode("zen")
         }
         return
       }
 
-      // ── 2c. Ctrl/Cmd+1~4 — Layout Mode Shortcuts ──
-      if (mod && !e.shiftKey && !e.altKey && ["1", "2", "3", "4"].includes(e.key)) {
+      // ── 2c. Ctrl/Cmd+0~2 — Workspace Mode Shortcuts ──
+      if (mod && !e.shiftKey && !e.altKey && ["0", "1", "2"].includes(e.key)) {
         const s = usePlotStore.getState()
         e.preventDefault()
-        const modes = ["list", "focus", "three-column", "split"] as const
-        s.setLayoutMode(modes[parseInt(e.key) - 1])
+        const modes = ["default", "zen", "research"] as const
+        s.setWorkspaceMode(modes[parseInt(e.key)])
         return
       }
 

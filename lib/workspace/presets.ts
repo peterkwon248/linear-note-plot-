@@ -41,7 +41,7 @@ export function buildPreset(preset: WorkspacePreset): WorkspaceNode {
   }
 }
 
-/** Map from legacy LayoutMode string to workspace preset */
+/** @deprecated Map from legacy LayoutMode string to workspace preset */
 export function layoutModeToPreset(mode: string): WorkspacePreset {
   switch (mode) {
     case "focus": return "focus"

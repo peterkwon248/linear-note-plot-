@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, AutopilotLogEntry, Relation, Reflection } from "../types"
+import type { NoteEvent, AutopilotLogEntry, Relation, Reflection, WorkspaceMode } from "../types"
 import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
@@ -66,8 +66,10 @@ export const usePlotStore = create<PlotState>()(
         coOccurrences: [] as CoOccurrence[],
         relationSuggestions: [] as RelationSuggestion[],
         ontologyPositions: {} as Record<string, { x: number; y: number }>,
-        layoutMode: "tabs" as const,
+        layoutMode: "three-column" as const,  // @deprecated — use workspaceMode
         _preFocusLayoutMode: null as any,
+        workspaceMode: "default" as const,
+        _preZenWorkspaceMode: null as WorkspaceMode | null,
         researchPreset: "left-right2" as const,
         listPaneWidth: 320,
         srsStateByNoteId: {} as Record<string, SRSState>,
@@ -102,11 +104,11 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 40,
+      version: 42,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, _preFocusLayoutMode, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePeekNoteId, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, _preFocusLayoutMode, _preZenWorkspaceMode, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePeekNoteId, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
@@ -11,41 +10,37 @@ import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { InsightsView } from "@/components/insights-view"
 import { CalendarView } from "@/components/calendar-view"
-import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, setActiveRoute } from "@/lib/table-route"
+import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
 import { findLeafByContentType } from "@/lib/workspace/tree-utils"
-import { layoutModeToPreset } from "@/lib/workspace/presets"
 import type { ViewContextKey } from "@/lib/view-engine/types"
-import type { Note, LayoutMode } from "@/lib/types"
+import type { Note } from "@/lib/types"
 
 /* ── Route → View Config map ─────────────────────────── */
 
 interface ViewConfig {
   context?: ViewContextKey
   title?: string
-  showTabs?: boolean
   hideCreateButton?: boolean
   createNoteOverrides?: Partial<Note>
-  initialTab?: ViewContextKey
 }
 
 const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
   "/notes": {},
-  "/inbox": { initialTab: "inbox" },
-  "/pinned": { context: "pinned", title: "Pinned", showTabs: false, hideCreateButton: true },
-  "/trash": { context: "trash", title: "Trash", showTabs: false, hideCreateButton: true },
+  "/inbox": { context: "inbox", title: "Inbox" },
+  "/pinned": { context: "pinned", title: "Pinned", hideCreateButton: true },
+  "/trash": { context: "trash", title: "Trash", hideCreateButton: true },
 }
 
 /* ── NotesTableView (always mounted in layout) ───────── */
 
 export function NotesTableView() {
-  const router = useRouter()
   const tableRoute = useActiveRoute()
   const activeFolderId = useActiveFolderId()
   const activeTagId = useActiveTagId()
   const activeLabelId = useActiveLabelId()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
-  const layoutMode = usePlotStore((s) => s.layoutMode) as LayoutMode
+  const workspaceMode = usePlotStore((s) => s.workspaceMode)
   const workspaceRoot = usePlotStore((s) => s.workspaceRoot)
   const applyPreset = usePlotStore((s) => s.applyPreset)
   const viewMode = useSettingsStore((s) => s.viewMode)
@@ -62,14 +57,6 @@ export function NotesTableView() {
     if (activeLabelId) return { ...baseConfig, context: "label" as ViewContextKey }
     return baseConfig
   })()
-
-  // When user switches tabs away from "inbox" while on /inbox route, navigate to /notes
-  const handleTabChange = useCallback((tab: ViewContextKey) => {
-    if (tableRoute === "/inbox" && tab !== "inbox") {
-      setActiveRoute("/notes")
-      router.push("/notes")
-    }
-  }, [tableRoute, router])
 
   // ESC closes preview panel
   const handleKeyDown = useCallback(
@@ -95,16 +82,16 @@ export function NotesTableView() {
     setPreviewId(null)
   }, [tableRoute])
 
-  // Auto-migrate: if in list/split mode but workspace has no note-list leaf, apply new preset once
+  // Auto-migrate: if in default/research mode but workspace has no note-list leaf, apply preset once
   // hasMigrated is set unconditionally on first run so closing the list pane won't re-trigger
   useEffect(() => {
     if (hasMigrated.current) return
     hasMigrated.current = true
-    if ((layoutMode === "three-column" || layoutMode === "split") &&
+    if ((workspaceMode === "default" || workspaceMode === "research") &&
         !findLeafByContentType(workspaceRoot, "note-list")) {
-      applyPreset(layoutModeToPreset(layoutMode))
+      applyPreset(workspaceMode === "research" ? "research" : "list-editor")
     }
-  }, [layoutMode, workspaceRoot, applyPreset])
+  }, [workspaceMode, workspaceRoot, applyPreset])
 
   // ── Insights (layout-mode agnostic) ──
   if (viewMode === "insights") {
@@ -132,7 +119,6 @@ export function NotesTableView() {
         <CalendarView
           context={config.context}
           title={config.title}
-          showTabs={config.showTabs}
           hideCreateButton={config.hideCreateButton}
           createNoteOverrides={config.createNoteOverrides}
           folderId={activeFolderId ?? undefined}
@@ -140,7 +126,6 @@ export function NotesTableView() {
           labelId={activeLabelId ?? undefined}
           onRowClick={(noteId) => setPreviewId(noteId)}
           activePreviewId={previewId}
-          initialTab={config.initialTab}
         />
         {previewId && (
           <NoteDetailPanel
@@ -165,7 +150,6 @@ export function NotesTableView() {
       <ViewComponent
         context={config.context}
         title={config.title}
-        showTabs={config.showTabs}
         hideCreateButton={config.hideCreateButton}
         createNoteOverrides={config.createNoteOverrides}
         folderId={activeFolderId ?? undefined}
@@ -173,8 +157,6 @@ export function NotesTableView() {
         labelId={activeLabelId ?? undefined}
         onRowClick={(noteId) => setPreviewId(noteId)}
         activePreviewId={previewId}
-        initialTab={config.initialTab}
-        onTabChange={handleTabChange}
       />
       {previewId && (
         <NoteDetailPanel

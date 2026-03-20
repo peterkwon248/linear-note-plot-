@@ -1,4 +1,4 @@
-import type { Note, ActiveView, LayoutMode } from "../../types"
+import type { Note, ActiveView, LayoutMode, WorkspaceMode } from "../../types"
 import type { ViewState, ViewContextKey } from "../../view-engine/types"
 import type { ResearchPreset } from "../../workspace/types"
 import { layoutModeToPreset, buildResearchPreset } from "../../workspace/presets"
@@ -68,6 +68,13 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
           if (state.layoutMode === "focus") {
             updates.layoutMode = "list"
             updates._preFocusLayoutMode = null
+            updates.sidebarCollapsed = false
+            updates.detailsOpen = false
+          }
+          // If in zen workspace mode, exit to default
+          if (state.workspaceMode === "zen") {
+            updates.workspaceMode = "default"
+            updates._preZenWorkspaceMode = null
             updates.sidebarCollapsed = false
             updates.detailsOpen = false
           }
@@ -170,7 +177,50 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
       const newRoot = buildResearchPreset(preset)
       const leaves = getAllLeaves(newRoot)
       const activeLeaf = findFirstEditorLeaf(newRoot) ?? leaves[0]
-      set({ workspaceRoot: newRoot, activeLeafId: activeLeaf?.id ?? null, layoutMode: "split" as LayoutMode })
+      set({ workspaceRoot: newRoot, activeLeafId: activeLeaf?.id ?? null, layoutMode: "split" as LayoutMode, workspaceMode: "research" as WorkspaceMode })
+    },
+
+    // WorkspaceMode — zen/research/default with auto-collapse
+    setWorkspaceMode: (mode: WorkspaceMode) => {
+      const state = get()
+      const current = state.workspaceMode as WorkspaceMode
+
+      if (mode === current) return
+
+      // ── Leaving zen: restore sidebar & details ──
+      if (current === "zen" && mode !== "zen") {
+        set({
+          sidebarCollapsed: false,
+          detailsOpen: true,
+          _preZenWorkspaceMode: null,
+        })
+      }
+
+      if (mode === "zen") {
+        // Save current mode before entering zen (for potential restore)
+        set({
+          workspaceMode: "zen",
+          _preZenWorkspaceMode: current,
+          sidebarCollapsed: true,
+          sidebarPeek: false,
+          detailsOpen: false,
+        })
+        get().applyPreset("focus")
+      } else if (mode === "research") {
+        set({ workspaceMode: "research" })
+        const researchPreset = (state.researchPreset as ResearchPreset) ?? "left-right2"
+        const newRoot = buildResearchPreset(researchPreset)
+        const leaves = getAllLeaves(newRoot)
+        const activeLeaf = findFirstEditorLeaf(newRoot) ?? leaves[0]
+        set({ workspaceRoot: newRoot, activeLeafId: activeLeaf?.id ?? null })
+      } else {
+        // default
+        set({
+          workspaceMode: "default",
+          sidebarCollapsed: false,
+        })
+        get().applyPreset("list-editor")
+      }
     },
 
     setListPaneWidth: (width: number) => set({ listPaneWidth: Math.max(200, Math.min(500, width)) }),

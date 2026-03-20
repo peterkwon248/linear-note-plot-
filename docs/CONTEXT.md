@@ -37,11 +37,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ### 구현 Phase (7단계, 추천순서: 1→2→3→4→5, 6은 독립적)
 
-1. Foundation (v41 wikiStatus, v42 workspaceMode, activeSpace)
-2. Layout Automation (WorkspaceMode, auto-collapse)
-3. Activity Bar + Top Utility Bar (가장 임팩트 큼)
-4. Sidebar Refactor (컨텍스트 반응형)
-5. Breadcrumb
+1. Foundation (v41 wikiStatus, v42 workspaceMode, activeSpace) ✅
+2. Layout Automation (WorkspaceMode, auto-collapse) ✅
+3. Activity Bar + Top Utility Bar (가장 임팩트 큼) ✅
+4. Sidebar Refactor (컨텍스트 반응형) ✅
+5. Breadcrumb ✅
 6. Wiki Evolution (자동 등재 엔진, stubSource, 초성 인덱스)
 7. Wiki Collection (수집함, WikiQuote, Extract as Note)
 
@@ -50,7 +50,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (16): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections
-- Store version: 40
+- Store version: 42
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -62,7 +62,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - TipTap 3 editor (`components/editor/TipTapEditor.tsx`)
 - 24+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, etc.)
 - Workspace: binary tree layout system (v35) — WorkspaceNode = Leaf | Branch
-- LayoutMode: list | focus | three-column | tabs | panels | split (6 modes) → WorkspaceMode 3개로 수렴 예정
+- WorkspaceMode: default | zen | research (3 modes, LayoutMode 6개에서 수렴 완료)
 - Wiki-links: `[[title]]` extracted to `Note.linksOut`
 
 ### Knowledge System
@@ -84,11 +84,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-29. Linear식 풀페이지 SearchView — 엔티티 검색
-30. Wiki 홈 대시보드 + WikiView 내부 문서 읽기 3단 레이아웃 (TOC/본문/Infobox)
 31. Side Peek 패널 — 위키링크 아이콘 클릭 → Peek/Open 드롭다운
 32. Tags/Labels/Templates 소프트 삭제 — Trash 뷰 탭 필터
 33. 위키링크 UX 통합 — `[[` 하나로 노트+위키 통합, 브래킷 숨김, Import Note
+34. Architecture Redesign v2 Phase 1~3 — Foundation + Layout Automation + Activity Bar + Top Utility Bar
+35. Architecture Redesign v2 Phase 4~5 — Sidebar 컨텍스트 반응형 + NotesTable 상태 탭 제거 + Breadcrumb + PlotIcons + 테마 토글
 
 ## Three Axes — Core Design Philosophy
 
@@ -110,7 +110,7 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## TODO: Future Work
 
-- **Architecture Redesign v2 Phase 1~7 구현** (docs/architecture-redesign-v2.md)
+- **Architecture Redesign v2 Phase 6~7 구현** (docs/architecture-redesign-v2.md)
 - 위키 수집함 시스템 (docs/wiki-collection-design.md)
 - 커스텀 뷰 시스템 (Phase 4 이후)
 - Phase 4-D: Context Panel

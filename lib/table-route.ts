@@ -5,11 +5,15 @@
  */
 
 import { useSyncExternalStore } from "react"
+import type { ActivitySpace } from "./types"
 
 /* ── Route constants ─────────────────────────────────── */
 
 /** Routes handled by NotesTableView (always-mounted table component) */
 export const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/pinned", "/trash"]
+
+/** Workflow routes — for future Phase 4 sidebar refactor */
+export const WORKFLOW_ROUTES = ["/inbox", "/capture", "/permanent"]
 
 /** Routes handled by individual always-mounted view components */
 export const VIEW_ROUTES = ["/tags", "/labels", "/templates", "/ontology", "/insights", "/wiki", "/search"]
@@ -17,13 +21,31 @@ export const VIEW_ROUTES = ["/tags", "/labels", "/templates", "/ontology", "/ins
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
 
+/** Default route per activity space */
+export const DEFAULT_ROUTES: Record<ActivitySpace, string> = {
+  inbox: "/inbox",
+  notes: "/notes",
+  wiki: "/wiki",
+  ontology: "/ontology",
+}
+
 /* ── Store ───────────────────────────────────────────── */
 
 let _listeners: Array<() => void> = []
 let _activeRoute: string | null = null
+let _activeSpace: ActivitySpace = "notes"
 let _activeFolderId: string | null = null
 let _activeTagId: string | null = null
 let _activeLabelId: string | null = null
+
+/** Infer which activity space a route belongs to */
+export function inferSpace(route: string): ActivitySpace {
+  if (route === "/inbox") return "inbox"
+  if (route === "/wiki") return "wiki"
+  if (route === "/ontology") return "ontology"
+  // /notes, /tags, /labels, /templates, /insights, /capture, /permanent, /trash, /pinned, /search
+  return "notes"
+}
 
 export function getActiveRoute(): string | null {
   return _activeRoute
@@ -32,6 +54,21 @@ export function getActiveRoute(): string | null {
 export function setActiveRoute(route: string | null): void {
   if (_activeRoute === route) return
   _activeRoute = route
+  // Auto-infer space from route (backward compatible)
+  if (route) {
+    _activeSpace = inferSpace(route)
+  }
+  _listeners.forEach((fn) => fn())
+}
+
+export function getActiveSpace(): ActivitySpace {
+  return _activeSpace
+}
+
+export function setActiveSpace(space: ActivitySpace): void {
+  if (_activeSpace === space) return
+  _activeSpace = space
+  _activeRoute = DEFAULT_ROUTES[space]
   _listeners.forEach((fn) => fn())
 }
 
@@ -87,11 +124,16 @@ export function syncFromPathname(pathname: string): void {
   }
 }
 
-/* ── React hook ──────────────────────────────────────── */
+/* ── React hooks ──────────────────────────────────────── */
 
 /** Subscribe to the active sidebar route. Returns null for fallback routes. */
 export function useActiveRoute(): string | null {
   return useSyncExternalStore(subscribeActiveRoute, getActiveRoute, () => null)
+}
+
+/** Subscribe to the active activity space. */
+export function useActiveSpace(): ActivitySpace {
+  return useSyncExternalStore(subscribeActiveRoute, getActiveSpace, () => "notes" as ActivitySpace)
 }
 
 /** Subscribe to the active folder ID. Returns null when no folder is selected. */

@@ -240,7 +240,7 @@ export function createEditorSlice(set: Set, get: Get) {
 
     addPanel: () => {
       set((state: any) => {
-        if (state.layoutMode !== "panels") return state
+        // Panel management is now tree-based, no layout mode guard needed
         const es: EditorState = { ...state.editorState }
         es.panels = es.panels.map((p: EditorPanel) => ({ ...p, tabs: [...p.tabs] }))
 
