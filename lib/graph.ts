@@ -2,7 +2,7 @@ import type { Note, NoteStatus, Relation, RelationType } from "./types"
 
 /* ── Ontology graph ──────────────────────────────── */
 
-export type OntologyEdgeKind = RelationType | "wikilink"
+export type OntologyEdgeKind = RelationType | "wikilink" | "tag"
 
 export interface OntologyEdge {
   source: string
@@ -19,6 +19,9 @@ export interface OntologyNode {
   status: NoteStatus
   labelId: string | null
   isWiki: boolean
+  nodeType: "note" | "wiki-complete" | "wiki-draft" | "wiki-stub" | "tag"
+  wikiStatus: "stub" | "draft" | "complete" | null
+  tagColor?: string  // only for tag nodes
 }
 
 export interface OntologyGraph {
@@ -60,6 +63,7 @@ export function computeForceConfig(nodeCount: number): ForceConfig {
 export function buildOntologyGraphData(
   notes: Note[],
   relations: Relation[],
+  tags?: Array<{ id: string; name: string; color: string }>,
 ): OntologyGraphData {
   if (notes.length === 0) return { nodeData: [], edges: [], forceConfig: computeForceConfig(0) }
 
@@ -98,22 +102,74 @@ export function buildOntologyGraphData(
     }
   }
 
-  // 3. Connection counts
+  // 3. Connection counts (note-to-note edges only at this stage)
   const connectionCount = new Map<string, number>()
   for (const edge of edges) {
     connectionCount.set(edge.source, (connectionCount.get(edge.source) ?? 0) + 1)
     connectionCount.set(edge.target, (connectionCount.get(edge.target) ?? 0) + 1)
   }
 
-  // 4. Build node data (no x/y)
-  const nodeData: Omit<OntologyNode, "x" | "y">[] = notes.map((n) => ({
-    id: n.id,
-    label: n.title || "Untitled",
-    connectionCount: connectionCount.get(n.id) ?? 0,
-    status: n.status,
-    labelId: n.labelId,
-    isWiki: !!n.isWiki,
-  }))
+  // 4. Build note node data (no x/y)
+  const nodeData: Omit<OntologyNode, "x" | "y">[] = notes.map((n) => {
+    let nodeType: OntologyNode["nodeType"]
+    if (n.isWiki && n.wikiStatus === "complete") nodeType = "wiki-complete"
+    else if (n.isWiki && n.wikiStatus === "draft") nodeType = "wiki-draft"
+    else if (n.isWiki && n.wikiStatus === "stub") nodeType = "wiki-stub"
+    else nodeType = "note"
 
-  return { nodeData, edges, forceConfig: computeForceConfig(notes.length) }
+    return {
+      id: n.id,
+      label: n.title || "Untitled",
+      connectionCount: connectionCount.get(n.id) ?? 0,
+      status: n.status,
+      labelId: n.labelId,
+      isWiki: !!n.isWiki,
+      nodeType,
+      wikiStatus: n.wikiStatus ?? null,
+    }
+  })
+
+  // 5. Tag nodes — only tags used in 5+ notes
+  if (tags && tags.length > 0) {
+    const tagUsageCount = new Map<string, number>()
+    const notesByTag = new Map<string, string[]>()
+
+    for (const note of notes) {
+      for (const tagId of note.tags) {
+        tagUsageCount.set(tagId, (tagUsageCount.get(tagId) ?? 0) + 1)
+        const arr = notesByTag.get(tagId) ?? []
+        arr.push(note.id)
+        notesByTag.set(tagId, arr)
+      }
+    }
+
+    for (const tag of tags) {
+      const usageCount = tagUsageCount.get(tag.id) ?? 0
+      if (usageCount < 5) continue
+
+      const tagNodeId = `tag:${tag.id}`
+      const noteIds = notesByTag.get(tag.id) ?? []
+
+      // Add tag node
+      nodeData.push({
+        id: tagNodeId,
+        label: tag.name,
+        connectionCount: noteIds.length,
+        status: "permanent", // tag nodes use a default status
+        labelId: null,
+        isWiki: false,
+        nodeType: "tag",
+        wikiStatus: null,
+        tagColor: tag.color,
+      })
+
+      // Add tag edges
+      for (const noteId of noteIds) {
+        edges.push({ source: tagNodeId, target: noteId, kind: "tag" })
+      }
+    }
+  }
+
+  const totalNodeCount = nodeData.length
+  return { nodeData, edges, forceConfig: computeForceConfig(totalNodeCount) }
 }

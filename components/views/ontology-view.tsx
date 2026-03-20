@@ -17,6 +17,7 @@ const DEFAULT_FILTERS: OntologyFilters = {
   status: "all",
   relationTypes: "all",
   showWikilinks: true,
+  showTagNodes: true,
 }
 
 function applyFilters(notes: Note[], filters: OntologyFilters): Note[] {
@@ -46,9 +47,13 @@ export function OntologyView() {
   const filteredNotes = useMemo(() => applyFilters(notes, filters), [notes, filters])
 
   // Build graph data (no positions — fast, synchronous)
+  const tagsMapped = useMemo(
+    () => tags.map((t) => ({ id: t.id, name: t.name, color: t.color })),
+    [tags],
+  )
   const graphData = useMemo(
-    () => buildOntologyGraphData(filteredNotes, relations),
-    [filteredNotes, relations],
+    () => buildOntologyGraphData(filteredNotes, relations, tagsMapped),
+    [filteredNotes, relations, tagsMapped],
   )
 
   // Previous positions for warm-start (initialized from persisted store)

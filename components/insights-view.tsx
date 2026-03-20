@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import {
   AlertCircle, AlertTriangle, Info, ChevronDown, ChevronUp,
   Lightbulb, Activity, TrendingUp, FileText, Eye,
-  SlidersHorizontal, LayoutList, LayoutGrid, Calendar,
+  SlidersHorizontal, LayoutList, LayoutGrid,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ViewHeader } from "@/components/view-header"
@@ -318,19 +318,6 @@ export function InsightsView() {
                 >
                   <LayoutGrid className="h-4 w-4" />
                   Board
-                </button>
-                <button
-                  className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors bg-secondary text-foreground"
-                >
-                  <Lightbulb className="h-4 w-4" />
-                  Insights
-                </button>
-                <button
-                  onClick={() => { setViewMode("calendar"); setDisplayOpen(false) }}
-                  className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Calendar
                 </button>
               </div>
             </PopoverContent>

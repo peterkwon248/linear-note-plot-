@@ -16,7 +16,7 @@ export const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/pinned", "/trash"]
 export const WORKFLOW_ROUTES = ["/inbox", "/capture", "/permanent"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/tags", "/labels", "/templates", "/ontology", "/insights", "/wiki", "/search"]
+export const VIEW_ROUTES = ["/tags", "/labels", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
@@ -26,6 +26,7 @@ export const DEFAULT_ROUTES: Record<ActivitySpace, string> = {
   inbox: "/inbox",
   notes: "/notes",
   wiki: "/wiki",
+  calendar: "/calendar",
   ontology: "/ontology",
 }
 
@@ -42,6 +43,7 @@ let _activeLabelId: string | null = null
 export function inferSpace(route: string): ActivitySpace {
   if (route === "/inbox") return "inbox"
   if (route === "/wiki") return "wiki"
+  if (route.startsWith("/calendar")) return "calendar"
   if (route === "/ontology") return "ontology"
   // /notes, /tags, /labels, /templates, /insights, /capture, /permanent, /trash, /pinned, /search
   return "notes"

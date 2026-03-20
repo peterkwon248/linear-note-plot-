@@ -250,6 +250,19 @@ export function OntologyFilterBar({
         Wiki
       </button>
 
+      {/* Tag Nodes Toggle */}
+      <button
+        onClick={() => onChange({ ...filters, showTagNodes: !filters.showTagNodes })}
+        className={`text-note px-2.5 py-1 rounded transition-colors ${
+          filters.showTagNodes
+            ? "bg-secondary hover:bg-secondary/80"
+            : "hover:bg-secondary/50"
+        }`}
+        title="Toggle tag nodes"
+      >
+        Tags
+      </button>
+
       {/* Search — next to Wiki */}
       <div className="flex items-center">
         <div className="flex items-center bg-secondary/50 rounded-md px-2 py-1">

@@ -18,7 +18,7 @@ Plot = 노트 + 개인 위키 + 지식 관계망
 
 | 영역 | 현재 | 변경 후 |
 |------|------|---------|
-| 네비게이션 | 사이드바 의존 | Activity Bar (Inbox/Notes/Wiki/Graph) + 상단 유틸리티 바 |
+| 네비게이션 | 사이드바 의존 | Activity Bar (Inbox/Notes/Wiki/Calendar/Graph) + 상단 유틸리티 바 |
 | 라우팅 | 1-level (setActiveRoute) | 2-level (activeSpace + activeRoute) |
 | 레이아웃 | LayoutMode 6개 | WorkspaceMode 3개 (default/zen/research) |
 | 위키 상태 | isWiki boolean | isWiki + wikiStatus (stub/draft/complete) |
@@ -42,7 +42,8 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 3. Activity Bar + Top Utility Bar (가장 임팩트 큼) ✅
 4. Sidebar Refactor (컨텍스트 반응형) ✅
 5. Breadcrumb ✅
-6. Wiki Evolution (자동 등재 엔진, stubSource, 초성 인덱스)
+6. Wiki Evolution (자동 등재 엔진, stubSource, 초성 인덱스, 목업 매칭) ✅
+6.5. Phase 6 후속 — Calendar Activity Bar, Wiki Overview 재구조, 위키 강등, Display 정리 ✅
 7. Wiki Collection (수집함, WikiQuote, Extract as Note)
 
 ## Current Architecture (현재 코드 기준)
@@ -69,7 +70,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Backlinks: `lib/backlinks.ts` (incremental index, keyword/tag scoring, alias support)
 - Search: FlexSearch worker-based (`lib/search/`) with IDB persistence
 - Ontology Engine: co-occurrence engine, relation suggestions, wiki infobox, graph view (d3-force worker, Canvas rendering)
-- Graph: `ontology-graph-canvas.tsx` — Canvas 기반, Web Worker 레이아웃, viewport culling, LOD zoom
+- Graph: `ontology-graph-canvas.tsx` — SVG 기반, Web Worker 레이아웃, viewport culling, LOD zoom, 노드 형태 분화 (Note=원, Wiki=큐브 와이어프레임, Stub=점선 큐브, Tag=겹침 마름모), 3-tier 엣지 두께
 
 ### Note Lifecycle (병렬 트랙)
 
@@ -84,11 +85,12 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-31. Side Peek 패널 — 위키링크 아이콘 클릭 → Peek/Open 드롭다운
 32. Tags/Labels/Templates 소프트 삭제 — Trash 뷰 탭 필터
 33. 위키링크 UX 통합 — `[[` 하나로 노트+위키 통합, 브래킷 숨김, Import Note
 34. Architecture Redesign v2 Phase 1~3 — Foundation + Layout Automation + Activity Bar + Top Utility Bar
 35. Architecture Redesign v2 Phase 4~5 — Sidebar 컨텍스트 반응형 + NotesTable 상태 탭 제거 + Breadcrumb + PlotIcons + 테마 토글
+36. Phase 6: Wiki Evolution + 목업 매칭 — 자동 등재 엔진 (3 signals), wikiStatus lifecycle, 초성 인덱스, Wiki stat cards+table-list 레이아웃, Graph 노드 형태 분화 (큐브 와이어프레임/겹침 마름모), 3-tier 엣지, tag 노드
+37. Phase 6 후속 — Calendar Activity Bar 승격, Wiki Overview 재구조 (Dashboard→Overview + Categories/Pinned/Recent), stat 카드 드릴다운, 위키 강등 (complete→draft→stub), Display 정리 (Insights/Calendar 제거), Inbox "All Notes" 제거
 
 ## Three Axes — Core Design Philosophy
 
@@ -107,10 +109,14 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **소프트 삭제** — 태그/라벨/템플릿 삭제 시 노트 연결 유지
 - **글로벌 검색 = 풀페이지** (Linear 스타일) — Cmd+K → 모달(커맨드), 상단 🔍 → 풀페이지
 - **로컬 검색 ≠ 글로벌 검색** — 뷰 헤더 = 로컬 필터, 사이드바/Cmd+K = 글로벌
+- **Activity Bar 5-space**: Inbox / Notes / Wiki / Calendar / Graph
+- **Wiki 사이드바 = Overview 단일 진입**: Dashboard+All Articles+Stubs → Overview 통합, stat 카드 클릭으로 드릴다운
+- **위키 강등 = 라이프사이클 역순**: complete→draft→stub, stub은 바닥(강등 없음, 삭제만)
+- **Display = List/Board만**: Insights/Calendar는 사이드바/Activity Bar 전용
 
 ## TODO: Future Work
 
-- **Architecture Redesign v2 Phase 6~7 구현** (docs/architecture-redesign-v2.md)
+- **Architecture Redesign v2 Phase 7 구현** (docs/architecture-redesign-v2.md)
 - 위키 수집함 시스템 (docs/wiki-collection-design.md)
 - 커스텀 뷰 시스템 (Phase 4 이후)
 - Phase 4-D: Context Panel

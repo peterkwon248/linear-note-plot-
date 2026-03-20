@@ -1,4 +1,4 @@
-import type { Note, NoteBody, ActiveView, WikiInfoboxEntry } from "../../types"
+import type { Note, NoteBody, ActiveView, WikiInfoboxEntry, StubSource, WikiStatus } from "../../types"
 import { extractPreview, extractLinksOut } from "../../body-helpers"
 import { genId, now, workflowDefaults, persistBody, removeBody, type AppendEventFn } from "../helpers"
 
@@ -353,7 +353,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       appendEvent(noteId, "updated", { field: "wikiInfobox" })
     },
 
-    createWikiStub: (title: string, aliases?: string[]) => {
+    createWikiStub: (title: string, aliases?: string[], stubSource?: StubSource) => {
       const id = genId()
       const newNote: Note = {
         id,
@@ -377,7 +377,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         aliases: aliases ?? [],
         wikiInfobox: [],
         wikiStatus: "stub",
-        stubSource: "manual",
+        stubSource: stubSource ?? "manual",
         ...workflowDefaults("inbox"),
       }
       set((state: any) => ({
@@ -388,15 +388,26 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       return id
     },
 
-    convertToWiki: (noteId: string) => {
+    convertToWiki: (noteId: string, stubSource?: StubSource) => {
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === noteId
-            ? { ...n, isWiki: true, wikiStatus: "draft" as const, stubSource: null, updatedAt: now(), lastTouchedAt: now() }
+            ? { ...n, isWiki: true, wikiStatus: "draft" as const, stubSource: stubSource ?? null, updatedAt: now(), lastTouchedAt: now() }
             : n
         ),
       }))
       appendEvent(noteId, "wiki_converted")
+    },
+
+    setWikiStatus: (noteId: string, wikiStatus: WikiStatus) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id === noteId
+            ? { ...n, wikiStatus, updatedAt: now(), lastTouchedAt: now() }
+            : n
+        ),
+      }))
+      appendEvent(noteId, "updated", { field: "wikiStatus", wikiStatus })
     },
 
     revertFromWiki: (noteId: string) => {

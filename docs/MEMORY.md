@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 16-slice Zustand store with versioned migration (currently v40)
+- **Store**: `lib/store/index.ts` — 16-slice Zustand store with versioned migration (currently v42)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only, "reference" removed in v26)
 
 ## Architecture Decisions
@@ -78,6 +78,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #80**: Wiki system + Side Peek + soft-delete trash — Wiki 홈 대시보드 (나무위키 스타일), WikiView 내부 3단 읽기 레이아웃, Side Peek 패널, SearchView Wiki 탭, Tags/Labels/Templates 소프트 삭제 + Trash 탭 필터
 - **PR #81**: 위키링크 UX 통합 — `[[[` 제거 → `[[` 통합, 브래킷 숨김 (font-size:0), 아이콘 클릭 드롭다운 (Peek/Open), Import Note, Side Peek 편집 토글, 사이드바 닫기 버튼, 라인 하이라이트 제거, 자기 자신 필터
 - **PR #84**: Architecture Redesign v2 Phase 1~5 구현 — Activity Bar, Top Utility Bar, Sidebar 컨텍스트 반응형, PlotIcons 시스템, Breadcrumb, NotesTable 상태 탭 제거, WorkspaceMode 3개, 2-level routing, 테마 토글
+- **PR #85** (pending): Phase 6 Wiki Evolution + 목업 매칭 + Phase 6 후속 — wiki-auto-enroll.ts (3 signals), korean-utils.ts (초성 인덱스), WikiView stat cards+table-list+Overview 재구조 (Dashboard→Overview + Categories/Pinned/Recent sidebar, stat 카드 드릴다운), Graph 노드 형태 분화 (Note=circle, Wiki=cube wireframe, Stub=dashed cube, Tag=double diamond), 3-tier edge, tag 노드, Calendar Activity Bar 승격, 위키 강등 (complete→draft→stub, stub은 바닥), Display 정리 (Insights/Calendar 제거), Inbox "All Notes" 제거, wiki-view-mode.ts (external store)
 
 ## Graph Architecture
 - See [graph.md](./graph.md) for graph implementation details

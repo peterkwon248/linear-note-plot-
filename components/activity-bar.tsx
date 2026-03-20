@@ -18,6 +18,7 @@ import {
   IconInbox,
   IconNotes,
   IconWiki,
+  IconCalendar,
   IconOntology,
   IconSun,
   IconMoon,
@@ -32,10 +33,11 @@ const SPACES: {
   icon: typeof IconInbox
   shortcut: string
 }[] = [
-  { id: "inbox",    label: "Inbox",  icon: IconInbox,    shortcut: "G then I" },
-  { id: "notes",    label: "Notes",  icon: IconNotes,    shortcut: "G then N" },
-  { id: "wiki",     label: "Wiki",   icon: IconWiki,     shortcut: "" },
-  { id: "ontology", label: "Graph",  icon: IconOntology, shortcut: "" },
+  { id: "inbox",    label: "Inbox",    icon: IconInbox,    shortcut: "G then I" },
+  { id: "notes",    label: "Notes",    icon: IconNotes,    shortcut: "G then N" },
+  { id: "wiki",     label: "Wiki",     icon: IconWiki,     shortcut: "" },
+  { id: "calendar", label: "Calendar", icon: IconCalendar, shortcut: "" },
+  { id: "ontology", label: "Graph",    icon: IconOntology, shortcut: "" },
 ]
 
 /* ── Component ──────────────────────────────────────── */

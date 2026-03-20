@@ -35,6 +35,7 @@ export interface OntologyFilters {
   status: "inbox" | "capture" | "permanent" | "all"
   relationTypes: RelationType[] | "all"
   showWikilinks: boolean
+  showTagNodes: boolean
 }
 
 interface OntologyGraphCanvasProps {
@@ -69,6 +70,74 @@ const MIN_SCALE = 0.3
 const MAX_SCALE = 3.0
 const ZOOM_STEP = 0.15
 const LABEL_TRUNCATE = 18
+
+/* ── Node type derivation (safe fallback when nodeType not yet on OntologyNode) ── */
+
+type GraphNodeType = "note" | "wiki-complete" | "wiki-draft" | "wiki-stub" | "tag"
+
+function getNodeType(node: OntologyNode): GraphNodeType {
+  // Use nodeType directly if available (set by graph.ts)
+  const explicit = (node as any).nodeType as GraphNodeType | undefined
+  if (explicit) return explicit
+
+  // Check for tag nodes (id starts with "tag:")
+  if (node.id.startsWith("tag:")) return "tag"
+
+  // Fallback: derive from isWiki + wikiStatus
+  if (node.isWiki) {
+    const ws = (node as any).wikiStatus as string | null
+    if (ws === "complete") return "wiki-complete"
+    if (ws === "stub") return "wiki-stub"
+    return "wiki-draft"
+  }
+
+  return "note"
+}
+
+/* ── SVG shape helpers ─────────────────────────────────── */
+
+/** Hexagon points array for reuse (center→vertex lines need raw coords) */
+function hexagonPoints(cx: number, cy: number, s: number): [number, number][] {
+  const pts: [number, number][] = []
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i - Math.PI / 2
+    pts.push([cx + s * 0.87 * Math.cos(angle + Math.PI / 6), cy + s * Math.sin(angle + Math.PI / 6)])
+  }
+  // Canonical cube wireframe vertices: top, top-right, bottom-right, bottom, bottom-left, top-left
+  return [
+    [cx, cy - s],                      // 0: top
+    [cx + s * 0.87, cy - s * 0.5],     // 1: top-right
+    [cx + s * 0.87, cy + s * 0.5],     // 2: bottom-right
+    [cx, cy + s],                      // 3: bottom
+    [cx - s * 0.87, cy + s * 0.5],     // 4: bottom-left
+    [cx - s * 0.87, cy - s * 0.5],     // 5: top-left
+  ]
+}
+
+function hexagonPathFromPoints(pts: [number, number][]): string {
+  return `M ${pts.map(p => `${p[0]},${p[1]}`).join(" L ")} Z`
+}
+
+function hexagonPath(cx: number, cy: number, r: number): string {
+  return hexagonPathFromPoints(hexagonPoints(cx, cy, r))
+}
+
+/** Diamond points for a single diamond centered at (cx, cy) with half-size d */
+function diamondPointsStr(cx: number, cy: number, d: number): string {
+  return `${cx},${cy - d} ${cx + d * 0.7},${cy} ${cx},${cy + d} ${cx - d * 0.7},${cy}`
+}
+
+/* ── Edge style by kind (3-tier thickness) ─────────────── */
+
+function getEdgeStyle(kind: OntologyEdgeKind): { strokeWidth: number; strokeColor: string; opacity: number } {
+  switch (kind) {
+    case "wikilink": return { strokeWidth: 1.2, strokeColor: "rgba(255,255,255,0.08)", opacity: 1.0 }
+    case "tag": return { strokeWidth: 0.8, strokeColor: "rgba(255,255,255,0.06)", opacity: 0.35 }
+    default: return { strokeWidth: 2.0, strokeColor: "rgba(255,255,255,0.12)", opacity: 1.0 } // relation types
+  }
+}
+
+const ACCENT_COLOR = "#5e6ad2"
 
 /* ── Helpers ───────────────────────────────────────────── */
 
@@ -114,6 +183,7 @@ function computeFitTransform(
 
 function isEdgeVisible(edge: OntologyEdge, filters: OntologyFilters): boolean {
   if (edge.kind === "wikilink") return filters.showWikilinks
+  if (edge.kind === "tag") return filters.showTagNodes
   if (filters.relationTypes === "all") return true
   return (filters.relationTypes as RelationType[]).includes(edge.kind as RelationType)
 }
@@ -904,13 +974,14 @@ export function OntologyGraphCanvas({
     }
   })()
 
-  const culledNodes = viewBounds
+  const culledNodes = (viewBounds
     ? graph.nodes.filter((n) => {
         const pos = getPos(n.id)
         return pos.x >= viewBounds.left && pos.x <= viewBounds.right &&
                pos.y >= viewBounds.top && pos.y <= viewBounds.bottom
       })
     : graph.nodes
+  ).filter((n) => filters.showTagNodes || !n.id.startsWith("tag:"))
 
   const culledNodeIds = new Set(culledNodes.map((n) => n.id))
 
@@ -1042,55 +1113,67 @@ export function OntologyGraphCanvas({
             // n8n style: no dimming on hover/select — only search dimming
             const dimmed = searchMatchIds !== null && !searchMatchIds.has(edge.source) && !searchMatchIds.has(edge.target)
 
+            // 3-tier edge styling per spec
+            const edgeStyle = getEdgeStyle(edge.kind)
+
+            // Highlighted edges use accent color
+            const isHighlightedEdge = isHighlighted
+            const edgeStroke = isHighlightedEdge
+              ? `${ACCENT_COLOR}70`
+              : edgeStyle.strokeColor
+            const edgeWidth = isHighlightedEdge ? 2.5 : edgeStyle.strokeWidth
+            const edgeOpacity = dimmed ? 0.08 : isHighlightedEdge ? 1 : edgeStyle.opacity
+
             if (isWikilink) {
               return (
                 <g key={`e-${i}`}>
                   <path
                     d={path}
                     fill="none"
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke={edgeStroke}
                     strokeDasharray="8 4"
-                    strokeWidth={1.5}
-                    opacity={dimmed ? 0.3 : isHighlighted ? 0.8 : 0.4}
-                    className={isHighlighted ? "wikilink-edge-animated" : undefined}
-                    filter={isHighlighted ? "url(#edge-glow)" : undefined}
+                    strokeWidth={edgeWidth}
+                    opacity={edgeOpacity}
                     style={{ transition: "opacity 0.2s" }}
                   />
                 </g>
               )
             }
 
+            if (edge.kind === "tag") {
+              return (
+                <g key={`e-${i}`}>
+                  <path
+                    d={path}
+                    fill="none"
+                    stroke={edgeStroke}
+                    strokeWidth={edgeWidth}
+                    opacity={edgeOpacity}
+                    style={{ transition: "opacity 0.2s" }}
+                  />
+                </g>
+              )
+            }
+
+            // Relation edges — thickest, gradient stroke preserved for non-highlighted
             const edgeColor = RELATION_TYPE_CONFIG[edge.kind as RelationType]?.color ?? "#6b7280"
-            // Gradient stroke: lookup by source→target color pair
             const srcNode = nodeMap.get(edge.source)
             const srcColor = srcNode ? getNodeBaseColor(srcNode, labels) : edgeColor
             const tgtColor = getNodeBaseColor(targetNode, labels)
             const gradId = gradientLookup.get(`${srcColor}||${tgtColor}`)
-            const strokeRef = gradId ? `url(#${gradId})` : edgeColor
+            const strokeRef = isHighlightedEdge
+              ? `${ACCENT_COLOR}70`
+              : gradId ? `url(#${gradId})` : edgeStyle.strokeColor
 
             return (
               <g key={`e-${i}`}>
-                {/* Shadow / halo — only on highlighted edges */}
-                {isHighlighted && (
-                  <path
-                    d={path}
-                    fill="none"
-                    stroke={edgeColor}
-                    strokeWidth={5}
-                    opacity={0.15}
-                    strokeLinecap="round"
-                    style={{ pointerEvents: "none" }}
-                  />
-                )}
-                {/* Main edge with gradient stroke */}
                 <path
                   d={path}
                   fill="none"
                   stroke={strokeRef}
-                  strokeWidth={isHighlighted ? 2 : 1.5}
-                  opacity={dimmed ? 0.3 : isHighlighted ? 1 : 0.7}
-                  markerEnd={`url(#arrow-${edge.kind})`}
-                  filter={isHighlighted ? "url(#edge-glow)" : undefined}
+                  strokeWidth={edgeWidth}
+                  opacity={edgeOpacity}
+                  markerEnd={isHighlightedEdge ? undefined : `url(#arrow-${edge.kind})`}
                   style={{ transition: "opacity 0.2s" }}
                 />
                 {showEdgeLabels && (
@@ -1100,10 +1183,10 @@ export function OntologyGraphCanvas({
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fontSize={9}
-                    fill="var(--muted-foreground)"
-                    opacity={dimmed ? 0.25 : 0.5}
+                    fill="rgba(255,255,255,0.45)"
+                    opacity={dimmed ? 0.15 : 0.5}
                     style={{ pointerEvents: "none" }}
-                    fontFamily="var(--font-sans)"
+                    fontFamily="-apple-system, system-ui, sans-serif"
                   >
                     {RELATION_TYPE_CONFIG[edge.kind as RelationType]?.label}
                   </text>
@@ -1127,6 +1210,14 @@ export function OntologyGraphCanvas({
             const r = nodeRadius(node.connectionCount)
             const fill = getNodeFill(node, labels, isSelected, isHovered, isConnected)
             const isDragging = dragNodeIdRef.current === node.id
+            const nodeType = getNodeType(node)
+
+            // Shape-specific radius adjustments
+            const shapeR = nodeType === "wiki-complete" ? r * 1.15
+              : nodeType === "wiki-draft" ? r * 1.1
+              : nodeType === "wiki-stub" ? r * 1.05
+              : nodeType === "tag" ? r * 0.8
+              : r
 
             return (
               <g
@@ -1164,106 +1255,134 @@ export function OntologyGraphCanvas({
                 onClick={(e) => handleNodeClick(e, node.id)}
                 onDoubleClick={(e) => handleNodeDblClick(e, node.id)}
               >
-                {/* Selection ring with pulse */}
+                {/* Selection ring — accent color */}
                 {isSelected && (
                   <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r={r + 5}
-                    fill="none"
-                    stroke={fill}
-                    strokeWidth={2}
-                    opacity={0.6}
-                    key={`sel-${node.id}`}
-                  >
-                    <animate
-                      attributeName="r"
-                      values={`${r + 5};${r + 5.8};${r + 5}`}
-                      dur="200ms"
-                      begin="0s"
-                      fill="freeze"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0.4;0.6;0.4"
-                      dur="200ms"
-                      begin="0s"
-                      fill="freeze"
-                    />
-                  </circle>
+                    cx={pos.x} cy={pos.y} r={r + 6}
+                    fill="none" stroke={ACCENT_COLOR} strokeWidth={1.5} opacity={0.4}
+                  />
                 )}
 
                 {/* Multi-selection ring */}
                 {isMultiSelected && !isSelected && (
                   <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r={r + 4}
-                    fill="none"
-                    stroke={fill}
-                    strokeWidth={1.5}
-                    strokeDasharray="4 3"
-                    opacity={0.7}
+                    cx={pos.x} cy={pos.y} r={r + 5}
+                    fill="none" stroke={fill} strokeWidth={1.5} strokeDasharray="4 3" opacity={0.5}
                   />
                 )}
 
-                {/* Node circle */}
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r}
-                  fill={fill}
-                  stroke={isMultiSelected ? fill : "hsl(var(--border))"}
-                  strokeWidth={isMultiSelected ? 2.5 : 1.5}
-                  opacity={dimmed ? 0.65 : 1}
-                  style={{ transition: "fill 0.15s, opacity 0.15s" }}
-                />
-
-                {/* Wiki badge — double ring + "W" */}
-                {node.isWiki && (
-                  <>
+                {/* ── Node shape — type-dependent per spec ── */}
+                {nodeType === "note" && (() => {
+                  const op = dimmed ? 0.15 : 0.85
+                  return (
                     <circle
-                      cx={pos.x}
-                      cy={pos.y}
-                      r={r + 3}
-                      fill="none"
+                      cx={pos.x} cy={pos.y} r={r}
+                      fill={`${fill}15`}
                       stroke={fill}
-                      strokeWidth={1.2}
-                      strokeDasharray="3 2"
-                      opacity={dimmed ? 0.4 : 0.7}
-                      style={{ pointerEvents: "none" }}
+                      strokeWidth={1.3}
+                      opacity={op}
+                      style={{ transition: "opacity 0.15s" }}
                     />
-                    {transform.scale >= 0.6 && (
-                      <text
-                        x={pos.x + r - 2}
-                        y={pos.y - r + 2}
-                        textAnchor="middle"
-                        fill="var(--foreground)"
-                        fontSize={8}
-                        fontFamily="var(--font-sans)"
-                        fontWeight={700}
-                        opacity={dimmed ? 0.4 : 0.85}
-                        style={{ pointerEvents: "none" }}
-                      >
-                        W
-                      </text>
-                    )}
-                  </>
-                )}
+                  )
+                })()}
+
+                {(nodeType === "wiki-complete" || nodeType === "wiki-draft") && (() => {
+                  const s = shapeR * 0.85
+                  const pts = hexagonPoints(pos.x, pos.y, s)
+                  const hexPath = hexagonPathFromPoints(pts)
+                  const op = dimmed ? 0.15 : 0.85
+                  return (
+                    <>
+                      <polygon
+                        points={pts.map(p => `${p[0]},${p[1]}`).join(" ")}
+                        fill={`${fill}12`}
+                        stroke={fill}
+                        strokeWidth={1.5}
+                        strokeLinejoin="round"
+                        opacity={op}
+                        style={{ transition: "opacity 0.15s" }}
+                      />
+                      {/* Internal cube wireframe lines: center → vertices 0, 2, 4 */}
+                      <line x1={pos.x} y1={pos.y} x2={pts[0][0]} y2={pts[0][1]}
+                        stroke={fill} strokeWidth={1.05} opacity={op * 0.6} />
+                      <line x1={pos.x} y1={pos.y} x2={pts[2][0]} y2={pts[2][1]}
+                        stroke={fill} strokeWidth={1.05} opacity={op * 0.6} />
+                      <line x1={pos.x} y1={pos.y} x2={pts[4][0]} y2={pts[4][1]}
+                        stroke={fill} strokeWidth={1.05} opacity={op * 0.6} />
+                    </>
+                  )
+                })()}
+
+                {nodeType === "wiki-stub" && (() => {
+                  const s = shapeR * 0.85
+                  const pts = hexagonPoints(pos.x, pos.y, s)
+                  const op = dimmed ? 0.15 : 0.85
+                  return (
+                    <>
+                      <polygon
+                        points={pts.map(p => `${p[0]},${p[1]}`).join(" ")}
+                        fill="transparent"
+                        stroke={fill}
+                        strokeWidth={1.5}
+                        strokeDasharray="3 2"
+                        strokeLinejoin="round"
+                        opacity={op}
+                        style={{ transition: "opacity 0.15s" }}
+                      />
+                      {/* Internal cube wireframe lines — dashed */}
+                      <line x1={pos.x} y1={pos.y} x2={pts[0][0]} y2={pts[0][1]}
+                        stroke={fill} strokeWidth={1.05} strokeDasharray="3 2" opacity={op * 0.6} />
+                      <line x1={pos.x} y1={pos.y} x2={pts[2][0]} y2={pts[2][1]}
+                        stroke={fill} strokeWidth={1.05} strokeDasharray="3 2" opacity={op * 0.6} />
+                      <line x1={pos.x} y1={pos.y} x2={pts[4][0]} y2={pts[4][1]}
+                        stroke={fill} strokeWidth={1.05} strokeDasharray="3 2" opacity={op * 0.6} />
+                    </>
+                  )
+                })()}
+
+                {nodeType === "tag" && (() => {
+                  const color = (node as any).tagColor || fill
+                  const d = r * 0.7
+                  const off = r * 0.25
+                  const op = dimmed ? 0.15 : 0.85
+                  return (
+                    <>
+                      {/* Back diamond (offset) */}
+                      <polygon
+                        points={diamondPointsStr(pos.x + off, pos.y - off, d)}
+                        fill={`${color}08`}
+                        stroke={color}
+                        strokeWidth={1.2}
+                        strokeLinejoin="round"
+                        opacity={op * 0.35}
+                      />
+                      {/* Front diamond */}
+                      <polygon
+                        points={diamondPointsStr(pos.x, pos.y, d)}
+                        fill={`${color}15`}
+                        stroke={color}
+                        strokeWidth={1.3}
+                        strokeLinejoin="round"
+                        opacity={op}
+                      />
+                    </>
+                  )
+                })()}
 
                 {/* Label — LOD: hide at low zoom */}
                 {showLabels && (
                   <text
                     x={pos.x}
-                    y={pos.y + r + 15}
+                    y={pos.y + shapeR + 14}
                     textAnchor="middle"
-                    fill={isHighlighted ? "var(--foreground)" : "var(--muted-foreground)"}
-                    fontSize={11}
-                    fontFamily="var(--font-sans)"
+                    fill={dimmed ? "rgba(255,255,255,0.15)" : nodeType === "tag" ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.6)"}
+                    fontSize={nodeType === "tag" ? 10 : 11}
+                    fontFamily="-apple-system, system-ui, sans-serif"
                     fontWeight={isSelected ? 600 : 400}
-                    opacity={dimmed ? 0.55 : isHighlighted ? 1 : 0.75}
+                    fontStyle={nodeType === "tag" ? "italic" : "normal"}
+                    opacity={isHighlighted ? 1 : undefined}
                     style={{
-                      transition: "fill 0.15s, opacity 0.15s",
+                      transition: "opacity 0.15s",
                       pointerEvents: "none",
                     }}
                   >
@@ -1540,24 +1659,65 @@ function MiniMap({ positions, transform, svgRef, nodes, edges, labels, selectedN
       ctx.stroke()
     }
 
-    // Draw nodes with label colors
+    // Draw nodes with shape-aware rendering per spec
     for (const node of nodes) {
       const p = pos?.get(node.id)
       if (!p) continue
       const { mx, my } = toMini(p.x, p.y)
-      // Skip nodes outside minimap
       if (mx < -5 || mx > MINIMAP_W + 5 || my < -5 || my > MINIMAP_H + 5) continue
       const isSelected = node.id === selectedNodeId
-      ctx.beginPath()
-      ctx.arc(mx, my, isSelected ? 3 : 2, 0, Math.PI * 2)
+      const nodeType = getNodeType(node)
+      const sz = isSelected ? 3 : 2
+
       if (isSelected) {
         ctx.fillStyle = "rgba(94, 106, 210, 1)"
+        ctx.strokeStyle = "rgba(94, 106, 210, 1)"
       } else {
         const color = getNodeBaseColor(node, labels)
         ctx.fillStyle = color
+        ctx.strokeStyle = color
         ctx.globalAlpha = 0.75
       }
-      ctx.fill()
+
+      ctx.beginPath()
+      if (nodeType === "note") {
+        // Circle with light fill
+        ctx.arc(mx, my, sz, 0, Math.PI * 2)
+        ctx.globalAlpha = ctx.globalAlpha * 0.15
+        ctx.fill()
+        ctx.globalAlpha = isSelected ? 1 : 0.75
+        ctx.lineWidth = 1
+        ctx.stroke()
+      } else if (nodeType === "tag") {
+        // Double diamond — just draw front diamond for minimap
+        ctx.moveTo(mx, my - sz)
+        ctx.lineTo(mx + sz * 0.7, my)
+        ctx.lineTo(mx, my + sz)
+        ctx.lineTo(mx - sz * 0.7, my)
+        ctx.closePath()
+        ctx.globalAlpha = ctx.globalAlpha * 0.5
+        ctx.fill()
+        ctx.globalAlpha = isSelected ? 1 : 0.75
+        ctx.stroke()
+      } else {
+        // Hexagon for wiki nodes
+        for (let hi = 0; hi < 6; hi++) {
+          const angle = (Math.PI / 3) * hi - Math.PI / 2
+          const hx = mx + sz * Math.cos(angle)
+          const hy = my + sz * Math.sin(angle)
+          if (hi === 0) ctx.moveTo(hx, hy)
+          else ctx.lineTo(hx, hy)
+        }
+        ctx.closePath()
+        if (nodeType === "wiki-stub") {
+          ctx.lineWidth = 1
+          ctx.setLineDash([2, 2])
+          ctx.stroke()
+          ctx.setLineDash([])
+        } else {
+          ctx.fill()
+        }
+      }
       ctx.globalAlpha = 1
     }
 
@@ -1706,9 +1866,12 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
   }, [svgRef])
 
   const rowHeight = 18
-  const totalRows = legendRelationTypes.length + (hasWikilinkEdges ? 1 : 0)
+  // Node type legend entries (always shown) + edge entries
+  const nodeTypeRows = 4 // Note, Wiki, Wiki draft, Tag
+  const edgeRows = legendRelationTypes.length + (hasWikilinkEdges ? 1 : 0)
+  const totalRows = nodeTypeRows + (edgeRows > 0 ? 1 : 0) + edgeRows // +1 for separator
   const legendH = totalRows * rowHeight + 16
-  const legendW = 130
+  const legendW = 140
   const pad = 16
 
   const tx = pad
@@ -1716,11 +1879,64 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
 
   if (svgSize.height === 0) return null
 
+  // Compute edge section start offset (after node types + separator)
+  const edgeSectionStart = nodeTypeRows + (edgeRows > 0 ? 1 : 0)
+
   return (
     <g transform={`translate(${tx},${ty})`} style={{ pointerEvents: "none" }}>
       <rect x={0} y={0} width={legendW} height={legendH} rx={6} ry={6} fill="rgba(0,0,0,0.55)" />
+
+      {/* Node type legends */}
+      {/* Note — circle with light fill */}
+      <g transform={`translate(10, ${10 + 0 * rowHeight})`}>
+        <circle cx={6} cy={6} r={5} fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.6)" strokeWidth={1.3} />
+        <text x={26} y={10} fill="rgba(255,255,255,0.75)" fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Note</text>
+      </g>
+      {/* Wiki — cube wireframe hexagon */}
+      <g transform={`translate(10, ${10 + 1 * rowHeight})`}>
+        {(() => {
+          const pts = hexagonPoints(6, 6, 5)
+          return (
+            <>
+              <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.6)" strokeWidth={1.3} strokeLinejoin="round" />
+              <line x1={6} y1={6} x2={pts[0][0]} y2={pts[0][1]} stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} />
+              <line x1={6} y1={6} x2={pts[2][0]} y2={pts[2][1]} stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} />
+              <line x1={6} y1={6} x2={pts[4][0]} y2={pts[4][1]} stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} />
+            </>
+          )
+        })()}
+        <text x={26} y={10} fill="rgba(255,255,255,0.75)" fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Wiki</text>
+      </g>
+      {/* Wiki stub — dashed cube wireframe */}
+      <g transform={`translate(10, ${10 + 2 * rowHeight})`}>
+        {(() => {
+          const pts = hexagonPoints(6, 6, 5)
+          return (
+            <>
+              <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={1.3} strokeDasharray="2.5 2" strokeLinejoin="round" />
+              <line x1={6} y1={6} x2={pts[0][0]} y2={pts[0][1]} stroke="rgba(255,255,255,0.2)" strokeWidth={0.7} strokeDasharray="2 2" />
+              <line x1={6} y1={6} x2={pts[2][0]} y2={pts[2][1]} stroke="rgba(255,255,255,0.2)" strokeWidth={0.7} strokeDasharray="2 2" />
+              <line x1={6} y1={6} x2={pts[4][0]} y2={pts[4][1]} stroke="rgba(255,255,255,0.2)" strokeWidth={0.7} strokeDasharray="2 2" />
+            </>
+          )
+        })()}
+        <text x={26} y={10} fill="rgba(255,255,255,0.6)" fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Stub</text>
+      </g>
+      {/* Tag — double diamond */}
+      <g transform={`translate(10, ${10 + 3 * rowHeight})`}>
+        <polygon points={diamondPointsStr(7.5, 4.5, 3.5)} fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.25)" strokeWidth={1} strokeLinejoin="round" />
+        <polygon points={diamondPointsStr(5, 7, 3.5)} fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.5)" strokeWidth={1.2} strokeLinejoin="round" />
+        <text x={26} y={10} fill="rgba(255,255,255,0.75)" fontSize={10} fontFamily="-apple-system, system-ui, sans-serif" fontStyle="italic">Tag</text>
+      </g>
+
+      {/* Separator line before edges */}
+      {edgeRows > 0 && (
+        <line x1={8} y1={10 + nodeTypeRows * rowHeight - 2} x2={legendW - 8} y2={10 + nodeTypeRows * rowHeight - 2} stroke="rgba(255,255,255,0.15)" strokeWidth={0.5} />
+      )}
+
+      {/* Edge type legends */}
       {legendRelationTypes.map(([type, config], i) => (
-        <g key={type} transform={`translate(10, ${10 + i * rowHeight})`}>
+        <g key={type} transform={`translate(10, ${10 + (edgeSectionStart + i) * rowHeight})`}>
           <line x1={0} y1={6} x2={20} y2={6} stroke={config.color} strokeWidth={1.5} />
           <polygon points="16 3.5, 20 6, 16 8.5" fill={config.color} />
           <text x={26} y={10} fill="rgba(255,255,255,0.75)" fontSize={10} fontFamily="var(--font-sans)">
@@ -1729,7 +1945,7 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
         </g>
       ))}
       {hasWikilinkEdges && (
-        <g transform={`translate(10, ${10 + legendRelationTypes.length * rowHeight})`}>
+        <g transform={`translate(10, ${10 + (edgeSectionStart + legendRelationTypes.length) * rowHeight})`}>
           <line x1={0} y1={6} x2={20} y2={6} stroke="#6b7280" strokeWidth={1.5} strokeDasharray="4 2" />
           <text x={26} y={10} fill="rgba(255,255,255,0.6)" fontSize={10} fontFamily="var(--font-sans)">
             Wiki-link
