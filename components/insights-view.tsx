@@ -4,16 +4,16 @@ import { useState, useMemo } from "react"
 import {
   AlertCircle, AlertTriangle, Info, ChevronDown, ChevronUp,
   Lightbulb, Activity, TrendingUp, FileText, Eye,
-  SlidersHorizontal, LayoutList, LayoutGrid,
 } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ViewHeader } from "@/components/view-header"
+import { DisplayPanel } from "@/components/display-panel"
+import { INSIGHTS_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { DEFAULT_VIEW_STATE } from "@/lib/view-engine/defaults"
 import { usePlotStore } from "@/lib/store"
-import { useSettingsStore } from "@/lib/settings-store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { runAnalysis } from "@/lib/analysis/engine"
 import { computeActivityStats } from "@/lib/datalog/helpers"
-import { format, subDays } from "date-fns"
+import { format } from "date-fns"
 import type { AnalysisResult, AnalysisSeverity } from "@/lib/analysis/types"
 
 /* ── Severity helpers ─────────────────────────────────── */
@@ -257,8 +257,6 @@ function InsightCard({ result }: { result: AnalysisResult }) {
 /* ── InsightsView ─────────────────────────────────────── */
 
 export function InsightsView() {
-  const setViewMode = useSettingsStore((s) => s.setViewMode)
-  const [displayOpen, setDisplayOpen] = useState(false)
   const notes = usePlotStore((s) => s.notes)
   const noteEvents = usePlotStore((s) => s.noteEvents)
   const srsMap = usePlotStore((s) => s.srsStateByNoteId)
@@ -295,33 +293,13 @@ export function InsightsView() {
       <ViewHeader
         icon={<Lightbulb className="h-5 w-5" strokeWidth={1.5} />}
         title="Insights"
-        actions={
-          <Popover open={displayOpen} onOpenChange={setDisplayOpen}>
-            <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <SlidersHorizontal className="h-4 w-4" />
-                Display
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[320px] p-0" align="end">
-              <div className="flex gap-1 border-b border-border px-3 py-2.5">
-                <button
-                  onClick={() => { setViewMode("table"); setDisplayOpen(false) }}
-                  className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                >
-                  <LayoutList className="h-4 w-4" />
-                  List
-                </button>
-                <button
-                  onClick={() => { setViewMode("board"); setDisplayOpen(false) }}
-                  className="flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                  Board
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
+        showDisplay
+        displayContent={
+          <DisplayPanel
+            config={INSIGHTS_VIEW_CONFIG.displayConfig}
+            viewState={DEFAULT_VIEW_STATE}
+            onViewStateChange={() => {}}
+          />
         }
       />
 

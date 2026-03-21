@@ -96,25 +96,12 @@
       "WebFetch(domain:facedragons.com)",
       "Bash(grep -l \"noteEvents\\\\|addEvent\" lib/store/slices/*.ts)",
       "Bash(~/.claude/.omc-worklog/latest.md:*)",
-      "Bash(ls /c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/pensive-bouman/app/\\\\\\(app\\\\\\)/search/)",
-      "Bash(echo \"exit: $?\")",
-      "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/views -type f -name *.tsx -o -name *.ts)",
-      "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/ontology -type f -name *.tsx -o -name *.ts)",
-      "Bash(find /c/Users/user/Desktop/linear-note-plot-/components -maxdepth 1 -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
-      "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/activity -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
-      "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/workspace -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
-      "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/editor -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
-      "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/inspector -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
-      "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/ui -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
-      "Bash(find /c/Users/user/Desktop/linear-note-plot-/components/providers -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
-      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); errors=[x for x in data if x.get\\(''''type''''\\)==''''error'''']; print\\(f''''Total errors: {len\\(errors\\)}''''\\); [print\\(x[''''text''''][:200]\\) for x in errors[:5]]\")",
-      "Bash(ls \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\loving-chatterjee\\\\app\\\\\\(app\\)\\\\calendar\")",
-      "Bash(ls \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\loving-chatterjee\\\\app\\\\\\(app\\)\"\")",
-      "Bash(ls \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/loving-chatterjee/app/\\(app\\)/\")",
-      "Bash(rm docs/architecture-redesign-v2.md docs/wiki-collection-design.md docs/sidebar-wiki-redesign.md docs/WIKI-REDESIGN-INSTRUCTIONS.md docs/ontology-view-design.md)",
-      "Bash(rm -rf docs/search)",
-      "Bash(rm docs/plot-wiki-full-flow.html)",
-      "Bash(rm -rf docs/.pdca-snapshots docs/.pdca-status.json docs/.bkit-memory.json)"
+      "Bash(gh api repos/peterkwon248/linear-note-plot-/collaborators/ludimast --silent 2>&1; echo \"Exit: $?\")",
+      "WebFetch(domain:cloudcli.ai)",
+      "Bash(ipconfig | grep -A 2 \"Wi-Fi\\\\|Ethernet\\\\|이더넷\\\\|무선\" | grep \"IPv4\" | head -3)",
+      "Bash(ipconfig | grep \"IPv4\")",
+      "Bash(cloudflared --version 2>&1 || echo \"NOT_INSTALLED\")",
+      "Bash(winget install Cloudflare.cloudflared 2>&1)"
     ]
   }
 }

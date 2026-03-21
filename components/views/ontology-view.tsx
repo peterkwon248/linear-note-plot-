@@ -9,6 +9,11 @@ import { OntologyDetailPanel } from "@/components/ontology/ontology-detail-panel
 import { ontologyLayoutClient } from "@/lib/graph/ontology-layout-client"
 import type { Note, RelationType } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
+import { FilterPanel } from "@/components/filter-panel"
+import { DisplayPanel } from "@/components/display-panel"
+import { GRAPH_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { DEFAULT_VIEW_STATE } from "@/lib/view-engine/defaults"
+import type { FilterRule } from "@/lib/view-engine/types"
 import { Network } from "lucide-react"
 
 const DEFAULT_FILTERS: OntologyFilters = {
@@ -35,6 +40,14 @@ export function OntologyView() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [graph, setGraph] = useState<OntologyGraph | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [graphFilters, setGraphFilters] = useState<FilterRule[]>([])
+
+  const handleGraphFilterToggle = (rule: FilterRule) => {
+    setGraphFilters(prev => {
+      const exists = prev.some(f => f.field === rule.field && f.value === rule.value)
+      return exists ? prev.filter(f => !(f.field === rule.field && f.value === rule.value)) : [...prev, rule]
+    })
+  }
 
   const notes = usePlotStore((s) => s.notes)
   const relations = usePlotStore((s) => s.relations)
@@ -153,6 +166,24 @@ export function OntologyView() {
       <ViewHeader
         icon={<Network className="h-5 w-5" strokeWidth={1.5} />}
         title="Ontology"
+        showFilter
+        hasActiveFilters={graphFilters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={GRAPH_VIEW_CONFIG.filterCategories}
+            activeFilters={graphFilters}
+            onToggle={handleGraphFilterToggle}
+          />
+        }
+        showDisplay
+        displayContent={
+          <DisplayPanel
+            config={GRAPH_VIEW_CONFIG.displayConfig}
+            viewState={DEFAULT_VIEW_STATE}
+            onViewStateChange={() => {}}
+          />
+        }
+        showDetailPanel
       >
         <OntologyFilterBar
           filters={filters}
