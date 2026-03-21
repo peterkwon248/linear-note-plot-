@@ -60,6 +60,8 @@ import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
+import { ViewDistributionPanel } from "@/components/view-distribution-panel"
+import type { DistributionItem } from "@/components/view-distribution-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
@@ -85,6 +87,18 @@ const TRASH_TABS: { id: TrashFilter; label: string }[] = [
 ]
 
 /* ── Column + group config ─────────────────────────────── */
+
+const SORT_FIELD_LABELS: Record<SortField, string> = {
+  updatedAt: "Updated",
+  createdAt: "Created",
+  priority: "Priority",
+  title: "Name",
+  status: "Status",
+  links: "Links",
+  reads: "Reads",
+  folder: "Folder",
+  label: "Label",
+}
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField: SortField; minWidth?: number }[] = [
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
@@ -122,14 +136,14 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-[11px] uppercase tracking-wider font-medium text-muted-foreground/30 transition-colors hover:text-muted-foreground/60 ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
       {active ? (
-        sortDir === "asc" ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />
+        sortDir === "asc" ? <ArrowUp className="h-2.5 w-2.5 text-muted-foreground/50" /> : <ArrowDown className="h-2.5 w-2.5 text-muted-foreground/50" />
       ) : (
-        <ArrowUpDown className="h-2.5 w-2.5 opacity-0 group-hover/th:opacity-40" />
+        <ArrowUpDown className="h-2.5 w-2.5 opacity-0 group-hover/th:opacity-50" />
       )}
     </button>
   )
@@ -324,6 +338,9 @@ export function NotesTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const lastClickedRef = useRef<number | null>(null)
 
+  // ── Distribution panel state ──
+  const [showDistribution, setShowDistribution] = useState(false)
+
   // ── Group collapse state ──
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const toggleGroupCollapse = useCallback((groupKey: string) => {
@@ -472,6 +489,92 @@ export function NotesTable({
     updateViewState({ filters: newFilters })
   }, [viewState.filters, updateViewState])
 
+  // ── Distribution panel data ──
+  const getDistribution = useCallback((tabKey: string): DistributionItem[] => {
+    switch (tabKey) {
+      case "status": {
+        const counts: Record<string, number> = {}
+        for (const n of flatNotes) {
+          counts[n.status] = (counts[n.status] ?? 0) + 1
+        }
+        return Object.entries(counts).map(([key, count]) => ({
+          key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          count,
+        }))
+      }
+      case "folder": {
+        const counts: Record<string, number> = {}
+        const noFolder = flatNotes.filter(n => !n.folderId).length
+        for (const n of flatNotes) {
+          if (n.folderId) counts[n.folderId] = (counts[n.folderId] ?? 0) + 1
+        }
+        const items: DistributionItem[] = Object.entries(counts).map(([fId, count]) => ({
+          key: fId,
+          label: folders.find(f => f.id === fId)?.name ?? "Unknown",
+          count,
+        }))
+        if (noFolder > 0) items.push({ key: "__none__", label: "No folder", count: noFolder })
+        return items
+      }
+      case "tags": {
+        const counts: Record<string, number> = {}
+        for (const n of flatNotes) {
+          for (const tId of n.tags) {
+            counts[tId] = (counts[tId] ?? 0) + 1
+          }
+        }
+        return Object.entries(counts).map(([tId, count]) => ({
+          key: tId,
+          label: tags.find(t => t.id === tId)?.name ?? "Unknown",
+          count,
+        }))
+      }
+      case "labels": {
+        const counts: Record<string, number> = {}
+        const noLabel = flatNotes.filter(n => !n.labelId).length
+        for (const n of flatNotes) {
+          if (n.labelId) counts[n.labelId] = (counts[n.labelId] ?? 0) + 1
+        }
+        const items: DistributionItem[] = Object.entries(counts).map(([lId, count]) => ({
+          key: lId,
+          label: labels.find(l => l.id === lId)?.name ?? "Unknown",
+          color: labels.find(l => l.id === lId)?.color,
+          count,
+        }))
+        if (noLabel > 0) items.push({ key: "__none__", label: "No label", count: noLabel })
+        return items
+      }
+      default:
+        return []
+    }
+  }, [flatNotes, folders, tags, labels])
+
+  const handleDistributionItemClick = useCallback((tabKey: string, itemKey: string) => {
+    const fieldMap: Record<string, FilterRule["field"]> = {
+      status: "status",
+      folder: "folder",
+      tags: "tags",
+      labels: "label",
+    }
+    const field = fieldMap[tabKey]
+    if (!field) return
+    const rule: FilterRule = { field, operator: "eq", value: itemKey }
+    const exists = viewState.filters.some(
+      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+    )
+    if (!exists) {
+      updateViewState({ filters: [...viewState.filters, rule] })
+    }
+  }, [viewState.filters, updateViewState])
+
+  const distributionTabs = useMemo(() => [
+    { key: "status", label: "Status" },
+    { key: "folder", label: "Folder" },
+    { key: "tags", label: "Tags" },
+    { key: "labels", label: "Labels" },
+  ], [])
+
   // ── Side peek state for detail panel ──
   const sidePeekNoteId = usePlotStore((s) => s.sidePeekNoteId)
   const setSidePeekNoteId = usePlotStore((s) => s.setSidePeekNoteId)
@@ -533,7 +636,7 @@ export function NotesTable({
   const rowVirtualizer = useVirtualizer({
     count: virtualItems.length,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: (i) => virtualItems[i].type === "header" ? 36 : (viewState.viewMode === "list" ? 40 : 41),
+    estimateSize: (i) => virtualItems[i].type === "header" ? 36 : (viewState.viewMode === "list" ? 40 : 44),
     overscan: 5,
   })
 
@@ -596,7 +699,7 @@ export function NotesTable({
       }
 
       // Also check non-visible rows by index range
-      const rowHeight = 41
+      const rowHeight = 44
       const firstVisibleIdx = Math.floor(rectTop / rowHeight)
       const lastVisibleIdx = Math.ceil(rectBottom / rowHeight)
       for (let i = Math.max(0, firstVisibleIdx); i < Math.min(items.length, lastVisibleIdx); i++) {
@@ -653,6 +756,7 @@ export function NotesTable({
             activeFilters={viewState.filters}
             onToggle={handleFilterToggle}
             quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => updateViewState({ filters: rules })}
           />
         }
         showDisplay
@@ -665,8 +769,8 @@ export function NotesTable({
           />
         }
         showDetailPanel
-        detailPanelOpen={!!sidePeekNoteId}
-        onDetailPanelToggle={() => setSidePeekNoteId(sidePeekNoteId ? null : (activePreviewId ?? null))}
+        detailPanelOpen={showDistribution}
+        onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
       >
         {/* Trash sub-filter tabs */}
         {isTrashView && (
@@ -704,7 +808,26 @@ export function NotesTable({
           onClearAll={() => updateViewState({ filters: [] })}
           onSetFilters={(filters) => updateViewState({ filters })}
         />
+
+        {/* ── Sort order chip ── */}
+        {viewState.sortField !== "updatedAt" && (
+          <div className="flex items-center px-5 pb-1">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-[12px] font-medium">
+              Order by {SORT_FIELD_LABELS[viewState.sortField]}
+              <span>{viewState.sortDirection === "asc" ? "↑" : "↓"}</span>
+              <button
+                onClick={() => updateViewState({ sortField: "updatedAt", sortDirection: "desc" })}
+                className="ml-0.5 hover:text-accent/80 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          </div>
+        )}
       </ViewHeader>
+
+      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden">
 
       {/* ── Folder indicator ──────────────────────────────── */}
       {folderId && (() => {
@@ -760,7 +883,7 @@ export function NotesTable({
               <div ref={scrollContainerRef} onMouseDown={handleDragMouseDown} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
                 {/* Column headers (table mode — removed, never renders) */}
                 {(viewState.viewMode as string) === "table" && (
-                <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
+                <div className="sticky top-0 z-10 flex items-center border-b border-border/30 bg-background px-5 py-2.5">
                   <div className="w-8 shrink-0 flex items-center justify-center mr-0.5">
                     <div
                       className={`h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${
@@ -838,15 +961,15 @@ export function NotesTable({
                           </div>
                           ) : (
                           <div
-                            className="flex items-center gap-2 px-5 py-3 bg-secondary/30 border-b border-border cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-secondary/20 border-b border-border/30 cursor-pointer select-none hover:bg-secondary/30 transition-colors"
                             onClick={() => toggleGroupCollapse(item.groupKey)}
                           >
                             <ChevronDown className={`h-3 w-3 text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-sm font-semibold text-foreground">
+                            <span className="text-[12px] font-semibold text-foreground/80 tracking-wider">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-xs text-muted-foreground">{item.count}</span>
+                            <span className="text-[11px] text-muted-foreground/50 tabular-nums">{item.count}</span>
                           </div>
                           )
                         ) : (
@@ -956,6 +1079,16 @@ export function NotesTable({
           onClearSelection={() => setSelectedIds(new Set())}
         />
       )}
+      </div>
+      {showDistribution && (
+        <ViewDistributionPanel
+          tabs={distributionTabs}
+          getDistribution={getDistribution}
+          onItemClick={handleDistributionItemClick}
+          onClose={() => setShowDistribution(false)}
+        />
+      )}
+      </div>
     </main>
   )
 }
@@ -1305,14 +1438,14 @@ function NoteRowInner({
         <div
           draggable
           onDragStart={(e) => setNoteDragData(e, note.id)}
-          className={`group flex items-center transition-colors cursor-pointer ${
-            isCompact ? "px-3 py-1.5" : "px-5 py-3"
+          className={`group flex items-center transition-colors cursor-pointer border-b border-border/30 ${
+            isCompact ? "px-3 py-1.5" : "px-5 py-0"
           } ${
             isSelected
               ? "bg-accent/5"
               : isActive
                 ? "bg-accent/8 border-l-2 border-l-accent"
-                : "hover:bg-secondary/20"
+                : "hover:bg-white/[0.02]"
           }`}
           onClick={onClick ?? onOpen}
           onDoubleClick={onDoubleClick}
@@ -1343,7 +1476,7 @@ function NoteRowInner({
       </div>
 
       {/* Name */}
-      <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
+      <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-4">
         <FileText className={`shrink-0 text-muted-foreground/60 ${isCompact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
         <span className={`truncate text-foreground ${isCompact ? "text-note" : "text-ui"}`}>
           {note.title || "Untitled"}
@@ -1396,23 +1529,23 @@ function NoteRowInner({
 
       {/* Folder */}
       {visibleCols.includes("folder") && (
-        <div className="w-[80px] shrink-0 flex items-center justify-center">
+        <div className="w-[80px] shrink-0 flex items-center justify-center px-2">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
-            if (!folder) return <span className="text-ui text-muted-foreground/30">—</span>
+            if (!folder) return <span className="text-[11px] text-muted-foreground/20">—</span>
             return (
-              <span className="text-xs text-muted-foreground truncate">{folder.name}</span>
+              <span className="text-[11px] text-muted-foreground/50 truncate">{folder.name}</span>
             )
           })() : (
-            <span className="text-ui text-muted-foreground/30">—</span>
+            <span className="text-[11px] text-muted-foreground/20">—</span>
           )}
         </div>
       )}
 
       {/* Links */}
       {visibleCols.includes("links") && (
-        <div className="w-[56px] shrink-0 text-center">
-          <span className={`tabular-nums ${isCompact ? "text-note" : "text-ui"} ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+        <div className="w-[56px] shrink-0 text-center px-1">
+          <span className={`tabular-nums text-[12px] ${links === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
             {links}
           </span>
         </div>
@@ -1420,8 +1553,8 @@ function NoteRowInner({
 
       {/* Reads */}
       {visibleCols.includes("reads") && (
-        <div className="w-[56px] shrink-0 text-center">
-          <span className={`tabular-nums ${isCompact ? "text-note" : "text-ui"} ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+        <div className="w-[56px] shrink-0 text-center px-1">
+          <span className={`tabular-nums text-[12px] ${note.reads === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
             {note.reads}
           </span>
         </div>
@@ -1429,10 +1562,10 @@ function NoteRowInner({
 
       {/* Updated - relative time like Linear */}
       {visibleCols.includes("updatedAt") && (
-        <div className="w-[80px] shrink-0 text-right">
+        <div className="w-[80px] shrink-0 text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className={`tabular-nums text-muted-foreground cursor-default ${isCompact ? "text-note" : "text-ui"}`}>
+              <span className="tabular-nums text-[12px] text-muted-foreground/50 cursor-default">
                 {shortRelative(note.updatedAt)}
               </span>
             </TooltipTrigger>
@@ -1445,10 +1578,10 @@ function NoteRowInner({
 
       {/* Created - absolute date like Linear */}
       {visibleCols.includes("createdAt") && (
-        <div className="w-[80px] shrink-0 text-right">
+        <div className="w-[80px] shrink-0 text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className={`tabular-nums text-muted-foreground cursor-default ${isCompact ? "text-note" : "text-ui"}`}>
+              <span className="tabular-nums text-[12px] text-muted-foreground/50 cursor-default">
                 {absDate(note.createdAt)}
               </span>
             </TooltipTrigger>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useRef, useCallback } from "react"
 import type { ReactNode } from "react"
 import type { FilterRule, FilterField } from "@/lib/view-engine/types"
 
@@ -81,7 +81,19 @@ export function FilterPanel({
   onQuickFilter,
 }: FilterPanelProps) {
   const [openCat, setOpenCat] = useState<string | null>(null)
+  const [subPanelTop, setSubPanelTop] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleCatHover = useCallback((catKey: string, e: React.MouseEvent<HTMLButtonElement>) => {
+    setOpenCat(catKey)
+    if (containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect()
+      const rowRect = e.currentTarget.getBoundingClientRect()
+      const offset = rowRect.top - containerRect.top
+      setSubPanelTop(offset)
+    }
+  }, [])
 
   const q = searchQuery.toLowerCase()
 
@@ -104,10 +116,13 @@ export function FilterPanel({
     : null
 
   return (
-    <div className="flex">
-      {/* ── Sub Panel (values) — LEFT side, only when a category is selected ── */}
+    <div ref={containerRef} className="relative flex">
+      {/* ── Sub Panel (values) — LEFT side, positioned at hovered row's y ── */}
       {activeCategory && activeCategory.values.length > 0 && (
-        <div className="w-[220px] max-h-[560px] overflow-y-auto border-r border-white/[0.06] py-1 shrink-0">
+        <div
+          className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-white/[0.08] bg-popover rounded-[10px] py-1 shrink-0 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.3),0_16px_40px_rgba(0,0,0,0.35)] z-10 -mr-px"
+          style={{ top: subPanelTop }}
+        >
           {activeCategory.values.map((val) => {
             const isActive = activeFilters.some(
               (f) => f.field === activeCategory.key && f.value === val.key
@@ -187,7 +202,7 @@ export function FilterPanel({
               className={`w-full flex items-center gap-2 px-3 py-[7px] transition-colors cursor-default ${
                 isOpen ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"
               }`}
-              onMouseEnter={() => setOpenCat(cat.key)}
+              onMouseEnter={(e) => handleCatHover(cat.key, e)}
               onClick={() => setOpenCat(isOpen ? null : cat.key)}
             >
               <span

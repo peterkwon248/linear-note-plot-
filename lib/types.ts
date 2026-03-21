@@ -15,9 +15,6 @@ export type StubSource = "red-link" | "tag" | "backlink" | "manual"
 /** Activity Bar spaces — top-level navigation */
 export type ActivitySpace = "inbox" | "notes" | "wiki" | "calendar" | "ontology"
 
-/** Workspace layout mode (replaces LayoutMode in Phase 2) */
-export type WorkspaceMode = "default" | "zen" | "research"
-
 export interface WikiInfoboxEntry {
   key: string
   value: string
@@ -268,9 +265,6 @@ export interface Reflection {
 /* ── Relations ─────────────────────────────────────── */
 
 export type RelationType = "related-to" | "inspired-by" | "contradicts" | "extends" | "depends-on"
-
-/** @deprecated Use WorkspaceMode instead */
-export type LayoutMode = "list" | "focus" | "three-column" | "tabs" | "panels" | "split"
 
 export interface Relation {
   id: string

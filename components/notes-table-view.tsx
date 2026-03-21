@@ -38,7 +38,6 @@ export function NotesTableView() {
   const activeLabelId = useActiveLabelId()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
-  const workspaceMode = usePlotStore((s) => s.workspaceMode)
   const workspaceRoot = usePlotStore((s) => s.workspaceRoot)
   const applyPreset = usePlotStore((s) => s.applyPreset)
   const settingsViewMode = useSettingsStore((s) => s.viewMode)
@@ -87,16 +86,15 @@ export function NotesTableView() {
     setPreviewId(null)
   }, [tableRoute])
 
-  // Auto-migrate: if in default/research mode but workspace has no note-list leaf, apply preset once
+  // Auto-migrate: if in default mode but workspace has no note-list leaf, apply preset once
   // hasMigrated is set unconditionally on first run so closing the list pane won't re-trigger
   useEffect(() => {
     if (hasMigrated.current) return
     hasMigrated.current = true
-    if ((workspaceMode === "default" || workspaceMode === "research") &&
-        !findLeafByContentType(workspaceRoot, "note-list")) {
-      applyPreset(workspaceMode === "research" ? "research" : "list-editor")
+    if (!findLeafByContentType(workspaceRoot, "note-list")) {
+      applyPreset("list-editor")
     }
-  }, [workspaceMode, workspaceRoot, applyPreset])
+  }, [workspaceRoot, applyPreset])
 
   // ── Workspace editor area: show when editing in any layout mode ──
   if (isEditing) {
