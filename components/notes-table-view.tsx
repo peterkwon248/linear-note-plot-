@@ -41,7 +41,7 @@ export function NotesTableView() {
   const workspaceMode = usePlotStore((s) => s.workspaceMode)
   const workspaceRoot = usePlotStore((s) => s.workspaceRoot)
   const applyPreset = usePlotStore((s) => s.applyPreset)
-  const viewMode = useSettingsStore((s) => s.viewMode)
+  const settingsViewMode = useSettingsStore((s) => s.viewMode)
   const isEditing = selectedNoteId !== null
 
   const [previewId, setPreviewId] = useState<string | null>(null)
@@ -55,6 +55,13 @@ export function NotesTableView() {
     if (activeLabelId) return { ...baseConfig, context: "label" as ViewContextKey }
     return baseConfig
   })()
+
+  // Read viewMode: check per-context viewState first, fallback to settings
+  const contextKey = (config.context ?? "all") as ViewContextKey
+  const contextViewMode = usePlotStore(
+    useCallback((s) => s.viewStateByContext[contextKey]?.viewMode, [contextKey])
+  )
+  const viewMode = contextViewMode ?? settingsViewMode
 
   // ESC closes preview panel
   const handleKeyDown = useCallback(

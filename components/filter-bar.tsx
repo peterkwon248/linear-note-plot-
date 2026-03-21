@@ -885,17 +885,17 @@ export function FilterChipBar({
   if (filters.length === 0) return null
 
   return (
-    <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
-      {/* Active filter chips */}
+    <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-2">
+      {/* Active filter chips — accent style */}
       {filters.map((f, i) => (
         <span
           key={i}
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary/50 px-2 py-0.5 text-xs text-foreground"
+          className="inline-flex items-center gap-[5px] rounded-[6px] border border-accent/30 bg-accent/[0.14] py-[3px] pl-2.5 pr-1 text-xs font-medium text-accent/90"
         >
-          <span className="text-muted-foreground">{formatFilterLabel(f, folders, tags, labels)}</span>
+          {formatFilterLabel(f, folders, tags, labels)}
           <button
             onClick={() => onRemoveFilter(i)}
-            className="ml-0.5 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="flex h-[18px] w-[18px] items-center justify-center rounded text-accent/60 transition-colors hover:bg-accent/25"
           >
             <X className="h-2.5 w-2.5" />
           </button>
@@ -918,9 +918,9 @@ export function FilterChipBar({
       <div className="ml-auto">
         <button
           onClick={onClearAll}
-          className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="border-none bg-transparent px-1 py-0.5 text-xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
         >
-          Clear
+          Clear all
         </button>
       </div>
     </div>

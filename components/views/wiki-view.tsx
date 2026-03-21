@@ -1,6 +1,10 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
+import type { FilterRule, ViewState } from "@/lib/view-engine/types"
+import { FilterPanel } from "@/components/filter-panel"
+import { DisplayPanel } from "@/components/display-panel"
+import { WIKI_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { useRouter } from "next/navigation"
 import {
   BookOpen,
@@ -70,6 +74,33 @@ export function WikiView() {
 
   // All Articles view state
   const [showAllArticles, setShowAllArticles] = useState(false)
+
+  // Filter / Display state
+  const [wikiFilters, setWikiFilters] = useState<FilterRule[]>([])
+  const [wikiViewState, setWikiViewState] = useState<ViewState>({
+    viewMode: "list" as const,
+    sortField: "updatedAt" as const,
+    sortDirection: "desc" as const,
+    groupBy: "none" as const,
+    subGroupBy: "none" as const,
+    filters: [] as FilterRule[],
+    visibleColumns: ["status", "links", "tags", "updatedAt"],
+    showEmptyGroups: false,
+    orderPermanentByRecency: false,
+    showThread: false,
+  })
+  const handleWikiFilterToggle = (rule: FilterRule) => {
+    setWikiFilters((prev) => {
+      const exists = prev.some(
+        (f) => f.field === rule.field && f.value === rule.value
+      )
+      return exists
+        ? prev.filter(
+            (f) => !(f.field === rule.field && f.value === rule.value)
+          )
+        : [...prev, rule]
+    })
+  }
 
   // Auto-enrollment
   const setWikiStatus = usePlotStore((s) => s.setWikiStatus)
@@ -524,6 +555,26 @@ export function WikiView() {
         icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
         title="Wiki"
         count={stats.articles}
+        showFilter
+        hasActiveFilters={wikiFilters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={WIKI_VIEW_CONFIG.filterCategories}
+            activeFilters={wikiFilters}
+            onToggle={handleWikiFilterToggle}
+          />
+        }
+        showDisplay
+        displayContent={
+          <DisplayPanel
+            config={WIKI_VIEW_CONFIG.displayConfig}
+            viewState={wikiViewState}
+            onViewStateChange={(patch) =>
+              setWikiViewState((prev) => ({ ...prev, ...patch }))
+            }
+          />
+        }
+        showDetailPanel
         actions={
           <div className="flex items-center gap-2">
             <Popover open={importOpen} onOpenChange={(o) => {

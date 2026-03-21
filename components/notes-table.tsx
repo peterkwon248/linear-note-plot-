@@ -11,10 +11,6 @@ import {
   Link2,
   ChevronDown,
   X,
-  SlidersHorizontal,
-  Columns3,
-  Sparkles,
-  Layers,
   Check,
   AlarmClock,
   Trash2,
@@ -22,9 +18,6 @@ import {
   ArrowDownLeft,
   Inbox,
   MoreHorizontal,
-  LayoutList,
-  LayoutGrid,
-  Search,
   Bell,
   Clock,
   Merge,
@@ -54,9 +47,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { usePlotStore } from "@/lib/store"
-import { useSettingsStore, useUIStore } from "@/lib/settings-store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
@@ -67,70 +58,14 @@ import { shortRelative } from "@/lib/format-utils"
 import type { Note, NoteStatus, NotePriority, Folder, NoteSource, Tag, Label, NoteTemplate } from "@/lib/types"
 import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
-import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
+import { FilterPanel } from "@/components/filter-panel"
+import { DisplayPanel } from "@/components/display-panel"
+import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
 import { pushUndo } from "@/lib/undo-manager"
-
-/* ── Inline Select (portal-free, works inside Popover) ── */
-
-function InlineSelect<T extends string>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T
-  options: { value: T; label: string }[]
-  onChange: (v: T) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClick)
-    return () => document.removeEventListener("mousedown", handleClick)
-  }, [open])
-
-  const current = options.find((o) => o.value === value)
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
-      >
-        {current?.label ?? value}
-        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
-          {options.map((opt) => {
-            const active = opt.value === value
-            return (
-              <button
-                key={opt.value}
-                onClick={() => { onChange(opt.value); setOpen(false) }}
-                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
-                  active ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                <Check className={`h-3.5 w-3.5 shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} />
-                {opt.label}
-              </button>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
 
 /* ── Helpers ───────────────────────────────────────────── */
 
@@ -162,25 +97,6 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
   { id: "priority", label: "Priority", width: "w-[72px] shrink-0", align: "text-center", sortField: "priority", minWidth: 480 },
   { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
   { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt", minWidth: 800 },
-]
-
-const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
-  { value: "none", label: "No grouping" },
-  { value: "status", label: "Status" },
-  { value: "priority", label: "Priority" },
-  { value: "date", label: "Date" },
-  { value: "folder", label: "Folder" },
-]
-
-const SORT_OPTIONS: { value: SortField; label: string }[] = [
-  { value: "title", label: "Title" },
-  { value: "status", label: "Status" },
-  { value: "folder", label: "Folder" },
-  { value: "links", label: "Links" },
-  { value: "reads", label: "Reads" },
-  { value: "priority", label: "Priority" },
-  { value: "updatedAt", label: "Updated" },
-  { value: "createdAt", label: "Created" },
 ]
 
 /* ── Virtual item type ─────────────────────────────────── */
@@ -369,11 +285,6 @@ export function NotesTable({
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
 
-  const viewMode = useSettingsStore((s) => s.viewMode)
-  const setViewMode = useSettingsStore((s) => s.setViewMode)
-  const displayPopoverOpen = useUIStore((s) => s.displayPopoverOpen)
-  const setDisplayPopoverOpen = useUIStore((s) => s.setDisplayPopoverOpen)
-
   const { flatNotes: rawFlatNotes, groups: rawGroups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId, tagId, labelId })
 
   // ── Trash sub-filter ──
@@ -519,6 +430,43 @@ export function NotesTable({
   }
 
   const isSingleStatusTab = ["inbox", "capture", "permanent"].includes(effectiveTab)
+
+  // ── Dynamic filter categories (merge static config with store data) ──
+  const notesFilterCategories = useMemo(() => {
+    return NOTES_VIEW_CONFIG.filterCategories.map(cat => {
+      if (cat.key === "folder") {
+        return { ...cat, values: folders.map(f => ({ key: f.id, label: f.name, count: notes.filter(n => !n.trashed && !n.archived && n.folderId === f.id).length })) }
+      }
+      if (cat.key === "label") {
+        return { ...cat, values: labels.filter(l => !l.trashed).map(l => ({ key: l.id, label: l.name, color: l.color, count: notes.filter(n => !n.trashed && !n.archived && n.labelId === l.id).length })) }
+      }
+      if (cat.key === "tags") {
+        return { ...cat, values: tags.filter(t => !t.trashed).map(t => ({ key: t.id, label: t.name, count: notes.filter(n => !n.trashed && !n.archived && n.tags?.includes(t.id)).length })) }
+      }
+      if (cat.key === "status") {
+        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && !n.archived && n.status === v.key).length })) }
+      }
+      if (cat.key === "priority") {
+        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && !n.archived && n.priority === v.key).length })) }
+      }
+      return cat
+    })
+  }, [folders, labels, tags, notes])
+
+  // ── Filter toggle handler for FilterPanel ──
+  const handleFilterToggle = useCallback((rule: FilterRule) => {
+    const exists = viewState.filters.some(
+      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+    )
+    const newFilters = exists
+      ? viewState.filters.filter(f => !(f.field === rule.field && f.operator === rule.operator && f.value === rule.value))
+      : [...viewState.filters, rule]
+    updateViewState({ filters: newFilters })
+  }, [viewState.filters, updateViewState])
+
+  // ── Side peek state for detail panel ──
+  const sidePeekNoteId = usePlotStore((s) => s.sidePeekNoteId)
+  const setSidePeekNoteId = usePlotStore((s) => s.setSidePeekNoteId)
 
   function toggleColumn(colId: string) {
     const cols = viewState.visibleColumns
@@ -672,6 +620,10 @@ export function NotesTable({
       <ViewHeader
         icon={<FileText className="h-5 w-5" strokeWidth={1.5} />}
         title={title ?? "Notes"}
+        count={flatNotes.length}
+        searchPlaceholder="Search..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
         actions={
           !hideCreateButton && (
             <button
@@ -683,13 +635,32 @@ export function NotesTable({
             </button>
           )
         }
-      />
-
-      {/* ── Toolbar ─────────────────────────────────────── */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">
+        showFilter
+        hasActiveFilters={viewState.filters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={notesFilterCategories}
+            activeFilters={viewState.filters}
+            onToggle={handleFilterToggle}
+            quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+          />
+        }
+        showDisplay
+        displayContent={
+          <DisplayPanel
+            config={NOTES_VIEW_CONFIG.displayConfig}
+            viewState={viewState}
+            onViewStateChange={(patch) => updateViewState(patch)}
+            showViewMode
+          />
+        }
+        showDetailPanel
+        detailPanelOpen={!!sidePeekNoteId}
+        onDetailPanelToggle={() => setSidePeekNoteId(sidePeekNoteId ? null : (activePreviewId ?? null))}
+      >
         {/* Trash sub-filter tabs */}
         {isTrashView && (
-          <div className="flex items-center gap-0">
+          <div className="flex shrink-0 items-center gap-0 border-b border-border px-5 pt-1 pb-0">
             {TRASH_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -710,196 +681,20 @@ export function NotesTable({
           </div>
         )}
 
-        {/* Right toolbar */}
-        <div className="flex items-center gap-1.5">
-          {/* Search input */}
-          <div className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 transition-colors focus-within:border-accent">
-            <Search className="h-3.5 w-3.5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[120px] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="text-muted-foreground hover:text-foreground">
-                <X className="h-2.5 w-2.5" />
-              </button>
-            )}
-          </div>
-
-          {viewState.groupBy !== "none" && (
-            <button
-              onClick={() => updateViewState({ groupBy: "none" })}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              title="Remove grouping"
-            >
-              <Layers className="h-4 w-4" />
-              <span className="text-note">{GROUP_OPTIONS.find(o => o.value === viewState.groupBy)?.label}</span>
-              <X className="h-3 w-3" />
-            </button>
-          )}
-
-          <FilterButton
-            filters={viewState.filters}
-            groupBy={viewState.groupBy}
-            isSingleStatusTab={isSingleStatusTab}
-            folders={folders}
-            tags={tags.filter((t) => !t.trashed)}
-            labels={labels.filter((l) => !l.trashed)}
-            onToggleFilter={toggleFilter}
-            onSetFilters={(f) => updateViewState({ filters: f })}
-            hideLabel={isCompact}
-          />
-
-          <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
-            <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <SlidersHorizontal className="h-4 w-4" />
-                {!isCompact && "Display"}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[320px] p-0" align="end">
-              {/* View mode toggle — Linear-style tab buttons */}
-              <div className="flex gap-1 border-b border-border px-3 py-2.5">
-                <button
-                  onClick={() => setViewMode("table")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
-                    viewMode === "table" || viewMode === "list"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <LayoutList className="h-4 w-4" />
-                  List
-                </button>
-                <button
-                  onClick={() => {
-                    setViewMode("board")
-                    if (viewState.groupBy === "none") {
-                      updateViewState({ groupBy: "status" })
-                    }
-                  }}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
-                    viewMode === "board"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                  Board
-                </button>
-              </div>
-
-              <>
-                  {/* Grouping / Columns row */}
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-ui text-foreground">{viewMode === "board" ? "Columns" : "Grouping"}</span>
-                    </div>
-                    <InlineSelect
-                      value={viewState.groupBy}
-                      options={viewMode === "board" ? GROUP_OPTIONS.filter((o) => o.value !== "none") : GROUP_OPTIONS}
-                      onChange={(v) => updateViewState({ groupBy: v })}
-                    />
-                  </div>
-
-                  {/* Ordering row */}
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-ui text-foreground">Ordering</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <InlineSelect
-                        value={viewState.sortField}
-                        options={SORT_OPTIONS}
-                        onChange={(v) => updateViewState({ sortField: v })}
-                      />
-                      <button
-                        onClick={() => updateViewState({ sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc" })}
-                        className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                      >
-                        {viewState.sortDirection === "asc"
-                          ? <ArrowUp className="h-3.5 w-3.5" />
-                          : <ArrowDown className="h-3.5 w-3.5" />
-                        }
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="border-b border-border" />
-
-                  {/* Show empty groups/columns */}
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Columns3 className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-ui text-foreground">{viewMode === "board" ? "Show empty columns" : "Show empty groups"}</span>
-                    </div>
-                    <button
-                      onClick={() => updateViewState({ showEmptyGroups: !viewState.showEmptyGroups })}
-                      className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full transition-colors duration-200 ${
-                        viewState.showEmptyGroups ? "bg-accent" : "bg-muted-foreground/20"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-[14px] w-[14px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                          viewState.showEmptyGroups ? "translate-x-[16px]" : "translate-x-[2px]"
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  {/* Display properties (list mode only) */}
-                  {viewMode !== "board" && (
-                    <>
-                      <div className="border-b border-border" />
-                      <div>
-                        <div className="px-4 pt-3 pb-1.5">
-                          <span className="text-xs font-semibold text-muted-foreground">Display properties</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5 px-4 pb-3">
-                          {COLUMN_DEFS.filter((c) => c.id !== "title").map((col) => {
-                            const active = visibleCols.includes(col.id)
-                            return (
-                              <button
-                                key={col.id}
-                                onClick={() => toggleColumn(col.id)}
-                                className={`rounded-md px-2.5 py-1 text-sm font-medium transition-colors ${
-                                  active
-                                    ? "bg-foreground/10 text-foreground border border-foreground/20"
-                                    : "border border-border text-muted-foreground/60 hover:text-muted-foreground"
-                                }`}
-                              >
-                                {col.label}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
-      {/* ── Filter chip bar (only when filters active) ── */}
-      <FilterChipBar
-        filters={viewState.filters}
-        groupBy={viewState.groupBy}
-        isSingleStatusTab={isSingleStatusTab}
-        folders={folders}
-        tags={tags.filter((t) => !t.trashed)}
-        labels={labels.filter((l) => !l.trashed)}
-        onToggleFilter={toggleFilter}
-        onRemoveFilter={removeFilter}
-        onClearAll={() => updateViewState({ filters: [] })}
-        onSetFilters={(filters) => updateViewState({ filters })}
-      />
+        {/* ── Filter chip bar (only when filters active) ── */}
+        <FilterChipBar
+          filters={viewState.filters}
+          groupBy={viewState.groupBy}
+          isSingleStatusTab={isSingleStatusTab}
+          folders={folders}
+          tags={tags.filter((t) => !t.trashed)}
+          labels={labels.filter((l) => !l.trashed)}
+          onToggleFilter={toggleFilter}
+          onRemoveFilter={removeFilter}
+          onClearAll={() => updateViewState({ filters: [] })}
+          onSetFilters={(filters) => updateViewState({ filters })}
+        />
+      </ViewHeader>
 
       {/* ── Folder indicator ──────────────────────────────── */}
       {folderId && (() => {

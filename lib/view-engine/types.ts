@@ -54,9 +54,12 @@ export interface ViewState {
   sortField: SortField
   sortDirection: SortDirection
   groupBy: GroupBy
+  subGroupBy: GroupBy
   filters: FilterRule[]
   visibleColumns: string[]
   showEmptyGroups: boolean
+  orderPermanentByRecency: boolean
+  showThread: boolean
 }
 
 /* ── Pipeline Types ────────────────────────────────────── */

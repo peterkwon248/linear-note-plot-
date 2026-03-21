@@ -1,16 +1,19 @@
-import type { ViewState, ViewContextKey } from "./types"
+import type { ViewState, ViewContextKey, GroupBy } from "./types"
 import { VALID_VIEW_CONTEXT_KEYS, VALID_SORT_FIELDS, VALID_GROUP_BY, VALID_VIEW_MODES, VALID_COLUMNS } from "./types"
 
 /* ── Default ViewState ─────────────────────────────────── */
 
 export const DEFAULT_VIEW_STATE: ViewState = {
-  viewMode: "table",
+  viewMode: "list",
   sortField: "updatedAt",
   sortDirection: "desc",
   groupBy: "none",
+  subGroupBy: "none",
   filters: [],
   visibleColumns: ["title", "status", "folder", "links", "reads", "priority", "updatedAt", "createdAt"],
   showEmptyGroups: false,
+  orderPermanentByRecency: false,
+  showThread: false,
 }
 
 /* ── Context-specific overrides ────────────────────────── */
@@ -79,6 +82,7 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
       ? merged.sortDirection
       : base.sortDirection,
     groupBy: VALID_GROUP_BY.includes(merged.groupBy) ? merged.groupBy : base.groupBy,
+    subGroupBy: VALID_GROUP_BY.includes(merged.subGroupBy as GroupBy) ? (merged.subGroupBy as GroupBy) : "none",
     filters: Array.isArray(merged.filters) ? merged.filters : [],
     visibleColumns: ensureRequiredColumns(
       Array.isArray(merged.visibleColumns)
@@ -86,6 +90,8 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
         : base.visibleColumns
     ),
     showEmptyGroups: typeof merged.showEmptyGroups === "boolean" ? merged.showEmptyGroups : false,
+    orderPermanentByRecency: typeof merged.orderPermanentByRecency === "boolean" ? merged.orderPermanentByRecency : false,
+    showThread: typeof merged.showThread === "boolean" ? merged.showThread : false,
   }
 }
 

@@ -22,18 +22,12 @@ import {
   Link2,
   ChevronDown,
   X,
-  SlidersHorizontal,
-  Columns3,
-  Layers,
   Check,
   AlarmClock,
   Trash2,
   ArrowUpRight,
   ArrowDownLeft,
   Inbox as InboxIcon,
-  LayoutList,
-  LayoutGrid,
-  Search,
   Clock,
   Bell,
   FolderOpen,
@@ -48,9 +42,7 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
 } from "@/components/ui/context-menu"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { usePlotStore } from "@/lib/store"
-import { useSettingsStore, useUIStore } from "@/lib/settings-store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
@@ -59,7 +51,11 @@ import type { ViewContextKey, SortField, GroupBy, NoteGroup, FilterRule } from "
 import { StatusBadge, PriorityBadge, STATUS_CONFIG, PRIORITY_CONFIG } from "@/components/note-fields"
 import { BoardWorkbench } from "@/components/board-workbench"
 import type { Note, NoteStatus, NotePriority, TriageStatus, Folder } from "@/lib/types"
-import { FilterButton, FilterChipBar } from "@/components/filter-bar"
+import { FilterChipBar } from "@/components/filter-bar"
+import { ViewHeader } from "@/components/view-header"
+import { FilterPanel } from "@/components/filter-panel"
+import { DisplayPanel } from "@/components/display-panel"
+import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId } from "@/lib/table-route"
 
 /* ── Inline Select (portal-free, works inside Popover) ── */
@@ -514,16 +510,44 @@ export function NotesBoard({
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
 
-  const viewMode = useSettingsStore((s) => s.viewMode)
-  const setViewMode = useSettingsStore((s) => s.setViewMode)
-  const displayPopoverOpen = useUIStore((s) => s.displayPopoverOpen)
-  const setDisplayPopoverOpen = useUIStore((s) => s.setDisplayPopoverOpen)
-
   const effectiveTab = context ?? "all"
 
   const backlinksMap = useBacklinksIndex()
 
   const { flatNotes, groups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId, tagId, labelId })
+
+  // ── Dynamic filter categories (merge static config with store data) ──
+  const notesFilterCategories = useMemo(() => {
+    return NOTES_VIEW_CONFIG.filterCategories.map(cat => {
+      if (cat.key === "folder") {
+        return { ...cat, values: folders.map(f => ({ key: f.id, label: f.name, count: notes.filter(n => !n.trashed && !n.archived && n.folderId === f.id).length })) }
+      }
+      if (cat.key === "label") {
+        return { ...cat, values: labels.filter(l => !l.trashed).map(l => ({ key: l.id, label: l.name, color: l.color, count: notes.filter(n => !n.trashed && !n.archived && n.labelId === l.id).length })) }
+      }
+      if (cat.key === "tags") {
+        return { ...cat, values: tags.filter(t => !t.trashed).map(t => ({ key: t.id, label: t.name, count: notes.filter(n => !n.trashed && !n.archived && n.tags?.includes(t.id)).length })) }
+      }
+      if (cat.key === "status") {
+        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && !n.archived && n.status === v.key).length })) }
+      }
+      if (cat.key === "priority") {
+        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && !n.archived && n.priority === v.key).length })) }
+      }
+      return cat
+    })
+  }, [folders, labels, tags, notes])
+
+  // ── Filter toggle handler for FilterPanel ──
+  const handleFilterToggle = useCallback((rule: FilterRule) => {
+    const exists = viewState.filters.some(
+      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+    )
+    const newFilters = exists
+      ? viewState.filters.filter(f => !(f.field === rule.field && f.operator === rule.operator && f.value === rule.value))
+      : [...viewState.filters, rule]
+    updateViewState({ filters: newFilters })
+  }, [viewState.filters, updateViewState])
 
   // Auto-set groupBy: board requires grouping, and single-status tabs need contextual grouping
   const isSingleStatusTab = SINGLE_STATUS_TABS.includes(effectiveTab)
@@ -627,183 +651,68 @@ export function NotesBoard({
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
-      {/* Header */}
-      <header className="flex shrink-0 items-center justify-between px-5 pt-5 pb-1">
-        <h1 className="text-base font-semibold text-foreground">{title ?? "Notes"}</h1>
-        {!hideCreateButton && (
-          <button
-            className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-            onClick={() => createNote(createNoteOverrides ?? {})}
-          >
-            <Plus className="h-3.5 w-3.5" /> New note
-          </button>
-        )}
-      </header>
-
-      {/* Toolbar */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pt-1 pb-0">
-        <div className="flex items-center gap-1.5">
-          {/* Search input */}
-          <div className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 transition-colors focus-within:border-accent">
-            <Search className="h-3.5 w-3.5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[120px] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="text-muted-foreground hover:text-foreground">
-                <X className="h-2.5 w-2.5" />
-              </button>
-            )}
-          </div>
-
-          <FilterButton
-            filters={viewState.filters}
-            groupBy={viewState.groupBy}
-            isSingleStatusTab={isSingleStatusTab}
-            folders={folders}
-            tags={tags}
-            labels={labels}
-            onToggleFilter={(field, value, op) => {
-              const exists = viewState.filters.some(
-                (f) => f.field === field && f.operator === (op ?? "eq") && f.value === value
-              )
-              if (exists) {
-                updateViewState({
-                  filters: viewState.filters.filter((f) => !(f.field === field && f.operator === (op ?? "eq") && f.value === value)),
-                })
-              } else {
-                updateViewState({ filters: [...viewState.filters, { field, operator: op ?? "eq", value }] })
-              }
-            }}
-            onSetFilters={(f) => updateViewState({ filters: f })}
-          />
-
-          {/* Display popover with List/Board toggle */}
-          <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
-            <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <SlidersHorizontal className="h-4 w-4" /> Display
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[320px] p-0" align="end">
-              {/* View mode toggle — Linear-style tab buttons */}
-              <div className="flex gap-1 border-b border-border px-3 py-2.5">
-                <button
-                  onClick={() => setViewMode("table")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
-                    viewMode !== "board"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <LayoutList className="h-4 w-4" />
-                  List
-                </button>
-                <button
-                  onClick={() => setViewMode("board")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-sm font-medium transition-colors ${
-                    viewMode === "board"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                  Board
-                </button>
-              </div>
-
-              {/* Columns row */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-ui text-foreground">Columns</span>
-                </div>
-                <InlineSelect
-                  value={viewState.groupBy}
-                  options={GROUP_OPTIONS.filter((o) =>
-                    o.value !== "none" && !(isSingleStatusTab && o.value === "status")
-                  )}
-                  onChange={(v) => updateViewState({ groupBy: v })}
-                />
-              </div>
-
-              {/* Ordering row */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-ui text-foreground">Ordering</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <InlineSelect
-                    value={viewState.sortField}
-                    options={SORT_OPTIONS}
-                    onChange={(v) => updateViewState({ sortField: v })}
-                  />
-                  <button
-                    onClick={() => updateViewState({ sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc" })}
-                    className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                  >
-                    {viewState.sortDirection === "asc"
-                      ? <ArrowUp className="h-3.5 w-3.5" />
-                      : <ArrowDown className="h-3.5 w-3.5" />
-                    }
-                  </button>
-                </div>
-              </div>
-
-              <div className="border-b border-border" />
-
-              {/* Show empty columns */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Columns3 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-ui text-foreground">Show empty columns</span>
-                </div>
-                <button
-                  onClick={() => updateViewState({ showEmptyGroups: !viewState.showEmptyGroups })}
-                  className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full transition-colors duration-200 ${
-                    viewState.showEmptyGroups ? "bg-accent" : "bg-muted-foreground/20"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-[14px] w-[14px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                      viewState.showEmptyGroups ? "translate-x-[16px]" : "translate-x-[2px]"
-                    }`}
-                  />
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
-      <FilterChipBar
-        filters={viewState.filters}
-        groupBy={viewState.groupBy}
-        isSingleStatusTab={isSingleStatusTab}
-        folders={folders}
-        tags={tags}
-        labels={labels}
-        onToggleFilter={(field, value, op) => {
-          const exists = viewState.filters.some(
-            (f) => f.field === field && f.operator === (op ?? "eq") && f.value === value
+      <ViewHeader
+        icon={<FileText className="h-5 w-5" strokeWidth={1.5} />}
+        title={title ?? "Notes"}
+        count={flatNotes.length}
+        searchPlaceholder="Search..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        actions={
+          !hideCreateButton && (
+            <button
+              className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+              onClick={() => createNote(createNoteOverrides ?? {})}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New note
+            </button>
           )
-          if (exists) {
-            updateViewState({
-              filters: viewState.filters.filter((f) => !(f.field === field && f.operator === (op ?? "eq") && f.value === value)),
-            })
-          } else {
-            updateViewState({ filters: [...viewState.filters, { field, operator: op ?? "eq", value }] })
-          }
-        }}
-        onRemoveFilter={(idx) => updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })}
-        onClearAll={() => updateViewState({ filters: [] })}
-        onSetFilters={(filters) => updateViewState({ filters })}
-      />
+        }
+        showFilter
+        hasActiveFilters={viewState.filters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={notesFilterCategories}
+            activeFilters={viewState.filters}
+            onToggle={handleFilterToggle}
+            quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+          />
+        }
+        showDisplay
+        displayContent={
+          <DisplayPanel
+            config={NOTES_VIEW_CONFIG.displayConfig}
+            viewState={viewState}
+            onViewStateChange={(patch) => updateViewState(patch)}
+            showViewMode
+          />
+        }
+      >
+        <FilterChipBar
+          filters={viewState.filters}
+          groupBy={viewState.groupBy}
+          isSingleStatusTab={isSingleStatusTab}
+          folders={folders}
+          tags={tags}
+          labels={labels}
+          onToggleFilter={(field, value, op) => {
+            const exists = viewState.filters.some(
+              (f) => f.field === field && f.operator === (op ?? "eq") && f.value === value
+            )
+            if (exists) {
+              updateViewState({
+                filters: viewState.filters.filter((f) => !(f.field === field && f.operator === (op ?? "eq") && f.value === value)),
+              })
+            } else {
+              updateViewState({ filters: [...viewState.filters, { field, operator: op ?? "eq", value }] })
+            }
+          }}
+          onRemoveFilter={(idx) => updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })}
+          onClearAll={() => updateViewState({ filters: [] })}
+          onSetFilters={(filters) => updateViewState({ filters })}
+        />
+      </ViewHeader>
 
       {/* ── Folder indicator ──────────────────────────────── */}
       {folderId && (() => {
