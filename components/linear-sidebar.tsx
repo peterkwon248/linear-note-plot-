@@ -30,7 +30,6 @@ import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, 
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 import type { PanelContent } from "@/lib/workspace/types"
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
-import { LayoutModeSwitcher } from "@/components/editor/layout-mode-switcher"
 import { StatusIcon } from "@/components/status-icon"
 import { ColorPickerGrid } from "@/components/color-picker-grid"
 import {
@@ -433,7 +432,6 @@ export function LinearSidebar() {
           )}
         </div>
         <div className="flex-1" />
-        <LayoutModeSwitcher />
         <button
           onClick={() => setSidebarCollapsed(true)}
           className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"

@@ -2,7 +2,20 @@ import type { NoteBody } from "../types"
 import { nanoid } from "nanoid"
 import { extractPreview, extractLinksOut } from "../body-helpers"
 import { buildDefaultViewStates, normalizeViewStatesMap } from "../view-engine/defaults"
-import { buildPreset, layoutModeToPreset } from "../workspace/presets"
+import { buildPreset } from "../workspace/presets"
+import type { WorkspacePreset } from "../workspace/types"
+
+/** @deprecated Inline migration helper — maps legacy LayoutMode to workspace preset */
+function layoutModeToPreset(mode: string): WorkspacePreset {
+  switch (mode) {
+    case "focus": return "focus"
+    case "three-column": return "list-editor"
+    case "tabs": return "focus"
+    case "panels": return "dual-editor"
+    case "split": return "list-editor"
+    default: return "editor-only"
+  }
+}
 import { createLeaf, createBranch, updateLeafTabs, findFirstEditorLeaf } from "../workspace/tree-utils"
 import type { WorkspaceNode, WorkspaceTab } from "../workspace/types"
 import type { PlotState } from "./types"
@@ -452,6 +465,14 @@ export function migrate(persistedState: unknown): PlotState {
 
   // v43: wikiCollections (wiki article staging area)
   if (!state.wikiCollections) state.wikiCollections = {}
+
+  // v44: Remove deprecated LayoutMode + Research mode + WorkspaceMode (zen)
+  // Remove deprecated fields
+  delete state.researchPreset
+  delete state._preFocusLayoutMode
+  delete state.layoutMode
+  delete state.workspaceMode
+  delete state._preZenWorkspaceMode
 
   return state as unknown as PlotState
 }

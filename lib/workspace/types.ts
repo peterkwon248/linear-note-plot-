@@ -56,16 +56,6 @@ export type WorkspacePreset =
   | "list-editor"
   | "editor-only"
   | "dual-editor"
-  | "research"
-
-/** Sub-preset layouts for Research mode */
-export type ResearchPreset =
-  | "two-cols"
-  | "three-cols"
-  | "two-rows"
-  | "left-right2"
-  | "left2-right"
-  | "grid-2x2"
 
 /* ── Helpers ───────────────────────────────────────────── */
 

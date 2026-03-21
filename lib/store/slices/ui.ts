@@ -1,8 +1,5 @@
-import type { Note, ActiveView, LayoutMode, WorkspaceMode } from "../../types"
+import type { Note, ActiveView } from "../../types"
 import type { ViewState, ViewContextKey } from "../../view-engine/types"
-import type { ResearchPreset } from "../../workspace/types"
-import { layoutModeToPreset, buildResearchPreset } from "../../workspace/presets"
-import { getAllLeaves, findFirstEditorLeaf } from "../../workspace/tree-utils"
 import { now, type AppendEventFn } from "../helpers"
 import { getActiveRoute } from "../../table-route"
 
@@ -63,22 +60,7 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
         const index = state.navigationIndex as number
         // At index 0 with an open note → close editor (return to table/view)
         if (index <= 0 && state.selectedNoteId) {
-          const updates: Record<string, unknown> = { selectedNoteId: null, navigationIndex: -1 }
-          // If in focus mode, switch to list mode so user sees the note list
-          if (state.layoutMode === "focus") {
-            updates.layoutMode = "list"
-            updates._preFocusLayoutMode = null
-            updates.sidebarCollapsed = false
-            updates.detailsOpen = false
-          }
-          // If in zen workspace mode, exit to default
-          if (state.workspaceMode === "zen") {
-            updates.workspaceMode = "default"
-            updates._preZenWorkspaceMode = null
-            updates.sidebarCollapsed = false
-            updates.detailsOpen = false
-          }
-          return updates
+          return { selectedNoteId: null, navigationIndex: -1 }
         }
         if (index <= 0) return state
         const newIndex = index - 1
@@ -120,108 +102,6 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     setShortcutOverlayOpen: (open: boolean) => set({ shortcutOverlayOpen: open }),
     setDetailsOpen: (open: boolean) => set({ detailsOpen: open }),
     toggleDetailsOpen: () => set((s: any) => ({ detailsOpen: !s.detailsOpen })),
-
-    // Layout Mode
-    setLayoutMode: (mode: LayoutMode) => {
-      set((state: any) => {
-        const current = state.layoutMode as LayoutMode
-        const updates: Record<string, unknown> = { layoutMode: mode }
-
-        if (mode === "focus" && current !== "focus") {
-          // Save current mode before entering focus
-          updates._preFocusLayoutMode = current
-          updates.sidebarCollapsed = true
-          updates.sidebarPeek = false
-          updates.detailsOpen = false
-        } else if (current === "focus" && mode !== "focus") {
-          // Leaving focus — restore sidebar and details
-          updates._preFocusLayoutMode = null
-          updates.sidebarCollapsed = false
-          updates.detailsOpen = true
-        }
-
-        if (mode === "list") {
-          // List mode: show note list only, deselect note, restore sidebar
-          updates.selectedNoteId = null
-          updates.sidebarCollapsed = false
-          updates.detailsOpen = false
-          updates._preFocusLayoutMode = null
-        }
-
-        if (mode === "three-column") {
-          // Force sidebar open in three-column
-          updates.sidebarCollapsed = false
-          updates.sidebarPeek = false
-        }
-
-        return updates
-      })
-
-      // For "split" (Research) mode, use the research sub-preset
-      if (mode === "split") {
-        const researchPreset = (get() as any).researchPreset as ResearchPreset ?? "left-right2"
-        const newRoot = buildResearchPreset(researchPreset)
-        const leaves = getAllLeaves(newRoot)
-        const activeLeaf = findFirstEditorLeaf(newRoot) ?? leaves[0]
-        set({ workspaceRoot: newRoot, activeLeafId: activeLeaf?.id ?? null })
-      } else {
-        // Rebuild workspace tree to match the new layout mode
-        const preset = layoutModeToPreset(mode)
-        get().applyPreset(preset)
-      }
-    },
-
-    // Research sub-preset
-    setResearchPreset: (preset: ResearchPreset) => {
-      set({ researchPreset: preset })
-      const newRoot = buildResearchPreset(preset)
-      const leaves = getAllLeaves(newRoot)
-      const activeLeaf = findFirstEditorLeaf(newRoot) ?? leaves[0]
-      set({ workspaceRoot: newRoot, activeLeafId: activeLeaf?.id ?? null, layoutMode: "split" as LayoutMode, workspaceMode: "research" as WorkspaceMode })
-    },
-
-    // WorkspaceMode — zen/research/default with auto-collapse
-    setWorkspaceMode: (mode: WorkspaceMode) => {
-      const state = get()
-      const current = state.workspaceMode as WorkspaceMode
-
-      if (mode === current) return
-
-      // ── Leaving zen: restore sidebar & details ──
-      if (current === "zen" && mode !== "zen") {
-        set({
-          sidebarCollapsed: false,
-          detailsOpen: true,
-          _preZenWorkspaceMode: null,
-        })
-      }
-
-      if (mode === "zen") {
-        // Save current mode before entering zen (for potential restore)
-        set({
-          workspaceMode: "zen",
-          _preZenWorkspaceMode: current,
-          sidebarCollapsed: true,
-          sidebarPeek: false,
-          detailsOpen: false,
-        })
-        get().applyPreset("focus")
-      } else if (mode === "research") {
-        set({ workspaceMode: "research" })
-        const researchPreset = (state.researchPreset as ResearchPreset) ?? "left-right2"
-        const newRoot = buildResearchPreset(researchPreset)
-        const leaves = getAllLeaves(newRoot)
-        const activeLeaf = findFirstEditorLeaf(newRoot) ?? leaves[0]
-        set({ workspaceRoot: newRoot, activeLeafId: activeLeaf?.id ?? null })
-      } else {
-        // default
-        set({
-          workspaceMode: "default",
-          sidebarCollapsed: false,
-        })
-        get().applyPreset("list-editor")
-      }
-    },
 
     setListPaneWidth: (width: number) => set({ listPaneWidth: Math.max(200, Math.min(500, width)) }),
 

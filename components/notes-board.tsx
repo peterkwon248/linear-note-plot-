@@ -682,6 +682,7 @@ export function NotesBoard({
             activeFilters={viewState.filters}
             onToggle={handleFilterToggle}
             quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
+            onQuickFilter={(rules) => updateViewState({ filters: rules })}
           />
         }
         showDisplay

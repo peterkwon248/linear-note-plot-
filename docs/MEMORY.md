@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 17-slice Zustand store with versioned migration (currently v43)
+- **Store**: `lib/store/index.ts` — 17-slice Zustand store with versioned migration (currently v44)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -49,10 +49,17 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - view-configs 5뷰별 설정 분리
   - ViewState 확장 (subGroupBy, showThread, orderPermanentByRecency)
   - Links/Reads/Updated/Created 아이콘 구분자
-- **PR #89** (WIP): 후속 개선 — EditorToolbar hooks 수정, Board toast, Grouping 동적 연동
-  - EditorToolbar hooks 순서 에러 수정
-  - Board 드래그&드롭 toast 피드백 추가
-  - Grouping 동적 연동 (status/folder/label/template + collapse/expand)
+- **PR #89**: 후속 개선 — EditorToolbar hooks 수정, Board toast, Grouping 동적 연동
+- **PR #90** (WIP): 레이아웃 리팩토링 + List 디자인 품질 개선
+  - List/Table 컬럼 디자인 Linear 수준으로 (선 제거, 연한 헤더, 44px 행)
+  - "Order by X" 정렬 칩 (ViewHeader에 표시)
+  - ViewDistributionPanel 신규 (Linear식 우측 데이터 분포 패널)
+  - deprecated LayoutMode(6값) 완전 삭제
+  - Research 모드 + 6개 서브프리셋 삭제
+  - Zen 모드 삭제 → sidebarCollapsed + detailsOpen 독립 토글
+  - WorkspaceMode 타입 삭제, store migration v44
+  - Filter sub-panel hover 위치 동적 계산 (Linear식)
+  - Quick Filter 클릭 연동
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
@@ -82,16 +89,19 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-03-21)
+## Current Direction (as of 2026-03-22)
+
+### Key Design Decisions (추가)
+- **WorkspaceMode 삭제**: zen/research 모드 불필요. sidebarCollapsed + detailsOpen 독립 토글만으로 충분. focusMode = sidebarCollapsed && !detailsOpen (TipTapEditor에서 자동 파생)
+- **우측 사이드바 = Linear식 데이터 분포 패널**: All Overview 대체. 뷰별 탭 (Notes: Status/Folder/Tags/Labels)
+- **컬럼 헤더 클릭 정렬**: Linear처럼 "Order by X ↑/↓" 칩 표시
+- **Filter sub-panel 위치**: hover한 카테고리 행의 y좌표에 맞춰 동적 위치
 
 ### 다음 작업 후보 (우선순위 순)
-1. **레이아웃 모드 리팩토링** — zen/research 모드를 사이드바+패널 토글 조합으로 전환 검토 (별도 세션 권장)
+1. **ViewDistributionPanel 다른 뷰 적용** — Wiki/Inbox/Graph에도 분포 패널 연결
 2. **사이드바 목업 매칭** — Graph/Wiki/Inbox 사이드바를 목업에 맞추기
 3. **커스텀 뷰 시스템** — 유저가 필터 조합으로 뷰 저장
 4. **Phosphor Icons 마이그레이션**
-5. **사이드바 목업 매칭** — Graph/Wiki/Inbox 사이드바를 목업에 맞추기
-6. **커스텀 뷰 시스템** — 유저가 필터 조합으로 뷰 저장
-7. **Phosphor Icons 마이그레이션**
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정
