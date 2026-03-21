@@ -99,7 +99,7 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
 /* ── Virtual item type ─────────────────────────────────── */
 
 type VirtualItem =
-  | { type: "header"; label: string; count: number }
+  | { type: "header"; label: string; count: number; groupKey: string; groupBy: GroupBy }
   | { type: "note"; note: Note }
 
 /* ── Header cell ───────────────────────────────────────── */
@@ -324,6 +324,17 @@ export function NotesTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const lastClickedRef = useRef<number | null>(null)
 
+  // ── Group collapse state ──
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  const toggleGroupCollapse = useCallback((groupKey: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(groupKey)) next.delete(groupKey)
+      else next.add(groupKey)
+      return next
+    })
+  }, [])
+
   // Drag selection
   const [dragRect, setDragRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   const dragStartRef = useRef<{ x: number; y: number; scrollTop: number } | null>(null)
@@ -331,6 +342,9 @@ export function NotesTable({
 
   // Clear selection on tab change
   useEffect(() => { setSelectedIds(new Set()) }, [effectiveTab])
+
+  // Clear collapsed groups when groupBy changes
+  useEffect(() => { setCollapsedGroups(new Set()) }, [viewState.groupBy])
 
   // ESC to clear selection, Ctrl+A to select all
   useEffect(() => {
@@ -504,13 +518,15 @@ export function NotesTable({
     const items: VirtualItem[] = []
     for (const group of groups) {
       if (group.notes.length === 0 && !viewState.showEmptyGroups) continue
-      items.push({ type: "header", label: group.label, count: group.notes.length })
-      for (const note of group.notes) {
-        items.push({ type: "note", note })
+      items.push({ type: "header", label: group.label, count: group.notes.length, groupKey: group.key, groupBy: viewState.groupBy })
+      if (!collapsedGroups.has(group.key)) {
+        for (const note of group.notes) {
+          items.push({ type: "note", note })
+        }
       }
     }
     return items
-  }, [flatNotes, groups, viewState.groupBy, viewState.showEmptyGroups])
+  }, [flatNotes, groups, viewState.groupBy, viewState.showEmptyGroups, collapsedGroups])
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -809,14 +825,27 @@ export function NotesTable({
                       >
                         {item.type === "header" ? (
                           viewState.viewMode === "list" ? (
-                          <div className="flex items-center gap-2.5 px-5 py-2 border-b border-border/50">
-                            <StatusShapeIcon status={item.label.toLowerCase() as NoteStatus} size={8} />
-                            <span className="text-[12px] font-semibold text-foreground/80 uppercase tracking-wider">{item.label}</span>
+                          <div
+                            className="flex items-center gap-2.5 px-5 py-2 border-b border-border/50 cursor-pointer select-none hover:bg-secondary/20 transition-colors"
+                            onClick={() => toggleGroupCollapse(item.groupKey)}
+                          >
+                            <ChevronDown className={`h-3 w-3 text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
+                            <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
+                            <span className="text-[12px] font-semibold text-foreground/80 tracking-wider">
+                              {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
+                            </span>
                             <span className="text-[11px] text-muted-foreground/50 tabular-nums">{item.count}</span>
                           </div>
                           ) : (
-                          <div className="flex items-center gap-2 px-5 py-3 bg-secondary/30 border-b border-border">
-                            <span className="text-sm font-semibold text-foreground">{item.label}</span>
+                          <div
+                            className="flex items-center gap-2 px-5 py-3 bg-secondary/30 border-b border-border cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                            onClick={() => toggleGroupCollapse(item.groupKey)}
+                          >
+                            <ChevronDown className={`h-3 w-3 text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
+                            <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
+                            <span className="text-sm font-semibold text-foreground">
+                              {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
+                            </span>
                             <span className="text-xs text-muted-foreground">{item.count}</span>
                           </div>
                           )
@@ -1004,6 +1033,44 @@ function StatusShapeIcon({ status, size = 8 }: { status: NoteStatus; size?: numb
       <circle cx="4" cy="4" r="3.5" fill={color} />
     </svg>
   )
+}
+
+/** Resolve display label for group headers (folder/label use IDs as keys) */
+function resolveGroupLabel(groupBy: GroupBy, groupKey: string, fallback: string, folders: Folder[], labels: Label[]): string {
+  if (groupBy === "folder" && groupKey !== "_no_folder") {
+    return folders.find((f) => f.id === groupKey)?.name ?? fallback
+  }
+  if (groupBy === "label" && groupKey !== "_no_label") {
+    return labels.find((l) => l.id === groupKey)?.name ?? fallback
+  }
+  return fallback
+}
+
+/** Dynamic group header icon based on groupBy type */
+function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
+  groupBy: GroupBy
+  groupKey: string
+  label: string
+  folders: Folder[]
+  labels: Label[]
+}) {
+  switch (groupBy) {
+    case "status":
+      return <StatusShapeIcon status={label.toLowerCase() as NoteStatus} size={8} />
+    case "folder":
+      return <FolderOpen className="h-3.5 w-3.5 text-muted-foreground/70" strokeWidth={1.5} />
+    case "label": {
+      const labelColor = labels.find((l) => l.id === groupKey)?.color
+      return labelColor ? (
+        <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: labelColor }} />
+      ) : (
+        <span className="h-2 w-2 rounded-full shrink-0 bg-muted-foreground/30" />
+      )
+    }
+    default:
+      // priority, date, triage, linkCount — text-only, no special icon
+      return null
+  }
 }
 
 function NoteRowInner({

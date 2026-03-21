@@ -607,6 +607,8 @@ export function NotesBoard({
     const fieldUpdate = getFieldUpdate(viewState.groupBy, targetKey)
     if (!fieldUpdate) return
 
+    const targetGroup = groups.find(g => g.key === targetKey)
+
     // Multi-card or single-card update
     const idsToUpdate = selectedIds.has(noteId) && selectedIds.size > 1
       ? Array.from(selectedIds)
@@ -614,12 +616,15 @@ export function NotesBoard({
 
     if (idsToUpdate.length > 1) {
       batchUpdateNotes(idsToUpdate, fieldUpdate)
+      toast.success(`Moved ${idsToUpdate.length} notes to ${targetGroup?.label ?? targetKey}`)
     } else {
       updateNote(idsToUpdate[0], fieldUpdate)
+      const draggedNote = notes.find(n => n.id === idsToUpdate[0])
+      toast.success(`Moved "${draggedNote?.title ?? "Note"}" to ${targetGroup?.label ?? targetKey}`)
     }
 
     setSelectedIds(new Set())
-  }, [groups, viewState.groupBy, updateNote, batchUpdateNotes, selectedIds])
+  }, [groups, viewState.groupBy, updateNote, batchUpdateNotes, selectedIds, notes])
 
   const handleCardSelect = useCallback((noteId: string, e: React.MouseEvent) => {
     setSelectedIds((prev) => {

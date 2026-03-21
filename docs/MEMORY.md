@@ -39,7 +39,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #84**: Architecture Redesign v2 Phase 1~5 완료
 - **PR #85**: Phase 6 Wiki Evolution + 후속 작업 — auto-enroll, korean-utils, Graph 노드 형태, Wiki Overview 재구조, Calendar 승격, 위키 강등, Display 정리
 - **PR #86**: Phase 7 Wiki Collection + Graph Insights + docs 정리
-- **PR #87** (WIP): Filter & Display 시스템 v2 — Linear 철학 적용
+- **PR #88**: Filter & Display 시스템 v2 — Linear 철학 적용
   - FilterPanel 2단계 nested (hover 기반 side-by-side)
   - DisplayPanel 2모드 (List/Board, Table 제거)
   - List 모드 Linear식 렌더링 (status shape icon + 제목 + 칩 + 시간)
@@ -49,6 +49,10 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - view-configs 5뷰별 설정 분리
   - ViewState 확장 (subGroupBy, showThread, orderPermanentByRecency)
   - Links/Reads/Updated/Created 아이콘 구분자
+- **PR #89** (WIP): 후속 개선 — EditorToolbar hooks 수정, Board toast, Grouping 동적 연동
+  - EditorToolbar hooks 순서 에러 수정
+  - Board 드래그&드롭 toast 피드백 추가
+  - Grouping 동적 연동 (status/folder/label/template + collapse/expand)
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
@@ -73,16 +77,18 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Show thread = Show sub-issues 매핑**: 노트앱에서 Linear의 sub-issue → Thread로 대체
 - **Order permanent by recency**: 최근 Permanent 승격 노트 우선 정렬
 - **Sub-grouping 필수**: 1만개+ 노트 스케일 기준 설계, collapse/expand
-- **뷰별 Display 분리**: Notes=풀스펙(3모드), Wiki=3모드, Inbox=List only, Graph/Insights=모드 없음
+- **뷰별 Display 분리**: Notes=풀스펙(2모드 List/Board), Wiki=2모드, Inbox=List only, Graph/Insights=모드 없음
+- **Priority 삭제**: 노트앱에서 불필요 — Pin + Labels로 충분. 모든 뷰에서 무의미
+- **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
 ## Current Direction (as of 2026-03-21)
 
 ### 다음 작업 후보 (우선순위 순)
-1. **Board 드래그&드롭** — 칸반 카드 드래그로 status 변경 (dnd-kit 이미 있음)
-2. **Grouping/SubGrouping 실제 연동** — Display에서 변경 시 List/Board 렌더링에 반영
-3. **EditorToolbar Hooks 에러 수정** — React hooks 순서 에러 (기존 버그)
-4. **레이아웃 모드 리팩토링** — zen/research 모드를 사이드바+패널 토글 조합으로 전환 검토
+1. **레이아웃 모드 리팩토링** — zen/research 모드를 사이드바+패널 토글 조합으로 전환 검토 (별도 세션 권장)
+2. **사이드바 목업 매칭** — Graph/Wiki/Inbox 사이드바를 목업에 맞추기
+3. **커스텀 뷰 시스템** — 유저가 필터 조합으로 뷰 저장
+4. **Phosphor Icons 마이그레이션**
 5. **사이드바 목업 매칭** — Graph/Wiki/Inbox 사이드바를 목업에 맞추기
 6. **커스텀 뷰 시스템** — 유저가 필터 조합으로 뷰 저장
 7. **Phosphor Icons 마이그레이션**
