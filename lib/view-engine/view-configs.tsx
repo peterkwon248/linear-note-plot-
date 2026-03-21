@@ -65,12 +65,6 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "capture", label: "Capture", color: "#f5a623" },
       { key: "permanent", label: "Permanent", color: "#45d483" },
     ]},
-    { key: "priority", label: "Priority", icon: PriorityIcon, values: [
-      { key: "urgent", label: "Urgent", color: "#e5484d" },
-      { key: "high", label: "High", color: "#f5a623" },
-      { key: "medium", label: "Medium", color: "rgba(255,255,255,0.50)" },
-      { key: "low", label: "Low", color: "rgba(255,255,255,0.32)" },
-    ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
@@ -113,7 +107,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   displayConfig: {
-    supportedModes: ["list", "board", "table"],
+    supportedModes: ["list", "board"],
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },
@@ -124,7 +118,6 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     groupingOptions: [
       { value: "none", label: "No grouping" },
       { value: "status", label: "Status" },
-      { value: "priority", label: "Priority" },
       { value: "folder", label: "Folder" },
       { value: "label", label: "Label" },
     ],
@@ -139,7 +132,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "status", label: "Status", icon: StatusIcon },
       { key: "folder", label: "Folder", icon: FolderIcon },
       { key: "tags", label: "Tags", icon: TagIcon },
-      { key: "priority", label: "Priority", icon: PriorityIcon },
+      { key: "links", label: "Links", icon: LinkIcon },
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
       { key: "createdAt", label: "Created", icon: CalendarIcon },
       { key: "reads", label: "Word count", icon: ContentIcon },
@@ -166,7 +159,7 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
   ],
   quickFilters: [],
   displayConfig: {
-    supportedModes: ["list", "board", "table"],
+    supportedModes: ["list", "board"],
     orderingOptions: [
       { value: "links", label: "Most linked" },
       { value: "updatedAt", label: "Updated" },

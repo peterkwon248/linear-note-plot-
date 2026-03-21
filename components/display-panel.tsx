@@ -31,7 +31,7 @@ interface DisplayPanelProps {
   /** Toggle states for view-specific toggles (showArchived, showTrashed, etc.) */
   toggleStates?: Record<string, boolean>
   onToggleChange?: (key: string, value: boolean) => void
-  /** Show List/Board/Table view mode switcher */
+  /** Show List/Board view mode switcher */
   showViewMode?: boolean
 }
 
@@ -50,15 +50,6 @@ const BoardIcon = () => (
     <rect x="1.5" y="2" width="4" height="12" rx="1" />
     <rect x="6" y="2" width="4" height="9" rx="1" />
     <rect x="10.5" y="2" width="4" height="7" rx="1" />
-  </svg>
-)
-
-const TableIcon = () => (
-  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="2" width="12" height="12" rx="1.5" />
-    <line x1="2" y1="6" x2="14" y2="6" />
-    <line x1="2" y1="10" x2="14" y2="10" />
-    <line x1="6" y1="2" x2="6" y2="14" />
   </svg>
 )
 
@@ -202,12 +193,10 @@ function ChipDropdown<T extends string>({
 const MODE_DEFS: { mode: ViewMode; icon: () => ReactNode; label: string }[] = [
   { mode: "list", icon: ListIcon, label: "List" },
   { mode: "board", icon: BoardIcon, label: "Board" },
-  { mode: "table", icon: TableIcon, label: "Table" },
 ]
 
-function resolveViewMode(viewMode: ViewMode): "list" | "board" | "table" {
+function resolveViewMode(viewMode: ViewMode): "list" | "board" {
   if (viewMode === "board") return "board"
-  if (viewMode === "table") return "table"
   return "list"
 }
 
@@ -221,10 +210,9 @@ export function DisplayPanel({
   onToggleChange,
   showViewMode,
 }: DisplayPanelProps) {
-  const supportedModes = config.supportedModes ?? (["list", "board", "table"] as ViewMode[])
+  const supportedModes = config.supportedModes ?? (["list", "board"] as ViewMode[])
   const currentMode = resolveViewMode(viewState.viewMode)
   const isBoard = currentMode === "board"
-  const isTable = currentMode === "table"
 
   /* ── Grouping options ── */
   const groupingOptions = config.groupingOptions ?? []
@@ -233,9 +221,7 @@ export function DisplayPanel({
   /* ── Mode-specific section label ── */
   const optionsSectionLabel = isBoard
     ? "Board options"
-    : isTable
-      ? "Table options"
-      : "List options"
+    : "List options"
 
   function handlePropertyToggle(key: string) {
     const current = viewState.visibleColumns
@@ -247,7 +233,7 @@ export function DisplayPanel({
 
   return (
     <div className="flex flex-col gap-3 p-3">
-      {/* ── Section 0: View Mode (List / Board / Table) ── */}
+      {/* ── Section 0: View Mode (List / Board) ── */}
       {showViewMode && (
         <>
           <div className="flex rounded-lg border border-border/80 bg-[#131315] p-0.5">
@@ -306,7 +292,7 @@ export function DisplayPanel({
               </div>
             </>
           ) : (
-            /* List / Table: Grouping + optional Sub-grouping */
+            /* List: Grouping + optional Sub-grouping */
             <>
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-muted-foreground">Grouping</span>

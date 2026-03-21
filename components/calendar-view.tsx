@@ -602,9 +602,9 @@ export function CalendarView({
             <PopoverContent className="w-[280px] p-0" align="end">
               <div className="flex gap-1 px-3 py-2.5">
                 <button
-                  onClick={() => setViewMode("table")}
+                  onClick={() => setViewMode("list")}
                   className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-note font-medium transition-colors ${
-                    viewMode === "table" || viewMode === "list"
+                    viewMode === "list"
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                   }`}

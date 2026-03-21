@@ -10,7 +10,7 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   groupBy: "none",
   subGroupBy: "none",
   filters: [],
-  visibleColumns: ["title", "status", "folder", "links", "reads", "priority", "updatedAt", "createdAt"],
+  visibleColumns: ["title", "status", "folder", "links", "reads", "updatedAt", "createdAt"],
   showEmptyGroups: false,
   orderPermanentByRecency: false,
   showThread: false,
@@ -27,7 +27,7 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   folder:    { viewMode: "list", sortField: "updatedAt" },
   tag:       { viewMode: "list", sortField: "updatedAt" },
   label:     { viewMode: "list", sortField: "updatedAt" },
-  savedView: { viewMode: "table", sortField: "updatedAt", groupBy: "none" },
+  savedView: { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
 }
 
 /** Build a ViewState for a specific context, merging defaults */
