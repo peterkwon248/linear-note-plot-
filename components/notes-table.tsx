@@ -22,8 +22,6 @@ import {
   Clock,
   Merge,
   Minus,
-  ChevronsUp,
-  ChevronUp,
   FolderOpen,
   RotateCcw,
   Globe,
@@ -51,11 +49,11 @@ import { usePlotStore } from "@/lib/store"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
-import type { ViewContextKey, SortField, SortDirection, GroupBy, FilterRule, NoteGroup } from "@/lib/view-engine/types"
-import { StatusDropdown, PriorityDropdown, StatusBadge } from "@/components/note-fields"
+import type { ViewContextKey, ViewMode, SortField, SortDirection, GroupBy, FilterRule, NoteGroup } from "@/lib/view-engine/types"
+import { StatusDropdown, StatusBadge } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
-import type { Note, NoteStatus, NotePriority, Folder, NoteSource, Tag, Label, NoteTemplate } from "@/lib/types"
+import type { Note, NoteStatus, Folder, NoteSource, Tag, Label, NoteTemplate } from "@/lib/types"
 import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterChipBar } from "@/components/filter-bar"
@@ -94,7 +92,6 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
   { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links", minWidth: 640 },
   { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
-  { id: "priority", label: "Priority", width: "w-[72px] shrink-0", align: "text-center", sortField: "priority", minWidth: 480 },
   { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
   { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt", minWidth: 800 },
 ]
@@ -446,9 +443,6 @@ export function NotesTable({
       if (cat.key === "status") {
         return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && !n.archived && n.status === v.key).length })) }
       }
-      if (cat.key === "priority") {
-        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && !n.archived && n.priority === v.key).length })) }
-      }
       return cat
     })
   }, [folders, labels, tags, notes])
@@ -523,7 +517,7 @@ export function NotesTable({
   const rowVirtualizer = useVirtualizer({
     count: virtualItems.length,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: (i) => virtualItems[i].type === "header" ? 36 : 41,
+    estimateSize: (i) => virtualItems[i].type === "header" ? 36 : (viewState.viewMode === "list" ? 40 : 41),
     overscan: 5,
   })
 
@@ -748,7 +742,8 @@ export function NotesTable({
               </div>
             ) : (
               <div ref={scrollContainerRef} onMouseDown={handleDragMouseDown} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
-                {/* Column headers */}
+                {/* Column headers (table mode — removed, never renders) */}
+                {(viewState.viewMode as string) === "table" && (
                 <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
                   <div className="w-8 shrink-0 flex items-center justify-center mr-0.5">
                     <div
@@ -788,6 +783,7 @@ export function NotesTable({
                     </div>
                   ))}
                 </div>
+                )}
 
                 {/* Virtualized rows */}
                 <div
@@ -812,10 +808,18 @@ export function NotesTable({
                         }}
                       >
                         {item.type === "header" ? (
+                          viewState.viewMode === "list" ? (
+                          <div className="flex items-center gap-2.5 px-5 py-2 border-b border-border/50">
+                            <StatusShapeIcon status={item.label.toLowerCase() as NoteStatus} size={8} />
+                            <span className="text-[12px] font-semibold text-foreground/80 uppercase tracking-wider">{item.label}</span>
+                            <span className="text-[11px] text-muted-foreground/50 tabular-nums">{item.count}</span>
+                          </div>
+                          ) : (
                           <div className="flex items-center gap-2 px-5 py-3 bg-secondary/30 border-b border-border">
                             <span className="text-sm font-semibold text-foreground">{item.label}</span>
                             <span className="text-xs text-muted-foreground">{item.count}</span>
                           </div>
+                          )
                         ) : (
                           <NoteRow
                             note={item.note}
@@ -826,6 +830,7 @@ export function NotesTable({
                             selectionActive={selectedIds.size > 0}
                             visibleColumns={effectiveVisibleCols}
                             isCompact={isCompact}
+                            viewMode={viewState.viewMode}
                             onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
                             onClick={(e: React.MouseEvent) => {
                               const flatIndex = flatNotes.findIndex((n) => n.id === item.note.id)
@@ -833,7 +838,6 @@ export function NotesTable({
                             }}
                             onDoubleClick={() => openNote(item.note.id)}
                             onStatus={(s) => updateNote(item.note.id, { status: s })}
-                            onPriority={(p) => updateNote(item.note.id, { priority: p })}
                             onSetFolder={(folderId) => updateNote(item.note.id, { folderId })}
                             onRemoveFolder={() => updateNote(item.note.id, { folderId: null })}
                             onKeep={() => { triageKeep(item.note.id); pushUndo("Triage to Capture", () => moveBackToInbox(item.note.id)) }}
@@ -937,12 +941,12 @@ interface NoteRowProps {
   isSelected?: boolean
   selectionActive?: boolean
   isCompact?: boolean
+  viewMode?: ViewMode
   visibleColumns: string[]
   onOpen: () => void
   onClick?: (e: React.MouseEvent) => void
   onDoubleClick?: () => void
   onStatus: (s: NoteStatus) => void
-  onPriority: (p: NotePriority) => void
   onSetFolder: (folderId: string) => void
   onRemoveFolder: () => void
   onKeep: () => void
@@ -968,6 +972,40 @@ function SourceIcon({ source }: { source: NoteSource }) {
   return <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={1.5} />
 }
 
+const STATUS_DOT_COLORS: Record<NoteStatus, string> = {
+  inbox: "rgba(255,255,255,0.32)",
+  capture: "#f5a623",
+  permanent: "#45d483",
+}
+
+/** Status icon with shape differentiation (Linear-style) */
+function StatusShapeIcon({ status, size = 8 }: { status: NoteStatus; size?: number }) {
+  const color = STATUS_DOT_COLORS[status]
+  if (status === "inbox") {
+    // ○ Empty circle — not yet processed
+    return (
+      <svg width={size} height={size} viewBox="0 0 8 8" className="shrink-0">
+        <circle cx="4" cy="4" r="3" fill="none" stroke={color} strokeWidth="1.5" />
+      </svg>
+    )
+  }
+  if (status === "capture") {
+    // ◐ Half circle — in progress
+    return (
+      <svg width={size} height={size} viewBox="0 0 8 8" className="shrink-0">
+        <circle cx="4" cy="4" r="3" fill="none" stroke={color} strokeWidth="1.5" />
+        <path d="M4 1a3 3 0 010 6z" fill={color} />
+      </svg>
+    )
+  }
+  // ● Filled circle — permanent
+  return (
+    <svg width={size} height={size} viewBox="0 0 8 8" className="shrink-0">
+      <circle cx="4" cy="4" r="3.5" fill={color} />
+    </svg>
+  )
+}
+
 function NoteRowInner({
   note,
   folders,
@@ -976,12 +1014,12 @@ function NoteRowInner({
   isSelected,
   selectionActive,
   isCompact,
+  viewMode,
   visibleColumns,
   onOpen,
   onClick,
   onDoubleClick,
   onStatus,
-  onPriority,
   onSetFolder,
   onRemoveFolder,
   onKeep,
@@ -996,6 +1034,204 @@ function NoteRowInner({
 }: NoteRowProps) {
   const visibleCols = visibleColumns
   const labels = usePlotStore((s) => s.labels)
+
+  /* ── List mode rendering ── */
+  if (viewMode === "list") {
+    const label = note.labelId ? labels.find((l: { id: string; name: string; color: string }) => l.id === note.labelId) : null
+    const folderName = note.folderId ? folders.find((f: Folder) => f.id === note.folderId)?.name : null
+    const statusColor = STATUS_DOT_COLORS[note.status] ?? "rgba(255,255,255,0.32)"
+
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div
+            draggable
+            onDragStart={(e) => setNoteDragData(e, note.id)}
+            className={`group flex items-center gap-3 px-5 py-2.5 cursor-pointer transition-colors ${
+              isSelected
+                ? "bg-accent/5"
+                : isActive
+                  ? "bg-accent/8 border-l-2 border-l-accent"
+                  : "hover:bg-secondary/20"
+            }`}
+            onClick={onClick ?? onOpen}
+            onDoubleClick={onDoubleClick}
+          >
+            {/* Checkbox */}
+            <div
+              data-checkbox
+              className={`shrink-0 flex items-center justify-center cursor-pointer rounded w-6 h-6 ${
+                selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
+              }`}
+              onClick={(e) => {
+                e.stopPropagation()
+                const syntheticEvent = { ...e, metaKey: true, ctrlKey: true, shiftKey: false } as React.MouseEvent
+                onClick?.(syntheticEvent)
+              }}
+            >
+              <div
+                className={`rounded border flex items-center justify-center transition-colors pointer-events-none h-3.5 w-3.5 ${
+                  isSelected ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                }`}
+              >
+                {isSelected && <Check className="h-2 w-2 text-accent-foreground" />}
+              </div>
+            </div>
+
+            {/* Status icon (shape-differentiated) */}
+            {visibleCols.includes("status") && (
+              <StatusShapeIcon status={note.status} size={8} />
+            )}
+
+            {/* Title */}
+            <span className="text-[13px] font-medium text-foreground truncate flex-1">{note.title || "Untitled"}</span>
+
+            {/* Label badge (always visible — part of note identity) */}
+            {label ? (
+              <span
+                className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium"
+                style={{ backgroundColor: `${label.color}18`, color: label.color }}
+              >
+                {label.name}
+              </span>
+            ) : (
+              <span className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.06] text-muted-foreground shrink-0">
+                Memo
+              </span>
+            )}
+
+            {/* Tags (max 2) */}
+            {visibleCols.includes("tags") && note.tags?.slice(0, 2).map((tagId) => {
+              const tagStore = usePlotStore.getState().tags
+              const tag = tagStore.find((t: Tag) => t.id === tagId)
+              return tag ? (
+                <span key={tagId} className="text-[11px] px-1.5 py-0.5 rounded border border-border/60 text-muted-foreground/60 shrink-0">
+                  {tag.name}
+                </span>
+              ) : null
+            })}
+
+            {/* Folder */}
+            {visibleCols.includes("folder") && folderName && (
+              <span className="text-[12px] text-muted-foreground/50 shrink-0">{folderName}</span>
+            )}
+
+            {/* Links */}
+            {visibleCols.includes("links") && links > 0 && (
+              <span className="flex items-center gap-0.5 text-[12px] text-muted-foreground/40 tabular-nums shrink-0">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                  <path d="M6.7 8.7a3.3 3.3 0 005 .4l2-2a3.3 3.3 0 00-4.7-4.7L8.4 3"/>
+                  <path d="M9.3 7.3a3.3 3.3 0 00-5-.4l-2 2a3.3 3.3 0 004.7 4.7l.6-.6"/>
+                </svg>
+                {links}
+              </span>
+            )}
+
+            {/* Reads */}
+            {visibleCols.includes("reads") && note.reads > 0 && (
+              <span className="flex items-center gap-0.5 text-[12px] text-muted-foreground/40 tabular-nums shrink-0">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                  <path d="M1 8s2.7-5 7-5 7 5 7 5-2.7 5-7 5-7-5-7-5z"/>
+                  <circle cx="8" cy="8" r="2"/>
+                </svg>
+                {note.reads}
+              </span>
+            )}
+
+            {/* Updated (relative time) */}
+            {visibleCols.includes("updatedAt") && (
+              <span className="flex items-center gap-0.5 text-[12px] text-muted-foreground/40 tabular-nums shrink-0 text-right">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 shrink-0">
+                  <circle cx="8" cy="8" r="6"/>
+                  <polyline points="8 4.5 8 8 10.5 9.5"/>
+                </svg>
+                {shortRelative(note.updatedAt)}
+              </span>
+            )}
+
+            {/* Created (absolute date) */}
+            {visibleCols.includes("createdAt") && (
+              <span className="flex items-center gap-0.5 text-[12px] text-muted-foreground/40 tabular-nums shrink-0 text-right">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 shrink-0">
+                  <rect x="2" y="3" width="12" height="11" rx="1.5"/>
+                  <line x1="2" y1="7" x2="14" y2="7"/>
+                  <line x1="5.3" y1="1.3" x2="5.3" y2="4.7"/>
+                  <line x1="10.7" y1="1.3" x2="10.7" y2="4.7"/>
+                </svg>
+                {absDate(note.createdAt)}
+              </span>
+            )}
+          </div>
+        </ContextMenuTrigger>
+
+        <ContextMenuContent className="w-52">
+          {/* Inbox actions */}
+          {note.status === "inbox" && note.triageStatus !== "trashed" && (
+            <>
+              <ContextMenuItem onClick={onKeep} className="text-sm">
+                <Check className="h-4 w-4 mr-2 text-accent" />
+                Done
+              </ContextMenuItem>
+              <ContextMenuSub>
+                <ContextMenuSubTrigger className="text-sm">
+                  <AlarmClock className="h-4 w-4 mr-2 text-muted-foreground" />
+                  Snooze
+                </ContextMenuSubTrigger>
+                <ContextMenuSubContent className="w-44">
+                  <ContextMenuItem onClick={() => onSnooze("3h")} className="text-sm">3 hours</ContextMenuItem>
+                  <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-sm">Tomorrow 10:00 AM</ContextMenuItem>
+                  <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-sm">In 3 days</ContextMenuItem>
+                  <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-sm">Next week 10:00 AM</ContextMenuItem>
+                  <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-sm">In 1 week</ContextMenuItem>
+                </ContextMenuSubContent>
+              </ContextMenuSub>
+              <ContextMenuItem onClick={onTrash} className="text-sm text-destructive focus:text-destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Trash
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+            </>
+          )}
+          {note.status === "capture" && (
+            <>
+              <ContextMenuItem onClick={onPromote} className="text-sm">
+                <ArrowUpRight className="h-4 w-4 mr-2 text-chart-5" />
+                Promote to Permanent
+              </ContextMenuItem>
+              <ContextMenuItem onClick={onMoveBack} className="text-sm">
+                <Inbox className="h-4 w-4 mr-2 text-muted-foreground" />
+                Back to Inbox
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+            </>
+          )}
+          {note.status === "permanent" && (
+            <>
+              <ContextMenuItem onClick={onDemote} className="text-sm">
+                <ArrowDownLeft className="h-4 w-4 mr-2 text-muted-foreground" />
+                Demote to Capture
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+            </>
+          )}
+          <ContextMenuItem onClick={onOpen} className="text-sm">
+            <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+            Open
+          </ContextMenuItem>
+          <ContextMenuItem onClick={onMergeWith} className="text-sm">
+            <Merge className="h-4 w-4 mr-2 text-muted-foreground" />
+            Merge with...
+          </ContextMenuItem>
+          <ContextMenuItem onClick={onLinkWith} className="text-sm">
+            <Link2 className="h-4 w-4 mr-2 text-muted-foreground" />
+            Link to...
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    )
+  }
+
+  /* ── Table mode rendering (existing) ── */
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -1121,17 +1357,6 @@ function NoteRowInner({
           <span className={`tabular-nums ${isCompact ? "text-note" : "text-ui"} ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
             {note.reads}
           </span>
-        </div>
-      )}
-
-      {/* Priority */}
-      {visibleCols.includes("priority") && (
-        <div className="w-[72px] shrink-0 flex justify-center">
-          {note.priority === "urgent" && <ChevronsUp className="h-4 w-4 text-red-400" />}
-          {note.priority === "high" && <ChevronUp className="h-4 w-4 text-orange-400" />}
-          {note.priority === "medium" && <Minus className="h-4 w-4 text-yellow-400" />}
-          {note.priority === "low" && <ChevronDown className="h-4 w-4 text-blue-400" />}
-          {(!note.priority || note.priority === "none") && <span className="text-sm text-muted-foreground">—</span>}
         </div>
       )}
 
@@ -1293,7 +1518,6 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.note.id === next.note.id &&
   prev.note.updatedAt === next.note.updatedAt &&
   prev.note.status === next.note.status &&
-  prev.note.priority === next.note.priority &&
   prev.note.folderId === next.note.folderId &&
   prev.note.reads === next.note.reads &&
   prev.note.title === next.note.title &&
@@ -1302,5 +1526,6 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.isSelected === next.isSelected &&
   prev.selectionActive === next.selectionActive &&
   prev.isCompact === next.isCompact &&
+  prev.viewMode === next.viewMode &&
   prev.visibleColumns === next.visibleColumns
 )

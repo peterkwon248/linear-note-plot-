@@ -39,7 +39,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #84**: Architecture Redesign v2 Phase 1~5 완료
 - **PR #85**: Phase 6 Wiki Evolution + 후속 작업 — auto-enroll, korean-utils, Graph 노드 형태, Wiki Overview 재구조, Calendar 승격, 위키 강등, Display 정리
 - **PR #86**: Phase 7 Wiki Collection + Graph Insights + docs 정리
-- **PR #87** (WIP): Filter & Display 시스템 — FilterPanel(2단계 nested), DisplayPanel(3모드 List/Board/Table), view-configs(5뷰별), ViewState 확장(subGroupBy, showThread, orderPermanentByRecency)
+- **PR #87** (WIP): Filter & Display 시스템 v2 — Linear 철학 적용
+  - FilterPanel 2단계 nested (hover 기반 side-by-side)
+  - DisplayPanel 2모드 (List/Board, Table 제거)
+  - List 모드 Linear식 렌더링 (status shape icon + 제목 + 칩 + 시간)
+  - Status 형태 차별화 (○ Inbox / ◐ Capture / ● Permanent)
+  - Priority 제거 (Pin + Labels로 대체)
+  - Grouping/Sub-grouping 드롭다운 추가
+  - view-configs 5뷰별 설정 분리
+  - ViewState 확장 (subGroupBy, showThread, orderPermanentByRecency)
+  - Links/Reads/Updated/Created 아이콘 구분자
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
@@ -58,7 +67,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Activity Bar 5-space**: Inbox / Notes / Wiki / Calendar / Graph
 - **Wiki 사이드바 = Overview 단일 진입**: stat 카드 클릭으로 드릴다운
 - **위키 강등 = 라이프사이클 역순**: complete→draft→stub, stub은 바닥(강등 없음, 삭제만)
-- **Display = List/Board/Table 3모드**: List=Linear식 깔끔, Board=칸반, Table=스프레드시트. Notion 검증 패턴.
+- **Display = List/Board 2모드**: Table 제거 — List의 Display Properties가 Table 역할 (Linear 철학). List에서 컬럼 켜면 테이블처럼 보임.
 - **Graph Health → /graph-insights 페이지로 분리**: 사이드바는 필터/컨트롤 패널
 - **Ontology → Graph 네이밍 분리**: Ontology = 엔진, Graph = 시각화
 - **Show thread = Show sub-issues 매핑**: 노트앱에서 Linear의 sub-issue → Thread로 대체
@@ -70,14 +79,13 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 ## Current Direction (as of 2026-03-21)
 
 ### 다음 작업 후보 (우선순위 순)
-1. **List 뷰 Linear식 렌더링** — `notes-table.tsx`에서 viewMode=list일 때 dot+제목+칩+시간 깔끔한 리스트 (현재 List=Table 동일 렌더링 문제)
-2. **Board 드래그&드롭** — 칸반 카드 드래그로 status 변경 (dnd-kit 이미 있음)
-3. **Grouping/SubGrouping 실제 연동** — Display에서 변경 시 테이블/보드 렌더링에 반영
-4. **사이드바 목업 매칭** — 필터 인프라 완성 후 Graph/Wiki/Inbox 사이드바를 목업에 맞추기
-3. **Phase 4-D: Context Panel** (보류) — 기존 NoteDetailPanel 진화, 급하지 않음
-4. **커스텀 뷰 시스템** — 유저가 필터 조합으로 뷰 저장
-5. **Settings always-mounted**
-6. **Phosphor Icons 마이그레이션**
+1. **Board 드래그&드롭** — 칸반 카드 드래그로 status 변경 (dnd-kit 이미 있음)
+2. **Grouping/SubGrouping 실제 연동** — Display에서 변경 시 List/Board 렌더링에 반영
+3. **EditorToolbar Hooks 에러 수정** — React hooks 순서 에러 (기존 버그)
+4. **레이아웃 모드 리팩토링** — zen/research 모드를 사이드바+패널 토글 조합으로 전환 검토
+5. **사이드바 목업 매칭** — Graph/Wiki/Inbox 사이드바를 목업에 맞추기
+6. **커스텀 뷰 시스템** — 유저가 필터 조합으로 뷰 저장
+7. **Phosphor Icons 마이그레이션**
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정

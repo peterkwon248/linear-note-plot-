@@ -289,8 +289,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
     }
   }, [editor, isVisible])
 
-  if (!editor || !editorState) return null
-
   const handleExtractAsNote = useCallback(() => {
     if (!editor) return
     const { from, to, empty } = editor.state.selection
@@ -314,17 +312,21 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   }, [editor, createNote])
 
   const handleSetLink = () => {
+    if (!editor || !editorState) return
     if (editorState.link) { editor.chain().unsetLink().run(); return }
     const url = window.prompt("Enter URL:")
     if (url) editor.chain().setLink({ href: url }).run()
   }
 
   const getActiveTextColor = (): string | null => {
+    if (!editor) return null
     const attrs = editor.getAttributes("textStyle")
     return attrs.color || null
   }
 
   const activeTextColor = getActiveTextColor()
+
+  if (!editor || !editorState) return null
 
   return (
     <div
