@@ -318,13 +318,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
     if (url) editor.chain().setLink({ href: url }).run()
   }
 
-  const getActiveTextColor = (): string | null => {
-    if (!editor) return null
-    const attrs = editor.getAttributes("textStyle")
-    return attrs.color || null
-  }
-
-  const activeTextColor = getActiveTextColor()
+  const activeTextColor = editor ? (editor.getAttributes("textStyle").color || null) : null
 
   if (!editor || !editorState) return null
 
