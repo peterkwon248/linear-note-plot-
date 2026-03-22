@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone } from "../workspace/types"
@@ -96,6 +96,9 @@ export interface PlotState {
   // ── Wiki Collections ──
   wikiCollections: Record<string, WikiCollectionItem[]>  // key = wikiNoteId
 
+  // ── Saved Views ──
+  savedViews: SavedView[]
+
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
   updateNote: (id: string, updates: Partial<Note>) => void
@@ -182,8 +185,8 @@ export interface PlotState {
   setSidebarCollapsed: (collapsed: boolean) => void
   setSidebarPeek: (peek: boolean) => void
   restoreSidebar: () => void
-  goBack: () => void
-  goForward: () => void
+  goBack: () => boolean
+  goForward: () => boolean
   setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
   setListPaneWidth: (width: number) => void
   setSidePeekNoteId: (id: string | null) => void
@@ -224,6 +227,11 @@ export interface PlotState {
   removeFromCollection: (wikiNoteId: string, itemId: string) => void
   reorderCollection: (wikiNoteId: string, itemIds: string[]) => void
   clearCollection: (wikiNoteId: string) => void
+
+  // ── Saved Views ──
+  createSavedView: (name: string, viewState?: Partial<SavedView['viewState']>, space?: SavedView['space']) => string
+  updateSavedView: (id: string, updates: Partial<SavedView>) => void
+  deleteSavedView: (id: string) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

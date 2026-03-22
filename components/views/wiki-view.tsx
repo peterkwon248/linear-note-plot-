@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
-import type { FilterRule, ViewState } from "@/lib/view-engine/types"
+import type { FilterRule, FilterField, ViewState } from "@/lib/view-engine/types"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -49,6 +49,7 @@ import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
 import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 import { WikiCollectionSidebar } from "@/components/editor/wiki-collection-sidebar"
 import { toast } from "sonner"
+import { ViewDistributionPanel, type DistributionItem } from "@/components/view-distribution-panel"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -77,6 +78,7 @@ export function WikiView() {
 
   // Filter / Display state
   const [wikiFilters, setWikiFilters] = useState<FilterRule[]>([])
+  const [showDistribution, setShowDistribution] = useState(false)
   const [wikiViewState, setWikiViewState] = useState<ViewState>({
     viewMode: "list" as const,
     sortField: "updatedAt" as const,
@@ -383,6 +385,78 @@ export function WikiView() {
     return { connected, total, percent }
   }, [notes, wikiNotes])
 
+  const wikiDistributionTabs = useMemo(() => [
+    { key: "wikiStatus", label: "Wiki Status" },
+    { key: "tags", label: "Categories" },
+    { key: "backlinks", label: "Backlinks" },
+  ], [])
+
+  const getWikiDistribution = useCallback((tabKey: string): DistributionItem[] => {
+    switch (tabKey) {
+      case "wikiStatus": {
+        const counts: Record<string, number> = { stub: 0, draft: 0, complete: 0 }
+        for (const n of wikiNotes) {
+          if (n.wikiStatus) counts[n.wikiStatus] = (counts[n.wikiStatus] ?? 0) + 1
+        }
+        return [
+          { key: "complete", label: "Complete", count: counts.complete, color: "#45d483" },
+          { key: "draft", label: "Draft", count: counts.draft, color: "#f5a623" },
+          { key: "stub", label: "Stub", count: counts.stub, color: "rgba(255,255,255,0.32)" },
+        ].filter(i => i.count > 0)
+      }
+      case "tags": {
+        const counts: Record<string, number> = {}
+        for (const n of wikiNotes) {
+          for (const tId of n.tags) {
+            counts[tId] = (counts[tId] ?? 0) + 1
+          }
+        }
+        return Object.entries(counts)
+          .map(([tId, count]) => ({
+            key: tId,
+            label: tags.find(t => t.id === tId)?.name ?? "Unknown",
+            count,
+          }))
+          .sort((a, b) => b.count - a.count)
+      }
+      case "backlinks": {
+        const ranges = { "0": 0, "1-4": 0, "5-9": 0, "10+": 0 }
+        for (const n of wikiNotes) {
+          const bc = backlinkCounts.get(n.id) ?? 0
+          if (bc === 0) ranges["0"]++
+          else if (bc <= 4) ranges["1-4"]++
+          else if (bc <= 9) ranges["5-9"]++
+          else ranges["10+"]++
+        }
+        return [
+          { key: "10+", label: "10+ backlinks", count: ranges["10+"] },
+          { key: "5-9", label: "5-9 backlinks", count: ranges["5-9"] },
+          { key: "1-4", label: "1-4 backlinks", count: ranges["1-4"] },
+          { key: "0", label: "No backlinks", count: ranges["0"] },
+        ].filter(i => i.count > 0)
+      }
+      default:
+        return []
+    }
+  }, [wikiNotes, tags, backlinkCounts])
+
+  const handleWikiDistributionClick = useCallback((tabKey: string, itemKey: string) => {
+    const fieldMap: Record<string, FilterField> = {
+      wikiStatus: "isWiki",
+      tags: "tags",
+      backlinks: "links",
+    }
+    const field = fieldMap[tabKey]
+    if (!field) return
+    const rule: FilterRule = { field, operator: "eq", value: itemKey }
+    const exists = wikiFilters.some(
+      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+    )
+    if (!exists) {
+      setWikiFilters(prev => [...prev, rule])
+    }
+  }, [wikiFilters])
+
   // Search results (simple title/alias filter)
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -575,6 +649,8 @@ export function WikiView() {
           />
         }
         showDetailPanel
+        detailPanelOpen={showDistribution}
+        onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
         actions={
           <div className="flex items-center gap-2">
             <Popover open={importOpen} onOpenChange={(o) => {
@@ -645,6 +721,7 @@ export function WikiView() {
         /* ══════════════════════════════════════════════════
            Dashboard Mode
            ══════════════════════════════════════════════════ */
+        <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-[860px] px-6 py-8">
             {/* Hero Section */}
@@ -802,6 +879,15 @@ export function WikiView() {
               )}
             </div>
           </div>
+        </div>
+        {showDistribution && (
+          <ViewDistributionPanel
+            tabs={wikiDistributionTabs}
+            getDistribution={getWikiDistribution}
+            onItemClick={handleWikiDistributionClick}
+            onClose={() => setShowDistribution(false)}
+          />
+        )}
         </div>
       ) : (
         /* ══════════════════════════════════════════════════
@@ -1087,6 +1173,14 @@ export function WikiView() {
               </SidebarSection>
             )}
           </div>
+          {showDistribution && (
+            <ViewDistributionPanel
+              tabs={wikiDistributionTabs}
+              getDistribution={getWikiDistribution}
+              onItemClick={handleWikiDistributionClick}
+              onClose={() => setShowDistribution(false)}
+            />
+          )}
         </div>
       )}
     </div>

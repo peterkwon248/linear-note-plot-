@@ -55,46 +55,45 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
       state.openNoteInTab(id)
     },
 
-    goBack: () => {
-      set((state: any) => {
-        const index = state.navigationIndex as number
-        // At index 0 with an open note → close editor (return to table/view)
-        if (index <= 0 && state.selectedNoteId) {
-          return { selectedNoteId: null, navigationIndex: -1 }
-        }
-        if (index <= 0) return state
+    goBack: (): boolean => {
+      const state = get()
+      const index = state.navigationIndex as number
+      // At index 0 with an open note → close editor (return to table/view)
+      if (index <= 0 && state.selectedNoteId) {
+        set({ selectedNoteId: null, navigationIndex: -1 })
+        return true
+      }
+      // Navigate note history
+      if (index > 0) {
         const newIndex = index - 1
         const noteId = state.navigationHistory[newIndex]
-        // Check if note still exists
-        if (!state.notes.some((n: Note) => n.id === noteId && !n.trashed)) {
-          return state
+        if (state.notes.some((n: Note) => n.id === noteId && !n.trashed)) {
+          _navigating = true
+          setTimeout(() => { _navigating = false }, 0)
+          set({ navigationIndex: newIndex, selectedNoteId: noteId })
+          return true
         }
-        _navigating = true
-        setTimeout(() => { _navigating = false }, 0)
-        return {
-          navigationIndex: newIndex,
-          selectedNoteId: noteId,
-        }
-      })
+      }
+      // No note history to navigate — caller should use router.back()
+      return false
     },
 
-    goForward: () => {
-      set((state: any) => {
-        const history = state.navigationHistory as string[]
-        const index = state.navigationIndex as number
-        if (history.length === 0 || index >= history.length - 1) return state
+    goForward: (): boolean => {
+      const state = get()
+      const history = state.navigationHistory as string[]
+      const index = state.navigationIndex as number
+      if (history.length > 0 && index < history.length - 1) {
         const newIndex = index + 1
         const noteId = history[newIndex]
-        if (!state.notes.some((n: Note) => n.id === noteId && !n.trashed)) {
-          return state
+        if (state.notes.some((n: Note) => n.id === noteId && !n.trashed)) {
+          _navigating = true
+          setTimeout(() => { _navigating = false }, 0)
+          set({ navigationIndex: newIndex, selectedNoteId: noteId })
+          return true
         }
-        _navigating = true
-        setTimeout(() => { _navigating = false }, 0)
-        return {
-          navigationIndex: newIndex,
-          selectedNoteId: noteId,
-        }
-      })
+      }
+      // No note history to navigate — caller should use router.forward()
+      return false
     },
 
     setSearchQuery: (query: string) => set({ searchQuery: query }),

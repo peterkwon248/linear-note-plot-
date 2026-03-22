@@ -8,7 +8,7 @@ import { NotesBoard } from "@/components/notes-board"
 import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
-import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId } from "@/lib/table-route"
+import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
 import { findLeafByContentType } from "@/lib/workspace/tree-utils"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
@@ -36,10 +36,13 @@ export function NotesTableView() {
   const activeFolderId = useActiveFolderId()
   const activeTagId = useActiveTagId()
   const activeLabelId = useActiveLabelId()
+  const activeViewId = useActiveViewId()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
   const workspaceRoot = usePlotStore((s) => s.workspaceRoot)
   const applyPreset = usePlotStore((s) => s.applyPreset)
+  const savedViews = usePlotStore((s) => s.savedViews)
+  const setViewState = usePlotStore((s) => s.setViewState)
   const settingsViewMode = useSettingsStore((s) => s.viewMode)
   const isEditing = selectedNoteId !== null
 
@@ -47,11 +50,13 @@ export function NotesTableView() {
   const hasMigrated = useRef(false)
 
   const baseConfig = TABLE_VIEW_MAP[tableRoute ?? ""] ?? {}
+  const activeView = activeViewId ? savedViews.find((v) => v.id === activeViewId) : null
   const config: ViewConfig = (() => {
     if (tableRoute !== "/notes") return baseConfig
     if (activeFolderId) return { ...baseConfig, context: "folder" as ViewContextKey }
     if (activeTagId) return { ...baseConfig, context: "tag" as ViewContextKey }
     if (activeLabelId) return { ...baseConfig, context: "label" as ViewContextKey }
+    if (activeViewId) return { ...baseConfig, context: "savedView" as ViewContextKey, title: activeView?.name ?? "View" }
     return baseConfig
   })()
 
@@ -85,6 +90,13 @@ export function NotesTableView() {
   useEffect(() => {
     setPreviewId(null)
   }, [tableRoute])
+
+  // Sync saved view's viewState into the view engine when activeViewId changes
+  useEffect(() => {
+    if (activeView) {
+      setViewState("savedView" as ViewContextKey, activeView.viewState as Parameters<typeof setViewState>[1])
+    }
+  }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-migrate: if in default mode but workspace has no note-list leaf, apply preset once
   // hasMigrated is set unconditionally on first run so closing the list pane won't re-trigger

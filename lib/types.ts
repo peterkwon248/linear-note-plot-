@@ -36,6 +36,29 @@ export interface WikiCollectionItem {
   addedAt: string
 }
 
+/** Saved custom view — user-defined filter/sort/grouping combination */
+export interface SavedView {
+  id: string
+  name: string
+  description?: string
+  icon?: string
+  color: string
+  space: "inbox" | "notes" | "wiki" | "calendar" | "ontology" | "all"
+  viewState: {
+    viewMode: "list" | "table" | "board" | "insights" | "calendar"
+    sortField: string
+    sortDirection: "asc" | "desc"
+    groupBy: string
+    filters: Array<{ field: string; operator: string; value: string }>
+    visibleColumns: string[]
+    showEmptyGroups: boolean
+  }
+  pinned: boolean
+  pinnedOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Note {
   id: string
   title: string

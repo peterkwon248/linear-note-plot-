@@ -12,17 +12,31 @@ import {
   isToday,
   addMonths,
   subMonths,
+  addWeeks,
+  subWeeks,
   isSameDay,
   parseISO,
 } from "date-fns"
-import { ChevronLeft, ChevronRight, CalendarDays, FileText, Plus, X, SlidersHorizontal, LayoutList, LayoutGrid } from "lucide-react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
+  FileText,
+  Plus,
+  X,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { useSettingsStore } from "@/lib/settings-store"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import type { ViewContextKey } from "@/lib/view-engine/types"
+import { ViewHeader } from "@/components/view-header"
+import { FilterPanel } from "@/components/filter-panel"
+import {
+  ViewDistributionPanel,
+  type DistributionItem,
+} from "@/components/view-distribution-panel"
+import { CALENDAR_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import type { FilterRule, FilterField, ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
 /* ── Types ───────────────────────────────────────────── */
@@ -38,6 +52,9 @@ interface CalendarViewProps {
   onRowClick?: (noteId: string) => void
   activePreviewId?: string | null
 }
+
+type CalendarMode = "month" | "week" | "agenda"
+type DateSource = "createdAt" | "updatedAt"
 
 /* ── Day-of-week header labels (Mon-first) ───────────── */
 
@@ -61,6 +78,45 @@ const STATUS_LABEL: Record<string, { text: string; color: string }> = {
   inbox: { text: "Inbox", color: "#06b6d4" },
   capture: { text: "Capture", color: "#f2994a" },
   permanent: { text: "Permanent", color: "#45d483" },
+}
+
+/* ── Layer type icon (tiny, inline) ───────────────────── */
+
+function LayerIcon({ isWiki }: { isWiki: boolean }) {
+  if (isWiki) {
+    return (
+      <svg
+        width={10}
+        height={10}
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="shrink-0 text-muted-foreground/40"
+      >
+        <path d="M2 3h12M2 7h8M2 11h10" />
+      </svg>
+    )
+  }
+  return (
+    <svg
+      width={10}
+      height={10}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0 text-muted-foreground/40"
+    >
+      <path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" />
+      <line x1="5" y1="6" x2="11" y2="6" />
+      <line x1="5" y1="9" x2="9" y2="9" />
+    </svg>
+  )
 }
 
 /* ── NotePill ────────────────────────────────────────── */
@@ -95,6 +151,9 @@ function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillPr
         className="h-[5px] w-[5px] shrink-0 rounded-full"
         style={{ backgroundColor: dot }}
       />
+
+      {/* Layer type icon */}
+      <LayerIcon isWiki={note.isWiki} />
 
       {/* Title */}
       <span className="flex-1 truncate text-[11.5px] font-medium leading-tight text-foreground/90 group-hover:text-foreground">
@@ -224,7 +283,6 @@ function DayCell({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              // Click the first overflow note to show it, or could be a popover in future
               if (notes[MAX_VISIBLE]) onNoteClick(notes[MAX_VISIBLE].id)
             }}
             className="w-full rounded-[5px] px-2 py-[2px] text-left text-[10.5px] font-medium text-muted-foreground/60 transition-colors hover:bg-secondary/60 hover:text-muted-foreground"
@@ -421,6 +479,182 @@ function DayDashboard({
   )
 }
 
+/* ── WeekView ────────────────────────────────────────── */
+
+interface WeekViewProps {
+  weekStart: Date
+  notesByDay: Map<string, Note[]>
+  labels: Array<{ id: string; name: string; color: string }>
+  activePreviewId?: string | null
+  onNoteClick: (noteId: string) => void
+  onCreateNote: (day: Date) => void
+}
+
+function WeekView({
+  weekStart,
+  notesByDay,
+  labels,
+  activePreviewId,
+  onNoteClick,
+  onCreateNote,
+}: WeekViewProps) {
+  const weekDays = useMemo(
+    () =>
+      eachDayOfInterval({
+        start: startOfWeek(weekStart, { weekStartsOn: 1 }),
+        end: endOfWeek(weekStart, { weekStartsOn: 1 }),
+      }),
+    [weekStart],
+  )
+
+  const getLabelForNote = useCallback(
+    (note: Note) => {
+      if (!note.labelId) return null
+      return labels.find((l) => l.id === note.labelId) ?? null
+    },
+    [labels],
+  )
+
+  return (
+    <div className="flex flex-1 overflow-hidden">
+      {weekDays.map((day) => {
+        const key = format(day, "yyyy-MM-dd")
+        const dayNotes = notesByDay.get(key) ?? []
+        return (
+          <div
+            key={key}
+            className="flex flex-1 flex-col border-r border-border last:border-r-0 overflow-hidden"
+          >
+            {/* Day header */}
+            <div className="sticky top-0 z-10 shrink-0 border-b border-border bg-background px-2 py-1.5">
+              <span
+                className={cn(
+                  "text-xs font-semibold",
+                  isToday(day) ? "text-accent" : "text-muted-foreground",
+                )}
+              >
+                {format(day, "EEE d")}
+              </span>
+              {dayNotes.length > 0 && (
+                <span className="ml-1 text-[10px] text-muted-foreground/50">
+                  {dayNotes.length}
+                </span>
+              )}
+            </div>
+
+            {/* Notes list */}
+            <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-1.5">
+              {dayNotes.map((note) => {
+                const label = getLabelForNote(note)
+                return (
+                  <NotePill
+                    key={note.id}
+                    note={note}
+                    labelColor={label?.color}
+                    labelName={label?.name}
+                    isActive={activePreviewId === note.id}
+                    onClick={() => onNoteClick(note.id)}
+                  />
+                )
+              })}
+              {dayNotes.length === 0 && (
+                <button
+                  onClick={() => onCreateNote(day)}
+                  className="mt-1 flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-muted-foreground/40 transition-colors hover:bg-secondary/50 hover:text-muted-foreground"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add
+                </button>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ── AgendaView ──────────────────────────────────────── */
+
+interface AgendaViewProps {
+  notesByDay: Map<string, Note[]>
+  labels: Array<{ id: string; name: string; color: string }>
+  activePreviewId?: string | null
+  onNoteClick: (noteId: string) => void
+}
+
+function AgendaView({
+  notesByDay,
+  labels,
+  activePreviewId,
+  onNoteClick,
+}: AgendaViewProps) {
+  const datesWithNotes = useMemo(() => {
+    return Array.from(notesByDay.entries())
+      .filter(([, notes]) => notes.length > 0)
+      .sort(([a], [b]) => a.localeCompare(b))
+  }, [notesByDay])
+
+  const getLabelForNote = useCallback(
+    (note: Note) => {
+      if (!note.labelId) return null
+      return labels.find((l) => l.id === note.labelId) ?? null
+    },
+    [labels],
+  )
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      {datesWithNotes.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 py-20 text-center">
+          <CalendarDays className="h-5 w-5 text-muted-foreground/50" />
+          <p className="text-sm text-muted-foreground">No notes in this period</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-border">
+          {datesWithNotes.map(([dateKey, notes]) => {
+            const date = parseISO(dateKey)
+            return (
+              <div key={dateKey} className="px-5 py-3">
+                {/* Date header */}
+                <div className="mb-2 flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "text-xs font-semibold",
+                      isToday(date) ? "text-accent" : "text-muted-foreground",
+                    )}
+                  >
+                    {isToday(date) ? "Today" : format(date, "EEEE, MMMM d")}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/40">
+                    {notes.length}
+                  </span>
+                </div>
+                {/* Notes list */}
+                <div className="flex flex-col gap-1">
+                  {notes.map((note) => {
+                    const label = getLabelForNote(note)
+                    return (
+                      <NotePill
+                        key={note.id}
+                        note={note}
+                        labelColor={label?.color}
+                        labelName={label?.name}
+                        isActive={activePreviewId === note.id}
+                        onClick={() => onNoteClick(note.id)}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── CalendarView ────────────────────────────────────── */
 
 export function CalendarView({
@@ -434,56 +668,97 @@ export function CalendarView({
   onRowClick,
   activePreviewId,
 }: CalendarViewProps) {
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+  const [currentDate, setCurrentDate] = useState<Date>(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+
+  /* ── Calendar-specific state ──────────────────────── */
+
+  const [calendarFilters, setCalendarFilters] = useState<FilterRule[]>([])
+  const [calendarMode, setCalendarMode] = useState<CalendarMode>("month")
+  const [dateSource, setDateSource] = useState<DateSource>("createdAt")
+  const [layers, setLayers] = useState({ notes: true, wiki: true })
+  const [showDistribution, setShowDistribution] = useState(false)
+
+  /* ── Store / hooks ────────────────────────────────── */
 
   const viewContext = (context ?? "all") as ViewContextKey
   const backlinksMap = useBacklinksIndex()
   const { flatNotes } = useNotesView(viewContext, { backlinksMap, folderId, tagId, labelId })
 
   const labels = usePlotStore((s) => s.labels)
+  const folders = usePlotStore((s) => s.folders)
+  const tags = usePlotStore((s) => s.tags)
   const createNote = usePlotStore((s) => s.createNote)
   const openNote = usePlotStore((s) => s.openNote)
-  const viewMode = useSettingsStore((s) => s.viewMode)
-  const setViewMode = useSettingsStore((s) => s.setViewMode)
 
-  /* ── Calendar grid days ──────────────────────────── */
+  /* ── Filter logic ─────────────────────────────────── */
 
-  const calendarDays = useMemo(() => {
-    const monthStart = startOfMonth(currentMonth)
-    const monthEnd = endOfMonth(currentMonth)
-    // Start week on Monday (weekStartsOn: 1)
-    const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 })
-    const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
-    return eachDayOfInterval({ start: gridStart, end: gridEnd })
-  }, [currentMonth])
+  const filteredNotes = useMemo(() => {
+    let result = flatNotes
+
+    // Apply layer filters
+    if (!layers.notes && !layers.wiki) return []
+    if (!layers.notes) result = result.filter((n) => n.isWiki)
+    if (!layers.wiki) result = result.filter((n) => !n.isWiki)
+
+    // Apply user filters
+    for (const rule of calendarFilters) {
+      if (rule.field === "status") result = result.filter((n) => n.status === rule.value)
+      if (rule.field === "folder") result = result.filter((n) => n.folderId === rule.value)
+      if (rule.field === "label") result = result.filter((n) => n.labelId === rule.value)
+      if (rule.field === "tags") result = result.filter((n) => n.tags.includes(rule.value))
+    }
+    return result
+  }, [flatNotes, calendarFilters, layers])
 
   /* ── Notes grouped by day ────────────────────────── */
 
   const notesByDay = useMemo(() => {
     const map = new Map<string, Note[]>()
-    for (const note of flatNotes) {
+    for (const note of filteredNotes) {
       try {
-        const date = parseISO(note.createdAt)
+        const dateField = dateSource === "updatedAt" ? note.updatedAt : note.createdAt
+        const date = parseISO(dateField)
         const key = format(date, "yyyy-MM-dd")
         const existing = map.get(key)
-        if (existing) {
-          existing.push(note)
-        } else {
-          map.set(key, [note])
-        }
+        if (existing) existing.push(note)
+        else map.set(key, [note])
       } catch {
         // skip malformed dates
       }
     }
     return map
-  }, [flatNotes])
+  }, [filteredNotes, dateSource])
+
+  /* ── Calendar grid days (month view) ──────────────── */
+
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(currentDate)
+    const monthEnd = endOfMonth(currentDate)
+    const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 })
+    const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
+    return eachDayOfInterval({ start: gridStart, end: gridEnd })
+  }, [currentDate])
 
   /* ── Navigation ──────────────────────────────────── */
 
-  const goToPrevMonth = useCallback(() => setCurrentMonth((m) => subMonths(m, 1)), [])
-  const goToNextMonth = useCallback(() => setCurrentMonth((m) => addMonths(m, 1)), [])
-  const goToToday = useCallback(() => setCurrentMonth(new Date()), [])
+  const goToPrev = useCallback(() => {
+    if (calendarMode === "week") {
+      setCurrentDate((d) => subWeeks(d, 1))
+    } else {
+      setCurrentDate((d) => subMonths(d, 1))
+    }
+  }, [calendarMode])
+
+  const goToNext = useCallback(() => {
+    if (calendarMode === "week") {
+      setCurrentDate((d) => addWeeks(d, 1))
+    } else {
+      setCurrentDate((d) => addMonths(d, 1))
+    }
+  }, [calendarMode])
+
+  const goToToday = useCallback(() => setCurrentDate(new Date()), [])
 
   /* ── Note click ──────────────────────────────────── */
 
@@ -517,24 +792,38 @@ export function CalendarView({
     setSelectedDate((prev) => (prev && isSameDay(prev, day) ? null : day))
   }, [])
 
+  /* ── Filter toggle (same pattern as wiki-view) ───── */
+
+  const handleFilterToggle = useCallback((rule: FilterRule) => {
+    setCalendarFilters((prev) => {
+      const exists = prev.some(
+        (f) => f.field === rule.field && f.value === rule.value,
+      )
+      return exists
+        ? prev.filter((f) => !(f.field === rule.field && f.value === rule.value))
+        : [...prev, rule]
+    })
+  }, [])
+
   /* ── Header note count (for current month only) ──── */
 
   const currentMonthCount = useMemo(() => {
-    const monthStart = startOfMonth(currentMonth)
-    const monthEnd = endOfMonth(currentMonth)
-    return flatNotes.filter((note) => {
+    const monthStart = startOfMonth(currentDate)
+    const monthEnd = endOfMonth(currentDate)
+    return filteredNotes.filter((note) => {
       try {
-        const d = parseISO(note.createdAt)
+        const dateField = dateSource === "updatedAt" ? note.updatedAt : note.createdAt
+        const d = parseISO(dateField)
         return d >= monthStart && d <= monthEnd
       } catch {
         return false
       }
     }).length
-  }, [flatNotes, currentMonth])
+  }, [filteredNotes, currentDate, dateSource])
 
   /* ── Check if viewing current month ─────────────── */
 
-  const isCurrentMonth = isSameMonth(currentMonth, new Date())
+  const isCurrentMonthView = isSameMonth(currentDate, new Date())
 
   /* ── Notes for selected date ─────────────────────── */
 
@@ -544,184 +833,349 @@ export function CalendarView({
     return notesByDay.get(key) ?? []
   }, [selectedDate, notesByDay])
 
+  /* ── Distribution panel ─────────────────────────── */
+
+  const distributionTabs = useMemo(
+    () => [
+      { key: "status", label: "Status" },
+      { key: "folder", label: "Folder" },
+      { key: "tags", label: "Tags" },
+    ],
+    [],
+  )
+
+  const getDistribution = useCallback(
+    (tabKey: string): DistributionItem[] => {
+      switch (tabKey) {
+        case "status": {
+          const counts: Record<string, number> = {}
+          for (const n of filteredNotes) counts[n.status] = (counts[n.status] ?? 0) + 1
+          return Object.entries(counts).map(([key, count]) => ({
+            key,
+            label: key.charAt(0).toUpperCase() + key.slice(1),
+            count,
+            color: STATUS_DOT[key],
+          }))
+        }
+        case "folder": {
+          const counts: Record<string, number> = {}
+          for (const n of filteredNotes) {
+            const fid = n.folderId ?? "_none"
+            counts[fid] = (counts[fid] ?? 0) + 1
+          }
+          return Object.entries(counts).map(([key, count]) => {
+            const folder = folders.find((f) => f.id === key)
+            return {
+              key,
+              label: folder?.name ?? (key === "_none" ? "No folder" : key),
+              count,
+            }
+          })
+        }
+        case "tags": {
+          const counts: Record<string, number> = {}
+          for (const n of filteredNotes) {
+            for (const tid of n.tags) counts[tid] = (counts[tid] ?? 0) + 1
+          }
+          return Object.entries(counts).map(([key, count]) => {
+            const tag = tags.find((t) => t.id === key)
+            return {
+              key,
+              label: tag?.name ?? key,
+              count,
+              color: tag?.color,
+            }
+          })
+        }
+        default:
+          return []
+      }
+    },
+    [filteredNotes, folders, tags],
+  )
+
+  const handleDistributionItemClick = useCallback(
+    (tabKey: string, itemKey: string) => {
+      const fieldMap: Record<string, FilterField> = {
+        status: "status",
+        folder: "folder",
+        tags: "tags",
+      }
+      const field = fieldMap[tabKey]
+      if (!field) return
+      const rule: FilterRule = { field, operator: "eq", value: itemKey }
+      const exists = calendarFilters.some(
+        (f) => f.field === rule.field && f.operator === rule.operator && f.value === rule.value,
+      )
+      if (!exists) {
+        setCalendarFilters((prev) => [...prev, rule])
+      }
+    },
+    [calendarFilters],
+  )
+
+  /* ── Title text based on mode ─────────────────────── */
+
+  const headerTitle = useMemo(() => {
+    if (calendarMode === "week") {
+      const ws = startOfWeek(currentDate, { weekStartsOn: 1 })
+      const we = endOfWeek(currentDate, { weekStartsOn: 1 })
+      if (isSameMonth(ws, we)) {
+        return format(ws, "MMMM yyyy")
+      }
+      return `${format(ws, "MMM d")} – ${format(we, "MMM d, yyyy")}`
+    }
+    return format(currentDate, "MMMM yyyy")
+  }, [currentDate, calendarMode])
+
   /* ── Render ──────────────────────────────────────── */
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
-      {/* ── Header ─────────────────────────────────── */}
-      <header className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3">
-        <div className="flex items-center gap-3">
-          <CalendarDays className="h-4 w-4 text-muted-foreground/60" />
-          <div className="flex items-baseline gap-2">
-            <h1 className="text-ui font-semibold text-foreground">
-              {format(currentMonth, "MMMM yyyy")}
-            </h1>
-            {currentMonthCount > 0 && (
-              <span className="text-xs text-muted-foreground/60">
-                {currentMonthCount} {currentMonthCount === 1 ? "note" : "notes"}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1">
-          {/* Today button — only when not on current month */}
-          {!isCurrentMonth && (
-            <button
-              onClick={goToToday}
-              className="mr-1 rounded-md px-2.5 py-1 text-note font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              Today
-            </button>
-          )}
-
-          {/* Prev / Next */}
-          <button
-            onClick={goToPrevMonth}
-            aria-label="Previous month"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            onClick={goToNextMonth}
-            aria-label="Next month"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-
-          {/* Display menu */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Display
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[280px] p-0" align="end">
-              <div className="flex gap-1 px-3 py-2.5">
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-note font-medium transition-colors ${
-                    viewMode === "list"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <LayoutList className="h-4 w-4" />
-                  List
-                </button>
-                <button
-                  onClick={() => setViewMode("board")}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-md py-2 text-note font-medium transition-colors ${
-                    viewMode === "board"
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                  Board
-                </button>
+      {/* ── ViewHeader ──────────────────────────────── */}
+      <ViewHeader
+        icon={<CalendarDays className="h-5 w-5" strokeWidth={1.5} />}
+        title={headerTitle}
+        count={currentMonthCount}
+        showFilter
+        hasActiveFilters={calendarFilters.length > 0}
+        filterContent={
+          <FilterPanel
+            categories={CALENDAR_VIEW_CONFIG.filterCategories}
+            activeFilters={calendarFilters}
+            onToggle={handleFilterToggle}
+          />
+        }
+        showDisplay
+        displayContent={
+          <div className="w-[280px] p-3 space-y-4">
+            {/* Calendar by */}
+            <div>
+              <div className="text-[11px] font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Calendar by</div>
+              <div className="flex gap-1">
+                {(["createdAt", "updatedAt"] as const).map((src) => (
+                  <button
+                    key={src}
+                    onClick={() => setDateSource(src)}
+                    className={cn(
+                      "flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
+                      dateSource === src
+                        ? "bg-accent/15 text-accent"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    )}
+                  >
+                    {src === "createdAt" ? "Created" : "Updated"}
+                  </button>
+                ))}
               </div>
-            </PopoverContent>
-          </Popover>
+            </div>
 
-
-          {/* New note button */}
-          {!hideCreateButton && (
+            {/* Layers */}
+            <div>
+              <div className="text-[11px] font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Layers</div>
+              <div className="space-y-1">
+                {([
+                  { key: "notes" as const, label: "Notes" },
+                  { key: "wiki" as const, label: "Wiki" },
+                ] as const).map((layer) => (
+                  <button
+                    key={layer.key}
+                    onClick={() => setLayers((l) => ({ ...l, [layer.key]: !l[layer.key] }))}
+                    className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs transition-colors hover:bg-secondary"
+                  >
+                    <span className={layers[layer.key] ? "text-foreground" : "text-muted-foreground/40"}>
+                      {layer.label}
+                    </span>
+                    <span
+                      className={cn(
+                        "flex h-4 w-4 items-center justify-center rounded border transition-colors",
+                        layers[layer.key] ? "border-accent bg-accent" : "border-border",
+                      )}
+                    >
+                      {layers[layer.key] && (
+                        <svg viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+                          <path d="M4 8l3 3 5-5" />
+                        </svg>
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        }
+        showDetailPanel
+        detailPanelOpen={showDistribution}
+        onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
+        actions={
+          !hideCreateButton ? (
             <button
-              className="ml-1 flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors hover:bg-accent/85"
+              className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors hover:bg-accent/85"
               onClick={() => createNote(createNoteOverrides ?? {})}
             >
               <Plus className="h-3.5 w-3.5" />
               New note
             </button>
-          )}
-        </div>
-      </header>
+          ) : undefined
+        }
+      />
 
-      {/* ── Day-of-week labels ──────────────────────── */}
-      <div className="grid shrink-0 grid-cols-7 border-b border-border">
-        {DAY_LABELS.map((label) => (
-          <div
-            key={label}
-            className="border-r border-border px-2 py-2 last:border-r-0"
+      {/* ── Calendar controls bar ──────────────────── */}
+      <div className="flex shrink-0 items-center justify-between border-b border-border/50 px-5 py-2">
+        {/* Left: Calendar mode tabs */}
+        <div className="flex items-center gap-1">
+          {(["month", "week", "agenda"] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setCalendarMode(mode)}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                calendarMode === mode
+                  ? "bg-white/10 text-foreground"
+                  : "text-muted-foreground hover:text-foreground/70",
+              )}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* Center: Month/Week navigation */}
+        <div className="flex items-center gap-1">
+          {!isCurrentMonthView && (
+            <button
+              onClick={goToToday}
+              className="mr-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              Today
+            </button>
+          )}
+          <button
+            onClick={goToPrev}
+            aria-label={calendarMode === "week" ? "Previous week" : "Previous month"}
+            className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
-            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-              {label}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Calendar grid — scrollable, gives way to dashboard ── */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {flatNotes.length === 0 && (
-          /* Empty state overlay — subtle, doesn't disrupt the calendar grid */
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2 opacity-0 transition-opacity duration-200 [.has-no-notes_&]:pointer-events-auto [.has-no-notes_&]:opacity-100">
-            <FileText className="h-8 w-8 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground/50">No notes this month</p>
-          </div>
-        )}
-
-        <div
-          className={cn(
-            "grid grid-cols-7",
-            flatNotes.length === 0 && "has-no-notes",
-          )}
-        >
-          {calendarDays.map((day) => {
-            const key = format(day, "yyyy-MM-dd")
-            const dayNotes = notesByDay.get(key) ?? []
-            const isSelected = selectedDate ? isSameDay(selectedDate, day) : false
-
-            return (
-              <DayCell
-                key={key}
-                day={day}
-                currentMonth={currentMonth}
-                notes={dayNotes}
-                labels={labels}
-                activePreviewId={activePreviewId}
-                onNoteClick={handleNoteClick}
-                onCreateNote={handleCreateOnDay}
-                onSelectDate={handleSelectDate}
-                isSelected={isSelected}
-              />
-            )
-          })}
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={goToNext}
+            aria-label={calendarMode === "week" ? "Next week" : "Next month"}
+            className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
         </div>
 
-        {/* Bottom empty state — when fully empty, show centered message inside the grid */}
-        {flatNotes.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
-              <CalendarDays className="h-5 w-5 text-muted-foreground/50" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">No notes yet</p>
-              <p className="mt-0.5 text-note text-muted-foreground/60">
-                Click any day to create a note, or use New note above.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* ── Day dashboard — slides up from bottom ───── */}
-      {selectedDate && (
-        <DayDashboard
-          date={selectedDate}
-          notes={selectedDateNotes}
-          labels={labels}
-          activePreviewId={activePreviewId}
-          onNoteClick={handleNoteClick}
-          onEditNote={openNote}
-          onCreateNote={handleCreateOnDay}
-          onClose={() => setSelectedDate(null)}
-        />
+      {/* ── Day-of-week labels (for month and week modes) ── */}
+      {calendarMode !== "agenda" && (
+        <div className="grid shrink-0 grid-cols-7 border-b border-border">
+          {DAY_LABELS.map((label) => (
+            <div
+              key={label}
+              className="border-r border-border px-2 py-2 last:border-r-0"
+            >
+              <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
+
+      {/* ── Main content area ──────────────────────── */}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Month view */}
+          {calendarMode === "month" && (
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {filteredNotes.length === 0 && (
+                <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
+                    <CalendarDays className="h-5 w-5 text-muted-foreground/50" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">No notes yet</p>
+                    <p className="mt-0.5 text-note text-muted-foreground/60">
+                      Click any day to create a note, or use New note above.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-7">
+                {calendarDays.map((day) => {
+                  const key = format(day, "yyyy-MM-dd")
+                  const dayNotes = notesByDay.get(key) ?? []
+                  const isSelected = selectedDate ? isSameDay(selectedDate, day) : false
+
+                  return (
+                    <DayCell
+                      key={key}
+                      day={day}
+                      currentMonth={currentDate}
+                      notes={dayNotes}
+                      labels={labels}
+                      activePreviewId={activePreviewId}
+                      onNoteClick={handleNoteClick}
+                      onCreateNote={handleCreateOnDay}
+                      onSelectDate={handleSelectDate}
+                      isSelected={isSelected}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Week view */}
+          {calendarMode === "week" && (
+            <WeekView
+              weekStart={currentDate}
+              notesByDay={notesByDay}
+              labels={labels}
+              activePreviewId={activePreviewId}
+              onNoteClick={handleNoteClick}
+              onCreateNote={handleCreateOnDay}
+            />
+          )}
+
+          {/* Agenda view */}
+          {calendarMode === "agenda" && (
+            <AgendaView
+              notesByDay={notesByDay}
+              labels={labels}
+              activePreviewId={activePreviewId}
+              onNoteClick={handleNoteClick}
+            />
+          )}
+
+          {/* Day dashboard (bottom panel for month view) */}
+          {selectedDate && calendarMode === "month" && (
+            <DayDashboard
+              date={selectedDate}
+              notes={selectedDateNotes}
+              labels={labels}
+              activePreviewId={activePreviewId}
+              onNoteClick={handleNoteClick}
+              onEditNote={openNote}
+              onCreateNote={handleCreateOnDay}
+              onClose={() => setSelectedDate(null)}
+            />
+          )}
+        </div>
+
+        {/* Distribution panel */}
+        {showDistribution && (
+          <ViewDistributionPanel
+            tabs={distributionTabs}
+            getDistribution={getDistribution}
+            onItemClick={handleDistributionItemClick}
+            onClose={() => setShowDistribution(false)}
+          />
+        )}
+      </div>
     </main>
   )
 }

@@ -38,6 +38,7 @@ let _activeSpace: ActivitySpace = "notes"
 let _activeFolderId: string | null = null
 let _activeTagId: string | null = null
 let _activeLabelId: string | null = null
+let _activeViewId: string | null = null
 
 /** Infer which activity space a route belongs to */
 export function inferSpace(route: string): ActivitySpace {
@@ -83,6 +84,7 @@ export function setActiveFolderId(folderId: string | null): void {
   _activeFolderId = folderId
   _activeTagId = null
   _activeLabelId = null
+  _activeViewId = null
   _listeners.forEach((fn) => fn())
 }
 
@@ -95,6 +97,7 @@ export function setActiveTagId(tagId: string | null): void {
   _activeTagId = tagId
   _activeFolderId = null
   _activeLabelId = null
+  _activeViewId = null
   _listeners.forEach((fn) => fn())
 }
 
@@ -102,11 +105,25 @@ export function getActiveLabelId(): string | null {
   return _activeLabelId
 }
 
+export function getActiveViewId(): string | null {
+  return _activeViewId
+}
+
 export function setActiveLabelId(labelId: string | null): void {
   if (_activeLabelId === labelId) return
   _activeLabelId = labelId
   _activeFolderId = null
   _activeTagId = null
+  _activeViewId = null
+  _listeners.forEach((fn) => fn())
+}
+
+export function setActiveViewId(viewId: string | null): void {
+  if (_activeViewId === viewId) return
+  _activeViewId = viewId
+  _activeFolderId = null
+  _activeTagId = null
+  _activeLabelId = null
   _listeners.forEach((fn) => fn())
 }
 
@@ -151,4 +168,9 @@ export function useActiveTagId(): string | null {
 /** Subscribe to the active label ID. Returns null when no label is selected. */
 export function useActiveLabelId(): string | null {
   return useSyncExternalStore(subscribeActiveRoute, getActiveLabelId, () => null)
+}
+
+/** Subscribe to the active view ID. Returns null when no view is selected. */
+export function useActiveViewId(): string | null {
+  return useSyncExternalStore(subscribeActiveRoute, getActiveViewId, () => null)
 }
