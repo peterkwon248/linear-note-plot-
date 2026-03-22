@@ -1,0 +1,415 @@
+"use client"
+
+import { useMemo } from "react"
+import {
+  BookOpen,
+  Search,
+  Plus,
+  Clock,
+  TrendingUp,
+  AlertTriangle,
+  FileText,
+  CircleDot,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { shortRelative } from "@/lib/format-utils"
+import { WikiStatusDot } from "./wiki-shared"
+import type { Note } from "@/lib/types"
+
+/* ── Types ── */
+
+interface WikiDashboardProps {
+  wikiNotes: Note[]
+  stats: {
+    articles: number
+    redLinks: number
+    internalLinks: number
+    connectedNotes: number
+    stubs: number
+    drafts: number
+    complete: number
+  }
+  articleCount: number
+  coverageStats: { connected: number; total: number; percent: number }
+  redLinks: { title: string; refCount: number }[]
+  recentChanges: Note[]
+  mostConnected: { note: Note; count: number }[]
+  staleDocuments: { note: Note; daysAgo: number }[]
+  categories: { tags: { name: string; count: number }[]; uncategorized: number }
+
+  // Search
+  searchQuery: string
+  setSearchQuery: (q: string) => void
+  searchFocused: boolean
+  setSearchFocused: (f: boolean) => void
+  searchInputRef: React.RefObject<HTMLInputElement | null>
+  searchResults: Note[]
+  showSearchDropdown: boolean
+
+  // Actions
+  onOpenArticle: (id: string) => void
+  onCreateFromRedLink: (title: string) => void
+  onViewAll: () => void
+  onViewStubs: () => void
+  onCategoryClick?: (tagName: string) => void
+}
+
+/* ── Dashboard ── */
+
+export function WikiDashboard({
+  wikiNotes,
+  stats,
+  articleCount,
+  coverageStats,
+  redLinks,
+  recentChanges,
+  mostConnected,
+  staleDocuments,
+  categories,
+  searchQuery,
+  setSearchQuery,
+  searchFocused,
+  setSearchFocused,
+  searchInputRef,
+  searchResults,
+  showSearchDropdown,
+  onOpenArticle,
+  onCreateFromRedLink,
+  onViewAll,
+  onViewStubs,
+  onCategoryClick,
+}: WikiDashboardProps) {
+
+  // Featured article: most recently edited complete article
+  const featured = useMemo(() => {
+    return wikiNotes
+      .filter((n) => n.wikiStatus === "complete")
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      [0] ?? null
+  }, [wikiNotes])
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-6 py-6">
+
+        {/* ── Search ── */}
+        <div className="relative mb-6">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" strokeWidth={1.5} />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => { setTimeout(() => setSearchFocused(false), 150) }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && searchResults.length > 0) {
+                  onOpenArticle(searchResults[0].id)
+                  setSearchQuery("")
+                }
+                if (e.key === "Escape") {
+                  setSearchQuery("")
+                  searchInputRef.current?.blur()
+                }
+              }}
+              placeholder="Search wiki articles..."
+              className="h-9 w-full rounded-lg border border-border/60 bg-secondary/30 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-colors"
+            />
+          </div>
+          {showSearchDropdown && (
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border/60 bg-popover shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+              <div className="max-h-64 overflow-y-auto py-1">
+                {searchResults.map((note) => (
+                  <button
+                    key={note.id}
+                    onMouseDown={(e) => { e.preventDefault(); onOpenArticle(note.id); setSearchQuery("") }}
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-100 hover:bg-white/[0.04]"
+                  >
+                    <WikiStatusDot status={note.wikiStatus} />
+                    <span className="truncate">{note.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Top Stats Row ── */}
+        <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-4">
+          <MiniStat
+            label="Articles"
+            value={articleCount}
+            sub={`${stats.complete} complete`}
+            color="text-accent"
+            onClick={onViewAll}
+          />
+          <MiniStat
+            label="Stubs"
+            value={stats.stubs}
+            sub="need attention"
+            color="text-chart-3"
+            onClick={onViewStubs}
+          />
+          <MiniStat
+            label="Red Links"
+            value={stats.redLinks}
+            sub="missing articles"
+            color="text-destructive"
+          />
+          <CoverageStat
+            percent={coverageStats.percent}
+            connected={coverageStats.connected}
+            total={coverageStats.total}
+          />
+        </div>
+
+        {/* ── Featured Article ── */}
+        {featured && (
+          <button
+            onClick={() => onOpenArticle(featured.id)}
+            className="group mb-6 flex w-full items-start gap-4 rounded-xl border border-border/50 bg-card/30 p-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+              <Sparkles className="h-4 w-4 text-accent" strokeWidth={1.5} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="mb-0.5 flex items-center gap-2">
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40">Featured Article</span>
+              </div>
+              <h3 className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
+                {featured.title || "Untitled"}
+              </h3>
+              <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">
+                Updated {shortRelative(featured.updatedAt)}
+                {featured.tags.length > 0 && ` · ${featured.tags.length} categories`}
+              </p>
+            </div>
+            <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-accent" strokeWidth={1.5} />
+          </button>
+        )}
+
+        {/* ── Categories Grid ── */}
+        {categories.tags.length > 0 && (
+          <div className="mb-6">
+            <SectionLabel>Categories</SectionLabel>
+            <div className="flex flex-wrap gap-1.5">
+              {categories.tags.slice(0, 12).map((tag) => (
+                <button
+                  key={tag.name}
+                  onClick={() => onCategoryClick?.(tag.name)}
+                  className="rounded-[5px] bg-secondary/50 px-2 py-1 text-[11.5px] font-medium text-foreground/80 transition-colors hover:bg-secondary cursor-pointer"
+                >
+                  {tag.name}
+                  <span className="ml-1 text-muted-foreground/40 tabular-nums">{tag.count}</span>
+                </button>
+              ))}
+              {categories.uncategorized > 0 && (
+                <span className="rounded-[5px] bg-chart-3/5 px-2 py-1 text-[11.5px] font-medium text-chart-3/70">
+                  Uncategorized
+                  <span className="ml-1 tabular-nums">{categories.uncategorized}</span>
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Two-Column Content ── */}
+        <div className="grid grid-cols-1 gap-5 min-[700px]:grid-cols-2">
+
+          {/* Left Column */}
+          <div className="space-y-5">
+            {/* Recent Changes */}
+            {recentChanges.length > 0 && (
+              <ContentCard title="Recent Changes" icon={Clock}>
+                {recentChanges.map((note) => (
+                  <ArticleItem
+                    key={note.id}
+                    title={note.title || "Untitled"}
+                    status={note.wikiStatus}
+                    meta={shortRelative(note.updatedAt)}
+                    onClick={() => onOpenArticle(note.id)}
+                  />
+                ))}
+              </ContentCard>
+            )}
+
+            {/* Most Connected */}
+            {mostConnected.length > 0 && mostConnected[0].count > 0 && (
+              <ContentCard title="Hub Articles" icon={TrendingUp}>
+                {mostConnected.filter(({ count }) => count > 0).map(({ note, count }) => (
+                  <ArticleItem
+                    key={note.id}
+                    title={note.title || "Untitled"}
+                    status={note.wikiStatus}
+                    meta={`${count} links`}
+                    onClick={() => onOpenArticle(note.id)}
+                  />
+                ))}
+              </ContentCard>
+            )}
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-5">
+            {/* Red Links */}
+            {redLinks.length > 0 && (
+              <ContentCard title="Red Links" icon={AlertTriangle} iconColor="text-destructive/60">
+                {redLinks.slice(0, 6).map((item) => (
+                  <div key={item.title} className="group flex items-center gap-2 rounded-md px-2.5 py-[7px] transition-colors duration-100 hover:bg-white/[0.03]">
+                    <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-destructive/60" />
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-destructive/80">{item.title}</span>
+                    <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/50 group-hover:hidden">{item.refCount} refs</span>
+                    <button
+                      onClick={() => onCreateFromRedLink(item.title)}
+                      className="hidden shrink-0 items-center gap-0.5 text-2xs font-medium text-accent group-hover:flex"
+                    >
+                      <Plus className="h-3 w-3" strokeWidth={1.5} />
+                      Create
+                    </button>
+                  </div>
+                ))}
+              </ContentCard>
+            )}
+
+            {/* Stale Documents */}
+            {staleDocuments.length > 0 && (
+              <ContentCard title="Needs Review" icon={FileText}>
+                {staleDocuments.map(({ note, daysAgo }) => (
+                  <ArticleItem
+                    key={note.id}
+                    title={note.title || "Untitled"}
+                    status={note.wikiStatus}
+                    meta={`${daysAgo}d ago`}
+                    onClick={() => onOpenArticle(note.id)}
+                  />
+                ))}
+              </ContentCard>
+            )}
+          </div>
+        </div>
+
+        {/* ── Empty State ── */}
+        {wikiNotes.length === 0 && (
+          <div className="flex flex-col items-center gap-3 py-20 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
+              <BookOpen className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">No wiki articles yet</p>
+            <p className="text-xs text-muted-foreground/60">Create your first article or import existing notes</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Sub-Components ── */
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="mb-2.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40">
+      {children}
+    </h3>
+  )
+}
+
+function MiniStat({
+  label,
+  value,
+  sub,
+  color,
+  onClick,
+}: {
+  label: string
+  value: number
+  sub: string
+  color: string
+  onClick?: () => void
+}) {
+  const Wrapper = onClick ? "button" : "div"
+  return (
+    <Wrapper
+      onClick={onClick}
+      className={cn(
+        "rounded-lg border border-border/40 bg-card/50 px-3 py-2.5 text-left",
+        onClick && "cursor-pointer transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
+      )}
+    >
+      <p className={cn("text-xl font-semibold tabular-nums", color)}>{value}</p>
+      <p className="text-[11px] font-medium text-foreground/70">{label}</p>
+      <p className="text-2xs text-muted-foreground/40">{sub}</p>
+    </Wrapper>
+  )
+}
+
+function CoverageStat({
+  percent,
+  connected,
+  total,
+}: {
+  percent: number
+  connected: number
+  total: number
+}) {
+  return (
+    <div className="rounded-lg border border-border/40 bg-card/50 px-3 py-2.5">
+      <p className="text-xl font-semibold tabular-nums text-chart-5">{percent}%</p>
+      <p className="text-[11px] font-medium text-foreground/70">Coverage</p>
+      <div className="mt-1.5 h-1 w-full rounded-full bg-secondary/60">
+        <div
+          className="h-full rounded-full bg-chart-5 transition-all duration-300"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <p className="mt-0.5 text-2xs text-muted-foreground/40 tabular-nums">{connected} / {total}</p>
+    </div>
+  )
+}
+
+function ContentCard({
+  title,
+  icon: Icon,
+  iconColor = "text-muted-foreground/40",
+  children,
+}: {
+  title: string
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { strokeWidth?: number }>
+  iconColor?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="rounded-xl border border-border/40 bg-card/30">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
+        <Icon className={cn("h-3.5 w-3.5", iconColor)} strokeWidth={1.5} />
+        <h3 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/50">{title}</h3>
+      </div>
+      <div className="px-1.5 py-1">{children}</div>
+    </div>
+  )
+}
+
+function ArticleItem({
+  title,
+  status,
+  meta,
+  onClick,
+}: {
+  title: string
+  status: string | null
+  meta: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-[7px] text-left transition-colors duration-100 hover:bg-white/[0.03]"
+    >
+      <WikiStatusDot status={status as any} />
+      <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/90">{title}</span>
+      <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/40">{meta}</span>
+    </button>
+  )
+}

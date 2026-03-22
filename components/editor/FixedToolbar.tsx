@@ -36,6 +36,7 @@ interface FixedToolbarProps {
   editor: Editor | null
   position?: 'top' | 'bottom'
   onTogglePosition?: () => void
+  noteId?: string
 }
 
 function ToolbarButton({
@@ -266,7 +267,7 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
   )
 }
 
-export function FixedToolbar({ editor, position = 'bottom', onTogglePosition }: FixedToolbarProps) {
+export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, noteId }: FixedToolbarProps) {
   const editorState = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -329,7 +330,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition }: 
         minWidth: 0,
       }}
     >
-      <InsertMenu editor={editor} />
+      <InsertMenu editor={editor} noteId={noteId} />
       <ToolbarDivider />
       <HeadingDropdown editor={editor} />
       <ToolbarDivider />

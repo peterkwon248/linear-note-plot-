@@ -477,5 +477,20 @@ export function migrate(persistedState: unknown): PlotState {
   // v45: savedViews (custom views system)
   if (!state.savedViews) state.savedViews = []
 
+  // v46: Replace old English seed data with tutorial + Zettelkasten seeds
+  {
+    const notes = state.notes as any[]
+    const oldSeedNote = notes?.find((n: any) => n.id === "note-1")
+    if (oldSeedNote && oldSeedNote.title === "Welcome to Plot" && !notes.some((n: any) => n.id === "note-wiki-1")) {
+      const { SEED_NOTES, SEED_TAGS } = require("./seeds")
+      const oldSeedIds = new Set(["note-1", "note-2", "note-3", "note-4", "note-5", "note-6"])
+      state.notes = [
+        ...notes.filter((n: any) => !oldSeedIds.has(n.id)),
+        ...SEED_NOTES,
+      ] as any
+      state.tags = SEED_TAGS as any
+    }
+  }
+
   return state as unknown as PlotState
 }

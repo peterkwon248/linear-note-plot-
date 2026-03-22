@@ -10,17 +10,12 @@ import {
   BookOpen,
   Plus,
   Search,
-  TrendingUp,
-  CircleDot,
   AlertTriangle,
   ArrowLeft,
   PenLine,
   Check,
   ArrowUpFromLine,
   FileText,
-  List,
-  ChevronUp,
-  Clock,
   MoreHorizontal,
   ArrowDownFromLine,
 } from "lucide-react"
@@ -30,26 +25,19 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { groupByInitial, INDEX_GROUPS } from "@/lib/korean-utils"
 import { startAutoEnrollment, stopAutoEnrollment } from "@/lib/wiki-auto-enroll"
-import type { WikiStatus, StubSource } from "@/lib/types"
+import type { StubSource } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { useWikiViewMode, setWikiViewMode } from "@/lib/wiki-view-mode"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
-import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
-import { shortRelative } from "@/lib/format-utils"
-import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
-import { WikiTOC } from "@/components/editor/wiki-toc"
-import { WikiInfobox } from "@/components/editor/wiki-infobox"
-import { WikiCategories } from "@/components/editor/wiki-categories"
-import { WikiDisambig } from "@/components/editor/wiki-disambig"
-import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
-import { BacklinksFooter } from "@/components/editor/backlinks-footer"
-import { WikiCollectionSidebar } from "@/components/editor/wiki-collection-sidebar"
 import { toast } from "sonner"
 import { ViewDistributionPanel, type DistributionItem } from "@/components/view-distribution-panel"
+import { WikiArticleReader } from "./wiki-article-reader"
+import { WikiDashboard } from "./wiki-dashboard"
+import { WikiList } from "./wiki-list"
+import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -72,6 +60,9 @@ export function WikiView() {
 
   // Dashboard filter
   const [dashFilter, setDashFilter] = useState<"all" | "stubs" | "drafts" | "complete">("all")
+
+  // Category filter from sidebar click
+  const categoryFilterTagId = useWikiCategoryFilter()
 
   // All Articles view state
   const [showAllArticles, setShowAllArticles] = useState(false)
@@ -214,12 +205,17 @@ export function WikiView() {
 
   // Filter by wikiStatus
   const filteredWikiNotes = useMemo(() => {
-    if (dashFilter === "all") return wikiNotes
-    if (dashFilter === "stubs") return wikiNotes.filter(n => n.wikiStatus === "stub")
-    if (dashFilter === "drafts") return wikiNotes.filter(n => n.wikiStatus === "draft")
-    if (dashFilter === "complete") return wikiNotes.filter(n => n.wikiStatus === "complete")
-    return wikiNotes
-  }, [wikiNotes, dashFilter])
+    let result = wikiNotes
+    // Apply status filter
+    if (dashFilter === "stubs") result = result.filter(n => n.wikiStatus === "stub")
+    else if (dashFilter === "drafts") result = result.filter(n => n.wikiStatus === "draft")
+    else if (dashFilter === "complete") result = result.filter(n => n.wikiStatus === "complete")
+    // Apply category filter from sidebar
+    if (categoryFilterTagId) {
+      result = result.filter(n => n.tags.includes(categoryFilterTagId))
+    }
+    return result
+  }, [wikiNotes, dashFilter, categoryFilterTagId])
 
   // Sorted by updatedAt descending for articles table-list
   const sortedFilteredWikiNotes = useMemo(
@@ -228,12 +224,6 @@ export function WikiView() {
         (a, b) =>
           new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       ),
-    [filteredWikiNotes]
-  )
-
-  // Grouped by 초성 for All Articles view (uses filtered notes when filter active)
-  const groupedArticles = useMemo(
-    () => groupByInitial(filteredWikiNotes, (n) => n.title || "Untitled"),
     [filteredWikiNotes]
   )
 
@@ -501,18 +491,21 @@ export function WikiView() {
       if (n.tags.length === 0) {
         uncategorized++
       } else {
-        for (const tag of n.tags) {
-          tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1)
+        for (const tagId of n.tags) {
+          tagCounts.set(tagId, (tagCounts.get(tagId) ?? 0) + 1)
         }
       }
     }
     return {
       tags: Array.from(tagCounts.entries())
         .sort((a, b) => b[1] - a[1])
-        .map(([name, count]) => ({ name, count })),
+        .map(([tagId, count]) => ({
+          name: tags.find(t => t.id === tagId)?.name ?? tagId,
+          count,
+        })),
       uncategorized,
     }
-  }, [wikiNotes])
+  }, [wikiNotes, tags])
 
   // Card data: stale documents (14+ days since update)
   const staleDocuments = useMemo(() => {
@@ -722,457 +715,61 @@ export function WikiView() {
            Dashboard Mode
            ══════════════════════════════════════════════════ */
         <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-[860px] px-6 py-8">
-            {/* Hero Section */}
-            <div className="mb-10 text-center">
-              <div className="mb-3 flex items-center justify-center gap-2.5">
-                <BookOpen className="h-6 w-6 text-accent" strokeWidth={1.5} />
-                <h2 className="text-xl font-semibold text-foreground">Overview</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">Your personal encyclopedia</p>
-            </div>
-
-            {/* Search bar */}
-            <div className="relative mb-8">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => {
-                    setTimeout(() => setSearchFocused(false), 150)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && searchResults.length > 0) {
-                      openArticle(searchResults[0].id)
-                      setSearchQuery("")
-                    }
-                    if (e.key === "Escape") {
-                      setSearchQuery("")
-                      searchInputRef.current?.blur()
-                    }
-                  }}
-                  placeholder="Search wiki articles..."
-                  className="h-9 w-full rounded-lg border border-border bg-secondary/50 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-                />
-              </div>
-
-              {/* Search dropdown */}
-              {showSearchDropdown && (
-                <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-popover shadow-md">
-                  <div className="max-h-64 overflow-y-auto py-1">
-                    {searchResults.map((note) => (
-                      <button
-                        key={note.id}
-                        onMouseDown={(e) => {
-                          e.preventDefault()
-                          openArticle(note.id)
-                          setSearchQuery("")
-                        }}
-                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
-                      >
-                        <BookOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
-                        <span className="truncate">{note.title || "Untitled"}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 5 stat cards — clickable drill-down */}
-            <div className="grid grid-cols-5 gap-4 mb-8">
-              <StatCard icon={BookOpen} label="Total" value={stats.articles} color="text-foreground" onClick={() => { setWikiViewMode("list"); setDashFilter("all") }} />
-              <StatCard icon={FileText} label="Articles" value={articleCount} color="text-accent" onClick={() => { setWikiViewMode("list"); setDashFilter("all") }} />
-              <StatCard icon={CircleDot} label="Stubs" value={stats.stubs} color="text-chart-3" onClick={() => { setWikiViewMode("list"); setDashFilter("stubs") }} />
-              <StatCard icon={AlertTriangle} label="Red Links" value={stats.redLinks} color="text-destructive" />
-              {/* Coverage card with progress bar */}
-              <div className="rounded-lg border border-border bg-card p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="h-4 w-4 text-chart-5" strokeWidth={1.5} />
-                  <span className="text-xs font-medium text-muted-foreground">Coverage</span>
-                </div>
-                <p className="text-2xl font-semibold tabular-nums text-foreground">{coverageStats.percent}%</p>
-                <div className="mt-2 h-1.5 w-full rounded-full bg-secondary">
-                  <div className="h-full rounded-full bg-chart-5 transition-all duration-300" style={{ width: `${coverageStats.percent}%` }} />
-                </div>
-                <p className="mt-1 text-[10px] text-muted-foreground">{coverageStats.connected} / {coverageStats.total}</p>
-              </div>
-            </div>
-
-            {/* Actionable insight cards -- 2-column grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Stale Documents */}
-              {staleDocuments.length > 0 && (
-                <DashboardCard title="Stale Documents" subtitle="Not updated in 14+ days">
-                  {staleDocuments.map(({ note: staleNote, daysAgo }) => (
-                    <button
-                      key={staleNote.id}
-                      onClick={() => openArticle(staleNote.id)}
-                      className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-secondary"
-                    >
-                      <Clock className="h-3 w-3 shrink-0 text-muted-foreground" strokeWidth={1.5} />
-                      <span className="min-w-0 flex-1 truncate text-xs text-foreground">{staleNote.title || "Untitled"}</span>
-                      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground group-hover:hidden">{daysAgo}d ago</span>
-                      <span className="hidden shrink-0 text-[10px] font-medium text-accent group-hover:block">Open</span>
-                    </button>
-                  ))}
-                </DashboardCard>
-              )}
-
-              {/* Red Links */}
-              {redLinks.length > 0 && (
-                <DashboardCard title="Red Links" subtitle="Referenced but not created">
-                  {redLinks.slice(0, 5).map((item) => (
-                    <div key={item.title} className="group flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors duration-150 hover:bg-secondary">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
-                      <span className="min-w-0 flex-1 truncate text-xs text-destructive">{item.title}</span>
-                      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground group-hover:hidden">{item.refCount} refs</span>
-                      <button
-                        onClick={() => handleCreateFromRedLink(item.title)}
-                        className="hidden shrink-0 items-center gap-0.5 text-[10px] font-medium text-accent group-hover:flex"
-                      >
-                        <Plus className="h-3 w-3" strokeWidth={1.5} />
-                        Create
-                      </button>
-                    </div>
-                  ))}
-                </DashboardCard>
-              )}
-
-              {/* Most Connected */}
-              {mostConnected.length > 0 && mostConnected[0].count > 0 && (
-                <DashboardCard title="Most Connected" subtitle="Hub articles">
-                  {mostConnected.filter(({ count }) => count > 0).map(({ note: connNote, count }) => (
-                    <button
-                      key={connNote.id}
-                      onClick={() => openArticle(connNote.id)}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-secondary"
-                    >
-                      <WikiStatusDot status={connNote.wikiStatus} />
-                      <span className="min-w-0 flex-1 truncate text-xs text-foreground">{connNote.title || "Untitled"}</span>
-                      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{count} links</span>
-                    </button>
-                  ))}
-                </DashboardCard>
-              )}
-
-              {/* Recent Changes */}
-              {recentChanges.length > 0 && (
-                <DashboardCard title="Recent Changes">
-                  {recentChanges.map((rcNote) => (
-                    <button
-                      key={rcNote.id}
-                      onClick={() => openArticle(rcNote.id)}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-secondary"
-                    >
-                      <WikiStatusDot status={rcNote.wikiStatus} />
-                      <span className="min-w-0 flex-1 truncate text-xs text-foreground">{rcNote.title || "Untitled"}</span>
-                      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{shortRelative(rcNote.updatedAt)}</span>
-                    </button>
-                  ))}
-                </DashboardCard>
-              )}
-            </div>
-          </div>
-        </div>
-        {showDistribution && (
-          <ViewDistributionPanel
-            tabs={wikiDistributionTabs}
-            getDistribution={getWikiDistribution}
-            onItemClick={handleWikiDistributionClick}
-            onClose={() => setShowDistribution(false)}
+          <WikiDashboard
+            wikiNotes={wikiNotes}
+            stats={stats}
+            articleCount={articleCount}
+            coverageStats={coverageStats}
+            redLinks={redLinks}
+            recentChanges={recentChanges}
+            mostConnected={mostConnected}
+            staleDocuments={staleDocuments}
+            categories={categories}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            searchFocused={searchFocused}
+            setSearchFocused={setSearchFocused}
+            searchInputRef={searchInputRef}
+            searchResults={searchResults}
+            showSearchDropdown={showSearchDropdown}
+            onOpenArticle={openArticle}
+            onCreateFromRedLink={handleCreateFromRedLink}
+            onViewAll={() => { setWikiViewMode("list"); setDashFilter("all") }}
+            onViewStubs={() => { setWikiViewMode("list"); setDashFilter("stubs") }}
+            onCategoryClick={(tagName) => {
+              const tag = tags.find(t => t.name === tagName)
+              if (tag) {
+                setWikiCategoryFilter(tag.id)
+                setWikiViewMode("list")
+              }
+            }}
           />
-        )}
+          {showDistribution && (
+            <ViewDistributionPanel
+              tabs={wikiDistributionTabs}
+              getDistribution={getWikiDistribution}
+              onItemClick={handleWikiDistributionClick}
+              onClose={() => setShowDistribution(false)}
+            />
+          )}
         </div>
       ) : (
         /* ══════════════════════════════════════════════════
            List Mode (table-list view)
            ══════════════════════════════════════════════════ */
         <div className="flex flex-1 overflow-hidden">
-          {/* Left: Main content */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-6 py-6">
-              {/* Back to Overview */}
-              <div className="mb-4">
-                <button
-                  onClick={() => setWikiViewMode("dashboard")}
-                  className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Overview
-                </button>
-              </div>
-
-              {/* Search bar */}
-              <div className="relative mb-6">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => {
-                      setTimeout(() => setSearchFocused(false), 150)
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && searchResults.length > 0) {
-                        openArticle(searchResults[0].id)
-                        setSearchQuery("")
-                      }
-                      if (e.key === "Escape") {
-                        setSearchQuery("")
-                        searchInputRef.current?.blur()
-                      }
-                    }}
-                    placeholder="Search wiki articles..."
-                    className="h-9 w-full rounded-lg border border-border bg-secondary/50 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-
-                {/* Search dropdown */}
-                {showSearchDropdown && (
-                  <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-popover shadow-md">
-                    <div className="max-h-64 overflow-y-auto py-1">
-                      {searchResults.map((note) => (
-                        <button
-                          key={note.id}
-                          onMouseDown={(e) => {
-                            e.preventDefault()
-                            openArticle(note.id)
-                            setSearchQuery("")
-                          }}
-                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
-                        >
-                          <BookOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
-                          <span className="truncate">{note.title || "Untitled"}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Stat cards row */}
-              <div className="grid grid-cols-5 gap-4 mb-8">
-                <StatCard icon={BookOpen} label="Total" value={stats.articles} color="text-foreground" onClick={() => setDashFilter("all")} />
-                <StatCard icon={FileText} label="Articles" value={articleCount} color="text-accent" onClick={() => setDashFilter("all")} />
-                <StatCard icon={CircleDot} label="Stubs" value={stats.stubs} color="text-chart-3" onClick={() => setDashFilter("stubs")} />
-                <StatCard icon={AlertTriangle} label="Red Links" value={stats.redLinks} color="text-destructive" />
-                <StatCard icon={TrendingUp} label="Connected" value={stats.connectedNotes} color="text-chart-5" />
-              </div>
-
-              {/* Articles section header */}
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Articles</h3>
-                <div className="flex items-center gap-1">
-                  {(["all", "complete", "drafts", "stubs"] as const).map((tab) => {
-                    const labels = { all: "All", complete: "Complete", drafts: "Draft", stubs: "Stub" }
-                    return (
-                      <button
-                        key={tab}
-                        onClick={() => {
-                          setDashFilter(tab)
-                          setShowAllArticles(false)
-                        }}
-                        className={cn(
-                          "rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150",
-                          dashFilter === tab && !showAllArticles
-                            ? "bg-accent text-accent-foreground"
-                            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                        )}
-                      >
-                        {labels[tab]}
-                      </button>
-                    )
-                  })}
-                  <span className="mx-1.5 text-border">|</span>
-                  <button
-                    onClick={() => setShowAllArticles(!showAllArticles)}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150",
-                      showAllArticles
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                    )}
-                  >
-                    <List className="h-3 w-3" strokeWidth={1.5} />
-                    Index
-                  </button>
-                </div>
-              </div>
-
-              {/* Articles list OR Index view */}
-              {showAllArticles ? (
-                /* ── All Articles Alphabetical Index ── */
-                <div>
-                  {/* Jump Navigation */}
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {INDEX_GROUPS.filter(g => groupedArticles.has(g)).map(group => (
-                      <button
-                        key={group}
-                        onClick={() => {
-                          const el = document.getElementById(`wiki-group-${group}`)
-                          el?.scrollIntoView({ behavior: "smooth", block: "start" })
-                        }}
-                        className="w-7 h-7 rounded text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors duration-150"
-                      >
-                        {group}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Grouped List */}
-                  <div className="space-y-6">
-                    {Array.from(groupedArticles.entries()).map(([group, articles]) => (
-                      <div key={group} id={`wiki-group-${group}`}>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 sticky top-0 bg-background py-1 z-10">
-                          {group}
-                        </h3>
-                        <div className="space-y-0.5">
-                          {articles.map(note => (
-                            <button
-                              key={note.id}
-                              onClick={() => openArticle(note.id)}
-                              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-secondary"
-                            >
-                              <WikiStatusDot status={note.wikiStatus} />
-                              <span className="min-w-0 flex-1 truncate text-foreground">
-                                {note.title || "Untitled"}
-                              </span>
-                              {note.wikiStatus && (
-                                <span className={cn(
-                                  "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize",
-                                  note.wikiStatus === "stub" ? "bg-chart-3/10 text-chart-3" :
-                                  note.wikiStatus === "draft" ? "bg-accent/10 text-accent" :
-                                  "bg-chart-5/10 text-chart-5"
-                                )}>
-                                  {note.wikiStatus}
-                                </span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                /* ── Articles Table-List ── */
-                <div>
-                  {sortedFilteredWikiNotes.length === 0 ? (
-                    <div className="py-12 text-center">
-                      <p className="text-sm text-muted-foreground">No articles found</p>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-border rounded-lg border border-border">
-                      {sortedFilteredWikiNotes.map(note => (
-                        <ArticleRow
-                          key={note.id}
-                          note={note}
-                          onOpen={openArticle}
-                          backlinkCount={backlinkCounts.get(note.id) ?? 0}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right sidebar */}
-          <div className="w-[280px] shrink-0 border-l border-border overflow-y-auto px-5 py-6">
-            {/* Categories */}
-            <SidebarSection title="Categories">
-              {categories.tags.length === 0 && categories.uncategorized === 0 ? (
-                <p className="text-xs text-muted-foreground">No categories</p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {categories.tags.map((tag) => (
-                    <span
-                      key={tag.name}
-                      className="rounded-full bg-accent/10 text-accent px-2 py-0.5 text-xs font-medium"
-                    >
-                      {tag.name} ({tag.count})
-                    </span>
-                  ))}
-                  {categories.uncategorized > 0 && (
-                    <span className="rounded-full bg-chart-3/10 text-chart-3 px-2 py-0.5 text-xs font-medium">
-                      Uncategorized ({categories.uncategorized})
-                    </span>
-                  )}
-                </div>
-              )}
-            </SidebarSection>
-
-            {/* Recent */}
-            <SidebarSection title="Recent">
-              {recentChanges.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No recent changes</p>
-              ) : (
-                <ul className="space-y-0.5">
-                  {recentChanges.map((note) => (
-                    <li key={note.id}>
-                      <button
-                        onClick={() => openArticle(note.id)}
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-secondary"
-                      >
-                        <WikiStatusDot status={note.wikiStatus} />
-                        <span className="min-w-0 flex-1 truncate text-xs text-foreground">
-                          {note.title || "Untitled"}
-                        </span>
-                        <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
-                          {shortRelative(note.updatedAt)}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </SidebarSection>
-
-            {/* Red Links */}
-            {redLinks.length > 0 && (
-              <SidebarSection title="Red Links">
-                <ul className="space-y-0.5">
-                  {redLinks.slice(0, 5).map((item) => (
-                    <li key={item.title} className="group">
-                      <button
-                        onClick={() => handleCreateFromRedLink(item.title)}
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-secondary"
-                      >
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
-                        <span className="min-w-0 flex-1 truncate text-xs text-destructive">
-                          {item.title}
-                        </span>
-                        <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground group-hover:hidden">
-                          {item.refCount}
-                        </span>
-                        <span className="hidden shrink-0 items-center gap-0.5 text-[10px] font-medium text-accent group-hover:flex">
-                          <Plus className="h-3 w-3" strokeWidth={1.5} />
-                          Create
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </SidebarSection>
-            )}
-
-            {/* Stubs by Source */}
-            {stats.stubs > 0 && (
-              <SidebarSection title="Stubs by Source">
-                <StubsBySourceList items={stubsBySource} />
-              </SidebarSection>
-            )}
-          </div>
+          <WikiList
+            filteredWikiNotes={filteredWikiNotes}
+            sortedFilteredWikiNotes={sortedFilteredWikiNotes}
+            backlinkCounts={backlinkCounts}
+            dashFilter={dashFilter}
+            setDashFilter={setDashFilter}
+            showAllArticles={showAllArticles}
+            setShowAllArticles={setShowAllArticles}
+            categoryFilterLabel={categoryFilterTagId ? tags.find(t => t.id === categoryFilterTagId)?.name ?? null : null}
+            onClearCategoryFilter={() => setWikiCategoryFilter(null)}
+            onOpenArticle={openArticle}
+          />
           {showDistribution && (
             <ViewDistributionPanel
               tabs={wikiDistributionTabs}
@@ -1184,316 +781,5 @@ export function WikiView() {
         </div>
       )}
     </div>
-  )
-}
-
-/* ── Article Reader ──────────────────────────────── */
-
-function WikiArticleReader({
-  noteId,
-  onNavigate,
-  isEditing = false,
-}: {
-  noteId: string
-  onNavigate: (id: string) => void
-  isEditing?: boolean
-}) {
-  const notes = usePlotStore((s) => s.notes)
-  const allTags = usePlotStore((s) => s.tags)
-  const relations = usePlotStore((s) => s.relations)
-  const setWikiStatus = usePlotStore((s) => s.setWikiStatus)
-  const backlinks = useBacklinksFor(noteId)
-  const editorRef = useRef<any>(null)
-
-  const note = notes.find((n) => n.id === noteId)
-  if (!note) return null
-
-  const backlinkCount = backlinks.length
-  const relationCount = relations.filter(
-    (r) => r.sourceNoteId === noteId || r.targetNoteId === noteId
-  ).length
-
-  // Edit mode: editor + collection sidebar
-  if (isEditing) {
-    return (
-      <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-8 py-6 max-w-[780px]">
-            <NoteEditorAdapter
-              note={note}
-              editable={true}
-              onEditorReady={(ed) => { editorRef.current = ed }}
-            />
-          </div>
-        </div>
-        <WikiCollectionSidebar
-          noteId={noteId}
-          onNavigate={onNavigate}
-          onInsertLink={(title: string) => {
-            const editor = editorRef.current
-            if (editor) {
-              editor.chain().focus().insertContent(`[[${title}]]`).run()
-              toast.success(`Inserted [[${title}]]`, { duration: 1500 })
-            }
-          }}
-          onInsertQuote={(sourceNoteId: string, sourceTitle: string, quotedText: string) => {
-            const editor = editorRef.current
-            if (editor) {
-              editor.chain().focus().insertContent({
-                type: "wikiQuote",
-                attrs: {
-                  sourceNoteId,
-                  sourceTitle,
-                  quotedText,
-                  quotedAt: new Date().toISOString(),
-                },
-              }).run()
-              toast.success(`Quote from "${sourceTitle}" inserted`, { duration: 1500 })
-            }
-          }}
-        />
-      </div>
-    )
-  }
-
-  // Read mode: 3-column layout
-  return (
-    <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
-      {/* Left: TOC sidebar */}
-      <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border p-4">
-        <div className="sticky top-0">
-          <WikiTOC content={note.content} className="w-full" />
-        </div>
-      </aside>
-
-      {/* Center: Article content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="wiki-read-content px-8 py-6 max-w-[780px]">
-          {/* Disambig banner */}
-          <WikiDisambig noteId={note.id} noteTitle={note.title} onNavigate={onNavigate} />
-
-          {/* Title */}
-          <h1 className="text-[28px] font-bold text-foreground mb-1">
-            {note.title || "Untitled"}
-          </h1>
-
-          {/* Aliases as subtitle */}
-          {note.aliases && note.aliases.length > 0 && (
-            <p className="text-sm text-muted-foreground mb-6">
-              {note.aliases.join(" \u00b7 ")}
-            </p>
-          )}
-
-          {/* Article body */}
-          <NoteEditorAdapter note={note} editable={false} />
-
-          {/* Related wiki docs */}
-          <WikiRelatedDocs noteId={note.id} onNavigate={onNavigate} />
-
-          {/* Backlinks */}
-          <BacklinksFooter noteId={note.id} onNavigate={onNavigate} />
-        </div>
-      </div>
-
-      {/* Right: Infobox sidebar */}
-      <aside className="w-[260px] shrink-0 overflow-y-auto border-l border-border p-4 space-y-4">
-        {/* Infobox */}
-        {(note.wikiInfobox ?? []).length > 0 && (
-          <WikiInfobox
-            noteId={note.id}
-            entries={note.wikiInfobox ?? []}
-            editable={false}
-            className="w-full"
-          />
-        )}
-
-        {/* Categories as badges */}
-        {note.tags.length > 0 && (
-          <WikiCategories noteTagIds={note.tags} allTags={allTags.filter((t) => !t.trashed)} />
-        )}
-
-        {/* Wiki Quality Track */}
-        {note.isWiki && note.wikiStatus && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Quality
-            </h4>
-            <div className="flex items-center gap-2">
-              <WikiStatusBadge status={note.wikiStatus} />
-              {note.stubSource && note.wikiStatus === "stub" && (
-                <span className="text-[10px] text-muted-foreground">
-                  via {note.stubSource}
-                </span>
-              )}
-            </div>
-            {/* Promotion buttons */}
-            <div className="flex gap-1.5">
-              {note.wikiStatus === "stub" && (
-                <button
-                  onClick={() => setWikiStatus(note.id, "draft")}
-                  className="flex items-center gap-1 rounded-md bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-500 transition-colors hover:bg-blue-500/20"
-                >
-                  <ChevronUp className="h-3 w-3" />
-                  Promote to Draft
-                </button>
-              )}
-              {note.wikiStatus === "draft" && (
-                <button
-                  onClick={() => setWikiStatus(note.id, "complete")}
-                  className="flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-500 transition-colors hover:bg-emerald-500/20"
-                >
-                  <ChevronUp className="h-3 w-3" />
-                  Mark Complete
-                </button>
-              )}
-              {note.wikiStatus === "complete" && (
-                <span className="flex items-center gap-1 text-xs text-emerald-500">
-                  <Check className="h-3 w-3" />
-                  Complete
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Activity stats */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Activity
-          </h4>
-          <div className="space-y-1.5">
-            <StatRow label="Connected notes" value={`${backlinkCount}`} />
-            <StatRow label="Ontology links" value={`${relationCount}`} />
-            <StatRow label="Last modified" value={shortRelative(note.updatedAt)} />
-          </div>
-        </div>
-      </aside>
-    </div>
-  )
-}
-
-/* ── Sub-components ──────────────────────────────── */
-
-function StatRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-2xs text-muted-foreground">{label}</span>
-      <span className="text-2xs font-medium text-foreground">{value}</span>
-    </div>
-  )
-}
-
-function StatCard({ icon: Icon, label, value, color, onClick }: { icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { strokeWidth?: number }>; label: string; value: number; color: string; onClick?: () => void }) {
-  const Wrapper = onClick ? "button" : "div"
-  return (
-    <Wrapper
-      onClick={onClick}
-      className={cn(
-        "rounded-lg border border-border bg-card p-4 text-left",
-        onClick && "transition-colors duration-150 hover:bg-secondary/50 hover:border-accent/30 cursor-pointer"
-      )}
-    >
-      <div className="flex items-center gap-2 mb-1">
-        <Icon className={cn("h-4 w-4", color)} strokeWidth={1.5} />
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      </div>
-      <p className="text-2xl font-semibold tabular-nums text-foreground">{value}</p>
-    </Wrapper>
-  )
-}
-
-function ArticleRow({ note, onOpen, backlinkCount }: { note: { id: string; title: string; wikiStatus: WikiStatus | null; preview?: string; updatedAt: string }; onOpen: (id: string) => void; backlinkCount: number }) {
-  return (
-    <button
-      onClick={() => onOpen(note.id)}
-      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-secondary/50"
-    >
-      <WikiStatusDot status={note.wikiStatus} />
-      <div className="min-w-0 flex-1">
-        <span className="text-sm font-medium text-foreground">{note.title || "Untitled"}</span>
-        {note.preview && (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{note.preview}</p>
-        )}
-      </div>
-      {backlinkCount > 0 && (
-        <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground">
-          {backlinkCount} links
-        </span>
-      )}
-      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-        {shortRelative(note.updatedAt)}
-      </span>
-    </button>
-  )
-}
-
-function SidebarSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-6">
-      <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h4>
-      {children}
-    </div>
-  )
-}
-
-function DashboardCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{title}</h3>
-      {subtitle && <p className="text-[10px] text-muted-foreground mb-3">{subtitle}</p>}
-      <div className="space-y-0.5">{children}</div>
-    </div>
-  )
-}
-
-function WikiStatusDot({ status }: { status: WikiStatus | null }) {
-  if (!status) return <span className="h-2 w-2 rounded-full shrink-0 bg-muted-foreground/30" />
-  const colors: Record<string, string> = {
-    stub: "bg-chart-3",
-    draft: "bg-accent",
-    complete: "bg-chart-5",
-  }
-  return <span className={cn("h-2 w-2 rounded-full shrink-0", colors[status] ?? "bg-muted-foreground/30")} />
-}
-
-const STUB_SOURCE_LABELS: Record<string, string> = {
-  "red-link": "Red Links",
-  "tag": "Tags",
-  "backlink": "Backlinks",
-  "manual": "Manual",
-}
-
-const STUB_SOURCE_COLORS: Record<string, string> = {
-  "red-link": "bg-destructive/10 text-destructive",
-  "tag": "bg-accent/10 text-accent",
-  "backlink": "bg-blue-500/10 text-blue-500",
-  "manual": "bg-secondary text-muted-foreground",
-}
-
-function StubsBySourceList({ items }: { items: [string, number][] }) {
-  return (
-    <div className="space-y-2">
-      {items.map(([source, count]) => (
-        <div key={source} className="flex items-center justify-between">
-          <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", STUB_SOURCE_COLORS[source] ?? "bg-secondary text-muted-foreground")}>
-            {STUB_SOURCE_LABELS[source] ?? source}
-          </span>
-          <span className="text-xs tabular-nums font-medium text-foreground">{count}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function WikiStatusBadge({ status }: { status: WikiStatus }) {
-  const styles: Record<string, string> = {
-    stub: "bg-yellow-500/10 text-yellow-500",
-    draft: "bg-blue-500/10 text-blue-500",
-    complete: "bg-emerald-500/10 text-emerald-500",
-  }
-  return (
-    <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium capitalize", styles[status])}>
-      {status}
-    </span>
   )
 }

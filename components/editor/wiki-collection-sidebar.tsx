@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
+import { persistAttachmentBlob } from "@/lib/store/helpers"
+import { useRef } from "react"
 import {
   FileText,
   Link,
@@ -10,6 +12,7 @@ import {
   Search,
   CircleDot,
   ExternalLink,
+  Paperclip,
 } from "lucide-react"
 import {
   Popover,
@@ -186,6 +189,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
           <div className="flex flex-wrap gap-1 mt-2">
             <AddNotePopover noteId={noteId} onAdd={addToCollection} notes={notes} />
             <AddUrlPopover noteId={noteId} onAdd={addToCollection} />
+            <AddFileButton noteId={noteId} onAdd={addToCollection} />
             <AddMemoPopover noteId={noteId} onAdd={addToCollection} />
           </div>
         </SidebarSection>
@@ -254,6 +258,7 @@ function CollectionItemRow({
       {item.type === "note" && <FileText className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />}
       {item.type === "url" && <Link className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />}
       {item.type === "text" && <Type className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />}
+      {(item.type === "file" || item.type === "image") && <Paperclip className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />}
 
       <div className="flex-1 min-w-0">
         {item.type === "note" && (
@@ -285,6 +290,19 @@ function CollectionItemRow({
         )}
         {item.type === "text" && (
           <span className="text-sm text-muted-foreground truncate block">{item.text}</span>
+        )}
+        {(item.type === "file" || item.type === "image") && (
+          <span className="text-sm text-muted-foreground truncate block">
+            {item.fileName || "File"}
+            {item.fileSize && (
+              <span className="ml-1 text-xs text-muted-foreground/50">
+                ({item.fileSize < 1024 * 1024
+                  ? `${(item.fileSize / 1024).toFixed(0)} KB`
+                  : `${(item.fileSize / (1024 * 1024)).toFixed(1)} MB`
+                })
+              </span>
+            )}
+          </span>
         )}
       </div>
 
@@ -476,5 +494,60 @@ function AddMemoPopover({
         </button>
       </PopoverContent>
     </Popover>
+  )
+}
+
+function AddFileButton({
+  noteId,
+  onAdd,
+}: {
+  noteId: string
+  onAdd: (wikiNoteId: string, item: Omit<WikiCollectionItem, "id" | "addedAt">) => void
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const addAttachment = usePlotStore((s) => s.addAttachment)
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const buffer = await file.arrayBuffer()
+    const attachmentId = addAttachment({
+      noteId,
+      name: file.name,
+      type: file.type.startsWith("image/") ? "image" : "file",
+      url: "",
+      mimeType: file.type || "application/octet-stream",
+      size: file.size,
+    })
+    persistAttachmentBlob({ id: attachmentId, data: buffer })
+
+    onAdd(noteId, {
+      type: file.type.startsWith("image/") ? "image" : "file",
+      attachmentId,
+      fileName: file.name,
+      fileSize: file.size,
+      fileMimeType: file.type || "application/octet-stream",
+    })
+
+    e.target.value = ""
+  }
+
+  return (
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        onChange={handleFileSelected}
+        style={{ display: "none" }}
+      />
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md px-2 py-1 transition-colors duration-150"
+      >
+        <Plus className="w-3 h-3" />
+        Add file
+      </button>
+    </>
   )
 }

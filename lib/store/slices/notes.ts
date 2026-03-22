@@ -355,10 +355,12 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
 
     createWikiStub: (title: string, aliases?: string[], stubSource?: StubSource) => {
       const id = genId()
+      // Wiki template: pre-fill with basic structure so TOC appears immediately
+      const templateContent = `## Overview\n\n\n\n## Details\n\n\n\n## See Also\n\n`
       const newNote: Note = {
         id,
         title,
-        content: "",
+        content: templateContent,
         contentJson: null,
         folderId: null,
         tags: [],
@@ -383,7 +385,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       set((state: any) => ({
         notes: [newNote, ...state.notes],
       }))
-      persistBody({ id, content: "", contentJson: null })
+      persistBody({ id, content: templateContent, contentJson: null })
       appendEvent(id, "created", { isWikiStub: true })
       return id
     },

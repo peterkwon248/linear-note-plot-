@@ -22,33 +22,51 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { usePlotStore } from "@/lib/store"
+import { persistAttachmentBlob } from "@/lib/store/helpers"
 
 interface InsertMenuProps {
   editor: Editor
+  /** noteId is required to associate attachments with a note */
+  noteId?: string
 }
 
-export function InsertMenu({ editor }: InsertMenuProps) {
+export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const addAttachment = usePlotStore((s) => s.addAttachment)
 
   const handleImage = () => {
     imageInputRef.current?.click()
   }
 
-  const onImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onImageSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result as string
-      // Insert at current cursor position (end of doc if no selection)
-      const pos = editor.state.selection.anchor
-      editor.chain().focus().insertContentAt(pos, {
-        type: "image",
-        attrs: { src: dataUrl, alt: file.name },
-      }).run()
-    }
-    reader.readAsDataURL(file)
+
+    // Read as ArrayBuffer for IDB storage
+    const buffer = await file.arrayBuffer()
+
+    // Save metadata to Zustand store
+    const attachmentId = addAttachment({
+      noteId: noteId ?? "",
+      name: file.name,
+      type: "image",
+      url: "", // will be resolved via attachment:// protocol
+      mimeType: file.type,
+      size: file.size,
+    })
+
+    // Save binary blob to IDB
+    persistAttachmentBlob({ id: attachmentId, data: buffer })
+
+    // Insert image with attachment:// URL
+    const pos = editor.state.selection.anchor
+    editor.chain().focus().insertContentAt(pos, {
+      type: "image",
+      attrs: { src: `attachment://${attachmentId}`, alt: file.name },
+    }).run()
+
     e.target.value = ""
   }
 
@@ -56,18 +74,39 @@ export function InsertMenu({ editor }: InsertMenuProps) {
     fileInputRef.current?.click()
   }
 
-  const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result as string
-      editor.chain().focus().insertContent(
-        `<a href="${dataUrl}" download="${file.name}">${file.name}</a>`
-      ).run()
-    }
-    reader.readAsDataURL(file)
+
+    // Read as ArrayBuffer for IDB storage
+    const buffer = await file.arrayBuffer()
+
+    // Save metadata to Zustand store
+    const attachmentId = addAttachment({
+      noteId: noteId ?? "",
+      name: file.name,
+      type: "file",
+      url: "",
+      mimeType: file.type || "application/octet-stream",
+      size: file.size,
+    })
+
+    // Save binary blob to IDB
+    persistAttachmentBlob({ id: attachmentId, data: buffer })
+
+    // Insert as a downloadable link with attachment:// URL
+    editor.chain().focus().insertContent(
+      `<a href="attachment://${attachmentId}" download="${file.name}">${file.name} (${formatFileSize(file.size)})</a>`
+    ).run()
+
     e.target.value = ""
+  }
+
+  /** Format bytes to human-readable size */
+  function formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
   const handleTable = () => {
