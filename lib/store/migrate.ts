@@ -492,5 +492,18 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v47: wikiArticles (Assembly Model — wiki as separate entity from notes)
+  if (!state.wikiArticles) {
+    state.wikiArticles = [] as any
+  }
+  // v48: Inject seed WikiArticles if none of the seed IDs exist
+  {
+    const articles = state.wikiArticles as any[]
+    if (!articles.some((a: any) => a.id === "wiki-article-1")) {
+      const { SEED_WIKI_ARTICLES } = require("./seeds")
+      state.wikiArticles = [...articles, ...SEED_WIKI_ARTICLES] as any
+    }
+  }
+
   return state as unknown as PlotState
 }

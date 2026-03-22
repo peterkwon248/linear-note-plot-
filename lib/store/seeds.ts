@@ -1,4 +1,4 @@
-import type { Note, Folder, Tag, Label, NoteTemplate } from "../types"
+import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock } from "../types"
 import { workflowDefaults } from "./helpers"
 
 export const SEED_FOLDERS: Folder[] = [
@@ -489,5 +489,91 @@ export const SEED_NOTES: Note[] = [
     wikiInfobox: [],
     wikiStatus: "stub",
     stubSource: "red-link",
+  },
+]
+
+/* ── Seed Wiki Articles (Assembly Model) ── */
+
+const ts = () => new Date().toISOString()
+const bid = () => crypto.randomUUID()
+
+export const SEED_WIKI_ARTICLES: WikiArticle[] = [
+  {
+    id: "wiki-article-1",
+    title: "Zettelkasten",
+    aliases: ["Slip box", "Zettelkasten Method"],
+    wikiStatus: "complete",
+    stubSource: null,
+    infobox: [
+      { key: "Creator", value: "Niklas Luhmann" },
+      { key: "Origin", value: "Zettelkasten (German)" },
+      { key: "Meaning", value: "Slip box" },
+      { key: "Core Principle", value: "Linking and indexing" },
+    ],
+    blocks: [
+      { id: bid(), type: "section", title: "Overview", level: 2 },
+      { id: bid(), type: "text", content: "Zettelkasten is a knowledge management methodology devised by the German sociologist Niklas Luhmann. \"Zettelkasten\" is German for \"slip box.\" Luhmann used this system to produce 70 books and over 400 academic papers across 40 years." },
+      { id: bid(), type: "section", title: "Core Principles", level: 2 },
+      { id: bid(), type: "section", title: "Atomic Notes", level: 3 },
+      { id: bid(), type: "text", content: "Each note contains exactly one idea. This is called a Permanent Note." },
+      { id: bid(), type: "note-ref", noteId: "note-2" },
+      { id: bid(), type: "section", title: "Write in Your Own Words", level: 3 },
+      { id: bid(), type: "text", content: "Don't copy the original text verbatim — restate it in your own language. A quick initial jotting is called a Fleeting Note." },
+      { id: bid(), type: "section", title: "Linking", level: 3 },
+      { id: bid(), type: "text", content: "Every time you write a new note, find and create connections to existing notes. As these links accumulate, unexpected insights emerge." },
+      { id: bid(), type: "section", title: "Indexing", level: 3 },
+      { id: bid(), type: "text", content: "Create structure notes that serve as entry points. In Plot, this corresponds to wiki pages — like this one." },
+      { id: bid(), type: "section", title: "Zettelkasten in Plot", level: 2 },
+      { id: bid(), type: "text", content: "Here's how Zettelkasten concepts map to Plot features:\n\n• Slip box → Notes list\n• Permanent note → Permanent-status note\n• Index card → Wiki article\n• Link → [[wikilink]]\n• Structure note → Tags + Folders" },
+      { id: bid(), type: "section", title: "Related Notes", level: 2 },
+      { id: bid(), type: "note-ref", noteId: "note-1" },
+      { id: bid(), type: "note-ref", noteId: "note-4" },
+    ],
+    tags: ["tag-2", "tag-1"],
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+  },
+  {
+    id: "wiki-article-2",
+    title: "Permanent Note",
+    aliases: ["Evergreen Note"],
+    wikiStatus: "draft",
+    stubSource: null,
+    infobox: [
+      { key: "Origin", value: "Zettelkasten method" },
+      { key: "Also known as", value: "Evergreen Note" },
+    ],
+    blocks: [
+      { id: bid(), type: "section", title: "Overview", level: 2 },
+      { id: bid(), type: "text", content: "A Permanent Note is the final, refined output in the Zettelkasten system. Unlike fleeting notes (quick jottings) or literature notes (reading highlights), a permanent note is:\n\n1. Written in your own words\n2. Atomic — one idea per note\n3. Context-independent — understandable on its own\n4. Connected — linked to at least one other note" },
+      { id: bid(), type: "section", title: "In Plot", level: 2 },
+      { id: bid(), type: "text", content: "In Plot, changing a note's status to \"Permanent\" signals that it has been refined into an evergreen idea. These notes are the building blocks of wiki articles." },
+      { id: bid(), type: "section", title: "From Notes", level: 2 },
+      { id: bid(), type: "note-ref", noteId: "note-2" },
+      { id: bid(), type: "section", title: "See Also", level: 2 },
+      { id: bid(), type: "text", content: "Related concepts: Fleeting Note, Literature Note" },
+    ],
+    tags: ["tag-2"],
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: "wiki-article-3",
+    title: "Fleeting Note",
+    aliases: ["Quick Note", "Scratch Note"],
+    wikiStatus: "stub",
+    stubSource: "manual",
+    infobox: [],
+    blocks: [
+      { id: bid(), type: "section", title: "Overview", level: 2 },
+      { id: bid(), type: "text", content: "A Fleeting Note is a quick, temporary note captured in the moment. It's not meant to be permanent — it's raw material to be processed later into a Permanent Note." },
+      { id: bid(), type: "section", title: "In Plot", level: 2 },
+      { id: bid(), type: "text", content: "Inbox-status notes in Plot serve as fleeting notes. They should be reviewed regularly and either promoted to Capture/Permanent or discarded." },
+      { id: bid(), type: "section", title: "Details", level: 2 },
+      { id: bid(), type: "section", title: "See Also", level: 2 },
+    ],
+    tags: ["tag-2"],
+    createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
   },
 ]

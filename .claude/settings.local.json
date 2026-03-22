@@ -102,7 +102,9 @@
       "Bash(ipconfig | grep \"IPv4\")",
       "Bash(cloudflared --version 2>&1 || echo \"NOT_INSTALLED\")",
       "Bash(winget install Cloudflare.cloudflared 2>&1)",
-      "Bash(ls -t ~/.claude/.omc-worklog/*.md)"
+      "Bash(ls -t ~/.claude/.omc-worklog/*.md)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-22_1740.md)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)"
     ]
   }
 }

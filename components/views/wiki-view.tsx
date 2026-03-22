@@ -37,12 +37,15 @@ import { ViewDistributionPanel, type DistributionItem } from "@/components/view-
 import { WikiArticleReader } from "./wiki-article-reader"
 import { WikiDashboard } from "./wiki-dashboard"
 import { WikiList } from "./wiki-list"
+import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
   const createWikiStub = usePlotStore((s) => s.createWikiStub)
+  const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const router = useRouter()
   const backlinkCounts = useBacklinksIndex()
@@ -116,9 +119,13 @@ export function WikiView() {
     return () => stopAutoEnrollment()
   }, [])
 
-  // Article reader state
+  // Article reader state (Note-based legacy)
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
   const [isEditingArticle, setIsEditingArticle] = useState(false)
+
+  // WikiArticle viewer state (new Assembly Model)
+  const [selectedWikiArticleId, setSelectedWikiArticleId] = useState<string | null>(null)
+  const [isEditingWikiArticle, setIsEditingWikiArticle] = useState(false)
 
   // Reset edit mode whenever we navigate to a different article
   useEffect(() => {
@@ -137,8 +144,19 @@ export function WikiView() {
 
   // Open article within WikiView
   const openArticle = useCallback((noteId: string) => {
+    // Check if there's a WikiArticle with matching title — prefer block editor
+    const note = notes.find((n) => n.id === noteId)
+    if (note) {
+      const matchingArticle = wikiArticles.find(
+        (a) => a.title.toLowerCase() === note.title.toLowerCase()
+      )
+      if (matchingArticle) {
+        setSelectedWikiArticleId(matchingArticle.id)
+        return
+      }
+    }
     setSelectedArticleId(noteId)
-  }, [])
+  }, [notes, wikiArticles])
 
   // Smart navigation: wiki notes open in-view, non-wiki go to /notes
   const handleNavigate = useCallback(
@@ -154,10 +172,10 @@ export function WikiView() {
   )
 
   const handleCreateWiki = useCallback(() => {
-    const id = createWikiStub("Untitled Wiki")
-    // Open new wiki in edit mode in /notes
-    navigateToNote(id)
-  }, [createWikiStub, navigateToNote])
+    const id = createWikiArticle({ title: "Untitled Wiki" })
+    setSelectedWikiArticleId(id)
+    setIsEditingWikiArticle(true)
+  }, [createWikiArticle])
 
   const handleCreateFromRedLink = useCallback(
     (title: string) => {
@@ -537,7 +555,59 @@ export function WikiView() {
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
   }, [wikiNotes])
 
-  // ── Article Reader Mode ──
+  // ── WikiArticle View (Assembly Model) ──
+  const selectedWikiArticle = selectedWikiArticleId
+    ? wikiArticles.find((a) => a.id === selectedWikiArticleId)
+    : null
+
+  if (selectedWikiArticleId && selectedWikiArticle) {
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <ViewHeader
+          icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
+          title={selectedWikiArticle.title || "Untitled"}
+          actions={
+            <div className="flex items-center gap-2">
+              {isEditingWikiArticle ? (
+                <button
+                  onClick={() => setIsEditingWikiArticle(false)}
+                  className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
+                >
+                  <Check className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Done
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsEditingWikiArticle(true)}
+                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
+                >
+                  <PenLine className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Edit
+                </button>
+              )}
+            </div>
+          }
+        >
+          <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
+            <button
+              onClick={() => { setSelectedWikiArticleId(null); setIsEditingWikiArticle(false) }}
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+              Back
+            </button>
+          </div>
+        </ViewHeader>
+
+        <WikiArticleView
+          articleId={selectedWikiArticleId}
+          editable={isEditingWikiArticle}
+        />
+      </div>
+    )
+  }
+
+  // ── Article Reader Mode (Legacy Note-based) ──
   if (selectedArticleId && selectedNote) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -717,6 +787,7 @@ export function WikiView() {
         <div className="flex flex-1 overflow-hidden">
           <WikiDashboard
             wikiNotes={wikiNotes}
+            wikiArticles={wikiArticles}
             stats={stats}
             articleCount={articleCount}
             coverageStats={coverageStats}
@@ -733,6 +804,7 @@ export function WikiView() {
             searchResults={searchResults}
             showSearchDropdown={showSearchDropdown}
             onOpenArticle={openArticle}
+            onOpenWikiArticle={setSelectedWikiArticleId}
             onCreateFromRedLink={handleCreateFromRedLink}
             onViewAll={() => { setWikiViewMode("list"); setDashFilter("all") }}
             onViewStubs={() => { setWikiViewMode("list"); setDashFilter("stubs") }}

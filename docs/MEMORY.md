@@ -109,9 +109,18 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Wiki stub 자동 템플릿**: Overview/Details/See Also 기본 구조
 - **+ Add file**: WikiCollectionSidebar에 파일 첨부 버튼 추가
 - **Infobox editable**: read mode에서도 편집 가능, 비어있을 때 "Add infobox" 표시
+- **Wiki Block Editor 1~3단계 완료**:
+  - WikiArticle + WikiBlock 데이터 모델 (별도 엔티티, store v48)
+  - createWikiArticlesSlice (10개 액션: CRUD + 블록 조작)
+  - WikiBlockRenderer (Section/Text/NoteRef/Image 4종 + AddBlockButton)
+  - WikiArticleView (TOC + 블록 목록 + Infobox 사이드바)
+  - 블록 인라인 편집 (Section 제목, Text textarea, NoteRef 검색/삽입, Image 업로드)
+  - Section 자동 번호 매기기 (TOC ↔ 본문 동기화)
+  - 시드 WikiArticle 3개 (Zettelkasten/Permanent Note/Fleeting Note)
+  - Note 기반 위키 클릭 시 같은 제목 WikiArticle로 자동 라우팅
 
 ### 다음 작업 후보 (우선순위 순)
-1. **Wiki Block Editor (Option C)** — 위키 전용 블록 에디터 (7-9 세션 규모). 상세 계획: ~/.claude/projects/.../memory/project_wiki_block_editor.md
+1. **Wiki Block Editor 후속** — 드래그 이동, 기존 isWiki 노트 마이그레이션, lazy load, Section 접기/펼치기 구현
 2. **Phosphor Icons 마이그레이션** — Lucide → Phosphor weight 시스템 전환
 3. **에디터 업그레이드** — 노트 에디터 개선
 4. **Custom Views 2차**
