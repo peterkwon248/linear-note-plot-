@@ -1,19 +1,52 @@
 "use client"
 
 import { usePlotStore } from "@/lib/store"
-import { WorkspaceRenderer } from "./workspace-renderer"
+import { NoteEditor } from "@/components/note-editor"
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import { EditorPaneHeader } from "@/components/workspace/editor-pane-header"
 
-/**
- * Workspace tree scoped to the editor area only.
- * Workspace tree manages editor tabs, splitting, and drag-drop
- * within the right column.
- */
 export function WorkspaceEditorArea() {
-  const workspaceRoot = usePlotStore((s) => s.workspaceRoot)
+  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
+  const activePane = usePlotStore((s) => s.activePane)
+  const notes = usePlotStore((s) => s.notes)
+  const setActivePane = usePlotStore((s) => s.setActivePane)
+
+  const primaryNote = notes.find((n) => n.id === selectedNoteId)
+  const secondaryNote = secondaryNoteId ? notes.find((n) => n.id === secondaryNoteId) : null
+
+  if (!primaryNote) return null
+
+  const isDual = !!secondaryNote
 
   return (
-    <div className="flex flex-1 overflow-hidden min-w-0">
-      <WorkspaceRenderer node={workspaceRoot} />
-    </div>
+    <ResizablePanelGroup direction="horizontal" className="flex-1">
+      <ResizablePanel defaultSize={isDual ? 50 : 100} minSize={30}>
+        <div
+          className={`flex h-full flex-col overflow-hidden ${activePane === 'primary' ? '' : 'opacity-80'}`}
+          onClick={() => setActivePane('primary')}
+        >
+          <NoteEditor noteId={primaryNote.id} />
+        </div>
+      </ResizablePanel>
+      {isDual && secondaryNote && (
+        <>
+          <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <div
+              className={`flex h-full flex-col overflow-hidden ${activePane === 'secondary' ? '' : 'opacity-80'}`}
+              onClick={() => setActivePane('secondary')}
+            >
+              <EditorPaneHeader
+                noteTitle={secondaryNote.title}
+                pane="secondary"
+                showClose
+              />
+              <NoteEditor noteId={secondaryNote.id} />
+            </div>
+          </ResizablePanel>
+        </>
+      )}
+    </ResizablePanelGroup>
   )
 }

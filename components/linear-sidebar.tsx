@@ -30,7 +30,7 @@ import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
-import type { PanelContent } from "@/lib/workspace/types"
+type PanelContent = Record<string, unknown>
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
 import { StatusIcon } from "@/components/status-icon"
 import { ColorPickerGrid } from "@/components/color-picker-grid"

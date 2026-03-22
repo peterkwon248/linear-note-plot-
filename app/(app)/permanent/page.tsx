@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { getPermanentNotes } from "@/lib/queries/notes"
 import { NoteEditor } from "@/components/note-editor"
-import { NoteInspector } from "@/components/note-inspector"
+import { SmartSidePanel } from "@/components/side-panel/smart-side-panel"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -65,7 +65,7 @@ export default function PermanentPage() {
     return (
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
         <NoteEditor />
-        <NoteInspector />
+        <SmartSidePanel />
       </div>
     )
   }

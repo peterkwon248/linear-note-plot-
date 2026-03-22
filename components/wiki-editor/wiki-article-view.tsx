@@ -5,8 +5,24 @@ import { BookOpen, ChevronUp, Check, FileText, ImageIcon } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
+import { SortableBlockItem } from "./sortable-block-item"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { shortRelative } from "@/lib/format-utils"
+import { Virtuoso } from "react-virtuoso"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable"
 
 interface WikiArticleViewProps {
   articleId: string
@@ -38,8 +54,16 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
   const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
   const removeWikiBlock = usePlotStore((s) => s.removeWikiBlock)
   const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
+  const reorderWikiBlocks = usePlotStore((s) => s.reorderWikiBlocks)
   const setWikiArticleStatus = usePlotStore((s) => s.setWikiArticleStatus)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(KeyboardSensor)
+  )
 
   const article = useMemo(
     () => wikiArticles.find((a) => a.id === articleId),
@@ -57,6 +81,22 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
     removeWikiBlock(articleId, blockId)
   }, [articleId, removeWikiBlock])
 
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id || !article) return
+
+    const oldIndex = article.blocks.findIndex((b) => b.id === active.id)
+    const newIndex = article.blocks.findIndex((b) => b.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const newOrder = arrayMove(
+      article.blocks.map((b) => b.id),
+      oldIndex,
+      newIndex
+    )
+    reorderWikiBlocks(articleId, newOrder)
+  }, [article, articleId, reorderWikiBlocks])
+
   if (!article) {
     return (
       <div className="flex flex-col items-center gap-3 py-20 text-center">
@@ -71,9 +111,9 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
   // Section numbers: blockId → "1", "2.1", etc.
   const sectionNumbers = useMemo(() => computeSectionNumbers(article.blocks), [article.blocks])
 
-  // Compute which blocks are hidden due to collapsed sections
-  const hiddenBlockIds = useMemo(() => {
-    const hidden = new Set<string>()
+  // Flatten visible blocks (skip collapsed section children)
+  const visibleBlocks = useMemo(() => {
+    const result: WikiBlock[] = []
     let collapsingLevel: number | null = null
 
     for (const block of article.blocks) {
@@ -83,16 +123,16 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
         if (collapsingLevel !== null && level <= collapsingLevel) {
           collapsingLevel = null
         }
+        result.push(block) // always show section headers
         // If this section is collapsed, start hiding everything after it
         if (block.collapsed) {
           collapsingLevel = level
-          continue
         }
-      } else if (collapsingLevel !== null) {
-        hidden.add(block.id)
+      } else if (collapsingLevel === null) {
+        result.push(block)
       }
     }
-    return hidden
+    return result
   }, [article.blocks])
 
   // TOC from section blocks
@@ -150,7 +190,7 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
       </aside>
 
       {/* Blocks Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" id="wiki-article-scroll-container">
         <div className="max-w-[780px] px-8 py-6 space-y-1">
           {/* Title */}
           <h1 className="text-[26px] font-bold text-foreground mb-1">
@@ -167,22 +207,52 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
             <AddBlockButton onAdd={(type) => handleAddBlock(type)} />
           )}
 
-          {article.blocks.filter((b) => !hiddenBlockIds.has(b.id)).map((block) => (
+          {editable ? (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={visibleBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+                {visibleBlocks.map((block) => (
+                  <SortableBlockItem
+                    key={block.id}
+                    block={block}
+                    editable={editable}
+                    sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
+                    onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
+                    onDelete={() => handleDeleteBlock(block.id)}
+                    onAddBlock={(type) => handleAddBlock(type, block.id)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          ) : visibleBlocks.length > 50 ? (
+            <Virtuoso
+              data={visibleBlocks}
+              increaseViewportBy={200}
+              itemContent={(_index, block) => (
+                <div key={block.id} id={`wiki-block-${block.id}`}>
+                  <WikiBlockRenderer
+                    block={block}
+                    editable={false}
+                    sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
+                    onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
+                    onDelete={() => handleDeleteBlock(block.id)}
+                  />
+                </div>
+              )}
+              style={{ height: "100%" }}
+            />
+          ) : (
+            visibleBlocks.map((block) => (
               <div key={block.id} id={`wiki-block-${block.id}`}>
                 <WikiBlockRenderer
                   block={block}
-                  editable={editable}
+                  editable={false}
                   sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
                   onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
                   onDelete={() => handleDeleteBlock(block.id)}
                 />
-                {editable && (
-                  <AddBlockButton
-                    onAdd={(type) => handleAddBlock(type, block.id)}
-                  />
-                )}
               </div>
-          ))}
+            ))
+          )}
 
           {article.blocks.length === 0 && !editable && (
             <p className="py-8 text-center text-sm text-muted-foreground/40">
@@ -335,7 +405,7 @@ function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
             onClick={() => {
               if (src.type === "note") {
                 // Open note in side peek panel
-                usePlotStore.getState().setSidePeekNoteId(src.id)
+                usePlotStore.getState().openSidePeek(src.id)
               } else {
                 // Scroll to block for images
                 document.getElementById(`wiki-block-${src.blockId}`)?.scrollIntoView({

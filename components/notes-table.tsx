@@ -576,8 +576,8 @@ export function NotesTable({
   ], [])
 
   // ── Side peek state for detail panel ──
-  const sidePeekNoteId = usePlotStore((s) => s.sidePeekNoteId)
-  const setSidePeekNoteId = usePlotStore((s) => s.setSidePeekNoteId)
+  const sidePeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
+  const setSidePeekNoteId = usePlotStore((s) => s.openSidePeek)
 
   function toggleColumn(colId: string) {
     const cols = viewState.visibleColumns

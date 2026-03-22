@@ -55,7 +55,7 @@ export function OntologyView() {
   const relations = usePlotStore((s) => s.relations)
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
-  const openNoteInLeaf = usePlotStore((s) => s.openNoteInLeaf)
+  const openNote = usePlotStore((s) => s.openNote)
   const ontologyPositions = usePlotStore((s) => s.ontologyPositions)
   const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
 
@@ -263,7 +263,7 @@ export function OntologyView() {
             searchMatchIds={searchMatchIds}
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
-            onOpenNote={(noteId) => openNoteInLeaf(noteId)}
+            onOpenNote={(noteId) => openNote(noteId)}
             onPositionsUpdate={handlePositionsUpdate}
           />
         ) : (
@@ -278,7 +278,7 @@ export function OntologyView() {
           <OntologyDetailPanel
             noteId={selectedNodeId}
             onClose={() => setSelectedNodeId(null)}
-            onOpenNote={(noteId) => openNoteInLeaf(noteId)}
+            onOpenNote={(noteId) => openNote(noteId)}
           />
         )}
         {showDistribution && (

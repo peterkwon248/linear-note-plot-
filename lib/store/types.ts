@@ -1,7 +1,7 @@
 import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView, WikiArticle, WikiBlock } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
-import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone } from "../workspace/types"
+import type { WorkspaceTab } from "../workspace/types"
 
 export interface EditorTab {
   id: string           // nanoid
@@ -23,6 +23,8 @@ export interface EditorState {
   panelRatios: number[]  // for 3-panel mode, e.g. [0.33, 0.33, 0.34]
 }
 
+export type SidePanelMode = 'context' | 'peek'
+
 export interface PlotState {
   // ── Data ──
   notes: Note[]
@@ -37,7 +39,8 @@ export interface PlotState {
   searchQuery: string
   searchOpen: boolean
   shortcutOverlayOpen: boolean
-  detailsOpen: boolean
+  sidePanelOpen: boolean
+  sidePanelMode: SidePanelMode
 
   // Merge
   mergePickerOpen: boolean
@@ -47,8 +50,8 @@ export interface PlotState {
   linkPickerOpen: boolean
   linkPickerSourceId: string | null
 
-  // Side Peek
-  sidePeekNoteId: string | null
+  // Side Panel (peek)
+  sidePanelPeekNoteId: string | null
 
   // Navigation History
   navigationHistory: string[]  // stack of note IDs
@@ -182,8 +185,8 @@ export interface PlotState {
   setSearchQuery: (query: string) => void
   setSearchOpen: (open: boolean) => void
   setShortcutOverlayOpen: (open: boolean) => void
-  setDetailsOpen: (open: boolean) => void
-  toggleDetailsOpen: () => void
+  setSidePanelOpen: (open: boolean) => void
+  toggleSidePanel: () => void
   setSidebarWidth: (width: number) => void
   setSidebarCollapsed: (collapsed: boolean) => void
   setSidebarPeek: (peek: boolean) => void
@@ -192,7 +195,8 @@ export interface PlotState {
   goForward: () => boolean
   setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
   setListPaneWidth: (width: number) => void
-  setSidePeekNoteId: (id: string | null) => void
+  openSidePeek: (noteId: string) => void
+  closeSidePeek: () => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
 
@@ -270,22 +274,16 @@ export interface PlotState {
   removePanel: (panelId: string) => void
   setPanelRatios: (ratios: number[]) => void
 
-  // ── Workspace ──
-  workspaceRoot: WorkspaceNode
-  activeLeafId: string | null
-  setWorkspaceRoot: (root: WorkspaceNode) => void
-  setActiveLeaf: (leafId: string) => void
-  setLeafContent: (leafId: string, content: PanelContent) => void
-  splitLeaf: (leafId: string, direction: SplitDirection, content: PanelContent, position?: "before" | "after") => void
-  closeLeaf: (leafId: string) => void
-  setBranchRatio: (branchId: string, ratio: number) => void
-  openNoteInLeaf: (noteId: string, leafId?: string, forceNewTab?: boolean) => void
-  closeTabInLeaf: (tabId: string, leafId: string) => void
-  setActiveTabInLeaf: (tabId: string, leafId: string) => void
-  moveTabToLeaf: (tabId: string, fromLeafId: string, toLeafId: string) => void
-  splitTabToNewLeaf: (tabId: string, fromLeafId: string, targetLeafId: string, direction: SplitDirection, position: "before" | "after") => void
-  moveLeaf: (leafId: string, targetLeafId: string, zone: DropZone) => void
-  applyPreset: (preset: WorkspacePreset) => void
+  // ── Workspace (Simplified Dual Pane) ──
+  secondaryNoteId: string | null  // right editor note (null = single pane)
+  activePane: 'primary' | 'secondary'
+  editorTabs: WorkspaceTab[]
+  activeTabId: string | null
+  openInSecondary: (noteId: string) => void
+  closeSecondary: () => void
+  setActivePane: (pane: 'primary' | 'secondary') => void
+  closeEditorTab: (tabId: string) => void
+  setActiveEditorTab: (tabId: string) => void
 
   // ── Internal ──
   _hydrateNoteBodies: (bodies: NoteBody[]) => void

@@ -170,17 +170,22 @@ export function WikiView() {
     setSelectedArticleId(noteId)
   }, [notes, wikiArticles])
 
-  // Smart navigation: wiki notes open in-view, non-wiki go to /notes
+  // Smart navigation: wiki articles open in-view, non-wiki go to /notes
   const handleNavigate = useCallback(
     (noteId: string) => {
       const target = notes.find((n) => n.id === noteId)
-      if (target?.isWiki && !target.trashed) {
-        openArticle(noteId)
+      if (!target || target.trashed) return
+      // Check if there's a matching WikiArticle
+      const matchingWiki = wikiArticles.find(
+        (a) => a.title.toLowerCase() === target.title.toLowerCase()
+      )
+      if (matchingWiki) {
+        setSelectedWikiArticleId(matchingWiki.id)
       } else {
         navigateToNote(noteId)
       }
     },
-    [notes, openArticle, navigateToNote]
+    [notes, wikiArticles, navigateToNote]
   )
 
   const handleCreateWiki = useCallback(() => {
@@ -227,11 +232,8 @@ export function WikiView() {
     [notes, setWikiStatus]
   )
 
-  // All non-trashed wiki articles
-  const wikiNotes = useMemo(
-    () => notes.filter((n) => n.isWiki && !n.trashed),
-    [notes]
-  )
+  // Wiki data comes from wikiArticles (separate entity since v47)
+  const wikiNotes = wikiArticles
 
   // Filter by wikiStatus
   const filteredWikiNotes = useMemo(() => {
@@ -257,11 +259,11 @@ export function WikiView() {
     [filteredWikiNotes]
   )
 
-  // Non-wiki, non-trashed, non-archived notes available to import
+  // Non-trashed, non-archived notes available to import
   const importableNotes = useMemo(() => {
     const q = importQuery.toLowerCase().trim()
     return notes
-      .filter((n) => !n.isWiki && !n.trashed && !n.archived)
+      .filter((n) => !n.trashed && !n.archived)
       .filter((n) =>
         q.length === 0
           ? true
@@ -323,24 +325,22 @@ export function WikiView() {
   const stats = useMemo(() => {
     const articleCount = wikiNotes.length
     const redLinkCount = redLinks.length
-    const internalLinkCount = wikiNotes.reduce(
-      (sum, n) => sum + (n.linksOut?.length ?? 0),
-      0
-    )
+    // WikiArticle doesn't track linksOut — use 0 for now
+    const internalLinkCount = 0
 
-    // Connected notes: unique non-wiki notes that have backlinks TO wiki notes
+    // Connected notes: unique non-wiki notes that have backlinks TO wiki articles
+    const wikiTitles = new Set(
+      wikiNotes.flatMap((w) => [
+        w.title.toLowerCase(),
+        ...w.aliases.map((a) => a.toLowerCase()),
+      ])
+    )
     const wikiIds = new Set(wikiNotes.map((n) => n.id))
     const connectedNoteIds = new Set<string>()
     for (const note of notes) {
       if (note.trashed || wikiIds.has(note.id)) continue
       for (const link of note.linksOut) {
-        const normalized = link.toLowerCase()
-        const hasMatch = wikiNotes.some(
-          (w) =>
-            w.title.toLowerCase() === normalized ||
-            w.aliases.some((a) => a.toLowerCase() === normalized)
-        )
-        if (hasMatch) {
+        if (wikiTitles.has(link.toLowerCase())) {
           connectedNoteIds.add(note.id)
           break
         }
@@ -364,14 +364,14 @@ export function WikiView() {
     [wikiNotes]
   )
 
-  // Coverage stats: how many non-wiki notes are connected to wiki
+  // Coverage stats: how many non-trashed notes are connected to wiki
   const coverageStats = useMemo(() => {
-    const nonWikiNotes = notes.filter((n) => !n.isWiki && !n.trashed)
-    const total = nonWikiNotes.length
+    const nonTrashedNotes = notes.filter((n) => !n.trashed)
+    const total = nonTrashedNotes.length
     if (total === 0) return { connected: 0, total: 0, percent: 0 }
 
     const wikiTitleSet = new Set(
-      wikiNotes.flatMap((w) => [
+      wikiArticles.flatMap((w) => [
         w.title.toLowerCase(),
         ...w.aliases.map((a) => a.toLowerCase()),
       ])
@@ -379,31 +379,17 @@ export function WikiView() {
 
     const connectedIds = new Set<string>()
 
-    // A: non-wiki notes that reference wiki (via linksOut)
-    for (const n of nonWikiNotes) {
+    // Notes that reference wiki articles (via linksOut)
+    for (const n of nonTrashedNotes) {
       if (n.linksOut.some((link) => wikiTitleSet.has(link.toLowerCase()))) {
         connectedIds.add(n.id)
-      }
-    }
-
-    // B: non-wiki notes referenced BY wiki notes
-    for (const w of wikiNotes) {
-      for (const link of w.linksOut) {
-        const normalized = link.toLowerCase()
-        for (const n of nonWikiNotes) {
-          if (connectedIds.has(n.id)) continue
-          const titles = [n.title.toLowerCase(), ...n.aliases.map((a) => a.toLowerCase())]
-          if (titles.includes(normalized)) {
-            connectedIds.add(n.id)
-          }
-        }
       }
     }
 
     const connected = connectedIds.size
     const percent = Math.round((connected / total) * 100)
     return { connected, total, percent }
-  }, [notes, wikiNotes])
+  }, [notes, wikiArticles])
 
   const wikiDistributionTabs = useMemo(() => [
     { key: "wikiStatus", label: "Wiki Status" },
@@ -815,7 +801,6 @@ export function WikiView() {
             searchInputRef={searchInputRef}
             searchResults={searchResults}
             showSearchDropdown={showSearchDropdown}
-            onOpenArticle={openArticle}
             onOpenWikiArticle={setSelectedWikiArticleId}
             onCreateFromRedLink={handleCreateFromRedLink}
             onViewAll={() => { setWikiViewMode("list"); setDashFilter("all") }}

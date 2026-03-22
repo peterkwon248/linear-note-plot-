@@ -69,9 +69,22 @@ export interface WikiBlock {
   caption?: string
 }
 
+/** Lightweight section index entry — persisted in Zustand (blocks go to IDB) */
+export interface WikiSectionIndex {
+  id: string           // section block ID
+  title: string        // section heading text
+  level: number        // heading level (2, 3, etc.)
+  blockCount: number   // blocks under this section (until next same-or-higher level section)
+  collapsed?: boolean
+}
+
 /**
  * Wiki Article — a curated article assembled from notes and original content.
  * Separate entity from Note. Notes are raw material; WikiArticles are the compiled product.
+ *
+ * `blocks` stays in-memory for fast access but is stripped from Zustand persist.
+ * Block metadata is stored in IDB (plot-wiki-block-meta).
+ * `sectionIndex` is a lightweight summary persisted in Zustand.
  */
 export interface WikiArticle {
   id: string
@@ -81,6 +94,7 @@ export interface WikiArticle {
   stubSource: StubSource | null
   infobox: WikiInfoboxEntry[]
   blocks: WikiBlock[]
+  sectionIndex: WikiSectionIndex[]
   tags: string[]
   createdAt: string
   updatedAt: string

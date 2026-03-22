@@ -1,5 +1,6 @@
 import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock } from "../types"
 import { workflowDefaults } from "./helpers"
+import { buildSectionIndex } from "../wiki-section-index"
 
 export const SEED_FOLDERS: Folder[] = [
   { id: "folder-1", name: "Projects", color: "#5e6ad2", parentId: null, lastAccessedAt: null, pinned: false, pinnedOrder: 0, createdAt: new Date().toISOString() },
@@ -497,7 +498,7 @@ export const SEED_NOTES: Note[] = [
 const ts = () => new Date().toISOString()
 const bid = () => crypto.randomUUID()
 
-export const SEED_WIKI_ARTICLES: WikiArticle[] = [
+const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
   {
     id: "wiki-article-1",
     title: "Zettelkasten",
@@ -577,3 +578,9 @@ export const SEED_WIKI_ARTICLES: WikiArticle[] = [
     updatedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
   },
 ]
+
+// Compute sectionIndex from blocks for each seed article
+export const SEED_WIKI_ARTICLES: WikiArticle[] = _SEED_WIKI_ARTICLES_RAW.map((a) => ({
+  ...a,
+  sectionIndex: buildSectionIndex(a.blocks),
+}))

@@ -1,5 +1,6 @@
 import type { WikiArticle, WikiBlock, WikiStatus, StubSource } from "../../types"
-import { genId, now, type AppendEventFn } from "../helpers"
+import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, removeArticleBlocks, type AppendEventFn } from "../helpers"
+import { buildSectionIndex } from "../../wiki-section-index"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
@@ -17,6 +18,13 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       blocks?: WikiBlock[]
     }) => {
       const id = genId()
+      const blocks = partial.blocks ?? [
+        // Default template: Overview + Details + See Also sections
+        { id: genId(), type: "section" as const, title: "Overview", level: 2 },
+        { id: genId(), type: "text" as const, content: "" },
+        { id: genId(), type: "section" as const, title: "Details", level: 2 },
+        { id: genId(), type: "section" as const, title: "See Also", level: 2 },
+      ]
       const article: WikiArticle = {
         id,
         title: partial.title,
@@ -24,13 +32,8 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         wikiStatus: partial.wikiStatus ?? "stub",
         stubSource: partial.stubSource ?? "manual",
         infobox: [],
-        blocks: partial.blocks ?? [
-          // Default template: Overview + Details + See Also sections
-          { id: genId(), type: "section", title: "Overview", level: 2 },
-          { id: genId(), type: "text", content: "" },
-          { id: genId(), type: "section", title: "Details", level: 2 },
-          { id: genId(), type: "section", title: "See Also", level: 2 },
-        ],
+        blocks,
+        sectionIndex: buildSectionIndex(blocks),
         tags: partial.tags ?? [],
         createdAt: now(),
         updatedAt: now(),
@@ -38,18 +41,42 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       set((state: any) => ({
         wikiArticles: [...state.wikiArticles, article],
       }))
+      // Persist text block bodies to IDB
+      for (const b of article.blocks) {
+        if (b.type === "text" && b.content) {
+          persistBlockBody({ id: b.id, content: b.content })
+        }
+      }
+      // Persist block metadata to IDB
+      persistArticleBlocks(id, article.blocks)
       return id
     },
 
     updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => {
       set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
-          a.id === articleId ? { ...a, ...patch, updatedAt: now() } : a
-        ),
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId) return a
+          const updated = { ...a, ...patch, updatedAt: now() }
+          // If blocks were replaced, rebuild sectionIndex and persist
+          if (patch.blocks) {
+            updated.sectionIndex = buildSectionIndex(patch.blocks)
+            persistArticleBlocks(articleId, patch.blocks)
+          }
+          return updated
+        }),
       }))
     },
 
     deleteWikiArticle: (articleId: string) => {
+      // Clean up block bodies from IDB before removing
+      const article = get().wikiArticles.find((a: WikiArticle) => a.id === articleId)
+      if (article) {
+        for (const b of article.blocks) {
+          if (b.type === "text") removeBlockBody(b.id)
+        }
+      }
+      // Remove block metadata from IDB
+      removeArticleBlocks(articleId)
       set((state: any) => ({
         wikiArticles: state.wikiArticles.filter((a: WikiArticle) => a.id !== articleId),
       }))
@@ -85,36 +112,50 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           } else {
             blocks.push(newBlock)
           }
-          return { ...a, blocks, updatedAt: now() }
+          const sectionIndex = buildSectionIndex(blocks)
+          persistArticleBlocks(articleId, blocks)
+          return { ...a, blocks, sectionIndex, updatedAt: now() }
         }),
       }))
+      // Persist text block body to IDB
+      if (newBlock.type === "text" && newBlock.content) {
+        persistBlockBody({ id: newBlock.id, content: newBlock.content })
+      }
       return newBlock.id
     },
 
     removeWikiBlock: (articleId: string, blockId: string) => {
       set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
-          a.id === articleId
-            ? { ...a, blocks: a.blocks.filter((b) => b.id !== blockId), updatedAt: now() }
-            : a
-        ),
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId) return a
+          const blocks = a.blocks.filter((b) => b.id !== blockId)
+          const sectionIndex = buildSectionIndex(blocks)
+          persistArticleBlocks(articleId, blocks)
+          return { ...a, blocks, sectionIndex, updatedAt: now() }
+        }),
       }))
+      // Remove block body from IDB
+      removeBlockBody(blockId)
     },
 
     updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => {
+      // Check if patch affects section index (section title, level, collapsed, or type change)
+      const affectsIndex = patch.title !== undefined || patch.level !== undefined || patch.collapsed !== undefined || patch.type !== undefined
       set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
-          a.id === articleId
-            ? {
-                ...a,
-                blocks: a.blocks.map((b) =>
-                  b.id === blockId ? { ...b, ...patch } : b
-                ),
-                updatedAt: now(),
-              }
-            : a
-        ),
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId) return a
+          const blocks = a.blocks.map((b) =>
+            b.id === blockId ? { ...b, ...patch } : b
+          )
+          persistArticleBlocks(articleId, blocks)
+          const sectionIndex = affectsIndex ? buildSectionIndex(blocks) : a.sectionIndex
+          return { ...a, blocks, sectionIndex, updatedAt: now() }
+        }),
       }))
+      // Persist updated content to IDB
+      if (patch.content !== undefined) {
+        persistBlockBody({ id: blockId, content: patch.content })
+      }
     },
 
     moveWikiBlock: (articleId: string, blockId: string, targetIndex: number) => {
@@ -127,7 +168,9 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           const [moved] = blocks.splice(fromIdx, 1)
           const insertAt = Math.min(targetIndex, blocks.length)
           blocks.splice(insertAt, 0, moved)
-          return { ...a, blocks, updatedAt: now() }
+          const sectionIndex = buildSectionIndex(blocks)
+          persistArticleBlocks(articleId, blocks)
+          return { ...a, blocks, sectionIndex, updatedAt: now() }
         }),
       }))
     },
@@ -140,7 +183,9 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           const ordered = blockIds
             .map((id) => blockMap.get(id))
             .filter(Boolean) as WikiBlock[]
-          return { ...a, blocks: ordered, updatedAt: now() }
+          const sectionIndex = buildSectionIndex(ordered)
+          persistArticleBlocks(articleId, ordered)
+          return { ...a, blocks: ordered, sectionIndex, updatedAt: now() }
         }),
       }))
     },
