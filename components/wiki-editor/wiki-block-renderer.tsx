@@ -37,7 +37,8 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
 /* ── Section Block ── */
 
 function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete }: WikiBlockRendererProps) {
-  const [collapsed, setCollapsed] = useState(block.collapsed ?? false)
+  const collapsed = block.collapsed ?? false
+  const toggleCollapsed = () => onUpdate?.({ collapsed: !collapsed })
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(block.title || "")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -66,7 +67,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete }: Wi
           </button>
         )}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggleCollapsed}
           className="p-0.5 text-muted-foreground/40 hover:text-muted-foreground transition-colors duration-100"
         >
           {collapsed

@@ -104,7 +104,9 @@
       "Bash(winget install Cloudflare.cloudflared 2>&1)",
       "Bash(ls -t ~/.claude/.omc-worklog/*.md)",
       "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-22_1740.md)",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)"
+      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-22_1930.md)",
+      "Bash(.omc/notepads/general/decisions.md:*)"
     ]
   }
 }
