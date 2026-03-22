@@ -24,6 +24,7 @@ import { createAttachmentsSlice } from "./slices/attachments"
 import { createOntologySlice } from "./slices/ontology"
 import { createReflectionsSlice } from "./slices/reflections"
 import { createWikiCollectionsSlice } from "./slices/wiki-collections"
+import { createSavedViewsSlice } from "./slices/saved-views"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -68,6 +69,7 @@ export const usePlotStore = create<PlotState>()(
         relationSuggestions: [] as RelationSuggestion[],
         ontologyPositions: {} as Record<string, { x: number; y: number }>,
         wikiCollections: {} as Record<string, import("../types").WikiCollectionItem[]>,
+        savedViews: [] as import("../types").SavedView[],
         listPaneWidth: 320,
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
@@ -98,11 +100,12 @@ export const usePlotStore = create<PlotState>()(
         ...createOntologySlice(set, get, appendEvent),
         ...createReflectionsSlice(set, get, appendEvent),
         ...createWikiCollectionsSlice(set, get),
+        ...createSavedViewsSlice(set),
       }
     },
     {
       name: "plot-store",
-      version: 44,
+      version: 45,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

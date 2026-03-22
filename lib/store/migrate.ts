@@ -474,5 +474,8 @@ export function migrate(persistedState: unknown): PlotState {
   delete state.workspaceMode
   delete state._preZenWorkspaceMode
 
+  // v45: savedViews (custom views system)
+  if (!state.savedViews) state.savedViews = []
+
   return state as unknown as PlotState
 }

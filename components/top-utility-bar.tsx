@@ -1,13 +1,25 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { IconChevronLeft, IconChevronRight, IconSearch, IconPlus } from "@/components/plot-icons"
 
 export function TopUtilityBar() {
+  const router = useRouter()
   const goBack = usePlotStore((s) => s.goBack)
   const goForward = usePlotStore((s) => s.goForward)
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
+
+  const handleGoBack = () => {
+    const handled = goBack()
+    if (!handled) router.back()
+  }
+
+  const handleGoForward = () => {
+    const handled = goForward()
+    if (!handled) router.forward()
+  }
 
   const handleNewNote = () => {
     const state = usePlotStore.getState()
@@ -21,7 +33,7 @@ export function TopUtilityBar() {
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            onClick={goBack}
+            onClick={handleGoBack}
             className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Go back"
           >
@@ -34,7 +46,7 @@ export function TopUtilityBar() {
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            onClick={goForward}
+            onClick={handleGoForward}
             className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Go forward"
           >

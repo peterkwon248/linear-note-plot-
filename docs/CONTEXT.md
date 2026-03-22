@@ -35,8 +35,8 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (17): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections
-- Store version: 43
+- Slices (18): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views
+- Store version: 45 (v44: layout cleanup, v45: savedViews)
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -106,12 +106,75 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## TODO: Future Work
 
-- **필터/디스플레이 인프라** — 공간별 필터 모델 + UI 컨트롤
-- **사이드바 목업 매칭** — 필터 완성 후 Graph/Wiki/Inbox 사이드바 재구조
-- Phase 4-D: Context Panel (보류)
-- 커스텀 뷰 시스템
-- Phosphor Icons 적용
-- Settings always-mounted
+- Calendar 리디자인 (아래 설계 참조)
+- Custom Views 2차 — Quick Filter ↔ View 승격/강등, Wiki/Graph 뷰 연동
+
+## Calendar 리디자인 설계 (확정)
+
+### 정체성
+
+Calendar = **Cross-Space 시간 대시보드**. Notes/Wiki/Graph 어디에도 속하지 않는 독립 공간.
+"시간 축에서 내 지식 활동이 어떻게 분포되는가"를 보여주는 곳.
+
+### 핵심 원칙
+
+1. **모든 엔티티를 시간 축에 표시** — 노트뿐 아니라 위키, 태그, 라벨, 폴더, 관계, 템플릿 전부
+2. **레이어 시스템으로 밀도 제어** — 자주 발생하는 이벤트는 기본 ON, 드문 이벤트는 기본 OFF
+3. **기존 필터 인프라 재사용** — FilterPanel, DisplayPanel 그대로 적용
+4. **Calendar는 Notes의 뷰 모드가 아님** — 독립 공간으로서 cross-space 통합 뷰
+
+### Date Source
+
+| 필드 | 의미 | "Calendar by" 선택 가능 |
+|------|------|------------------------|
+| createdAt | 생성일 | ✅ (기본) |
+| updatedAt | 수정일 | ✅ |
+| reviewAt | 리뷰 예정일 | ✅ |
+
+### 레이어 (Display 토글)
+
+| 레이어 | 기본값 | 이벤트 |
+|--------|--------|--------|
+| Notes | ☑ ON | 노트 생성/수정 |
+| Wiki | ☑ ON | 위키 문서 생성/수정/상태변경 |
+| Reminders | ☑ ON | snoozed 노트 reviewAt |
+| Relations | ☐ OFF | 관계 생성 |
+| Tags/Labels/Folders | ☐ OFF | 태그·라벨·폴더 생성 |
+| Templates | ☐ OFF | 템플릿 생성 |
+
+### Display Modes (캘린더 내)
+
+| 모드 | 용도 |
+|------|------|
+| Month | 전체 흐름 파악 (기본) |
+| Week | 주간 디테일 |
+| Agenda | 날짜별 그룹된 리스트 (텍스트 밀도 최고) |
+
+**Timeline(Gantt) 뷰는 제외** — 노트는 "시점" 데이터이지 "기간" 데이터가 아님.
+
+### Filter
+
+기존 FilterPanel 재사용:
+- Status (inbox/capture/permanent)
+- Tags, Labels, Folders
+- Space (Notes만 / Wiki만 / 전체)
+- Date range
+
+### 인터랙션
+
+| 액션 | 동작 |
+|------|------|
+| 빈 날짜 + 클릭 | 해당 날짜로 노트 생성 |
+| 아이템 클릭 | Side peek / 에디터 열기 |
+| 날짜 숫자 클릭 | Week/Day 뷰로 드릴다운 |
+| ← → 키 | 월/주 이동 |
+
+### Calendar 사이드바
+
+- 미니 캘린더 (월간, 날짜 점프)
+- 오늘의 요약 (생성 N, 수정 N, 리뷰 N)
+- Views 섹션 (Calendar 커스텀 뷰)
+- Upcoming (다가오는 리마인더)
 
 ## 참조 문서
 

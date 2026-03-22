@@ -92,16 +92,18 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 ## Current Direction (as of 2026-03-22)
 
 ### Key Design Decisions (추가)
-- **WorkspaceMode 삭제**: zen/research 모드 불필요. sidebarCollapsed + detailsOpen 독립 토글만으로 충분. focusMode = sidebarCollapsed && !detailsOpen (TipTapEditor에서 자동 파생)
+- **WorkspaceMode 삭제**: zen/research 모드 불필요. sidebarCollapsed + detailsOpen 독립 토글만으로 충분
 - **우측 사이드바 = Linear식 데이터 분포 패널**: All Overview 대체. 뷰별 탭 (Notes: Status/Folder/Tags/Labels)
-- **컬럼 헤더 클릭 정렬**: Linear처럼 "Order by X ↑/↓" 칩 표시
-- **Filter sub-panel 위치**: hover한 카테고리 행의 y좌표에 맞춰 동적 위치
+- **Calendar = Cross-Space 시간 대시보드**: 독립 공간, Notes 뷰 모드 아님. 모든 엔티티 시간 축 표시
+- **Custom Views = 사이드바 Views 섹션**: Linear식 savedView. 각 공간(Notes/Wiki/Graph/Calendar)별 독립
+- **Back/Forward = note history + browser history fallback**: note history 없으면 router.back() 호출
+- **디자인 라이브러리 13개 도입**: Phosphor/Motion/Sonner/Resizable/Radix Colors/dnd-kit/cmdk/Vaul/Iconoir/Tabler/Remix/React Spring + DESIGN-TOKENS.md에 사용 규칙 문서화
 
 ### 다음 작업 후보 (우선순위 순)
-1. **ViewDistributionPanel 다른 뷰 적용** — Wiki/Inbox/Graph에도 분포 패널 연결
-2. **사이드바 목업 매칭** — Graph/Wiki/Inbox 사이드바를 목업에 맞추기
-3. **커스텀 뷰 시스템** — 유저가 필터 조합으로 뷰 저장
-4. **Phosphor Icons 마이그레이션**
+1. **위키 리디자인** — Overview 통합, 파생 위키(암묵적 관계), Footnote 각주, Send to Wiki 버블 메뉴
+2. **에디터 업그레이드** — 파일 첨부 UX, 우클릭 컨텍스트 메뉴, 버블 메뉴 확장
+3. **Phosphor Icons 마이그레이션** — Lucide → Phosphor weight 시스템 전환
+4. **Custom Views 2차** — Quick Filter ↔ View 승격/강등, Wiki/Graph 뷰 연동
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정

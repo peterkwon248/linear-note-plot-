@@ -11,9 +11,10 @@ import type { Note, RelationType } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
+import { ViewDistributionPanel, type DistributionItem } from "@/components/view-distribution-panel"
 import { GRAPH_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { DEFAULT_VIEW_STATE } from "@/lib/view-engine/defaults"
-import type { FilterRule } from "@/lib/view-engine/types"
+import type { FilterRule, FilterField } from "@/lib/view-engine/types"
 import { Network } from "lucide-react"
 
 const DEFAULT_FILTERS: OntologyFilters = {
@@ -41,6 +42,7 @@ export function OntologyView() {
   const [graph, setGraph] = useState<OntologyGraph | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [graphFilters, setGraphFilters] = useState<FilterRule[]>([])
+  const [showDistribution, setShowDistribution] = useState(false)
 
   const handleGraphFilterToggle = (rule: FilterRule) => {
     setGraphFilters(prev => {
@@ -136,6 +138,58 @@ export function OntologyView() {
     [updateOntologyPositions],
   )
 
+  const graphDistributionTabs = useMemo(() => [
+    { key: "nodeType", label: "Node Type" },
+    { key: "relations", label: "Relations" },
+  ], [])
+
+  const getGraphDistribution = useCallback((tabKey: string): DistributionItem[] => {
+    if (!graph) return []
+    switch (tabKey) {
+      case "nodeType": {
+        const counts: Record<string, number> = {}
+        for (const node of graph.nodes) {
+          const type = node.nodeType
+          counts[type] = (counts[type] ?? 0) + 1
+        }
+        return Object.entries(counts)
+          .map(([key, count]) => ({
+            key,
+            label: key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, " "),
+            count,
+          }))
+          .sort((a, b) => b.count - a.count)
+      }
+      case "relations": {
+        const counts: Record<string, number> = {}
+        for (const edge of graph.edges) {
+          const type = edge.kind
+          counts[type] = (counts[type] ?? 0) + 1
+        }
+        return Object.entries(counts)
+          .map(([key, count]) => ({ key, label: key, count }))
+          .sort((a, b) => b.count - a.count)
+      }
+      default:
+        return []
+    }
+  }, [graph])
+
+  const handleGraphDistributionClick = useCallback((tabKey: string, itemKey: string) => {
+    const fieldMap: Record<string, FilterField> = {
+      nodeType: "status",
+    }
+    const field = fieldMap[tabKey]
+    if (!field) return
+    const rule: FilterRule = { field, operator: "eq", value: itemKey }
+    const exists = graphFilters.some(
+      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+    )
+    if (!exists) {
+      setGraphFilters(prev => [...prev, rule])
+    }
+  }, [graphFilters])
+
   // Count edges per relation type
   const relationTypeCounts = useMemo(() => {
     const counts = new Map<RelationType, number>()
@@ -184,6 +238,8 @@ export function OntologyView() {
           />
         }
         showDetailPanel
+        detailPanelOpen={showDistribution}
+        onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
       >
         <OntologyFilterBar
           filters={filters}
@@ -223,6 +279,14 @@ export function OntologyView() {
             noteId={selectedNodeId}
             onClose={() => setSelectedNodeId(null)}
             onOpenNote={(noteId) => openNoteInLeaf(noteId)}
+          />
+        )}
+        {showDistribution && (
+          <ViewDistributionPanel
+            tabs={graphDistributionTabs}
+            getDistribution={getGraphDistribution}
+            onItemClick={handleGraphDistributionClick}
+            onClose={() => setShowDistribution(false)}
           />
         )}
       </div>

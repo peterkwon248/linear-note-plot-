@@ -269,10 +269,42 @@ export const INSIGHTS_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+export const CALENDAR_VIEW_CONFIG: ViewConfig = {
+  showFilter: true,
+  showDisplay: true,
+  showDetailPanel: true,
+  filterCategories: [
+    { key: "status", label: "Status", icon: StatusIcon, values: [
+      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)" },
+      { key: "capture", label: "Capture", color: "#f5a623" },
+      { key: "permanent", label: "Permanent", color: "#45d483" },
+    ]},
+    { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
+    { key: "label", label: "Label", icon: LabelIcon, values: [] },
+    { key: "tags", label: "Tags", icon: TagIcon, values: [] },
+  ],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: [],
+    orderingOptions: [
+      { value: "createdAt", label: "Created date" },
+      { value: "updatedAt", label: "Updated date" },
+    ],
+    groupingOptions: [],
+    toggles: [
+      { key: "showNotes", label: "Notes", icon: ContentIcon },
+      { key: "showWiki", label: "Wiki", icon: LinkIcon },
+      { key: "showReminders", label: "Reminders", icon: CalendarIcon },
+    ],
+    properties: [],
+  },
+}
+
 export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   notes: NOTES_VIEW_CONFIG,
   wiki: WIKI_VIEW_CONFIG,
   graph: GRAPH_VIEW_CONFIG,
   inbox: INBOX_VIEW_CONFIG,
   insights: INSIGHTS_VIEW_CONFIG,
+  calendar: CALENDAR_VIEW_CONFIG,
 }

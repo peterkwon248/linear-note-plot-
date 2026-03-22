@@ -177,13 +177,17 @@ Plot의 모든 설계 결정은 Linear 수준의 미니멀리즘을 추구합니
 
 ## 아이콘
 
-### strokeWidth 규칙
+### 라이브러리 우선순위
 
-**금지 사항 없음. strokeWidth = 1.5 (변경 불가)**
+1. **Phosphor Icons** — 기본. 모든 새 아이콘은 Phosphor 사용
+2. **PlotIcons** (`components/plot-icons.tsx`) — 커스텀 SVG (기존 유지, 점진적 Phosphor 전환)
+3. **Iconoir** — Phosphor에 없는 아이콘 보완
+4. **Tabler / Remix** — 위 둘에 없을 때만
+5. **Lucide** — 레거시. 새 코드에서 사용 금지, 기존 코드는 점진적 교체
 
-- 모든 아이콘 스트로크: `strokeWidth={1.5}`
-- 온톨로지 줌 비례 계산 시만 수정 허용 (예: `strokeWidth={1.5 * zoomLevel}`)
-- 스트로크 너비 커스터마이징 불가
+### Weight 규칙 (Phosphor)
+
+Phosphor의 weight prop으로 시각적 계층을 표현합니다. strokeWidth prop은 사용하지 않습니다.
 
 ### 아이콘 사이즈 스케일
 
@@ -494,18 +498,221 @@ font-bold       → 700
 
 ---
 
+## 라이브러리 사용 규칙
+
+> 아래 라이브러리들은 Plot의 디자인 품질을 보장하기 위한 공식 도구입니다.
+> Claude Code는 해당 영역 작업 시 **자동으로** 이 규칙을 따라야 합니다.
+
+### Phosphor Icons (Lucide 대체)
+
+**도입 목적:** Lucide의 단일 weight 한계 탈피. 6가지 weight로 시각적 계층 표현.
+
+| 컨텍스트 | Weight | 예시 |
+|---------|--------|------|
+| 사이드바 inactive | `light` | 비활성 nav 아이콘 |
+| 사이드바 hover | `regular` | 마우스 오버 |
+| 사이드바 active | `bold` | 선택된 항목 |
+| 에디터 툴바 | `regular` | 고정 (hover 변화 없음) |
+| ViewHeader 아이콘 | `regular` | 필터/디스플레이/패널 |
+| 빈 상태 일러스트 | `thin` | Empty state 큰 아이콘 |
+
+**금지:** `duotone` (Plot 미학에 안 맞음), `fill` (아이콘 무게 과잉)
+
+**Import 규칙:**
+```tsx
+// 개별 import (tree-shaking)
+import { Calendar } from "@phosphor-icons/react/dist/ssr/Calendar"
+// 금지: import { Calendar } from "@phosphor-icons/react" (번들 비대)
+```
+
+**마이그레이션:** Lucide → Phosphor 1:1 대응. 기존 `strokeWidth={1.5}` prop 제거 (Phosphor는 weight prop 사용).
+
+### Motion (구 Framer Motion)
+
+**도입 목적:** CSS transition 대체. 레이아웃 전환, 리스트 정렬에 spring 기반 모션.
+
+**허용 패턴:**
+| 패턴 | 사용처 | 예시 |
+|------|--------|------|
+| `layoutId` | 탭 인디케이터, 모드 전환 | 활성 탭 슬라이드 |
+| `AnimatePresence` | 등장/퇴장 애니메이션 | 패널 열기/닫기 |
+| `motion.div` + `layout` | 리스트 재정렬 | 노트 순서 변경 |
+| `spring` config | 모든 모션 | 자연스러운 물리 반응 |
+
+**Plot 전용 spring config:**
+```ts
+const PLOT_SPRING = { type: "spring", stiffness: 400, damping: 30 }  // 빠르고 단단
+const PLOT_SPRING_SOFT = { type: "spring", stiffness: 300, damping: 25 }  // 부드러운 전환
+```
+
+**금지:**
+- `duration` 기반 easing (CSS transition과 중복, spring만 사용)
+- 1초 이상 애니메이션 (사용자 답답함)
+- 장식적 모션 (로딩 스피너 이외의 반복 애니메이션)
+
+### Sonner (토스트)
+
+**현재 상태:** 이미 사용 중. `toast()` 호출로 토스트 표시.
+
+**규칙:**
+| 설정 | 값 | 이유 |
+|------|-----|------|
+| position | `bottom-right` | Linear 동일 위치 |
+| richColors | `true` | success/error 자동 색상 |
+| duration | 3000ms (기본) | 충분히 읽고 사라짐 |
+| closeButton | `false` | 자동 사라짐 (Linear 동일) |
+
+**토스트 타입별 사용:**
+```ts
+toast("기본 메시지")                    // 정보
+toast.success("저장 완료")              // 성공 (초록)
+toast.error("삭제 실패")               // 에러 (빨강)
+toast.promise(asyncFn, { ... })        // 비동기 (로딩→성공/실패)
+```
+
+**금지:** `toast.warning` (Plot에서 경고 토스트는 쓰지 않음 — 명확하게 성공/실패만)
+
+### React Resizable Panels
+
+**도입 목적:** 사이드바↔콘텐츠, 리스트↔에디터 경계 드래그 리사이즈.
+
+**규칙:**
+| 패널 경계 | 최소 | 최대 | 기본 |
+|----------|------|------|------|
+| 사이드바 | 200px | 400px | 260px |
+| 노트 리스트 | 200px | 500px | 320px |
+| 에디터 | 나머지 전부 | - | flex-1 |
+| 분포 패널 | 280px (고정) | - | 280px |
+
+**퍼시스턴스:** `autoSaveId` prop으로 localStorage에 패널 비율 저장.
+**접기:** 더블클릭 핸들 → 최소 크기로 접기/복원 (현재 sidebarCollapsed 패턴과 통합).
+
+### Radix Colors
+
+**도입 목적:** 12단계 컬러 스케일로 다크모드 자동 전환, 의미 기반 색상 사용.
+
+**12단계 스케일 구조:**
+| 단계 | 용도 | 예시 |
+|------|------|------|
+| 1-2 | App background | 페이지 배경 |
+| 3-4 | Component background | 카드, 입력 필드 |
+| 5-6 | Border | 보더, 구분선 |
+| 7-8 | Solid background | 버튼, 배지 |
+| 9-10 | Solid hover | 버튼 호버 |
+| 11-12 | Text | 텍스트 |
+
+**Plot 매핑 (점진적 전환):**
+- 현재 `--accent: #6366f1` → Radix `indigo-9`
+- 현재 `--destructive: #ef4444` → Radix `red-9`
+- 현재 `--chart-5: #22c55e` → Radix `green-9`
+
+**다크모드:** Radix Colors는 `[light|dark]-[color]-[step]` CSS 변수를 자동 생성. `dark:` prefix 불필요.
+
+### Inter + Geist 폰트
+
+**현재 상태:** Geist 이미 사용 중 (`--font-sans: 'Geist'`).
+
+**Inter 도입 시 규칙:**
+- Inter는 Geist 대체가 아닌 **대안 옵션** (Linear가 Inter 사용)
+- 현재는 Geist 유지, Inter는 향후 테마 전환 시 고려
+
+**Geist OpenType 피처 (활성화 권장):**
+```css
+font-feature-settings: "cv02" 1, "cv03" 1, "cv04" 1;
+/* cv02: 대안 a, cv03: 대안 g, cv04: 대안 6/9 */
+```
+
+**Geist Mono:** 코드블록, tabular-nums 영역 전용. 에디터 본문에는 쓰지 않음.
+
+### @dnd-kit
+
+**도입 목적:** 노트 재정렬, 폴더 간 이동, 태그 관리에 DnD 지원.
+
+**허용 패턴:**
+| 패턴 | 사용처 |
+|------|--------|
+| `SortableContext` + `useSortable` | 리스트 내 재정렬 (노트, 폴더) |
+| `DndContext` + `useDroppable` | 폴더 간 노트 이동 |
+| `DragOverlay` | 드래그 중 미리보기 |
+| 키보드 DnD | 접근성 필수 (`KeyboardSensor`) |
+
+**드래그 임계값:** `distance: 5` (5px 이동 후 드래그 시작 — 클릭과 구분).
+
+### cmdk (Command Palette)
+
+**현재 상태:** shadcn/ui Command 컴포넌트가 cmdk 기반. 이미 사용 중.
+
+**커스텀 규칙:**
+- 그룹 헤더: `text-[11px] uppercase tracking-wide text-muted-foreground/40`
+- 아이템 간격: `py-1.5 px-2`
+- 검색 입력: placeholder `"Type a command or search..."`
+- 빈 결과: `"No results found."` (마침표 포함)
+
+### Vaul (Drawer)
+
+**도입 목적:** 모바일/좁은 화면에서 Side Peek, Detail Panel을 바텀 시트로 전환.
+
+**트리거 조건:** 뷰포트 너비 < 768px 일 때 모달 → Vaul drawer로 자동 전환.
+
+**Snap points:** `[0.5, 1]` (반 높이 / 전체 높이).
+
+**금지:** 데스크탑에서 Vaul 사용 (모바일 전용).
+
+### Iconoir (Phosphor 보완)
+
+**역할:** Phosphor에 없는 특수 아이콘 보완용 폴백.
+
+**사용 조건:** Phosphor에서 찾을 수 없는 아이콘만. Phosphor 우선.
+
+**Import:** `import { IconName } from "iconoir-react"`
+
+### Tabler Icons (비상 대안)
+
+**역할:** Phosphor 마이그레이션 실패 시 대안.
+
+**사용 조건:** Phosphor가 특정 아이콘을 제공하지 않고 Iconoir에도 없을 때만.
+
+**Import:** `import { IconName } from "@tabler/icons-react"`
+
+### Remix Icon (특수 카테고리)
+
+**역할:** 파일 타입, 디바이스 등 Phosphor가 약한 특수 카테고리 보완.
+
+**사용 조건:** 파일 타입 아이콘 (docx, pdf, xlsx 등), 디바이스 아이콘 (mobile, tablet 등).
+
+**라이선스:** Apache 2.0 (MIT 아님, 상업적 사용 가능).
+
+### React Spring (Ontology 전용)
+
+**역할:** Ontology View 그래프 노드 물리 배치 애니메이션.
+
+**사용 조건:** `ontology-graph-canvas.tsx` 전용. 다른 곳에서는 Motion 사용.
+
+**Config:**
+```ts
+const NODE_SPRING = { mass: 1, tension: 170, friction: 26 }  // 노드 배치
+const EDGE_SPRING = { mass: 0.5, tension: 120, friction: 14 }  // 엣지 따라가기
+```
+
+---
+
 ## 체크리스트: 설계 가이드라인 준수
 
 설계 리뷰 시 다음 항목을 확인하세요:
 
 - [ ] **색상**: hex 코드 직접 사용 안 함 (항상 `--variable` 또는 Tailwind 클래스)
-- [ ] **아이콘**: strokeWidth = 1.5, 사이즈는 스케일 중 하나
+- [ ] **아이콘**: Phosphor weight 규칙 준수, 사이즈는 스케일 중 하나
 - [ ] **스페이싱**: 4px 그리드, density 변수 사용
 - [ ] **타이포그래피**: 이 문서의 폰트 사이즈 스케일만 사용
 - [ ] **트랜지션**: 75ms, 150ms, 200ms만 사용
 - [ ] **라디우스**: `--radius-*` CSS 변수 또는 Tailwind 클래스
 - [ ] **사이드바 다크모드**: opacity 계층 구조 준수
 - [ ] **스크롤바**: 6px 너비, 호버 시에만 보이기
+- [ ] **모션**: Motion(spring) 사용, duration 기반 easing 금지
+- [ ] **아이콘 weight**: Phosphor weight 컨텍스트별 매핑 준수
+- [ ] **패널 리사이즈**: React Resizable Panels min/max 규칙
+- [ ] **DnD**: @dnd-kit 사용, distance: 5 임계값
+- [ ] **모바일 Drawer**: 768px 이하에서 Vaul 사용
 
 ---
 

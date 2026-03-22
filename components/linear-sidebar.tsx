@@ -26,7 +26,7 @@ import {
   IconGear,
 } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
-import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace } from "@/lib/table-route"
+import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 import type { PanelContent } from "@/lib/workspace/types"
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
@@ -186,6 +186,12 @@ export function LinearSidebar() {
   const navigationHistory = usePlotStore((s) => s.navigationHistory)
   const navigationIndex = usePlotStore((s) => s.navigationIndex)
 
+  const savedViews = usePlotStore((s) => s.savedViews)
+  const createSavedView = usePlotStore((s) => s.createSavedView)
+  const updateSavedView = usePlotStore((s) => s.updateSavedView)
+  const deleteSavedView = usePlotStore((s) => s.deleteSavedView)
+  const activeViewId = useActiveViewId()
+
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
 
   const tags = usePlotStore((s) => s.tags)
@@ -236,6 +242,11 @@ export function LinearSidebar() {
   // Folder collapse state
   const [showAllFolders, setShowAllFolders] = useState(false)
 
+  // View creation state
+  const [newViewOpen, setNewViewOpen] = useState(false)
+  const [newViewName, setNewViewName] = useState("")
+  const newViewInputRef = useRef<HTMLInputElement>(null)
+
   // Rename state (folders only)
   const [renamingItem, setRenamingItem] = useState<{ id: string } | null>(null)
   const [renameValue, setRenameValue] = useState("")
@@ -246,6 +257,12 @@ export function LinearSidebar() {
       setTimeout(() => newFolderInputRef.current?.focus(), 0)
     }
   }, [newFolderOpen])
+
+  useEffect(() => {
+    if (newViewOpen) {
+      setTimeout(() => newViewInputRef.current?.focus(), 0)
+    }
+  }, [newViewOpen])
 
   useEffect(() => {
     if (renamingItem) setTimeout(() => renameInputRef.current?.focus(), 0)
@@ -368,7 +385,15 @@ export function LinearSidebar() {
   const handleRenameSubmit = () => {
     if (!renamingItem) return
     const name = renameValue.trim()
-    if (name) updateFolder(renamingItem.id, { name })
+    const folderToRename = folders.find(f => f.id === renamingItem.id)
+    if (folderToRename) {
+      if (name) updateFolder(renamingItem.id, { name })
+    } else {
+      const viewToRename = savedViews.find(v => v.id === renamingItem.id)
+      if (viewToRename && name) {
+        updateSavedView(renamingItem.id, { name })
+      }
+    }
     setRenamingItem(null)
     setRenameValue("")
   }
@@ -383,6 +408,124 @@ export function LinearSidebar() {
 
   const handleDeleteFolder = (id: string) => {
     deleteFolder(id)
+  }
+
+  const handleNewViewSubmit = () => {
+    const name = newViewName.trim()
+    if (name) {
+      createSavedView(name, undefined, activeSpace as any)
+    }
+    setNewViewName("")
+    setNewViewOpen(false)
+  }
+
+  const handleNewViewKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleNewViewSubmit()
+    if (e.key === "Escape") {
+      setNewViewName("")
+      setNewViewOpen(false)
+    }
+  }
+
+  const handleDeleteView = (id: string) => {
+    deleteSavedView(id)
+    if (activeViewId === id) {
+      setActiveViewId(null)
+      setActiveRoute("/notes")
+      router.push("/notes")
+    }
+  }
+
+  const renderViewsSection = (spaceFilter: string, routeOnClick: string) => {
+    const spaceViews = savedViews.filter(v => v.space === spaceFilter || v.space === "all")
+    return (
+      <Section
+        title="Views"
+        trailing={
+          <button
+            onClick={() => setNewViewOpen(true)}
+            className="flex items-center justify-center h-5 w-5 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+            aria-label="New view"
+          >
+            <IconPlus size={14} />
+          </button>
+        }
+      >
+        {newViewOpen && activeSpace === spaceFilter && (
+          <div className="px-2 py-1">
+            <input
+              ref={newViewInputRef}
+              type="text"
+              value={newViewName}
+              onChange={(e) => setNewViewName(e.target.value)}
+              onKeyDown={handleNewViewKeyDown}
+              onBlur={handleNewViewSubmit}
+              placeholder="View name"
+              className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-sm text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+          </div>
+        )}
+        {spaceViews.map((view) => {
+          const isViewActive = activeViewId === view.id
+          const isViewRenaming = renamingItem?.id === view.id
+          return (
+            <ContextMenu key={view.id}>
+              <ContextMenuTrigger asChild>
+                <button
+                  onClick={() => {
+                    setActiveViewId(view.id)
+                    setActiveRoute(routeOnClick)
+                    setSelectedNoteId(null)
+                    router.push(routeOnClick)
+                  }}
+                  className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+                    isViewActive
+                      ? "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.93)]"
+                      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                  }`}
+                >
+                  <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${isViewActive ? "text-[rgba(255,255,255,0.93)]" : "text-sidebar-muted group-hover:text-[rgba(255,255,255,0.65)]"}`}>
+                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </span>
+                  {isViewRenaming ? (
+                    <input
+                      ref={renameInputRef}
+                      type="text"
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={handleRenameKeyDown}
+                      onBlur={handleRenameSubmit}
+                      className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-sm text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span className="truncate text-left flex-1">{view.name}</span>
+                  )}
+                </button>
+              </ContextMenuTrigger>
+              <ContextMenuContent className="w-48">
+                <ContextMenuItem onClick={() => {
+                  setRenamingItem({ id: view.id })
+                  setRenameValue(view.name)
+                }}>
+                  Rename
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem
+                  onClick={() => handleDeleteView(view.id)}
+                  className="text-red-400 focus:text-red-400"
+                >
+                  Delete
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+          )
+        })}
+      </Section>
+    )
   }
 
   const notesInFolder = (folderId: string) =>
@@ -592,6 +735,9 @@ export function LinearSidebar() {
               )}
             </Section>
 
+            {/* Views section */}
+            {renderViewsSection("notes", "/notes")}
+
             {/* More section: Tags, Labels, Templates, Insights */}
             <Section title="More">
               <NavLink
@@ -738,6 +884,9 @@ export function LinearSidebar() {
               ) : null
             })()}
 
+            {/* Wiki Views */}
+            {renderViewsSection("wiki", "/wiki")}
+
             {/* Pinned wiki articles */}
             {(() => {
               const pinnedWiki = notes.filter((n) => n.isWiki && !n.trashed && n.pinned)
@@ -796,6 +945,66 @@ export function LinearSidebar() {
                 active={isActive("/calendar")}
               />
             </div>
+
+            {/* Today's Summary */}
+            <Section title="Today">
+              {(() => {
+                const todayStr = new Date().toISOString().slice(0, 10)
+                const created = notes.filter(n => !n.trashed && n.createdAt.startsWith(todayStr)).length
+                const updated = notes.filter(n => !n.trashed && n.updatedAt.startsWith(todayStr) && !n.createdAt.startsWith(todayStr)).length
+
+                return (
+                  <div className="flex flex-col gap-1.5 px-2.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sidebar-muted">Created</span>
+                      <span className="text-sidebar-foreground tabular-nums">{created}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sidebar-muted">Updated</span>
+                      <span className="text-sidebar-foreground tabular-nums">{updated}</span>
+                    </div>
+                  </div>
+                )
+              })()}
+            </Section>
+
+            {/* Upcoming Reminders */}
+            {(() => {
+              const now = new Date()
+              const upcoming = notes.filter(n => {
+                if (n.trashed || !n.reviewAt) return false
+                try { return new Date(n.reviewAt) > now } catch { return false }
+              }).sort((a, b) => new Date(a.reviewAt!).getTime() - new Date(b.reviewAt!).getTime()).slice(0, 5)
+
+              return upcoming.length > 0 ? (
+                <Section title="Upcoming">
+                  {upcoming.map(note => {
+                    let relDate = ""
+                    try {
+                      const d = new Date(note.reviewAt!)
+                      const diff = Math.ceil((d.getTime() - now.getTime()) / (1000*60*60*24))
+                      relDate = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : `In ${diff}d`
+                    } catch {}
+                    return (
+                      <button
+                        key={note.id}
+                        onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
+                        className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                      >
+                        <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                          <IconDoc size={14} />
+                        </span>
+                        <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
+                        <span className="text-[10px] text-muted-foreground/40 tabular-nums">{relDate}</span>
+                      </button>
+                    )
+                  })}
+                </Section>
+              ) : null
+            })()}
+
+            {/* Calendar Views */}
+            {renderViewsSection("calendar", "/calendar")}
           </>
         )}
 
@@ -829,6 +1038,9 @@ export function LinearSidebar() {
                 ))}
               </div>
             </Section>
+
+            {/* Ontology Views */}
+            {renderViewsSection("ontology", "/ontology")}
 
             {/* Graph Health */}
             <Section title="Health">
