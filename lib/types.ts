@@ -23,7 +23,7 @@ export interface WikiInfoboxEntry {
 /** Item in a wiki article's collection (staging area for related material) */
 export interface WikiCollectionItem {
   id: string
-  type: 'note' | 'url' | 'image' | 'text'
+  type: 'note' | 'url' | 'image' | 'text' | 'file'
   /** Referenced note ID (for type='note') */
   sourceNoteId?: string
   /** URL reference (for type='url') */
@@ -32,6 +32,14 @@ export interface WikiCollectionItem {
   urlTitle?: string
   /** Freeform text (for type='text') */
   text?: string
+  /** Attachment ID in IDB (for type='file' | 'image') */
+  attachmentId?: string
+  /** File name (for type='file' | 'image') */
+  fileName?: string
+  /** File size in bytes (for type='file' | 'image') */
+  fileSize?: number
+  /** MIME type (for type='file' | 'image') */
+  fileMimeType?: string
   /** When the item was added */
   addedAt: string
 }

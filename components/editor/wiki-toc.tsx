@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react"
+import { Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface TOCHeading {
@@ -14,6 +15,8 @@ interface TOCHeading {
 interface WikiTOCProps {
   content: string
   onScrollTo?: (headingIndex: number) => void
+  /** Called with (sectionTitle, level) when user adds a new section */
+  onAddSection?: (title: string, level: number) => void
   className?: string
 }
 
@@ -29,7 +32,7 @@ function extractHeadingsFromContent(content: string): TOCHeading[] {
         level: match[1].length,
         text: match[2].trim(),
         index: idx,
-        sectionNumber: "", // will be computed below
+        sectionNumber: "",
       })
       idx++
     }
@@ -37,38 +40,38 @@ function extractHeadingsFromContent(content: string): TOCHeading[] {
   return headings
 }
 
-/**
- * Compute hierarchical section numbers like 1, 2, 2.1, 2.2, 3, 3.1.1
- * H2 = top level, H3 = sub, H4 = sub-sub, etc.
- */
 function assignSectionNumbers(headings: TOCHeading[]): TOCHeading[] {
   if (headings.length === 0) return headings
 
   const minLevel = Math.min(...headings.map((h) => h.level))
-  // counters[0] = top-level counter, counters[1] = sub, etc.
   const counters: number[] = []
 
   return headings.map((h) => {
     const depth = h.level - minLevel
-    // Ensure counters array is long enough
     while (counters.length <= depth) counters.push(0)
-    // Increment current depth counter
     counters[depth]++
-    // Reset all deeper counters
     for (let i = depth + 1; i < counters.length; i++) {
       counters[i] = 0
     }
-    // Build section number string
     const parts = counters.slice(0, depth + 1)
     const sectionNumber = parts.join(".")
     return { ...h, sectionNumber }
   })
 }
 
-export function WikiTOC({ content, onScrollTo, className }: WikiTOCProps) {
+export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTOCProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const rawHeadings = useMemo(() => extractHeadingsFromContent(content), [content])
   const headings = useMemo(() => assignSectionNumbers(rawHeadings), [rawHeadings])
+
+  // Inline add state
+  const [addingLevel, setAddingLevel] = useState<number | null>(null)
+  const [newTitle, setNewTitle] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (addingLevel !== null) inputRef.current?.focus()
+  }, [addingLevel])
 
   const handleClick = useCallback(
     (heading: TOCHeading) => {
@@ -78,9 +81,21 @@ export function WikiTOC({ content, onScrollTo, className }: WikiTOCProps) {
     [onScrollTo],
   )
 
-  if (headings.length === 0) return null
+  const handleSubmitNew = useCallback(() => {
+    if (!newTitle.trim() || addingLevel === null) return
+    onAddSection?.(newTitle.trim(), addingLevel)
+    setNewTitle("")
+    setAddingLevel(null)
+  }, [newTitle, addingLevel, onAddSection])
 
-  const minLevel = Math.min(...headings.map((h) => h.level))
+  const handleCancelAdd = useCallback(() => {
+    setNewTitle("")
+    setAddingLevel(null)
+  }, [])
+
+  if (headings.length === 0 && !onAddSection) return null
+
+  const minLevel = headings.length > 0 ? Math.min(...headings.map((h) => h.level)) : 2
 
   return (
     <div className={cn("", className)}>
@@ -88,26 +103,76 @@ export function WikiTOC({ content, onScrollTo, className }: WikiTOCProps) {
         Contents
       </h4>
 
-      <nav className="space-y-0.5">
-        {headings.map((h) => (
-          <button
-            key={h.id}
-            onClick={() => handleClick(h)}
-            className={cn(
-              "flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-note transition-colors duration-150",
-              activeIndex === h.index
-                ? "border-l-2 border-accent text-accent bg-accent/5 font-medium"
-                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-            )}
-            style={{ paddingLeft: `${(h.level - minLevel) * 12 + 8}px` }}
-          >
-            <span className="shrink-0 text-accent font-semibold text-2xs">
-              {h.sectionNumber}.
+      {headings.length > 0 && (
+        <nav className="space-y-0.5">
+          {headings.map((h) => (
+            <button
+              key={h.id}
+              onClick={() => handleClick(h)}
+              className={cn(
+                "flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-note transition-colors duration-150",
+                activeIndex === h.index
+                  ? "border-l-2 border-accent text-accent bg-accent/5 font-medium"
+                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+              )}
+              style={{ paddingLeft: `${(h.level - minLevel) * 12 + 8}px` }}
+            >
+              <span className="shrink-0 text-accent font-semibold text-2xs">
+                {h.sectionNumber}.
+              </span>
+              <span className="truncate">{h.text}</span>
+            </button>
+          ))}
+        </nav>
+      )}
+
+      {headings.length === 0 && (
+        <p className="px-2 text-2xs text-muted-foreground/40">No sections yet</p>
+      )}
+
+      {/* Inline add input */}
+      {addingLevel !== null && (
+        <div className="mt-1.5 px-1">
+          <div className="flex items-center gap-1 rounded-md border border-accent/30 bg-background px-2 py-1">
+            <span className="text-2xs text-accent/50 shrink-0">
+              {addingLevel === 2 ? "##" : addingLevel === 3 ? "###" : "####"}
             </span>
-            <span className="truncate">{h.text}</span>
+            <input
+              ref={inputRef}
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSubmitNew()
+                if (e.key === "Escape") handleCancelAdd()
+              }}
+              onBlur={() => { if (!newTitle.trim()) handleCancelAdd() }}
+              placeholder={addingLevel === 2 ? "e.g. Background" : addingLevel === 3 ? "e.g. Key Points" : "e.g. Details"}
+              className="flex-1 bg-transparent text-2xs text-foreground outline-none placeholder:text-muted-foreground/30"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Add buttons */}
+      {onAddSection && addingLevel === null && (
+        <div className="mt-2 space-y-0.5">
+          <button
+            onClick={() => setAddingLevel(2)}
+            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-secondary/30 transition-colors duration-100"
+          >
+            <Plus className="h-3 w-3" strokeWidth={1.5} />
+            Section
           </button>
-        ))}
-      </nav>
+          <button
+            onClick={() => setAddingLevel(3)}
+            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/30 hover:text-muted-foreground hover:bg-secondary/30 transition-colors duration-100"
+            style={{ paddingLeft: "20px" }}
+          >
+            <Plus className="h-2.5 w-2.5" strokeWidth={1.5} />
+            Subsection
+          </button>
+        </div>
+      )}
     </div>
   )
 }

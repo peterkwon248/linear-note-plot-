@@ -26,6 +26,8 @@ import {
   IconGear,
 } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
+import { setWikiViewMode } from "@/lib/wiki-view-mode"
+import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 import type { PanelContent } from "@/lib/workspace/types"
@@ -846,6 +848,8 @@ export function LinearSidebar() {
                       onClick={() => {
                         setActiveRoute("/wiki")
                         setSelectedNoteId(null)
+                        setWikiViewMode("list")
+                        setWikiCategoryFilter(cat.id)
                         router.push("/wiki")
                       }}
                       className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"

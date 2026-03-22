@@ -13,6 +13,7 @@ import {
   AlignCenter,
   AlignRight,
 } from "lucide-react"
+import { useAttachmentUrl } from "@/lib/use-attachment-url"
 
 export function ImageNode({ node, updateAttributes, deleteNode, selected, editor }: NodeViewProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -26,7 +27,11 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
   const startWidth = useRef(0)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0, isLeft: false })
 
-  const { src, alt, width, textAlign = "left" } = node.attrs
+  const { src: rawSrc, alt, width, textAlign = "left" } = node.attrs
+
+  // Resolve attachment:// URLs to blob: URLs (also handles data: and http: pass-through)
+  const { url: resolvedUrl, loading } = useAttachmentUrl(rawSrc)
+  const src = resolvedUrl ?? ""
 
   // Close menu on outside click
   useEffect(() => {
@@ -159,14 +164,33 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
         }}
       >
         {/* Image */}
-        <img
-          ref={imageRef}
-          src={src}
-          alt={alt || ""}
-          draggable={false}
-          className={`image-node-img ${selected ? "image-node-selected" : ""}`}
-          style={{ width: width ? `${width}px` : undefined }}
-        />
+        {loading ? (
+          <div
+            className="image-node-img image-node-loading"
+            style={{
+              width: width ? `${width}px` : "200px",
+              height: "120px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "var(--secondary)",
+              borderRadius: "6px",
+              color: "var(--muted-foreground)",
+              fontSize: "12px",
+            }}
+          >
+            Loading...
+          </div>
+        ) : (
+          <img
+            ref={imageRef}
+            src={src}
+            alt={alt || ""}
+            draggable={false}
+            className={`image-node-img ${selected ? "image-node-selected" : ""}`}
+            style={{ width: width ? `${width}px` : undefined }}
+          />
+        )}
 
         {/* Resize handles (invisible hit areas at corners) */}
         {editor?.isEditable && (

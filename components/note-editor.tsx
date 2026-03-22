@@ -327,7 +327,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       </div>
 
       {/* FixedToolbar — outside SURFACE, full width (hidden in read mode) */}
-      {!isReadMode && <FixedToolbar editor={editorInstance} />}
+      {!isReadMode && <FixedToolbar editor={editorInstance} noteId={activeNoteId ?? undefined} />}
     </div>
   )
 }

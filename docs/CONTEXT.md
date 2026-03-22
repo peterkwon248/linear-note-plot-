@@ -36,7 +36,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (18): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views
-- Store version: 45 (v44: layout cleanup, v45: savedViews)
+- Store version: 46 (v44: layout cleanup, v45: savedViews, v46: tutorial seed data migration)
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -106,8 +106,10 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## TODO: Future Work
 
-- Calendar 리디자인 (아래 설계 참조)
-- Custom Views 2차 — Quick Filter ↔ View 승격/강등, Wiki/Graph 뷰 연동
+- **Wiki Block Editor (Option C)** — 위키 전용 블록 에디터. Note Embed, Section 접기/펼치기, 블록 단위 편집 (7-9 세션)
+- Phosphor Icons 마이그레이션
+- 에디터 업그레이드
+- Custom Views 2차
 
 ## Calendar 리디자인 설계 (확정)
 

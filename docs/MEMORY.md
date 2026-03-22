@@ -39,6 +39,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #84**: Architecture Redesign v2 Phase 1~5 완료
 - **PR #85**: Phase 6 Wiki Evolution + 후속 작업 — auto-enroll, korean-utils, Graph 노드 형태, Wiki Overview 재구조, Calendar 승격, 위키 강등, Display 정리
 - **PR #86**: Phase 7 Wiki Collection + Graph Insights + docs 정리
+- **PR #91**: Custom Views + Calendar 리디자인 + 분포 패널 + 디자인 라이브러리
 - **PR #88**: Filter & Display 시스템 v2 — Linear 철학 적용
   - FilterPanel 2단계 nested (hover 기반 side-by-side)
   - DisplayPanel 2모드 (List/Board, Table 제거)
@@ -99,11 +100,21 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Back/Forward = note history + browser history fallback**: note history 없으면 router.back() 호출
 - **디자인 라이브러리 13개 도입**: Phosphor/Motion/Sonner/Resizable/Radix Colors/dnd-kit/cmdk/Vaul/Iconoir/Tabler/Remix/React Spring + DESIGN-TOKENS.md에 사용 규칙 문서화
 
+### 이번 세션 완료 (2026-03-22)
+- **Wiki 리디자인**: 파일 분리 (1500줄→6파일), Dashboard 새 설계, List→Linear-style 테이블, ArticleReader 폴리시, 사이드바 스타일링
+- **첨부파일 시스템 개선**: data URL → IDB blob 저장 (attachment:// URL 스킴)
+- **시드 데이터**: Zettelkasten 튜토리얼 (9 notes, 3 wiki articles), auto-migration v46
+- **카테고리 클릭 필터**: 사이드바/Dashboard 카테고리 클릭 → List 모드 + 태그 필터
+- **TOC 개선**: + Section/Subsection 인라인 추가, 빈 위키에도 TOC 표시
+- **Wiki stub 자동 템플릿**: Overview/Details/See Also 기본 구조
+- **+ Add file**: WikiCollectionSidebar에 파일 첨부 버튼 추가
+- **Infobox editable**: read mode에서도 편집 가능, 비어있을 때 "Add infobox" 표시
+
 ### 다음 작업 후보 (우선순위 순)
-1. **위키 리디자인** — Overview 통합, 파생 위키(암묵적 관계), Footnote 각주, Send to Wiki 버블 메뉴
-2. **에디터 업그레이드** — 파일 첨부 UX, 우클릭 컨텍스트 메뉴, 버블 메뉴 확장
-3. **Phosphor Icons 마이그레이션** — Lucide → Phosphor weight 시스템 전환
-4. **Custom Views 2차** — Quick Filter ↔ View 승격/강등, Wiki/Graph 뷰 연동
+1. **Wiki Block Editor (Option C)** — 위키 전용 블록 에디터 (7-9 세션 규모). 상세 계획: ~/.claude/projects/.../memory/project_wiki_block_editor.md
+2. **Phosphor Icons 마이그레이션** — Lucide → Phosphor weight 시스템 전환
+3. **에디터 업그레이드** — 노트 에디터 개선
+4. **Custom Views 2차**
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정

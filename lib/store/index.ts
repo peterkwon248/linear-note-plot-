@@ -7,6 +7,7 @@ import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
 import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES } from "./seeds"
+import { persistBody } from "./helpers"
 import { createNotesSlice } from "./slices/notes"
 import { createWorkflowSlice } from "./slices/workflow"
 import { createFoldersSlice } from "./slices/folders"
@@ -105,7 +106,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 45,
+      version: 46,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -119,6 +120,16 @@ export const usePlotStore = create<PlotState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state._viewStateHydrated = true
+
+          // Persist seed note bodies to IDB (content is stripped during partialize)
+          // Only runs if seed notes exist and have empty content (just rehydrated)
+          for (const note of state.notes) {
+            const seed = SEED_NOTES.find((s) => s.id === note.id)
+            if (seed && seed.content && !note.content) {
+              note.content = seed.content
+              persistBody({ id: seed.id, content: seed.content, contentJson: null })
+            }
+          }
         }
       },
     }
