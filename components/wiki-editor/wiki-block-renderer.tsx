@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback } from "react"
-import { ChevronDown, ChevronRight, FileText, ImageIcon, GripVertical, Plus, Trash2, Search, Upload } from "lucide-react"
+import { ChevronDown, ChevronRight, FileText, ImageIcon, GripVertical, Plus, Trash2, Search, Upload, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import type { WikiBlock } from "@/lib/types"
@@ -311,6 +311,14 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete }: WikiBlockRenderer
         <FileText className="h-3.5 w-3.5 text-accent/60" strokeWidth={1.5} />
         <span className="text-[11px] font-medium uppercase tracking-wide text-accent/50">From Note</span>
         <span className="text-[13px] font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
+        <button
+          onClick={() => usePlotStore.getState().setSidePeekNoteId(block.noteId!)}
+          className="flex items-center gap-1 text-2xs text-muted-foreground/30 hover:text-accent transition-colors"
+          title="Open in side panel"
+        >
+          <ExternalLink className="h-3 w-3" />
+          Open
+        </button>
         {editable && (
           <button
             onClick={() => setPicking(true)}

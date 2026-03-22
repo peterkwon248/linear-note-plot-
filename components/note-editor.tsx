@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import {
   Pin,
   Archive,
@@ -149,12 +149,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       )}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <EditorBreadcrumb note={note} onClose={onClose} />
-          {note.isWiki && (
-            <span className="flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-2xs font-medium text-purple-400 shrink-0">
-              <Globe className="h-3 w-3" />
-              Wiki
-            </span>
-          )}
+          <ReferencedInBadges noteId={note.id} />
         </div>
         <div className="flex items-center gap-0.5">
           <Tooltip>
@@ -203,17 +198,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
                 <Link2 className="h-4 w-4" />
                 Link to...
               </DropdownMenuItem>
-              {note.isWiki ? (
-                <DropdownMenuItem onClick={() => revertFromWiki(note.id)}>
-                  <Globe className="h-4 w-4" />
-                  Revert from Wiki
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => convertToWiki(note.id)}>
-                  <Globe className="h-4 w-4" />
-                  Convert to Wiki
-                </DropdownMenuItem>
-              )}
+              {/* Convert to Wiki removed — WikiArticle is now separate entity */}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
@@ -298,15 +283,11 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       )}
 
       {/* Content Editor */}
-      {note.isWiki && isReadMode ? (
-        <WikiReadLayout
-          note={note}
-          allTags={allTags}
-          relations={relations}
-          onEditorReady={handleEditorReady}
-        />
+      {/* WikiReadLayout removed — wiki rendering now handled by WikiArticleView */}
+      {false ? (
+        null
       ) : (
-        /* Normal mode / wiki edit mode */
+        /* Normal note editor */
         <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
           {note.isWiki && !isReadMode && (
             <div className="px-6 pt-4">
@@ -423,6 +404,38 @@ function WikiReadLayout({
           </div>
         </div>
       </aside>
+    </div>
+  )
+}
+
+/* ── Referenced In Badges ── */
+
+function ReferencedInBadges({ noteId }: { noteId: string }) {
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+
+  const refs = useMemo(() => {
+    return wikiArticles.filter((a) =>
+      a.blocks.some((b) => b.type === "note-ref" && b.noteId === noteId)
+    )
+  }, [wikiArticles, noteId])
+
+  if (refs.length === 0) return null
+
+  return (
+    <div className="flex items-center gap-1 shrink-0">
+      <span className="text-2xs text-muted-foreground/30">in</span>
+      {refs.map((a) => (
+        <button
+          key={a.id}
+          onClick={() => {
+            import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
+            import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
+          }}
+          className="rounded-[4px] bg-accent/8 px-1.5 py-px text-[10px] font-medium text-accent/60 hover:text-accent transition-colors duration-100"
+        >
+          {a.title}
+        </button>
+      ))}
     </div>
   )
 }

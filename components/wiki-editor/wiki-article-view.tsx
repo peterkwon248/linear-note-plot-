@@ -333,10 +333,16 @@ function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
           <button
             key={`${src.type}-${src.id}`}
             onClick={() => {
-              document.getElementById(`wiki-block-${src.blockId}`)?.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              })
+              if (src.type === "note") {
+                // Open note in side peek panel
+                usePlotStore.getState().setSidePeekNoteId(src.id)
+              } else {
+                // Scroll to block for images
+                document.getElementById(`wiki-block-${src.blockId}`)?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                })
+              }
             }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-[6px] text-left transition-colors duration-100 hover:bg-white/[0.03]"
           >
