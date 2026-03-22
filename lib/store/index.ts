@@ -6,7 +6,7 @@ import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
-import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES } from "./seeds"
+import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES } from "./seeds"
 import { persistBody } from "./helpers"
 import { createNotesSlice } from "./slices/notes"
 import { createWorkflowSlice } from "./slices/workflow"
@@ -26,6 +26,7 @@ import { createOntologySlice } from "./slices/ontology"
 import { createReflectionsSlice } from "./slices/reflections"
 import { createWikiCollectionsSlice } from "./slices/wiki-collections"
 import { createSavedViewsSlice } from "./slices/saved-views"
+import { createWikiArticlesSlice } from "./slices/wiki-articles"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -71,6 +72,7 @@ export const usePlotStore = create<PlotState>()(
         ontologyPositions: {} as Record<string, { x: number; y: number }>,
         wikiCollections: {} as Record<string, import("../types").WikiCollectionItem[]>,
         savedViews: [] as import("../types").SavedView[],
+        wikiArticles: SEED_WIKI_ARTICLES,
         listPaneWidth: 320,
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
@@ -102,11 +104,12 @@ export const usePlotStore = create<PlotState>()(
         ...createReflectionsSlice(set, get, appendEvent),
         ...createWikiCollectionsSlice(set, get),
         ...createSavedViewsSlice(set),
+        ...createWikiArticlesSlice(set, get),
       }
     },
     {
       name: "plot-store",
-      version: 46,
+      version: 48,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

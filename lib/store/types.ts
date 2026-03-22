@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView, WikiArticle, WikiBlock } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceNode, WorkspacePreset, PanelContent, SplitDirection, DropZone } from "../workspace/types"
@@ -98,6 +98,9 @@ export interface PlotState {
 
   // ── Saved Views ──
   savedViews: SavedView[]
+
+  // ── Wiki Articles (Assembly Model) ──
+  wikiArticles: WikiArticle[]
 
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
@@ -232,6 +235,18 @@ export interface PlotState {
   createSavedView: (name: string, viewState?: Partial<SavedView['viewState']>, space?: SavedView['space']) => string
   updateSavedView: (id: string, updates: Partial<SavedView>) => void
   deleteSavedView: (id: string) => void
+
+  // ── Wiki Articles (Assembly Model) ──
+  createWikiArticle: (partial: { title: string; aliases?: string[]; wikiStatus?: WikiStatus; stubSource?: StubSource; tags?: string[]; blocks?: WikiBlock[] }) => string
+  updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
+  deleteWikiArticle: (articleId: string) => void
+  setWikiArticleStatus: (articleId: string, wikiStatus: WikiStatus) => void
+  setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => void
+  addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => string
+  removeWikiBlock: (articleId: string, blockId: string) => void
+  updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => void
+  moveWikiBlock: (articleId: string, blockId: string, targetIndex: number) => void
+  reorderWikiBlocks: (articleId: string, blockIds: string[]) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

@@ -44,6 +44,48 @@ export interface WikiCollectionItem {
   addedAt: string
 }
 
+/* ── Wiki Article (Assembly Model) ────────────────── */
+
+/** Wiki block types — building blocks of a wiki article */
+export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table'
+
+/** A single block in a wiki article */
+export interface WikiBlock {
+  id: string
+  type: WikiBlockType
+  /** Section: heading title */
+  title?: string
+  /** Section: heading level (2 = H2, 3 = H3, etc.) */
+  level?: number
+  /** Section: whether the section is collapsed in view */
+  collapsed?: boolean
+  /** Note reference: ID of the source note whose content is embedded */
+  noteId?: string
+  /** Text: directly authored wiki content (markdown) */
+  content?: string
+  /** Image: attachment blob ID in IDB */
+  attachmentId?: string
+  /** Image: caption text */
+  caption?: string
+}
+
+/**
+ * Wiki Article — a curated article assembled from notes and original content.
+ * Separate entity from Note. Notes are raw material; WikiArticles are the compiled product.
+ */
+export interface WikiArticle {
+  id: string
+  title: string
+  aliases: string[]
+  wikiStatus: WikiStatus
+  stubSource: StubSource | null
+  infobox: WikiInfoboxEntry[]
+  blocks: WikiBlock[]
+  tags: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 /** Saved custom view — user-defined filter/sort/grouping combination */
 export interface SavedView {
   id: string

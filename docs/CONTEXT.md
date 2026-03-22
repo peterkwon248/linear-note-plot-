@@ -35,8 +35,8 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (18): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views
-- Store version: 46 (v44: layout cleanup, v45: savedViews, v46: tutorial seed data migration)
+- Slices (19): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles
+- Store version: 48 (v46: seed data, v47: wikiArticles init, v48: seed WikiArticles)
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System

@@ -16,12 +16,13 @@ import {
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import { WikiStatusDot } from "./wiki-shared"
-import type { Note } from "@/lib/types"
+import type { Note, WikiArticle } from "@/lib/types"
 
 /* ── Types ── */
 
 interface WikiDashboardProps {
   wikiNotes: Note[]
+  wikiArticles: WikiArticle[]
   stats: {
     articles: number
     redLinks: number
@@ -50,6 +51,7 @@ interface WikiDashboardProps {
 
   // Actions
   onOpenArticle: (id: string) => void
+  onOpenWikiArticle?: (id: string) => void
   onCreateFromRedLink: (title: string) => void
   onViewAll: () => void
   onViewStubs: () => void
@@ -60,6 +62,7 @@ interface WikiDashboardProps {
 
 export function WikiDashboard({
   wikiNotes,
+  wikiArticles,
   stats,
   articleCount,
   coverageStats,
@@ -76,6 +79,7 @@ export function WikiDashboard({
   searchResults,
   showSearchDropdown,
   onOpenArticle,
+  onOpenWikiArticle,
   onCreateFromRedLink,
   onViewAll,
   onViewStubs,
@@ -290,6 +294,39 @@ export function WikiDashboard({
             )}
           </div>
         </div>
+
+        {/* ── Wiki Articles (Assembly Model) ── */}
+        {wikiArticles.length > 0 && (
+          <div className="mt-6">
+            <SectionLabel>Wiki Articles</SectionLabel>
+            <div className="grid grid-cols-1 gap-2 min-[700px]:grid-cols-2">
+              {wikiArticles.map((article) => (
+                <button
+                  key={article.id}
+                  onClick={() => onOpenWikiArticle?.(article.id)}
+                  className="group flex items-start gap-3 rounded-xl border border-border/40 bg-card/30 p-3 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-[13px] font-semibold text-foreground group-hover:text-accent transition-colors">
+                      {article.title}
+                    </h4>
+                    <p className="mt-0.5 text-2xs text-muted-foreground/40">
+                      {article.blocks.length} blocks · {article.wikiStatus}
+                    </p>
+                  </div>
+                  <span className={cn(
+                    "shrink-0 rounded-[4px] px-1.5 py-px text-[9.5px] font-semibold uppercase tracking-wide",
+                    article.wikiStatus === "stub" ? "bg-chart-3/8 text-chart-3/70" :
+                    article.wikiStatus === "draft" ? "bg-accent/8 text-accent/70" :
+                    "bg-chart-5/8 text-chart-5/70"
+                  )}>
+                    {article.wikiStatus}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Empty State ── */}
         {wikiNotes.length === 0 && (
