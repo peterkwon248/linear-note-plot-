@@ -16,12 +16,12 @@ import {
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import { WikiStatusDot } from "./wiki-shared"
-import type { Note, WikiArticle } from "@/lib/types"
+import type { WikiArticle } from "@/lib/types"
 
 /* ── Types ── */
 
 interface WikiDashboardProps {
-  wikiNotes: Note[]
+  wikiNotes: WikiArticle[]
   wikiArticles: WikiArticle[]
   stats: {
     articles: number
@@ -35,9 +35,9 @@ interface WikiDashboardProps {
   articleCount: number
   coverageStats: { connected: number; total: number; percent: number }
   redLinks: { title: string; refCount: number }[]
-  recentChanges: Note[]
-  mostConnected: { note: Note; count: number }[]
-  staleDocuments: { note: Note; daysAgo: number }[]
+  recentChanges: WikiArticle[]
+  mostConnected: { note: WikiArticle; count: number }[]
+  staleDocuments: { note: WikiArticle; daysAgo: number }[]
   categories: { tags: { name: string; count: number }[]; uncategorized: number }
 
   // Search
@@ -46,11 +46,10 @@ interface WikiDashboardProps {
   searchFocused: boolean
   setSearchFocused: (f: boolean) => void
   searchInputRef: React.RefObject<HTMLInputElement | null>
-  searchResults: Note[]
+  searchResults: WikiArticle[]
   showSearchDropdown: boolean
 
   // Actions
-  onOpenArticle: (id: string) => void
   onOpenWikiArticle?: (id: string) => void
   onCreateFromRedLink: (title: string) => void
   onViewAll: () => void
@@ -78,7 +77,6 @@ export function WikiDashboard({
   searchInputRef,
   searchResults,
   showSearchDropdown,
-  onOpenArticle,
   onOpenWikiArticle,
   onCreateFromRedLink,
   onViewAll,
@@ -111,7 +109,7 @@ export function WikiDashboard({
               onBlur={() => { setTimeout(() => setSearchFocused(false), 150) }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && searchResults.length > 0) {
-                  onOpenArticle(searchResults[0].id)
+                  onOpenWikiArticle?.(searchResults[0].id)
                   setSearchQuery("")
                 }
                 if (e.key === "Escape") {
@@ -129,7 +127,7 @@ export function WikiDashboard({
                 {searchResults.map((note) => (
                   <button
                     key={note.id}
-                    onMouseDown={(e) => { e.preventDefault(); onOpenArticle(note.id); setSearchQuery("") }}
+                    onMouseDown={(e) => { e.preventDefault(); onOpenWikiArticle?.(note.id); setSearchQuery("") }}
                     className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-100 hover:bg-white/[0.04]"
                   >
                     <WikiStatusDot status={note.wikiStatus} />
@@ -173,7 +171,7 @@ export function WikiDashboard({
         {/* ── Featured Article ── */}
         {featured && (
           <button
-            onClick={() => onOpenArticle(featured.id)}
+            onClick={() => onOpenWikiArticle?.(featured.id)}
             className="group mb-6 flex w-full items-start gap-4 rounded-xl border border-border/50 bg-card/30 p-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
@@ -234,7 +232,7 @@ export function WikiDashboard({
                     title={note.title || "Untitled"}
                     status={note.wikiStatus}
                     meta={shortRelative(note.updatedAt)}
-                    onClick={() => onOpenArticle(note.id)}
+                    onClick={() => onOpenWikiArticle?.(note.id)}
                   />
                 ))}
               </ContentCard>
@@ -249,7 +247,7 @@ export function WikiDashboard({
                     title={note.title || "Untitled"}
                     status={note.wikiStatus}
                     meta={`${count} links`}
-                    onClick={() => onOpenArticle(note.id)}
+                    onClick={() => onOpenWikiArticle?.(note.id)}
                   />
                 ))}
               </ContentCard>
@@ -287,7 +285,7 @@ export function WikiDashboard({
                     title={note.title || "Untitled"}
                     status={note.wikiStatus}
                     meta={`${daysAgo}d ago`}
-                    onClick={() => onOpenArticle(note.id)}
+                    onClick={() => onOpenWikiArticle?.(note.id)}
                   />
                 ))}
               </ContentCard>

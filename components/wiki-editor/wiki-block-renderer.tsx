@@ -7,6 +7,8 @@ import { usePlotStore } from "@/lib/store"
 import type { WikiBlock } from "@/lib/types"
 import { useAttachmentUrl } from "@/lib/use-attachment-url"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
+import { useWikiBlockContent } from "@/hooks/use-wiki-block-content"
+import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 
 /* ── Block Renderer ── */
 
@@ -17,18 +19,20 @@ interface WikiBlockRendererProps {
   sectionNumber?: string
   onUpdate?: (patch: Partial<Omit<WikiBlock, "id">>) => void
   onDelete?: () => void
+  /** Drag handle listeners from @dnd-kit/sortable — attach to GripVertical button */
+  dragHandleProps?: DraggableSyntheticListeners
 }
 
-export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete }: WikiBlockRendererProps) {
+export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
   switch (block.type) {
     case "section":
-      return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} />
+      return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "text":
-      return <TextBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} />
+      return <TextBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "note-ref":
-      return <NoteRefBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} />
+      return <NoteRefBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "image":
-      return <ImageBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} />
+      return <ImageBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     default:
       return null
   }
@@ -36,7 +40,7 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
 
 /* ── Section Block ── */
 
-function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete }: WikiBlockRendererProps) {
+function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
   const collapsed = block.collapsed ?? false
   const toggleCollapsed = () => onUpdate?.({ collapsed: !collapsed })
   const [editing, setEditing] = useState(false)
@@ -62,7 +66,10 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete }: Wi
     <div className="group/section">
       <div className="flex items-center gap-1">
         {editable && (
-          <button className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-0.5 text-muted-foreground cursor-grab transition-opacity duration-100">
+          <button
+            className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-0.5 text-muted-foreground cursor-grab transition-opacity duration-100"
+            {...(dragHandleProps ?? {})}
+          >
             <GripVertical className="h-3.5 w-3.5" />
           </button>
         )}
@@ -134,14 +141,15 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete }: Wi
 
 /* ── Text Block ── */
 
-function TextBlock({ block, editable, onUpdate, onDelete }: WikiBlockRendererProps) {
+function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+  const content = useWikiBlockContent(block.id, block.content)
   const [editing, setEditing] = useState(false)
-  const [editContent, setEditContent] = useState(block.content || "")
+  const [editContent, setEditContent] = useState(content || "")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleStartEdit = () => {
     if (!editable) return
-    setEditContent(block.content || "")
+    setEditContent(content || "")
     setEditing(true)
     setTimeout(() => {
       const ta = textareaRef.current
@@ -155,7 +163,7 @@ function TextBlock({ block, editable, onUpdate, onDelete }: WikiBlockRendererPro
 
   const handleFinishEdit = () => {
     setEditing(false)
-    if (editContent !== (block.content || "")) {
+    if (editContent !== (content || "")) {
       onUpdate?.({ content: editContent })
     }
   }
@@ -170,7 +178,7 @@ function TextBlock({ block, editable, onUpdate, onDelete }: WikiBlockRendererPro
     <div className="group/text relative">
       {editable && (
         <div className="absolute -left-6 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
-          <button className="p-0.5 text-muted-foreground cursor-grab">
+          <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
             <GripVertical className="h-3.5 w-3.5" />
           </button>
           {onDelete && (
@@ -198,7 +206,7 @@ function TextBlock({ block, editable, onUpdate, onDelete }: WikiBlockRendererPro
             editable && "cursor-text hover:bg-white/[0.02] transition-colors duration-100",
           )}
         >
-          {block.content || (
+          {content || (
             <span className="text-muted-foreground/30 italic">Write something...</span>
           )}
         </div>
@@ -209,7 +217,7 @@ function TextBlock({ block, editable, onUpdate, onDelete }: WikiBlockRendererPro
 
 /* ── Note Reference Block ── */
 
-function NoteRefBlock({ block, editable, onUpdate, onDelete }: WikiBlockRendererProps) {
+function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
   const notes = usePlotStore((s) => s.notes)
   const note = useMemo(() => notes.find((n) => n.id === block.noteId), [notes, block.noteId])
   const [picking, setPicking] = useState(!block.noteId) // auto-open picker if no note selected
@@ -297,7 +305,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete }: WikiBlockRenderer
     <div className="group/noteref relative rounded-lg border border-border/40 bg-card/30 transition-colors duration-100 hover:border-accent/20">
       {editable && (
         <div className="absolute -left-6 top-3 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
-          <button className="p-0.5 text-muted-foreground cursor-grab">
+          <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
             <GripVertical className="h-3.5 w-3.5" />
           </button>
           {onDelete && (
@@ -312,7 +320,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete }: WikiBlockRenderer
         <span className="text-[11px] font-medium uppercase tracking-wide text-accent/50">From Note</span>
         <span className="text-[13px] font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
         <button
-          onClick={() => usePlotStore.getState().setSidePeekNoteId(block.noteId!)}
+          onClick={() => usePlotStore.getState().openSidePeek(block.noteId!)}
           className="flex items-center gap-1 text-2xs text-muted-foreground/30 hover:text-accent transition-colors"
           title="Open in side panel"
         >
@@ -341,7 +349,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete }: WikiBlockRenderer
 
 /* ── Image Block ── */
 
-function ImageBlock({ block, editable, onUpdate, onDelete }: WikiBlockRendererProps) {
+function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
   const src = block.attachmentId ? `attachment://${block.attachmentId}` : ""
   const { url, loading } = useAttachmentUrl(src)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -398,7 +406,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete }: WikiBlockRendererPr
     <div className="group/image relative">
       {editable && (
         <div className="absolute -left-6 top-2 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
-          <button className="p-0.5 text-muted-foreground cursor-grab">
+          <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
             <GripVertical className="h-3.5 w-3.5" />
           </button>
           {onDelete && (

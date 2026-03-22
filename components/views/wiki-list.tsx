@@ -5,13 +5,13 @@ import { ArrowLeft, BookOpen, List, X } from "lucide-react"
 import { groupByInitial, INDEX_GROUPS } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
-import type { Note } from "@/lib/types"
+import type { WikiArticle } from "@/lib/types"
 
 /* ── Types ── */
 
 interface WikiListProps {
-  filteredWikiNotes: Note[]
-  sortedFilteredWikiNotes: Note[]
+  filteredWikiNotes: WikiArticle[]
+  sortedFilteredWikiNotes: WikiArticle[]
   backlinkCounts: Map<string, number>
 
   // Filter state
@@ -70,7 +70,7 @@ function ArticleTableRow({
   backlinkCount,
   onClick,
 }: {
-  note: Note
+  note: WikiArticle
   backlinkCount: number
   onClick: () => void
 }) {
@@ -102,7 +102,7 @@ function IndexTableRow({
   backlinkCount,
   onClick,
 }: {
-  note: Note
+  note: WikiArticle
   backlinkCount: number
   onClick: () => void
 }) {
@@ -154,7 +154,7 @@ export function WikiList({
   onClearCategoryFilter,
   onOpenArticle,
 }: WikiListProps) {
-  const groupedArticles = groupByInitial(filteredWikiNotes, (n: Note) => n.title || "Untitled")
+  const groupedArticles = groupByInitial(filteredWikiNotes, (n: WikiArticle) => n.title || "Untitled")
 
   const counts = {
     all: sortedFilteredWikiNotes.length,
@@ -249,7 +249,7 @@ export function WikiList({
                 <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40 border-b border-border/20">
                   {group}
                 </div>
-                {(articles as Note[]).map(note => (
+                {(articles as WikiArticle[]).map(note => (
                   <IndexTableRow
                     key={note.id}
                     note={note}

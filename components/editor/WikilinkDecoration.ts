@@ -39,7 +39,7 @@ function showNavDropdown(anchor: HTMLElement, noteId: string) {
   peekBtn.textContent = "Peek"
   peekBtn.addEventListener("click", (e) => {
     e.stopPropagation()
-    usePlotStore.getState().setSidePeekNoteId(noteId)
+    usePlotStore.getState().openSidePeek(noteId)
     hideDropdown()
   })
 

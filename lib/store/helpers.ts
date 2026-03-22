@@ -1,7 +1,10 @@
-import type { NoteBody, NoteStatus, Note, NoteEvent, NoteEventType } from "../types"
+import type { NoteBody, NoteStatus, Note, NoteEvent, NoteEventType, WikiBlock } from "../types"
 import { saveBody as saveBodyToIDB, deleteBody as deleteBodyFromIDB } from "../note-body-store"
 import { saveBlob as saveBlobToIDB, deleteBlob as deleteBlobFromIDB } from "../attachment-store"
 import type { AttachmentBlob } from "../attachment-store"
+import { saveBlockBody as saveBlockBodyToIDB, deleteBlockBody as deleteBlockBodyFromIDB } from "../wiki-block-body-store"
+import type { WikiBlockBody } from "../wiki-block-body-store"
+import { saveArticleBlocks as saveArticleBlocksToIDB, deleteArticleBlocks as deleteArticleBlocksFromIDB } from "../wiki-block-meta-store"
 
 /** Fire-and-forget IDB body write (guarded for SSR) */
 export function persistBody(body: NoteBody) {
@@ -25,6 +28,30 @@ export function persistAttachmentBlob(blob: AttachmentBlob) {
 export function removeAttachmentBlob(id: string) {
   if (typeof indexedDB === "undefined") return
   deleteBlobFromIDB(id).catch((err) => console.warn("[Plot] Attachment blob delete failed:", err))
+}
+
+/** Fire-and-forget IDB wiki block body write (guarded for SSR) */
+export function persistBlockBody(body: WikiBlockBody) {
+  if (typeof indexedDB === "undefined") return
+  saveBlockBodyToIDB(body).catch((err) => console.warn("[Plot] Block body save failed:", err))
+}
+
+/** Fire-and-forget IDB wiki block body delete (guarded for SSR) */
+export function removeBlockBody(id: string) {
+  if (typeof indexedDB === "undefined") return
+  deleteBlockBodyFromIDB(id).catch((err) => console.warn("[Plot] Block body delete failed:", err))
+}
+
+/** Fire-and-forget IDB article blocks write (guarded for SSR) */
+export function persistArticleBlocks(articleId: string, blocks: WikiBlock[]) {
+  if (typeof indexedDB === "undefined") return
+  saveArticleBlocksToIDB(articleId, blocks).catch((err) => console.warn("[Plot] Article blocks save failed:", err))
+}
+
+/** Fire-and-forget IDB article blocks delete (guarded for SSR) */
+export function removeArticleBlocks(articleId: string) {
+  if (typeof indexedDB === "undefined") return
+  deleteArticleBlocksFromIDB(articleId).catch((err) => console.warn("[Plot] Article blocks delete failed:", err))
 }
 
 export const genId = () => crypto.randomUUID()

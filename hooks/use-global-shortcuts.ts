@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { isEditableTarget } from "@/lib/keyboard-utils"
-import { findNode } from "@/lib/workspace/tree-utils"
-import { isLeaf } from "@/lib/workspace/types"
 import { popUndo } from "@/lib/undo-manager"
 import { setActiveRoute } from "@/lib/table-route"
 
@@ -35,50 +33,36 @@ export function useGlobalShortcuts() {
       const mod = e.metaKey || e.ctrlKey
 
       // ── Editor Tab Shortcuts ──────────────────────────────
-      // Cmd+W — close current tab (workspace)
+      // Cmd+W — close current tab
       if (mod && e.key === "w") {
         e.preventDefault()
         const s = usePlotStore.getState()
-        if (s.activeLeafId) {
-          const node = findNode(s.workspaceRoot, s.activeLeafId)
-          if (node && isLeaf(node) && node.content.type === "editor" && node.activeTabId) {
-            s.closeTabInLeaf(node.activeTabId, s.activeLeafId)
-          }
+        if (s.activeTabId) {
+          s.closeEditorTab(s.activeTabId)
         }
         return
       }
 
-      // Cmd+Alt+Left/Right — switch tabs (workspace)
+      // Cmd+Alt+Left/Right — switch tabs
       if (mod && e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
         e.preventDefault()
         const s = usePlotStore.getState()
-        if (s.activeLeafId) {
-          const node = findNode(s.workspaceRoot, s.activeLeafId)
-          if (node && isLeaf(node) && node.content.type === "editor" && node.tabs.length > 1) {
-            const currentIdx = node.tabs.findIndex((t: any) => t.id === node.activeTabId)
-            if (currentIdx !== -1) {
-              const nextIdx = e.key === "ArrowLeft"
-                ? (currentIdx - 1 + node.tabs.length) % node.tabs.length
-                : (currentIdx + 1) % node.tabs.length
-              s.setActiveTabInLeaf(node.tabs[nextIdx].id, s.activeLeafId)
-            }
+        const tabs = s.editorTabs
+        if (tabs.length > 1 && s.activeTabId) {
+          const currentIdx = tabs.findIndex((t: any) => t.id === s.activeTabId)
+          if (currentIdx !== -1) {
+            const nextIdx = e.key === "ArrowLeft"
+              ? (currentIdx - 1 + tabs.length) % tabs.length
+              : (currentIdx + 1) % tabs.length
+            s.setActiveEditorTab(tabs[nextIdx].id)
           }
-        }
-        return
-      }
-
-      // Cmd+\ — split active leaf (workspace)
-      if (mod && e.key === "\\") {
-        e.preventDefault()
-        const s = usePlotStore.getState()
-        if (s.activeLeafId) {
-          s.splitLeaf(s.activeLeafId, "horizontal", { type: "editor", noteId: null })
         }
         return
       }
 
       // ── 1. Esc ─────────────────────────────────────────────
-      // Two-stage dismissal:
+      // Multi-stage dismissal:
+      //   0th Esc: close side peek (return to context)
       //   1st Esc: close details panel (keep editor)
       //   2nd Esc: close editor (clear selection)
       if (e.key === "Escape") {
@@ -89,8 +73,14 @@ export function useGlobalShortcuts() {
           return // let dialog handle it
         }
         const s = usePlotStore.getState()
-        if (s.selectedNoteId !== null && s.detailsOpen) {
-          s.setDetailsOpen(false)
+        // 0th: close side peek first
+        if (s.sidePanelMode === 'peek' && s.sidePanelPeekNoteId) {
+          s.closeSidePeek()
+          e.preventDefault()
+          return
+        }
+        if (s.selectedNoteId !== null && s.sidePanelOpen) {
+          s.setSidePanelOpen(false)
           return
         }
         if (s.selectedNoteId !== null) {
@@ -135,6 +125,27 @@ export function useGlobalShortcuts() {
         }
         const s = usePlotStore.getState()
         s.setSidebarCollapsed(!s.sidebarCollapsed)
+        return
+      }
+
+      // ── 2c. Cmd+B — toggle side panel ─────────────────────────
+      if (mod && e.key === 'b' && !e.shiftKey) {
+        if (target.closest('[contenteditable]') || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+          // let editor handle bold
+        } else {
+          usePlotStore.getState().toggleSidePanel()
+          e.preventDefault()
+          return
+        }
+      }
+
+      // ── 2d. Cmd+\ — close secondary editor ────────────────────
+      if (mod && e.key === '\\') {
+        const s = usePlotStore.getState()
+        if (s.secondaryNoteId) {
+          s.closeSecondary()
+        }
+        e.preventDefault()
         return
       }
 

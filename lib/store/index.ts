@@ -7,7 +7,7 @@ import { buildDefaultViewStates } from "../view-engine/defaults"
 import { createIDBStorage } from "../idb-storage"
 import { createAppendEvent } from "./helpers"
 import { SEED_NOTES, SEED_FOLDERS, SEED_TAGS, SEED_LABELS, SEED_TEMPLATES, SEED_WIKI_ARTICLES } from "./seeds"
-import { persistBody } from "./helpers"
+import { persistBody, persistBlockBody } from "./helpers"
 import { createNotesSlice } from "./slices/notes"
 import { createWorkflowSlice } from "./slices/workflow"
 import { createFoldersSlice } from "./slices/folders"
@@ -48,7 +48,9 @@ export const usePlotStore = create<PlotState>()(
         searchQuery: "",
         searchOpen: false,
         shortcutOverlayOpen: false,
-        detailsOpen: true,
+        sidePanelOpen: true,
+        sidePanelMode: 'context' as import("./types").SidePanelMode,
+        sidePanelPeekNoteId: null,
 
         sidebarWidth: 260,
         sidebarLastWidth: 260,
@@ -58,7 +60,6 @@ export const usePlotStore = create<PlotState>()(
         mergePickerSourceId: null,
         linkPickerOpen: false,
         linkPickerSourceId: null,
-        sidePeekNoteId: null,
 
         noteEvents: [] as NoteEvent[],
         threads: [],
@@ -109,14 +110,19 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 50,
+      version: 53,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePeekNoteId, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
+          // Strip blocks from wiki articles — block metadata is persisted in IDB (plot-wiki-block-meta)
+          wikiArticles: state.wikiArticles.map((a) => ({
+            ...a,
+            blocks: [],  // blocks are persisted separately in IDB
+          })),
         } as unknown as PlotState
       },
       migrate,
@@ -132,6 +138,66 @@ export const usePlotStore = create<PlotState>()(
               note.content = seed.content
               persistBody({ id: seed.id, content: seed.content, contentJson: null })
             }
+          }
+
+          // Load wiki article blocks from IDB (block metadata + text bodies)
+          if (typeof indexedDB !== "undefined" && state.wikiArticles?.length > 0) {
+            import("@/lib/wiki-block-meta-store").then(({ getArticleBlocks }) => {
+              Promise.all(
+                state.wikiArticles.map(async (a: any) => {
+                  const blocks = await getArticleBlocks(a.id)
+                  return { id: a.id, blocks }
+                })
+              ).then((results) => {
+                const store = usePlotStore.getState()
+                const updatedArticles = store.wikiArticles.map((a) => {
+                  const result = results.find((r) => r.id === a.id)
+                  if (result?.blocks && result.blocks.length > 0) {
+                    return { ...a, blocks: result.blocks }
+                  }
+                  // Fallback: seed articles on first load (no IDB data yet)
+                  const seedArticle = SEED_WIKI_ARTICLES.find((s) => s.id === a.id)
+                  if (seedArticle && a.blocks.length === 0) {
+                    // Persist seed blocks to IDB for future loads
+                    import("@/lib/wiki-block-meta-store").then(({ saveArticleBlocks }) => {
+                      saveArticleBlocks(a.id, seedArticle.blocks).catch(() => {})
+                    })
+                    // Persist seed text block bodies to IDB
+                    for (const b of seedArticle.blocks) {
+                      if (b.type === "text" && b.content) {
+                        persistBlockBody({ id: b.id, content: b.content })
+                      }
+                    }
+                    return { ...a, blocks: seedArticle.blocks }
+                  }
+                  return a
+                })
+                usePlotStore.setState({ wikiArticles: updatedArticles })
+
+                // Now load text block bodies from wiki-block-body-store
+                const textBlockIds = updatedArticles
+                  .flatMap((a) => a.blocks)
+                  .filter((b) => b.type === "text" && !b.content)
+                  .map((b) => b.id)
+
+                if (textBlockIds.length > 0) {
+                  import("@/lib/wiki-block-body-store").then(({ getBlockBodies }) => {
+                    getBlockBodies(textBlockIds).then((bodies) => {
+                      if (bodies.size === 0) return
+                      usePlotStore.setState((s) => ({
+                        wikiArticles: s.wikiArticles.map((a) => ({
+                          ...a,
+                          blocks: a.blocks.map((b) => {
+                            const content = bodies.get(b.id)
+                            return content !== undefined ? { ...b, content } : b
+                          }),
+                        })),
+                      }))
+                    })
+                  })
+                }
+              })
+            })
           }
         }
       },

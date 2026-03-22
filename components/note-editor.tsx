@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { EditorBreadcrumb } from "@/components/editor-breadcrumb"
@@ -60,8 +61,8 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
-  const detailsOpen = usePlotStore((s) => s.detailsOpen)
-  const toggleDetailsOpen = usePlotStore((s) => s.toggleDetailsOpen)
+  const detailsOpen = usePlotStore((s) => s.sidePanelOpen)
+  const toggleDetailsOpen = usePlotStore((s) => s.toggleSidePanel)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
   const convertToWiki = usePlotStore((s) => s.convertToWiki)
   const revertFromWiki = usePlotStore((s) => s.revertFromWiki)
@@ -421,10 +422,14 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
 
   if (refs.length === 0) return null
 
+  const MAX_BADGES = 3
+  const visible = refs.slice(0, MAX_BADGES)
+  const overflow = refs.length - MAX_BADGES
+
   return (
     <div className="flex items-center gap-1 shrink-0">
       <span className="text-2xs text-muted-foreground/30">in</span>
-      {refs.map((a) => (
+      {visible.map((a) => (
         <button
           key={a.id}
           onClick={() => {
@@ -436,6 +441,29 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
           {a.title}
         </button>
       ))}
+      {overflow > 0 && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="rounded-[4px] bg-secondary/50 px-1.5 py-px text-[10px] font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100">
+              +{overflow} more
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-auto min-w-[140px] p-1">
+            {refs.slice(MAX_BADGES).map((a) => (
+              <button
+                key={a.id}
+                onClick={() => {
+                  import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
+                  import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
+                }}
+                className="flex w-full items-center rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              >
+                {a.title}
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   )
 }

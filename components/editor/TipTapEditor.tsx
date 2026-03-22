@@ -142,7 +142,7 @@ export function TipTapEditor({
 
   // Focus Mode detection for Typewriter Mode
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
-  const detailsOpen = usePlotStore((s) => s.detailsOpen)
+  const detailsOpen = usePlotStore((s) => s.sidePanelOpen)
   const focusMode = sidebarCollapsed && !detailsOpen
 
   const editorWrapRef = useRef<HTMLDivElement>(null)

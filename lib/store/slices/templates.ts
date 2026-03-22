@@ -113,8 +113,6 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
       }))
       persistBody({ id, content, contentJson: template.contentJson ?? null })
       appendEvent(id, "created", { templateId, templateName: template.name })
-      // Open in workspace editor (same pattern as addNote)
-      get().openNoteInLeaf(id)
       return id
     },
   }

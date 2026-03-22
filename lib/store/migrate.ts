@@ -2,22 +2,7 @@ import type { NoteBody } from "../types"
 import { nanoid } from "nanoid"
 import { extractPreview, extractLinksOut } from "../body-helpers"
 import { buildDefaultViewStates, normalizeViewStatesMap } from "../view-engine/defaults"
-import { buildPreset } from "../workspace/presets"
-import type { WorkspacePreset } from "../workspace/types"
-
-/** @deprecated Inline migration helper — maps legacy LayoutMode to workspace preset */
-function layoutModeToPreset(mode: string): WorkspacePreset {
-  switch (mode) {
-    case "focus": return "focus"
-    case "three-column": return "list-editor"
-    case "tabs": return "focus"
-    case "panels": return "dual-editor"
-    case "split": return "list-editor"
-    default: return "editor-only"
-  }
-}
-import { createLeaf, createBranch, updateLeafTabs, findFirstEditorLeaf } from "../workspace/tree-utils"
-import type { WorkspaceNode, WorkspaceTab } from "../workspace/types"
+import type { WorkspaceTab } from "../workspace/types"
 import type { PlotState } from "./types"
 
 export function migrate(persistedState: unknown): PlotState {
@@ -402,45 +387,6 @@ export function migrate(persistedState: unknown): PlotState {
     if (!es.panelRatios) es.panelRatios = [0.5, 0.5]
   }
 
-  // v35: Workspace — convert EditorState + LayoutMode → workspace tree
-  if (!state.workspaceRoot) {
-    const layoutMode = (state.layoutMode as string) ?? "tabs"
-    const preset = layoutModeToPreset(layoutMode)
-    let root: WorkspaceNode = buildPreset(preset)
-
-    // Transfer existing editor tabs into the workspace tree
-    if (state.editorState && typeof state.editorState === "object") {
-      const es = state.editorState as Record<string, unknown>
-      const panels = (es.panels ?? []) as Array<Record<string, unknown>>
-      if (panels.length > 0) {
-        const firstPanel = panels[0]
-        const tabs = (firstPanel.tabs ?? []) as WorkspaceTab[]
-        const activeTabId = (firstPanel.activeTabId as string) ?? null
-        if (tabs.length > 0) {
-          const editorLeaf = findFirstEditorLeaf(root)
-          if (editorLeaf) {
-            root = updateLeafTabs(root, editorLeaf.id, tabs, activeTabId)
-          }
-        }
-      }
-    }
-
-    state.workspaceRoot = root
-    state.activeLeafId = findFirstEditorLeaf(root as WorkspaceNode)?.id ?? null
-    // Keep original layoutMode — workspace tree is used within editor area, not as a layout mode
-  }
-
-  // v35b: Ensure activeLeafId is set when workspaceRoot exists
-  if (state.workspaceRoot && !state.activeLeafId) {
-    const leaf = findFirstEditorLeaf(state.workspaceRoot as WorkspaceNode)
-    if (leaf) state.activeLeafId = leaf.id
-  }
-
-  // v35c: "workspace" is no longer a valid layoutMode — revert to "tabs"
-  if (state.layoutMode === "workspace") {
-    state.layoutMode = "tabs"
-  }
-
   // v36: Ontology Engine data layer
   if (!(state as any).attachments) (state as any).attachments = []
   if (!(state as any).coOccurrences) (state as any).coOccurrences = []
@@ -512,6 +458,77 @@ export function migrate(persistedState: unknown): PlotState {
       state.notes = notes.map((n: any) =>
         n.isWiki ? { ...n, isWiki: false, wikiStatus: null, stubSource: null } : n
       ) as any
+    }
+  }
+
+  // v51: Unified Side Panel — detailsOpen → sidePanelOpen, sidePeekNoteId → sidePanelPeekNoteId
+  if (state.detailsOpen !== undefined) {
+    state.sidePanelOpen = state.detailsOpen
+    delete state.detailsOpen
+  }
+  if (state.sidePanelOpen === undefined) state.sidePanelOpen = true
+  if (!state.sidePanelMode) state.sidePanelMode = 'context'
+  // sidePanelPeekNoteId is transient (not persisted), no migration needed
+  delete state.sidePeekNoteId // clean up old transient field if present
+
+  // v52: Simplify workspace — binary tree → dual pane
+  if (state.workspaceRoot) {
+    // Extract tabs from the old tree's active editor leaf
+    const extractTabsFromTree = (node: any): WorkspaceTab[] => {
+      if (!node) return []
+      if (node.kind === 'leaf' && node.content?.type === 'editor' && node.tabs?.length > 0) {
+        return node.tabs
+      }
+      if (node.kind === 'branch' && node.children) {
+        for (const child of node.children) {
+          const tabs = extractTabsFromTree(child)
+          if (tabs.length > 0) return tabs
+        }
+      }
+      return []
+    }
+    state.editorTabs = extractTabsFromTree(state.workspaceRoot)
+    state.activeTabId = (state.editorTabs as WorkspaceTab[]).length > 0 ? (state.editorTabs as WorkspaceTab[])[0].id : null
+    delete state.workspaceRoot
+    delete state.activeLeafId
+  }
+  if (!state.editorTabs) state.editorTabs = []
+  if (!state.activeTabId) state.activeTabId = null
+  if (!state.secondaryNoteId) state.secondaryNoteId = null
+  if (!state.activePane) state.activePane = 'primary'
+
+  // v53: WikiArticle sectionIndex — build from existing blocks, persist blocks to IDB
+  if (state.wikiArticles && Array.isArray(state.wikiArticles)) {
+    for (const a of state.wikiArticles as any[]) {
+      if (!a.sectionIndex) {
+        // Build section index from blocks
+        const sectionIndex: any[] = []
+        let current: any = null
+        let count = 0
+        for (const b of (a.blocks ?? [])) {
+          if (b.type === "section") {
+            if (current) { current.blockCount = count; sectionIndex.push(current) }
+            current = { id: b.id, title: b.title ?? "", level: b.level ?? 2, blockCount: 0, collapsed: b.collapsed }
+            count = 1
+          } else { count++ }
+        }
+        if (current) { current.blockCount = count; sectionIndex.push(current) }
+        a.sectionIndex = sectionIndex
+      }
+      // Persist blocks to IDB on first migration (blocks will be stripped from persist after this)
+      if (typeof window !== "undefined" && a.blocks?.length > 0) {
+        import("@/lib/wiki-block-meta-store").then(({ saveArticleBlocks }) => {
+          saveArticleBlocks(a.id, a.blocks).catch(() => {})
+        })
+        // Also persist text block bodies
+        for (const b of a.blocks) {
+          if (b.type === "text" && b.content) {
+            import("@/lib/wiki-block-body-store").then(({ saveBlockBody }) => {
+              saveBlockBody({ id: b.id, content: b.content }).catch(() => {})
+            })
+          }
+        }
+      }
     }
   }
 

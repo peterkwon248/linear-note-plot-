@@ -1,15 +1,13 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
-import { NoteInspector } from "@/components/note-inspector"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
-import { findLeafByContentType } from "@/lib/workspace/tree-utils"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
@@ -39,15 +37,12 @@ export function NotesTableView() {
   const activeViewId = useActiveViewId()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const openNote = usePlotStore((s) => s.openNote)
-  const workspaceRoot = usePlotStore((s) => s.workspaceRoot)
-  const applyPreset = usePlotStore((s) => s.applyPreset)
   const savedViews = usePlotStore((s) => s.savedViews)
   const setViewState = usePlotStore((s) => s.setViewState)
   const settingsViewMode = useSettingsStore((s) => s.viewMode)
   const isEditing = selectedNoteId !== null
 
   const [previewId, setPreviewId] = useState<string | null>(null)
-  const hasMigrated = useRef(false)
 
   const baseConfig = TABLE_VIEW_MAP[tableRoute ?? ""] ?? {}
   const activeView = activeViewId ? savedViews.find((v) => v.id === activeViewId) : null
@@ -98,22 +93,11 @@ export function NotesTableView() {
     }
   }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-migrate: if in default mode but workspace has no note-list leaf, apply preset once
-  // hasMigrated is set unconditionally on first run so closing the list pane won't re-trigger
-  useEffect(() => {
-    if (hasMigrated.current) return
-    hasMigrated.current = true
-    if (!findLeafByContentType(workspaceRoot, "note-list")) {
-      applyPreset("list-editor")
-    }
-  }, [workspaceRoot, applyPreset])
-
   // ── Workspace editor area: show when editing in any layout mode ──
   if (isEditing) {
     return (
       <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
         <WorkspaceEditorArea />
-        <NoteInspector />
       </div>
     )
   }

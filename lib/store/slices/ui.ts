@@ -1,5 +1,7 @@
+import { nanoid } from "nanoid"
 import type { Note, ActiveView } from "../../types"
 import type { ViewState, ViewContextKey } from "../../view-engine/types"
+import type { WorkspaceTab } from "../../workspace/types"
 import { now, type AppendEventFn } from "../helpers"
 import { getActiveRoute } from "../../table-route"
 
@@ -48,9 +50,23 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
         return updates
       })
       appendEvent(id, "opened")
-      // Sync workspace editor tab state
+      // Sync editor tabs
       const state = get()
-      state.openNoteInLeaf(id, undefined, opts?.forceNewTab)
+      const tabs = state.editorTabs as WorkspaceTab[]
+      const existingTab = opts?.forceNewTab ? undefined : tabs.find((t: WorkspaceTab) => t.noteId === id)
+      if (existingTab) {
+        set({ activeTabId: existingTab.id, activePane: 'primary' })
+      } else {
+        const newTab: WorkspaceTab = { id: nanoid(), noteId: id }
+        const activeIdx = tabs.findIndex((t: WorkspaceTab) => t.id === state.activeTabId)
+        const newTabs = [...tabs]
+        if (activeIdx >= 0) {
+          newTabs.splice(activeIdx + 1, 0, newTab)
+        } else {
+          newTabs.push(newTab)
+        }
+        set({ editorTabs: newTabs, activeTabId: newTab.id, activePane: 'primary' })
+      }
       // Also sync legacy editor state for backward compat
       state.openNoteInTab(id)
     },
@@ -99,8 +115,18 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     setSearchQuery: (query: string) => set({ searchQuery: query }),
     setSearchOpen: (open: boolean) => set({ searchOpen: open }),
     setShortcutOverlayOpen: (open: boolean) => set({ shortcutOverlayOpen: open }),
-    setDetailsOpen: (open: boolean) => set({ detailsOpen: open }),
-    toggleDetailsOpen: () => set((s: any) => ({ detailsOpen: !s.detailsOpen })),
+    setSidePanelOpen: (open: boolean) => set({ sidePanelOpen: open }),
+    toggleSidePanel: () => set((s: any) => ({ sidePanelOpen: !s.sidePanelOpen })),
+
+    openSidePeek: (noteId: string) => set({ sidePanelPeekNoteId: noteId, sidePanelMode: 'peek' as const, sidePanelOpen: true }),
+    closeSidePeek: () => set((s: any) => {
+      const hasSelectedNote = !!s.selectedNoteId
+      return {
+        sidePanelPeekNoteId: null,
+        sidePanelMode: 'context' as const,
+        sidePanelOpen: hasSelectedNote ? s.sidePanelOpen : false,
+      }
+    }),
 
     setListPaneWidth: (width: number) => set({ listPaneWidth: Math.max(200, Math.min(500, width)) }),
 
@@ -109,9 +135,6 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     setSidebarCollapsed: (collapsed: boolean) => set({ sidebarCollapsed: collapsed, sidebarPeek: false }),
     setSidebarPeek: (peek: boolean) => set({ sidebarPeek: peek }),
     restoreSidebar: () => set((s: any) => ({ sidebarCollapsed: false, sidebarPeek: false, sidebarWidth: s.sidebarLastWidth })),
-
-    // Side Peek
-    setSidePeekNoteId: (id: string | null) => set({ sidePeekNoteId: id }),
 
     // Merge
     setMergePickerOpen: (open: boolean, sourceId?: string | null) => {

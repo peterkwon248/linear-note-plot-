@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 17-slice Zustand store with versioned migration (currently v44)
+- **Store**: `lib/store/index.ts` — 17-slice Zustand store with versioned migration (currently v53)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -23,7 +23,10 @@
 - **Alias resolution**: BacklinksIndex + graph.ts register note aliases in `titleToId` Map (no-clobber)
 - **Search**: Worker-based FlexSearch with IDB persistence
 - **Body separation**: Note content in separate IDB (`plot-note-bodies`), meta in Zustand persist
-- **Workspace**: Binary tree layout (v35) — WorkspaceNode = Leaf | Branch, WorkspaceMode 3개 (default/zen/research)
+- **Wiki block body separation**: Text block content in `plot-wiki-block-bodies` IDB, block metadata in `plot-wiki-block-meta` IDB
+- **Workspace**: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
+- **Side Panel**: Unified `SmartSidePanel` (v51) — Context mode (NoteInspector) + Peek mode (SidePeek), app-level, resizable
+- **Wiki sectionIndex**: `WikiSectionIndex[]` in Zustand for lightweight TOC, full blocks in IDB for scalability (v53)
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
 - **TipTap Editor**: 25+ extensions including SlashCommand, HashtagSuggestion, WikilinkSuggestion, Mathematics, WikiQuoteExtension
 - **2-Level Routing**: `activeSpace` (inbox/notes/wiki/ontology/calendar) + `activeRoute`, `inferSpace()` 하위호환
@@ -90,7 +93,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-03-22)
+## Current Direction (as of 2026-03-23)
 
 ### Key Design Decisions (추가)
 - **WorkspaceMode 삭제**: zen/research 모드 불필요. sidebarCollapsed + detailsOpen 독립 토글만으로 충분
@@ -99,6 +102,9 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Custom Views = 사이드바 Views 섹션**: Linear식 savedView. 각 공간(Notes/Wiki/Graph/Calendar)별 독립
 - **Back/Forward = note history + browser history fallback**: note history 없으면 router.back() 호출
 - **디자인 라이브러리 13개 도입**: Phosphor/Motion/Sonner/Resizable/Radix Colors/dnd-kit/cmdk/Vaul/Iconoir/Tabler/Remix/React Spring + DESIGN-TOKENS.md에 사용 규칙 문서화
+- **Side Panel = 통합 우측 패널**: NoteInspector(Context) + SidePeekPanel(Peek) 통합. 하나의 슬롯, 두 모드. 리사이즈 가능
+- **Workspace 단순화**: Binary tree → 듀얼 패인. react-resizable-panels. 9개 레거시 파일 삭제
+- **위키 = 유저의 확장된 세계관**: 블록 무한 확장 대응 (IDB 분리 + virtuoso + lazy load + sectionIndex)
 
 ### 이번 세션 완료 (2026-03-22)
 - **Wiki 리디자인**: 파일 분리 (1500줄→6파일), Dashboard 새 설계, List→Linear-style 테이블, ArticleReader 폴리시, 사이드바 스타일링
@@ -122,10 +128,27 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Sources 사이드바 (note-ref/image 블록 자동 추출, 클릭 시 SidePeek 열기)
   - Context Panel: NoteRef "Open" 버튼 → SidePeekPanel로 원본 노트 열기 (편집 + FixedToolbar)
 
+### 이번 세션 완료 (2026-03-23)
+- **Smart Side Panel**: NoteInspector + SidePeekPanel → 통합 SmartSidePanel (Context/Peek 두 모드)
+  - react-resizable-panels로 리사이즈 가능
+  - Details에서 백링크/관련 노트 클릭 → Peek 전환
+  - ReferencedInBadges MAX 3개 + "+N more" Popover
+- **Workspace 단순화**: Binary tree(14 액션, 9 컴포넌트) → 듀얼 패인(5 액션, 2 컴포넌트)
+  - `secondaryNoteId` + `editorTabs` + `activePane` 모델
+  - "나란히 열기" 버튼 (Peek → 듀얼 에디터 승격)
+  - Store v50→v52 마이그레이션
+- **위키 블록 무한 확장 대응**:
+  - text block content → IDB 분리 (`plot-wiki-block-bodies`)
+  - block metadata → IDB 분리 (`plot-wiki-block-meta`)
+  - `WikiSectionIndex` — Zustand에 경량 섹션 인덱스만 보관 (v53)
+  - react-virtuoso 가상 스크롤 (>50 블록)
+  - 섹션 lazy load (접힌 섹션 렌더 스킵)
+- **블록 DnD**: @dnd-kit 기반 드래그 앤 드롭 순서 변경 (edit 모드)
+- **Wiki stats 버그 수정**: `notes.isWiki` → `wikiArticles` 기반으로 전환
+- **Wiki article 클릭 버그 수정**: Dashboard에서 `onOpenArticle` → `onOpenWikiArticle`
+
 ### 다음 작업 후보 (우선순위 순)
-1. **패널 디자인 리뉴얼** — Obsidian 수준 멀티패널 + Context Panel 고도화
-2. **블록 드래그 이동** — dnd-kit 기반 블록 순서 변경
-3. **기존 isWiki 노트 마이그레이션** — Note 기반 위키 → WikiArticle 완전 전환
+1. **블록 Undo/Redo** — 위키 블록 수준 undo 스택 (현재 즉시 저장, 되돌리기 불가)
 2. **Phosphor Icons 마이그레이션** — Lucide → Phosphor weight 시스템 전환
 3. **에디터 업그레이드** — 노트 에디터 개선
 4. **Custom Views 2차**
