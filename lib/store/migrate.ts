@@ -505,5 +505,15 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v49+v50: Remove ALL isWiki flags — WikiArticle is now the only wiki entity
+  {
+    const notes = state.notes as any[]
+    if (notes.some((n: any) => n.isWiki)) {
+      state.notes = notes.map((n: any) =>
+        n.isWiki ? { ...n, isWiki: false, wikiStatus: null, stubSource: null } : n
+      ) as any
+    }
+  }
+
   return state as unknown as PlotState
 }

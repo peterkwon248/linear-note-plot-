@@ -118,9 +118,14 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Section 자동 번호 매기기 (TOC ↔ 본문 동기화)
   - 시드 WikiArticle 3개 (Zettelkasten/Permanent Note/Fleeting Note)
   - Note 기반 위키 클릭 시 같은 제목 WikiArticle로 자동 라우팅
+  - Section 접기/펼치기 (collapsed → 하위 블록 숨김, store persist)
+  - Sources 사이드바 (note-ref/image 블록 자동 추출, 클릭 시 SidePeek 열기)
+  - Context Panel: NoteRef "Open" 버튼 → SidePeekPanel로 원본 노트 열기 (편집 + FixedToolbar)
 
 ### 다음 작업 후보 (우선순위 순)
-1. **Wiki Block Editor 후속** — 드래그 이동, 기존 isWiki 노트 마이그레이션, lazy load, Section 접기/펼치기 구현
+1. **패널 디자인 리뉴얼** — Obsidian 수준 멀티패널 + Context Panel 고도화
+2. **블록 드래그 이동** — dnd-kit 기반 블록 순서 변경
+3. **기존 isWiki 노트 마이그레이션** — Note 기반 위키 → WikiArticle 완전 전환
 2. **Phosphor Icons 마이그레이션** — Lucide → Phosphor weight 시스템 전환
 3. **에디터 업그레이드** — 노트 에디터 개선
 4. **Custom Views 2차**

@@ -39,6 +39,7 @@ import { WikiDashboard } from "./wiki-dashboard"
 import { WikiList } from "./wiki-list"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
+import { usePendingWikiArticle, consumePendingWikiArticle } from "@/lib/wiki-article-nav"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -115,8 +116,10 @@ export function WikiView() {
       convertToWiki: (noteId: string, stubSource?: string) =>
         store.convertToWiki(noteId, stubSource as StubSource | undefined),
     }
-    startAutoEnrollment(getState, actions)
-    return () => stopAutoEnrollment()
+    // Auto-enrollment disabled — WikiArticle (Assembly Model) replaces Note-based wiki
+    // TODO: Re-enable with createWikiArticle instead of createWikiStub/convertToWiki
+    // startAutoEnrollment(getState, actions)
+    // return () => stopAutoEnrollment()
   }, [])
 
   // Article reader state (Note-based legacy)
@@ -126,6 +129,15 @@ export function WikiView() {
   // WikiArticle viewer state (new Assembly Model)
   const [selectedWikiArticleId, setSelectedWikiArticleId] = useState<string | null>(null)
   const [isEditingWikiArticle, setIsEditingWikiArticle] = useState(false)
+
+  // Navigate to WikiArticle when triggered from outside (e.g., "Referenced in" badge)
+  const pendingArticleId = usePendingWikiArticle()
+  useEffect(() => {
+    if (pendingArticleId) {
+      setSelectedWikiArticleId(pendingArticleId)
+      consumePendingWikiArticle()
+    }
+  }, [pendingArticleId])
 
   // Reset edit mode whenever we navigate to a different article
   useEffect(() => {

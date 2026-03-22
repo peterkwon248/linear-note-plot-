@@ -14,3 +14,9 @@
 - **2-Level Routing**: activeSpace + activeRoute. inferSpace()로 하위호환 유지
 - **Breadcrumb**: NoteEditor Back 버튼 교체. activeSpace > folder > title
 - **자동 등재 시 기존 노트 convert**: createWikiStub가 아니라 convertToWiki 사용 (중복 방지)
+
+## 2026-03-22 (Wiki Block Editor)
+- **Wiki = Assembly Model**: 위키는 노트와 별도 엔티티(WikiArticle). 노트는 원재료, 위키는 노트를 블록으로 참조하여 아티클 조립. isWiki 노트 기반에서 전환.
+- **에디터 자동 결정**: isWiki/WikiArticle 여부로 에디터 타입 자동 결정. "New Node" 선택 UI 없음 — 인지과부하 방지.
+- **Section 번호 = JS 계산**: CSS counter 대신 useMemo + O(n) 순회. TOC와 100% 동기화 보장. 성능 문제 없음 (200블록 = 마이크로초).
+- **convertToWiki 삭제 예정**: 노트→위키 전환 개념 없어짐. auto-enroll은 빈 WikiArticle 생성 + 관련 노트 추천으로 전환.
