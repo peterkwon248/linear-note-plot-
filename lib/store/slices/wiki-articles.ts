@@ -189,5 +189,49 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         }),
       }))
     },
+
+    mergeWikiArticles: (targetId: string, sourceId: string) => {
+      const state = get()
+      const target = (state.wikiArticles as WikiArticle[]).find((a) => a.id === targetId)
+      const source = (state.wikiArticles as WikiArticle[]).find((a) => a.id === sourceId)
+      if (!target || !source) return
+
+      // Divider section for merged content
+      const dividerBlock: WikiBlock = {
+        id: genId(),
+        type: "section" as const,
+        title: `From: ${source.title}`,
+        level: 2,
+      }
+
+      // Concat blocks: target + divider + source
+      const mergedBlocks = [...target.blocks, dividerBlock, ...source.blocks]
+
+      // Update target with merged blocks
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== targetId) return a
+          const sectionIndex = buildSectionIndex(mergedBlocks)
+          return {
+            ...a,
+            blocks: mergedBlocks,
+            sectionIndex,
+            aliases: [...new Set([...a.aliases, source.title, ...source.aliases])],
+            tags: [...new Set([...a.tags, ...source.tags])],
+            updatedAt: now(),
+          }
+        }),
+      }))
+
+      // Persist merged blocks to IDB
+      persistArticleBlocks(targetId, mergedBlocks)
+
+      // Delete source article (removes its block metadata from IDB)
+      // But DON'T remove text block bodies since they now belong to the target
+      removeArticleBlocks(sourceId)
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.filter((a: WikiArticle) => a.id !== sourceId),
+      }))
+    },
   }
 }

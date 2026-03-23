@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
+import { routeGoBack, routeGoForward } from "@/lib/table-route"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { IconChevronLeft, IconChevronRight, IconSearch, IconPlus } from "@/components/plot-icons"
 
@@ -12,13 +13,23 @@ export function TopUtilityBar() {
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
 
   const handleGoBack = () => {
-    const handled = goBack()
-    if (!handled) router.back()
+    const s = usePlotStore.getState()
+    // If a note is open, try note history first
+    if (s.selectedNoteId) {
+      const handled = goBack()
+      if (handled) return
+    }
+    // Route-level back (page navigation)
+    routeGoBack()
   }
 
   const handleGoForward = () => {
-    const handled = goForward()
-    if (!handled) router.forward()
+    const s = usePlotStore.getState()
+    if (s.selectedNoteId) {
+      const handled = goForward()
+      if (handled) return
+    }
+    routeGoForward()
   }
 
   const handleNewNote = () => {

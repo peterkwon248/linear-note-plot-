@@ -5,6 +5,7 @@ import type { FilterRule, FilterField, ViewState } from "@/lib/view-engine/types
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { useRouter } from "next/navigation"
 import {
   BookOpen,
@@ -18,12 +19,20 @@ import {
   FileText,
   MoreHorizontal,
   ArrowDownFromLine,
+  Merge,
 } from "lucide-react"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { startAutoEnrollment, stopAutoEnrollment } from "@/lib/wiki-auto-enroll"
 import type { StubSource } from "@/lib/types"
@@ -48,6 +57,7 @@ export function WikiView() {
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
+  const mergeWikiArticles = usePlotStore((s) => s.mergeWikiArticles)
   const router = useRouter()
   const backlinkCounts = useBacklinksIndex()
 
@@ -61,6 +71,9 @@ export function WikiView() {
   const [importOpen, setImportOpen] = useState(false)
   const [importQuery, setImportQuery] = useState("")
   const importInputRef = useRef<HTMLInputElement>(null)
+
+  // Wiki merge state
+  const [wikiMergeSourceId, setWikiMergeSourceId] = useState<string | null>(null)
 
   // Dashboard filter
   const [dashFilter, setDashFilter] = useState<"all" | "stubs" | "drafts" | "complete">("all")
@@ -155,9 +168,15 @@ export function WikiView() {
   )
 
   // Open article within WikiView
-  const openArticle = useCallback((noteId: string) => {
-    // Check if there's a WikiArticle with matching title — prefer block editor
-    const note = notes.find((n) => n.id === noteId)
+  const openArticle = useCallback((id: string) => {
+    // Check if id is a WikiArticle directly
+    const directArticle = wikiArticles.find((a) => a.id === id)
+    if (directArticle) {
+      setSelectedWikiArticleId(id)
+      return
+    }
+    // Check if there's a WikiArticle with matching title for a note
+    const note = notes.find((n) => n.id === id)
     if (note) {
       const matchingArticle = wikiArticles.find(
         (a) => a.title.toLowerCase() === note.title.toLowerCase()
@@ -167,7 +186,7 @@ export function WikiView() {
         return
       }
     }
-    setSelectedArticleId(noteId)
+    setSelectedArticleId(id)
   }, [notes, wikiArticles])
 
   // Smart navigation: wiki articles open in-view, non-wiki go to /notes
@@ -405,9 +424,9 @@ export function WikiView() {
           if (n.wikiStatus) counts[n.wikiStatus] = (counts[n.wikiStatus] ?? 0) + 1
         }
         return [
-          { key: "complete", label: "Complete", count: counts.complete, color: "#45d483" },
-          { key: "draft", label: "Draft", count: counts.draft, color: "#f5a623" },
-          { key: "stub", label: "Stub", count: counts.stub, color: "rgba(255,255,255,0.32)" },
+          { key: "complete", label: "Complete", count: counts.complete, color: WIKI_STATUS_HEX.complete },
+          { key: "draft", label: "Draft", count: counts.draft, color: WIKI_STATUS_HEX.draft },
+          { key: "stub", label: "Stub", count: counts.stub, color: WIKI_STATUS_HEX.stub },
         ].filter(i => i.count > 0)
       }
       case "tags": {
@@ -838,6 +857,7 @@ export function WikiView() {
             categoryFilterLabel={categoryFilterTagId ? tags.find(t => t.id === categoryFilterTagId)?.name ?? null : null}
             onClearCategoryFilter={() => setWikiCategoryFilter(null)}
             onOpenArticle={openArticle}
+            onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
           />
           {showDistribution && (
             <ViewDistributionPanel
@@ -848,6 +868,63 @@ export function WikiView() {
             />
           )}
         </div>
+      )}
+
+      {/* Wiki Merge Picker Dialog */}
+      {wikiMergeSourceId && (
+        <Dialog open={!!wikiMergeSourceId} onOpenChange={(open) => !open && setWikiMergeSourceId(null)}>
+          <DialogContent className="max-w-sm gap-0 p-0 overflow-hidden">
+            <DialogHeader className="px-5 pt-5 pb-3">
+              <DialogTitle className="flex items-center gap-2 text-ui">
+                <Merge className="h-4 w-4" />
+                Merge Wiki Article
+              </DialogTitle>
+              <DialogDescription className="text-note">
+                Select target article to merge into
+              </DialogDescription>
+            </DialogHeader>
+            <div className="px-5 py-2 max-h-[300px] overflow-y-auto">
+              {wikiArticles
+                .filter((a) => a.id !== wikiMergeSourceId)
+                .map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => {
+                      mergeWikiArticles(a.id, wikiMergeSourceId)
+                      const sourceTitle = wikiArticles.find((s) => s.id === wikiMergeSourceId)?.title ?? "article"
+                      toast.success(`Merged "${sourceTitle}" into "${a.title}"`)
+                      setWikiMergeSourceId(null)
+                    }}
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-secondary/40 text-left"
+                  >
+                    <BookOpen className="h-4 w-4 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm text-foreground">{a.title || "Untitled"}</p>
+                    </div>
+                    <span className={cn(
+                      "rounded-[4px] px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide shrink-0",
+                      a.wikiStatus === "complete" ? "bg-wiki-complete/8 text-wiki-complete/70" :
+                      a.wikiStatus === "draft" ? "bg-accent/8 text-accent/70" :
+                      "bg-chart-3/8 text-chart-3/70"
+                    )}>
+                      {a.wikiStatus}
+                    </span>
+                  </button>
+                ))}
+              {wikiArticles.filter((a) => a.id !== wikiMergeSourceId).length === 0 && (
+                <p className="py-8 text-center text-xs text-muted-foreground/40">No other articles to merge into</p>
+              )}
+            </div>
+            <div className="border-t border-border px-5 py-3 flex justify-end">
+              <button
+                onClick={() => setWikiMergeSourceId(null)}
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   )

@@ -11,7 +11,7 @@ export function WikiStatusDot({ status }: { status: WikiStatus | null }) {
   const colors: Record<string, string> = {
     stub: "bg-chart-3",
     draft: "bg-accent",
-    complete: "bg-chart-5",
+    complete: "bg-wiki-complete",
   }
   return <span className={cn("h-2 w-2 rounded-full shrink-0", colors[status] ?? "bg-muted-foreground/30")} />
 }
@@ -20,9 +20,9 @@ export function WikiStatusDot({ status }: { status: WikiStatus | null }) {
 
 export function WikiStatusBadge({ status }: { status: WikiStatus }) {
   const styles: Record<string, string> = {
-    stub: "bg-yellow-500/10 text-yellow-500",
-    draft: "bg-blue-500/10 text-blue-500",
-    complete: "bg-emerald-500/10 text-emerald-500",
+    stub: "bg-chart-3/10 text-chart-3",
+    draft: "bg-accent/10 text-accent",
+    complete: "bg-wiki-complete/10 text-wiki-complete",
   }
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium capitalize", styles[status])}>

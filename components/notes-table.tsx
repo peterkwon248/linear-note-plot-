@@ -65,6 +65,7 @@ import type { DistributionItem } from "@/components/view-distribution-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
 import { pushUndo } from "@/lib/undo-manager"
 
 /* ── Helpers ───────────────────────────────────────────── */
@@ -1135,9 +1136,9 @@ function SourceIcon({ source }: { source: NoteSource }) {
 }
 
 const STATUS_DOT_COLORS: Record<NoteStatus, string> = {
-  inbox: "rgba(255,255,255,0.32)",
-  capture: "#f5a623",
-  permanent: "#45d483",
+  inbox: NOTE_STATUS_HEX.inbox,
+  capture: NOTE_STATUS_HEX.capture,
+  permanent: NOTE_STATUS_HEX.permanent,
 }
 
 /** Status icon with shape differentiation (Linear-style) */

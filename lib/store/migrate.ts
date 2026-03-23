@@ -532,5 +532,10 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v54: cluster suggestions
+  if (!state.clusterSuggestions) {
+    state.clusterSuggestions = []
+  }
+
   return state as unknown as PlotState
 }

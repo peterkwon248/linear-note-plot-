@@ -1030,14 +1030,14 @@ export function LinearSidebar() {
             <Section title="Node Types">
               <div className="flex flex-col gap-1 px-2.5">
                 {[
-                  { label: "Note", color: "text-sidebar-muted", desc: "일반 노트" },
-                  { label: "Wiki", color: "text-accent", desc: "위키 문서" },
-                  { label: "Stub", color: "text-sidebar-muted/50", desc: "미완성 위키" },
+                  { label: "Inbox", bg: "bg-chart-2" },
+                  { label: "Capture", bg: "bg-chart-3" },
+                  { label: "Permanent", bg: "bg-chart-5" },
+                  { label: "Wiki", bg: "bg-wiki-complete" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-2 text-xs">
-                    <span className={`h-2 w-2 rounded-full ${item.color === "text-accent" ? "bg-accent" : "bg-sidebar-muted"}`} />
-                    <span className="flex-1 text-sidebar-foreground">{item.label}</span>
-                    <span className="text-sidebar-muted">{item.desc}</span>
+                    <span className={`h-2 w-2 rounded-full ${item.bg}`} />
+                    <span className="text-sidebar-foreground">{item.label}</span>
                   </div>
                 ))}
               </div>

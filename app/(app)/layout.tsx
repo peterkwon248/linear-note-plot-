@@ -14,6 +14,7 @@ import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts"
 import { useAutopilotNudges } from "@/hooks/use-autopilot-nudges"
 import { useCoOccurrences } from "@/hooks/use-co-occurrences"
 import { useRelationSuggestions } from "@/hooks/use-relation-suggestions"
+import { useClusterSuggestions } from "@/hooks/use-cluster-suggestions"
 import { Toaster } from "sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { NotesTableView } from "@/components/notes-table-view"
@@ -29,6 +30,7 @@ import { SearchView } from "@/components/views/search-view"
 import { GraphInsightsView } from "@/components/views/graph-insights-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
+import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
 import { SmartSidePanel } from "@/components/side-panel/smart-side-panel"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 
@@ -46,6 +48,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const sidePanelMode = usePlotStore((s) => s.sidePanelMode)
   const sidePanelPeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const pendingWikiAssemblyIds = usePlotStore((s) => s.pendingWikiAssemblyIds)
+  const setPendingWikiAssembly = usePlotStore((s) => s.setPendingWikiAssembly)
   const { resolvedTheme } = useTheme()
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
@@ -90,6 +94,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useCoOccurrences()
   // Relation suggestions: auto-generate from co-occurrences
   useRelationSuggestions()
+  // Cluster detection: auto-detect wiki article candidates
+  useClusterSuggestions()
 
   // ── Resize handle drag ──────────────────────────────────
   const handlePointerDown = useCallback(
@@ -241,6 +247,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <ShortcutOverlay />
         <MergeDialogGlobal />
         <LinkDialogGlobal />
+        {/* Global Wiki Assembly Dialog (triggered by cluster nudge) */}
+        {pendingWikiAssemblyIds && pendingWikiAssemblyIds.length > 0 && (
+          <WikiAssemblyDialog
+            open={true}
+            onOpenChange={(open) => {
+              if (!open) setPendingWikiAssembly(null)
+            }}
+            noteIds={pendingWikiAssemblyIds}
+            onComplete={() => {
+              setPendingWikiAssembly(null)
+            }}
+          />
+        )}
         <Toaster position="bottom-right" theme={resolvedTheme === "dark" ? "dark" : "light"} />
       </div>
     </TooltipProvider>

@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView, WikiArticle, WikiBlock } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView, WikiArticle, WikiBlock } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -199,6 +199,7 @@ export interface PlotState {
   closeSidePeek: () => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
+  setPendingWikiAssembly: (noteIds: string[] | null) => void
 
   // ── Reflections ──
   addReflection: (noteId: string, text: string) => string
@@ -251,6 +252,7 @@ export interface PlotState {
   updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => void
   moveWikiBlock: (articleId: string, blockId: string, targetIndex: number) => void
   reorderWikiBlocks: (articleId: string, blockIds: string[]) => void
+  mergeWikiArticles: (targetId: string, sourceId: string) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>
@@ -259,6 +261,10 @@ export interface PlotState {
   addRelationSuggestion: (partial: Omit<RelationSuggestion, "id" | "createdAt" | "status">) => string
   acceptRelationSuggestion: (id: string, typeOverride?: RelationType) => void
   dismissRelationSuggestion: (id: string) => void
+  clusterSuggestions: WikiClusterSuggestion[]
+  updateClusterSuggestions: (suggestions: WikiClusterSuggestion[]) => void
+  dismissClusterSuggestion: (id: string) => void
+  acceptClusterSuggestion: (id: string) => void
 
   // ── Editor Tabs ──
   openNoteInTab: (noteId: string, panelId?: string) => void
@@ -273,6 +279,9 @@ export interface PlotState {
   addPanel: () => void
   removePanel: (panelId: string) => void
   setPanelRatios: (ratios: number[]) => void
+
+  // ── Wiki Assembly (Cluster Nudge) ──
+  pendingWikiAssemblyIds: string[] | null
 
   // ── Workspace (Simplified Dual Pane) ──
   secondaryNoteId: string | null  // right editor note (null = single pane)

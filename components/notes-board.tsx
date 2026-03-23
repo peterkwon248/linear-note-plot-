@@ -57,6 +57,7 @@ import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId } from "@/lib/table-route"
+import { TRIAGE_HEX } from "@/lib/colors"
 
 /* ── Inline Select (portal-free, works inside Popover) ── */
 
@@ -181,13 +182,7 @@ function BoardColumn({
       return cfg ? { color: cfg.color, bg: `${cfg.color}1a` } : null
     }
     if (groupBy === "triage") {
-      const triageColors: Record<string, string> = {
-        untriaged: "#3b82f6", // blue — new
-        kept: "#22c55e",      // green — kept
-        snoozed: "#f59e0b",   // amber — snoozed
-        trashed: "#ef4444",   // red — trashed
-      }
-      const c = triageColors[group.key]
+      const c = TRIAGE_HEX[group.key as keyof typeof TRIAGE_HEX]
       return c ? { color: c, bg: `${c}1a` } : null
     }
     if (groupBy === "linkCount") {

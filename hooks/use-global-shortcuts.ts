@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { isEditableTarget } from "@/lib/keyboard-utils"
 import { popUndo } from "@/lib/undo-manager"
-import { setActiveRoute } from "@/lib/table-route"
+import { setActiveRoute, routeGoBack } from "@/lib/table-route"
 
 /**
  * Single global keydown listener that consolidates all app-wide keyboard
@@ -170,6 +170,18 @@ export function useGlobalShortcuts() {
 
       // ── Guard: skip remaining shortcuts inside editable ────
       if (isEditableTarget(target)) return
+
+      // ── 4a. Backspace — navigate back ──────────────────────
+      if (e.key === "Backspace" && !mod && !e.altKey && !e.shiftKey) {
+        e.preventDefault()
+        const s = usePlotStore.getState()
+        if (s.selectedNoteId) {
+          const handled = s.goBack()
+          if (handled) return
+        }
+        routeGoBack()
+        return
+      }
 
       // ── 5. / — open search ─────────────────────────────────
       if (e.key === "/" && !e.ctrlKey && !e.metaKey) {

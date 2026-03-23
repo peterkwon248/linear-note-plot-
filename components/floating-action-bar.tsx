@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useCallback } from "react"
-import { X, Zap, Check, Trash2, ArrowUpRight, ArrowDownLeft, Inbox, Merge, Link2, RotateCcw } from "lucide-react"
+import { X, Zap, Check, Trash2, ArrowUpRight, ArrowDownLeft, Inbox, Merge, Link2, RotateCcw, BookOpen } from "lucide-react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
@@ -10,6 +10,7 @@ import { NotePickerDialog } from "@/components/note-picker-dialog"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note, NoteStatus, NotePriority } from "@/lib/types"
 import { MergeDialog } from "@/components/merge-dialog"
+import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
 import { pushUndo } from "@/lib/undo-manager"
 
 /* ── Props ────────────────────────────────────────────── */
@@ -55,6 +56,8 @@ export function FloatingActionBar({
   const [mergeOpen, setMergeOpen] = useState(false)
   /* ── Link ── */
   const [linkOpen, setLinkOpen] = useState(false)
+  /* ── Wiki Assembly ── */
+  const [wikiAssemblyOpen, setWikiAssemblyOpen] = useState(false)
 
   const selectedNotes = useMemo(
     () => notes.filter((n) => selectedIds.has(n.id)),
@@ -342,6 +345,14 @@ export function FloatingActionBar({
               <Merge className="h-4 w-4" /> Merge
             </button>
 
+            {/* Wiki Assembly */}
+            <button
+              onClick={() => setWikiAssemblyOpen(true)}
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            >
+              <BookOpen className="h-4 w-4" /> Wiki
+            </button>
+
             {/* Link */}
             <Divider />
             <button
@@ -390,6 +401,19 @@ export function FloatingActionBar({
           )
         }}
       />
+
+      {/* Wiki Assembly Dialog */}
+      {wikiAssemblyOpen && (
+        <WikiAssemblyDialog
+          open={wikiAssemblyOpen}
+          onOpenChange={setWikiAssemblyOpen}
+          noteIds={ids}
+          onComplete={() => {
+            setWikiAssemblyOpen(false)
+            onClearSelection()
+          }}
+        />
+      )}
     </div>
   )
 }

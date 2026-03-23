@@ -23,7 +23,7 @@ const DEFAULT_FILTERS: OntologyFilters = {
   status: "all",
   relationTypes: "all",
   showWikilinks: true,
-  showTagNodes: true,
+  showTagNodes: false,
 }
 
 function applyFilters(notes: Note[], filters: OntologyFilters): Note[] {
@@ -55,6 +55,7 @@ export function OntologyView() {
   const relations = usePlotStore((s) => s.relations)
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const openNote = usePlotStore((s) => s.openNote)
   const ontologyPositions = usePlotStore((s) => s.ontologyPositions)
   const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
@@ -66,9 +67,19 @@ export function OntologyView() {
     () => tags.map((t) => ({ id: t.id, name: t.name, color: t.color })),
     [tags],
   )
+  const wikiArticlesMapped = useMemo(
+    () => wikiArticles.map((a) => ({
+      title: a.title,
+      aliases: a.aliases,
+      wikiStatus: a.wikiStatus,
+      // Extract noteIds from note-ref blocks so graph can identify which notes belong to this article
+      noteIds: a.blocks.filter((b) => b.type === "note-ref" && b.noteId).map((b) => b.noteId as string),
+    })),
+    [wikiArticles],
+  )
   const graphData = useMemo(
-    () => buildOntologyGraphData(filteredNotes, relations, tagsMapped),
-    [filteredNotes, relations, tagsMapped],
+    () => buildOntologyGraphData(filteredNotes, relations, tagsMapped, wikiArticlesMapped),
+    [filteredNotes, relations, tagsMapped, wikiArticlesMapped],
   )
 
   // Previous positions for warm-start (initialized from persisted store)
@@ -219,7 +230,7 @@ export function OntologyView() {
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
         icon={<Network className="h-5 w-5" strokeWidth={1.5} />}
-        title="Ontology"
+        title="Graph"
         showFilter
         hasActiveFilters={graphFilters.length > 0}
         filterContent={
