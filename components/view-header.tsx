@@ -111,6 +111,8 @@ interface ViewHeaderProps {
   detailPanelOpen?: boolean
   /** Toggle detail panel */
   onDetailPanelToggle?: () => void
+  /** Extra icon buttons inserted before the filter icon */
+  extraToolbarButtons?: ReactNode
 }
 
 export function ViewHeader({
@@ -130,6 +132,7 @@ export function ViewHeader({
   showDetailPanel,
   detailPanelOpen,
   onDetailPanelToggle,
+  extraToolbarButtons,
 }: ViewHeaderProps) {
   const router = useRouter()
   const notes = usePlotStore((s) => s.notes)
@@ -298,6 +301,7 @@ export function ViewHeader({
         {/* Filter / Display / Detail Panel icons */}
         {hasToolbar && (
           <div className="flex items-center gap-0.5">
+            {extraToolbarButtons}
             {showFilter && (
               <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                 <PopoverTrigger asChild>

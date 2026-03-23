@@ -113,6 +113,11 @@ export function setActiveRoute(route: string | null): void {
   _listeners.forEach((fn) => fn())
 }
 
+/** Force notify listeners even if route hasn't changed (e.g. closing editor on same route) */
+export function forceRouteRefresh(): void {
+  _listeners.forEach((fn) => fn())
+}
+
 export function getActiveSpace(): ActivitySpace {
   return _activeSpace
 }

@@ -28,7 +28,7 @@ import {
 import { usePlotStore } from "@/lib/store"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
-import { ALL_SIDEBAR_ROUTES, setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
+import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 type PanelContent = Record<string, unknown>
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
@@ -108,14 +108,15 @@ function NavLink({
     return (
       <button
         onClick={() => {
+          setNoteId(null)
           if (href === "/notes" || href === "/inbox") {
             setActiveFolderId(null)
             setActiveTagId(null)
             setActiveLabelId(null)
           }
+          const currentRoute = getActiveRoute()
           setActiveRoute(href)
-          setNoteId(null)
-          router.push(href)
+          if (currentRoute !== href) router.push(href)
         }}
         className={className}
         {...dragProps}

@@ -202,7 +202,7 @@ export function NoteDetailPanel({
 
   const handleDone = useCallback(() => {
     triageKeep(noteId)
-    pushUndo("Triage to Capture", () => moveBackToInbox(noteId))
+    pushUndo("Triage to Capture", () => moveBackToInbox(noteId), () => triageKeep(noteId))
     toast("Done — moved to Capture")
     advanceToNext()
   }, [triageKeep, noteId, advanceToNext, moveBackToInbox])
@@ -218,26 +218,26 @@ export function NoteDetailPanel({
 
   const handleTrash = useCallback(() => {
     triageTrash(noteId)
-    pushUndo("Trash note", () => toggleTrash(noteId))
+    pushUndo("Trash note", () => toggleTrash(noteId), () => triageTrash(noteId))
     toast("Trashed")
     advanceToNext()
   }, [triageTrash, noteId, advanceToNext, toggleTrash])
 
   const handlePromote = useCallback(() => {
     promoteToPermanent(noteId)
-    pushUndo("Promote to Permanent", () => undoPromote(noteId))
+    pushUndo("Promote to Permanent", () => undoPromote(noteId), () => promoteToPermanent(noteId))
     toast("Promoted to Permanent")
   }, [promoteToPermanent, noteId, undoPromote])
 
   const handleDemote = useCallback(() => {
     undoPromote(noteId)
-    pushUndo("Demote to Capture", () => promoteToPermanent(noteId))
+    pushUndo("Demote to Capture", () => promoteToPermanent(noteId), () => undoPromote(noteId))
     toast("Demoted to Capture")
   }, [undoPromote, noteId, promoteToPermanent])
 
   const handleMoveBack = useCallback(() => {
     moveBackToInbox(noteId)
-    pushUndo("Move back to Inbox", () => triageKeep(noteId))
+    pushUndo("Move back to Inbox", () => triageKeep(noteId), () => moveBackToInbox(noteId))
     toast("Moved back to Inbox")
   }, [moveBackToInbox, noteId, triageKeep])
 
@@ -606,7 +606,7 @@ export function NoteDetailPanel({
                 <button
                   onClick={() => {
                     toggleTrash(note.id)
-                    pushUndo("Restore note", () => toggleTrash(note.id))
+                    pushUndo("Restore note", () => toggleTrash(note.id), () => toggleTrash(note.id))
                     toast("Note restored")
                   }}
                   className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-accent transition-colors hover:bg-accent/10"

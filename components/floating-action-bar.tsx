@@ -74,7 +74,7 @@ export function FloatingActionBar({
     batchUpdateNotes(ids, { status })
     pushUndo(`Status → ${status}`, () => {
       prevStatuses.forEach(({ id, status: prev }) => batchUpdateNotes([id], { status: prev }))
-    })
+    }, () => batchUpdateNotes(ids, { status }))
     toast(`Updated status for ${count} note${count > 1 ? "s" : ""}`)
   }
 
@@ -86,14 +86,14 @@ export function FloatingActionBar({
     batchUpdateNotes(ids, { priority })
     pushUndo(`Priority → ${priority}`, () => {
       prevPriorities.forEach(({ id, priority: prev }) => batchUpdateNotes([id], { priority: prev }))
-    })
+    }, () => batchUpdateNotes(ids, { priority }))
     toast(`Updated priority for ${count} note${count > 1 ? "s" : ""}`)
   }
 
   const handleKeepAll = () => {
     ids.forEach((id) => triageKeep(id))
     onClearSelection()
-    pushUndo(`Triage ${count} to Capture`, () => ids.forEach((id) => moveBackToInbox(id)))
+    pushUndo(`Triage ${count} to Capture`, () => ids.forEach((id) => moveBackToInbox(id)), () => ids.forEach((id) => triageKeep(id)))
     toast(`Moved ${count} note${count > 1 ? "s" : ""} to Capture`, {
       action: { label: "Undo", onClick: () => ids.forEach((id) => moveBackToInbox(id)) },
       duration: 5000,
@@ -103,7 +103,7 @@ export function FloatingActionBar({
   const handleTrashAll = () => {
     ids.forEach((id) => triageTrash(id))
     onClearSelection()
-    pushUndo(`Trash ${count} note${count > 1 ? "s" : ""}`, () => ids.forEach((id) => toggleTrash(id)))
+    pushUndo(`Trash ${count} note${count > 1 ? "s" : ""}`, () => ids.forEach((id) => toggleTrash(id)), () => ids.forEach((id) => triageTrash(id)))
     toast(`Trashed ${count} note${count > 1 ? "s" : ""}`, {
       duration: 5000,
     })
@@ -112,7 +112,7 @@ export function FloatingActionBar({
   const handlePromoteAll = () => {
     ids.forEach((id) => promoteToPermanent(id))
     onClearSelection()
-    pushUndo(`Promote ${count} to Permanent`, () => ids.forEach((id) => undoPromote(id)))
+    pushUndo(`Promote ${count} to Permanent`, () => ids.forEach((id) => undoPromote(id)), () => ids.forEach((id) => promoteToPermanent(id)))
     toast(`Promoted ${count} note${count > 1 ? "s" : ""} to Permanent`, {
       action: { label: "Undo", onClick: () => ids.forEach((id) => undoPromote(id)) },
       duration: 5000,
@@ -122,7 +122,7 @@ export function FloatingActionBar({
   const handleDemoteAll = () => {
     ids.forEach((id) => undoPromote(id))
     onClearSelection()
-    pushUndo(`Demote ${count} to Capture`, () => ids.forEach((id) => promoteToPermanent(id)))
+    pushUndo(`Demote ${count} to Capture`, () => ids.forEach((id) => promoteToPermanent(id)), () => ids.forEach((id) => undoPromote(id)))
     toast(`Demoted ${count} note${count > 1 ? "s" : ""} to Capture`, {
       duration: 5000,
     })
@@ -131,7 +131,7 @@ export function FloatingActionBar({
   const handleMoveBackAll = () => {
     ids.forEach((id) => moveBackToInbox(id))
     onClearSelection()
-    pushUndo(`Move ${count} back to Inbox`, () => ids.forEach((id) => triageKeep(id)))
+    pushUndo(`Move ${count} back to Inbox`, () => ids.forEach((id) => triageKeep(id)), () => ids.forEach((id) => moveBackToInbox(id)))
     toast(`Moved ${count} note${count > 1 ? "s" : ""} back to Inbox`, {
       duration: 5000,
     })
@@ -139,14 +139,14 @@ export function FloatingActionBar({
 
   const handleRemind = (isoDate: string) => {
     batchSetReminder(ids, isoDate)
-    pushUndo(`Set reminder for ${count} note${count > 1 ? "s" : ""}`, () => batchSetReminder(ids, ""))
+    pushUndo(`Set reminder for ${count} note${count > 1 ? "s" : ""}`, () => batchSetReminder(ids, ""), () => batchSetReminder(ids, isoDate))
     toast(`Reminder set for ${count} note${count > 1 ? "s" : ""}`)
   }
 
   const handleRestoreAll = () => {
     ids.forEach((id) => toggleTrash(id))
     onClearSelection()
-    pushUndo(`Restore ${count} note${count > 1 ? "s" : ""}`, () => ids.forEach((id) => toggleTrash(id)))
+    pushUndo(`Restore ${count} note${count > 1 ? "s" : ""}`, () => ids.forEach((id) => toggleTrash(id)), () => ids.forEach((id) => toggleTrash(id)))
     toast(`Restored ${count} note${count > 1 ? "s" : ""}`, { duration: 5000 })
   }
 

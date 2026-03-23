@@ -49,7 +49,12 @@ export function ActivityBar() {
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
 
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+
   const handleSpaceClick = (space: ActivitySpace) => {
+    // Always clear selected note so editor closes and list view appears
+    setSelectedNoteId(null)
+
     if (space === activeSpace) {
       // Same space → toggle sidebar
       setSidebarCollapsed(!sidebarCollapsed)

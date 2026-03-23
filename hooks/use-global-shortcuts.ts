@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { isEditableTarget } from "@/lib/keyboard-utils"
-import { popUndo } from "@/lib/undo-manager"
+import { popUndo, popRedo } from "@/lib/undo-manager"
 import { setActiveRoute, routeGoBack } from "@/lib/table-route"
 
 /**
@@ -106,6 +106,20 @@ export function useGlobalShortcuts() {
         const label = popUndo()
         if (label) {
           toast(`Undone: ${label}`)
+        }
+        return
+      }
+
+      // ── 2a-2. Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z — global redo ────────
+      if (
+        ((e.key === "y" || e.key === "Y") && (e.metaKey || e.ctrlKey)) ||
+        (e.key === "z" && (e.metaKey || e.ctrlKey) && e.shiftKey)
+      ) {
+        if (isEditableTarget(target)) return
+        e.preventDefault()
+        const label = popRedo()
+        if (label) {
+          toast(`Redone: ${label}`)
         }
         return
       }

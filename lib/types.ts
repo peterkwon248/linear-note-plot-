@@ -325,6 +325,7 @@ export interface ThreadStep {
   id: string
   at: string
   text: string
+  parentId: string | null
 }
 
 export interface Thread {

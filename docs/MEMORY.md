@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 17-slice Zustand store with versioned migration (currently v53)
+- **Store**: `lib/store/index.ts` — 17-slice Zustand store with versioned migration (currently v54)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -32,6 +32,9 @@
 - **2-Level Routing**: `activeSpace` (inbox/notes/wiki/ontology/calendar) + `activeRoute`, `inferSpace()` 하위호환
 - **PlotIcons**: 28 custom SVG icon components in `components/plot-icons.tsx` — Lucide 대체
 - **Wiki Collection**: `wikiCollections: Record<string, WikiCollectionItem[]>` — per-wiki-note staging area for related material
+- **Undo Manager**: `lib/undo-manager.ts` — LinkedList 기반 글로벌 Undo/Redo (capacity 50), Zustand state diff 기반
+- **Sub-grouping**: `group.ts` 재귀 호출로 2단계 그룹핑. NoteGroup.subGroups에 저장. VirtualItem "subheader" 타입으로 렌더
+- **Thread Nested Replies**: ThreadStep.parentId 기반 트리 구조. Thread 패널에서 들여쓰기 렌더 + Reply 버튼
 
 ## Store Slices (17 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections
@@ -173,14 +176,24 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **위키 클릭 버그 수정**: Dashboard/Overview에서 위키 아티클 클릭 시 열기 동작 수정
 - **위키 카테고리 필터 버그 수정**: 드롭다운 열리지 않던 이슈 수정
 
+### 이번 세션 완료 (2026-03-24)
+- **List/Board 토글 활성화**: Show trashed / Compact mode / Show card preview 3개 토글 실제 동작 연결
+- **Nested Replies (Thread 트리 구조)**: ThreadStep에 parentId 추가 + 트리 렌더링 + Reply 버튼 + store migration v54
+- **Compact + Preview 공존**: isCompact 조건 제거하여 두 토글 독립 동작
+- **Board 컬럼 헤더 라벨 색상 dot**: Label/Folder 그룹핑 시 컬럼 헤더에 색상 dot 표시
+- **그룹 드래그 순서 변경 (List + Board)**: dnd-kit 기반 그룹 헤더/컬럼 드래그로 순서 커스텀. viewState.groupOrder에 persist
+- **Collapse All / Expand All 버튼**: ViewHeader 필터 왼쪽에 토글 버튼 추가 (그룹핑 활성일 때만)
+- **Breadcrumb/Sidebar 클릭 시 에디터 닫기**: 같은 라우트 router.push 시 IDB persist 덮어쓰기 문제 해결
+- **글로벌 Undo/Redo**: Ctrl+Z / Ctrl+Y + UndoManager (linked list + capacity 50) + 에디터 focused 시 비활성
+- **Sub-grouping 실제 동작 구현**: group.ts 재귀 그룹핑 + subheader VirtualItem + 들여쓰기된 서브그룹 헤더 렌더링
+- **Show card preview 즉시 전환**: 토글 ON/OFF 시 리스트 즉시 반영
+
 ### 다음 작업 후보 (우선순위 순)
-1. **글로벌 Ctrl+Z 되돌리기** — store 전체 history 레이어
-2. **리니어 디자인 폴리시** — 전 화면 UI 폴리시 (줄/사각형 제거, 폰트/아이콘 정렬)
-3. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
-4. **J/K 리스트 네비게이션** — Linear식
-5. **노트 가져오기/내보내기**
-6. **그래프 사이드바 리워크** — 클러스터 + 인사이트
-7. **리스트 가상화** — react-window, 1만개 노트 대응
+1. **리니어 디자인 폴리시** — 전 화면 UI 폴리시 (줄/사각형 제거, 폰트/아이콘 정렬)
+2. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
+3. **J/K 리스트 네비게이션** — Linear식
+4. **노트 가져오기/내보내기**
+5. **그래프 사이드바 리워크** — 클러스터 + 인사이트
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정
