@@ -270,10 +270,10 @@ export function LinearSidebar() {
     if (renamingItem) setTimeout(() => renameInputRef.current?.focus(), 0)
   }, [renamingItem])
 
-  const inboxCount = useMemo(() => notes.filter((n) => n.status === "inbox" && !n.archived && !n.trashed && n.triageStatus !== "trashed").length, [notes])
-  const allNotesCount = useMemo(() => notes.filter((n) => !n.archived && !n.trashed).length, [notes])
-  const captureCount = useMemo(() => notes.filter((n) => n.status === "capture" && !n.archived && !n.trashed).length, [notes])
-  const permanentCount = useMemo(() => notes.filter((n) => n.status === "permanent" && !n.archived && !n.trashed).length, [notes])
+  const inboxCount = useMemo(() => notes.filter((n) => n.status === "inbox" && !n.trashed && n.triageStatus !== "trashed").length, [notes])
+  const allNotesCount = useMemo(() => notes.filter((n) => !n.trashed).length, [notes])
+  const captureCount = useMemo(() => notes.filter((n) => n.status === "capture" && !n.trashed).length, [notes])
+  const permanentCount = useMemo(() => notes.filter((n) => n.status === "permanent" && !n.trashed).length, [notes])
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
   const wikiCount = useMemo(() => notes.filter((n) => n.isWiki && !n.trashed).length, [notes])
 
@@ -328,7 +328,7 @@ export function LinearSidebar() {
 
   // Pinned notes for sidebar shortcut section
   const pinnedNotes = useMemo(() =>
-    notes.filter((n) => n.pinned && !n.trashed && !n.archived),
+    notes.filter((n) => n.pinned && !n.trashed),
     [notes]
   )
 
@@ -531,7 +531,7 @@ export function LinearSidebar() {
   }
 
   const notesInFolder = (folderId: string) =>
-    notes.filter((n) => n.folderId === folderId && !n.archived && !n.trashed).length
+    notes.filter((n) => n.folderId === folderId && !n.trashed).length
 
   return (
     <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">

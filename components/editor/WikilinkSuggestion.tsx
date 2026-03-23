@@ -163,7 +163,7 @@ export const WikilinkSuggestion = Extension.create({
 
           // Empty query: show recent 8 notes/wikis
           if (q.length === 0) {
-            const pool = notes.filter((n) => !n.archived && !n.trashed && n.title.trim() && n.id !== currentNoteId)
+            const pool = notes.filter((n) => !n.trashed && n.title.trim() && n.id !== currentNoteId)
             return pool
               .sort(
                 (a, b) =>
@@ -175,7 +175,7 @@ export const WikilinkSuggestion = Extension.create({
           }
 
           // Title matches: exact > startsWith > contains, then by length
-          const pool = notes.filter((n) => !n.archived && !n.trashed && n.id !== currentNoteId)
+          const pool = notes.filter((n) => !n.trashed && n.id !== currentNoteId)
           const titleMatches = pool
             .filter(
               (n) =>

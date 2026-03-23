@@ -28,7 +28,7 @@ export function detectUnlinkedMentions(
   // Build candidates: other notes' titles and aliases (>2 chars, not already linked)
   const candidates: { noteId: string; title: string; titleLower: string }[] = []
   for (const note of notes) {
-    if (note.id === targetNoteId || note.archived || note.trashed) continue
+    if (note.id === targetNoteId || note.trashed) continue
     if (note.title.trim().length > 2 && !linkedTitles.has(note.title.toLowerCase())) {
       candidates.push({ noteId: note.id, title: note.title, titleLower: note.title.toLowerCase() })
     }

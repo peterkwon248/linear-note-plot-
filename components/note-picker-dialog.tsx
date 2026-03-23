@@ -164,7 +164,7 @@ export function NotePickerDialog({
   // Base candidates: active, non-excluded notes
   const baseCandidates = useMemo(() => {
     return notes
-      .filter((n) => !n.archived && !n.trashed && !excludeSet.has(n.id))
+      .filter((n) => !n.trashed && !excludeSet.has(n.id))
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   }, [notes, excludeSet])
 

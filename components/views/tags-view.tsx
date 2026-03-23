@@ -151,7 +151,7 @@ export function TagsView() {
 
   // Active (non-trashed, non-archived) notes only
   const activeNotes = useMemo(
-    () => notes.filter((n) => !n.archived && !n.trashed),
+    () => notes.filter((n) => !n.trashed),
     [notes],
   )
 

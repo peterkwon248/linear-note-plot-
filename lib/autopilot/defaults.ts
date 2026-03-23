@@ -38,23 +38,6 @@ export const DEFAULT_AUTOPILOT_RULES: AutopilotRule[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "rule-auto-archive-stale",
-    name: "오래된 Permanent 노트 자동 아카이브",
-    description: "60일 이상 안 열린 Permanent 노트를 자동 아카이브",
-    enabled: false,  // disabled by default — opt-in
-    trigger: "on_interval",
-    conditions: [
-      { field: "status", operator: "eq", value: "permanent" },
-      { field: "age_days", operator: "gte", value: 60 },
-      { field: "reads", operator: "lte", value: 1 },
-    ],
-    actions: [
-      { type: "archive" },
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
     id: "rule-high-priority-inbox",
     name: "긴 Inbox 노트 우선순위 자동 부여",
     description: "내용이 긴 Inbox 노트에 High 우선순위 자동 부여",

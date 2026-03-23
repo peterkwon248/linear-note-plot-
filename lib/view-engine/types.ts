@@ -10,7 +10,6 @@ export type ViewContextKey =
   | "permanent"  // /permanent
   | "unlinked"   // tab filter within /notes
   | "review"     // /review
-  | "archive"    // /archive
   | "folder"     // /folder/[id]
   | "tag"        // /tag/[id]
   | "label"      // /label/[id]
@@ -60,6 +59,8 @@ export interface ViewState {
   showEmptyGroups: boolean
   orderPermanentByRecency: boolean
   showThread: boolean
+  /** View-config-specific toggle states (showArchived, showStubs, compact, etc.) */
+  toggles: Record<string, boolean>
 }
 
 /* ── Pipeline Types ────────────────────────────────────── */
@@ -105,7 +106,7 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
 
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "all", "pinned", "inbox", "capture", "permanent",
-  "unlinked", "review", "archive", "folder", "tag", "label", "trash",
+  "unlinked", "review", "folder", "tag", "label", "trash",
   "savedView",
 ]
 

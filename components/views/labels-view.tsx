@@ -162,7 +162,7 @@ export function LabelsView() {
 
   // Active notes
   const activeNotes = useMemo(() =>
-    notes.filter((n) => !n.archived && !n.trashed),
+    notes.filter((n) => !n.trashed),
     [notes]
   )
 

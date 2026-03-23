@@ -13,30 +13,30 @@ export function applyContext(
 ): Note[] {
   switch (context) {
     case "all":
-      return notes.filter((n) => !n.archived && !n.trashed)
+      return notes.filter((n) => !n.trashed)
 
     case "pinned":
-      return notes.filter((n) => n.pinned && !n.archived && !n.trashed)
+      return notes.filter((n) => n.pinned && !n.trashed)
 
     case "inbox":
       return notes.filter(
-        (n) => n.status === "inbox" && !n.archived && n.triageStatus !== "trashed" && !n.trashed
+        (n) => n.status === "inbox" && n.triageStatus !== "trashed" && !n.trashed
       )
 
     case "capture":
       return notes.filter(
-        (n) => n.status === "capture" && !n.archived && n.triageStatus !== "trashed" && !n.trashed
+        (n) => n.status === "capture" && n.triageStatus !== "trashed" && !n.trashed
       )
 
     case "permanent":
       return notes.filter(
-        (n) => n.status === "permanent" && !n.archived && n.triageStatus !== "trashed" && !n.trashed
+        (n) => n.status === "permanent" && n.triageStatus !== "trashed" && !n.trashed
       )
 
     case "unlinked": {
       const backlinks = extras?.backlinksMap
       return notes.filter((n) => {
-        if (n.archived || n.trashed) return false
+        if (n.trashed) return false
         const linkCount = backlinks?.get(n.id) ?? 0
         const hasOutLinks = (n.linksOut?.length ?? 0) > 0
         return linkCount === 0 && !hasOutLinks
@@ -45,26 +45,23 @@ export function applyContext(
 
     case "review":
       // Review queue uses domain-specific logic from lib/queries/notes.ts.
-      // For the pipeline, we return all non-archived notes and let
+      // For the pipeline, we return all active notes and let
       // the Review page apply its own getReviewQueue() on top.
-      return notes.filter((n) => !n.archived && !n.trashed)
-
-    case "archive":
-      return notes.filter((n) => n.archived && !n.trashed)
+      return notes.filter((n) => !n.trashed)
 
     case "folder":
       return notes.filter(
-        (n) => !n.archived && !n.trashed && n.folderId === extras?.folderId
+        (n) => !n.trashed && n.folderId === extras?.folderId
       )
 
     case "tag":
       return notes.filter(
-        (n) => !n.archived && !n.trashed && extras?.tagId && n.tags.includes(extras.tagId)
+        (n) => !n.trashed && extras?.tagId && n.tags.includes(extras.tagId)
       )
 
     case "label":
       return notes.filter(
-        (n) => !n.archived && !n.trashed && extras?.labelId && n.labelId === extras.labelId
+        (n) => !n.trashed && extras?.labelId && n.labelId === extras.labelId
       )
 
     case "trash":
@@ -72,10 +69,10 @@ export function applyContext(
 
     case "savedView":
       // Saved views apply their own user-filters in stage 2;
-      // context stage just returns all active (non-archived, non-trashed) notes.
-      return notes.filter((n) => !n.archived && !n.trashed)
+      // context stage just returns all active (non-trashed) notes.
+      return notes.filter((n) => !n.trashed)
 
     default:
-      return notes.filter((n) => !n.archived && !n.trashed)
+      return notes.filter((n) => !n.trashed)
   }
 }

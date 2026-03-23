@@ -51,7 +51,7 @@ export function suggestBacklinks(
 
   for (const other of notes) {
     if (other.id === targetNoteId) continue
-    if (other.archived) continue
+    if (other.trashed) continue
     // Skip if already wiki-linked from target
     if (existingLinks.has(other.title.toLowerCase())) continue
 

@@ -14,7 +14,7 @@ export function computeCoOccurrences(
   const pairMap = new Map<string, { count: number; noteIds: string[] }>()
 
   for (const note of notes) {
-    if (note.archived || note.trashed) continue
+    if (note.trashed) continue
 
     const links = note.linksOut
     if (links.length < 2) continue

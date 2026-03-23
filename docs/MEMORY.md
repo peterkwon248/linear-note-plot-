@@ -163,14 +163,24 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **위키 클릭 버그 수정**: openArticle이 WikiArticle.id 직접 인식하도록 수정
 - **Node Types 범례 한글 → 영어**: "일반 노트/위키 문서/미완성 위키" 제거
 
+### 이번 세션 완료 (2026-03-23, 세션 3)
+- **필터 드롭다운 검색창**: 모든 필터 서브드롭다운에 검색 입력 추가 (Linear식, 임계값 제거)
+- **Wiki Merge 스토어**: mergeWikiArticles (A+A), mergeNotesIntoWikiArticle (B: Note[]→WikiArticle)
+- **Wiki Assembly Dialog**: Note[] → WikiArticle 조립 UI (FloatingActionBar + Dialog)
+- **클러스터 감지 → 자동 제안**: detectClusters() + useClusterSuggestions hook + nudge toast
+- **archive 제거**: 노트에서 isArchived 필드 + Show archived 토글 + 관련 로직 전부 삭제
+- **위키 리스트 토글 버그 수정**: Show stubs/Show red links 토글 동작 수정
+- **위키 클릭 버그 수정**: Dashboard/Overview에서 위키 아티클 클릭 시 열기 동작 수정
+- **위키 카테고리 필터 버그 수정**: 드롭다운 열리지 않던 이슈 수정
+
 ### 다음 작업 후보 (우선순위 순)
 1. **글로벌 Ctrl+Z 되돌리기** — store 전체 history 레이어
 2. **리니어 디자인 폴리시** — 전 화면 UI 폴리시 (줄/사각형 제거, 폰트/아이콘 정렬)
 3. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
-4. **필터 드롭다운 내 검색창** — 모든 필터 버튼 드롭다운에 검색 입력
-5. **J/K 리스트 네비게이션** — Linear식
-6. **노트 가져오기/내보내기**
-7. **그래프 사이드바 리워크** — 클러스터 + 인사이트
+4. **J/K 리스트 네비게이션** — Linear식
+5. **노트 가져오기/내보내기**
+6. **그래프 사이드바 리워크** — 클러스터 + 인사이트
+7. **리스트 가상화** — react-window, 1만개 노트 대응
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정

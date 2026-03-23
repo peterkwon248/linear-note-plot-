@@ -92,7 +92,6 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         priority: template.priority,
         reads: 0,
         pinned: false,
-        archived: false,
         trashed: false,
         createdAt: now(),
         updatedAt: now(),

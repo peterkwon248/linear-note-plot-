@@ -135,7 +135,6 @@ export interface Note {
   priority: NotePriority
   reads: number
   pinned: boolean
-  archived: boolean
   trashed: boolean
   createdAt: string
   updatedAt: string
@@ -149,7 +148,6 @@ export interface Note {
   promotedAt: string | null
   lastTouchedAt: string
   snoozeCount: number
-  archivedAt: string | null
   trashedAt: string | null
 
   /* ── Thread ──────────────────────────────────────── */
@@ -222,7 +220,7 @@ export interface AutopilotCondition {
 
 export type AutopilotActionType =
   | "set_status" | "set_priority" | "set_label" | "set_triage"
-  | "archive" | "pin" | "add_tag" | "remove_tag"
+  | "pin" | "add_tag" | "remove_tag"
 
 export interface AutopilotAction {
   type: AutopilotActionType
@@ -281,7 +279,6 @@ export type ActiveView =
   | { type: "inbox" }
   | { type: "all" }
   | { type: "folder"; folderId: string }
-  | { type: "archive" }
   | { type: "templates" }
   | { type: "insights" }
   | { type: "pinned" }
@@ -292,7 +289,6 @@ export type ActiveView =
 export type NoteFilter =
   | { type: "inbox" }
   | { type: "all" }
-  | { type: "archive" }
   | { type: "trash" }
   | { type: "pinned" }
   | { type: "folder"; folderId: string }
@@ -304,7 +300,7 @@ export type NoteFilter =
 /* ── Phase 2: Event Log / Timeline ──────────────────── */
 
 export type NoteEventType =
-  | "created" | "updated" | "opened" | "promoted" | "archived" | "unarchived" | "trashed" | "untrashed"
+  | "created" | "updated" | "opened" | "promoted" | "trashed" | "untrashed"
   | "triage_keep" | "triage_snooze" | "triage_trash"
   | "link_added" | "link_removed"
   | "thread_started" | "thread_step_added" | "thread_ended" | "thread_deleted"

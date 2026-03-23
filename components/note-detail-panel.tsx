@@ -396,7 +396,7 @@ export function NoteDetailPanel({
             <div className="flex items-center gap-2 px-4 py-2">
               <Clock className="h-4 w-4 text-muted-foreground/60" />
               <span className="text-note text-muted-foreground/70">
-                In capture for {daysInCapture} days. Consider promoting or archiving.
+                In capture for {daysInCapture} days. Consider promoting or moving to trash.
               </span>
             </div>
           )}

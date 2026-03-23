@@ -26,7 +26,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     priority: "none" as NotePriority,
     reads: 0,
     pinned: false,
-    archived: false,
     createdAt: now,
     updatedAt: now,
     triageStatus: "untriaged",
@@ -37,7 +36,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     promotedAt: null,
     lastTouchedAt: now,
     snoozeCount: 0,
-    archivedAt: null,
     trashedAt: null,
     trashed: false,
     parentNoteId: null,
@@ -61,14 +59,6 @@ const emptyBacklinks = new Map<string, number>()
 describe("runAnalysis", () => {
   it("returns empty array when no notes", () => {
     const results = runAnalysis([], emptySrsMap, emptyBacklinks)
-    expect(results).toEqual([])
-  })
-
-  it("skips archived notes", () => {
-    const notes = [
-      makeNote({ id: "a1", archived: true, status: "capture", lastTouchedAt: daysAgo(10) }),
-    ]
-    const results = runAnalysis(notes, emptySrsMap, emptyBacklinks)
     expect(results).toEqual([])
   })
 

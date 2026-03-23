@@ -11,7 +11,6 @@ import {
   Hash,
   FileText,
   Pin,
-  Archive,
   AlignLeft,
   Paperclip,
   Link2,
@@ -329,12 +328,6 @@ export function SidePanelContext() {
           <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-xs font-medium text-chart-3">
             <Pin className="h-3.5 w-3.5" />
             Pinned
-          </span>
-        )}
-        {note.archived && (
-          <span className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-            <Archive className="h-3.5 w-3.5" />
-            Archived
           </span>
         )}
         {/* Stage badge */}

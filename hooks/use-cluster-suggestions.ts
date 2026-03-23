@@ -29,7 +29,7 @@ export function useClusterSuggestions(): void {
       // Build title -> noteId map
       const titleToNoteId = new Map<string, string>()
       for (const note of notes) {
-        if (note.trashed || note.archived) continue
+        if (note.trashed) continue
         const key = note.title.toLowerCase()
         if (key) titleToNoteId.set(key, note.id)
         // Also add aliases if present

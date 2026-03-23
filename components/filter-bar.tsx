@@ -139,6 +139,13 @@ export function FilterMenuItems({
 }: FilterMenuProps) {
   const [labelSearch, setLabelSearch] = useState("")
   const [tagSearch, setTagSearch] = useState("")
+  const [statusSearch, setStatusSearch] = useState("")
+  const [prioritySearch, setPrioritySearch] = useState("")
+  const [folderSearch, setFolderSearch] = useState("")
+  const [sourceSearch, setSourceSearch] = useState("")
+  const [linksSearch, setLinksSearch] = useState("")
+  const [contentSearch, setContentSearch] = useState("")
+  const [pinnedSearch, setPinnedSearch] = useState("")
 
   const showStatusFilter = groupBy !== "status" && groupBy !== "triage" && !isSingleStatusTab
   const showPriorityFilter = groupBy !== "priority"
@@ -200,7 +207,20 @@ export function FilterMenuItems({
             <ActiveBadge count={statusCount} />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48">
-            {(["inbox", "capture", "permanent"] as NoteStatus[]).map((s) => (
+            <div className="px-2 py-1.5">
+              <input
+                type="text"
+                placeholder="Filter..."
+                className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+                value={statusSearch}
+                onChange={(e) => setStatusSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
+            {(["inbox", "capture", "permanent"] as NoteStatus[]).filter((s) =>
+              !statusSearch || s.toLowerCase().includes(statusSearch.toLowerCase())
+            ).map((s) => (
               <DropdownMenuItem key={s} onSelect={(e) => { e.preventDefault(); onToggleFilter("status", s) }}>
                 <CheckMark active={hasFilter(filters, "status", s)} />
                 <StatusBadge status={s} />
@@ -219,13 +239,30 @@ export function FilterMenuItems({
             <ActiveBadge count={priorityCount} />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48">
-            {(["urgent", "high", "medium", "low", "none"] as NotePriority[]).map((p) => (
-              <DropdownMenuItem key={p} onSelect={(e) => { e.preventDefault(); onToggleFilter("priority", p) }}>
-                <CheckMark active={hasFilter(filters, "priority", p)} />
-                <PriorityBadge priority={p} />
-                <span className="ml-2 text-sm capitalize">{p === "none" ? "No priority" : p}</span>
-              </DropdownMenuItem>
-            ))}
+            <div className="px-2 py-1.5">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                value={prioritySearch}
+                onChange={(e) => setPrioritySearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
+            {(["urgent", "high", "medium", "low", "none"] as NotePriority[])
+              .filter((p) => {
+                if (!prioritySearch) return true
+                const label = p === "none" ? "no priority" : p
+                return label.toLowerCase().includes(prioritySearch.toLowerCase())
+              })
+              .map((p) => (
+                <DropdownMenuItem key={p} onSelect={(e) => { e.preventDefault(); onToggleFilter("priority", p) }}>
+                  <CheckMark active={hasFilter(filters, "priority", p)} />
+                  <PriorityBadge priority={p} />
+                  <span className="ml-2 text-sm capitalize">{p === "none" ? "No priority" : p}</span>
+                </DropdownMenuItem>
+              ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
       )}
@@ -238,18 +275,33 @@ export function FilterMenuItems({
             <span className="text-sm">Folder</span>
             <ActiveBadge count={folderCount} />
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-52">
-            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", "_none") }}>
-              <CheckMark active={hasFilter(filters, "folder", "_none")} />
-              <span className="text-sm text-muted-foreground">No folder</span>
-            </DropdownMenuItem>
-            {folders.length > 0 && <DropdownMenuSeparator />}
-            {folders.map((folder) => (
-              <DropdownMenuItem key={folder.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", folder.id) }}>
-                <CheckMark active={hasFilter(filters, "folder", folder.id)} />
-                <span className="text-sm">{folder.name}</span>
+          <DropdownMenuSubContent className="w-52 max-h-80 overflow-y-auto">
+            <div className="px-2 py-1.5">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                value={folderSearch}
+                onChange={(e) => setFolderSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
+            {!folderSearch && (
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", "_none") }}>
+                <CheckMark active={hasFilter(filters, "folder", "_none")} />
+                <span className="text-sm text-muted-foreground">No folder</span>
               </DropdownMenuItem>
-            ))}
+            )}
+            {folders.length > 0 && !folderSearch && <DropdownMenuSeparator />}
+            {folders
+              .filter((folder) => !folderSearch || folder.name.toLowerCase().includes(folderSearch.toLowerCase()))
+              .map((folder) => (
+                <DropdownMenuItem key={folder.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", folder.id) }}>
+                  <CheckMark active={hasFilter(filters, "folder", folder.id)} />
+                  <span className="text-sm">{folder.name}</span>
+                </DropdownMenuItem>
+              ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
       )}
@@ -272,19 +324,17 @@ export function FilterMenuItems({
               <span className="text-sm">Has label</span>
             </DropdownMenuItem>
             {labels.length > 0 && <DropdownMenuSeparator />}
-            {labels.length >= 10 && (
-              <div className="px-2 py-1.5">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                  value={labelSearch}
-                  onChange={(e) => setLabelSearch(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
-                />
-              </div>
-            )}
+            <div className="px-2 py-1.5">
+              <input
+                type="text"
+                placeholder="Filter..."
+                className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+                value={labelSearch}
+                onChange={(e) => setLabelSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
             {labels
               .filter((label) => !labelSearch || label.name.toLowerCase().includes(labelSearch.toLowerCase()))
               .map((label) => (
@@ -317,19 +367,17 @@ export function FilterMenuItems({
             <span className="text-sm">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
-          {tags.length >= 10 && (
-            <div className="px-2 py-1.5">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                value={tagSearch}
-                onChange={(e) => setTagSearch(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              />
-            </div>
-          )}
+          <div className="px-2 py-1.5">
+            <input
+              type="text"
+              placeholder="Filter..."
+              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+              value={tagSearch}
+              onChange={(e) => setTagSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
           {tags
             .filter((tag) => !tagSearch || tag.name.toLowerCase().includes(tagSearch.toLowerCase()))
             .map((tag) => (
@@ -355,20 +403,41 @@ export function FilterMenuItems({
           <ActiveBadge count={sourceCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-48">
-          {(["manual", "webclip", "import", "share", "api"] as NonNullable<NoteSource>[]).map((src) => {
-            const labels: Record<string, string> = { manual: "Manual", webclip: "Web clip", import: "Import", share: "Shared", api: "API" }
-            return (
-              <DropdownMenuItem key={src} onSelect={(e) => { e.preventDefault(); onToggleFilter("source", src) }}>
-                <CheckMark active={hasFilter(filters, "source", src)} />
-                <span className="text-sm">{labels[src]}</span>
+          <div className="px-2 py-1.5">
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              value={sourceSearch}
+              onChange={(e) => setSourceSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
+          {(["manual", "webclip", "import", "share", "api"] as NonNullable<NoteSource>[])
+            .filter((src) => {
+              if (!sourceSearch) return true
+              const srcLabels: Record<string, string> = { manual: "Manual", webclip: "Web clip", import: "Import", share: "Shared", api: "API" }
+              return srcLabels[src].toLowerCase().includes(sourceSearch.toLowerCase())
+            })
+            .map((src) => {
+              const srcLabels: Record<string, string> = { manual: "Manual", webclip: "Web clip", import: "Import", share: "Shared", api: "API" }
+              return (
+                <DropdownMenuItem key={src} onSelect={(e) => { e.preventDefault(); onToggleFilter("source", src) }}>
+                  <CheckMark active={hasFilter(filters, "source", src)} />
+                  <span className="text-sm">{srcLabels[src]}</span>
+                </DropdownMenuItem>
+              )
+            })}
+          {(!sourceSearch || "no source".includes(sourceSearch.toLowerCase())) && (
+            <>
+              {!sourceSearch && <DropdownMenuSeparator />}
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("source", "_none") }}>
+                <CheckMark active={hasFilter(filters, "source", "_none")} />
+                <span className="text-sm text-muted-foreground">No source</span>
               </DropdownMenuItem>
-            )
-          })}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("source", "_none") }}>
-            <CheckMark active={hasFilter(filters, "source", "_none")} />
-            <span className="text-sm text-muted-foreground">No source</span>
-          </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuSubContent>
       </DropdownMenuSub>
 
@@ -441,27 +510,48 @@ export function FilterMenuItems({
             <ActiveBadge count={linksCount} />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48">
-            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "0") }}>
-              <CheckMark active={hasFilter(filters, "links", "0")} />
-              <span className="text-sm">Unlinked</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "0", "gt") }}>
-              <CheckMark active={hasFilter(filters, "links", "0", "gt")} />
-              <span className="text-sm">Has links</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "2", "gt") }}>
-              <CheckMark active={hasFilter(filters, "links", "2", "gt")} />
-              <span className="text-sm">3+ links</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "4", "gt") }}>
-              <CheckMark active={hasFilter(filters, "links", "4", "gt")} />
-              <span className="text-sm">5+ links</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "9", "gt") }}>
-              <CheckMark active={hasFilter(filters, "links", "9", "gt")} />
-              <span className="text-sm">10+ links</span>
-            </DropdownMenuItem>
+            <div className="px-2 py-1.5">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                value={linksSearch}
+                onChange={(e) => setLinksSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
+            {"unlinked".includes(linksSearch.toLowerCase()) && (
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "0") }}>
+                <CheckMark active={hasFilter(filters, "links", "0")} />
+                <span className="text-sm">Unlinked</span>
+              </DropdownMenuItem>
+            )}
+            {"has links".includes(linksSearch.toLowerCase()) && (
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "0", "gt") }}>
+                <CheckMark active={hasFilter(filters, "links", "0", "gt")} />
+                <span className="text-sm">Has links</span>
+              </DropdownMenuItem>
+            )}
+            {!linksSearch && <DropdownMenuSeparator />}
+            {"3+ links".includes(linksSearch.toLowerCase()) && (
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "2", "gt") }}>
+                <CheckMark active={hasFilter(filters, "links", "2", "gt")} />
+                <span className="text-sm">3+ links</span>
+              </DropdownMenuItem>
+            )}
+            {"5+ links".includes(linksSearch.toLowerCase()) && (
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "4", "gt") }}>
+                <CheckMark active={hasFilter(filters, "links", "4", "gt")} />
+                <span className="text-sm">5+ links</span>
+              </DropdownMenuItem>
+            )}
+            {"10+ links".includes(linksSearch.toLowerCase()) && (
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "9", "gt") }}>
+                <CheckMark active={hasFilter(filters, "links", "9", "gt")} />
+                <span className="text-sm">10+ links</span>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
       )}
@@ -474,40 +564,65 @@ export function FilterMenuItems({
           <ActiveBadge count={contentCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-52">
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("content", "empty") }}>
-            <CheckMark active={hasFilter(filters, "content", "empty")} />
-            <FileQuestion className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">Empty body</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("title", "empty") }}>
-            <CheckMark active={hasFilter(filters, "title", "empty")} />
-            <Type className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">Untitled</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("reads", "0") }}>
-            <CheckMark active={hasFilter(filters, "reads", "0")} />
-            <Eye className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">Unread</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>
-            Word Count
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "50", "lt") }}>
-            <CheckMark active={hasFilter(filters, "wordCount", "50", "lt")} />
-            <ALargeSmall className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">Short (&lt; 50 words)</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "199", "gt") }}>
-            <CheckMark active={hasFilter(filters, "wordCount", "199", "gt")} />
-            <ALargeSmall className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">Long (200+ words)</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "499", "gt") }}>
-            <CheckMark active={hasFilter(filters, "wordCount", "499", "gt")} />
-            <ALargeSmall className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">Very long (500+ words)</span>
-          </DropdownMenuItem>
+          <div className="px-2 py-1.5">
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              value={contentSearch}
+              onChange={(e) => setContentSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
+          {"empty body".includes(contentSearch.toLowerCase()) && (
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("content", "empty") }}>
+              <CheckMark active={hasFilter(filters, "content", "empty")} />
+              <FileQuestion className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Empty body</span>
+            </DropdownMenuItem>
+          )}
+          {"untitled".includes(contentSearch.toLowerCase()) && (
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("title", "empty") }}>
+              <CheckMark active={hasFilter(filters, "title", "empty")} />
+              <Type className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Untitled</span>
+            </DropdownMenuItem>
+          )}
+          {"unread".includes(contentSearch.toLowerCase()) && (
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("reads", "0") }}>
+              <CheckMark active={hasFilter(filters, "reads", "0")} />
+              <Eye className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Unread</span>
+            </DropdownMenuItem>
+          )}
+          {(!contentSearch || "word count short long".includes(contentSearch.toLowerCase())) && <DropdownMenuSeparator />}
+          {(!contentSearch || "word count".includes(contentSearch.toLowerCase())) && (
+            <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>
+              Word Count
+            </DropdownMenuItem>
+          )}
+          {"short 50 words".includes(contentSearch.toLowerCase()) && (
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "50", "lt") }}>
+              <CheckMark active={hasFilter(filters, "wordCount", "50", "lt")} />
+              <ALargeSmall className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Short (&lt; 50 words)</span>
+            </DropdownMenuItem>
+          )}
+          {"long 200 words".includes(contentSearch.toLowerCase()) && (
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "199", "gt") }}>
+              <CheckMark active={hasFilter(filters, "wordCount", "199", "gt")} />
+              <ALargeSmall className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Long (200+ words)</span>
+            </DropdownMenuItem>
+          )}
+          {"very long 500 words".includes(contentSearch.toLowerCase()) && (
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "499", "gt") }}>
+              <CheckMark active={hasFilter(filters, "wordCount", "499", "gt")} />
+              <ALargeSmall className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Very long (500+ words)</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuSubContent>
       </DropdownMenuSub>
 
@@ -586,12 +701,33 @@ interface FilterFieldContentProps {
 export function FilterFieldContent({ groupKey, filters, folders, tags, labels = [], onToggleFilter }: FilterFieldContentProps) {
   const [labelSearch, setLabelSearch] = useState("")
   const [tagSearch, setTagSearch] = useState("")
+  const [statusSearch, setStatusSearch] = useState("")
+  const [prioritySearch, setPrioritySearch] = useState("")
+  const [folderSearch, setFolderSearch] = useState("")
+  const [sourceSearch, setSourceSearch] = useState("")
+
+  const searchInput = (value: string, onChange: (v: string) => void) => (
+    <div className="px-2 py-1.5">
+      <input
+        type="text"
+        placeholder="Filter..."
+        className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      />
+    </div>
+  )
 
   switch (groupKey) {
     case "status":
       return (
         <>
-          {(["inbox", "capture", "permanent"] as NoteStatus[]).map((s) => (
+          {searchInput(statusSearch, setStatusSearch)}
+          {(["inbox", "capture", "permanent"] as NoteStatus[]).filter((s) =>
+            !statusSearch || s.toLowerCase().includes(statusSearch.toLowerCase())
+          ).map((s) => (
             <DropdownMenuItem key={s} onSelect={(e) => { e.preventDefault(); onToggleFilter("status", s) }}>
               <CheckMark active={hasFilter(filters, "status", s)} />
               <StatusBadge status={s} />
@@ -602,7 +738,12 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
     case "priority":
       return (
         <>
-          {(["urgent", "high", "medium", "low", "none"] as NotePriority[]).map((p) => (
+          {searchInput(prioritySearch, setPrioritySearch)}
+          {(["urgent", "high", "medium", "low", "none"] as NotePriority[]).filter((p) => {
+            if (!prioritySearch) return true
+            const label = p === "none" ? "no priority" : p
+            return label.toLowerCase().includes(prioritySearch.toLowerCase())
+          }).map((p) => (
             <DropdownMenuItem key={p} onSelect={(e) => { e.preventDefault(); onToggleFilter("priority", p) }}>
               <CheckMark active={hasFilter(filters, "priority", p)} />
               <PriorityBadge priority={p} />
@@ -614,12 +755,15 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
     case "folder":
       return (
         <>
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", "_none") }}>
-            <CheckMark active={hasFilter(filters, "folder", "_none")} />
-            <span className="text-sm text-muted-foreground">No folder</span>
-          </DropdownMenuItem>
-          {folders.length > 0 && <DropdownMenuSeparator />}
-          {folders.map((folder) => (
+          {searchInput(folderSearch, setFolderSearch)}
+          {!folderSearch && (
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", "_none") }}>
+              <CheckMark active={hasFilter(filters, "folder", "_none")} />
+              <span className="text-sm text-muted-foreground">No folder</span>
+            </DropdownMenuItem>
+          )}
+          {folders.length > 0 && !folderSearch && <DropdownMenuSeparator />}
+          {folders.filter((folder) => !folderSearch || folder.name.toLowerCase().includes(folderSearch.toLowerCase())).map((folder) => (
             <DropdownMenuItem key={folder.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", folder.id) }}>
               <CheckMark active={hasFilter(filters, "folder", folder.id)} />
               <span className="text-sm">{folder.name}</span>
@@ -639,19 +783,17 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
             <span className="text-sm">Has label</span>
           </DropdownMenuItem>
           {labels.length > 0 && <DropdownMenuSeparator />}
-          {labels.length >= 10 && (
-            <div className="px-2 py-1.5">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                value={labelSearch}
-                onChange={(e) => setLabelSearch(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              />
-            </div>
-          )}
+          <div className="px-2 py-1.5">
+            <input
+              type="text"
+              placeholder="Filter..."
+              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+              value={labelSearch}
+              onChange={(e) => setLabelSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
           {labels
             .filter((label) => !labelSearch || label.name.toLowerCase().includes(labelSearch.toLowerCase()))
             .map((label) => (
@@ -677,19 +819,17 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
             <span className="text-sm">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
-          {tags.length >= 10 && (
-            <div className="px-2 py-1.5">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                value={tagSearch}
-                onChange={(e) => setTagSearch(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              />
-            </div>
-          )}
+          <div className="px-2 py-1.5">
+            <input
+              type="text"
+              placeholder="Filter..."
+              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+              value={tagSearch}
+              onChange={(e) => setTagSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
           {tags
             .filter((tag) => !tagSearch || tag.name.toLowerCase().includes(tagSearch.toLowerCase()))
             .map((tag) => (
@@ -705,17 +845,25 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
       const srcLabels: Record<string, string> = { manual: "Manual", webclip: "Web clip", import: "Import", share: "Shared", api: "API" }
       return (
         <>
-          {(["manual", "webclip", "import", "share", "api"] as NonNullable<NoteSource>[]).map((src) => (
+          {searchInput(sourceSearch, setSourceSearch)}
+          {(["manual", "webclip", "import", "share", "api"] as NonNullable<NoteSource>[]).filter((src) => {
+            if (!sourceSearch) return true
+            return srcLabels[src].toLowerCase().includes(sourceSearch.toLowerCase())
+          }).map((src) => (
             <DropdownMenuItem key={src} onSelect={(e) => { e.preventDefault(); onToggleFilter("source", src) }}>
               <CheckMark active={hasFilter(filters, "source", src)} />
               <span className="text-sm">{srcLabels[src]}</span>
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("source", "_none") }}>
-            <CheckMark active={hasFilter(filters, "source", "_none")} />
-            <span className="text-sm text-muted-foreground">No source</span>
-          </DropdownMenuItem>
+          {(!sourceSearch || "no source".includes(sourceSearch.toLowerCase())) && (
+            <>
+              {!sourceSearch && <DropdownMenuSeparator />}
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("source", "_none") }}>
+                <CheckMark active={hasFilter(filters, "source", "_none")} />
+                <span className="text-sm text-muted-foreground">No source</span>
+              </DropdownMenuItem>
+            </>
+          )}
         </>
       )
     }

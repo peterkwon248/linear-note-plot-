@@ -26,7 +26,7 @@ export default function PreferencesPage() {
   const enrollAllPermanentSRS = usePlotStore((s) => s.enrollAllPermanentSRS)
 
   const unenrolledCount = useMemo(
-    () => notes.filter((n) => n.status === "permanent" && !n.archived && !srsStateByNoteId[n.id]).length,
+    () => notes.filter((n) => n.status === "permanent" && !n.trashed && !srsStateByNoteId[n.id]).length,
     [notes, srsStateByNoteId]
   )
 

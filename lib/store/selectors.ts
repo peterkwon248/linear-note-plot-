@@ -8,7 +8,7 @@ export function getFilteredNotes(state: PlotState): Note[] {
 
   let filtered = notes
 
-  const isActive = (n: Note) => !n.archived && !n.trashed
+  const isActive = (n: Note) => !n.trashed
 
   switch (activeView.type) {
     case "inbox":
@@ -21,9 +21,6 @@ export function getFilteredNotes(state: PlotState): Note[] {
       filtered = filtered.filter(
         (n) => n.folderId === activeView.folderId && isActive(n)
       )
-      break
-    case "archive":
-      filtered = filtered.filter((n) => n.archived && !n.trashed)
       break
     case "pinned":
       filtered = filtered.filter((n) => n.pinned && isActive(n))
@@ -54,7 +51,7 @@ export function getFilteredNotes(state: PlotState): Note[] {
 /** Route-based filter (used by NoteList via filter prop) */
 export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuery = ""): Note[] {
   let filtered = notes
-  const isActive = (n: Note) => !n.archived && !n.trashed
+  const isActive = (n: Note) => !n.trashed
 
   switch (filter.type) {
     case "inbox":
@@ -62,9 +59,6 @@ export function filterNotesByRoute(notes: Note[], filter: NoteFilter, searchQuer
       break
     case "all":
       filtered = filtered.filter(isActive)
-      break
-    case "archive":
-      filtered = filtered.filter((n) => n.archived && !n.trashed)
       break
     case "trash":
       filtered = filtered.filter((n) => n.trashed)
@@ -116,8 +110,6 @@ export function getFilterTitle(filter: NoteFilter, state: Pick<PlotState, "folde
       return "Inbox"
     case "all":
       return "All Notes"
-    case "archive":
-      return "Archive"
     case "trash":
       return "Trash"
     case "pinned":
@@ -151,8 +143,6 @@ export function getViewTitle(view: ActiveView, state: PlotState): string {
       const folder = state.folders.find((f) => f.id === view.folderId)
       return folder?.name ?? "Folder"
     }
-    case "archive":
-      return "Archive"
     case "templates":
       return "Templates"
     case "insights":

@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import {
   Pin,
-  Archive,
   Trash2,
   MoreHorizontal,
   Copy,
@@ -56,7 +55,6 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
   const togglePin = usePlotStore((s) => s.togglePin)
-  const toggleArchive = usePlotStore((s) => s.toggleArchive)
   const deleteNote = usePlotStore((s) => s.deleteNote)
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
@@ -168,17 +166,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
             <TooltipContent>{note.pinned ? "Unpin" : "Pin"}</TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => toggleArchive(note.id)}
-                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary"
-              >
-                <Archive className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Archive</TooltipContent>
-          </Tooltip>
+
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

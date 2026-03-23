@@ -105,8 +105,6 @@ export const EVENT_HEX = {
   updated:             "#5e6ad2",
   opened:              "#6b7280",
   promoted:            "#10b981",
-  archived:            "#f59e0b",
-  unarchived:          "#f59e0b",
   trashed:             "#ef4444",
   untrashed:           "#ef4444",
   triage_keep:         "#45d483",

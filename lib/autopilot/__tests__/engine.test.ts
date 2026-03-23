@@ -19,7 +19,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     priority: "none",
     reads: 0,
     pinned: false,
-    archived: false,
     trashed: false,
     createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
     updatedAt: new Date().toISOString(),
@@ -31,7 +30,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     promotedAt: null,
     lastTouchedAt: new Date().toISOString(),
     snoozeCount: 0,
-    archivedAt: null,
     trashedAt: null,
     parentNoteId: null,
     isWiki: false,
