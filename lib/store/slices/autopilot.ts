@@ -18,8 +18,6 @@ function applyAction(note: Note, action: AutopilotAction): Partial<Note> {
       return { labelId: action.value ?? null, updatedAt: now() }
     case "set_triage":
       return { triageStatus: action.value as TriageStatus, updatedAt: now() }
-    case "archive":
-      return { trashed: true, trashedAt: now(), updatedAt: now() }
     case "pin":
       return { pinned: true, updatedAt: now() }
     case "add_tag":
@@ -165,9 +163,6 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
             break
           case "set_triage":
             reverseUpdates.triageStatus = "untriaged"
-            break
-          case "archive":
-            reverseUpdates = { ...reverseUpdates, trashed: false, trashedAt: null }
             break
           case "pin":
             reverseUpdates.pinned = false
