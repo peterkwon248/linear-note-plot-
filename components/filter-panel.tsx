@@ -83,9 +83,11 @@ export function FilterPanel({
   const [openCat, setOpenCat] = useState<string | null>(null)
   const [subPanelTop, setSubPanelTop] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
+  const [subSearch, setSubSearch] = useState("")
   const containerRef = useRef<HTMLDivElement>(null)
 
   const handleCatHover = useCallback((catKey: string, e: React.MouseEvent<HTMLButtonElement>) => {
+    if (catKey !== openCat) setSubSearch("")
     setOpenCat(catKey)
     if (containerRef.current) {
       const containerRect = containerRef.current.getBoundingClientRect()
@@ -93,7 +95,8 @@ export function FilterPanel({
       const offset = rowRect.top - containerRect.top
       setSubPanelTop(offset)
     }
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openCat])
 
   const q = searchQuery.toLowerCase()
 
@@ -123,7 +126,20 @@ export function FilterPanel({
           className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-white/[0.08] bg-popover rounded-[10px] py-1 shrink-0 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.3),0_16px_40px_rgba(0,0,0,0.35)] z-10 -mr-px"
           style={{ top: subPanelTop }}
         >
-          {activeCategory.values.map((val) => {
+          <div className="px-2 pb-1">
+            <input
+              type="text"
+              placeholder="Filter..."
+              value={subSearch}
+              onChange={(e) => setSubSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+            />
+          </div>
+          {activeCategory.values.filter((val) =>
+            !subSearch || val.label.toLowerCase().includes(subSearch.toLowerCase())
+          ).map((val) => {
             const isActive = activeFilters.some(
               (f) => f.field === activeCategory.key && f.value === val.key
             )

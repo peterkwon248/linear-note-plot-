@@ -73,7 +73,7 @@ export function useRelationSuggestions() {
     // Build title→noteId lookup (lowercased, active notes only)
     const titleToNote = new Map<string, string>()
     for (const note of notes) {
-      if (note.archived || note.trashed) continue
+      if (note.trashed) continue
       if (note.title.trim()) {
         titleToNote.set(note.title.toLowerCase(), note.id)
       }

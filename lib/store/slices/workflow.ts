@@ -35,7 +35,7 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === id
-            ? { ...n, triageStatus: "trashed" as const, trashed: true, trashedAt: now(), archivedAt: now(), lastTouchedAt: now(), updatedAt: now() }
+            ? { ...n, triageStatus: "trashed" as const, trashed: true, trashedAt: now(), lastTouchedAt: now(), updatedAt: now() }
             : n
         ),
       }))
@@ -151,7 +151,7 @@ export function createWorkflowSlice(set: Set, get: Get, appendEvent: AppendEvent
     enrollAllPermanentSRS: () => {
       const state = get()
       const toEnroll = state.notes.filter(
-        (n: Note) => n.status === "permanent" && !n.archived && !state.srsStateByNoteId[n.id]
+        (n: Note) => n.status === "permanent" && !n.trashed && !state.srsStateByNoteId[n.id]
       )
       if (toEnroll.length === 0) return 0
       const timestamp = now()

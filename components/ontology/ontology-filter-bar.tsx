@@ -29,16 +29,29 @@ export function OntologyFilterBar({
 }: OntologyFilterBarProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [tagSearch, setTagSearch] = useState("")
+  const [labelSearch, setLabelSearch] = useState("")
+  const [statusSearch, setStatusSearch] = useState("")
+  const [relationsSearch, setRelationsSearch] = useState("")
+
+  const closeDropdown = () => {
+    setOpenDropdown(null)
+    setTagSearch("")
+    setLabelSearch("")
+    setStatusSearch("")
+    setRelationsSearch("")
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpenDropdown(null)
+        closeDropdown()
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleTagToggle = (tagId: string) => {
@@ -51,11 +64,13 @@ export function OntologyFilterBar({
   const handleLabelSelect = (labelId: string | null) => {
     onChange({ ...filters, labelId })
     setOpenDropdown(null)
+    setLabelSearch("")
   }
 
   const handleStatusSelect = (status: "inbox" | "capture" | "permanent" | "all") => {
     onChange({ ...filters, status })
     setOpenDropdown(null)
+    setStatusSearch("")
   }
 
   const handleRelationTypeToggle = (type: RelationType) => {
@@ -104,7 +119,7 @@ export function OntologyFilterBar({
       {/* Tags Dropdown */}
       <div className="relative">
         <button
-          onClick={() => setOpenDropdown(openDropdown === "tags" ? null : "tags")}
+          onClick={() => { if (openDropdown === "tags") { closeDropdown() } else { setOpenDropdown("tags") } }}
           className="flex items-center gap-1 text-note px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedTag}
@@ -115,20 +130,35 @@ export function OntologyFilterBar({
             {tags.length === 0 ? (
               <div className="px-2 py-1 text-note text-muted-foreground">No tags</div>
             ) : (
-              tags.map((tag) => (
-                <label
-                  key={tag.id}
-                  className="flex items-center gap-2 px-2 py-1 text-note hover:bg-secondary rounded cursor-pointer"
-                >
+              <>
+                <div className="px-1 pb-1">
                   <input
-                    type="checkbox"
-                    checked={filters.tagIds.includes(tag.id)}
-                    onChange={() => handleTagToggle(tag.id)}
-                    className="w-3 h-3"
+                    type="text"
+                    placeholder="Filter..."
+                    className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+                    value={tagSearch}
+                    onChange={(e) => setTagSearch(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
                   />
-                  <span>{tag.name}</span>
-                </label>
-              ))
+                </div>
+                {tags
+                  .filter((tag) => !tagSearch || tag.name.toLowerCase().includes(tagSearch.toLowerCase()))
+                  .map((tag) => (
+                    <label
+                      key={tag.id}
+                      className="flex items-center gap-2 px-2 py-1 text-note hover:bg-secondary rounded cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.tagIds.includes(tag.id)}
+                        onChange={() => handleTagToggle(tag.id)}
+                        className="w-3 h-3"
+                      />
+                      <span>{tag.name}</span>
+                    </label>
+                  ))}
+              </>
             )}
           </div>
         )}
@@ -137,33 +167,48 @@ export function OntologyFilterBar({
       {/* Label Dropdown */}
       <div className="relative">
         <button
-          onClick={() => setOpenDropdown(openDropdown === "label" ? null : "label")}
+          onClick={() => { if (openDropdown === "label") { closeDropdown() } else { setOpenDropdown("label") } }}
           className="flex items-center gap-1 text-note px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedLabel}
           <ChevronDown className="w-3 h-3" />
         </button>
         {openDropdown === "label" && (
-          <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max">
-            <button
-              onClick={() => handleLabelSelect(null)}
-              className={`block w-full text-left px-2 py-1 text-note rounded hover:bg-secondary ${
-                filters.labelId === null ? "bg-secondary" : ""
-              }`}
-            >
-              All
-            </button>
-            {labels.map((label) => (
+          <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max max-h-80 overflow-y-auto">
+            <div className="px-1 pb-1">
+              <input
+                type="text"
+                placeholder="Filter..."
+                className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+                value={labelSearch}
+                onChange={(e) => setLabelSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
+            {!labelSearch && (
               <button
-                key={label.id}
-                onClick={() => handleLabelSelect(label.id)}
+                onClick={() => handleLabelSelect(null)}
                 className={`block w-full text-left px-2 py-1 text-note rounded hover:bg-secondary ${
-                  filters.labelId === label.id ? "bg-secondary" : ""
+                  filters.labelId === null ? "bg-secondary" : ""
                 }`}
               >
-                {label.name}
+                All
               </button>
-            ))}
+            )}
+            {labels
+              .filter((label) => !labelSearch || label.name.toLowerCase().includes(labelSearch.toLowerCase()))
+              .map((label) => (
+                <button
+                  key={label.id}
+                  onClick={() => handleLabelSelect(label.id)}
+                  className={`block w-full text-left px-2 py-1 text-note rounded hover:bg-secondary ${
+                    filters.labelId === label.id ? "bg-secondary" : ""
+                  }`}
+                >
+                  {label.name}
+                </button>
+              ))}
           </div>
         )}
       </div>
@@ -171,7 +216,7 @@ export function OntologyFilterBar({
       {/* Status Dropdown */}
       <div className="relative">
         <button
-          onClick={() => setOpenDropdown(openDropdown === "status" ? null : "status")}
+          onClick={() => { if (openDropdown === "status") { closeDropdown() } else { setOpenDropdown("status") } }}
           className="flex items-center gap-1 text-note px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedStatus}
@@ -179,17 +224,34 @@ export function OntologyFilterBar({
         </button>
         {openDropdown === "status" && (
           <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max">
-            {(["all", "inbox", "capture", "permanent"] as const).map((status) => (
-              <button
-                key={status}
-                onClick={() => handleStatusSelect(status)}
-                className={`block w-full text-left px-2 py-1 text-note rounded hover:bg-secondary ${
-                  filters.status === status ? "bg-secondary" : ""
-                }`}
-              >
-                {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
+            <div className="px-1 pb-1">
+              <input
+                type="text"
+                placeholder="Filter..."
+                className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+                value={statusSearch}
+                onChange={(e) => setStatusSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
+            {(["all", "inbox", "capture", "permanent"] as const)
+              .filter((status) => {
+                if (!statusSearch) return true
+                const label = status === "all" ? "all" : status
+                return label.toLowerCase().includes(statusSearch.toLowerCase())
+              })
+              .map((status) => (
+                <button
+                  key={status}
+                  onClick={() => handleStatusSelect(status)}
+                  className={`block w-full text-left px-2 py-1 text-note rounded hover:bg-secondary ${
+                    filters.status === status ? "bg-secondary" : ""
+                  }`}
+                >
+                  {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
           </div>
         )}
       </div>
@@ -200,7 +262,7 @@ export function OntologyFilterBar({
       {/* Relations Dropdown */}
       <div className="relative">
         <button
-          onClick={() => setOpenDropdown(openDropdown === "relations" ? null : "relations")}
+          onClick={() => { if (openDropdown === "relations") { closeDropdown() } else { setOpenDropdown("relations") } }}
           className="flex items-center gap-1 text-note px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedRelations}
@@ -208,31 +270,49 @@ export function OntologyFilterBar({
         </button>
         {openDropdown === "relations" && (
           <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max">
-            {RELATION_TYPES.map((type) => {
-              const isActive =
-                filters.relationTypes === "all" ||
-                (filters.relationTypes as RelationType[]).includes(type)
-              const config = RELATION_TYPE_CONFIG[type]
-              const count = relationTypeCounts.get(type) ?? 0
+            <div className="px-1 pb-1">
+              <input
+                type="text"
+                placeholder="Filter..."
+                className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+                value={relationsSearch}
+                onChange={(e) => setRelationsSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </div>
+            {RELATION_TYPES
+              .filter((type) => {
+                if (!relationsSearch) return true
+                const config = RELATION_TYPE_CONFIG[type]
+                return config.label.toLowerCase().includes(relationsSearch.toLowerCase()) ||
+                  type.toLowerCase().includes(relationsSearch.toLowerCase())
+              })
+              .map((type) => {
+                const isActive =
+                  filters.relationTypes === "all" ||
+                  (filters.relationTypes as RelationType[]).includes(type)
+                const config = RELATION_TYPE_CONFIG[type]
+                const count = relationTypeCounts.get(type) ?? 0
 
-              return (
-                <button
-                  key={type}
-                  onClick={() => handleRelationTypeToggle(type)}
-                  className="flex items-center gap-2 w-full text-left px-2 py-1 text-note rounded hover:bg-secondary cursor-pointer"
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{
-                      backgroundColor: isActive ? config.color : "transparent",
-                      border: `1.5px solid ${config.color}`,
-                    }}
-                  />
-                  <span className={isActive ? "" : "text-muted-foreground"}>{config.label}</span>
-                  <span className="ml-auto text-2xs text-muted-foreground/50">{count}</span>
-                </button>
-              )
-            })}
+                return (
+                  <button
+                    key={type}
+                    onClick={() => handleRelationTypeToggle(type)}
+                    className="flex items-center gap-2 w-full text-left px-2 py-1 text-note rounded hover:bg-secondary cursor-pointer"
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{
+                        backgroundColor: isActive ? config.color : "transparent",
+                        border: `1.5px solid ${config.color}`,
+                      }}
+                    />
+                    <span className={isActive ? "" : "text-muted-foreground"}>{config.label}</span>
+                    <span className="ml-auto text-2xs text-muted-foreground/50">{count}</span>
+                  </button>
+                )
+              })}
           </div>
         )}
       </div>

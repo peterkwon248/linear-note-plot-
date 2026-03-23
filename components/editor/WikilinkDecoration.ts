@@ -104,7 +104,6 @@ export const WikilinkDecorationExtension = Extension.create({
             const note = store.notes.find(
               (n) =>
                 n.title.toLowerCase() === title.toLowerCase() &&
-                !n.archived &&
                 !n.trashed
             )
             if (note) {
@@ -115,7 +114,6 @@ export const WikilinkDecorationExtension = Extension.create({
 
             const aliasNote = store.notes.find(
               (n) =>
-                !n.archived &&
                 !n.trashed &&
                 n.aliases?.some((a) => a.toLowerCase() === title.toLowerCase())
             )
@@ -141,7 +139,6 @@ export const WikilinkDecorationExtension = Extension.create({
                 const store = usePlotStore.getState()
                 const note = store.notes.find(
                   (n) =>
-                    !n.archived &&
                     !n.trashed &&
                     (n.title.toLowerCase() === title.toLowerCase() ||
                       n.aliases?.some((a) => a.toLowerCase() === title.toLowerCase()))
@@ -175,7 +172,7 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
   const notes = usePlotStore.getState().notes
   const titleSet = new Set<string>()
   for (const note of notes) {
-    if (note.archived || note.trashed) continue
+    if (note.trashed) continue
     if (note.title.trim()) titleSet.add(note.title.toLowerCase())
     if (note.aliases) {
       for (const alias of note.aliases) {

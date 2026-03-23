@@ -98,6 +98,7 @@ export function WikiView() {
     showEmptyGroups: false,
     orderPermanentByRecency: false,
     showThread: false,
+    toggles: {},
   })
   const handleWikiFilterToggle = (rule: FilterRule) => {
     setWikiFilters((prev) => {
@@ -278,11 +279,11 @@ export function WikiView() {
     [filteredWikiNotes]
   )
 
-  // Non-trashed, non-archived notes available to import
+  // Non-trashed notes available to import
   const importableNotes = useMemo(() => {
     const q = importQuery.toLowerCase().trim()
     return notes
-      .filter((n) => !n.trashed && !n.archived)
+      .filter((n) => !n.trashed)
       .filter((n) =>
         q.length === 0
           ? true
@@ -725,6 +726,13 @@ export function WikiView() {
             viewState={wikiViewState}
             onViewStateChange={(patch) =>
               setWikiViewState((prev) => ({ ...prev, ...patch }))
+            }
+            toggleStates={wikiViewState.toggles}
+            onToggleChange={(key, value) =>
+              setWikiViewState((prev) => ({
+                ...prev,
+                toggles: { ...prev.toggles, [key]: value },
+              }))
             }
           />
         }

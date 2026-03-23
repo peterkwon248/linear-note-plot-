@@ -19,7 +19,7 @@ function applyAction(note: Note, action: AutopilotAction): Partial<Note> {
     case "set_triage":
       return { triageStatus: action.value as TriageStatus, updatedAt: now() }
     case "archive":
-      return { archived: true, archivedAt: now(), updatedAt: now() }
+      return { trashed: true, trashedAt: now(), updatedAt: now() }
     case "pin":
       return { pinned: true, updatedAt: now() }
     case "add_tag":
@@ -83,7 +83,7 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
       if (!state.autopilotEnabled) return null
 
       const note = state.notes.find((n: Note) => n.id === noteId)
-      if (!note || note.trashed || note.archived) return null
+      if (!note || note.trashed) return null
 
       const rules = state.autopilotRules as AutopilotRule[]
       const result = runAutopilot(note, rules, "on_save", 0)
@@ -167,7 +167,7 @@ export function createAutopilotSlice(set: Set, get: Get, appendEvent: AppendEven
             reverseUpdates.triageStatus = "untriaged"
             break
           case "archive":
-            reverseUpdates = { ...reverseUpdates, archived: false, archivedAt: null }
+            reverseUpdates = { ...reverseUpdates, trashed: false, trashedAt: null }
             break
           case "pin":
             reverseUpdates.pinned = false

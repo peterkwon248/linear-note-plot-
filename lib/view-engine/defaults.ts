@@ -14,6 +14,7 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   showEmptyGroups: false,
   orderPermanentByRecency: false,
   showThread: false,
+  toggles: {},
 }
 
 /* ── Context-specific overrides ────────────────────────── */
@@ -23,7 +24,6 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   capture:   { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
   permanent: { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
   review:    { viewMode: "list", sortField: "updatedAt", groupBy: "status" },
-  archive:   { viewMode: "list", sortField: "updatedAt" },
   folder:    { viewMode: "list", sortField: "updatedAt" },
   tag:       { viewMode: "list", sortField: "updatedAt" },
   label:     { viewMode: "list", sortField: "updatedAt" },
@@ -92,6 +92,9 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
     showEmptyGroups: typeof merged.showEmptyGroups === "boolean" ? merged.showEmptyGroups : false,
     orderPermanentByRecency: typeof merged.orderPermanentByRecency === "boolean" ? merged.orderPermanentByRecency : false,
     showThread: typeof merged.showThread === "boolean" ? merged.showThread : false,
+    toggles: (merged.toggles && typeof merged.toggles === "object" && !Array.isArray(merged.toggles))
+      ? merged.toggles as Record<string, boolean>
+      : {},
   }
 }
 

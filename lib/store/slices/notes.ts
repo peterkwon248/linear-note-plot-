@@ -24,7 +24,6 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         priority: partial?.priority ?? "none",
         reads: 0,
         pinned: partial?.pinned ?? false,
-        archived: false,
         trashed: false,
         createdAt: now(),
         updatedAt: now(),
@@ -196,12 +195,12 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
               lastTouchedAt: now(),
             }
           }
-          // ── 5. Archive source notes ──
+          // ── 5. Trash source notes after merge ──
           if (sourceIdSet.has(n.id)) {
             return {
               ...n,
-              archived: true,
-              archivedAt: now(),
+              trashed: true,
+              trashedAt: now(),
               content: `> *This note was merged into [[${target.title || "Untitled"}]]*\n\n${n.content}`,
               preview: extractPreview(`> *This note was merged into [[${target.title || "Untitled"}]]*\n\n${n.content}`),
               updatedAt: now(),
@@ -245,7 +244,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       // ── 9. Events ──
       appendEvent(targetId, "updated", { type: "merge", sourceIds })
       for (const source of sources) {
-        appendEvent(source.id, "archived", { type: "merged_into", targetId })
+        appendEvent(source.id, "trashed", { type: "merged_into", targetId })
       }
     },
 
@@ -255,17 +254,6 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
           n.id === id ? { ...n, pinned: !n.pinned, updatedAt: now(), lastTouchedAt: now() } : n
         ),
       }))
-    },
-
-    toggleArchive: (id: string) => {
-      const note = get().notes.find((n: Note) => n.id === id)
-      const wasArchived = note?.archived ?? false
-      set((state: any) => ({
-        notes: state.notes.map((n: Note) =>
-          n.id === id ? { ...n, archived: !n.archived, updatedAt: now(), lastTouchedAt: now() } : n
-        ),
-      }))
-      appendEvent(id, wasArchived ? "unarchived" : "archived")
     },
 
     toggleTrash: (id: string) => {
@@ -305,7 +293,6 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         priority: "none",
         reads: 0,
         pinned: false,
-        archived: false,
         trashed: false,
         createdAt: now(),
         updatedAt: now(),
@@ -366,7 +353,6 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         priority: "none",
         reads: 0,
         pinned: false,
-        archived: false,
         trashed: false,
         createdAt: now(),
         updatedAt: now(),

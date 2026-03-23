@@ -50,7 +50,7 @@ export function useAutopilotNudges(): void {
     const timer = setTimeout(() => {
       // Inbox nudge
       const inboxCount = notes.filter(
-        (n) => n.status === "inbox" && !n.archived && !n.trashed
+        (n) => n.status === "inbox" && !n.trashed
       ).length
 
       if (inboxCount > 0 && !isOnCooldown("inbox-waiting")) {

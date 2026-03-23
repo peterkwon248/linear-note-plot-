@@ -1,5 +1,5 @@
 import {
-  FilePlus, Pencil, Eye, ArrowUpCircle, Archive, Trash2,
+  FilePlus, Pencil, Eye, ArrowUpCircle, Trash2,
   Check, Clock, Tag, Brain, Sparkles, Link2, FileText, Paperclip, BookOpen,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -17,8 +17,6 @@ export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
   updated: { icon: Pencil, verb: "Edited", color: EVENT_HEX.updated },
   opened: { icon: Eye, verb: "Opened", color: EVENT_HEX.opened },
   promoted: { icon: ArrowUpCircle, verb: "Promoted", color: EVENT_HEX.promoted },
-  archived: { icon: Archive, verb: "Archived", color: EVENT_HEX.archived },
-  unarchived: { icon: Archive, verb: "Unarchived", color: EVENT_HEX.unarchived },
   trashed: { icon: Trash2, verb: "Trashed", color: EVENT_HEX.trashed },
   untrashed: { icon: Trash2, verb: "Restored", color: EVENT_HEX.untrashed },
   triage_keep: { icon: Check, verb: "Kept", color: EVENT_HEX.triage_keep },
@@ -48,7 +46,7 @@ export const EVENT_TYPE_GROUPS: { label: string; types: NoteEventType[] }[] = [
   { label: "Created", types: ["created"] },
   { label: "Edited", types: ["updated"] },
   { label: "Opened", types: ["opened"] },
-  { label: "Status", types: ["promoted", "archived", "unarchived", "trashed", "untrashed"] },
+  { label: "Status", types: ["promoted", "trashed", "untrashed"] },
   { label: "Triage", types: ["triage_keep", "triage_snooze", "triage_trash"] },
   { label: "Links", types: ["link_added", "link_removed", "relation_added", "relation_removed", "relation_type_changed"] },
   { label: "Review", types: ["srs_reviewed"] },

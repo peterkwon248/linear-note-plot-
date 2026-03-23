@@ -515,19 +515,19 @@ export function NotesBoard({
   const notesFilterCategories = useMemo(() => {
     return NOTES_VIEW_CONFIG.filterCategories.map(cat => {
       if (cat.key === "folder") {
-        return { ...cat, values: folders.map(f => ({ key: f.id, label: f.name, count: notes.filter(n => !n.trashed && !n.archived && n.folderId === f.id).length })) }
+        return { ...cat, values: folders.map(f => ({ key: f.id, label: f.name, count: notes.filter(n => !n.trashed && n.folderId === f.id).length })) }
       }
       if (cat.key === "label") {
-        return { ...cat, values: labels.filter(l => !l.trashed).map(l => ({ key: l.id, label: l.name, color: l.color, count: notes.filter(n => !n.trashed && !n.archived && n.labelId === l.id).length })) }
+        return { ...cat, values: labels.filter(l => !l.trashed).map(l => ({ key: l.id, label: l.name, color: l.color, count: notes.filter(n => !n.trashed && n.labelId === l.id).length })) }
       }
       if (cat.key === "tags") {
-        return { ...cat, values: tags.filter(t => !t.trashed).map(t => ({ key: t.id, label: t.name, count: notes.filter(n => !n.trashed && !n.archived && n.tags?.includes(t.id)).length })) }
+        return { ...cat, values: tags.filter(t => !t.trashed).map(t => ({ key: t.id, label: t.name, count: notes.filter(n => !n.trashed && n.tags?.includes(t.id)).length })) }
       }
       if (cat.key === "status") {
-        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && !n.archived && n.status === v.key).length })) }
+        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && n.status === v.key).length })) }
       }
       if (cat.key === "priority") {
-        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && !n.archived && n.priority === v.key).length })) }
+        return { ...cat, values: cat.values.map(v => ({ ...v, count: notes.filter(n => !n.trashed && n.priority === v.key).length })) }
       }
       return cat
     })
@@ -687,6 +687,10 @@ export function NotesBoard({
             viewState={viewState}
             onViewStateChange={(patch) => updateViewState(patch)}
             showViewMode
+            toggleStates={viewState.toggles ?? {}}
+            onToggleChange={(key, value) =>
+              updateViewState({ toggles: { ...(viewState.toggles ?? {}), [key]: value } })
+            }
           />
         }
       >

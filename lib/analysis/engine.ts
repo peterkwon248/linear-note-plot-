@@ -17,7 +17,7 @@ export function runAnalysis(
   const now = Date.now()
 
   const activeNotes = notes.filter(
-    (n) => !n.archived && !n.trashed && n.triageStatus !== "trashed",
+    (n) => !n.trashed && n.triageStatus !== "trashed",
   )
 
   const ctx: RuleContext = {

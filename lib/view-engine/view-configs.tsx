@@ -122,7 +122,6 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { value: "label", label: "Label" },
     ],
     toggles: [
-      { key: "showArchived", label: "Show archived", icon: ArchiveIcon },
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
       { key: "compact", label: "Compact mode", icon: SortIcon },
       { key: "showCardPreview", label: "Show card preview", icon: EyeIcon },

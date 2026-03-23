@@ -23,7 +23,7 @@ export function useAutopilotRunner() {
           case "set_priority": return `priority: ${a.value}`
           case "set_label": return "label assigned"
           case "set_triage": return `triage: ${a.value}`
-          case "archive": return "archived"
+          case "archive": return "trashed"
           case "pin": return "pinned"
           case "add_tag": return "tag added"
           case "remove_tag": return "tag removed"

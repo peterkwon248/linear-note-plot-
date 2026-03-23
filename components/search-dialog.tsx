@@ -169,9 +169,9 @@ export function SearchDialog() {
 
   // ---------- Links Mode Data ----------
 
-  // Filtered note pool (non-archived, non-trashed)
+  // Filtered note pool (non-trashed)
   const searchableNotes = useMemo(
-    () => notes.filter((n) => !n.archived && !n.trashed && n.triageStatus !== "trashed"),
+    () => notes.filter((n) => !n.trashed && n.triageStatus !== "trashed"),
     [notes],
   )
 

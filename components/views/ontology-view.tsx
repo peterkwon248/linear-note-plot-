@@ -28,7 +28,7 @@ const DEFAULT_FILTERS: OntologyFilters = {
 
 function applyFilters(notes: Note[], filters: OntologyFilters): Note[] {
   return notes.filter((n) => {
-    if (n.trashed || n.archived) return false
+    if (n.trashed) return false
     if (filters.status !== "all" && n.status !== filters.status) return false
     if (filters.labelId && n.labelId !== filters.labelId) return false
     if (filters.tagIds.length > 0 && !filters.tagIds.some((t) => n.tags.includes(t))) return false
@@ -43,6 +43,7 @@ export function OntologyView() {
   const [searchQuery, setSearchQuery] = useState("")
   const [graphFilters, setGraphFilters] = useState<FilterRule[]>([])
   const [showDistribution, setShowDistribution] = useState(false)
+  const [graphToggles, setGraphToggles] = useState<Record<string, boolean>>({})
 
   const handleGraphFilterToggle = (rule: FilterRule) => {
     setGraphFilters(prev => {
@@ -246,6 +247,10 @@ export function OntologyView() {
             config={GRAPH_VIEW_CONFIG.displayConfig}
             viewState={DEFAULT_VIEW_STATE}
             onViewStateChange={() => {}}
+            toggleStates={graphToggles}
+            onToggleChange={(key, value) =>
+              setGraphToggles((prev) => ({ ...prev, [key]: value }))
+            }
           />
         }
         showDetailPanel

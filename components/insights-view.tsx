@@ -141,7 +141,7 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
 /* ── LifecycleStats ───────────────────────────────────── */
 
 function LifecycleStats({ notes }: { notes: any[] }) {
-  const active = notes.filter((n) => !n.trashedAt && !n.archivedAt)
+  const active = notes.filter((n) => !n.trashedAt)
   const inbox = active.filter((n) => n.status === "inbox").length
   const capture = active.filter((n) => n.status === "capture").length
   const permanent = active.filter((n) => n.status === "permanent").length
@@ -261,6 +261,7 @@ export function InsightsView() {
   const noteEvents = usePlotStore((s) => s.noteEvents)
   const srsMap = usePlotStore((s) => s.srsStateByNoteId)
   const backlinks = useBacklinksIndex()
+  const [insightsToggles, setInsightsToggles] = useState<Record<string, boolean>>({})
 
   // Activity stats
   const activityStats = useMemo(
@@ -299,6 +300,10 @@ export function InsightsView() {
             config={INSIGHTS_VIEW_CONFIG.displayConfig}
             viewState={DEFAULT_VIEW_STATE}
             onViewStateChange={() => {}}
+            toggleStates={insightsToggles}
+            onToggleChange={(key, value) =>
+              setInsightsToggles((prev) => ({ ...prev, [key]: value }))
+            }
           />
         }
       />

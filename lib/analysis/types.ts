@@ -5,7 +5,7 @@ export type AnalysisSeverity = "info" | "warning" | "critical"
 
 /** All data a rule might need — built once, shared across rules */
 export interface RuleContext {
-  notes: Note[] // active notes (non-trashed, non-archived)
+  notes: Note[] // active notes (non-trashed)
   allNotes: Note[] // truly all notes
   srsMap: Record<string, SRSState>
   backlinks: Map<string, number> // noteId → inbound link count

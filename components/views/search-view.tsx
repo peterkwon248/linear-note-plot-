@@ -82,7 +82,7 @@ export function SearchView() {
 
   // Searchable notes (exclude archived / trashed)
   const searchableNotes = useMemo(
-    () => notes.filter((n) => !n.archived && !n.trashed && n.triageStatus !== "trashed"),
+    () => notes.filter((n) => !n.trashed && n.triageStatus !== "trashed"),
     [notes],
   )
 
@@ -192,7 +192,7 @@ export function SearchView() {
   const tagNoteCounts = useMemo(() => {
     const counts = new Map<string, number>()
     for (const note of notes) {
-      if (note.trashed || note.archived) continue
+      if (note.trashed) continue
       for (const tagName of note.tags ?? []) {
         counts.set(tagName, (counts.get(tagName) ?? 0) + 1)
       }

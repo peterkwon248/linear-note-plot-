@@ -163,7 +163,7 @@ export function ViewHeader({
     if (!search.trim()) return []
     const q = search.toLowerCase().trim()
     return notes
-      .filter((n) => !n.archived && !n.trashed && n.triageStatus !== "trashed")
+      .filter((n) => !n.trashed && n.triageStatus !== "trashed")
       .filter((n) => (n.title || "").toLowerCase().includes(q))
       .slice(0, 6)
   }, [notes, search])

@@ -39,8 +39,8 @@ export const DEFAULT_AUTOPILOT_RULES: AutopilotRule[] = [
   },
   {
     id: "rule-auto-archive-stale",
-    name: "오래된 Permanent 노트 자동 아카이브",
-    description: "60일 이상 안 열린 Permanent 노트를 자동 아카이브",
+    name: "오래된 Permanent 노트 자동 정리",
+    description: "60일 이상 안 열린 Permanent 노트를 자동으로 trash로 이동",
     enabled: false,  // disabled by default — opt-in
     trigger: "on_interval",
     conditions: [

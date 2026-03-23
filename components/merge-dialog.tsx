@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Merge, Archive } from "lucide-react"
+import { Merge, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import type { Note } from "@/lib/types"
 
@@ -77,7 +77,7 @@ export function MergeDialog({
     openNote(resolvedTarget)
     toast.success(
       `Merged ${sourceIds.length} note${sourceIds.length > 1 ? "s" : ""} into "${targetLabel}"`,
-      { description: "Source notes have been archived." }
+      { description: "Source notes have been trashed." }
     )
     onComplete?.(resolvedTarget)
   }, [resolvedTarget, noteIds, mergeNotes, onOpenChange, openNote, targetLabel, onComplete])
@@ -93,7 +93,7 @@ export function MergeDialog({
             Merge Notes
           </DialogTitle>
           <DialogDescription className="text-note">
-            Select the target note. {sourceCount > 0 && `${sourceCount} source note${sourceCount > 1 ? "s" : ""} will be archived.`}
+            Select the target note. {sourceCount > 0 && `${sourceCount} source note${sourceCount > 1 ? "s" : ""} will be trashed.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -125,9 +125,9 @@ export function MergeDialog({
 
         {/* Info */}
         <div className="mx-5 mb-3 flex items-center gap-2 rounded-md bg-secondary/30 px-3 py-2">
-          <Archive className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+          <Trash2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
           <p className="text-xs text-muted-foreground/70 leading-relaxed">
-            Source notes will be archived, not deleted. Content, tags, and reads will be merged into the target.
+            Source notes will be trashed. Content, tags, and reads will be merged into the target.
           </p>
         </div>
 
