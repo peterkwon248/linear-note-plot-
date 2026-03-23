@@ -205,7 +205,7 @@ export interface PlotState {
 
   // ── Thread ──
   startThread: (noteId: string) => string
-  addThreadStep: (threadId: string, text: string) => void
+  addThreadStep: (threadId: string, text: string, parentId?: string | null) => void
   endThread: (threadId: string) => void
   deleteThread: (threadId: string) => void
   addWikiLink: (noteId: string, targetTitle: string) => void

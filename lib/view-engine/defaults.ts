@@ -15,6 +15,7 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   orderPermanentByRecency: false,
   showThread: false,
   toggles: {},
+  groupOrder: null,
 }
 
 /* ── Context-specific overrides ────────────────────────── */
@@ -95,6 +96,9 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
     toggles: (merged.toggles && typeof merged.toggles === "object" && !Array.isArray(merged.toggles))
       ? merged.toggles as Record<string, boolean>
       : {},
+    groupOrder: (merged.groupOrder && typeof merged.groupOrder === "object" && !Array.isArray(merged.groupOrder))
+      ? merged.groupOrder as Record<string, string[]>
+      : null,
   }
 }
 

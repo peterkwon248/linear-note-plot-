@@ -61,6 +61,8 @@ export interface ViewState {
   showThread: boolean
   /** View-config-specific toggle states (showArchived, showStubs, compact, etc.) */
   toggles: Record<string, boolean>
+  /** Custom group ordering per groupBy dimension. null = natural order */
+  groupOrder: Record<string, string[]> | null
 }
 
 /* ── Pipeline Types ────────────────────────────────────── */
@@ -69,6 +71,7 @@ export interface NoteGroup {
   key: string
   label: string
   notes: Note[]
+  subGroups?: NoteGroup[]
 }
 
 export interface PipelineResult {
@@ -84,6 +87,7 @@ export interface PipelineExtras {
   folderId?: string
   tagId?: string
   labelId?: string
+  showTrashed?: boolean
 }
 
 /* ── Sort Order Constants ──────────────────────────────── */

@@ -12,6 +12,7 @@ import {
   useSensor,
 } from "@dnd-kit/core"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
+import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import {
   Plus,
@@ -170,7 +171,30 @@ function BoardColumn({
   dragCount: number
   activeDragId: string | null
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: group.key, disabled: isDragDisabled })
+  // Sortable for column reorder (drag handle on header)
+  const {
+    setNodeRef: setSortableRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: `col-${group.key}`,
+    disabled: isDragDisabled,
+  })
+
+  // Droppable for card drops (cards land on the column)
+  const { setNodeRef: setDropRef, isOver: isCardOver } = useDroppable({
+    id: group.key,
+    disabled: isDragDisabled,
+  })
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
 
   const headerColor = useMemo(() => {
     if (groupBy === "status") {
@@ -195,18 +219,33 @@ function BoardColumn({
       const c = linkColors[group.key]
       return c ? { color: c, bg: `${c}1a` } : null
     }
+    if (groupBy === "label") {
+      const labels = usePlotStore.getState().labels
+      const label = labels.find((l) => l.id === group.key)
+      return label ? { color: label.color, bg: `${label.color}1a` } : null
+    }
+    if (groupBy === "folder") {
+      const folders = usePlotStore.getState().folders
+      const folder = folders.find((f) => f.id === group.key)
+      return folder?.color ? { color: folder.color, bg: `${folder.color}1a` } : null
+    }
     return null
   }, [groupBy, group.key])
 
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => { setSortableRef(node); setDropRef(node); }}
+      style={sortableStyle}
       className={`flex w-[260px] shrink-0 flex-col rounded-lg transition-colors ${
-        isOver ? "bg-accent/8 ring-1 ring-accent/30" : "bg-secondary/20"
+        isCardOver ? "bg-accent/8 ring-1 ring-accent/30" : "bg-secondary/20"
       }`}
     >
-      {/* Column header */}
-      <div className="flex items-center gap-2 px-3 py-2.5">
+      {/* Column header — drag handle for column reorder */}
+      <div
+        className="flex items-center gap-2 px-3 py-2.5 cursor-grab active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
         {headerColor && (
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: headerColor.color }} />
         )}
@@ -214,7 +253,7 @@ function BoardColumn({
         <span className="text-xs text-muted-foreground">{group.notes.length}</span>
       </div>
       {/* Drop feedback banner */}
-      {isOver && activeDragId && (
+      {isCardOver && activeDragId && !activeDragId.startsWith("col-") && (
         <div className="mx-1.5 mb-1 rounded-md bg-accent/10 px-2.5 py-1.5 text-center text-xs font-medium text-accent animate-in fade-in duration-150">
           Move {dragCount && dragCount > 1 ? `${dragCount} notes` : "here"}
         </div>
@@ -236,6 +275,7 @@ interface BoardCardProps {
   isActive?: boolean
   isSelected?: boolean
   isDragOverlay?: boolean
+  showCardPreview?: boolean
   groupBy: GroupBy
   onClick: () => void
   onSelect?: (noteId: string, e: React.MouseEvent) => void
@@ -257,6 +297,7 @@ function BoardCardInner({
   isActive,
   isSelected,
   isDragOverlay,
+  showCardPreview,
   groupBy,
   onClick,
   onSelect,
@@ -316,7 +357,7 @@ function BoardCardInner({
       </div>
 
       {/* Preview text */}
-      {note.preview && (
+      {showCardPreview !== false && note.preview && (
         <p className="mt-1 line-clamp-1 text-xs text-muted-foreground leading-relaxed">
           {note.preview}
         </p>
@@ -446,6 +487,7 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.note.title === next.note.title &&
   prev.note.preview === next.note.preview &&
   prev.links === next.links &&
+  prev.showCardPreview === next.showCardPreview &&
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
   prev.groupBy === next.groupBy
@@ -570,17 +612,32 @@ export function NotesBoard({
 
   // DnD state
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
-  const activeDragNote = activeDragId ? notes.find((n) => n.id === activeDragId) : null
-  const dragCount = activeDragId && selectedIds.has(activeDragId) ? selectedIds.size : 1
+  const isColumnDrag = activeDragId?.startsWith("col-") ?? false
+  const activeDragNote = activeDragId && !isColumnDrag ? notes.find((n) => n.id === activeDragId) : null
+  const dragCount = activeDragId && !isColumnDrag && selectedIds.has(activeDragId) ? selectedIds.size : 1
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor)
   )
 
+  const isDragDisabled = viewState.groupBy === "date" || viewState.groupBy === "linkCount"
+
+  // Resolve folder names for folder-grouped board
+  const resolvedGroups = useMemo(() => {
+    if (viewState.groupBy !== "folder") return groups
+    return groups.map((g) => {
+      if (g.key === "_no_folder") return g
+      const folder = folders.find((f) => f.id === g.key)
+      return folder ? { ...g, label: folder.name } : g
+    })
+  }, [groups, viewState.groupBy, folders])
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const dragId = event.active.id as string
     setActiveDragId(dragId)
+    // Column drag — no card selection logic
+    if (dragId.startsWith("col-")) return
     // If dragging an unselected card, clear multi-selection
     if (!selectedIds.has(dragId)) {
       setSelectedIds(new Set())
@@ -588,19 +645,44 @@ export function NotesBoard({
   }, [selectedIds])
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
-    setActiveDragId(null)
     const { active, over } = event
-    if (!over) return
+    if (!over) { setActiveDragId(null); return }
 
-    const noteId = active.id as string
-    const targetKey = over.id as string
+    const activeId = active.id as string
+    const overId = over.id as string
+
+    // ── Column reorder: both IDs start with "col-" ──
+    if (activeId.startsWith("col-") && overId.startsWith("col-")) {
+      const activeKey = activeId.replace("col-", "")
+      const overKey = overId.replace("col-", "")
+      if (activeKey !== overKey) {
+        const currentOrder = resolvedGroups.map(g => g.key)
+        const oldIndex = currentOrder.indexOf(activeKey)
+        const newIndex = currentOrder.indexOf(overKey)
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newOrder = arrayMove(currentOrder, oldIndex, newIndex)
+          updateViewState({
+            groupOrder: {
+              ...(viewState.groupOrder ?? {}),
+              [viewState.groupBy]: newOrder,
+            },
+          })
+        }
+      }
+      setActiveDragId(null)
+      return
+    }
+
+    // ── Card drag (existing logic) ──
+    const noteId = activeId
+    const targetKey = overId
 
     // Find which group the note is currently in
     const currentGroup = groups.find((g) => g.notes.some((n) => n.id === noteId))
-    if (currentGroup && currentGroup.key === targetKey) return
+    if (currentGroup && currentGroup.key === targetKey) { setActiveDragId(null); return }
 
     const fieldUpdate = getFieldUpdate(viewState.groupBy, targetKey)
-    if (!fieldUpdate) return
+    if (!fieldUpdate) { setActiveDragId(null); return }
 
     const targetGroup = groups.find(g => g.key === targetKey)
 
@@ -619,7 +701,8 @@ export function NotesBoard({
     }
 
     setSelectedIds(new Set())
-  }, [groups, viewState.groupBy, updateNote, batchUpdateNotes, selectedIds, notes])
+    setActiveDragId(null)
+  }, [groups, resolvedGroups, viewState, updateViewState, updateNote, batchUpdateNotes, selectedIds, notes])
 
   const handleCardSelect = useCallback((noteId: string, e: React.MouseEvent) => {
     setSelectedIds((prev) => {
@@ -636,18 +719,6 @@ export function NotesBoard({
   const handleSelectMany = useCallback((ids: string[]) => {
     setSelectedIds(new Set(ids))
   }, [])
-
-  const isDragDisabled = viewState.groupBy === "date" || viewState.groupBy === "linkCount"
-
-  // Resolve folder names for folder-grouped board
-  const resolvedGroups = useMemo(() => {
-    if (viewState.groupBy !== "folder") return groups
-    return groups.map((g) => {
-      if (g.key === "_no_folder") return g
-      const folder = folders.find((f) => f.id === g.key)
-      return folder ? { ...g, label: folder.name } : g
-    })
-  }, [groups, viewState.groupBy, folders])
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
@@ -758,50 +829,56 @@ export function NotesBoard({
               }
             }}
           >
-            {resolvedGroups.map((group) => {
-              if (group.notes.length === 0 && !viewState.showEmptyGroups) return null
-              const isExpanded = expandedColumns.has(group.key)
-              const visibleNotes = isExpanded ? group.notes : group.notes.slice(0, COLUMN_CARD_LIMIT)
-              const hiddenCount = group.notes.length - COLUMN_CARD_LIMIT
+            <SortableContext
+              items={resolvedGroups.map(g => `col-${g.key}`)}
+              strategy={horizontalListSortingStrategy}
+            >
+              {resolvedGroups.map((group) => {
+                if (group.notes.length === 0 && !viewState.showEmptyGroups) return null
+                const isExpanded = expandedColumns.has(group.key)
+                const visibleNotes = isExpanded ? group.notes : group.notes.slice(0, COLUMN_CARD_LIMIT)
+                const hiddenCount = group.notes.length - COLUMN_CARD_LIMIT
 
-              return (
-                <BoardColumn key={group.key} group={group} groupBy={viewState.groupBy} isDragDisabled={isDragDisabled} dragCount={dragCount} activeDragId={activeDragId}>
-                  {visibleNotes.map((note) => (
-                    <BoardCard
-                      key={note.id}
-                      note={note}
-                      links={backlinksMap.get(note.id) ?? 0}
-                      folders={folders}
-                      isActive={activePreviewId === note.id}
-                      isSelected={selectedIds.has(note.id)}
-                      groupBy={viewState.groupBy}
-                      onClick={() => {
-                        setSelectedIds(new Set())
-                        onRowClick ? onRowClick(note.id) : openNote(note.id)
-                      }}
-                      onSelect={handleCardSelect}
-                      onStatus={(s) => updateNote(note.id, { status: s })}
-                      onPriority={(p) => updateNote(note.id, { priority: p })}
-                      onKeep={() => triageKeep(note.id)}
-                      onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
-                      onTrash={() => triageTrash(note.id)}
-                      onPromote={() => promoteToPermanent(note.id)}
-                      onDemote={() => undoPromote(note.id)}
-                      onMoveBack={() => moveBackToInbox(note.id)}
-                      onRemind={(isoDate) => { setReminder(note.id, isoDate); toast("Reminder set") }}
-                    />
-                  ))}
-                  {!isExpanded && hiddenCount > 0 && (
-                    <button
-                      onClick={() => setExpandedColumns((prev) => new Set([...prev, group.key]))}
-                      className="mx-1.5 mb-1.5 rounded-md py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                    >
-                      + {hiddenCount} more
-                    </button>
-                  )}
-                </BoardColumn>
-              )
-            })}
+                return (
+                  <BoardColumn key={group.key} group={group} groupBy={viewState.groupBy} isDragDisabled={isDragDisabled} dragCount={dragCount} activeDragId={activeDragId}>
+                    {visibleNotes.map((note) => (
+                      <BoardCard
+                        key={note.id}
+                        note={note}
+                        links={backlinksMap.get(note.id) ?? 0}
+                        folders={folders}
+                        isActive={activePreviewId === note.id}
+                        isSelected={selectedIds.has(note.id)}
+                        showCardPreview={viewState.toggles?.showCardPreview !== false}
+                        groupBy={viewState.groupBy}
+                        onClick={() => {
+                          setSelectedIds(new Set())
+                          onRowClick ? onRowClick(note.id) : openNote(note.id)
+                        }}
+                        onSelect={handleCardSelect}
+                        onStatus={(s) => updateNote(note.id, { status: s })}
+                        onPriority={(p) => updateNote(note.id, { priority: p })}
+                        onKeep={() => triageKeep(note.id)}
+                        onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
+                        onTrash={() => triageTrash(note.id)}
+                        onPromote={() => promoteToPermanent(note.id)}
+                        onDemote={() => undoPromote(note.id)}
+                        onMoveBack={() => moveBackToInbox(note.id)}
+                        onRemind={(isoDate) => { setReminder(note.id, isoDate); toast("Reminder set") }}
+                      />
+                    ))}
+                    {!isExpanded && hiddenCount > 0 && (
+                      <button
+                        onClick={() => setExpandedColumns((prev) => new Set([...prev, group.key]))}
+                        className="mx-1.5 mb-1.5 rounded-md py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      >
+                        + {hiddenCount} more
+                      </button>
+                    )}
+                  </BoardColumn>
+                )
+              })}
+            </SortableContext>
 
             {/* Processing Workbench: fills remaining space */}
             <BoardWorkbench
@@ -819,6 +896,17 @@ export function NotesBoard({
           </div>
 
           <DragOverlay>
+            {isColumnDrag && (() => {
+              const key = activeDragId!.replace("col-", "")
+              const group = resolvedGroups.find(g => g.key === key)
+              if (!group) return null
+              return (
+                <div className="w-[260px] rounded-lg bg-secondary/40 border border-accent/30 px-3 py-2.5 opacity-80 shadow-lg">
+                  <span className="text-sm font-semibold text-foreground">{group.label}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">{group.notes.length}</span>
+                </div>
+              )
+            })()}
             {activeDragNote && (
               <div className="relative">
                 {/* Stacked cards behind for multi-drag */}

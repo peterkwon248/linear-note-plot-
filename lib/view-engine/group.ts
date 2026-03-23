@@ -7,35 +7,57 @@ import { STATUS_ORDER, PRIORITY_ORDER } from "./types"
  * Stage 5: Group sorted notes by the given dimension.
  * Returns groups in a natural display order.
  */
-export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backlinksMap?: Map<string, number> }): NoteGroup[] {
+export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backlinksMap?: Map<string, number>; labelNames?: Map<string, string>; folderNames?: Map<string, string>; customOrder?: string[]; subGroupBy?: GroupBy }): NoteGroup[] {
+  let groups: NoteGroup[]
+
   switch (groupBy) {
     case "none":
       return [{ key: "_all", label: "", notes }]
 
     case "status":
-      return groupByStatus(notes)
-
+      groups = groupByStatus(notes); break
     case "priority":
-      return groupByPriority(notes)
-
+      groups = groupByPriority(notes); break
     case "date":
-      return groupByDate(notes)
-
+      groups = groupByDate(notes); break
     case "folder":
-      return groupByFolder(notes)
-
+      groups = groupByFolder(notes, extras?.folderNames); break
     case "label":
-      return groupByLabel(notes)
-
+      groups = groupByLabel(notes, extras?.labelNames); break
     case "triage":
-      return groupByTriage(notes)
-
+      groups = groupByTriage(notes); break
     case "linkCount":
-      return groupByLinkCount(notes, extras?.backlinksMap)
-
+      groups = groupByLinkCount(notes, extras?.backlinksMap); break
     default:
       return [{ key: "_all", label: "", notes }]
   }
+
+  // Apply custom group ordering if provided
+  const customOrder = extras?.customOrder
+  if (customOrder && customOrder.length > 0) {
+    const orderMap = new Map(customOrder.map((k, i) => [k, i]))
+    groups.sort((a, b) => (orderMap.get(a.key) ?? 999) - (orderMap.get(b.key) ?? 999))
+  }
+
+  // Apply sub-grouping if specified
+  const subGroupBy = extras?.subGroupBy
+  if (subGroupBy && subGroupBy !== "none" && subGroupBy !== groupBy) {
+    for (const group of groups) {
+      if (group.notes.length === 0) continue
+      const subGroups = applyGrouping(group.notes, subGroupBy, {
+        backlinksMap: extras?.backlinksMap,
+        labelNames: extras?.labelNames,
+        folderNames: extras?.folderNames,
+      })
+      // Only apply sub-grouping if it actually splits notes into multiple groups
+      const nonEmpty = subGroups.filter((sg) => sg.notes.length > 0)
+      if (nonEmpty.length > 1) {
+        group.subGroups = subGroups
+      }
+    }
+  }
+
+  return groups
 }
 
 /* ── Status grouping ──────────────────────────────────── */
@@ -131,7 +153,7 @@ function groupByDate(notes: Note[]): NoteGroup[] {
 
 /* ── Folder grouping ──────────────────────────────────── */
 
-function groupByFolder(notes: Note[]): NoteGroup[] {
+function groupByFolder(notes: Note[], folderNames?: Map<string, string>): NoteGroup[] {
   const map = new Map<string, Note[]>()
   const noFolder: Note[] = []
 
@@ -148,10 +170,13 @@ function groupByFolder(notes: Note[]): NoteGroup[] {
 
   const groups: NoteGroup[] = []
 
-  // Sort folder IDs (stable ordering)
-  const sortedKeys = [...map.keys()].sort((a, b) => a.localeCompare(b))
+  const sortedKeys = [...map.keys()].sort((a, b) => {
+    const nameA = folderNames?.get(a) ?? a
+    const nameB = folderNames?.get(b) ?? b
+    return nameA.localeCompare(nameB)
+  })
   for (const key of sortedKeys) {
-    groups.push({ key, label: key, notes: map.get(key)! })
+    groups.push({ key, label: folderNames?.get(key) ?? key, notes: map.get(key)! })
   }
 
   if (noFolder.length > 0) {
@@ -163,7 +188,7 @@ function groupByFolder(notes: Note[]): NoteGroup[] {
 
 /* ── Label grouping ──────────────────────────────────── */
 
-function groupByLabel(notes: Note[]): NoteGroup[] {
+function groupByLabel(notes: Note[], labelNames?: Map<string, string>): NoteGroup[] {
   const map = new Map<string, Note[]>()
   const noLabel: Note[] = []
 
@@ -180,9 +205,13 @@ function groupByLabel(notes: Note[]): NoteGroup[] {
 
   const groups: NoteGroup[] = []
 
-  const sortedKeys = [...map.keys()].sort((a, b) => a.localeCompare(b))
+  const sortedKeys = [...map.keys()].sort((a, b) => {
+    const nameA = labelNames?.get(a) ?? a
+    const nameB = labelNames?.get(b) ?? b
+    return nameA.localeCompare(nameB)
+  })
   for (const key of sortedKeys) {
-    groups.push({ key, label: key, notes: map.get(key)! })
+    groups.push({ key, label: labelNames?.get(key) ?? key, notes: map.get(key)! })
   }
 
   if (noLabel.length > 0) {

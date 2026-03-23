@@ -537,5 +537,28 @@ export function migrate(persistedState: unknown): PlotState {
     state.clusterSuggestions = []
   }
 
+  // v55: ThreadStep.parentId — nested replies support
+  if (state.threads && Array.isArray(state.threads)) {
+    for (const t of state.threads as any[]) {
+      if (t.steps && Array.isArray(t.steps)) {
+        for (const step of t.steps as any[]) {
+          if (step.parentId === undefined) {
+            step.parentId = null
+          }
+        }
+      }
+    }
+  }
+
+  // v56: ViewState.groupOrder — custom group ordering
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+    for (const key of Object.keys(vsMap)) {
+      if (vsMap[key].groupOrder === undefined) {
+        vsMap[key].groupOrder = null
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

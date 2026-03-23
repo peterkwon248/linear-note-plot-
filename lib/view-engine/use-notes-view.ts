@@ -43,15 +43,30 @@ export function useNotesView(
 ): UseNotesViewResult {
   // ── Store selectors (fine-grained subscriptions) ──────
   const notes = usePlotStore((s) => s.notes)
+  const labels = usePlotStore((s) => s.labels)
+  const folders = usePlotStore((s) => s.folders)
   const viewState = usePlotStore((s) => s.viewStateByContext[contextKey]) ?? buildViewStateForContext(contextKey)
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setViewState = usePlotStore((s) => s.setViewState)
   const isHydrated = usePlotStore((s) => s._viewStateHydrated)
 
+  // ── Name maps for grouping labels ──────────────────────
+  const labelNames = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const l of labels) map.set(l.id, l.name)
+    return map
+  }, [labels])
+  const folderNames = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const f of folders) map.set(f.id, f.name)
+    return map
+  }, [folders])
+
   // ── Stage 1: Context filter ───────────────────────────
+  const showTrashed = viewState.toggles?.showTrashed === true
   const contextFiltered = useMemo(
-    () => applyContext(notes, contextKey, extras),
-    [notes, contextKey, extras?.backlinksMap, extras?.folderId, extras?.tagId, extras?.labelId]
+    () => applyContext(notes, contextKey, { ...extras, showTrashed }),
+    [notes, contextKey, extras?.backlinksMap, extras?.folderId, extras?.tagId, extras?.labelId, showTrashed]
   )
 
   const totalCount = notes.length
@@ -76,9 +91,11 @@ export function useNotesView(
   )
 
   // ── Stage 5: Group ────────────────────────────────────
+  const customOrder = viewState.groupOrder?.[viewState.groupBy] ?? undefined
+  const subGroupBy = viewState.subGroupBy !== "none" ? viewState.subGroupBy : undefined
   const groups = useMemo(
-    () => applyGrouping(sorted, viewState.groupBy, { backlinksMap: extras?.backlinksMap }),
-    [sorted, viewState.groupBy, extras?.backlinksMap]
+    () => applyGrouping(sorted, viewState.groupBy, { backlinksMap: extras?.backlinksMap, labelNames, folderNames, customOrder, subGroupBy }),
+    [sorted, viewState.groupBy, subGroupBy, extras?.backlinksMap, labelNames, folderNames, customOrder]
   )
 
   // ── Actions ───────────────────────────────────────────

@@ -99,6 +99,7 @@ export function WikiView() {
     orderPermanentByRecency: false,
     showThread: false,
     toggles: {},
+    groupOrder: null,
   })
   const handleWikiFilterToggle = (rule: FilterRule) => {
     setWikiFilters((prev) => {

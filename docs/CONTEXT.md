@@ -79,10 +79,10 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-39. Graph Insights 페이지 + docs 정리 (완료된 설계문서 9개 삭제, -22k줄)
 40. Smart Side Panel + Workspace 단순화 + Wiki 블록 무한 확장 대응
 41. 글로벌 색상 체계 + 위키 아이콘 + 그래프 폴리시 + 라우트 히스토리 + 성능 최적화
 42. 필터 드롭다운 검색창 + 위키 Merge + 클러스터 감지 + archive 제거 + 위키 클릭/토글 버그 수정
+43. List/Board 토글 활성화 + Nested Replies + 그룹 드래그 + Sub-grouping + 글로벌 Undo/Redo + Collapse All
 
 ## Three Axes — Core Design Philosophy
 
@@ -105,7 +105,6 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## TODO: Future Work
 
-- **글로벌 Ctrl+Z 되돌리기** — store 전체 history 레이어 (큰 작업)
 - **리니어 디자인 폴리시** — 전 화면 대상 UI 폴리시 (줄/사각형 제거, 폰트/아이콘 정렬)
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식 통합 에디터
 - J/K 리스트 네비게이션 (Linear식)

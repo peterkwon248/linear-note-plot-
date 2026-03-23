@@ -17,8 +17,8 @@ export function createThreadSlice(set: Set, get: Get, appendEvent: AppendEventFn
       return id
     },
 
-    addThreadStep: (threadId: string, text: string) => {
-      const step: ThreadStep = { id: genId(), at: now(), text }
+    addThreadStep: (threadId: string, text: string, parentId?: string | null) => {
+      const step: ThreadStep = { id: genId(), at: now(), text, parentId: parentId ?? null }
       set((state: any) => ({
         threads: state.threads.map((c: Thread) =>
           c.id === threadId ? { ...c, steps: [...c.steps, step] } : c

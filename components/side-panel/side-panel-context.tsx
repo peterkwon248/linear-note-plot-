@@ -253,6 +253,7 @@ export function SidePanelContext() {
   const relationSuggestions = usePlotStore((s) => s.relationSuggestions)
   const acceptRelationSuggestion = usePlotStore((s) => s.acceptRelationSuggestion)
   const dismissRelationSuggestion = usePlotStore((s) => s.dismissRelationSuggestion)
+  const nestedReplies = usePlotStore((s) => s.viewStateByContext["all"]?.toggles?.nestedReplies === true)
 
   const backlinks = useBacklinksIndex()
   const backlinkNotes = useBacklinksFor(selectedNoteId)
@@ -869,7 +870,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Thread */}
-      <ThreadPanel noteId={note.id} />
+      <ThreadPanel noteId={note.id} nestedReplies={nestedReplies} />
 
       <div className="mx-4 border-b border-border" />
 

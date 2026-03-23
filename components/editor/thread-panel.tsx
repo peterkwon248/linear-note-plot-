@@ -1,19 +1,103 @@
 "use client"
 
-import { useState, useRef, useEffect, KeyboardEvent } from "react"
-import { ChevronDown, ChevronRight, Plus, Check, MessageSquare, Trash2 } from "lucide-react"
+import { useState, useRef, useEffect, useMemo, KeyboardEvent } from "react"
+import { ChevronDown, ChevronRight, Plus, Check, MessageSquare, Trash2, Reply } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { format } from "date-fns"
-import type { Thread } from "@/lib/types"
+import type { Thread, ThreadStep } from "@/lib/types"
 
 interface ThreadPanelProps {
   noteId: string
+  nestedReplies?: boolean
 }
 
-function DoneThreadItem({ thread }: { thread: Thread }) {
+interface StepNode {
+  step: ThreadStep
+  children: StepNode[]
+}
+
+function buildStepTree(steps: ThreadStep[]): StepNode[] {
+  const map = new Map<string, StepNode>()
+  const roots: StepNode[] = []
+  for (const step of steps) {
+    map.set(step.id, { step, children: [] })
+  }
+  for (const step of steps) {
+    const node = map.get(step.id)!
+    if (step.parentId && map.has(step.parentId)) {
+      map.get(step.parentId)!.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+  return roots
+}
+
+function StepTreeNode({
+  node,
+  onReply,
+}: {
+  node: StepNode
+  onReply: (stepId: string) => void
+}) {
+  return (
+    <div>
+      <div className="relative group/step">
+        <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
+        <p className="text-sm text-foreground whitespace-pre-wrap">{node.step.text}</p>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {format(new Date(node.step.at), "h:mm a")}
+          </span>
+          <button
+            onClick={() => onReply(node.step.id)}
+            className="opacity-0 group-hover/step:opacity-100 text-[10px] text-muted-foreground hover:text-foreground transition-opacity duration-75 flex items-center gap-0.5"
+          >
+            <Reply className="h-2.5 w-2.5" />
+            Reply
+          </button>
+        </div>
+      </div>
+      {node.children.length > 0 && (
+        <div className="ml-4 border-l-2 border-border pl-3 space-y-2 mt-2">
+          {node.children.map((child) => (
+            <StepTreeNode key={child.step.id} node={child} onReply={onReply} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DoneStepTreeNode({ node }: { node: StepNode }) {
+  return (
+    <div>
+      <div className="relative">
+        <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
+        <p className="text-xs text-muted-foreground whitespace-pre-wrap">{node.step.text}</p>
+        <span className="text-[10px] text-muted-foreground/60">
+          {format(new Date(node.step.at), "h:mm a")}
+        </span>
+      </div>
+      {node.children.length > 0 && (
+        <div className="ml-4 border-l-2 border-border pl-3 space-y-2 mt-1">
+          {node.children.map((child) => (
+            <DoneStepTreeNode key={child.step.id} node={child} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DoneThreadItem({ thread, nestedReplies }: { thread: Thread; nestedReplies?: boolean }) {
   const [expanded, setExpanded] = useState(false)
   const deleteThread = usePlotStore((s) => s.deleteThread)
+  const tree = useMemo(
+    () => (nestedReplies ? buildStepTree(thread.steps) : []),
+    [nestedReplies, thread.steps]
+  )
 
   return (
     <div className="group/done border border-border/50 rounded-md overflow-hidden">
@@ -46,15 +130,21 @@ function DoneThreadItem({ thread }: { thread: Thread }) {
       {expanded && thread.steps.length > 0 && (
         <div className="px-3 pb-3 pt-1">
           <div className="ml-4 border-l-2 border-border pl-3 space-y-2">
-            {thread.steps.map((step) => (
-              <div key={step.id} className="relative">
-                <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
-                <p className="text-xs text-muted-foreground whitespace-pre-wrap">{step.text}</p>
-                <span className="text-[10px] text-muted-foreground/60">
-                  {format(new Date(step.at), "h:mm a")}
-                </span>
-              </div>
-            ))}
+            {nestedReplies ? (
+              tree.map((node) => (
+                <DoneStepTreeNode key={node.step.id} node={node} />
+              ))
+            ) : (
+              thread.steps.map((step) => (
+                <div key={step.id} className="relative">
+                  <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
+                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{step.text}</p>
+                  <span className="text-[10px] text-muted-foreground/60">
+                    {format(new Date(step.at), "h:mm a")}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -62,7 +152,7 @@ function DoneThreadItem({ thread }: { thread: Thread }) {
   )
 }
 
-export function ThreadPanel({ noteId }: ThreadPanelProps) {
+export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
   const threads = usePlotStore((s) => s.threads)
   const startThread = usePlotStore((s) => s.startThread)
   const addThreadStep = usePlotStore((s) => s.addThreadStep)
@@ -75,7 +165,13 @@ export function ThreadPanel({ noteId }: ThreadPanelProps) {
 
   const [collapsed, setCollapsed] = useState(true)
   const [stepText, setStepText] = useState("")
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const tree = useMemo(
+    () => (nestedReplies && activeThread ? buildStepTree(activeThread.steps) : []),
+    [nestedReplies, activeThread?.steps]
+  )
 
   // Auto-expand when there's an active thread
   useEffect(() => {
@@ -92,8 +188,9 @@ export function ThreadPanel({ noteId }: ThreadPanelProps) {
 
   const handleAddStep = () => {
     if (!activeThread || !stepText.trim()) return
-    addThreadStep(activeThread.id, stepText.trim())
+    addThreadStep(activeThread.id, stepText.trim(), replyingTo)
     setStepText("")
+    setReplyingTo(null)
     textareaRef.current?.focus()
   }
 
@@ -108,7 +205,18 @@ export function ThreadPanel({ noteId }: ThreadPanelProps) {
     if (!activeThread) return
     endThread(activeThread.id)
     setStepText("")
+    setReplyingTo(null)
   }
+
+  const handleReply = (stepId: string) => {
+    setReplyingTo(stepId)
+    textareaRef.current?.focus()
+  }
+
+  // Find the text of the step being replied to
+  const replyingToStep = replyingTo && activeThread
+    ? activeThread.steps.find((s) => s.id === replyingTo)
+    : null
 
   const activeBadgeCount = activeThread ? 1 : 0
 
@@ -147,15 +255,37 @@ export function ThreadPanel({ noteId }: ThreadPanelProps) {
               {/* Steps timeline */}
               {activeThread.steps.length > 0 && (
                 <div className="ml-2 border-l-2 border-border pl-3 space-y-2">
-                  {activeThread.steps.map((step) => (
-                    <div key={step.id} className="relative">
-                      <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
-                      <p className="text-sm text-foreground whitespace-pre-wrap">{step.text}</p>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(step.at), "h:mm a")}
-                      </span>
-                    </div>
-                  ))}
+                  {nestedReplies ? (
+                    tree.map((node) => (
+                      <StepTreeNode key={node.step.id} node={node} onReply={handleReply} />
+                    ))
+                  ) : (
+                    activeThread.steps.map((step) => (
+                      <div key={step.id} className="relative">
+                        <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
+                        <p className="text-sm text-foreground whitespace-pre-wrap">{step.text}</p>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(step.at), "h:mm a")}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Replying-to indicator */}
+              {replyingTo && replyingToStep && (
+                <div className="flex items-center gap-1.5 ml-2 px-2 py-1 rounded bg-secondary/50">
+                  <Reply className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <span className="text-[10px] text-muted-foreground truncate flex-1">
+                    Replying to: {replyingToStep.text.slice(0, 60)}{replyingToStep.text.length > 60 ? "..." : ""}
+                  </span>
+                  <button
+                    onClick={() => setReplyingTo(null)}
+                    className="text-[10px] text-muted-foreground hover:text-foreground shrink-0"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
 
@@ -214,7 +344,7 @@ export function ThreadPanel({ noteId }: ThreadPanelProps) {
                 Completed
               </p>
               {doneThreads.map((thread) => (
-                <DoneThreadItem key={thread.id} thread={thread} />
+                <DoneThreadItem key={thread.id} thread={thread} nestedReplies={nestedReplies} />
               ))}
             </div>
           )}

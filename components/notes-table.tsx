@@ -115,6 +115,7 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
 
 type VirtualItem =
   | { type: "header"; label: string; count: number; groupKey: string; groupBy: GroupBy }
+  | { type: "subheader"; label: string; count: number; groupKey: string; parentKey: string; groupBy: GroupBy }
   | { type: "note"; note: Note }
 
 /* ── Header cell ───────────────────────────────────────── */
@@ -344,6 +345,11 @@ export function NotesTable({
 
   // ── Group collapse state ──
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+
+  // ── Group header pointer-based reorder state ──
+  const [reorderSource, setReorderSource] = useState<string | null>(null)
+  const [reorderTarget, setReorderTarget] = useState<string | null>(null)
+  const reorderMoved = useRef(false)
   const toggleGroupCollapse = useCallback((groupKey: string) => {
     setCollapsedGroups((prev) => {
       const next = new Set(prev)
@@ -352,6 +358,52 @@ export function NotesTable({
       return next
     })
   }, [])
+
+  // ── Group header pointer-based reorder handlers ──
+  const handleGroupPointerDown = useCallback((e: React.PointerEvent, groupKey: string) => {
+    if (e.button !== 0) return
+    if (viewState.groupBy === "none") return
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setReorderSource(groupKey)
+    reorderMoved.current = false
+  }, [viewState.groupBy])
+
+  const handleGroupPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!reorderSource) return
+    reorderMoved.current = true
+
+    const target = document.elementFromPoint(e.clientX, e.clientY)
+    const headerEl = target?.closest("[data-group-key]") as HTMLElement | null
+    const targetKey = headerEl?.dataset.groupKey ?? null
+
+    if (targetKey && targetKey !== reorderSource) {
+      setReorderTarget(targetKey)
+    } else if (!targetKey) {
+      setReorderTarget(null)
+    }
+  }, [reorderSource])
+
+  const handleGroupPointerUp = useCallback(() => {
+    if (reorderSource && reorderTarget && reorderSource !== reorderTarget) {
+      const currentOrder = groups.map(g => g.key)
+      const oldIndex = currentOrder.indexOf(reorderSource)
+      const newIndex = currentOrder.indexOf(reorderTarget)
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = [...currentOrder]
+        newOrder.splice(oldIndex, 1)
+        newOrder.splice(newIndex, 0, reorderSource)
+        updateViewState({
+          groupOrder: {
+            ...(viewState.groupOrder ?? {}),
+            [viewState.groupBy]: newOrder,
+          },
+        })
+      }
+    }
+    setReorderSource(null)
+    setReorderTarget(null)
+  }, [reorderSource, reorderTarget, groups, updateViewState, viewState.groupOrder, viewState.groupBy])
 
   // Drag selection
   const [dragRect, setDragRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
@@ -613,7 +665,7 @@ export function NotesTable({
     })
   }, [visibleCols, containerWidth])
 
-  const isCompact = containerWidth < 480
+  const isCompact = containerWidth < 480 || viewState.toggles?.compact === true
 
   const virtualItems = useMemo((): VirtualItem[] => {
     if (viewState.groupBy === "none") {
@@ -624,20 +676,39 @@ export function NotesTable({
       if (group.notes.length === 0 && !viewState.showEmptyGroups) continue
       items.push({ type: "header", label: group.label, count: group.notes.length, groupKey: group.key, groupBy: viewState.groupBy })
       if (!collapsedGroups.has(group.key)) {
-        for (const note of group.notes) {
-          items.push({ type: "note", note })
+        if (group.subGroups && group.subGroups.length > 0) {
+          // Render sub-groups
+          for (const sub of group.subGroups) {
+            if (sub.notes.length === 0 && !viewState.showEmptyGroups) continue
+            const subKey = `${group.key}::${sub.key}`
+            items.push({ type: "subheader", label: sub.label, count: sub.notes.length, groupKey: subKey, parentKey: group.key, groupBy: viewState.subGroupBy })
+            if (!collapsedGroups.has(subKey)) {
+              for (const note of sub.notes) {
+                items.push({ type: "note", note })
+              }
+            }
+          }
+        } else {
+          for (const note of group.notes) {
+            items.push({ type: "note", note })
+          }
         }
       }
     }
     return items
-  }, [flatNotes, groups, viewState.groupBy, viewState.showEmptyGroups, collapsedGroups])
+  }, [flatNotes, groups, viewState.groupBy, viewState.subGroupBy, viewState.showEmptyGroups, collapsedGroups])
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const rowVirtualizer = useVirtualizer({
     count: virtualItems.length,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: (i) => virtualItems[i].type === "header" ? 36 : (viewState.viewMode === "list" ? 40 : 44),
+    estimateSize: (i) => {
+      const t = virtualItems[i].type
+      if (t === "header") return 36
+      if (t === "subheader") return 32
+      return viewState.viewMode === "list" ? 40 : 44
+    },
     overscan: 5,
   })
 
@@ -749,6 +820,33 @@ export function NotesTable({
             </button>
           )
         }
+        extraToolbarButtons={viewState.groupBy !== "none" && groups.length > 0 ? (
+          <button
+            onClick={() => {
+              const allKeys = groups.map(g => g.key)
+              const allCollapsed = allKeys.every(k => collapsedGroups.has(k))
+              if (allCollapsed) {
+                setCollapsedGroups(new Set())
+              } else {
+                setCollapsedGroups(new Set(allKeys))
+              }
+            }}
+            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground/50 hover:bg-white/[0.03] hover:text-muted-foreground transition-all duration-100"
+            title={groups.every(g => collapsedGroups.has(g.key)) ? "Expand all groups" : "Collapse all groups"}
+          >
+            <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+              {groups.every(g => collapsedGroups.has(g.key)) ? (
+                <>
+                  <path d="M4 6l4 4 4-4" />
+                </>
+              ) : (
+                <>
+                  <path d="M12 10l-4-4-4 4" />
+                </>
+              )}
+            </svg>
+          </button>
+        ) : undefined}
         showFilter
         hasActiveFilters={viewState.filters.length > 0}
         filterContent={
@@ -954,8 +1052,20 @@ export function NotesTable({
                         {item.type === "header" ? (
                           viewState.viewMode === "list" ? (
                           <div
-                            className="flex items-center gap-2.5 px-5 py-2 border-b border-border/50 cursor-pointer select-none hover:bg-secondary/20 transition-colors"
-                            onClick={() => toggleGroupCollapse(item.groupKey)}
+                            data-group-key={item.groupKey}
+                            onPointerDown={(e) => handleGroupPointerDown(e, item.groupKey)}
+                            onPointerMove={handleGroupPointerMove}
+                            onPointerUp={handleGroupPointerUp}
+                            className={`flex items-center gap-2.5 px-5 py-2 border-b border-border/50 select-none transition-colors ${
+                              reorderSource ? "cursor-grabbing" : "cursor-pointer"
+                            } ${
+                              reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/20"
+                            } ${
+                              reorderSource === item.groupKey ? "opacity-50 bg-secondary/30" : ""
+                            }`}
+                            onClick={() => {
+                              if (!reorderMoved.current) toggleGroupCollapse(item.groupKey)
+                            }}
                           >
                             <ChevronDown className={`h-3 w-3 text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
@@ -966,8 +1076,20 @@ export function NotesTable({
                           </div>
                           ) : (
                           <div
-                            className="flex items-center gap-2 px-5 py-2.5 bg-secondary/20 border-b border-border/30 cursor-pointer select-none hover:bg-secondary/30 transition-colors"
-                            onClick={() => toggleGroupCollapse(item.groupKey)}
+                            data-group-key={item.groupKey}
+                            onPointerDown={(e) => handleGroupPointerDown(e, item.groupKey)}
+                            onPointerMove={handleGroupPointerMove}
+                            onPointerUp={handleGroupPointerUp}
+                            className={`flex items-center gap-2 px-5 py-2.5 bg-secondary/20 border-b border-border/30 select-none transition-colors ${
+                              reorderSource ? "cursor-grabbing" : "cursor-pointer"
+                            } ${
+                              reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/30"
+                            } ${
+                              reorderSource === item.groupKey ? "opacity-50 bg-secondary/30" : ""
+                            }`}
+                            onClick={() => {
+                              if (!reorderMoved.current) toggleGroupCollapse(item.groupKey)
+                            }}
                           >
                             <ChevronDown className={`h-3 w-3 text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
@@ -977,6 +1099,18 @@ export function NotesTable({
                             <span className="text-[11px] text-muted-foreground/50 tabular-nums">{item.count}</span>
                           </div>
                           )
+                        ) : item.type === "subheader" ? (
+                          <div
+                            className="flex items-center gap-2 pl-10 pr-5 py-1.5 border-b border-border/30 select-none cursor-pointer hover:bg-secondary/20 transition-colors"
+                            onClick={() => toggleGroupCollapse(item.groupKey)}
+                          >
+                            <ChevronDown className={`h-2.5 w-2.5 text-muted-foreground/50 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
+                            <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey.split("::")[1] ?? item.groupKey} label={item.label} folders={folders} labels={labels} />
+                            <span className="text-[11px] font-medium text-foreground/60 tracking-wider">
+                              {resolveGroupLabel(item.groupBy, item.groupKey.split("::")[1] ?? item.groupKey, item.label, folders, labels)}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground/40 tabular-nums">{item.count}</span>
+                          </div>
                         ) : (
                           <NoteRow
                             note={item.note}
@@ -997,15 +1131,16 @@ export function NotesTable({
                             onStatus={(s) => updateNote(item.note.id, { status: s })}
                             onSetFolder={(folderId) => updateNote(item.note.id, { folderId })}
                             onRemoveFolder={() => updateNote(item.note.id, { folderId: null })}
-                            onKeep={() => { triageKeep(item.note.id); pushUndo("Triage to Capture", () => moveBackToInbox(item.note.id)) }}
+                            onKeep={() => { triageKeep(item.note.id); pushUndo("Triage to Capture", () => moveBackToInbox(item.note.id), () => triageKeep(item.note.id)) }}
                             onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
-                            onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id)) }}
-                            onPromote={() => { promoteToPermanent(item.note.id); pushUndo("Promote to Permanent", () => undoPromote(item.note.id)) }}
-                            onDemote={() => { undoPromote(item.note.id); pushUndo("Demote to Capture", () => promoteToPermanent(item.note.id)) }}
-                            onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Inbox", () => triageKeep(item.note.id)) }}
+                            onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id), () => triageTrash(item.note.id)) }}
+                            onPromote={() => { promoteToPermanent(item.note.id); pushUndo("Promote to Permanent", () => undoPromote(item.note.id), () => promoteToPermanent(item.note.id)) }}
+                            onDemote={() => { undoPromote(item.note.id); pushUndo("Demote to Capture", () => promoteToPermanent(item.note.id), () => undoPromote(item.note.id)) }}
+                            onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Inbox", () => triageKeep(item.note.id), () => moveBackToInbox(item.note.id)) }}
                             onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
                             onMergeWith={() => setMergePickerOpen(true, item.note.id)}
                             onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
+                            showCardPreview={viewState.toggles?.showCardPreview === true}
                           />
                         )}
                       </div>
@@ -1035,7 +1170,7 @@ export function NotesTable({
                   onClick={() => {
                     const noteIds = flatNotes.map((n) => n.id)
                     flatNotes.forEach((n) => toggleTrash(n.id))
-                    pushUndo(`Restore ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`, () => noteIds.forEach((id) => toggleTrash(id)))
+                    pushUndo(`Restore ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`, () => noteIds.forEach((id) => toggleTrash(id)), () => noteIds.forEach((id) => toggleTrash(id)))
                     toast(`Restored ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`)
                   }}
                   disabled={flatNotes.length === 0}
@@ -1125,6 +1260,7 @@ interface NoteRowProps {
   onRemind: (isoDate: string) => void
   onMergeWith: () => void
   onLinkWith: () => void
+  showCardPreview?: boolean
 }
 
 function SourceIcon({ source }: { source: NoteSource }) {
@@ -1236,6 +1372,7 @@ function NoteRowInner({
   onRemind,
   onMergeWith,
   onLinkWith,
+  showCardPreview,
 }: NoteRowProps) {
   const visibleCols = visibleColumns
   const labels = usePlotStore((s) => s.labels)
@@ -1252,7 +1389,9 @@ function NoteRowInner({
           <div
             draggable
             onDragStart={(e) => setNoteDragData(e, note.id)}
-            className={`group flex items-center gap-3 px-5 py-2.5 cursor-pointer transition-colors ${
+            className={`group flex items-center gap-3 cursor-pointer transition-colors ${
+              isCompact ? "px-3 py-1" : "px-5 py-2.5"
+            } ${
               isSelected
                 ? "bg-accent/5"
                 : isActive
@@ -1265,7 +1404,7 @@ function NoteRowInner({
             {/* Checkbox */}
             <div
               data-checkbox
-              className={`shrink-0 flex items-center justify-center cursor-pointer rounded w-6 h-6 ${
+              className={`shrink-0 flex items-center justify-center cursor-pointer rounded ${isCompact ? "w-5 h-5" : "w-6 h-6"} ${
                 selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
               }`}
               onClick={(e) => {
@@ -1288,8 +1427,13 @@ function NoteRowInner({
               <StatusShapeIcon status={note.status} size={8} />
             )}
 
-            {/* Title */}
-            <span className="text-[13px] font-medium text-foreground truncate flex-1">{note.title || "Untitled"}</span>
+            {/* Title + optional preview */}
+            <div className="flex-1 min-w-0">
+              <span className={`font-medium text-foreground truncate block ${isCompact ? "text-xs" : "text-[13px]"}`}>{note.title || "Untitled"}</span>
+              {showCardPreview && note.preview && (
+                <span className="text-xs text-muted-foreground/60 truncate block mt-0.5">{note.preview}</span>
+              )}
+            </div>
 
             {/* Label badge (always visible — part of note identity) */}
             {label ? (
@@ -1732,5 +1876,6 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.selectionActive === next.selectionActive &&
   prev.isCompact === next.isCompact &&
   prev.viewMode === next.viewMode &&
-  prev.visibleColumns === next.visibleColumns
+  prev.visibleColumns === next.visibleColumns &&
+  prev.showCardPreview === next.showCardPreview
 )

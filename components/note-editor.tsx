@@ -28,6 +28,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
+import { pushUndo } from "@/lib/undo-manager"
 import { EditorBreadcrumb } from "@/components/editor-breadcrumb"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"

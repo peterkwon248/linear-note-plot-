@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
-import { useActiveSpace, setActiveRoute, setActiveFolderId, DEFAULT_ROUTES } from "@/lib/table-route"
+import { useActiveSpace, setActiveRoute, setActiveFolderId, getActiveRoute, DEFAULT_ROUTES } from "@/lib/table-route"
 import { IconChevronRight } from "@/components/plot-icons"
 import type { Note, ActivitySpace } from "@/lib/types"
 
@@ -28,25 +28,27 @@ export function EditorBreadcrumb({ note, onClose }: EditorBreadcrumbProps) {
 
   const navigateToSpace = () => {
     if (onClose) { onClose(); return }
-    const route = DEFAULT_ROUTES[activeSpace]
-    setActiveRoute(route)
-    router.push(route)
     usePlotStore.getState().setSelectedNoteId(null)
+    const route = DEFAULT_ROUTES[activeSpace]
+    const currentRoute = getActiveRoute()
+    setActiveRoute(route)
+    if (currentRoute !== route) router.push(route)
   }
 
   const navigateToFolder = () => {
     if (onClose) { onClose(); return }
+    usePlotStore.getState().setSelectedNoteId(null)
+    const currentRoute = getActiveRoute()
     setActiveRoute("/notes")
     setActiveFolderId(note.folderId)
-    router.push("/notes")
-    usePlotStore.getState().setSelectedNoteId(null)
+    if (currentRoute !== "/notes") router.push("/notes")
   }
 
   return (
     <nav className="flex items-center gap-1 min-w-0">
       {/* Space crumb */}
       <button
-        onClick={navigateToSpace}
+        onClick={(e) => { e.stopPropagation(); navigateToSpace() }}
         className="shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
       >
         {SPACE_LABELS[activeSpace]}
@@ -57,7 +59,7 @@ export function EditorBreadcrumb({ note, onClose }: EditorBreadcrumbProps) {
         <>
           <IconChevronRight size={12} className="shrink-0 text-muted-foreground/40" />
           <button
-            onClick={navigateToFolder}
+            onClick={(e) => { e.stopPropagation(); navigateToFolder() }}
             className="shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
           >
             {folder.name}
