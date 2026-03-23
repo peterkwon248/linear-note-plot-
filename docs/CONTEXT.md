@@ -36,7 +36,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (19): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles
-- Store version: 48 (v46: seed data, v47: wikiArticles init, v48: seed WikiArticles)
+- Store version: 54
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -79,11 +79,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-35. Architecture Redesign v2 Phase 4~5 — Sidebar + Breadcrumb + PlotIcons
-36. Phase 6: Wiki Evolution — 자동 등재, 초성 인덱스, Graph 노드 형태, 3-tier 엣지
 37. Phase 6 후속 — Calendar 승격, Wiki Overview 재구조, 위키 강등, Display 정리
 38. Phase 7: Wiki Collection — Store v43, WikiQuote TipTap node, Extract as Note, Collection sidebar, Red Links
 39. Graph Insights 페이지 + docs 정리 (완료된 설계문서 9개 삭제, -22k줄)
+40. Smart Side Panel + Workspace 단순화 + Wiki 블록 무한 확장 대응
+41. 글로벌 색상 체계 + 위키 아이콘 + 그래프 폴리시 + 라우트 히스토리 + 성능 최적화
 
 ## Three Axes — Core Design Philosophy
 
@@ -106,9 +106,16 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## TODO: Future Work
 
-- **Wiki Block Editor (Option C)** — 위키 전용 블록 에디터. Note Embed, Section 접기/펼치기, 블록 단위 편집 (7-9 세션)
+- **글로벌 Ctrl+Z 되돌리기** — store 전체 history 레이어 (큰 작업)
+- **리니어 디자인 폴리시** — 전 화면 대상 UI 폴리시 (줄/사각형 제거, 폰트/아이콘 정렬)
+- **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식 통합 에디터
+- 필터 드롭다운 내 검색창 추가
+- J/K 리스트 네비게이션 (Linear식)
+- 노트 가져오기/내보내기 (import/export)
+- 사이드바 반응형
+- Settings 기능 감사
+- 그래프 사이드바 → 클러스터 + 인사이트 리워크
 - Phosphor Icons 마이그레이션
-- 에디터 업그레이드
 - Custom Views 2차
 
 ## Calendar 리디자인 설계 (확정)

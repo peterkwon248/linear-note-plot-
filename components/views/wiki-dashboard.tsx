@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import { WikiStatusDot } from "./wiki-shared"
+import { IconWikiStub, IconWikiDraft, IconWikiComplete } from "@/components/plot-icons"
 import type { WikiArticle } from "@/lib/types"
 
 /* ── Types ── */
@@ -313,11 +314,14 @@ export function WikiDashboard({
                     </p>
                   </div>
                   <span className={cn(
-                    "shrink-0 rounded-[4px] px-1.5 py-px text-[9.5px] font-semibold uppercase tracking-wide",
-                    article.wikiStatus === "stub" ? "bg-chart-3/8 text-chart-3/70" :
-                    article.wikiStatus === "draft" ? "bg-accent/8 text-accent/70" :
-                    "bg-chart-5/8 text-chart-5/70"
+                    "inline-flex items-center gap-1.5 shrink-0 text-[11px] font-medium capitalize",
+                    article.wikiStatus === "stub" ? "text-chart-3" :
+                    article.wikiStatus === "draft" ? "text-accent" :
+                    "text-wiki-complete"
                   )}>
+                    {article.wikiStatus === "stub" ? <IconWikiStub size={14} /> :
+                     article.wikiStatus === "draft" ? <IconWikiDraft size={14} /> :
+                     <IconWikiComplete size={14} />}
                     {article.wikiStatus}
                   </span>
                 </button>

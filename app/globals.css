@@ -29,6 +29,8 @@
   --chart-3: #f2994a;
   --chart-4: #e5484d;
   --chart-5: #45d483;
+  --wiki-complete: #7c3aed;
+  --priority-medium: #d97706;
   --radius: 0.5rem;
   --sidebar-bg: #f5f5f7;
   --sidebar-foreground: #1a1a2e;
@@ -43,15 +45,15 @@
 }
 
 .dark {
-  /* App background: zinc-950 */
-  --background: #09090b;
+  /* App background: charcoal (not pure black) for depth hierarchy */
+  --background: #141417;
   --foreground: #fafafa;
-  --card: #18181b;
+  --card: #1c1c20;
   --card-foreground: #fafafa;
-  --popover: #18181b;
+  --popover: #222226;
   --popover-foreground: #fafafa;
   --primary: #fafafa;
-  --primary-foreground: #09090b;
+  --primary-foreground: #141417;
   --secondary: #27272a;
   --secondary-foreground: #fafafa;
   --muted: #27272a;
@@ -60,14 +62,16 @@
   --accent-foreground: #fafafa;
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
-  --border: #27272a;
-  --input: #27272a;
+  --border: #2a2a2e;
+  --input: #2a2a2e;
   --ring: #6366f1;
   --chart-1: #6366f1;
   --chart-2: #22d3ee;
   --chart-3: #f97316;
   --chart-4: #ef4444;
   --chart-5: #22c55e;
+  --wiki-complete: #8b5cf6;
+  --priority-medium: #f59e0b;
   /* Sidebar: solid charcoal, opacity-based hierarchy */
   --sidebar-bg: #1c1c20;
   --sidebar-foreground: rgba(255,255,255, 0.65);
@@ -114,6 +118,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-wiki-complete: var(--wiki-complete);
+  --color-priority-medium: var(--priority-medium);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

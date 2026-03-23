@@ -395,3 +395,13 @@ export interface RelationSuggestion {
   status: "pending" | "accepted" | "dismissed"
   createdAt: string
 }
+
+/** Auto-detected cluster of related notes that could form a wiki article */
+export interface WikiClusterSuggestion {
+  id: string
+  conceptTitles: string[]
+  noteIds: string[]
+  strength: number        // 0-1 density score
+  status: "pending" | "accepted" | "dismissed"
+  createdAt: string
+}

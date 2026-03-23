@@ -59,5 +59,25 @@ export function createOntologySlice(set: Set, get: Get, _appendEvent: AppendEven
         ),
       }))
     },
+
+    updateClusterSuggestions: (suggestions: any[]) => {
+      set({ clusterSuggestions: suggestions })
+    },
+
+    dismissClusterSuggestion: (id: string) => {
+      set((state: any) => ({
+        clusterSuggestions: (state.clusterSuggestions ?? []).map((s: any) =>
+          s.id === id ? { ...s, status: "dismissed" as const } : s
+        ),
+      }))
+    },
+
+    acceptClusterSuggestion: (id: string) => {
+      set((state: any) => ({
+        clusterSuggestions: (state.clusterSuggestions ?? []).map((s: any) =>
+          s.id === id ? { ...s, status: "accepted" as const } : s
+        ),
+      }))
+    },
   }
 }

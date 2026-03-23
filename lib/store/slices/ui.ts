@@ -146,6 +146,11 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
       set({ linkPickerOpen: open, linkPickerSourceId: open ? (sourceId ?? null) : null })
     },
 
+    // Wiki Assembly (Cluster Nudge)
+    setPendingWikiAssembly: (noteIds: string[] | null) => {
+      set({ pendingWikiAssemblyIds: noteIds })
+    },
+
     // View Engine
     setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => {
       set((state: any) => ({

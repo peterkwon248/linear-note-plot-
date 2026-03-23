@@ -1,11 +1,14 @@
 "use client"
 
+import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { ArrowLeft, BookOpen, List, X } from "lucide-react"
+import { ArrowLeft, BookOpen, List, Merge, MoreHorizontal, X } from "lucide-react"
+import { IconWikiStub, IconWikiDraft, IconWikiComplete } from "@/components/plot-icons"
 import { groupByInitial, INDEX_GROUPS } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import type { WikiArticle } from "@/lib/types"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 /* ── Types ── */
 
@@ -26,25 +29,34 @@ interface WikiListProps {
 
   // Actions
   onOpenArticle: (id: string) => void
+  onMergeArticle?: (sourceId: string) => void
 }
 
 /* ── Status Badge ── */
 
-const STATUS_STYLES: Record<string, string> = {
-  stub: "bg-chart-3/8 text-chart-3/70",
-  draft: "bg-accent/8 text-accent/70",
-  complete: "bg-chart-5/8 text-chart-5/70",
+const STATUS_COLORS: Record<string, string> = {
+  stub: "text-chart-3",
+  draft: "text-accent",
+  complete: "text-wiki-complete",
+}
+
+const STATUS_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  stub: IconWikiStub,
+  draft: IconWikiDraft,
+  complete: IconWikiComplete,
 }
 
 function StatusBadge({ status }: { status: string | null }) {
   if (!status) return null
+  const Icon = STATUS_ICONS[status]
   return (
     <span
       className={cn(
-        "rounded-[4px] px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide",
-        STATUS_STYLES[status] ?? "bg-muted/10 text-muted-foreground/50"
+        "inline-flex items-center gap-1.5 text-[11px] font-medium capitalize",
+        STATUS_COLORS[status] ?? "text-muted-foreground/50"
       )}
     >
+      {Icon && <Icon size={14} />}
       {status}
     </span>
   )
@@ -58,6 +70,7 @@ function ColumnHeaders() {
       <span className="w-[80px]">Status</span>
       <span className="min-w-0 flex-1">Title</span>
       <span className="w-[60px] text-right">Links</span>
+      <span className="w-[36px]" />
       <span className="w-[70px] text-right">Updated</span>
     </div>
   )
@@ -69,29 +82,62 @@ function ArticleTableRow({
   note,
   backlinkCount,
   onClick,
+  onMerge,
 }: {
   note: WikiArticle
   backlinkCount: number
   onClick: () => void
+  onMerge?: () => void
 }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+
   return (
-    <button
-      onClick={onClick}
-      className="flex w-full items-center px-5 py-2.5 hover:bg-white/[0.02] transition-colors duration-75 cursor-pointer border-b border-border/[0.06] text-left"
+    <div
+      className="group flex w-full items-center px-5 py-2.5 hover:bg-white/[0.02] transition-colors duration-75 border-b border-border/[0.06]"
     >
-      <span className="w-[80px] shrink-0">
-        <StatusBadge status={note.wikiStatus} />
-      </span>
-      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/90">
-        {note.title || "Untitled"}
-      </span>
+      <button
+        onClick={onClick}
+        className="flex flex-1 items-center text-left min-w-0"
+      >
+        <span className="w-[80px] shrink-0">
+          <StatusBadge status={note.wikiStatus} />
+        </span>
+        <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/90">
+          {note.title || "Untitled"}
+        </span>
+      </button>
       <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/40">
         {backlinkCount > 0 ? backlinkCount : "\u2014"}
       </span>
+
+      {/* Context menu */}
+      <span className="w-[36px] shrink-0 flex justify-center">
+        {onMerge ? (
+          <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+            <PopoverTrigger asChild>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+                className="rounded-md p-1 text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-white/[0.06] hover:text-muted-foreground/60 transition-all duration-100"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
+              <button
+                onClick={() => { setMenuOpen(false); onMerge() }}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-white/[0.06] transition-colors"
+              >
+                <Merge className="h-3.5 w-3.5" /> Merge into...
+              </button>
+            </PopoverContent>
+          </Popover>
+        ) : null}
+      </span>
+
       <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/30">
         {shortRelative(note.updatedAt)}
       </span>
-    </button>
+    </div>
   )
 }
 
@@ -153,6 +199,7 @@ export function WikiList({
   categoryFilterLabel,
   onClearCategoryFilter,
   onOpenArticle,
+  onMergeArticle,
 }: WikiListProps) {
   const groupedArticles = groupByInitial(filteredWikiNotes, (n: WikiArticle) => n.title || "Untitled")
 
@@ -275,6 +322,7 @@ export function WikiList({
                   note={note}
                   backlinkCount={backlinkCounts.get(note.id) ?? 0}
                   onClick={() => onOpenArticle(note.id)}
+                  onMerge={onMergeArticle ? () => onMergeArticle(note.id) : undefined}
                 />
               ))}
             </div>

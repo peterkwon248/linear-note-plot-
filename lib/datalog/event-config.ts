@@ -4,6 +4,7 @@ import {
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import type { NoteEventType } from "@/lib/types"
+import { EVENT_HEX } from "@/lib/colors"
 
 interface EventTypeConfig {
   icon: LucideIcon
@@ -12,34 +13,34 @@ interface EventTypeConfig {
 }
 
 export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
-  created: { icon: FilePlus, verb: "Created", color: "#45d483" },
-  updated: { icon: Pencil, verb: "Edited", color: "#5e6ad2" },
-  opened: { icon: Eye, verb: "Opened", color: "#6b7280" },
-  promoted: { icon: ArrowUpCircle, verb: "Promoted", color: "#10b981" },
-  archived: { icon: Archive, verb: "Archived", color: "#f59e0b" },
-  unarchived: { icon: Archive, verb: "Unarchived", color: "#f59e0b" },
-  trashed: { icon: Trash2, verb: "Trashed", color: "#ef4444" },
-  untrashed: { icon: Trash2, verb: "Restored", color: "#ef4444" },
-  triage_keep: { icon: Check, verb: "Kept", color: "#45d483" },
-  triage_snooze: { icon: Clock, verb: "Snoozed", color: "#f59e0b" },
-  triage_trash: { icon: Trash2, verb: "Triaged to trash", color: "#ef4444" },
-  link_added: { icon: Link2, verb: "Linked", color: "#5e6ad2" },
-  link_removed: { icon: Link2, verb: "Unlinked", color: "#5e6ad2" },
-  thread_started: { icon: Brain, verb: "Started thread", color: "#06b6d4" },
-  thread_step_added: { icon: Brain, verb: "Added thread step", color: "#06b6d4" },
-  thread_ended: { icon: Brain, verb: "Ended thread", color: "#06b6d4" },
-  thread_deleted: { icon: Trash2, verb: "Deleted thread", color: "#ef4444" },
-  label_changed: { icon: Tag, verb: "Label changed", color: "#a855f7" },
-  srs_reviewed: { icon: Brain, verb: "Reviewed (SRS)", color: "#06b6d4" },
-  autopilot_applied: { icon: Sparkles, verb: "Autopilot applied", color: "#8b5cf6" },
-  relation_added: { icon: Link2, verb: "Relation added", color: "#3b82f6" },
-  relation_removed: { icon: Link2, verb: "Relation removed", color: "#3b82f6" },
-  relation_type_changed: { icon: Link2, verb: "Relation type changed", color: "#3b82f6" },
-  alias_changed: { icon: Tag, verb: "changed aliases", color: "text-blue-400" },
-  wiki_converted: { icon: FileText, verb: "converted to wiki", color: "text-purple-400" },
-  attachment_added: { icon: Paperclip, verb: "attached file", color: "text-green-400" },
-  attachment_removed: { icon: Paperclip, verb: "removed attachment", color: "text-red-400" },
-  reflection_added: { icon: BookOpen, verb: "Added reflection", color: "#f59e0b" },
+  created: { icon: FilePlus, verb: "Created", color: EVENT_HEX.created },
+  updated: { icon: Pencil, verb: "Edited", color: EVENT_HEX.updated },
+  opened: { icon: Eye, verb: "Opened", color: EVENT_HEX.opened },
+  promoted: { icon: ArrowUpCircle, verb: "Promoted", color: EVENT_HEX.promoted },
+  archived: { icon: Archive, verb: "Archived", color: EVENT_HEX.archived },
+  unarchived: { icon: Archive, verb: "Unarchived", color: EVENT_HEX.unarchived },
+  trashed: { icon: Trash2, verb: "Trashed", color: EVENT_HEX.trashed },
+  untrashed: { icon: Trash2, verb: "Restored", color: EVENT_HEX.untrashed },
+  triage_keep: { icon: Check, verb: "Kept", color: EVENT_HEX.triage_keep },
+  triage_snooze: { icon: Clock, verb: "Snoozed", color: EVENT_HEX.triage_snooze },
+  triage_trash: { icon: Trash2, verb: "Triaged to trash", color: EVENT_HEX.triage_trash },
+  link_added: { icon: Link2, verb: "Linked", color: EVENT_HEX.link_added },
+  link_removed: { icon: Link2, verb: "Unlinked", color: EVENT_HEX.link_removed },
+  thread_started: { icon: Brain, verb: "Started thread", color: EVENT_HEX.thread_started },
+  thread_step_added: { icon: Brain, verb: "Added thread step", color: EVENT_HEX.thread_step_added },
+  thread_ended: { icon: Brain, verb: "Ended thread", color: EVENT_HEX.thread_ended },
+  thread_deleted: { icon: Trash2, verb: "Deleted thread", color: EVENT_HEX.thread_deleted },
+  label_changed: { icon: Tag, verb: "Label changed", color: EVENT_HEX.label_changed },
+  srs_reviewed: { icon: Brain, verb: "Reviewed (SRS)", color: EVENT_HEX.srs_reviewed },
+  autopilot_applied: { icon: Sparkles, verb: "Autopilot applied", color: EVENT_HEX.autopilot_applied },
+  relation_added: { icon: Link2, verb: "Relation added", color: EVENT_HEX.relation_added },
+  relation_removed: { icon: Link2, verb: "Relation removed", color: EVENT_HEX.relation_removed },
+  relation_type_changed: { icon: Link2, verb: "Relation type changed", color: EVENT_HEX.relation_type_changed },
+  alias_changed: { icon: Tag, verb: "changed aliases", color: EVENT_HEX.alias_changed },
+  wiki_converted: { icon: FileText, verb: "converted to wiki", color: EVENT_HEX.wiki_converted },
+  attachment_added: { icon: Paperclip, verb: "attached file", color: EVENT_HEX.attachment_added },
+  attachment_removed: { icon: Paperclip, verb: "removed attachment", color: EVENT_HEX.attachment_removed },
+  reflection_added: { icon: BookOpen, verb: "Added reflection", color: EVENT_HEX.reflection_added },
 }
 
 // Human-readable event type labels for filter chips

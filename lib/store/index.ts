@@ -60,6 +60,7 @@ export const usePlotStore = create<PlotState>()(
         mergePickerSourceId: null,
         linkPickerOpen: false,
         linkPickerSourceId: null,
+        pendingWikiAssemblyIds: null,
 
         noteEvents: [] as NoteEvent[],
         threads: [],
@@ -70,6 +71,7 @@ export const usePlotStore = create<PlotState>()(
         attachments: [] as Attachment[],
         coOccurrences: [] as CoOccurrence[],
         relationSuggestions: [] as RelationSuggestion[],
+        clusterSuggestions: [] as import("../types").WikiClusterSuggestion[],
         ontologyPositions: {} as Record<string, { x: number; y: number }>,
         wikiCollections: {} as Record<string, import("../types").WikiCollectionItem[]>,
         savedViews: [] as import("../types").SavedView[],
@@ -110,7 +112,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 53,
+      version: 54,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -40,6 +40,54 @@ let _activeTagId: string | null = null
 let _activeLabelId: string | null = null
 let _activeViewId: string | null = null
 
+/* ── Route History Stack (global back/forward) ──────── */
+
+let _routeHistory: string[] = []
+let _routeHistoryIndex = -1
+let _isNavigatingHistory = false // prevent push during goBack/goForward
+
+function _pushRouteHistory(route: string): void {
+  if (_isNavigatingHistory) return
+  // Don't push duplicate
+  if (_routeHistory[_routeHistoryIndex] === route) return
+  // Truncate forward history
+  _routeHistory = _routeHistory.slice(0, _routeHistoryIndex + 1)
+  _routeHistory.push(route)
+  _routeHistoryIndex = _routeHistory.length - 1
+  // Cap at 50 entries
+  if (_routeHistory.length > 50) {
+    _routeHistory = _routeHistory.slice(_routeHistory.length - 50)
+    _routeHistoryIndex = _routeHistory.length - 1
+  }
+}
+
+export function routeGoBack(): boolean {
+  if (_routeHistoryIndex <= 0) return false
+  _isNavigatingHistory = true
+  _routeHistoryIndex--
+  const route = _routeHistory[_routeHistoryIndex]
+  setActiveRoute(route)
+  // Sync URL without triggering Next.js navigation
+  if (typeof window !== "undefined") {
+    window.history.replaceState(null, "", route)
+  }
+  _isNavigatingHistory = false
+  return true
+}
+
+export function routeGoForward(): boolean {
+  if (_routeHistoryIndex >= _routeHistory.length - 1) return false
+  _isNavigatingHistory = true
+  _routeHistoryIndex++
+  const route = _routeHistory[_routeHistoryIndex]
+  setActiveRoute(route)
+  if (typeof window !== "undefined") {
+    window.history.replaceState(null, "", route)
+  }
+  _isNavigatingHistory = false
+  return true
+}
+
 /** Infer which activity space a route belongs to */
 export function inferSpace(route: string): ActivitySpace {
   if (route === "/inbox") return "inbox"
@@ -60,6 +108,7 @@ export function setActiveRoute(route: string | null): void {
   // Auto-infer space from route (backward compatible)
   if (route) {
     _activeSpace = inferSpace(route)
+    _pushRouteHistory(route)
   }
   _listeners.forEach((fn) => fn())
 }

@@ -147,11 +147,30 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Wiki stats 버그 수정**: `notes.isWiki` → `wikiArticles` 기반으로 전환
 - **Wiki article 클릭 버그 수정**: Dashboard에서 `onOpenArticle` → `onOpenWikiArticle`
 
+### 이번 세션 완료 (2026-03-23, 세션 2)
+- **글로벌 색상 체계 (`lib/colors.ts`)**: 15개 파일 하드코딩 → 단일 소스. CSS 변수 추가 (`--wiki-complete`, `--priority-medium`)
+- **wiki-complete 색상 분리**: permanent 초록 → violet `#8b5cf6`로 분리
+- **위키 상태 아이콘 3종**: IconWikiStub(점선 책), IconWikiDraft(연필 책), IconWikiComplete(북마크 책) — Linear 스타일 아이콘+텍스트
+- **그래프 nodeType 버그 수정**: WikiArticle이 원(Note)으로 나오던 버그 → 헥사곤으로 정상 표시
+- **그래프 색상 수정**: inbox/capture 색상이 뒤바뀐 거 수정 + 위키 상태별 색상(violet/indigo/orange)
+- **그래프 범례 재구성**: Node Types → 상태별(Inbox/Capture/Permanent) + Wiki별(Complete/Draft/Stub)
+- **태그 기본 OFF + pill 형태**: 그래프에서 태그 노드 기본 숨김, 다이아몬드 → pill 캡슐 형태
+- **배경색 차콜 전환**: `#09090b` → `#141417`. 카드/팝오버/보더도 elevation 계층 조정
+- **그래프 노드 제한**: MAX 200개(connectionCount 순), LOD 최적화(zoom < 0.3 라벨 숨김, < 0.15 노드 숨김)
+- **글로벌 라우트 히스토리**: `table-route.ts`에 히스토리 스택. Back/Forward 버튼이 페이지 간 이동 지원
+- **Backspace = 뒤로가기**: 에디터 밖에서 Backspace키로 이전 페이지/노트 이동
+- **"Ontology" → "Graph"**: 헤더 타이틀 변경
+- **위키 클릭 버그 수정**: openArticle이 WikiArticle.id 직접 인식하도록 수정
+- **Node Types 범례 한글 → 영어**: "일반 노트/위키 문서/미완성 위키" 제거
+
 ### 다음 작업 후보 (우선순위 순)
-1. **블록 Undo/Redo** — 위키 블록 수준 undo 스택 (현재 즉시 저장, 되돌리기 불가)
-2. **Phosphor Icons 마이그레이션** — Lucide → Phosphor weight 시스템 전환
-3. **에디터 업그레이드** — 노트 에디터 개선
-4. **Custom Views 2차**
+1. **글로벌 Ctrl+Z 되돌리기** — store 전체 history 레이어
+2. **리니어 디자인 폴리시** — 전 화면 UI 폴리시 (줄/사각형 제거, 폰트/아이콘 정렬)
+3. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
+4. **필터 드롭다운 내 검색창** — 모든 필터 버튼 드롭다운에 검색 입력
+5. **J/K 리스트 네비게이션** — Linear식
+6. **노트 가져오기/내보내기**
+7. **그래프 사이드바 리워크** — 클러스터 + 인사이트
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정

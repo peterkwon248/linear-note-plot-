@@ -26,6 +26,7 @@ import type { OntologyGraph, OntologyNode, OntologyEdge, OntologyEdgeKind } from
 import { computeForceConfig } from "@/lib/graph"
 import { RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
 import type { RelationType, Label } from "@/lib/types"
+import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE, WIKI_STATUS_HEX } from "@/lib/colors"
 
 /* ── Types ─────────────────────────────────────────────── */
 
@@ -66,10 +67,11 @@ interface SimNode extends SimulationNodeDatum {
 
 /* ── Constants ─────────────────────────────────────────── */
 
-const MIN_SCALE = 0.3
+const MIN_SCALE = 0.05
 const MAX_SCALE = 3.0
 const ZOOM_STEP = 0.15
 const LABEL_TRUNCATE = 18
+const MAX_VISIBLE_NODES = 200
 
 /* ── Node type derivation (safe fallback when nodeType not yet on OntologyNode) ── */
 
@@ -122,9 +124,10 @@ function hexagonPath(cx: number, cy: number, r: number): string {
   return hexagonPathFromPoints(hexagonPoints(cx, cy, r))
 }
 
-/** Diamond points for a single diamond centered at (cx, cy) with half-size d */
+/** Diamond points for a single diamond centered at (cx, cy) with half-size d.
+ *  Flattened shape: wider (0.9) than tall (0.55) for a compressed look. */
 function diamondPointsStr(cx: number, cy: number, d: number): string {
-  return `${cx},${cy - d} ${cx + d * 0.7},${cy} ${cx},${cy + d} ${cx - d * 0.7},${cy}`
+  return `${cx},${cy - d * 0.55} ${cx + d * 0.9},${cy} ${cx},${cy + d * 0.55} ${cx - d * 0.9},${cy}`
 }
 
 /* ── Edge style by kind (3-tier thickness) ─────────────── */
@@ -139,10 +142,36 @@ function getEdgeStyle(kind: OntologyEdgeKind): { strokeWidth: number; strokeColo
 
 const ACCENT_COLOR = "#5e6ad2"
 
+const CLUSTER_COLORS = [...GRAPH_CLUSTER_PALETTE]
+
 /* ── Helpers ───────────────────────────────────────────── */
 
 function truncate(str: string, max: number): string {
   return str.length > max ? str.slice(0, max) + "\u2026" : str
+}
+
+/** Generate a smooth closed curve through convex hull points using Catmull-Rom → cubic bezier */
+function smoothHullPath(points: { x: number; y: number }[], tension: number = 0.3): string {
+  if (points.length < 3) return ""
+  const n = points.length
+  let d = `M ${points[0].x} ${points[0].y}`
+
+  for (let i = 0; i < n; i++) {
+    const p0 = points[(i - 1 + n) % n]
+    const p1 = points[i]
+    const p2 = points[(i + 1) % n]
+    const p3 = points[(i + 2) % n]
+
+    const cp1x = p1.x + (p2.x - p0.x) * tension
+    const cp1y = p1.y + (p2.y - p0.y) * tension
+    const cp2x = p2.x - (p3.x - p1.x) * tension
+    const cp2y = p2.y - (p3.y - p1.y) * tension
+
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`
+  }
+
+  d += " Z"
+  return d
 }
 
 function nodeRadius(connectionCount: number): number {
@@ -230,9 +259,9 @@ function computeEdgePath(
 /* ── Node base color (for gradient palette) ──────────── */
 
 const STATUS_COLORS: Record<string, string> = {
-  inbox: "#f59e0b",
-  capture: "#3b82f6",
-  permanent: "#22c55e",
+  inbox:     GRAPH_NODE_HEX.inbox,
+  capture:   GRAPH_NODE_HEX.capture,
+  permanent: GRAPH_NODE_HEX.permanent,
 }
 const DEFAULT_NODE_COLOR = "hsl(var(--muted-foreground))"
 
@@ -241,6 +270,11 @@ function getNodeBaseColor(node: OntologyNode, labels: Label[]): string {
     const label = labels.find((l) => l.id === node.labelId)
     if (label?.color) return label.color
   }
+  // Wiki nodes use violet color regardless of note status
+  const nt = (node as any).nodeType as string | undefined
+  if (nt === "wiki-complete") return WIKI_STATUS_HEX.complete   // #8b5cf6 violet
+  if (nt === "wiki-draft")    return WIKI_STATUS_HEX.draft      // #6366f1 indigo
+  if (nt === "wiki-stub")     return WIKI_STATUS_HEX.stub       // #f97316 orange
   return STATUS_COLORS[node.status] ?? DEFAULT_NODE_COLOR
 }
 
@@ -536,24 +570,74 @@ export function OntologyGraphCanvas({
     return map
   }, [visibleEdges])
 
-  /* ── Label cluster hulls ─────────────────────────────── */
+  /* ── Edge-based cluster hulls (connected components) ── */
   const clusterHulls = useMemo(() => {
-    // Group nodes by labelId (skip null)
-    const groups = new Map<string, { x: number; y: number }[]>()
-    for (const node of graph.nodes) {
-      if (!node.labelId) continue
-      const pos = positionsRef.current.get(node.id)
-      if (!pos) continue
-      if (!groups.has(node.labelId)) groups.set(node.labelId, [])
-      groups.get(node.labelId)!.push(pos)
+    // Build adjacency from visible edges
+    const adj = new Map<string, Set<string>>()
+    for (const edge of visibleEdges) {
+      if (!adj.has(edge.source)) adj.set(edge.source, new Set())
+      if (!adj.has(edge.target)) adj.set(edge.target, new Set())
+      adj.get(edge.source)!.add(edge.target)
+      adj.get(edge.target)!.add(edge.source)
     }
 
-    const hulls: { labelId: string; color: string; path: string }[] = []
-    for (const [labelId, points] of groups) {
-      if (points.length < 3) continue // Need at least 3 points for a hull
+    // Find connected components via BFS
+    const visited = new Set<string>()
+    const components: string[][] = []
 
-      const label = labels.find((l) => l.id === labelId)
-      const color = label?.color ?? "hsl(var(--muted-foreground))"
+    for (const nodeId of adj.keys()) {
+      if (visited.has(nodeId)) continue
+      const component: string[] = []
+      const queue = [nodeId]
+      visited.add(nodeId)
+      while (queue.length > 0) {
+        const current = queue.shift()!
+        component.push(current)
+        for (const neighbor of adj.get(current) ?? []) {
+          if (!visited.has(neighbor)) {
+            visited.add(neighbor)
+            queue.push(neighbor)
+          }
+        }
+      }
+      components.push(component)
+    }
+
+    const hulls: { id: string; color: string; path: string }[] = []
+
+    for (let ci = 0; ci < components.length; ci++) {
+      const component = components[ci]
+      if (component.length < 3) continue // Need at least 3 nodes for a hull
+
+      // Gather positions
+      const points: { x: number; y: number }[] = []
+      for (const nid of component) {
+        const pos = positionsRef.current.get(nid)
+        if (pos) points.push(pos)
+      }
+      if (points.length < 3) continue
+
+      // Determine color — if all nodes share a common label, use that label's color
+      let commonLabelId: string | null = null
+      let allSameLabel = true
+      for (const nid of component) {
+        const node = nodeMap.get(nid)
+        if (!node) continue
+        if (commonLabelId === null) {
+          commonLabelId = node.labelId
+        } else if (node.labelId !== commonLabelId) {
+          allSameLabel = false
+          break
+        }
+      }
+
+      let color: string
+      if (allSameLabel && commonLabelId) {
+        const label = labels.find((l) => l.id === commonLabelId)
+        color = label?.color ?? CLUSTER_COLORS[ci % CLUSTER_COLORS.length]
+      } else {
+        color = CLUSTER_COLORS[ci % CLUSTER_COLORS.length]
+      }
 
       // Compute convex hull (Graham scan)
       const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y)
@@ -577,7 +661,7 @@ export function OntologyGraphCanvas({
       if (hull.length < 3) continue
 
       // Expand hull outward by padding
-      const pad = 25
+      const pad = 30
       const cx = hull.reduce((s, p) => s + p.x, 0) / hull.length
       const cy = hull.reduce((s, p) => s + p.y, 0) / hull.length
       const expanded = hull.map((p) => {
@@ -586,15 +670,14 @@ export function OntologyGraphCanvas({
         return { x: p.x + (dx / d) * pad, y: p.y + (dy / d) * pad }
       })
 
-      // Build smooth closed path with rounded corners
-      const pathParts = expanded.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`))
-      pathParts.push("Z")
+      // Build smooth closed curve
+      const path = smoothHullPath(expanded)
 
-      hulls.push({ labelId, color, path: pathParts.join(" ") })
+      hulls.push({ id: `cluster-${ci}`, color, path })
     }
 
     return hulls
-  }, [graph.nodes, labels, positionsRef.current])
+  }, [visibleEdges, graph.nodes, labels, nodeMap, positionsRef.current])
 
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(
@@ -929,6 +1012,19 @@ export function OntologyGraphCanvas({
     [],
   )
 
+  /* ── Node cap: if total exceeds MAX_VISIBLE_NODES, keep top-N by connectionCount ── */
+  const cappedNodes = useMemo(() => {
+    if (graph.nodes.length <= MAX_VISIBLE_NODES) return graph.nodes
+    return [...graph.nodes]
+      .sort((a, b) => b.connectionCount - a.connectionCount)
+      .slice(0, MAX_VISIBLE_NODES)
+  }, [graph.nodes])
+  const cappedNodeIds = useMemo(
+    () => new Set(cappedNodes.map((n) => n.id)),
+    [cappedNodes],
+  )
+  const isCapped = graph.nodes.length > MAX_VISIBLE_NODES
+
   /* ── Empty state ────────────────────────────────────── */
   if (graph.nodes.length === 0) {
     return (
@@ -956,8 +1052,9 @@ export function OntologyGraphCanvas({
   ) as [RelationType, (typeof RELATION_TYPE_CONFIG)[RelationType]][]
 
   /* ── LOD zoom (Feature 4) ──────────────────────────── */
-  const showLabels = transform.scale >= 0.5
+  const showLabels = transform.scale >= 0.3
   const showEdgeLabels = transform.scale > 0.7
+  const showNodesAtAll = transform.scale >= 0.15
 
   /* ── Viewport culling (Feature 4) ─────────────────── */
   const viewBounds = (() => {
@@ -975,18 +1072,21 @@ export function OntologyGraphCanvas({
   })()
 
   const culledNodes = (viewBounds
-    ? graph.nodes.filter((n) => {
+    ? cappedNodes.filter((n) => {
         const pos = getPos(n.id)
         return pos.x >= viewBounds.left && pos.x <= viewBounds.right &&
                pos.y >= viewBounds.top && pos.y <= viewBounds.bottom
       })
-    : graph.nodes
+    : cappedNodes
   ).filter((n) => filters.showTagNodes || !n.id.startsWith("tag:"))
 
   const culledNodeIds = new Set(culledNodes.map((n) => n.id))
 
   const culledEdges = visibleEdges.filter(
-    (e) => culledNodeIds.has(e.source) || culledNodeIds.has(e.target)
+    (e) =>
+      cappedNodeIds.has(e.source) &&
+      cappedNodeIds.has(e.target) &&
+      (culledNodeIds.has(e.source) || culledNodeIds.has(e.target))
   )
 
   /* ── Cursor ────────────────────────────────────────── */
@@ -995,12 +1095,18 @@ export function OntologyGraphCanvas({
   /* ── Render ─────────────────────────────────────────── */
   return (
     <div
-      className="relative w-full h-full"
+      className="relative w-full h-full flex flex-col"
       style={{
         backgroundImage: "radial-gradient(circle, hsl(var(--border) / 0.3) 1px, transparent 1px)",
         backgroundSize: "20px 20px",
       }}
     >
+      {/* ── Node cap warning banner ─────────────────── */}
+      {isCapped && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-400/90 pointer-events-none select-none">
+          Showing top {MAX_VISIBLE_NODES} of {graph.nodes.length} nodes. Use filters to narrow down.
+        </div>
+      )}
       <svg
         ref={svgRef}
         className="w-full h-full"
@@ -1070,14 +1176,13 @@ export function OntologyGraphCanvas({
           {/* ── Cluster hull backgrounds ──────────── */}
           {clusterHulls.map((hull) => (
             <path
-              key={`hull-${hull.labelId}`}
+              key={hull.id}
               d={hull.path}
               fill={hull.color}
-              fillOpacity={0.06}
+              fillOpacity={0.04}
               stroke={hull.color}
-              strokeOpacity={0.15}
+              strokeOpacity={0.12}
               strokeWidth={1}
-              strokeDasharray="6 4"
               style={{ pointerEvents: "none" }}
             />
           ))}
@@ -1195,8 +1300,8 @@ export function OntologyGraphCanvas({
             )
           })}
 
-          {/* ── Nodes ──────────────────────────────── */}
-          {culledNodes.map((node) => {
+          {/* ── Nodes (hidden at zoom < 0.15; cluster hulls still show) ── */}
+          {showNodesAtAll && culledNodes.map((node) => {
             const pos = getPos(node.id)
             const isSelected = selectedNodeId === node.id
             const isMultiSelected = multiSelectedIds.has(node.id)
@@ -1216,7 +1321,7 @@ export function OntologyGraphCanvas({
             const shapeR = nodeType === "wiki-complete" ? r * 1.15
               : nodeType === "wiki-draft" ? r * 1.1
               : nodeType === "wiki-stub" ? r * 1.05
-              : nodeType === "tag" ? r * 0.8
+              : nodeType === "tag" ? r * 0.55
               : r
 
             return (
@@ -1342,30 +1447,19 @@ export function OntologyGraphCanvas({
 
                 {nodeType === "tag" && (() => {
                   const color = (node as any).tagColor || fill
-                  const d = r * 0.7
-                  const off = r * 0.25
-                  const op = dimmed ? 0.15 : 0.85
+                  const pw = r * 0.7   // pill half-width
+                  const ph = r * 0.35  // pill half-height
+                  const op = dimmed ? 0.15 : 0.75
                   return (
-                    <>
-                      {/* Back diamond (offset) */}
-                      <polygon
-                        points={diamondPointsStr(pos.x + off, pos.y - off, d)}
-                        fill={`${color}08`}
-                        stroke={color}
-                        strokeWidth={1.2}
-                        strokeLinejoin="round"
-                        opacity={op * 0.35}
-                      />
-                      {/* Front diamond */}
-                      <polygon
-                        points={diamondPointsStr(pos.x, pos.y, d)}
-                        fill={`${color}15`}
-                        stroke={color}
-                        strokeWidth={1.3}
-                        strokeLinejoin="round"
-                        opacity={op}
-                      />
-                    </>
+                    <rect
+                      x={pos.x - pw} y={pos.y - ph}
+                      width={pw * 2} height={ph * 2}
+                      rx={ph} ry={ph}
+                      fill={`${color}18`}
+                      stroke={color}
+                      strokeWidth={1.3}
+                      opacity={op}
+                    />
                   )
                 })()}
 
@@ -1867,7 +1961,7 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
 
   const rowHeight = 18
   // Node type legend entries (always shown) + edge entries
-  const nodeTypeRows = 4 // Note, Wiki, Wiki draft, Tag
+  const nodeTypeRows = 6 // Inbox, Capture, Permanent, Complete, Draft, Stub (separator uses row 3 space)
   const edgeRows = legendRelationTypes.length + (hasWikilinkEdges ? 1 : 0)
   const totalRows = nodeTypeRows + (edgeRows > 0 ? 1 : 0) + edgeRows // +1 for separator
   const legendH = totalRows * rowHeight + 16
@@ -1886,47 +1980,44 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
     <g transform={`translate(${tx},${ty})`} style={{ pointerEvents: "none" }}>
       <rect x={0} y={0} width={legendW} height={legendH} rx={6} ry={6} fill="rgba(0,0,0,0.55)" />
 
-      {/* Node type legends */}
-      {/* Note — circle with light fill */}
+      {/* ── Notes (circle, by status) ── */}
       <g transform={`translate(10, ${10 + 0 * rowHeight})`}>
-        <circle cx={6} cy={6} r={5} fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.6)" strokeWidth={1.3} />
-        <text x={26} y={10} fill="rgba(255,255,255,0.75)" fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Note</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.inbox + "30"} stroke={GRAPH_NODE_HEX.inbox} strokeWidth={1.3} />
+        <text x={26} y={10} fill={GRAPH_NODE_HEX.inbox} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Inbox</text>
       </g>
-      {/* Wiki — cube wireframe hexagon */}
       <g transform={`translate(10, ${10 + 1 * rowHeight})`}>
-        {(() => {
-          const pts = hexagonPoints(6, 6, 5)
-          return (
-            <>
-              <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.6)" strokeWidth={1.3} strokeLinejoin="round" />
-              <line x1={6} y1={6} x2={pts[0][0]} y2={pts[0][1]} stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} />
-              <line x1={6} y1={6} x2={pts[2][0]} y2={pts[2][1]} stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} />
-              <line x1={6} y1={6} x2={pts[4][0]} y2={pts[4][1]} stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} />
-            </>
-          )
-        })()}
-        <text x={26} y={10} fill="rgba(255,255,255,0.75)" fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Wiki</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.capture + "30"} stroke={GRAPH_NODE_HEX.capture} strokeWidth={1.3} />
+        <text x={26} y={10} fill={GRAPH_NODE_HEX.capture} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Capture</text>
       </g>
-      {/* Wiki stub — dashed cube wireframe */}
       <g transform={`translate(10, ${10 + 2 * rowHeight})`}>
-        {(() => {
-          const pts = hexagonPoints(6, 6, 5)
-          return (
-            <>
-              <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={1.3} strokeDasharray="2.5 2" strokeLinejoin="round" />
-              <line x1={6} y1={6} x2={pts[0][0]} y2={pts[0][1]} stroke="rgba(255,255,255,0.2)" strokeWidth={0.7} strokeDasharray="2 2" />
-              <line x1={6} y1={6} x2={pts[2][0]} y2={pts[2][1]} stroke="rgba(255,255,255,0.2)" strokeWidth={0.7} strokeDasharray="2 2" />
-              <line x1={6} y1={6} x2={pts[4][0]} y2={pts[4][1]} stroke="rgba(255,255,255,0.2)" strokeWidth={0.7} strokeDasharray="2 2" />
-            </>
-          )
-        })()}
-        <text x={26} y={10} fill="rgba(255,255,255,0.6)" fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Stub</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.permanent + "30"} stroke={GRAPH_NODE_HEX.permanent} strokeWidth={1.3} />
+        <text x={26} y={10} fill={GRAPH_NODE_HEX.permanent} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Permanent</text>
       </g>
-      {/* Tag — double diamond */}
+
+      {/* Separator */}
+      <line x1={8} y1={10 + 3 * rowHeight - 2} x2={legendW - 8} y2={10 + 3 * rowHeight - 2} stroke="rgba(255,255,255,0.12)" strokeWidth={0.5} />
+
+      {/* ── Wiki (hexagon, by status) ── */}
       <g transform={`translate(10, ${10 + 3 * rowHeight})`}>
-        <polygon points={diamondPointsStr(7.5, 4.5, 3.5)} fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.25)" strokeWidth={1} strokeLinejoin="round" />
-        <polygon points={diamondPointsStr(5, 7, 3.5)} fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.5)" strokeWidth={1.2} strokeLinejoin="round" />
-        <text x={26} y={10} fill="rgba(255,255,255,0.75)" fontSize={10} fontFamily="-apple-system, system-ui, sans-serif" fontStyle="italic">Tag</text>
+        {(() => {
+          const pts = hexagonPoints(6, 6, 4)
+          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={WIKI_STATUS_HEX.complete + "30"} stroke={WIKI_STATUS_HEX.complete} strokeWidth={1.3} strokeLinejoin="round" />
+        })()}
+        <text x={26} y={10} fill={WIKI_STATUS_HEX.complete} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Complete</text>
+      </g>
+      <g transform={`translate(10, ${10 + 4 * rowHeight})`}>
+        {(() => {
+          const pts = hexagonPoints(6, 6, 4)
+          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={WIKI_STATUS_HEX.draft + "20"} stroke={WIKI_STATUS_HEX.draft} strokeWidth={1.3} strokeLinejoin="round" />
+        })()}
+        <text x={26} y={10} fill={WIKI_STATUS_HEX.draft} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Draft</text>
+      </g>
+      <g transform={`translate(10, ${10 + 5 * rowHeight})`}>
+        {(() => {
+          const pts = hexagonPoints(6, 6, 4)
+          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill="none" stroke={WIKI_STATUS_HEX.stub} strokeWidth={1.3} strokeDasharray="2.5 2" strokeLinejoin="round" />
+        })()}
+        <text x={26} y={10} fill={WIKI_STATUS_HEX.stub} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Stub</text>
       </g>
 
       {/* Separator line before edges */}

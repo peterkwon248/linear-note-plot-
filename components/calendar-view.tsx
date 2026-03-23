@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -67,17 +68,17 @@ const MAX_VISIBLE = 3
 /* ── Status dot colors matching STATUS_CONFIG ──────────── */
 
 const STATUS_DOT: Record<string, string> = {
-  inbox: "#06b6d4",
-  capture: "#f2994a",
-  permanent: "#45d483",
+  inbox: NOTE_STATUS_HEX.inbox,
+  capture: NOTE_STATUS_HEX.capture,
+  permanent: NOTE_STATUS_HEX.permanent,
 }
 
 /* ── Status label config for dashboard ─────────────────── */
 
 const STATUS_LABEL: Record<string, { text: string; color: string }> = {
-  inbox: { text: "Inbox", color: "#06b6d4" },
-  capture: { text: "Capture", color: "#f2994a" },
-  permanent: { text: "Permanent", color: "#45d483" },
+  inbox: { text: "Inbox", color: NOTE_STATUS_HEX.inbox },
+  capture: { text: "Capture", color: NOTE_STATUS_HEX.capture },
+  permanent: { text: "Permanent", color: NOTE_STATUS_HEX.permanent },
 }
 
 /* ── Layer type icon (tiny, inline) ───────────────────── */

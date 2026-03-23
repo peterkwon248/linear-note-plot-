@@ -38,6 +38,8 @@ function setCooldown(type: string): void {
 export function useAutopilotNudges(): void {
   const notes = usePlotStore((s) => s.notes)
   const srsMap = usePlotStore((s) => s.srsStateByNoteId)
+  const clusterSuggestions = usePlotStore((s) => s.clusterSuggestions)
+  const setPendingWikiAssembly = usePlotStore((s) => s.setPendingWikiAssembly)
   const firedRef = useRef(false)
   const router = useRouter()
 
@@ -87,6 +89,26 @@ export function useAutopilotNudges(): void {
           })
         }
       }, 2000)
+
+      // Wiki cluster nudge
+      setTimeout(() => {
+        const pending = (clusterSuggestions ?? []).filter((s: any) => s.status === "pending")
+        if (pending.length > 0 && !isOnCooldown("wiki-cluster")) {
+          const top = pending[0]
+          setCooldown("wiki-cluster")
+          const conceptLabel = top.conceptTitles[0] ?? "related notes"
+          toast(`"${conceptLabel}" cluster detected`, {
+            description: `${top.noteIds.length} notes form a knowledge cluster`,
+            action: {
+              label: "Create Wiki",
+              onClick: () => {
+                setPendingWikiAssembly(top.noteIds)
+              },
+            },
+            duration: 10000,
+          })
+        }
+      }, 4000)
     }, 1000)
 
     return () => clearTimeout(timer)
