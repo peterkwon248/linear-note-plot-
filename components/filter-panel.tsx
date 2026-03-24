@@ -123,7 +123,7 @@ export function FilterPanel({
       {/* ── Sub Panel (values) — LEFT side, positioned at hovered row's y ── */}
       {activeCategory && activeCategory.values.length > 0 && (
         <div
-          className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-white/[0.08] bg-popover rounded-[10px] py-1 shrink-0 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.3),0_16px_40px_rgba(0,0,0,0.35)] z-10 -mr-px"
+          className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-border-subtle bg-popover rounded-[10px] py-1 shrink-0 shadow-lg z-10 -mr-px"
           style={{ top: subPanelTop }}
         >
           <div className="px-2 pb-1">
@@ -146,7 +146,7 @@ export function FilterPanel({
             return (
               <button
                 key={val.key}
-                className="group/row w-full flex items-center gap-2.5 px-3 py-[7px] hover:bg-white/[0.03] transition-colors cursor-default"
+                className="group/row w-full flex items-center gap-2.5 px-3 py-[7px] hover:bg-hover-bg transition-colors cursor-default"
                 onClick={() =>
                   onToggle({
                     field: activeCategory.key as FilterField,
@@ -162,7 +162,7 @@ export function FilterPanel({
                     style={{ backgroundColor: val.color }}
                   />
                 )}
-                <span className={`flex-1 text-left text-[13px] ${isActive ? "text-foreground font-medium" : "text-foreground"}`}>
+                <span className={`flex-1 text-left text-note ${isActive ? "text-foreground font-medium" : "text-foreground"}`}>
                   {val.label}
                 </span>
                 {val.count !== undefined && (
@@ -183,7 +183,7 @@ export function FilterPanel({
             placeholder="Filter..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-md bg-transparent px-2.5 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
+            className="w-full rounded-md bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
             autoFocus
           />
         </div>
@@ -191,18 +191,18 @@ export function FilterPanel({
         {/* Quick Filters */}
         {filteredQuickFilters && filteredQuickFilters.length > 0 && (
           <div className="pb-1.5" onMouseEnter={() => setOpenCat(null)}>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-muted-foreground/40 uppercase tracking-wide">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 text-2xs font-medium text-muted-foreground/40 uppercase tracking-wide">
               <SparkleIcon />
               <span>Quick Filters</span>
             </div>
             {filteredQuickFilters.map((qf) => (
               <button
                 key={qf.label}
-                className="w-full flex items-center justify-between px-3 pl-8 py-1.5 hover:bg-white/[0.03] transition-colors cursor-default"
+                className="w-full flex items-center justify-between px-3 pl-8 py-1.5 hover:bg-hover-bg transition-colors cursor-default"
                 onClick={() => onQuickFilter?.(qf.rules)}
               >
-                <span className="text-[13px] text-foreground/80 leading-none">{qf.label}</span>
-                <span className="text-[11px] text-muted-foreground/30 leading-none">{qf.desc}</span>
+                <span className="text-note text-foreground/80 leading-none">{qf.label}</span>
+                <span className="text-2xs text-muted-foreground/30 leading-none">{qf.desc}</span>
               </button>
             ))}
           </div>
@@ -216,7 +216,7 @@ export function FilterPanel({
             <button
               key={cat.key}
               className={`w-full flex items-center gap-2 px-3 py-[7px] transition-colors cursor-default ${
-                isOpen ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"
+                isOpen ? "bg-active-bg" : "hover:bg-hover-bg"
               }`}
               onMouseEnter={(e) => handleCatHover(cat.key, e)}
               onClick={() => setOpenCat(isOpen ? null : cat.key)}
@@ -229,14 +229,14 @@ export function FilterPanel({
               </span>
               <span
                 className={[
-                  "flex-1 text-left text-[13px]",
+                  "flex-1 text-left text-note",
                   activeCount > 0 || isOpen ? "text-foreground font-medium" : "text-muted-foreground",
                 ].join(" ")}
               >
                 {cat.label}
               </span>
               {activeCount > 0 && (
-                <span className="rounded-full bg-accent/20 px-1.5 text-[11px] text-accent font-medium tabular-nums">
+                <span className="rounded-full bg-accent/20 px-1.5 text-2xs text-accent font-medium tabular-nums">
                   {activeCount}
                 </span>
               )}

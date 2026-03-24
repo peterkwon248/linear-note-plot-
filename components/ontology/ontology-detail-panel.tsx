@@ -59,12 +59,12 @@ export function OntologyDetailPanel({
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: label.color }}
                 />
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   {label.name}
                 </span>
               </div>
             )}
-            <span className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
+            <span className="text-2xs text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
               {note.status}
             </span>
           </div>
@@ -88,7 +88,7 @@ export function OntologyDetailPanel({
       {/* Relations */}
       {relationsInvolving.length > 0 && (
         <div>
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
+          <div className="text-2xs font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
             Relations ({relationsInvolving.length})
           </div>
           <div className="space-y-0.5">
@@ -133,7 +133,7 @@ export function OntologyDetailPanel({
       {/* Backlinks */}
       {backlinks.length > 0 && (
         <div>
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
+          <div className="text-2xs font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
             Backlinks ({backlinks.length})
           </div>
           <div className="space-y-0.5">
@@ -154,7 +154,7 @@ export function OntologyDetailPanel({
       {/* Unlinked Mentions */}
       {unlinkedMentions.length > 0 && (
         <div>
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
+          <div className="text-2xs font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
             Unlinked Mentions ({unlinkedMentions.length})
           </div>
           <div className="space-y-0.5">
@@ -165,10 +165,10 @@ export function OntologyDetailPanel({
               >
                 <span className="text-muted-foreground/60">⚡</span>
                 <span className="truncate flex-1 text-foreground">{m.title}</span>
-                <span className="text-[10px] text-muted-foreground/40 shrink-0">{m.count}×</span>
+                <span className="text-2xs text-muted-foreground/40 shrink-0">{m.count}×</span>
                 <button
                   onClick={() => addWikiLink(noteId, m.title)}
-                  className="shrink-0 text-[10px] text-accent opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                  className="shrink-0 text-2xs text-accent opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
                 >
                   Link
                 </button>
@@ -181,14 +181,14 @@ export function OntologyDetailPanel({
       {/* Tags */}
       {noteTags.length > 0 && (
         <div>
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
+          <div className="text-2xs font-semibold uppercase text-muted-foreground tracking-wider px-4 pt-3 pb-1">
             Tags
           </div>
           <div className="px-4 py-2 flex flex-wrap gap-1">
             {noteTags.map((tag) => (
               <div
                 key={tag!.id}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded bg-secondary"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 text-2xs rounded bg-secondary"
               >
                 <div
                   className="w-1.5 h-1.5 rounded-full flex-shrink-0"

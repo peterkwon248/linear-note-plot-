@@ -64,31 +64,16 @@ export function TableMenu({ editor }: TableMenuProps) {
   }
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="relative">
       <button
         ref={buttonRef}
         onMouseDown={handleToggle}
         title="Table"
-        style={{
-          width: "28px",
-          height: "28px",
-          borderRadius: "6px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          transition: "all 0.1s ease",
-          cursor: "pointer",
-          color: isInsideTable ? "var(--foreground)" : "var(--muted-foreground)",
-          backgroundColor: isOpen
-            ? "color-mix(in srgb, var(--foreground) 10%, transparent)"
-            : isInsideTable
-              ? "rgba(94,106,210,0.2)"
-              : "transparent",
-          border: "none",
-          outline: "none",
-        }}
-        className="hover:text-foreground hover:bg-foreground/[0.06]"
+        className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none hover:text-foreground hover:bg-foreground/[0.06] ${
+          isInsideTable ? "text-foreground" : "text-muted-foreground"
+        } ${
+          isOpen ? "bg-foreground/10" : isInsideTable ? "bg-toolbar-active" : ""
+        }`}
       >
         <Grid3x3 size={15} strokeWidth={1.5} />
       </button>
@@ -97,35 +82,17 @@ export function TableMenu({ editor }: TableMenuProps) {
         createPortal(
           <div
             ref={dropdownRef}
-            style={{
-              position: "fixed",
-              left: `${pos.left}px`,
-              bottom: `${pos.bottom}px`,
-              transform: "translateX(-50%)",
-              padding: "10px",
-              borderRadius: "10px",
-              backgroundColor: "var(--popover)",
-              border: "1px solid var(--border)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-              zIndex: 9999,
-              minWidth: "180px",
-            }}
+            className="fixed -translate-x-1/2 p-2.5 rounded-[10px] bg-popover border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-[9999] min-w-[180px]"
+            style={{ left: `${pos.left}px`, bottom: `${pos.bottom}px` }}
           >
             {!isInsideTable ? (
               <>
-                <div
-                  className="text-2xs"
-                  style={{
-                    fontWeight: 600,
-                    color: "var(--muted-foreground)",
-                    marginBottom: "8px",
-                    padding: "0 2px",
-                  }}
-                >
+                <div className="text-2xs font-semibold text-muted-foreground mb-2 px-0.5">
                   Insert table
                 </div>
                 <div
-                  style={{ display: "grid", gridTemplateColumns: `repeat(${maxCols}, 1fr)`, gap: "3px", marginBottom: "8px" }}
+                  className="grid gap-[3px] mb-2"
+                  style={{ gridTemplateColumns: `repeat(${maxCols}, 1fr)` }}
                   onMouseLeave={() => { setHoverRow(0); setHoverCol(0) }}
                 >
                   {Array.from({ length: maxRows * maxCols }).map((_, idx) => {
@@ -137,38 +104,31 @@ export function TableMenu({ editor }: TableMenuProps) {
                         key={idx}
                         onMouseEnter={() => { setHoverRow(r); setHoverCol(c) }}
                         onMouseDown={(e) => { e.preventDefault(); insertTable(r, c) }}
-                        style={{
-                          width: "22px",
-                          height: "22px",
-                          borderRadius: "3px",
-                          border: "1px solid",
-                          borderColor: isHighlighted ? "rgba(94,106,210,0.6)" : "var(--border)",
-                          backgroundColor: isHighlighted ? "rgba(94,106,210,0.2)" : "transparent",
-                          cursor: "pointer",
-                          transition: "all 0.05s",
-                        }}
+                        className={`w-[22px] h-[22px] rounded-sm border cursor-pointer transition-all duration-[50ms] ${
+                          isHighlighted ? "border-[rgba(94,106,210,0.6)] bg-toolbar-active" : "border-border"
+                        }`}
                       />
                     )
                   })}
                 </div>
-                <div className="text-2xs" style={{ color: "var(--muted-foreground)", textAlign: "center" }}>
+                <div className="text-2xs text-muted-foreground text-center">
                   {hoverRow > 0 && hoverCol > 0 ? `${hoverRow} x ${hoverCol}` : "Select size"}
                 </div>
               </>
             ) : (
               <>
-                <div className="text-2xs" style={{ fontWeight: 600, color: "var(--muted-foreground)", marginBottom: "8px", padding: "0 2px" }}>
+                <div className="text-2xs font-semibold text-muted-foreground mb-2 px-0.5">
                   Edit table
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                <div className="flex flex-col gap-0.5">
                   <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add row above" onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
                   <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add row below" onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
                   <TableAction icon={<Minus size={13} strokeWidth={1.5} />} label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
-                  <div style={{ height: "1px", backgroundColor: "var(--border)", margin: "4px 0" }} />
+                  <div className="h-px bg-border my-1" />
                   <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add column left" onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
                   <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add column right" onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
                   <TableAction icon={<Minus size={13} strokeWidth={1.5} />} label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
-                  <div style={{ height: "1px", backgroundColor: "var(--border)", margin: "4px 0" }} />
+                  <div className="h-px bg-border my-1" />
                   <TableAction icon={<Trash2 size={13} strokeWidth={1.5} />} label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
                 </div>
               </>
@@ -184,22 +144,9 @@ function TableAction({ icon, label, onClick, danger = false }: { icon: React.Rea
   return (
     <button
       onMouseDown={(e) => { e.preventDefault(); onClick() }}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "5px 6px",
-        borderRadius: "5px",
-        fontWeight: 500,
-        color: danger ? "var(--destructive)" : "var(--foreground)",
-        backgroundColor: "transparent",
-        border: "none",
-        cursor: "pointer",
-        transition: "background-color 0.1s",
-        width: "100%",
-        textAlign: "left",
-      }}
-      className="text-xs hover:bg-foreground/[0.06]"
+      className={`flex items-center gap-2 py-[5px] px-1.5 rounded-[5px] font-medium bg-transparent border-0 cursor-pointer transition-colors duration-100 w-full text-left text-xs hover:bg-foreground/[0.06] ${
+        danger ? "text-destructive" : "text-foreground"
+      }`}
     >
       {icon}
       {label}

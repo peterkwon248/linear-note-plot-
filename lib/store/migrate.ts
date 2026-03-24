@@ -560,5 +560,25 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v57: ViewState.subGroupOrder — custom sub-group ordering
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+    for (const key of Object.keys(vsMap)) {
+      if (vsMap[key].subGroupOrder === undefined) {
+        vsMap[key].subGroupOrder = null
+      }
+    }
+  }
+
+  // v58: ViewState.subGroupSortBy — sub-group sort criterion
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+    for (const key of Object.keys(vsMap)) {
+      if (vsMap[key].subGroupSortBy === undefined) {
+        vsMap[key].subGroupSortBy = "default"
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

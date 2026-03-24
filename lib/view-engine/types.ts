@@ -35,6 +35,8 @@ export type SortDirection = "asc" | "desc"
 
 export type GroupBy = "none" | "status" | "priority" | "date" | "folder" | "label" | "triage" | "linkCount"
 
+export type GroupSortBy = "default" | "manual" | "name" | "count"
+
 export type FilterOperator = "eq" | "neq" | "gt" | "lt"
 
 export type FilterField =
@@ -63,6 +65,10 @@ export interface ViewState {
   toggles: Record<string, boolean>
   /** Custom group ordering per groupBy dimension. null = natural order */
   groupOrder: Record<string, string[]> | null
+  /** Custom sub-group ordering per subGroupBy dimension. null = natural order */
+  subGroupOrder: Record<string, string[]> | null
+  /** Sub-group sort criterion: default (natural), manual (drag), name (alpha), count (by size) */
+  subGroupSortBy: GroupSortBy
 }
 
 /* ── Pipeline Types ────────────────────────────────────── */
@@ -123,6 +129,8 @@ export const VALID_GROUP_BY: GroupBy[] = [
 ]
 
 export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calendar"]
+
+export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", "count"]
 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "folder", "tags", "links", "reads", "createdAt", "updatedAt",

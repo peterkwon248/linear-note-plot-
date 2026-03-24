@@ -58,22 +58,11 @@ function ToolbarButton({
       onClick={() => { if (!disabled) onClick() }}
       disabled={disabled}
       title={title}
-      style={{
-        width: "44px",
-        height: "44px",
-        borderRadius: "8px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-        cursor: disabled ? "not-allowed" : "pointer",
-        color: disabled ? "var(--muted-foreground)" : isActive ? "var(--foreground)" : "var(--muted-foreground)",
-        backgroundColor: isActive ? "rgba(94,106,210,0.2)" : "transparent",
-        border: "none",
-        outline: "none",
-        opacity: disabled ? 0.4 : 1,
-      }}
-      className="hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
+      className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 border-0 outline-none transition-colors duration-75 ${
+        disabled ? "cursor-not-allowed opacity-40 text-muted-foreground" :
+        isActive ? "cursor-pointer text-foreground bg-toolbar-active" :
+        "cursor-pointer text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+      }`}
     >
       {children}
     </button>
@@ -82,15 +71,7 @@ function ToolbarButton({
 
 function ToolbarDivider() {
   return (
-    <div
-      style={{
-        width: "1px",
-        height: "28px",
-        backgroundColor: "color-mix(in srgb, var(--foreground) 10%, transparent)",
-        margin: "0 6px",
-        flexShrink: 0,
-      }}
-    />
+    <div className="w-px h-7 bg-foreground/10 mx-1.5 shrink-0" />
   )
 }
 
@@ -184,21 +165,9 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
         ref={buttonRef}
         onMouseDown={handleToggle}
         title="Heading"
-        style={{
-          width: "44px",
-          height: "44px",
-          borderRadius: "8px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          cursor: "pointer",
-          color: isAnyHeadingActive ? "var(--foreground)" : "var(--muted-foreground)",
-          backgroundColor: isAnyHeadingActive ? "rgba(94,106,210,0.2)" : "transparent",
-          border: "none",
-          outline: "none",
-        }}
-        className="hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
+        className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 cursor-pointer border-0 outline-none transition-colors duration-75 ${
+          isAnyHeadingActive ? "text-foreground bg-toolbar-active" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+        }`}
       >
         <Heading size={24} strokeWidth={1.5} />
       </button>
@@ -207,56 +176,26 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
         createPortal(
           <div
             ref={dropdownRef}
-            style={{
-              position: "fixed",
-              left: `${pos.left}px`,
-              bottom: `${pos.bottom}px`,
-              transform: "translateX(-50%)",
-              minWidth: "120px",
-              backgroundColor: "var(--popover)",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
-              padding: "4px",
-              zIndex: 1000,
-            }}
+            className="fixed -translate-x-1/2 min-w-[120px] bg-popover border border-border rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.55)] p-1 z-[1000]"
+            style={{ left: `${pos.left}px`, bottom: `${pos.bottom}px` }}
           >
             {headingOptions.map(({ level, label, fontSize }) => (
               <button
                 key={level}
                 onMouseDown={(e) => { e.preventDefault(); handleSelect(level) }}
-                style={{
-                  width: "100%",
-                  padding: "6px 12px",
-                  fontSize,
-                  fontWeight: 600,
-                  textAlign: "left",
-                  border: "none",
-                  outline: "none",
-                  cursor: "pointer",
-                  borderRadius: "6px",
-                  backgroundColor: headingActiveMap[level] ? "rgba(94,106,210,0.2)" : "transparent",
-                  color: headingActiveMap[level] ? "var(--foreground)" : "var(--muted-foreground)",
-                }}
-                className="hover:bg-foreground/[0.06]"
+                className={`w-full py-1.5 px-3 font-semibold text-left border-0 outline-none cursor-pointer rounded-md hover:bg-foreground/[0.06] ${
+                  headingActiveMap[level] ? "bg-toolbar-active text-foreground" : "text-muted-foreground"
+                }`}
+                style={{ fontSize }}
               >
                 {label}
               </button>
             ))}
             <button
               onMouseDown={(e) => { e.preventDefault(); handleSelect(null) }}
-              style={{
-                width: "100%",
-                padding: "6px 12px",
-                textAlign: "left",
-                border: "none",
-                outline: "none",
-                cursor: "pointer",
-                borderRadius: "6px",
-                backgroundColor: !isAnyHeadingActive ? "rgba(94,106,210,0.2)" : "transparent",
-                color: !isAnyHeadingActive ? "var(--foreground)" : "var(--muted-foreground)",
-              }}
-              className="text-note hover:bg-foreground/[0.06]"
+              className={`w-full py-1.5 px-3 text-note text-left border-0 outline-none cursor-pointer rounded-md hover:bg-foreground/[0.06] ${
+                !isAnyHeadingActive ? "bg-toolbar-active text-foreground" : "text-muted-foreground"
+              }`}
             >
               Normal
             </button>
@@ -313,22 +252,9 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
 
   return (
     <div
-      className="flex-shrink-0"
-      style={{
-        position: "sticky",
-        bottom: 0,
-        zIndex: 10,
-        height: "58px",
-        display: "flex",
-        alignItems: "center",
-        gap: "2px",
-        padding: "0 16px",
-        [position === 'top' ? 'borderBottom' : 'borderTop']: "1px solid var(--border)",
-        backgroundColor: "var(--background)",
-        overflowX: "auto",
-        overflowY: "hidden",
-        minWidth: 0,
-      }}
+      className={`shrink-0 sticky bottom-0 z-10 h-14 flex items-center gap-0.5 px-4 bg-background overflow-x-auto overflow-y-hidden min-w-0 ${
+        position === 'top' ? 'border-b border-border' : 'border-t border-border'
+      }`}
     >
       <InsertMenu editor={editor} noteId={noteId} />
       <ToolbarDivider />
@@ -399,7 +325,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
         <AlignRight size={24} strokeWidth={1.5} />
       </ToolbarButton>
 
-      <div style={{ flex: 1 }} />
+      <div className="flex-1" />
 
       <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editorState.canUndo} title="Undo (Ctrl+Z)">
         <Undo2 size={24} strokeWidth={1.5} />

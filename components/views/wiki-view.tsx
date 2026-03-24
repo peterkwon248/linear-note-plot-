@@ -100,6 +100,8 @@ export function WikiView() {
     showThread: false,
     toggles: {},
     groupOrder: null,
+    subGroupOrder: null,
+    subGroupSortBy: "default" as const,
   })
   const handleWikiFilterToggle = (rule: FilterRule) => {
     setWikiFilters((prev) => {
@@ -785,7 +787,7 @@ export function WikiView() {
                         <span className="min-w-0 flex-1 truncate">
                           {note.title || "Untitled"}
                         </span>
-                        <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground capitalize">
+                        <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-2xs font-medium text-muted-foreground capitalize">
                           {note.status}
                         </span>
                       </button>
@@ -911,7 +913,7 @@ export function WikiView() {
                       <p className="truncate text-sm text-foreground">{a.title || "Untitled"}</p>
                     </div>
                     <span className={cn(
-                      "rounded-[4px] px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide shrink-0",
+                      "rounded-[4px] px-1.5 py-px text-2xs font-semibold uppercase tracking-wide shrink-0",
                       a.wikiStatus === "complete" ? "bg-wiki-complete/8 text-wiki-complete/70" :
                       a.wikiStatus === "draft" ? "bg-accent/8 text-accent/70" :
                       "bg-chart-3/8 text-chart-3/70"

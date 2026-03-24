@@ -52,7 +52,7 @@ function StatusBadge({ status }: { status: string | null }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-[11px] font-medium capitalize",
+        "inline-flex items-center gap-1.5 text-2xs font-medium capitalize",
         STATUS_COLORS[status] ?? "text-muted-foreground/50"
       )}
     >
@@ -66,7 +66,7 @@ function StatusBadge({ status }: { status: string | null }) {
 
 function ColumnHeaders() {
   return (
-    <div className="flex items-center px-5 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/30 border-b border-border/30">
+    <div className="flex items-center px-5 py-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground/30 border-b border-border/30">
       <span className="w-[80px]">Status</span>
       <span className="min-w-0 flex-1">Title</span>
       <span className="w-[60px] text-right">Links</span>
@@ -93,7 +93,7 @@ function ArticleTableRow({
 
   return (
     <div
-      className="group flex w-full items-center px-5 py-2.5 hover:bg-white/[0.02] transition-colors duration-75 border-b border-border/[0.06]"
+      className="group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75 border-b border-border/[0.06]"
     >
       <button
         onClick={onClick}
@@ -102,7 +102,7 @@ function ArticleTableRow({
         <span className="w-[80px] shrink-0">
           <StatusBadge status={note.wikiStatus} />
         </span>
-        <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/90">
+        <span className="min-w-0 flex-1 truncate text-note font-medium text-foreground/90">
           {note.title || "Untitled"}
         </span>
       </button>
@@ -117,7 +117,7 @@ function ArticleTableRow({
             <PopoverTrigger asChild>
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-                className="rounded-md p-1 text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-white/[0.06] hover:text-muted-foreground/60 transition-all duration-100"
+                className="rounded-md p-1 text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-active-bg hover:text-muted-foreground/60 transition-all duration-100"
               >
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </button>
@@ -125,7 +125,7 @@ function ArticleTableRow({
             <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
               <button
                 onClick={() => { setMenuOpen(false); onMerge() }}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-white/[0.06] transition-colors"
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
               >
                 <Merge className="h-3.5 w-3.5" /> Merge into...
               </button>
@@ -155,12 +155,12 @@ function IndexTableRow({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center px-5 py-2 hover:bg-white/[0.02] transition-colors duration-75 cursor-pointer border-b border-border/[0.06] text-left"
+      className="flex w-full items-center px-5 py-2 hover:bg-hover-bg transition-colors duration-75 cursor-pointer border-b border-border/[0.06] text-left"
     >
       <span className="w-[80px] shrink-0">
         <StatusBadge status={note.wikiStatus} />
       </span>
-      <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/90">
+      <span className="min-w-0 flex-1 truncate text-note text-foreground/90">
         {note.title || "Untitled"}
       </span>
       <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/40">
@@ -217,7 +217,7 @@ export function WikiList({
         {/* Back to Overview */}
         <button
           onClick={() => { setWikiViewMode("dashboard"); onClearCategoryFilter?.() }}
-          className="flex items-center gap-1 text-[13px] text-muted-foreground/50 hover:text-foreground transition-colors duration-100 mr-1"
+          className="flex items-center gap-1 text-note text-muted-foreground/50 hover:text-foreground transition-colors duration-100 mr-1"
         >
           <ArrowLeft className="h-3 w-3" strokeWidth={1.5} />
           Overview
@@ -238,8 +238,8 @@ export function WikiList({
               className={cn(
                 "rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-100",
                 dashFilter === tab && !showAllArticles
-                  ? "bg-white/10 text-foreground"
-                  : "text-muted-foreground/60 hover:bg-white/[0.04] hover:text-muted-foreground"
+                  ? "bg-foreground/10 text-foreground"
+                  : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
               )}
             >
               {labels[tab]}
@@ -276,8 +276,8 @@ export function WikiList({
           className={cn(
             "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-100",
             showAllArticles
-              ? "bg-white/10 text-foreground"
-              : "text-muted-foreground/60 hover:bg-white/[0.04] hover:text-muted-foreground"
+              ? "bg-foreground/10 text-foreground"
+              : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
           )}
         >
           <List className="h-3 w-3" strokeWidth={1.5} />
@@ -293,7 +293,7 @@ export function WikiList({
           <div>
             {Array.from(groupedArticles.entries()).map(([group, articles]) => (
               <div key={group} id={`wiki-group-${group}`}>
-                <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40 border-b border-border/20">
+                <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-2xs font-medium uppercase tracking-wide text-muted-foreground/40 border-b border-border/20">
                   {group}
                 </div>
                 {(articles as WikiArticle[]).map(note => (

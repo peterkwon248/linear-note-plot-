@@ -52,7 +52,7 @@ function StepTreeNode({
           </span>
           <button
             onClick={() => onReply(node.step.id)}
-            className="opacity-0 group-hover/step:opacity-100 text-[10px] text-muted-foreground hover:text-foreground transition-opacity duration-75 flex items-center gap-0.5"
+            className="opacity-0 group-hover/step:opacity-100 text-2xs text-muted-foreground hover:text-foreground transition-opacity duration-75 flex items-center gap-0.5"
           >
             <Reply className="h-2.5 w-2.5" />
             Reply
@@ -76,7 +76,7 @@ function DoneStepTreeNode({ node }: { node: StepNode }) {
       <div className="relative">
         <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
         <p className="text-xs text-muted-foreground whitespace-pre-wrap">{node.step.text}</p>
-        <span className="text-[10px] text-muted-foreground/60">
+        <span className="text-2xs text-muted-foreground/60">
           {format(new Date(node.step.at), "h:mm a")}
         </span>
       </div>
@@ -139,7 +139,7 @@ function DoneThreadItem({ thread, nestedReplies }: { thread: Thread; nestedRepli
                 <div key={step.id} className="relative">
                   <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
                   <p className="text-xs text-muted-foreground whitespace-pre-wrap">{step.text}</p>
-                  <span className="text-[10px] text-muted-foreground/60">
+                  <span className="text-2xs text-muted-foreground/60">
                     {format(new Date(step.at), "h:mm a")}
                   </span>
                 </div>
@@ -235,12 +235,12 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
         <MessageSquare className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs font-medium text-muted-foreground">Thread</span>
         {activeBadgeCount > 0 && (
-          <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-500/20 px-1 text-[10px] font-medium text-cyan-500">
+          <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-500/20 px-1 text-2xs font-medium text-cyan-500">
             {activeBadgeCount}
           </span>
         )}
         {doneThreads.length > 0 && (
-          <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-border px-1 text-[10px] font-medium text-muted-foreground">
+          <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-border px-1 text-2xs font-medium text-muted-foreground">
             {doneThreads.length}
           </span>
         )}
@@ -277,12 +277,12 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
               {replyingTo && replyingToStep && (
                 <div className="flex items-center gap-1.5 ml-2 px-2 py-1 rounded bg-secondary/50">
                   <Reply className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <span className="text-[10px] text-muted-foreground truncate flex-1">
+                  <span className="text-2xs text-muted-foreground truncate flex-1">
                     Replying to: {replyingToStep.text.slice(0, 60)}{replyingToStep.text.length > 60 ? "..." : ""}
                   </span>
                   <button
                     onClick={() => setReplyingTo(null)}
-                    className="text-[10px] text-muted-foreground hover:text-foreground shrink-0"
+                    className="text-2xs text-muted-foreground hover:text-foreground shrink-0"
                   >
                     ✕
                   </button>
@@ -340,7 +340,7 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
           {/* Done Threads */}
           {doneThreads.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
+              <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60 px-1">
                 Completed
               </p>
               {doneThreads.map((thread) => (

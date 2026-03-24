@@ -76,7 +76,7 @@ export function TopUtilityBar() {
       >
         <IconSearch size={14} className="shrink-0" />
         <span className="flex-1 text-left">Search…</span>
-        <kbd className="font-mono text-[11px] opacity-40">⌘K</kbd>
+        <kbd className="font-mono text-2xs opacity-40">⌘K</kbd>
       </button>
 
       <div className="flex-1" />

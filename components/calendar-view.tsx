@@ -445,7 +445,7 @@ function DayDashboard({
                       {/* Label badge */}
                       {label && (
                         <span
-                          className="rounded px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide"
+                          className="rounded px-1.5 py-px text-2xs font-semibold uppercase tracking-wide"
                           style={{
                             backgroundColor: `${label.color}1a`,
                             color: label.color,
@@ -537,7 +537,7 @@ function WeekView({
                 {format(day, "EEE d")}
               </span>
               {dayNotes.length > 0 && (
-                <span className="ml-1 text-[10px] text-muted-foreground/50">
+                <span className="ml-1 text-2xs text-muted-foreground/50">
                   {dayNotes.length}
                 </span>
               )}
@@ -561,7 +561,7 @@ function WeekView({
               {dayNotes.length === 0 && (
                 <button
                   onClick={() => onCreateNote(day)}
-                  className="mt-1 flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-muted-foreground/40 transition-colors hover:bg-secondary/50 hover:text-muted-foreground"
+                  className="mt-1 flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 transition-colors hover:bg-secondary/50 hover:text-muted-foreground"
                 >
                   <Plus className="h-3 w-3" />
                   Add
@@ -627,7 +627,7 @@ function AgendaView({
                   >
                     {isToday(date) ? "Today" : format(date, "EEEE, MMMM d")}
                   </span>
-                  <span className="text-[10px] text-muted-foreground/40">
+                  <span className="text-2xs text-muted-foreground/40">
                     {notes.length}
                   </span>
                 </div>
@@ -952,7 +952,7 @@ export function CalendarView({
           <div className="w-[280px] p-3 space-y-4">
             {/* Calendar by */}
             <div>
-              <div className="text-[11px] font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Calendar by</div>
+              <div className="text-2xs font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Calendar by</div>
               <div className="flex gap-1">
                 {(["createdAt", "updatedAt"] as const).map((src) => (
                   <button
@@ -973,7 +973,7 @@ export function CalendarView({
 
             {/* Layers */}
             <div>
-              <div className="text-[11px] font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Layers</div>
+              <div className="text-2xs font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Layers</div>
               <div className="space-y-1">
                 {([
                   { key: "notes" as const, label: "Notes" },
@@ -1032,7 +1032,7 @@ export function CalendarView({
               className={cn(
                 "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
                 calendarMode === mode
-                  ? "bg-white/10 text-foreground"
+                  ? "bg-foreground/10 text-foreground"
                   : "text-muted-foreground hover:text-foreground/70",
               )}
             >

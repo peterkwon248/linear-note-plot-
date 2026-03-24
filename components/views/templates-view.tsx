@@ -466,7 +466,7 @@ function TemplateEditor({
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Content</label>
             <div className="h-3 w-px bg-border mx-0.5" />
-            <span className="text-[10px] text-muted-foreground/60">Insert variable:</span>
+            <span className="text-2xs text-muted-foreground/60">Insert variable:</span>
             {PLACEHOLDER_VARS.map(({ key, label, desc }) => (
               <button
                 key={key}
@@ -476,7 +476,7 @@ function TemplateEditor({
                     editorInstance.chain().focus().insertContent(key).run()
                   }
                 }}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-secondary/60 text-muted-foreground hover:bg-accent/20 hover:text-accent transition-colors border border-transparent hover:border-accent/30"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-mono bg-secondary/60 text-muted-foreground hover:bg-accent/20 hover:text-accent transition-colors border border-transparent hover:border-accent/30"
               >
                 {label}
               </button>
@@ -580,12 +580,12 @@ function TemplateCard({
 
             {/* Badges */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-secondary text-muted-foreground">
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-2xs font-medium bg-secondary text-muted-foreground">
                 {STATUS_LABELS[tmpl.status]}
               </span>
               {tmpl.priority !== "none" && (
                 <span className={cn(
-                  "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium",
+                  "inline-flex items-center rounded-md px-1.5 py-0.5 text-2xs font-medium",
                   PRIORITY_COLORS[tmpl.priority]
                 )}>
                   {PRIORITY_LABELS[tmpl.priority]}

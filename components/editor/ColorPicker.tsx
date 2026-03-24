@@ -89,32 +89,16 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
   }
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="relative">
       <button
         ref={buttonRef}
         onMouseDown={handleToggle}
         title={mode === "text" ? "Text color" : "Highlight"}
-        style={{
-          width: "28px",
-          height: "28px",
-          borderRadius: "6px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          transition: "all 0.1s ease",
-          cursor: "pointer",
-          color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
-          backgroundColor: isOpen
-            ? "color-mix(in srgb, var(--foreground) 10%, transparent)"
-            : isActive
-              ? "rgba(94,106,210,0.2)"
-              : "transparent",
-          border: "none",
-          outline: "none",
-          position: "relative",
-        }}
-        className="hover:text-foreground hover:bg-foreground/[0.06]"
+        className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none relative hover:text-foreground hover:bg-foreground/[0.06] ${
+          isActive ? "text-foreground" : "text-muted-foreground"
+        } ${
+          isOpen ? "bg-foreground/10" : isActive ? "bg-toolbar-active" : ""
+        }`}
       >
         {mode === "text" ? (
           <Type size={15} strokeWidth={1.5} />
@@ -122,16 +106,8 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
           <Highlighter size={15} strokeWidth={1.5} />
         )}
         <div
-          style={{
-            position: "absolute",
-            bottom: "2px",
-            left: "6px",
-            right: "6px",
-            height: "2px",
-            borderRadius: "1px",
-            backgroundColor: activeColor || (mode === "text" ? "var(--muted-foreground)" : "transparent"),
-            transition: "background-color 0.1s",
-          }}
+          className="absolute bottom-0.5 left-1.5 right-1.5 h-0.5 rounded-sm transition-colors duration-100"
+          style={{ backgroundColor: activeColor || (mode === "text" ? "var(--muted-foreground)" : "transparent") }}
         />
       </button>
 
@@ -139,30 +115,11 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
         createPortal(
           <div
             ref={dropdownRef}
-            style={{
-              position: "fixed",
-              left: `${pos.left}px`,
-              bottom: `${pos.bottom}px`,
-              transform: "translateX(-50%)",
-              padding: "8px",
-              borderRadius: "10px",
-              backgroundColor: "var(--popover)",
-              border: "1px solid var(--border)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-              zIndex: 9999,
-              width: "188px",
-            }}
+            className="fixed -translate-x-1/2 p-2 rounded-[10px] bg-popover border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-[9999] w-[188px]"
+            style={{ left: `${pos.left}px`, bottom: `${pos.bottom}px` }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "8px",
-                padding: "0 2px",
-              }}
-            >
-              <span className="text-2xs" style={{ fontWeight: 600, color: "var(--muted-foreground)" }}>
+            <div className="flex items-center justify-between mb-2 px-0.5">
+              <span className="text-2xs font-semibold text-muted-foreground">
                 {mode === "text" ? "Text color" : "Highlight color"}
               </span>
               <button
@@ -170,25 +127,13 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                   e.preventDefault()
                   setIsOpen(false)
                 }}
-                style={{
-                  width: "18px",
-                  height: "18px",
-                  borderRadius: "4px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  color: "var(--muted-foreground)",
-                  backgroundColor: "transparent",
-                  border: "none",
-                }}
-                className="hover:bg-foreground/[0.08] hover:text-muted-foreground"
+                className="w-[18px] h-[18px] rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 hover:bg-foreground/[0.08] hover:text-muted-foreground"
               >
                 <X size={12} strokeWidth={1.5} />
               </button>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "4px" }}>
+            <div className="grid grid-cols-5 gap-1">
               {colors.map((color) => {
                 const isColorActive =
                   mode === "text"
@@ -205,57 +150,16 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                       applyColor(color.value)
                     }}
                     title={color.label}
-                    style={{
-                      width: "30px",
-                      height: "30px",
-                      borderRadius: "6px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                      border: isColorActive
-                        ? "2px solid var(--accent)"
-                        : "1px solid var(--border)",
-                      backgroundColor: "transparent",
-                      transition: "all 0.1s",
-                      outline: "none",
-                      padding: 0,
-                    }}
-                    className="hover:border-foreground/20"
+                    className={`w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer bg-transparent transition-all duration-100 outline-none p-0 hover:border-foreground/20 ${
+                      isColorActive ? "border-2 border-accent" : "border border-border"
+                    }`}
                   >
                     {!color.value ? (
-                      <div
-                        style={{
-                          width: "16px",
-                          height: "16px",
-                          borderRadius: "3px",
-                          position: "relative",
-                          overflow: "hidden",
-                          border: "1px solid var(--border)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "50%",
-                            left: "-2px",
-                            right: "-2px",
-                            height: "1px",
-                            backgroundColor: "var(--destructive)",
-                            transform: "rotate(-45deg)",
-                          }}
-                        />
+                      <div className="w-4 h-4 rounded-sm relative overflow-hidden border border-border">
+                        <div className="absolute top-1/2 -left-0.5 -right-0.5 h-px bg-destructive -rotate-45" />
                       </div>
                     ) : (
-                      <div
-                        style={{
-                          width: "16px",
-                          height: "16px",
-                          borderRadius: "3px",
-                          backgroundColor: color.swatch,
-                          opacity: mode === "highlight" ? 0.7 : 1,
-                        }}
-                      />
+                      <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: color.swatch, opacity: mode === "highlight" ? 0.7 : 1 }} />
                     )}
                   </button>
                 )

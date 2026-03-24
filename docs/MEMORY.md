@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 17-slice Zustand store with versioned migration (currently v54)
+- **Store**: `lib/store/index.ts` — 19-slice Zustand store with versioned migration (currently v58)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -67,6 +67,22 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - WorkspaceMode 타입 삭제, store migration v44
   - Filter sub-panel hover 위치 동적 계산 (Linear식)
   - Quick Filter 클릭 연동
+
+- **PR #100**: Linear Design Polish + Sub-group Order
+  - 8-Phase 디자인 토큰 준수율 100% 달성 (~251건 위반 → 5건 의도적 유지)
+  - globals.css에 11개 신규 시맨틱 토큰 추가 (sidebar-active, surface-overlay, hover-bg, active-bg, toolbar-active 등)
+  - DESIGN-TOKENS.md에 Linear Polish Design Principles 6대 원칙 + Borderless Design 원칙 + Surface/인터랙션 토큰 문서화
+  - DESIGN-TOKENS.md 다크테마 값 globals.css 실제값으로 동기화
+  - linear-sidebar.tsx: 27건 rgba/hex → 시맨틱 토큰
+  - view-header + filter-panel + display-panel: P0 라이트모드 깨짐 수정 (bg-[#1d1d20] → bg-surface-overlay)
+  - notes-table.tsx: 24건 arbitrary value → 토큰 (text-[Npx], bg-white/, hex)
+  - FixedToolbar + EditorToolbar + ColorPicker + TableMenu: 인라인 style → Tailwind (rgba(94,106,210,0.2) → bg-toolbar-active)
+  - 나머지 ~20 파일: text-[Npx], bg-white/ 일괄 토큰화
+  - Sub-group Order: ViewState.subGroupSortBy (default/manual/name/count) + 드롭다운 UI
+  - Sub-group 드래그 순서 변경 (manual 모드)
+  - Grouping/Sub-grouping 상호 배제 + 자동 리셋
+  - Board 뷰에서 미지원 Rows/Group order 행 제거
+  - Store migration v54→v58
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

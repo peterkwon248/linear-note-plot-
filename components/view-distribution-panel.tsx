@@ -54,9 +54,9 @@ export function ViewDistributionPanel({
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] transition-colors duration-100 ${
+              className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors duration-100 ${
                 activeTab === tab.key
-                  ? "bg-white/10 font-medium text-foreground"
+                  ? "bg-foreground/10 font-medium text-foreground"
                   : "text-muted-foreground hover:text-foreground/70"
               }`}
             >
@@ -79,7 +79,7 @@ export function ViewDistributionPanel({
           <button
             key={item.key}
             onClick={() => onItemClick(activeTab, item.key)}
-            className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-white/[0.03]"
+            className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-hover-bg"
           >
             {item.icon ? (
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
@@ -91,16 +91,16 @@ export function ViewDistributionPanel({
                 style={{ backgroundColor: item.color }}
               />
             ) : null}
-            <span className="flex-1 truncate text-[13px] text-foreground/80">
+            <span className="flex-1 truncate text-note text-foreground/80">
               {item.label}
             </span>
-            <span className="shrink-0 text-[12px] tabular-nums text-muted-foreground/50">
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground/50">
               {item.count}
             </span>
           </button>
         ))}
         {items.length === 0 && (
-          <div className="px-3 py-6 text-center text-[12px] text-muted-foreground/40">
+          <div className="px-3 py-6 text-center text-xs text-muted-foreground/40">
             No data
           </div>
         )}

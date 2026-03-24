@@ -36,7 +36,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (19): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles
-- Store version: 54
+- Store version: 58
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -79,10 +79,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-40. Smart Side Panel + Workspace 단순화 + Wiki 블록 무한 확장 대응
 41. 글로벌 색상 체계 + 위키 아이콘 + 그래프 폴리시 + 라우트 히스토리 + 성능 최적화
 42. 필터 드롭다운 검색창 + 위키 Merge + 클러스터 감지 + archive 제거 + 위키 클릭/토글 버그 수정
 43. List/Board 토글 활성화 + Nested Replies + 그룹 드래그 + Sub-grouping + 글로벌 Undo/Redo + Collapse All
+44. Linear Design Polish (8 Phase) — 토큰 인프라 정비, ~35 파일 토큰 준수율 100%, 인라인 스타일 제거, DESIGN-TOKENS.md 동기화
+45. Sub-group Order 기능 — 서브그룹 정렬 드롭다운 (Default/Manual/Name/Count), Grouping/Sub-grouping 상호 배제
 
 ## Three Axes — Core Design Philosophy
 
@@ -105,7 +106,9 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## TODO: Future Work
 
-- **리니어 디자인 폴리시** — 전 화면 대상 UI 폴리시 (줄/사각형 제거, 폰트/아이콘 정렬, NoteRow CSS Grid 컬럼 기반 재설계, 로컬 검색 제거→글로벌 검색 통합, word count 복원)
+- **보드 뷰 서브그룹(Rows) 렌더링** — Linear처럼 보드에서도 Rows + Group order 지원 (현재 notes-board.tsx 미지원)
+- **NoteRow CSS Grid 컬럼 기반 재설계** — 현재 flex 기반을 CSS Grid로 전환
+- **글로벌 검색 통합** — 로컬 검색 제거, 글로벌 검색으로 통합
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식 통합 에디터
 - J/K 리스트 네비게이션 (Linear식)
 - Ctrl+A/C 스프레드시트 단축키

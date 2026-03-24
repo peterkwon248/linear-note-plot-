@@ -102,69 +102,37 @@ function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
   )
 
   return (
-    <div ref={dropdownRef} style={{ position: "relative" }}>
+    <div ref={dropdownRef} className="relative">
       <button
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setIsOpen((prev) => !prev)}
         title="Heading"
-        className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors duration-75 flex-shrink-0 ${
+        className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors duration-75 shrink-0 ${
           isAnyHeadingActive ? "text-foreground bg-foreground/[0.12]" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]"
         }`}
       >
         <Heading size={14} strokeWidth={1.5} />
       </button>
       {isOpen && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: "0",
-            marginTop: "8px",
-            minWidth: "120px",
-            backgroundColor: "var(--popover)",
-            border: "1px solid var(--border)",
-            borderRadius: "8px",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
-            padding: "4px",
-            zIndex: 1000,
-          }}
-        >
+        <div className="absolute top-full left-0 mt-2 min-w-[120px] bg-popover border border-border rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.55)] p-1 z-[1000]">
+
           {headingOptions.map(({ level, label, fontSize }) => (
             <button
               key={level}
               onMouseDown={(e) => { e.preventDefault(); handleSelect(level) }}
-              style={{
-                width: "100%",
-                padding: "6px 12px",
-                fontSize,
-                fontWeight: 600,
-                textAlign: "left",
-                border: "none",
-                outline: "none",
-                cursor: "pointer",
-                borderRadius: "6px",
-                backgroundColor: headingActiveMap[level] ? "rgba(94,106,210,0.2)" : "transparent",
-                color: headingActiveMap[level] ? "var(--foreground)" : "var(--muted-foreground)",
-              }}
-              className="hover:bg-foreground/[0.06]"
+              className={`w-full py-1.5 px-3 font-semibold text-left border-0 outline-none cursor-pointer rounded-md hover:bg-foreground/[0.06] ${
+                headingActiveMap[level] ? "bg-toolbar-active text-foreground" : "text-muted-foreground"
+              }`}
+              style={{ fontSize }}
             >
               {label}
             </button>
           ))}
           <button
             onMouseDown={(e) => { e.preventDefault(); handleSelect(null) }}
-            style={{
-              width: "100%",
-              padding: "6px 12px",
-              textAlign: "left",
-              border: "none",
-              outline: "none",
-              cursor: "pointer",
-              borderRadius: "6px",
-              backgroundColor: !isAnyHeadingActive ? "rgba(94,106,210,0.2)" : "transparent",
-              color: !isAnyHeadingActive ? "var(--foreground)" : "var(--muted-foreground)",
-            }}
-            className="text-note hover:bg-foreground/[0.06]"
+            className={`w-full py-1.5 px-3 text-note text-left border-0 outline-none cursor-pointer rounded-md hover:bg-foreground/[0.06] ${
+              !isAnyHeadingActive ? "bg-toolbar-active text-foreground" : "text-muted-foreground"
+            }`}
           >
             Normal
           </button>
@@ -188,41 +156,26 @@ function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "3px", padding: "0 2px" }}>
+    <div className="flex items-center gap-[3px] px-0.5">
       {colors.map((color) => (
         <button
           key={color.label}
           onMouseDown={(e) => { e.preventDefault(); applyColor(color.value) }}
           title={color.label}
-          style={{
-            width: "20px",
-            height: "20px",
-            borderRadius: "4px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            border: "1px solid var(--border)",
-            backgroundColor: "transparent",
-            outline: "none",
-            padding: 0,
-            flexShrink: 0,
-          }}
-          className="hover:border-foreground/30"
+          className="w-5 h-5 rounded flex items-center justify-center cursor-pointer border border-border bg-transparent outline-none p-0 shrink-0 hover:border-foreground/30"
         >
           {!color.value ? (
-            <div style={{ width: "12px", height: "12px", borderRadius: "2px", position: "relative", overflow: "hidden", border: "1px solid var(--border)" }}>
-              <div style={{ position: "absolute", top: "50%", left: "-2px", right: "-2px", height: "1px", backgroundColor: "var(--destructive)", transform: "rotate(-45deg)" }} />
+            <div className="w-3 h-3 rounded-sm relative overflow-hidden border border-border">
+              <div className="absolute top-1/2 -left-0.5 -right-0.5 h-px bg-destructive -rotate-45" />
             </div>
           ) : (
-            <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: color.swatch, opacity: mode === "highlight" ? 0.7 : 1 }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: color.swatch, opacity: mode === "highlight" ? 0.7 : 1 }} />
           )}
         </button>
       ))}
       <button
         onMouseDown={(e) => { e.preventDefault(); onClose() }}
-        style={{ width: "20px", height: "20px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--muted-foreground)", backgroundColor: "transparent", border: "none", flexShrink: 0 }}
-        className="hover:text-muted-foreground"
+        className="w-5 h-5 rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 shrink-0 hover:text-muted-foreground"
       >
         <X size={12} strokeWidth={1.5} />
       </button>
@@ -351,9 +304,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </BubbleButton>
           <BubbleDivider />
           <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title="Text color">
-            <div style={{ position: "relative" }}>
+            <div className="relative">
               <Type size={14} strokeWidth={1.5} />
-              <div style={{ position: "absolute", bottom: "-3px", left: "1px", right: "1px", height: "2px", borderRadius: "1px", backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
+              <div className="absolute -bottom-[3px] left-px right-px h-0.5 rounded-sm" style={{ backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
             </div>
           </BubbleButton>
           <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title="Highlight">

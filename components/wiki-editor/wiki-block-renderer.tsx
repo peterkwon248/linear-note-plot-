@@ -195,15 +195,15 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
           value={editContent}
           onChange={handleInput}
           onBlur={handleFinishEdit}
-          className="w-full bg-transparent outline-none border border-accent/20 rounded-md px-3 py-2 text-[14px] leading-relaxed text-foreground/85 resize-none focus:border-accent/40"
+          className="w-full bg-transparent outline-none border border-accent/20 rounded-md px-3 py-2 text-sm leading-relaxed text-foreground/85 resize-none focus:border-accent/40"
           placeholder="Write something..."
         />
       ) : (
         <div
           onClick={handleStartEdit}
           className={cn(
-            "text-[14px] leading-relaxed text-foreground/85 whitespace-pre-wrap rounded-md px-3 py-2",
-            editable && "cursor-text hover:bg-white/[0.02] transition-colors duration-100",
+            "text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap rounded-md px-3 py-2",
+            editable && "cursor-text hover:bg-hover-bg transition-colors duration-100",
           )}
         >
           {content || (
@@ -268,7 +268,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
               <button
                 key={n.id}
                 onClick={() => handlePickNote(n.id)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/[0.04] transition-colors duration-75"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-hover-bg transition-colors duration-75"
               >
                 <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
                 <span className="truncate text-foreground/80">{n.title || "Untitled"}</span>
@@ -317,8 +317,8 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
       )}
       <div className="flex items-center gap-2 border-b border-border/30 px-4 py-2">
         <FileText className="h-3.5 w-3.5 text-accent/60" strokeWidth={1.5} />
-        <span className="text-[11px] font-medium uppercase tracking-wide text-accent/50">From Note</span>
-        <span className="text-[13px] font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
+        <span className="text-2xs font-medium uppercase tracking-wide text-accent/50">From Note</span>
+        <span className="text-note font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
         <button
           onClick={() => usePlotStore.getState().openSidePeek(block.noteId!)}
           className="flex items-center gap-1 text-2xs text-muted-foreground/30 hover:text-accent transition-colors"
@@ -336,7 +336,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
           </button>
         )}
       </div>
-      <div className="px-4 py-3 text-[14px] leading-relaxed text-foreground/75 whitespace-pre-wrap">
+      <div className="px-4 py-3 text-sm leading-relaxed text-foreground/75 whitespace-pre-wrap">
         {note.content ? (
           note.content.length > 500 ? note.content.slice(0, 500) + "..." : note.content
         ) : (
@@ -468,7 +468,7 @@ export function AddBlockButton({ onAdd }: {
             <button
               key={type}
               onClick={() => { onAdd(type); setOpen(false) }}
-              className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors duration-75"
+              className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-75"
             >
               <span className="text-sm font-medium text-foreground/80">{label}</span>
               <span className="text-2xs text-muted-foreground/30">{desc}</span>

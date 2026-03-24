@@ -48,8 +48,8 @@ function HBtn({
       onClick={onClick}
       className={`flex h-7 w-7 items-center justify-center rounded-[6px] border-none transition-all duration-100 ${
         active
-          ? "bg-white/[0.06] text-foreground"
-          : "text-muted-foreground/50 hover:bg-white/[0.03] hover:text-muted-foreground"
+          ? "bg-active-bg text-foreground"
+          : "text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground"
       }`}
     >
       {children}
@@ -314,7 +314,7 @@ export function ViewHeader({
                 <PopoverContent
                   align="end"
                   sideOffset={5}
-                  className="!w-auto !max-w-none rounded-[10px] border border-white/[0.08] bg-[#1d1d20] p-0 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.3),0_16px_40px_rgba(0,0,0,0.35)]"
+                  className="!w-auto !max-w-none rounded-[10px] border border-border-subtle bg-surface-overlay p-0 shadow-lg"
                 >
                   {filterContent}
                 </PopoverContent>
@@ -333,7 +333,7 @@ export function ViewHeader({
                 <PopoverContent
                   align="end"
                   sideOffset={5}
-                  className="w-[300px] overflow-hidden rounded-[10px] border border-white/[0.08] bg-[#1d1d20] p-0 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.3),0_16px_40px_rgba(0,0,0,0.35)]"
+                  className="w-[300px] overflow-hidden rounded-[10px] border border-border-subtle bg-surface-overlay p-0 shadow-lg"
                 >
                   {displayContent}
                 </PopoverContent>

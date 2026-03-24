@@ -70,18 +70,18 @@ function NavLink({
 
   const className = `nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
     active
-      ? "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.93)]"
-      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+      ? "bg-sidebar-active text-sidebar-active-text"
+      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
   }`
 
   const content = (
     <>
-      <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-[rgba(255,255,255,0.93)]" : "text-sidebar-muted group-hover:text-[rgba(255,255,255,0.65)]"}`}>
+      <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
         {icon}
       </span>
       <span className="truncate text-left flex-1">{label}</span>
       {count !== undefined && (
-        <span className="text-xs text-[rgba(255,255,255,0.35)] tabular-nums">
+        <span className="text-xs text-sidebar-count tabular-nums">
           {count}
         </span>
       )}
@@ -483,11 +483,11 @@ export function LinearSidebar() {
                   }}
                   className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
                     isViewActive
-                      ? "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.93)]"
-                      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                      ? "bg-sidebar-active text-sidebar-active-text"
+                      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                   }`}
                 >
-                  <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${isViewActive ? "text-[rgba(255,255,255,0.93)]" : "text-sidebar-muted group-hover:text-[rgba(255,255,255,0.65)]"}`}>
+                  <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${isViewActive ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
                     <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
                       <circle cx="12" cy="12" r="3" />
@@ -667,11 +667,11 @@ export function LinearSidebar() {
                         }}
                         className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
                           active
-                            ? "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.93)]"
-                            : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                            ? "bg-sidebar-active text-sidebar-active-text"
+                            : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                         }`}
                       >
-                        <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-[rgba(255,255,255,0.93)]" : "text-sidebar-muted group-hover:text-[rgba(255,255,255,0.65)]"}`}>
+                        <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
                           <IconFolder size={20} />
                         </span>
                         {isRenaming ? (
@@ -689,7 +689,7 @@ export function LinearSidebar() {
                           <span className="truncate text-left flex-1">{folder.name}</span>
                         )}
                         {!isRenaming && count > 0 && (
-                          <span className="text-xs text-[rgba(255,255,255,0.35)] tabular-nums">{count}</span>
+                          <span className="text-xs text-sidebar-count tabular-nums">{count}</span>
                         )}
                       </button>
                     </ContextMenuTrigger>
@@ -782,7 +782,7 @@ export function LinearSidebar() {
                     draggable
                     onDragStart={(e) => setNoteDragData(e, item.id)}
                     onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                   >
                     <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
                       <StatusIcon status={item.status} />
@@ -802,7 +802,7 @@ export function LinearSidebar() {
                     draggable
                     onDragStart={(e) => setNoteDragData(e, item.id)}
                     onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                   >
                     <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
                       <StatusIcon status={item.status} />
@@ -853,16 +853,16 @@ export function LinearSidebar() {
                         setWikiCategoryFilter(cat.id)
                         router.push("/wiki")
                       }}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                     >
                       <span className="flex shrink-0 items-center justify-center w-5 h-5">
                         <span
                           className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: cat.color || "rgba(255,255,255,0.3)" }}
+                          style={{ backgroundColor: cat.color || "var(--sidebar-count)" }}
                         />
                       </span>
                       <span className="truncate text-left flex-1">{cat.name}</span>
-                      <span className="text-xs text-[rgba(255,255,255,0.35)] tabular-nums">
+                      <span className="text-xs text-sidebar-count tabular-nums">
                         {cat.count}
                       </span>
                     </button>
@@ -874,13 +874,13 @@ export function LinearSidebar() {
                         setSelectedNoteId(null)
                         router.push("/wiki")
                       }}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                     >
                       <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                        <span className="h-2 w-2 rounded-full bg-[rgba(255,255,255,0.2)]" />
+                        <span className="h-2 w-2 rounded-full bg-foreground/20" />
                       </span>
                       <span className="truncate text-left flex-1 text-sidebar-muted">Uncategorized</span>
-                      <span className="text-xs text-[rgba(255,255,255,0.35)] tabular-nums">
+                      <span className="text-xs text-sidebar-count tabular-nums">
                         {uncategorized}
                       </span>
                     </button>
@@ -901,7 +901,7 @@ export function LinearSidebar() {
                     <button
                       key={note.id}
                       onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                     >
                       <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
                         <IconDoc size={14} />
@@ -925,7 +925,7 @@ export function LinearSidebar() {
                     <button
                       key={item.id}
                       onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                     >
                       <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
                         <IconDoc size={14} />
@@ -994,13 +994,13 @@ export function LinearSidebar() {
                       <button
                         key={note.id}
                         onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                        className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-[rgba(255,255,255,0.85)]"
+                        className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                       >
                         <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
                           <IconDoc size={14} />
                         </span>
                         <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
-                        <span className="text-[10px] text-muted-foreground/40 tabular-nums">{relDate}</span>
+                        <span className="text-2xs text-muted-foreground/40 tabular-nums">{relDate}</span>
                       </button>
                     )
                   })}
@@ -1102,7 +1102,7 @@ export function LinearSidebar() {
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-sidebar-muted">Orphans</span>
-                      <span className={`tabular-nums ${orphanCount > 0 ? "text-[#f5a623]" : "text-sidebar-foreground"}`}>{orphanCount}</span>
+                      <span className={`tabular-nums ${orphanCount > 0 ? "text-chart-3" : "text-sidebar-foreground"}`}>{orphanCount}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-sidebar-muted">Hubs (5+)</span>
@@ -1146,7 +1146,7 @@ export function LinearSidebar() {
               </div>
               <div className="h-0.5 rounded-full bg-sidebar-border">
                 <div
-                  className="h-full rounded-full bg-[#45d483] transition-all duration-300"
+                  className="h-full rounded-full bg-chart-5 transition-all duration-300"
                   style={{ width: `${inboxCount > 0 ? Math.max(5, Math.min(100, ((allNotesCount - inboxCount) / Math.max(allNotesCount, 1)) * 100)) : 100}%` }}
                 />
               </div>
