@@ -883,7 +883,7 @@ export function WikiView() {
                 redLinks.map((rl) => (
                   <button
                     key={rl.title}
-                    className="flex w-full items-center px-5 py-2.5 text-left transition-colors hover:bg-hover-bg border-b border-border/10"
+                    className="flex w-full items-center px-5 py-2.5 text-left transition-colors hover:bg-hover-bg"
                     onClick={() => handleCreateFromRedLink(rl.title)}
                   >
                     <span className="min-w-0 flex-1 truncate text-note font-medium text-destructive/80">

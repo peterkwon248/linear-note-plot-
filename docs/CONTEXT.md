@@ -79,10 +79,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-44. Linear Design Polish (8 Phase) — 토큰 인프라 정비, ~35 파일 토큰 준수율 100%, 인라인 스타일 제거, DESIGN-TOKENS.md 동기화
 45. Sub-group Order 기능 — 서브그룹 정렬 드롭다운 (Default/Manual/Name/Count), Grouping/Sub-grouping 상호 배제
 46. Board SubGroup Rows + Distribution Panel — Board 컬럼 내 서브그룹 렌더링/접기, List/Board 공유 Distribution 사이드바, 필터 토글
 47. Linear UI 폴리시 3차 — ViewHeader New Note 중복 제거(+아이콘만 남김), Inbox 독립 viewState, Wiki Red Links 리스트+탭, Show stubs 토글 연결, STATUS↔TITLE 간격 수정
+48. Design Polish Phase 1~5 — Lucide→Phosphor 아이콘 통일(83파일), hardcoded hex→lib/colors.ts, 인라인 style→Tailwind, 비표준 값 정규화
+49. 정보 밀도 철학 전면 적용 — NoteRow CSS Grid 컬럼화, 로컬 검색 제거→글로벌 통합, word count 컬럼 복원, 전 뷰 행 구분선 제거 (notes-table/wiki-list/wiki-view/note-list/labels-view/tags-view)
 
 ## Three Axes — Core Design Philosophy
 
@@ -112,7 +113,7 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **View 시스템 v2** — 사이드바 Views에 필터+디스플레이+정렬 프리셋 저장. "Save as View"로 현재 상태 저장. 시스템 View(All/Capture/Permanent/Pinned) 편집불가, 사용자 View 편집/삭제 가능
 - **풀페이지 검색 분리** — ⌘K = 풀페이지 노트 검색, ⌘/ = 커맨드 팔레트 (액션 전용)
 - **커맨드 팔레트 확장** — 컨텍스트 반응형 20+개 커맨드 (Note Actions, View Actions, Navigation, Creation)
-- **정보 밀도 철학 변경** — 행 구분선 제거, 기본 메타 최소화, 여백 확대 ("Structure felt, not seen")
+- **정보 밀도 철학 변경** — ~~행 구분선 제거~~ ✅, 기본 메타 최소화, 여백 확대 ("Structure felt, not seen")
 
 ### Tier 2 — Wiki & Dashboard
 - **Wiki 대시보드 반응형 모드** — Articles/Stubs/Red Links 카드 클릭시 콘텐츠 전환 (Linear All/Active/Backlog 패턴)
@@ -121,7 +122,7 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ### Tier 3 — 구조 개선
 - **멀티패널 뷰 타입 확장** — Wiki/Calendar/Graph + 에디터 조합 스플릿 ("참조하면서 쓰기")
-- **NoteRow CSS Grid 컬럼 기반 재설계** — flex → CSS Grid 전환
+- ~~**NoteRow CSS Grid 컬럼 기반 재설계**~~ ✅
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식 통합 에디터
 
 ### Tier 4 — 기능 확장

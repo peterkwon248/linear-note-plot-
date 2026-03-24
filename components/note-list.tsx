@@ -75,7 +75,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
     <div
       draggable
       onDragStart={(e) => setNoteDragData(e, note.id)}
-      className="note-row group flex items-center gap-3 border-b border-border px-3 transition-colors hover:bg-secondary/50 cursor-pointer"
+      className="note-row group flex items-center gap-3 px-3 transition-colors hover:bg-secondary/50 cursor-pointer"
       onClick={() => openNote(note.id)}
     >
       {/* Priority indicator */}

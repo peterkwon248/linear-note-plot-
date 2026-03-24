@@ -513,7 +513,7 @@ export function TagsView() {
               No notes with this tag
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div>
               {tagNotes.map((note) => (
                 <button
                   key={note.id}

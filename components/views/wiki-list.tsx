@@ -98,7 +98,7 @@ function ArticleTableRow({
 
   return (
     <div
-      className="group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75 border-b border-border/[0.06]"
+      className="group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75"
     >
       <button
         onClick={onClick}
@@ -160,7 +160,7 @@ function IndexTableRow({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center px-5 py-2 hover:bg-hover-bg transition-colors duration-75 cursor-pointer border-b border-border/[0.06] text-left"
+      className="flex w-full items-center px-5 py-2 hover:bg-hover-bg transition-colors duration-75 cursor-pointer text-left"
     >
       <span className="w-[100px] shrink-0">
         <StatusBadge status={note.wikiStatus} />

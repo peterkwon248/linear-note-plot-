@@ -521,7 +521,7 @@ export function LabelsView() {
               No notes with this label
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div>
               {labelNotes.map((note) => (
                 <button
                   key={note.id}
