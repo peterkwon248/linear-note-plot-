@@ -4,21 +4,19 @@ import { useState, useMemo, useCallback } from "react"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { useRef } from "react"
 import {
-  FileText,
-  Link,
-  Type,
-  Plus,
-  X,
-  Search,
-  CircleDot,
-  ExternalLink,
-  Paperclip,
-} from "lucide-react"
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
+import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
@@ -147,7 +145,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
                     title="Click: insert [[link]] · Shift+click: insert as quote"
                     className="flex items-center gap-1.5 flex-1 min-w-0 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 rounded-md px-2 py-1 hover:bg-secondary text-left"
                   >
-                    <FileText className="w-3.5 h-3.5 shrink-0" />
+                    <FileText className="shrink-0" size={14} weight="regular" />
                     <span className="truncate">{n.title || "Untitled"}</span>
                   </button>
                   <button
@@ -157,7 +155,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
                     title="Add to collection"
                     className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground shrink-0"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <PhPlus size={14} weight="regular" />
                   </button>
                 </div>
               ))}
@@ -202,7 +200,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
             <div className="flex flex-col gap-1">
               {redLinks.map(({ title, count }) => (
                 <div key={title} className="flex items-center gap-1.5 group">
-                  <CircleDot className="w-3 h-3 shrink-0 text-destructive" />
+                  <CircleDashed className="shrink-0 text-destructive" size={12} weight="regular" />
                   <span className="flex-1 min-w-0 text-sm text-foreground truncate">{title}</span>
                   {count > 1 && (
                     <span className="text-xs text-muted-foreground shrink-0">{count}</span>
@@ -255,10 +253,10 @@ function CollectionItemRow({
 
   return (
     <div className="flex items-center gap-1.5 group">
-      {item.type === "note" && <FileText className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />}
-      {item.type === "url" && <Link className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />}
-      {item.type === "text" && <Type className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />}
-      {(item.type === "file" || item.type === "image") && <Paperclip className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />}
+      {item.type === "note" && <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />}
+      {item.type === "url" && <PhLink className="shrink-0 text-muted-foreground" size={14} weight="regular" />}
+      {item.type === "text" && <TextT className="shrink-0 text-muted-foreground" size={14} weight="regular" />}
+      {(item.type === "file" || item.type === "image") && <Paperclip className="shrink-0 text-muted-foreground" size={14} weight="regular" />}
 
       <div className="flex-1 min-w-0">
         {item.type === "note" && (
@@ -285,7 +283,7 @@ function CollectionItemRow({
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 truncate"
           >
             <span className="truncate">{item.urlTitle || item.url}</span>
-            <ExternalLink className="w-3 h-3 shrink-0" />
+            <ArrowSquareOut className="shrink-0" size={12} weight="regular" />
           </a>
         )}
         {item.type === "text" && (
@@ -310,7 +308,7 @@ function CollectionItemRow({
         onClick={onRemove}
         className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground shrink-0"
       >
-        <X className="w-3.5 h-3.5" />
+        <PhX size={14} weight="regular" />
       </button>
     </div>
   )
@@ -346,18 +344,18 @@ function AddNotePopover({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md px-2 py-1 transition-colors duration-150">
-          <Plus className="w-3 h-3" />
+          <PhPlus size={12} weight="regular" />
           Add note
         </button>
       </PopoverTrigger>
       <PopoverContent side="bottom" align="start" className="w-64 p-2">
         <div className="flex items-center gap-2 border border-border rounded-md px-2 py-1.5 mb-2">
-          <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <MagnifyingGlass className="text-muted-foreground shrink-0" size={14} weight="regular" />
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search notes..."
+            placeholder="MagnifyingGlass notes..."
             className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -375,7 +373,7 @@ function AddNotePopover({
                 }}
                 className="flex items-center gap-2 text-sm text-left px-2 py-1.5 rounded hover:bg-secondary transition-colors duration-150 truncate"
               >
-                <FileText className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
                 <span className="truncate">{n.title || "Untitled"}</span>
               </button>
             ))
@@ -409,7 +407,7 @@ function AddUrlPopover({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md px-2 py-1 transition-colors duration-150">
-          <Plus className="w-3 h-3" />
+          <PhPlus size={12} weight="regular" />
           Add URL
         </button>
       </PopoverTrigger>
@@ -467,7 +465,7 @@ function AddMemoPopover({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md px-2 py-1 transition-colors duration-150">
-          <Plus className="w-3 h-3" />
+          <PhPlus size={12} weight="regular" />
           Add memo
         </button>
       </PopoverTrigger>
@@ -545,7 +543,7 @@ function AddFileButton({
         onClick={() => fileInputRef.current?.click()}
         className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md px-2 py-1 transition-colors duration-150"
       >
-        <Plus className="w-3 h-3" />
+        <PhPlus size={12} weight="regular" />
         Add file
       </button>
     </>

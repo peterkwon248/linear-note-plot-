@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react"
-import { ArrowLeft, ArrowUp, ArrowDown, ArrowUpDown, Plus, Trash2, Pencil, X, Zap, SlidersHorizontal, Layers, ChevronDown, Check, EyeOff, Bookmark } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import {
   ContextMenu,
@@ -9,6 +8,21 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
+import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
+import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
+import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal"
+import { Stack } from "@phosphor-icons/react/dist/ssr/Stack"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { EyeSlash } from "@phosphor-icons/react/dist/ssr/EyeSlash"
+import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   DropdownMenu,
@@ -17,7 +31,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { ColorPickerGrid, PRESET_COLORS } from "@/components/color-picker-grid"
+import { ColorPickerGrid } from "@/components/color-picker-grid"
+import { PRESET_COLORS } from "@/lib/colors"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
@@ -76,7 +91,7 @@ function InlineSelect<T extends string>({
         className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
       >
         {current?.label ?? value}
-        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+        <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} weight="regular" />
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
@@ -90,7 +105,7 @@ function InlineSelect<T extends string>({
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
-                <Check className={`h-3.5 w-3.5 shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} />
+                <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
                 {opt.label}
               </button>
             )
@@ -122,7 +137,7 @@ export function LabelsView() {
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState("")
-  const [newColor, setNewColor] = useState(PRESET_COLORS[5]) // default blue
+  const [newColor, setNewColor] = useState<string>(PRESET_COLORS[5]) // default blue
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState("")
   const [editColor, setEditColor] = useState("")
@@ -404,7 +419,7 @@ export function LabelsView() {
             onClick={() => setSelectedLabelId(null)}
             className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft size={16} weight="regular" />
           </button>
           <span
             className="w-3 h-3 rounded-sm shrink-0"
@@ -420,7 +435,7 @@ export function LabelsView() {
             }}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm text-red-400 hover:bg-red-400/10 transition-colors"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash size={14} weight="regular" />
             Delete label
           </button>
         </div>
@@ -441,7 +456,7 @@ export function LabelsView() {
           <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <SlidersHorizontal className="h-4 w-4" />
+                <SlidersHorizontal size={16} weight="regular" />
                 Display
               </button>
             </PopoverTrigger>
@@ -449,7 +464,7 @@ export function LabelsView() {
               {/* Grouping */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-muted-foreground" />
+                  <Stack className="text-muted-foreground" size={16} weight="regular" />
                   <span className="text-ui text-foreground">Grouping</span>
                 </div>
                 <InlineSelect
@@ -461,7 +476,7 @@ export function LabelsView() {
               {/* Ordering */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                  <ArrowsDownUp className="text-muted-foreground" size={16} weight="regular" />
                   <span className="text-ui text-foreground">Ordering</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -475,8 +490,8 @@ export function LabelsView() {
                     className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                   >
                     {labelViewState.sortDirection === "asc"
-                      ? <ArrowUp className="h-3.5 w-3.5" />
-                      : <ArrowDown className="h-3.5 w-3.5" />
+                      ? <ArrowUp size={14} weight="regular" />
+                      : <ArrowDown size={14} weight="regular" />
                     }
                   </button>
                 </div>
@@ -506,7 +521,7 @@ export function LabelsView() {
               No notes with this label
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div>
               {labelNotes.map((note) => (
                 <button
                   key={note.id}
@@ -535,7 +550,7 @@ export function LabelsView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<Bookmark className="h-5 w-5" strokeWidth={1.5} />}
+        icon={<BookmarkSimple size={20} weight="regular" />}
         title="Labels"
         count={labels.filter((l) => !l.trashed).length}
         searchPlaceholder="Search labels..."
@@ -546,7 +561,7 @@ export function LabelsView() {
             onClick={() => setCreating(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <PhPlus size={14} weight="regular" />
             New label
           </button>
         }
@@ -557,7 +572,7 @@ export function LabelsView() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              <ArrowUpDown className="h-3.5 w-3.5" />
+              <ArrowsDownUp size={14} weight="regular" />
               {labelSortBy === "name-asc" ? "Name A-Z" : labelSortBy === "name-desc" ? "Name Z-A" : labelSortBy === "count-desc" ? "Most notes" : "Fewest notes"}
             </button>
           </DropdownMenuTrigger>
@@ -569,7 +584,7 @@ export function LabelsView() {
               ["count-asc", "Fewest notes"],
             ] as const).map(([value, label]) => (
               <DropdownMenuItem key={value} onClick={() => setLabelSortBy(value)}>
-                <Check className={cn("h-3.5 w-3.5 mr-2 shrink-0", labelSortBy === value ? "opacity-100" : "opacity-0")} />
+                <PhCheck className={cn(" mr-2 shrink-0", labelSortBy === value ? "opacity-100" : "opacity-0")} size={14} weight="bold" />
                 {label}
               </DropdownMenuItem>
             ))}
@@ -583,7 +598,7 @@ export function LabelsView() {
             hideEmptyLabels ? "bg-accent/15 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
           )}
         >
-          <EyeOff className="h-3.5 w-3.5" />
+          <EyeSlash size={14} weight="regular" />
           Hide empty
         </button>
       </div>
@@ -714,13 +729,13 @@ export function LabelsView() {
                               }}
                               className="flex items-center justify-center h-6 w-6 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                             >
-                              <Pencil className="h-3 w-3" />
+                              <PencilSimple size={12} weight="regular" />
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); deleteLabel(label.id) }}
                               className="flex items-center justify-center h-6 w-6 rounded hover:bg-red-400/10 text-muted-foreground hover:text-red-400 transition-colors"
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash size={12} weight="regular" />
                             </button>
                           </div>
                         </>
@@ -747,7 +762,7 @@ export function LabelsView() {
             }}
             className="text-sm"
           >
-            <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
+            <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
             New label
           </ContextMenuItem>
         </ContextMenuContent>
@@ -758,7 +773,7 @@ export function LabelsView() {
         <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
           <div className="flex items-center gap-1 px-4 py-2.5">
             <div className="flex items-center gap-1.5 px-1.5">
-              <Zap className="h-4 w-4 text-accent" />
+              <Lightning className="text-accent" size={16} weight="regular" />
               <span className="text-ui font-medium text-foreground whitespace-nowrap">
                 {checkedLabels.size} selected
               </span>
@@ -766,7 +781,7 @@ export function LabelsView() {
                 onClick={() => setCheckedLabels(new Set())}
                 className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
-                <X className="h-4 w-4" />
+                <PhX size={16} weight="regular" />
               </button>
             </div>
             <div className="mx-1.5 h-7 w-px bg-border" />
@@ -774,7 +789,7 @@ export function LabelsView() {
               onClick={handleDeleteChecked}
               className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive transition-colors hover:bg-destructive/20"
             >
-              <Trash2 className="h-4 w-4" /> Delete
+              <Trash size={16} weight="regular" /> Delete
             </button>
           </div>
         </div>

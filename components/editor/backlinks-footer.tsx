@@ -1,11 +1,11 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { shortRelative } from "@/lib/format-utils"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 
 const DEFAULT_VISIBLE = 4
 
@@ -40,7 +40,7 @@ export function BacklinksFooter({ noteId, onNavigate }: { noteId: string; onNavi
             onClick={() => handleNavigate(note.id)}
             className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors duration-150 group"
           >
-            <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" strokeWidth={1.5} />
+            <FileText className="shrink-0 text-muted-foreground/50" size={14} weight="regular" />
             <span className="truncate flex-1 text-foreground/80 group-hover:text-foreground">
               {note.title || "Untitled"}
             </span>

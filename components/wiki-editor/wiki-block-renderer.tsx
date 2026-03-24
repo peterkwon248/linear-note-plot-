@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback } from "react"
-import { ChevronDown, ChevronRight, FileText, ImageIcon, GripVertical, Plus, Trash2, Search, Upload, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import type { WikiBlock } from "@/lib/types"
@@ -9,6 +8,16 @@ import { useAttachmentUrl } from "@/lib/use-attachment-url"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { useWikiBlockContent } from "@/hooks/use-wiki-block-content"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
+import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 
 /* ── Block Renderer ── */
 
@@ -70,7 +79,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-0.5 text-muted-foreground cursor-grab transition-opacity duration-100"
             {...(dragHandleProps ?? {})}
           >
-            <GripVertical className="h-3.5 w-3.5" />
+            <DotsSixVertical size={14} weight="regular" />
           </button>
         )}
         <button
@@ -78,8 +87,8 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
           className="p-0.5 text-muted-foreground/40 hover:text-muted-foreground transition-colors duration-100"
         >
           {collapsed
-            ? <ChevronRight className="h-3.5 w-3.5" />
-            : <ChevronDown className="h-3.5 w-3.5" />
+            ? <CaretRight size={14} weight="regular" />
+            : <CaretDown size={14} weight="regular" />
           }
         </button>
 
@@ -128,7 +137,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             onClick={onDelete}
             className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all duration-100"
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash size={12} weight="regular" />
           </button>
         )}
       </div>
@@ -179,11 +188,11 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
       {editable && (
         <div className="absolute -left-6 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
-            <GripVertical className="h-3.5 w-3.5" />
+            <DotsSixVertical size={14} weight="regular" />
           </button>
           {onDelete && (
             <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash2 className="h-3 w-3" />
+              <Trash size={12} weight="regular" />
             </button>
           )}
         </div>
@@ -243,14 +252,14 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
     return (
       <div className="rounded-lg border border-accent/30 bg-card/50 overflow-hidden">
         <div className="flex items-center gap-2 border-b border-border/30 px-3 py-2">
-          <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+          <MagnifyingGlass className="text-muted-foreground/50 shrink-0" size={14} weight="regular" />
           <input
             ref={inputRef}
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Escape") setPicking(false) }}
-            placeholder="Search notes to embed..."
+            placeholder="MagnifyingGlass notes to embed..."
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/30"
           />
           <button
@@ -270,7 +279,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
                 onClick={() => handlePickNote(n.id)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-hover-bg transition-colors duration-75"
               >
-                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                <FileText className="shrink-0 text-muted-foreground/50" size={14} weight="regular" />
                 <span className="truncate text-foreground/80">{n.title || "Untitled"}</span>
                 <span className="ml-auto shrink-0 text-2xs text-muted-foreground/30 capitalize">{n.status}</span>
               </button>
@@ -290,7 +299,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
             onClick={() => setPicking(true)}
             className="flex items-center gap-2 text-sm text-muted-foreground/40 hover:text-muted-foreground transition-colors"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <PhPlus size={14} weight="regular" />
             Select a note to embed
           </button>
         ) : (
@@ -306,17 +315,17 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
       {editable && (
         <div className="absolute -left-6 top-3 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
-            <GripVertical className="h-3.5 w-3.5" />
+            <DotsSixVertical size={14} weight="regular" />
           </button>
           {onDelete && (
             <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash2 className="h-3 w-3" />
+              <Trash size={12} weight="regular" />
             </button>
           )}
         </div>
       )}
       <div className="flex items-center gap-2 border-b border-border/30 px-4 py-2">
-        <FileText className="h-3.5 w-3.5 text-accent/60" strokeWidth={1.5} />
+        <FileText className="text-accent/60" size={14} weight="regular" />
         <span className="text-2xs font-medium uppercase tracking-wide text-accent/50">From Note</span>
         <span className="text-note font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
         <button
@@ -324,7 +333,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
           className="flex items-center gap-1 text-2xs text-muted-foreground/30 hover:text-accent transition-colors"
           title="Open in side panel"
         >
-          <ExternalLink className="h-3 w-3" />
+          <ArrowSquareOut size={12} weight="regular" />
           Open
         </button>
         {editable && (
@@ -379,7 +388,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
         {editable && onDelete && (
           <div className="absolute -left-6 top-2 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 transition-opacity duration-100">
             <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash2 className="h-3 w-3" />
+              <Trash size={12} weight="regular" />
             </button>
           </div>
         )}
@@ -389,12 +398,12 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
             onClick={() => fileInputRef.current?.click()}
             className="flex h-28 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border/50 bg-secondary/10 text-sm text-muted-foreground/40 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
           >
-            <Upload className="h-4 w-4" />
-            Upload image
+            <UploadSimple size={16} weight="regular" />
+            UploadSimple image
           </button>
         ) : (
           <div className="flex h-28 items-center justify-center rounded-lg border border-dashed border-border/50 bg-secondary/10 text-xs text-muted-foreground/40">
-            <ImageIcon className="h-5 w-5 mr-2" />
+            <PhImage className="mr-2" size={20} weight="regular" />
             No image
           </div>
         )}
@@ -407,11 +416,11 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
       {editable && (
         <div className="absolute -left-6 top-2 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
-            <GripVertical className="h-3.5 w-3.5" />
+            <DotsSixVertical size={14} weight="regular" />
           </button>
           {onDelete && (
             <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash2 className="h-3 w-3" />
+              <Trash size={12} weight="regular" />
             </button>
           )}
         </div>
@@ -431,7 +440,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
         </figure>
       ) : (
         <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border/50 bg-secondary/10 text-xs text-muted-foreground/40">
-          <ImageIcon className="h-5 w-5 mr-2" />
+          <PhImage className="mr-2" size={20} weight="regular" />
           Image not found
         </div>
       )}
@@ -453,7 +462,7 @@ export function AddBlockButton({ onAdd }: {
         onClick={() => setOpen(!open)}
         className="relative z-10 flex items-center gap-1 rounded-md bg-background px-2 py-0.5 text-2xs text-muted-foreground/0 group-hover/add:text-muted-foreground/40 hover:!text-muted-foreground transition-all duration-150"
       >
-        <Plus className="h-3 w-3" />
+        <PhPlus size={12} weight="regular" />
         Add block
       </button>
 
@@ -463,7 +472,7 @@ export function AddBlockButton({ onAdd }: {
             { type: "section" as const, label: "Section", desc: "Heading divider" },
             { type: "text" as const, label: "Text", desc: "Write directly" },
             { type: "note-ref" as const, label: "Note", desc: "Embed a note" },
-            { type: "image" as const, label: "Image", desc: "Upload image" },
+            { type: "image" as const, label: "Image", desc: "UploadSimple image" },
           ].map(({ type, label, desc }) => (
             <button
               key={type}

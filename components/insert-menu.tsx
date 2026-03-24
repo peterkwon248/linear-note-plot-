@@ -4,24 +4,22 @@ import { useRef } from "react"
 import { format } from "date-fns"
 import { Editor } from "@tiptap/react"
 import {
-  Image,
-  Paperclip,
-  Table,
-  CalendarDays,
-  Minus,
-  Code,
-  Plus,
-  Play,
-  ChevronRight,
-  Sigma,
-} from "lucide-react"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
+import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
+import { CalendarDots } from "@phosphor-icons/react/dist/ssr/CalendarDots"
+import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
+import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Play as PhPlay } from "@phosphor-icons/react/dist/ssr/Play"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
 import { usePlotStore } from "@/lib/store"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 
@@ -182,7 +180,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
         >
-          <Plus size={14} strokeWidth={2} />
+          <PhPlus size={14} weight="regular" />
           <span>Insert</span>
         </button>
       </DropdownMenuTrigger>
@@ -210,8 +208,8 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <Image size={14} strokeWidth={1.5} />
-          <span style={{ flex: 1 }}>Image</span>
+          <PhImage size={14} weight="regular" />
+          <span style={{ flex: 1 }}>PhImage</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -227,7 +225,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <Play size={14} strokeWidth={1.5} />
+          <PhPlay size={14} weight="regular" />
           <span style={{ flex: 1 }}>YouTube</span>
         </DropdownMenuItem>
 
@@ -244,7 +242,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <Paperclip size={14} strokeWidth={1.5} />
+          <Paperclip size={14} weight="regular" />
           <span style={{ flex: 1 }}>File</span>
         </DropdownMenuItem>
 
@@ -263,8 +261,8 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <Table size={14} strokeWidth={1.5} />
-          <span style={{ flex: 1 }}>Table</span>
+          <PhTable size={14} weight="regular" />
+          <span style={{ flex: 1 }}>PhTable</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -280,7 +278,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <CalendarDays size={14} strokeWidth={1.5} />
+          <CalendarDots size={14} weight="regular" />
           <span style={{ flex: 1 }}>Date</span>
         </DropdownMenuItem>
 
@@ -299,7 +297,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <Minus size={14} strokeWidth={1.5} />
+          <PhMinus size={14} weight="regular" />
           <span style={{ flex: 1 }}>Divider</span>
         </DropdownMenuItem>
 
@@ -316,8 +314,8 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <Code size={14} strokeWidth={1.5} />
-          <span style={{ flex: 1 }}>Code Block</span>
+          <PhCode size={14} weight="regular" />
+          <span style={{ flex: 1 }}>PhCode Block</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -333,7 +331,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <ChevronRight size={14} strokeWidth={1.5} />
+          <CaretRight size={14} weight="regular" />
           <span style={{ flex: 1 }}>Toggle</span>
         </DropdownMenuItem>
 
@@ -352,7 +350,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <Sigma size={14} strokeWidth={1.5} />
+          <MathOperations size={14} weight="regular" />
           <span style={{ flex: 1 }}>Inline Math</span>
         </DropdownMenuItem>
 
@@ -369,7 +367,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }}
           className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
         >
-          <Sigma size={14} strokeWidth={1.5} />
+          <MathOperations size={14} weight="regular" />
           <span style={{ flex: 1 }}>Block Math</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

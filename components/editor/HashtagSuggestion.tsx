@@ -159,7 +159,7 @@ export const HashtagSuggestion = Extension.create({
             filtered.push({
               id: `__new__${q}`,
               name: q,
-              color: "#6366f1",
+              color: "var(--accent)",
               isNew: true,
             } as HashtagItem)
           }

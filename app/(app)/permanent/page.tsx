@@ -13,11 +13,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  FileText,
-  Shield,
-  Link2,
-} from "lucide-react"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Shield as PhShield } from "@phosphor-icons/react/dist/ssr/Shield"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { format } from "date-fns"
 import type { Note } from "@/lib/types"
 import { shortRelative } from "@/lib/format-utils"
@@ -84,7 +82,7 @@ export default function PermanentPage() {
         </header>
 
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-2">
-          <Shield className="h-3.5 w-3.5 text-chart-5" />
+          <PhShield className="text-chart-5" size={14} weight="regular" />
           <span className="text-xs text-muted-foreground">
             Fully-enriched, permanent knowledge base notes.
           </span>
@@ -93,7 +91,7 @@ export default function PermanentPage() {
         {/* Content */}
         {permanentNotes.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <Shield className="mb-4 h-12 w-12 text-muted-foreground/20" />
+            <PhShield className="mb-4 text-muted-foreground/20" size={48} weight="regular" />
             <p className="text-ui text-muted-foreground">No permanent notes yet</p>
             <p className="mt-1 text-sm text-muted-foreground/60">
               Promote capture notes when their ready score reaches 5+.
@@ -139,7 +137,7 @@ export default function PermanentPage() {
                 >
                   {/* Name */}
                   <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
-                    <FileText className="h-4 w-4 shrink-0 text-chart-5/60" />
+                    <FileText className="shrink-0 text-chart-5/60" size={16} weight="regular" />
                     <span className="truncate text-ui text-foreground">
                       {note.title || "Untitled"}
                     </span>
@@ -147,7 +145,7 @@ export default function PermanentPage() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span className="flex shrink-0 items-center gap-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-2xs font-medium text-destructive">
-                            <Link2 className="h-2.5 w-2.5" />
+                            <PhLink size={10} weight="regular" />
                             Orphan
                           </span>
                         </TooltipTrigger>

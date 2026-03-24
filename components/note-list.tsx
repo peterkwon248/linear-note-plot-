@@ -1,17 +1,6 @@
 "use client"
 
 import { useRef, useMemo, memo } from "react"
-import {
-  Plus,
-  Filter,
-  ArrowUpDown,
-  MoreHorizontal,
-  Pin,
-  FileText,
-  Calendar,
-  Copy,
-  Trash2,
-} from "lucide-react"
 import { isToday, isThisWeek, formatDistanceToNow } from "date-fns"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import {
@@ -21,6 +10,15 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { FunnelSimple } from "@phosphor-icons/react/dist/ssr/FunnelSimple"
+import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
+import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
+import { Copy as PhCopy } from "@phosphor-icons/react/dist/ssr/Copy"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { usePlotStore, filterNotesByRoute, getFilterTitle } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import type { Note, NoteFilter } from "@/lib/types"
@@ -77,7 +75,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
     <div
       draggable
       onDragStart={(e) => setNoteDragData(e, note.id)}
-      className="note-row group flex items-center gap-3 border-b border-border px-3 transition-colors hover:bg-secondary/50 cursor-pointer"
+      className="note-row group flex items-center gap-3 px-3 transition-colors hover:bg-secondary/50 cursor-pointer"
       onClick={() => openNote(note.id)}
     >
       {/* Priority indicator */}
@@ -87,9 +85,9 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
         variant="inline"
       />
 
-      {/* Pin icon */}
+      {/* PushPin icon */}
       {note.pinned && (
-        <Pin className="h-3.5 w-3.5 shrink-0 text-chart-3 fill-chart-3" />
+        <PushPin className="shrink-0 text-chart-3 fill-chart-3" size={14} weight="regular" />
       )}
 
       {/* Content area */}
@@ -141,7 +139,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
             className="shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-secondary group-hover:opacity-100"
             onClick={(e) => e.stopPropagation()}
           >
-            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+            <DotsThree className="text-muted-foreground" size={16} weight="bold" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
@@ -151,8 +149,8 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
               togglePin(note.id)
             }}
           >
-            <Pin className="h-4 w-4" />
-            {note.pinned ? "Unpin" : "Pin"}
+            <PushPin size={16} weight="regular" />
+            {note.pinned ? "Unpin" : "PushPin"}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
@@ -160,7 +158,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
               duplicateNote(note.id)
             }}
           >
-            <Copy className="h-4 w-4" />
+            <PhCopy size={16} weight="regular" />
             Duplicate
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -175,7 +173,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
               deleteNote(note.id)
             }}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash size={16} weight="regular" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -229,11 +227,11 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
         </div>
         <div className="flex items-center gap-1">
           <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <Filter className="h-3.5 w-3.5" />
-            Filter
+            <FunnelSimple size={14} weight="regular" />
+            FunnelSimple
           </button>
           <button className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <ArrowUpDown className="h-3.5 w-3.5" />
+            <ArrowsDownUp size={14} weight="regular" />
             Sort
           </button>
           <button
@@ -244,7 +242,7 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
               pinned: filter.type === "pinned" ? true : undefined,
             })}
           >
-            <Plus className="h-3.5 w-3.5" />
+            <PhPlus size={14} weight="regular" />
             <span>New</span>
           </button>
         </div>
@@ -254,7 +252,7 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
       {filteredNotes.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
-            <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+            <FileText className="mx-auto text-muted-foreground mb-2" size={32} weight="regular" />
             <p className="text-ui text-muted-foreground">No notes yet</p>
             <p className="text-sm text-muted-foreground mt-1">
               Create your first note to get started.
@@ -286,7 +284,7 @@ export function NoteList({ filter }: { filter: NoteFilter }) {
                 >
                   {item.type === "header" ? (
                     <div className="flex items-center gap-2 bg-background/95 backdrop-blur-sm px-3 py-2 border-b border-border">
-                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                      <CalendarBlank className="text-muted-foreground" size={14} weight="regular" />
                       <span className="text-xs font-medium text-muted-foreground">
                         {item.label}
                       </span>

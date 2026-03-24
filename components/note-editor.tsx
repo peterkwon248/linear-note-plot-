@@ -2,22 +2,20 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import {
-  Pin,
-  Trash2,
-  MoreHorizontal,
-  Copy,
-  PanelRight,
-  Merge,
-  Link2,
-  BookOpen,
-  PenLine,
-  Globe,
-} from "lucide-react"
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { Copy as PhCopy } from "@phosphor-icons/react/dist/ssr/Copy"
+import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine"
+import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -161,10 +159,10 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
                   note.pinned ? "text-chart-3" : "text-muted-foreground"
                 )}
               >
-                <Pin className="h-4 w-4" />
+                <PushPin size={16} weight="regular" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>{note.pinned ? "Unpin" : "Pin"}</TooltipContent>
+            <TooltipContent>{note.pinned ? "Unpin" : "PushPin"}</TooltipContent>
           </Tooltip>
 
 
@@ -172,20 +170,20 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary">
-                <MoreHorizontal className="h-4 w-4" />
+                <DotsThree size={16} weight="bold" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem onClick={() => duplicateNote(note.id)}>
-                <Copy className="h-4 w-4" />
+                <PhCopy size={16} weight="regular" />
                 Duplicate
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setMergePickerOpen(true, note.id)}>
-                <Merge className="h-4 w-4" />
-                Merge with...
+                <GitMerge size={16} weight="regular" />
+                GitMerge with...
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLinkPickerOpen(true, note.id)}>
-                <Link2 className="h-4 w-4" />
+                <PhLink size={16} weight="regular" />
                 Link to...
               </DropdownMenuItem>
               {/* Convert to Wiki removed — WikiArticle is now separate entity */}
@@ -201,7 +199,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
                   onClose ? onClose() : setSelectedNoteId(null)
                 }}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash size={16} weight="regular" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -216,7 +214,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
                   isReadMode ? "text-accent" : "text-muted-foreground"
                 )}
               >
-                {isReadMode ? <BookOpen className="h-4 w-4" /> : <PenLine className="h-4 w-4" />}
+                {isReadMode ? <BookOpen size={16} weight="regular" /> : <PencilLine size={16} weight="regular" />}
               </button>
             </TooltipTrigger>
             <TooltipContent>
@@ -234,7 +232,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
                   detailsOpen ? "text-foreground" : "text-muted-foreground"
                 )}
               >
-                <PanelRight className="h-4 w-4" />
+                <SidebarSimple size={16} weight="regular" />
               </button>
             </TooltipTrigger>
             <TooltipContent>{detailsOpen ? "Hide details" : "Show details"}</TooltipContent>

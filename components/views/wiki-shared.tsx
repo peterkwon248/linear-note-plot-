@@ -2,8 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import type { WikiStatus } from "@/lib/types"
-import type { LucideIcon } from "lucide-react"
-
+import type { Icon as PhIcon } from "@phosphor-icons/react"
 /* ── Wiki Status Dot ── */
 
 export function WikiStatusDot({ status }: { status: WikiStatus | null }) {
@@ -34,7 +33,7 @@ export function WikiStatusBadge({ status }: { status: WikiStatus }) {
 /* ── Stat Card ── */
 
 export function StatCard({ icon: Icon, label, value, color, onClick }: {
-  icon: LucideIcon
+  icon: PhIcon
   label: string
   value: number
   color: string

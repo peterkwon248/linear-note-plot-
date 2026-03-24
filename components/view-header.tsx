@@ -1,43 +1,13 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react"
-import { useRouter } from "next/navigation"
-import { Search, X, FileText, Pin } from "lucide-react"
+import { useState, useEffect, type ReactNode } from "react"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { FunnelSimple } from "@phosphor-icons/react/dist/ssr/FunnelSimple"
+import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal"
+import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
+import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { usePlotStore } from "@/lib/store"
-
-/* ── SVG Icons (14-15px, strokeWidth 1.2-1.3 — Linear weight) ── */
-
-const FilterIcon = (
-  <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-    <path d="M2.5 3.5h11M4 7h8M6 10.5h4" />
-  </svg>
-)
-
-const DisplayIcon = (
-  <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-    <line x1="2.5" y1="4" x2="13.5" y2="4" />
-    <line x1="2.5" y1="8" x2="13.5" y2="8" />
-    <line x1="2.5" y1="12" x2="13.5" y2="12" />
-    <circle cx="5.5" cy="4" r="1.4" fill="currentColor" stroke="none" />
-    <circle cx="10.5" cy="8" r="1.4" fill="currentColor" stroke="none" />
-    <circle cx="7" cy="12" r="1.4" fill="currentColor" stroke="none" />
-  </svg>
-)
-
-const PlusIcon = (
-  <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-    <line x1="8" y1="3" x2="8" y2="13" />
-    <line x1="3" y1="8" x2="13" y2="8" />
-  </svg>
-)
-
-const PanelRightIcon = (
-  <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="1.5" y="2" width="13" height="12" rx="1.5" />
-    <line x1="10" y1="2" x2="10" y2="14" />
-  </svg>
-)
 
 /* ── Header Icon Button ── */
 
@@ -53,7 +23,7 @@ function HBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex h-7 w-7 items-center justify-center rounded-[6px] border-none transition-all duration-100 ${
+      className={`flex h-7 w-7 items-center justify-center rounded-md border-none transition-all duration-100 ${
         active
           ? "bg-active-bg text-foreground"
           : "text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground"
@@ -65,23 +35,6 @@ function HBtn({
 }
 
 export { HBtn }
-
-/* ── highlight helper ── */
-
-function highlightMatch(text: string, query: string): ReactNode {
-  if (!query.trim()) return text
-  const lower = text.toLowerCase()
-  const q = query.toLowerCase().trim()
-  const idx = lower.indexOf(q)
-  if (idx === -1) return text
-  return (
-    <>
-      {text.slice(0, idx)}
-      <mark className="bg-accent/40 text-foreground rounded-sm">{text.slice(idx, idx + q.length)}</mark>
-      {text.slice(idx + q.length)}
-    </>
-  )
-}
 
 /* ── ViewHeader Props ── */
 
@@ -144,20 +97,11 @@ export function ViewHeader({
   extraToolbarButtons,
   onCreateNew,
 }: ViewHeaderProps) {
-  const router = useRouter()
-  const notes = usePlotStore((s) => s.notes)
-  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
-
   // Internal search state if not controlled
   const [internalSearch, setInternalSearch] = useState("")
   const search = searchValue ?? internalSearch
   const setSearch = onSearchChange ?? setInternalSearch
   const showSearch = searchPlaceholder !== undefined
-
-  // Dropdown state
-  const [focused, setFocused] = useState(false)
-  const [highlightedIndex, setHighlightedIndex] = useState(-1)
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Filter/Display popover state
   const [filterOpen, setFilterOpen] = useState(false)
@@ -170,47 +114,6 @@ export function ViewHeader({
   useEffect(() => {
     if (displayOpen) setFilterOpen(false)
   }, [displayOpen])
-
-  // Match notes by title
-  const matchedNotes = useMemo(() => {
-    if (!search.trim()) return []
-    const q = search.toLowerCase().trim()
-    return notes
-      .filter((n) => !n.trashed && n.triageStatus !== "trashed")
-      .filter((n) => (n.title || "").toLowerCase().includes(q))
-      .slice(0, 6)
-  }, [notes, search])
-
-  const showDropdown = focused && search.trim().length > 0 && matchedNotes.length > 0
-
-  const selectNote = useCallback((noteId: string) => {
-    setSelectedNoteId(noteId)
-    router.push("/notes")
-    setFocused(false)
-    setHighlightedIndex(-1)
-  }, [setSelectedNoteId, router])
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!showDropdown) return
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault()
-      setHighlightedIndex((prev) => (prev < matchedNotes.length - 1 ? prev + 1 : 0))
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault()
-      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : matchedNotes.length - 1))
-    } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      e.preventDefault()
-      selectNote(matchedNotes[highlightedIndex].id)
-    } else if (e.key === "Escape") {
-      setFocused(false)
-      setHighlightedIndex(-1)
-    }
-  }, [showDropdown, highlightedIndex, matchedNotes, selectNote])
-
-  const statusLabel = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1)
-  }
 
   const hasToolbar = showFilter || showDisplay || showDetailPanel || onCreateNew
 
@@ -235,72 +138,21 @@ export function ViewHeader({
         {/* Search bar */}
         {showSearch && (
           <div className="relative flex items-center">
-            <Search className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <MagnifyingGlass size={14} weight="regular" className="pointer-events-none absolute left-2.5 text-muted-foreground" />
             <input
               type="text"
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setHighlightedIndex(-1)
-              }}
-              onFocus={() => setFocused(true)}
-              onBlur={() => {
-                setTimeout(() => setFocused(false), 150)
-              }}
-              onKeyDown={handleKeyDown}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder={searchPlaceholder}
               className="h-8 w-48 rounded-md border border-border bg-background pl-8 pr-7 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
             {search && (
               <button
-                onClick={() => {
-                  setSearch("")
-                  setFocused(false)
-                  setHighlightedIndex(-1)
-                }}
+                onClick={() => setSearch("")}
                 className="absolute right-2 text-muted-foreground hover:text-foreground"
               >
-                <X className="h-3.5 w-3.5" />
+                <PhX size={14} weight="regular" />
               </button>
-            )}
-
-            {/* Dropdown autocomplete */}
-            {showDropdown && (
-              <div
-                ref={dropdownRef}
-                className="absolute right-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-md border border-border bg-popover shadow-md"
-              >
-                <div className="max-h-64 overflow-y-auto py-1">
-                  {matchedNotes.map((note, i) => (
-                    <button
-                      key={note.id}
-                      onMouseDown={(e) => {
-                        e.preventDefault()
-                        selectNote(note.id)
-                      }}
-                      className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors ${
-                        i === highlightedIndex
-                          ? "bg-accent text-accent-foreground"
-                          : "text-foreground hover:bg-secondary"
-                      }`}
-                    >
-                      {note.pinned ? (
-                        <Pin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      ) : (
-                        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate">
-                          {highlightMatch(note.title || "Untitled", search)}
-                        </div>
-                        <div className="truncate text-xs text-muted-foreground">
-                          {statusLabel(note.status)}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
             )}
           </div>
         )}
@@ -317,7 +169,7 @@ export function ViewHeader({
                 <PopoverTrigger asChild>
                   <div>
                     <HBtn active={filterOpen || hasActiveFilters}>
-                      {FilterIcon}
+                      <FunnelSimple size={15} weight="regular" />
                     </HBtn>
                   </div>
                 </PopoverTrigger>
@@ -336,7 +188,7 @@ export function ViewHeader({
                 <PopoverTrigger asChild>
                   <div>
                     <HBtn active={displayOpen}>
-                      {DisplayIcon}
+                      <SlidersHorizontal size={15} weight="regular" />
                     </HBtn>
                   </div>
                 </PopoverTrigger>
@@ -352,13 +204,13 @@ export function ViewHeader({
 
             {showDetailPanel && (
               <HBtn active={detailPanelOpen} onClick={onDetailPanelToggle}>
-                {PanelRightIcon}
+                <SidebarSimple size={15} weight="regular" />
               </HBtn>
             )}
 
             {onCreateNew && (
               <HBtn onClick={onCreateNew}>
-                {PlusIcon}
+                <Plus size={15} weight="regular" />
               </HBtn>
             )}
           </div>

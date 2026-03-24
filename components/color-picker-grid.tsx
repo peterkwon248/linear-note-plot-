@@ -1,20 +1,8 @@
 "use client"
 
-import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-export const PRESET_COLORS = [
-  "#e5484d",
-  "#f2994a",
-  "#f2c94c",
-  "#45d483",
-  "#06b6d4",
-  "#5e6ad2",
-  "#9b59b6",
-  "#e91e8c",
-  "#8b5cf6",
-  "#0ea5e9",
-]
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { PRESET_COLORS } from "@/lib/colors"
 
 export function ColorPickerGrid({
   value,
@@ -39,7 +27,7 @@ export function ColorPickerGrid({
           }}
           type="button"
         >
-          {value === color && <Check className="h-3 w-3 text-white" />}
+          {value === color && <PhCheck className="text-white" size={12} weight="bold" />}
         </button>
       ))}
     </div>

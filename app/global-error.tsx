@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle } from 'lucide-react'
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 
 export default function GlobalError({
   error,
@@ -35,7 +35,7 @@ export default function GlobalError({
               backgroundColor: 'rgba(229, 72, 77, 0.1)',
             }}
           >
-            <AlertTriangle style={{ height: '1.25rem', width: '1.25rem', color: '#e5484d' }} />
+            <Warning style={{ height: '1.25rem', width: '1.25rem', color: '#e5484d' }} />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>

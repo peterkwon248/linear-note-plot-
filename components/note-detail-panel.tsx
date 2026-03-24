@@ -1,34 +1,6 @@
 "use client"
 
 import { useMemo, useState, useEffect, useCallback } from "react"
-import {
-  X,
-  FileText,
-  Calendar,
-  Clock,
-  Link2,
-  Sparkles,
-  ArrowRight,
-  Bell,
-  CircleDot,
-  Signal,
-  ExternalLink,
-  Check,
-  AlarmClock,
-  Trash2,
-  ArrowUpRight,
-  ArrowDownLeft,
-  AlertTriangle,
-  Inbox,
-  Plus,
-  Pencil,
-  Archive as ArchiveIcon,
-  RotateCcw,
-  Merge,
-  Folder,
-  Tag,
-  Type,
-} from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
@@ -40,6 +12,32 @@ import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import type { Note } from "@/lib/types"
 import { pushUndo } from "@/lib/undo-manager"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
+import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
+import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { WifiHigh } from "@phosphor-icons/react/dist/ssr/WifiHigh"
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Alarm } from "@phosphor-icons/react/dist/ssr/Alarm"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
+import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { Archive as ArchiveIcon } from "@phosphor-icons/react/dist/ssr/Archive"
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
 
 /* ── Section ───────────────────────────────────────────── */
 
@@ -108,13 +106,13 @@ function NoteLink({
       onClick={() => onOpen(note.id)}
       className="group/link flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50"
     >
-      <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+      <FileText className="shrink-0 text-muted-foreground/60" size={16} weight="regular" />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-sm text-foreground group-hover/link:text-accent">
           {note.title || "Untitled"}
         </span>
       </div>
-      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/0 transition-colors group-hover/link:text-muted-foreground" />
+      <ArrowRight className="shrink-0 text-muted-foreground/0 transition-colors group-hover/link:text-muted-foreground" size={14} weight="regular" />
     </button>
   )
 }
@@ -237,8 +235,8 @@ export function NoteDetailPanel({
 
   const handleMoveBack = useCallback(() => {
     moveBackToInbox(noteId)
-    pushUndo("Move back to Inbox", () => triageKeep(noteId), () => moveBackToInbox(noteId))
-    toast("Moved back to Inbox")
+    pushUndo("Move back to Tray", () => triageKeep(noteId), () => moveBackToInbox(noteId))
+    toast("Moved back to Tray")
   }, [moveBackToInbox, noteId, triageKeep])
 
   const handleLinkSuggestion = useCallback((targetTitle: string) => {
@@ -285,7 +283,7 @@ export function NoteDetailPanel({
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border px-5 py-3">
         <div className="flex items-center gap-2 min-w-0">
-          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <FileText className="shrink-0 text-muted-foreground" size={16} weight="regular" />
           <span className="text-ui font-medium text-foreground truncate">
             Details
           </span>
@@ -296,14 +294,14 @@ export function NoteDetailPanel({
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Open in editor"
           >
-            <ExternalLink className="h-4 w-4" />
+            <ArrowSquareOut size={16} weight="regular" />
           </button>
           <button
             onClick={onClose}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Close panel"
           >
-            <X className="h-4 w-4" />
+            <PhX size={16} weight="regular" />
           </button>
         </div>
       </header>
@@ -315,7 +313,7 @@ export function NoteDetailPanel({
             onClick={handleDone}
             className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
-            <Check className="h-3.5 w-3.5" />
+            <PhCheck size={14} weight="bold" />
             Done
             <kbd className="ml-1 rounded bg-accent-foreground/10 px-1 py-0.5 text-2xs font-mono leading-none text-accent-foreground/60">D</kbd>
           </button>
@@ -323,7 +321,7 @@ export function NoteDetailPanel({
             onSelect={(date) => handleSnooze(date)}
             triggerContent={
               <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-                <AlarmClock className="h-3.5 w-3.5" />
+                <Alarm size={14} weight="regular" />
                 Snooze
                 <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-2xs font-mono leading-none text-muted-foreground">S</kbd>
               </button>
@@ -334,7 +332,7 @@ export function NoteDetailPanel({
             onClick={handleTrash}
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash size={14} weight="regular" />
             Trash
             <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-2xs font-mono leading-none text-muted-foreground">T</kbd>
           </button>
@@ -352,7 +350,7 @@ export function NoteDetailPanel({
                   : "border border-border bg-card text-foreground hover:bg-secondary"
               }`}
             >
-              <ArrowUpRight className="h-3.5 w-3.5" />
+              <ArrowUpRight size={14} weight="regular" />
               Promote
               <kbd className="ml-1 rounded bg-foreground/10 px-1 py-0.5 text-2xs font-mono leading-none opacity-60">P</kbd>
             </button>
@@ -360,15 +358,15 @@ export function NoteDetailPanel({
               onClick={handleMoveBack}
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              <Inbox className="h-3.5 w-3.5" />
-              Back to Inbox
+              <Tray size={14} weight="regular" />
+              Back to Tray
               <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-2xs font-mono leading-none text-muted-foreground">B</kbd>
             </button>
             <RemindPicker
               onSelect={(date) => { setReminder(noteId, date); toast("Reminder set", { description: format(new Date(date), "MMM d, h:mm a") }) }}
               triggerContent={
                 <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-                  <Bell className="h-3.5 w-3.5" />
+                  <Bell size={14} weight="regular" />
                   Remind
                 </button>
               }
@@ -376,25 +374,25 @@ export function NoteDetailPanel({
           </div>
           {staleSuggest && (
             <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <Warning className="text-destructive" size={16} weight="regular" />
               <span className="text-sm text-destructive">Untouched for 14+ days.</span>
               <button
                 onClick={handleMoveBack}
                 className="ml-auto text-xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
               >
-                Move back to Inbox?
+                Move back to Tray?
               </button>
             </div>
           )}
           {!staleSuggest && stale && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
-              <AlertTriangle className="h-4 w-4 text-chart-3" />
+              <Warning className="text-chart-3" size={16} weight="regular" />
               <span className="text-sm text-chart-3">Review needed - untouched for 7+ days.</span>
             </div>
           )}
           {showCaptureAgeNudge && (
             <div className="flex items-center gap-2 px-4 py-2">
-              <Clock className="h-4 w-4 text-muted-foreground/60" />
+              <PhClock className="text-muted-foreground/60" size={16} weight="regular" />
               <span className="text-note text-muted-foreground/70">
                 In capture for {daysInCapture} days. Consider promoting or moving to trash.
               </span>
@@ -410,7 +408,7 @@ export function NoteDetailPanel({
               onClick={handleDemote}
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              <ArrowDownLeft className="h-3.5 w-3.5" />
+              <ArrowDownLeft size={14} weight="regular" />
               Demote to Capture
               <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-2xs font-mono leading-none text-muted-foreground">D</kbd>
             </button>
@@ -418,7 +416,7 @@ export function NoteDetailPanel({
               onSelect={(date) => { setReminder(noteId, date); toast("Reminder set", { description: format(new Date(date), "MMM d, h:mm a") }) }}
               triggerContent={
                 <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-                  <Bell className="h-3.5 w-3.5" />
+                  <Bell size={14} weight="regular" />
                   Remind
                 </button>
               }
@@ -426,7 +424,7 @@ export function NoteDetailPanel({
           </div>
           {linkCount === 0 && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
-              <Link2 className="h-4 w-4 text-chart-3" />
+              <PhLink className="text-chart-3" size={16} weight="regular" />
               <span className="text-sm text-chart-3">
                 Unlinked permanent note — add connections to strengthen your knowledge graph.
                 {suggestions.length > 0 && (
@@ -455,12 +453,12 @@ export function NoteDetailPanel({
         </div>
 
         {/* Metadata */}
-        <PanelSection title="Metadata" icon={<CircleDot className="h-4 w-4" />}>
+        <PanelSection title="Metadata" icon={<CircleDashed size={16} weight="regular" />}>
           <div className="space-y-0.5">
-            <MetaRow label="Status" icon={<CircleDot className="h-3.5 w-3.5" />}>
+            <MetaRow label="Status" icon={<CircleDashed size={14} weight="regular" />}>
               <StatusBadge status={note.status} />
             </MetaRow>
-            <MetaRow label="Priority" icon={<Signal className="h-3.5 w-3.5" />}>
+            <MetaRow label="Priority" icon={<WifiHigh size={14} weight="regular" />}>
               <span className="flex items-center gap-1.5">
                 <PriorityBadge priority={note.priority} />
                 <span className="text-sm capitalize text-muted-foreground">
@@ -469,14 +467,14 @@ export function NoteDetailPanel({
               </span>
             </MetaRow>
             {noteFolder && (
-              <MetaRow label="Folder" icon={<Folder className="h-3.5 w-3.5" />}>
+              <MetaRow label="FolderSimple" icon={<FolderSimple size={14} weight="regular" />}>
                 <span className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: noteFolder.color }} />
                   <span className="text-sm">{noteFolder.name}</span>
                 </span>
               </MetaRow>
             )}
-            <MetaRow label="Label" icon={<Tag className="h-3.5 w-3.5" />}>
+            <MetaRow label="Label" icon={<PhTag size={14} weight="regular" />}>
               <LabelPicker
                 noteId={noteId}
                 currentLabelId={note.labelId}
@@ -485,7 +483,7 @@ export function NoteDetailPanel({
                 onCreateLabel={createLabel}
               />
             </MetaRow>
-            <MetaRow label="Tags" icon={<Tag className="h-3.5 w-3.5" />}>
+            <MetaRow label="Tags" icon={<PhTag size={14} weight="regular" />}>
               <TagPicker
                 noteId={noteId}
                 selectedTagIds={note.tags}
@@ -495,13 +493,13 @@ export function NoteDetailPanel({
                 onCreateTag={createTag}
               />
             </MetaRow>
-            <MetaRow label="Created" icon={<Calendar className="h-3.5 w-3.5" />}>
+            <MetaRow label="Created" icon={<CalendarBlank size={14} weight="regular" />}>
               {format(new Date(note.createdAt), "MMM d, yyyy")}
             </MetaRow>
-            <MetaRow label="Updated" icon={<Clock className="h-3.5 w-3.5" />}>
+            <MetaRow label="Updated" icon={<PhClock size={14} weight="regular" />}>
               {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
             </MetaRow>
-            <MetaRow label="Length" icon={<Type className="h-3.5 w-3.5" />}>
+            <MetaRow label="Length" icon={<TextT size={14} weight="regular" />}>
               <span className="tabular-nums">
                 {note.content.length > 0
                   ? `${note.content.trim().split(/\s+/).filter(Boolean).length} words · ${note.content.length} chars`
@@ -511,13 +509,13 @@ export function NoteDetailPanel({
             {note.reviewAt && note.status !== "inbox" && (
               <div className="flex items-center justify-between py-1.5">
                 <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Bell className="h-3.5 w-3.5" />
+                  <Bell size={14} weight="regular" />
                   Reminder
                 </span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm text-foreground">{format(new Date(note.reviewAt), "MMM d, h:mm a")}</span>
                   <button onClick={() => clearReminder(noteId)} className="text-muted-foreground hover:text-destructive transition-colors">
-                    <X className="h-3.5 w-3.5" />
+                    <PhX size={14} weight="regular" />
                   </button>
                 </div>
               </div>
@@ -530,7 +528,7 @@ export function NoteDetailPanel({
         {/* Backlinks */}
         <PanelSection
           title="Backlinks"
-          icon={<Link2 className="h-4 w-4" />}
+          icon={<PhLink size={16} weight="regular" />}
           count={backlinks.length}
         >
           {backlinks.length > 0 ? (
@@ -551,7 +549,7 @@ export function NoteDetailPanel({
         {/* Related Notes */}
         <PanelSection
           title="Related Notes"
-          icon={<Sparkles className="h-4 w-4" />}
+          icon={<Sparkle size={16} weight="regular" />}
           count={suggestions.length}
         >
           {suggestions.length > 0 ? (
@@ -564,7 +562,7 @@ export function NoteDetailPanel({
                     key={s.noteId}
                     className="group/link flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-secondary/50"
                   >
-                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+                    <FileText className="shrink-0 text-muted-foreground/60" size={16} weight="regular" />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <button
                         onClick={() => onOpenNote(candidateNote.id)}
@@ -599,7 +597,7 @@ export function NoteDetailPanel({
         <div className="mx-5 border-b border-border" />
 
         {/* Actions */}
-        <PanelSection title="Actions" icon={<Merge className="h-4 w-4" />}>
+        <PanelSection title="Actions" icon={<GitMerge size={16} weight="regular" />}>
           <div className="flex items-center gap-2 flex-wrap">
             {note.trashed ? (
               <>
@@ -611,7 +609,7 @@ export function NoteDetailPanel({
                   }}
                   className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" />
+                  <ArrowCounterClockwise size={14} weight="regular" />
                   Restore
                 </button>
                 <button
@@ -622,7 +620,7 @@ export function NoteDetailPanel({
                   }}
                   className="inline-flex items-center gap-2 rounded-md border border-destructive/30 bg-card px-3 py-1.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash size={14} weight="regular" />
                   Delete permanently
                 </button>
               </>
@@ -632,14 +630,14 @@ export function NoteDetailPanel({
                   onClick={() => setMergePickerOpen(true, note.id)}
                   className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
                 >
-                  <Merge className="h-3.5 w-3.5" />
-                  Merge with...
+                  <GitMerge size={14} weight="regular" />
+                  GitMerge with...
                 </button>
                 <button
                   onClick={() => setLinkPickerOpen(true, note.id)}
                   className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
                 >
-                  <Link2 className="h-3.5 w-3.5" />
+                  <PhLink size={14} weight="regular" />
                   Link to...
                 </button>
               </>

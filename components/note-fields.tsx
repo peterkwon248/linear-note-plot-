@@ -2,40 +2,34 @@
 
 import { useState, useRef, useEffect, useMemo } from "react"
 import {
-  AlertTriangle,
-  ArrowUp,
-  ArrowRight,
-  ArrowDown,
-  Minus,
-  Zap,
-  BookOpen,
-  Archive as ArchiveIcon,
-  ChevronDown,
-  Check,
-  Inbox,
-  Tag,
-  Plus,
-  X,
-} from "lucide-react"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
+import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
+import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
+import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Archive as ArchiveIcon } from "@phosphor-icons/react/dist/ssr/Archive"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { PRESET_COLORS } from "@/lib/colors"
 import type { NoteStatus, NotePriority } from "@/lib/types"
-
-const TAG_COLORS = [
-  "#e5484d", "#f2994a", "#f2c94c", "#45d483", "#06b6d4",
-  "#5e6ad2", "#9b59b6", "#e91e8c", "#8b5cf6", "#0ea5e9",
-]
 
 export function pickColor(name: string): string {
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0
-  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length]
+  return PRESET_COLORS[Math.abs(hash) % PRESET_COLORS.length]
 }
 
 /* ── Status config ────────────────────────────────────── */
@@ -45,22 +39,22 @@ export const STATUS_CONFIG: Record<
   { label: string; color: string; bg: string; icon: React.ReactNode }
 > = {
   inbox: {
-    label: "Inbox",
+    label: "Tray",
     color: "var(--chart-2)",
     bg: "color-mix(in srgb, var(--chart-2) 12%, transparent)",
-    icon: <Inbox className="h-3.5 w-3.5" />,
+    icon: <Tray size={14} weight="regular" />,
   },
   capture: {
     label: "Capture",
     color: "var(--chart-3)",
     bg: "color-mix(in srgb, var(--chart-3) 12%, transparent)",
-    icon: <Zap className="h-3.5 w-3.5" />,
+    icon: <Lightning size={14} weight="regular" />,
   },
   permanent: {
     label: "Permanent",
     color: "var(--chart-5)",
     bg: "color-mix(in srgb, var(--chart-5) 12%, transparent)",
-    icon: <ArchiveIcon className="h-3.5 w-3.5" />,
+    icon: <ArchiveIcon size={14} weight="regular" />,
   },
 }
 
@@ -75,27 +69,27 @@ export const PRIORITY_CONFIG: Record<
   none: {
     label: "No priority",
     color: "var(--muted-foreground)",
-    icon: <Minus className="h-3.5 w-3.5" />,
+    icon: <PhMinus size={14} weight="regular" />,
   },
   urgent: {
     label: "Urgent",
     color: "var(--chart-4)",
-    icon: <AlertTriangle className="h-3.5 w-3.5" />,
+    icon: <Warning size={14} weight="regular" />,
   },
   high: {
     label: "High",
     color: "var(--chart-3)",
-    icon: <ArrowUp className="h-3.5 w-3.5" />,
+    icon: <ArrowUp size={14} weight="regular" />,
   },
   medium: {
     label: "Medium",
     color: "var(--chart-3)",
-    icon: <ArrowRight className="h-3.5 w-3.5" />,
+    icon: <ArrowRight size={14} weight="regular" />,
   },
   low: {
     label: "Low",
     color: "var(--accent)",
-    icon: <ArrowDown className="h-3.5 w-3.5" />,
+    icon: <ArrowDown size={14} weight="regular" />,
   },
 }
 
@@ -164,7 +158,7 @@ export function StatusDropdown({
               {current.icon}
               {current.label}
             </span>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            <CaretDown className="text-muted-foreground" size={14} weight="regular" />
           </button>
         )}
       </DropdownMenuTrigger>
@@ -184,7 +178,7 @@ export function StatusDropdown({
                 {cfg.icon}
                 <span className="text-foreground">{cfg.label}</span>
               </span>
-              {value === s && <Check className="h-3.5 w-3.5 text-muted-foreground" />}
+              {value === s && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
             </DropdownMenuItem>
           )
         })}
@@ -226,7 +220,7 @@ export function PriorityDropdown({
               {current.icon}
               <span className="text-foreground">{current.label}</span>
             </span>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            <CaretDown className="text-muted-foreground" size={14} weight="regular" />
           </button>
         )}
       </DropdownMenuTrigger>
@@ -246,7 +240,7 @@ export function PriorityDropdown({
                 {cfg.icon}
                 <span className="text-foreground">{cfg.label}</span>
               </span>
-              {value === p && <Check className="h-3.5 w-3.5 text-muted-foreground" />}
+              {value === p && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
             </DropdownMenuItem>
           )
         })}
@@ -263,7 +257,7 @@ export function LabelBadge({ label }: { label: { name: string; color: string } }
       className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-none"
       style={{ backgroundColor: `${label.color}18`, color: label.color }}
     >
-      <Tag className="h-2.5 w-2.5" />
+      <PhTag size={10} weight="regular" />
       {label.name}
     </span>
   )
@@ -293,7 +287,7 @@ export function LabelDropdown({
             style={current ? { backgroundColor: `${current.color}18`, color: current.color } : {}}
             onClick={(e) => e.stopPropagation()}
           >
-            <Tag className="h-2.5 w-2.5" />
+            <PhTag size={10} weight="regular" />
             {current?.name ?? "No label"}
           </button>
         ) : (
@@ -310,7 +304,7 @@ export function LabelDropdown({
               )}
               {current?.name ?? "No label"}
             </span>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            <CaretDown className="text-muted-foreground" size={14} weight="regular" />
           </button>
         )}
       </DropdownMenuTrigger>
@@ -323,7 +317,7 @@ export function LabelDropdown({
           className="flex items-center justify-between"
         >
           <span className="text-muted-foreground">No label</span>
-          {!value && <Check className="h-3.5 w-3.5 text-muted-foreground" />}
+          {!value && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
         </DropdownMenuItem>
         {labels.map((l) => (
           <DropdownMenuItem
@@ -338,7 +332,7 @@ export function LabelDropdown({
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
               <span className="text-foreground">{l.name}</span>
             </span>
-            {value === l.id && <Check className="h-3.5 w-3.5 text-muted-foreground" />}
+            {value === l.id && <PhCheck className="text-muted-foreground" size={14} weight="bold" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -398,7 +392,7 @@ export function TagPicker({
               onClick={(e) => { e.stopPropagation(); onRemoveTag(noteId, t.id) }}
               className="ml-0.5 rounded-full p-0 opacity-0 transition-opacity group-hover/tag:opacity-100 hover:bg-black/10"
             >
-              <X className="h-2.5 w-2.5" />
+              <PhX size={10} weight="regular" />
             </button>
           </span>
         ))}
@@ -409,7 +403,7 @@ export function TagPicker({
             className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             onClick={(e) => e.stopPropagation()}
           >
-            <Plus className="h-3 w-3" />
+            <PhPlus size={12} weight="regular" />
           </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-52 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
@@ -446,7 +440,7 @@ export function TagPicker({
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} />
                     <span className="text-foreground">{t.name}</span>
                   </span>
-                  {isSelected && <Check className="h-3 w-3 text-muted-foreground" />}
+                  {isSelected && <PhCheck className="text-muted-foreground" size={12} weight="bold" />}
                 </button>
               )
             })}
@@ -459,7 +453,7 @@ export function TagPicker({
                   setSearch("")
                 }}
               >
-                <Plus className="h-3 w-3" />
+                <PhPlus size={12} weight="regular" />
                 Create &ldquo;{search.trim()}&rdquo;
               </button>
             )}
@@ -519,7 +513,7 @@ export function LabelPicker({
         >
           {current ? (
             <>
-              <Tag className="h-2.5 w-2.5" />
+              <PhTag size={10} weight="regular" />
               {current.name}
             </>
           ) : (
@@ -554,7 +548,7 @@ export function LabelPicker({
                 setOpen(false)
               }}
             >
-              <X className="h-3 w-3" />
+              <PhX size={12} weight="regular" />
               Remove label
             </button>
           )}
@@ -572,7 +566,7 @@ export function LabelPicker({
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
                 <span className="text-foreground">{l.name}</span>
               </span>
-              {currentLabelId === l.id && <Check className="h-3 w-3 text-muted-foreground" />}
+              {currentLabelId === l.id && <PhCheck className="text-muted-foreground" size={12} weight="bold" />}
             </button>
           ))}
           {showCreate && (
@@ -584,7 +578,7 @@ export function LabelPicker({
                 setSearch("")
               }}
             >
-              <Plus className="h-3 w-3" />
+              <PhPlus size={12} weight="regular" />
               Create &ldquo;{search.trim()}&rdquo;
             </button>
           )}

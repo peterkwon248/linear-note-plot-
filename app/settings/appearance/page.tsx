@@ -1,6 +1,5 @@
 "use client"
 
-import { Moon, Sun, Monitor } from "lucide-react"
 import { useSettingsStore } from "@/lib/settings-store"
 import {
   SettingsPageTitle,
@@ -9,6 +8,9 @@ import {
   Divider,
   SelectControl,
 } from "@/components/settings-ui"
+import { Moon } from "@phosphor-icons/react/dist/ssr/Moon"
+import { Sun } from "@phosphor-icons/react/dist/ssr/Sun"
+import { Monitor } from "@phosphor-icons/react/dist/ssr/Monitor"
 
 export default function AppearancePage() {
   const theme = useSettingsStore((s) => s.theme)

@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useState, useCallback } from "react"
-import { X, Zap, Check, Trash2, ArrowUpRight, ArrowDownLeft, Inbox, Merge, Link2, RotateCcw, BookOpen } from "lucide-react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
@@ -12,6 +11,17 @@ import type { Note, NoteStatus, NotePriority } from "@/lib/types"
 import { MergeDialog } from "@/components/merge-dialog"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
 import { pushUndo } from "@/lib/undo-manager"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
+import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
+import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 
 /* ── Props ────────────────────────────────────────────── */
 
@@ -52,7 +62,7 @@ export function FloatingActionBar({
   const addWikiLink = usePlotStore((s) => s.addWikiLink)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
 
-  /* ── Merge ── */
+  /* ── GitMerge ── */
   const [mergeOpen, setMergeOpen] = useState(false)
   /* ── Link ── */
   const [linkOpen, setLinkOpen] = useState(false)
@@ -131,8 +141,8 @@ export function FloatingActionBar({
   const handleMoveBackAll = () => {
     ids.forEach((id) => moveBackToInbox(id))
     onClearSelection()
-    pushUndo(`Move ${count} back to Inbox`, () => ids.forEach((id) => triageKeep(id)), () => ids.forEach((id) => moveBackToInbox(id)))
-    toast(`Moved ${count} note${count > 1 ? "s" : ""} back to Inbox`, {
+    pushUndo(`Move ${count} back to Tray`, () => ids.forEach((id) => triageKeep(id)), () => ids.forEach((id) => moveBackToInbox(id)))
+    toast(`Moved ${count} note${count > 1 ? "s" : ""} back to Tray`, {
       duration: 5000,
     })
   }
@@ -167,13 +177,13 @@ export function FloatingActionBar({
               onClick={handleRestoreAll}
               className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
             >
-              <RotateCcw className="h-4 w-4" /> Restore
+              <ArrowCounterClockwise size={16} weight="regular" /> Restore
             </button>
             <button
               onClick={handleDeletePermanently}
               className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
             >
-              <Trash2 className="h-4 w-4" /> Delete
+              <Trash size={16} weight="regular" /> Delete
             </button>
           </>
         )
@@ -185,13 +195,13 @@ export function FloatingActionBar({
               onClick={handleKeepAll}
               className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
             >
-              <Check className="h-4 w-4" /> Done
+              <PhCheck size={16} weight="bold" /> Done
             </button>
             <button
               onClick={handleTrashAll}
               className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
             >
-              <Trash2 className="h-4 w-4" /> Trash
+              <Trash size={16} weight="regular" /> Trash
             </button>
           </>
         )
@@ -203,13 +213,13 @@ export function FloatingActionBar({
               onClick={handlePromoteAll}
               className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-ui font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
             >
-              <ArrowUpRight className="h-4 w-4" /> Promote
+              <ArrowUpRight size={16} weight="regular" /> Promote
             </button>
             <button
               onClick={handleMoveBackAll}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
             >
-              <Inbox className="h-4 w-4" /> Back to Inbox
+              <Tray size={16} weight="regular" /> Back to Tray
             </button>
           </>
         )
@@ -220,7 +230,7 @@ export function FloatingActionBar({
             onClick={handleDemoteAll}
             className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
           >
-            <ArrowDownLeft className="h-4 w-4" /> Demote
+            <ArrowDownLeft size={16} weight="regular" /> Demote
           </button>
         )
 
@@ -237,13 +247,13 @@ export function FloatingActionBar({
                   onClick={handleKeepAll}
                   className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
                 >
-                  <Check className="h-4 w-4" /> Done
+                  <PhCheck size={16} weight="bold" /> Done
                 </button>
                 <button
                   onClick={handleTrashAll}
                   className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
                 >
-                  <Trash2 className="h-4 w-4" /> Trash
+                  <Trash size={16} weight="regular" /> Trash
                 </button>
               </>
             )}
@@ -252,7 +262,7 @@ export function FloatingActionBar({
                 onClick={handlePromoteAll}
                 className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-ui font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
               >
-                <ArrowUpRight className="h-4 w-4" /> Promote
+                <ArrowUpRight size={16} weight="regular" /> Promote
               </button>
             )}
             {hasPermanent && (
@@ -260,7 +270,7 @@ export function FloatingActionBar({
                 onClick={handleDemoteAll}
                 className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
               >
-                <ArrowDownLeft className="h-4 w-4" /> Demote
+                <ArrowDownLeft size={16} weight="regular" /> Demote
               </button>
             )}
           </>
@@ -279,7 +289,7 @@ export function FloatingActionBar({
       <div className="flex items-center gap-1 px-4 py-2.5">
         {/* Selection info */}
         <div className="flex items-center gap-1.5 px-1.5">
-          <Zap className="h-4 w-4 text-accent" />
+          <Lightning className="text-accent" size={16} weight="regular" />
           <span className="text-ui font-medium text-foreground whitespace-nowrap">
             {count} selected
           </span>
@@ -287,7 +297,7 @@ export function FloatingActionBar({
             onClick={onClearSelection}
             className="rounded-md p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
-            <X className="h-4 w-4" />
+            <PhX size={16} weight="regular" />
           </button>
         </div>
 
@@ -330,7 +340,7 @@ export function FloatingActionBar({
               </>
             )}
 
-            {/* Merge */}
+            {/* GitMerge */}
             <Divider />
             <button
               onClick={() => {
@@ -342,7 +352,7 @@ export function FloatingActionBar({
               }}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
-              <Merge className="h-4 w-4" /> Merge
+              <GitMerge size={16} weight="regular" /> GitMerge
             </button>
 
             {/* Wiki Assembly */}
@@ -350,7 +360,7 @@ export function FloatingActionBar({
               onClick={() => setWikiAssemblyOpen(true)}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
-              <BookOpen className="h-4 w-4" /> Wiki
+              <BookOpen size={16} weight="regular" /> Wiki
             </button>
 
             {/* Link */}
@@ -359,7 +369,7 @@ export function FloatingActionBar({
               onClick={() => setLinkOpen(true)}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
-              <Link2 className="h-4 w-4" /> Link
+              <PhLink size={16} weight="regular" /> Link
             </button>
 
             {/* Remind */}
@@ -369,7 +379,7 @@ export function FloatingActionBar({
         )}
       </div>
 
-      {/* Merge Dialog */}
+      {/* GitMerge Dialog */}
       {mergeOpen && (
         <MergeDialog
           open={mergeOpen}

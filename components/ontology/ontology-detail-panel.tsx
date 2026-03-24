@@ -6,8 +6,8 @@ import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import type { Relation, RelationType } from "@/lib/types"
-import { X, ExternalLink } from "lucide-react"
-
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 interface OntologyDetailPanelProps {
   noteId: string
   onClose: () => void
@@ -73,7 +73,7 @@ export function OntologyDetailPanel({
           onClick={onClose}
           className="text-muted-foreground hover:text-foreground p-1"
         >
-          <X className="w-4 h-4" />
+          <PhX size={16} weight="regular" />
         </button>
       </div>
 
@@ -206,7 +206,7 @@ export function OntologyDetailPanel({
         onClick={() => onOpenNote(noteId)}
         className="mx-4 mb-4 mt-auto px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 flex items-center justify-center gap-1 transition-colors"
       >
-        <ExternalLink className="w-3 h-3" />
+        <ArrowSquareOut size={12} weight="regular" />
         Open Note
       </button>
     </div>

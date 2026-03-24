@@ -231,12 +231,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Sub-grouping 실제 동작 구현**: group.ts 재귀 그룹핑 + subheader VirtualItem + 들여쓰기된 서브그룹 헤더 렌더링
 - **Show card preview 즉시 전환**: 토글 ON/OFF 시 리스트 즉시 반영
 
+### 이번 세션 완료 (2026-03-24, 세션 2)
+- **Design Polish Phase 1~5**: Lucide→Phosphor 아이콘 통일(83파일), hardcoded hex→lib/colors.ts 중앙화, 인라인 style→Tailwind 클래스, 비표준 값 정규화
+- **NoteRow CSS Grid 컬럼 기반 재설계**: flex→CSS Grid 전환, word count 컬럼 복원, ViewHeader 로컬 검색 제거→글로벌 검색 통합
+- **전 뷰 행 구분선 제거**: notes-table, wiki-list, wiki-view, note-list, labels-view, tags-view — "Structure felt, not seen" 철학 전면 적용
+
 ### 다음 작업 후보 (우선순위 순)
-1. **리니어 디자인 폴리시** — 전 화면 UI 폴리시 (줄/사각형 제거, 폰트/아이콘 정렬, NoteRow CSS Grid 컬럼화, 로컬 검색 제거→글로벌 검색 통합, word count 복원)
-2. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
-3. **J/K 리스트 네비게이션** — Linear식
-4. **노트 가져오기/내보내기**
-5. **그래프 사이드바 리워크** — 클러스터 + 인사이트
+1. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
+2. **J/K 리스트 네비게이션** — Linear식
+3. **노트 가져오기/내보내기**
+4. **그래프 사이드바 리워크** — 클러스터 + 인사이트
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정

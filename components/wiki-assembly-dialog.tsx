@@ -10,8 +10,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Button } from "@/components/ui/button"
-import { BookOpen } from "lucide-react"
 import { toast } from "sonner"
 import { setActiveSpace } from "@/lib/table-route"
 import type { Note, WikiBlock } from "@/lib/types"
@@ -91,7 +91,7 @@ export function WikiAssemblyDialog({
       <DialogContent className="max-w-sm gap-0 p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="flex items-center gap-2 text-ui">
-            <BookOpen className="h-4 w-4" />
+            <BookOpen size={16} weight="regular" />
             Assemble Wiki Article
           </DialogTitle>
           <DialogDescription className="text-note">
@@ -122,7 +122,7 @@ export function WikiAssemblyDialog({
                 key={note.id}
                 className="flex items-center gap-3 rounded-md px-3 py-2.5 bg-secondary/20"
               >
-                <BookOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                <BookOpen className="shrink-0 text-muted-foreground/50" size={14} weight="regular" />
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-sm text-foreground">
                     {note.title || "Untitled"}
@@ -138,7 +138,7 @@ export function WikiAssemblyDialog({
 
         {/* Info banner */}
         <div className="mx-5 mb-3 flex items-center gap-2 rounded-md bg-secondary/30 px-3 py-2">
-          <BookOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+          <BookOpen className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
           <p className="text-xs text-muted-foreground/70 leading-relaxed">
             Notes will be referenced, not archived. Original notes remain unchanged.
           </p>
@@ -158,7 +158,7 @@ export function WikiAssemblyDialog({
             onClick={handleAssemble}
             className="text-note"
           >
-            <BookOpen className="h-3.5 w-3.5" />
+            <BookOpen size={14} weight="regular" />
             Create Article
           </Button>
         </DialogFooter>

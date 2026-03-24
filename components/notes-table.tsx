@@ -3,34 +3,6 @@
 import { useState, useMemo, useRef, memo, useEffect, useCallback, type Dispatch, type SetStateAction } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import {
-  Plus,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  FileText,
-  Link2,
-  ChevronDown,
-  X,
-  Check,
-  AlarmClock,
-  Trash2,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Inbox,
-  MoreHorizontal,
-  Bell,
-  Clock,
-  Merge,
-  Minus,
-  FolderOpen,
-  RotateCcw,
-  Globe,
-  Download,
-  Share2,
-  Zap,
-  Pencil,
-} from "lucide-react"
-import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
@@ -40,6 +12,32 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
 } from "@/components/ui/context-menu"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
+import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
+import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Alarm } from "@phosphor-icons/react/dist/ssr/Alarm"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
+import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
+import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
+import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
+import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
+import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
+import { ShareNetwork } from "@phosphor-icons/react/dist/ssr/ShareNetwork"
+import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import {
   Tooltip,
   TooltipContent,
@@ -107,6 +105,7 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
   { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links", minWidth: 640 },
   { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
+  { id: "wordCount", label: "Words", width: "w-[56px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
   { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
   { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt", minWidth: 800 },
 ]
@@ -143,9 +142,9 @@ function TH({
     >
       {label}
       {active ? (
-        sortDir === "asc" ? <ArrowUp className="h-2.5 w-2.5 text-muted-foreground/50" /> : <ArrowDown className="h-2.5 w-2.5 text-muted-foreground/50" />
+        sortDir === "asc" ? <ArrowUp className="text-muted-foreground/50" size={10} weight="regular" /> : <ArrowDown className="text-muted-foreground/50" size={10} weight="regular" />
       ) : (
-        <ArrowUpDown className="h-2.5 w-2.5 opacity-0 group-hover/th:opacity-50" />
+        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-50" size={10} weight="regular" />
       )}
     </button>
   )
@@ -181,7 +180,7 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
     return (
       <div className="flex flex-1 items-center justify-center text-center">
         <div>
-          <Trash2 className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+          <Trash className="mx-auto mb-3 text-muted-foreground/40" size={40} weight="regular" />
           <p className="text-ui text-muted-foreground">No trashed {type}</p>
         </div>
       </div>
@@ -227,7 +226,7 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 title="Restore"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
+                <ArrowCounterClockwise size={14} weight="regular" />
                 Restore
               </button>
               <button
@@ -235,7 +234,7 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-destructive transition-colors hover:bg-destructive/10"
                 title="Delete permanently"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash size={14} weight="regular" />
               </button>
             </div>
           </div>
@@ -738,6 +737,19 @@ export function NotesTable({
     })
   }, [visibleCols, containerWidth])
 
+  // ── Grid template for table-mode columns ──
+  const gridTemplate = useMemo(() => {
+    const cols = ["32px", "1fr"] // checkbox + name (always)
+    if (effectiveVisibleCols.includes("status")) cols.push("120px")
+    if (effectiveVisibleCols.includes("folder")) cols.push("80px")
+    if (effectiveVisibleCols.includes("links")) cols.push("56px")
+    if (effectiveVisibleCols.includes("reads")) cols.push("56px")
+    if (effectiveVisibleCols.includes("wordCount")) cols.push("56px")
+    if (effectiveVisibleCols.includes("updatedAt")) cols.push("80px")
+    if (effectiveVisibleCols.includes("createdAt")) cols.push("80px")
+    return cols.join(" ")
+  }, [effectiveVisibleCols])
+
   const isCompact = containerWidth < 480 || viewState.toggles?.compact === true
 
   const virtualItems = useMemo((): VirtualItem[] => {
@@ -801,7 +813,7 @@ export function NotesTable({
       const dx = e.clientX - dragStartRef.current.x
       const dy = e.clientY - dragStartRef.current.y
 
-      // Check threshold
+      // PhCheck threshold
       if (!isDraggingRef.current) {
         if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return
         isDraggingRef.current = true
@@ -876,7 +888,7 @@ export function NotesTable({
     <main ref={tableContainerRef} className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <ViewHeader
-        icon={<FileText className="h-5 w-5" strokeWidth={1.5} />}
+        icon={<FileText size={20} weight="regular" />}
         title={title ?? "Notes"}
         count={flatNotes.length}
         extraToolbarButtons={viewState.groupBy !== "none" && groups.length > 0 ? (
@@ -893,7 +905,7 @@ export function NotesTable({
             className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
             title={groups.every(g => collapsedGroups.has(g.key)) ? "Expand all groups" : "Collapse all groups"}
           >
-            <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+            <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               {groups.every(g => collapsedGroups.has(g.key)) ? (
                 <>
                   <path d="M4 6l4 4 4-4" />
@@ -982,7 +994,7 @@ export function NotesTable({
                 onClick={() => updateViewState({ sortField: "updatedAt", sortDirection: "desc" })}
                 className="ml-0.5 hover:text-accent/80 transition-colors"
               >
-                <X className="h-3 w-3" />
+                <PhX size={12} weight="regular" />
               </button>
             </span>
           </div>
@@ -997,13 +1009,13 @@ export function NotesTable({
         const folderName = folders.find((f) => f.id === folderId)?.name
         return folderName ? (
           <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
-            <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <FolderOpen className="text-muted-foreground" size={14} weight="regular" />
             <span className="text-note text-foreground">{folderName}</span>
             <button
               onClick={() => setActiveFolderId(null)}
               className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
-              <X className="h-3 w-3" />
+              <PhX size={12} weight="regular" />
             </button>
           </div>
         ) : null
@@ -1012,7 +1024,7 @@ export function NotesTable({
       {/* ── Unlinked helper ─────────────────────────────── */}
       {effectiveTab === "unlinked" && flatNotes.length > 0 && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-3">
-          <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+          <PhLink className="text-muted-foreground" size={14} weight="regular" />
           <span className="text-xs text-muted-foreground">
             These notes have no links. Add <span className="font-mono text-foreground/70">[[wiki-links]]</span> to connect them to your knowledge graph.
           </span>
@@ -1029,7 +1041,7 @@ export function NotesTable({
             {virtualItems.length === 0 ? (
               <div className="flex flex-1 items-center justify-center text-center">
                 <div>
-                  <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+                  <FileText className="mx-auto mb-3 text-muted-foreground/40" size={40} weight="regular" />
                   <p className="text-ui text-muted-foreground">
                     {context === "trash" ? "Trash is empty" : "No notes found"}
                   </p>
@@ -1044,10 +1056,13 @@ export function NotesTable({
               </div>
             ) : (
               <div ref={scrollContainerRef} onMouseDown={handleDragMouseDown} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
-                {/* Column headers (table mode — removed, never renders) */}
+                {/* Column headers (table mode) */}
                 {(viewState.viewMode as string) === "table" && (
-                <div className="sticky top-0 z-10 flex items-center border-b border-border/30 bg-background px-5 py-2.5">
-                  <div className="w-8 shrink-0 flex items-center justify-center mr-0.5">
+                <div
+                  style={{ display: "grid", gridTemplateColumns: gridTemplate }}
+                  className="sticky top-0 z-10 items-center border-b border-border/30 bg-background px-5 py-2.5"
+                >
+                  <div className="flex items-center justify-center">
                     <div
                       className={`h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${
                         selectedIds.size === flatNotes.length && flatNotes.length > 0
@@ -1065,15 +1080,15 @@ export function NotesTable({
                       }}
                     >
                       {selectedIds.size === flatNotes.length && flatNotes.length > 0 && (
-                        <Check className="h-2.5 w-2.5 text-accent-foreground" />
+                        <PhCheck className="text-accent-foreground" size={10} weight="bold" />
                       )}
                       {selectedIds.size > 0 && selectedIds.size < flatNotes.length && (
-                        <Minus className="h-2.5 w-2.5 text-accent-foreground" />
+                        <PhMinus className="text-accent-foreground" size={10} weight="regular" />
                       )}
                     </div>
                   </div>
                   {COLUMN_DEFS.filter((col) => col.id === "title" || effectiveVisibleCols.includes(col.id)).map((col) => (
-                    <div key={col.id} className={col.width + " " + (col.align ?? "")}>
+                    <div key={col.id} className={col.align ?? ""}>
                       <TH
                         label={col.label}
                         col={col.sortField}
@@ -1116,7 +1131,7 @@ export function NotesTable({
                             onPointerDown={(e) => handleGroupPointerDown(e, item.groupKey)}
                             onPointerMove={handleGroupPointerMove}
                             onPointerUp={handleGroupPointerUp}
-                            className={`flex items-center gap-2.5 px-5 py-2 border-b border-border/50 select-none transition-colors ${
+                            className={`flex items-center gap-2.5 px-5 py-2 mt-4 mb-0.5 select-none transition-colors ${
                               reorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
                               reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/20"
@@ -1127,7 +1142,7 @@ export function NotesTable({
                               if (!reorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <ChevronDown className={`h-3 w-3 text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
+                            <CaretDown className={`text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
                             <span className="text-xs font-semibold text-foreground/80 tracking-wider">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
@@ -1140,7 +1155,7 @@ export function NotesTable({
                             onPointerDown={(e) => handleGroupPointerDown(e, item.groupKey)}
                             onPointerMove={handleGroupPointerMove}
                             onPointerUp={handleGroupPointerUp}
-                            className={`flex items-center gap-2 px-5 py-2.5 bg-secondary/20 border-b border-border/30 select-none transition-colors ${
+                            className={`flex items-center gap-2 px-5 py-2.5 bg-secondary/20 mt-3 mb-0.5 select-none transition-colors ${
                               reorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
                               reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/30"
@@ -1151,7 +1166,7 @@ export function NotesTable({
                               if (!reorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <ChevronDown className={`h-3 w-3 text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
+                            <CaretDown className={`text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
                             <span className="text-xs font-semibold text-foreground/80 tracking-wider">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
@@ -1165,7 +1180,7 @@ export function NotesTable({
                             onPointerDown={(e) => handleSubGroupPointerDown(e, item.groupKey)}
                             onPointerMove={handleSubGroupPointerMove}
                             onPointerUp={handleSubGroupPointerUp}
-                            className={`flex items-center gap-2 pl-10 pr-5 py-1.5 border-b border-border/30 select-none transition-colors ${
+                            className={`flex items-center gap-2 pl-10 pr-5 py-1.5 select-none transition-colors ${
                               subReorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
                               subReorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/20"
@@ -1176,7 +1191,7 @@ export function NotesTable({
                               if (!subReorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <ChevronDown className={`h-2.5 w-2.5 text-muted-foreground/50 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
+                            <CaretDown className={`text-muted-foreground/50 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey.split("::")[1] ?? item.groupKey} label={item.label} folders={folders} labels={labels} />
                             <span className="text-2xs font-medium text-foreground/60 tracking-wider">
                               {resolveGroupLabel(item.groupBy, item.groupKey.split("::")[1] ?? item.groupKey, item.label, folders, labels)}
@@ -1192,6 +1207,7 @@ export function NotesTable({
                             isSelected={selectedIds.has(item.note.id)}
                             selectionActive={selectedIds.size > 0}
                             visibleColumns={effectiveVisibleCols}
+                            gridTemplate={gridTemplate}
                             isCompact={isCompact}
                             viewMode={viewState.viewMode}
                             onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
@@ -1208,7 +1224,7 @@ export function NotesTable({
                             onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id), () => triageTrash(item.note.id)) }}
                             onPromote={() => { promoteToPermanent(item.note.id); pushUndo("Promote to Permanent", () => undoPromote(item.note.id), () => promoteToPermanent(item.note.id)) }}
                             onDemote={() => { undoPromote(item.note.id); pushUndo("Demote to Capture", () => promoteToPermanent(item.note.id), () => undoPromote(item.note.id)) }}
-                            onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Inbox", () => triageKeep(item.note.id), () => moveBackToInbox(item.note.id)) }}
+                            onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Tray", () => triageKeep(item.note.id), () => moveBackToInbox(item.note.id)) }}
                             onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
                             onMergeWith={() => setMergePickerOpen(true, item.note.id)}
                             onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
@@ -1248,7 +1264,7 @@ export function NotesTable({
                   disabled={flatNotes.length === 0}
                   className="text-sm"
                 >
-                  <RotateCcw className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <ArrowCounterClockwise className="mr-2 text-muted-foreground" size={16} weight="regular" />
                   Restore all
                 </ContextMenuItem>
                 <ContextMenuSeparator />
@@ -1262,7 +1278,7 @@ export function NotesTable({
                   disabled={flatNotes.length === 0}
                   className="text-sm text-destructive focus:text-destructive"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash className="mr-2" size={16} weight="regular" />
                   Empty trash
                 </ContextMenuItem>
               </>
@@ -1274,7 +1290,7 @@ export function NotesTable({
                 }}
                 className="text-sm"
               >
-                <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
+                <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
                 New note
               </ContextMenuItem>
             )}
@@ -1317,6 +1333,7 @@ interface NoteRowProps {
   isCompact?: boolean
   viewMode?: ViewMode
   visibleColumns: string[]
+  gridTemplate?: string
   onOpen: () => void
   onClick?: (e: React.MouseEvent) => void
   onDoubleClick?: () => void
@@ -1337,14 +1354,14 @@ interface NoteRowProps {
 
 function SourceIcon({ source }: { source: NoteSource }) {
   const Icon = {
-    manual: Pencil,
+    manual: PencilSimple,
     webclip: Globe,
-    import: Download,
-    share: Share2,
-    api: Zap,
+    import: DownloadSimple,
+    share: ShareNetwork,
+    api: Lightning,
   }[source ?? "manual"]
   if (!Icon) return null
-  return <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={1.5} />
+  return <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
 }
 
 const STATUS_DOT_COLORS: Record<NoteStatus, string> = {
@@ -1404,7 +1421,7 @@ function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
     case "status":
       return <StatusShapeIcon status={label.toLowerCase() as NoteStatus} size={8} />
     case "folder":
-      return <FolderOpen className="h-3.5 w-3.5 text-muted-foreground/70" strokeWidth={1.5} />
+      return <FolderOpen className="text-muted-foreground/70" size={14} weight="regular" />
     case "label": {
       const labelColor = labels.find((l) => l.id === groupKey)?.color
       return labelColor ? (
@@ -1429,6 +1446,7 @@ function NoteRowInner({
   isCompact,
   viewMode,
   visibleColumns,
+  gridTemplate,
   onOpen,
   onClick,
   onDoubleClick,
@@ -1490,7 +1508,7 @@ function NoteRowInner({
                   isSelected ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
                 }`}
               >
-                {isSelected && <Check className="h-2 w-2 text-accent-foreground" />}
+                {isSelected && <PhCheck className="text-accent-foreground" size={8} weight="bold" />}
               </div>
             </div>
 
@@ -1586,16 +1604,16 @@ function NoteRowInner({
         </ContextMenuTrigger>
 
         <ContextMenuContent className="w-52">
-          {/* Inbox actions */}
+          {/* Tray actions */}
           {note.status === "inbox" && note.triageStatus !== "trashed" && (
             <>
               <ContextMenuItem onClick={onKeep} className="text-sm">
-                <Check className="h-4 w-4 mr-2 text-accent" />
+                <PhCheck className="mr-2 text-accent" size={16} weight="bold" />
                 Done
               </ContextMenuItem>
               <ContextMenuSub>
                 <ContextMenuSubTrigger className="text-sm">
-                  <AlarmClock className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <Alarm className="mr-2 text-muted-foreground" size={16} weight="regular" />
                   Snooze
                 </ContextMenuSubTrigger>
                 <ContextMenuSubContent className="w-44">
@@ -1607,7 +1625,7 @@ function NoteRowInner({
                 </ContextMenuSubContent>
               </ContextMenuSub>
               <ContextMenuItem onClick={onTrash} className="text-sm text-destructive focus:text-destructive">
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash className="mr-2" size={16} weight="regular" />
                 Trash
               </ContextMenuItem>
               <ContextMenuSeparator />
@@ -1616,12 +1634,12 @@ function NoteRowInner({
           {note.status === "capture" && (
             <>
               <ContextMenuItem onClick={onPromote} className="text-sm">
-                <ArrowUpRight className="h-4 w-4 mr-2 text-chart-5" />
+                <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" />
                 Promote to Permanent
               </ContextMenuItem>
               <ContextMenuItem onClick={onMoveBack} className="text-sm">
-                <Inbox className="h-4 w-4 mr-2 text-muted-foreground" />
-                Back to Inbox
+                <Tray className="mr-2 text-muted-foreground" size={16} weight="regular" />
+                Back to Tray
               </ContextMenuItem>
               <ContextMenuSeparator />
             </>
@@ -1629,22 +1647,22 @@ function NoteRowInner({
           {note.status === "permanent" && (
             <>
               <ContextMenuItem onClick={onDemote} className="text-sm">
-                <ArrowDownLeft className="h-4 w-4 mr-2 text-muted-foreground" />
+                <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" />
                 Demote to Capture
               </ContextMenuItem>
               <ContextMenuSeparator />
             </>
           )}
           <ContextMenuItem onClick={onOpen} className="text-sm">
-            <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+            <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" />
             Open
           </ContextMenuItem>
           <ContextMenuItem onClick={onMergeWith} className="text-sm">
-            <Merge className="h-4 w-4 mr-2 text-muted-foreground" />
-            Merge with...
+            <GitMerge className="mr-2 text-muted-foreground" size={16} weight="regular" />
+            GitMerge with...
           </ContextMenuItem>
           <ContextMenuItem onClick={onLinkWith} className="text-sm">
-            <Link2 className="h-4 w-4 mr-2 text-muted-foreground" />
+            <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />
             Link to...
           </ContextMenuItem>
         </ContextMenuContent>
@@ -1652,14 +1670,21 @@ function NoteRowInner({
     )
   }
 
-  /* ── Table mode rendering (existing) ── */
+  /* ── Table mode rendering (CSS Grid) ── */
+
+  const wordCount = useMemo(() => {
+    if (!note.preview) return 0
+    return note.preview.split(/\s+/).filter(Boolean).length
+  }, [note.preview])
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
           draggable
           onDragStart={(e) => setNoteDragData(e, note.id)}
-          className={`group flex items-center transition-colors cursor-pointer border-b border-border/30 ${
+          style={{ display: "grid", gridTemplateColumns: gridTemplate }}
+          className={`group items-center transition-colors cursor-pointer ${
             isCompact ? "px-3 py-1.5" : "px-5 py-0"
           } ${
             isSelected
@@ -1674,8 +1699,8 @@ function NoteRowInner({
       {/* Checkbox */}
       <div
         data-checkbox
-        className={`shrink-0 flex items-center justify-center mr-0.5 cursor-pointer rounded ${
-          isCompact ? "w-6 h-6" : "w-8 h-8"
+        className={`flex items-center justify-center cursor-pointer rounded ${
+          isCompact ? "h-6" : "h-8"
         } ${
           selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
         }`}
@@ -1692,13 +1717,13 @@ function NoteRowInner({
             isSelected ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
           }`}
         >
-          {isSelected && <Check className={`text-accent-foreground ${isCompact ? "h-2 w-2" : "h-2.5 w-2.5"}`} />}
+          {isSelected && <PhCheck className="text-accent-foreground" size={8} weight="bold" />}
         </div>
       </div>
 
       {/* Name */}
-      <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-4">
-        <FileText className={`shrink-0 text-muted-foreground/60 ${isCompact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+      <div className="flex items-center gap-2.5 min-w-0 pr-4">
+        <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
         <span className={`truncate text-foreground ${isCompact ? "text-note" : "text-ui"}`}>
           {note.title || "Untitled"}
         </span>
@@ -1732,7 +1757,7 @@ function NoteRowInner({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="shrink-0 flex items-center gap-0.5 text-2xs text-muted-foreground/50">
-                <Link2 className="h-2.5 w-2.5" />
+                <PhLink size={10} weight="regular" />
               </span>
             </TooltipTrigger>
             <TooltipContent className="text-xs">Add at least 1 link to reduce orphan notes.</TooltipContent>
@@ -1742,14 +1767,14 @@ function NoteRowInner({
 
       {/* Status */}
       {visibleCols.includes("status") && (
-        <div className="w-[120px] shrink-0 flex items-center justify-end">
+        <div className="flex items-center justify-end">
           <StatusBadge status={note.status} />
         </div>
       )}
 
       {/* Folder */}
       {visibleCols.includes("folder") && (
-        <div className="w-[80px] shrink-0 flex items-center justify-center px-2">
+        <div className="flex items-center justify-center px-2">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
             if (!folder) return <span className="text-2xs text-muted-foreground/20">—</span>
@@ -1764,7 +1789,7 @@ function NoteRowInner({
 
       {/* Links */}
       {visibleCols.includes("links") && (
-        <div className="w-[56px] shrink-0 text-center px-1">
+        <div className="text-center px-1">
           <span className={`tabular-nums text-xs ${links === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
             {links}
           </span>
@@ -1773,16 +1798,25 @@ function NoteRowInner({
 
       {/* Reads */}
       {visibleCols.includes("reads") && (
-        <div className="w-[56px] shrink-0 text-center px-1">
+        <div className="text-center px-1">
           <span className={`tabular-nums text-xs ${note.reads === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
             {note.reads}
           </span>
         </div>
       )}
 
+      {/* Word Count */}
+      {visibleCols.includes("wordCount") && (
+        <div className="text-right px-1">
+          <span className={`tabular-nums text-xs ${wordCount === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
+            {wordCount}
+          </span>
+        </div>
+      )}
+
       {/* Updated - relative time like Linear */}
       {visibleCols.includes("updatedAt") && (
-        <div className="w-[80px] shrink-0 text-right px-1">
+        <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="tabular-nums text-xs text-muted-foreground/50 cursor-default">
@@ -1798,7 +1832,7 @@ function NoteRowInner({
 
       {/* Created - absolute date like Linear */}
       {visibleCols.includes("createdAt") && (
-        <div className="w-[80px] shrink-0 text-right px-1">
+        <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="tabular-nums text-xs text-muted-foreground/50 cursor-default">
@@ -1815,17 +1849,17 @@ function NoteRowInner({
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-52">
-        {/* Inbox actions */}
+        {/* Tray actions */}
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
             <ContextMenuItem onClick={onKeep} className="text-sm">
-              <Check className="h-4 w-4 mr-2 text-accent" />
+              <PhCheck className="mr-2 text-accent" size={16} weight="bold" />
               Done
               <span className="ml-auto text-2xs text-muted-foreground">D</span>
             </ContextMenuItem>
             <ContextMenuSub>
               <ContextMenuSubTrigger className="text-sm">
-                <AlarmClock className="h-4 w-4 mr-2 text-muted-foreground" />
+                <Alarm className="mr-2 text-muted-foreground" size={16} weight="regular" />
                 Snooze
                 <span className="ml-auto text-2xs text-muted-foreground">S</span>
               </ContextMenuSubTrigger>
@@ -1848,7 +1882,7 @@ function NoteRowInner({
               </ContextMenuSubContent>
             </ContextMenuSub>
             <ContextMenuItem onClick={onTrash} className="text-sm text-destructive focus:text-destructive">
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash className="mr-2" size={16} weight="regular" />
               Trash
               <span className="ml-auto text-2xs">T</span>
             </ContextMenuItem>
@@ -1860,13 +1894,13 @@ function NoteRowInner({
         {note.status === "capture" && (
           <>
             <ContextMenuItem onClick={onPromote} className="text-sm">
-              <ArrowUpRight className="h-4 w-4 mr-2 text-chart-5" />
+              <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" />
               Promote to Permanent
               <span className="ml-auto text-2xs text-muted-foreground">P</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={onMoveBack} className="text-sm">
-              <Inbox className="h-4 w-4 mr-2 text-muted-foreground" />
-              Back to Inbox
+              <Tray className="mr-2 text-muted-foreground" size={16} weight="regular" />
+              Back to Tray
               <span className="ml-auto text-2xs text-muted-foreground">B</span>
             </ContextMenuItem>
             <ContextMenuSeparator />
@@ -1877,7 +1911,7 @@ function NoteRowInner({
         {note.status === "permanent" && (
           <>
             <ContextMenuItem onClick={onDemote} className="text-sm">
-              <ArrowDownLeft className="h-4 w-4 mr-2 text-muted-foreground" />
+              <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" />
               Demote to Capture
               <span className="ml-auto text-2xs text-muted-foreground">D</span>
             </ContextMenuItem>
@@ -1888,28 +1922,28 @@ function NoteRowInner({
         {/* Remind me (all notes) */}
         <ContextMenuSub>
           <ContextMenuSubTrigger className="text-sm">
-            <Bell className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Bell className="mr-2 text-muted-foreground" size={16} weight="regular" />
             Remind me
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-48">
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Later today</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Tomorrow</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>In 3 days</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Next week</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>In 1 week</span>
             </ContextMenuItem>
           </ContextMenuSubContent>
@@ -1918,15 +1952,15 @@ function NoteRowInner({
 
         {/* Common actions */}
         <ContextMenuItem onClick={onOpen} className="text-sm">
-          <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+          <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" />
           Open
         </ContextMenuItem>
         <ContextMenuItem onClick={onMergeWith} className="text-sm">
-          <Merge className="h-4 w-4 mr-2 text-muted-foreground" />
-          Merge with...
+          <GitMerge className="mr-2 text-muted-foreground" size={16} weight="regular" />
+          GitMerge with...
         </ContextMenuItem>
         <ContextMenuItem onClick={onLinkWith} className="text-sm">
-          <Link2 className="h-4 w-4 mr-2 text-muted-foreground" />
+          <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />
           Link to...
         </ContextMenuItem>
       </ContextMenuContent>
@@ -1941,6 +1975,7 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.note.folderId === next.note.folderId &&
   prev.note.reads === next.note.reads &&
   prev.note.title === next.note.title &&
+  prev.note.preview === next.note.preview &&
   prev.links === next.links &&
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
@@ -1948,5 +1983,6 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.isCompact === next.isCompact &&
   prev.viewMode === next.viewMode &&
   prev.visibleColumns === next.visibleColumns &&
+  prev.gridTemplate === next.gridTemplate &&
   prev.showCardPreview === next.showCardPreview
 )

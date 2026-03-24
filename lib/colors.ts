@@ -98,6 +98,19 @@ export const PRESET_COLORS = [
   "#5e6ad2", "#9b59b6", "#e91e8c", "#8b5cf6", "#0ea5e9",
 ] as const
 
+/* ── Link Density (board view) ──────────────── */
+
+export const LINK_DENSITY_HEX = {
+  none: "#6b7280",
+  few:  "#3b82f6",
+  well: "#22c55e",
+  hub:  "#a855f7",
+} as const
+
+/* ── Calendar Status Dots ───────────────────── */
+
+export const STATUS_DOT_FALLBACK = "#6b7280"
+
 /* ── Event Log ───────────────────────────────── */
 
 export const EVENT_HEX = {

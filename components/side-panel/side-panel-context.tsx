@@ -1,33 +1,5 @@
 "use client"
 
-import {
-  Calendar,
-  Clock,
-  FolderOpen,
-  Tag,
-  X,
-  Plus,
-  ChevronDown,
-  Hash,
-  FileText,
-  Pin,
-  AlignLeft,
-  Paperclip,
-  Link2,
-  Shield,
-  Sparkles,
-  Check,
-  AlarmClock,
-  Trash2,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Inbox,
-  AlertTriangle,
-  GitBranch,
-  Merge,
-  History,
-  MessageSquare,
-} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   DropdownMenu,
@@ -35,6 +7,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
+import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
+import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { Shield as PhShield } from "@phosphor-icons/react/dist/ssr/Shield"
+import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Alarm } from "@phosphor-icons/react/dist/ssr/Alarm"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
+import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
+import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { GitBranch } from "@phosphor-icons/react/dist/ssr/GitBranch"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
+import { Chat } from "@phosphor-icons/react/dist/ssr/Chat"
+import { WifiHigh } from "@phosphor-icons/react/dist/ssr/WifiHigh"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
@@ -44,7 +45,6 @@ import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSn
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { suggestBacklinks } from "@/lib/backlinks"
-import { Signal, CircleDot, Network } from "lucide-react"
 import { toast } from "sonner"
 import { ActivityTimeline } from "@/components/activity/activity-timeline"
 import { ThreadPanel } from "@/components/editor/thread-panel"
@@ -111,9 +111,9 @@ function RelationRow({
   return (
     <div className="flex items-center gap-2 w-full px-1 py-0.5 rounded group hover:bg-secondary/50 transition-colors">
       {isSource ? (
-        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+        <ArrowUpRight className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
       ) : (
-        <ArrowDownLeft className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+        <ArrowDownLeft className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
       )}
 
       <DropdownMenu>
@@ -137,7 +137,7 @@ function RelationRow({
                 style={{ backgroundColor: RELATION_TYPE_CONFIG[t].color }}
               />
               {getRelationLabel(t, isSource)}
-              {t === relation.type && <Check className="h-3.5 w-3.5 ml-auto" />}
+              {t === relation.type && <PhCheck className="ml-auto" size={14} weight="bold" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -154,7 +154,7 @@ function RelationRow({
         onClick={onRemove}
         className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/10 transition-opacity"
       >
-        <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+        <PhX className="text-muted-foreground hover:text-destructive" size={12} weight="regular" />
       </button>
     </div>
   )
@@ -176,7 +176,7 @@ function SuggestionRow({
 
   return (
     <div className="flex items-center gap-2 px-1 py-0.5 rounded group hover:bg-secondary/50 transition-colors">
-      <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-500/60" />
+      <Sparkle className="shrink-0 text-amber-500/60" size={14} weight="regular" />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -198,7 +198,7 @@ function SuggestionRow({
                 style={{ backgroundColor: RELATION_TYPE_CONFIG[t].color }}
               />
               {RELATION_TYPE_CONFIG[t].label}
-              {t === selectedType && <Check className="h-3.5 w-3.5 ml-auto" />}
+              {t === selectedType && <PhCheck className="ml-auto" size={14} weight="bold" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -327,7 +327,7 @@ export function SidePanelContext() {
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
         {note.pinned && (
           <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-xs font-medium text-chart-3">
-            <Pin className="h-3.5 w-3.5" />
+            <PushPin size={14} weight="regular" />
             Pinned
           </span>
         )}
@@ -341,18 +341,18 @@ export function SidePanelContext() {
             ? "bg-chart-5/10 text-chart-5"
             : "bg-accent/10 text-accent"
         }`}>
-          {note.status === "permanent" && <Shield className="h-3.5 w-3.5" />}
-          {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Inbox"}
+          {note.status === "permanent" && <PhShield size={14} weight="regular" />}
+          {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Tray"}
         </span>
         {note.status === "capture" && isReadyToPromote(note, backlinks) && (
           <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-xs font-medium text-chart-5">
-            <Sparkles className="h-3.5 w-3.5" />
+            <Sparkle size={14} weight="regular" />
             Ready to promote
           </span>
         )}
         {note.parentNoteId && (
           <span className="flex items-center gap-1 rounded-md bg-chart-1/10 px-2 py-0.5 text-xs font-medium text-chart-1">
-            <GitBranch className="h-3.5 w-3.5" />
+            <GitBranch size={14} weight="regular" />
             Chain
           </span>
         )}
@@ -365,15 +365,15 @@ export function SidePanelContext() {
             onClick={() => { triageKeep(note.id); toast("Done — moved to Capture"); advanceToNextInbox() }}
             className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
-            <Check className="h-3.5 w-3.5" />
+            <PhCheck size={14} weight="bold" />
             Done
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
-                <AlarmClock className="h-3.5 w-3.5" />
+                <Alarm size={14} weight="regular" />
                 Snooze
-                <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+                <CaretDown className="text-muted-foreground" size={10} weight="regular" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44">
@@ -392,7 +392,7 @@ export function SidePanelContext() {
             onClick={() => { triageTrash(note.id); toast("Trashed"); advanceToNextInbox() }}
             className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash size={14} weight="regular" />
             Trash
           </button>
         </div>
@@ -409,32 +409,32 @@ export function SidePanelContext() {
                   : "border border-border bg-card text-foreground hover:bg-secondary"
               }`}
             >
-              <ArrowUpRight className="h-3.5 w-3.5" />
+              <ArrowUpRight size={14} weight="regular" />
               Promote
             </button>
             <button
-              onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
+              onClick={() => { moveBackToInbox(note.id); toast("Moved back to Tray") }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              <Inbox className="h-3.5 w-3.5" />
-              Back to Inbox
+              <Tray size={14} weight="regular" />
+              Back to Tray
             </button>
           </div>
           {staleSuggest && (
             <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
-              <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />
+              <Warning className="shrink-0 text-destructive" size={14} weight="regular" />
               <span className="text-xs text-destructive">14+ days untouched.</span>
               <button
-                onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
+                onClick={() => { moveBackToInbox(note.id); toast("Moved back to Tray") }}
                 className="ml-auto text-2xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
               >
-                Move to Inbox?
+                Move to Tray?
               </button>
             </div>
           )}
           {!staleSuggest && stale && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
-              <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-chart-3" />
+              <Warning className="shrink-0 text-chart-3" size={14} weight="regular" />
               <span className="text-xs text-chart-3">Review needed - 7+ days untouched.</span>
             </div>
           )}
@@ -448,13 +448,13 @@ export function SidePanelContext() {
               onClick={() => { undoPromote(note.id); toast("Demoted to Capture") }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              <ArrowDownLeft className="h-3.5 w-3.5" />
+              <ArrowDownLeft size={14} weight="regular" />
               Demote to Capture
             </button>
           </div>
           {linkCount === 0 && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
-              <Link2 className="h-3.5 w-3.5 shrink-0 text-chart-3" />
+              <PhLink className="shrink-0 text-chart-3" size={14} weight="regular" />
               <span className="text-xs text-chart-3">Unlinked - add connections to strengthen graph.</span>
             </div>
           )}
@@ -462,7 +462,7 @@ export function SidePanelContext() {
       )}
 
       {/* Dates */}
-      <InspectorSection title="Dates" icon={<Calendar className="h-4 w-4" />}>
+      <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Created</span>
@@ -482,7 +482,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Status */}
-      <InspectorSection title="Status" icon={<CircleDot className="h-4 w-4" />}>
+      <InspectorSection title="Status" icon={<CircleDashed size={16} weight="regular" />}>
         <StatusDropdown
           value={note.status}
           onChange={(s) => updateNote(note.id, { status: s })}
@@ -493,7 +493,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Priority */}
-      <InspectorSection title="Priority" icon={<Signal className="h-4 w-4" />}>
+      <InspectorSection title="Priority" icon={<WifiHigh size={16} weight="regular" />}>
         <PriorityDropdown
           value={note.priority}
           onChange={(p) => updateNote(note.id, { priority: p })}
@@ -504,7 +504,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Folder */}
-      <InspectorSection title="Folder" icon={<FolderOpen className="h-4 w-4" />}>
+      <InspectorSection title="Folder" icon={<FolderOpen size={16} weight="regular" />}>
         <Popover open={folderOpen} onOpenChange={setFolderOpen}>
           <PopoverTrigger asChild>
             <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary/60">
@@ -517,7 +517,7 @@ export function SidePanelContext() {
                 )}
                 {currentFolder?.name ?? "No folder"}
               </span>
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <CaretDown className="text-muted-foreground" size={14} weight="regular" />
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-52 p-1">
@@ -559,7 +559,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Label */}
-      <InspectorSection title="Label" icon={<Tag className="h-4 w-4" />}>
+      <InspectorSection title="Label" icon={<PhTag size={16} weight="regular" />}>
         <LabelDropdown
           value={note.labelId}
           labels={labels.filter((l) => !l.trashed)}
@@ -571,7 +571,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Tags */}
-      <InspectorSection title="Tags" icon={<Hash className="h-4 w-4" />}>
+      <InspectorSection title="Tags" icon={<PhHash size={16} weight="regular" />}>
         <div className="flex flex-wrap items-center gap-1.5">
           {noteTags.map((tag) => (
             <span
@@ -587,7 +587,7 @@ export function SidePanelContext() {
                 onClick={() => removeTagFromNote(note.id, tag.id)}
                 className="rounded-full p-0.5 transition-colors hover:bg-foreground/10"
               >
-                <X className="h-2.5 w-2.5" />
+                <PhX size={10} weight="regular" />
               </button>
             </span>
           ))}
@@ -595,7 +595,7 @@ export function SidePanelContext() {
             <Popover open={tagOpen} onOpenChange={setTagOpen}>
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
-                  <Plus className="h-2.5 w-2.5" />
+                  <PhPlus size={10} weight="regular" />
                   Add
                 </button>
               </PopoverTrigger>
@@ -628,7 +628,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Outline (headings) */}
-      <InspectorSection title="Outline" icon={<AlignLeft className="h-4 w-4" />}>
+      <InspectorSection title="Outline" icon={<TextAlignLeft size={16} weight="regular" />}>
         {headings.length > 0 ? (
           <div className="space-y-1">
             {headings.map((h, i) => (
@@ -652,7 +652,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Properties */}
-      <InspectorSection title="Properties" icon={<FileText className="h-4 w-4" />}>
+      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Words</span>
@@ -676,7 +676,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Linked References */}
-      <InspectorSection title="References" icon={<Link2 className="h-4 w-4" />}>
+      <InspectorSection title="References" icon={<PhLink size={16} weight="regular" />}>
         {backlinkNotes.length === 0 && related.length === 0 ? (
           <span className="text-sm text-muted-foreground">No linked references</span>
         ) : (
@@ -690,7 +690,7 @@ export function SidePanelContext() {
                     onClick={() => openSidePeek(n.id)}
                     className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
                   >
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
                     <span className="truncate">{n.title || "Untitled"}</span>
                   </button>
                 ))}
@@ -708,7 +708,7 @@ export function SidePanelContext() {
                       onClick={() => openSidePeek(r.noteId)}
                       className="flex items-center gap-2 w-full text-left px-1 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors group"
                     >
-                      <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                      <Sparkle className="shrink-0 text-muted-foreground/40" size={14} weight="regular" />
                       <span className="truncate flex-1">{rNote.title || "Untitled"}</span>
                       <span className="text-2xs text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground/60">
                         {r.reasons[r.reasons.length - 1]}
@@ -726,7 +726,7 @@ export function SidePanelContext() {
       {unlinkedMentions.length > 0 && (
         <>
           <div className="mx-4 border-b border-border" />
-          <InspectorSection title="Unlinked Mentions" icon={<AlertTriangle className="h-4 w-4" />}>
+          <InspectorSection title="Unlinked Mentions" icon={<Warning size={16} weight="regular" />}>
             <div className="space-y-0.5">
               {unlinkedMentions.map((m) => {
                 const mNote = notes.find((n) => n.id === m.noteId)
@@ -736,7 +736,7 @@ export function SidePanelContext() {
                     key={m.noteId + m.title}
                     className="flex items-center gap-2 group px-1 py-0.5 rounded hover:bg-secondary/50 transition-colors"
                   >
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
                     <span className="truncate flex-1 text-sm text-muted-foreground">
                       {m.title}
                     </span>
@@ -760,7 +760,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Relations */}
-      <InspectorSection title="Relations" icon={<Network className="h-4 w-4" />}>
+      <InspectorSection title="Relations" icon={<Graph size={16} weight="regular" />}>
         {noteRelations.outgoing.length === 0 && noteRelations.incoming.length === 0 && !relationPickerOpen ? (
           <div className="space-y-2">
             <span className="text-note text-muted-foreground">No relations</span>
@@ -768,7 +768,7 @@ export function SidePanelContext() {
               onClick={() => setRelationPickerOpen(true)}
               className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <PhPlus size={14} weight="regular" />
               Add relation
             </button>
           </div>
@@ -848,7 +848,7 @@ export function SidePanelContext() {
                 onClick={() => setRelationPickerOpen(true)}
                 className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors mt-1"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <PhPlus size={14} weight="regular" />
                 Add relation
               </button>
             )}
@@ -880,20 +880,20 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Actions */}
-      <InspectorSection title="Actions" icon={<Merge className="h-4 w-4" />}>
+      <InspectorSection title="Actions" icon={<GitMerge size={16} weight="regular" />}>
         <div className="flex flex-col gap-1.5">
           <button
             onClick={() => setMergePickerOpen(true, note.id)}
             className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
-            <Merge className="h-3.5 w-3.5" />
-            Merge with...
+            <GitMerge size={14} weight="regular" />
+            GitMerge with...
           </button>
           <button
             onClick={() => setLinkPickerOpen(true, note.id)}
             className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
-            <Link2 className="h-3.5 w-3.5" />
+            <PhLink size={14} weight="regular" />
             Link to...
           </button>
         </div>
@@ -902,7 +902,7 @@ export function SidePanelContext() {
       <div className="mx-4 border-b border-border" />
 
       {/* Attachments (placeholder) */}
-      <InspectorSection title="Attachments" icon={<Paperclip className="h-4 w-4" />}>
+      <InspectorSection title="Attachments" icon={<Paperclip size={16} weight="regular" />}>
         <span className="text-sm text-muted-foreground">No attachments</span>
       </InspectorSection>
 

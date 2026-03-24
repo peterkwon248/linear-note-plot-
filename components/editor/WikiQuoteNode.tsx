@@ -1,8 +1,7 @@
 "use client"
 
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { FileText } from "lucide-react"
-
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 export function WikiQuoteNode({ node }: NodeViewProps) {
   const { sourceTitle, quotedText, quotedAt } = node.attrs
 
@@ -13,7 +12,7 @@ export function WikiQuoteNode({ node }: NodeViewProps) {
           {quotedText || "Empty quote"}
         </p>
         <footer className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <FileText className="w-3 h-3 shrink-0" />
+          <FileText className="shrink-0" size={12} weight="regular" />
           <span className="font-medium">{sourceTitle || "Unknown source"}</span>
           {quotedAt && (
             <span className="text-muted-foreground/60">

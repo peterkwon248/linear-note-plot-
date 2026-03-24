@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { ChevronDown, Search, X } from "lucide-react"
 import { RELATION_TYPE_CONFIG, RELATION_TYPES } from "@/lib/relation-helpers"
 import type { OntologyFilters } from "./ontology-graph-canvas"
 import type { Tag, Label, RelationType } from "@/lib/types"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 
 interface OntologyFilterBarProps {
   filters: OntologyFilters
@@ -123,7 +125,7 @@ export function OntologyFilterBar({
           className="flex items-center gap-1 text-note px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedTag}
-          <ChevronDown className="w-3 h-3" />
+          <CaretDown size={12} weight="regular" />
         </button>
         {openDropdown === "tags" && (
           <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max">
@@ -171,7 +173,7 @@ export function OntologyFilterBar({
           className="flex items-center gap-1 text-note px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedLabel}
-          <ChevronDown className="w-3 h-3" />
+          <CaretDown size={12} weight="regular" />
         </button>
         {openDropdown === "label" && (
           <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max max-h-80 overflow-y-auto">
@@ -220,7 +222,7 @@ export function OntologyFilterBar({
           className="flex items-center gap-1 text-note px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedStatus}
-          <ChevronDown className="w-3 h-3" />
+          <CaretDown size={12} weight="regular" />
         </button>
         {openDropdown === "status" && (
           <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max">
@@ -266,7 +268,7 @@ export function OntologyFilterBar({
           className="flex items-center gap-1 text-note px-2.5 py-1 rounded hover:bg-secondary transition-colors text-muted-foreground"
         >
           {selectedRelations}
-          <ChevronDown className="w-3 h-3" />
+          <CaretDown size={12} weight="regular" />
         </button>
         {openDropdown === "relations" && (
           <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg p-1 z-50 min-w-max">
@@ -343,15 +345,15 @@ export function OntologyFilterBar({
         Tags
       </button>
 
-      {/* Search — next to Wiki */}
+      {/* MagnifyingGlass — next to Wiki */}
       <div className="flex items-center">
         <div className="flex items-center bg-secondary/50 rounded-md px-2 py-1">
-          <Search className="w-3.5 h-3.5 text-muted-foreground mr-1.5 shrink-0" />
+          <MagnifyingGlass className="text-muted-foreground mr-1.5 shrink-0" size={14} weight="regular" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search nodes…"
+            placeholder="MagnifyingGlass nodes…"
             className="bg-transparent text-note text-foreground placeholder:text-muted-foreground/50 outline-none w-36"
           />
           {searchMatchCount !== null && (
@@ -364,7 +366,7 @@ export function OntologyFilterBar({
               onClick={() => onSearchChange("")}
               className="ml-1 text-muted-foreground/40 hover:text-muted-foreground shrink-0"
             >
-              <X className="w-3 h-3" />
+              <PhX size={12} weight="regular" />
             </button>
           )}
         </div>

@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useCallback } from "react"
-import { BookOpen, ChevronUp, Check, FileText, ImageIcon } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
@@ -18,6 +17,11 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -101,7 +105,7 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
     return (
       <div className="flex flex-col items-center gap-3 py-20 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
-          <BookOpen className="h-5 w-5 text-muted-foreground/40" strokeWidth={1.5} />
+          <BookOpen className="text-muted-foreground/40" size={20} weight="regular" />
         </div>
         <p className="text-sm text-muted-foreground/60">Article not found</p>
       </div>
@@ -304,7 +308,7 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
                 onClick={() => setWikiArticleStatus(articleId, "draft")}
                 className="flex items-center gap-1 rounded-md bg-blue-500/8 px-2 py-1 text-xs font-medium text-blue-400 transition-colors duration-100 hover:bg-blue-500/15"
               >
-                <ChevronUp className="h-3 w-3" />
+                <CaretUp size={12} weight="regular" />
                 Promote to Draft
               </button>
             )}
@@ -313,13 +317,13 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
                 onClick={() => setWikiArticleStatus(articleId, "complete")}
                 className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
               >
-                <ChevronUp className="h-3 w-3" />
+                <CaretUp size={12} weight="regular" />
                 Mark Complete
               </button>
             )}
             {article.wikiStatus === "complete" && (
               <span className="flex items-center gap-1 text-xs text-emerald-400">
-                <Check className="h-3 w-3" />
+                <PhCheck size={12} weight="bold" />
                 Complete
               </span>
             )}
@@ -419,8 +423,8 @@ function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
             <span className="shrink-0 text-2xs font-semibold text-accent/40 tabular-nums w-4">
               {i + 1}
             </span>
-            {src.type === "note" && <FileText className="h-3 w-3 shrink-0 text-muted-foreground/40" strokeWidth={1.5} />}
-            {src.type === "image" && <ImageIcon className="h-3 w-3 shrink-0 text-muted-foreground/40" strokeWidth={1.5} />}
+            {src.type === "note" && <FileText className="shrink-0 text-muted-foreground/40" size={12} weight="regular" />}
+            {src.type === "image" && <PhImage className="shrink-0 text-muted-foreground/40" size={12} weight="regular" />}
             <span className="flex-1 min-w-0 truncate text-2xs text-foreground/70">
               {src.label}
             </span>

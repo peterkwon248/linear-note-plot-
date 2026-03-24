@@ -1,10 +1,6 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import {
-  AlertCircle, AlertTriangle, Info, ChevronDown, ChevronUp,
-  Lightbulb, Activity, TrendingUp, FileText, Eye,
-} from "lucide-react"
 import { ViewHeader } from "@/components/view-header"
 import { DisplayPanel } from "@/components/display-panel"
 import { INSIGHTS_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -15,6 +11,16 @@ import { runAnalysis } from "@/lib/analysis/engine"
 import { computeActivityStats } from "@/lib/datalog/helpers"
 import { format } from "date-fns"
 import type { AnalysisResult, AnalysisSeverity } from "@/lib/analysis/types"
+import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle"
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
+import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb"
+import { Pulse as PhActivity } from "@phosphor-icons/react/dist/ssr/Pulse"
+import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Eye as PhEye } from "@phosphor-icons/react/dist/ssr/Eye"
 
 /* ── Severity helpers ─────────────────────────────────── */
 
@@ -27,22 +33,22 @@ const SEVERITY_ORDER: Record<AnalysisSeverity, number> = {
 const SEVERITY_CONFIG: Record<AnalysisSeverity, {
   dot: string
   badge: string
-  icon: typeof AlertCircle
+  icon: typeof WarningCircle
 }> = {
   critical: {
     dot: "bg-red-500",
     badge: "bg-red-500/15 text-red-400 border-red-500/20",
-    icon: AlertCircle,
+    icon: WarningCircle,
   },
   warning: {
     dot: "bg-amber-500",
     badge: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-    icon: AlertTriangle,
+    icon: Warning,
   },
   info: {
     dot: "bg-blue-500",
     badge: "bg-blue-500/15 text-blue-400 border-blue-500/20",
-    icon: Info,
+    icon: PhInfo,
   },
 }
 
@@ -51,7 +57,7 @@ const SEVERITY_CONFIG: Record<AnalysisSeverity, {
 function StatCard({ label, value, icon: Icon, accent }: {
   label: string
   value: number
-  icon: typeof Activity
+  icon: typeof PhActivity
   accent: string
 }) {
   return (
@@ -75,8 +81,8 @@ function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-xs font-medium text-muted-foreground">7-Day Activity</span>
+        <TrendUp className="text-muted-foreground" size={14} weight="regular" />
+        <span className="text-xs font-medium text-muted-foreground">7-Day PhActivity</span>
       </div>
       <div className="flex items-end gap-1.5 h-16">
         {data.map((d) => {
@@ -117,7 +123,7 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-2.5">
-        <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+        <PhEye className="text-muted-foreground" size={14} weight="regular" />
         <span className="text-xs font-medium text-muted-foreground">Most Opened</span>
       </div>
       <div className="space-y-0.5">
@@ -128,7 +134,7 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
             className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors hover:bg-secondary"
           >
             <span className="text-2xs text-muted-foreground/50 w-4 text-right">{i + 1}</span>
-            <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+            <FileText className="text-muted-foreground shrink-0" size={12} weight="regular" />
             <span className="flex-1 truncate text-note text-foreground/80">{item.title}</span>
             <span className="text-2xs text-muted-foreground">{item.count}×</span>
           </button>
@@ -150,7 +156,7 @@ function LifecycleStats({ notes }: { notes: any[] }) {
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
-        <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+        <PhActivity className="text-muted-foreground" size={14} weight="regular" />
         <span className="text-xs font-medium text-muted-foreground">Note Lifecycle</span>
       </div>
       <div className="grid grid-cols-4 gap-2">
@@ -211,7 +217,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
           onClick={() => setExpanded(!expanded)}
           className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
         >
-          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          {expanded ? <CaretUp size={16} weight="regular" /> : <CaretDown size={16} weight="regular" />}
         </button>
       </div>
 
@@ -245,7 +251,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
             onClick={() => setExpanded(true)}
             className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            <ChevronDown className="h-3 w-3" />
+            <CaretDown size={12} weight="regular" />
             Show {matchedNotes.length} notes...
           </button>
         </div>
@@ -263,7 +269,7 @@ export function InsightsView() {
   const backlinks = useBacklinksIndex()
   const [insightsToggles, setInsightsToggles] = useState<Record<string, boolean>>({})
 
-  // Activity stats
+  // PhActivity stats
   const activityStats = useMemo(
     () => computeActivityStats(noteEvents ?? [], notes),
     [noteEvents, notes],
@@ -292,7 +298,7 @@ export function InsightsView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <ViewHeader
-        icon={<Lightbulb className="h-5 w-5" strokeWidth={1.5} />}
+        icon={<Lightbulb size={20} weight="regular" />}
         title="Insights"
         showDisplay
         displayContent={
@@ -310,10 +316,10 @@ export function InsightsView() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-        {/* ── Activity Dashboard ────────────────────── */}
+        {/* ── PhActivity Dashboard ────────────────────── */}
         <section>
           <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60 mb-3">
-            Activity
+            PhActivity
           </h3>
 
           {/* Stat cards */}
@@ -321,13 +327,13 @@ export function InsightsView() {
             <StatCard
               label="Today"
               value={activityStats.todayCount}
-              icon={Activity}
+              icon={PhActivity}
               accent="bg-chart-5/15 text-chart-5"
             />
             <StatCard
               label="This Week"
               value={activityStats.weekCount}
-              icon={TrendingUp}
+              icon={TrendUp}
               accent="bg-chart-2/15 text-chart-2"
             />
             <StatCard
@@ -378,7 +384,7 @@ export function InsightsView() {
 
           {total === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-secondary/30 py-10 text-center">
-              <Lightbulb className="mb-3 h-8 w-8 text-muted-foreground/30" />
+              <Lightbulb className="mb-3 text-muted-foreground/30" size={32} weight="regular" />
               <p className="text-sm font-medium text-foreground/70">All good!</p>
               <p className="mt-0.5 text-xs text-muted-foreground">No issues detected.</p>
             </div>

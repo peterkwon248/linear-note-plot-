@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
-import { ArrowLeft, ArrowUp, ArrowDown, ArrowUpDown, Hash, Tag, Plus, Trash2, X, Zap, SlidersHorizontal, Layers, ChevronDown, Check, EyeOff } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import {
   ContextMenu,
@@ -9,6 +8,21 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
+import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
+import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
+import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
+import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal"
+import { Stack } from "@phosphor-icons/react/dist/ssr/Stack"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { EyeSlash } from "@phosphor-icons/react/dist/ssr/EyeSlash"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   DropdownMenu,
@@ -75,7 +89,7 @@ function InlineSelect<T extends string>({
         className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
       >
         {current?.label ?? value}
-        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+        <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} weight="regular" />
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
@@ -89,7 +103,7 @@ function InlineSelect<T extends string>({
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
-                <Check className={`h-3.5 w-3.5 shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} />
+                <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
                 {opt.label}
               </button>
             )
@@ -155,7 +169,7 @@ export function TagsView() {
     [notes],
   )
 
-  // Tag note counts
+  // PhTag note counts
   const tagCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     for (const tag of tags) {
@@ -202,12 +216,12 @@ export function TagsView() {
         .filter((s) => s.length > 0)
 
       for (const name of names) {
-        // Check if tag already exists (case-insensitive)
+        // PhCheck if tag already exists (case-insensitive)
         const exists = tags.some(
           (t) => t.name.toLowerCase() === name.toLowerCase(),
         )
         if (!exists) {
-          createTag(name, "#888888")
+          createTag(name, "#6b7280")
         }
       }
       setTagInput("")
@@ -387,7 +401,7 @@ export function TagsView() {
     })
   }
 
-  // ── Tag Detail Mode ──
+  // ── PhTag Detail Mode ──
   if (selectedTagId && selectedTag) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -397,7 +411,7 @@ export function TagsView() {
             onClick={() => setSelectedTagId(null)}
             className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft size={16} weight="regular" />
           </button>
           <h1 className="text-ui font-semibold text-foreground">
             #{selectedTag.name}
@@ -413,7 +427,7 @@ export function TagsView() {
             }}
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm text-red-400 transition-colors hover:bg-red-400/10"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash size={14} weight="regular" />
             Delete tag
           </button>
         </div>
@@ -434,7 +448,7 @@ export function TagsView() {
           <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <SlidersHorizontal className="h-4 w-4" />
+                <SlidersHorizontal size={16} weight="regular" />
                 Display
               </button>
             </PopoverTrigger>
@@ -442,7 +456,7 @@ export function TagsView() {
               {/* Grouping */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-muted-foreground" />
+                  <Stack className="text-muted-foreground" size={16} weight="regular" />
                   <span className="text-ui text-foreground">Grouping</span>
                 </div>
                 <InlineSelect
@@ -454,7 +468,7 @@ export function TagsView() {
               {/* Ordering */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                  <ArrowsDownUp className="text-muted-foreground" size={16} weight="regular" />
                   <span className="text-ui text-foreground">Ordering</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -468,8 +482,8 @@ export function TagsView() {
                     className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                   >
                     {tagViewState.sortDirection === "asc"
-                      ? <ArrowUp className="h-3.5 w-3.5" />
-                      : <ArrowDown className="h-3.5 w-3.5" />
+                      ? <ArrowUp size={14} weight="regular" />
+                      : <ArrowDown size={14} weight="regular" />
                     }
                   </button>
                 </div>
@@ -499,7 +513,7 @@ export function TagsView() {
               No notes with this tag
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div>
               {tagNotes.map((note) => (
                 <button
                   key={note.id}
@@ -524,11 +538,11 @@ export function TagsView() {
     )
   }
 
-  // ── Tag List Mode ──
+  // ── PhTag List Mode ──
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<Tag className="h-5 w-5" strokeWidth={1.5} />}
+        icon={<PhTag size={20} weight="regular" />}
         title="Tags"
         count={filteredTags.length}
         searchPlaceholder="Search tags..."
@@ -536,7 +550,7 @@ export function TagsView() {
         onSearchChange={setSearchQuery}
         actions={
           <div className="relative flex items-center">
-            <Hash className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <PhHash className="pointer-events-none absolute left-2.5 text-muted-foreground" size={14} weight="regular" />
             <input
               ref={tagInputRef}
               type="text"
@@ -555,7 +569,7 @@ export function TagsView() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              <ArrowUpDown className="h-3.5 w-3.5" />
+              <ArrowsDownUp size={14} weight="regular" />
               {tagSortBy === "name-asc" ? "Name A-Z" : tagSortBy === "name-desc" ? "Name Z-A" : tagSortBy === "count-desc" ? "Most notes" : "Fewest notes"}
             </button>
           </DropdownMenuTrigger>
@@ -567,7 +581,7 @@ export function TagsView() {
               ["count-asc", "Fewest notes"],
             ] as const).map(([value, label]) => (
               <DropdownMenuItem key={value} onClick={() => setTagSortBy(value)}>
-                <Check className={cn("h-3.5 w-3.5 mr-2 shrink-0", tagSortBy === value ? "opacity-100" : "opacity-0")} />
+                <PhCheck className={cn(" mr-2 shrink-0", tagSortBy === value ? "opacity-100" : "opacity-0")} size={14} weight="bold" />
                 {label}
               </DropdownMenuItem>
             ))}
@@ -581,12 +595,12 @@ export function TagsView() {
             hideEmptyTags ? "bg-accent/15 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
           )}
         >
-          <EyeOff className="h-3.5 w-3.5" />
+          <EyeSlash size={14} weight="regular" />
           Hide empty
         </button>
       </div>
 
-      {/* Tag list */}
+      {/* PhTag list */}
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div
@@ -673,7 +687,7 @@ export function TagsView() {
             }}
             className="text-sm"
           >
-            <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
+            <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
             New tag
           </ContextMenuItem>
         </ContextMenuContent>
@@ -684,7 +698,7 @@ export function TagsView() {
         <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
           <div className="flex items-center gap-1 px-4 py-2.5">
             <div className="flex items-center gap-1.5 px-1.5">
-              <Zap className="h-4 w-4 text-accent" />
+              <Lightning className="text-accent" size={16} weight="regular" />
               <span className="text-ui font-medium text-foreground whitespace-nowrap">
                 {checkedTags.size} selected
               </span>
@@ -692,7 +706,7 @@ export function TagsView() {
                 onClick={() => setCheckedTags(new Set())}
                 className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
-                <X className="h-4 w-4" />
+                <PhX size={16} weight="regular" />
               </button>
             </div>
             <div className="mx-1.5 h-7 w-px bg-border" />
@@ -700,7 +714,7 @@ export function TagsView() {
               onClick={handleDeleteChecked}
               className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive transition-colors hover:bg-destructive/20"
             >
-              <Trash2 className="h-4 w-4" /> Delete
+              <Trash size={16} weight="regular" /> Delete
             </button>
           </div>
         </div>
