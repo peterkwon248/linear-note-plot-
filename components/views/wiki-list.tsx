@@ -57,7 +57,7 @@ function StatusBadge({ status }: { status: string | null }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-2xs font-medium capitalize",
+        "inline-flex items-center gap-1.5 text-xs font-medium capitalize",
         STATUS_COLORS[status] ?? "text-muted-foreground/50"
       )}
     >
@@ -71,7 +71,7 @@ function StatusBadge({ status }: { status: string | null }) {
 
 function ColumnHeaders() {
   return (
-    <div className="flex items-center px-5 py-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground/30 border-b border-border/30">
+    <div className="flex items-center px-5 py-2 text-xs font-medium text-muted-foreground/50 border-b border-border/30">
       <span className="w-[100px]">Status</span>
       <span className="min-w-0 flex-1">Title</span>
       <span className="w-[60px] text-right">Links</span>
@@ -111,7 +111,7 @@ function ArticleTableRow({
           {note.title || "Untitled"}
         </span>
       </button>
-      <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/40">
+      <span className="w-[60px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
         {backlinkCount > 0 ? backlinkCount : "\u2014"}
       </span>
 
@@ -139,7 +139,7 @@ function ArticleTableRow({
         ) : null}
       </span>
 
-      <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/30">
+      <span className="w-[70px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
         {shortRelative(note.updatedAt)}
       </span>
     </div>
@@ -168,10 +168,10 @@ function IndexTableRow({
       <span className="min-w-0 flex-1 truncate text-note text-foreground/90">
         {note.title || "Untitled"}
       </span>
-      <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/40">
+      <span className="w-[60px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
         {backlinkCount > 0 ? backlinkCount : "\u2014"}
       </span>
-      <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/30">
+      <span className="w-[70px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
         {shortRelative(note.updatedAt)}
       </span>
     </button>
@@ -300,7 +300,7 @@ export function WikiList({
           <div>
             {Array.from(groupedArticles.entries()).map(([group, articles]) => (
               <div key={group} id={`wiki-group-${group}`}>
-                <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-2xs font-medium uppercase tracking-wide text-muted-foreground/40 border-b border-border/20">
+                <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-xs font-medium text-muted-foreground/50 border-b border-border/20">
                   {group}
                 </div>
                 {(articles as WikiArticle[]).map(note => (

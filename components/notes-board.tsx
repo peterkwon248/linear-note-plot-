@@ -334,12 +334,20 @@ function BoardCardInner({
         : "border-border"
       } ${isDragOverlay ? "shadow-lg rotate-[2deg]" : ""} ${isDragging ? "opacity-50" : ""}`}
     >
-      {/* Selection indicator */}
-      {isSelected && (
-        <div className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent">
-          <PhCheck className="text-accent-foreground" size={10} weight="bold" />
-        </div>
-      )}
+      {/* Selection checkbox — hover or selected */}
+      <div
+        className={`absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded border transition-all cursor-pointer ${
+          isSelected
+            ? "bg-accent border-accent"
+            : "border-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:border-muted-foreground/50 bg-background"
+        }`}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect?.(note.id, e)
+        }}
+      >
+        {isSelected && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
+      </div>
 
       {/* Title row */}
       <div className="flex items-start gap-2">

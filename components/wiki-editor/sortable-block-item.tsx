@@ -11,7 +11,9 @@ interface SortableBlockItemProps {
   sectionNumber?: string
   onUpdate?: (patch: Partial<Omit<WikiBlock, "id">>) => void
   onDelete?: () => void
-  onAddBlock?: (type: WikiBlock["type"]) => void
+  onAddBlock?: (type: WikiBlock["type"], level?: number) => void
+  /** Level of the nearest section block at/above this block, for Subsection affordance */
+  nearestSectionLevel?: number
 }
 
 export function SortableBlockItem({
@@ -21,6 +23,7 @@ export function SortableBlockItem({
   onUpdate,
   onDelete,
   onAddBlock,
+  nearestSectionLevel,
 }: SortableBlockItemProps) {
   const {
     attributes,
@@ -48,7 +51,7 @@ export function SortableBlockItem({
         dragHandleProps={listeners}
       />
       {editable && onAddBlock && (
-        <AddBlockButton onAdd={onAddBlock} />
+        <AddBlockButton onAdd={onAddBlock} nearestSectionLevel={nearestSectionLevel} />
       )}
     </div>
   )

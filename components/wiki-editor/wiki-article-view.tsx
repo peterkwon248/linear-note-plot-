@@ -74,9 +74,9 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
     [wikiArticles, articleId]
   )
 
-  const handleAddBlock = useCallback((type: WikiBlock["type"], afterBlockId?: string) => {
+  const handleAddBlock = useCallback((type: WikiBlock["type"], afterBlockId?: string, level?: number) => {
     const block: Omit<WikiBlock, "id"> = { type }
-    if (type === "section") { block.title = ""; block.level = 2 }
+    if (type === "section") { block.title = ""; block.level = level ?? 2 }
     if (type === "text") { block.content = "" }
     addWikiBlock(articleId, block, afterBlockId)
   }, [articleId, addWikiBlock])
@@ -134,6 +134,21 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
         }
       } else if (collapsingLevel === null) {
         result.push(block)
+      }
+    }
+    return result
+  }, [article.blocks])
+
+  // Map blockId → nearest section level at-or-above that block
+  const nearestSectionLevelByBlockId = useMemo(() => {
+    const result = new Map<string, number>()
+    let currentLevel: number | undefined
+    for (const block of article.blocks) {
+      if (block.type === "section") {
+        currentLevel = block.level ?? 2
+      }
+      if (currentLevel !== undefined) {
+        result.set(block.id, currentLevel)
       }
     }
     return result
@@ -222,7 +237,8 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
                     sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
                     onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
                     onDelete={() => handleDeleteBlock(block.id)}
-                    onAddBlock={(type) => handleAddBlock(type, block.id)}
+                    onAddBlock={(type, level) => handleAddBlock(type, block.id, level)}
+                    nearestSectionLevel={nearestSectionLevelByBlockId.get(block.id)}
                   />
                 ))}
               </SortableContext>

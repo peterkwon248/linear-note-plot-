@@ -17,6 +17,7 @@ import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
 import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb"
+import { IconInsight } from "@/components/plot-icons"
 import { Pulse as PhActivity } from "@phosphor-icons/react/dist/ssr/Pulse"
 import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
@@ -298,7 +299,7 @@ export function InsightsView() {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <ViewHeader
-        icon={<Lightbulb size={20} weight="regular" />}
+        icon={<IconInsight size={20} />}
         title="Insights"
         showDisplay
         displayContent={

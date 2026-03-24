@@ -10,7 +10,7 @@ import type { ActivitySpace } from "./types"
 /* ── Route constants ─────────────────────────────────── */
 
 /** Routes handled by NotesTableView (always-mounted table component) */
-export const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/pinned", "/trash"]
+export const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/capture", "/permanent", "/pinned", "/trash"]
 
 /** Workflow routes — for future Phase 4 sidebar refactor */
 export const WORKFLOW_ROUTES = ["/inbox", "/capture", "/permanent"]

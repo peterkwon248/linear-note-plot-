@@ -607,14 +607,14 @@ export function LinearSidebar() {
                 icon={<IconCapture size={20} />}
                 label="Capture"
                 count={captureCount > 0 ? captureCount : undefined}
-                active={pathname === "/capture"}
+                active={isActive("/capture")}
               />
               <NavLink
                 href="/permanent"
                 icon={<IconPermanent size={20} />}
                 label="Permanent"
                 count={permanentCount > 0 ? permanentCount : undefined}
-                active={pathname === "/permanent"}
+                active={isActive("/permanent")}
               />
               <NavLink
                 href="/pinned"

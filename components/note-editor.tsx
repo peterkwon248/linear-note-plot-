@@ -81,7 +81,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
     noteIdRef.current = note?.id
     if (note) {
       setLocalTitle(note.title)
-      setIsReadMode(note.isWiki ?? false)
+      setIsReadMode(false)
     }
   }, [note?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -255,20 +255,6 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         />
       )}
 
-      {/* Wiki aliases — only shown outside of wiki read mode */}
-      {note.isWiki && !isReadMode && note.aliases && note.aliases.length > 0 && (
-        <div className="flex items-center gap-1.5 px-6 pt-1">
-          <span className="text-xs text-muted-foreground/60">Also known as:</span>
-          {note.aliases.map((alias, i) => (
-            <span
-              key={i}
-              className="rounded-full bg-secondary px-2 py-0.5 text-2xs text-muted-foreground"
-            >
-              {alias}
-            </span>
-          ))}
-        </div>
-      )}
 
       {/* Content Editor */}
       {/* WikiReadLayout removed — wiki rendering now handled by WikiArticleView */}
@@ -277,16 +263,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
       ) : (
         /* Normal note editor */
         <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
-          {note.isWiki && !isReadMode && (
-            <div className="px-6 pt-4">
-              <WikiInfobox
-                noteId={note.id}
-                entries={note.wikiInfobox ?? []}
-                editable={true}
-                className="max-w-[400px]"
-              />
-            </div>
-          )}
+          {/* Infobox moved to WikiArticle view — disabled in note editor */}
           <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
             <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
             <BacklinksFooter noteId={note.id} />

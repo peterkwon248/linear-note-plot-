@@ -553,55 +553,9 @@ export function LabelsView() {
         icon={<BookmarkSimple size={20} weight="regular" />}
         title="Labels"
         count={labels.filter((l) => !l.trashed).length}
-        searchPlaceholder="Search labels..."
-        searchValue={search}
-        onSearchChange={setSearch}
-        actions={
-          <button
-            onClick={() => setCreating(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
-          >
-            <PhPlus size={14} weight="regular" />
-            New label
-          </button>
-        }
+        onCreateNew={() => setCreating(true)}
       />
 
-      {/* Sort & Filter toolbar */}
-      <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              <ArrowsDownUp size={14} weight="regular" />
-              {labelSortBy === "name-asc" ? "Name A-Z" : labelSortBy === "name-desc" ? "Name Z-A" : labelSortBy === "count-desc" ? "Most notes" : "Fewest notes"}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {([
-              ["name-asc", "Name A-Z"],
-              ["name-desc", "Name Z-A"],
-              ["count-desc", "Most notes"],
-              ["count-asc", "Fewest notes"],
-            ] as const).map(([value, label]) => (
-              <DropdownMenuItem key={value} onClick={() => setLabelSortBy(value)}>
-                <PhCheck className={cn(" mr-2 shrink-0", labelSortBy === value ? "opacity-100" : "opacity-0")} size={14} weight="bold" />
-                {label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="flex-1" />
-        <button
-          onClick={() => setHideEmptyLabels(!hideEmptyLabels)}
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-colors",
-            hideEmptyLabels ? "bg-accent/15 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-          )}
-        >
-          <EyeSlash size={14} weight="regular" />
-          Hide empty
-        </button>
-      </div>
 
       {/* Label list */}
       <ContextMenu>
@@ -651,18 +605,47 @@ export function LabelsView() {
             ) : (
               <div>
                 {/* Header row */}
-                <div className="flex items-center gap-3 px-6 py-2 text-sm font-medium text-muted-foreground border-b border-border">
+                <div className="flex items-center gap-3 border-b border-border/30 px-6 py-2">
                   <button
                     onClick={toggleAll}
-                    className="flex h-4 w-4 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50 shrink-0"
+                    className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
                   >
                     {checkedLabels.size === sortedLabels.length && sortedLabels.length > 0 && (
                       <div className="h-2 w-2 rounded-sm bg-accent" />
                     )}
                   </button>
-                  <span className="w-3" /> {/* color dot spacer */}
-                  <span className="flex-1">Name</span>
-                  <span className="w-16 text-right">Notes</span>
+                  <button
+                    className="flex flex-1 items-center gap-1 text-left text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    onClick={() => setLabelSortBy(labelSortBy === "name-asc" ? "name-desc" : "name-asc")}
+                  >
+                    Name
+                    {(labelSortBy === "name-asc" || labelSortBy === "name-desc") && (
+                      labelSortBy === "name-asc"
+                        ? <ArrowUp size={12} weight="regular" className="text-muted-foreground/50" />
+                        : <ArrowDown size={12} weight="regular" className="text-muted-foreground/50" />
+                    )}
+                  </button>
+                  <button
+                    className="flex w-16 items-center justify-end gap-1 text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    onClick={() => setLabelSortBy(labelSortBy === "count-desc" ? "count-asc" : "count-desc")}
+                  >
+                    Notes
+                    {(labelSortBy === "count-desc" || labelSortBy === "count-asc") && (
+                      labelSortBy === "count-desc"
+                        ? <ArrowDown size={12} weight="regular" className="text-muted-foreground/50" />
+                        : <ArrowUp size={12} weight="regular" className="text-muted-foreground/50" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setHideEmptyLabels(!hideEmptyLabels)}
+                    className={cn(
+                      "ml-2 rounded p-1 transition-colors",
+                      hideEmptyLabels ? "text-accent" : "text-muted-foreground/30 hover:text-muted-foreground/50"
+                    )}
+                    title={hideEmptyLabels ? "Show all" : "Hide empty"}
+                  >
+                    <EyeSlash size={14} weight="regular" />
+                  </button>
                   <span className="w-16" />
                 </div>
 

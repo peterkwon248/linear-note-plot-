@@ -190,7 +190,7 @@ export function SearchDialog() {
   // Whether we're showing search results (non-empty query) vs recent notes
   const hasFuzzyQuery = query.trim().length > 0
 
-  /** Build sublabel text: "Tray · Updated 2d · 3 backlinks" */
+  /** Build sublabel text: "Inbox · Updated 2d · 3 backlinks" */
   function noteSublabel(note: { id: string; status: string; updatedAt: string; createdAt: string }): string {
     const stageLabel = note.status.charAt(0).toUpperCase() + note.status.slice(1)
     const relTime = shortRelative(note.updatedAt || note.createdAt)
@@ -314,7 +314,7 @@ export function SearchDialog() {
                   onSelect={() => { router.push("/inbox"); closePalette() }}
                 >
                   <Tray size={16} weight="regular" />
-                  <span>Go to Tray</span>
+                  <span>Go to Inbox</span>
                   <CommandShortcut>G I</CommandShortcut>
                 </CommandItem>
                 <CommandItem
@@ -518,7 +518,7 @@ export function SearchDialog() {
                   {selectedNote.status === "inbox" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Tray Actions">
+                      <CommandGroup heading="Inbox Actions">
                         <CommandItem
                           value="triage-keep"
                           onSelect={() =>
@@ -578,12 +578,12 @@ export function SearchDialog() {
                           onSelect={() =>
                             execCommand(
                               () => moveBackToInbox(selectedNote.id),
-                              "Moved back to Tray"
+                              "Moved back to Inbox"
                             )
                           }
                         >
                           <Tray size={16} weight="regular" />
-                          <span>Back to Tray</span>
+                          <span>Back to Inbox</span>
                           <CommandShortcut>B</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>

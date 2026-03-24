@@ -580,12 +580,29 @@ function TemplateCard({
               </div>
             </div>
 
-            {/* Content preview */}
-            {tmpl.content && (
-              <p className="text-xs text-muted-foreground/70 line-clamp-3 leading-relaxed font-mono bg-secondary/40 rounded-md px-2.5 py-2">
-                {tmpl.content}
-              </p>
-            )}
+            {/* Title + Content preview */}
+            <div className="bg-secondary/40 rounded-md px-2.5 py-2 space-y-1">
+              {tmpl.title && (
+                <p className="text-xs font-semibold text-foreground/70 truncate">
+                  {tmpl.title}
+                </p>
+              )}
+              {tmpl.content ? (
+                <div className="text-xs text-muted-foreground/70 line-clamp-3 leading-relaxed space-y-0.5">
+                  {tmpl.content.split("\n").filter(Boolean).slice(0, 4).map((line, i) => (
+                    <p key={i} className={cn(
+                      line.startsWith("#") && "font-semibold text-muted-foreground/90",
+                      (line.startsWith("- ") || line.startsWith("* ")) && "pl-2 before:content-['·'] before:mr-1 before:text-muted-foreground/40",
+                      (line.match(/^\d+\.\s/)) && "pl-2",
+                    )}>
+                      {line.replace(/^#+\s*/, "")}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground/40 italic">Empty template</p>
+              )}
+            </div>
 
             {/* Badges */}
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -771,6 +788,7 @@ export function TemplatesView() {
     })
     setShowCreateDialog(false)
     setSelectedTemplateId(newId)
+    setViewMode("focus")
   }
 
   const handleUseTemplate = (templateId: string) => {

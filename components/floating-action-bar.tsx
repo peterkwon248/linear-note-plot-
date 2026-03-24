@@ -141,8 +141,8 @@ export function FloatingActionBar({
   const handleMoveBackAll = () => {
     ids.forEach((id) => moveBackToInbox(id))
     onClearSelection()
-    pushUndo(`Move ${count} back to Tray`, () => ids.forEach((id) => triageKeep(id)), () => ids.forEach((id) => moveBackToInbox(id)))
-    toast(`Moved ${count} note${count > 1 ? "s" : ""} back to Tray`, {
+    pushUndo(`Move ${count} back to Inbox`, () => ids.forEach((id) => triageKeep(id)), () => ids.forEach((id) => moveBackToInbox(id)))
+    toast(`Moved ${count} note${count > 1 ? "s" : ""} back to Inbox`, {
       duration: 5000,
     })
   }
@@ -219,7 +219,7 @@ export function FloatingActionBar({
               onClick={handleMoveBackAll}
               className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
             >
-              <Tray size={16} weight="regular" /> Back to Tray
+              <Tray size={16} weight="regular" /> Back to Inbox
             </button>
           </>
         )

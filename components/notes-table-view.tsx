@@ -23,6 +23,8 @@ interface ViewConfig {
 const TABLE_VIEW_MAP: Record<string, ViewConfig> = {
   "/notes": {},
   "/inbox": { context: "inbox", title: "Inbox" },
+  "/capture": { context: "capture", title: "Capture" },
+  "/permanent": { context: "permanent", title: "Permanent" },
   "/pinned": { context: "pinned", title: "Pinned", hideCreateButton: true },
   "/trash": { context: "trash", title: "Trash", hideCreateButton: true },
 }
