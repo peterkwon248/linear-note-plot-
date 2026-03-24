@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-24T08:05:19.017Z",
+  "lastUpdated": "2026-03-24T08:11:33.611Z",
   "activeFeatures": [
     "agitated-payne",
     "editor",
@@ -115,9 +115,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-24T07:10:42.703Z",
-        "lastUpdated": "2026-03-24T08:05:19.016Z"
+        "lastUpdated": "2026-03-24T08:11:33.611Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\charming-snyder\\components\\views\\wiki-dashboard.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\charming-snyder\\components\\notes-table.tsx"
     },
     "datalog": {
       "phase": "do",
@@ -154,7 +154,7 @@
   "session": {
     "startedAt": "2026-03-24T00:37:14.348Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-24T08:05:19.017Z"
+    "lastActivity": "2026-03-24T08:11:33.611Z"
   },
   "history": [
     {
@@ -1425,6 +1425,30 @@
     },
     {
       "timestamp": "2026-03-24T08:05:19.017Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:11:10.938Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:11:18.774Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:11:26.251Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:11:33.611Z",
       "feature": "charming-snyder",
       "phase": "do",
       "action": "updated"

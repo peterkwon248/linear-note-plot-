@@ -1114,7 +1114,7 @@ export function NotesTable({
                             onPointerDown={(e) => handleGroupPointerDown(e, item.groupKey)}
                             onPointerMove={handleGroupPointerMove}
                             onPointerUp={handleGroupPointerUp}
-                            className={`flex items-center gap-2.5 px-5 py-2 border-b border-border/50 select-none transition-colors ${
+                            className={`flex items-center gap-2.5 px-5 py-2 mt-4 mb-0.5 select-none transition-colors ${
                               reorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
                               reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/20"
@@ -1138,7 +1138,7 @@ export function NotesTable({
                             onPointerDown={(e) => handleGroupPointerDown(e, item.groupKey)}
                             onPointerMove={handleGroupPointerMove}
                             onPointerUp={handleGroupPointerUp}
-                            className={`flex items-center gap-2 px-5 py-2.5 bg-secondary/20 border-b border-border/30 select-none transition-colors ${
+                            className={`flex items-center gap-2 px-5 py-2.5 bg-secondary/20 mt-3 mb-0.5 select-none transition-colors ${
                               reorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
                               reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/30"
@@ -1163,7 +1163,7 @@ export function NotesTable({
                             onPointerDown={(e) => handleSubGroupPointerDown(e, item.groupKey)}
                             onPointerMove={handleSubGroupPointerMove}
                             onPointerUp={handleSubGroupPointerUp}
-                            className={`flex items-center gap-2 pl-10 pr-5 py-1.5 border-b border-border/30 select-none transition-colors ${
+                            className={`flex items-center gap-2 pl-10 pr-5 py-1.5 select-none transition-colors ${
                               subReorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
                               subReorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/20"
@@ -1657,7 +1657,7 @@ function NoteRowInner({
         <div
           draggable
           onDragStart={(e) => setNoteDragData(e, note.id)}
-          className={`group flex items-center transition-colors cursor-pointer border-b border-border/30 ${
+          className={`group flex items-center transition-colors cursor-pointer ${
             isCompact ? "px-3 py-1.5" : "px-5 py-0"
           } ${
             isSelected
