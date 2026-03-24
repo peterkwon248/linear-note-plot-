@@ -1,5 +1,5 @@
-import type { ViewState, ViewContextKey, GroupBy } from "./types"
-import { VALID_VIEW_CONTEXT_KEYS, VALID_SORT_FIELDS, VALID_GROUP_BY, VALID_VIEW_MODES, VALID_COLUMNS } from "./types"
+import type { ViewState, ViewContextKey, GroupBy, GroupSortBy } from "./types"
+import { VALID_VIEW_CONTEXT_KEYS, VALID_SORT_FIELDS, VALID_GROUP_BY, VALID_VIEW_MODES, VALID_COLUMNS, VALID_GROUP_SORT_BY } from "./types"
 
 /* ── Default ViewState ─────────────────────────────────── */
 
@@ -16,6 +16,8 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   showThread: false,
   toggles: {},
   groupOrder: null,
+  subGroupOrder: null,
+  subGroupSortBy: "default",
 }
 
 /* ── Context-specific overrides ────────────────────────── */
@@ -99,6 +101,10 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
     groupOrder: (merged.groupOrder && typeof merged.groupOrder === "object" && !Array.isArray(merged.groupOrder))
       ? merged.groupOrder as Record<string, string[]>
       : null,
+    subGroupOrder: (merged.subGroupOrder && typeof merged.subGroupOrder === "object" && !Array.isArray(merged.subGroupOrder))
+      ? merged.subGroupOrder as Record<string, string[]>
+      : null,
+    subGroupSortBy: VALID_GROUP_SORT_BY.includes(merged.subGroupSortBy as GroupSortBy) ? (merged.subGroupSortBy as GroupSortBy) : "default",
   }
 }
 

@@ -1,13 +1,13 @@
 import { isToday, isThisWeek, isThisMonth } from "date-fns"
 import type { Note, NoteStatus, NotePriority, TriageStatus } from "../types"
-import type { GroupBy, NoteGroup } from "./types"
+import type { GroupBy, GroupSortBy, NoteGroup } from "./types"
 import { STATUS_ORDER, PRIORITY_ORDER } from "./types"
 
 /**
  * Stage 5: Group sorted notes by the given dimension.
  * Returns groups in a natural display order.
  */
-export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backlinksMap?: Map<string, number>; labelNames?: Map<string, string>; folderNames?: Map<string, string>; customOrder?: string[]; subGroupBy?: GroupBy }): NoteGroup[] {
+export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backlinksMap?: Map<string, number>; labelNames?: Map<string, string>; folderNames?: Map<string, string>; customOrder?: string[]; subGroupBy?: GroupBy; subGroupCustomOrder?: string[]; subGroupSortBy?: GroupSortBy }): NoteGroup[] {
   let groups: NoteGroup[]
 
   switch (groupBy) {
@@ -41,6 +41,7 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
 
   // Apply sub-grouping if specified
   const subGroupBy = extras?.subGroupBy
+  const subGroupSortBy = extras?.subGroupSortBy ?? "default"
   if (subGroupBy && subGroupBy !== "none" && subGroupBy !== groupBy) {
     for (const group of groups) {
       if (group.notes.length === 0) continue
@@ -48,11 +49,23 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
         backlinksMap: extras?.backlinksMap,
         labelNames: extras?.labelNames,
         folderNames: extras?.folderNames,
+        // Only pass customOrder when manual mode is active
+        customOrder: subGroupSortBy === "manual" ? extras?.subGroupCustomOrder : undefined,
       })
       // Only apply sub-grouping if it actually splits notes into multiple groups
       const nonEmpty = subGroups.filter((sg) => sg.notes.length > 0)
       if (nonEmpty.length > 1) {
-        group.subGroups = subGroups
+        // Apply sort criterion to non-empty sub-groups
+        if (subGroupSortBy === "name") {
+          nonEmpty.sort((a, b) => a.label.localeCompare(b.label))
+          group.subGroups = nonEmpty
+        } else if (subGroupSortBy === "count") {
+          nonEmpty.sort((a, b) => b.notes.length - a.notes.length)
+          group.subGroups = nonEmpty
+        } else {
+          // "default" (natural order) or "manual" (customOrder already applied inside applyGrouping)
+          group.subGroups = subGroups
+        }
       }
     }
   }

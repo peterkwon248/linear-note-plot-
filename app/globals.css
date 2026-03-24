@@ -42,6 +42,19 @@
   --sidebar-ring: #5e6ad2;
   --sidebar-muted: #6b7280;
   --sidebar-hover: #eaebef;
+
+  /* === Linear Polish: 신규 시맨틱 토큰 (Light) === */
+  --sidebar-active: rgba(0,0,0, 0.06);
+  --sidebar-active-text: #1a1a2e;
+  --sidebar-hover-text: #1a1a2e;
+  --sidebar-icon: #9ca3af;
+  --sidebar-count: #9ca3af;
+  --surface-overlay: #ffffff;
+  --border-subtle: rgba(0,0,0, 0.08);
+  --hover-bg: rgba(0,0,0, 0.03);
+  --active-bg: rgba(0,0,0, 0.04);
+  --active-bg-strong: rgba(0,0,0, 0.06);
+  --toolbar-active: rgba(94,106,210, 0.15);
 }
 
 .dark {
@@ -83,6 +96,26 @@
   --sidebar-accent: #27272a;
   --sidebar-accent-foreground: #fafafa;
   --sidebar-ring: #6366f1;
+
+  /* === Linear Polish: 신규 시맨틱 토큰 === */
+  /* 사이드바 상태 */
+  --sidebar-active: rgba(255,255,255, 0.08);
+  --sidebar-active-text: rgba(255,255,255, 0.93);
+  --sidebar-hover-text: rgba(255,255,255, 0.85);
+  --sidebar-icon: rgba(255,255,255, 0.45);
+  --sidebar-count: rgba(255,255,255, 0.35);
+
+  /* Surface 계층 */
+  --surface-overlay: #1d1d20;
+  --border-subtle: rgba(255,255,255, 0.08);
+
+  /* 인터랙션 */
+  --hover-bg: rgba(255,255,255, 0.04);
+  --active-bg: rgba(255,255,255, 0.06);
+  --active-bg-strong: rgba(255,255,255, 0.08);
+
+  /* 에디터 툴바 */
+  --toolbar-active: rgba(99,102,241, 0.2);
 }
 
 @theme inline {
@@ -134,6 +167,22 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-muted: var(--sidebar-muted);
   --color-sidebar-hover: var(--sidebar-hover);
+
+  /* === Linear Polish: 신규 토큰 Tailwind 노출 === */
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-text: var(--sidebar-active-text);
+  --color-sidebar-hover-text: var(--sidebar-hover-text);
+  --color-sidebar-icon: var(--sidebar-icon);
+  --color-sidebar-count: var(--sidebar-count);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-border-subtle: var(--border-subtle);
+  --color-hover-bg: var(--hover-bg);
+  --color-active-bg: var(--active-bg);
+  --color-active-bg-strong: var(--active-bg-strong);
+  --color-toolbar-active: var(--toolbar-active);
+
+  /* 에디터 제목 사이즈 토큰 */
+  --font-size-title: 1.75rem;
 }
 
 @layer base {

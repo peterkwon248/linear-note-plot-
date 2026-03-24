@@ -197,7 +197,7 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
             {article.title}
           </h1>
           {article.aliases.length > 0 && (
-            <p className="text-[13px] text-muted-foreground/50 mb-6">
+            <p className="text-note text-muted-foreground/50 mb-6">
               {article.aliases.join(" · ")}
             </p>
           )}
@@ -275,7 +275,7 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
         {/* Tags as categories */}
         {article.tags.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40">
+            <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
               Categories
             </h4>
             <div className="flex flex-wrap gap-1">
@@ -286,7 +286,7 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
 
         {/* Quality */}
         <div className="space-y-2">
-          <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40">
+          <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
             Quality
           </h4>
           <div className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
 
         {/* Activity */}
         <div className="space-y-2">
-          <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40">
+          <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
             Activity
           </h4>
           <div className="space-y-1.5">
@@ -395,7 +395,7 @@ function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
 
   return (
     <div className="space-y-2">
-      <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40">
+      <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
         Sources
       </h4>
       <div className="space-y-px">
@@ -414,14 +414,14 @@ function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
                 })
               }
             }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-[6px] text-left transition-colors duration-100 hover:bg-white/[0.03]"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-[6px] text-left transition-colors duration-100 hover:bg-hover-bg"
           >
             <span className="shrink-0 text-2xs font-semibold text-accent/40 tabular-nums w-4">
               {i + 1}
             </span>
             {src.type === "note" && <FileText className="h-3 w-3 shrink-0 text-muted-foreground/40" strokeWidth={1.5} />}
             {src.type === "image" && <ImageIcon className="h-3 w-3 shrink-0 text-muted-foreground/40" strokeWidth={1.5} />}
-            <span className="flex-1 min-w-0 truncate text-[11px] text-foreground/70">
+            <span className="flex-1 min-w-0 truncate text-2xs text-foreground/70">
               {src.label}
             </span>
             {src.sub && (
@@ -444,7 +444,7 @@ function TagBadges({ tagIds }: { tagIds: string[] }) {
         return (
           <span
             key={tagId}
-            className="rounded-[5px] bg-secondary/50 px-1.5 py-0.5 text-[11px] font-medium text-foreground/70"
+            className="rounded-[5px] bg-secondary/50 px-1.5 py-0.5 text-2xs font-medium text-foreground/70"
           >
             {tag?.name ?? tagId}
           </span>

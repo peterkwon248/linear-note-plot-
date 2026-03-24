@@ -35,14 +35,14 @@ export function WikiSidebar({
             {categories.tags.map((tag) => (
               <span
                 key={tag.name}
-                className="rounded-[5px] bg-secondary/50 px-1.5 py-0.5 text-[11px] font-medium text-foreground/70"
+                className="rounded-[5px] bg-secondary/50 px-1.5 py-0.5 text-2xs font-medium text-foreground/70"
               >
                 {tag.name}
                 <span className="ml-0.5 tabular-nums text-muted-foreground/40">{tag.count}</span>
               </span>
             ))}
             {categories.uncategorized > 0 && (
-              <span className="rounded-[5px] bg-chart-3/5 px-1.5 py-0.5 text-[11px] font-medium text-chart-3/60">
+              <span className="rounded-[5px] bg-chart-3/5 px-1.5 py-0.5 text-2xs font-medium text-chart-3/60">
                 Uncategorized
                 <span className="ml-0.5 tabular-nums">{categories.uncategorized}</span>
               </span>
@@ -61,7 +61,7 @@ export function WikiSidebar({
               <button
                 key={note.id}
                 onClick={() => onOpenArticle(note.id)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-[7px] text-left transition-colors duration-100 hover:bg-white/[0.03]"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-[7px] text-left transition-colors duration-100 hover:bg-hover-bg"
               >
                 <WikiStatusDot status={note.wikiStatus} />
                 <span className="min-w-0 flex-1 truncate text-[11.5px] text-foreground/80">
@@ -81,7 +81,7 @@ export function WikiSidebar({
         <Section title="Red Links">
           <div className="space-y-px">
             {redLinks.slice(0, 5).map((item) => (
-              <div key={item.title} className="group flex items-center gap-2 rounded-md px-2 py-[7px] transition-colors duration-100 hover:bg-white/[0.03]">
+              <div key={item.title} className="group flex items-center gap-2 rounded-md px-2 py-[7px] transition-colors duration-100 hover:bg-hover-bg">
                 <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-destructive/60" />
                 <span className="min-w-0 flex-1 truncate text-[11.5px] text-destructive/70">
                   {item.title}
@@ -117,7 +117,7 @@ export function WikiSidebar({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
-      <h4 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40">
+      <h4 className="mb-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
         {title}
       </h4>
       {children}

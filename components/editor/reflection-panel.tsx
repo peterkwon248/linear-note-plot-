@@ -63,7 +63,7 @@ export function ReflectionPanel({ noteId }: ReflectionPanelProps) {
         <BookOpen className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs font-medium text-muted-foreground">Reflections</span>
         {noteReflections.length > 0 && (
-          <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500/20 px-1 text-[10px] font-medium text-amber-500">
+          <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500/20 px-1 text-2xs font-medium text-amber-500">
             {noteReflections.length}
           </span>
         )}
@@ -140,7 +140,7 @@ function ReflectionEntry({ reflection }: { reflection: Reflection }) {
         {reflection.text}
       </p>
       <span className={cn(
-        "text-[10px]",
+        "text-2xs",
         isRecent ? "text-amber-500/60" : "text-muted-foreground/60"
       )}>
         {format(createdDate, "yyyy.MM.dd h:mm a")}

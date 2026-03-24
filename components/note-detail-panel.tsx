@@ -444,7 +444,7 @@ export function NoteDetailPanel({
       <div className="flex-1 overflow-y-auto">
         {/* Note title */}
         <div className="border-b border-border px-5 py-4">
-          <h2 className="text-[16px] font-semibold leading-tight text-foreground text-balance">
+          <h2 className="text-base font-semibold leading-tight text-foreground text-balance">
             {note.title || "Untitled"}
           </h2>
           {preview && (

@@ -381,7 +381,7 @@ export function SearchView() {
                               <span className="truncate text-foreground">
                                 {highlightQuery(note.title || "Untitled", query)}
                               </span>
-                              <span className="shrink-0 rounded-sm bg-accent/20 px-1.5 py-0.5 text-[10px] font-medium text-accent">
+                              <span className="shrink-0 rounded-sm bg-accent/20 px-1.5 py-0.5 text-2xs font-medium text-accent">
                                 Wiki
                               </span>
                             </div>

@@ -20,6 +20,38 @@ Plot의 모든 설계 결정은 Linear 수준의 미니멀리즘을 추구합니
 
 ---
 
+## Design Philosophy — Linear Polish Principles
+
+이 프로젝트의 디자인 폴리시는 Linear의 "Calmer Interface" 철학을 따릅니다:
+
+### 6대 원칙
+
+1. **Structure felt, not seen** — 보더/구분선 대신 surface 색상 계층과 spacing으로 구조를 표현합니다. `border-b`보다 `bg-surface-overlay`와 여백을 선호합니다.
+
+2. **Opacity hierarchy** — 텍스트와 아이콘은 rgba opacity 단계로 중요도를 표현합니다.
+   - 활성: 0.93 | 호버: 0.85 | 기본: 0.65 | 아이콘: 0.45 | 보조: 0.38 | 약함: 0.35
+
+3. **4px base grid** — 모든 spacing, height, padding은 4의 배수여야 합니다. 예외: 6px(icon-text gap), 10px(density default py).
+
+4. **Token-only colors** — 하드코딩 hex/rgba 전면 금지. CSS 변수 또는 Tailwind 시맨틱 클래스만 허용합니다.
+
+5. **Light mode parity** — 다크 전용 값(`bg-white/[0.06]`, `text-white`) 금지. 반드시 라이트/다크 양립 토큰을 사용합니다.
+
+6. **Tailwind-first styling** — 인라인 `style={{}}` 객체 금지. Tailwind 유틸리티 클래스만 사용합니다.
+
+### Borderless Design 원칙
+
+Linear의 "Calmer Interface" 접근법을 적용합니다:
+
+| 기존 패턴 | Linear Polish 패턴 |
+|----------|-------------------|
+| `border-b border-border` (행 구분) | spacing + hover 배경으로 구분 |
+| `border border-border` (카드 테두리) | `bg-surface-overlay` + 미세 elevation |
+| `shadow-lg` (팝오버) | `bg-surface-overlay` + `border-border-subtle` |
+| 두꺼운 구분선 | 영역 간 배경색 차이 (surface 계층) |
+
+---
+
 ## 색상 시스템
 
 ### Light 테마 (:root)
@@ -50,14 +82,14 @@ Plot의 모든 설계 결정은 Linear 수준의 미니멀리즘을 추구합니
 
 | 토큰 | 용도 | 값 | Tailwind 클래스 |
 |------|------|-----|-----------------|
-| `--background` | 페이지 배경 | `#09090b` (zinc-950) | `dark:bg-background` |
+| `--background` | 페이지 배경 | `#141417` | `dark:bg-background` |
 | `--foreground` | 기본 텍스트 | `#fafafa` | `dark:text-foreground` |
-| `--card` | 카드/패널 배경 | `#18181b` | `dark:bg-card` |
+| `--card` | 카드/패널 배경 | `#1c1c20` | `dark:bg-card` |
 | `--card-foreground` | 카드 텍스트 | `#fafafa` | `dark:text-card-foreground` |
-| `--popover` | 팝오버 배경 | `#18181b` | `dark:bg-popover` |
+| `--popover` | 팝오버 배경 | `#222226` | `dark:bg-popover` |
 | `--popover-foreground` | 팝오버 텍스트 | `#fafafa` | `dark:text-popover-foreground` |
 | `--primary` | 주 색상 | `#fafafa` | `dark:bg-primary` |
-| `--primary-foreground` | 주 색상 텍스트 | `#09090b` | `dark:text-primary-foreground` |
+| `--primary-foreground` | 주 색상 텍스트 | `#141417` | `dark:text-primary-foreground` |
 | `--secondary` | 보조 배경 | `#27272a` | `dark:bg-secondary` |
 | `--secondary-foreground` | 보조 텍스트 | `#fafafa` | `dark:text-secondary-foreground` |
 | `--muted` | 비활성 배경 | `#27272a` | `dark:bg-muted` |
@@ -66,8 +98,8 @@ Plot의 모든 설계 결정은 Linear 수준의 미니멀리즘을 추구합니
 | `--accent-foreground` | 강조 텍스트 | `#fafafa` | `dark:text-accent-foreground` |
 | `--destructive` | 삭제/위험 | `#ef4444` (red-500) | `dark:bg-destructive`, `dark:text-destructive` |
 | `--destructive-foreground` | 삭제 텍스트 | `#fafafa` | `dark:text-destructive-foreground` |
-| `--border` | 보더 | `#27272a` | `dark:border-border` |
-| `--input` | 입력 필드 | `#27272a` | `dark:border-input` |
+| `--border` | 보더 | `#2a2a2e` | `dark:border-border` |
+| `--input` | 입력 필드 | `#2a2a2e` | `dark:border-input` |
 | `--ring` | Focus ring | `#6366f1` | `dark:ring-ring` |
 
 ### 차트 색상
@@ -112,6 +144,16 @@ Plot의 모든 설계 결정은 Linear 수준의 미니멀리즘을 추구합니
 | `--sidebar-accent` | `#27272a` | 비활성 항목 배경 |
 | `--sidebar-ring` | `#6366f1` | Focus ring (accent와 동일) |
 
+### 상태 토큰 (신규)
+
+| 토큰 | Light | Dark | Tailwind 클래스 | 용도 |
+|------|-------|------|-----------------|------|
+| `--sidebar-active` | `rgba(0,0,0, 0.06)` | `rgba(255,255,255, 0.08)` | `bg-sidebar-active` | 선택된 nav 항목 배경 |
+| `--sidebar-active-text` | `#1a1a2e` | `rgba(255,255,255, 0.93)` | `text-sidebar-active-text` | 선택된 nav 항목 텍스트 |
+| `--sidebar-hover-text` | `#1a1a2e` | `rgba(255,255,255, 0.85)` | `text-sidebar-hover-text` | 호버 텍스트 |
+| `--sidebar-icon` | `#9ca3af` | `rgba(255,255,255, 0.45)` | `text-sidebar-icon` | 비활성 아이콘 |
+| `--sidebar-count` | `#9ca3af` | `rgba(255,255,255, 0.35)` | `text-sidebar-count` | 카운트 숫자 |
+
 ### 텍스트 Opacity 계층
 
 | 계층 | Opacity | RGB 값 | 용도 |
@@ -132,6 +174,40 @@ Plot의 모든 설계 결정은 Linear 수준의 미니멀리즘을 추구합니
 | `--sidebar-foreground` | `rgba(255,255,255, 0.65)` | 기본 sidebar 텍스트 |
 | `--sidebar-muted` | `rgba(255,255,255, 0.38)` | 약한 텍스트 |
 | `--sidebar-accent-foreground` | `#fafafa` | Accent 텍스트 |
+
+---
+
+## Surface & 인터랙션 토큰
+
+### Surface 계층
+
+| 토큰 | Light | Dark | Tailwind 클래스 | 용도 |
+|------|-------|------|-----------------|------|
+| `--background` | `#ffffff` | `#141417` | `bg-background` | 앱 전체 배경 (Surface 0) |
+| `--card` | `#f7f8fa` | `#1c1c20` | `bg-card` | 카드/패널 (Surface 1) |
+| `--surface-overlay` | `#ffffff` | `#1d1d20` | `bg-surface-overlay` | 팝오버/드롭다운 (Surface 2) |
+| `--popover` | `#ffffff` | `#222226` | `bg-popover` | 모달/다이얼로그 (Surface 3) |
+
+### 인터랙션 배경
+
+| 토큰 | Light | Dark | Tailwind 클래스 | 용도 |
+|------|-------|------|-----------------|------|
+| `--hover-bg` | `rgba(0,0,0, 0.03)` | `rgba(255,255,255, 0.04)` | `bg-hover-bg` | 표준 hover 배경 |
+| `--active-bg` | `rgba(0,0,0, 0.04)` | `rgba(255,255,255, 0.06)` | `bg-active-bg` | 활성/선택 배경 |
+| `--active-bg-strong` | `rgba(0,0,0, 0.06)` | `rgba(255,255,255, 0.08)` | `bg-active-bg-strong` | 강한 활성 배경 |
+
+### 보더
+
+| 토큰 | Light | Dark | Tailwind 클래스 | 용도 |
+|------|-------|------|-----------------|------|
+| `--border` | `#e2e3e8` | `#2a2a2e` | `border-border` | 기본 보더 |
+| `--border-subtle` | `rgba(0,0,0, 0.08)` | `rgba(255,255,255, 0.08)` | `border-border-subtle` | 미세 보더 (팝오버 등) |
+
+### 에디터 툴바
+
+| 토큰 | Light | Dark | Tailwind 클래스 | 용도 |
+|------|-------|------|-----------------|------|
+| `--toolbar-active` | `rgba(94,106,210, 0.15)` | `rgba(99,102,241, 0.2)` | `bg-toolbar-active` | 툴바 버튼 활성 배경 |
 
 ---
 
@@ -157,12 +233,14 @@ Plot의 모든 설계 결정은 Linear 수준의 미니멀리즘을 추구합니
 | 클래스 | 실제 값 | 용도 |
 |--------|---------|------|
 | `text-2xs` | 0.6875rem (11px) | 배지, 타이니 라벨 |
+| `text-note` | 0.8125rem (13px) | 노트 콘텐츠, 리스트 기본 텍스트 |
 | `text-xs` | 0.75rem (12px) | 보조 텍스트 |
 | `text-sm` | 0.875rem (14px) | 바디 텍스트 |
 | `text-base` | 1rem (16px) | 표준 |
 | `text-lg` | 1.125rem (18px) | 섹션 헤더 |
 | `text-xl` | 1.25rem (20px) | 페이지 헤더 |
 | `text-2xl` | 1.5rem (24px) | 에디터 제목 (TipTap) |
+| `text-title` | 1.75rem (28px) | 에디터 메인 제목 |
 
 ### 폰트 가중치
 

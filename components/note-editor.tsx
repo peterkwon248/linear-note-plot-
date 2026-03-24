@@ -244,7 +244,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
       {/* Title */}
       {isReadMode ? (
-        <h1 className="w-full bg-transparent px-6 pt-6 text-[28px] font-semibold text-foreground">
+        <h1 className="w-full bg-transparent px-6 pt-6 text-title font-semibold text-foreground">
           {localTitle || "Untitled"}
         </h1>
       ) : (
@@ -253,7 +253,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
           placeholder="Untitled"
-          className="w-full bg-transparent px-6 pt-6 text-[28px] font-semibold text-foreground outline-none placeholder:text-muted-foreground/40"
+          className="w-full bg-transparent px-6 pt-6 text-title font-semibold text-foreground outline-none placeholder:text-muted-foreground/40"
         />
       )}
 
@@ -425,7 +425,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
             import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
             import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
           }}
-          className="rounded-[4px] bg-accent/8 px-1.5 py-px text-[10px] font-medium text-accent/60 hover:text-accent transition-colors duration-100"
+          className="rounded-[4px] bg-accent/8 px-1.5 py-px text-2xs font-medium text-accent/60 hover:text-accent transition-colors duration-100"
         >
           {a.title}
         </button>
@@ -433,7 +433,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
       {overflow > 0 && (
         <Popover>
           <PopoverTrigger asChild>
-            <button className="rounded-[4px] bg-secondary/50 px-1.5 py-px text-[10px] font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100">
+            <button className="rounded-[4px] bg-secondary/50 px-1.5 py-px text-2xs font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100">
               +{overflow} more
             </button>
           </PopoverTrigger>

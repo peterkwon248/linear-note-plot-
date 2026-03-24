@@ -161,8 +161,8 @@ function LifecycleStats({ notes }: { notes: any[] }) {
           { label: "Wiki", value: wiki, color: "text-accent" },
         ].map((s) => (
           <div key={s.label} className="text-center">
-            <p className={`text-[18px] font-semibold ${s.color}`}>{s.value}</p>
-            <p className="text-[10px] text-muted-foreground">{s.label}</p>
+            <p className={`text-lg font-semibold ${s.color}`}>{s.value}</p>
+            <p className="text-2xs text-muted-foreground">{s.label}</p>
           </div>
         ))}
       </div>
@@ -355,19 +355,19 @@ export function InsightsView() {
             {total > 0 && (
               <div className="flex items-center gap-1.5">
                 {counts.critical > 0 && (
-                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${SEVERITY_CONFIG.critical.badge}`}>
+                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-medium ${SEVERITY_CONFIG.critical.badge}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${SEVERITY_CONFIG.critical.dot}`} />
                     {counts.critical}
                   </span>
                 )}
                 {counts.warning > 0 && (
-                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${SEVERITY_CONFIG.warning.badge}`}>
+                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-medium ${SEVERITY_CONFIG.warning.badge}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${SEVERITY_CONFIG.warning.dot}`} />
                     {counts.warning}
                   </span>
                 )}
                 {counts.info > 0 && (
-                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${SEVERITY_CONFIG.info.badge}`}>
+                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-medium ${SEVERITY_CONFIG.info.badge}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${SEVERITY_CONFIG.info.dot}`} />
                     {counts.info}
                   </span>

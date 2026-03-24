@@ -116,7 +116,7 @@ export function WikiArticleReader({
 
           {/* Aliases as subtitle */}
           {note.aliases && note.aliases.length > 0 && (
-            <p className="text-[13px] text-muted-foreground/50 mb-6">
+            <p className="text-note text-muted-foreground/50 mb-6">
               {note.aliases.join(" \u00b7 ")}
             </p>
           )}
@@ -150,13 +150,13 @@ export function WikiArticleReader({
         {/* Wiki Quality Track */}
         {note.isWiki && note.wikiStatus && (
           <div className="space-y-2">
-            <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/40">
+            <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
               Quality
             </h4>
             <div className="flex items-center gap-2">
               <WikiStatusBadge status={note.wikiStatus} />
               {note.stubSource && note.wikiStatus === "stub" && (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   via {note.stubSource}
                 </span>
               )}

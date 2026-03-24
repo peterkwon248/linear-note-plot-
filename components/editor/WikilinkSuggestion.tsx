@@ -122,7 +122,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                       Wiki
                     </span>
                   )}
-                  <span className="ml-auto shrink-0 rounded px-1 py-0.5 text-[10px] font-medium bg-secondary text-muted-foreground">
+                  <span className="ml-auto shrink-0 rounded px-1 py-0.5 text-2xs font-medium bg-secondary text-muted-foreground">
                     {item.status}
                   </span>
                 </>

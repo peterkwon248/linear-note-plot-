@@ -44,7 +44,7 @@ export function SidePanelPeek() {
                 close()
               }
             }}
-            className="rounded-[6px] p-1 text-muted-foreground/50 transition-colors duration-100 hover:bg-white/[0.04] hover:text-foreground"
+            className="rounded-[6px] p-1 text-muted-foreground/50 transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
             title="Open side by side"
           >
             <Columns2 className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -52,7 +52,7 @@ export function SidePanelPeek() {
           {/* Open in full view */}
           <button
             onClick={handleOpenInTab}
-            className="rounded-[6px] p-1 text-muted-foreground/50 transition-colors duration-100 hover:bg-white/[0.04] hover:text-foreground"
+            className="rounded-[6px] p-1 text-muted-foreground/50 transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
             title="Open in full view"
           >
             <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -60,7 +60,7 @@ export function SidePanelPeek() {
           {/* Edit toggle */}
           <button
             onClick={() => setEditing((prev) => !prev)}
-            className={`rounded-[6px] p-1 transition-colors duration-100 hover:bg-white/[0.04] ${
+            className={`rounded-[6px] p-1 transition-colors duration-100 hover:bg-hover-bg ${
               editing ? "text-accent" : "text-muted-foreground/50 hover:text-foreground"
             }`}
             title={editing ? "Switch to View" : "Switch to Edit"}

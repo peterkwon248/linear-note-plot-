@@ -67,7 +67,7 @@ function DashboardCard({
         {title}
       </h3>
       {subtitle && (
-        <p className="text-[10px] text-muted-foreground mb-3">{subtitle}</p>
+        <p className="text-2xs text-muted-foreground mb-3">{subtitle}</p>
       )}
       <div className="space-y-0.5">{children}</div>
     </div>
@@ -198,7 +198,7 @@ export function GraphInsightsView() {
                   style={{ width: `${Math.min(parseFloat(String(density)) * 10, 100)}%` }}
                 />
               </div>
-              <p className="mt-1 text-[10px] text-muted-foreground">
+              <p className="mt-1 text-2xs text-muted-foreground">
                 {edgeCount} / {nodeCount > 1 ? nodeCount * (nodeCount - 1) : 0} possible
               </p>
             </div>
@@ -229,14 +229,14 @@ export function GraphInsightsView() {
                     <span className="min-w-0 flex-1 truncate text-xs text-foreground">
                       {note.title || "Untitled"}
                     </span>
-                    <span className="hidden shrink-0 text-[10px] font-medium text-accent group-hover:block">
+                    <span className="hidden shrink-0 text-2xs font-medium text-accent group-hover:block">
                       Open
                     </span>
                   </button>
                 ))
               )}
               {orphans.length > 8 && (
-                <p className="px-2 pt-1 text-[10px] text-muted-foreground">
+                <p className="px-2 pt-1 text-2xs text-muted-foreground">
                   +{orphans.length - 8} more orphan nodes
                 </p>
               )}
@@ -265,7 +265,7 @@ export function GraphInsightsView() {
                     <span className="min-w-0 flex-1 truncate text-xs text-foreground">
                       {note.title || "Untitled"}
                     </span>
-                    <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                    <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
                       {connections} links
                     </span>
                   </button>
@@ -281,25 +281,25 @@ export function GraphInsightsView() {
               <div className="px-2 py-1 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Total Notes</p>
+                    <p className="text-2xs text-muted-foreground">Total Notes</p>
                     <p className="text-base font-semibold tabular-nums text-foreground">
                       {nodeCount}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Wiki Articles</p>
+                    <p className="text-2xs text-muted-foreground">Wiki Articles</p>
                     <p className="text-base font-semibold tabular-nums text-accent">
                       {wikiNotes.length}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Coverage</p>
+                    <p className="text-2xs text-muted-foreground">Coverage</p>
                     <p className="text-base font-semibold tabular-nums text-foreground">
                       {wikiPercent}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Stubs</p>
+                    <p className="text-2xs text-muted-foreground">Stubs</p>
                     <p className="text-base font-semibold tabular-nums text-chart-3">
                       {stubCount}
                     </p>
@@ -307,8 +307,8 @@ export function GraphInsightsView() {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-muted-foreground">Wiki %</span>
-                    <span className="text-[10px] tabular-nums text-muted-foreground">
+                    <span className="text-2xs text-muted-foreground">Wiki %</span>
+                    <span className="text-2xs tabular-nums text-muted-foreground">
                       {wikiNotes.length} / {nodeCount}
                     </span>
                   </div>
@@ -345,10 +345,10 @@ export function GraphInsightsView() {
                     <span className="min-w-0 flex-1 truncate text-xs text-foreground">
                       {note.title || "Untitled"}
                     </span>
-                    <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                    <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
                       {note.linksOut?.length ?? 0} out
                     </span>
-                    <span className="ml-1 shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                    <span className="ml-1 shrink-0 text-2xs tabular-nums text-muted-foreground">
                       · {shortRelative(note.updatedAt)}
                     </span>
                   </button>

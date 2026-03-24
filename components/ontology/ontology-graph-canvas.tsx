@@ -1589,11 +1589,11 @@ export function OntologyGraphCanvas({
                 <p className="text-2xs text-muted-foreground mt-1 line-clamp-2">{note.preview}</p>
               )}
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground capitalize">
+                <span className="text-2xs px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground capitalize">
                   {note.status}
                 </span>
                 {nodeData && (
-                  <span className="text-[10px] text-muted-foreground/60">
+                  <span className="text-2xs text-muted-foreground/60">
                     {nodeData.connectionCount} links
                   </span>
                 )}

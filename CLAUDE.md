@@ -24,7 +24,7 @@
 
 ### Stack
 - Next.js 16, React 19, TypeScript, Zustand 5, TipTap 3, Tailwind v4
-- Store: `lib/store/index.ts` — 19-slice, versioned migration (v54)
+- Store: `lib/store/index.ts` — 19-slice, versioned migration (v58)
 - Colors: `lib/colors.ts` — Global color constants (single source of truth)
 
 ### Conventions

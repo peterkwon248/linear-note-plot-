@@ -138,7 +138,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-[11px] uppercase tracking-wider font-medium text-muted-foreground/30 transition-colors hover:text-muted-foreground/60 ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-2xs uppercase tracking-wider font-medium text-muted-foreground/30 transition-colors hover:text-muted-foreground/60 ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
@@ -404,6 +404,69 @@ export function NotesTable({
     setReorderSource(null)
     setReorderTarget(null)
   }, [reorderSource, reorderTarget, groups, updateViewState, viewState.groupOrder, viewState.groupBy])
+
+  // ── Sub-group header pointer-based reorder state ──
+  const [subReorderSource, setSubReorderSource] = useState<string | null>(null)
+  const [subReorderTarget, setSubReorderTarget] = useState<string | null>(null)
+  const subReorderMoved = useRef(false)
+
+  const handleSubGroupPointerDown = useCallback((e: React.PointerEvent, subGroupKey: string) => {
+    if (e.button !== 0) return
+    if (!viewState.subGroupBy || viewState.subGroupBy === "none") return
+    // Only allow drag reorder when sub-group sort is set to "manual"
+    if (viewState.subGroupSortBy !== "manual") return
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setSubReorderSource(subGroupKey)
+    subReorderMoved.current = false
+  }, [viewState.subGroupBy, viewState.subGroupSortBy])
+
+  const handleSubGroupPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!subReorderSource) return
+    subReorderMoved.current = true
+
+    const target = document.elementFromPoint(e.clientX, e.clientY)
+    const headerEl = target?.closest("[data-subgroup-key]") as HTMLElement | null
+    const targetKey = headerEl?.dataset.subgroupKey ?? null
+
+    // Only allow reorder within the same parent group
+    if (targetKey && targetKey !== subReorderSource) {
+      const sourceParent = subReorderSource.split("::")[0]
+      const targetParent = targetKey.split("::")[0]
+      if (sourceParent === targetParent) {
+        setSubReorderTarget(targetKey)
+      }
+    } else if (!targetKey) {
+      setSubReorderTarget(null)
+    }
+  }, [subReorderSource])
+
+  const handleSubGroupPointerUp = useCallback(() => {
+    if (subReorderSource && subReorderTarget && subReorderSource !== subReorderTarget) {
+      const sourceParent = subReorderSource.split("::")[0]
+      const parentGroup = groups.find(g => g.key === sourceParent)
+      if (parentGroup?.subGroups) {
+        const currentOrder = parentGroup.subGroups.map(sg => `${sourceParent}::${sg.key}`)
+        const oldIndex = currentOrder.indexOf(subReorderSource)
+        const newIndex = currentOrder.indexOf(subReorderTarget)
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newOrder = [...currentOrder]
+          newOrder.splice(oldIndex, 1)
+          newOrder.splice(newIndex, 0, subReorderSource)
+          // Store only the sub-keys (without parent prefix)
+          const subKeys = newOrder.map(k => k.split("::")[1])
+          updateViewState({
+            subGroupOrder: {
+              ...(viewState.subGroupOrder ?? {}),
+              [viewState.subGroupBy]: subKeys,
+            },
+          })
+        }
+      }
+    }
+    setSubReorderSource(null)
+    setSubReorderTarget(null)
+  }, [subReorderSource, subReorderTarget, groups, updateViewState, viewState.subGroupOrder, viewState.subGroupBy])
 
   // Drag selection
   const [dragRect, setDragRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
@@ -831,7 +894,7 @@ export function NotesTable({
                 setCollapsedGroups(new Set(allKeys))
               }
             }}
-            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground/50 hover:bg-white/[0.03] hover:text-muted-foreground transition-all duration-100"
+            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
             title={groups.every(g => collapsedGroups.has(g.key)) ? "Expand all groups" : "Collapse all groups"}
           >
             <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
@@ -889,7 +952,7 @@ export function NotesTable({
                 }`}
               >
                 {tab.label}
-                <span className="ml-1.5 rounded-[3px] bg-white/15 px-1.5 py-0.5 text-2xs font-medium tabular-nums text-white">{trashTabCounts[tab.id]}</span>
+                <span className="ml-1.5 rounded-[3px] bg-foreground/15 px-1.5 py-0.5 text-2xs font-medium tabular-nums text-foreground">{trashTabCounts[tab.id]}</span>
                 {trashFilter === tab.id && (
                   <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
                 )}
@@ -915,7 +978,7 @@ export function NotesTable({
         {/* ── Sort order chip ── */}
         {viewState.sortField !== "updatedAt" && (
           <div className="flex items-center px-5 pb-1">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-[12px] font-medium">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-xs font-medium">
               Order by {SORT_FIELD_LABELS[viewState.sortField]}
               <span>{viewState.sortDirection === "asc" ? "↑" : "↓"}</span>
               <button
@@ -1069,10 +1132,10 @@ export function NotesTable({
                           >
                             <ChevronDown className={`h-3 w-3 text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-[12px] font-semibold text-foreground/80 tracking-wider">
+                            <span className="text-xs font-semibold text-foreground/80 tracking-wider">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-[11px] text-muted-foreground/50 tabular-nums">{item.count}</span>
+                            <span className="text-2xs text-muted-foreground/50 tabular-nums">{item.count}</span>
                           </div>
                           ) : (
                           <div
@@ -1093,23 +1156,35 @@ export function NotesTable({
                           >
                             <ChevronDown className={`h-3 w-3 text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-[12px] font-semibold text-foreground/80 tracking-wider">
+                            <span className="text-xs font-semibold text-foreground/80 tracking-wider">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-[11px] text-muted-foreground/50 tabular-nums">{item.count}</span>
+                            <span className="text-2xs text-muted-foreground/50 tabular-nums">{item.count}</span>
                           </div>
                           )
                         ) : item.type === "subheader" ? (
                           <div
-                            className="flex items-center gap-2 pl-10 pr-5 py-1.5 border-b border-border/30 select-none cursor-pointer hover:bg-secondary/20 transition-colors"
-                            onClick={() => toggleGroupCollapse(item.groupKey)}
+                            data-subgroup-key={item.groupKey}
+                            onPointerDown={(e) => handleSubGroupPointerDown(e, item.groupKey)}
+                            onPointerMove={handleSubGroupPointerMove}
+                            onPointerUp={handleSubGroupPointerUp}
+                            className={`flex items-center gap-2 pl-10 pr-5 py-1.5 border-b border-border/30 select-none transition-colors ${
+                              subReorderSource ? "cursor-grabbing" : "cursor-pointer"
+                            } ${
+                              subReorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/20"
+                            } ${
+                              subReorderSource === item.groupKey ? "opacity-50 bg-secondary/30" : ""
+                            }`}
+                            onClick={() => {
+                              if (!subReorderMoved.current) toggleGroupCollapse(item.groupKey)
+                            }}
                           >
                             <ChevronDown className={`h-2.5 w-2.5 text-muted-foreground/50 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey.split("::")[1] ?? item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-[11px] font-medium text-foreground/60 tracking-wider">
+                            <span className="text-2xs font-medium text-foreground/60 tracking-wider">
                               {resolveGroupLabel(item.groupBy, item.groupKey.split("::")[1] ?? item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-[10px] text-muted-foreground/40 tabular-nums">{item.count}</span>
+                            <span className="text-2xs text-muted-foreground/40 tabular-nums">{item.count}</span>
                           </div>
                         ) : (
                           <NoteRow
@@ -1429,7 +1504,7 @@ function NoteRowInner({
 
             {/* Title + optional preview */}
             <div className="flex-1 min-w-0">
-              <span className={`font-medium text-foreground truncate block ${isCompact ? "text-xs" : "text-[13px]"}`}>{note.title || "Untitled"}</span>
+              <span className={`font-medium text-foreground truncate block ${isCompact ? "text-xs" : "text-note"}`}>{note.title || "Untitled"}</span>
               {showCardPreview && note.preview && (
                 <span className="text-xs text-muted-foreground/60 truncate block mt-0.5">{note.preview}</span>
               )}
@@ -1438,13 +1513,13 @@ function NoteRowInner({
             {/* Label badge (always visible — part of note identity) */}
             {label ? (
               <span
-                className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium"
+                className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-2xs font-medium"
                 style={{ backgroundColor: `${label.color}18`, color: label.color }}
               >
                 {label.name}
               </span>
             ) : (
-              <span className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.06] text-muted-foreground shrink-0">
+              <span className="text-2xs px-1.5 py-0.5 rounded bg-active-bg text-muted-foreground shrink-0">
                 Memo
               </span>
             )}
@@ -1454,7 +1529,7 @@ function NoteRowInner({
               const tagStore = usePlotStore.getState().tags
               const tag = tagStore.find((t: Tag) => t.id === tagId)
               return tag ? (
-                <span key={tagId} className="text-[11px] px-1.5 py-0.5 rounded border border-border/60 text-muted-foreground/60 shrink-0">
+                <span key={tagId} className="text-2xs px-1.5 py-0.5 rounded border border-border/60 text-muted-foreground/60 shrink-0">
                   {tag.name}
                 </span>
               ) : null
@@ -1462,12 +1537,12 @@ function NoteRowInner({
 
             {/* Folder */}
             {visibleCols.includes("folder") && folderName && (
-              <span className="text-[12px] text-muted-foreground/50 shrink-0">{folderName}</span>
+              <span className="text-xs text-muted-foreground/50 shrink-0">{folderName}</span>
             )}
 
             {/* Links */}
             {visibleCols.includes("links") && links > 0 && (
-              <span className="flex items-center gap-0.5 text-[12px] text-muted-foreground/40 tabular-nums shrink-0">
+              <span className="flex items-center gap-0.5 text-xs text-muted-foreground/40 tabular-nums shrink-0">
                 <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
                   <path d="M6.7 8.7a3.3 3.3 0 005 .4l2-2a3.3 3.3 0 00-4.7-4.7L8.4 3"/>
                   <path d="M9.3 7.3a3.3 3.3 0 00-5-.4l-2 2a3.3 3.3 0 004.7 4.7l.6-.6"/>
@@ -1478,7 +1553,7 @@ function NoteRowInner({
 
             {/* Reads */}
             {visibleCols.includes("reads") && note.reads > 0 && (
-              <span className="flex items-center gap-0.5 text-[12px] text-muted-foreground/40 tabular-nums shrink-0">
+              <span className="flex items-center gap-0.5 text-xs text-muted-foreground/40 tabular-nums shrink-0">
                 <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
                   <path d="M1 8s2.7-5 7-5 7 5 7 5-2.7 5-7 5-7-5-7-5z"/>
                   <circle cx="8" cy="8" r="2"/>
@@ -1489,7 +1564,7 @@ function NoteRowInner({
 
             {/* Updated (relative time) */}
             {visibleCols.includes("updatedAt") && (
-              <span className="flex items-center gap-0.5 text-[12px] text-muted-foreground/40 tabular-nums shrink-0 text-right">
+              <span className="flex items-center gap-0.5 text-xs text-muted-foreground/40 tabular-nums shrink-0 text-right">
                 <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 shrink-0">
                   <circle cx="8" cy="8" r="6"/>
                   <polyline points="8 4.5 8 8 10.5 9.5"/>
@@ -1500,7 +1575,7 @@ function NoteRowInner({
 
             {/* Created (absolute date) */}
             {visibleCols.includes("createdAt") && (
-              <span className="flex items-center gap-0.5 text-[12px] text-muted-foreground/40 tabular-nums shrink-0 text-right">
+              <span className="flex items-center gap-0.5 text-xs text-muted-foreground/40 tabular-nums shrink-0 text-right">
                 <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 shrink-0">
                   <rect x="2" y="3" width="12" height="11" rx="1.5"/>
                   <line x1="2" y1="7" x2="14" y2="7"/>
@@ -1594,7 +1669,7 @@ function NoteRowInner({
               ? "bg-accent/5"
               : isActive
                 ? "bg-accent/8 border-l-2 border-l-accent"
-                : "hover:bg-white/[0.02]"
+                : "hover:bg-hover-bg"
           }`}
           onClick={onClick ?? onOpen}
           onDoubleClick={onDoubleClick}
@@ -1651,8 +1726,7 @@ function NoteRowInner({
         <SourceIcon source={note.source} />
         {note.preview.length > 0 && (
           <span
-            className="shrink-0 text-2xs tabular-nums font-medium"
-            style={{ color: note.preview.length >= 80 ? "#45d483" : note.preview.length >= 30 ? "#60a5fa" : "#9ca3af" }}
+            className={`shrink-0 text-2xs tabular-nums font-medium ${note.preview.length >= 80 ? "text-chart-5" : note.preview.length >= 30 ? "text-blue-400" : "text-muted-foreground"}`}
           >
             {note.preview.length >= 120 ? "120+" : note.preview.length}
           </span>
@@ -1681,12 +1755,12 @@ function NoteRowInner({
         <div className="w-[80px] shrink-0 flex items-center justify-center px-2">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
-            if (!folder) return <span className="text-[11px] text-muted-foreground/20">—</span>
+            if (!folder) return <span className="text-2xs text-muted-foreground/20">—</span>
             return (
-              <span className="text-[11px] text-muted-foreground/50 truncate">{folder.name}</span>
+              <span className="text-2xs text-muted-foreground/50 truncate">{folder.name}</span>
             )
           })() : (
-            <span className="text-[11px] text-muted-foreground/20">—</span>
+            <span className="text-2xs text-muted-foreground/20">—</span>
           )}
         </div>
       )}
@@ -1694,7 +1768,7 @@ function NoteRowInner({
       {/* Links */}
       {visibleCols.includes("links") && (
         <div className="w-[56px] shrink-0 text-center px-1">
-          <span className={`tabular-nums text-[12px] ${links === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
+          <span className={`tabular-nums text-xs ${links === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
             {links}
           </span>
         </div>
@@ -1703,7 +1777,7 @@ function NoteRowInner({
       {/* Reads */}
       {visibleCols.includes("reads") && (
         <div className="w-[56px] shrink-0 text-center px-1">
-          <span className={`tabular-nums text-[12px] ${note.reads === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
+          <span className={`tabular-nums text-xs ${note.reads === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
             {note.reads}
           </span>
         </div>
@@ -1714,7 +1788,7 @@ function NoteRowInner({
         <div className="w-[80px] shrink-0 text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-[12px] text-muted-foreground/50 cursor-default">
+              <span className="tabular-nums text-xs text-muted-foreground/50 cursor-default">
                 {shortRelative(note.updatedAt)}
               </span>
             </TooltipTrigger>
@@ -1730,7 +1804,7 @@ function NoteRowInner({
         <div className="w-[80px] shrink-0 text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-[12px] text-muted-foreground/50 cursor-default">
+              <span className="tabular-nums text-xs text-muted-foreground/50 cursor-default">
                 {absDate(note.createdAt)}
               </span>
             </TooltipTrigger>

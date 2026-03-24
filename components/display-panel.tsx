@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { SortField, GroupBy, ViewMode, ViewState } from "@/lib/view-engine/types"
+import type { SortField, GroupBy, GroupSortBy, ViewMode, ViewState } from "@/lib/view-engine/types"
 import type { ReactNode } from "react"
 
 export interface DisplayConfig {
@@ -144,7 +144,7 @@ function ChipDropdown<T extends string>({
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border/80 bg-[#171719] text-[13px] font-medium"
+        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border/80 bg-surface-overlay text-note font-medium"
       >
         {currentLabel}
         <ChevronDown />
@@ -153,7 +153,7 @@ function ChipDropdown<T extends string>({
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-md border border-border/80 bg-[#171719] py-1 shadow-lg">
+          <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-md border border-border/80 bg-surface-overlay py-1 shadow-lg">
             {options.map((opt) => {
               const disabled = disabledValues?.includes(opt.value)
               return (
@@ -166,10 +166,10 @@ function ChipDropdown<T extends string>({
                     }
                   }}
                   disabled={disabled}
-                  className={`flex w-full items-center justify-between px-3 py-1.5 text-[13px] ${
+                  className={`flex w-full items-center justify-between px-3 py-1.5 text-note ${
                     disabled
                       ? "text-muted-foreground/30 cursor-not-allowed"
-                      : "hover:bg-white/[0.03]"
+                      : "hover:bg-hover-bg"
                   }`}
                 >
                   <span>{opt.label}</span>
@@ -217,6 +217,18 @@ export function DisplayPanel({
   /* ── Grouping options ── */
   const groupingOptions = config.groupingOptions ?? []
   const subGroupOptions = groupingOptions.filter((o) => o.value !== viewState.groupBy)
+  // Grouping 드롭다운에서 현재 subGroupBy 값을 disabled로 표시 (none은 항상 허용)
+  const disabledGroupByValues = viewState.subGroupBy && viewState.subGroupBy !== "none"
+    ? [viewState.subGroupBy]
+    : []
+
+  /* ── Sub-group order options ── */
+  const groupOrderOptions: { value: GroupSortBy; label: string }[] = [
+    { value: "default", label: "Default" },
+    { value: "manual", label: "Manual" },
+    { value: "name", label: "Name" },
+    { value: "count", label: "Count" },
+  ]
 
   /* ── Mode-specific section label ── */
   const optionsSectionLabel = isBoard
@@ -236,7 +248,7 @@ export function DisplayPanel({
       {/* ── Section 0: View Mode (List / Board) ── */}
       {showViewMode && (
         <>
-          <div className="flex rounded-lg border border-border/80 bg-[#131315] p-0.5">
+          <div className="flex rounded-lg border border-border/80 bg-card p-0.5">
             {MODE_DEFS.filter((d) => supportedModes.includes(d.mode)).map((def) => {
               const isActive = currentMode === def.mode
               const Icon = def.icon
@@ -251,9 +263,9 @@ export function DisplayPanel({
                     }
                     onViewStateChange(patch)
                   }}
-                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-[13px] font-medium transition-all ${
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-note font-medium transition-all ${
                     isActive
-                      ? "bg-white/[0.08] text-foreground shadow-sm"
+                      ? "bg-active-bg-strong text-foreground shadow-sm"
                       : "text-muted-foreground/60 hover:text-muted-foreground"
                   }`}
                 >
@@ -271,23 +283,19 @@ export function DisplayPanel({
       {groupingOptions.length > 0 && (
         <>
           {isBoard ? (
-            /* Board: Columns (required) + Rows (sub-group) */
+            /* Board: Columns만 표시 (Rows/Group order는 board에서 미지원) */
             <>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-muted-foreground">Columns</span>
+                <span className="text-note text-muted-foreground">Columns</span>
                 <ChipDropdown<GroupBy>
                   value={viewState.groupBy}
                   options={groupingOptions}
-                  onChange={(v) => onViewStateChange({ groupBy: v })}
-                  disabledValues={["none"]}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] text-muted-foreground">Rows</span>
-                <ChipDropdown<GroupBy>
-                  value={viewState.subGroupBy ?? "none"}
-                  options={subGroupOptions}
-                  onChange={(v) => onViewStateChange({ subGroupBy: v })}
+                  onChange={(v) => {
+                    const patch: Partial<ViewState> = { groupBy: v }
+                    if (v === viewState.subGroupBy) patch.subGroupBy = "none"
+                    onViewStateChange(patch)
+                  }}
+                  disabledValues={["none" as GroupBy, ...(disabledGroupByValues as GroupBy[])]}
                 />
               </div>
             </>
@@ -295,22 +303,39 @@ export function DisplayPanel({
             /* List: Grouping + optional Sub-grouping */
             <>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-muted-foreground">Grouping</span>
+                <span className="text-note text-muted-foreground">Grouping</span>
                 <ChipDropdown<GroupBy>
                   value={viewState.groupBy}
                   options={groupingOptions}
-                  onChange={(v) => onViewStateChange({ groupBy: v })}
+                  onChange={(v) => {
+                    const patch: Partial<ViewState> = { groupBy: v }
+                    if (v === viewState.subGroupBy) patch.subGroupBy = "none"
+                    onViewStateChange(patch)
+                  }}
+                  disabledValues={disabledGroupByValues as GroupBy[]}
                 />
               </div>
               {viewState.groupBy !== "none" && (
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-muted-foreground">Sub-grouping</span>
-                  <ChipDropdown<GroupBy>
-                    value={viewState.subGroupBy ?? "none"}
-                    options={subGroupOptions}
-                    onChange={(v) => onViewStateChange({ subGroupBy: v })}
-                  />
-                </div>
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-note text-muted-foreground">Sub-grouping</span>
+                    <ChipDropdown<GroupBy>
+                      value={viewState.subGroupBy ?? "none"}
+                      options={subGroupOptions}
+                      onChange={(v) => onViewStateChange({ subGroupBy: v })}
+                    />
+                  </div>
+                  {viewState.subGroupBy && viewState.subGroupBy !== "none" && (
+                    <div className="flex items-center justify-between pl-3">
+                      <span className="text-2xs text-muted-foreground/60">Group order</span>
+                      <ChipDropdown<GroupSortBy>
+                        value={viewState.subGroupSortBy ?? "default"}
+                        options={groupOrderOptions}
+                        onChange={(v) => onViewStateChange({ subGroupSortBy: v })}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -319,7 +344,7 @@ export function DisplayPanel({
 
       {/* ── Section 2: Ordering + Sort direction ── */}
       <div className="flex items-center justify-between">
-        <span className="text-[13px] text-muted-foreground">Ordering</span>
+        <span className="text-note text-muted-foreground">Ordering</span>
         <div className="flex items-center gap-1">
           <ChipDropdown<SortField>
             value={viewState.sortField}
@@ -332,7 +357,7 @@ export function DisplayPanel({
                 sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc",
               })
             }
-            className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border/80 bg-[#171719] text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border/80 bg-surface-overlay text-muted-foreground hover:text-foreground transition-colors"
             title={viewState.sortDirection === "asc" ? "Ascending" : "Descending"}
           >
             {viewState.sortDirection === "asc" ? <SortAscIcon /> : <SortDescIcon />}
@@ -344,7 +369,7 @@ export function DisplayPanel({
       <hr className="border-border/60" />
       <div className="flex flex-col gap-2.5">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] flex-1">Order permanent by recency</span>
+          <span className="text-note flex-1">Order permanent by recency</span>
           <Toggle
             on={!!viewState.orderPermanentByRecency}
             onChange={() =>
@@ -355,7 +380,7 @@ export function DisplayPanel({
           />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[13px] flex-1">Show thread</span>
+          <span className="text-note flex-1">Show thread</span>
           <Toggle
             on={!!viewState.showThread}
             onChange={() =>
@@ -380,7 +405,7 @@ export function DisplayPanel({
                     {toggle.icon}
                   </span>
                 )}
-                <span className="text-[13px] flex-1">{toggle.label}</span>
+                <span className="text-note flex-1">{toggle.label}</span>
                 <Toggle
                   on={
                     toggle.key === "showEmptyGroups"
