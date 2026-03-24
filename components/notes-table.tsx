@@ -1519,7 +1519,15 @@ function NoteRowInner({
 
             {/* Title + optional preview */}
             <div className="flex-1 min-w-0">
-              <span className={`font-medium text-foreground truncate block ${isCompact ? "text-xs" : "text-note"}`}>{note.title || "Untitled"}</span>
+              <div className="flex items-center gap-2">
+                <span className={`font-medium text-foreground truncate ${isCompact ? "text-xs" : "text-note"}`}>{note.title || "Untitled"}</span>
+                {visibleCols.includes("wordCount") && (() => {
+                  const wc = note.preview ? note.preview.split(/\s+/).filter(Boolean).length : 0
+                  return wc > 0 ? (
+                    <span className="text-2xs tabular-nums text-muted-foreground/30 shrink-0">{wc}</span>
+                  ) : null
+                })()}
+              </div>
               {showCardPreview && note.preview && (
                 <span className="text-xs text-muted-foreground/60 truncate block mt-0.5">{note.preview}</span>
               )}
