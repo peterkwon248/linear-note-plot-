@@ -105,6 +105,7 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
   { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links", minWidth: 640 },
   { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
+  { id: "wordCount", label: "Words", width: "w-[56px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
   { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
   { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt", minWidth: 800 },
 ]
@@ -736,6 +737,19 @@ export function NotesTable({
     })
   }, [visibleCols, containerWidth])
 
+  // ── Grid template for table-mode columns ──
+  const gridTemplate = useMemo(() => {
+    const cols = ["32px", "1fr"] // checkbox + name (always)
+    if (effectiveVisibleCols.includes("status")) cols.push("120px")
+    if (effectiveVisibleCols.includes("folder")) cols.push("80px")
+    if (effectiveVisibleCols.includes("links")) cols.push("56px")
+    if (effectiveVisibleCols.includes("reads")) cols.push("56px")
+    if (effectiveVisibleCols.includes("wordCount")) cols.push("56px")
+    if (effectiveVisibleCols.includes("updatedAt")) cols.push("80px")
+    if (effectiveVisibleCols.includes("createdAt")) cols.push("80px")
+    return cols.join(" ")
+  }, [effectiveVisibleCols])
+
   const isCompact = containerWidth < 480 || viewState.toggles?.compact === true
 
   const virtualItems = useMemo((): VirtualItem[] => {
@@ -1042,10 +1056,13 @@ export function NotesTable({
               </div>
             ) : (
               <div ref={scrollContainerRef} onMouseDown={handleDragMouseDown} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
-                {/* Column headers (table mode — removed, never renders) */}
+                {/* Column headers (table mode) */}
                 {(viewState.viewMode as string) === "table" && (
-                <div className="sticky top-0 z-10 flex items-center border-b border-border/30 bg-background px-5 py-2.5">
-                  <div className="w-8 shrink-0 flex items-center justify-center mr-0.5">
+                <div
+                  style={{ display: "grid", gridTemplateColumns: gridTemplate }}
+                  className="sticky top-0 z-10 items-center border-b border-border/30 bg-background px-5 py-2.5"
+                >
+                  <div className="flex items-center justify-center">
                     <div
                       className={`h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${
                         selectedIds.size === flatNotes.length && flatNotes.length > 0
@@ -1071,7 +1088,7 @@ export function NotesTable({
                     </div>
                   </div>
                   {COLUMN_DEFS.filter((col) => col.id === "title" || effectiveVisibleCols.includes(col.id)).map((col) => (
-                    <div key={col.id} className={col.width + " " + (col.align ?? "")}>
+                    <div key={col.id} className={col.align ?? ""}>
                       <TH
                         label={col.label}
                         col={col.sortField}
@@ -1190,6 +1207,7 @@ export function NotesTable({
                             isSelected={selectedIds.has(item.note.id)}
                             selectionActive={selectedIds.size > 0}
                             visibleColumns={effectiveVisibleCols}
+                            gridTemplate={gridTemplate}
                             isCompact={isCompact}
                             viewMode={viewState.viewMode}
                             onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
@@ -1315,6 +1333,7 @@ interface NoteRowProps {
   isCompact?: boolean
   viewMode?: ViewMode
   visibleColumns: string[]
+  gridTemplate?: string
   onOpen: () => void
   onClick?: (e: React.MouseEvent) => void
   onDoubleClick?: () => void
@@ -1427,6 +1446,7 @@ function NoteRowInner({
   isCompact,
   viewMode,
   visibleColumns,
+  gridTemplate,
   onOpen,
   onClick,
   onDoubleClick,
@@ -1650,14 +1670,21 @@ function NoteRowInner({
     )
   }
 
-  /* ── Table mode rendering (existing) ── */
+  /* ── Table mode rendering (CSS Grid) ── */
+
+  const wordCount = useMemo(() => {
+    if (!note.preview) return 0
+    return note.preview.split(/\s+/).filter(Boolean).length
+  }, [note.preview])
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
           draggable
           onDragStart={(e) => setNoteDragData(e, note.id)}
-          className={`group flex items-center transition-colors cursor-pointer ${
+          style={{ display: "grid", gridTemplateColumns: gridTemplate }}
+          className={`group items-center transition-colors cursor-pointer ${
             isCompact ? "px-3 py-1.5" : "px-5 py-0"
           } ${
             isSelected
@@ -1672,8 +1699,8 @@ function NoteRowInner({
       {/* Checkbox */}
       <div
         data-checkbox
-        className={`shrink-0 flex items-center justify-center mr-0.5 cursor-pointer rounded ${
-          isCompact ? "w-6 h-6" : "w-8 h-8"
+        className={`flex items-center justify-center cursor-pointer rounded ${
+          isCompact ? "h-6" : "h-8"
         } ${
           selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
         }`}
@@ -1690,13 +1717,13 @@ function NoteRowInner({
             isSelected ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
           }`}
         >
-          {isSelected && <PhCheck className={`text-accent-foreground ${isCompact ? " " : " "}`} size={8} weight="bold" />}
+          {isSelected && <PhCheck className="text-accent-foreground" size={8} weight="bold" />}
         </div>
       </div>
 
       {/* Name */}
-      <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-4">
-        <FileText className={`shrink-0 text-muted-foreground/60 ${isCompact ? " " : " "}`} size={14} weight="regular" />
+      <div className="flex items-center gap-2.5 min-w-0 pr-4">
+        <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
         <span className={`truncate text-foreground ${isCompact ? "text-note" : "text-ui"}`}>
           {note.title || "Untitled"}
         </span>
@@ -1740,14 +1767,14 @@ function NoteRowInner({
 
       {/* Status */}
       {visibleCols.includes("status") && (
-        <div className="w-[120px] shrink-0 flex items-center justify-end">
+        <div className="flex items-center justify-end">
           <StatusBadge status={note.status} />
         </div>
       )}
 
       {/* Folder */}
       {visibleCols.includes("folder") && (
-        <div className="w-[80px] shrink-0 flex items-center justify-center px-2">
+        <div className="flex items-center justify-center px-2">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
             if (!folder) return <span className="text-2xs text-muted-foreground/20">—</span>
@@ -1762,7 +1789,7 @@ function NoteRowInner({
 
       {/* Links */}
       {visibleCols.includes("links") && (
-        <div className="w-[56px] shrink-0 text-center px-1">
+        <div className="text-center px-1">
           <span className={`tabular-nums text-xs ${links === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
             {links}
           </span>
@@ -1771,16 +1798,25 @@ function NoteRowInner({
 
       {/* Reads */}
       {visibleCols.includes("reads") && (
-        <div className="w-[56px] shrink-0 text-center px-1">
+        <div className="text-center px-1">
           <span className={`tabular-nums text-xs ${note.reads === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
             {note.reads}
           </span>
         </div>
       )}
 
+      {/* Word Count */}
+      {visibleCols.includes("wordCount") && (
+        <div className="text-right px-1">
+          <span className={`tabular-nums text-xs ${wordCount === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
+            {wordCount}
+          </span>
+        </div>
+      )}
+
       {/* Updated - relative time like Linear */}
       {visibleCols.includes("updatedAt") && (
-        <div className="w-[80px] shrink-0 text-right px-1">
+        <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="tabular-nums text-xs text-muted-foreground/50 cursor-default">
@@ -1796,7 +1832,7 @@ function NoteRowInner({
 
       {/* Created - absolute date like Linear */}
       {visibleCols.includes("createdAt") && (
-        <div className="w-[80px] shrink-0 text-right px-1">
+        <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="tabular-nums text-xs text-muted-foreground/50 cursor-default">
@@ -1939,6 +1975,7 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.note.folderId === next.note.folderId &&
   prev.note.reads === next.note.reads &&
   prev.note.title === next.note.title &&
+  prev.note.preview === next.note.preview &&
   prev.links === next.links &&
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
@@ -1946,5 +1983,6 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.isCompact === next.isCompact &&
   prev.viewMode === next.viewMode &&
   prev.visibleColumns === next.visibleColumns &&
+  prev.gridTemplate === next.gridTemplate &&
   prev.showCardPreview === next.showCardPreview
 )

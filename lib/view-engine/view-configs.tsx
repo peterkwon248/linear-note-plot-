@@ -132,6 +132,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "folder", label: "Folder", icon: FolderIcon },
       { key: "tags", label: "Tags", icon: TagIcon },
       { key: "links", label: "Links", icon: LinkIcon },
+      { key: "wordCount", label: "Words", icon: ContentIcon },
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
       { key: "createdAt", label: "Created", icon: CalendarIcon },
       { key: "reads", label: "Word count", icon: ContentIcon },
