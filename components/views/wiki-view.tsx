@@ -20,6 +20,7 @@ import {
   MoreHorizontal,
   ArrowDownFromLine,
   Merge,
+  ChevronLeft,
 } from "lucide-react"
 import {
   Popover,
@@ -76,7 +77,7 @@ export function WikiView() {
   const [wikiMergeSourceId, setWikiMergeSourceId] = useState<string | null>(null)
 
   // Dashboard filter
-  const [dashFilter, setDashFilter] = useState<"all" | "stubs" | "drafts" | "complete">("all")
+  const [dashFilter, setDashFilter] = useState<"all" | "stubs" | "drafts" | "complete" | "redlinks">("all")
 
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
@@ -265,12 +266,16 @@ export function WikiView() {
     if (dashFilter === "stubs") result = result.filter(n => n.wikiStatus === "stub")
     else if (dashFilter === "drafts") result = result.filter(n => n.wikiStatus === "draft")
     else if (dashFilter === "complete") result = result.filter(n => n.wikiStatus === "complete")
+    // Apply toggle-based filtering
+    if (wikiViewState.toggles.showStubs === false) {
+      result = result.filter(n => n.wikiStatus !== "stub")
+    }
     // Apply category filter from sidebar
     if (categoryFilterTagId) {
       result = result.filter(n => n.tags.includes(categoryFilterTagId))
     }
     return result
-  }, [wikiNotes, dashFilter, categoryFilterTagId])
+  }, [wikiNotes, dashFilter, categoryFilterTagId, wikiViewState.toggles.showStubs])
 
   // Sorted by updatedAt descending for articles table-list
   const sortedFilteredWikiNotes = useMemo(
@@ -796,16 +801,9 @@ export function WikiView() {
                 </div>
               </PopoverContent>
             </Popover>
-
-            <button
-              onClick={handleCreateWiki}
-              className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
-            >
-              <Plus className="h-3.5 w-3.5" strokeWidth={1.5} />
-              New Article
-            </button>
           </div>
         }
+        onCreateNew={handleCreateWiki}
       />
 
       {wikiViewMode === "dashboard" ? (
@@ -835,6 +833,7 @@ export function WikiView() {
             onCreateFromRedLink={handleCreateFromRedLink}
             onViewAll={() => { setWikiViewMode("list"); setDashFilter("all") }}
             onViewStubs={() => { setWikiViewMode("list"); setDashFilter("stubs") }}
+            onViewRedLinks={() => { setWikiViewMode("list"); setDashFilter("redlinks") }}
             onCategoryClick={(tagName) => {
               const tag = tags.find(t => t.name === tagName)
               if (tag) {
@@ -857,6 +856,54 @@ export function WikiView() {
            List Mode (table-list view)
            ══════════════════════════════════════════════════ */
         <div className="flex flex-1 overflow-hidden">
+          {dashFilter === "redlinks" ? (
+            /* Red Links list mode */
+            <div className="flex-1 overflow-y-auto">
+              <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-5 py-2">
+                <button
+                  onClick={() => { setDashFilter("all"); setWikiViewMode("dashboard") }}
+                  className="flex items-center gap-1 text-note text-muted-foreground/50 hover:text-foreground transition-colors duration-100 mr-1"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Overview
+                </button>
+                <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                  Red Links {redLinks.length}
+                </span>
+              </div>
+              <div className="flex items-center px-5 py-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground/30 border-b border-border/30">
+                <span className="min-w-0 flex-1">Missing Article</span>
+                <span className="w-[80px] text-right">References</span>
+                <span className="w-[100px] text-right">Action</span>
+              </div>
+              {redLinks.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-20 text-center">
+                  <p className="text-sm text-muted-foreground/50">No red links found</p>
+                  <p className="text-xs text-muted-foreground/30">All wiki links point to existing articles</p>
+                </div>
+              ) : (
+                redLinks.map((rl) => (
+                  <button
+                    key={rl.title}
+                    className="flex w-full items-center px-5 py-2.5 text-left transition-colors hover:bg-hover-bg border-b border-border/10"
+                    onClick={() => handleCreateFromRedLink(rl.title)}
+                  >
+                    <span className="min-w-0 flex-1 truncate text-note font-medium text-destructive/80">
+                      {rl.title}
+                    </span>
+                    <span className="w-[80px] text-right text-2xs tabular-nums text-muted-foreground/40">
+                      {rl.refCount} {rl.refCount === 1 ? "ref" : "refs"}
+                    </span>
+                    <span className="w-[100px] text-right">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                        <Plus className="h-3 w-3" /> Create
+                      </span>
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          ) : (
           <WikiList
             filteredWikiNotes={filteredWikiNotes}
             sortedFilteredWikiNotes={sortedFilteredWikiNotes}
@@ -870,6 +917,7 @@ export function WikiView() {
             onOpenArticle={openArticle}
             onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
           />
+          )}
           {showDistribution && (
             <ViewDistributionPanel
               tabs={wikiDistributionTabs}

@@ -1008,17 +1008,7 @@ export function CalendarView({
         showDetailPanel
         detailPanelOpen={showDistribution}
         onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
-        actions={
-          !hideCreateButton ? (
-            <button
-              className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors hover:bg-accent/85"
-              onClick={() => createNote(createNoteOverrides ?? {})}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              New note
-            </button>
-          ) : undefined
-        }
+        onCreateNew={!hideCreateButton ? () => { const id = createNote(createNoteOverrides ?? {}); if (id) openNote(id) } : undefined}
       />
 
       {/* ── Calendar controls bar ──────────────────── */}

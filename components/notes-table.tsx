@@ -594,6 +594,14 @@ export function NotesTable({
     })
   }, [folders, labels, tags, notes])
 
+  // Inbox/Capture/Permanent: hide Status from filter categories (already pre-filtered)
+  const filteredCategories = useMemo(() => {
+    if (isSingleStatusTab) {
+      return notesFilterCategories.filter(cat => cat.key !== "status")
+    }
+    return notesFilterCategories
+  }, [notesFilterCategories, isSingleStatusTab])
+
   // ── Filter toggle handler for FilterPanel ──
   const handleFilterToggle = useCallback((rule: FilterRule) => {
     const exists = viewState.filters.some(
@@ -871,20 +879,6 @@ export function NotesTable({
         icon={<FileText className="h-5 w-5" strokeWidth={1.5} />}
         title={title ?? "Notes"}
         count={flatNotes.length}
-        searchPlaceholder="Search..."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        actions={
-          !hideCreateButton && (
-            <button
-              className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
-              onClick={() => createNote(createNoteOverrides ?? {})}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {!isCompact && "New note"}
-            </button>
-          )
-        }
         extraToolbarButtons={viewState.groupBy !== "none" && groups.length > 0 ? (
           <button
             onClick={() => {
@@ -916,7 +910,7 @@ export function NotesTable({
         hasActiveFilters={viewState.filters.length > 0}
         filterContent={
           <FilterPanel
-            categories={notesFilterCategories}
+            categories={filteredCategories}
             activeFilters={viewState.filters}
             onToggle={handleFilterToggle}
             quickFilters={NOTES_VIEW_CONFIG.quickFilters as any}
@@ -939,6 +933,7 @@ export function NotesTable({
         showDetailPanel
         detailPanelOpen={showDistribution}
         onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
+        onCreateNew={!hideCreateButton ? () => { const id = createNote(createNoteOverrides ?? {}); if (id) openNote(id) } : undefined}
       >
         {/* Trash sub-filter tabs */}
         {isTrashView && (

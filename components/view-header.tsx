@@ -25,6 +25,13 @@ const DisplayIcon = (
   </svg>
 )
 
+const PlusIcon = (
+  <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <line x1="8" y1="3" x2="8" y2="13" />
+    <line x1="3" y1="8" x2="13" y2="8" />
+  </svg>
+)
+
 const PanelRightIcon = (
   <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="1.5" y="2" width="13" height="12" rx="1.5" />
@@ -113,6 +120,8 @@ interface ViewHeaderProps {
   onDetailPanelToggle?: () => void
   /** Extra icon buttons inserted before the filter icon */
   extraToolbarButtons?: ReactNode
+  /** Create new item callback — renders + icon next to filter/display icons */
+  onCreateNew?: () => void
 }
 
 export function ViewHeader({
@@ -133,6 +142,7 @@ export function ViewHeader({
   detailPanelOpen,
   onDetailPanelToggle,
   extraToolbarButtons,
+  onCreateNew,
 }: ViewHeaderProps) {
   const router = useRouter()
   const notes = usePlotStore((s) => s.notes)
@@ -202,7 +212,7 @@ export function ViewHeader({
     return status.charAt(0).toUpperCase() + status.slice(1)
   }
 
-  const hasToolbar = showFilter || showDisplay || showDetailPanel
+  const hasToolbar = showFilter || showDisplay || showDetailPanel || onCreateNew
 
   return (
     <>
@@ -343,6 +353,12 @@ export function ViewHeader({
             {showDetailPanel && (
               <HBtn active={detailPanelOpen} onClick={onDetailPanelToggle}>
                 {PanelRightIcon}
+              </HBtn>
+            )}
+
+            {onCreateNew && (
+              <HBtn onClick={onCreateNew}>
+                {PlusIcon}
               </HBtn>
             )}
           </div>

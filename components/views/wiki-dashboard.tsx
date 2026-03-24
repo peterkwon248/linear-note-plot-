@@ -55,6 +55,7 @@ interface WikiDashboardProps {
   onCreateFromRedLink: (title: string) => void
   onViewAll: () => void
   onViewStubs: () => void
+  onViewRedLinks?: () => void
   onCategoryClick?: (tagName: string) => void
 }
 
@@ -82,6 +83,7 @@ export function WikiDashboard({
   onCreateFromRedLink,
   onViewAll,
   onViewStubs,
+  onViewRedLinks,
   onCategoryClick,
 }: WikiDashboardProps) {
 
@@ -161,6 +163,7 @@ export function WikiDashboard({
             value={stats.redLinks}
             sub="missing articles"
             color="text-destructive"
+            onClick={onViewRedLinks}
           />
           <CoverageStat
             percent={coverageStats.percent}
