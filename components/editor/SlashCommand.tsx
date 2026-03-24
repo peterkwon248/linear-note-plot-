@@ -242,7 +242,7 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
                   flexShrink: 0,
                 }}
               >
-                <Icon size={15} strokeWidth={1.5} />
+                <Icon size={15} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="text-note" style={{ fontWeight: 500, lineHeight: 1.3 }}>

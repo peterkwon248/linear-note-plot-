@@ -400,7 +400,7 @@ function CoverageStat({
       <p className="text-2xs font-medium text-foreground/70">Coverage</p>
       <div className="mt-1.5 h-1 w-full rounded-full bg-secondary/60">
         <div
-          className="h-full rounded-full bg-chart-5 transition-all duration-300"
+          className="h-full rounded-full bg-chart-5 transition-all duration-200"
           style={{ width: `${percent}%` }}
         />
       </div>

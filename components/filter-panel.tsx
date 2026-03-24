@@ -19,7 +19,7 @@ const ChevronRightSmall = () => (
 )
 
 const CheckIcon = () => (
-  <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 8.5 6.5 12 13 5" />
   </svg>
 )
@@ -222,8 +222,7 @@ export function FilterPanel({
               onClick={() => setOpenCat(isOpen ? null : cat.key)}
             >
               <span
-                className={activeCount > 0 || isOpen ? "text-foreground" : "text-muted-foreground"}
-                style={{ fontSize: 14, lineHeight: 1, display: "flex" }}
+                className={`text-sm leading-none flex ${activeCount > 0 || isOpen ? "text-foreground" : "text-muted-foreground"}`}
               >
                 {cat.icon}
               </span>

@@ -254,7 +254,7 @@ function BoardColumn({
         </div>
       )}
       {/* Cards container */}
-      <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-1.5 pb-1.5" style={{ maxHeight: "calc(100vh - 200px)" }}>
+      <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-1.5 pb-1.5 max-h-[calc(100vh-200px)]">
         {children}
       </div>
     </div>

@@ -192,7 +192,7 @@ export function GraphInsightsView() {
               </p>
               <div className="mt-2 h-1.5 w-full rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-chart-5 transition-all duration-300"
+                  className="h-full rounded-full bg-chart-5 transition-all duration-200"
                   style={{ width: `${Math.min(parseFloat(String(density)) * 10, 100)}%` }}
                 />
               </div>
@@ -306,7 +306,7 @@ export function GraphInsightsView() {
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-secondary">
                     <div
-                      className="h-full rounded-full bg-accent transition-all duration-300"
+                      className="h-full rounded-full bg-accent transition-all duration-200"
                       style={{ width: `${wikiPercent}%` }}
                     />
                   </div>

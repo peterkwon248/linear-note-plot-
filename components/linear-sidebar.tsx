@@ -1148,7 +1148,7 @@ export function LinearSidebar() {
               </div>
               <div className="h-0.5 rounded-full bg-sidebar-border">
                 <div
-                  className="h-full rounded-full bg-chart-5 transition-all duration-300"
+                  className="h-full rounded-full bg-chart-5 transition-all duration-200"
                   style={{ width: `${inboxCount > 0 ? Math.max(5, Math.min(100, ((allNotesCount - inboxCount) / Math.max(allNotesCount, 1)) * 100)) : 100}%` }}
                 />
               </div>

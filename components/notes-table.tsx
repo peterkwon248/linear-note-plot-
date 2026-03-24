@@ -891,7 +891,7 @@ export function NotesTable({
             className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
             title={groups.every(g => collapsedGroups.has(g.key)) ? "Expand all groups" : "Collapse all groups"}
           >
-            <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+            <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               {groups.every(g => collapsedGroups.has(g.key)) ? (
                 <>
                   <path d="M4 6l4 4 4-4" />
@@ -1342,7 +1342,7 @@ function SourceIcon({ source }: { source: NoteSource }) {
     api: Lightning,
   }[source ?? "manual"]
   if (!Icon) return null
-  return <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={1.5} />
+  return <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
 }
 
 const STATUS_DOT_COLORS: Record<NoteStatus, string> = {

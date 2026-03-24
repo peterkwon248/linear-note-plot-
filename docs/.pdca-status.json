@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-24T07:56:14.515Z",
+  "lastUpdated": "2026-03-24T08:05:19.017Z",
   "activeFeatures": [
     "agitated-payne",
     "editor",
@@ -37,9 +37,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-24T00:52:49.353Z",
-        "lastUpdated": "2026-03-24T07:53:47.489Z"
+        "lastUpdated": "2026-03-24T08:04:54.912Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\charming-snyder\\components\\editor\\HashtagSuggestion.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\charming-snyder\\components\\editor\\SlashCommand.tsx"
     },
     "wiki-editor": {
       "phase": "do",
@@ -115,9 +115,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-24T07:10:42.703Z",
-        "lastUpdated": "2026-03-24T07:56:14.515Z"
+        "lastUpdated": "2026-03-24T08:05:19.016Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\charming-snyder\\components\\views\\labels-view.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\charming-snyder\\components\\views\\wiki-dashboard.tsx"
     },
     "datalog": {
       "phase": "do",
@@ -154,7 +154,7 @@
   "session": {
     "startedAt": "2026-03-24T00:37:14.348Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-24T07:56:14.515Z"
+    "lastActivity": "2026-03-24T08:05:19.017Z"
   },
   "history": [
     {
@@ -1365,6 +1365,66 @@
     },
     {
       "timestamp": "2026-03-24T07:56:14.515Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:04:46.770Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:04:49.115Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:04:50.821Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:04:52.661Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:04:54.023Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:04:54.912Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:05:14.931Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:05:16.688Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:05:18.005Z",
+      "feature": "charming-snyder",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:05:19.017Z",
       "feature": "charming-snyder",
       "phase": "do",
       "action": "updated"
