@@ -135,7 +135,6 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "wordCount", label: "Words", icon: ContentIcon },
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
       { key: "createdAt", label: "Created", icon: CalendarIcon },
-      { key: "reads", label: "Word count", icon: ContentIcon },
     ],
   },
 }
