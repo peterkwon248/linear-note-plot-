@@ -22,6 +22,7 @@ import {
   FileText,
   Link2,
   ChevronDown,
+  ChevronRight,
   X,
   Check,
   AlarmClock,
@@ -59,6 +60,8 @@ import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId } from "@/lib/table-route"
 import { TRIAGE_HEX } from "@/lib/colors"
+import { ViewDistributionPanel } from "@/components/view-distribution-panel"
+import type { DistributionItem } from "@/components/view-distribution-panel"
 
 /* ── Inline Select (portal-free, works inside Popover) ── */
 
@@ -586,6 +589,94 @@ export function NotesBoard({
     updateViewState({ filters: newFilters })
   }, [viewState.filters, updateViewState])
 
+  // ── Distribution panel state ──
+  const [showDistribution, setShowDistribution] = useState(false)
+
+  const getDistribution = useCallback((tabKey: string): DistributionItem[] => {
+    switch (tabKey) {
+      case "status": {
+        const counts: Record<string, number> = {}
+        for (const n of flatNotes) {
+          counts[n.status] = (counts[n.status] ?? 0) + 1
+        }
+        return Object.entries(counts).map(([key, count]) => ({
+          key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          count,
+        }))
+      }
+      case "folder": {
+        const counts: Record<string, number> = {}
+        const noFolder = flatNotes.filter(n => !n.folderId).length
+        for (const n of flatNotes) {
+          if (n.folderId) counts[n.folderId] = (counts[n.folderId] ?? 0) + 1
+        }
+        const items: DistributionItem[] = Object.entries(counts).map(([fId, count]) => ({
+          key: fId,
+          label: folders.find(f => f.id === fId)?.name ?? "Unknown",
+          count,
+        }))
+        if (noFolder > 0) items.push({ key: "__none__", label: "No folder", count: noFolder })
+        return items
+      }
+      case "tags": {
+        const counts: Record<string, number> = {}
+        for (const n of flatNotes) {
+          for (const tId of n.tags) {
+            counts[tId] = (counts[tId] ?? 0) + 1
+          }
+        }
+        return Object.entries(counts).map(([tId, count]) => ({
+          key: tId,
+          label: tags.find(t => t.id === tId)?.name ?? "Unknown",
+          count,
+        }))
+      }
+      case "labels": {
+        const counts: Record<string, number> = {}
+        const noLabel = flatNotes.filter(n => !n.labelId).length
+        for (const n of flatNotes) {
+          if (n.labelId) counts[n.labelId] = (counts[n.labelId] ?? 0) + 1
+        }
+        const items: DistributionItem[] = Object.entries(counts).map(([lId, count]) => ({
+          key: lId,
+          label: labels.find(l => l.id === lId)?.name ?? "Unknown",
+          color: labels.find(l => l.id === lId)?.color,
+          count,
+        }))
+        if (noLabel > 0) items.push({ key: "__none__", label: "No label", count: noLabel })
+        return items
+      }
+      default:
+        return []
+    }
+  }, [flatNotes, folders, tags, labels])
+
+  const handleDistributionItemClick = useCallback((tabKey: string, itemKey: string) => {
+    const fieldMap: Record<string, FilterRule["field"]> = {
+      status: "status",
+      folder: "folder",
+      tags: "tags",
+      labels: "label",
+    }
+    const field = fieldMap[tabKey]
+    if (!field) return
+    const rule: FilterRule = { field, operator: "eq", value: itemKey }
+    const idx = viewState.filters.findIndex(
+      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
+    )
+    if (idx >= 0) {
+      updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
+    }
+  }, [viewState.filters, updateViewState])
+
+  const distributionTabs = useMemo(() => [
+    { key: "status", label: "Status" },
+    { key: "folder", label: "Folder" },
+    { key: "tags", label: "Tags" },
+    { key: "labels", label: "Labels" },
+  ], [])
+
   // Auto-set groupBy: board requires grouping, and single-status tabs need contextual grouping
   const isSingleStatusTab = SINGLE_STATUS_TABS.includes(effectiveTab)
   const tabDefault = BOARD_DEFAULT_GROUP[effectiveTab]
@@ -606,6 +697,17 @@ export function NotesBoard({
 
   // Column card limit state
   const [expandedColumns, setExpandedColumns] = useState<Set<string>>(new Set())
+
+  // Sub-group collapse state
+  const [collapsedSubGroups, setCollapsedSubGroups] = useState<Set<string>>(new Set())
+  const toggleSubGroup = useCallback((key: string) => {
+    setCollapsedSubGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }, [])
 
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -764,6 +866,9 @@ export function NotesBoard({
             }
           />
         }
+        showDetailPanel
+        detailPanelOpen={showDistribution}
+        onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
       >
         <FilterChipBar
           filters={viewState.filters}
@@ -807,7 +912,9 @@ export function NotesBoard({
         ) : null
       })()}
 
-      {/* Board area */}
+      {/* Board area + Distribution panel */}
+      <div className="flex flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
       {flatNotes.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
@@ -836,44 +943,96 @@ export function NotesBoard({
               {resolvedGroups.map((group) => {
                 if (group.notes.length === 0 && !viewState.showEmptyGroups) return null
                 const isExpanded = expandedColumns.has(group.key)
-                const visibleNotes = isExpanded ? group.notes : group.notes.slice(0, COLUMN_CARD_LIMIT)
-                const hiddenCount = group.notes.length - COLUMN_CARD_LIMIT
+                const totalNotes = group.notes.length
+                const cardLimit = isExpanded ? Infinity : COLUMN_CARD_LIMIT
+                const hiddenCount = totalNotes - COLUMN_CARD_LIMIT
+
+                const renderCard = (note: Note) => (
+                  <BoardCard
+                    key={note.id}
+                    note={note}
+                    links={backlinksMap.get(note.id) ?? 0}
+                    folders={folders}
+                    isActive={activePreviewId === note.id}
+                    isSelected={selectedIds.has(note.id)}
+                    showCardPreview={viewState.toggles?.showCardPreview !== false}
+                    groupBy={viewState.groupBy}
+                    onClick={() => {
+                      setSelectedIds(new Set())
+                      onRowClick ? onRowClick(note.id) : openNote(note.id)
+                    }}
+                    onSelect={handleCardSelect}
+                    onStatus={(s) => updateNote(note.id, { status: s })}
+                    onPriority={(p) => updateNote(note.id, { priority: p })}
+                    onKeep={() => triageKeep(note.id)}
+                    onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
+                    onTrash={() => triageTrash(note.id)}
+                    onPromote={() => promoteToPermanent(note.id)}
+                    onDemote={() => undoPromote(note.id)}
+                    onMoveBack={() => moveBackToInbox(note.id)}
+                    onRemind={(isoDate) => { setReminder(note.id, isoDate); toast("Reminder set") }}
+                  />
+                )
 
                 return (
                   <BoardColumn key={group.key} group={group} groupBy={viewState.groupBy} isDragDisabled={isDragDisabled} dragCount={dragCount} activeDragId={activeDragId}>
-                    {visibleNotes.map((note) => (
-                      <BoardCard
-                        key={note.id}
-                        note={note}
-                        links={backlinksMap.get(note.id) ?? 0}
-                        folders={folders}
-                        isActive={activePreviewId === note.id}
-                        isSelected={selectedIds.has(note.id)}
-                        showCardPreview={viewState.toggles?.showCardPreview !== false}
-                        groupBy={viewState.groupBy}
-                        onClick={() => {
-                          setSelectedIds(new Set())
-                          onRowClick ? onRowClick(note.id) : openNote(note.id)
-                        }}
-                        onSelect={handleCardSelect}
-                        onStatus={(s) => updateNote(note.id, { status: s })}
-                        onPriority={(p) => updateNote(note.id, { priority: p })}
-                        onKeep={() => triageKeep(note.id)}
-                        onSnooze={(opt) => triageSnooze(note.id, getSnoozeTime(opt))}
-                        onTrash={() => triageTrash(note.id)}
-                        onPromote={() => promoteToPermanent(note.id)}
-                        onDemote={() => undoPromote(note.id)}
-                        onMoveBack={() => moveBackToInbox(note.id)}
-                        onRemind={(isoDate) => { setReminder(note.id, isoDate); toast("Reminder set") }}
-                      />
-                    ))}
-                    {!isExpanded && hiddenCount > 0 && (
-                      <button
-                        onClick={() => setExpandedColumns((prev) => new Set([...prev, group.key]))}
-                        className="mx-1.5 mb-1.5 rounded-md py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                      >
-                        + {hiddenCount} more
-                      </button>
+                    {group.subGroups && group.subGroups.length > 0 ? (
+                      // Render sub-groups with headers
+                      (() => {
+                        let cardCount = 0
+                        let limitReached = false
+                        return (
+                          <>
+                            {group.subGroups.map(sub => {
+                              if (limitReached) return null
+                              const subKey = `${group.key}::${sub.key}`
+                              const isCollapsed = collapsedSubGroups.has(subKey)
+                              const subLabel = sub.key === "_none"
+                                ? `No ${viewState.subGroupBy === "folder" ? "Folder" : viewState.subGroupBy === "label" ? "Label" : viewState.subGroupBy === "priority" ? "Priority" : viewState.subGroupBy === "status" ? "Status" : "Group"}`
+                                : sub.label
+                              // Calculate how many cards we can show in this sub-group
+                              const remaining = cardLimit - cardCount
+                              const notesToShow = isCollapsed ? [] : sub.notes.slice(0, remaining)
+                              cardCount += notesToShow.length
+                              if (cardCount >= cardLimit && !isExpanded) limitReached = true
+                              return (
+                                <div key={sub.key}>
+                                  <button
+                                    onClick={() => toggleSubGroup(subKey)}
+                                    className="flex items-center gap-1.5 w-full px-1.5 py-1 mt-2 first:mt-0 rounded-md text-2xs text-muted-foreground hover:bg-hover-bg transition-colors"
+                                  >
+                                    <ChevronRight className={`h-3 w-3 shrink-0 transition-transform ${isCollapsed ? "" : "rotate-90"}`} />
+                                    <span className="font-medium truncate">{subLabel}</span>
+                                    <span className="text-muted-foreground/50 tabular-nums ml-auto">{sub.notes.length}</span>
+                                  </button>
+                                  {!isCollapsed && notesToShow.map(renderCard)}
+                                </div>
+                              )
+                            })}
+                            {!isExpanded && hiddenCount > 0 && (
+                              <button
+                                onClick={() => setExpandedColumns((prev) => new Set([...prev, group.key]))}
+                                className="mx-1.5 mb-1.5 rounded-md py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                              >
+                                + {hiddenCount} more
+                              </button>
+                            )}
+                          </>
+                        )
+                      })()
+                    ) : (
+                      // No sub-groups — flat card list (original logic)
+                      <>
+                        {(isExpanded ? group.notes : group.notes.slice(0, COLUMN_CARD_LIMIT)).map(renderCard)}
+                        {!isExpanded && hiddenCount > 0 && (
+                          <button
+                            onClick={() => setExpandedColumns((prev) => new Set([...prev, group.key]))}
+                            className="mx-1.5 mb-1.5 rounded-md py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                          >
+                            + {hiddenCount} more
+                          </button>
+                        )}
+                      </>
                     )}
                   </BoardColumn>
                 )
@@ -947,6 +1106,16 @@ export function NotesBoard({
           </DragOverlay>
         </DndContext>
       )}
+      </div>
+      {showDistribution && (
+        <ViewDistributionPanel
+          tabs={distributionTabs}
+          getDistribution={getDistribution}
+          onItemClick={handleDistributionItemClick}
+          onClose={() => setShowDistribution(false)}
+        />
+      )}
+      </div>
     </main>
   )
 }

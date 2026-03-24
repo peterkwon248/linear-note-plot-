@@ -283,7 +283,7 @@ export function DisplayPanel({
       {groupingOptions.length > 0 && (
         <>
           {isBoard ? (
-            /* Board: Columns만 표시 (Rows/Group order는 board에서 미지원) */
+            /* Board: Columns (required) + Rows (sub-group) + Group order */
             <>
               <div className="flex items-center justify-between">
                 <span className="text-note text-muted-foreground">Columns</span>
@@ -298,6 +298,24 @@ export function DisplayPanel({
                   disabledValues={["none" as GroupBy, ...(disabledGroupByValues as GroupBy[])]}
                 />
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-note text-muted-foreground">Rows</span>
+                <ChipDropdown<GroupBy>
+                  value={viewState.subGroupBy ?? "none"}
+                  options={subGroupOptions}
+                  onChange={(v) => onViewStateChange({ subGroupBy: v })}
+                />
+              </div>
+              {viewState.subGroupBy && viewState.subGroupBy !== "none" && (
+                <div className="flex items-center justify-between pl-3">
+                  <span className="text-2xs text-muted-foreground/60">Group order</span>
+                  <ChipDropdown<GroupSortBy>
+                    value={viewState.subGroupSortBy ?? "default"}
+                    options={groupOrderOptions}
+                    onChange={(v) => onViewStateChange({ subGroupSortBy: v })}
+                  />
+                </div>
+              )}
             </>
           ) : (
             /* List: Grouping + optional Sub-grouping */

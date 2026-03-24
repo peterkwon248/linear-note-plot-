@@ -79,11 +79,10 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-41. 글로벌 색상 체계 + 위키 아이콘 + 그래프 폴리시 + 라우트 히스토리 + 성능 최적화
-42. 필터 드롭다운 검색창 + 위키 Merge + 클러스터 감지 + archive 제거 + 위키 클릭/토글 버그 수정
 43. List/Board 토글 활성화 + Nested Replies + 그룹 드래그 + Sub-grouping + 글로벌 Undo/Redo + Collapse All
 44. Linear Design Polish (8 Phase) — 토큰 인프라 정비, ~35 파일 토큰 준수율 100%, 인라인 스타일 제거, DESIGN-TOKENS.md 동기화
 45. Sub-group Order 기능 — 서브그룹 정렬 드롭다운 (Default/Manual/Name/Count), Grouping/Sub-grouping 상호 배제
+46. Board SubGroup Rows + Distribution Panel — Board 컬럼 내 서브그룹 렌더링/접기, List/Board 공유 Distribution 사이드바, 필터 토글
 
 ## Three Axes — Core Design Philosophy
 

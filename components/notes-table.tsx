@@ -676,10 +676,12 @@ export function NotesTable({
     const field = fieldMap[tabKey]
     if (!field) return
     const rule: FilterRule = { field, operator: "eq", value: itemKey }
-    const exists = viewState.filters.some(
+    const idx = viewState.filters.findIndex(
       f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
     )
-    if (!exists) {
+    if (idx >= 0) {
+      updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
+    } else {
       updateViewState({ filters: [...viewState.filters, rule] })
     }
   }, [viewState.filters, updateViewState])

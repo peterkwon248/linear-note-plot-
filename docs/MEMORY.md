@@ -68,6 +68,11 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Filter sub-panel hover 위치 동적 계산 (Linear식)
   - Quick Filter 클릭 연동
 
+- **PR #101**: Board SubGroup Rows + Distribution Panel + 필터 토글
+  - Board 컬럼 내 SubGroup(Rows) 렌더링 — 서브그룹 헤더 + 접기/펼치기 + COLUMN_CARD_LIMIT 유지
+  - Display Panel Board 모드에 Rows + Group order 드롭다운 복원
+  - Board에 ViewDistributionPanel 연결 (List와 동일한 Status/Folder/Tags/Labels 4탭)
+  - Distribution 사이드바 항목 클릭 = 필터 토글 (List/Board 양쪽)
 - **PR #100**: Linear Design Polish + Sub-group Order
   - 8-Phase 디자인 토큰 준수율 100% 달성 (~251건 위반 → 5건 의도적 유지)
   - globals.css에 11개 신규 시맨틱 토큰 추가 (sidebar-active, surface-overlay, hover-bg, active-bg, toolbar-active 등)
