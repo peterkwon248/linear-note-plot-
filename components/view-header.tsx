@@ -2,42 +2,16 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { Search, X, FileText, Pin } from "lucide-react"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { FileText as PhFileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { FunnelSimple } from "@phosphor-icons/react/dist/ssr/FunnelSimple"
+import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal"
+import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
+import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { usePlotStore } from "@/lib/store"
-
-/* ── SVG Icons (14-15px, strokeWidth 1.2-1.3 — Linear weight) ── */
-
-const FilterIcon = (
-  <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-    <path d="M2.5 3.5h11M4 7h8M6 10.5h4" />
-  </svg>
-)
-
-const DisplayIcon = (
-  <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-    <line x1="2.5" y1="4" x2="13.5" y2="4" />
-    <line x1="2.5" y1="8" x2="13.5" y2="8" />
-    <line x1="2.5" y1="12" x2="13.5" y2="12" />
-    <circle cx="5.5" cy="4" r="1.4" fill="currentColor" stroke="none" />
-    <circle cx="10.5" cy="8" r="1.4" fill="currentColor" stroke="none" />
-    <circle cx="7" cy="12" r="1.4" fill="currentColor" stroke="none" />
-  </svg>
-)
-
-const PlusIcon = (
-  <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-    <line x1="8" y1="3" x2="8" y2="13" />
-    <line x1="3" y1="8" x2="13" y2="8" />
-  </svg>
-)
-
-const PanelRightIcon = (
-  <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="1.5" y="2" width="13" height="12" rx="1.5" />
-    <line x1="10" y1="2" x2="10" y2="14" />
-  </svg>
-)
 
 /* ── Header Icon Button ── */
 
@@ -53,7 +27,7 @@ function HBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex h-7 w-7 items-center justify-center rounded-[6px] border-none transition-all duration-100 ${
+      className={`flex h-7 w-7 items-center justify-center rounded-md border-none transition-all duration-100 ${
         active
           ? "bg-active-bg text-foreground"
           : "text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground"
@@ -235,7 +209,7 @@ export function ViewHeader({
         {/* Search bar */}
         {showSearch && (
           <div className="relative flex items-center">
-            <Search className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <MagnifyingGlass size={14} weight="regular" className="pointer-events-none absolute left-2.5 text-muted-foreground" />
             <input
               type="text"
               value={search}
@@ -260,7 +234,7 @@ export function ViewHeader({
                 }}
                 className="absolute right-2 text-muted-foreground hover:text-foreground"
               >
-                <X className="h-3.5 w-3.5" />
+                <PhX size={14} weight="regular" />
               </button>
             )}
 
@@ -285,9 +259,9 @@ export function ViewHeader({
                       }`}
                     >
                       {note.pinned ? (
-                        <Pin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <PushPin size={14} weight="regular" className="shrink-0 text-muted-foreground" />
                       ) : (
-                        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <PhFileText size={14} weight="regular" className="shrink-0 text-muted-foreground" />
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="truncate">
@@ -317,7 +291,7 @@ export function ViewHeader({
                 <PopoverTrigger asChild>
                   <div>
                     <HBtn active={filterOpen || hasActiveFilters}>
-                      {FilterIcon}
+                      <FunnelSimple size={15} weight="regular" />
                     </HBtn>
                   </div>
                 </PopoverTrigger>
@@ -336,7 +310,7 @@ export function ViewHeader({
                 <PopoverTrigger asChild>
                   <div>
                     <HBtn active={displayOpen}>
-                      {DisplayIcon}
+                      <SlidersHorizontal size={15} weight="regular" />
                     </HBtn>
                   </div>
                 </PopoverTrigger>
@@ -352,13 +326,13 @@ export function ViewHeader({
 
             {showDetailPanel && (
               <HBtn active={detailPanelOpen} onClick={onDetailPanelToggle}>
-                {PanelRightIcon}
+                <SidebarSimple size={15} weight="regular" />
               </HBtn>
             )}
 
             {onCreateNew && (
               <HBtn onClick={onCreateNew}>
-                {PlusIcon}
+                <Plus size={15} weight="regular" />
               </HBtn>
             )}
           </div>

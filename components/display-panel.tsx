@@ -3,6 +3,12 @@
 import { useState } from "react"
 import type { SortField, GroupBy, GroupSortBy, ViewMode, ViewState } from "@/lib/view-engine/types"
 import type { ReactNode } from "react"
+import { List } from "@phosphor-icons/react/dist/ssr/List"
+import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { Check } from "@phosphor-icons/react/dist/ssr/Check"
+import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
+import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
 
 export interface DisplayConfig {
   orderingOptions: { value: SortField; label: string }[]
@@ -35,37 +41,7 @@ interface DisplayPanelProps {
   showViewMode?: boolean
 }
 
-/* ── View mode icons ── */
-
-const ListIcon = () => (
-  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-    <line x1="2.5" y1="4" x2="13.5" y2="4" />
-    <line x1="2.5" y1="8" x2="13.5" y2="8" />
-    <line x1="2.5" y1="12" x2="13.5" y2="12" />
-  </svg>
-)
-
-const BoardIcon = () => (
-  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="1.5" y="2" width="4" height="12" rx="1" />
-    <rect x="6" y="2" width="4" height="9" rx="1" />
-    <rect x="10.5" y="2" width="4" height="7" rx="1" />
-  </svg>
-)
-
 /* ── Icons ─────────────────────────────────────────────── */
-
-const ChevronDown = () => (
-  <svg width={10} height={10} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="4 6 8 10 12 6" />
-  </svg>
-)
-
-const CheckIcon = () => (
-  <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 8.5 6.5 12 13 5" />
-  </svg>
-)
 
 export const ArchiveIcon = () => (
   <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
@@ -90,35 +66,20 @@ export const SortIcon = () => (
   </svg>
 )
 
-const SortAscIcon = () => (
-  <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="8" y1="12" x2="8" y2="4" />
-    <polyline points="4 8 8 4 12 8" />
-  </svg>
-)
-
-const SortDescIcon = () => (
-  <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="8" y1="4" x2="8" y2="12" />
-    <polyline points="4 8 8 12 12 8" />
-  </svg>
-)
-
 /* ── Toggle component ───────────────────────────────────── */
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
     <button
       onClick={onChange}
-      className="relative w-[34px] h-5 rounded-full shrink-0 transition-colors duration-200"
-      style={{ background: on ? "#5e6ad2" : "rgba(255,255,255,0.12)" }}
+      className={`relative w-[34px] h-5 rounded-full shrink-0 transition-colors duration-200 ${
+        on ? "bg-accent" : "bg-white/[0.12]"
+      }`}
     >
       <div
-        className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-[left] duration-200"
-        style={{
-          left: on ? 16 : 2,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
-        }}
+        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.25)] transition-all duration-200 ${
+          on ? "left-[16px]" : "left-0.5"
+        }`}
       />
     </button>
   )
@@ -147,7 +108,7 @@ function ChipDropdown<T extends string>({
         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border/80 bg-surface-overlay text-note font-medium"
       >
         {currentLabel}
-        <ChevronDown />
+        <CaretDown size={10} weight="bold" />
       </button>
 
       {open && (
@@ -175,7 +136,7 @@ function ChipDropdown<T extends string>({
                   <span>{opt.label}</span>
                   {value === opt.value && (
                     <span className="text-accent">
-                      <CheckIcon />
+                      <Check size={12} weight="bold" />
                     </span>
                   )}
                 </button>
@@ -190,9 +151,9 @@ function ChipDropdown<T extends string>({
 
 /* ── Mode config helpers ────────────────────────────────── */
 
-const MODE_DEFS: { mode: ViewMode; icon: () => ReactNode; label: string }[] = [
-  { mode: "list", icon: ListIcon, label: "List" },
-  { mode: "board", icon: BoardIcon, label: "Board" },
+const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string }[] = [
+  { mode: "list", icon: <List size={14} weight="regular" />, label: "List" },
+  { mode: "board", icon: <Kanban size={14} weight="regular" />, label: "Board" },
 ]
 
 function resolveViewMode(viewMode: ViewMode): "list" | "board" {
@@ -251,7 +212,6 @@ export function DisplayPanel({
           <div className="flex rounded-lg border border-border/80 bg-card p-0.5">
             {MODE_DEFS.filter((d) => supportedModes.includes(d.mode)).map((def) => {
               const isActive = currentMode === def.mode
-              const Icon = def.icon
               return (
                 <button
                   key={def.mode}
@@ -269,7 +229,7 @@ export function DisplayPanel({
                       : "text-muted-foreground/60 hover:text-muted-foreground"
                   }`}
                 >
-                  <Icon />
+                  {def.icon}
                   {def.label}
                 </button>
               )
@@ -378,7 +338,7 @@ export function DisplayPanel({
             className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border/80 bg-surface-overlay text-muted-foreground hover:text-foreground transition-colors"
             title={viewState.sortDirection === "asc" ? "Ascending" : "Descending"}
           >
-            {viewState.sortDirection === "asc" ? <SortAscIcon /> : <SortDescIcon />}
+            {viewState.sortDirection === "asc" ? <SortAscending size={12} weight="regular" /> : <SortDescending size={12} weight="regular" />}
           </button>
         </div>
       </div>
