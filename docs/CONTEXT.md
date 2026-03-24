@@ -83,7 +83,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 46. Board SubGroup Rows + Distribution Panel — Board 컬럼 내 서브그룹 렌더링/접기, List/Board 공유 Distribution 사이드바, 필터 토글
 47. Linear UI 폴리시 3차 — ViewHeader New Note 중복 제거(+아이콘만 남김), Inbox 독립 viewState, Wiki Red Links 리스트+탭, Show stubs 토글 연결, STATUS↔TITLE 간격 수정
 48. Design Polish Phase 1~5 — Lucide→Phosphor 아이콘 통일(83파일), hardcoded hex→lib/colors.ts, 인라인 style→Tailwind, 비표준 값 정규화
-49. 정보 밀도 철학 전면 적용 — NoteRow CSS Grid 컬럼화, 로컬 검색 제거→글로벌 통합, word count 컬럼 복원, 전 뷰 행 구분선 제거 (notes-table/wiki-list/wiki-view/note-list/labels-view/tags-view)
+49. 정보 밀도 철학 전면 적용 — NoteRow CSS Grid 컬럼화, 로컬 검색 제거→글로벌 통합, word count 타이틀 옆 배치, 전 뷰 행 구분선 제거 (notes-table/wiki-list/wiki-view/note-list/labels-view/tags-view)
 
 ## Three Axes — Core Design Philosophy
 

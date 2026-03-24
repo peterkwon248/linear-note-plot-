@@ -233,7 +233,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 
 ### 이번 세션 완료 (2026-03-24, 세션 2)
 - **Design Polish Phase 1~5**: Lucide→Phosphor 아이콘 통일(83파일), hardcoded hex→lib/colors.ts 중앙화, 인라인 style→Tailwind 클래스, 비표준 값 정규화
-- **NoteRow CSS Grid 컬럼 기반 재설계**: flex→CSS Grid 전환, word count 컬럼 복원, ViewHeader 로컬 검색 제거→글로벌 검색 통합
+- **NoteRow CSS Grid 컬럼 기반 재설계**: flex→CSS Grid 전환, word count 타이틀 옆 배치, ViewHeader 로컬 검색 제거→글로벌 검색 통합
 - **전 뷰 행 구분선 제거**: notes-table, wiki-list, wiki-view, note-list, labels-view, tags-view — "Structure felt, not seen" 철학 전면 적용
 
 ### 다음 작업 후보 (우선순위 순)
