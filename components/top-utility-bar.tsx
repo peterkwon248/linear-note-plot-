@@ -1,25 +1,21 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { routeGoBack, routeGoForward } from "@/lib/table-route"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { IconChevronLeft, IconChevronRight, IconSearch, IconPlus } from "@/components/plot-icons"
+import { IconChevronLeft, IconChevronRight, IconSearch } from "@/components/plot-icons"
 
 export function TopUtilityBar() {
-  const router = useRouter()
   const goBack = usePlotStore((s) => s.goBack)
   const goForward = usePlotStore((s) => s.goForward)
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
 
   const handleGoBack = () => {
     const s = usePlotStore.getState()
-    // If a note is open, try note history first
     if (s.selectedNoteId) {
       const handled = goBack()
       if (handled) return
     }
-    // Route-level back (page navigation)
     routeGoBack()
   }
 
@@ -30,12 +26,6 @@ export function TopUtilityBar() {
       if (handled) return
     }
     routeGoForward()
-  }
-
-  const handleNewNote = () => {
-    const state = usePlotStore.getState()
-    const id = state.createNote({})
-    if (id) state.openNote(id)
   }
 
   return (
@@ -77,17 +67,6 @@ export function TopUtilityBar() {
         <IconSearch size={14} className="shrink-0" />
         <span className="flex-1 text-left">Search…</span>
         <kbd className="font-mono text-2xs opacity-40">⌘K</kbd>
-      </button>
-
-      <div className="flex-1" />
-
-      {/* New Note CTA */}
-      <button
-        onClick={handleNewNote}
-        className="flex h-[30px] items-center gap-1.5 rounded-md bg-accent px-3.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
-      >
-        <IconPlus size={14} />
-        New Note
       </button>
     </div>
   )

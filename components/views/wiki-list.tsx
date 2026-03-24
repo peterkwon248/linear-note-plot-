@@ -18,8 +18,8 @@ interface WikiListProps {
   backlinkCounts: Map<string, number>
 
   // Filter state
-  dashFilter: "all" | "stubs" | "drafts" | "complete"
-  setDashFilter: (f: "all" | "stubs" | "drafts" | "complete") => void
+  dashFilter: "all" | "stubs" | "drafts" | "complete" | "redlinks"
+  setDashFilter: (f: "all" | "stubs" | "drafts" | "complete" | "redlinks") => void
   showAllArticles: boolean
   setShowAllArticles: (show: boolean) => void
 
@@ -67,7 +67,7 @@ function StatusBadge({ status }: { status: string | null }) {
 function ColumnHeaders() {
   return (
     <div className="flex items-center px-5 py-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground/30 border-b border-border/30">
-      <span className="w-[80px]">Status</span>
+      <span className="w-[100px]">Status</span>
       <span className="min-w-0 flex-1">Title</span>
       <span className="w-[60px] text-right">Links</span>
       <span className="w-[36px]" />
@@ -99,7 +99,7 @@ function ArticleTableRow({
         onClick={onClick}
         className="flex flex-1 items-center text-left min-w-0"
       >
-        <span className="w-[80px] shrink-0">
+        <span className="w-[100px] shrink-0">
           <StatusBadge status={note.wikiStatus} />
         </span>
         <span className="min-w-0 flex-1 truncate text-note font-medium text-foreground/90">
@@ -157,7 +157,7 @@ function IndexTableRow({
       onClick={onClick}
       className="flex w-full items-center px-5 py-2 hover:bg-hover-bg transition-colors duration-75 cursor-pointer border-b border-border/[0.06] text-left"
     >
-      <span className="w-[80px] shrink-0">
+      <span className="w-[100px] shrink-0">
         <StatusBadge status={note.wikiStatus} />
       </span>
       <span className="min-w-0 flex-1 truncate text-note text-foreground/90">
@@ -226,8 +226,9 @@ export function WikiList({
         <span className="h-4 w-px bg-border/50" />
 
         {/* Filter Tabs */}
-        {(["all", "complete", "drafts", "stubs"] as const).map((tab) => {
-          const labels = { all: "All", complete: "Complete", drafts: "Draft", stubs: "Stub" }
+        {(["all", "complete", "drafts", "stubs", "redlinks"] as const).map((tab) => {
+          const labels: Record<string, string> = { all: "All", complete: "Complete", drafts: "Draft", stubs: "Stub", redlinks: "Red Links" }
+          const tabCount = tab === "redlinks" ? undefined : counts[tab as keyof typeof counts]
           return (
             <button
               key={tab}
@@ -237,15 +238,16 @@ export function WikiList({
               }}
               className={cn(
                 "rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-100",
+                tab === "redlinks" && "text-destructive/70",
                 dashFilter === tab && !showAllArticles
-                  ? "bg-foreground/10 text-foreground"
+                  ? tab === "redlinks" ? "bg-destructive/10 text-destructive" : "bg-foreground/10 text-foreground"
                   : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
               )}
             >
               {labels[tab]}
-              {counts[tab] > 0 && (
+              {tabCount !== undefined && tabCount > 0 && (
                 <span className="ml-1 tabular-nums text-muted-foreground/40">
-                  {counts[tab]}
+                  {tabCount}
                 </span>
               )}
             </button>

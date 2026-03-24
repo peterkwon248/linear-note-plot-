@@ -79,10 +79,10 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-43. List/Board 토글 활성화 + Nested Replies + 그룹 드래그 + Sub-grouping + 글로벌 Undo/Redo + Collapse All
 44. Linear Design Polish (8 Phase) — 토큰 인프라 정비, ~35 파일 토큰 준수율 100%, 인라인 스타일 제거, DESIGN-TOKENS.md 동기화
 45. Sub-group Order 기능 — 서브그룹 정렬 드롭다운 (Default/Manual/Name/Count), Grouping/Sub-grouping 상호 배제
 46. Board SubGroup Rows + Distribution Panel — Board 컬럼 내 서브그룹 렌더링/접기, List/Board 공유 Distribution 사이드바, 필터 토글
+47. Linear UI 폴리시 3차 — ViewHeader New Note 중복 제거(+아이콘만 남김), Inbox 독립 viewState, Wiki Red Links 리스트+탭, Show stubs 토글 연결, STATUS↔TITLE 간격 수정
 
 ## Three Axes — Core Design Philosophy
 
@@ -105,19 +105,16 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## TODO: Future Work
 
-- **보드 뷰 서브그룹(Rows) 렌더링** — Linear처럼 보드에서도 Rows + Group order 지원 (현재 notes-board.tsx 미지원)
+- **View 시스템 고도화** — 사이드바 Views 섹션에 필터+디스플레이+정렬 프리셋 저장 (Linear의 View 개념)
+- **Wiki 대시보드 반응형 모드** — Articles/Stubs/Red Links 카드 클릭시 대시보드 콘텐츠 전환 (Linear의 All/Active/Backlog 패턴)
+- **정보 밀도 철학 변경** — 행 구분선 제거, 기본 메타 최소화, 여백 확대 ("Structure felt, not seen")
+- **멀티패널 뷰 타입 확장** — 노트끼리만이 아니라 Wiki/Calendar/Graph + 에디터 조합 스플릿
 - **NoteRow CSS Grid 컬럼 기반 재설계** — 현재 flex 기반을 CSS Grid로 전환
-- **글로벌 검색 통합** — 로컬 검색 제거, 글로벌 검색으로 통합
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식 통합 에디터
 - J/K 리스트 네비게이션 (Linear식)
-- Ctrl+A/C 스프레드시트 단축키
 - 노트 가져오기/내보내기 (import/export)
-- 사이드바 반응형 + 닫기 버튼
-- Settings 기능 감사
 - 그래프 사이드바 → 클러스터 + 인사이트 리워크
-- 필터/디스플레이 섹션별 고도화
 - 리스트 가상화 (react-window, 1만개 대응)
-- Custom Views 2차
 
 ## Calendar 리디자인 설계 (확정)
 

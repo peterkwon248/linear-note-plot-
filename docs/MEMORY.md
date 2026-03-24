@@ -117,7 +117,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-03-23)
+## Current Direction (as of 2026-03-24)
 
 ### Key Design Decisions (추가)
 - **WorkspaceMode 삭제**: zen/research 모드 불필요. sidebarCollapsed + detailsOpen 독립 토글만으로 충분
@@ -170,6 +170,18 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **블록 DnD**: @dnd-kit 기반 드래그 앤 드롭 순서 변경 (edit 모드)
 - **Wiki stats 버그 수정**: `notes.isWiki` → `wikiArticles` 기반으로 전환
 - **Wiki article 클릭 버그 수정**: Dashboard에서 `onOpenArticle` → `onOpenWikiArticle`
+
+### 이번 세션 완료 (2026-03-24)
+- **Linear UI 폴리시 3차**:
+  - ViewHeader "+ New note" 중복 제거 → top-utility-bar "+" 아이콘만 남김 (컨텍스트별 라벨: Notes→New Note, Wiki→New Article)
+  - top-utility-bar에서 "+ New Note" 텍스트 버튼 제거, ViewHeader `onCreateNew` → "+" 아이콘 버튼으로 통일
+  - Calendar onCreateNew 복원
+  - Inbox 독립 viewState (Notes와 필터/디스플레이 분리, Status 필터 카테고리 자동 숨김)
+  - Wiki Show stubs 토글 실제 동작 연결 (`filteredWikiNotes`에서 `toggles.showStubs` 필터링)
+  - Wiki Red Links MiniStat 클릭 → 리스트 모드 전환 + 전용 Red Links 리스트 (제목+참조수+Create 버튼)
+  - Wiki 리스트 탭 바에 "Red Links" 탭 추가 (빨간색 강조)
+  - Wiki STATUS↔TITLE 간격 수정 (w-[80px] → w-[100px])
+  - linear-design-mirror 스킬 생성 + SKILL.md 참고 자료 저장
 
 ### 이번 세션 완료 (2026-03-23, 세션 2)
 - **글로벌 색상 체계 (`lib/colors.ts`)**: 15개 파일 하드코딩 → 단일 소스. CSS 변수 추가 (`--wiki-complete`, `--priority-medium`)
