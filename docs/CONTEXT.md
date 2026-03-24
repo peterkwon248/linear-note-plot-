@@ -102,15 +102,29 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **Graph Health → /graph-insights 페이지**: 사이드바는 필터/컨트롤 패널
 - **필터/디스플레이 먼저, 사이드바 정리 나중에**: 기능이 동작해야 사이드바 의미 있음
 - **Phase 4-D Context Panel 보류**: 각 공간별로 이미 컨텍스트 패널 존재
+- **글로벌 탭 도입 안 함**: 멀티패널과 역할 충돌. 사이드바가 탭 역할 수행. Linear는 멀티패널이 없어서 탭 필요하지만 Plot은 사이드바+멀티패널로 커버
+- **View = 사이드바 섹션**: Linear의 View(상단 탭 프리셋)를 사이드바 Views 섹션으로 구현. 한눈에 전체 구조 파악 가능, 액티비티별 독립
+- **+ 버튼 = ViewHeader 우측**: top-utility-bar에서 제거, ViewHeader의 필터 아이콘 옆 `+` 아이콘으로 통일
 
-## TODO: Future Work
+## TODO: Future Work (우선순위 순)
 
-- **View 시스템 고도화** — 사이드바 Views 섹션에 필터+디스플레이+정렬 프리셋 저장 (Linear의 View 개념)
-- **Wiki 대시보드 반응형 모드** — Articles/Stubs/Red Links 카드 클릭시 대시보드 콘텐츠 전환 (Linear의 All/Active/Backlog 패턴)
+### Tier 1 — Linear UX 핵심
+- **View 시스템 v2** — 사이드바 Views에 필터+디스플레이+정렬 프리셋 저장. "Save as View"로 현재 상태 저장. 시스템 View(All/Capture/Permanent/Pinned) 편집불가, 사용자 View 편집/삭제 가능
+- **풀페이지 검색 분리** — ⌘K = 풀페이지 노트 검색, ⌘/ = 커맨드 팔레트 (액션 전용)
+- **커맨드 팔레트 확장** — 컨텍스트 반응형 20+개 커맨드 (Note Actions, View Actions, Navigation, Creation)
 - **정보 밀도 철학 변경** — 행 구분선 제거, 기본 메타 최소화, 여백 확대 ("Structure felt, not seen")
-- **멀티패널 뷰 타입 확장** — 노트끼리만이 아니라 Wiki/Calendar/Graph + 에디터 조합 스플릿
-- **NoteRow CSS Grid 컬럼 기반 재설계** — 현재 flex 기반을 CSS Grid로 전환
+
+### Tier 2 — Wiki & Dashboard
+- **Wiki 대시보드 반응형 모드** — Articles/Stubs/Red Links 카드 클릭시 콘텐츠 전환 (Linear All/Active/Backlog 패턴)
+- **사이드바 상단 View 편집 버튼** — 닫기 버튼 왼쪽에 + 배치, 클릭시 View 편집 모드
+- **사이드바 닫기 아이콘 변경** — chevron 제거, panel collapse 아이콘으로
+
+### Tier 3 — 구조 개선
+- **멀티패널 뷰 타입 확장** — Wiki/Calendar/Graph + 에디터 조합 스플릿 ("참조하면서 쓰기")
+- **NoteRow CSS Grid 컬럼 기반 재설계** — flex → CSS Grid 전환
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식 통합 에디터
+
+### Tier 4 — 기능 확장
 - J/K 리스트 네비게이션 (Linear식)
 - 노트 가져오기/내보내기 (import/export)
 - 그래프 사이드바 → 클러스터 + 인사이트 리워크

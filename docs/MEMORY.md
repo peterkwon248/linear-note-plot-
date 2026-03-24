@@ -130,6 +130,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Workspace 단순화**: Binary tree → 듀얼 패인. react-resizable-panels. 9개 레거시 파일 삭제
 - **위키 = 유저의 확장된 세계관**: 블록 무한 확장 대응 (IDB 분리 + virtuoso + lazy load + sectionIndex)
 
+### 이번 세션 브레인스토밍 결과 (2026-03-24)
+- **글로벌 탭 도입 안 함** — 멀티패널과 역할 충돌. 사이드바가 탭 역할 수행
+- **View = 사이드바 프리셋** — Linear View(탭)를 사이드바 Views 섹션으로 구현. FilterRule[] + groupBy + ordering + subGroupBy + visibleColumns + viewMode 저장
+- **+ 버튼 통일** — top-utility-bar "New Note" 텍스트 제거 → ViewHeader 우측 `+` 아이콘만
+- **커맨드 팔레트 확장 필요** — 현재 6개 → 20+개 컨텍스트 반응형 커맨드 (Note Actions, View, Navigation, Creation)
+- **풀페이지 검색 분리** — ⌘K = 검색, ⌘/ = 커맨드 팔레트
+- **멀티패널 뷰 타입 확장** — Wiki/Calendar/Graph + 에디터 조합 ("참조하면서 쓰기")
+- **Wiki 대시보드 반응형** — Articles/Stubs/Red Links 카드가 탭/필터 역할
+- **Linear 디자인 레퍼런스** — linear-design-mirror.tar.gz + SKILL.md 참고자료 저장 완료
+
 ### 이번 세션 완료 (2026-03-22)
 - **Wiki 리디자인**: 파일 분리 (1500줄→6파일), Dashboard 새 설계, List→Linear-style 테이블, ArticleReader 폴리시, 사이드바 스타일링
 - **첨부파일 시스템 개선**: data URL → IDB blob 저장 (attachment:// URL 스킴)
