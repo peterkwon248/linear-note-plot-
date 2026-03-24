@@ -57,7 +57,7 @@ import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId } from "@/lib/table-route"
-import { TRIAGE_HEX } from "@/lib/colors"
+import { TRIAGE_HEX, LINK_DENSITY_HEX } from "@/lib/colors"
 import { ViewDistributionPanel } from "@/components/view-distribution-panel"
 import type { DistributionItem } from "@/components/view-distribution-panel"
 
@@ -211,13 +211,7 @@ function BoardColumn({
       return c ? { color: c, bg: `${c}1a` } : null
     }
     if (groupBy === "linkCount") {
-      const linkColors: Record<string, string> = {
-        none: "#6b7280",  // gray
-        few: "#3b82f6",   // blue
-        well: "#22c55e",  // green
-        hub: "#a855f7",   // purple
-      }
-      const c = linkColors[group.key]
+      const c = LINK_DENSITY_HEX[group.key as keyof typeof LINK_DENSITY_HEX]
       return c ? { color: c, bg: `${c}1a` } : null
     }
     if (groupBy === "label") {

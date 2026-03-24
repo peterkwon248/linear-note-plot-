@@ -2,19 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-
-export const PRESET_COLORS = [
-  "#e5484d",
-  "#f2994a",
-  "#f2c94c",
-  "#45d483",
-  "#06b6d4",
-  "#5e6ad2",
-  "#9b59b6",
-  "#e91e8c",
-  "#8b5cf6",
-  "#0ea5e9",
-]
+import { PRESET_COLORS } from "@/lib/colors"
 
 export function ColorPickerGrid({
   value,

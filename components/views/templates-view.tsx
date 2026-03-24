@@ -35,11 +35,11 @@ import { TipTapEditor } from "@/components/editor/TipTapEditor"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
 import { ViewHeader } from "@/components/view-header"
+import { PRESET_COLORS } from "@/lib/colors"
 
 /* ── Constants ─────────────────────────────────────────── */
 
 const ICON_OPTIONS = ["📄", "📋", "📝", "💡", "📊", "🎯", "🔬", "📌", "✏️", "📎", "🗂️", "📁"]
-const COLOR_OPTIONS = ["#5e6ad2", "#45d483", "#e5484d", "#f5a623", "#7c66dc", "#0ea5e9", "#ec4899", "#8b5cf6"]
 
 const PLACEHOLDER_VARS = [
   { key: "{date}",     label: "Date",     desc: "YYYY-MM-DD" },
@@ -74,7 +74,7 @@ const DEFAULT_FORM: TemplateFormData = {
   name: "",
   description: "",
   icon: "📄",
-  color: "#5e6ad2",
+  color: PRESET_COLORS[5],
   title: "",
   content: "",
   status: "inbox",
@@ -222,7 +222,7 @@ function TemplateFormDialog({
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">Color</label>
               <div className="flex flex-wrap gap-1.5">
-                {COLOR_OPTIONS.map((c) => (
+                {PRESET_COLORS.map((c) => (
                   <button
                     key={c}
                     onClick={() => setForm((f) => ({ ...f, color: c }))}
@@ -411,7 +411,7 @@ function TemplateEditor({
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Color</label>
             <div className="flex flex-wrap gap-1.5">
-              {COLOR_OPTIONS.map((c) => (
+              {PRESET_COLORS.map((c) => (
                 <button
                   key={c}
                   onClick={() => handleColor(c)}

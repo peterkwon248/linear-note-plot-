@@ -27,6 +27,7 @@ import {
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { usePlotStore } from "@/lib/store"
+import { PRESET_COLORS } from "@/lib/colors"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
@@ -371,7 +372,7 @@ export function LinearSidebar() {
   const handleNewFolderSubmit = () => {
     const name = newFolderName.trim()
     if (name) {
-      createFolder(name, "#5e6ad2")
+      createFolder(name, PRESET_COLORS[5])
     }
     setNewFolderOpen(false)
     setNewFolderName("")

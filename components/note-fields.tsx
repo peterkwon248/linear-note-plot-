@@ -23,17 +23,13 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { PRESET_COLORS } from "@/lib/colors"
 import type { NoteStatus, NotePriority } from "@/lib/types"
-
-const TAG_COLORS = [
-  "#e5484d", "#f2994a", "#f2c94c", "#45d483", "#06b6d4",
-  "#5e6ad2", "#9b59b6", "#e91e8c", "#8b5cf6", "#0ea5e9",
-]
 
 export function pickColor(name: string): string {
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0
-  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length]
+  return PRESET_COLORS[Math.abs(hash) % PRESET_COLORS.length]
 }
 
 /* ── Status config ────────────────────────────────────── */

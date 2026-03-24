@@ -172,7 +172,7 @@ export function GraphInsightsView() {
               icon={Warning}
               label="Orphans"
               value={orphans.length}
-              color={orphans.length > 0 ? "text-[#f5a623]" : "text-muted-foreground"}
+              color={orphans.length > 0 ? "text-chart-3" : "text-muted-foreground"}
             />
             <StatCard
               icon={Lightning}
@@ -220,7 +220,7 @@ export function GraphInsightsView() {
                     onClick={() => openNote(note.id)}
                     className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-secondary"
                   >
-                    <FileText className="shrink-0 text-[#f5a623]" size={12} weight="regular" />
+                    <FileText className="shrink-0 text-chart-3" size={12} weight="regular" />
                     <span className="min-w-0 flex-1 truncate text-xs text-foreground">
                       {note.title || "Untitled"}
                     </span>

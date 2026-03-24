@@ -31,7 +31,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { ColorPickerGrid, PRESET_COLORS } from "@/components/color-picker-grid"
+import { ColorPickerGrid } from "@/components/color-picker-grid"
+import { PRESET_COLORS } from "@/lib/colors"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
@@ -136,7 +137,7 @@ export function LabelsView() {
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState("")
-  const [newColor, setNewColor] = useState(PRESET_COLORS[5]) // default blue
+  const [newColor, setNewColor] = useState<string>(PRESET_COLORS[5]) // default blue
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState("")
   const [editColor, setEditColor] = useState("")

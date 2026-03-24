@@ -8,17 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-
-const PRESET_COLORS = [
-  "#5e6ad2",
-  "#26b5ce",
-  "#f2994a",
-  "#e5484d",
-  "#45d483",
-  "#8b5cf6",
-  "#ec4899",
-  "#f59e0b",
-]
+import { PRESET_COLORS } from "@/lib/colors"
 
 interface CreateItemDialogProps {
   open: boolean
@@ -34,7 +24,7 @@ export function CreateItemDialog({
   onCreate,
 }: CreateItemDialogProps) {
   const [name, setName] = useState("")
-  const [color, setColor] = useState(PRESET_COLORS[0])
+  const [color, setColor] = useState<string>(PRESET_COLORS[0])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

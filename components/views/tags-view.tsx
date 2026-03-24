@@ -221,7 +221,7 @@ export function TagsView() {
           (t) => t.name.toLowerCase() === name.toLowerCase(),
         )
         if (!exists) {
-          createTag(name, "#888888")
+          createTag(name, "#6b7280")
         }
       }
       setTagInput("")

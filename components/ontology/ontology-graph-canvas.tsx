@@ -144,7 +144,7 @@ function getEdgeStyle(kind: OntologyEdgeKind): { strokeWidth: number; strokeColo
   }
 }
 
-const ACCENT_COLOR = "#5e6ad2"
+const ACCENT_COLOR = GRAPH_CLUSTER_PALETTE[0]
 
 const CLUSTER_COLORS = [...GRAPH_CLUSTER_PALETTE]
 

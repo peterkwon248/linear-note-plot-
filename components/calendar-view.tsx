@@ -24,7 +24,7 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { cn } from "@/lib/utils"
-import { NOTE_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_HEX, STATUS_DOT_FALLBACK } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -129,7 +129,7 @@ interface NotePillProps {
 }
 
 function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillProps) {
-  const dot = STATUS_DOT[note.status] ?? "#6b7280"
+  const dot = STATUS_DOT[note.status] ?? STATUS_DOT_FALLBACK
 
   return (
     <button
@@ -395,7 +395,7 @@ function DayDashboard({
           <div className="flex flex-col gap-1.5">
             {sortedNotes.map((note) => {
               const label = getLabelForNote(note)
-              const dot = STATUS_DOT[note.status] ?? "#6b7280"
+              const dot = STATUS_DOT[note.status] ?? STATUS_DOT_FALLBACK
               const statusInfo = STATUS_LABEL[note.status]
               const isActive = activePreviewId === note.id
 
