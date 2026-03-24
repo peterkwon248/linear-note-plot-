@@ -2,9 +2,11 @@
 
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { X, PanelRight, FileText } from "lucide-react"
 import { SidePanelContext } from "./side-panel-context"
 import { SidePanelPeek } from "./side-panel-peek"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 
 export function SmartSidePanel() {
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
@@ -44,7 +46,7 @@ export function SmartSidePanel() {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
               )}
             >
-              <PanelRight className="h-3.5 w-3.5 inline mr-1" strokeWidth={1.5} />
+              <SidebarSimple className="inline mr-1" size={14} weight="regular" />
               Details
             </button>
           )}
@@ -59,7 +61,7 @@ export function SmartSidePanel() {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
               )}
             >
-              <FileText className="h-3.5 w-3.5 inline mr-1" strokeWidth={1.5} />
+              <FileText className="inline mr-1" size={14} weight="regular" />
               Peek
             </button>
           )}
@@ -75,7 +77,7 @@ export function SmartSidePanel() {
           className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           aria-label="Close panel"
         >
-          <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+          <PhX size={14} weight="regular" />
         </button>
       </header>
 

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -42,7 +42,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       return (
         <div className="flex min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-lg border border-border bg-background p-8 text-center">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
+            <Warning className="h-5 w-5 text-destructive" />
           </div>
           <div className="flex flex-col gap-1">
             <p className="text-sm font-medium text-foreground">Something went wrong</p>

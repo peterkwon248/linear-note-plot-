@@ -1,29 +1,27 @@
 "use client"
 
 import { useMemo } from "react"
-import {
-  InboxIcon,
-  Pencil,
-  BookOpen,
-  GraduationCap,
-  Link2,
-  Zap,
-  Check,
-  Trash2,
-  ArrowUpRight,
-  ArrowDownLeft,
-  AlertCircle,
-  MousePointerClick,
-  CheckCircle2,
-  Undo2,
-  Bell,
-} from "lucide-react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { StatusDropdown, PriorityDropdown, STATUS_CONFIG } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
 import type { ViewContextKey, GroupBy } from "@/lib/view-engine/types"
 import type { Note, NoteStatus, NotePriority, Folder } from "@/lib/types"
+import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { GraduationCap } from "@phosphor-icons/react/dist/ssr/GraduationCap"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
+import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
+import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle"
+import { CursorClick } from "@phosphor-icons/react/dist/ssr/CursorClick"
+import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
+import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 
 /* ── Props ────────────────────────────────────────────── */
 
@@ -155,7 +153,7 @@ export function BoardWorkbench({
         <div className="mb-4">
           <div className="flex items-center justify-between">
             <h3 className="text-ui font-semibold text-foreground flex items-center gap-2">
-              <Zap className="h-4 w-4 text-accent" />
+              <Lightning className="text-accent" size={16} weight="regular" />
               {selectedIds.size} note{selectedIds.size > 1 ? "s" : ""} selected
             </h3>
             <button
@@ -218,7 +216,7 @@ export function BoardWorkbench({
               }}
               triggerContent={
                 <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-                  <Bell className="h-4 w-4 text-accent" />
+                  <Bell className="text-accent" size={16} weight="regular" />
                   Remind
                 </button>
               }
@@ -270,21 +268,21 @@ function WorkflowActions({
 
   if (effectiveTab === "inbox") {
     actions.push(
-      { icon: <Check className="h-4 w-4 text-accent" />, label: "Done All", onClick: onKeepAll },
-      { icon: <Trash2 className="h-4 w-4 text-accent" />, label: "Trash All", onClick: onTrashAll },
+      { icon: <PhCheck className="text-accent" size={16} weight="bold" />, label: "Done All", onClick: onKeepAll },
+      { icon: <Trash className="text-accent" size={16} weight="regular" />, label: "Trash All", onClick: onTrashAll },
     )
   }
 
   if (effectiveTab === "capture") {
     actions.push(
-      { icon: <ArrowUpRight className="h-4 w-4 text-accent" />, label: "Promote All", onClick: onPromoteAll },
-      { icon: <ArrowDownLeft className="h-4 w-4 text-accent" />, label: "Back to Inbox", onClick: onMoveBackAll },
+      { icon: <ArrowUpRight className="text-accent" size={16} weight="regular" />, label: "Promote All", onClick: onPromoteAll },
+      { icon: <ArrowDownLeft className="text-accent" size={16} weight="regular" />, label: "Back to Inbox", onClick: onMoveBackAll },
     )
   }
 
   if (effectiveTab === "permanent") {
     actions.push(
-      { icon: <ArrowDownLeft className="h-4 w-4 text-accent" />, label: "Demote All", onClick: onDemoteAll },
+      { icon: <ArrowDownLeft className="text-accent" size={16} weight="regular" />, label: "Demote All", onClick: onDemoteAll },
     )
   }
 
@@ -395,7 +393,7 @@ function InboxOverview({
   return (
     <div>
       <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
-        <InboxIcon className="h-4 w-4 text-chart-2" />
+        <Tray className="text-chart-2" size={16} weight="regular" />
         Inbox Overview
       </h3>
 
@@ -427,7 +425,7 @@ function InboxOverview({
               onClick={onSelectAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
-              <MousePointerClick className="h-4 w-4" />
+              <CursorClick size={16} weight="regular" />
               Select All
             </button>
             {untriagedNotes.length > 0 && (
@@ -435,7 +433,7 @@ function InboxOverview({
                 onClick={selectUntriaged}
                 className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
               >
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle size={16} weight="regular" />
                 Select Untriaged ({untriagedNotes.length})
               </button>
             )}
@@ -470,7 +468,7 @@ function CaptureOverview({
   return (
     <div>
       <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
-        <Pencil className="h-4 w-4 text-chart-3" />
+        <PencilSimple className="text-chart-3" size={16} weight="regular" />
         Capture Overview
       </h3>
 
@@ -495,7 +493,7 @@ function CaptureOverview({
                   onClick={() => onCardClick?.(note.id)}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors hover:bg-secondary"
                 >
-                  <Link2 className="h-3.5 w-3.5 text-accent shrink-0" />
+                  <PhLink className="text-accent shrink-0" size={14} weight="regular" />
                   <span className="truncate text-foreground">{note.title || "Untitled"}</span>
                   <span className="ml-auto text-2xs text-muted-foreground shrink-0">
                     {backlinksMap.get(note.id) ?? 0} links
@@ -516,7 +514,7 @@ function CaptureOverview({
               onClick={onSelectAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
-              <MousePointerClick className="h-4 w-4" />
+              <CursorClick size={16} weight="regular" />
               Select All
             </button>
           </div>
@@ -558,7 +556,7 @@ function KnowledgeOverview({
   return (
     <div>
       <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
-        <GraduationCap className="h-4 w-4 text-chart-5" />
+        <GraduationCap className="text-chart-5" size={16} weight="regular" />
         Permanent Overview
       </h3>
 
@@ -583,7 +581,7 @@ function KnowledgeOverview({
                   onClick={() => onCardClick?.(note.id)}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors hover:bg-secondary"
                 >
-                  <AlertCircle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <WarningCircle className="text-muted-foreground shrink-0" size={14} weight="regular" />
                   <span className="truncate text-foreground">{note.title || "Untitled"}</span>
                   <span className="ml-auto text-2xs text-muted-foreground shrink-0">
                     {backlinksMap.get(note.id) ?? 0} links
@@ -604,7 +602,7 @@ function KnowledgeOverview({
               onClick={onSelectAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
-              <MousePointerClick className="h-4 w-4" />
+              <CursorClick size={16} weight="regular" />
               Select All
             </button>
           </div>
@@ -648,7 +646,7 @@ function DefaultOverview({
               onClick={onSelectAll}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
-              <MousePointerClick className="h-4 w-4" />
+              <CursorClick size={16} weight="regular" />
               Select All
             </button>
           </div>

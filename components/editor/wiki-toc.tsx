@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
-import { Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 
 interface TOCHeading {
   id: string
@@ -160,7 +160,7 @@ export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTO
             onClick={() => setAddingLevel(2)}
             className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-secondary/30 transition-colors duration-100"
           >
-            <Plus className="h-3 w-3" strokeWidth={1.5} />
+            <PhPlus size={12} weight="regular" />
             Section
           </button>
           <button
@@ -168,7 +168,7 @@ export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTO
             className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/30 hover:text-muted-foreground hover:bg-secondary/30 transition-colors duration-100"
             style={{ paddingLeft: "20px" }}
           >
-            <Plus className="h-2.5 w-2.5" strokeWidth={1.5} />
+            <PhPlus size={10} weight="regular" />
             Subsection
           </button>
         </div>

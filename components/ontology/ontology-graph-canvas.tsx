@@ -10,7 +10,11 @@ import {
   type MouseEvent as ReactMouseEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react"
-import { ZoomIn, ZoomOut, RotateCcw, Minimize2, Maximize2 } from "lucide-react"
+import { MagnifyingGlassPlus } from "@phosphor-icons/react/dist/ssr/MagnifyingGlassPlus"
+import { MagnifyingGlassMinus } from "@phosphor-icons/react/dist/ssr/MagnifyingGlassMinus"
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
+import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { ArrowsOut } from "@phosphor-icons/react/dist/ssr/ArrowsOut"
 import {
   forceSimulation,
   forceLink,
@@ -1533,7 +1537,7 @@ export function OntologyGraphCanvas({
           className="rounded-l-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Cluster nodes"
         >
-          <Minimize2 className="h-4 w-4" />
+          <ArrowsIn size={16} weight="regular" />
         </button>
         <button
           tabIndex={-1}
@@ -1541,7 +1545,7 @@ export function OntologyGraphCanvas({
           className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Spread nodes"
         >
-          <Maximize2 className="h-4 w-4" />
+          <ArrowsOut size={16} weight="regular" />
         </button>
         <div className="h-4 w-px bg-border" />
         <button
@@ -1550,7 +1554,7 @@ export function OntologyGraphCanvas({
           className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Zoom in"
         >
-          <ZoomIn className="h-4 w-4" />
+          <MagnifyingGlassPlus size={16} weight="regular" />
         </button>
         <button
           tabIndex={-1}
@@ -1558,7 +1562,7 @@ export function OntologyGraphCanvas({
           className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Zoom out"
         >
-          <ZoomOut className="h-4 w-4" />
+          <MagnifyingGlassMinus size={16} weight="regular" />
         </button>
         <div className="h-4 w-px bg-border" />
         <button
@@ -1567,7 +1571,7 @@ export function OntologyGraphCanvas({
           className="rounded-r-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Reset view"
         >
-          <RotateCcw className="h-4 w-4" />
+          <ArrowCounterClockwise size={16} weight="regular" />
         </button>
       </div>
 

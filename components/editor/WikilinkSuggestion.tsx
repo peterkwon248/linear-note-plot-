@@ -13,9 +13,9 @@ import React, {
   useState,
   forwardRef,
 } from "react"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { usePlotStore } from "@/lib/store"
-import { FileText, BookOpen } from "lucide-react"
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface WikilinkItem {
@@ -107,9 +107,9 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
               ) : (
                 <>
                   {item.isWiki ? (
-                    <BookOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <BookOpen className="shrink-0 text-muted-foreground" size={14} weight="regular" />
                   ) : (
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
                   )}
                   <span className="truncate">{item.title}</span>
                   {item.isAlias && (

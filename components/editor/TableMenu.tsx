@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { Editor } from "@tiptap/react"
-import { Grid3x3, Plus, Minus, Trash2 } from "lucide-react"
-
+import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 interface TableMenuProps {
   editor: Editor
 }
@@ -75,7 +77,7 @@ export function TableMenu({ editor }: TableMenuProps) {
           isOpen ? "bg-foreground/10" : isInsideTable ? "bg-toolbar-active" : ""
         }`}
       >
-        <Grid3x3 size={15} strokeWidth={1.5} />
+        <PhTable size={15} weight="regular" />
       </button>
 
       {isOpen &&
@@ -121,15 +123,15 @@ export function TableMenu({ editor }: TableMenuProps) {
                   Edit table
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add row above" onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
-                  <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add row below" onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
-                  <TableAction icon={<Minus size={13} strokeWidth={1.5} />} label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<PhPlus size={13} weight="regular" />} label="Add row above" onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhPlus size={13} weight="regular" />} label="Add row below" onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhMinus size={13} weight="regular" />} label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
                   <div className="h-px bg-border my-1" />
-                  <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add column left" onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
-                  <TableAction icon={<Plus size={13} strokeWidth={1.5} />} label="Add column right" onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
-                  <TableAction icon={<Minus size={13} strokeWidth={1.5} />} label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<PhPlus size={13} weight="regular" />} label="Add column left" onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhPlus size={13} weight="regular" />} label="Add column right" onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhMinus size={13} weight="regular" />} label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
                   <div className="h-px bg-border my-1" />
-                  <TableAction icon={<Trash2 size={13} strokeWidth={1.5} />} label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<Trash size={13} weight="regular" />} label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
                 </div>
               </>
             )}

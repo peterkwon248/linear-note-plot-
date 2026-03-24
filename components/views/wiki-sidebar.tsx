@@ -1,9 +1,9 @@
 "use client"
 
-import { Plus } from "lucide-react"
 import { WikiStatusDot, StubsBySourceList } from "./wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note } from "@/lib/types"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 
 interface WikiSidebarProps {
   categories: { tags: { name: string; count: number }[]; uncategorized: number }
@@ -93,7 +93,7 @@ export function WikiSidebar({
                   onClick={() => onCreateFromRedLink(item.title)}
                   className="hidden shrink-0 items-center gap-0.5 text-2xs font-medium text-accent group-hover:flex"
                 >
-                  <Plus className="h-3 w-3" strokeWidth={1.5} />
+                  <PhPlus size={12} weight="regular" />
                   Create
                 </button>
               </div>

@@ -7,8 +7,16 @@ import { useSearch } from "@/lib/search/use-search"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { shortRelative } from "@/lib/format-utils"
 import { setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId } from "@/lib/table-route"
-import { Search, FileText, Pin, Tag, Bookmark, LayoutTemplate, FolderOpen, X, BookOpen, CircleAlert } from "lucide-react"
-
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
+import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle"
 // ── Types ───────────────────────────────────────────────────────────────────
 
 type TabKey = "all" | "notes" | "wiki" | "tags" | "labels" | "templates" | "folders"
@@ -275,16 +283,16 @@ export function SearchView() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Search header */}
+      {/* MagnifyingGlass header */}
       <div className="shrink-0 border-b border-border px-6 py-5">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <MagnifyingGlass className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} weight="regular" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search notes, tags, and more..."
+            placeholder="MagnifyingGlass notes, tags, and more..."
             className="h-12 w-full rounded-lg border border-border bg-background pl-12 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
           />
           {query && (
@@ -293,7 +301,7 @@ export function SearchView() {
               aria-label="Clear search"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
             >
-              <X className="h-4 w-4" />
+              <PhX size={16} weight="regular" />
             </button>
           )}
         </div>
@@ -335,9 +343,9 @@ export function SearchView() {
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
                   >
                     {note.pinned ? (
-                      <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <PushPin className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                     ) : (
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <FileText className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-foreground">
@@ -375,7 +383,7 @@ export function SearchView() {
                           onClick={() => handleWikiSelect(note.id)}
                           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
                         >
-                          <BookOpen className="h-4 w-4 shrink-0 text-accent" />
+                          <BookOpen className="shrink-0 text-accent" size={16} weight="regular" />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <span className="truncate text-foreground">
@@ -408,7 +416,7 @@ export function SearchView() {
                           key={rl.title}
                           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-secondary"
                         >
-                          <CircleAlert className="h-4 w-4 shrink-0 text-destructive" />
+                          <WarningCircle className="shrink-0 text-destructive" size={16} weight="regular" />
                           <div className="min-w-0 flex-1">
                             <span className="truncate text-destructive">
                               {highlightQuery(rl.title, query)}
@@ -444,9 +452,9 @@ export function SearchView() {
                           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
                         >
                           {note.pinned ? (
-                            <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <PushPin className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           ) : (
-                            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <FileText className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-foreground">
@@ -476,7 +484,7 @@ export function SearchView() {
                           onClick={() => handleTagSelect(tag.id)}
                           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
                         >
-                          <Tag className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <PhTag className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           <div className="min-w-0 flex-1">
                             <span className="text-foreground">
                               {highlightQuery(`#${tag.name}`, query)}
@@ -505,7 +513,7 @@ export function SearchView() {
                           onClick={() => handleLabelSelect(label.id)}
                           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
                         >
-                          <Bookmark className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <BookmarkSimple className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           <div className="flex min-w-0 flex-1 items-center gap-2">
                             <span
                               className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -538,7 +546,7 @@ export function SearchView() {
                           {tmpl.icon ? (
                             <span className="shrink-0 text-sm leading-none">{tmpl.icon}</span>
                           ) : (
-                            <LayoutTemplate className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <Layout className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-foreground">
@@ -570,7 +578,7 @@ export function SearchView() {
                           onClick={() => handleFolderSelect(folder.id)}
                           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
                         >
-                          <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <FolderOpen className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           <span className="text-foreground">
                             {highlightQuery(folder.name, query)}
                           </span>
@@ -599,7 +607,7 @@ export function SearchView() {
                       onClick={() => handleCreateWikiFromQuery(query.trim())}
                       className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                     >
-                      <BookOpen className="h-4 w-4 shrink-0" />
+                      <BookOpen className="shrink-0" size={16} weight="regular" />
                       Create &apos;{query.trim()}&apos; as wiki article
                     </button>
                   </div>

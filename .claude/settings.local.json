@@ -107,7 +107,11 @@
       "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)",
       "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-22_1930.md)",
       "Bash(.omc/notepads/general/decisions.md:*)",
-      "Bash(wc -l lib/workspace/*.ts lib/store/slices/workspace.ts app/\\\\\\(app\\\\\\)/layout.tsx)"
+      "Bash(wc -l lib/workspace/*.ts lib/store/slices/workspace.ts app/\\\\\\(app\\\\\\)/layout.tsx)",
+      "Bash(unzip -o \"/c/Users/kwonkyunghun/Downloads/files.zip\" -d docs/)",
+      "Bash(mkdir -p docs/linear-design-mirror-extracted)",
+      "Bash(tar -xzf docs/linear-design-mirror.tar.gz -C docs/linear-design-mirror-extracted)",
+      "Bash(grep -v '^$')"
     ]
   }
 }

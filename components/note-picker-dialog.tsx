@@ -11,6 +11,15 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { WifiHigh } from "@phosphor-icons/react/dist/ssr/WifiHigh"
+import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import type { Icon as PhIcon } from "@phosphor-icons/react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,11 +29,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import { applyFilters } from "@/lib/view-engine/filter"
-import { FileText, X, Plus, ChevronDown, CircleDot, Signal, Hash, Check } from "lucide-react"
 import type { FilterRule, FilterField } from "@/lib/view-engine/types"
 import type { NoteStatus, NotePriority } from "@/lib/types"
-import type { LucideIcon } from "lucide-react"
-
 /* ── Picker Filter Types ──────────────────────────────── */
 
 interface PickerFilterValue {
@@ -35,7 +41,7 @@ interface PickerFilterValue {
 interface PickerFilterGroup {
   key: string
   label: string
-  icon: LucideIcon
+  icon: PhIcon
   field: FilterField
   values: PickerFilterValue[]
 }
@@ -45,7 +51,7 @@ interface PickerFilterGroup {
 const STATUS_GROUP: PickerFilterGroup = {
   key: "status",
   label: "Status",
-  icon: CircleDot,
+  icon: CircleDashed,
   field: "status" as FilterField,
   values: [
     { value: "inbox", label: "Inbox" },
@@ -57,7 +63,7 @@ const STATUS_GROUP: PickerFilterGroup = {
 const PRIORITY_GROUP: PickerFilterGroup = {
   key: "priority",
   label: "Priority",
-  icon: Signal,
+  icon: WifiHigh,
   field: "priority" as FilterField,
   values: [
     { value: "urgent", label: "Urgent" },
@@ -82,7 +88,7 @@ function getChipSummary(group: PickerFilterGroup, selected: Set<string>): string
       .map((v) => v.label)
       .join(", ")
   }
-  // If only 1 deselected, show "All except X"
+  // If only 1 deselected, show "All except PhX"
   const deselectedCount = total - count
   if (deselectedCount === 1) {
     const deselected = group.values.find((v) => !selected.has(v.value))
@@ -130,7 +136,7 @@ export function NotePickerDialog({
   const tagsGroup: PickerFilterGroup = useMemo(() => ({
     key: "tags",
     label: "Tags",
-    icon: Hash,
+    icon: PhHash,
     field: "tags" as FilterField,
     values: [
       { value: "_none", label: "No tags" },
@@ -270,7 +276,7 @@ export function NotePickerDialog({
                   <GroupIcon className="h-3 w-3 text-accent/70" />
                   <span className="font-medium">{group.label}:</span>
                   <span className="max-w-[120px] truncate text-muted-foreground">{summary}</span>
-                  <ChevronDown className="h-2.5 w-2.5 text-muted-foreground/50" />
+                  <CaretDown className="text-muted-foreground/50" size={10} weight="regular" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-52" onCloseAutoFocus={(e) => e.preventDefault()}>
@@ -279,7 +285,7 @@ export function NotePickerDialog({
                     key={value}
                     onSelect={(e) => { e.preventDefault(); toggleValue(groupKey, value) }}
                   >
-                    <Check className={`h-3.5 w-3.5 shrink-0 ${selected.has(value) ? "text-accent opacity-100" : "opacity-0"}`} />
+                    <PhCheck className={`shrink-0 ${selected.has(value) ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
                     {groupKey === "status" ? (
                       <StatusBadge status={value as NoteStatus} />
                     ) : groupKey === "priority" ? (
@@ -323,7 +329,7 @@ export function NotePickerDialog({
                 onClick={() => clearGroup(groupKey)}
                 className="shrink-0 -ml-0.5 rounded-sm p-0.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-foreground"
               >
-                <X className="h-2.5 w-2.5" />
+                <PhX size={10} weight="regular" />
               </button>
             </DropdownMenu>
           )
@@ -336,7 +342,7 @@ export function NotePickerDialog({
             onClick={() => activateGroup(group.key)}
             className="shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
-            <Plus className="h-3 w-3" />
+            <PhPlus size={12} weight="regular" />
             {group.label}
           </button>
         ))}
@@ -360,7 +366,7 @@ export function NotePickerDialog({
       <CommandList className="max-h-[560px]">
         <CommandEmpty>
           <div className="flex flex-col items-center gap-1.5 py-2">
-            <FileText className="h-8 w-8 text-muted-foreground/30" />
+            <FileText className="text-muted-foreground/30" size={32} weight="regular" />
             <p className="text-note text-muted-foreground">No notes found</p>
             {activeGroupKeys.length > 0 && (
               <button
@@ -380,7 +386,7 @@ export function NotePickerDialog({
               onSelect={() => handleSelect(note.id)}
               className="flex items-center gap-3 px-3 py-2.5"
             >
-              <FileText className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+              <FileText className="shrink-0 text-muted-foreground/40" size={16} weight="regular" />
               <div className="flex-1 min-w-0">
                 <span className="truncate text-sm font-medium text-foreground block">
                   {note.title || "Untitled"}

@@ -4,8 +4,9 @@ import { useState, useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { RELATION_TYPES, RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
 import type { RelationType } from "@/lib/types"
-import { Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 
 interface RelationPickerProps {
   sourceNoteId: string
@@ -43,7 +44,7 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">Add Relation</span>
         <button onClick={onClose} className="p-0.5 rounded hover:bg-secondary">
-          <X className="h-3.5 w-3.5 text-muted-foreground" />
+          <PhX className="text-muted-foreground" size={14} weight="regular" />
         </button>
       </div>
 
@@ -65,14 +66,14 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
         ))}
       </div>
 
-      {/* Search */}
+      {/* MagnifyingGlass */}
       <div className="relative">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+        <MagnifyingGlass className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/60" size={14} weight="regular" />
         <input
           autoFocus
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search notes..."
+          placeholder="MagnifyingGlass notes..."
           className="w-full pl-7 pr-2 py-1.5 text-note bg-secondary/50 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>

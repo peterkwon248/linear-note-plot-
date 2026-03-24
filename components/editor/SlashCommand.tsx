@@ -9,24 +9,22 @@ import type { Editor, Range } from "@tiptap/core"
 import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
 // Import to pick up module augmentation for setDetails / unsetDetails
 import "@tiptap/extension-details"
-import {
-  Heading1,
-  Heading2,
-  Heading3,
-  List,
-  ListOrdered,
-  ListTodo,
-  Quote,
-  Code,
-  Minus,
-  Table,
-  ChevronRight,
-  Sigma,
-  LayoutTemplate,
-} from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { expandPlaceholders } from "@/lib/store/slices/templates"
 import type { NoteTemplate } from "@/lib/types"
+import { TextHOne } from "@phosphor-icons/react/dist/ssr/TextHOne"
+import { TextHTwo } from "@phosphor-icons/react/dist/ssr/TextHTwo"
+import { TextHThree } from "@phosphor-icons/react/dist/ssr/TextHThree"
+import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
+import { ListNumbers } from "@phosphor-icons/react/dist/ssr/ListNumbers"
+import { CheckSquare } from "@phosphor-icons/react/dist/ssr/CheckSquare"
+import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
+import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
+import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
+import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
+import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
 
 interface CommandItem {
   title: string
@@ -39,7 +37,7 @@ const COMMANDS: CommandItem[] = [
   {
     title: "Heading 1",
     description: "Large heading",
-    icon: Heading1,
+    icon: TextHOne,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run()
     },
@@ -47,7 +45,7 @@ const COMMANDS: CommandItem[] = [
   {
     title: "Heading 2",
     description: "Medium heading",
-    icon: Heading2,
+    icon: TextHTwo,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run()
     },
@@ -55,23 +53,23 @@ const COMMANDS: CommandItem[] = [
   {
     title: "Heading 3",
     description: "Small heading",
-    icon: Heading3,
+    icon: TextHThree,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run()
     },
   },
   {
-    title: "Bullet List",
+    title: "Bullet ListBullets",
     description: "Unordered list",
-    icon: List,
+    icon: ListBullets,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBulletList().run()
     },
   },
   {
-    title: "Numbered List",
+    title: "Numbered ListBullets",
     description: "Ordered list",
-    icon: ListOrdered,
+    icon: ListNumbers,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleOrderedList().run()
     },
@@ -79,23 +77,23 @@ const COMMANDS: CommandItem[] = [
   {
     title: "Checklist",
     description: "Task list with checkboxes",
-    icon: ListTodo,
+    icon: CheckSquare,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run()
     },
   },
   {
-    title: "Quote",
+    title: "Quotes",
     description: "Blockquote",
-    icon: Quote,
+    icon: Quotes,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBlockquote().run()
     },
   },
   {
-    title: "Code Block",
-    description: "Code with syntax highlighting",
-    icon: Code,
+    title: "PhCode Block",
+    description: "PhCode with syntax highlighting",
+    icon: PhCode,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run()
     },
@@ -103,7 +101,7 @@ const COMMANDS: CommandItem[] = [
   {
     title: "Toggle",
     description: "Collapsible content",
-    icon: ChevronRight,
+    icon: CaretRight,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setDetails().run()
     },
@@ -111,15 +109,15 @@ const COMMANDS: CommandItem[] = [
   {
     title: "Divider",
     description: "Horizontal rule",
-    icon: Minus,
+    icon: PhMinus,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHorizontalRule().run()
     },
   },
   {
-    title: "Table",
+    title: "PhTable",
     description: "3×3 table with header",
-    icon: Table,
+    icon: PhTable,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
     },
@@ -127,7 +125,7 @@ const COMMANDS: CommandItem[] = [
   {
     title: "Math",
     description: "LaTeX math equation",
-    icon: Sigma,
+    icon: MathOperations,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).insertContent("$$\n\\displaystyle \n$$").run()
     },
@@ -290,7 +288,7 @@ export const SlashCommandExtension = Extension.create({
             .map((t) => ({
               title: `Template: ${t.name}`,
               description: t.description || "Insert template content",
-              icon: LayoutTemplate,
+              icon: Layout,
               command: ({ editor, range }: { editor: Editor; range: Range }) => {
                 const expanded = expandPlaceholders(t.content)
                 editor.chain().focus().deleteRange(range).insertContent(expanded).run()

@@ -2,10 +2,6 @@
 
 import { useState } from "react"
 import {
-  Filter, Plus, X, Check, Zap, Clock, Link2, Eye, FileQuestion, FolderOpen,
-  Tag, Pin, CircleDot, Signal, Globe, FileText, Type, ALargeSmall, Hash,
-} from "lucide-react"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -15,6 +11,25 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
+import { FunnelSimple } from "@phosphor-icons/react/dist/ssr/FunnelSimple"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
+import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { Eye as PhEye } from "@phosphor-icons/react/dist/ssr/Eye"
+import { FileMagnifyingGlass } from "@phosphor-icons/react/dist/ssr/FileMagnifyingGlass"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { WifiHigh } from "@phosphor-icons/react/dist/ssr/WifiHigh"
+import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
+import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
+import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
 import { StatusBadge, PriorityBadge } from "@/components/note-fields"
 import type { FilterRule, FilterField, GroupBy } from "@/lib/view-engine/types"
 import type { NoteStatus, NotePriority, NoteSource, Folder, Tag as TagType, Label } from "@/lib/types"
@@ -108,10 +123,10 @@ function ActiveBadge({ count }: { count: number }) {
   )
 }
 
-/* ── Check icon for toggleable items ─────────────────── */
+/* ── PhCheck icon for toggleable items ─────────────────── */
 
 function CheckMark({ active }: { active: boolean }) {
-  return <Check className={`h-3.5 w-3.5 shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} />
+  return <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
 }
 
 /* ── Shared menu items (nested sub-menus) ────────────── */
@@ -167,7 +182,7 @@ export function FilterMenuItems({
     <>
       {/* ── Quick Filters (presets) ── */}
       <DropdownMenuItem className="text-xs font-medium text-muted-foreground" disabled>
-        <Zap className="h-3.5 w-3.5 mr-1" /> Quick Filters
+        <Lightning className="mr-1" size={14} weight="regular" /> Quick Filters
       </DropdownMenuItem>
       <DropdownMenuItem onSelect={(e) => {
         e.preventDefault()
@@ -202,7 +217,7 @@ export function FilterMenuItems({
       {showStatusFilter && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <CircleDot className="h-4 w-4 text-muted-foreground" />
+            <CircleDashed className="text-muted-foreground" size={16} weight="regular" />
             <span className="text-sm">Status</span>
             <ActiveBadge count={statusCount} />
           </DropdownMenuSubTrigger>
@@ -210,7 +225,7 @@ export function FilterMenuItems({
             <div className="px-2 py-1.5">
               <input
                 type="text"
-                placeholder="Filter..."
+                placeholder="FunnelSimple..."
                 className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
                 value={statusSearch}
                 onChange={(e) => setStatusSearch(e.target.value)}
@@ -234,7 +249,7 @@ export function FilterMenuItems({
       {showPriorityFilter && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <Signal className="h-4 w-4 text-muted-foreground" />
+            <WifiHigh className="text-muted-foreground" size={16} weight="regular" />
             <span className="text-sm">Priority</span>
             <ActiveBadge count={priorityCount} />
           </DropdownMenuSubTrigger>
@@ -271,7 +286,7 @@ export function FilterMenuItems({
       {showFolderFilter && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <FolderOpen className="text-muted-foreground" size={16} weight="regular" />
             <span className="text-sm">Folder</span>
             <ActiveBadge count={folderCount} />
           </DropdownMenuSubTrigger>
@@ -310,7 +325,7 @@ export function FilterMenuItems({
       {groupBy !== "label" && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <Tag className="h-4 w-4 text-muted-foreground" />
+            <PhTag className="text-muted-foreground" size={16} weight="regular" />
             <span className="text-sm">Label</span>
             <ActiveBadge count={labelCount} />
           </DropdownMenuSubTrigger>
@@ -327,7 +342,7 @@ export function FilterMenuItems({
             <div className="px-2 py-1.5">
               <input
                 type="text"
-                placeholder="Filter..."
+                placeholder="FunnelSimple..."
                 className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
                 value={labelSearch}
                 onChange={(e) => setLabelSearch(e.target.value)}
@@ -351,26 +366,26 @@ export function FilterMenuItems({
       {/* ── Tags ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <Hash className="h-4 w-4 text-muted-foreground" />
+          <PhHash className="text-muted-foreground" size={16} weight="regular" />
           <span className="text-sm">Tags</span>
           <ActiveBadge count={tagCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-52 max-h-80 overflow-y-auto">
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_any") }}>
             <CheckMark active={hasFilter(filters, "tags", "_any")} />
-            <Tag className="h-4 w-4 text-muted-foreground" />
+            <PhTag className="text-muted-foreground" size={16} weight="regular" />
             <span className="text-sm">Has tags</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_none") }}>
             <CheckMark active={hasFilter(filters, "tags", "_none")} />
-            <Tag className="h-4 w-4 text-muted-foreground" />
+            <PhTag className="text-muted-foreground" size={16} weight="regular" />
             <span className="text-sm">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
           <div className="px-2 py-1.5">
             <input
               type="text"
-              placeholder="Filter..."
+              placeholder="FunnelSimple..."
               className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
               value={tagSearch}
               onChange={(e) => setTagSearch(e.target.value)}
@@ -398,7 +413,7 @@ export function FilterMenuItems({
       {/* ── Source ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <Globe className="h-4 w-4 text-muted-foreground" />
+          <Globe className="text-muted-foreground" size={16} weight="regular" />
           <span className="text-sm">Source</span>
           <ActiveBadge count={sourceCount} />
         </DropdownMenuSubTrigger>
@@ -444,7 +459,7 @@ export function FilterMenuItems({
       {/* ── Dates ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <Clock className="h-4 w-4 text-muted-foreground" />
+          <PhClock className="text-muted-foreground" size={16} weight="regular" />
           <span className="text-sm">Dates</span>
           <ActiveBadge count={dateCount} />
         </DropdownMenuSubTrigger>
@@ -505,7 +520,7 @@ export function FilterMenuItems({
       {showLinksFilter && (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <Link2 className="h-4 w-4 text-muted-foreground" />
+            <PhLink className="text-muted-foreground" size={16} weight="regular" />
             <span className="text-sm">Links</span>
             <ActiveBadge count={linksCount} />
           </DropdownMenuSubTrigger>
@@ -559,7 +574,7 @@ export function FilterMenuItems({
       {/* ── Content ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <FileText className="h-4 w-4 text-muted-foreground" />
+          <FileText className="text-muted-foreground" size={16} weight="regular" />
           <span className="text-sm">Content</span>
           <ActiveBadge count={contentCount} />
         </DropdownMenuSubTrigger>
@@ -578,21 +593,21 @@ export function FilterMenuItems({
           {"empty body".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("content", "empty") }}>
               <CheckMark active={hasFilter(filters, "content", "empty")} />
-              <FileQuestion className="h-4 w-4 text-muted-foreground" />
+              <FileMagnifyingGlass className="text-muted-foreground" size={16} weight="regular" />
               <span className="text-sm">Empty body</span>
             </DropdownMenuItem>
           )}
           {"untitled".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("title", "empty") }}>
               <CheckMark active={hasFilter(filters, "title", "empty")} />
-              <Type className="h-4 w-4 text-muted-foreground" />
+              <TextT className="text-muted-foreground" size={16} weight="regular" />
               <span className="text-sm">Untitled</span>
             </DropdownMenuItem>
           )}
           {"unread".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("reads", "0") }}>
               <CheckMark active={hasFilter(filters, "reads", "0")} />
-              <Eye className="h-4 w-4 text-muted-foreground" />
+              <PhEye className="text-muted-foreground" size={16} weight="regular" />
               <span className="text-sm">Unread</span>
             </DropdownMenuItem>
           )}
@@ -605,21 +620,21 @@ export function FilterMenuItems({
           {"short 50 words".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "50", "lt") }}>
               <CheckMark active={hasFilter(filters, "wordCount", "50", "lt")} />
-              <ALargeSmall className="h-4 w-4 text-muted-foreground" />
+              <TextAa className="text-muted-foreground" size={16} weight="regular" />
               <span className="text-sm">Short (&lt; 50 words)</span>
             </DropdownMenuItem>
           )}
           {"long 200 words".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "199", "gt") }}>
               <CheckMark active={hasFilter(filters, "wordCount", "199", "gt")} />
-              <ALargeSmall className="h-4 w-4 text-muted-foreground" />
+              <TextAa className="text-muted-foreground" size={16} weight="regular" />
               <span className="text-sm">Long (200+ words)</span>
             </DropdownMenuItem>
           )}
           {"very long 500 words".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "499", "gt") }}>
               <CheckMark active={hasFilter(filters, "wordCount", "499", "gt")} />
-              <ALargeSmall className="h-4 w-4 text-muted-foreground" />
+              <TextAa className="text-muted-foreground" size={16} weight="regular" />
               <span className="text-sm">Very long (500+ words)</span>
             </DropdownMenuItem>
           )}
@@ -629,7 +644,7 @@ export function FilterMenuItems({
       {/* ── Pinned ── */}
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <Pin className="h-4 w-4 text-muted-foreground" />
+          <PushPin className="text-muted-foreground" size={16} weight="regular" />
           <span className="text-sm">Pinned</span>
           <ActiveBadge count={pinnedCount} />
         </DropdownMenuSubTrigger>
@@ -648,7 +663,7 @@ export function FilterMenuItems({
   )
 }
 
-/* ── Filter Grouping (for grouped chips) ──────────────── */
+/* ── FunnelSimple Grouping (for grouped chips) ──────────────── */
 
 export type FilterGroupKey = "status" | "priority" | "folder" | "label" | "tags" | "source" | "dates" | "links" | "content" | "pinned"
 
@@ -674,17 +689,17 @@ export function getFilterGroupKey(field: FilterField): FilterGroupKey {
   return FIELD_TO_GROUP[field]
 }
 
-export const FILTER_GROUP_META: Record<FilterGroupKey, { label: string; icon: typeof CircleDot }> = {
-  status: { label: "Status", icon: CircleDot },
-  priority: { label: "Priority", icon: Signal },
+export const FILTER_GROUP_META: Record<FilterGroupKey, { label: string; icon: typeof CircleDashed }> = {
+  status: { label: "Status", icon: CircleDashed },
+  priority: { label: "Priority", icon: WifiHigh },
   folder: { label: "Folder", icon: FolderOpen },
-  label: { label: "Label", icon: Tag },
-  tags: { label: "Tags", icon: Hash },
+  label: { label: "Label", icon: PhTag },
+  tags: { label: "Tags", icon: PhHash },
   source: { label: "Source", icon: Globe },
-  dates: { label: "Dates", icon: Clock },
-  links: { label: "Links", icon: Link2 },
+  dates: { label: "Dates", icon: PhClock },
+  links: { label: "Links", icon: PhLink },
   content: { label: "Content", icon: FileText },
-  pinned: { label: "Pinned", icon: Pin },
+  pinned: { label: "Pinned", icon: PushPin },
 }
 
 /* ── Per-field dropdown content (for grouped chips) ─── */
@@ -710,7 +725,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
     <div className="px-2 py-1.5">
       <input
         type="text"
-        placeholder="Filter..."
+        placeholder="FunnelSimple..."
         className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -786,7 +801,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
           <div className="px-2 py-1.5">
             <input
               type="text"
-              placeholder="Filter..."
+              placeholder="FunnelSimple..."
               className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
               value={labelSearch}
               onChange={(e) => setLabelSearch(e.target.value)}
@@ -810,19 +825,19 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
         <>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_any") }}>
             <CheckMark active={hasFilter(filters, "tags", "_any")} />
-            <Tag className="h-4 w-4 text-muted-foreground" />
+            <PhTag className="text-muted-foreground" size={16} weight="regular" />
             <span className="text-sm">Has tags</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_none") }}>
             <CheckMark active={hasFilter(filters, "tags", "_none")} />
-            <Tag className="h-4 w-4 text-muted-foreground" />
+            <PhTag className="text-muted-foreground" size={16} weight="regular" />
             <span className="text-sm">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
           <div className="px-2 py-1.5">
             <input
               type="text"
-              placeholder="Filter..."
+              placeholder="FunnelSimple..."
               className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
               value={tagSearch}
               onChange={(e) => setTagSearch(e.target.value)}
@@ -998,8 +1013,8 @@ export function FilterButton({ hideLabel, ...props }: FilterButtonProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-          <Filter className="h-4 w-4" />
-          {!hideLabel && "Filter"}
+          <FunnelSimple size={16} weight="regular" />
+          {!hideLabel && "FunnelSimple"}
           {props.filters.length > 0 && (
             <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/15 px-1 text-2xs font-medium text-accent">
               {props.filters.length}
@@ -1045,7 +1060,7 @@ export function FilterChipBar({
             onClick={() => onRemoveFilter(i)}
             className="flex h-[18px] w-[18px] items-center justify-center rounded text-accent/60 transition-colors hover:bg-accent/25"
           >
-            <X className="h-2.5 w-2.5" />
+            <PhX size={10} weight="regular" />
           </button>
         </span>
       ))}
@@ -1054,7 +1069,7 @@ export function FilterChipBar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="inline-flex items-center justify-center rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <Plus className="h-4 w-4" />
+            <PhPlus size={16} weight="regular" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">

@@ -12,9 +12,10 @@ import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
 import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 import { WikiCollectionSidebar } from "@/components/editor/wiki-collection-sidebar"
 import { WikiStatusBadge, StatRow } from "./wiki-shared"
-import { ChevronUp, Check } from "lucide-react"
 import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
+import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 
 export function WikiArticleReader({
   noteId,
@@ -168,7 +169,7 @@ export function WikiArticleReader({
                   onClick={() => setWikiStatus(note.id, "draft")}
                   className="flex items-center gap-1 rounded-md bg-blue-500/8 px-2 py-1 text-xs font-medium text-blue-400 transition-colors duration-100 hover:bg-blue-500/15"
                 >
-                  <ChevronUp className="h-3 w-3" />
+                  <CaretUp size={12} weight="regular" />
                   Promote to Draft
                 </button>
               )}
@@ -177,13 +178,13 @@ export function WikiArticleReader({
                   onClick={() => setWikiStatus(note.id, "complete")}
                   className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
                 >
-                  <ChevronUp className="h-3 w-3" />
+                  <CaretUp size={12} weight="regular" />
                   Mark Complete
                 </button>
               )}
               {note.wikiStatus === "complete" && (
                 <span className="flex items-center gap-1 text-xs text-emerald-400">
-                  <Check className="h-3 w-3" />
+                  <PhCheck size={12} weight="bold" />
                   Complete
                 </span>
               )}

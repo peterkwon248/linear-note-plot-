@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useMemo, useRef } from "react"
-import { Bell } from "lucide-react"
 import { format } from "date-fns"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
+import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 
 interface RemindPickerProps {
   onSelect: (isoDate: string) => void
@@ -69,7 +69,7 @@ export function RemindPicker({ onSelect, triggerContent, align = "start" }: Remi
             className="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             aria-label="Set reminder"
           >
-            <Bell className="h-4 w-4" />
+            <Bell size={16} weight="regular" />
           </button>
         )}
       </PopoverTrigger>

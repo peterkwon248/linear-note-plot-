@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 
 export function SettingRow({
   label,
@@ -65,7 +65,7 @@ export function SelectControl({
           </option>
         ))}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+      <CaretDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
     </div>
   )
 }

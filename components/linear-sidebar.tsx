@@ -3,7 +3,6 @@
 import { useState, useMemo, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { ChevronDown, ChevronRight } from "lucide-react"
 import {
   IconInbox,
   IconNotes,
@@ -25,6 +24,8 @@ import {
   IconDoc,
   IconGear,
 } from "@/components/plot-icons"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { usePlotStore } from "@/lib/store"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
@@ -160,9 +161,9 @@ function Section({
         >
           <span>{title}</span>
           {open ? (
-            <ChevronDown className="h-3.5 w-3.5" />
+            <CaretDown size={14} weight="regular" />
           ) : (
-            <ChevronRight className="h-3.5 w-3.5" />
+            <CaretRight size={14} weight="regular" />
           )}
         </button>
         {trailing}

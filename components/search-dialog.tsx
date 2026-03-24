@@ -19,33 +19,29 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { Brain as PhBrain } from "@phosphor-icons/react/dist/ssr/Brain"
+import { SkipForward } from "@phosphor-icons/react/dist/ssr/SkipForward"
+import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
+import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowCircleUp } from "@phosphor-icons/react/dist/ssr/ArrowCircleUp"
+import { ArrowCircleDown } from "@phosphor-icons/react/dist/ssr/ArrowCircleDown"
+import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { Crosshair } from "@phosphor-icons/react/dist/ssr/Crosshair"
+import { Terminal } from "@phosphor-icons/react/dist/ssr/Terminal"
+import { Stack } from "@phosphor-icons/react/dist/ssr/Stack"
+import { Shield as PhShield } from "@phosphor-icons/react/dist/ssr/Shield"
+import { GearSix } from "@phosphor-icons/react/dist/ssr/GearSix"
+import { Sun } from "@phosphor-icons/react/dist/ssr/Sun"
+import { Moon } from "@phosphor-icons/react/dist/ssr/Moon"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import {
   setActiveRoute,
 } from "@/lib/table-route"
-import {
-  FileText,
-  Pin,
-  Plus,
-  Link2,
-  Brain,
-  BrainCircuit,
-  StepForward,
-  CheckCircle2,
-  Clock,
-  Trash2,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  Inbox,
-  Focus,
-  Terminal,
-  Layers,
-  Shield,
-  Settings,
-  Sun,
-  Moon,
-  Merge,
-} from "lucide-react"
-
 function highlightQuery(text: string, q: string): ReactNode {
   if (!q.trim()) return text
   const lower = text.toLowerCase()
@@ -194,7 +190,7 @@ export function SearchDialog() {
   // Whether we're showing search results (non-empty query) vs recent notes
   const hasFuzzyQuery = query.trim().length > 0
 
-  /** Build sublabel text: "Inbox · Updated 2d · 3 backlinks" */
+  /** Build sublabel text: "Tray · Updated 2d · 3 backlinks" */
   function noteSublabel(note: { id: string; status: string; updatedAt: string; createdAt: string }): string {
     const stageLabel = note.status.charAt(0).toUpperCase() + note.status.slice(1)
     const relTime = shortRelative(note.updatedAt || note.createdAt)
@@ -262,14 +258,14 @@ export function SearchDialog() {
         {/* Mode badge — always shown */}
         <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center">
           <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
-            {commandPaletteMode === "commands" && <Terminal className="h-3.5 w-3.5" />}
-            {commandPaletteMode === "links" && <Link2 className="h-3.5 w-3.5" />}
+            {commandPaletteMode === "commands" && <Terminal size={14} weight="regular" />}
+            {commandPaletteMode === "links" && <PhLink size={14} weight="regular" />}
             {MODE_LABELS[commandPaletteMode]}
           </span>
         </div>
         {thinkingStepInput ? (
           <div className="flex h-12 items-center gap-2 border-b px-3">
-            <BrainCircuit className="h-4 w-4 shrink-0 opacity-50" />
+            <PhBrain className="shrink-0 opacity-50" size={16} weight="regular" />
             <input
               className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Enter thinking step text..."
@@ -317,15 +313,15 @@ export function SearchDialog() {
                   value="go-to-inbox"
                   onSelect={() => { router.push("/inbox"); closePalette() }}
                 >
-                  <Inbox className="h-4 w-4" />
-                  <span>Go to Inbox</span>
+                  <Tray size={16} weight="regular" />
+                  <span>Go to Tray</span>
                   <CommandShortcut>G I</CommandShortcut>
                 </CommandItem>
                 <CommandItem
                   value="go-to-capture"
                   onSelect={() => { router.push("/capture"); closePalette() }}
                 >
-                  <Layers className="h-4 w-4" />
+                  <Stack size={16} weight="regular" />
                   <span>Go to Capture</span>
                   <CommandShortcut>G C</CommandShortcut>
                 </CommandItem>
@@ -333,7 +329,7 @@ export function SearchDialog() {
                   value="go-to-permanent"
                   onSelect={() => { router.push("/permanent"); closePalette() }}
                 >
-                  <Shield className="h-4 w-4" />
+                  <PhShield size={16} weight="regular" />
                   <span>Go to Permanent</span>
                   <CommandShortcut>G M</CommandShortcut>
                 </CommandItem>
@@ -341,7 +337,7 @@ export function SearchDialog() {
                   value="go-to-all-notes"
                   onSelect={() => { router.push("/notes"); closePalette() }}
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText size={16} weight="regular" />
                   <span>Go to All Notes</span>
                   <CommandShortcut>G N</CommandShortcut>
                 </CommandItem>
@@ -349,8 +345,8 @@ export function SearchDialog() {
                   value="go-to-settings"
                   onSelect={() => { router.push("/settings"); closePalette() }}
                 >
-                  <Settings className="h-4 w-4" />
-                  <span>Go to Settings</span>
+                  <GearSix size={16} weight="regular" />
+                  <span>Go to GearSix</span>
                 </CommandItem>
               </CommandGroup>
 
@@ -368,7 +364,7 @@ export function SearchDialog() {
                     }, "Note created")
                   }
                 >
-                  <Plus className="h-4 w-4" />
+                  <PhPlus size={16} weight="regular" />
                   <span>Create New Note</span>
                   <CommandShortcut>C</CommandShortcut>
                 </CommandItem>
@@ -388,9 +384,9 @@ export function SearchDialog() {
                   }
                 >
                   {resolvedTheme === "dark" ? (
-                    <Sun className="h-4 w-4" />
+                    <Sun size={16} weight="regular" />
                   ) : (
-                    <Moon className="h-4 w-4" />
+                    <Moon size={16} weight="regular" />
                   )}
                   <span>Toggle Theme</span>
                 </CommandItem>
@@ -404,29 +400,29 @@ export function SearchDialog() {
                   value="graph-focus-depth-1"
                   onSelect={() => execCommand(() => setGraphFocusDepth(1), "Graph focus: depth 1")}
                 >
-                  <Focus className="h-4 w-4" />
-                  <span>Set Graph Focus Depth 1</span>
+                  <Crosshair size={16} weight="regular" />
+                  <span>Set Graph Crosshair Depth 1</span>
                 </CommandItem>
                 <CommandItem
                   value="graph-focus-depth-2"
                   onSelect={() => execCommand(() => setGraphFocusDepth(2), "Graph focus: depth 2")}
                 >
-                  <Focus className="h-4 w-4" />
-                  <span>Set Graph Focus Depth 2</span>
+                  <Crosshair size={16} weight="regular" />
+                  <span>Set Graph Crosshair Depth 2</span>
                 </CommandItem>
                 <CommandItem
                   value="graph-focus-depth-3"
                   onSelect={() => execCommand(() => setGraphFocusDepth(3), "Graph focus: depth 3")}
                 >
-                  <Focus className="h-4 w-4" />
-                  <span>Set Graph Focus Depth 3</span>
+                  <Crosshair size={16} weight="regular" />
+                  <span>Set Graph Crosshair Depth 3</span>
                 </CommandItem>
                 <CommandItem
                   value="graph-focus-off"
                   onSelect={() => execCommand(() => setGraphFocusDepth(0), "Graph focus: off")}
                 >
-                  <Focus className="h-4 w-4" />
-                  <span>Set Graph Focus Off</span>
+                  <Crosshair size={16} weight="regular" />
+                  <span>Set Graph Crosshair Off</span>
                 </CommandItem>
               </CommandGroup>
 
@@ -444,8 +440,8 @@ export function SearchDialog() {
                         )
                       }
                     >
-                      <Pin className="h-4 w-4" />
-                      <span>{selectedNote.pinned ? "Unpin Note" : "Pin Note"}</span>
+                      <PushPin size={16} weight="regular" />
+                      <span>{selectedNote.pinned ? "Unpin Note" : "PushPin Note"}</span>
                       <CommandShortcut>⌘⇧P</CommandShortcut>
                     </CommandItem>
 
@@ -460,7 +456,7 @@ export function SearchDialog() {
                           )
                         }
                       >
-                        <Brain className="h-4 w-4" />
+                        <PhBrain size={16} weight="regular" />
                         <span>Start Thinking Chain</span>
                       </CommandItem>
                     )}
@@ -473,7 +469,7 @@ export function SearchDialog() {
                             setThinkingStepText("")
                           }}
                         >
-                          <StepForward className="h-4 w-4" />
+                          <SkipForward size={16} weight="regular" />
                           <span>Add Thinking Step</span>
                         </CommandItem>
                         <CommandItem
@@ -485,7 +481,7 @@ export function SearchDialog() {
                             )
                           }
                         >
-                          <CheckCircle2 className="h-4 w-4" />
+                          <CheckCircle size={16} weight="regular" />
                           <span>End Thinking Chain</span>
                         </CommandItem>
                       </>
@@ -499,12 +495,12 @@ export function SearchDialog() {
                         setQuery("")
                       }}
                     >
-                      <Link2 className="h-4 w-4" />
+                      <PhLink size={16} weight="regular" />
                       <span>Link to Note...</span>
                       <CommandShortcut>{"[["}</CommandShortcut>
                     </CommandItem>
 
-                    {/* Merge with */}
+                    {/* GitMerge with */}
                     <CommandItem
                       value="merge-with-note"
                       onSelect={() => {
@@ -512,8 +508,8 @@ export function SearchDialog() {
                         setMergePickerOpen(true, selectedNote.id)
                       }}
                     >
-                      <Merge className="h-4 w-4" />
-                      <span>Merge with...</span>
+                      <GitMerge size={16} weight="regular" />
+                      <span>GitMerge with...</span>
                     </CommandItem>
 
                   </CommandGroup>
@@ -522,14 +518,14 @@ export function SearchDialog() {
                   {selectedNote.status === "inbox" && (
                     <>
                       <CommandSeparator />
-                      <CommandGroup heading="Inbox Actions">
+                      <CommandGroup heading="Tray Actions">
                         <CommandItem
                           value="triage-keep"
                           onSelect={() =>
                             execCommand(() => triageKeep(selectedNote.id), "Kept - moved to Capture")
                           }
                         >
-                          <CheckCircle2 className="h-4 w-4" />
+                          <CheckCircle size={16} weight="regular" />
                           <span>Keep</span>
                           <CommandShortcut>K</CommandShortcut>
                         </CommandItem>
@@ -542,7 +538,7 @@ export function SearchDialog() {
                             )
                           }
                         >
-                          <Clock className="h-4 w-4" />
+                          <PhClock size={16} weight="regular" />
                           <span>Snooze until Tomorrow</span>
                           <CommandShortcut>S</CommandShortcut>
                         </CommandItem>
@@ -552,7 +548,7 @@ export function SearchDialog() {
                             execCommand(() => triageTrash(selectedNote.id), "Trashed")
                           }
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash size={16} weight="regular" />
                           <span>Trash</span>
                           <CommandShortcut>T</CommandShortcut>
                         </CommandItem>
@@ -573,7 +569,7 @@ export function SearchDialog() {
                             )
                           }
                         >
-                          <ArrowUpCircle className="h-4 w-4" />
+                          <ArrowCircleUp size={16} weight="regular" />
                           <span>Promote to Permanent</span>
                           <CommandShortcut>P</CommandShortcut>
                         </CommandItem>
@@ -582,12 +578,12 @@ export function SearchDialog() {
                           onSelect={() =>
                             execCommand(
                               () => moveBackToInbox(selectedNote.id),
-                              "Moved back to Inbox"
+                              "Moved back to Tray"
                             )
                           }
                         >
-                          <Inbox className="h-4 w-4" />
-                          <span>Back to Inbox</span>
+                          <Tray size={16} weight="regular" />
+                          <span>Back to Tray</span>
                           <CommandShortcut>B</CommandShortcut>
                         </CommandItem>
                       </CommandGroup>
@@ -607,7 +603,7 @@ export function SearchDialog() {
                             )
                           }
                         >
-                          <ArrowDownCircle className="h-4 w-4" />
+                          <ArrowCircleDown size={16} weight="regular" />
                           <span>Demote to Capture</span>
                           <CommandShortcut>D</CommandShortcut>
                         </CommandItem>
@@ -633,7 +629,7 @@ export function SearchDialog() {
                         value={`link-${note.id}`}
                         onSelect={() => handleLinkSelect(note)}
                       >
-                        <Link2 className="h-4 w-4 shrink-0 self-start mt-0.5" />
+                        <PhLink className="shrink-0 self-start mt-0.5" size={16} weight="regular" />
                         <div className="flex-1 min-w-0">
                           <div className="truncate">
                             {highlightQuery(note.title || "Untitled", query)}
@@ -658,7 +654,7 @@ export function SearchDialog() {
                         value={`link-${note.id}-${note.title || "Untitled"}`}
                         onSelect={() => handleLinkSelect(note)}
                       >
-                        <Link2 className="h-4 w-4 shrink-0 self-start mt-0.5" />
+                        <PhLink className="shrink-0 self-start mt-0.5" size={16} weight="regular" />
                         <div className="flex-1 min-w-0">
                           <div className="truncate">{note.title || "Untitled"}</div>
                           <div className="truncate text-xs text-muted-foreground leading-tight">

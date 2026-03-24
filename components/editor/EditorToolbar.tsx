@@ -2,23 +2,21 @@
 
 import { useCallback, useState, useRef, useEffect } from "react"
 import { Editor, useEditorState } from "@tiptap/react"
-import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  Strikethrough,
-  Heading,
-  Code,
-  Link2,
-  Unlink,
-  Type,
-  Highlighter,
-  X,
-  FileOutput,
-} from "lucide-react"
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from "@/lib/editor-colors"
 import { usePlotStore } from "@/lib/store"
 import { toast } from "sonner"
+import { TextB } from "@phosphor-icons/react/dist/ssr/TextB"
+import { TextItalic } from "@phosphor-icons/react/dist/ssr/TextItalic"
+import { TextUnderline as UnderlineIcon } from "@phosphor-icons/react/dist/ssr/TextUnderline"
+import { TextStrikethrough } from "@phosphor-icons/react/dist/ssr/TextStrikethrough"
+import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
+import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
+import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
+import { HighlighterCircle } from "@phosphor-icons/react/dist/ssr/HighlighterCircle"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { FileArrowUp } from "@phosphor-icons/react/dist/ssr/FileArrowUp"
 
 interface EditorToolbarProps {
   editor: Editor | null
@@ -106,12 +104,12 @@ function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
       <button
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setIsOpen((prev) => !prev)}
-        title="Heading"
+        title="TextH"
         className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors duration-75 shrink-0 ${
           isAnyHeadingActive ? "text-foreground bg-foreground/[0.12]" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]"
         }`}
       >
-        <Heading size={14} strokeWidth={1.5} />
+        <TextH size={14} weight="regular" />
       </button>
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 min-w-[120px] bg-popover border border-border rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.55)] p-1 z-[1000]">
@@ -177,7 +175,7 @@ function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "
         onMouseDown={(e) => { e.preventDefault(); onClose() }}
         className="w-5 h-5 rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 shrink-0 hover:text-muted-foreground"
       >
-        <X size={12} strokeWidth={1.5} />
+        <PhX size={12} weight="regular" />
       </button>
     </div>
   )
@@ -288,37 +286,37 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <BubbleHeadingDropdown editor={editor} />
           <BubbleDivider />
           <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
-            <Bold size={14} strokeWidth={2} />
+            <TextB size={14} weight="regular" />
           </BubbleButton>
           <BubbleButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
-            <Italic size={14} strokeWidth={1.5} />
+            <TextItalic size={14} weight="regular" />
           </BubbleButton>
           <BubbleButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
-            <UnderlineIcon size={14} strokeWidth={1.5} />
+            <UnderlineIcon size={14} weight="regular" />
           </BubbleButton>
-          <BubbleButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="Strikethrough">
-            <Strikethrough size={14} strokeWidth={1.5} />
+          <BubbleButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="TextStrikethrough">
+            <TextStrikethrough size={14} weight="regular" />
           </BubbleButton>
           <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code">
-            <Code size={14} strokeWidth={1.5} />
+            <PhCode size={14} weight="regular" />
           </BubbleButton>
           <BubbleDivider />
           <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title="Text color">
             <div className="relative">
-              <Type size={14} strokeWidth={1.5} />
+              <TextT size={14} weight="regular" />
               <div className="absolute -bottom-[3px] left-px right-px h-0.5 rounded-sm" style={{ backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
             </div>
           </BubbleButton>
           <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title="Highlight">
-            <Highlighter size={14} strokeWidth={1.5} />
+            <HighlighterCircle size={14} weight="regular" />
           </BubbleButton>
           <BubbleDivider />
           <BubbleButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
-            {editorState.link ? <Unlink size={14} strokeWidth={1.5} /> : <Link2 size={14} strokeWidth={1.5} />}
+            {editorState.link ? <LinkBreak size={14} weight="regular" /> : <PhLink size={14} weight="regular" />}
           </BubbleButton>
           <BubbleDivider />
           <BubbleButton onClick={handleExtractAsNote} title="Extract as Note">
-            <FileOutput size={14} strokeWidth={1.5} />
+            <FileArrowUp size={14} weight="regular" />
           </BubbleButton>
         </>
       ) : (

@@ -9,6 +9,12 @@ import {
   needsReview,
   isStaleSuggest,
 } from "@/lib/queries/notes"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { Tray as InboxIcon } from "@phosphor-icons/react/dist/ssr/Tray"
+import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { NoteEditor } from "@/components/note-editor"
 import { SmartSidePanel } from "@/components/side-panel/smart-side-panel"
 import { NoteDetailPanel } from "@/components/note-detail-panel"
@@ -19,14 +25,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  FileText,
-  ArrowUp,
-  AlertTriangle,
-  Inbox as InboxIcon,
-  Sparkles,
-  Link2,
-} from "lucide-react"
 import type { Note } from "@/lib/types"
 import { shortRelative } from "@/lib/format-utils"
 
@@ -105,7 +103,7 @@ export default function CapturePage() {
         {/* Content */}
         {captureNotes.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <FileText className="mb-4 h-12 w-12 text-muted-foreground/20" />
+            <FileText className="mb-4 text-muted-foreground/20" size={48} weight="regular" />
             <p className="text-ui text-muted-foreground">No capture notes</p>
             <p className="mt-1 text-sm text-muted-foreground/60">
               Keep notes from Inbox to move them here.
@@ -152,19 +150,19 @@ export default function CapturePage() {
                   >
                     {/* Name */}
                     <div className="flex flex-1 items-center gap-2.5 min-w-0 pr-3">
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+                      <FileText className="shrink-0 text-muted-foreground/60" size={16} weight="regular" />
                       <span className="truncate text-ui text-foreground">
                         {note.title || "Untitled"}
                       </span>
                       {ready && (
                         <span className="flex shrink-0 items-center gap-1 rounded-full bg-chart-5/10 px-1.5 py-0.5 text-2xs font-medium text-chart-5">
-                          <Sparkles className="h-2.5 w-2.5" />
+                          <Sparkle size={10} weight="regular" />
                           Ready
                         </span>
                       )}
                       {stale && !staleSuggest && (
                         <span className="flex shrink-0 items-center gap-1 rounded-full bg-chart-3/10 px-1.5 py-0.5 text-2xs font-medium text-chart-3">
-                          <AlertTriangle className="h-2.5 w-2.5" />
+                          <Warning size={10} weight="regular" />
                           Review needed
                         </span>
                       )}
@@ -203,7 +201,7 @@ export default function CapturePage() {
                           }}
                           className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-2xs font-medium text-chart-5 transition-colors hover:bg-chart-5/20"
                         >
-                          <ArrowUp className="h-2.5 w-2.5" />
+                          <ArrowUp size={10} weight="regular" />
                           Promote
                         </button>
                       )}
@@ -214,14 +212,14 @@ export default function CapturePage() {
                   {staleSuggest && (
                     <div className="flex items-center justify-between border-b border-border bg-chart-3/5 px-5 py-1.5">
                       <span className="flex items-center gap-1.5 text-xs text-chart-3">
-                        <AlertTriangle className="h-3.5 w-3.5" />
+                        <Warning size={14} weight="regular" />
                         Untouched for 14+ days. Move back to Inbox?
                       </span>
                       <button
                         onClick={() => moveBackToInbox(note.id)}
                         className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-xs font-medium text-chart-3 transition-colors hover:bg-chart-3/20"
                       >
-                        <InboxIcon className="h-3.5 w-3.5" />
+                        <InboxIcon size={14} weight="regular" />
                         Move to Inbox
                       </button>
                     </div>
@@ -291,7 +289,7 @@ function CaptureDetailPanel({
             </span>
             {ready && (
               <span className="flex items-center gap-1 text-xs font-medium text-chart-5">
-                <Sparkles className="h-3.5 w-3.5" />
+                <Sparkle size={14} weight="regular" />
                 Ready to promote
               </span>
             )}
@@ -304,7 +302,7 @@ function CaptureDetailPanel({
                 : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
             }`}
           >
-            <ArrowUp className="h-4 w-4" />
+            <ArrowUp size={16} weight="regular" />
             Promote to Permanent
           </button>
         </div>

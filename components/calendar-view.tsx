@@ -17,14 +17,12 @@ import {
   isSameDay,
   parseISO,
 } from "date-fns"
-import {
-  ChevronLeft,
-  ChevronRight,
-  CalendarDays,
-  FileText,
-  Plus,
-  X,
-} from "lucide-react"
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { CalendarDots } from "@phosphor-icons/react/dist/ssr/CalendarDots"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { cn } from "@/lib/utils"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
 import { usePlotStore } from "@/lib/store"
@@ -259,7 +257,7 @@ function DayCell({
             }}
             className="flex h-4 w-4 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-all duration-150 hover:bg-secondary hover:text-foreground group-hover/cell:opacity-100"
           >
-            <Plus className="h-2.5 w-2.5" />
+            <PhPlus size={10} weight="regular" />
           </button>
         )}
       </div>
@@ -362,14 +360,14 @@ function DayDashboard({
             className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Create note on this day"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <PhPlus size={14} weight="regular" />
           </button>
           <button
             onClick={onClose}
             className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Close day panel"
           >
-            <X className="h-3.5 w-3.5" />
+            <PhX size={14} weight="regular" />
           </button>
         </div>
       </div>
@@ -380,7 +378,7 @@ function DayDashboard({
           /* Empty state */
           <div className="flex flex-col items-center gap-2.5 py-6 text-center">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/60">
-              <CalendarDays className="h-4 w-4 text-muted-foreground/40" />
+              <CalendarDots className="text-muted-foreground/40" size={16} weight="regular" />
             </div>
             <div>
               <p className="text-note text-muted-foreground/70">No notes on this day</p>
@@ -389,7 +387,7 @@ function DayDashboard({
               onClick={() => onCreateNote(date)}
               className="mt-0.5 flex items-center gap-1.5 rounded-md bg-secondary px-3 py-1.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary/80 hover:text-foreground"
             >
-              <Plus className="h-3 w-3" />
+              <PhPlus size={12} weight="regular" />
               Create note
             </button>
           </div>
@@ -563,7 +561,7 @@ function WeekView({
                   onClick={() => onCreateNote(day)}
                   className="mt-1 flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 transition-colors hover:bg-secondary/50 hover:text-muted-foreground"
                 >
-                  <Plus className="h-3 w-3" />
+                  <PhPlus size={12} weight="regular" />
                   Add
                 </button>
               )}
@@ -608,7 +606,7 @@ function AgendaView({
     <div className="flex-1 overflow-y-auto">
       {datesWithNotes.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-20 text-center">
-          <CalendarDays className="h-5 w-5 text-muted-foreground/50" />
+          <CalendarDots className="text-muted-foreground/50" size={20} weight="regular" />
           <p className="text-sm text-muted-foreground">No notes in this period</p>
         </div>
       ) : (
@@ -935,7 +933,7 @@ export function CalendarView({
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── ViewHeader ──────────────────────────────── */}
       <ViewHeader
-        icon={<CalendarDays className="h-5 w-5" strokeWidth={1.5} />}
+        icon={<CalendarDots size={20} weight="regular" />}
         title={headerTitle}
         count={currentMonthCount}
         showFilter
@@ -1046,14 +1044,14 @@ export function CalendarView({
             aria-label={calendarMode === "week" ? "Previous week" : "Previous month"}
             className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <CaretLeft size={14} weight="regular" />
           </button>
           <button
             onClick={goToNext}
             aria-label={calendarMode === "week" ? "Next week" : "Next month"}
             className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <CaretRight size={14} weight="regular" />
           </button>
         </div>
 
@@ -1084,7 +1082,7 @@ export function CalendarView({
               {filteredNotes.length === 0 && (
                 <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
-                    <CalendarDays className="h-5 w-5 text-muted-foreground/50" />
+                    <CalendarDots className="text-muted-foreground/50" size={20} weight="regular" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">No notes yet</p>

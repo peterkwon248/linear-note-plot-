@@ -8,25 +8,23 @@ import { WIKI_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { useRouter } from "next/navigation"
 import {
-  BookOpen,
-  Plus,
-  Search,
-  AlertTriangle,
-  ArrowLeft,
-  PenLine,
-  Check,
-  ArrowUpFromLine,
-  FileText,
-  MoreHorizontal,
-  ArrowDownFromLine,
-  Merge,
-  ChevronLeft,
-} from "lucide-react"
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { ArrowLineUp } from "@phosphor-icons/react/dist/ssr/ArrowLineUp"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { ArrowLineDown } from "@phosphor-icons/react/dist/ssr/ArrowLineDown"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import {
   Dialog,
   DialogContent,
@@ -174,13 +172,13 @@ export function WikiView() {
 
   // Open article within WikiView
   const openArticle = useCallback((id: string) => {
-    // Check if id is a WikiArticle directly
+    // PhCheck if id is a WikiArticle directly
     const directArticle = wikiArticles.find((a) => a.id === id)
     if (directArticle) {
       setSelectedWikiArticleId(id)
       return
     }
-    // Check if there's a WikiArticle with matching title for a note
+    // PhCheck if there's a WikiArticle with matching title for a note
     const note = notes.find((n) => n.id === id)
     if (note) {
       const matchingArticle = wikiArticles.find(
@@ -199,7 +197,7 @@ export function WikiView() {
     (noteId: string) => {
       const target = notes.find((n) => n.id === noteId)
       if (!target || target.trashed) return
-      // Check if there's a matching WikiArticle
+      // PhCheck if there's a matching WikiArticle
       const matchingWiki = wikiArticles.find(
         (a) => a.title.toLowerCase() === target.title.toLowerCase()
       )
@@ -491,7 +489,7 @@ export function WikiView() {
     }
   }, [wikiFilters])
 
-  // Search results (simple title/alias filter)
+  // MagnifyingGlass results (simple title/alias filter)
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return []
     const q = searchQuery.toLowerCase()
@@ -590,7 +588,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
+          icon={<BookOpen size={20} weight="regular" />}
           title={selectedWikiArticle.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -599,7 +597,7 @@ export function WikiView() {
                   onClick={() => setIsEditingWikiArticle(false)}
                   className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
                 >
-                  <Check className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <PhCheck size={14} weight="bold" />
                   Done
                 </button>
               ) : (
@@ -607,7 +605,7 @@ export function WikiView() {
                   onClick={() => setIsEditingWikiArticle(true)}
                   className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
                 >
-                  <PenLine className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <PencilLine size={14} weight="regular" />
                   Edit
                 </button>
               )}
@@ -619,7 +617,7 @@ export function WikiView() {
               onClick={() => { setSelectedWikiArticleId(null); setIsEditingWikiArticle(false) }}
               className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
             >
-              <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+              <ArrowLeft size={14} weight="regular" />
               Back
             </button>
           </div>
@@ -638,7 +636,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
+          icon={<BookOpen size={20} weight="regular" />}
           title={selectedNote.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -648,7 +646,7 @@ export function WikiView() {
                     className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
                     aria-label="More actions"
                   >
-                    <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
+                    <DotsThree size={16} weight="bold" />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-48 p-1">
@@ -657,7 +655,7 @@ export function WikiView() {
                       onClick={() => handleDemote(selectedArticleId)}
                       className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
                     >
-                      <ArrowDownFromLine className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+                      <ArrowLineDown className="text-muted-foreground" size={14} weight="regular" />
                       {selectedNote?.wikiStatus === "complete" ? "Demote to Draft" : "Demote to Stub"}
                     </button>
                   )}
@@ -665,7 +663,7 @@ export function WikiView() {
                     onClick={() => { toggleTrash(selectedArticleId); setSelectedArticleId(null) }}
                     className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-destructive transition-colors duration-150 hover:bg-destructive/10"
                   >
-                    <AlertTriangle className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    <Warning size={14} weight="regular" />
                     Move to Trash
                   </button>
                 </PopoverContent>
@@ -675,7 +673,7 @@ export function WikiView() {
                   onClick={handleDoneEditing}
                   className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
                 >
-                  <Check className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <PhCheck size={14} weight="bold" />
                   Done
                 </button>
               ) : (
@@ -683,7 +681,7 @@ export function WikiView() {
                   onClick={handleEditArticle}
                   className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
                 >
-                  <PenLine className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <PencilLine size={14} weight="regular" />
                   Edit
                 </button>
               )}
@@ -696,7 +694,7 @@ export function WikiView() {
               onClick={handleBack}
               className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
             >
-              <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+              <ArrowLeft size={14} weight="regular" />
               Back
             </button>
           </div>
@@ -715,7 +713,7 @@ export function WikiView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<BookOpen className="h-5 w-5" strokeWidth={1.5} />}
+        icon={<BookOpen size={20} weight="regular" />}
         title="Wiki"
         count={stats.articles}
         showFilter
@@ -758,20 +756,20 @@ export function WikiView() {
                 <button
                   className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-secondary"
                 >
-                  <ArrowUpFromLine className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <ArrowLineUp size={14} weight="regular" />
                   Import Note
                 </button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-72 p-0">
                 <div className="border-b border-border px-3 py-2">
                   <div className="relative">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
                     <input
                       ref={importInputRef}
                       type="text"
                       value={importQuery}
                       onChange={(e) => setImportQuery(e.target.value)}
-                      placeholder="Search notes..."
+                      placeholder="MagnifyingGlass notes..."
                       className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                     />
                   </div>
@@ -788,7 +786,7 @@ export function WikiView() {
                         onClick={() => handleImportNote(note.id)}
                         className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
                       >
-                        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+                        <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
                         <span className="min-w-0 flex-1 truncate">
                           {note.title || "Untitled"}
                         </span>
@@ -864,7 +862,7 @@ export function WikiView() {
                   onClick={() => { setDashFilter("all"); setWikiViewMode("dashboard") }}
                   className="flex items-center gap-1 text-note text-muted-foreground/50 hover:text-foreground transition-colors duration-100 mr-1"
                 >
-                  <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <CaretLeft size={14} weight="regular" />
                   Overview
                 </button>
                 <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
@@ -896,7 +894,7 @@ export function WikiView() {
                     </span>
                     <span className="w-[100px] text-right">
                       <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
-                        <Plus className="h-3 w-3" /> Create
+                        <PhPlus size={12} weight="regular" /> Create
                       </span>
                     </span>
                   </button>
@@ -929,14 +927,14 @@ export function WikiView() {
         </div>
       )}
 
-      {/* Wiki Merge Picker Dialog */}
+      {/* Wiki GitMerge Picker Dialog */}
       {wikiMergeSourceId && (
         <Dialog open={!!wikiMergeSourceId} onOpenChange={(open) => !open && setWikiMergeSourceId(null)}>
           <DialogContent className="max-w-sm gap-0 p-0 overflow-hidden">
             <DialogHeader className="px-5 pt-5 pb-3">
               <DialogTitle className="flex items-center gap-2 text-ui">
-                <Merge className="h-4 w-4" />
-                Merge Wiki Article
+                <GitMerge size={16} weight="regular" />
+                GitMerge Wiki Article
               </DialogTitle>
               <DialogDescription className="text-note">
                 Select target article to merge into
@@ -956,7 +954,7 @@ export function WikiView() {
                     }}
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-secondary/40 text-left"
                   >
-                    <BookOpen className="h-4 w-4 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
+                    <BookOpen className="text-muted-foreground/40 shrink-0" size={16} weight="regular" />
                     <div className="flex-1 min-w-0">
                       <p className="truncate text-sm text-foreground">{a.title || "Untitled"}</p>
                     </div>

@@ -1,9 +1,9 @@
 "use client"
 
-import { X } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import type { WorkspaceTab } from "@/lib/workspace/types"
 import { cn } from "@/lib/utils"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 
 interface EditorPaneHeaderProps {
   tabs?: WorkspaceTab[]
@@ -29,7 +29,7 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
             onClick={(e) => { e.stopPropagation(); closeSecondary() }}
             className="rounded-md p-1 text-muted-foreground/50 hover:text-foreground hover:bg-secondary/50 transition-colors"
           >
-            <X className="h-3 w-3" strokeWidth={1.5} />
+            <PhX size={12} weight="regular" />
           </button>
         )}
       </div>
@@ -61,7 +61,7 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
                 onClick={(e) => { e.stopPropagation(); closeEditorTab(tab.id) }}
                 className="rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-secondary/50 transition-opacity"
               >
-                <X className="h-2.5 w-2.5" />
+                <PhX size={10} weight="regular" />
               </button>
             )}
           </div>

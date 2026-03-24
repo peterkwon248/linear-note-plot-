@@ -2,13 +2,18 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { ArrowLeft, BookOpen, List, Merge, MoreHorizontal, X } from "lucide-react"
 import { IconWikiStub, IconWikiDraft, IconWikiComplete } from "@/components/plot-icons"
 import { groupByInitial, INDEX_GROUPS } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import type { WikiArticle } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 
 /* ── Types ── */
 
@@ -119,7 +124,7 @@ function ArticleTableRow({
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
                 className="rounded-md p-1 text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-active-bg hover:text-muted-foreground/60 transition-all duration-100"
               >
-                <MoreHorizontal className="h-3.5 w-3.5" />
+                <DotsThree size={14} weight="bold" />
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
@@ -127,7 +132,7 @@ function ArticleTableRow({
                 onClick={() => { setMenuOpen(false); onMerge() }}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
               >
-                <Merge className="h-3.5 w-3.5" /> Merge into...
+                <GitMerge size={14} weight="regular" /> GitMerge into...
               </button>
             </PopoverContent>
           </Popover>
@@ -179,14 +184,14 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
-        <BookOpen className="h-5 w-5 text-muted-foreground/40" strokeWidth={1.5} />
+        <BookOpen className="text-muted-foreground/40" size={20} weight="regular" />
       </div>
       <p className="text-sm text-muted-foreground/60">No articles found</p>
     </div>
   )
 }
 
-/* ── List View ── */
+/* ── ListBullets View ── */
 
 export function WikiList({
   filteredWikiNotes,
@@ -219,7 +224,7 @@ export function WikiList({
           onClick={() => { setWikiViewMode("dashboard"); onClearCategoryFilter?.() }}
           className="flex items-center gap-1 text-note text-muted-foreground/50 hover:text-foreground transition-colors duration-100 mr-1"
         >
-          <ArrowLeft className="h-3 w-3" strokeWidth={1.5} />
+          <ArrowLeft size={12} weight="regular" />
           Overview
         </button>
 
@@ -264,7 +269,7 @@ export function WikiList({
                 onClick={onClearCategoryFilter}
                 className="ml-0.5 rounded-sm p-0.5 hover:bg-accent/20 transition-colors duration-100"
               >
-                <X className="h-2.5 w-2.5" strokeWidth={2} />
+                <PhX size={10} weight="regular" />
               </button>
             </span>
           </>
@@ -282,7 +287,7 @@ export function WikiList({
               : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
           )}
         >
-          <List className="h-3 w-3" strokeWidth={1.5} />
+          <ListBullets size={12} weight="regular" />
           Index
         </button>
       </div>

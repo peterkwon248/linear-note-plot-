@@ -11,29 +11,27 @@ import {
   useSensors,
   useSensor,
 } from "@dnd-kit/core"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
+import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
+import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Alarm } from "@phosphor-icons/react/dist/ssr/Alarm"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
+import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
+import { Tray as InboxIcon } from "@phosphor-icons/react/dist/ssr/Tray"
+import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import {
-  Plus,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  FileText,
-  Link2,
-  ChevronDown,
-  ChevronRight,
-  X,
-  Check,
-  AlarmClock,
-  Trash2,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Inbox as InboxIcon,
-  Clock,
-  Bell,
-  FolderOpen,
-} from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -97,7 +95,7 @@ function InlineSelect<T extends string>({
         className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
       >
         {current?.label ?? value}
-        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+        <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} weight="regular" />
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
@@ -111,7 +109,7 @@ function InlineSelect<T extends string>({
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
-                <Check className={`h-3.5 w-3.5 shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} />
+                <PhCheck className={`shrink-0 ${active ? "text-accent opacity-100" : "opacity-0"}`} size={14} weight="bold" />
                 {opt.label}
               </button>
             )
@@ -345,7 +343,7 @@ function BoardCardInner({
       {/* Selection indicator */}
       {isSelected && (
         <div className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent">
-          <Check className="h-2.5 w-2.5 text-accent-foreground" />
+          <PhCheck className="text-accent-foreground" size={10} weight="bold" />
         </div>
       )}
 
@@ -378,7 +376,7 @@ function BoardCardInner({
         )}
         {links > 0 && (
           <span className="flex items-center gap-0.5 text-2xs text-muted-foreground">
-            <Link2 className="h-2.5 w-2.5" />
+            <PhLink size={10} weight="regular" />
             {links}
           </span>
         )}
@@ -397,11 +395,11 @@ function BoardCardInner({
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
             <ContextMenuItem onClick={onKeep} className="text-sm">
-              <Check className="h-4 w-4 mr-2 text-accent" /> Done
+              <PhCheck className="mr-2 text-accent" size={16} weight="bold" /> Done
             </ContextMenuItem>
             <ContextMenuSub>
               <ContextMenuSubTrigger className="text-sm">
-                <AlarmClock className="h-4 w-4 mr-2 text-muted-foreground" /> Snooze
+                <Alarm className="mr-2 text-muted-foreground" size={16} weight="regular" /> Snooze
               </ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-44">
                 <ContextMenuItem onClick={() => onSnooze("3h")} className="text-sm">3 hours</ContextMenuItem>
@@ -412,7 +410,7 @@ function BoardCardInner({
               </ContextMenuSubContent>
             </ContextMenuSub>
             <ContextMenuItem onClick={onTrash} className="text-sm text-destructive focus:text-destructive">
-              <Trash2 className="h-4 w-4 mr-2" /> Trash
+              <Trash className="mr-2" size={16} weight="regular" /> Trash
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -420,10 +418,10 @@ function BoardCardInner({
         {note.status === "capture" && (
           <>
             <ContextMenuItem onClick={onPromote} className="text-sm">
-              <ArrowUpRight className="h-4 w-4 mr-2 text-chart-5" /> Promote to Permanent
+              <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" /> Promote to Permanent
             </ContextMenuItem>
             <ContextMenuItem onClick={onMoveBack} className="text-sm">
-              <InboxIcon className="h-4 w-4 mr-2 text-muted-foreground" /> Back to Inbox
+              <InboxIcon className="mr-2 text-muted-foreground" size={16} weight="regular" /> Back to Inbox
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -431,7 +429,7 @@ function BoardCardInner({
         {note.status === "permanent" && (
           <>
             <ContextMenuItem onClick={onDemote} className="text-sm">
-              <ArrowDownLeft className="h-4 w-4 mr-2 text-muted-foreground" /> Demote to Capture
+              <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" /> Demote to Capture
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -439,28 +437,28 @@ function BoardCardInner({
         {/* Remind me (all notes) */}
         <ContextMenuSub>
           <ContextMenuSubTrigger className="text-sm">
-            <Bell className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Bell className="mr-2 text-muted-foreground" size={16} weight="regular" />
             Remind me
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-48">
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Later today</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Tomorrow</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>In 3 days</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Next week</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>In 1 week</span>
             </ContextMenuItem>
           </ContextMenuSubContent>
@@ -468,7 +466,7 @@ function BoardCardInner({
         <ContextMenuSeparator />
 
         <ContextMenuItem onClick={onClick} className="text-sm">
-          <FileText className="h-4 w-4 mr-2 text-muted-foreground" /> Open
+          <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" /> Open
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
@@ -825,7 +823,7 @@ export function NotesBoard({
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
-        icon={<FileText className="h-5 w-5" strokeWidth={1.5} />}
+        icon={<FileText size={20} weight="regular" />}
         title={title ?? "Notes"}
         count={flatNotes.length}
         showFilter
@@ -887,13 +885,13 @@ export function NotesBoard({
         const folderName = folders.find((f) => f.id === folderId)?.name
         return folderName ? (
           <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-1.5">
-            <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <FolderOpen className="text-muted-foreground" size={14} weight="regular" />
             <span className="text-note text-foreground">{folderName}</span>
             <button
               onClick={() => setActiveFolderId(null)}
               className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
-              <X className="h-3 w-3" />
+              <PhX size={12} weight="regular" />
             </button>
           </div>
         ) : null
@@ -905,7 +903,7 @@ export function NotesBoard({
       {flatNotes.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
-            <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+            <FileText className="mx-auto mb-3 text-muted-foreground/40" size={40} weight="regular" />
             <p className="text-ui text-muted-foreground">No notes found</p>
             <p className="mt-1 text-sm text-muted-foreground/60">
               {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
@@ -988,7 +986,7 @@ export function NotesBoard({
                                     onClick={() => toggleSubGroup(subKey)}
                                     className="flex items-center gap-1.5 w-full px-1.5 py-1 mt-2 first:mt-0 rounded-md text-2xs text-muted-foreground hover:bg-hover-bg transition-colors"
                                   >
-                                    <ChevronRight className={`h-3 w-3 shrink-0 transition-transform ${isCollapsed ? "" : "rotate-90"}`} />
+                                    <CaretRight className={`shrink-0 transition-transform ${isCollapsed ? "" : "rotate-90"}`} size={12} weight="regular" />
                                     <span className="font-medium truncate">{subLabel}</span>
                                     <span className="text-muted-foreground/50 tabular-nums ml-auto">{sub.notes.length}</span>
                                   </button>

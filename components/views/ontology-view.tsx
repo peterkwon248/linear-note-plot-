@@ -15,8 +15,7 @@ import { ViewDistributionPanel, type DistributionItem } from "@/components/view-
 import { GRAPH_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { DEFAULT_VIEW_STATE } from "@/lib/view-engine/defaults"
 import type { FilterRule, FilterField } from "@/lib/view-engine/types"
-import { Network } from "lucide-react"
-
+import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 const DEFAULT_FILTERS: OntologyFilters = {
   tagIds: [],
   labelId: null,
@@ -230,7 +229,7 @@ export function OntologyView() {
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
-        icon={<Network className="h-5 w-5" strokeWidth={1.5} />}
+        icon={<Graph size={20} weight="regular" />}
         title="Graph"
         showFilter
         hasActiveFilters={graphFilters.length > 0}

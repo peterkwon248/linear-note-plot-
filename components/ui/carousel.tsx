@@ -4,8 +4,8 @@ import * as React from 'react'
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from 'embla-carousel-react'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
-
+import { ArrowLeft as PhArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { ArrowRight as PhArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -77,10 +77,10 @@ function Carousel({
 
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === 'ArrowLeft') {
+      if (event.key === 'PhArrowLeft') {
         event.preventDefault()
         scrollPrev()
-      } else if (event.key === 'ArrowRight') {
+      } else if (event.key === 'PhArrowRight') {
         event.preventDefault()
         scrollNext()
       }
@@ -195,7 +195,7 @@ function CarouselPrevious({
       onClick={scrollPrev}
       {...props}
     >
-      <ArrowLeft />
+      <PhArrowLeft />
       <span className="sr-only">Previous slide</span>
     </Button>
   )
@@ -225,7 +225,7 @@ function CarouselNext({
       onClick={scrollNext}
       {...props}
     >
-      <ArrowRight />
+      <PhArrowRight />
       <span className="sr-only">Next slide</span>
     </Button>
   )

@@ -2,17 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  ArrowLeft,
-  SlidersHorizontal,
-  Palette,
-  PenTool,
-  Keyboard,
-  Cloud,
-  Download,
-  Info,
-} from "lucide-react"
-
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal"
+import { Palette } from "@phosphor-icons/react/dist/ssr/Palette"
+import { Pen } from "@phosphor-icons/react/dist/ssr/Pen"
+import { Keyboard } from "@phosphor-icons/react/dist/ssr/Keyboard"
+import { Cloud as PhCloud } from "@phosphor-icons/react/dist/ssr/Cloud"
+import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
+import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
 interface NavItemProps {
   href: string
   icon: React.ReactNode
@@ -48,23 +45,23 @@ const navGroups = [
   {
     section: "General",
     items: [
-      { href: "/settings/preferences", label: "Preferences", icon: <SlidersHorizontal className="h-4 w-4" /> },
-      { href: "/settings/appearance", label: "Appearance", icon: <Palette className="h-4 w-4" /> },
-      { href: "/settings/editor", label: "Editor", icon: <PenTool className="h-4 w-4" /> },
-      { href: "/settings/shortcuts", label: "Shortcuts", icon: <Keyboard className="h-4 w-4" /> },
+      { href: "/settings/preferences", label: "Preferences", icon: <SlidersHorizontal size={16} weight="regular" /> },
+      { href: "/settings/appearance", label: "Appearance", icon: <Palette size={16} weight="regular" /> },
+      { href: "/settings/editor", label: "Editor", icon: <Pen size={16} weight="regular" /> },
+      { href: "/settings/shortcuts", label: "Shortcuts", icon: <Keyboard size={16} weight="regular" /> },
     ],
   },
   {
     section: "Data",
     items: [
-      { href: "/settings/sync", label: "Sync & Storage", icon: <Cloud className="h-4 w-4" /> },
-      { href: "/settings/backup", label: "Backup & Export", icon: <Download className="h-4 w-4" /> },
+      { href: "/settings/sync", label: "Sync & Storage", icon: <PhCloud size={16} weight="regular" /> },
+      { href: "/settings/backup", label: "Backup & Export", icon: <DownloadSimple size={16} weight="regular" /> },
     ],
   },
   {
-    section: "Info",
+    section: "PhInfo",
     items: [
-      { href: "/settings/about", label: "About", icon: <Info className="h-4 w-4" /> },
+      { href: "/settings/about", label: "About", icon: <PhInfo size={16} weight="regular" /> },
     ],
   },
 ]
@@ -85,7 +82,7 @@ export default function SettingsLayout({
             href="/"
             className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-ui text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft size={16} weight="regular" />
             <span>Back to app</span>
           </Link>
         </div>

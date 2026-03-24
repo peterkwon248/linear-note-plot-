@@ -1,23 +1,21 @@
 "use client"
 
 import { useMemo } from "react"
-import {
-  BookOpen,
-  Search,
-  Plus,
-  Clock,
-  TrendingUp,
-  AlertTriangle,
-  FileText,
-  CircleDot,
-  ArrowRight,
-  Sparkles,
-} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import { WikiStatusDot } from "./wiki-shared"
 import { IconWikiStub, IconWikiDraft, IconWikiComplete } from "@/components/plot-icons"
 import type { WikiArticle } from "@/lib/types"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
+import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 
 /* ── Types ── */
 
@@ -41,7 +39,7 @@ interface WikiDashboardProps {
   staleDocuments: { note: WikiArticle; daysAgo: number }[]
   categories: { tags: { name: string; count: number }[]; uncategorized: number }
 
-  // Search
+  // MagnifyingGlass
   searchQuery: string
   setSearchQuery: (q: string) => void
   searchFocused: boolean
@@ -99,10 +97,10 @@ export function WikiDashboard({
     <div className="flex-1 overflow-y-auto">
       <div className="px-6 py-6">
 
-        {/* ── Search ── */}
+        {/* ── MagnifyingGlass ── */}
         <div className="relative mb-6">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" strokeWidth={1.5} />
+            <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" size={14} weight="regular" />
             <input
               ref={searchInputRef}
               type="text"
@@ -120,7 +118,7 @@ export function WikiDashboard({
                   searchInputRef.current?.blur()
                 }
               }}
-              placeholder="Search wiki articles..."
+              placeholder="MagnifyingGlass wiki articles..."
               className="h-9 w-full rounded-lg border border-border/60 bg-secondary/30 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-colors"
             />
           </div>
@@ -179,7 +177,7 @@ export function WikiDashboard({
             className="group mb-6 flex w-full items-start gap-4 rounded-xl border border-border/50 bg-card/30 p-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-              <Sparkles className="h-4 w-4 text-accent" strokeWidth={1.5} />
+              <Sparkle className="text-accent" size={16} weight="regular" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="mb-0.5 flex items-center gap-2">
@@ -193,7 +191,7 @@ export function WikiDashboard({
                 {featured.tags.length > 0 && ` · ${featured.tags.length} categories`}
               </p>
             </div>
-            <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-accent" strokeWidth={1.5} />
+            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-accent" size={16} weight="regular" />
           </button>
         )}
 
@@ -229,7 +227,7 @@ export function WikiDashboard({
           <div className="space-y-5">
             {/* Recent Changes */}
             {recentChanges.length > 0 && (
-              <ContentCard title="Recent Changes" icon={Clock}>
+              <ContentCard title="Recent Changes" icon={PhClock}>
                 {recentChanges.map((note) => (
                   <ArticleItem
                     key={note.id}
@@ -244,7 +242,7 @@ export function WikiDashboard({
 
             {/* Most Connected */}
             {mostConnected.length > 0 && mostConnected[0].count > 0 && (
-              <ContentCard title="Hub Articles" icon={TrendingUp}>
+              <ContentCard title="Hub Articles" icon={TrendUp}>
                 {mostConnected.filter(({ count }) => count > 0).map(({ note, count }) => (
                   <ArticleItem
                     key={note.id}
@@ -262,7 +260,7 @@ export function WikiDashboard({
           <div className="space-y-5">
             {/* Red Links */}
             {redLinks.length > 0 && (
-              <ContentCard title="Red Links" icon={AlertTriangle} iconColor="text-destructive/60">
+              <ContentCard title="Red Links" icon={Warning} iconColor="text-destructive/60">
                 {redLinks.slice(0, 6).map((item) => (
                   <div key={item.title} className="group flex items-center gap-2 rounded-md px-2.5 py-[7px] transition-colors duration-100 hover:bg-hover-bg">
                     <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-destructive/60" />
@@ -272,7 +270,7 @@ export function WikiDashboard({
                       onClick={() => onCreateFromRedLink(item.title)}
                       className="hidden shrink-0 items-center gap-0.5 text-2xs font-medium text-accent group-hover:flex"
                     >
-                      <Plus className="h-3 w-3" strokeWidth={1.5} />
+                      <PhPlus size={12} weight="regular" />
                       Create
                     </button>
                   </div>
@@ -337,7 +335,7 @@ export function WikiDashboard({
         {wikiNotes.length === 0 && (
           <div className="flex flex-col items-center gap-3 py-20 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
-              <BookOpen className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+              <BookOpen className="text-muted-foreground" size={20} weight="regular" />
             </div>
             <p className="text-sm font-medium text-muted-foreground">No wiki articles yet</p>
             <p className="text-xs text-muted-foreground/60">Create your first article or import existing notes</p>

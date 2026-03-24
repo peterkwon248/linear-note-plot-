@@ -1,12 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { ExternalLink, Pencil, Eye, Globe, FileText, Columns2 } from "lucide-react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { Eye as PhEye } from "@phosphor-icons/react/dist/ssr/Eye"
+import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
 
 export function SidePanelPeek() {
   const sidePanelPeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
@@ -31,7 +36,7 @@ export function SidePanelPeek() {
       {/* Mini action bar with note title + actions */}
       <div className="flex items-center justify-between border-b border-border/50 px-3 py-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
-          <FileText className="h-3 w-3 shrink-0 text-muted-foreground/60" strokeWidth={1.5} />
+          <FileText className="shrink-0 text-muted-foreground/60" size={12} weight="regular" />
           <span className="text-xs text-muted-foreground truncate">{note.title || "Untitled"}</span>
         </div>
         <div className="flex items-center gap-0.5">
@@ -47,7 +52,7 @@ export function SidePanelPeek() {
             className="rounded-[6px] p-1 text-muted-foreground/50 transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
             title="Open side by side"
           >
-            <Columns2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+            <Columns size={14} weight="regular" />
           </button>
           {/* Open in full view */}
           <button
@@ -55,7 +60,7 @@ export function SidePanelPeek() {
             className="rounded-[6px] p-1 text-muted-foreground/50 transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
             title="Open in full view"
           >
-            <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} />
+            <ArrowSquareOut size={14} weight="regular" />
           </button>
           {/* Edit toggle */}
           <button
@@ -66,9 +71,9 @@ export function SidePanelPeek() {
             title={editing ? "Switch to View" : "Switch to Edit"}
           >
             {editing ? (
-              <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
+              <PhEye size={14} weight="regular" />
             ) : (
-              <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
+              <PencilSimple size={14} weight="regular" />
             )}
           </button>
         </div>
