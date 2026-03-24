@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { IconTag } from "@/components/plot-icons"
 import { ViewHeader } from "@/components/view-header"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { FilterButton, FilterChipBar } from "@/components/filter-bar"
@@ -131,6 +132,7 @@ export function TagsView() {
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [tagInput, setTagInput] = useState("")
+  const [creatingTag, setCreatingTag] = useState(false)
   const [checkedTags, setCheckedTags] = useState<Set<string>>(new Set())
   const tagInputRef = useRef<HTMLInputElement>(null)
   const [displayPopoverOpen, setDisplayPopoverOpen] = useState(false)
@@ -225,8 +227,10 @@ export function TagsView() {
         }
       }
       setTagInput("")
+      setCreatingTag(false)
     } else if (e.key === "Escape") {
       setTagInput("")
+      setCreatingTag(false)
       tagInputRef.current?.blur()
     }
   }
@@ -542,63 +546,15 @@ export function TagsView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<PhTag size={20} weight="regular" />}
+        icon={<IconTag size={20} />}
         title="Tags"
         count={filteredTags.length}
-        searchPlaceholder="Search tags..."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        actions={
-          <div className="relative flex items-center">
-            <PhHash className="pointer-events-none absolute left-2.5 text-muted-foreground" size={14} weight="regular" />
-            <input
-              ref={tagInputRef}
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagInputKeyDown}
-              placeholder="tag1, tag2, tag3"
-              className="h-8 w-56 rounded-md border border-border bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-          </div>
-        }
+        onCreateNew={() => {
+          setCreatingTag(true)
+          setTimeout(() => tagInputRef.current?.focus(), 100)
+        }}
       />
 
-      {/* Sort & Filter toolbar */}
-      <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              <ArrowsDownUp size={14} weight="regular" />
-              {tagSortBy === "name-asc" ? "Name A-Z" : tagSortBy === "name-desc" ? "Name Z-A" : tagSortBy === "count-desc" ? "Most notes" : "Fewest notes"}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {([
-              ["name-asc", "Name A-Z"],
-              ["name-desc", "Name Z-A"],
-              ["count-desc", "Most notes"],
-              ["count-asc", "Fewest notes"],
-            ] as const).map(([value, label]) => (
-              <DropdownMenuItem key={value} onClick={() => setTagSortBy(value)}>
-                <PhCheck className={cn(" mr-2 shrink-0", tagSortBy === value ? "opacity-100" : "opacity-0")} size={14} weight="bold" />
-                {label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="flex-1" />
-        <button
-          onClick={() => setHideEmptyTags(!hideEmptyTags)}
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-colors",
-            hideEmptyTags ? "bg-accent/15 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-          )}
-        >
-          <EyeSlash size={14} weight="regular" />
-          Hide empty
-        </button>
-      </div>
 
       {/* PhTag list */}
       <ContextMenu>
@@ -608,21 +564,36 @@ export function TagsView() {
             className={`relative flex-1 overflow-y-auto ${isDraggingRef.current ? "select-none" : ""} ${checkedTags.size > 0 ? "pb-20" : ""}`}
             onMouseDown={handleDragMouseDown}
           >
-            {sortedTags.length === 0 ? (
-              <div className="flex h-32 flex-col items-center justify-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {searchQuery ? "No tags match your search" : "No tags yet"}
-                </span>
-                {!searchQuery && (
-                  <span className="text-xs text-muted-foreground">
-                    Type #tagname above and press Enter to create
-                  </span>
-                )}
+            {/* Create tag form */}
+            {creatingTag && (
+              <div className="px-6 py-3 border-b border-border flex items-center gap-3">
+                <PhHash className="text-muted-foreground shrink-0" size={14} weight="regular" />
+                <input
+                  ref={tagInputRef}
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                  onBlur={() => { if (!tagInput.trim()) setCreatingTag(false) }}
+                  placeholder="tag1, tag2, tag3 — Enter to create"
+                  className="h-8 flex-1 rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+                <button onClick={() => { setTagInput(""); setCreatingTag(false) }} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <PhX size={14} weight="regular" />
+                </button>
               </div>
-            ) : (
+            )}
+
+            {sortedTags.length === 0 && !creatingTag && (
+              <div className="flex h-32 flex-col items-center justify-center gap-2">
+                <span className="text-sm text-muted-foreground">No tags yet</span>
+                <span className="text-xs text-muted-foreground">Click + to create a tag</span>
+              </div>
+            )}
+            {sortedTags.length > 0 && (
               <div>
                 {/* Header row with select-all checkbox */}
-                <div className="flex items-center gap-3 border-b border-border px-6 py-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-3 border-b border-border/30 px-6 py-2">
                   <button
                     onClick={toggleAll}
                     className="flex h-4 w-4 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
@@ -632,8 +603,38 @@ export function TagsView() {
                         <div className="h-2 w-2 rounded-sm bg-accent" />
                       )}
                   </button>
-                  <span className="flex-1">Name</span>
-                  <span className="w-16 text-right">Notes</span>
+                  <button
+                    className="flex flex-1 items-center gap-1 text-left text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    onClick={() => setTagSortBy(tagSortBy === "name-asc" ? "name-desc" : "name-asc")}
+                  >
+                    Name
+                    {(tagSortBy === "name-asc" || tagSortBy === "name-desc") && (
+                      tagSortBy === "name-asc"
+                        ? <ArrowUp size={12} weight="regular" className="text-muted-foreground/50" />
+                        : <ArrowDown size={12} weight="regular" className="text-muted-foreground/50" />
+                    )}
+                  </button>
+                  <button
+                    className="flex w-16 items-center justify-end gap-1 text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    onClick={() => setTagSortBy(tagSortBy === "count-desc" ? "count-asc" : "count-desc")}
+                  >
+                    Notes
+                    {(tagSortBy === "count-desc" || tagSortBy === "count-asc") && (
+                      tagSortBy === "count-desc"
+                        ? <ArrowDown size={12} weight="regular" className="text-muted-foreground/50" />
+                        : <ArrowUp size={12} weight="regular" className="text-muted-foreground/50" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setHideEmptyTags(!hideEmptyTags)}
+                    className={cn(
+                      "ml-2 rounded p-1 transition-colors",
+                      hideEmptyTags ? "text-accent" : "text-muted-foreground/30 hover:text-muted-foreground/50"
+                    )}
+                    title={hideEmptyTags ? "Show all" : "Hide empty"}
+                  >
+                    <EyeSlash size={14} weight="regular" />
+                  </button>
                 </div>
                 {sortedTags.map((tag, index) => (
                   <div

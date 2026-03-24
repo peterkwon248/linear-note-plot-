@@ -182,7 +182,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         content={initialContent}
         onChange={editable ? handleChange : undefined}
         editable={editable}
-        placeholder="Start writing..."
+        placeholder="Type / for commands, or start writing..."
         onEditorReady={onEditorReady}
       />
       <LinkSuggestion

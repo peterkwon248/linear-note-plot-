@@ -450,10 +450,30 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
 
 /* ── Add Block Button ── */
 
-export function AddBlockButton({ onAdd }: {
-  onAdd: (type: WikiBlock["type"]) => void
+export function AddBlockButton({ onAdd, nearestSectionLevel }: {
+  onAdd: (type: WikiBlock["type"], level?: number) => void
+  /** Level of the nearest section block above this insertion point (2, 3, or 4) */
+  nearestSectionLevel?: number
 }) {
   const [open, setOpen] = useState(false)
+
+  // Subsection level = nearest section level + 1, capped at 4, minimum 3
+  const subsectionLevel = nearestSectionLevel != null
+    ? Math.min(nearestSectionLevel + 1, 4)
+    : 3
+
+  // Only show Subsection option when a parent section exists and it's below max depth
+  const canAddSubsection = nearestSectionLevel != null && nearestSectionLevel < 4
+
+  const items: { type: WikiBlock["type"]; level?: number; label: string; desc: string }[] = [
+    { type: "section", label: "Section", desc: "H2 heading divider" },
+    ...(canAddSubsection
+      ? [{ type: "section" as const, level: subsectionLevel, label: "Subsection", desc: `H${subsectionLevel} under current section` }]
+      : []),
+    { type: "text", label: "Text", desc: "Write directly" },
+    { type: "note-ref", label: "Note", desc: "Embed a note" },
+    { type: "image", label: "Image", desc: "Upload image" },
+  ]
 
   return (
     <div className="relative flex items-center justify-center py-1 group/add">
@@ -467,23 +487,21 @@ export function AddBlockButton({ onAdd }: {
       </button>
 
       {open && (
-        <div className="absolute top-full z-20 mt-1 rounded-lg border border-border/60 bg-popover shadow-[0_4px_12px_rgba(0,0,0,0.2)] py-1 min-w-[160px]">
-          {[
-            { type: "section" as const, label: "Section", desc: "Heading divider" },
-            { type: "text" as const, label: "Text", desc: "Write directly" },
-            { type: "note-ref" as const, label: "Note", desc: "Embed a note" },
-            { type: "image" as const, label: "Image", desc: "UploadSimple image" },
-          ].map(({ type, label, desc }) => (
-            <button
-              key={type}
-              onClick={() => { onAdd(type); setOpen(false) }}
-              className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-75"
-            >
-              <span className="text-sm font-medium text-foreground/80">{label}</span>
-              <span className="text-2xs text-muted-foreground/30">{desc}</span>
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute top-full z-20 mt-1 rounded-lg border border-border/60 bg-popover shadow-[0_4px_12px_rgba(0,0,0,0.2)] py-1 min-w-[180px]">
+            {items.map(({ type, level, label, desc }, idx) => (
+              <button
+                key={`${type}-${level ?? "default"}-${idx}`}
+                onClick={() => { onAdd(type, level); setOpen(false) }}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-75"
+              >
+                <span className="text-sm font-medium text-foreground/80">{label}</span>
+                <span className="text-2xs text-muted-foreground/30">{desc}</span>
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

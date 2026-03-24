@@ -342,7 +342,7 @@ export function SidePanelContext() {
             : "bg-accent/10 text-accent"
         }`}>
           {note.status === "permanent" && <PhShield size={14} weight="regular" />}
-          {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Tray"}
+          {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Inbox"}
         </span>
         {note.status === "capture" && isReadyToPromote(note, backlinks) && (
           <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-xs font-medium text-chart-5">
@@ -413,11 +413,11 @@ export function SidePanelContext() {
               Promote
             </button>
             <button
-              onClick={() => { moveBackToInbox(note.id); toast("Moved back to Tray") }}
+              onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <Tray size={14} weight="regular" />
-              Back to Tray
+              Back to Inbox
             </button>
           </div>
           {staleSuggest && (
@@ -425,10 +425,10 @@ export function SidePanelContext() {
               <Warning className="shrink-0 text-destructive" size={14} weight="regular" />
               <span className="text-xs text-destructive">14+ days untouched.</span>
               <button
-                onClick={() => { moveBackToInbox(note.id); toast("Moved back to Tray") }}
+                onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
                 className="ml-auto text-2xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
               >
-                Move to Tray?
+                Move to Inbox?
               </button>
             </div>
           )}

@@ -25,6 +25,8 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { cn } from "@/lib/utils"
 import { NOTE_STATUS_HEX, STATUS_DOT_FALLBACK } from "@/lib/colors"
+import { STATUS_CONFIG } from "@/components/note-fields"
+import type { NoteStatus } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -63,21 +65,6 @@ const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 const MAX_VISIBLE = 3
 
-/* ── Status dot colors matching STATUS_CONFIG ──────────── */
-
-const STATUS_DOT: Record<string, string> = {
-  inbox: NOTE_STATUS_HEX.inbox,
-  capture: NOTE_STATUS_HEX.capture,
-  permanent: NOTE_STATUS_HEX.permanent,
-}
-
-/* ── Status label config for dashboard ─────────────────── */
-
-const STATUS_LABEL: Record<string, { text: string; color: string }> = {
-  inbox: { text: "Inbox", color: NOTE_STATUS_HEX.inbox },
-  capture: { text: "Capture", color: NOTE_STATUS_HEX.capture },
-  permanent: { text: "Permanent", color: NOTE_STATUS_HEX.permanent },
-}
 
 /* ── Layer type icon (tiny, inline) ───────────────────── */
 
@@ -129,7 +116,7 @@ interface NotePillProps {
 }
 
 function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillProps) {
-  const dot = STATUS_DOT[note.status] ?? STATUS_DOT_FALLBACK
+  const dot = NOTE_STATUS_HEX[note.status as keyof typeof NOTE_STATUS_HEX] ?? STATUS_DOT_FALLBACK
 
   return (
     <button
@@ -395,8 +382,8 @@ function DayDashboard({
           <div className="flex flex-col gap-1.5">
             {sortedNotes.map((note) => {
               const label = getLabelForNote(note)
-              const dot = STATUS_DOT[note.status] ?? STATUS_DOT_FALLBACK
-              const statusInfo = STATUS_LABEL[note.status]
+              const dot = NOTE_STATUS_HEX[note.status as keyof typeof NOTE_STATUS_HEX] ?? STATUS_DOT_FALLBACK
+              const statusInfo = STATUS_CONFIG[note.status as NoteStatus]
               const isActive = activePreviewId === note.id
 
               let timeStr = ""
@@ -436,7 +423,7 @@ function DayDashboard({
                           className="text-2xs font-medium"
                           style={{ color: statusInfo.color }}
                         >
-                          {statusInfo.text}
+                          {statusInfo.label}
                         </span>
                       )}
 
@@ -853,7 +840,7 @@ export function CalendarView({
             key,
             label: key.charAt(0).toUpperCase() + key.slice(1),
             count,
-            color: STATUS_DOT[key],
+            color: NOTE_STATUS_HEX[key as keyof typeof NOTE_STATUS_HEX],
           }))
         }
         case "folder": {

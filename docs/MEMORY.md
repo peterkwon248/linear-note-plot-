@@ -30,14 +30,14 @@
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
 - **TipTap Editor**: 25+ extensions including SlashCommand, HashtagSuggestion, WikilinkSuggestion, Mathematics, WikiQuoteExtension
 - **2-Level Routing**: `activeSpace` (inbox/notes/wiki/ontology/calendar) + `activeRoute`, `inferSpace()` 하위호환
-- **PlotIcons**: 28 custom SVG icon components in `components/plot-icons.tsx` — Lucide 대체
+- **PlotIcons**: 35 custom SVG icon components in `components/plot-icons.tsx` — Lucide 대체
 - **Wiki Collection**: `wikiCollections: Record<string, WikiCollectionItem[]>` — per-wiki-note staging area for related material
 - **Undo Manager**: `lib/undo-manager.ts` — LinkedList 기반 글로벌 Undo/Redo (capacity 50), Zustand state diff 기반
 - **Sub-grouping**: `group.ts` 재귀 호출로 2단계 그룹핑. NoteGroup.subGroups에 저장. VirtualItem "subheader" 타입으로 렌더
 - **Thread Nested Replies**: ThreadStep.parentId 기반 트리 구조. Thread 패널에서 들여쓰기 렌더 + Reply 버튼
 
-## Store Slices (17 total)
-notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections
+## Store Slices (19 total)
+notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles
 
 ## Completed PRs (recent)
 - **PR #80**: Wiki system + Side Peek + soft-delete trash
@@ -139,6 +139,19 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **멀티패널 뷰 타입 확장** — Wiki/Calendar/Graph + 에디터 조합 ("참조하면서 쓰기")
 - **Wiki 대시보드 반응형** — Articles/Stubs/Red Links 카드가 탭/필터 역할
 - **Linear 디자인 레퍼런스** — linear-design-mirror.tar.gz + SKILL.md 참고자료 저장 완료
+
+### 이번 세션 완료 (2026-03-24)
+- **Notes List 리니어식 그리드 통합**: list+table 2개 렌더러 → grid 하나 (~220줄 삭제), 컬럼 헤더 활성화
+- **Phosphor 상태 아이콘**: CircleDashed(Inbox)/CircleHalf(Capture)/CheckCircle(Permanent)
+- **Tray → Inbox 전체 교체**: 5+ 파일 라벨 통일
+- **Capture/Permanent → NotesTable 통합**: 독립 페이지 삭제 (~520줄), TABLE_VIEW_ROUTES 추가
+- **Tags/Labels 정상화**: sort 컬럼 헤더, 검색 제거, + 버튼, 아이콘 통일
+- **Board 카드 개별 선택**: hover 체크박스 추가
+- **isWiki 레거시 완전 폐기**: v59 마이그레이션 (isWiki→false, 빈 스텁 trash, wikiStatus→null)
+- **템플릿 UX 개선**: Grid 프리뷰 강화, 생성 후 focus 모드, placeholder 힌트
+- **위키 서브섹션 UI**: AddBlockButton에 Subsection 옵션 (level 3/4)
+- **폰트/opacity 표준화**: text-xs 통일, opacity /30~/60, uppercase 제거
+- Store v58→v59
 
 ### 이번 세션 완료 (2026-03-22)
 - **Wiki 리디자인**: 파일 분리 (1500줄→6파일), Dashboard 새 설계, List→Linear-style 테이블, ArticleReader 폴리시, 사이드바 스타일링

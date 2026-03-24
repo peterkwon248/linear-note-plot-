@@ -17,7 +17,9 @@ import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Archive as ArchiveIcon } from "@phosphor-icons/react/dist/ssr/Archive"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
+import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
@@ -39,22 +41,22 @@ export const STATUS_CONFIG: Record<
   { label: string; color: string; bg: string; icon: React.ReactNode }
 > = {
   inbox: {
-    label: "Tray",
+    label: "Inbox",
     color: "var(--chart-2)",
     bg: "color-mix(in srgb, var(--chart-2) 12%, transparent)",
-    icon: <Tray size={14} weight="regular" />,
+    icon: <CircleDashed size={14} weight="regular" />,
   },
   capture: {
     label: "Capture",
     color: "var(--chart-3)",
     bg: "color-mix(in srgb, var(--chart-3) 12%, transparent)",
-    icon: <Lightning size={14} weight="regular" />,
+    icon: <CircleHalf size={14} weight="fill" />,
   },
   permanent: {
     label: "Permanent",
     color: "var(--chart-5)",
     bg: "color-mix(in srgb, var(--chart-5) 12%, transparent)",
-    icon: <ArchiveIcon size={14} weight="regular" />,
+    icon: <CheckCircle size={14} weight="fill" />,
   },
 }
 

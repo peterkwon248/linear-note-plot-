@@ -869,7 +869,7 @@ export function WikiView() {
                   Red Links {redLinks.length}
                 </span>
               </div>
-              <div className="flex items-center px-5 py-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground/30 border-b border-border/30">
+              <div className="flex items-center px-5 py-2 text-xs font-medium text-muted-foreground/50 border-b border-border/30">
                 <span className="min-w-0 flex-1">Missing Article</span>
                 <span className="w-[80px] text-right">References</span>
                 <span className="w-[100px] text-right">Action</span>
@@ -889,7 +889,7 @@ export function WikiView() {
                     <span className="min-w-0 flex-1 truncate text-note font-medium text-destructive/80">
                       {rl.title}
                     </span>
-                    <span className="w-[80px] text-right text-2xs tabular-nums text-muted-foreground/40">
+                    <span className="w-[80px] text-right text-xs tabular-nums text-muted-foreground/60">
                       {rl.refCount} {rl.refCount === 1 ? "ref" : "refs"}
                     </span>
                     <span className="w-[100px] text-right">

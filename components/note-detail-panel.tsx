@@ -235,8 +235,8 @@ export function NoteDetailPanel({
 
   const handleMoveBack = useCallback(() => {
     moveBackToInbox(noteId)
-    pushUndo("Move back to Tray", () => triageKeep(noteId), () => moveBackToInbox(noteId))
-    toast("Moved back to Tray")
+    pushUndo("Move back to Inbox", () => triageKeep(noteId), () => moveBackToInbox(noteId))
+    toast("Moved back to Inbox")
   }, [moveBackToInbox, noteId, triageKeep])
 
   const handleLinkSuggestion = useCallback((targetTitle: string) => {
@@ -359,7 +359,7 @@ export function NoteDetailPanel({
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <Tray size={14} weight="regular" />
-              Back to Tray
+              Back to Inbox
               <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-2xs font-mono leading-none text-muted-foreground">B</kbd>
             </button>
             <RemindPicker
@@ -380,7 +380,7 @@ export function NoteDetailPanel({
                 onClick={handleMoveBack}
                 className="ml-auto text-xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
               >
-                Move back to Tray?
+                Move back to Inbox?
               </button>
             </div>
           )}

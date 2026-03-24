@@ -580,5 +580,23 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v59: Reset isWiki flag + trash empty wiki stubs — wiki rendering moved to WikiArticle system
+  if (Array.isArray(state.notes)) {
+    for (const note of state.notes as Record<string, unknown>[]) {
+      if (note.isWiki) note.isWiki = false
+      // Trash auto-generated wiki stubs with only template headings and no real content
+      if (note.wikiStatus && !note.trashed) {
+        const preview = (note.preview as string) ?? ""
+        const isEmptyStub = !preview.trim() || /^(#{1,3}\s*(Overview|Details|See Also)\s*)+$/i.test(preview.trim())
+        if (isEmptyStub) {
+          note.trashed = true
+          note.trashedAt = new Date().toISOString()
+        }
+      }
+      // Clear wikiStatus on all notes — wiki is now WikiArticle only
+      if (note.wikiStatus) note.wikiStatus = null
+    }
+  }
+
   return state as unknown as PlotState
 }

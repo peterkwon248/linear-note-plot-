@@ -26,6 +26,9 @@ import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
 import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
 import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { CircleDashed as PhCircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { CircleHalf as PhCircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
+import { CheckCircle as PhCheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
@@ -103,6 +106,7 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
   { id: "status", label: "Status", width: "w-[120px] shrink-0", align: "text-right", sortField: "status", minWidth: 400 },
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
+  { id: "tags", label: "Tags", width: "w-[120px] shrink-0", sortField: "title", minWidth: 600 },
   { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links", minWidth: 640 },
   { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
   { id: "wordCount", label: "Words", width: "w-[56px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
@@ -137,7 +141,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-2xs uppercase tracking-wider font-medium text-muted-foreground/30 transition-colors hover:text-muted-foreground/60 ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80 ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
@@ -742,6 +746,7 @@ export function NotesTable({
     const cols = ["32px", "1fr"] // checkbox + name (always)
     if (effectiveVisibleCols.includes("status")) cols.push("120px")
     if (effectiveVisibleCols.includes("folder")) cols.push("80px")
+    if (effectiveVisibleCols.includes("tags")) cols.push("120px")
     if (effectiveVisibleCols.includes("links")) cols.push("56px")
     if (effectiveVisibleCols.includes("reads")) cols.push("56px")
     if (effectiveVisibleCols.includes("wordCount")) cols.push("56px")
@@ -792,7 +797,10 @@ export function NotesTable({
       const t = virtualItems[i].type
       if (t === "header") return 36
       if (t === "subheader") return 32
-      return viewState.viewMode === "list" ? 40 : 44
+      const showPreview = viewState.toggles?.showCardPreview === true
+      if (isCompact) return 32
+      if (showPreview) return 56
+      return 40
     },
     overscan: 5,
   })
@@ -1057,7 +1065,7 @@ export function NotesTable({
             ) : (
               <div ref={scrollContainerRef} onMouseDown={handleDragMouseDown} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
                 {/* Column headers (table mode) */}
-                {(viewState.viewMode as string) === "table" && (
+                {effectiveVisibleCols.length > 0 && (
                 <div
                   style={{ display: "grid", gridTemplateColumns: gridTemplate }}
                   className="sticky top-0 z-10 items-center border-b border-border/30 bg-background px-5 py-2.5"
@@ -1224,7 +1232,7 @@ export function NotesTable({
                             onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id), () => triageTrash(item.note.id)) }}
                             onPromote={() => { promoteToPermanent(item.note.id); pushUndo("Promote to Permanent", () => undoPromote(item.note.id), () => promoteToPermanent(item.note.id)) }}
                             onDemote={() => { undoPromote(item.note.id); pushUndo("Demote to Capture", () => promoteToPermanent(item.note.id), () => undoPromote(item.note.id)) }}
-                            onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Tray", () => triageKeep(item.note.id), () => moveBackToInbox(item.note.id)) }}
+                            onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Inbox", () => triageKeep(item.note.id), () => moveBackToInbox(item.note.id)) }}
                             onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
                             onMergeWith={() => setMergePickerOpen(true, item.note.id)}
                             onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
@@ -1364,38 +1372,17 @@ function SourceIcon({ source }: { source: NoteSource }) {
   return <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
 }
 
-const STATUS_DOT_COLORS: Record<NoteStatus, string> = {
-  inbox: NOTE_STATUS_HEX.inbox,
-  capture: NOTE_STATUS_HEX.capture,
-  permanent: NOTE_STATUS_HEX.permanent,
-}
-
 /** Status icon with shape differentiation (Linear-style) */
-function StatusShapeIcon({ status, size = 8 }: { status: NoteStatus; size?: number }) {
-  const color = STATUS_DOT_COLORS[status]
+function StatusShapeIcon({ status, size = 14 }: { status: NoteStatus; size?: number }) {
+  const color = NOTE_STATUS_HEX[status]
   if (status === "inbox") {
-    // ○ Empty circle — not yet processed
-    return (
-      <svg width={size} height={size} viewBox="0 0 8 8" className="shrink-0">
-        <circle cx="4" cy="4" r="3" fill="none" stroke={color} strokeWidth="1.5" />
-      </svg>
-    )
+    return <PhCircleDashed size={size} weight="regular" style={{ color }} className="shrink-0" />
   }
   if (status === "capture") {
-    // ◐ Half circle — in progress
-    return (
-      <svg width={size} height={size} viewBox="0 0 8 8" className="shrink-0">
-        <circle cx="4" cy="4" r="3" fill="none" stroke={color} strokeWidth="1.5" />
-        <path d="M4 1a3 3 0 010 6z" fill={color} />
-      </svg>
-    )
+    return <PhCircleHalf size={size} weight="fill" style={{ color }} className="shrink-0" />
   }
-  // ● Filled circle — permanent
-  return (
-    <svg width={size} height={size} viewBox="0 0 8 8" className="shrink-0">
-      <circle cx="4" cy="4" r="3.5" fill={color} />
-    </svg>
-  )
+  // permanent
+  return <PhCheckCircle size={size} weight="fill" style={{ color }} className="shrink-0" />
 }
 
 /** Resolve display label for group headers (folder/label use IDs as keys) */
@@ -1467,227 +1454,6 @@ function NoteRowInner({
   const visibleCols = visibleColumns
   const labels = usePlotStore((s) => s.labels)
 
-  /* ── List mode rendering ── */
-  if (viewMode === "list") {
-    const label = note.labelId ? labels.find((l: { id: string; name: string; color: string }) => l.id === note.labelId) : null
-    const folderName = note.folderId ? folders.find((f: Folder) => f.id === note.folderId)?.name : null
-    const statusColor = STATUS_DOT_COLORS[note.status] ?? "rgba(255,255,255,0.32)"
-
-    return (
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <div
-            draggable
-            onDragStart={(e) => setNoteDragData(e, note.id)}
-            className={`group flex items-center gap-3 cursor-pointer transition-colors ${
-              isCompact ? "px-3 py-1" : "px-5 py-2.5"
-            } ${
-              isSelected
-                ? "bg-accent/5"
-                : isActive
-                  ? "bg-accent/8 border-l-2 border-l-accent"
-                  : "hover:bg-secondary/20"
-            }`}
-            onClick={onClick ?? onOpen}
-            onDoubleClick={onDoubleClick}
-          >
-            {/* Checkbox */}
-            <div
-              data-checkbox
-              className={`shrink-0 flex items-center justify-center cursor-pointer rounded ${isCompact ? "w-5 h-5" : "w-6 h-6"} ${
-                selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
-              }`}
-              onClick={(e) => {
-                e.stopPropagation()
-                const syntheticEvent = { ...e, metaKey: true, ctrlKey: true, shiftKey: false } as React.MouseEvent
-                onClick?.(syntheticEvent)
-              }}
-            >
-              <div
-                className={`rounded border flex items-center justify-center transition-colors pointer-events-none h-3.5 w-3.5 ${
-                  isSelected ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
-                }`}
-              >
-                {isSelected && <PhCheck className="text-accent-foreground" size={8} weight="bold" />}
-              </div>
-            </div>
-
-            {/* Status icon (shape-differentiated) */}
-            {visibleCols.includes("status") && (
-              <StatusShapeIcon status={note.status} size={8} />
-            )}
-
-            {/* Title + optional preview */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className={`font-medium text-foreground truncate ${isCompact ? "text-xs" : "text-note"}`}>{note.title || "Untitled"}</span>
-                {visibleCols.includes("wordCount") && (() => {
-                  const wc = note.preview ? note.preview.split(/\s+/).filter(Boolean).length : 0
-                  return wc > 0 ? (
-                    <span className="text-2xs tabular-nums text-muted-foreground/30 shrink-0">{wc}</span>
-                  ) : null
-                })()}
-              </div>
-              {showCardPreview && note.preview && (
-                <span className="text-xs text-muted-foreground/60 truncate block mt-0.5">{note.preview}</span>
-              )}
-            </div>
-
-            {/* Label badge (always visible — part of note identity) */}
-            {label ? (
-              <span
-                className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-2xs font-medium"
-                style={{ backgroundColor: `${label.color}18`, color: label.color }}
-              >
-                {label.name}
-              </span>
-            ) : (
-              <span className="text-2xs px-1.5 py-0.5 rounded bg-active-bg text-muted-foreground shrink-0">
-                Memo
-              </span>
-            )}
-
-            {/* Tags (max 2) */}
-            {visibleCols.includes("tags") && note.tags?.slice(0, 2).map((tagId) => {
-              const tagStore = usePlotStore.getState().tags
-              const tag = tagStore.find((t: Tag) => t.id === tagId)
-              return tag ? (
-                <span key={tagId} className="text-2xs px-1.5 py-0.5 rounded border border-border/60 text-muted-foreground/60 shrink-0">
-                  {tag.name}
-                </span>
-              ) : null
-            })}
-
-            {/* Folder */}
-            {visibleCols.includes("folder") && folderName && (
-              <span className="text-xs text-muted-foreground/50 shrink-0">{folderName}</span>
-            )}
-
-            {/* Links */}
-            {visibleCols.includes("links") && links > 0 && (
-              <span className="flex items-center gap-0.5 text-xs text-muted-foreground/40 tabular-nums shrink-0">
-                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
-                  <path d="M6.7 8.7a3.3 3.3 0 005 .4l2-2a3.3 3.3 0 00-4.7-4.7L8.4 3"/>
-                  <path d="M9.3 7.3a3.3 3.3 0 00-5-.4l-2 2a3.3 3.3 0 004.7 4.7l.6-.6"/>
-                </svg>
-                {links}
-              </span>
-            )}
-
-            {/* Reads */}
-            {visibleCols.includes("reads") && note.reads > 0 && (
-              <span className="flex items-center gap-0.5 text-xs text-muted-foreground/40 tabular-nums shrink-0">
-                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
-                  <path d="M1 8s2.7-5 7-5 7 5 7 5-2.7 5-7 5-7-5-7-5z"/>
-                  <circle cx="8" cy="8" r="2"/>
-                </svg>
-                {note.reads}
-              </span>
-            )}
-
-            {/* Word count */}
-            {visibleCols.includes("wordCount") && (() => {
-              const wc = note.preview ? note.preview.split(/\s+/).filter(Boolean).length : 0
-              return (
-                <span className={`text-xs tabular-nums shrink-0 ${wc === 0 ? "text-muted-foreground/20" : "text-muted-foreground/40"}`}>
-                  {wc}
-                </span>
-              )
-            })()}
-
-            {/* Updated (relative time) */}
-            {visibleCols.includes("updatedAt") && (
-              <span className="flex items-center gap-0.5 text-xs text-muted-foreground/40 tabular-nums shrink-0 text-right">
-                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 shrink-0">
-                  <circle cx="8" cy="8" r="6"/>
-                  <polyline points="8 4.5 8 8 10.5 9.5"/>
-                </svg>
-                {shortRelative(note.updatedAt)}
-              </span>
-            )}
-
-            {/* Created (absolute date) */}
-            {visibleCols.includes("createdAt") && (
-              <span className="flex items-center gap-0.5 text-xs text-muted-foreground/40 tabular-nums shrink-0 text-right">
-                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 shrink-0">
-                  <rect x="2" y="3" width="12" height="11" rx="1.5"/>
-                  <line x1="2" y1="7" x2="14" y2="7"/>
-                  <line x1="5.3" y1="1.3" x2="5.3" y2="4.7"/>
-                  <line x1="10.7" y1="1.3" x2="10.7" y2="4.7"/>
-                </svg>
-                {absDate(note.createdAt)}
-              </span>
-            )}
-          </div>
-        </ContextMenuTrigger>
-
-        <ContextMenuContent className="w-52">
-          {/* Tray actions */}
-          {note.status === "inbox" && note.triageStatus !== "trashed" && (
-            <>
-              <ContextMenuItem onClick={onKeep} className="text-sm">
-                <PhCheck className="mr-2 text-accent" size={16} weight="bold" />
-                Done
-              </ContextMenuItem>
-              <ContextMenuSub>
-                <ContextMenuSubTrigger className="text-sm">
-                  <Alarm className="mr-2 text-muted-foreground" size={16} weight="regular" />
-                  Snooze
-                </ContextMenuSubTrigger>
-                <ContextMenuSubContent className="w-44">
-                  <ContextMenuItem onClick={() => onSnooze("3h")} className="text-sm">3 hours</ContextMenuItem>
-                  <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-sm">Tomorrow 10:00 AM</ContextMenuItem>
-                  <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-sm">In 3 days</ContextMenuItem>
-                  <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-sm">Next week 10:00 AM</ContextMenuItem>
-                  <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-sm">In 1 week</ContextMenuItem>
-                </ContextMenuSubContent>
-              </ContextMenuSub>
-              <ContextMenuItem onClick={onTrash} className="text-sm text-destructive focus:text-destructive">
-                <Trash className="mr-2" size={16} weight="regular" />
-                Trash
-              </ContextMenuItem>
-              <ContextMenuSeparator />
-            </>
-          )}
-          {note.status === "capture" && (
-            <>
-              <ContextMenuItem onClick={onPromote} className="text-sm">
-                <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" />
-                Promote to Permanent
-              </ContextMenuItem>
-              <ContextMenuItem onClick={onMoveBack} className="text-sm">
-                <Tray className="mr-2 text-muted-foreground" size={16} weight="regular" />
-                Back to Tray
-              </ContextMenuItem>
-              <ContextMenuSeparator />
-            </>
-          )}
-          {note.status === "permanent" && (
-            <>
-              <ContextMenuItem onClick={onDemote} className="text-sm">
-                <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" />
-                Demote to Capture
-              </ContextMenuItem>
-              <ContextMenuSeparator />
-            </>
-          )}
-          <ContextMenuItem onClick={onOpen} className="text-sm">
-            <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" />
-            Open
-          </ContextMenuItem>
-          <ContextMenuItem onClick={onMergeWith} className="text-sm">
-            <GitMerge className="mr-2 text-muted-foreground" size={16} weight="regular" />
-            GitMerge with...
-          </ContextMenuItem>
-          <ContextMenuItem onClick={onLinkWith} className="text-sm">
-            <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />
-            Link to...
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-    )
-  }
-
   /* ── Table mode rendering (CSS Grid) ── */
 
   const wordCount = useMemo(() => {
@@ -1703,7 +1469,7 @@ function NoteRowInner({
           onDragStart={(e) => setNoteDragData(e, note.id)}
           style={{ display: "grid", gridTemplateColumns: gridTemplate }}
           className={`group items-center transition-colors cursor-pointer ${
-            isCompact ? "px-3 py-1.5" : "px-5 py-0"
+            isCompact ? "px-3 py-1.5" : "px-5 py-2"
           } ${
             isSelected
               ? "bg-accent/5"
@@ -1740,46 +1506,30 @@ function NoteRowInner({
       </div>
 
       {/* Name */}
-      <div className="flex items-center gap-2.5 min-w-0 pr-4">
-        <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
-        <span className={`truncate text-foreground ${isCompact ? "text-note" : "text-ui"}`}>
-          {note.title || "Untitled"}
-        </span>
-        {(() => {
-          const label = note.labelId ? labels.find((l: { id: string; name: string; color: string }) => l.id === note.labelId) : null
-          if (label) {
-            return (
-              <span
-                className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-2xs font-medium"
-                style={{ backgroundColor: `${label.color}18`, color: label.color }}
-              >
-                {label.name}
-              </span>
-            )
-          }
-          return (
-            <span className="shrink-0 inline-flex items-center rounded-full px-1.5 py-0.5 text-2xs font-medium text-muted-foreground/70 bg-muted/50">
-              Memo
-            </span>
-          )
-        })()}
-        <SourceIcon source={note.source} />
-        {note.preview.length > 0 && (
-          <span
-            className={`shrink-0 text-2xs tabular-nums font-medium ${note.preview.length >= 80 ? "text-chart-5" : note.preview.length >= 30 ? "text-blue-400" : "text-muted-foreground"}`}
-          >
-            {note.preview.length >= 120 ? "120+" : note.preview.length}
+      <div className="flex flex-col min-w-0 pr-4">
+        <div className="flex items-center gap-2">
+          <StatusShapeIcon status={note.status} size={14} />
+          <span className={`truncate text-foreground ${isCompact ? "text-note" : "text-ui"}`}>
+            {note.title || "Untitled"}
           </span>
-        )}
-        {links === 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="shrink-0 flex items-center gap-0.5 text-2xs text-muted-foreground/50">
-                <PhLink size={10} weight="regular" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent className="text-xs">Add at least 1 link to reduce orphan notes.</TooltipContent>
-          </Tooltip>
+          {(() => {
+            const label = note.labelId ? labels.find((l: { id: string; name: string; color: string }) => l.id === note.labelId) : null
+            if (label) {
+              return (
+                <span
+                  className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-2xs font-medium"
+                  style={{ backgroundColor: `${label.color}18`, color: label.color }}
+                >
+                  {label.name}
+                </span>
+              )
+            }
+            return null
+          })()}
+          <SourceIcon source={note.source} />
+        </div>
+        {showCardPreview && note.preview && (
+          <span className="text-xs text-muted-foreground/50 truncate pl-[22px] mt-0.5">{note.preview}</span>
         )}
       </div>
 
@@ -1795,20 +1545,34 @@ function NoteRowInner({
         <div className="flex items-center justify-center px-2">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
-            if (!folder) return <span className="text-2xs text-muted-foreground/20">—</span>
+            if (!folder) return <span className="text-xs text-muted-foreground/30">—</span>
             return (
-              <span className="text-2xs text-muted-foreground/50 truncate">{folder.name}</span>
+              <span className="text-xs text-muted-foreground/60 truncate">{folder.name}</span>
             )
           })() : (
-            <span className="text-2xs text-muted-foreground/20">—</span>
+            <span className="text-xs text-muted-foreground/30">—</span>
           )}
+        </div>
+      )}
+
+      {/* Tags */}
+      {visibleCols.includes("tags") && (
+        <div className="flex items-center gap-1 px-1 overflow-hidden">
+          {note.tags?.slice(0, 2).map((tagId) => {
+            const tag = usePlotStore.getState().tags.find((t: Tag) => t.id === tagId)
+            return tag ? (
+              <span key={tagId} className="text-2xs px-1.5 py-0.5 rounded border border-border/60 text-muted-foreground/60 shrink-0 truncate max-w-[56px]">
+                {tag.name}
+              </span>
+            ) : null
+          })}
         </div>
       )}
 
       {/* Links */}
       {visibleCols.includes("links") && (
         <div className="text-center px-1">
-          <span className={`tabular-nums text-xs ${links === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
+          <span className={`tabular-nums text-xs ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground/60"}`}>
             {links}
           </span>
         </div>
@@ -1817,7 +1581,7 @@ function NoteRowInner({
       {/* Reads */}
       {visibleCols.includes("reads") && (
         <div className="text-center px-1">
-          <span className={`tabular-nums text-xs ${note.reads === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
+          <span className={`tabular-nums text-xs ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground/60"}`}>
             {note.reads}
           </span>
         </div>
@@ -1826,7 +1590,7 @@ function NoteRowInner({
       {/* Word Count */}
       {visibleCols.includes("wordCount") && (
         <div className="text-right px-1">
-          <span className={`tabular-nums text-xs ${wordCount === 0 ? "text-muted-foreground/20" : "text-muted-foreground/60"}`}>
+          <span className={`tabular-nums text-xs ${wordCount === 0 ? "text-muted-foreground/30" : "text-muted-foreground/60"}`}>
             {wordCount}
           </span>
         </div>
@@ -1837,7 +1601,7 @@ function NoteRowInner({
         <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-xs text-muted-foreground/50 cursor-default">
+              <span className="tabular-nums text-xs text-muted-foreground/60 cursor-default">
                 {shortRelative(note.updatedAt)}
               </span>
             </TooltipTrigger>
@@ -1853,7 +1617,7 @@ function NoteRowInner({
         <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-xs text-muted-foreground/50 cursor-default">
+              <span className="tabular-nums text-xs text-muted-foreground/60 cursor-default">
                 {absDate(note.createdAt)}
               </span>
             </TooltipTrigger>
@@ -1867,7 +1631,7 @@ function NoteRowInner({
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-52">
-        {/* Tray actions */}
+        {/* Inbox actions */}
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
             <ContextMenuItem onClick={onKeep} className="text-sm">
@@ -1918,7 +1682,7 @@ function NoteRowInner({
             </ContextMenuItem>
             <ContextMenuItem onClick={onMoveBack} className="text-sm">
               <Tray className="mr-2 text-muted-foreground" size={16} weight="regular" />
-              Back to Tray
+              Back to Inbox
               <span className="ml-auto text-2xs text-muted-foreground">B</span>
             </ContextMenuItem>
             <ContextMenuSeparator />

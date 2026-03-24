@@ -47,8 +47,8 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Editor
 - TipTap 3 editor (`components/editor/TipTapEditor.tsx`)
 - 25+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, WikiQuoteExtension, etc.)
-- Workspace: binary tree layout system (v35) — WorkspaceNode = Leaf | Branch
-- WorkspaceMode: default | zen | research
+- Workspace: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
+- WorkspaceMode 삭제됨 — sidebarCollapsed + detailsOpen 독립 토글
 - Wiki-links: `[[title]]` extracted to `Note.linksOut`
 
 ### Knowledge System
