@@ -1585,6 +1585,16 @@ function NoteRowInner({
               </span>
             )}
 
+            {/* Word count */}
+            {visibleCols.includes("wordCount") && (() => {
+              const wc = note.preview ? note.preview.split(/\s+/).filter(Boolean).length : 0
+              return (
+                <span className={`text-xs tabular-nums shrink-0 ${wc === 0 ? "text-muted-foreground/20" : "text-muted-foreground/40"}`}>
+                  {wc}
+                </span>
+              )
+            })()}
+
             {/* Updated (relative time) */}
             {visibleCols.includes("updatedAt") && (
               <span className="flex items-center gap-0.5 text-xs text-muted-foreground/40 tabular-nums shrink-0 text-right">
