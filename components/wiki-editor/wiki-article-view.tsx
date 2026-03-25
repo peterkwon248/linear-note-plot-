@@ -241,6 +241,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
     toast.success(`Moved ${blockIds.length} block(s) to "${targetArticle.title}"`)
   }, [article, articleId])
 
+
   // Improvement 2: confirm drag split with custom title
   const handleConfirmDragSplit = useCallback(() => {
     if (!dragSplitPrompt || !article) return
