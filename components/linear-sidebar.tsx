@@ -31,6 +31,7 @@ import { PRESET_COLORS } from "@/lib/colors"
 import { setWikiViewMode, useWikiViewMode } from "@/lib/wiki-view-mode"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
+import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
@@ -118,6 +119,9 @@ function NavLink({
             setActiveTagId(null)
             setActiveLabelId(null)
           }
+          if (href === "/wiki") {
+            setWikiViewMode("dashboard")
+          }
           const currentRoute = getActiveRoute()
           setActiveRoute(href)
           if (currentRoute !== href) router.push(href)
@@ -203,6 +207,11 @@ export function LinearSidebar() {
 
   const tags = usePlotStore((s) => s.tags)
 
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
+  const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
+  const deleteWikiCategory = usePlotStore((s) => s.deleteWikiCategory)
+
   const activeSpace = useActiveSpace()
   const wikiViewMode = useWikiViewMode()
 
@@ -260,6 +269,14 @@ export function LinearSidebar() {
   const [renameValue, setRenameValue] = useState("")
   const renameInputRef = useRef<HTMLInputElement>(null)
 
+  // Wiki category state
+  const [newCategoryInput, setNewCategoryInput] = useState(false)
+  const [newCatName, setNewCatName] = useState("")
+  const [categoryMenuId, setCategoryMenuId] = useState<string | null>(null)
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
+  const [editCatName, setEditCatName] = useState("")
+  const categoryMenuRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (newFolderOpen) {
       setTimeout(() => newFolderInputRef.current?.focus(), 0)
@@ -275,6 +292,17 @@ export function LinearSidebar() {
   useEffect(() => {
     if (renamingItem) setTimeout(() => renameInputRef.current?.focus(), 0)
   }, [renamingItem])
+
+  useEffect(() => {
+    if (!categoryMenuId) return
+    const handler = (e: MouseEvent) => {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(e.target as Node)) {
+        setCategoryMenuId(null)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [categoryMenuId])
 
   const inboxCount = useMemo(() => notes.filter((n) => n.status === "inbox" && !n.trashed && n.triageStatus !== "trashed").length, [notes])
   const allNotesCount = useMemo(() => notes.filter((n) => !n.trashed).length, [notes])
@@ -869,65 +897,145 @@ export function LinearSidebar() {
               </button>
             </div>
 
-            {/* Wiki categories (tags used by wiki notes) */}
+            {/* Wiki Categories (CRUD) */}
             {(() => {
-              const wikiNotes = notes.filter((n) => n.isWiki && !n.trashed)
-              const allTags = tags.filter((t) => !t.trashed)
-              const cats = allTags
-                .map((tag) => ({
-                  ...tag,
-                  count: wikiNotes.filter((n) => n.tags.includes(tag.id)).length,
-                }))
-                .filter((c) => c.count > 0)
-                .sort((a, b) => b.count - a.count)
-              const uncategorized = wikiNotes.filter((n) => n.tags.length === 0).length
-
-              return (cats.length > 0 || uncategorized > 0) ? (
-                <Section title="Categories">
-                  {cats.map((cat) => (
+              const sortedCats = [...wikiCategories].sort((a, b) => a.name.localeCompare(b.name))
+              return (
+                <Section
+                  title="Categories"
+                  trailing={
                     <button
-                      key={cat.id}
-                      onClick={() => {
-                        setActiveRoute("/wiki")
-                        setSelectedNoteId(null)
-                        setWikiViewMode("list")
-                        setWikiCategoryFilter(cat.id)
-                        router.push("/wiki")
-                      }}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                      onClick={() => { setNewCategoryInput(true); setNewCatName("") }}
+                      className="flex items-center justify-center w-5 h-5 rounded text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
                     >
-                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                        <span
-                          className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: cat.color || "var(--sidebar-count)" }}
-                        />
-                      </span>
-                      <span className="truncate text-left flex-1">{cat.name}</span>
-                      <span className="text-xs text-sidebar-count tabular-nums">
-                        {cat.count}
-                      </span>
+                      <IconPlus size={12} />
                     </button>
+                  }
+                >
+                  {newCategoryInput && (
+                    <div className="px-2.5 py-1">
+                      <input
+                        autoFocus
+                        value={newCatName}
+                        onChange={(e) => setNewCatName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newCatName.trim()) {
+                            createWikiCategory(newCatName.trim())
+                            setNewCatName("")
+                            setNewCategoryInput(false)
+                          }
+                          if (e.key === "Escape") {
+                            setNewCategoryInput(false)
+                            setNewCatName("")
+                          }
+                        }}
+                        onBlur={() => {
+                          if (!newCatName.trim()) {
+                            setNewCategoryInput(false)
+                            setNewCatName("")
+                          }
+                        }}
+                        placeholder="Category name..."
+                        className="h-7 w-full rounded border border-white/[0.12] bg-white/[0.06] px-2 text-xs text-sidebar-foreground placeholder:text-sidebar-muted focus:border-white/20 focus:outline-none"
+                      />
+                    </div>
+                  )}
+                  {sortedCats.map((cat) => (
+                    <div key={cat.id} className="relative">
+                      {editingCategoryId === cat.id ? (
+                        <div className="px-2.5 py-1">
+                          <input
+                            autoFocus
+                            value={editCatName}
+                            onChange={(e) => setEditCatName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && editCatName.trim()) {
+                                updateWikiCategory(cat.id, { name: editCatName.trim() })
+                                setEditingCategoryId(null)
+                                setEditCatName("")
+                              }
+                              if (e.key === "Escape") {
+                                setEditingCategoryId(null)
+                                setEditCatName("")
+                              }
+                            }}
+                            onBlur={() => {
+                              if (editCatName.trim()) {
+                                updateWikiCategory(cat.id, { name: editCatName.trim() })
+                              }
+                              setEditingCategoryId(null)
+                              setEditCatName("")
+                            }}
+                            className="h-7 w-full rounded border border-white/[0.12] bg-white/[0.06] px-2 text-xs text-sidebar-foreground placeholder:text-sidebar-muted focus:border-white/20 focus:outline-none"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => {
+                            setActiveRoute("/wiki")
+                            setSelectedNoteId(null)
+                            setWikiViewMode("list")
+                            setWikiCategoryFilter(cat.id)
+                            router.push("/wiki")
+                          }}
+                          className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text cursor-pointer"
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.currentTarget.click() }}
+                        >
+                          <span className="flex shrink-0 items-center justify-center w-5 h-5">
+                            <span
+                              className="h-2 w-2 rounded-full"
+                              style={{ backgroundColor: "var(--sidebar-count)" }}
+                            />
+                          </span>
+                          <span className="truncate flex-1 text-left">{cat.name}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setCategoryMenuId(categoryMenuId === cat.id ? null : cat.id)
+                            }}
+                            className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-5 h-5 rounded hover:bg-white/[0.08] transition-colors"
+                          >
+                            <DotsThree size={14} weight="bold" />
+                          </button>
+                        </div>
+                      )}
+                      {categoryMenuId === cat.id && (
+                        <div
+                          ref={categoryMenuRef}
+                          className="absolute right-2 top-full z-50 mt-0.5 min-w-[120px] rounded-md border border-white/[0.12] bg-popover py-1 shadow-lg"
+                        >
+                          <button
+                            onClick={() => {
+                              setEditingCategoryId(cat.id)
+                              setEditCatName(cat.name)
+                              setCategoryMenuId(null)
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-popover-foreground hover:bg-white/[0.06] transition-colors"
+                          >
+                            Rename
+                          </button>
+                          <button
+                            onClick={() => {
+                              deleteWikiCategory(cat.id)
+                              setCategoryMenuId(null)
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-400 hover:bg-white/[0.06] transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ))}
-                  {uncategorized > 0 && (
-                    <button
-                      onClick={() => {
-                        setActiveRoute("/wiki")
-                        setSelectedNoteId(null)
-                        router.push("/wiki")
-                      }}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                    >
-                      <span className="flex shrink-0 items-center justify-center w-5 h-5">
-                        <span className="h-2 w-2 rounded-full bg-foreground/20" />
-                      </span>
-                      <span className="truncate text-left flex-1 text-sidebar-muted">Uncategorized</span>
-                      <span className="text-xs text-sidebar-count tabular-nums">
-                        {uncategorized}
-                      </span>
-                    </button>
+                  {sortedCats.length === 0 && !newCategoryInput && (
+                    <div className="px-2.5 py-1.5 text-xs text-sidebar-muted">
+                      No categories yet
+                    </div>
                   )}
                 </Section>
-              ) : null
+              )
             })()}
 
             {/* Wiki Views */}

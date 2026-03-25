@@ -35,7 +35,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (19): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles
+- Slices (20): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
 - Store version: 60
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
@@ -79,11 +79,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-51. 템플릿 UX 개선 — Grid 프리뷰 강화, 생성 후 focus 모드, placeholder 힌트
-52. 위키 서브섹션 UI + 폰트/opacity 표준화 — AddBlockButton에 Subsection 옵션, text-xs 통일, opacity /30~/60
 53. WikiStatus 단순화 + Import Note 리디자인 + Red Links 통합 + 위키 삭제/플로팅 액션바 + 아이콘 통일
 54. Wiki Merge/Split 시스템 — Preview 다이얼로그, Unmerge, 섹션 컨텍스트 메뉴, 드래그 Split
 55. Drag Split UX 폴리시 + Merge/Split 풀페이지 — 플로팅 드롭존, DragOverlay, 기존 아티클 드롭 타겟, 사이드바 Merge/Split 전용 페이지
+56. Wiki 카테고리 + Merge/Split 풀페이지 개선 + 블록 렌더러 강화 — 카테고리 슬라이스, Merge/Split UX 대폭 개선
+57. Wiki Merge UX 수정 — Overview 사이드바 네비게이션 수정, 하단 드롭다운 위로 열림, New Article 타이틀 직접 입력, 카테고리 CRUD 사이드바 추가
 
 ## Three Axes — Core Design Philosophy
 
@@ -97,7 +97,7 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 - **LLM/API 사용 안 함** — 전부 규칙 기반 + 통계 기반 + 그래프 알고리즘. 오프라인, 프라이버시, 비용 0
 - **Activity Bar 5-space**: Inbox / Notes / Wiki / Calendar / Graph
-- **Wiki 사이드바 = Overview 단일 진입**: stat 카드 클릭으로 드릴다운
+- **Wiki 사이드바 4-항목**: Overview / Merge / Split / Categories (+ Views 섹션). Categories = 계층적 트리
 - **WikiStatus 2단계**: stub(미완성) → article(완성). Red Link = computed (참조만 존재). draft/complete 제거 (v60)
 - **위키 강등 = article→stub 1단계**: stub은 바닥(강등 없음, 삭제만)
 - **Display = List/Board만**: Insights/Calendar는 사이드바/Activity Bar 전용
@@ -107,26 +107,31 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **글로벌 탭 도입 안 함**: 멀티패널과 역할 충돌. 사이드바가 탭 역할 수행. Linear는 멀티패널이 없어서 탭 필요하지만 Plot은 사이드바+멀티패널로 커버
 - **View = 사이드바 섹션**: Linear의 View(상단 탭 프리셋)를 사이드바 Views 섹션으로 구현. 한눈에 전체 구조 파악 가능, 액티비티별 독립
 - **+ 버튼 = ViewHeader 우측**: top-utility-bar에서 제거, ViewHeader의 필터 아이콘 옆 `+` 아이콘으로 통일
+- **위키 카테고리 = 계층적 트리**: 태그/라벨은 flat(동등), 카테고리만 parentId 기반 트리. 위키백과식 지식 분류 체계
+- **카테고리 페이지 = 사이드바 최상위**: Overview/Merge/Split과 동급. 전체 트리 + 상세 페이지
+- **캘린더 플로팅 액션바 삭제**: 불필요하다고 판단 (2026-03-25)
 
 ## TODO: Future Work (우선순위 순)
 
-### Tier 1 — Linear UX 핵심
-- **위키 머지 UX 리디자인** — 타겟 선택 시 제목/상태 선택 UI, Undo 지원, 방향성 명확화
-- **캘린더 플로팅 액션바** — 캘린더에서도 선택 + 하단 액션바
+### P0 — 최우선 (현재)
+- **위키 카테고리 계층구조 + 카테고리 페이지** — WikiViewMode에 "categories" 추가, 사이드바 최상위 항목, 카테고리 전체/상세 페이지, 트리 렌더링 (접기/펼치기, parentId), "Add subcategory" 메뉴, 오버뷰 카테고리 클릭 → 상세 이동
+
+### P1 — 다음
+- **사이드바 View 편집 버튼** — 닫기 버튼 왼쪽에 + 배치, 클릭시 View 편집 모드
+- **사이드바 닫기 아이콘 변경** — chevron 제거, panel collapse 아이콘으로
+- **위키 머지 UX 리디자인** — Undo 지원, 방향성 명확화
+
+### P2 — 핵심 기능
 - **View 시스템 v2** — 사이드바 Views에 필터+디스플레이+정렬 프리셋 저장. "Save as View"로 현재 상태 저장
 - **풀페이지 검색 분리** — ⌘K = 풀페이지 노트 검색, ⌘/ = 커맨드 팔레트 (액션 전용)
 - **커맨드 팔레트 확장** — 컨텍스트 반응형 20+개 커맨드 (Note Actions, View Actions, Navigation, Creation)
 
-### Tier 2 — Wiki & Dashboard
+### P3 — 구조/확장
 - **Wiki 대시보드 반응형 모드** — Articles/Stubs/Red Links 카드 클릭시 콘텐츠 전환 (Linear All/Active/Backlog 패턴)
-- **사이드바 상단 View 편집 버튼** — 닫기 버튼 왼쪽에 + 배치, 클릭시 View 편집 모드
-- **사이드바 닫기 아이콘 변경** — chevron 제거, panel collapse 아이콘으로
-
-### Tier 3 — 구조 개선
 - **멀티패널 뷰 타입 확장** — Wiki/Calendar/Graph + 에디터 조합 스플릿 ("참조하면서 쓰기")
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식 통합 에디터
 
-### Tier 4 — 기능 확장
+### P4 — 나중에
 - J/K 리스트 네비게이션 (Linear식)
 - 노트 가져오기/내보내기 (import/export)
 - 그래프 사이드바 → 클러스터 + 인사이트 리워크
