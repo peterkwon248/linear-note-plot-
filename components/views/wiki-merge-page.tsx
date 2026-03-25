@@ -225,10 +225,6 @@ export function WikiMergePage() {
     setCategoryDropdownOpen(false)
   }
 
-  // Determine title dropdown display value
-  const titleIsCustom = !selectedArticles.some(a => a.title === mergeTitle)
-  const titleDropdownLabel = titleIsCustom ? "Custom title…" : (mergeTitle || "Select title…")
-
   // Survivor label
   const survivorLabel = selectedArticles.find(a => a.id === survivorId)?.title ?? "Select survivor"
 
@@ -452,25 +448,32 @@ export function WikiMergePage() {
                   {selectedArticles.find(a => a.id === survivorId)?.title ?? "Select survivor"}
                 </div>
               ) : (
-                /* New Article: custom dropdown */
+                /* New Article: direct input + picker */
                 <div className="space-y-1">
-                  <div ref={titleDropdownRef} className="relative">
+                  <div ref={titleDropdownRef} className="relative flex gap-1">
+                    <input
+                      type="text"
+                      value={mergeTitle}
+                      onChange={(e) => setMergeTitle(e.target.value)}
+                      placeholder="Enter article title…"
+                      className="h-8 flex-1 rounded-md border border-white/[0.08] bg-white/[0.03] px-3 text-xs text-white/90 placeholder:text-white/30 focus:border-white/20 focus:outline-none"
+                    />
                     <button
                       onClick={() => setTitleDropdownOpen(!titleDropdownOpen)}
-                      className="flex h-8 w-full items-center justify-between rounded-md border border-white/[0.08] bg-white/[0.03] px-3 text-xs text-white/80 hover:border-white/15 transition-colors"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-white/40 hover:border-white/15 hover:text-white/60 transition-colors"
+                      title="Pick from selected articles"
                     >
-                      <span className="truncate">{titleDropdownLabel}</span>
-                      <ChevronDown size={12} className="ml-2 shrink-0 text-white/30" />
+                      <ChevronDown size={12} />
                     </button>
                     {titleDropdownOpen && (
-                      <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
+                      <div className="absolute left-0 bottom-full z-50 mb-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
                         {selectedArticles.map(a => (
                           <button
                             key={a.id}
                             onClick={() => { setMergeTitle(a.title); setTitleDropdownOpen(false) }}
                             className={cn(
                               "flex w-full items-center px-3 py-1.5 text-xs transition-colors",
-                              mergeTitle === a.title && !titleIsCustom
+                              mergeTitle === a.title
                                 ? "bg-white/10 text-white/90"
                                 : "text-white/60 hover:bg-white/5 hover:text-white/80"
                             )}
@@ -478,31 +481,9 @@ export function WikiMergePage() {
                             {a.title}
                           </button>
                         ))}
-                        <div className="my-1 border-t border-white/[0.06]" />
-                        <button
-                          onClick={() => { setMergeTitle(""); setTitleDropdownOpen(false) }}
-                          className={cn(
-                            "flex w-full items-center px-3 py-1.5 text-xs transition-colors",
-                            titleIsCustom
-                              ? "bg-white/10 text-white/90"
-                              : "text-white/40 hover:bg-white/5 hover:text-white/60"
-                          )}
-                        >
-                          Custom title…
-                        </button>
                       </div>
                     )}
                   </div>
-                  {titleIsCustom && (
-                    <input
-                      type="text"
-                      value={mergeTitle}
-                      onChange={(e) => setMergeTitle(e.target.value)}
-                      placeholder="Enter custom title…"
-                      autoFocus
-                      className="h-8 w-full rounded-md border border-white/[0.08] bg-white/[0.03] px-3 text-xs text-white/90 placeholder:text-white/30 focus:border-white/20 focus:outline-none"
-                    />
-                  )}
                 </div>
               )}
             </div>
@@ -549,7 +530,7 @@ export function WikiMergePage() {
                     <ChevronDown size={12} className="ml-2 shrink-0 text-white/30" />
                   </button>
                   {survivorDropdownOpen && (
-                    <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
+                    <div className="absolute left-0 bottom-full z-50 mb-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
                       {selectedArticles.map(a => (
                         <button
                           key={a.id}
@@ -624,7 +605,7 @@ export function WikiMergePage() {
                     Add
                   </button>
                   {categoryDropdownOpen && (
-                    <div className="absolute left-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
+                    <div className="absolute left-0 bottom-full z-50 mb-1 min-w-[160px] rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
                       {showNewCategoryInput ? (
                         <div className="px-2 py-1">
                           <input
