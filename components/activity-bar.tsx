@@ -73,27 +73,27 @@ export function ActivityBar() {
   }
 
   return (
-    <div className="flex h-full w-11 shrink-0 flex-col items-center border-r border-border bg-background pt-2">
+    <div className="flex h-full w-12 shrink-0 flex-col items-center border-r border-border bg-background pt-3">
       {/* Sidebar open button — only when collapsed */}
       {sidebarCollapsed && (
-        <div className="flex flex-col items-center mb-1">
+        <div className="flex flex-col items-center mb-1.5">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={() => setSidebarCollapsed(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
                 aria-label="Open sidebar"
               >
-                <SidebarSimple size={20} />
+                <SidebarSimple size={18} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">Open sidebar</TooltipContent>
+            <TooltipContent side="right" className="text-[11px]">Open sidebar</TooltipContent>
           </Tooltip>
         </div>
       )}
 
       {/* Tier 1 — primary spaces */}
-      <div className="flex flex-col items-center gap-0.5">
+      <div className="flex flex-col items-center gap-1">
         {SPACES.map(({ id, label, icon: Icon, shortcut }) => {
           const isActive = activeSpace === id
           return (
@@ -102,20 +102,20 @@ export function ActivityBar() {
                 <button
                   onClick={() => handleSpaceClick(id)}
                   className={cn(
-                    "relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150",
+                    "relative flex h-8 w-8 items-center justify-center rounded-md transition-all duration-150",
                     isActive
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                   )}
                   aria-label={label}
                 >
-                  <Icon size={20} />
+                  <Icon size={18} />
                   {isActive && (
                     <div className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-foreground" />
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="text-xs">
+              <TooltipContent side="right" className="text-[11px]">
                 {label}
                 {shortcut && (
                   <span className="ml-2 text-muted-foreground">{shortcut}</span>
@@ -130,18 +130,18 @@ export function ActivityBar() {
       <div className="flex-1" />
 
       {/* Tier 2 — theme toggle */}
-      <div className="pb-2">
+      <div className="pb-3">
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}
+              {theme === "dark" ? <IconSun size={18} /> : <IconMoon size={18} />}
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right" className="text-xs">
+          <TooltipContent side="right" className="text-[11px]">
             {theme === "dark" ? "Light mode" : "Dark mode"}
           </TooltipContent>
         </Tooltip>

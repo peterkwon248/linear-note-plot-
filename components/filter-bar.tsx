@@ -117,7 +117,7 @@ export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagLi
 function ActiveBadge({ count }: { count: number }) {
   if (count === 0) return null
   return (
-    <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/15 px-1 text-2xs font-medium text-accent">
+    <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/15 px-1 text-[10px] font-medium text-accent">
       {count}
     </span>
   )

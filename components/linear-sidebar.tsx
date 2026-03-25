@@ -75,7 +75,7 @@ function NavLink({
   const setNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const isSidebarRoute = ALL_SIDEBAR_ROUTES.includes(href)
 
-  const className = `nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+  const className = `nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors ${
     active
       ? "bg-sidebar-active text-sidebar-active-text"
       : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
@@ -83,18 +83,18 @@ function NavLink({
 
   const content = (
     <>
-      <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+      <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
         {icon}
       </span>
       <span className="truncate text-left flex-1">{label}</span>
       {count !== undefined && (
-        <span className="text-xs text-sidebar-count tabular-nums">
+        <span className="text-[11px] text-sidebar-count tabular-nums">
           {count}
         </span>
       )}
       {badge && badge.count > 0 && (
         <span
-          className="rounded-full px-1.5 py-0.5 text-2xs font-medium tabular-nums"
+          className="rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums"
           style={{
             backgroundColor: `color-mix(in srgb, ${badge.color} 15%, transparent)`,
             color: badge.color,
@@ -162,22 +162,22 @@ function Section({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <div className="mt-8">
-      <div className="flex w-full items-center gap-1.5 px-2.5 py-1">
+    <div className="mt-6">
+      <div className="flex w-full items-center gap-1 px-2 py-1">
         <button
           onClick={() => setOpen(!open)}
-          className="flex flex-1 items-center gap-1.5 text-xs font-medium text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          className="flex flex-1 items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-sidebar-muted hover:text-sidebar-foreground transition-colors"
         >
           <span>{title}</span>
           {open ? (
-            <CaretDown size={14} weight="regular" />
+            <CaretDown size={12} weight="regular" />
           ) : (
-            <CaretRight size={14} weight="regular" />
+            <CaretRight size={12} weight="regular" />
           )}
         </button>
         {trailing}
       </div>
-      {open && <div className="mt-1 space-y-px">{children}</div>}
+      {open && <div className="mt-0.5 space-y-px">{children}</div>}
     </div>
   )
 }
@@ -505,7 +505,7 @@ export function LinearSidebar() {
             className="flex items-center justify-center h-5 w-5 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
             aria-label="New view"
           >
-            <IconPlus size={14} />
+            <IconPlus size={12} />
           </button>
         }
       >
@@ -519,7 +519,7 @@ export function LinearSidebar() {
               onKeyDown={handleNewViewKeyDown}
               onBlur={handleNewViewSubmit}
               placeholder="View name"
-              className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-sm text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
+              className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2 py-1 text-[13px] text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
         )}
@@ -536,14 +536,14 @@ export function LinearSidebar() {
                     setSelectedNoteId(null)
                     router.push(routeOnClick)
                   }}
-                  className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+                  className={`nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors ${
                     isViewActive
                       ? "bg-sidebar-active text-sidebar-active-text"
                       : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                   }`}
                 >
-                  <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${isViewActive ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
-                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${isViewActive ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
@@ -556,7 +556,7 @@ export function LinearSidebar() {
                       onChange={(e) => setRenameValue(e.target.value)}
                       onKeyDown={handleRenameKeyDown}
                       onBlur={handleRenameSubmit}
-                      className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-sm text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                      className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-[13px] text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                       onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
@@ -592,7 +592,7 @@ export function LinearSidebar() {
   return (
     <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
       {/* Header: RecentlyViewed + Back/Forward + spacer + Search + Close */}
-      <div className="flex items-center gap-0.5 px-2.5 pt-2.5 pb-1.5">
+      <div className="flex items-center gap-0.5 px-2 py-2">
         {/* Recently Viewed */}
         <div className="relative" ref={recentlyViewedRef}>
           <button
@@ -607,10 +607,10 @@ export function LinearSidebar() {
           {recentlyViewedOpen && (
             <div className="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border bg-popover shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="px-3 py-2 border-b border-border">
-                <span className="text-xs font-medium text-muted-foreground">Recently Viewed</span>
+                <span className="text-[11px] font-medium text-muted-foreground">Recently Viewed</span>
               </div>
               {recentlyViewed.length === 0 ? (
-                <div className="px-3 py-4 text-center text-note text-muted-foreground">
+                <div className="px-3 py-4 text-center text-[13px] text-muted-foreground">
                   No recently viewed notes
                 </div>
               ) : (
@@ -625,7 +625,7 @@ export function LinearSidebar() {
                       className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-secondary/50"
                     >
                       <IconDoc size={14} className="shrink-0 text-muted-foreground" />
-                      <span className="truncate text-note text-foreground">{item.title}</span>
+                      <span className="truncate text-[13px] text-foreground">{item.title}</span>
                     </button>
                   ))}
                 </div>
@@ -656,9 +656,9 @@ export function LinearSidebar() {
         <button
           onClick={() => setSearchOpen(true)}
           className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
-          title="Search (⌘K)"
+          title="Search (Cmd+K)"
         >
-          <MagnifyingGlass size={14} weight="regular" />
+          <MagnifyingGlass size={16} weight="regular" />
         </button>
 
         <button
@@ -671,35 +671,35 @@ export function LinearSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-2">
+      <nav className="flex-1 overflow-y-auto px-2 py-2">
         {/* ── Notes Context ─────────────────────────── */}
         {activeSpace === "notes" && (
           <>
             <div className="space-y-px">
               <NavLink
                 href="/notes"
-                icon={<IconNotes size={20} />}
+                icon={<IconNotes size={16} />}
                 label="All Notes"
                 count={allNotesCount > 0 ? allNotesCount : undefined}
                 active={isActive("/notes")}
               />
               <NavLink
                 href="/capture"
-                icon={<IconCapture size={20} />}
+                icon={<IconCapture size={16} />}
                 label="Capture"
                 count={captureCount > 0 ? captureCount : undefined}
                 active={isActive("/capture")}
               />
               <NavLink
                 href="/permanent"
-                icon={<IconPermanent size={20} />}
+                icon={<IconPermanent size={16} />}
                 label="Permanent"
                 count={permanentCount > 0 ? permanentCount : undefined}
                 active={isActive("/permanent")}
               />
               <NavLink
                 href="/pinned"
-                icon={<IconPin size={20} />}
+                icon={<IconPin size={16} />}
                 label="Pinned"
                 count={pinnedNotes.length > 0 ? pinnedNotes.length : undefined}
                 active={isActive("/pinned")}
@@ -715,7 +715,7 @@ export function LinearSidebar() {
                   className="flex items-center justify-center h-5 w-5 rounded hover:bg-sidebar-hover text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                   aria-label="New folder"
                 >
-                  <IconPlus size={14} />
+                  <IconPlus size={12} />
                 </button>
               }
             >
@@ -748,14 +748,14 @@ export function LinearSidebar() {
                           setSelectedNoteId(null)
                           router.push("/notes")
                         }}
-                        className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+                        className={`nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors ${
                           active
                             ? "bg-sidebar-active text-sidebar-active-text"
                             : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                         }`}
                       >
-                        <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
-                          <IconFolder size={20} />
+                        <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${active ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                          <IconFolder size={16} />
                         </span>
                         {isRenaming ? (
                           <input
@@ -765,14 +765,14 @@ export function LinearSidebar() {
                             onChange={(e) => setRenameValue(e.target.value)}
                             onKeyDown={handleRenameKeyDown}
                             onBlur={handleRenameSubmit}
-                            className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-sm text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                            className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-[13px] text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                             onClick={(e) => e.stopPropagation()}
                           />
                         ) : (
                           <span className="truncate text-left flex-1">{folder.name}</span>
                         )}
                         {!isRenaming && count > 0 && (
-                          <span className="text-xs text-sidebar-count tabular-nums">{count}</span>
+                          <span className="text-[11px] text-sidebar-count tabular-nums">{count}</span>
                         )}
                       </button>
                     </ContextMenuTrigger>
@@ -806,7 +806,7 @@ export function LinearSidebar() {
               {hiddenFolders.length > 0 && !showAllFolders && (
                 <button
                   onClick={() => setShowAllFolders(true)}
-                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[11px] text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                 >
                   {hiddenFolders.length} more
                 </button>
@@ -814,7 +814,7 @@ export function LinearSidebar() {
               {showAllFolders && hiddenFolders.length > 0 && (
                 <button
                   onClick={() => setShowAllFolders(false)}
-                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-note text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[11px] text-sidebar-muted hover:text-sidebar-foreground transition-colors"
                 >
                   Show less
                 </button>
@@ -828,7 +828,7 @@ export function LinearSidebar() {
             <Section title="More">
               <NavLink
                 href="/tags"
-                icon={<IconTag size={20} />}
+                icon={<IconTag size={16} />}
                 label="Tags"
                 count={tags.length}
                 active={isActive("/tags")}
@@ -836,7 +836,7 @@ export function LinearSidebar() {
               />
               <NavLink
                 href="/labels"
-                icon={<IconLabel size={20} />}
+                icon={<IconLabel size={16} />}
                 label="Labels"
                 count={labels.length}
                 active={isActive("/labels")}
@@ -844,7 +844,7 @@ export function LinearSidebar() {
               />
               <NavLink
                 href="/templates"
-                icon={<IconTemplate size={20} />}
+                icon={<IconTemplate size={16} />}
                 label="Templates"
                 count={templates.length}
                 active={isActive("/templates")}
@@ -852,7 +852,7 @@ export function LinearSidebar() {
               />
               <NavLink
                 href="/insights"
-                icon={<IconInsight size={20} />}
+                icon={<IconInsight size={16} />}
                 label="Insights"
                 active={isActive("/insights")}
                 dragContent={{ type: "insights" }}
@@ -868,9 +868,9 @@ export function LinearSidebar() {
                     draggable
                     onDragStart={(e) => setNoteDragData(e, item.id)}
                     onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                    className="nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                   >
-                    <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                    <span className="flex shrink-0 items-center justify-center w-4 h-4 text-sidebar-muted">
                       <StatusIcon status={item.status} />
                     </span>
                     <span className="truncate text-left flex-1">{item.title || "Untitled"}</span>
@@ -888,9 +888,9 @@ export function LinearSidebar() {
                     draggable
                     onDragStart={(e) => setNoteDragData(e, item.id)}
                     onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                    className="nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                   >
-                    <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                    <span className="flex shrink-0 items-center justify-center w-4 h-4 text-sidebar-muted">
                       <StatusIcon status={item.status} />
                     </span>
                     <span className="truncate text-left flex-1">{item.title}</span>
@@ -907,7 +907,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/wiki"
-                icon={<IconWiki size={20} />}
+                icon={<IconWiki size={16} />}
                 label="Overview"
                 count={wikiCount > 0 ? wikiCount : undefined}
                 active={isActive("/wiki") && wikiViewMode !== "merge" && wikiViewMode !== "split"}
@@ -919,13 +919,13 @@ export function LinearSidebar() {
                   setWikiViewMode("merge")
                   router.push("/wiki")
                 }}
-                className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+                className={`nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors ${
                   wikiViewMode === "merge"
                     ? "bg-sidebar-active text-sidebar-active-text"
                     : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                 }`}
               >
-                <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${wikiViewMode === "merge" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${wikiViewMode === "merge" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
                   <GitMerge size={16} weight="regular" />
                 </span>
                 <span className="truncate text-left flex-1">Merge</span>
@@ -937,13 +937,13 @@ export function LinearSidebar() {
                   setWikiViewMode("split")
                   router.push("/wiki")
                 }}
-                className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+                className={`nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors ${
                   wikiViewMode === "split"
                     ? "bg-sidebar-active text-sidebar-active-text"
                     : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                 }`}
               >
-                <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${wikiViewMode === "split" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${wikiViewMode === "split" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
                   <Scissors size={16} weight="regular" />
                 </span>
                 <span className="truncate text-left flex-1">Split</span>
@@ -955,13 +955,13 @@ export function LinearSidebar() {
                   setCategoryOverview()
                   router.push("/wiki")
                 }}
-                className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+                className={`nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors ${
                   wikiViewMode === "category"
                     ? "bg-sidebar-active text-sidebar-active-text"
                     : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                 }`}
               >
-                <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${wikiViewMode === "category" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                <span className={`flex shrink-0 items-center justify-center w-4 h-4 ${wikiViewMode === "category" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
                   <Folders size={16} weight="regular" />
                 </span>
                 <span className="truncate text-left flex-1">Categories</span>
@@ -980,9 +980,9 @@ export function LinearSidebar() {
                     <button
                       key={note.id}
                       onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                      className="nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                     >
-                      <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                      <span className="flex shrink-0 items-center justify-center w-4 h-4 text-sidebar-muted">
                         <IconDoc size={14} />
                       </span>
                       <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
@@ -1004,9 +1004,9 @@ export function LinearSidebar() {
                     <button
                       key={item.id}
                       onClick={(e) => openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                      className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                      className="nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                     >
-                      <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                      <span className="flex shrink-0 items-center justify-center w-4 h-4 text-sidebar-muted">
                         <IconDoc size={14} />
                       </span>
                       <span className="truncate text-left flex-1">{item.title}</span>
@@ -1024,7 +1024,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/calendar"
-                icon={<IconCalendar size={20} />}
+                icon={<IconCalendar size={16} />}
                 label="Calendar"
                 active={isActive("/calendar")}
               />
@@ -1038,12 +1038,12 @@ export function LinearSidebar() {
                 const updated = notes.filter(n => !n.trashed && n.updatedAt.startsWith(todayStr) && !n.createdAt.startsWith(todayStr)).length
 
                 return (
-                  <div className="flex flex-col gap-1.5 px-2.5">
-                    <div className="flex items-center justify-between text-xs">
+                  <div className="flex flex-col gap-1.5 px-2">
+                    <div className="flex items-center justify-between text-[11px]">
                       <span className="text-sidebar-muted">Created</span>
                       <span className="text-sidebar-foreground tabular-nums">{created}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-[11px]">
                       <span className="text-sidebar-muted">Updated</span>
                       <span className="text-sidebar-foreground tabular-nums">{updated}</span>
                     </div>
@@ -1073,13 +1073,13 @@ export function LinearSidebar() {
                       <button
                         key={note.id}
                         onClick={(e) => openNote(note.id, { forceNewTab: e.ctrlKey || e.metaKey })}
-                        className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                        className="nav-item group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
                       >
-                        <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
+                        <span className="flex shrink-0 items-center justify-center w-4 h-4 text-sidebar-muted">
                           <IconDoc size={14} />
                         </span>
                         <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
-                        <span className="text-2xs text-muted-foreground/40 tabular-nums">{relDate}</span>
+                        <span className="text-[10px] text-muted-foreground/40 tabular-nums">{relDate}</span>
                       </button>
                     )
                   })}
@@ -1098,7 +1098,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/ontology"
-                icon={<IconOntology size={20} />}
+                icon={<IconOntology size={16} />}
                 label="Graph"
                 count={allNotesCount > 0 ? allNotesCount : undefined}
                 active={isActive("/ontology")}
@@ -1108,14 +1108,14 @@ export function LinearSidebar() {
 
             {/* Node Types legend */}
             <Section title="Node Types">
-              <div className="flex flex-col gap-1 px-2.5">
+              <div className="flex flex-col gap-1 px-2">
                 {[
                   { label: "Inbox", bg: "bg-chart-2" },
                   { label: "Capture", bg: "bg-chart-3" },
                   { label: "Permanent", bg: "bg-chart-5" },
                   { label: "Wiki", bg: "bg-wiki-complete" },
                 ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-2 text-xs">
+                  <div key={item.label} className="flex items-center gap-2 text-[11px]">
                     <span className={`h-2 w-2 rounded-full ${item.bg}`} />
                     <span className="text-sidebar-foreground">{item.label}</span>
                   </div>
@@ -1170,28 +1170,28 @@ export function LinearSidebar() {
                 const wikiPercent = totalNodes > 0 ? Math.round((wikiCount / totalNodes) * 100) : 0
 
                 return (
-                  <div className="flex flex-col gap-2 px-2.5">
-                    <div className="flex items-center justify-between text-xs">
+                  <div className="flex flex-col gap-2 px-2">
+                    <div className="flex items-center justify-between text-[11px]">
                       <span className="text-sidebar-muted">Nodes</span>
                       <span className="text-sidebar-foreground tabular-nums">{totalNodes}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-[11px]">
                       <span className="text-sidebar-muted">Edges</span>
                       <span className="text-sidebar-foreground tabular-nums">{totalEdges}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-[11px]">
                       <span className="text-sidebar-muted">Orphans</span>
                       <span className={`tabular-nums ${orphanCount > 0 ? "text-chart-3" : "text-sidebar-foreground"}`}>{orphanCount}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-[11px]">
                       <span className="text-sidebar-muted">Hubs (5+)</span>
                       <span className="text-sidebar-foreground tabular-nums">{hubCount}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-[11px]">
                       <span className="text-sidebar-muted">Density</span>
                       <span className="text-sidebar-foreground tabular-nums">{density}%</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-[11px]">
                       <span className="text-sidebar-muted">Wiki Coverage</span>
                       <span className="text-sidebar-foreground tabular-nums">{wikiPercent}%</span>
                     </div>
@@ -1204,7 +1204,7 @@ export function LinearSidebar() {
             <Section title="More">
               <NavLink
                 href="/graph-insights"
-                icon={<IconInsight size={20} />}
+                icon={<IconInsight size={16} />}
                 label="Insights"
                 active={isActive("/graph-insights")}
               />
@@ -1218,8 +1218,8 @@ export function LinearSidebar() {
             {/* Triage stats card */}
             <div className="mx-1 mb-2 rounded-lg bg-sidebar-hover p-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-sidebar-muted">Inbox</span>
-                <span className="text-lg font-semibold tabular-nums text-sidebar-foreground">
+                <span className="text-[11px] text-sidebar-muted">Inbox</span>
+                <span className="text-base font-semibold tabular-nums text-sidebar-foreground">
                   {inboxCount}
                 </span>
               </div>
@@ -1234,7 +1234,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/inbox"
-                icon={<IconInbox size={20} />}
+                icon={<IconInbox size={16} />}
                 label="Untriaged"
                 count={inboxCount > 0 ? inboxCount : undefined}
                 active={isActive("/inbox")}
@@ -1245,7 +1245,7 @@ export function LinearSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-sidebar-border px-2.5 py-2 space-y-px">
+      <div className="border-t border-sidebar-border px-2 py-2 space-y-px">
         <NavLink
           href="/settings"
           icon={<IconGear size={16} />}
@@ -1254,7 +1254,7 @@ export function LinearSidebar() {
         />
         <NavLink
           href="/trash"
-          icon={<IconTrash size={20} />}
+          icon={<IconTrash size={16} />}
           label="Trash"
           count={trashCount > 0 ? trashCount : undefined}
           active={isActive("/trash")}

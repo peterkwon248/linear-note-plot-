@@ -29,7 +29,7 @@ export function TopUtilityBar() {
   }
 
   return (
-    <div className="flex h-11 shrink-0 items-center border-b border-border bg-background px-4 gap-1.5">
+    <div className="flex h-10 shrink-0 items-center border-b border-border bg-background px-4 gap-1.5">
       {/* Navigation buttons */}
       <Tooltip>
         <TooltipTrigger asChild>
@@ -41,7 +41,7 @@ export function TopUtilityBar() {
             <IconChevronLeft size={16} />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">Back</TooltipContent>
+        <TooltipContent side="bottom" className="text-[11px]">Back</TooltipContent>
       </Tooltip>
 
       <Tooltip>
@@ -54,7 +54,7 @@ export function TopUtilityBar() {
             <IconChevronRight size={16} />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">Forward</TooltipContent>
+        <TooltipContent side="bottom" className="text-[11px]">Forward</TooltipContent>
       </Tooltip>
 
       <div className="w-2" />
@@ -62,11 +62,11 @@ export function TopUtilityBar() {
       {/* Search trigger — opens SearchDialog, not a real input */}
       <button
         onClick={() => setSearchOpen(true)}
-        className="flex h-[30px] max-w-[260px] flex-1 items-center gap-2 rounded-md border border-border px-2.5 text-sm text-muted-foreground transition-colors hover:border-foreground/20"
+        className="flex h-8 max-w-[260px] flex-1 items-center gap-2 rounded-md border border-border px-2.5 text-[13px] text-muted-foreground transition-colors hover:border-foreground/20"
       >
         <IconSearch size={14} className="shrink-0" />
-        <span className="flex-1 text-left">Search…</span>
-        <kbd className="font-mono text-2xs opacity-40">⌘K</kbd>
+        <span className="flex-1 text-left">Search...</span>
+        <kbd className="font-mono text-[10px] opacity-40">Cmd+K</kbd>
       </button>
     </div>
   )
