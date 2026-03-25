@@ -1050,6 +1050,10 @@ export function WikiView() {
             onClearCategoryFilter={() => setWikiCategoryFilter(null)}
             onOpenArticle={openArticle}
             onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
+            onSplitArticle={(id) => {
+              setSelectedWikiArticleId(id)
+              setIsEditingWikiArticle(true)
+            }}
             onDeleteArticle={(id) => {
               deleteWikiArticle(id)
               toast.success("Article deleted")
@@ -1064,6 +1068,7 @@ export function WikiView() {
               selectedIds={selectedArticleIds}
               articles={wikiArticles}
               onClearSelection={clearArticleSelection}
+              onMerge={(sourceId) => setWikiMergeSourceId(sourceId)}
             />
           )}
           {showDistribution && (

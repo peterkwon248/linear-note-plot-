@@ -67,6 +67,20 @@ export interface WikiBlock {
   attachmentId?: string
   /** Image: caption text */
   caption?: string
+  /** Merge history: snapshot of the merged article for unmerge */
+  mergedFrom?: WikiMergeSnapshot
+}
+
+/** Snapshot of a merged article — stored on the divider section block for unmerge */
+export interface WikiMergeSnapshot {
+  articleId: string
+  title: string
+  wikiStatus: WikiStatus
+  aliases: string[]
+  tags: string[]
+  infobox: WikiInfoboxEntry[]
+  blockIds: string[]       // IDs of blocks that came from this merged article
+  mergedAt: string
 }
 
 /** Lightweight section index entry — persisted in Zustand (blocks go to IDB) */

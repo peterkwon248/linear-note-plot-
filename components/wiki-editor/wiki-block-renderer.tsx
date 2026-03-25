@@ -18,6 +18,10 @@ import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
+import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { ArrowSquareUpRight } from "@phosphor-icons/react/dist/ssr/ArrowSquareUpRight"
+import { toast } from "sonner"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 /* ── Block Renderer ── */
 
@@ -30,12 +34,16 @@ interface WikiBlockRendererProps {
   onDelete?: () => void
   /** Drag handle listeners from @dnd-kit/sortable — attach to GripVertical button */
   dragHandleProps?: DraggableSyntheticListeners
+  /** Parent article ID — needed for unmerge and split operations */
+  articleId?: string
+  /** Callback to split this section (and its children) into a new article */
+  onSplitSection?: (blockId: string) => void
 }
 
-export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection }: WikiBlockRendererProps) {
   switch (block.type) {
     case "section":
-      return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+      return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} onSplitSection={onSplitSection} />
     case "text":
       return <TextBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "note-ref":
@@ -49,11 +57,12 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
 
 /* ── Section Block ── */
 
-function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection }: WikiBlockRendererProps) {
   const collapsed = block.collapsed ?? false
   const toggleCollapsed = () => onUpdate?.({ collapsed: !collapsed })
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(block.title || "")
+  const [menuOpen, setMenuOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const level = block.level ?? 2
 
@@ -70,6 +79,15 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
       onUpdate?.({ title: editTitle.trim() || "Untitled Section" })
     }
   }
+
+  const handleUnmerge = useCallback(() => {
+    if (!articleId || !block.mergedFrom) return
+    const store = usePlotStore.getState()
+    const restoredId = store.unmergeWikiArticle(articleId, block.id)
+    if (restoredId) {
+      toast.success(`Unmerged "${block.mergedFrom.title}" back to separate article`)
+    }
+  }, [articleId, block.id, block.mergedFrom])
 
   return (
     <div className="group/section">
@@ -132,14 +150,56 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
           </div>
         )}
 
-        {editable && onDelete && (
+        {/* Unmerge button — shown on merge divider blocks */}
+        {block.mergedFrom && articleId && (
           <button
-            onClick={onDelete}
-            className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all duration-100"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleUnmerge()
+            }}
+            className="ml-2 rounded-md bg-chart-3/10 px-2 py-0.5 text-2xs font-medium text-chart-3 hover:bg-chart-3/20 transition-colors"
           >
-            <Trash size={12} weight="regular" />
+            Unmerge
           </button>
         )}
+
+        {/* Section actions menu — shown on hover in edit mode */}
+        {editable && (
+          <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+            <PopoverTrigger asChild>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+                className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
+              >
+                <DotsThree size={14} weight="bold" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-48 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
+              {onSplitSection && (
+                <button
+                  onClick={() => { setMenuOpen(false); onSplitSection(block.id) }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                >
+                  <ArrowSquareUpRight size={14} weight="regular" />
+                  Move to new article
+                </button>
+              )}
+              {onDelete && (
+                <>
+                  {onSplitSection && <div className="my-1 h-px bg-border/40" />}
+                  <button
+                    onClick={() => { setMenuOpen(false); onDelete() }}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-destructive hover:bg-active-bg transition-colors"
+                  >
+                    <Trash size={14} weight="regular" />
+                    Delete section
+                  </button>
+                </>
+              )}
+            </PopoverContent>
+          </Popover>
+        )}
+
       </div>
       {collapsed && (
         <p className="ml-7 mt-0.5 text-2xs text-muted-foreground/30 italic">Section collapsed</p>

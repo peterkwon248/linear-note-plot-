@@ -253,6 +253,7 @@ export interface PlotState {
   reorderWikiBlocks: (articleId: string, blockIds: string[]) => void
   mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string; status?: WikiStatus }) => void
   splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string) => string | null
+  unmergeWikiArticle: (articleId: string, dividerBlockId: string) => string | null
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>
