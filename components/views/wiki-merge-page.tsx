@@ -12,6 +12,7 @@ import {
   GripVertical,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   Plus,
   Check,
   FileText,
@@ -54,7 +55,7 @@ function BlockContent({ block, noteTitleMap }: { block: WikiBlock; noteTitleMap:
 export function WikiMergePage() {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const notes = usePlotStore((s) => s.notes)
-  const mergeWikiArticles = usePlotStore((s) => s.mergeWikiArticles)
+  const mergeMultipleWikiArticles = usePlotStore((s) => s.mergeMultipleWikiArticles)
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -187,22 +188,24 @@ export function WikiMergePage() {
   const handleMerge = () => {
     if (selectedIds.length < 2) return
 
-    if (mergeMode === "existing" && survivorId) {
-      // Merge all others into survivor sequentially
-      const othersIds = selectedIds.filter((id) => id !== survivorId)
-      for (const otherId of othersIds) {
-        mergeWikiArticles(survivorId, otherId, { title: mergeTitle, status: mergeStatus })
-      }
-      toast.success(`Merged ${othersIds.length} article${othersIds.length > 1 ? "s" : ""} into "${mergeTitle}"`)
-      navigateToWikiArticle(survivorId)
-    } else {
-      // "New Article" mode: merge into the first, rename
-      const [primaryId, ...rest] = selectedIds
-      for (const otherId of rest) {
-        mergeWikiArticles(primaryId, otherId, { title: mergeTitle, status: mergeStatus })
-      }
-      toast.success(`Created merged article "${mergeTitle}"`)
-      navigateToWikiArticle(primaryId)
+    const blockOrder = selectedArticles.flatMap((a) => a.blocks)
+
+    const resultId = mergeMultipleWikiArticles(selectedIds, {
+      title: mergeTitle,
+      mode: mergeMode === "existing" ? "into" : "new",
+      targetId: mergeMode === "existing" ? (survivorId ?? undefined) : undefined,
+      blockOrder,
+      status: mergeStatus,
+      categoryIds: categories,
+    })
+
+    if (resultId) {
+      toast.success(
+        mergeMode === "existing"
+          ? `Merged ${selectedIds.length - 1} article${selectedIds.length > 2 ? "s" : ""} into "${mergeTitle}"`
+          : `Created merged article "${mergeTitle}"`
+      )
+      navigateToWikiArticle(resultId)
     }
     setWikiViewMode("list")
   }
@@ -463,7 +466,7 @@ export function WikiMergePage() {
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-white/40 hover:border-white/15 hover:text-white/60 transition-colors"
                       title="Pick from selected articles"
                     >
-                      <ChevronDown size={12} />
+                      <ChevronUp size={12} />
                     </button>
                     {titleDropdownOpen && (
                       <div className="absolute left-0 bottom-full z-50 mb-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
@@ -527,7 +530,7 @@ export function WikiMergePage() {
                     className="flex h-8 w-full items-center justify-between rounded-md border border-white/[0.08] bg-white/[0.03] px-3 text-xs text-white/80 hover:border-white/15 transition-colors"
                   >
                     <span className="truncate">{survivorLabel}</span>
-                    <ChevronDown size={12} className="ml-2 shrink-0 text-white/30" />
+                    <ChevronUp size={12} className="ml-2 shrink-0 text-white/30" />
                   </button>
                   {survivorDropdownOpen && (
                     <div className="absolute left-0 bottom-full z-50 mb-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">

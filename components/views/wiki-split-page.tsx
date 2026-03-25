@@ -168,7 +168,7 @@ export function WikiSplitPage() {
   // Split action
   const handleSplit = () => {
     if (!selectedArticleId || rightBlocks.length === 0 || !newTitle.trim()) return
-    const newId = splitWikiArticle(selectedArticleId, rightBlocks, newTitle.trim())
+    const newId = splitWikiArticle(selectedArticleId, rightBlocks, newTitle.trim(), newStatus)
     if (newId) {
       toast.success(`Split "${newTitle}" from "${article?.title}"`)
       navigateToWikiArticle(newId)

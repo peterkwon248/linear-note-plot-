@@ -261,7 +261,7 @@ export interface PlotState {
   moveWikiBlock: (articleId: string, blockId: string, targetIndex: number) => void
   reorderWikiBlocks: (articleId: string, blockIds: string[]) => void
   mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string; status?: WikiStatus }) => void
-  splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string) => string | null
+  splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string, status?: WikiStatus) => string | null
   unmergeWikiArticle: (articleId: string, dividerBlockId: string) => string | null
   mergeMultipleWikiArticles: (sourceIds: string[], options: {
     title: string
@@ -270,6 +270,7 @@ export interface PlotState {
     blockOrder: WikiBlock[]
     status: WikiStatus
     categories?: string[]
+    categoryIds?: string[]
     tags?: string[]
     aliases?: string[]
   }) => string

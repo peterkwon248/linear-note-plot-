@@ -9,6 +9,9 @@ export type NoteSource = "manual" | "webclip" | "import" | "share" | "api" | nul
 /** Wiki quality track — independent of workflow status */
 export type WikiStatus = "stub" | "article"
 
+/** Wiki article layout mode */
+export type WikiLayout = "default" | "encyclopedia"
+
 /** Reason a wiki stub was auto-created */
 export type StubSource = "red-link" | "tag" | "backlink" | "manual"
 
@@ -58,7 +61,7 @@ export interface WikiCategory {
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
 /** Wiki block types — building blocks of a wiki article */
-export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table'
+export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url'
 
 /** A single block in a wiki article */
 export interface WikiBlock {
@@ -78,6 +81,10 @@ export interface WikiBlock {
   attachmentId?: string
   /** Image: caption text */
   caption?: string
+  /** URL: embedded link */
+  url?: string
+  /** URL: title/label for the link */
+  urlTitle?: string
   /** Merge history: snapshot of the merged article for unmerge */
   mergedFrom?: WikiMergeSnapshot
 }
@@ -123,6 +130,7 @@ export interface WikiArticle {
   sectionIndex: WikiSectionIndex[]
   tags: string[]
   categoryIds?: string[]           // references to WikiCategory.id (DAG)
+  layout?: WikiLayout              // article layout mode (default: "default")
   linksOut?: string[]              // extracted [[wiki-links]] from text blocks
   mergeHistory?: WikiMergeSnapshot[]  // snapshots from N→1 merge for unmerge
   createdAt: string

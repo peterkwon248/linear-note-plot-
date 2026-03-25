@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
@@ -274,6 +274,13 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   }, [dragSplitPrompt, article, articleId, splitWikiArticle])
 
   const handleAddBlock = useCallback((type: WikiBlock["type"], afterBlockId?: string, level?: number) => {
+    if (type === "url") {
+      const url = window.prompt("Enter URL:")
+      if (!url) return
+      const block: Omit<WikiBlock, "id"> = { type: "url", url, urlTitle: "" }
+      addWikiBlock(articleId, block, afterBlockId)
+      return
+    }
     const block: Omit<WikiBlock, "id"> = { type }
     if (type === "section") { block.title = ""; block.level = level ?? 2 }
     if (type === "text") { block.content = "" }
@@ -503,10 +510,13 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
             {article.title}
           </h1>
           {article.aliases.length > 0 && (
-            <p className="text-note text-muted-foreground/50 mb-6">
+            <p className="text-note text-muted-foreground/50 mb-2">
               {article.aliases.join(" · ")}
             </p>
           )}
+
+          {/* Category tag row */}
+          <InlineCategoryTags articleId={articleId} categoryIds={article.categoryIds ?? []} />
 
           {/* Blocks */}
           {editable && (
@@ -905,6 +915,152 @@ function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
             )}
           </button>
         ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── InlineCategoryTags — shown below title in article body ── */
+
+function InlineCategoryTags({
+  articleId,
+  categoryIds,
+}: {
+  articleId: string
+  categoryIds: string[]
+}) {
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const setArticleCategories = usePlotStore((s) => s.setArticleCategories)
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [newCatName, setNewCatName] = useState("")
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const assignedCategories = wikiCategories.filter((c) => categoryIds.includes(c.id))
+  const availableCategories = wikiCategories.filter((c) => !categoryIds.includes(c.id))
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!dropdownOpen) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [dropdownOpen])
+
+  // Focus input when dropdown opens
+  useEffect(() => {
+    if (dropdownOpen) {
+      setTimeout(() => inputRef.current?.focus(), 50)
+    }
+  }, [dropdownOpen])
+
+  const handleRemove = (catId: string) => {
+    setArticleCategories(articleId, categoryIds.filter((id) => id !== catId))
+  }
+
+  const handleAdd = (catId: string) => {
+    setArticleCategories(articleId, [...categoryIds, catId])
+    setDropdownOpen(false)
+    setNewCatName("")
+  }
+
+  const handleCreateAndAdd = () => {
+    if (!newCatName.trim()) return
+    const id = createWikiCategory(newCatName.trim())
+    setArticleCategories(articleId, [...categoryIds, id])
+    setNewCatName("")
+    setDropdownOpen(false)
+  }
+
+  const getBreadcrumb = (cat: typeof wikiCategories[number]): string => {
+    if (cat.parentIds.length === 0) return cat.name
+    const parent = wikiCategories.find((c) => c.id === cat.parentIds[0])
+    if (!parent) return cat.name
+    return `${parent.name} / ${cat.name}`
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 mb-5 min-h-[24px]">
+      {assignedCategories.map((cat) => (
+        <span
+          key={cat.id}
+          className="group inline-flex items-center gap-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-2xs font-medium text-foreground/60 transition-colors hover:border-white/[0.14] hover:text-foreground/80"
+          title={getBreadcrumb(cat)}
+        >
+          {cat.parentIds.length > 0 && (
+            <>
+              <span className="text-muted-foreground/40">
+                {wikiCategories.find((p) => p.id === cat.parentIds[0])?.name ?? ""}
+              </span>
+              <CaretRight size={8} weight="bold" className="text-muted-foreground/30" />
+            </>
+          )}
+          {cat.name}
+          <button
+            onClick={() => handleRemove(cat.id)}
+            className="ml-0.5 hidden rounded-full p-0 text-muted-foreground/40 transition-colors hover:text-foreground/70 group-hover:inline-flex"
+            title="Remove category"
+          >
+            <PhX size={9} weight="bold" />
+          </button>
+        </span>
+      ))}
+
+      {/* + Add button with dropdown */}
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="inline-flex items-center gap-1 rounded-full border border-dashed border-white/[0.10] px-2 py-0.5 text-2xs text-white/40 transition-colors hover:border-white/[0.20] hover:text-white/60"
+        >
+          <PhPlus size={10} weight="regular" />
+          Add
+        </button>
+        {dropdownOpen && (
+          <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-white/[0.08] bg-[#1a1a1a] p-1 shadow-xl">
+            {availableCategories.length > 0 && (
+              <div className="max-h-44 overflow-y-auto">
+                {availableCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleAdd(cat.id)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-foreground/80 transition-colors hover:bg-white/[0.06]"
+                  >
+                    <span className="truncate">{getBreadcrumb(cat)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {availableCategories.length > 0 && (
+              <div className="my-1 border-t border-white/[0.06]" />
+            )}
+            <div className="flex items-center gap-1 px-1 pb-0.5">
+              <input
+                ref={inputRef}
+                type="text"
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCreateAndAdd()
+                  if (e.key === "Escape") setDropdownOpen(false)
+                }}
+                placeholder="New category..."
+                className="flex-1 rounded-md bg-transparent px-1.5 py-1 text-xs text-foreground outline-none placeholder:text-muted-foreground/30"
+              />
+              <button
+                onClick={handleCreateAndAdd}
+                disabled={!newCatName.trim()}
+                className="rounded-md px-2 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent/10 disabled:opacity-30"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

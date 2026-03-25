@@ -672,5 +672,13 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v61c: Add layout field to wiki articles
+  if (Array.isArray(state.wikiArticles)) {
+    state.wikiArticles = (state.wikiArticles as any[]).map((a: any) => ({
+      ...a,
+      layout: a.layout ?? "default",
+    }))
+  }
+
   return state as unknown as PlotState
 }
