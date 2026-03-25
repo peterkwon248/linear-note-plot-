@@ -14,6 +14,10 @@ interface SortableBlockItemProps {
   onAddBlock?: (type: WikiBlock["type"], level?: number) => void
   /** Level of the nearest section block at/above this block, for Subsection affordance */
   nearestSectionLevel?: number
+  /** Parent article ID — needed for unmerge and split operations */
+  articleId?: string
+  /** Callback to split this section into a new article */
+  onSplitSection?: (blockId: string) => void
 }
 
 export function SortableBlockItem({
@@ -24,6 +28,8 @@ export function SortableBlockItem({
   onDelete,
   onAddBlock,
   nearestSectionLevel,
+  articleId,
+  onSplitSection,
 }: SortableBlockItemProps) {
   const {
     attributes,
@@ -49,6 +55,8 @@ export function SortableBlockItem({
         onUpdate={onUpdate}
         onDelete={onDelete}
         dragHandleProps={listeners}
+        articleId={articleId}
+        onSplitSection={onSplitSection}
       />
       {editable && onAddBlock && (
         <AddBlockButton onAdd={onAddBlock} nearestSectionLevel={nearestSectionLevel} />

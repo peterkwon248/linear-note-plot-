@@ -7,12 +7,14 @@ import type { WikiArticle } from "@/lib/types"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
 
 interface WikiFloatingActionBarProps {
   selectedIds: Set<string>
   articles: WikiArticle[]
   onClearSelection: () => void
+  onMerge?: (sourceId: string) => void
 }
 
 function Divider() {
@@ -23,6 +25,7 @@ export function WikiFloatingActionBar({
   selectedIds,
   articles,
   onClearSelection,
+  onMerge,
 }: WikiFloatingActionBarProps) {
   const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
   const setWikiArticleStatus = usePlotStore((s) => s.setWikiArticleStatus)
@@ -81,6 +84,20 @@ export function WikiFloatingActionBar({
             >
               <ArrowUpRight size={16} weight="regular" />
               Promote
+            </button>
+            <Divider />
+          </>
+        )}
+
+        {/* Merge (single selection only) */}
+        {count === 1 && onMerge && (
+          <>
+            <button
+              onClick={() => { onMerge(ids[0]); onClearSelection() }}
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <GitMerge size={16} weight="regular" />
+              Merge
             </button>
             <Divider />
           </>

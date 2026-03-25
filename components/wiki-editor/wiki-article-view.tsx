@@ -19,6 +19,8 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  useDroppable,
+  type DragOverEvent,
 } from "@dnd-kit/core"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
@@ -32,6 +34,27 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable"
+
+/** Drop zone for splitting sections into new articles via drag */
+function SplitDropZone({ isOver }: { isOver: boolean }) {
+  const { setNodeRef } = useDroppable({ id: "split-dropzone" })
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "mt-4 rounded-lg border-2 border-dashed px-3 py-4 text-center transition-all duration-150",
+        isOver
+          ? "border-accent bg-accent/10 text-accent"
+          : "border-border/40 text-muted-foreground/40"
+      )}
+    >
+      <Scissors size={16} weight="regular" className="mx-auto mb-1" />
+      <p className="text-2xs font-medium">
+        {isOver ? "Drop to split" : "Drag section here"}
+      </p>
+    </div>
+  )
+}
 
 interface WikiArticleViewProps {
   articleId: string
@@ -72,6 +95,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   const [splitMode, setSplitMode] = useState(false)
   const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(new Set())
   const [splitTitle, setSplitTitle] = useState("")
+  const [dragOverDropzone, setDragOverDropzone] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -85,6 +109,32 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
     [wikiArticles, articleId]
   )
 
+  /** Split a section and its child blocks into a new article */
+  const handleSplitSection = useCallback((sectionBlockId: string) => {
+    if (!article) return
+    const blocks = article.blocks
+    const sectionIdx = blocks.findIndex(b => b.id === sectionBlockId)
+    if (sectionIdx === -1) return
+
+    const sectionBlock = blocks[sectionIdx]
+    const sectionLevel = sectionBlock.level ?? 2
+
+    // Collect this section + all blocks until next same-or-higher level section
+    const blockIds: string[] = [sectionBlockId]
+    for (let i = sectionIdx + 1; i < blocks.length; i++) {
+      const b = blocks[i]
+      if (b.type === "section" && (b.level ?? 2) <= sectionLevel) break
+      blockIds.push(b.id)
+    }
+
+    const title = sectionBlock.title || "Untitled Section"
+    const newId = splitWikiArticle(articleId, blockIds, title)
+    if (newId) {
+      toast.success(`Moved "${title}" to new article`)
+      navigateToWikiArticle(newId)
+    }
+  }, [article, articleId, splitWikiArticle])
+
   const handleAddBlock = useCallback((type: WikiBlock["type"], afterBlockId?: string, level?: number) => {
     const block: Omit<WikiBlock, "id"> = { type }
     if (type === "section") { block.title = ""; block.level = level ?? 2 }
@@ -97,9 +147,21 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   }, [articleId, removeWikiBlock])
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setDragOverDropzone(false)
     const { active, over } = event
-    if (!over || active.id === over.id || !article) return
+    if (!over || !article) return
 
+    // Dropped on split dropzone → split this section into new article
+    if (over.id === "split-dropzone") {
+      const draggedBlockId = active.id as string
+      const block = article.blocks.find((b) => b.id === draggedBlockId)
+      if (block?.type === "section") {
+        handleSplitSection(draggedBlockId)
+      }
+      return
+    }
+
+    if (active.id === over.id) return
     const oldIndex = article.blocks.findIndex((b) => b.id === active.id)
     const newIndex = article.blocks.findIndex((b) => b.id === over.id)
     if (oldIndex === -1 || newIndex === -1) return
@@ -111,6 +173,10 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
     )
     reorderWikiBlocks(articleId, newOrder)
   }, [article, articleId, reorderWikiBlocks])
+
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    setDragOverDropzone(event.over?.id === "split-dropzone")
+  }, [])
 
   if (!article) {
     return (
@@ -186,7 +252,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   const noteRefCount = article.blocks.filter(b => b.type === "note-ref").length
   const textBlockCount = article.blocks.filter(b => b.type === "text").length
 
-  return (
+  const outerContent = (
     <div className="flex flex-1 min-h-0 overflow-hidden">
       {/* TOC Sidebar */}
       <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border/50 px-3 py-4">
@@ -216,6 +282,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
           ) : (
             <p className="px-2 text-2xs text-muted-foreground/40">No sections yet</p>
           )}
+          {editable && <SplitDropZone isOver={dragOverDropzone} />}
         </div>
       </aside>
 
@@ -238,7 +305,6 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
           )}
 
           {editable ? (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={visibleBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
                 {visibleBlocks.map((block) => (
                   <div
@@ -278,11 +344,12 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
                       onDelete={() => handleDeleteBlock(block.id)}
                       onAddBlock={(type, level) => handleAddBlock(type, block.id, level)}
                       nearestSectionLevel={nearestSectionLevelByBlockId.get(block.id)}
+                      articleId={articleId}
+                      onSplitSection={handleSplitSection}
                     />
                   </div>
                 ))}
               </SortableContext>
-            </DndContext>
           ) : visibleBlocks.length > 50 ? (
             <Virtuoso
               data={visibleBlocks}
@@ -459,7 +526,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground/70 hover:text-foreground hover:bg-secondary/60 transition-colors duration-100"
               >
                 <Scissors size={12} weight="regular" />
-                Split article
+                Split wiki
               </button>
             )}
             {onDelete && (
@@ -476,6 +543,17 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
       </aside>
     </div>
   )
+
+  // Wrap with DndContext when editable so drop zone in sidebar works
+  if (editable) {
+    return (
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
+        {outerContent}
+      </DndContext>
+    )
+  }
+
+  return outerContent
 }
 
 /* ── Sources List ── */

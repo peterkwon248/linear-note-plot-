@@ -263,12 +263,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **docs 최신화**: CLAUDE.md, CONTEXT.md, MEMORY.md store v60, WikiStatus 반영
 - **Wiki Merge Preview**: 2단계 다이얼로그 (타겟 선택 → 방향 스왑/제목/상태 선택 + 블록 미리보기 + Undo toast). mergeWikiArticles 개선 (infobox 머지, title/status 옵션 파라미터)
 - **Wiki Split**: 에디트 모드에서 블록 체크박스 선택 → "Extract" 버튼으로 새 아티클 분리. splitWikiArticle 스토어 액션 신규
+- **Wiki Unmerge**: mergedFrom 스냅샷 (WikiMergeSnapshot) + "From: X" 구분선에 Unmerge 버튼 + unmergeWikiArticle 액션
+- **섹션 컨텍스트 메뉴**: hover "..." → "Move to new article" / "Delete section"
+- **드래그 Split**: TOC 사이드바 하단 드롭존. 에디트 모드에서 섹션 드래그 → 드롭존에 놓으면 새 아티클로 분리
+- **위키 리스트 우클릭**: Split wiki + Merge into + Delete (컨텍스트 메뉴 3개)
 - Store v59→v60
 
 ### 다음 작업 후보 (우선순위 순)
-1. **위키 머지 UX 리디자인** — 타겟 선택 시 제목/상태 선택, Undo 지원, 방향성 명확화
-2. **캘린더 플로팅 액션바** — 캘린더에서도 선택 + 하단 액션바
-3. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
+1. **캘린더 플로팅 액션바** — 캘린더에서도 선택 + 하단 액션바
+2. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
+3. **노트 Split** — 노트도 분리 기능 (헤딩 기준)
 4. **J/K 리스트 네비게이션** — Linear식
 
 ### docs 현황

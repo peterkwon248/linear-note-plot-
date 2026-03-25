@@ -196,12 +196,23 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       const secondary = (state.wikiArticles as WikiArticle[]).find((a) => a.id === secondaryId)
       if (!primary || !secondary) return
 
-      // Divider section for merged content
+      // Divider section with merge snapshot for unmerge
+      const secondaryBlockIds = secondary.blocks.map((b) => b.id)
       const dividerBlock: WikiBlock = {
         id: genId(),
         type: "section" as const,
         title: `From: ${secondary.title}`,
         level: 2,
+        mergedFrom: {
+          articleId: secondary.id,
+          title: secondary.title,
+          wikiStatus: secondary.wikiStatus,
+          aliases: [...secondary.aliases],
+          tags: [...secondary.tags],
+          infobox: [...secondary.infobox],
+          blockIds: secondaryBlockIds,
+          mergedAt: now(),
+        },
       }
 
       // Concat blocks: primary + divider + secondary
@@ -302,6 +313,66 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }
 
       return newId
+    },
+
+    unmergeWikiArticle: (articleId: string, dividerBlockId: string): string | null => {
+      const state = get()
+      const article = (state.wikiArticles as WikiArticle[]).find((a) => a.id === articleId)
+      if (!article) return null
+
+      const divider = article.blocks.find((b) => b.id === dividerBlockId)
+      if (!divider?.mergedFrom) return null
+
+      const snapshot = divider.mergedFrom
+      const mergedBlockIdSet = new Set(snapshot.blockIds)
+
+      // Extract merged blocks + remove divider from original
+      const extractedBlocks = article.blocks.filter((b) => mergedBlockIdSet.has(b.id))
+      const remainingBlocks = article.blocks.filter((b) => b.id !== dividerBlockId && !mergedBlockIdSet.has(b.id))
+
+      if (extractedBlocks.length === 0) return null
+
+      // Recreate the original article from snapshot
+      const restoredId = genId()
+      const restoredArticle: WikiArticle = {
+        id: restoredId,
+        title: snapshot.title,
+        aliases: snapshot.aliases,
+        wikiStatus: snapshot.wikiStatus,
+        stubSource: null,
+        infobox: snapshot.infobox,
+        blocks: extractedBlocks,
+        sectionIndex: buildSectionIndex(extractedBlocks),
+        tags: snapshot.tags,
+        createdAt: snapshot.mergedAt,
+        updatedAt: now(),
+      }
+
+      // Remove merged aliases/tags from the original
+      const snapshotAliasSet = new Set([snapshot.title, ...snapshot.aliases])
+      const snapshotTagSet = new Set(snapshot.tags)
+
+      set((state: any) => ({
+        wikiArticles: [
+          ...state.wikiArticles.map((a: WikiArticle) => {
+            if (a.id !== articleId) return a
+            return {
+              ...a,
+              blocks: remainingBlocks,
+              sectionIndex: buildSectionIndex(remainingBlocks),
+              aliases: a.aliases.filter((al) => !snapshotAliasSet.has(al)),
+              tags: a.tags.filter((t) => !snapshotTagSet.has(t) || a.tags.indexOf(t) < snapshot.tags.length),
+              updatedAt: now(),
+            }
+          }),
+          restoredArticle,
+        ],
+      }))
+
+      persistArticleBlocks(articleId, remainingBlocks)
+      persistArticleBlocks(restoredId, extractedBlocks)
+
+      return restoredId
     },
   }
 }

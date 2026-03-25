@@ -16,6 +16,7 @@ import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 
 /* ── Types ── */
@@ -42,6 +43,7 @@ interface WikiListProps {
   // Actions
   onOpenArticle: (id: string) => void
   onMergeArticle?: (sourceId: string) => void
+  onSplitArticle?: (id: string) => void
   onDeleteArticle?: (id: string) => void
 
   // Selection
@@ -114,6 +116,7 @@ function ArticleTableRow({
   backlinkCount,
   onClick,
   onMerge,
+  onSplit,
   onDelete,
   isSelected,
   selectionActive,
@@ -123,6 +126,7 @@ function ArticleTableRow({
   backlinkCount: number
   onClick: () => void
   onMerge?: () => void
+  onSplit?: () => void
   onDelete?: () => void
   isSelected?: boolean
   selectionActive?: boolean
@@ -137,7 +141,7 @@ function ArticleTableRow({
         isSelected && "bg-accent/5"
       )}
       onContextMenu={(e) => {
-        if (onMerge || onDelete) {
+        if (onMerge || onSplit || onDelete) {
           e.preventDefault()
           setMenuOpen(true)
         }
@@ -182,7 +186,7 @@ function ArticleTableRow({
 
       {/* Context menu */}
       <span className="w-[36px] shrink-0 flex justify-center">
-        {(onMerge || onDelete) ? (
+        {(onMerge || onSplit || onDelete) ? (
           <Popover open={menuOpen} onOpenChange={setMenuOpen}>
             <PopoverTrigger asChild>
               <button
@@ -201,7 +205,15 @@ function ArticleTableRow({
                   <GitMerge size={14} weight="regular" /> Merge into...
                 </button>
               )}
-              {onMerge && onDelete && (
+              {onSplit && (
+                <button
+                  onClick={() => { setMenuOpen(false); onSplit() }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                >
+                  <Scissors size={14} weight="regular" /> Split wiki
+                </button>
+              )}
+              {(onMerge || onSplit) && onDelete && (
                 <div className="my-1 h-px bg-border/40" />
               )}
               {onDelete && (
@@ -321,6 +333,7 @@ export function WikiList({
   onClearCategoryFilter,
   onOpenArticle,
   onMergeArticle,
+  onSplitArticle,
   onDeleteArticle,
   redLinks,
   onCreateFromRedLink,
@@ -453,6 +466,7 @@ export function WikiList({
                   backlinkCount={backlinkCounts.get(note.id) ?? 0}
                   onClick={() => onOpenArticle(note.id)}
                   onMerge={onMergeArticle ? () => onMergeArticle(note.id) : undefined}
+                  onSplit={onSplitArticle ? () => onSplitArticle(note.id) : undefined}
                   onDelete={onDeleteArticle ? () => onDeleteArticle(note.id) : undefined}
                   isSelected={selectedIds?.has(note.id)}
                   selectionActive={selectionActive}
