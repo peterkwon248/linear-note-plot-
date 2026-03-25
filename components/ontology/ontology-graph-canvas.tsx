@@ -79,7 +79,7 @@ const MAX_VISIBLE_NODES = 200
 
 /* ── Node type derivation (safe fallback when nodeType not yet on OntologyNode) ── */
 
-type GraphNodeType = "note" | "wiki-complete" | "wiki-draft" | "wiki-stub" | "tag"
+type GraphNodeType = "note" | "wiki-article" | "wiki-stub" | "tag"
 
 function getNodeType(node: OntologyNode): GraphNodeType {
   // Use nodeType directly if available (set by graph.ts)
@@ -92,9 +92,9 @@ function getNodeType(node: OntologyNode): GraphNodeType {
   // Fallback: derive from isWiki + wikiStatus
   if (node.isWiki) {
     const ws = (node as any).wikiStatus as string | null
-    if (ws === "complete") return "wiki-complete"
+    if (ws === "article") return "wiki-article"
     if (ws === "stub") return "wiki-stub"
-    return "wiki-draft"
+    return "wiki-article"
   }
 
   return "note"
@@ -276,8 +276,7 @@ function getNodeBaseColor(node: OntologyNode, labels: Label[]): string {
   }
   // Wiki nodes use violet color regardless of note status
   const nt = (node as any).nodeType as string | undefined
-  if (nt === "wiki-complete") return WIKI_STATUS_HEX.complete   // #8b5cf6 violet
-  if (nt === "wiki-draft")    return WIKI_STATUS_HEX.draft      // #6366f1 indigo
+  if (nt === "wiki-article")  return WIKI_STATUS_HEX.article    // #8b5cf6 violet
   if (nt === "wiki-stub")     return WIKI_STATUS_HEX.stub       // #f97316 orange
   return STATUS_COLORS[node.status] ?? DEFAULT_NODE_COLOR
 }
@@ -1322,8 +1321,7 @@ export function OntologyGraphCanvas({
             const nodeType = getNodeType(node)
 
             // Shape-specific radius adjustments
-            const shapeR = nodeType === "wiki-complete" ? r * 1.15
-              : nodeType === "wiki-draft" ? r * 1.1
+            const shapeR = nodeType === "wiki-article" ? r * 1.15
               : nodeType === "wiki-stub" ? r * 1.05
               : nodeType === "tag" ? r * 0.55
               : r
@@ -1395,7 +1393,7 @@ export function OntologyGraphCanvas({
                   )
                 })()}
 
-                {(nodeType === "wiki-complete" || nodeType === "wiki-draft") && (() => {
+                {nodeType === "wiki-article" && (() => {
                   const s = shapeR * 0.85
                   const pts = hexagonPoints(pos.x, pos.y, s)
                   const hexPath = hexagonPathFromPoints(pts)
@@ -1965,7 +1963,7 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
 
   const rowHeight = 18
   // Node type legend entries (always shown) + edge entries
-  const nodeTypeRows = 6 // Inbox, Capture, Permanent, Complete, Draft, Stub (separator uses row 3 space)
+  const nodeTypeRows = 5 // Inbox, Capture, Permanent, Article, Stub (separator uses row 3 space)
   const edgeRows = legendRelationTypes.length + (hasWikilinkEdges ? 1 : 0)
   const totalRows = nodeTypeRows + (edgeRows > 0 ? 1 : 0) + edgeRows // +1 for separator
   const legendH = totalRows * rowHeight + 16
@@ -2005,18 +2003,11 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
       <g transform={`translate(10, ${10 + 3 * rowHeight})`}>
         {(() => {
           const pts = hexagonPoints(6, 6, 4)
-          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={WIKI_STATUS_HEX.complete + "30"} stroke={WIKI_STATUS_HEX.complete} strokeWidth={1.3} strokeLinejoin="round" />
+          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={WIKI_STATUS_HEX.article + "30"} stroke={WIKI_STATUS_HEX.article} strokeWidth={1.3} strokeLinejoin="round" />
         })()}
-        <text x={26} y={10} fill={WIKI_STATUS_HEX.complete} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Complete</text>
+        <text x={26} y={10} fill={WIKI_STATUS_HEX.article} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Article</text>
       </g>
       <g transform={`translate(10, ${10 + 4 * rowHeight})`}>
-        {(() => {
-          const pts = hexagonPoints(6, 6, 4)
-          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={WIKI_STATUS_HEX.draft + "20"} stroke={WIKI_STATUS_HEX.draft} strokeWidth={1.3} strokeLinejoin="round" />
-        })()}
-        <text x={26} y={10} fill={WIKI_STATUS_HEX.draft} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Draft</text>
-      </g>
-      <g transform={`translate(10, ${10 + 5 * rowHeight})`}>
         {(() => {
           const pts = hexagonPoints(6, 6, 4)
           return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill="none" stroke={WIKI_STATUS_HEX.stub} strokeWidth={1.3} strokeDasharray="2.5 2" strokeLinejoin="round" />

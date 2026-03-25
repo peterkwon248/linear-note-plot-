@@ -26,16 +26,14 @@ export const NOTE_STATUS_HEX = {
 /* ── Wiki Status ─────────────────────────────── */
 
 export const WIKI_STATUS_COLORS = {
-  stub:     { css: "var(--chart-3)", tw: "chart-3" },
-  draft:    { css: "var(--accent)",  tw: "accent" },
-  complete: { css: "var(--wiki-complete)", tw: "wiki-complete" },
+  stub:    { css: "var(--chart-3)", tw: "chart-3" },
+  article: { css: "var(--wiki-complete)", tw: "wiki-complete" },
 } as const
 
-/** Wiki hex — complete uses violet to distinguish from permanent green */
+/** Wiki hex — article uses violet to distinguish from permanent green */
 export const WIKI_STATUS_HEX = {
-  stub:     "#f97316",   // orange
-  draft:    "#6366f1",   // indigo (accent)
-  complete: "#8b5cf6",   // violet  ← NOT green
+  stub:    "#f97316",   // orange
+  article: "#8b5cf6",   // violet  ← NOT green
 } as const
 
 /* ── Priority ────────────────────────────────── */
@@ -81,7 +79,7 @@ export const GRAPH_NODE_HEX = {
   inbox:     NOTE_STATUS_HEX.inbox,
   capture:   NOTE_STATUS_HEX.capture,
   permanent: NOTE_STATUS_HEX.permanent,
-  wiki:      WIKI_STATUS_HEX.complete,   // violet for wiki nodes
+  wiki:      WIKI_STATUS_HEX.article,   // violet for wiki nodes
   tag:       "#6b7280",
   default:   "#6b7280",
 } as const

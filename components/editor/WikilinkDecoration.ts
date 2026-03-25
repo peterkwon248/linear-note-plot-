@@ -5,6 +5,7 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view"
 import type { EditorView } from "@tiptap/pm/view"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 
 const wikilinkDecoKey = new PluginKey("wikilinkDecoration")
 
@@ -123,9 +124,21 @@ export const WikilinkDecorationExtension = Extension.create({
               return true
             }
 
-            // Dangling link in read mode: create stub and navigate
-            const newId = store.createWikiStub(title, [], "red-link")
-            if (newId) store.openNoteInTab(newId)
+            // Dangling link in read mode: check if WikiArticle exists, else create one
+            const wikiArticle = store.wikiArticles.find(
+              (a) => a.title.toLowerCase() === title.toLowerCase() ||
+                a.aliases.some((al) => al.toLowerCase() === title.toLowerCase())
+            )
+            if (wikiArticle) {
+              setActiveRoute("/wiki")
+              navigateToWikiArticle(wikiArticle.id)
+            } else {
+              const newId = store.createWikiArticle({ title, wikiStatus: "stub", stubSource: "red-link" })
+              if (newId) {
+                setActiveRoute("/wiki")
+                navigateToWikiArticle(newId)
+              }
+            }
             return true
           },
 

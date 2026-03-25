@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import { WikiStatusDot } from "./wiki-shared"
-import { IconWikiStub, IconWikiDraft, IconWikiComplete } from "@/components/plot-icons"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import type { WikiArticle } from "@/lib/types"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
@@ -28,8 +28,6 @@ interface WikiDashboardProps {
     internalLinks: number
     connectedNotes: number
     stubs: number
-    drafts: number
-    complete: number
   }
   articleCount: number
   coverageStats: { connected: number; total: number; percent: number }
@@ -88,7 +86,7 @@ export function WikiDashboard({
   // Featured article: most recently edited complete article
   const featured = useMemo(() => {
     return wikiNotes
-      .filter((n) => n.wikiStatus === "complete")
+      .filter((n) => n.wikiStatus === "article")
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       [0] ?? null
   }, [wikiNotes])
@@ -145,7 +143,7 @@ export function WikiDashboard({
           <MiniStat
             label="Articles"
             value={articleCount}
-            sub={`${stats.complete} complete`}
+            sub={`${stats.articles} articles`}
             color="text-accent"
             onClick={onViewAll}
           />
@@ -311,19 +309,17 @@ export function WikiDashboard({
                       {article.title}
                     </h4>
                     <p className="mt-0.5 text-2xs text-muted-foreground/40">
-                      {article.blocks.length} blocks · {article.wikiStatus}
+                      {article.blocks.length} blocks · {(article.wikiStatus as string) === "complete" || article.wikiStatus === "article" ? "article" : "stub"}
                     </p>
                   </div>
                   <span className={cn(
-                    "inline-flex items-center gap-1.5 shrink-0 text-2xs font-medium capitalize",
-                    article.wikiStatus === "stub" ? "text-chart-3" :
-                    article.wikiStatus === "draft" ? "text-accent" :
+                    "inline-flex items-center gap-1.5 shrink-0 text-2xs font-medium",
+                    article.wikiStatus === "stub" || (article.wikiStatus as string) === "draft" ? "text-chart-3" :
                     "text-wiki-complete"
                   )}>
-                    {article.wikiStatus === "stub" ? <IconWikiStub size={14} /> :
-                     article.wikiStatus === "draft" ? <IconWikiDraft size={14} /> :
-                     <IconWikiComplete size={14} />}
-                    {article.wikiStatus}
+                    {article.wikiStatus === "stub" || (article.wikiStatus as string) === "draft" ? <IconWikiStub size={14} /> :
+                     <IconWikiArticle size={14} />}
+                    {(article.wikiStatus as string) === "complete" || article.wikiStatus === "article" ? "Article" : "Stub"}
                   </span>
                 </button>
               ))}

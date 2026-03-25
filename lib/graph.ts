@@ -19,8 +19,8 @@ export interface OntologyNode {
   status: NoteStatus
   labelId: string | null
   isWiki: boolean
-  nodeType: "note" | "wiki-complete" | "wiki-draft" | "wiki-stub" | "tag"
-  wikiStatus: "stub" | "draft" | "complete" | null
+  nodeType: "note" | "wiki-article" | "wiki-stub" | "tag"
+  wikiStatus: "stub" | "article" | null
   tagColor?: string  // only for tag nodes
 }
 
@@ -64,15 +64,15 @@ export function buildOntologyGraphData(
   notes: Note[],
   relations: Relation[],
   tags?: Array<{ id: string; name: string; color: string }>,
-  wikiArticles?: Array<{ title: string; aliases: string[]; wikiStatus: "stub" | "draft" | "complete"; noteIds?: string[] }>,
+  wikiArticles?: Array<{ title: string; aliases: string[]; wikiStatus: "stub" | "article"; noteIds?: string[] }>,
 ): OntologyGraphData {
   if (notes.length === 0) return { nodeData: [], edges: [], forceConfig: computeForceConfig(0) }
 
   // Build wiki title lookup from WikiArticle Assembly Model
   const wikiTitleSet = new Set<string>()
-  const wikiStatusByTitle = new Map<string, "stub" | "draft" | "complete">()
+  const wikiStatusByTitle = new Map<string, "stub" | "article">()
   // Also track by noteId (from note-ref blocks in WikiArticles)
-  const wikiStatusByNoteId = new Map<string, "stub" | "draft" | "complete">()
+  const wikiStatusByNoteId = new Map<string, "stub" | "article">()
   if (wikiArticles) {
     for (const wa of wikiArticles) {
       const lower = wa.title.toLowerCase()
@@ -141,22 +141,21 @@ export function buildOntologyGraphData(
     // Priority 1: note is directly referenced by a WikiArticle block (note-ref by noteId)
     const wikiStatusById = wikiStatusByNoteId.get(n.id)
     if (wikiStatusById) {
-      if (wikiStatusById === "complete") nodeType = "wiki-complete"
+      if (wikiStatusById === "article") nodeType = "wiki-article"
       else if (wikiStatusById === "stub") nodeType = "wiki-stub"
-      else nodeType = "wiki-draft"
+      else nodeType = "wiki-article"
     }
     // Priority 2: note title/alias matches a WikiArticle title
     else {
       const noteTitleLower = n.title.toLowerCase()
       const wikiArticleStatus = wikiStatusByTitle.get(noteTitleLower)
       if (wikiArticleStatus) {
-        if (wikiArticleStatus === "complete") nodeType = "wiki-complete"
+        if (wikiArticleStatus === "article") nodeType = "wiki-article"
         else if (wikiArticleStatus === "stub") nodeType = "wiki-stub"
-        else nodeType = "wiki-draft"
+        else nodeType = "wiki-article"
       }
       // Fallback to legacy Note.isWiki flag
-      else if (n.isWiki && n.wikiStatus === "complete") nodeType = "wiki-complete"
-      else if (n.isWiki && n.wikiStatus === "draft") nodeType = "wiki-draft"
+      else if (n.isWiki && n.wikiStatus === "article") nodeType = "wiki-article"
       else if (n.isWiki && n.wikiStatus === "stub") nodeType = "wiki-stub"
       else nodeType = "note"
     }

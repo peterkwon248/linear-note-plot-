@@ -145,8 +145,7 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "isWiki", label: "Wiki Status", icon: StatusIcon, values: [
-      { key: "complete", label: "Complete", color: "#45d483" },
-      { key: "draft", label: "Draft", color: "#f5a623" },
+      { key: "article", label: "Article", color: "#8b5cf6" },
       { key: "stub", label: "Stub", color: "rgba(255,255,255,0.32)" },
     ]},
     { key: "tags", label: "Category", icon: TagIcon, values: [] },

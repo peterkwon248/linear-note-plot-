@@ -36,7 +36,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (19): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles
-- Store version: 58
+- Store version: 60
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -71,7 +71,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ```
 노트 워크플로우:  inbox → capture → permanent   (처리 상태)
                     ↕        ↕        ↕         (어느 시점에서든 진입 가능)
-위키 품질 트랙:   stub  →  draft  → complete    (완성도)
+위키 품질 트랙:   red link → stub → article     (완성도, WikiArticle 별도 엔티티)
 ```
 
 ### Labels vs Tags
@@ -79,11 +79,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-45. Sub-group Order 기능 — 서브그룹 정렬 드롭다운 (Default/Manual/Name/Count), Grouping/Sub-grouping 상호 배제
-46. Board SubGroup Rows + Distribution Panel — Board 컬럼 내 서브그룹 렌더링/접기, List/Board 공유 Distribution 사이드바, 필터 토글
-47. Linear UI 폴리시 3차 — ViewHeader New Note 중복 제거(+아이콘만 남김), Inbox 독립 viewState, Wiki Red Links 리스트+탭, Show stubs 토글 연결, STATUS↔TITLE 간격 수정
-48. Design Polish Phase 1~5 — Lucide→Phosphor 아이콘 통일(83파일), hardcoded hex→lib/colors.ts, 인라인 style→Tailwind, 비표준 값 정규화
-49. 정보 밀도 철학 전면 적용 — NoteRow CSS Grid 컬럼화, 로컬 검색 제거→글로벌 통합, word count 타이틀 옆 배치, 전 뷰 행 구분선 제거 (notes-table/wiki-list/wiki-view/note-list/labels-view/tags-view)
+51. 템플릿 UX 개선 — Grid 프리뷰 강화, 생성 후 focus 모드, placeholder 힌트
+52. 위키 서브섹션 UI + 폰트/opacity 표준화 — AddBlockButton에 Subsection 옵션, text-xs 통일, opacity /30~/60
+53. WikiStatus 단순화 — stub/draft/complete → stub/article 2단계. v60 마이그레이션. Import Note 2단계 플로우 (노트→타겟 선택)
+54. Wiki UX 개선 — Red Links 리스트 통합, 위키 삭제(메뉴+에디터+우클릭), 플로팅 액션바(체크박스+Delete/Promote), createWikiStub→createWikiArticle 전환
+55. 아이콘 통일 — Wiki 섹션 헤더 IconWiki로 통일, Graph 액티비티바 Phosphor Graph로 통일
 
 ## Three Axes — Core Design Philosophy
 
@@ -98,7 +98,8 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **LLM/API 사용 안 함** — 전부 규칙 기반 + 통계 기반 + 그래프 알고리즘. 오프라인, 프라이버시, 비용 0
 - **Activity Bar 5-space**: Inbox / Notes / Wiki / Calendar / Graph
 - **Wiki 사이드바 = Overview 단일 진입**: stat 카드 클릭으로 드릴다운
-- **위키 강등 = 라이프사이클 역순**: complete→draft→stub, stub은 바닥(강등 없음, 삭제만)
+- **WikiStatus 2단계**: stub(미완성) → article(완성). Red Link = computed (참조만 존재). draft/complete 제거 (v60)
+- **위키 강등 = article→stub 1단계**: stub은 바닥(강등 없음, 삭제만)
 - **Display = List/Board만**: Insights/Calendar는 사이드바/Activity Bar 전용
 - **Graph Health → /graph-insights 페이지**: 사이드바는 필터/컨트롤 패널
 - **필터/디스플레이 먼저, 사이드바 정리 나중에**: 기능이 동작해야 사이드바 의미 있음
@@ -110,10 +111,11 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ## TODO: Future Work (우선순위 순)
 
 ### Tier 1 — Linear UX 핵심
-- **View 시스템 v2** — 사이드바 Views에 필터+디스플레이+정렬 프리셋 저장. "Save as View"로 현재 상태 저장. 시스템 View(All/Capture/Permanent/Pinned) 편집불가, 사용자 View 편집/삭제 가능
+- **위키 머지 UX 리디자인** — 타겟 선택 시 제목/상태 선택 UI, Undo 지원, 방향성 명확화
+- **캘린더 플로팅 액션바** — 캘린더에서도 선택 + 하단 액션바
+- **View 시스템 v2** — 사이드바 Views에 필터+디스플레이+정렬 프리셋 저장. "Save as View"로 현재 상태 저장
 - **풀페이지 검색 분리** — ⌘K = 풀페이지 노트 검색, ⌘/ = 커맨드 팔레트 (액션 전용)
 - **커맨드 팔레트 확장** — 컨텍스트 반응형 20+개 커맨드 (Note Actions, View Actions, Navigation, Creation)
-- **정보 밀도 철학 변경** — ~~행 구분선 제거~~ ✅, 기본 메타 최소화, 여백 확대 ("Structure felt, not seen")
 
 ### Tier 2 — Wiki & Dashboard
 - **Wiki 대시보드 반응형 모드** — Articles/Stubs/Red Links 카드 클릭시 콘텐츠 전환 (Linear All/Active/Backlog 패턴)
@@ -122,7 +124,6 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ### Tier 3 — 구조 개선
 - **멀티패널 뷰 타입 확장** — Wiki/Calendar/Graph + 에디터 조합 스플릿 ("참조하면서 쓰기")
-- ~~**NoteRow CSS Grid 컬럼 기반 재설계**~~ ✅
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식 통합 에디터
 
 ### Tier 4 — 기능 확장

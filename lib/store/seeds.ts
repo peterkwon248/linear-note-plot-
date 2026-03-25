@@ -426,7 +426,7 @@ export const SEED_NOTES: Note[] = [
       { key: "Meaning", value: "Slip box" },
       { key: "Core Principle", value: "Linking and indexing" },
     ],
-    wikiStatus: "complete",
+    wikiStatus: "article",
     stubSource: null,
   },
   {
@@ -454,7 +454,7 @@ export const SEED_NOTES: Note[] = [
       { key: "Also Known As", value: "Evergreen Note" },
       { key: "Related Concept", value: "Zettelkasten" },
     ],
-    wikiStatus: "draft",
+    wikiStatus: "article",
     stubSource: null,
   },
   {
@@ -494,7 +494,7 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     id: "wiki-article-1",
     title: "Zettelkasten",
     aliases: ["Slip box", "Zettelkasten Method"],
-    wikiStatus: "complete",
+    wikiStatus: "article",
     stubSource: null,
     infobox: [
       { key: "Creator", value: "Niklas Luhmann" },
@@ -529,7 +529,7 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     id: "wiki-article-2",
     title: "Permanent Note",
     aliases: ["Evergreen Note"],
-    wikiStatus: "draft",
+    wikiStatus: "stub",
     stubSource: null,
     infobox: [
       { key: "Origin", value: "Zettelkasten method" },

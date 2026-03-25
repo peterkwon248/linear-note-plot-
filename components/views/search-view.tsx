@@ -7,6 +7,7 @@ import { useSearch } from "@/lib/search/use-search"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { shortRelative } from "@/lib/format-utils"
 import { setActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId } from "@/lib/table-route"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
@@ -62,7 +63,7 @@ export function SearchView() {
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
   const setCommandPaletteMode = usePlotStore((s) => s.setCommandPaletteMode)
-  const createWikiStub = usePlotStore((s) => s.createWikiStub)
+  const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
 
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -246,10 +247,12 @@ export function SearchView() {
   }
 
   function handleCreateWikiFromQuery(title: string) {
-    const id = createWikiStub(title)
-    setSelectedNoteId(id)
-    setActiveRoute("/wiki")
-    router.push("/wiki")
+    const id = createWikiArticle({ title, wikiStatus: "stub", stubSource: "manual" })
+    if (id) {
+      navigateToWikiArticle(id)
+      setActiveRoute("/wiki")
+      router.push("/wiki")
+    }
   }
 
   // ── Sublabel for note rows ─────────────────────────────────────────────────

@@ -7,7 +7,7 @@ export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
 export type NoteSource = "manual" | "webclip" | "import" | "share" | "api" | null
 
 /** Wiki quality track — independent of workflow status */
-export type WikiStatus = "stub" | "draft" | "complete"
+export type WikiStatus = "stub" | "article"
 
 /** Reason a wiki stub was auto-created */
 export type StubSource = "red-link" | "tag" | "backlink" | "manual"
@@ -157,7 +157,7 @@ export interface Note {
   isWiki: boolean
   aliases: string[]
   wikiInfobox: WikiInfoboxEntry[]
-  wikiStatus: WikiStatus | null       // null = not wiki, stub/draft/complete = wiki quality
+  wikiStatus: WikiStatus | null       // null = not wiki, stub/article = wiki quality
   stubSource: StubSource | null       // reason for stub creation (null if not a stub)
 
   /* ── Precomputed (from content, for performance) ── */
