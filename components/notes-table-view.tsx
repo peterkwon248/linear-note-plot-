@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
-import { NoteDetailPanel } from "@/components/note-detail-panel"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
@@ -38,13 +37,12 @@ export function NotesTableView() {
   const activeLabelId = useActiveLabelId()
   const activeViewId = useActiveViewId()
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
-  const openNote = usePlotStore((s) => s.openNote)
   const savedViews = usePlotStore((s) => s.savedViews)
   const setViewState = usePlotStore((s) => s.setViewState)
   const settingsViewMode = useSettingsStore((s) => s.viewMode)
+  const setPreviewNoteId = usePlotStore((s) => s.setPreviewNoteId)
+  const previewNoteId = usePlotStore((s) => s.previewNoteId)
   const isEditing = selectedNoteId !== null
-
-  const [previewId, setPreviewId] = useState<string | null>(null)
 
   const baseConfig = TABLE_VIEW_MAP[tableRoute ?? ""] ?? {}
   const activeView = activeViewId ? savedViews.find((v) => v.id === activeViewId) : null
@@ -70,12 +68,12 @@ export function NotesTableView() {
       if (e.key === "Escape") {
         const target = e.target as HTMLElement
         if (target.closest("[role='dialog']") || target.closest("[data-radix-popper-content-wrapper]")) return
-        if (!isEditing && previewId) {
-          setPreviewId(null)
+        if (!isEditing) {
+          usePlotStore.getState().setPreviewNoteId(null)
         }
       }
     },
-    [isEditing, previewId],
+    [isEditing],
   )
 
   useEffect(() => {
@@ -85,7 +83,7 @@ export function NotesTableView() {
 
   // Clear preview when switching views
   useEffect(() => {
-    setPreviewId(null)
+    usePlotStore.getState().setPreviewNoteId(null)
   }, [tableRoute])
 
   // Sync saved view's viewState into the view engine when activeViewId changes
@@ -117,20 +115,9 @@ export function NotesTableView() {
         folderId={activeFolderId ?? undefined}
         tagId={activeTagId ?? undefined}
         labelId={activeLabelId ?? undefined}
-        onRowClick={(noteId) => setPreviewId(noteId)}
-        activePreviewId={previewId}
+        onRowClick={(noteId) => setPreviewNoteId(noteId)}
+        activePreviewId={previewNoteId}
       />
-      {previewId && (
-        <NoteDetailPanel
-          noteId={previewId}
-          onClose={() => setPreviewId(null)}
-          onOpenNote={(id) => setPreviewId(id)}
-          onEditNote={() => {
-            openNote(previewId)
-            setPreviewId(null)
-          }}
-        />
-      )}
     </div>
   )
 }

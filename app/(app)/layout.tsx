@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import { LinearSidebar } from "@/components/linear-sidebar"
 import { ActivityBar } from "@/components/activity-bar"
-import { TopUtilityBar } from "@/components/top-utility-bar"
+
 import { SearchDialog } from "@/components/search-dialog"
 import { ShortcutOverlay } from "@/components/shortcut-overlay"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -135,9 +135,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider>
       <div className="flex h-screen flex-col overflow-hidden bg-background">
-        {/* ── Top Utility Bar ── */}
-        <TopUtilityBar />
-
         {/* ── Body: Activity Bar + Sidebar + Content ── */}
         <div className="flex flex-1 overflow-hidden">
           {/* ── Activity Bar (always visible) ── */}
@@ -232,7 +229,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             </ResizablePanel>
-            {sidePanelOpen && ((sidePanelMode === 'context' && !!selectedNoteId) || (sidePanelMode === 'peek' && !!sidePanelPeekNoteId)) && (
+            {sidePanelOpen && (sidePanelMode === 'context' || (sidePanelMode === 'peek' && !!sidePanelPeekNoteId)) && (
               <>
                 <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
                 <ResizablePanel defaultSize={25} minSize={15} maxSize={40}>

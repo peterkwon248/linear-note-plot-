@@ -53,6 +53,9 @@ export interface PlotState {
   // Side Panel (peek)
   sidePanelPeekNoteId: string | null
 
+  // Preview (list row click — shows details in side panel without opening editor)
+  previewNoteId: string | null
+
   // Navigation History
   navigationHistory: string[]  // stack of note IDs
   navigationIndex: number      // current position (-1 = empty)
@@ -197,6 +200,7 @@ export interface PlotState {
   goForward: () => boolean
   setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
   setListPaneWidth: (width: number) => void
+  setPreviewNoteId: (id: string | null) => void
   openSidePeek: (noteId: string) => void
   closeSidePeek: () => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void

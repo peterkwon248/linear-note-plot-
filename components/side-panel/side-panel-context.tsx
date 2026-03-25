@@ -33,14 +33,13 @@ import { GitBranch } from "@phosphor-icons/react/dist/ssr/GitBranch"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
 import { Chat } from "@phosphor-icons/react/dist/ssr/Chat"
-import { WifiHigh } from "@phosphor-icons/react/dist/ssr/WifiHigh"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { useState, useMemo, useCallback } from "react"
-import { StatusDropdown, PriorityDropdown, LabelDropdown } from "@/components/note-fields"
+import { StatusDropdown, LabelDropdown } from "@/components/note-fields"
 import { computeReadyScore, isReadyToPromote, needsReview, isStaleSuggest, getSnoozeTime, getInboxNotes } from "@/lib/queries/notes"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
@@ -227,6 +226,8 @@ function SuggestionRow({
 
 export function SidePanelContext() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const previewNoteId = usePlotStore((s) => s.previewNoteId)
+  const noteId = selectedNoteId || previewNoteId
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
@@ -256,13 +257,13 @@ export function SidePanelContext() {
   const nestedReplies = usePlotStore((s) => s.viewStateByContext["all"]?.toggles?.nestedReplies === true)
 
   const backlinks = useBacklinksIndex()
-  const backlinkNotes = useBacklinksFor(selectedNoteId)
+  const backlinkNotes = useBacklinksFor(noteId)
 
   const [folderOpen, setFolderOpen] = useState(false)
   const [tagOpen, setTagOpen] = useState(false)
   const [relationPickerOpen, setRelationPickerOpen] = useState(false)
 
-  const note = notes.find((n) => n.id === selectedNoteId) ?? null
+  const note = notes.find((n) => n.id === noteId) ?? null
 
   const headings = useMemo(
     () => (note ? extractHeadings(note.content) : []),
@@ -270,33 +271,33 @@ export function SidePanelContext() {
   )
 
   const noteRelations = useMemo(() => {
-    if (!selectedNoteId) return { outgoing: [], incoming: [] }
+    if (!noteId) return { outgoing: [], incoming: [] }
     return {
-      outgoing: (relations ?? []).filter((r: Relation) => r.sourceNoteId === selectedNoteId),
-      incoming: (relations ?? []).filter((r: Relation) => r.targetNoteId === selectedNoteId),
+      outgoing: (relations ?? []).filter((r: Relation) => r.sourceNoteId === noteId),
+      incoming: (relations ?? []).filter((r: Relation) => r.targetNoteId === noteId),
     }
-  }, [relations, selectedNoteId])
+  }, [relations, noteId])
 
   const related = useMemo(() => {
-    if (!selectedNoteId) return []
+    if (!noteId) return []
     const backlinkIds = new Set(backlinkNotes.map((n) => n.id))
-    return suggestBacklinks(selectedNoteId, notes, { limit: 5 }).filter(
+    return suggestBacklinks(noteId, notes, { limit: 5 }).filter(
       (r) => !backlinkIds.has(r.noteId)
     )
-  }, [selectedNoteId, notes, backlinkNotes])
+  }, [noteId, notes, backlinkNotes])
 
   const unlinkedMentions = useMemo(() => {
-    if (!selectedNoteId) return []
-    return detectUnlinkedMentions(selectedNoteId, notes)
-  }, [selectedNoteId, notes])
+    if (!noteId) return []
+    return detectUnlinkedMentions(noteId, notes)
+  }, [noteId, notes])
 
   const pendingSuggestions = useMemo(() => {
-    if (!selectedNoteId) return []
+    if (!noteId) return []
     return (relationSuggestions ?? []).filter(
       (s) => s.status === "pending" &&
-      (s.sourceNoteId === selectedNoteId || s.targetNoteId === selectedNoteId)
+      (s.sourceNoteId === noteId || s.targetNoteId === noteId)
     )
-  }, [relationSuggestions, selectedNoteId])
+  }, [relationSuggestions, noteId])
 
   const advanceToNextInbox = useCallback(() => {
     if (!note || note.status !== "inbox") return
@@ -305,7 +306,13 @@ export function SidePanelContext() {
     setSelectedNoteId(next?.id ?? null)
   }, [note, notes, backlinks, setSelectedNoteId])
 
-  if (!note) return null
+  if (!note) return (
+    <div className="flex flex-1 items-center justify-center p-8 text-center">
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">Select a note to see details</p>
+      </div>
+    </div>
+  )
 
   const stale = needsReview(note)
   const staleSuggest = isStaleSuggest(note)
@@ -486,17 +493,6 @@ export function SidePanelContext() {
         <StatusDropdown
           value={note.status}
           onChange={(s) => updateNote(note.id, { status: s })}
-          variant="button"
-        />
-      </InspectorSection>
-
-      <div className="mx-4 border-b border-border" />
-
-      {/* Priority */}
-      <InspectorSection title="Priority" icon={<WifiHigh size={16} weight="regular" />}>
-        <PriorityDropdown
-          value={note.priority}
-          onChange={(p) => updateNote(note.id, { priority: p })}
           variant="button"
         />
       </InspectorSection>
@@ -827,7 +823,7 @@ export function SidePanelContext() {
                   Suggestions
                 </span>
                 {pendingSuggestions.map((s) => {
-                  const otherId = s.sourceNoteId === selectedNoteId ? s.targetNoteId : s.sourceNoteId
+                  const otherId = s.sourceNoteId === noteId ? s.targetNoteId : s.sourceNoteId
                   const otherNote = notes.find((n) => n.id === otherId)
                   if (!otherNote) return null
                   return (

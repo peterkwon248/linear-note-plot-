@@ -19,21 +19,23 @@ import {
   IconPin,
   IconTrash,
   IconClock,
-  IconPanelLeftClose,
   IconPlus,
   IconDoc,
   IconGear,
 } from "@/components/plot-icons"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { usePlotStore } from "@/lib/store"
 import { PRESET_COLORS } from "@/lib/colors"
 import { setWikiViewMode, useWikiViewMode, setCategoryOverview } from "@/lib/wiki-view-mode"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
+import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
-import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
+import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 type PanelContent = Record<string, unknown>
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
@@ -204,8 +206,28 @@ export function LinearSidebar() {
   const activeViewId = useActiveViewId()
 
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
+  const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
+
+  const handleGoBack = () => {
+    const s = usePlotStore.getState()
+    if (s.selectedNoteId) {
+      const handled = s.goBack()
+      if (handled) return
+    }
+    routeGoBack()
+  }
+  const handleGoForward = () => {
+    const s = usePlotStore.getState()
+    if (s.selectedNoteId) {
+      const handled = s.goForward()
+      if (handled) return
+    }
+    routeGoForward()
+  }
 
   const tags = usePlotStore((s) => s.tags)
+  const labels = usePlotStore((s) => s.labels)
+  const templates = usePlotStore((s) => s.templates)
 
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
@@ -569,8 +591,9 @@ export function LinearSidebar() {
 
   return (
     <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
-      {/* Header: Recently Viewed + Workspace Mode + Close */}
-      <div className="flex items-center gap-1 px-3.5 pt-2.5 pb-1.5">
+      {/* Header: RecentlyViewed + Back/Forward + spacer + Search + Close */}
+      <div className="flex items-center gap-0.5 px-2.5 pt-2.5 pb-1.5">
+        {/* Recently Viewed */}
         <div className="relative" ref={recentlyViewedRef}>
           <button
             onClick={() => setRecentlyViewedOpen(!recentlyViewedOpen)}
@@ -610,13 +633,40 @@ export function LinearSidebar() {
             </div>
           )}
         </div>
+
+        {/* Back/Forward */}
+        <button
+          onClick={handleGoBack}
+          className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
+          title="Back"
+        >
+          <CaretLeft size={14} weight="bold" />
+        </button>
+        <button
+          onClick={handleGoForward}
+          className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
+          title="Forward"
+        >
+          <CaretRight size={14} weight="bold" />
+        </button>
+
         <div className="flex-1" />
+
+        {/* Search trigger */}
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
+          title="Search (⌘K)"
+        >
+          <MagnifyingGlass size={14} weight="regular" />
+        </button>
+
         <button
           onClick={() => setSidebarCollapsed(true)}
           className="flex items-center justify-center h-7 w-7 rounded-md text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
           title="Close sidebar"
         >
-          <IconPanelLeftClose size={16} />
+          <SidebarSimple size={16} weight="regular" />
         </button>
       </div>
 
@@ -780,6 +830,7 @@ export function LinearSidebar() {
                 href="/tags"
                 icon={<IconTag size={20} />}
                 label="Tags"
+                count={tags.length}
                 active={isActive("/tags")}
                 dragContent={{ type: "tags" }}
               />
@@ -787,6 +838,7 @@ export function LinearSidebar() {
                 href="/labels"
                 icon={<IconLabel size={20} />}
                 label="Labels"
+                count={labels.length}
                 active={isActive("/labels")}
                 dragContent={{ type: "labels" }}
               />
@@ -794,6 +846,7 @@ export function LinearSidebar() {
                 href="/templates"
                 icon={<IconTemplate size={20} />}
                 label="Templates"
+                count={templates.length}
                 active={isActive("/templates")}
                 dragContent={{ type: "templates" }}
               />

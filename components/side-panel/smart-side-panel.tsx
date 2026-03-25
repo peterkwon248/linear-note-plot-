@@ -19,13 +19,10 @@ export function SmartSidePanel() {
   // Don't render content when closed (but the ResizablePanel wrapper handles collapse)
   if (!sidePanelOpen) return null
 
-  // Context mode needs a selected note
-  const showContext = sidePanelMode === 'context' && !!selectedNoteId
+  // Context mode — works with or without selected note
+  const showContext = sidePanelMode === 'context'
   // Peek mode needs a peek note
   const showPeek = sidePanelMode === 'peek' && !!sidePanelPeekNoteId
-
-  // Nothing to show
-  if (!showContext && !showPeek) return null
 
   // Header tabs - only show Peek tab when there's a peek note
   const hasPeekNote = !!sidePanelPeekNoteId
@@ -35,21 +32,19 @@ export function SmartSidePanel() {
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border px-3 py-2">
         <div className="flex items-center gap-1">
-          {/* Context tab - only when editing a note */}
-          {!!selectedNoteId && (
-            <button
-              onClick={() => usePlotStore.getState().closeSidePeek()} // returns to context if selectedNoteId exists
-              className={cn(
-                "rounded-md px-2 py-1 text-xs font-medium transition-colors",
-                sidePanelMode === 'context'
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              )}
-            >
-              <SidebarSimple className="inline mr-1" size={14} weight="regular" />
-              Details
-            </button>
-          )}
+          {/* Context/Details tab */}
+          <button
+            onClick={() => usePlotStore.getState().closeSidePeek()}
+            className={cn(
+              "rounded-md px-2 py-1 text-xs font-medium transition-colors",
+              sidePanelMode === 'context'
+                ? "bg-secondary text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+            )}
+          >
+            <SidebarSimple className="inline mr-1" size={14} weight="regular" />
+            Details
+          </button>
           {/* Peek tab - only when peek note exists */}
           {hasPeekNote && (
             <button

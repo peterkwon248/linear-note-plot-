@@ -61,8 +61,6 @@ import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
-import { ViewDistributionPanel } from "@/components/view-distribution-panel"
-import type { DistributionItem } from "@/components/view-distribution-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
@@ -141,12 +139,12 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80 ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
       {active ? (
-        sortDir === "asc" ? <ArrowUp className="text-muted-foreground/50" size={10} weight="regular" /> : <ArrowDown className="text-muted-foreground/50" size={10} weight="regular" />
+        sortDir === "asc" ? <ArrowUp className="text-muted-foreground/70" size={10} weight="regular" /> : <ArrowDown className="text-muted-foreground/70" size={10} weight="regular" />
       ) : (
         <ArrowsDownUp className="opacity-0 group-hover/th:opacity-50" size={10} weight="regular" />
       )}
@@ -286,6 +284,7 @@ export function NotesTable({
   const setReminder = usePlotStore((s) => s.setReminder)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
+  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
 
   const [trashFilter, setTrashFilter] = useState<TrashFilter>("all")
 
@@ -342,9 +341,6 @@ export function NotesTable({
   // ── Multi-select state ──
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const lastClickedRef = useRef<number | null>(null)
-
-  // ── Distribution panel state ──
-  const [showDistribution, setShowDistribution] = useState(false)
 
   // ── Group collapse state ──
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
@@ -616,94 +612,6 @@ export function NotesTable({
     updateViewState({ filters: newFilters })
   }, [viewState.filters, updateViewState])
 
-  // ── Distribution panel data ──
-  const getDistribution = useCallback((tabKey: string): DistributionItem[] => {
-    switch (tabKey) {
-      case "status": {
-        const counts: Record<string, number> = {}
-        for (const n of flatNotes) {
-          counts[n.status] = (counts[n.status] ?? 0) + 1
-        }
-        return Object.entries(counts).map(([key, count]) => ({
-          key,
-          label: key.charAt(0).toUpperCase() + key.slice(1),
-          count,
-        }))
-      }
-      case "folder": {
-        const counts: Record<string, number> = {}
-        const noFolder = flatNotes.filter(n => !n.folderId).length
-        for (const n of flatNotes) {
-          if (n.folderId) counts[n.folderId] = (counts[n.folderId] ?? 0) + 1
-        }
-        const items: DistributionItem[] = Object.entries(counts).map(([fId, count]) => ({
-          key: fId,
-          label: folders.find(f => f.id === fId)?.name ?? "Unknown",
-          count,
-        }))
-        if (noFolder > 0) items.push({ key: "__none__", label: "No folder", count: noFolder })
-        return items
-      }
-      case "tags": {
-        const counts: Record<string, number> = {}
-        for (const n of flatNotes) {
-          for (const tId of n.tags) {
-            counts[tId] = (counts[tId] ?? 0) + 1
-          }
-        }
-        return Object.entries(counts).map(([tId, count]) => ({
-          key: tId,
-          label: tags.find(t => t.id === tId)?.name ?? "Unknown",
-          count,
-        }))
-      }
-      case "labels": {
-        const counts: Record<string, number> = {}
-        const noLabel = flatNotes.filter(n => !n.labelId).length
-        for (const n of flatNotes) {
-          if (n.labelId) counts[n.labelId] = (counts[n.labelId] ?? 0) + 1
-        }
-        const items: DistributionItem[] = Object.entries(counts).map(([lId, count]) => ({
-          key: lId,
-          label: labels.find(l => l.id === lId)?.name ?? "Unknown",
-          color: labels.find(l => l.id === lId)?.color,
-          count,
-        }))
-        if (noLabel > 0) items.push({ key: "__none__", label: "No label", count: noLabel })
-        return items
-      }
-      default:
-        return []
-    }
-  }, [flatNotes, folders, tags, labels])
-
-  const handleDistributionItemClick = useCallback((tabKey: string, itemKey: string) => {
-    const fieldMap: Record<string, FilterRule["field"]> = {
-      status: "status",
-      folder: "folder",
-      tags: "tags",
-      labels: "label",
-    }
-    const field = fieldMap[tabKey]
-    if (!field) return
-    const rule: FilterRule = { field, operator: "eq", value: itemKey }
-    const idx = viewState.filters.findIndex(
-      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
-    )
-    if (idx >= 0) {
-      updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
-    } else {
-      updateViewState({ filters: [...viewState.filters, rule] })
-    }
-  }, [viewState.filters, updateViewState])
-
-  const distributionTabs = useMemo(() => [
-    { key: "status", label: "Status" },
-    { key: "folder", label: "Folder" },
-    { key: "tags", label: "Tags" },
-    { key: "labels", label: "Labels" },
-  ], [])
-
   // ── Side peek state for detail panel ──
   const sidePeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
   const setSidePeekNoteId = usePlotStore((s) => s.openSidePeek)
@@ -951,8 +859,18 @@ export function NotesTable({
           />
         }
         showDetailPanel
-        detailPanelOpen={showDistribution}
-        onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
+        detailPanelOpen={sidePanelOpen}
+        onDetailPanelToggle={() => {
+          const store = usePlotStore.getState()
+          if (!store.sidePanelOpen) {
+            store.setSidePanelOpen(true)
+            usePlotStore.setState({ sidePanelMode: 'context' })
+          } else if (store.sidePanelMode === 'context') {
+            store.setSidePanelOpen(false)
+          } else {
+            usePlotStore.setState({ sidePanelMode: 'context' })
+          }
+        }}
         onCreateNew={!hideCreateButton ? () => { const id = createNote(createNoteOverrides ?? {}); if (id) openNote(id) } : undefined}
       >
         {/* Trash sub-filter tabs */}
@@ -1103,7 +1021,7 @@ export function NotesTable({
                         sortCol={viewState.sortField}
                         sortDir={viewState.sortDirection}
                         onSort={handleSort}
-                        className={`${col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""} ${isCompact ? "!text-xs" : ""}`}
+                        className={`${col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""}`}
                       />
                     </div>
                   ))}
@@ -1152,10 +1070,10 @@ export function NotesTable({
                           >
                             <CaretDown className={`text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-xs font-semibold text-foreground/80 tracking-wider">
+                            <span className="text-note font-semibold text-foreground/80">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-2xs text-muted-foreground/50 tabular-nums">{item.count}</span>
+                            <span className="text-xs text-muted-foreground/60 tabular-nums">{item.count}</span>
                           </div>
                           ) : (
                           <div
@@ -1176,10 +1094,10 @@ export function NotesTable({
                           >
                             <CaretDown className={`text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-xs font-semibold text-foreground/80 tracking-wider">
+                            <span className="text-note font-semibold text-foreground/80">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-2xs text-muted-foreground/50 tabular-nums">{item.count}</span>
+                            <span className="text-xs text-muted-foreground/60 tabular-nums">{item.count}</span>
                           </div>
                           )
                         ) : item.type === "subheader" ? (
@@ -1201,10 +1119,10 @@ export function NotesTable({
                           >
                             <CaretDown className={`text-muted-foreground/50 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey.split("::")[1] ?? item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-2xs font-medium text-foreground/60 tracking-wider">
+                            <span className="text-xs font-medium text-foreground/60">
                               {resolveGroupLabel(item.groupBy, item.groupKey.split("::")[1] ?? item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-2xs text-muted-foreground/40 tabular-nums">{item.count}</span>
+                            <span className="text-xs text-muted-foreground/50 tabular-nums">{item.count}</span>
                           </div>
                         ) : (
                           <NoteRow
@@ -1316,14 +1234,6 @@ export function NotesTable({
         />
       )}
       </div>
-      {showDistribution && (
-        <ViewDistributionPanel
-          tabs={distributionTabs}
-          getDistribution={getDistribution}
-          onItemClick={handleDistributionItemClick}
-          onClose={() => setShowDistribution(false)}
-        />
-      )}
       </div>
     </main>
   )

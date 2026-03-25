@@ -32,12 +32,8 @@ import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
-import {
-  ViewDistributionPanel,
-  type DistributionItem,
-} from "@/components/view-distribution-panel"
 import { CALENDAR_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
-import type { FilterRule, FilterField, ViewContextKey } from "@/lib/view-engine/types"
+import type { FilterRule, ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 
 /* ── Types ───────────────────────────────────────────── */
@@ -663,7 +659,6 @@ export function CalendarView({
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("month")
   const [dateSource, setDateSource] = useState<DateSource>("createdAt")
   const [layers, setLayers] = useState({ notes: true, wiki: true })
-  const [showDistribution, setShowDistribution] = useState(false)
 
   /* ── Store / hooks ────────────────────────────────── */
 
@@ -676,6 +671,7 @@ export function CalendarView({
   const tags = usePlotStore((s) => s.tags)
   const createNote = usePlotStore((s) => s.createNote)
   const openNote = usePlotStore((s) => s.openNote)
+  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
 
   /* ── Filter logic ─────────────────────────────────── */
 
@@ -819,87 +815,6 @@ export function CalendarView({
     return notesByDay.get(key) ?? []
   }, [selectedDate, notesByDay])
 
-  /* ── Distribution panel ─────────────────────────── */
-
-  const distributionTabs = useMemo(
-    () => [
-      { key: "status", label: "Status" },
-      { key: "folder", label: "Folder" },
-      { key: "tags", label: "Tags" },
-    ],
-    [],
-  )
-
-  const getDistribution = useCallback(
-    (tabKey: string): DistributionItem[] => {
-      switch (tabKey) {
-        case "status": {
-          const counts: Record<string, number> = {}
-          for (const n of filteredNotes) counts[n.status] = (counts[n.status] ?? 0) + 1
-          return Object.entries(counts).map(([key, count]) => ({
-            key,
-            label: key.charAt(0).toUpperCase() + key.slice(1),
-            count,
-            color: NOTE_STATUS_HEX[key as keyof typeof NOTE_STATUS_HEX],
-          }))
-        }
-        case "folder": {
-          const counts: Record<string, number> = {}
-          for (const n of filteredNotes) {
-            const fid = n.folderId ?? "_none"
-            counts[fid] = (counts[fid] ?? 0) + 1
-          }
-          return Object.entries(counts).map(([key, count]) => {
-            const folder = folders.find((f) => f.id === key)
-            return {
-              key,
-              label: folder?.name ?? (key === "_none" ? "No folder" : key),
-              count,
-            }
-          })
-        }
-        case "tags": {
-          const counts: Record<string, number> = {}
-          for (const n of filteredNotes) {
-            for (const tid of n.tags) counts[tid] = (counts[tid] ?? 0) + 1
-          }
-          return Object.entries(counts).map(([key, count]) => {
-            const tag = tags.find((t) => t.id === key)
-            return {
-              key,
-              label: tag?.name ?? key,
-              count,
-              color: tag?.color,
-            }
-          })
-        }
-        default:
-          return []
-      }
-    },
-    [filteredNotes, folders, tags],
-  )
-
-  const handleDistributionItemClick = useCallback(
-    (tabKey: string, itemKey: string) => {
-      const fieldMap: Record<string, FilterField> = {
-        status: "status",
-        folder: "folder",
-        tags: "tags",
-      }
-      const field = fieldMap[tabKey]
-      if (!field) return
-      const rule: FilterRule = { field, operator: "eq", value: itemKey }
-      const exists = calendarFilters.some(
-        (f) => f.field === rule.field && f.operator === rule.operator && f.value === rule.value,
-      )
-      if (!exists) {
-        setCalendarFilters((prev) => [...prev, rule])
-      }
-    },
-    [calendarFilters],
-  )
-
   /* ── Title text based on mode ─────────────────────── */
 
   const headerTitle = useMemo(() => {
@@ -991,8 +906,18 @@ export function CalendarView({
           </div>
         }
         showDetailPanel
-        detailPanelOpen={showDistribution}
-        onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
+        detailPanelOpen={sidePanelOpen}
+        onDetailPanelToggle={() => {
+          const store = usePlotStore.getState()
+          if (!store.sidePanelOpen) {
+            store.setSidePanelOpen(true)
+            usePlotStore.setState({ sidePanelMode: 'context' })
+          } else if (store.sidePanelMode === 'context') {
+            store.setSidePanelOpen(false)
+          } else {
+            usePlotStore.setState({ sidePanelMode: 'context' })
+          }
+        }}
         onCreateNew={!hideCreateButton ? () => { const id = createNote(createNoteOverrides ?? {}); if (id) openNote(id) } : undefined}
       />
 
@@ -1142,15 +1067,6 @@ export function CalendarView({
           )}
         </div>
 
-        {/* Distribution panel */}
-        {showDistribution && (
-          <ViewDistributionPanel
-            tabs={distributionTabs}
-            getDistribution={getDistribution}
-            onItemClick={handleDistributionItemClick}
-            onClose={() => setShowDistribution(false)}
-          />
-        )}
       </div>
     </main>
   )

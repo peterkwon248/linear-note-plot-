@@ -52,9 +52,10 @@ export const usePlotStore = create<PlotState>()(
         sidePanelOpen: true,
         sidePanelMode: 'context' as import("./types").SidePanelMode,
         sidePanelPeekNoteId: null,
+        previewNoteId: null,
 
-        sidebarWidth: 260,
-        sidebarLastWidth: 260,
+        sidebarWidth: 220,
+        sidebarLastWidth: 220,
         sidebarCollapsed: false,
         sidebarPeek: false,
         mergePickerOpen: false,
@@ -119,7 +120,7 @@ export const usePlotStore = create<PlotState>()(
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, previewNoteId, sidePanelOpen, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
@@ -134,6 +135,9 @@ export const usePlotStore = create<PlotState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state._viewStateHydrated = true
+          // Side panel should always start closed (not persisted)
+          state.sidePanelOpen = false
+          state.previewNoteId = null
 
           // Persist seed note bodies to IDB (content is stripped during partialize)
           // Only runs if seed notes exist and have empty content (just rehydrated)
