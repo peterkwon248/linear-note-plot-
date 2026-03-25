@@ -190,55 +190,118 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }))
     },
 
-    mergeWikiArticles: (targetId: string, sourceId: string) => {
+    mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string; status?: WikiStatus }) => {
       const state = get()
-      const target = (state.wikiArticles as WikiArticle[]).find((a) => a.id === targetId)
-      const source = (state.wikiArticles as WikiArticle[]).find((a) => a.id === sourceId)
-      if (!target || !source) return
+      const primary = (state.wikiArticles as WikiArticle[]).find((a) => a.id === primaryId)
+      const secondary = (state.wikiArticles as WikiArticle[]).find((a) => a.id === secondaryId)
+      if (!primary || !secondary) return
 
       // Divider section for merged content
       const dividerBlock: WikiBlock = {
         id: genId(),
         type: "section" as const,
-        title: `From: ${source.title}`,
+        title: `From: ${secondary.title}`,
         level: 2,
       }
 
-      // Concat blocks: target + divider + source
-      const mergedBlocks = [...target.blocks, dividerBlock, ...source.blocks]
+      // Concat blocks: primary + divider + secondary
+      const mergedBlocks = [...primary.blocks, dividerBlock, ...secondary.blocks]
 
-      // Keep the higher status (article > stub)
+      // Status: use option override, else keep higher rank
       const STATUS_RANK: Record<string, number> = { article: 2, complete: 2, stub: 1, draft: 1 }
-      const targetRank = STATUS_RANK[target.wikiStatus] ?? 0
-      const sourceRank = STATUS_RANK[source.wikiStatus] ?? 0
-      const mergedStatus = sourceRank > targetRank ? source.wikiStatus : target.wikiStatus
+      const mergedStatus = options?.status
+        ?? ((STATUS_RANK[secondary.wikiStatus] ?? 0) > (STATUS_RANK[primary.wikiStatus] ?? 0) ? secondary.wikiStatus : primary.wikiStatus)
 
-      // Update target with merged blocks
+      // Infobox: merge (primary values take precedence for duplicate keys)
+      const primaryKeys = new Set(primary.infobox.map((e) => e.key))
+      const mergedInfobox = [...primary.infobox, ...secondary.infobox.filter((e) => !primaryKeys.has(e.key))]
+
+      // Title: use option override, else keep primary title
+      const mergedTitle = options?.title ?? primary.title
+
+      // Update primary with merged data
       set((state: any) => ({
         wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== targetId) return a
+          if (a.id !== primaryId) return a
           const sectionIndex = buildSectionIndex(mergedBlocks)
           return {
             ...a,
+            title: mergedTitle,
             blocks: mergedBlocks,
             sectionIndex,
             wikiStatus: mergedStatus,
-            aliases: [...new Set([...a.aliases, source.title, ...source.aliases])],
-            tags: [...new Set([...a.tags, ...source.tags])],
+            infobox: mergedInfobox,
+            aliases: [...new Set([...a.aliases, secondary.title, ...secondary.aliases].filter((al) => al !== mergedTitle))],
+            tags: [...new Set([...a.tags, ...secondary.tags])],
             updatedAt: now(),
           }
         }),
       }))
 
       // Persist merged blocks to IDB
-      persistArticleBlocks(targetId, mergedBlocks)
+      persistArticleBlocks(primaryId, mergedBlocks)
 
-      // Delete source article (removes its block metadata from IDB)
-      // But DON'T remove text block bodies since they now belong to the target
-      removeArticleBlocks(sourceId)
+      // Delete secondary article (removes its block metadata from IDB)
+      // But DON'T remove text block bodies since they now belong to the primary
+      removeArticleBlocks(secondaryId)
       set((state: any) => ({
-        wikiArticles: state.wikiArticles.filter((a: WikiArticle) => a.id !== sourceId),
+        wikiArticles: state.wikiArticles.filter((a: WikiArticle) => a.id !== secondaryId),
       }))
+    },
+
+    splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string): string | null => {
+      const state = get()
+      const source = (state.wikiArticles as WikiArticle[]).find((a) => a.id === sourceId)
+      if (!source) return null
+
+      const blockIdSet = new Set(blockIds)
+      const extractedBlocks = source.blocks.filter((b) => blockIdSet.has(b.id))
+      const remainingBlocks = source.blocks.filter((b) => !blockIdSet.has(b.id))
+
+      if (extractedBlocks.length === 0 || remainingBlocks.length === 0) return null
+
+      // Create new article with extracted blocks
+      const newId = genId()
+      const newArticle: WikiArticle = {
+        id: newId,
+        title: newTitle,
+        aliases: [],
+        wikiStatus: "stub",
+        stubSource: "manual",
+        infobox: [],
+        blocks: extractedBlocks,
+        sectionIndex: buildSectionIndex(extractedBlocks),
+        tags: [...source.tags],
+        createdAt: now(),
+        updatedAt: now(),
+      }
+
+      // Update source: remove extracted blocks
+      set((state: any) => ({
+        wikiArticles: [
+          ...state.wikiArticles.map((a: WikiArticle) => {
+            if (a.id !== sourceId) return a
+            return {
+              ...a,
+              blocks: remainingBlocks,
+              sectionIndex: buildSectionIndex(remainingBlocks),
+              updatedAt: now(),
+            }
+          }),
+          newArticle,
+        ],
+      }))
+
+      // Persist both
+      persistArticleBlocks(sourceId, remainingBlocks)
+      persistArticleBlocks(newId, extractedBlocks)
+      for (const b of extractedBlocks) {
+        if (b.type === "text" && b.content) {
+          persistBlockBody({ id: b.id, content: b.content })
+        }
+      }
+
+      return newId
     },
   }
 }

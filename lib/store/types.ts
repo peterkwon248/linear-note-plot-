@@ -251,7 +251,8 @@ export interface PlotState {
   updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => void
   moveWikiBlock: (articleId: string, blockId: string, targetIndex: number) => void
   reorderWikiBlocks: (articleId: string, blockIds: string[]) => void
-  mergeWikiArticles: (targetId: string, sourceId: string) => void
+  mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string; status?: WikiStatus }) => void
+  splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string) => string | null
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

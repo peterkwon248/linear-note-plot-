@@ -50,6 +50,7 @@ import { WikiFloatingActionBar } from "@/components/wiki-floating-action-bar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { usePendingWikiArticle, consumePendingWikiArticle } from "@/lib/wiki-article-nav"
+import { WikiMergePreview } from "@/components/wiki-merge-preview"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -1076,60 +1077,17 @@ export function WikiView() {
         </div>
       )}
 
-      {/* Wiki GitMerge Picker Dialog */}
+      {/* Wiki Merge Preview Dialog */}
       {wikiMergeSourceId && (
-        <Dialog open={!!wikiMergeSourceId} onOpenChange={(open) => !open && setWikiMergeSourceId(null)}>
-          <DialogContent className="max-w-sm gap-0 p-0 overflow-hidden">
-            <DialogHeader className="px-5 pt-5 pb-3">
-              <DialogTitle className="flex items-center gap-2 text-ui">
-                <GitMerge size={16} weight="regular" />
-                Merge Wiki Article
-              </DialogTitle>
-              <DialogDescription className="text-note">
-                Select target article to merge into
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-5 py-2 max-h-[300px] overflow-y-auto">
-              {wikiArticles
-                .filter((a) => a.id !== wikiMergeSourceId)
-                .map((a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => {
-                      mergeWikiArticles(a.id, wikiMergeSourceId)
-                      const sourceTitle = wikiArticles.find((s) => s.id === wikiMergeSourceId)?.title ?? "article"
-                      toast.success(`Merged "${sourceTitle}" into "${a.title}"`)
-                      setWikiMergeSourceId(null)
-                    }}
-                    className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-secondary/40 text-left"
-                  >
-                    <BookOpen className="text-muted-foreground/40 shrink-0" size={16} weight="regular" />
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-sm text-foreground">{a.title || "Untitled"}</p>
-                    </div>
-                    <span className={cn(
-                      "rounded-[4px] px-1.5 py-px text-2xs font-semibold uppercase tracking-wide shrink-0",
-                      (a.wikiStatus === "article" || (a.wikiStatus as string) === "complete") ? "bg-wiki-article/8 text-wiki-article/70" :
-                      "bg-chart-3/8 text-chart-3/70"
-                    )}>
-                      {(a.wikiStatus === "article" || (a.wikiStatus as string) === "complete") ? "ARTICLE" : "STUB"}
-                    </span>
-                  </button>
-                ))}
-              {wikiArticles.filter((a) => a.id !== wikiMergeSourceId).length === 0 && (
-                <p className="py-8 text-center text-xs text-muted-foreground/40">No other articles to merge into</p>
-              )}
-            </div>
-            <div className="border-t border-border px-5 py-3 flex justify-end">
-              <button
-                onClick={() => setWikiMergeSourceId(null)}
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <WikiMergePreview
+          sourceId={wikiMergeSourceId}
+          articles={wikiArticles}
+          onClose={() => setWikiMergeSourceId(null)}
+          onComplete={(survivorId) => {
+            setWikiMergeSourceId(null)
+            setSelectedWikiArticleId(survivorId)
+          }}
+        />
       )}
     </div>
   )
