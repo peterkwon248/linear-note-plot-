@@ -96,22 +96,7 @@
       "WebFetch(domain:facedragons.com)",
       "Bash(grep -l \"noteEvents\\\\|addEvent\" lib/store/slices/*.ts)",
       "Bash(~/.claude/.omc-worklog/latest.md:*)",
-      "Bash(gh api repos/peterkwon248/linear-note-plot-/collaborators/ludimast --silent 2>&1; echo \"Exit: $?\")",
-      "WebFetch(domain:cloudcli.ai)",
-      "Bash(ipconfig | grep -A 2 \"Wi-Fi\\\\|Ethernet\\\\|이더넷\\\\|무선\" | grep \"IPv4\" | head -3)",
-      "Bash(ipconfig | grep \"IPv4\")",
-      "Bash(cloudflared --version 2>&1 || echo \"NOT_INSTALLED\")",
-      "Bash(winget install Cloudflare.cloudflared 2>&1)",
-      "Bash(ls -t ~/.claude/.omc-worklog/*.md)",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-22_1740.md)",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-22_1930.md)",
-      "Bash(.omc/notepads/general/decisions.md:*)",
-      "Bash(wc -l lib/workspace/*.ts lib/store/slices/workspace.ts app/\\\\\\(app\\\\\\)/layout.tsx)",
-      "Bash(unzip -o \"/c/Users/kwonkyunghun/Downloads/files.zip\" -d docs/)",
-      "Bash(mkdir -p docs/linear-design-mirror-extracted)",
-      "Bash(tar -xzf docs/linear-design-mirror.tar.gz -C docs/linear-design-mirror-extracted)",
-      "Bash(grep -v '^$')"
+      "Bash(gh api:*)"
     ]
   }
 }
