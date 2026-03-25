@@ -51,6 +51,8 @@ import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { usePendingWikiArticle, consumePendingWikiArticle } from "@/lib/wiki-article-nav"
 import { WikiMergePreview } from "@/components/wiki-merge-preview"
+import { WikiMergePage } from "./wiki-merge-page"
+import { WikiSplitPage } from "./wiki-split-page"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -988,7 +990,11 @@ export function WikiView() {
         onCreateNew={handleCreateWiki}
       />
 
-      {wikiViewMode === "dashboard" ? (
+      {wikiViewMode === "merge" ? (
+        <WikiMergePage />
+      ) : wikiViewMode === "split" ? (
+        <WikiSplitPage />
+      ) : wikiViewMode === "dashboard" ? (
         /* ══════════════════════════════════════════════════
            Dashboard Mode
            ══════════════════════════════════════════════════ */
@@ -1069,6 +1075,10 @@ export function WikiView() {
               articles={wikiArticles}
               onClearSelection={clearArticleSelection}
               onMerge={(sourceId) => setWikiMergeSourceId(sourceId)}
+              onSplit={(id) => {
+                setSelectedWikiArticleId(id)
+                setIsEditingWikiArticle(true)
+              }}
             />
           )}
           {showDistribution && (

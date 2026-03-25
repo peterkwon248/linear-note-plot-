@@ -13,6 +13,7 @@ import { toast } from "sonner"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import {
   DndContext,
+  DragOverlay,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
@@ -21,6 +22,7 @@ import {
   type DragEndEvent,
   useDroppable,
   type DragOverEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
@@ -35,23 +37,70 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable"
 
-/** Drop zone for splitting sections into new articles via drag */
-function SplitDropZone({ isOver }: { isOver: boolean }) {
-  const { setNodeRef } = useDroppable({ id: "split-dropzone" })
+/** Floating drag-and-drop bar that appears at the bottom of the screen during drag */
+function FloatingDragDropBar({
+  isDragging,
+  isOverNew,
+  otherArticles,
+  dragOverArticleId,
+}: {
+  isDragging: boolean
+  isOverNew: boolean
+  otherArticles: WikiArticle[]
+  dragOverArticleId: string | null
+}) {
+  const { setNodeRef: newRef } = useDroppable({ id: "split-dropzone" })
+
+  if (!isDragging) return null
+
+  return (
+    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 fade-in duration-200">
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-popover px-3 py-2.5 shadow-2xl">
+        {/* New Article drop zone */}
+        <div
+          ref={newRef}
+          className={cn(
+            "flex items-center gap-2 rounded-lg border-2 border-dashed px-4 py-2.5 transition-all duration-150 cursor-default",
+            isOverNew
+              ? "border-accent bg-accent/10 text-accent scale-105"
+              : "border-border/60 text-muted-foreground/60 hover:border-border"
+          )}
+        >
+          <Scissors size={16} weight="regular" />
+          <span className="text-xs font-medium whitespace-nowrap">
+            {isOverNew ? "Drop to split" : "New Article"}
+          </span>
+        </div>
+
+        {/* Existing article drop zones */}
+        {otherArticles.map((a) => (
+          <ExistingArticleDropTarget
+            key={a.id}
+            articleId={a.id}
+            title={a.title}
+            isOver={dragOverArticleId === a.id}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** Drop target for moving blocks to an existing article (inside FloatingDragDropBar) */
+function ExistingArticleDropTarget({ articleId, title, isOver }: { articleId: string; title: string; isOver: boolean }) {
+  const { setNodeRef } = useDroppable({ id: `drop-article-${articleId}` })
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "mt-4 rounded-lg border-2 border-dashed px-3 py-4 text-center transition-all duration-150",
+        "flex items-center gap-1.5 rounded-lg border px-3 py-2.5 transition-all duration-150 cursor-default max-w-[160px]",
         isOver
-          ? "border-accent bg-accent/10 text-accent"
-          : "border-border/40 text-muted-foreground/40"
+          ? "border-accent bg-accent/10 text-accent scale-105"
+          : "border-border/40 text-muted-foreground/50 hover:border-border/60"
       )}
     >
-      <Scissors size={16} weight="regular" className="mx-auto mb-1" />
-      <p className="text-2xs font-medium">
-        {isOver ? "Drop to split" : "Drag section here"}
-      </p>
+      <BookOpen size={14} weight="regular" className="shrink-0" />
+      <span className="text-xs font-medium truncate">{title}</span>
     </div>
   )
 }
@@ -96,6 +145,14 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(new Set())
   const [splitTitle, setSplitTitle] = useState("")
   const [dragOverDropzone, setDragOverDropzone] = useState(false)
+  // Improvement 1: isDragging state
+  const [isDragging, setIsDragging] = useState(false)
+  // Improvement 2: drag split title prompt
+  const [dragSplitPrompt, setDragSplitPrompt] = useState<{ blockId: string; defaultTitle: string } | null>(null)
+  // Improvement 4: DragOverlay active drag ID
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
+  // Improvement 5: track which existing article drop zone is hovered
+  const [dragOverArticleId, setDragOverArticleId] = useState<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -106,6 +163,12 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
 
   const article = useMemo(
     () => wikiArticles.find((a) => a.id === articleId),
+    [wikiArticles, articleId]
+  )
+
+  // Improvement 5: other articles for drop targets
+  const otherArticles = useMemo(
+    () => wikiArticles.filter((a) => a.id !== articleId).slice(0, 5),
     [wikiArticles, articleId]
   )
 
@@ -135,6 +198,37 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
     }
   }, [article, articleId, splitWikiArticle])
 
+  // Improvement 2: confirm drag split with custom title
+  const handleConfirmDragSplit = useCallback(() => {
+    if (!dragSplitPrompt || !article) return
+    const blocks = article.blocks
+    const sectionIdx = blocks.findIndex(b => b.id === dragSplitPrompt.blockId)
+    if (sectionIdx === -1) return
+
+    const sectionBlock = blocks[sectionIdx]
+
+    // Improvement 3: handle non-section blocks too
+    let blockIds: string[]
+    if (sectionBlock.type === "section") {
+      const sectionLevel = sectionBlock.level ?? 2
+      blockIds = [dragSplitPrompt.blockId]
+      for (let i = sectionIdx + 1; i < blocks.length; i++) {
+        const b = blocks[i]
+        if (b.type === "section" && (b.level ?? 2) <= sectionLevel) break
+        blockIds.push(b.id)
+      }
+    } else {
+      blockIds = [dragSplitPrompt.blockId]
+    }
+
+    const newId = splitWikiArticle(articleId, blockIds, dragSplitPrompt.defaultTitle.trim() || "Untitled")
+    if (newId) {
+      toast.success(`Split "${dragSplitPrompt.defaultTitle}" to new article`)
+      navigateToWikiArticle(newId)
+    }
+    setDragSplitPrompt(null)
+  }, [dragSplitPrompt, article, articleId, splitWikiArticle])
+
   const handleAddBlock = useCallback((type: WikiBlock["type"], afterBlockId?: string, level?: number) => {
     const block: Omit<WikiBlock, "id"> = { type }
     if (type === "section") { block.title = ""; block.level = level ?? 2 }
@@ -146,18 +240,73 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
     removeWikiBlock(articleId, blockId)
   }, [articleId, removeWikiBlock])
 
+  // Improvement 1: onDragStart handler
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setIsDragging(true)
+    setActiveDragId(event.active.id as string)
+  }, [])
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     setDragOverDropzone(false)
+    setIsDragging(false)
+    setActiveDragId(null)
+    setDragOverArticleId(null)
     const { active, over } = event
     if (!over || !article) return
 
-    // Dropped on split dropzone → split this section into new article
+    // Improvement 2+3: Dropped on split dropzone -> show title prompt for any block type
     if (over.id === "split-dropzone") {
       const draggedBlockId = active.id as string
       const block = article.blocks.find((b) => b.id === draggedBlockId)
-      if (block?.type === "section") {
-        handleSplitSection(draggedBlockId)
+      if (block) {
+        if (block.type === "section") {
+          setDragSplitPrompt({ blockId: block.id, defaultTitle: block.title ?? "Untitled" })
+        } else {
+          setDragSplitPrompt({ blockId: block.id, defaultTitle: "Untitled" })
+        }
       }
+      return
+    }
+
+    // Improvement 5: Dropped on existing article
+    if (typeof over.id === "string" && over.id.startsWith("drop-article-")) {
+      const targetArticleId = over.id.replace("drop-article-", "")
+      const draggedBlockId = active.id as string
+      const block = article.blocks.find((b) => b.id === draggedBlockId)
+      if (!block) return
+
+      // Collect block IDs to move
+      let blockIds: string[]
+      if (block.type === "section") {
+        const sectionIdx = article.blocks.indexOf(block)
+        const sectionLevel = block.level ?? 2
+        blockIds = [block.id]
+        for (let i = sectionIdx + 1; i < article.blocks.length; i++) {
+          const b = article.blocks[i]
+          if (b.type === "section" && (b.level ?? 2) <= sectionLevel) break
+          blockIds.push(b.id)
+        }
+      } else {
+        blockIds = [block.id]
+      }
+
+      const store = usePlotStore.getState()
+      const targetArticle = store.wikiArticles.find((a) => a.id === targetArticleId)
+      if (!targetArticle) return
+
+      const blocksToMove = article.blocks.filter((b) => blockIds.includes(b.id))
+      const remainingBlocks = article.blocks.filter((b) => !blockIds.includes(b.id))
+
+      // Append to target, remove from source
+      store.updateWikiArticle(targetArticleId, {
+        blocks: [...targetArticle.blocks, ...blocksToMove],
+      })
+      store.updateWikiArticle(articleId, {
+        blocks: remainingBlocks,
+      })
+
+      const targetTitle = otherArticles.find((a) => a.id === targetArticleId)?.title ?? "article"
+      toast.success(`Moved ${blockIds.length} block(s) to "${targetTitle}"`)
       return
     }
 
@@ -172,10 +321,12 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
       newIndex
     )
     reorderWikiBlocks(articleId, newOrder)
-  }, [article, articleId, reorderWikiBlocks])
+  }, [article, articleId, reorderWikiBlocks, otherArticles])
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
-    setDragOverDropzone(event.over?.id === "split-dropzone")
+    const overId = event.over?.id as string ?? ""
+    setDragOverDropzone(overId === "split-dropzone")
+    setDragOverArticleId(overId.startsWith("drop-article-") ? overId.replace("drop-article-", "") : null)
   }, [])
 
   if (!article) {
@@ -189,7 +340,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
     )
   }
 
-  // Section numbers: blockId → "1", "2.1", etc.
+  // Section numbers: blockId -> "1", "2.1", etc.
   const sectionNumbers = useMemo(() => computeSectionNumbers(article.blocks), [article.blocks])
 
   // Flatten visible blocks (skip collapsed section children)
@@ -216,7 +367,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
     return result
   }, [article.blocks])
 
-  // Map blockId → nearest section level at-or-above that block
+  // Map blockId -> nearest section level at-or-above that block
   const nearestSectionLevelByBlockId = useMemo(() => {
     const result = new Map<string, number>()
     let currentLevel: number | undefined
@@ -252,6 +403,21 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   const noteRefCount = article.blocks.filter(b => b.type === "note-ref").length
   const textBlockCount = article.blocks.filter(b => b.type === "text").length
 
+  // Improvement 4: compute child block count for drag overlay
+  const getDragChildCount = (blockId: string) => {
+    const block = article.blocks.find(b => b.id === blockId)
+    if (!block || block.type !== "section") return 0
+    const sectionIdx = article.blocks.indexOf(block)
+    const sectionLevel = block.level ?? 2
+    let count = 0
+    for (let i = sectionIdx + 1; i < article.blocks.length; i++) {
+      const b = article.blocks[i]
+      if (b.type === "section" && (b.level ?? 2) <= sectionLevel) break
+      count++
+    }
+    return count
+  }
+
   const outerContent = (
     <div className="flex flex-1 min-h-0 overflow-hidden">
       {/* TOC Sidebar */}
@@ -282,7 +448,6 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
           ) : (
             <p className="px-2 text-2xs text-muted-foreground/40">No sections yet</p>
           )}
-          {editable && <SplitDropZone isOver={dragOverDropzone} />}
         </div>
       </aside>
 
@@ -493,7 +658,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
           })()}
         </div>
 
-        {/* Sources — auto-extracted from blocks */}
+        {/* Sources -- auto-extracted from blocks */}
         <SourcesList blocks={article.blocks} />
 
         {/* Activity */}
@@ -547,8 +712,69 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   // Wrap with DndContext when editable so drop zone in sidebar works
   if (editable) {
     return (
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+      >
         {outerContent}
+
+        <FloatingDragDropBar
+          isDragging={isDragging}
+          isOverNew={dragOverDropzone}
+          otherArticles={otherArticles}
+          dragOverArticleId={dragOverArticleId}
+        />
+
+        {/* Drag split title prompt (floating dialog) */}
+        {dragSplitPrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+            <div className="w-[340px] rounded-xl border border-border bg-popover p-4 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
+              <p className="text-sm font-medium text-foreground">New article title</p>
+              <input
+                autoFocus
+                type="text"
+                value={dragSplitPrompt.defaultTitle}
+                onChange={(e) => setDragSplitPrompt(prev => prev ? { ...prev, defaultTitle: e.target.value } : null)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleConfirmDragSplit()
+                  if (e.key === "Escape") setDragSplitPrompt(null)
+                }}
+                className="h-8 w-full rounded-md border border-border bg-secondary/50 px-3 text-sm text-foreground focus:outline-none focus:border-accent"
+              />
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setDragSplitPrompt(null)} className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors">Cancel</button>
+                <button onClick={handleConfirmDragSplit} className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent/90 transition-colors">Split</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* DragOverlay for drag preview */}
+        <DragOverlay dropAnimation={null}>
+          {activeDragId && (() => {
+            const block = article?.blocks.find(b => b.id === activeDragId)
+            if (!block) return null
+            return (
+              <div className="rounded-lg border border-accent/30 bg-popover/95 px-4 py-2 shadow-lg backdrop-blur-sm max-w-[400px]">
+                <p className="text-xs font-medium text-foreground truncate">
+                  {block.type === "section" ? `\u00A7 ${block.title || "Untitled"}` :
+                   block.type === "text" ? ((block.content?.slice(0, 60) ?? "Text block") + "...") :
+                   block.type === "note-ref" ? "Note reference" :
+                   block.type === "image" ? "Image block" :
+                   "Block"}
+                </p>
+                {block.type === "section" && (
+                  <p className="text-2xs text-muted-foreground mt-0.5">
+                    + {getDragChildCount(activeDragId)} child blocks
+                  </p>
+                )}
+              </div>
+            )
+          })()}
+        </DragOverlay>
       </DndContext>
     )
   }
@@ -556,7 +782,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   return outerContent
 }
 
-/* ── Sources List ── */
+/* -- Sources List -- */
 function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
   const notes = usePlotStore((s) => s.notes)
   const attachments = usePlotStore((s) => s.attachments)
@@ -636,7 +862,7 @@ function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
   )
 }
 
-/* ── Tag Badges ── */
+/* -- Tag Badges -- */
 function TagBadges({ tagIds }: { tagIds: string[] }) {
   const tags = usePlotStore((s) => s.tags)
   return (

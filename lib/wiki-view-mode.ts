@@ -6,7 +6,7 @@
 
 import { useSyncExternalStore } from "react"
 
-export type WikiViewMode = "dashboard" | "list"
+export type WikiViewMode = "dashboard" | "list" | "merge" | "split"
 
 let _mode: WikiViewMode = "dashboard"
 let _listeners: Array<() => void> = []

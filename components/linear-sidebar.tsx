@@ -28,7 +28,9 @@ import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { usePlotStore } from "@/lib/store"
 import { PRESET_COLORS } from "@/lib/colors"
-import { setWikiViewMode } from "@/lib/wiki-view-mode"
+import { setWikiViewMode, useWikiViewMode } from "@/lib/wiki-view-mode"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
@@ -202,6 +204,7 @@ export function LinearSidebar() {
   const tags = usePlotStore((s) => s.tags)
 
   const activeSpace = useActiveSpace()
+  const wikiViewMode = useWikiViewMode()
 
   const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
   const recentlyViewedRef = useRef<HTMLDivElement>(null)
@@ -826,8 +829,44 @@ export function LinearSidebar() {
                 icon={<IconWiki size={20} />}
                 label="Overview"
                 count={wikiCount > 0 ? wikiCount : undefined}
-                active={isActive("/wiki")}
+                active={isActive("/wiki") && wikiViewMode !== "merge" && wikiViewMode !== "split"}
               />
+              <button
+                onClick={() => {
+                  setSelectedNoteId(null)
+                  setActiveRoute("/wiki")
+                  setWikiViewMode("merge")
+                  router.push("/wiki")
+                }}
+                className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+                  wikiViewMode === "merge"
+                    ? "bg-sidebar-active text-sidebar-active-text"
+                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                }`}
+              >
+                <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${wikiViewMode === "merge" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                  <GitMerge size={16} weight="regular" />
+                </span>
+                <span className="truncate text-left flex-1">Merge</span>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedNoteId(null)
+                  setActiveRoute("/wiki")
+                  setWikiViewMode("split")
+                  router.push("/wiki")
+                }}
+                className={`nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors ${
+                  wikiViewMode === "split"
+                    ? "bg-sidebar-active text-sidebar-active-text"
+                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
+                }`}
+              >
+                <span className={`flex shrink-0 items-center justify-center w-5 h-5 ${wikiViewMode === "split" ? "text-sidebar-active-text" : "text-sidebar-muted group-hover:text-sidebar-foreground"}`}>
+                  <Scissors size={16} weight="regular" />
+                </span>
+                <span className="truncate text-left flex-1">Split</span>
+              </button>
             </div>
 
             {/* Wiki categories (tags used by wiki notes) */}
