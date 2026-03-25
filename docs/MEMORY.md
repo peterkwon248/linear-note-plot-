@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 19-slice Zustand store with versioned migration (currently v58)
+- **Store**: `lib/store/index.ts` — 19-slice Zustand store with versioned migration (currently v60)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -105,7 +105,8 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 ### Key Design Decisions
 - **Activity Bar 5-space**: Inbox / Notes / Wiki / Calendar / Graph
 - **Wiki 사이드바 = Overview 단일 진입**: stat 카드 클릭으로 드릴다운
-- **위키 강등 = 라이프사이클 역순**: complete→draft→stub, stub은 바닥(강등 없음, 삭제만)
+- **WikiStatus 2단계**: stub(미완성) → article(완성). Red Link = computed. draft/complete 제거 (v60)
+- **위키 강등 = article→stub 1단계**: stub은 바닥(강등 없음, 삭제만)
 - **Display = List/Board 2모드**: Table 제거 — List의 Display Properties가 Table 역할 (Linear 철학). List에서 컬럼 켜면 테이블처럼 보임.
 - **Graph Health → /graph-insights 페이지로 분리**: 사이드바는 필터/컨트롤 패널
 - **Ontology → Graph 네이밍 분리**: Ontology = 엔진, Graph = 시각화
@@ -249,11 +250,24 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **NoteRow CSS Grid 컬럼 기반 재설계**: flex→CSS Grid 전환, word count 타이틀 옆 배치, ViewHeader 로컬 검색 제거→글로벌 검색 통합
 - **전 뷰 행 구분선 제거**: notes-table, wiki-list, wiki-view, note-list, labels-view, tags-view — "Structure felt, not seen" 철학 전면 적용
 
+### 이번 세션 완료 (2026-03-25)
+- **WikiStatus 단순화**: stub/draft/complete → stub/article 2단계. v60 마이그레이션 (draft→stub, complete→article)
+- **Import Note 2단계 리디자인**: Step 1(노트 선택) → Step 2(Article/Stub/Red Link/Create new 타겟 선택). WikiArticle 조립 모델 사용
+- **Red Links 리스트 통합**: 별도 페이지 제거, All 탭에 Article/Stub/Red Link 동급 표시
+- **위키 삭제**: 리스트 ··· 메뉴 + 에디터 사이드바 + 우클릭 컨텍스트 메뉴
+- **위키 플로팅 액션바**: 체크박스 선택 + 하단 액션바 (Delete/Promote)
+- **createWikiStub → createWikiArticle 전환**: WikilinkDecoration, search-view, wiki-collection-sidebar, wiki-view 4곳
+- **아이콘 통일**: Wiki 섹션 헤더 IconWiki, Graph 액티비티바 Phosphor Graph
+- **머지 개선**: 높은 status 유지 (article > stub), DRAFT/COMPLETE 라벨 → STUB/ARTICLE
+- **Legacy fallback**: IDB의 draft/complete 값을 Stub/Article로 표시 (StatusBadge, WikiStatusDot, wiki-dashboard 등)
+- **docs 최신화**: CLAUDE.md, CONTEXT.md, MEMORY.md store v60, WikiStatus 반영
+- Store v59→v60
+
 ### 다음 작업 후보 (우선순위 순)
-1. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
-2. **J/K 리스트 네비게이션** — Linear식
-3. **노트 가져오기/내보내기**
-4. **그래프 사이드바 리워크** — 클러스터 + 인사이트
+1. **위키 머지 UX 리디자인** — 타겟 선택 시 제목/상태 선택, Undo 지원, 방향성 명확화
+2. **캘린더 플로팅 액션바** — 캘린더에서도 선택 + 하단 액션바
+3. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
+4. **J/K 리스트 네비게이션** — Linear식
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정

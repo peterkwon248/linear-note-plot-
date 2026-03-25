@@ -2,17 +2,20 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { IconWikiStub, IconWikiDraft, IconWikiComplete } from "@/components/plot-icons"
+import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { groupByInitial, INDEX_GROUPS } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import type { WikiArticle } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 
 /* ── Types ── */
@@ -23,8 +26,8 @@ interface WikiListProps {
   backlinkCounts: Map<string, number>
 
   // Filter state
-  dashFilter: "all" | "stubs" | "drafts" | "complete" | "redlinks"
-  setDashFilter: (f: "all" | "stubs" | "drafts" | "complete" | "redlinks") => void
+  dashFilter: "all" | "stubs" | "articles" | "redlinks"
+  setDashFilter: (f: "all" | "stubs" | "articles" | "redlinks") => void
   showAllArticles: boolean
   setShowAllArticles: (show: boolean) => void
 
@@ -32,46 +35,69 @@ interface WikiListProps {
   categoryFilterLabel?: string | null
   onClearCategoryFilter?: () => void
 
+  // Red links
+  redLinks: { title: string; refCount: number }[]
+  onCreateFromRedLink: (title: string) => void
+
   // Actions
   onOpenArticle: (id: string) => void
   onMergeArticle?: (sourceId: string) => void
+  onDeleteArticle?: (id: string) => void
+
+  // Selection
+  selectedIds?: Set<string>
+  onSelect?: (id: string, multi: boolean) => void
 }
 
 /* ── Status Badge ── */
 
 const STATUS_COLORS: Record<string, string> = {
   stub: "text-chart-3",
-  draft: "text-accent",
+  article: "text-wiki-complete",
+  // Legacy fallbacks (pre-v60 IDB data)
+  draft: "text-chart-3",
   complete: "text-wiki-complete",
 }
 
 const STATUS_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   stub: IconWikiStub,
-  draft: IconWikiDraft,
-  complete: IconWikiComplete,
+  article: IconWikiArticle,
+  // Legacy fallbacks
+  draft: IconWikiStub,
+  complete: IconWikiArticle,
+}
+
+// Normalize legacy status values to new names for display
+const STATUS_LABELS: Record<string, string> = {
+  stub: "Stub",
+  article: "Article",
+  draft: "Stub",
+  complete: "Article",
 }
 
 function StatusBadge({ status }: { status: string | null }) {
   if (!status) return null
   const Icon = STATUS_ICONS[status]
+  const label = STATUS_LABELS[status] ?? status
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-xs font-medium capitalize",
+        "inline-flex items-center gap-1.5 text-xs font-medium",
         STATUS_COLORS[status] ?? "text-muted-foreground/50"
       )}
     >
       {Icon && <Icon size={14} />}
-      {status}
+      {label}
     </span>
   )
 }
 
 /* ── Column Header ── */
 
-function ColumnHeaders() {
+function ColumnHeaders({ hasSelection }: { hasSelection?: boolean }) {
   return (
     <div className="flex items-center px-5 py-2 text-xs font-medium text-muted-foreground/50 border-b border-border/30">
+      {hasSelection && <span className="w-7 shrink-0" />}
       <span className="w-[100px]">Status</span>
       <span className="min-w-0 flex-1">Title</span>
       <span className="w-[60px] text-right">Links</span>
@@ -88,18 +114,57 @@ function ArticleTableRow({
   backlinkCount,
   onClick,
   onMerge,
+  onDelete,
+  isSelected,
+  selectionActive,
+  onSelect,
 }: {
   note: WikiArticle
   backlinkCount: number
   onClick: () => void
   onMerge?: () => void
+  onDelete?: () => void
+  isSelected?: boolean
+  selectionActive?: boolean
+  onSelect?: (multi: boolean) => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <div
-      className="group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75"
+      className={cn(
+        "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75",
+        isSelected && "bg-accent/5"
+      )}
+      onContextMenu={(e) => {
+        if (onMerge || onDelete) {
+          e.preventDefault()
+          setMenuOpen(true)
+        }
+      }}
     >
+      {/* Checkbox */}
+      {onSelect && (
+        <div
+          className={cn(
+            "w-7 shrink-0 flex items-center justify-center cursor-pointer",
+            selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
+          )}
+          onClick={(e) => {
+            e.stopPropagation()
+            onSelect(e.metaKey || e.ctrlKey)
+          }}
+        >
+          <div className={cn(
+            "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+            isSelected
+              ? "bg-accent border-accent text-white"
+              : "border-muted-foreground/30 hover:border-muted-foreground/50"
+          )}>
+            {isSelected && <PhCheck size={10} weight="bold" />}
+          </div>
+        </div>
+      )}
       <button
         onClick={onClick}
         className="flex flex-1 items-center text-left min-w-0"
@@ -117,7 +182,7 @@ function ArticleTableRow({
 
       {/* Context menu */}
       <span className="w-[36px] shrink-0 flex justify-center">
-        {onMerge ? (
+        {(onMerge || onDelete) ? (
           <Popover open={menuOpen} onOpenChange={setMenuOpen}>
             <PopoverTrigger asChild>
               <button
@@ -128,12 +193,25 @@ function ArticleTableRow({
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
-              <button
-                onClick={() => { setMenuOpen(false); onMerge() }}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
-              >
-                <GitMerge size={14} weight="regular" /> GitMerge into...
-              </button>
+              {onMerge && (
+                <button
+                  onClick={() => { setMenuOpen(false); onMerge() }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                >
+                  <GitMerge size={14} weight="regular" /> Merge into...
+                </button>
+              )}
+              {onMerge && onDelete && (
+                <div className="my-1 h-px bg-border/40" />
+              )}
+              {onDelete && (
+                <button
+                  onClick={() => { setMenuOpen(false); onDelete() }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-destructive hover:bg-active-bg transition-colors"
+                >
+                  <Trash size={14} weight="regular" /> Delete
+                </button>
+              )}
             </PopoverContent>
           </Popover>
         ) : null}
@@ -141,6 +219,44 @@ function ArticleTableRow({
 
       <span className="w-[70px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
         {shortRelative(note.updatedAt)}
+      </span>
+    </div>
+  )
+}
+
+/* ── Red Link Row ── */
+
+function RedLinkRow({
+  title,
+  refCount,
+  onClick,
+}: {
+  title: string
+  refCount: number
+  onClick: () => void
+}) {
+  return (
+    <div className="group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75">
+      <button
+        onClick={onClick}
+        className="flex flex-1 items-center text-left min-w-0"
+      >
+        <span className="w-[100px] shrink-0">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive">
+            <Warning size={14} weight="regular" />
+            Red Link
+          </span>
+        </span>
+        <span className="min-w-0 flex-1 truncate text-note font-medium text-destructive/80">
+          {title}
+        </span>
+      </button>
+      <span className="w-[60px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
+        {refCount > 0 ? `${refCount}` : "\u2014"}
+      </span>
+      <span className="w-[36px]" />
+      <span className="w-[70px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
+        {"\u2014"}
       </span>
     </div>
   )
@@ -205,14 +321,20 @@ export function WikiList({
   onClearCategoryFilter,
   onOpenArticle,
   onMergeArticle,
+  onDeleteArticle,
+  redLinks,
+  onCreateFromRedLink,
+  selectedIds,
+  onSelect,
 }: WikiListProps) {
+  const selectionActive = selectedIds ? selectedIds.size > 0 : false
   const groupedArticles = groupByInitial(filteredWikiNotes, (n: WikiArticle) => n.title || "Untitled")
 
   const counts = {
-    all: sortedFilteredWikiNotes.length,
-    complete: filteredWikiNotes.filter(n => n.wikiStatus === "complete").length,
-    drafts: filteredWikiNotes.filter(n => n.wikiStatus === "draft").length,
-    stubs: filteredWikiNotes.filter(n => n.wikiStatus === "stub").length,
+    all: sortedFilteredWikiNotes.length + redLinks.length,
+    articles: filteredWikiNotes.filter(n => n.wikiStatus === "article" || (n.wikiStatus as string) === "complete").length,
+    stubs: filteredWikiNotes.filter(n => n.wikiStatus === "stub" || (n.wikiStatus as string) === "draft").length,
+    redlinks: redLinks.length,
   }
 
   return (
@@ -231,9 +353,9 @@ export function WikiList({
         <span className="h-4 w-px bg-border/50" />
 
         {/* Filter Tabs */}
-        {(["all", "complete", "drafts", "stubs", "redlinks"] as const).map((tab) => {
-          const labels: Record<string, string> = { all: "All", complete: "Complete", drafts: "Draft", stubs: "Stub", redlinks: "Red Links" }
-          const tabCount = tab === "redlinks" ? undefined : counts[tab as keyof typeof counts]
+        {(["all", "articles", "stubs", "redlinks"] as const).map((tab) => {
+          const labels: Record<string, string> = { all: "All", articles: "Article", stubs: "Stub", redlinks: "Red Links" }
+          const tabCount = counts[tab as keyof typeof counts]
           return (
             <button
               key={tab}
@@ -318,20 +440,36 @@ export function WikiList({
       ) : (
         /* ── Filtered Article Table ── */
         <div className="flex-1 overflow-y-auto">
-          <ColumnHeaders />
-          {sortedFilteredWikiNotes.length === 0 ? (
+          <ColumnHeaders hasSelection={!!onSelect} />
+          {sortedFilteredWikiNotes.length === 0 && (dashFilter === "all" ? redLinks.length === 0 : dashFilter !== "redlinks") ? (
             <EmptyState />
           ) : (
             <div>
-              {sortedFilteredWikiNotes.map(note => (
+              {/* Article/Stub rows */}
+              {dashFilter !== "redlinks" && sortedFilteredWikiNotes.map(note => (
                 <ArticleTableRow
                   key={note.id}
                   note={note}
                   backlinkCount={backlinkCounts.get(note.id) ?? 0}
                   onClick={() => onOpenArticle(note.id)}
                   onMerge={onMergeArticle ? () => onMergeArticle(note.id) : undefined}
+                  onDelete={onDeleteArticle ? () => onDeleteArticle(note.id) : undefined}
+                  isSelected={selectedIds?.has(note.id)}
+                  selectionActive={selectionActive}
+                  onSelect={onSelect ? (multi) => onSelect(note.id, multi) : undefined}
                 />
               ))}
+              {/* Red Link rows */}
+              {(dashFilter === "all" || dashFilter === "redlinks") && redLinks.map(rl => (
+                <RedLinkRow
+                  key={`rl-${rl.title}`}
+                  title={rl.title}
+                  refCount={rl.refCount}
+                  onClick={() => onCreateFromRedLink(rl.title)}
+                />
+              ))}
+              {/* Empty state for redlinks filter with no red links */}
+              {dashFilter === "redlinks" && redLinks.length === 0 && <EmptyState />}
             </div>
           )}
         </div>

@@ -5,27 +5,34 @@ import type { WikiStatus } from "@/lib/types"
 import type { Icon as PhIcon } from "@phosphor-icons/react"
 /* ── Wiki Status Dot ── */
 
-export function WikiStatusDot({ status }: { status: WikiStatus | null }) {
+// Normalize legacy status values (draft→stub, complete→article)
+function normalizeStatus(status: string): "stub" | "article" {
+  if (status === "complete" || status === "article") return "article"
+  return "stub"
+}
+
+export function WikiStatusDot({ status }: { status: WikiStatus | string | null }) {
   if (!status) return <span className="h-2 w-2 rounded-full shrink-0 bg-muted-foreground/30" />
+  const normalized = normalizeStatus(status)
   const colors: Record<string, string> = {
     stub: "bg-chart-3",
-    draft: "bg-accent",
-    complete: "bg-wiki-complete",
+    article: "bg-wiki-complete",
   }
-  return <span className={cn("h-2 w-2 rounded-full shrink-0", colors[status] ?? "bg-muted-foreground/30")} />
+  return <span className={cn("h-2 w-2 rounded-full shrink-0", colors[normalized])} />
 }
 
 /* ── Wiki Status Badge ── */
 
-export function WikiStatusBadge({ status }: { status: WikiStatus }) {
+export function WikiStatusBadge({ status }: { status: WikiStatus | string }) {
+  const normalized = normalizeStatus(status)
   const styles: Record<string, string> = {
     stub: "bg-chart-3/10 text-chart-3",
-    draft: "bg-accent/10 text-accent",
-    complete: "bg-wiki-complete/10 text-wiki-complete",
+    article: "bg-wiki-complete/10 text-wiki-complete",
   }
+  const labels: Record<string, string> = { stub: "Stub", article: "Article" }
   return (
-    <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium capitalize", styles[status])}>
-      {status}
+    <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", styles[normalized])}>
+      {labels[normalized]}
     </span>
   )
 }

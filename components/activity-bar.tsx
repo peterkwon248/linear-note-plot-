@@ -19,10 +19,10 @@ import {
   IconNotes,
   IconWiki,
   IconCalendar,
-  IconOntology,
   IconSun,
   IconMoon,
 } from "@/components/plot-icons"
+import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { useSettingsStore } from "@/lib/settings-store"
 
 /* ── Space definitions ──────────────────────────────── */
@@ -30,14 +30,14 @@ import { useSettingsStore } from "@/lib/settings-store"
 const SPACES: {
   id: ActivitySpace
   label: string
-  icon: typeof IconInbox
+  icon: (props: { size?: number }) => React.ReactNode
   shortcut: string
 }[] = [
   { id: "inbox",    label: "Inbox",    icon: IconInbox,    shortcut: "G then I" },
   { id: "notes",    label: "Notes",    icon: IconNotes,    shortcut: "G then N" },
   { id: "wiki",     label: "Wiki",     icon: IconWiki,     shortcut: "" },
   { id: "calendar", label: "Calendar", icon: IconCalendar, shortcut: "" },
-  { id: "ontology", label: "Graph",    icon: IconOntology, shortcut: "" },
+  { id: "ontology", label: "Graph",    icon: Graph,        shortcut: "" },
 ]
 
 /* ── Component ──────────────────────────────────────── */

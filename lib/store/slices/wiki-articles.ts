@@ -207,6 +207,12 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       // Concat blocks: target + divider + source
       const mergedBlocks = [...target.blocks, dividerBlock, ...source.blocks]
 
+      // Keep the higher status (article > stub)
+      const STATUS_RANK: Record<string, number> = { article: 2, complete: 2, stub: 1, draft: 1 }
+      const targetRank = STATUS_RANK[target.wikiStatus] ?? 0
+      const sourceRank = STATUS_RANK[source.wikiStatus] ?? 0
+      const mergedStatus = sourceRank > targetRank ? source.wikiStatus : target.wikiStatus
+
       // Update target with merged blocks
       set((state: any) => ({
         wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
@@ -216,6 +222,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
             ...a,
             blocks: mergedBlocks,
             sectionIndex,
+            wikiStatus: mergedStatus,
             aliases: [...new Set([...a.aliases, source.title, ...source.aliases])],
             tags: [...new Set([...a.tags, ...source.tags])],
             updatedAt: now(),

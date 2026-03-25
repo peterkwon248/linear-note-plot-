@@ -13,6 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { IconWiki, IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
@@ -45,6 +46,7 @@ import { ViewDistributionPanel, type DistributionItem } from "@/components/view-
 import { WikiArticleReader } from "./wiki-article-reader"
 import { WikiDashboard } from "./wiki-dashboard"
 import { WikiList } from "./wiki-list"
+import { WikiFloatingActionBar } from "@/components/wiki-floating-action-bar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { usePendingWikiArticle, consumePendingWikiArticle } from "@/lib/wiki-article-nav"
@@ -57,6 +59,8 @@ export function WikiView() {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const mergeWikiArticles = usePlotStore((s) => s.mergeWikiArticles)
+  const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
+  const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
   const router = useRouter()
   const backlinkCounts = useBacklinksIndex()
 
@@ -66,22 +70,47 @@ export function WikiView() {
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Import Note popover state
+  // Import Note popover state (2-step flow)
   const [importOpen, setImportOpen] = useState(false)
   const [importQuery, setImportQuery] = useState("")
+  const [importStep, setImportStep] = useState<"select-note" | "select-target">("select-note")
+  const [importSelectedNoteId, setImportSelectedNoteId] = useState<string | null>(null)
+  const [importTargetQuery, setImportTargetQuery] = useState("")
   const importInputRef = useRef<HTMLInputElement>(null)
+  const importTargetInputRef = useRef<HTMLInputElement>(null)
 
   // Wiki merge state
   const [wikiMergeSourceId, setWikiMergeSourceId] = useState<string | null>(null)
 
   // Dashboard filter
-  const [dashFilter, setDashFilter] = useState<"all" | "stubs" | "drafts" | "complete" | "redlinks">("all")
+  const [dashFilter, setDashFilter] = useState<"all" | "stubs" | "articles" | "redlinks">("all")
 
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
 
   // All Articles view state
   const [showAllArticles, setShowAllArticles] = useState(false)
+
+  // Wiki article selection state (for floating action bar)
+  const [selectedArticleIds, setSelectedArticleIds] = useState<Set<string>>(new Set())
+
+  const handleArticleSelect = useCallback((id: string, multi: boolean) => {
+    setSelectedArticleIds(prev => {
+      const next = new Set(multi ? prev : [])
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const clearArticleSelection = useCallback(() => {
+    setSelectedArticleIds(new Set())
+  }, [])
+
+  // Clear selection when filter changes
+  useEffect(() => {
+    setSelectedArticleIds(new Set())
+  }, [dashFilter])
 
   // Filter / Display state
   const [wikiFilters, setWikiFilters] = useState<FilterRule[]>([])
@@ -172,6 +201,7 @@ export function WikiView() {
 
   // Open article within WikiView
   const openArticle = useCallback((id: string) => {
+    clearArticleSelection()
     // PhCheck if id is a WikiArticle directly
     const directArticle = wikiArticles.find((a) => a.id === id)
     if (directArticle) {
@@ -190,7 +220,7 @@ export function WikiView() {
       }
     }
     setSelectedArticleId(id)
-  }, [notes, wikiArticles])
+  }, [notes, wikiArticles, clearArticleSelection])
 
   // Smart navigation: wiki articles open in-view, non-wiki go to /notes
   const handleNavigate = useCallback(
@@ -218,10 +248,10 @@ export function WikiView() {
 
   const handleCreateFromRedLink = useCallback(
     (title: string) => {
-      const id = createWikiStub(title, [], "red-link")
-      openArticle(id)
+      const id = createWikiArticle({ title, wikiStatus: "stub", stubSource: "red-link" })
+      if (id) setSelectedWikiArticleId(id)
     },
-    [createWikiStub, openArticle]
+    [createWikiArticle]
   )
 
   const handleEditArticle = useCallback(() => {
@@ -242,10 +272,7 @@ export function WikiView() {
       const note = notes.find((n) => n.id === noteId)
       if (!note) return
       const status = note.wikiStatus
-      if (status === "complete") {
-        setWikiStatus(noteId, "draft")
-        toast.success(`"${note.title || "Untitled"}" demoted to Draft`)
-      } else if (status === "draft") {
+      if (status === "article") {
         setWikiStatus(noteId, "stub")
         toast.success(`"${note.title || "Untitled"}" demoted to Stub`)
       }
@@ -261,9 +288,8 @@ export function WikiView() {
   const filteredWikiNotes = useMemo(() => {
     let result = wikiNotes
     // Apply status filter
-    if (dashFilter === "stubs") result = result.filter(n => n.wikiStatus === "stub")
-    else if (dashFilter === "drafts") result = result.filter(n => n.wikiStatus === "draft")
-    else if (dashFilter === "complete") result = result.filter(n => n.wikiStatus === "complete")
+    if (dashFilter === "stubs") result = result.filter(n => n.wikiStatus === "stub" || (n.wikiStatus as string) === "draft")
+    else if (dashFilter === "articles") result = result.filter(n => n.wikiStatus === "article" || (n.wikiStatus as string) === "complete")
     // Apply toggle-based filtering
     if (wikiViewState.toggles.showStubs === false) {
       result = result.filter(n => n.wikiStatus !== "stub")
@@ -298,16 +324,61 @@ export function WikiView() {
       .slice(0, 12)
   }, [notes, importQuery])
 
-  const handleImportNote = useCallback(
-    (noteId: string) => {
-      usePlotStore.getState().convertToWiki(noteId, "manual")
-      setImportOpen(false)
-      setImportQuery("")
-      // Open the freshly promoted article
-      setSelectedArticleId(noteId)
-    },
-    []
-  )
+  // Step 1: select a note → advance to step 2
+  const handleImportSelectNote = useCallback((noteId: string) => {
+    setImportSelectedNoteId(noteId)
+    setImportStep("select-target")
+    setImportTargetQuery("")
+    setTimeout(() => importTargetInputRef.current?.focus(), 50)
+  }, [])
+
+  // Reset import popover state
+  const resetImport = useCallback(() => {
+    setImportOpen(false)
+    setImportQuery("")
+    setImportTargetQuery("")
+    setImportStep("select-note")
+    setImportSelectedNoteId(null)
+  }, [])
+
+  // Step 2a: import into existing article/stub
+  const handleImportIntoExisting = useCallback((targetArticleId: string) => {
+    if (!importSelectedNoteId) return
+    addWikiBlock(targetArticleId, { type: "note-ref", noteId: importSelectedNoteId })
+    toast.success("Note added to wiki article")
+    resetImport()
+    setSelectedWikiArticleId(targetArticleId)
+  }, [importSelectedNoteId, addWikiBlock, resetImport])
+
+  // Step 2b: import into red link (create new article from red link title)
+  const handleImportIntoRedLink = useCallback((title: string) => {
+    if (!importSelectedNoteId) return
+    const blocks = [
+      { id: crypto.randomUUID(), type: "section" as const, title: "Overview", level: 2 },
+      { id: crypto.randomUUID(), type: "note-ref" as const, noteId: importSelectedNoteId },
+      { id: crypto.randomUUID(), type: "section" as const, title: "See Also", level: 2 },
+    ]
+    const articleId = createWikiArticle({ title, blocks })
+    toast.success(`Wiki article "${title}" created`)
+    resetImport()
+    if (articleId) setSelectedWikiArticleId(articleId)
+  }, [importSelectedNoteId, createWikiArticle, resetImport])
+
+  // Step 2c: create new article
+  const handleImportCreateNew = useCallback(() => {
+    if (!importSelectedNoteId) return
+    const note = notes.find(n => n.id === importSelectedNoteId)
+    const title = note?.title || "Untitled"
+    const blocks = [
+      { id: crypto.randomUUID(), type: "section" as const, title: "Overview", level: 2 },
+      { id: crypto.randomUUID(), type: "note-ref" as const, noteId: importSelectedNoteId },
+      { id: crypto.randomUUID(), type: "section" as const, title: "See Also", level: 2 },
+    ]
+    const articleId = createWikiArticle({ title, blocks })
+    toast.success(`Wiki article "${title}" created`)
+    resetImport()
+    if (articleId) setSelectedWikiArticleId(articleId)
+  }, [importSelectedNoteId, notes, createWikiArticle, resetImport])
 
   // Reset selectedArticleId if note was deleted
   const selectedNote = selectedArticleId
@@ -347,6 +418,15 @@ export function WikiView() {
       .sort((a, b) => b.refCount - a.refCount || a.title.localeCompare(b.title))
   }, [notes, wikiNotes])
 
+  // Filtered targets for import step 2
+  const importTargets = useMemo(() => {
+    const q = importTargetQuery.toLowerCase().trim()
+    const articles = wikiArticles.filter(a => (a.wikiStatus === "article" || (a.wikiStatus as string) === "complete") && (q.length === 0 || a.title.toLowerCase().includes(q)))
+    const stubs = wikiArticles.filter(a => (a.wikiStatus === "stub" || (a.wikiStatus as string) === "draft") && (q.length === 0 || a.title.toLowerCase().includes(q)))
+    const rl = redLinks.filter(r => q.length === 0 || r.title.toLowerCase().includes(q))
+    return { articles, stubs, redLinks: rl }
+  }, [wikiArticles, redLinks, importTargetQuery])
+
   // Stats
   const stats = useMemo(() => {
     const articleCount = wikiNotes.length
@@ -374,19 +454,17 @@ export function WikiView() {
     }
 
     return {
-      articles: articleCount,
+      articles: wikiNotes.filter(n => n.wikiStatus === "article" || n.wikiStatus === "complete" as string).length,
       redLinks: redLinkCount,
       internalLinks: internalLinkCount,
       connectedNotes: connectedNoteIds.size,
-      stubs: wikiNotes.filter(n => n.wikiStatus === "stub").length,
-      drafts: wikiNotes.filter(n => n.wikiStatus === "draft").length,
-      complete: wikiNotes.filter(n => n.wikiStatus === "complete").length,
+      stubs: wikiNotes.filter(n => n.wikiStatus === "stub" || n.wikiStatus === "draft" as string).length,
     }
   }, [wikiNotes, redLinks, notes])
 
-  // Article count: draft + complete only (excludes stubs)
+  // Article count: articles only (excludes stubs)
   const articleCount = useMemo(
-    () => wikiNotes.filter((n) => n.wikiStatus !== "stub").length,
+    () => wikiNotes.filter((n) => n.wikiStatus === "article" || n.wikiStatus === "complete" as string).length,
     [wikiNotes]
   )
 
@@ -426,13 +504,12 @@ export function WikiView() {
   const getWikiDistribution = useCallback((tabKey: string): DistributionItem[] => {
     switch (tabKey) {
       case "wikiStatus": {
-        const counts: Record<string, number> = { stub: 0, draft: 0, complete: 0 }
+        const counts: Record<string, number> = { stub: 0, article: 0 }
         for (const n of wikiNotes) {
           if (n.wikiStatus) counts[n.wikiStatus] = (counts[n.wikiStatus] ?? 0) + 1
         }
         return [
-          { key: "complete", label: "Complete", count: counts.complete, color: WIKI_STATUS_HEX.complete },
-          { key: "draft", label: "Draft", count: counts.draft, color: WIKI_STATUS_HEX.draft },
+          { key: "article", label: "Article", count: counts.article, color: WIKI_STATUS_HEX.article },
           { key: "stub", label: "Stub", count: counts.stub, color: WIKI_STATUS_HEX.stub },
         ].filter(i => i.count > 0)
       }
@@ -588,7 +665,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<BookOpen size={20} weight="regular" />}
+          icon={<IconWiki size={20} />}
           title={selectedWikiArticle.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -626,6 +703,12 @@ export function WikiView() {
         <WikiArticleView
           articleId={selectedWikiArticleId}
           editable={isEditingWikiArticle}
+          onDelete={() => {
+            deleteWikiArticle(selectedWikiArticleId)
+            setSelectedWikiArticleId(null)
+            setIsEditingWikiArticle(false)
+            toast.success("Article deleted")
+          }}
         />
       </div>
     )
@@ -636,7 +719,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<BookOpen size={20} weight="regular" />}
+          icon={<IconWiki size={20} />}
           title={selectedNote.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -656,7 +739,7 @@ export function WikiView() {
                       className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
                     >
                       <ArrowLineDown className="text-muted-foreground" size={14} weight="regular" />
-                      {selectedNote?.wikiStatus === "complete" ? "Demote to Draft" : "Demote to Stub"}
+                      Demote to Stub
                     </button>
                   )}
                   <button
@@ -713,7 +796,7 @@ export function WikiView() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<BookOpen size={20} weight="regular" />}
+        icon={<IconWiki size={20} />}
         title="Wiki"
         count={stats.articles}
         showFilter
@@ -748,9 +831,16 @@ export function WikiView() {
         actions={
           <div className="flex items-center gap-2">
             <Popover open={importOpen} onOpenChange={(o) => {
-              setImportOpen(o)
-              if (!o) setImportQuery("")
-              else setTimeout(() => importInputRef.current?.focus(), 50)
+              if (o) {
+                setImportOpen(true)
+                setImportStep("select-note")
+                setImportSelectedNoteId(null)
+                setImportQuery("")
+                setImportTargetQuery("")
+                setTimeout(() => importInputRef.current?.focus(), 50)
+              } else {
+                resetImport()
+              }
             }}>
               <PopoverTrigger asChild>
                 <button
@@ -760,43 +850,136 @@ export function WikiView() {
                   Import Note
                 </button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-72 p-0">
-                <div className="border-b border-border px-3 py-2">
-                  <div className="relative">
-                    <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
-                    <input
-                      ref={importInputRef}
-                      type="text"
-                      value={importQuery}
-                      onChange={(e) => setImportQuery(e.target.value)}
-                      placeholder="MagnifyingGlass notes..."
-                      className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="max-h-60 overflow-y-auto py-1">
-                  {importableNotes.length === 0 ? (
-                    <p className="px-3 py-4 text-center text-xs text-muted-foreground">
-                      {importQuery.trim() ? "No matching notes" : "No notes to import"}
-                    </p>
-                  ) : (
-                    importableNotes.map((note) => (
+              <PopoverContent align="end" className="w-80 p-0">
+                {importStep === "select-note" ? (
+                  <>
+                    <div className="border-b border-border px-3 py-2">
+                      <p className="mb-1.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Step 1 — Select a note</p>
+                      <div className="relative">
+                        <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
+                        <input
+                          ref={importInputRef}
+                          type="text"
+                          value={importQuery}
+                          onChange={(e) => setImportQuery(e.target.value)}
+                          placeholder="Search notes..."
+                          className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto py-1">
+                      {importableNotes.length === 0 ? (
+                        <p className="px-3 py-4 text-center text-xs text-muted-foreground">
+                          {importQuery.trim() ? "No matching notes" : "No notes to import"}
+                        </p>
+                      ) : (
+                        importableNotes.map((note) => (
+                          <button
+                            key={note.id}
+                            onClick={() => handleImportSelectNote(note.id)}
+                            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                          >
+                            <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+                            <span className="min-w-0 flex-1 truncate">
+                              {note.title || "Untitled"}
+                            </span>
+                            <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-2xs font-medium text-muted-foreground capitalize">
+                              {note.status}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="border-b border-border px-3 py-2">
+                      <div className="mb-1.5 flex items-center gap-1.5">
+                        <button onClick={() => { setImportStep("select-note"); setImportTargetQuery("") }} className="text-muted-foreground hover:text-foreground transition-colors">
+                          <CaretLeft size={14} weight="bold" />
+                        </button>
+                        <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">Step 2 — Select target</p>
+                      </div>
+                      <div className="relative">
+                        <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
+                        <input
+                          ref={importTargetInputRef}
+                          type="text"
+                          value={importTargetQuery}
+                          onChange={(e) => setImportTargetQuery(e.target.value)}
+                          placeholder="Search articles, stubs, red links..."
+                          className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-72 overflow-y-auto py-1">
+                      {/* Create new article */}
                       <button
-                        key={note.id}
-                        onClick={() => handleImportNote(note.id)}
-                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                        onClick={handleImportCreateNew}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-accent transition-colors duration-150 hover:bg-secondary"
                       >
-                        <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
-                        <span className="min-w-0 flex-1 truncate">
-                          {note.title || "Untitled"}
-                        </span>
-                        <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-2xs font-medium text-muted-foreground capitalize">
-                          {note.status}
-                        </span>
+                        <PhPlus className="shrink-0" size={14} weight="bold" />
+                        <span className="font-medium">Create new article</span>
                       </button>
-                    ))
-                  )}
-                </div>
+
+                      {/* Articles */}
+                      {importTargets.articles.length > 0 && (
+                        <>
+                          <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Articles</p>
+                          {importTargets.articles.map((a) => (
+                            <button
+                              key={a.id}
+                              onClick={() => handleImportIntoExisting(a.id)}
+                              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                            >
+                              <IconWikiArticle size={14} className="shrink-0 text-wiki-complete" />
+                              <span className="min-w-0 flex-1 truncate">{a.title}</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Stubs */}
+                      {importTargets.stubs.length > 0 && (
+                        <>
+                          <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Stubs</p>
+                          {importTargets.stubs.map((a) => (
+                            <button
+                              key={a.id}
+                              onClick={() => handleImportIntoExisting(a.id)}
+                              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                            >
+                              <IconWikiStub size={14} className="shrink-0 text-chart-3" />
+                              <span className="min-w-0 flex-1 truncate">{a.title}</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Red Links */}
+                      {importTargets.redLinks.length > 0 && (
+                        <>
+                          <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Red Links</p>
+                          {importTargets.redLinks.map((r) => (
+                            <button
+                              key={r.title}
+                              onClick={() => handleImportIntoRedLink(r.title)}
+                              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                            >
+                              <Warning size={14} weight="regular" className="shrink-0 text-destructive" />
+                              <span className="min-w-0 flex-1 truncate">{r.title}</span>
+                              <span className="shrink-0 text-2xs text-muted-foreground">{r.refCount} refs</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+
+                      {importTargets.articles.length === 0 && importTargets.stubs.length === 0 && importTargets.redLinks.length === 0 && importTargetQuery.trim() && (
+                        <p className="px-3 py-4 text-center text-xs text-muted-foreground">No matching targets</p>
+                      )}
+                    </div>
+                  </>
+                )}
               </PopoverContent>
             </Popover>
           </div>
@@ -854,54 +1037,6 @@ export function WikiView() {
            List Mode (table-list view)
            ══════════════════════════════════════════════════ */
         <div className="flex flex-1 overflow-hidden">
-          {dashFilter === "redlinks" ? (
-            /* Red Links list mode */
-            <div className="flex-1 overflow-y-auto">
-              <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-5 py-2">
-                <button
-                  onClick={() => { setDashFilter("all"); setWikiViewMode("dashboard") }}
-                  className="flex items-center gap-1 text-note text-muted-foreground/50 hover:text-foreground transition-colors duration-100 mr-1"
-                >
-                  <CaretLeft size={14} weight="regular" />
-                  Overview
-                </button>
-                <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-                  Red Links {redLinks.length}
-                </span>
-              </div>
-              <div className="flex items-center px-5 py-2 text-xs font-medium text-muted-foreground/50 border-b border-border/30">
-                <span className="min-w-0 flex-1">Missing Article</span>
-                <span className="w-[80px] text-right">References</span>
-                <span className="w-[100px] text-right">Action</span>
-              </div>
-              {redLinks.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 py-20 text-center">
-                  <p className="text-sm text-muted-foreground/50">No red links found</p>
-                  <p className="text-xs text-muted-foreground/30">All wiki links point to existing articles</p>
-                </div>
-              ) : (
-                redLinks.map((rl) => (
-                  <button
-                    key={rl.title}
-                    className="flex w-full items-center px-5 py-2.5 text-left transition-colors hover:bg-hover-bg"
-                    onClick={() => handleCreateFromRedLink(rl.title)}
-                  >
-                    <span className="min-w-0 flex-1 truncate text-note font-medium text-destructive/80">
-                      {rl.title}
-                    </span>
-                    <span className="w-[80px] text-right text-xs tabular-nums text-muted-foreground/60">
-                      {rl.refCount} {rl.refCount === 1 ? "ref" : "refs"}
-                    </span>
-                    <span className="w-[100px] text-right">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
-                        <PhPlus size={12} weight="regular" /> Create
-                      </span>
-                    </span>
-                  </button>
-                ))
-              )}
-            </div>
-          ) : (
           <WikiList
             filteredWikiNotes={filteredWikiNotes}
             sortedFilteredWikiNotes={sortedFilteredWikiNotes}
@@ -914,7 +1049,21 @@ export function WikiView() {
             onClearCategoryFilter={() => setWikiCategoryFilter(null)}
             onOpenArticle={openArticle}
             onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
+            onDeleteArticle={(id) => {
+              deleteWikiArticle(id)
+              toast.success("Article deleted")
+            }}
+            redLinks={redLinks}
+            onCreateFromRedLink={handleCreateFromRedLink}
+            selectedIds={selectedArticleIds}
+            onSelect={handleArticleSelect}
           />
+          {selectedArticleIds.size > 0 && (
+            <WikiFloatingActionBar
+              selectedIds={selectedArticleIds}
+              articles={wikiArticles}
+              onClearSelection={clearArticleSelection}
+            />
           )}
           {showDistribution && (
             <ViewDistributionPanel
@@ -934,7 +1083,7 @@ export function WikiView() {
             <DialogHeader className="px-5 pt-5 pb-3">
               <DialogTitle className="flex items-center gap-2 text-ui">
                 <GitMerge size={16} weight="regular" />
-                GitMerge Wiki Article
+                Merge Wiki Article
               </DialogTitle>
               <DialogDescription className="text-note">
                 Select target article to merge into
@@ -960,11 +1109,10 @@ export function WikiView() {
                     </div>
                     <span className={cn(
                       "rounded-[4px] px-1.5 py-px text-2xs font-semibold uppercase tracking-wide shrink-0",
-                      a.wikiStatus === "complete" ? "bg-wiki-complete/8 text-wiki-complete/70" :
-                      a.wikiStatus === "draft" ? "bg-accent/8 text-accent/70" :
+                      (a.wikiStatus === "article" || (a.wikiStatus as string) === "complete") ? "bg-wiki-article/8 text-wiki-article/70" :
                       "bg-chart-3/8 text-chart-3/70"
                     )}>
-                      {a.wikiStatus}
+                      {(a.wikiStatus === "article" || (a.wikiStatus as string) === "complete") ? "ARTICLE" : "STUB"}
                     </span>
                   </button>
                 ))}

@@ -35,6 +35,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
   const addToCollection = usePlotStore((s) => s.addToCollection)
   const removeFromCollection = usePlotStore((s) => s.removeFromCollection)
   const createNote = usePlotStore((s) => s.createNote)
+  const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
 
   const collectionItems: WikiCollectionItem[] = wikiCollections[noteId] ?? []
   const backlinks = useBacklinksFor(noteId)
@@ -107,16 +108,13 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
 
   const handleCreateStub = useCallback(
     (title: string) => {
-      createNote({
+      createWikiArticle({
         title: title.charAt(0).toUpperCase() + title.slice(1),
-        isWiki: true,
         wikiStatus: "stub",
         stubSource: "red-link",
-        status: "permanent",
-        content: "",
       })
     },
-    [createNote]
+    [createWikiArticle]
   )
 
   if (!note) return null

@@ -19,6 +19,7 @@ import {
 } from "@dnd-kit/core"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
@@ -31,6 +32,7 @@ import {
 interface WikiArticleViewProps {
   articleId: string
   editable?: boolean
+  onDelete?: () => void
 }
 
 /** Compute section numbers (1., 2., 2.1., etc.) for section blocks */
@@ -53,7 +55,7 @@ function computeSectionNumbers(blocks: WikiBlock[]): Map<string, string> {
   return result
 }
 
-export function WikiArticleView({ articleId, editable = false }: WikiArticleViewProps) {
+export function WikiArticleView({ articleId, editable = false, onDelete }: WikiArticleViewProps) {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
   const removeWikiBlock = usePlotStore((s) => s.removeWikiBlock)
@@ -309,41 +311,38 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
           <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
             Quality
           </h4>
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
-              article.wikiStatus === "stub" ? "bg-yellow-500/10 text-yellow-500" :
-              article.wikiStatus === "draft" ? "bg-blue-500/10 text-blue-500" :
-              "bg-emerald-500/10 text-emerald-500"
-            }`}>
-              {article.wikiStatus}
-            </span>
-          </div>
-          <div className="flex gap-1.5">
-            {article.wikiStatus === "stub" && (
-              <button
-                onClick={() => setWikiArticleStatus(articleId, "draft")}
-                className="flex items-center gap-1 rounded-md bg-blue-500/8 px-2 py-1 text-xs font-medium text-blue-400 transition-colors duration-100 hover:bg-blue-500/15"
-              >
-                <CaretUp size={12} weight="regular" />
-                Promote to Draft
-              </button>
-            )}
-            {article.wikiStatus === "draft" && (
-              <button
-                onClick={() => setWikiArticleStatus(articleId, "complete")}
-                className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
-              >
-                <CaretUp size={12} weight="regular" />
-                Mark Complete
-              </button>
-            )}
-            {article.wikiStatus === "complete" && (
-              <span className="flex items-center gap-1 text-xs text-emerald-400">
-                <PhCheck size={12} weight="bold" />
-                Complete
-              </span>
-            )}
-          </div>
+          {(() => {
+            const isArticle = article.wikiStatus === "article" || (article.wikiStatus as string) === "complete"
+            const label = isArticle ? "Article" : "Stub"
+            return (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    isArticle ? "bg-emerald-500/10 text-emerald-500" : "bg-yellow-500/10 text-yellow-500"
+                  }`}>
+                    {label}
+                  </span>
+                </div>
+                <div className="flex gap-1.5">
+                  {!isArticle && (
+                    <button
+                      onClick={() => setWikiArticleStatus(articleId, "article")}
+                      className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
+                    >
+                      <CaretUp size={12} weight="regular" />
+                      Promote to Article
+                    </button>
+                  )}
+                  {isArticle && (
+                    <span className="flex items-center gap-1 text-xs text-emerald-400">
+                      <PhCheck size={12} weight="bold" />
+                      Article
+                    </span>
+                  )}
+                </div>
+              </>
+            )
+          })()}
         </div>
 
         {/* Sources — auto-extracted from blocks */}
@@ -369,6 +368,19 @@ export function WikiArticleView({ articleId, editable = false }: WikiArticleView
             </div>
           </div>
         </div>
+
+        {/* Delete article */}
+        {onDelete && (
+          <div className="pt-2 border-t border-border/30">
+            <button
+              onClick={onDelete}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
+            >
+              <Trash size={12} weight="regular" />
+              Delete article
+            </button>
+          </div>
+        )}
       </aside>
     </div>
   )

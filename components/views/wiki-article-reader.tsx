@@ -149,48 +149,43 @@ export function WikiArticleReader({
         )}
 
         {/* Wiki Quality Track */}
-        {note.isWiki && note.wikiStatus && (
-          <div className="space-y-2">
-            <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
-              Quality
-            </h4>
-            <div className="flex items-center gap-2">
-              <WikiStatusBadge status={note.wikiStatus} />
-              {note.stubSource && note.wikiStatus === "stub" && (
-                <span className="text-2xs text-muted-foreground">
-                  via {note.stubSource}
-                </span>
-              )}
+        {note.isWiki && note.wikiStatus && (() => {
+          const isArticle = note.wikiStatus === "article" || (note.wikiStatus as string) === "complete"
+          const isStub = !isArticle
+          return (
+            <div className="space-y-2">
+              <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
+                Quality
+              </h4>
+              <div className="flex items-center gap-2">
+                <WikiStatusBadge status={note.wikiStatus} />
+                {note.stubSource && isStub && (
+                  <span className="text-2xs text-muted-foreground">
+                    via {note.stubSource}
+                  </span>
+                )}
+              </div>
+              {/* Promotion buttons */}
+              <div className="flex gap-1.5">
+                {isStub && (
+                  <button
+                    onClick={() => setWikiStatus(note.id, "article")}
+                    className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
+                  >
+                    <CaretUp size={12} weight="regular" />
+                    Promote to Article
+                  </button>
+                )}
+                {isArticle && (
+                  <span className="flex items-center gap-1 text-xs text-emerald-400">
+                    <PhCheck size={12} weight="bold" />
+                    Article
+                  </span>
+                )}
+              </div>
             </div>
-            {/* Promotion buttons */}
-            <div className="flex gap-1.5">
-              {note.wikiStatus === "stub" && (
-                <button
-                  onClick={() => setWikiStatus(note.id, "draft")}
-                  className="flex items-center gap-1 rounded-md bg-blue-500/8 px-2 py-1 text-xs font-medium text-blue-400 transition-colors duration-100 hover:bg-blue-500/15"
-                >
-                  <CaretUp size={12} weight="regular" />
-                  Promote to Draft
-                </button>
-              )}
-              {note.wikiStatus === "draft" && (
-                <button
-                  onClick={() => setWikiStatus(note.id, "complete")}
-                  className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
-                >
-                  <CaretUp size={12} weight="regular" />
-                  Mark Complete
-                </button>
-              )}
-              {note.wikiStatus === "complete" && (
-                <span className="flex items-center gap-1 text-xs text-emerald-400">
-                  <PhCheck size={12} weight="bold" />
-                  Complete
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Activity stats */}
         <div className="space-y-2">

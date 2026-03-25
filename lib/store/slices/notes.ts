@@ -378,7 +378,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
           n.id === noteId
-            ? { ...n, isWiki: true, wikiStatus: "draft" as const, stubSource: stubSource ?? null, updatedAt: now(), lastTouchedAt: now() }
+            ? { ...n, isWiki: true, wikiStatus: "stub" as const, stubSource: stubSource ?? null, updatedAt: now(), lastTouchedAt: now() }
             : n
         ),
       }))

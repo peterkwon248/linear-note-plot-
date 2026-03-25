@@ -20,11 +20,11 @@
 ### Build & Test
 - `npm run build` — Next.js production build
 - `npm run dev` — dev server (port 3002)
-- No test suite yet
+- `npm run test` — Vitest
 
 ### Stack
 - Next.js 16, React 19, TypeScript, Zustand 5, TipTap 3, Tailwind v4
-- Store: `lib/store/index.ts` — 19-slice, versioned migration (v58)
+- Store: `lib/store/index.ts` — 19-slice, versioned migration (v60)
 - Colors: `lib/colors.ts` — Global color constants (single source of truth)
 
 ### Conventions

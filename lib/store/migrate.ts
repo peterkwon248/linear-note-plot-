@@ -598,5 +598,13 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v60: WikiStatus simplification — draft→stub, complete→article
+  if (Array.isArray(state.wikiArticles)) {
+    for (const article of state.wikiArticles as Record<string, unknown>[]) {
+      if (article.wikiStatus === "draft") article.wikiStatus = "stub"
+      if (article.wikiStatus === "complete") article.wikiStatus = "article"
+    }
+  }
+
   return state as unknown as PlotState
 }
