@@ -1,13 +1,16 @@
 "use client"
 
-import { useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { shortRelative } from "@/lib/format-utils"
+import { cn } from "@/lib/utils"
 import { Virtuoso } from "react-virtuoso"
+import { toast } from "sonner"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import {
   DndContext,
   closestCenter,
@@ -21,6 +24,7 @@ import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import {
@@ -63,6 +67,11 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   const reorderWikiBlocks = usePlotStore((s) => s.reorderWikiBlocks)
   const setWikiArticleStatus = usePlotStore((s) => s.setWikiArticleStatus)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
+  const splitWikiArticle = usePlotStore((s) => s.splitWikiArticle)
+
+  const [splitMode, setSplitMode] = useState(false)
+  const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(new Set())
+  const [splitTitle, setSplitTitle] = useState("")
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -211,8 +220,8 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
       </aside>
 
       {/* Blocks Content */}
-      <div className="flex-1 overflow-y-auto" id="wiki-article-scroll-container">
-        <div className="max-w-[780px] px-8 py-6 space-y-1">
+      <div className="flex-1 overflow-y-auto flex flex-col" id="wiki-article-scroll-container">
+        <div className="max-w-[780px] px-8 py-6 space-y-1 flex-1">
           {/* Title */}
           <h1 className="text-[26px] font-bold text-foreground mb-1">
             {article.title}
@@ -232,16 +241,45 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={visibleBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
                 {visibleBlocks.map((block) => (
-                  <SortableBlockItem
+                  <div
                     key={block.id}
-                    block={block}
-                    editable={editable}
-                    sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
-                    onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
-                    onDelete={() => handleDeleteBlock(block.id)}
-                    onAddBlock={(type, level) => handleAddBlock(type, block.id, level)}
-                    nearestSectionLevel={nearestSectionLevelByBlockId.get(block.id)}
-                  />
+                    className={cn(
+                      "relative",
+                      splitMode && selectedBlockIds.has(block.id) && "bg-accent/5 rounded-lg ring-1 ring-accent/20"
+                    )}
+                  >
+                    {splitMode && (
+                      <div
+                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 cursor-pointer z-10"
+                        onClick={() => {
+                          setSelectedBlockIds(prev => {
+                            const next = new Set(prev)
+                            if (next.has(block.id)) next.delete(block.id)
+                            else next.add(block.id)
+                            return next
+                          })
+                        }}
+                      >
+                        <div className={cn(
+                          "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+                          selectedBlockIds.has(block.id)
+                            ? "bg-accent border-accent text-white"
+                            : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                        )}>
+                          {selectedBlockIds.has(block.id) && <PhCheck size={10} weight="bold" />}
+                        </div>
+                      </div>
+                    )}
+                    <SortableBlockItem
+                      block={block}
+                      editable={editable}
+                      sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
+                      onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
+                      onDelete={() => handleDeleteBlock(block.id)}
+                      onAddBlock={(type, level) => handleAddBlock(type, block.id, level)}
+                      nearestSectionLevel={nearestSectionLevelByBlockId.get(block.id)}
+                    />
+                  </div>
                 ))}
               </SortableContext>
             </DndContext>
@@ -282,6 +320,49 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
             </p>
           )}
         </div>
+
+        {splitMode && (
+          <div className="sticky bottom-0 z-20 border-t border-border bg-popover px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground mb-1.5">
+                  {selectedBlockIds.size} block{selectedBlockIds.size !== 1 ? "s" : ""} selected
+                </p>
+                <input
+                  type="text"
+                  value={splitTitle}
+                  onChange={(e) => setSplitTitle(e.target.value)}
+                  placeholder="New article title..."
+                  className="h-8 w-full rounded-md border border-border bg-secondary/50 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent"
+                />
+              </div>
+              <button
+                onClick={() => { setSplitMode(false); setSelectedBlockIds(new Set()); setSplitTitle("") }}
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedBlockIds.size === 0 || !splitTitle.trim()) return
+                  const newId = splitWikiArticle(articleId, Array.from(selectedBlockIds), splitTitle.trim())
+                  if (newId) {
+                    toast.success(`Split "${splitTitle.trim()}" from "${article.title}"`)
+                    setSplitMode(false)
+                    setSelectedBlockIds(new Set())
+                    setSplitTitle("")
+                    navigateToWikiArticle(newId)
+                  }
+                }}
+                disabled={selectedBlockIds.size === 0 || !splitTitle.trim()}
+                className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Scissors size={12} weight="regular" className="inline mr-1" />
+                Extract
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Right Sidebar: Infobox + Quality + Activity */}
@@ -369,16 +450,27 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
           </div>
         </div>
 
-        {/* Delete article */}
-        {onDelete && (
-          <div className="pt-2 border-t border-border/30">
-            <button
-              onClick={onDelete}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
-            >
-              <Trash size={12} weight="regular" />
-              Delete article
-            </button>
+        {/* Split / Delete article */}
+        {(editable || onDelete) && (
+          <div className="pt-2 border-t border-border/30 space-y-0.5">
+            {editable && !splitMode && (
+              <button
+                onClick={() => setSplitMode(true)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground/70 hover:text-foreground hover:bg-secondary/60 transition-colors duration-100"
+              >
+                <Scissors size={12} weight="regular" />
+                Split article
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={onDelete}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
+              >
+                <Trash size={12} weight="regular" />
+                Delete article
+              </button>
+            )}
           </div>
         )}
       </aside>
