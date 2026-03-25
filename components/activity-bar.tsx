@@ -23,6 +23,7 @@ import {
   IconMoon,
 } from "@/components/plot-icons"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
+import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { useSettingsStore } from "@/lib/settings-store"
 
 /* ── Space definitions ──────────────────────────────── */
@@ -56,14 +57,12 @@ export function ActivityBar() {
     setSelectedNoteId(null)
 
     if (space === activeSpace) {
-      // Same space → toggle sidebar
-      setSidebarCollapsed(!sidebarCollapsed)
+      // Same space → do nothing (use dedicated sidebar toggle button)
       return
     }
-    // Different space → switch + ensure sidebar open
+    // Different space → switch (don't touch sidebar state)
     setActiveSpace(space)
     router.push(DEFAULT_ROUTES[space])
-    setSidebarCollapsed(false)
   }
 
   const theme = useSettingsStore((s) => s.theme)
@@ -75,6 +74,24 @@ export function ActivityBar() {
 
   return (
     <div className="flex h-full w-11 shrink-0 flex-col items-center border-r border-border bg-background pt-2">
+      {/* Sidebar open button — only when collapsed */}
+      {sidebarCollapsed && (
+        <div className="flex flex-col items-center mb-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
+                aria-label="Open sidebar"
+              >
+                <SidebarSimple size={20} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">Open sidebar</TooltipContent>
+          </Tooltip>
+        </div>
+      )}
+
       {/* Tier 1 — primary spaces */}
       <div className="flex flex-col items-center gap-0.5">
         {SPACES.map(({ id, label, icon: Icon, shortcut }) => {

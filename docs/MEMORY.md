@@ -125,7 +125,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 
 ### Key Design Decisions (추가)
 - **WorkspaceMode 삭제**: zen/research 모드 불필요. sidebarCollapsed + detailsOpen 독립 토글만으로 충분
-- **우측 사이드바 = Linear식 데이터 분포 패널**: All Overview 대체. 뷰별 탭 (Notes: Status/Folder/Tags/Labels)
+- **우측 사이드바 = Details 패널**: ViewDistributionPanel 삭제 → SmartSidePanel(Details)로 통합. 사이드바 버튼으로만 열림 (Linear 패턴)
 - **Calendar = Cross-Space 시간 대시보드**: 독립 공간, Notes 뷰 모드 아님. 모든 엔티티 시간 축 표시
 - **Custom Views = 사이드바 Views 섹션**: Linear식 savedView. 각 공간(Notes/Wiki/Graph/Calendar)별 독립
 - **Back/Forward = note history + browser history fallback**: note history 없으면 router.back() 호출
@@ -133,6 +133,17 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Side Panel = 통합 우측 패널**: NoteInspector(Context) + SidePeekPanel(Peek) 통합. 하나의 슬롯, 두 모드. 리사이즈 가능
 - **Workspace 단순화**: Binary tree → 듀얼 패인. react-resizable-panels. 9개 레거시 파일 삭제
 - **위키 = 유저의 확장된 세계관**: 블록 무한 확장 대응 (IDB 분리 + virtuoso + lazy load + sectionIndex)
+
+### 이번 세션 완료 (2026-03-26)
+- **TopUtilityBar 제거 + 사이드바 헤더 리디자인**: Back/Forward/Search를 사이드바 상단으로 이동 (Linear 스타일)
+- **사이드바 폭 260→220px**: 컴팩트화
+- **사이드바 닫기/열기 Plane식**: ActivityBar 상단 열기 버튼, 다른 space 클릭 시 사이드바 안 열림
+- **ViewDistributionPanel → SmartSidePanel(Details)**: 우측 사이드바 = 노트 디테일. NoteDetailPanel 오버레이도 제거. previewNoteId store 필드 추가
+- **사이드바 버튼으로만 패널 열기**: 행 클릭 시 자동 패널 열기 제거
+- **Priority UI 완전 삭제**: side-panel-context + note-detail-panel에서 제거
+- **ViewHeader h-14→h-[52px]**: 컴팩트 헤더, text-sm font-medium
+- **컬럼 헤더/버튼 밝기 개선**: text-muted-foreground/50→풀 opacity, compact 오버라이드 제거
+- **Tags/Labels/Templates 카운트**: 사이드바 More 섹션에 갯수 표시
 
 ### 이번 세션 완료 (2026-03-25)
 - **Wiki Merge UX 4가지 수정**: Overview 사이드바 네비게이션 복귀 버그 수정, 하단 드롭다운 위로 열림, New Article 타이틀 직접 입력, 카테고리 사이드바 CRUD

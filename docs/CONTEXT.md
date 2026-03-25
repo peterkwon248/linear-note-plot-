@@ -112,6 +112,11 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **위키 카테고리 = 계층적 트리**: 태그/라벨은 flat(동등), 카테고리만 parentId 기반 트리. 위키백과식 지식 분류 체계
 - **카테고리 페이지 = 사이드바 최상위**: Overview/Merge/Split과 동급. 전체 트리 + 상세 페이지
 - **캘린더 플로팅 액션바 삭제**: 불필요하다고 판단 (2026-03-25)
+- **TopUtilityBar 제거**: Back/Forward/Search를 사이드바 헤더로 이동. 44px 공간 확보 (2026-03-26)
+- **사이드바 닫기/열기 = Plane식**: 닫으면 완전 숨김. ActivityBar 상단 열기 버튼. space 클릭으로 열리지 않음 (2026-03-26)
+- **우측 사이드바 = Details 패널**: ViewDistributionPanel 삭제. 사이드바 버튼으로만 열림. previewNoteId로 리스트 행 클릭 시 내용 업데이트 (2026-03-26)
+- **Priority UI 완전 삭제**: 디테일 패널에서도 제거. Pin + Labels로 충분 (2026-03-26)
+- **sidePanelOpen persist 안 함**: 앱 시작 시 항상 닫힌 상태 (2026-03-26)
 
 ## TODO: Future Work (우선순위 순)
 

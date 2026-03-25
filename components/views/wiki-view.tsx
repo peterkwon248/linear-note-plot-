@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
-import type { FilterRule, FilterField, ViewState } from "@/lib/view-engine/types"
+import type { FilterRule, ViewState } from "@/lib/view-engine/types"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
-import { WIKI_STATUS_HEX } from "@/lib/colors"
 import { useRouter } from "next/navigation"
 import {
   Popover,
@@ -43,7 +42,6 @@ import { useWikiViewMode, setWikiViewMode, setPendingMergeIds, useActiveCategory
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
-import { ViewDistributionPanel, type DistributionItem } from "@/components/view-distribution-panel"
 import { WikiArticleReader } from "./wiki-article-reader"
 import { WikiDashboard } from "./wiki-dashboard"
 import { WikiList } from "./wiki-list"
@@ -69,6 +67,7 @@ export function WikiView() {
   const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
+  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const router = useRouter()
   const backlinkCounts = useBacklinksIndex()
 
@@ -111,7 +110,6 @@ export function WikiView() {
 
   // Filter / Display state
   const [wikiFilters, setWikiFilters] = useState<FilterRule[]>([])
-  const [showDistribution, setShowDistribution] = useState(false)
   const [wikiViewState, setWikiViewState] = useState<ViewState>({
     viewMode: "list" as const,
     sortField: "updatedAt" as const,
@@ -549,77 +547,6 @@ export function WikiView() {
     return { connected, total, percent }
   }, [notes, wikiArticles])
 
-  const wikiDistributionTabs = useMemo(() => [
-    { key: "wikiStatus", label: "Wiki Status" },
-    { key: "tags", label: "Categories" },
-    { key: "backlinks", label: "Backlinks" },
-  ], [])
-
-  const getWikiDistribution = useCallback((tabKey: string): DistributionItem[] => {
-    switch (tabKey) {
-      case "wikiStatus": {
-        const counts: Record<string, number> = { stub: 0, article: 0 }
-        for (const n of wikiNotes) {
-          if (n.wikiStatus) counts[n.wikiStatus] = (counts[n.wikiStatus] ?? 0) + 1
-        }
-        return [
-          { key: "article", label: "Article", count: counts.article, color: WIKI_STATUS_HEX.article },
-          { key: "stub", label: "Stub", count: counts.stub, color: WIKI_STATUS_HEX.stub },
-        ].filter(i => i.count > 0)
-      }
-      case "tags": {
-        const counts: Record<string, number> = {}
-        for (const n of wikiNotes) {
-          for (const tId of n.tags) {
-            counts[tId] = (counts[tId] ?? 0) + 1
-          }
-        }
-        return Object.entries(counts)
-          .map(([tId, count]) => ({
-            key: tId,
-            label: tags.find(t => t.id === tId)?.name ?? "Unknown",
-            count,
-          }))
-          .sort((a, b) => b.count - a.count)
-      }
-      case "backlinks": {
-        const ranges = { "0": 0, "1-4": 0, "5-9": 0, "10+": 0 }
-        for (const n of wikiNotes) {
-          const bc = backlinkCounts.get(n.id) ?? 0
-          if (bc === 0) ranges["0"]++
-          else if (bc <= 4) ranges["1-4"]++
-          else if (bc <= 9) ranges["5-9"]++
-          else ranges["10+"]++
-        }
-        return [
-          { key: "10+", label: "10+ backlinks", count: ranges["10+"] },
-          { key: "5-9", label: "5-9 backlinks", count: ranges["5-9"] },
-          { key: "1-4", label: "1-4 backlinks", count: ranges["1-4"] },
-          { key: "0", label: "No backlinks", count: ranges["0"] },
-        ].filter(i => i.count > 0)
-      }
-      default:
-        return []
-    }
-  }, [wikiNotes, tags, backlinkCounts])
-
-  const handleWikiDistributionClick = useCallback((tabKey: string, itemKey: string) => {
-    const fieldMap: Record<string, FilterField> = {
-      wikiStatus: "isWiki",
-      tags: "tags",
-      backlinks: "links",
-    }
-    const field = fieldMap[tabKey]
-    if (!field) return
-    const rule: FilterRule = { field, operator: "eq", value: itemKey }
-    const exists = wikiFilters.some(
-      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
-    )
-    if (!exists) {
-      setWikiFilters(prev => [...prev, rule])
-    }
-  }, [wikiFilters])
-
   // MagnifyingGlass results (simple title/alias filter)
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -912,8 +839,18 @@ export function WikiView() {
           />
         }
         showDetailPanel
-        detailPanelOpen={showDistribution}
-        onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
+        detailPanelOpen={sidePanelOpen}
+        onDetailPanelToggle={() => {
+          const store = usePlotStore.getState()
+          if (!store.sidePanelOpen) {
+            store.setSidePanelOpen(true)
+            usePlotStore.setState({ sidePanelMode: 'context' })
+          } else if (store.sidePanelMode === 'context') {
+            store.setSidePanelOpen(false)
+          } else {
+            usePlotStore.setState({ sidePanelMode: 'context' })
+          }
+        }}
         actions={
           <div className="flex items-center gap-2">
             <Popover open={importOpen} onOpenChange={(o) => {
@@ -1116,14 +1053,6 @@ export function WikiView() {
               setWikiViewMode("list")
             }}
           />
-          {showDistribution && (
-            <ViewDistributionPanel
-              tabs={wikiDistributionTabs}
-              getDistribution={getWikiDistribution}
-              onItemClick={handleWikiDistributionClick}
-              onClose={() => setShowDistribution(false)}
-            />
-          )}
         </div>
       ) : (
         /* ══════════════════════════════════════════════════
@@ -1170,14 +1099,6 @@ export function WikiView() {
                 setSelectedWikiArticleId(id)
                 setIsEditingWikiArticle(true)
               }}
-            />
-          )}
-          {showDistribution && (
-            <ViewDistributionPanel
-              tabs={wikiDistributionTabs}
-              getDistribution={getWikiDistribution}
-              onItemClick={handleWikiDistributionClick}
-              onClose={() => setShowDistribution(false)}
             />
           )}
         </div>

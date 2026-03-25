@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect, useCallback } from "react"
 import { format, formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
-import { StatusBadge, PriorityBadge, LabelBadge, TagPicker, LabelPicker } from "@/components/note-fields"
+import { StatusBadge, LabelBadge, TagPicker, LabelPicker } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
 import { isReadyToPromote, needsReview, isStaleSuggest, getInboxNotes, getSnoozeTime } from "@/lib/queries/notes"
 import { suggestBacklinks } from "@/lib/backlinks"
@@ -21,7 +21,6 @@ import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { WifiHigh } from "@phosphor-icons/react/dist/ssr/WifiHigh"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Alarm } from "@phosphor-icons/react/dist/ssr/Alarm"
@@ -457,14 +456,6 @@ export function NoteDetailPanel({
           <div className="space-y-0.5">
             <MetaRow label="Status" icon={<CircleDashed size={14} weight="regular" />}>
               <StatusBadge status={note.status} />
-            </MetaRow>
-            <MetaRow label="Priority" icon={<WifiHigh size={14} weight="regular" />}>
-              <span className="flex items-center gap-1.5">
-                <PriorityBadge priority={note.priority} />
-                <span className="text-sm capitalize text-muted-foreground">
-                  {note.priority === "none" ? "No priority" : note.priority}
-                </span>
-              </span>
             </MetaRow>
             {noteFolder && (
               <MetaRow label="FolderSimple" icon={<FolderSimple size={14} weight="regular" />}>

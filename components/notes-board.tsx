@@ -58,9 +58,6 @@ import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId } from "@/lib/table-route"
 import { TRIAGE_HEX, LINK_DENSITY_HEX } from "@/lib/colors"
-import { ViewDistributionPanel } from "@/components/view-distribution-panel"
-import type { DistributionItem } from "@/components/view-distribution-panel"
-
 /* ── Inline Select (portal-free, works inside Popover) ── */
 
 function InlineSelect<T extends string>({
@@ -549,6 +546,7 @@ export function NotesBoard({
 
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
+  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
 
   const effectiveTab = context ?? "all"
 
@@ -588,94 +586,6 @@ export function NotesBoard({
       : [...viewState.filters, rule]
     updateViewState({ filters: newFilters })
   }, [viewState.filters, updateViewState])
-
-  // ── Distribution panel state ──
-  const [showDistribution, setShowDistribution] = useState(false)
-
-  const getDistribution = useCallback((tabKey: string): DistributionItem[] => {
-    switch (tabKey) {
-      case "status": {
-        const counts: Record<string, number> = {}
-        for (const n of flatNotes) {
-          counts[n.status] = (counts[n.status] ?? 0) + 1
-        }
-        return Object.entries(counts).map(([key, count]) => ({
-          key,
-          label: key.charAt(0).toUpperCase() + key.slice(1),
-          count,
-        }))
-      }
-      case "folder": {
-        const counts: Record<string, number> = {}
-        const noFolder = flatNotes.filter(n => !n.folderId).length
-        for (const n of flatNotes) {
-          if (n.folderId) counts[n.folderId] = (counts[n.folderId] ?? 0) + 1
-        }
-        const items: DistributionItem[] = Object.entries(counts).map(([fId, count]) => ({
-          key: fId,
-          label: folders.find(f => f.id === fId)?.name ?? "Unknown",
-          count,
-        }))
-        if (noFolder > 0) items.push({ key: "__none__", label: "No folder", count: noFolder })
-        return items
-      }
-      case "tags": {
-        const counts: Record<string, number> = {}
-        for (const n of flatNotes) {
-          for (const tId of n.tags) {
-            counts[tId] = (counts[tId] ?? 0) + 1
-          }
-        }
-        return Object.entries(counts).map(([tId, count]) => ({
-          key: tId,
-          label: tags.find(t => t.id === tId)?.name ?? "Unknown",
-          count,
-        }))
-      }
-      case "labels": {
-        const counts: Record<string, number> = {}
-        const noLabel = flatNotes.filter(n => !n.labelId).length
-        for (const n of flatNotes) {
-          if (n.labelId) counts[n.labelId] = (counts[n.labelId] ?? 0) + 1
-        }
-        const items: DistributionItem[] = Object.entries(counts).map(([lId, count]) => ({
-          key: lId,
-          label: labels.find(l => l.id === lId)?.name ?? "Unknown",
-          color: labels.find(l => l.id === lId)?.color,
-          count,
-        }))
-        if (noLabel > 0) items.push({ key: "__none__", label: "No label", count: noLabel })
-        return items
-      }
-      default:
-        return []
-    }
-  }, [flatNotes, folders, tags, labels])
-
-  const handleDistributionItemClick = useCallback((tabKey: string, itemKey: string) => {
-    const fieldMap: Record<string, FilterRule["field"]> = {
-      status: "status",
-      folder: "folder",
-      tags: "tags",
-      labels: "label",
-    }
-    const field = fieldMap[tabKey]
-    if (!field) return
-    const rule: FilterRule = { field, operator: "eq", value: itemKey }
-    const idx = viewState.filters.findIndex(
-      f => f.field === rule.field && f.operator === rule.operator && f.value === rule.value
-    )
-    if (idx >= 0) {
-      updateViewState({ filters: viewState.filters.filter((_, i) => i !== idx) })
-    }
-  }, [viewState.filters, updateViewState])
-
-  const distributionTabs = useMemo(() => [
-    { key: "status", label: "Status" },
-    { key: "folder", label: "Folder" },
-    { key: "tags", label: "Tags" },
-    { key: "labels", label: "Labels" },
-  ], [])
 
   // Auto-set groupBy: board requires grouping, and single-status tabs need contextual grouping
   const isSingleStatusTab = SINGLE_STATUS_TABS.includes(effectiveTab)
@@ -853,8 +763,18 @@ export function NotesBoard({
           />
         }
         showDetailPanel
-        detailPanelOpen={showDistribution}
-        onDetailPanelToggle={() => setShowDistribution(!showDistribution)}
+        detailPanelOpen={sidePanelOpen}
+        onDetailPanelToggle={() => {
+          const store = usePlotStore.getState()
+          if (!store.sidePanelOpen) {
+            store.setSidePanelOpen(true)
+            usePlotStore.setState({ sidePanelMode: 'context' })
+          } else if (store.sidePanelMode === 'context') {
+            store.setSidePanelOpen(false)
+          } else {
+            usePlotStore.setState({ sidePanelMode: 'context' })
+          }
+        }}
         onCreateNew={!hideCreateButton ? () => { const id = createNote(createNoteOverrides ?? {}); if (id) openNote(id) } : undefined}
       >
         <FilterChipBar
@@ -1094,14 +1014,6 @@ export function NotesBoard({
         </DndContext>
       )}
       </div>
-      {showDistribution && (
-        <ViewDistributionPanel
-          tabs={distributionTabs}
-          getDistribution={getDistribution}
-          onItemClick={handleDistributionItemClick}
-          onClose={() => setShowDistribution(false)}
-        />
-      )}
       </div>
     </main>
   )

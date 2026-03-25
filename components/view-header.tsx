@@ -26,7 +26,7 @@ function HBtn({
       className={`flex h-7 w-7 items-center justify-center rounded-md border-none transition-all duration-100 ${
         active
           ? "bg-active-bg text-foreground"
-          : "text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground"
+          : "text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground"
       }`}
     >
       {children}
@@ -119,14 +119,14 @@ export function ViewHeader({
 
   return (
     <>
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-5">
+      <div className="flex h-[52px] shrink-0 items-center gap-2 border-b border-border px-4">
         {/* Title area */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <span className="text-muted-foreground">{icon}</span>
-          <h1 className="text-xl font-semibold text-foreground">
+          <h1 className="text-sm font-medium text-foreground">
             {title}
             {count !== undefined && (
-              <span className="ml-1.5 text-base font-normal text-muted-foreground">
+              <span className="ml-1.5 text-sm font-normal text-muted-foreground">
                 {count}
               </span>
             )}
