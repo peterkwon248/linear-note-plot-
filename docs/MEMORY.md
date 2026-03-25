@@ -267,6 +267,10 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **섹션 컨텍스트 메뉴**: hover "..." → "Move to new article" / "Delete section"
 - **드래그 Split**: TOC 사이드바 하단 드롭존. 에디트 모드에서 섹션 드래그 → 드롭존에 놓으면 새 아티클로 분리
 - **위키 리스트 우클릭**: Split wiki + Merge into + Delete (컨텍스트 메뉴 3개)
+- **Drag Split UX 폴리시 5개**: 드롭존 시각 피드백 강화, 제목 프롬프트, 모든 블록 타입 드래그 가능, DragOverlay 미리보기, 기존 아티클 드롭 타겟
+- **플로팅 드롭존**: TOC 사이드바 드롭존 → 화면 하단 플로팅 바로 이동 (드래그 시에만 출현)
+- **플로팅 액션바에 Split 추가**: 단일 선택 시 Promote + Merge + Split + Delete
+- **사이드바 Merge/Split 풀페이지**: 좌측 사이드바에 Merge/Split 내비 추가 + 각각 전용 풀페이지 UI (WikiMergePage, WikiSplitPage)
 - Store v59→v60
 
 ### 다음 작업 후보 (우선순위 순)

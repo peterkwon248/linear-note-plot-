@@ -82,8 +82,8 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 51. 템플릿 UX 개선 — Grid 프리뷰 강화, 생성 후 focus 모드, placeholder 힌트
 52. 위키 서브섹션 UI + 폰트/opacity 표준화 — AddBlockButton에 Subsection 옵션, text-xs 통일, opacity /30~/60
 53. WikiStatus 단순화 + Import Note 리디자인 + Red Links 통합 + 위키 삭제/플로팅 액션바 + 아이콘 통일
-54. Wiki Merge Preview — 2단계 다이얼로그 (방향 스왑/제목/상태 선택+Undo) + mergeWikiArticles 개선
-55. Wiki Split/Unmerge — 드래그 드롭존 분리, 섹션 컨텍스트 메뉴 "Move to new article", mergedFrom 스냅샷 + Unmerge 버튼
+54. Wiki Merge/Split 시스템 — Preview 다이얼로그, Unmerge, 섹션 컨텍스트 메뉴, 드래그 Split
+55. Drag Split UX 폴리시 + Merge/Split 풀페이지 — 플로팅 드롭존, DragOverlay, 기존 아티클 드롭 타겟, 사이드바 Merge/Split 전용 페이지
 
 ## Three Axes — Core Design Philosophy
 

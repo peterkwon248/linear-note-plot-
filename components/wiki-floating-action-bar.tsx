@@ -8,6 +8,7 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
 
 interface WikiFloatingActionBarProps {
@@ -15,6 +16,7 @@ interface WikiFloatingActionBarProps {
   articles: WikiArticle[]
   onClearSelection: () => void
   onMerge?: (sourceId: string) => void
+  onSplit?: (id: string) => void
 }
 
 function Divider() {
@@ -26,6 +28,7 @@ export function WikiFloatingActionBar({
   articles,
   onClearSelection,
   onMerge,
+  onSplit,
 }: WikiFloatingActionBarProps) {
   const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
   const setWikiArticleStatus = usePlotStore((s) => s.setWikiArticleStatus)
@@ -98,6 +101,20 @@ export function WikiFloatingActionBar({
             >
               <GitMerge size={16} weight="regular" />
               Merge
+            </button>
+            <Divider />
+          </>
+        )}
+
+        {/* Split (single selection only) */}
+        {count === 1 && onSplit && (
+          <>
+            <button
+              onClick={() => { onSplit(ids[0]); onClearSelection() }}
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <Scissors size={16} weight="regular" />
+              Split
             </button>
             <Divider />
           </>
