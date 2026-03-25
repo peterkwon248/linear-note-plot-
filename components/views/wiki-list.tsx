@@ -48,7 +48,7 @@ interface WikiListProps {
 
   // Selection
   selectedIds?: Set<string>
-  onSelect?: (id: string, multi: boolean) => void
+  onSelect?: (id: string, opts: { multi?: boolean; shift?: boolean; index?: number }) => void
 }
 
 /* ── Status Badge ── */
@@ -114,6 +114,7 @@ function ColumnHeaders({ hasSelection }: { hasSelection?: boolean }) {
 function ArticleTableRow({
   note,
   backlinkCount,
+  index,
   onClick,
   onMerge,
   onSplit,
@@ -124,13 +125,14 @@ function ArticleTableRow({
 }: {
   note: WikiArticle
   backlinkCount: number
+  index?: number
   onClick: () => void
   onMerge?: () => void
   onSplit?: () => void
   onDelete?: () => void
   isSelected?: boolean
   selectionActive?: boolean
-  onSelect?: (multi: boolean) => void
+  onSelect?: (opts: { multi?: boolean; shift?: boolean; index?: number }) => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -156,7 +158,7 @@ function ArticleTableRow({
           )}
           onClick={(e) => {
             e.stopPropagation()
-            onSelect(e.metaKey || e.ctrlKey)
+            onSelect({ multi: true, shift: e.shiftKey, index })
           }}
         >
           <div className={cn(
@@ -170,7 +172,13 @@ function ArticleTableRow({
         </div>
       )}
       <button
-        onClick={onClick}
+        onClick={(e) => {
+          if (onSelect && (e.metaKey || e.ctrlKey || e.shiftKey)) {
+            onSelect({ multi: e.metaKey || e.ctrlKey, shift: e.shiftKey, index })
+          } else {
+            onClick()
+          }
+        }}
         className="flex flex-1 items-center text-left min-w-0"
       >
         <span className="w-[100px] shrink-0">
@@ -242,13 +250,44 @@ function RedLinkRow({
   title,
   refCount,
   onClick,
+  isSelected,
+  selectionActive,
+  onSelect,
 }: {
   title: string
   refCount: number
   onClick: () => void
+  isSelected?: boolean
+  selectionActive?: boolean
+  onSelect?: (opts: { multi?: boolean }) => void
 }) {
   return (
-    <div className="group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75">
+    <div className={cn(
+      "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75",
+      isSelected && "bg-accent/5"
+    )}>
+      {/* Checkbox */}
+      {onSelect && (
+        <div
+          className={cn(
+            "w-7 shrink-0 flex items-center justify-center cursor-pointer",
+            selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
+          )}
+          onClick={(e) => {
+            e.stopPropagation()
+            onSelect({ multi: true })
+          }}
+        >
+          <div className={cn(
+            "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+            isSelected
+              ? "bg-accent border-accent text-white"
+              : "border-muted-foreground/30 hover:border-muted-foreground/50"
+          )}>
+            {isSelected && <PhCheck size={10} weight="bold" />}
+          </div>
+        </div>
+      )}
       <button
         onClick={onClick}
         className="flex flex-1 items-center text-left min-w-0"
@@ -459,18 +498,19 @@ export function WikiList({
           ) : (
             <div>
               {/* Article/Stub rows */}
-              {dashFilter !== "redlinks" && sortedFilteredWikiNotes.map(note => (
+              {dashFilter !== "redlinks" && sortedFilteredWikiNotes.map((note, idx) => (
                 <ArticleTableRow
                   key={note.id}
                   note={note}
                   backlinkCount={backlinkCounts.get(note.id) ?? 0}
+                  index={idx}
                   onClick={() => onOpenArticle(note.id)}
                   onMerge={onMergeArticle ? () => onMergeArticle(note.id) : undefined}
                   onSplit={onSplitArticle ? () => onSplitArticle(note.id) : undefined}
                   onDelete={onDeleteArticle ? () => onDeleteArticle(note.id) : undefined}
                   isSelected={selectedIds?.has(note.id)}
                   selectionActive={selectionActive}
-                  onSelect={onSelect ? (multi) => onSelect(note.id, multi) : undefined}
+                  onSelect={onSelect ? (opts) => onSelect(note.id, { ...opts, index: idx }) : undefined}
                 />
               ))}
               {/* Red Link rows */}
@@ -480,6 +520,9 @@ export function WikiList({
                   title={rl.title}
                   refCount={rl.refCount}
                   onClick={() => onCreateFromRedLink(rl.title)}
+                  isSelected={selectedIds?.has(`rl-${rl.title}`)}
+                  selectionActive={selectionActive}
+                  onSelect={onSelect ? (opts) => onSelect(`rl-${rl.title}`, opts) : undefined}
                 />
               ))}
               {/* Empty state for redlinks filter with no red links */}

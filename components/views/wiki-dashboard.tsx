@@ -35,7 +35,7 @@ interface WikiDashboardProps {
   recentChanges: WikiArticle[]
   mostConnected: { note: WikiArticle; count: number }[]
   staleDocuments: { note: WikiArticle; daysAgo: number }[]
-  categories: { tags: { name: string; count: number }[]; uncategorized: number }
+  categories: { items: { id: string; name: string; parentIds: string[]; count: number }[]; uncategorized: number }
 
   // MagnifyingGlass
   searchQuery: string
@@ -52,7 +52,7 @@ interface WikiDashboardProps {
   onViewAll: () => void
   onViewStubs: () => void
   onViewRedLinks?: () => void
-  onCategoryClick?: (tagName: string) => void
+  onCategoryClick?: (categoryId: string) => void
 }
 
 /* ── Dashboard ── */
@@ -186,7 +186,7 @@ export function WikiDashboard({
               </h3>
               <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">
                 Updated {shortRelative(featured.updatedAt)}
-                {featured.tags.length > 0 && ` · ${featured.tags.length} categories`}
+                {(featured.categoryIds?.length ?? 0) > 0 && ` · ${featured.categoryIds!.length} categories`}
               </p>
             </div>
             <ArrowRight className="mt-1 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-accent" size={16} weight="regular" />
@@ -194,18 +194,18 @@ export function WikiDashboard({
         )}
 
         {/* ── Categories Grid ── */}
-        {categories.tags.length > 0 && (
+        {categories.items.length > 0 && (
           <div className="mb-6">
             <SectionLabel>Categories</SectionLabel>
             <div className="flex flex-wrap gap-1.5">
-              {categories.tags.slice(0, 12).map((tag) => (
+              {categories.items.slice(0, 12).map((cat) => (
                 <button
-                  key={tag.name}
-                  onClick={() => onCategoryClick?.(tag.name)}
+                  key={cat.id}
+                  onClick={() => onCategoryClick?.(cat.id)}
                   className="rounded-[5px] bg-secondary/50 px-2 py-1 text-[11.5px] font-medium text-foreground/80 transition-colors hover:bg-secondary cursor-pointer"
                 >
-                  {tag.name}
-                  <span className="ml-1 text-muted-foreground/40 tabular-nums">{tag.count}</span>
+                  {cat.name}
+                  <span className="ml-1 text-muted-foreground/40 tabular-nums">{cat.count}</span>
                 </button>
               ))}
               {categories.uncategorized > 0 && (

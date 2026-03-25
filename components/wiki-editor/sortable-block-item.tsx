@@ -18,6 +18,8 @@ interface SortableBlockItemProps {
   articleId?: string
   /** Callback to split this section into a new article */
   onSplitSection?: (blockId: string) => void
+  /** Callback to move section to an existing article */
+  onMoveToArticle?: (blockId: string, targetArticleId: string) => void
 }
 
 export function SortableBlockItem({
@@ -30,6 +32,7 @@ export function SortableBlockItem({
   nearestSectionLevel,
   articleId,
   onSplitSection,
+  onMoveToArticle,
 }: SortableBlockItemProps) {
   const {
     attributes,
@@ -57,6 +60,7 @@ export function SortableBlockItem({
         dragHandleProps={listeners}
         articleId={articleId}
         onSplitSection={onSplitSection}
+        onMoveToArticle={onMoveToArticle}
       />
       {editable && onAddBlock && (
         <AddBlockButton onAdd={onAddBlock} nearestSectionLevel={nearestSectionLevel} />

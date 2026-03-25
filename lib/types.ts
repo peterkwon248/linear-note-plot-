@@ -44,6 +44,17 @@ export interface WikiCollectionItem {
   addedAt: string
 }
 
+/* ── Wiki Category (DAG) ──────────────────────────── */
+
+/** A wiki category node — forms a DAG (multiple parents allowed) */
+export interface WikiCategory {
+  id: string
+  name: string
+  parentIds: string[]  // multiple parents = DAG
+  description?: string
+  createdAt: string
+}
+
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
 /** Wiki block types — building blocks of a wiki article */
@@ -80,6 +91,7 @@ export interface WikiMergeSnapshot {
   tags: string[]
   infobox: WikiInfoboxEntry[]
   blockIds: string[]       // IDs of blocks that came from this merged article
+  blocks: WikiBlock[]      // full block data for restoration (deep clone)
   mergedAt: string
 }
 
@@ -110,6 +122,9 @@ export interface WikiArticle {
   blocks: WikiBlock[]
   sectionIndex: WikiSectionIndex[]
   tags: string[]
+  categoryIds?: string[]           // references to WikiCategory.id (DAG)
+  linksOut?: string[]              // extracted [[wiki-links]] from text blocks
+  mergeHistory?: WikiMergeSnapshot[]  // snapshots from N→1 merge for unmerge
   createdAt: string
   updatedAt: string
 }

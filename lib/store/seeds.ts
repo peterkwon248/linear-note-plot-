@@ -1,4 +1,4 @@
-import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock } from "../types"
+import type { Note, Folder, Tag, Label, NoteTemplate, WikiArticle, WikiBlock, WikiCategory } from "../types"
 import { workflowDefaults } from "./helpers"
 import { buildSectionIndex } from "../wiki-section-index"
 
@@ -484,6 +484,32 @@ export const SEED_NOTES: Note[] = [
   },
 ]
 
+/* ── Seed Wiki Categories (DAG) ── */
+
+export const SEED_WIKI_CATEGORIES: WikiCategory[] = [
+  {
+    id: "wcat-seed-1",
+    name: "Knowledge Management",
+    parentIds: [],
+    description: "Methods and systems for organizing knowledge",
+    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+  },
+  {
+    id: "wcat-seed-2",
+    name: "Zettelkasten",
+    parentIds: ["wcat-seed-1"],  // child of Knowledge Management
+    description: "The Zettelkasten slip-box methodology",
+    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+  },
+  {
+    id: "wcat-seed-3",
+    name: "Note Types",
+    parentIds: ["wcat-seed-1", "wcat-seed-2"],  // DAG: child of both
+    description: "Different types of notes in knowledge systems",
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+  },
+]
+
 /* ── Seed Wiki Articles (Assembly Model) ── */
 
 const ts = () => new Date().toISOString()
@@ -522,6 +548,7 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
       { id: bid(), type: "note-ref", noteId: "note-4" },
     ],
     tags: ["tag-2", "tag-1"],
+    categoryIds: ["wcat-seed-1", "wcat-seed-2"],
     createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
   },
@@ -546,6 +573,7 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
       { id: bid(), type: "text", content: "Related concepts: Fleeting Note, Literature Note" },
     ],
     tags: ["tag-2"],
+    categoryIds: ["wcat-seed-3"],
     createdAt: new Date(Date.now() - 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 86400000).toISOString(),
   },
@@ -565,6 +593,7 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
       { id: bid(), type: "section", title: "See Also", level: 2 },
     ],
     tags: ["tag-2"],
+    categoryIds: ["wcat-seed-3"],
     createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
     updatedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
   },
