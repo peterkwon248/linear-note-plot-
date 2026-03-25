@@ -45,3 +45,24 @@ export function extractLinksOut(content: string): string[] {
   const unique = new Set(matches.map((m) => m.slice(2, -2).toLowerCase()))
   return Array.from(unique)
 }
+
+/**
+ * Extract [[wiki-link]] targets from WikiArticle blocks.
+ * Scans text and section blocks for [[links]] in content/title fields.
+ * Returns unique lowercased link targets.
+ */
+export function extractLinksFromWikiBlocks(blocks: { type: string; content?: string; title?: string }[]): string[] {
+  const links = new Set<string>()
+  for (const block of blocks) {
+    if (block.type === "text" || block.type === "section") {
+      const content = block.content || block.title || ""
+      const matches = content.match(/\[\[([^\]]+)\]\]/g)
+      if (matches) {
+        for (const m of matches) {
+          links.add(m.slice(2, -2).toLowerCase().trim())
+        }
+      }
+    }
+  }
+  return Array.from(links)
+}

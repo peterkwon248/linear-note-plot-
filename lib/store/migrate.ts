@@ -606,5 +606,71 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v61: WikiCategories (DAG) — convert existing article tags to WikiCategory entities
+  if (!state.wikiCategories) {
+    const articles = (state.wikiArticles ?? []) as any[]
+    const tagMap = new Map<string, string>() // tagId -> categoryId
+    const categories: any[] = []
+
+    // Collect unique tags across all wiki articles
+    for (const a of articles) {
+      if (!a.tags || !Array.isArray(a.tags)) continue
+      for (const tagId of a.tags) {
+        if (!tagMap.has(tagId)) {
+          const catId = `wcat-${nanoid(10)}`
+          tagMap.set(tagId, catId)
+          // Find tag name from state.tags
+          const allTags = (state.tags ?? []) as Array<{ id: string; name: string }>
+          const tag = allTags.find((t) => t.id === tagId)
+          categories.push({
+            id: catId,
+            name: tag?.name ?? tagId,
+            parentIds: [],
+            createdAt: new Date().toISOString(),
+          })
+        }
+      }
+    }
+
+    // Set article categoryIds based on their tags
+    for (const a of articles) {
+      if (!a.tags || !Array.isArray(a.tags)) continue
+      a.categoryIds = a.tags
+        .map((tagId: string) => tagMap.get(tagId))
+        .filter(Boolean)
+    }
+
+    state.wikiCategories = categories
+    if (categories.length > 0) {
+      console.log(`[migrate] v60→v61: created ${categories.length} WikiCategories from article tags`)
+    }
+  }
+
+  // v61b: Inject seed WikiCategories if none of the seed IDs exist
+  {
+    const cats = (state.wikiCategories ?? []) as any[]
+    if (!cats.some((c: any) => c.id === "wcat-seed-1")) {
+      try {
+        const { SEED_WIKI_CATEGORIES } = require("./seeds")
+        state.wikiCategories = [...cats, ...SEED_WIKI_CATEGORIES] as any
+        // Also assign seed articles their categoryIds if not already set
+        const articles = (state.wikiArticles ?? []) as any[]
+        for (const a of articles) {
+          if (a.id === "wiki-article-1" && (!a.categoryIds || a.categoryIds.length === 0)) {
+            a.categoryIds = ["wcat-seed-1", "wcat-seed-2"]
+          }
+          if (a.id === "wiki-article-2" && (!a.categoryIds || a.categoryIds.length === 0)) {
+            a.categoryIds = ["wcat-seed-1"]
+          }
+          if (a.id === "wiki-article-3" && (!a.categoryIds || a.categoryIds.length === 0)) {
+            a.categoryIds = ["wcat-seed-1"]
+          }
+        }
+      } catch {
+        // seeds not available
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

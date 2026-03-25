@@ -1,6 +1,7 @@
 "use client"
 
-import type { Note } from "./types"
+import type { Note, WikiArticle } from "./types"
+import { extractLinksFromWikiBlocks } from "./body-helpers"
 
 /** Simple English stopwords */
 const STOP_WORDS = new Set([
@@ -266,6 +267,17 @@ export class BacklinksIndex {
       }
     }
     this.aliasesById.delete(noteId)
+  }
+
+  /** Register a WikiArticle in the backlinks index. */
+  upsertArticle(article: WikiArticle): void {
+    const linksOut = article.linksOut ?? extractLinksFromWikiBlocks(article.blocks)
+    this.upsert(article.id, article.title, linksOut, article.aliases)
+  }
+
+  /** Remove a WikiArticle from the backlinks index. */
+  removeArticle(articleId: string): void {
+    this.remove(articleId)
   }
 
   /** Get backlink count for a note. */

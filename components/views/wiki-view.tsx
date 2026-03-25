@@ -38,7 +38,7 @@ import { startAutoEnrollment, stopAutoEnrollment } from "@/lib/wiki-auto-enroll"
 import type { StubSource } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
-import { useWikiViewMode, setWikiViewMode } from "@/lib/wiki-view-mode"
+import { useWikiViewMode, setWikiViewMode, setPendingMergeIds } from "@/lib/wiki-view-mode"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
@@ -60,6 +60,7 @@ export function WikiView() {
   const createWikiStub = usePlotStore((s) => s.createWikiStub)
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const mergeWikiArticles = usePlotStore((s) => s.mergeWikiArticles)
   const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
@@ -96,24 +97,12 @@ export function WikiView() {
 
   // Wiki article selection state (for floating action bar)
   const [selectedArticleIds, setSelectedArticleIds] = useState<Set<string>>(new Set())
-
-  const handleArticleSelect = useCallback((id: string, multi: boolean) => {
-    setSelectedArticleIds(prev => {
-      const next = new Set(multi ? prev : [])
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }, [])
+  const lastClickedIndexRef = useRef<number>(-1)
 
   const clearArticleSelection = useCallback(() => {
     setSelectedArticleIds(new Set())
+    lastClickedIndexRef.current = -1
   }, [])
-
-  // Clear selection when filter changes
-  useEffect(() => {
-    setSelectedArticleIds(new Set())
-  }, [dashFilter])
 
   // Filter / Display state
   const [wikiFilters, setWikiFilters] = useState<FilterRule[]>([])
@@ -299,7 +288,7 @@ export function WikiView() {
     }
     // Apply category filter from sidebar
     if (categoryFilterTagId) {
-      result = result.filter(n => n.tags.includes(categoryFilterTagId))
+      result = result.filter(n => (n.categoryIds ?? []).includes(categoryFilterTagId))
     }
     return result
   }, [wikiNotes, dashFilter, categoryFilterTagId, wikiViewState.toggles.showStubs])
@@ -313,6 +302,63 @@ export function WikiView() {
       ),
     [filteredWikiNotes]
   )
+
+  // Selection handlers (need sortedFilteredWikiNotes)
+  const handleArticleSelect = useCallback((id: string, options: { multi?: boolean; shift?: boolean; index?: number }) => {
+    const { multi, shift, index } = options
+    setSelectedArticleIds(prev => {
+      // Shift+Click range selection
+      if (shift && lastClickedIndexRef.current >= 0 && index !== undefined && index !== lastClickedIndexRef.current) {
+        const lo = Math.min(lastClickedIndexRef.current, index)
+        const hi = Math.max(lastClickedIndexRef.current, index)
+        const next = new Set(prev)
+        for (let i = lo; i <= hi; i++) {
+          if (i < sortedFilteredWikiNotes.length) {
+            next.add(sortedFilteredWikiNotes[i].id)
+          }
+        }
+        return next
+      }
+      // Ctrl/Cmd+Click toggle
+      const next = new Set(multi ? prev : [])
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+    if (options.index !== undefined) {
+      lastClickedIndexRef.current = options.index
+    }
+  }, [sortedFilteredWikiNotes])
+
+  // Clear selection when filter changes
+  useEffect(() => {
+    setSelectedArticleIds(new Set())
+    lastClickedIndexRef.current = -1
+  }, [dashFilter])
+
+  // Ctrl+A select all / Escape clear selection keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only when in list view mode (not dashboard, not viewing an article)
+      if (wikiViewMode !== "list" || selectedWikiArticleId || selectedArticleId) return
+
+      if (e.key === "Escape") {
+        if (selectedArticleIds.size > 0) {
+          e.preventDefault()
+          clearArticleSelection()
+        }
+      }
+      if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+        // Don't override if focused on an input
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === "INPUT" || tag === "TEXTAREA") return
+        e.preventDefault()
+        setSelectedArticleIds(new Set(sortedFilteredWikiNotes.map(n => n.id)))
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [wikiViewMode, selectedWikiArticleId, selectedArticleId, selectedArticleIds, sortedFilteredWikiNotes, clearArticleSelection])
 
   // Non-trashed notes available to import
   const importableNotes = useMemo(() => {
@@ -605,29 +651,35 @@ export function WikiView() {
       .slice(0, 5)
   }, [wikiNotes, backlinkCounts])
 
-  // Card data: categories (tags used on wiki notes)
+  // Card data: categories (from WikiCategory entities via article.categoryIds)
   const categories = useMemo(() => {
-    const tagCounts = new Map<string, number>()
+    const catCounts = new Map<string, number>()
     let uncategorized = 0
     for (const n of wikiNotes) {
-      if (n.tags.length === 0) {
+      const catIds = n.categoryIds ?? []
+      if (catIds.length === 0) {
         uncategorized++
       } else {
-        for (const tagId of n.tags) {
-          tagCounts.set(tagId, (tagCounts.get(tagId) ?? 0) + 1)
+        for (const catId of catIds) {
+          catCounts.set(catId, (catCounts.get(catId) ?? 0) + 1)
         }
       }
     }
     return {
-      tags: Array.from(tagCounts.entries())
+      items: Array.from(catCounts.entries())
         .sort((a, b) => b[1] - a[1])
-        .map(([tagId, count]) => ({
-          name: tags.find(t => t.id === tagId)?.name ?? tagId,
-          count,
-        })),
+        .map(([catId, count]) => {
+          const cat = wikiCategories.find(c => c.id === catId)
+          return {
+            id: catId,
+            name: cat?.name ?? catId,
+            parentIds: cat?.parentIds ?? [],
+            count,
+          }
+        }),
       uncategorized,
     }
-  }, [wikiNotes, tags])
+  }, [wikiNotes, wikiCategories])
 
   // Card data: stale documents (14+ days since update)
   const staleDocuments = useMemo(() => {
@@ -1022,12 +1074,9 @@ export function WikiView() {
             onViewAll={() => { setWikiViewMode("list"); setDashFilter("all") }}
             onViewStubs={() => { setWikiViewMode("list"); setDashFilter("stubs") }}
             onViewRedLinks={() => { setWikiViewMode("list"); setDashFilter("redlinks") }}
-            onCategoryClick={(tagName) => {
-              const tag = tags.find(t => t.name === tagName)
-              if (tag) {
-                setWikiCategoryFilter(tag.id)
-                setWikiViewMode("list")
-              }
+            onCategoryClick={(categoryId) => {
+              setWikiCategoryFilter(categoryId)
+              setWikiViewMode("list")
             }}
           />
           {showDistribution && (
@@ -1052,7 +1101,7 @@ export function WikiView() {
             setDashFilter={setDashFilter}
             showAllArticles={showAllArticles}
             setShowAllArticles={setShowAllArticles}
-            categoryFilterLabel={categoryFilterTagId ? tags.find(t => t.id === categoryFilterTagId)?.name ?? null : null}
+            categoryFilterLabel={categoryFilterTagId ? wikiCategories.find(c => c.id === categoryFilterTagId)?.name ?? null : null}
             onClearCategoryFilter={() => setWikiCategoryFilter(null)}
             onOpenArticle={openArticle}
             onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
@@ -1067,7 +1116,7 @@ export function WikiView() {
             redLinks={redLinks}
             onCreateFromRedLink={handleCreateFromRedLink}
             selectedIds={selectedArticleIds}
-            onSelect={handleArticleSelect}
+            onSelect={(id, opts) => handleArticleSelect(id, opts)}
           />
           {selectedArticleIds.size > 0 && (
             <WikiFloatingActionBar
@@ -1075,6 +1124,11 @@ export function WikiView() {
               articles={wikiArticles}
               onClearSelection={clearArticleSelection}
               onMerge={(sourceId) => setWikiMergeSourceId(sourceId)}
+              onMultiMerge={(ids) => {
+                setPendingMergeIds(ids)
+                setWikiViewMode("merge")
+                clearArticleSelection()
+              }}
               onSplit={(id) => {
                 setSelectedWikiArticleId(id)
                 setIsEditingWikiArticle(true)

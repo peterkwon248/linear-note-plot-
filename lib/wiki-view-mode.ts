@@ -36,3 +36,17 @@ function subscribe(fn: () => void): () => void {
 export function useWikiViewMode(): WikiViewMode {
   return useSyncExternalStore(subscribe, getWikiViewMode, () => "dashboard" as const)
 }
+
+/* ── Pending Merge IDs (for multi-select merge from floating action bar) ── */
+
+let _pendingMergeIds: string[] = []
+
+export function setPendingMergeIds(ids: string[]): void {
+  _pendingMergeIds = ids
+}
+
+export function consumePendingMergeIds(): string[] {
+  const result = _pendingMergeIds
+  _pendingMergeIds = []
+  return result
+}

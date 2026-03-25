@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView, WikiArticle, WikiBlock } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -101,6 +101,9 @@ export interface PlotState {
 
   // ── Saved Views ──
   savedViews: SavedView[]
+
+  // ── Wiki Categories (DAG) ──
+  wikiCategories: WikiCategory[]
 
   // ── Wiki Articles (Assembly Model) ──
   wikiArticles: WikiArticle[]
@@ -240,6 +243,12 @@ export interface PlotState {
   updateSavedView: (id: string, updates: Partial<SavedView>) => void
   deleteSavedView: (id: string) => void
 
+  // ── Wiki Categories (DAG) ──
+  createWikiCategory: (name: string, parentIds?: string[]) => string
+  updateWikiCategory: (id: string, updates: Partial<Pick<WikiCategory, 'name' | 'parentIds' | 'description'>>) => void
+  deleteWikiCategory: (id: string) => void
+  setArticleCategories: (articleId: string, categoryIds: string[]) => void
+
   // ── Wiki Articles (Assembly Model) ──
   createWikiArticle: (partial: { title: string; aliases?: string[]; wikiStatus?: WikiStatus; stubSource?: StubSource; tags?: string[]; blocks?: WikiBlock[] }) => string
   updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
@@ -254,6 +263,17 @@ export interface PlotState {
   mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string; status?: WikiStatus }) => void
   splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string) => string | null
   unmergeWikiArticle: (articleId: string, dividerBlockId: string) => string | null
+  mergeMultipleWikiArticles: (sourceIds: string[], options: {
+    title: string
+    mode: "new" | "into"
+    targetId?: string
+    blockOrder: WikiBlock[]
+    status: WikiStatus
+    categories?: string[]
+    tags?: string[]
+    aliases?: string[]
+  }) => string
+  unmergeFromHistory: (articleId: string, snapshotIndex: number) => string[]
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

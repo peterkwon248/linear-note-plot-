@@ -20,6 +20,7 @@ import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { ArrowSquareUpRight } from "@phosphor-icons/react/dist/ssr/ArrowSquareUpRight"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
@@ -38,12 +39,14 @@ interface WikiBlockRendererProps {
   articleId?: string
   /** Callback to split this section (and its children) into a new article */
   onSplitSection?: (blockId: string) => void
+  /** Callback to move this section to an existing article */
+  onMoveToArticle?: (blockId: string, targetArticleId: string) => void
 }
 
-export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection }: WikiBlockRendererProps) {
+export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection, onMoveToArticle }: WikiBlockRendererProps) {
   switch (block.type) {
     case "section":
-      return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} onSplitSection={onSplitSection} />
+      return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} onSplitSection={onSplitSection} onMoveToArticle={onMoveToArticle} />
     case "text":
       return <TextBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "note-ref":
@@ -57,14 +60,24 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
 
 /* ── Section Block ── */
 
-function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection }: WikiBlockRendererProps) {
+function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection, onMoveToArticle }: WikiBlockRendererProps) {
   const collapsed = block.collapsed ?? false
   const toggleCollapsed = () => onUpdate?.({ collapsed: !collapsed })
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(block.title || "")
   const [menuOpen, setMenuOpen] = useState(false)
+  const [moveSubmenuOpen, setMoveSubmenuOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const level = block.level ?? 2
+
+  // Get other articles for "Move to existing article" submenu
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const otherArticles = useMemo(() => {
+    return wikiArticles
+      .filter((a) => a.id !== articleId)
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 5)
+  }, [wikiArticles, articleId])
 
   const handleStartEdit = () => {
     if (!editable) return
@@ -174,7 +187,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                 <DotsThree size={14} weight="bold" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-48 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
+            <PopoverContent align="end" className="w-52 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
               {onSplitSection && (
                 <button
                   onClick={() => { setMenuOpen(false); onSplitSection(block.id) }}
@@ -184,9 +197,56 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                   Move to new article
                 </button>
               )}
+
+              {/* Move to existing article submenu */}
+              {onMoveToArticle && otherArticles.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setMoveSubmenuOpen(!moveSubmenuOpen)}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                  >
+                    <ArrowSquareOut size={14} weight="regular" />
+                    <span className="flex-1 text-left">Move to article</span>
+                    <CaretRight size={10} weight="regular" className="text-muted-foreground/40" />
+                  </button>
+                  {moveSubmenuOpen && (
+                    <div className="absolute left-full top-0 ml-1 w-48 rounded-lg border border-border/60 bg-popover shadow-lg py-1 z-10">
+                      {otherArticles.map((a) => (
+                        <button
+                          key={a.id}
+                          onClick={() => {
+                            setMenuOpen(false)
+                            setMoveSubmenuOpen(false)
+                            onMoveToArticle(block.id, a.id)
+                          }}
+                          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                        >
+                          <BookOpen size={12} weight="regular" className="shrink-0 text-muted-foreground/50" />
+                          <span className="truncate">{a.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Unmerge option (only if block was merged) */}
+              {block.mergedFrom && articleId && (
+                <>
+                  {(onSplitSection || (onMoveToArticle && otherArticles.length > 0)) && <div className="my-1 h-px bg-border/40" />}
+                  <button
+                    onClick={() => { setMenuOpen(false); handleUnmerge() }}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-chart-3 hover:bg-active-bg transition-colors"
+                  >
+                    <ArrowSquareUpRight size={14} weight="regular" />
+                    Unmerge section
+                  </button>
+                </>
+              )}
+
               {onDelete && (
                 <>
-                  {onSplitSection && <div className="my-1 h-px bg-border/40" />}
+                  {(onSplitSection || block.mergedFrom || (onMoveToArticle && otherArticles.length > 0)) && <div className="my-1 h-px bg-border/40" />}
                   <button
                     onClick={() => { setMenuOpen(false); onDelete() }}
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-destructive hover:bg-active-bg transition-colors"

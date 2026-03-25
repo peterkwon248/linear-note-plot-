@@ -31,6 +31,9 @@ import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -53,27 +56,30 @@ function FloatingDragDropBar({
 
   if (!isDragging) return null
 
+  // Show max 3 other articles for horizontal layout
+  const displayArticles = otherArticles.slice(0, 3)
+
   return (
-    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 fade-in duration-200">
-      <div className="flex items-center gap-2 rounded-xl border border-border bg-popover px-3 py-2.5 shadow-2xl">
+    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-6 fade-in duration-300">
+      <div className="flex items-stretch gap-2.5 rounded-xl border border-border bg-popover px-4 py-3 shadow-2xl">
         {/* New Article drop zone */}
         <div
           ref={newRef}
           className={cn(
-            "flex items-center gap-2 rounded-lg border-2 border-dashed px-4 py-2.5 transition-all duration-150 cursor-default",
+            "flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-6 min-h-[80px] min-w-[120px] transition-all duration-200 cursor-default",
             isOverNew
-              ? "border-accent bg-accent/10 text-accent scale-105"
-              : "border-border/60 text-muted-foreground/60 hover:border-border"
+              ? "border-accent bg-accent/10 text-accent scale-[1.03] shadow-md shadow-accent/10 animate-pulse"
+              : "border-border/60 text-muted-foreground/60 hover:border-border hover:text-muted-foreground/80 hover:scale-[1.01]"
           )}
         >
-          <Scissors size={16} weight="regular" />
+          <Scissors size={20} weight="regular" />
           <span className="text-xs font-medium whitespace-nowrap">
             {isOverNew ? "Drop to split" : "New Article"}
           </span>
         </div>
 
         {/* Existing article drop zones */}
-        {otherArticles.map((a) => (
+        {displayArticles.map((a) => (
           <ExistingArticleDropTarget
             key={a.id}
             articleId={a.id}
@@ -93,14 +99,14 @@ function ExistingArticleDropTarget({ articleId, title, isOver }: { articleId: st
     <div
       ref={setNodeRef}
       className={cn(
-        "flex items-center gap-1.5 rounded-lg border px-3 py-2.5 transition-all duration-150 cursor-default max-w-[160px]",
+        "flex flex-col items-center justify-center gap-1 rounded-lg border px-4 min-h-[80px] min-w-[100px] max-w-[160px] transition-all duration-200 cursor-default",
         isOver
-          ? "border-accent bg-accent/10 text-accent scale-105"
-          : "border-border/40 text-muted-foreground/50 hover:border-border/60"
+          ? "border-accent bg-accent/10 text-accent scale-[1.03] shadow-md shadow-accent/10 animate-pulse"
+          : "border-border/40 text-muted-foreground/50 hover:border-border/60 hover:text-muted-foreground/70 hover:scale-[1.01]"
       )}
     >
-      <BookOpen size={14} weight="regular" className="shrink-0" />
-      <span className="text-xs font-medium truncate">{title}</span>
+      <BookOpen size={16} weight="regular" className="shrink-0" />
+      <span className="text-xs font-medium truncate max-w-full text-center">{title}</span>
     </div>
   )
 }
@@ -197,6 +203,43 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
       navigateToWikiArticle(newId)
     }
   }, [article, articleId, splitWikiArticle])
+
+  /** Move a section (and its child blocks) to an existing article */
+  const handleMoveToArticle = useCallback((sectionBlockId: string, targetArticleId: string) => {
+    if (!article) return
+    const blocks = article.blocks
+    const sectionIdx = blocks.findIndex(b => b.id === sectionBlockId)
+    if (sectionIdx === -1) return
+
+    const sectionBlock = blocks[sectionIdx]
+    const sectionLevel = sectionBlock.level ?? 2
+
+    // Collect this section + all blocks until next same-or-higher level section
+    const blockIds: string[] = [sectionBlockId]
+    if (sectionBlock.type === "section") {
+      for (let i = sectionIdx + 1; i < blocks.length; i++) {
+        const b = blocks[i]
+        if (b.type === "section" && (b.level ?? 2) <= sectionLevel) break
+        blockIds.push(b.id)
+      }
+    }
+
+    const store = usePlotStore.getState()
+    const targetArticle = store.wikiArticles.find((a) => a.id === targetArticleId)
+    if (!targetArticle) return
+
+    const blocksToMove = blocks.filter((b) => blockIds.includes(b.id))
+    const remainingBlocks = blocks.filter((b) => !blockIds.includes(b.id))
+
+    store.updateWikiArticle(targetArticleId, {
+      blocks: [...targetArticle.blocks, ...blocksToMove],
+    })
+    store.updateWikiArticle(articleId, {
+      blocks: remainingBlocks,
+    })
+
+    toast.success(`Moved ${blockIds.length} block(s) to "${targetArticle.title}"`)
+  }, [article, articleId])
 
   // Improvement 2: confirm drag split with custom title
   const handleConfirmDragSplit = useCallback(() => {
@@ -511,6 +554,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
                       nearestSectionLevel={nearestSectionLevelByBlockId.get(block.id)}
                       articleId={articleId}
                       onSplitSection={handleSplitSection}
+                      onMoveToArticle={handleMoveToArticle}
                     />
                   </div>
                 ))}
@@ -607,17 +651,8 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
           className="w-full"
         />
 
-        {/* Tags as categories */}
-        {article.tags.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
-              Categories
-            </h4>
-            <div className="flex flex-wrap gap-1">
-              <TagBadges tagIds={article.tags} />
-            </div>
-          </div>
-        )}
+        {/* Categories (WikiCategory DAG) */}
+        <ArticleCategories articleId={articleId} categoryIds={article.categoryIds ?? []} editable={editable} />
 
         {/* Quality */}
         <div className="space-y-2">
@@ -757,19 +792,31 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
           {activeDragId && (() => {
             const block = article?.blocks.find(b => b.id === activeDragId)
             if (!block) return null
+            const childCount = getDragChildCount(activeDragId)
+            const previewText = block.type === "section"
+              ? `\u00A7 ${block.title || "Untitled"}`
+              : block.type === "text"
+              ? (block.content?.slice(0, 50) || "Empty text block")
+              : block.type === "note-ref"
+              ? "Note reference"
+              : block.type === "image"
+              ? "Image block"
+              : "Block"
             return (
-              <div className="rounded-lg border border-accent/30 bg-popover/95 px-4 py-2 shadow-lg backdrop-blur-sm max-w-[400px]">
+              <div
+                className="rounded-lg border border-accent/30 bg-popover/95 px-4 py-2.5 shadow-xl backdrop-blur-sm max-w-[400px]"
+                style={{ transform: "rotate(-1.5deg)" }}
+              >
                 <p className="text-xs font-medium text-foreground truncate">
-                  {block.type === "section" ? `\u00A7 ${block.title || "Untitled"}` :
-                   block.type === "text" ? ((block.content?.slice(0, 60) ?? "Text block") + "...") :
-                   block.type === "note-ref" ? "Note reference" :
-                   block.type === "image" ? "Image block" :
-                   "Block"}
+                  {previewText}
                 </p>
-                {block.type === "section" && (
-                  <p className="text-2xs text-muted-foreground mt-0.5">
-                    + {getDragChildCount(activeDragId)} child blocks
+                {block.type === "section" && childCount > 0 && (
+                  <p className="text-2xs text-muted-foreground/60 mt-0.5">
+                    + {childCount} child block{childCount !== 1 ? "s" : ""}
                   </p>
+                )}
+                {block.type === "text" && block.content && block.content.length > 50 && (
+                  <p className="text-2xs text-muted-foreground/40 mt-0.5">...</p>
                 )}
               </div>
             )
@@ -879,5 +926,143 @@ function TagBadges({ tagIds }: { tagIds: string[] }) {
         )
       })}
     </>
+  )
+}
+
+/* ── ArticleCategories (WikiCategory DAG) ── */
+
+function ArticleCategories({
+  articleId,
+  categoryIds,
+  editable,
+}: {
+  articleId: string
+  categoryIds: string[]
+  editable: boolean
+}) {
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const setArticleCategories = usePlotStore((s) => s.setArticleCategories)
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [newCatName, setNewCatName] = useState("")
+
+  const assignedCategories = wikiCategories.filter((c) => categoryIds.includes(c.id))
+  const availableCategories = wikiCategories.filter((c) => !categoryIds.includes(c.id))
+
+  // Build breadcrumb path for a category
+  const getBreadcrumb = (cat: typeof wikiCategories[number]): string => {
+    if (cat.parentIds.length === 0) return cat.name
+    const parent = wikiCategories.find((c) => c.id === cat.parentIds[0])
+    if (!parent) return cat.name
+    return `${parent.name} / ${cat.name}`
+  }
+
+  const handleRemove = (catId: string) => {
+    setArticleCategories(articleId, categoryIds.filter((id) => id !== catId))
+  }
+
+  const handleAdd = (catId: string) => {
+    setArticleCategories(articleId, [...categoryIds, catId])
+    setDropdownOpen(false)
+  }
+
+  const handleCreateAndAdd = () => {
+    if (!newCatName.trim()) return
+    const id = createWikiCategory(newCatName.trim())
+    setArticleCategories(articleId, [...categoryIds, id])
+    setNewCatName("")
+    setDropdownOpen(false)
+  }
+
+  return (
+    <div className="space-y-2">
+      <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
+        Categories
+      </h4>
+      {assignedCategories.length === 0 && !editable && (
+        <p className="text-2xs text-muted-foreground/40">No categories</p>
+      )}
+      <div className="flex flex-wrap gap-1">
+        {assignedCategories.map((cat) => (
+          <span
+            key={cat.id}
+            className="group inline-flex items-center gap-0.5 rounded-[5px] bg-secondary/50 px-1.5 py-0.5 text-2xs font-medium text-foreground/70"
+            title={getBreadcrumb(cat)}
+          >
+            {cat.parentIds.length > 0 && (
+              <>
+                <span className="text-muted-foreground/40">
+                  {wikiCategories.find((p) => p.id === cat.parentIds[0])?.name ?? ""}
+                </span>
+                <CaretRight size={8} weight="bold" className="text-muted-foreground/30" />
+              </>
+            )}
+            {cat.name}
+            {editable && (
+              <button
+                onClick={() => handleRemove(cat.id)}
+                className="ml-0.5 hidden rounded-sm p-0 text-muted-foreground/40 transition-colors hover:text-foreground group-hover:inline-flex"
+              >
+                <PhX size={10} weight="bold" />
+              </button>
+            )}
+          </span>
+        ))}
+      </div>
+      {editable && (
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-medium text-muted-foreground/50 transition-colors hover:bg-secondary/50 hover:text-foreground/70"
+          >
+            <PhPlus size={12} weight="regular" />
+            Add category
+          </button>
+          {dropdownOpen && (
+            <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-lg border border-border/50 bg-popover p-1 shadow-lg">
+              {availableCategories.length > 0 && (
+                <div className="max-h-40 overflow-y-auto">
+                  {availableCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => handleAdd(cat.id)}
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-foreground/80 transition-colors hover:bg-hover-bg"
+                    >
+                      <span className="truncate">{getBreadcrumb(cat)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="border-t border-border/30 pt-1 mt-1">
+                <div className="flex items-center gap-1 px-1">
+                  <input
+                    type="text"
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleCreateAndAdd() }}
+                    placeholder="New category..."
+                    className="flex-1 rounded-md bg-transparent px-1.5 py-1 text-xs text-foreground outline-none placeholder:text-muted-foreground/30"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleCreateAndAdd}
+                    disabled={!newCatName.trim()}
+                    className="rounded-md px-2 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent/10 disabled:opacity-30"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => setDropdownOpen(false)}
+                className="mt-1 w-full rounded-md px-2 py-1 text-center text-2xs text-muted-foreground/40 transition-colors hover:bg-secondary/30"
+              >
+                Close
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
