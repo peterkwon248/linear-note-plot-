@@ -26,6 +26,7 @@ import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { ArrowLineDown } from "@phosphor-icons/react/dist/ssr/ArrowLineDown"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
+import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
 import {
   Dialog,
   DialogContent,
@@ -38,7 +39,7 @@ import { startAutoEnrollment, stopAutoEnrollment } from "@/lib/wiki-auto-enroll"
 import type { StubSource } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
-import { useWikiViewMode, setWikiViewMode, setPendingMergeIds } from "@/lib/wiki-view-mode"
+import { useWikiViewMode, setWikiViewMode, setPendingMergeIds, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { toast } from "sonner"
@@ -48,11 +49,13 @@ import { WikiDashboard } from "./wiki-dashboard"
 import { WikiList } from "./wiki-list"
 import { WikiFloatingActionBar } from "@/components/wiki-floating-action-bar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
+import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
 import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { usePendingWikiArticle, consumePendingWikiArticle } from "@/lib/wiki-article-nav"
 import { WikiMergePreview } from "@/components/wiki-merge-preview"
 import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
+import { WikiCategoryPage } from "./wiki-category-page"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -64,11 +67,13 @@ export function WikiView() {
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const mergeWikiArticles = usePlotStore((s) => s.mergeWikiArticles)
   const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
+  const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
   const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
   const router = useRouter()
   const backlinkCounts = useBacklinksIndex()
 
   const wikiViewMode = useWikiViewMode()
+  const activeCategoryId = useActiveCategoryId()
 
   const [searchQuery, setSearchQuery] = useState("")
   const [searchFocused, setSearchFocused] = useState(false)
@@ -724,6 +729,24 @@ export function WikiView() {
           title={selectedWikiArticle.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
+              {/* Layout toggle */}
+              <button
+                onClick={() => {
+                  const next = selectedWikiArticle.layout === "encyclopedia" ? "default" : "encyclopedia"
+                  updateWikiArticle(selectedWikiArticleId, { layout: next })
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium transition-colors duration-150",
+                  selectedWikiArticle.layout === "encyclopedia"
+                    ? "bg-accent/15 text-accent hover:bg-accent/25"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+                title={selectedWikiArticle.layout === "encyclopedia" ? "Switch to default layout" : "Switch to encyclopedia layout"}
+              >
+                <Layout size={14} weight="regular" />
+                {selectedWikiArticle.layout === "encyclopedia" ? "Encyclopedia" : "Default"}
+              </button>
+
               {isEditingWikiArticle ? (
                 <button
                   onClick={() => setIsEditingWikiArticle(false)}
@@ -755,16 +778,24 @@ export function WikiView() {
           </div>
         </ViewHeader>
 
-        <WikiArticleView
-          articleId={selectedWikiArticleId}
-          editable={isEditingWikiArticle}
-          onDelete={() => {
-            deleteWikiArticle(selectedWikiArticleId)
-            setSelectedWikiArticleId(null)
-            setIsEditingWikiArticle(false)
-            toast.success("Article deleted")
-          }}
-        />
+        {selectedWikiArticle.layout === "encyclopedia" ? (
+          <WikiArticleEncyclopedia
+            article={selectedWikiArticle}
+            isEditing={isEditingWikiArticle}
+            onBack={() => { setSelectedWikiArticleId(null); setIsEditingWikiArticle(false) }}
+          />
+        ) : (
+          <WikiArticleView
+            articleId={selectedWikiArticleId}
+            editable={isEditingWikiArticle}
+            onDelete={() => {
+              deleteWikiArticle(selectedWikiArticleId)
+              setSelectedWikiArticleId(null)
+              setIsEditingWikiArticle(false)
+              toast.success("Article deleted")
+            }}
+          />
+        )}
       </div>
     )
   }
@@ -1042,7 +1073,13 @@ export function WikiView() {
         onCreateNew={handleCreateWiki}
       />
 
-      {wikiViewMode === "merge" ? (
+      {wikiViewMode === "category" ? (
+        <WikiCategoryPage
+          categoryId={activeCategoryId}
+          onOpenArticle={setSelectedWikiArticleId}
+          onNavigateCategory={(catId) => setActiveCategoryView(catId)}
+        />
+      ) : wikiViewMode === "merge" ? (
         <WikiMergePage />
       ) : wikiViewMode === "split" ? (
         <WikiSplitPage />

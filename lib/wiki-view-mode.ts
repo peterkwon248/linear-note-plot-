@@ -6,7 +6,7 @@
 
 import { useSyncExternalStore } from "react"
 
-export type WikiViewMode = "dashboard" | "list" | "merge" | "split"
+export type WikiViewMode = "dashboard" | "list" | "merge" | "split" | "category"
 
 let _mode: WikiViewMode = "dashboard"
 let _listeners: Array<() => void> = []
@@ -49,4 +49,45 @@ export function consumePendingMergeIds(): string[] {
   const result = _pendingMergeIds
   _pendingMergeIds = []
   return result
+}
+
+/* ── Active Category ID (for category page navigation) ── */
+
+let _activeCategoryId: string | null = null
+let _categoryListeners: Array<() => void> = []
+
+function notifyCategory() {
+  _categoryListeners.forEach((fn) => fn())
+}
+
+export function getActiveCategoryId(): string | null {
+  return _activeCategoryId
+}
+
+export function setActiveCategoryView(categoryId: string | null): void {
+  _activeCategoryId = categoryId
+  setWikiViewMode("category")
+  notifyCategory()
+}
+
+/** Navigate to the category overview (all root categories, no specific category selected). */
+export function setCategoryOverview(): void {
+  _activeCategoryId = null
+  if (_mode !== "category") {
+    _mode = "category"
+    notify()
+  }
+  notifyCategory()
+}
+
+function subscribeCategory(fn: () => void): () => void {
+  _categoryListeners.push(fn)
+  return () => {
+    _categoryListeners = _categoryListeners.filter((f) => f !== fn)
+  }
+}
+
+/** React hook to subscribe to active category ID changes. */
+export function useActiveCategoryId(): string | null {
+  return useSyncExternalStore(subscribeCategory, getActiveCategoryId, () => null)
 }

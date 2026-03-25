@@ -21,6 +21,7 @@ import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { ArrowSquareUpRight } from "@phosphor-icons/react/dist/ssr/ArrowSquareUpRight"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
@@ -53,6 +54,8 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
       return <NoteRefBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "image":
       return <ImageBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+    case "url":
+      return <UrlBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     default:
       return null
   }
@@ -568,6 +571,142 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
   )
 }
 
+/* ── URL Block ── */
+
+function getYoutubeVideoId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return match ? match[1] : null
+}
+
+function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+  const [editing, setEditing] = useState(false)
+  const [editUrl, setEditUrl] = useState(block.url || "")
+  const [editTitle, setEditTitle] = useState(block.urlTitle || "")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleStartEdit = () => {
+    if (!editable) return
+    setEditUrl(block.url || "")
+    setEditTitle(block.urlTitle || "")
+    setEditing(true)
+    setTimeout(() => inputRef.current?.focus(), 0)
+  }
+
+  const handleFinishEdit = () => {
+    setEditing(false)
+    if (editUrl.trim() !== (block.url || "") || editTitle.trim() !== (block.urlTitle || "")) {
+      onUpdate?.({ url: editUrl.trim(), urlTitle: editTitle.trim() })
+    }
+  }
+
+  // Edit mode
+  if (editing) {
+    return (
+      <div className="group/url relative rounded-lg border border-accent/30 bg-card/50 p-3 space-y-2">
+        <input
+          ref={inputRef}
+          value={editUrl}
+          onChange={(e) => setEditUrl(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
+          placeholder="https://..."
+          className="w-full bg-transparent outline-none border-b border-accent/20 pb-1 text-sm text-foreground/85 placeholder:text-muted-foreground/30"
+        />
+        <input
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
+          onBlur={handleFinishEdit}
+          placeholder="Label (optional)"
+          className="w-full bg-transparent outline-none border-b border-accent/10 pb-1 text-xs text-muted-foreground/60 placeholder:text-muted-foreground/30"
+        />
+      </div>
+    )
+  }
+
+  // No URL yet
+  if (!block.url) {
+    return (
+      <div className="group/url relative">
+        {editable && onDelete && (
+          <div className="absolute -left-6 top-2 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 transition-opacity duration-100">
+            <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
+              <Trash size={12} weight="regular" />
+            </button>
+          </div>
+        )}
+        {editable ? (
+          <button
+            onClick={handleStartEdit}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border/50 bg-secondary/10 text-sm text-muted-foreground/40 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
+          >
+            <PhLink size={16} weight="regular" />
+            Add URL
+          </button>
+        ) : (
+          <div className="flex h-14 items-center justify-center rounded-lg border border-dashed border-border/50 bg-secondary/10 text-xs text-muted-foreground/40">
+            <PhLink className="mr-2" size={16} weight="regular" />
+            No URL
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const youtubeId = getYoutubeVideoId(block.url)
+
+  return (
+    <div className="group/url relative">
+      {editable && (
+        <div className="absolute -left-6 top-2 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
+          <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
+            <DotsSixVertical size={14} weight="regular" />
+          </button>
+          {onDelete && (
+            <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
+              <Trash size={12} weight="regular" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {youtubeId ? (
+        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-white/[0.08]">
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeId}`}
+            className="absolute inset-0 w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      ) : (
+        <a
+          href={block.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-lg border border-white/[0.08] bg-white/[0.02] p-3 transition-colors hover:bg-white/[0.04]"
+        >
+          <PhLink size={16} className="shrink-0 text-white/40" />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-xs font-medium text-white/80">
+              {block.urlTitle || block.url}
+            </div>
+            <div className="truncate text-2xs text-white/40">{block.url}</div>
+          </div>
+        </a>
+      )}
+
+      {editable && (
+        <button
+          onClick={handleStartEdit}
+          className="mt-1 text-2xs text-muted-foreground/30 hover:text-muted-foreground transition-colors"
+        >
+          Edit URL
+        </button>
+      )}
+    </div>
+  )
+}
+
 /* ── Add Block Button ── */
 
 export function AddBlockButton({ onAdd, nearestSectionLevel }: {
@@ -593,6 +732,7 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
     { type: "text", label: "Text", desc: "Write directly" },
     { type: "note-ref", label: "Note", desc: "Embed a note" },
     { type: "image", label: "Image", desc: "Upload image" },
+    { type: "url", label: "URL", desc: "Embed a link" },
   ]
 
   return (

@@ -96,7 +96,12 @@
       "WebFetch(domain:facedragons.com)",
       "Bash(grep -l \"noteEvents\\\\|addEvent\" lib/store/slices/*.ts)",
       "Bash(~/.claude/.omc-worklog/latest.md:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api repos/peterkwon248/linear-note-plot-/collaborators/ludimast --silent 2>&1; echo \"Exit: $?\")",
+      "WebFetch(domain:cloudcli.ai)",
+      "Bash(ipconfig | grep -A 2 \"Wi-Fi\\\\|Ethernet\\\\|이더넷\\\\|무선\" | grep \"IPv4\" | head -3)",
+      "Bash(ipconfig | grep \"IPv4\")",
+      "Bash(cloudflared --version 2>&1 || echo \"NOT_INSTALLED\")",
+      "Bash(winget install Cloudflare.cloudflared 2>&1)"
     ]
   }
 }

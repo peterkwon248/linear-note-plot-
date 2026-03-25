@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 19-slice Zustand store with versioned migration (currently v60)
+- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v61)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -30,11 +30,14 @@
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
 - **TipTap Editor**: 25+ extensions including SlashCommand, HashtagSuggestion, WikilinkSuggestion, Mathematics, WikiQuoteExtension
 - **2-Level Routing**: `activeSpace` (inbox/notes/wiki/ontology/calendar) + `activeRoute`, `inferSpace()` 하위호환
-- **PlotIcons**: 35 custom SVG icon components in `components/plot-icons.tsx` — Lucide 대체
+- **Phosphor Icons**: Lucide→Phosphor 전체 마이그레이션 완료 (PR #104, 83파일). `components/plot-icons.tsx`는 레거시
 - **Wiki Collection**: `wikiCollections: Record<string, WikiCollectionItem[]>` — per-wiki-note staging area for related material
 - **Undo Manager**: `lib/undo-manager.ts` — LinkedList 기반 글로벌 Undo/Redo (capacity 50), Zustand state diff 기반
 - **Sub-grouping**: `group.ts` 재귀 호출로 2단계 그룹핑. NoteGroup.subGroups에 저장. VirtualItem "subheader" 타입으로 렌더
 - **Thread Nested Replies**: ThreadStep.parentId 기반 트리 구조. Thread 패널에서 들여쓰기 렌더 + Reply 버튼
+- **Wiki Categories**: wiki-categories slice, DAG 트리 (parentIds[]), 2-panel 트리 에디터 (드래그 계층 편집)
+- **Wiki Layout Preset**: `WikiLayout = "default" | "encyclopedia"` — article별 레이아웃 전환
+- **Wiki URL Block**: `WikiBlockType` 'url' 추가, 유튜브 iframe embed + 일반 링크 카드
 
 ## Store Slices (20 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
@@ -279,11 +282,34 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **사이드바 Merge/Split 풀페이지**: 좌측 사이드바에 Merge/Split 내비 추가 + 각각 전용 풀페이지 UI (WikiMergePage, WikiSplitPage)
 - Store v59→v60
 
+### 이번 세션 완료 (2026-03-25, 세션 2)
+- **Wiki 카테고리 시스템 완성**:
+  - WikiLayout 프리셋 (`"default" | "encyclopedia"`) — article별 레이아웃 전환 UI
+  - 카테고리 전용 페이지 (WikiViewMode `"category"` 추가, WikiCategoryPage 컴포넌트)
+  - 사이드바 카테고리: flat 트리 → nav 최상위 항목 ("Categories" = Overview/Merge/Split과 동급)
+  - 2-panel 카테고리 트리 에디터: 왼쪽 드래그 가능 트리 + 오른쪽 상세 패널 (breadcrumb, 설명 편집, 하위 카테고리, 소속 아티클)
+  - 아티클/스텁 카테고리 할당 UI: 인라인 태그 행 + Add 드롭다운 + 새 카테고리 생성
+- **Encyclopedia 레이아웃** (나무위키식):
+  - 상단 분류 태그 행, float-right 인포박스, 인라인 collapsible 목차(Contents), 번호 매긴 접기/펼치기 섹션
+  - 텍스트 사이즈 밸런스 개선 (h1 3xl, 인포박스 xs/sm, 목차 sm)
+- **URL 블록 타입**: WikiBlockType에 'url' 추가. 유튜브 iframe embed + 일반 링크 카드. AddBlockButton에 URL 옵션
+- **Merge 카테고리 반영**: handleMerge → mergeMultipleWikiArticles 교체 (categoryIds, blockOrder 전달)
+- **Split status 반영**: splitWikiArticle에 status 파라미터 추가 (기존 항상 stub → 선택 가능)
+- **Chevron 방향 수정**: Title/Survives 드롭다운 ChevronDown → ChevronUp (위로 열리는 드롭다운)
+- Store v60→v61 (WikiArticle.layout 기본값)
+
 ### 다음 작업 후보 (우선순위 순)
-1. **캘린더 플로팅 액션바** — 캘린더에서도 선택 + 하단 액션바
-2. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식
-3. **노트 Split** — 노트도 분리 기능 (헤딩 기준)
-4. **J/K 리스트 네비게이션** — Linear식
+1. **타이포그래피 밸런스 전체 개선** — 컬럼 헤더/그룹 헤더/아이템 간 폰트 사이즈 균형 (Linear 참고)
+2. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식, infobox 통합
+3. **커맨드 팔레트 확장** — 6개 → 20+개 컨텍스트 반응형 커맨드
+4. **풀페이지 검색 분리** — ⌘K=검색, ⌘/=커맨드 팔레트
+5. **J/K 리스트 네비게이션** — Linear식
+
+### 완료 확인 (이전 TODO에서 제거)
+- ~~Phosphor Icons 전체 마이그레이션~~ → PR #104 완료 (83파일)
+- ~~Wiki Block 후속 (드래그/접기/펼치기)~~ → PR #94-95 완료
+- ~~위키 카테고리 계층구조~~ → PR #112-113 완료
+- ~~캘린더 플로팅 액션바~~ → 불필요 판단으로 삭제 (2026-03-25)
 
 ### docs 현황
 - `docs/CONTEXT.md` — 현재 상태 + 설계 결정

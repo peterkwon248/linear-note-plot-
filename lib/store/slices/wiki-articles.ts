@@ -270,7 +270,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }))
     },
 
-    splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string): string | null => {
+    splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string, status?: WikiStatus): string | null => {
       const state = get()
       const source = (state.wikiArticles as WikiArticle[]).find((a) => a.id === sourceId)
       if (!source) return null
@@ -287,7 +287,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         id: newId,
         title: newTitle,
         aliases: [],
-        wikiStatus: "stub",
+        wikiStatus: status ?? "stub",
         stubSource: "manual",
         infobox: [],
         blocks: extractedBlocks,
@@ -396,6 +396,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         blockOrder: WikiBlock[]
         status: WikiStatus
         categories?: string[]
+        categoryIds?: string[]
         tags?: string[]
         aliases?: string[]
       }
@@ -475,6 +476,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
                 wikiStatus: options.status,
                 aliases: Array.from(allAliases),
                 tags: Array.from(allTags),
+                categoryIds: options.categoryIds ?? a.categoryIds,
                 infobox: mergedInfobox,
                 linksOut,
                 mergeHistory: [...existingHistory, ...targetMergeHistory],
@@ -510,6 +512,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           blocks,
           sectionIndex,
           tags: Array.from(allTags),
+          categoryIds: options.categoryIds,
           linksOut,
           mergeHistory,
           createdAt: now(),
