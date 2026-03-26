@@ -17,32 +17,34 @@ import {
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
-import { Folder } from "@phosphor-icons/react/dist/ssr/Folder"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
+import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { TreeStructure } from "@phosphor-icons/react/dist/ssr/TreeStructure"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
-import { List as PhList } from "@phosphor-icons/react/dist/ssr/List"
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
+import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
+import { CursorClick } from "@phosphor-icons/react/dist/ssr/CursorClick"
+import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 /* ── Props ── */
+
+type CategoryOrdering = "name" | "articles" | "updated" | "parent" | "tier" | "stubs" | "sub"
 
 interface WikiCategoryPageProps {
   categoryId: string | null
   onOpenArticle: (articleId: string) => void
   onNavigateCategory: (categoryId: string) => void
-  categoryViewMode?: "tree" | "list"
-  categoryOrdering?: "name" | "articles" | "updated"
+  categoryViewMode?: "list" | "board"
+  categoryOrdering?: CategoryOrdering
   categoryTierFilter?: string | null
   categoryStatusFilter?: string | null
   categoryShowDescription?: boolean
   categoryShowEmpty?: boolean
   categoryGrouping?: "none" | "tier" | "parent" | "family"
+  categoryDisplayProps?: string[]
+  categorySortDirection?: "asc" | "desc"
+  onOrderingChange?: (ordering: CategoryOrdering) => void
+  onSortDirectionChange?: (dir: "asc" | "desc") => void
 }
 
 /* ── Breadcrumb helpers ── */
@@ -86,1211 +88,381 @@ function getDescendantIds(
   return result
 }
 
-/* ── Section divider ── */
+/* ── Depth helper ── */
 
-function SectionDivider({ label }: { label: string }) {
+function getDepth(catId: string, categories: WikiCategory[], visited = new Set<string>()): number {
+  if (visited.has(catId)) return 0
+  visited.add(catId)
+  const cat = categories.find(c => c.id === catId)
+  if (!cat || cat.parentIds.length === 0) return 0
+  return 1 + getDepth(cat.parentIds[0], categories, visited)
+}
+
+/* ── isDescendant helper ── */
+
+function isDescendant(possibleDescendantId: string, ancestorId: string, allCats: WikiCategory[]): boolean {
+  let current = allCats.find(c => c.id === possibleDescendantId)
+  const visited = new Set<string>()
+  while (current) {
+    if (visited.has(current.id)) return false
+    visited.add(current.id)
+    if (current.id === ancestorId) return true
+    const parentId = current.parentIds?.[0]
+    if (!parentId) return false
+    current = allCats.find(c => c.id === parentId)
+  }
+  return false
+}
+
+/* ── Max descendant depth helper (for tier limit validation) ── */
+
+function getMaxDescendantDepth(catId: string, categories: WikiCategory[]): number {
+  let maxDepth = 0
+  const children = categories.filter(c => c.parentIds.includes(catId))
+  for (const child of children) {
+    const childDepth = 1 + getMaxDescendantDepth(child.id, categories)
+    if (childDepth > maxDepth) maxDepth = childDepth
+  }
+  return maxDepth
+}
+
+/* ══════════════════════════════════════════════════════════
+   BOARD VIEW: Tier-based columns with drag-and-drop
+   ══════════════════════════════════════════════════════════ */
+
+interface CategoryDataItem {
+  cat: WikiCategory
+  depth: number
+  articleCount: number
+  stubCount: number
+  childCount: number
+}
+
+/* ── Board Card (draggable + droppable) ── */
+
+function CategoryBoardCard({
+  item,
+  onSelect,
+  showDescription,
+}: {
+  item: CategoryDataItem
+  onSelect: (id: string, e?: React.MouseEvent) => void
+  showDescription?: boolean
+}) {
+  const { cat, articleCount, stubCount, childCount } = item
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: cat.id })
+  const { setNodeRef: dropRef, isOver } = useDroppable({ id: `card-${cat.id}` })
+
+  const mergedRef = (el: HTMLElement | null) => {
+    setNodeRef(el)
+    dropRef(el)
+  }
+
   return (
-    <div className="flex items-center gap-3 py-1">
-      <span className="text-note font-medium text-muted-foreground/60 uppercase tracking-wider whitespace-nowrap">
-        {label}
-      </span>
-      <div className="h-px flex-1 bg-border/40" />
+    <div
+      ref={mergedRef}
+      {...attributes}
+      {...listeners}
+      onClick={(e) => { e.stopPropagation(); !isDragging && onSelect(cat.id, e) }}
+      className={cn(
+        "rounded-lg border border-border/50 bg-card p-3 transition-all select-none",
+        isDragging ? "opacity-20 cursor-grabbing" : "cursor-grab",
+        isOver && !isDragging && "ring-2 ring-accent border-accent/50 bg-accent/5"
+      )}
+      style={{ touchAction: "none" }}
+    >
+      {/* Title row */}
+      <div className="flex items-center gap-2">
+        <FolderSimple size={14} weight="regular" className="text-muted-foreground/60 shrink-0" />
+        <span className="text-sm font-medium text-foreground truncate">{cat.name}</span>
+      </div>
+      {/* Description */}
+      {showDescription && cat.description && (
+        <p className="text-xs text-muted-foreground/50 mt-1 line-clamp-1">{cat.description}</p>
+      )}
+      {/* Stats row */}
+      {(articleCount > 0 || stubCount > 0 || childCount > 0) && (
+        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground/50">
+          {articleCount > 0 && <span className="text-green-400">{articleCount} article{articleCount > 1 ? "s" : ""}</span>}
+          {stubCount > 0 && <span className="text-orange-400">{stubCount} stub{stubCount > 1 ? "s" : ""}</span>}
+          {childCount > 0 && <span>{childCount} sub</span>}
+        </div>
+      )}
     </div>
   )
 }
 
-/* ── Empty state ── */
+/* ── Board Card Overlay (for drag preview) ── */
 
-function EmptyState({ message }: { message: string }) {
+function CategoryBoardCardOverlay({ cat }: { cat: WikiCategory }) {
   return (
-    <p className="py-3 px-1 text-xs text-muted-foreground/50 italic">
-      {message}
-    </p>
-  )
-}
-
-/* ── Inline description editor ── */
-
-function DescriptionEditor({
-  categoryId,
-  description,
-}: {
-  categoryId: string
-  description: string | undefined
-}) {
-  const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
-  const [editing, setEditing] = useState(false)
-  const [value, setValue] = useState(description ?? "")
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  const handleClick = () => {
-    setValue(description ?? "")
-    setEditing(true)
-    setTimeout(() => textareaRef.current?.focus(), 0)
-  }
-
-  const handleBlur = () => {
-    setEditing(false)
-    const trimmed = value.trim()
-    updateWikiCategory(categoryId, { description: trimmed || undefined })
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Escape") {
-      setEditing(false)
-      setValue(description ?? "")
-    }
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      textareaRef.current?.blur()
-    }
-  }
-
-  if (editing) {
-    return (
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        rows={3}
-        placeholder="카테고리 설명을 입력하세요..."
-        className="w-full resize-none rounded-md border border-accent/40 bg-secondary/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors"
-      />
-    )
-  }
-
-  return (
-    <button
-      onClick={handleClick}
-      className="w-full rounded-md px-3 py-2 text-left text-sm text-muted-foreground hover:bg-secondary/40 hover:text-foreground transition-colors"
-    >
-      {description ? (
-        <span>{description}</span>
-      ) : (
-        <span className="italic text-muted-foreground/50">
-          No description — click to add
-        </span>
-      )}
-    </button>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════
-   LEFT PANEL: Tree Editor
-   ══════════════════════════════════════════════════════════ */
-
-/* ── Tree node (draggable + droppable) ── */
-
-interface TreeNodeProps {
-  category: WikiCategory
-  categories: WikiCategory[]
-  depth: number
-  selectedId: string | null
-  onSelect: (id: string) => void
-  expandedIds: Set<string>
-  onToggleExpand: (id: string) => void
-  dragOverId: string | null
-  filteredIds?: Set<string> | null
-  onCreateSub?: (parentId: string) => void
-  creatingSubParentId?: string | null
-  subInputRef?: React.RefObject<HTMLInputElement | null>
-  subName?: string
-  onSubNameChange?: (v: string) => void
-  onSubConfirm?: () => void
-  onSubKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
-}
-
-function TreeNode({
-  category,
-  categories,
-  depth,
-  selectedId,
-  onSelect,
-  expandedIds,
-  onToggleExpand,
-  dragOverId,
-  filteredIds,
-  onCreateSub,
-  creatingSubParentId,
-  subInputRef,
-  subName,
-  onSubNameChange,
-  onSubConfirm,
-  onSubKeyDown,
-}: TreeNodeProps) {
-  const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
-  const deleteWikiCategory = usePlotStore((s) => s.deleteWikiCategory)
-
-  const children = useMemo(
-    () => {
-      let result = categories
-        .filter((c) => c.parentIds.includes(category.id))
-        .sort((a, b) => a.name.localeCompare(b.name))
-      if (filteredIds) {
-        result = result.filter(c => filteredIds.has(c.id))
-      }
-      return result
-    },
-    [categories, category.id, filteredIds]
-  )
-  const hasChildren = children.length > 0
-  const isExpanded = expandedIds.has(category.id)
-  const isSelected = selectedId === category.id
-  const isDragOver = dragOverId === category.id
-
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [renaming, setRenaming] = useState(false)
-  const [renameValue, setRenameValue] = useState(category.name)
-  const renameRef = useRef<HTMLInputElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  // Draggable
-  const {
-    attributes,
-    listeners,
-    setNodeRef: setDragRef,
-    isDragging,
-  } = useDraggable({ id: `drag-${category.id}`, data: { categoryId: category.id } })
-
-  // Droppable
-  const { setNodeRef: setDropRef, isOver } = useDroppable({
-    id: `drop-${category.id}`,
-    data: { categoryId: category.id },
-  })
-
-  const handleRenameConfirm = () => {
-    const trimmed = renameValue.trim()
-    if (trimmed && trimmed !== category.name) {
-      updateWikiCategory(category.id, { name: trimmed })
-    }
-    setRenaming(false)
-  }
-
-  const handleRenameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleRenameConfirm()
-    if (e.key === "Escape") {
-      setRenaming(false)
-      setRenameValue(category.name)
-    }
-  }
-
-  const startRename = () => {
-    setMenuOpen(false)
-    setRenameValue(category.name)
-    setRenaming(true)
-    setTimeout(() => renameRef.current?.select(), 0)
-  }
-
-  const handleDelete = () => {
-    setMenuOpen(false)
-    deleteWikiCategory(category.id)
-  }
-
-  const handleAddSub = () => {
-    setMenuOpen(false)
-    onCreateSub?.(category.id)
-  }
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setMenuOpen(true)
-  }
-
-  return (
-    <>
-      <div
-        ref={(node) => {
-          setDropRef(node)
-          setDragRef(node)
-        }}
-        data-tree-node
-        {...attributes}
-        onContextMenu={handleContextMenu}
-        style={{ paddingLeft: depth * 20 }}
-        className={`group relative flex items-center rounded-md transition-colors ${
-          isDragging ? "opacity-40" : ""
-        } ${isSelected ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"} ${
-          (isOver || isDragOver) && !isDragging
-            ? "ring-1 ring-accent/40 bg-accent/[0.06]"
-            : ""
-        }`}
-      >
-        {/* drag handle */}
-        <button
-          {...listeners}
-          className="shrink-0 p-0.5 opacity-0 group-hover:opacity-60 hover:!opacity-100 cursor-grab text-muted-foreground/40 transition-opacity"
-          tabIndex={-1}
-        >
-          <DotsSixVertical size={14} weight="bold" />
-        </button>
-
-        {/* expand/collapse toggle */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            if (hasChildren) onToggleExpand(category.id)
-          }}
-          className="shrink-0 w-5 h-5 flex items-center justify-center rounded hover:bg-white/[0.06] text-muted-foreground/40 transition-colors"
-        >
-          {hasChildren ? (
-            isExpanded ? (
-              <CaretDown size={13} />
-            ) : (
-              <CaretRight size={13} />
-            )
-          ) : null}
-        </button>
-
-        {/* name */}
-        <button
-          onClick={() => onSelect(category.id)}
-          className="flex flex-1 items-center gap-2 min-w-0 py-2 pr-1 text-left"
-        >
-          <FolderSimple
-            size={17}
-            weight="duotone"
-            className={`shrink-0 ${
-              isSelected ? "text-accent/70" : "text-muted-foreground/50"
-            }`}
-          />
-          {renaming ? (
-            <input
-              ref={renameRef}
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              onBlur={handleRenameConfirm}
-              onKeyDown={handleRenameKeyDown}
-              onClick={(e) => e.stopPropagation()}
-              className="flex-1 min-w-0 bg-transparent text-sm text-foreground border-b border-accent/40 outline-none"
-            />
-          ) : (
-            <span
-              className={`flex-1 min-w-0 truncate text-sm ${
-                isSelected
-                  ? "text-foreground font-medium"
-                  : "text-foreground/70"
-              }`}
-            >
-              {category.name}
-            </span>
-          )}
-        </button>
-
-        {/* context menu */}
-        <div className="relative shrink-0">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setMenuOpen((v) => !v)
-            }}
-            className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] transition-all"
-          >
-            <DotsThree size={14} weight="bold" />
-          </button>
-          {menuOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setMenuOpen(false)}
-              />
-              <div
-                ref={menuRef}
-                className="absolute right-0 top-full z-20 mt-1 w-44 rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1.5 shadow-xl"
-              >
-                <button
-                  onClick={handleAddSub}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2 text-sm text-foreground/80 hover:bg-white/[0.06] hover:text-foreground transition-colors"
-                >
-                  <Plus size={14} weight="regular" />
-                  Add subcategory
-                </button>
-                <button
-                  onClick={startRename}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2 text-sm text-foreground/80 hover:bg-white/[0.06] hover:text-foreground transition-colors"
-                >
-                  <PencilSimple size={14} />
-                  Rename
-                </button>
-                <div className="my-1.5 h-px bg-white/[0.06]" />
-                <button
-                  onClick={handleDelete}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2 text-sm text-red-400/80 hover:bg-white/[0.06] hover:text-red-400 transition-colors"
-                >
-                  <Trash size={14} />
-                  Delete
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+    <div className="rounded-lg border border-accent/50 bg-card p-3 shadow-lg w-[236px] opacity-90">
+      <div className="flex items-center gap-2">
+        <FolderSimple size={14} weight="regular" className="text-muted-foreground/60 shrink-0" />
+        <span className="text-sm font-medium text-foreground truncate">{cat.name}</span>
       </div>
-
-      {/* children + sub-creation input */}
-      {(hasChildren && isExpanded || creatingSubParentId === category.id) && (
-        <div>
-          {children.map((child) => (
-            <TreeNode
-              key={child.id}
-              category={child}
-              categories={categories}
-              depth={depth + 1}
-              selectedId={selectedId}
-              onSelect={onSelect}
-              expandedIds={expandedIds}
-              onToggleExpand={onToggleExpand}
-              dragOverId={dragOverId}
-              filteredIds={filteredIds}
-              onCreateSub={onCreateSub}
-              creatingSubParentId={creatingSubParentId}
-              subInputRef={subInputRef}
-              subName={subName}
-              onSubNameChange={onSubNameChange}
-              onSubConfirm={onSubConfirm}
-              onSubKeyDown={onSubKeyDown}
-            />
-          ))}
-          {/* Inline sub-category input */}
-          {creatingSubParentId === category.id && (
-            <div style={{ paddingLeft: (depth + 1) * 20 }} className="flex items-center gap-2 px-2 py-1.5">
-              <FolderSimple size={14} weight="duotone" className="shrink-0 text-accent/50" />
-              <input
-                ref={subInputRef}
-                value={subName ?? ""}
-                onChange={(e) => onSubNameChange?.(e.target.value)}
-                onBlur={onSubConfirm}
-                onKeyDown={onSubKeyDown}
-                placeholder="Subcategory name…"
-                className="flex-1 min-w-0 bg-transparent text-sm text-foreground border-b border-accent/40 outline-none placeholder:text-muted-foreground/30"
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </>
+    </div>
   )
 }
 
-/* ── Root drop zone (for making items root-level) ── */
+/* ── Board Column (droppable tier) ── */
 
-function RootDropZone({ isDragActive }: { isDragActive: boolean }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: "drop-root",
-    data: { categoryId: null },
-  })
-
-  if (!isDragActive) return null
+function CategoryBoardColumn({
+  columnKey,
+  label,
+  items,
+  onSelect,
+  showDescription,
+  activeDragId,
+  isRootColumn,
+}: {
+  columnKey: string
+  label: string
+  items: CategoryDataItem[]
+  onSelect: (id: string, e?: React.MouseEvent) => void
+  showDescription?: boolean
+  activeDragId?: string | null
+  isRootColumn?: boolean
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: columnKey })
+  const isDragging = !!activeDragId
 
   return (
     <div
       ref={setNodeRef}
-      className={`mx-2 mt-1 rounded-md border border-dashed py-2 text-center text-xs transition-colors ${
-        isOver
-          ? "border-accent/50 bg-accent/[0.06] text-accent/70"
-          : "border-white/[0.08] text-muted-foreground/30"
-      }`}
+      className={cn(
+        "flex flex-col w-[260px] shrink-0 rounded-lg",
+        isOver && "ring-1 ring-accent/30 bg-accent/5"
+      )}
     >
-      Move to root
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-foreground/80">
+        <span>{label}</span>
+        <span className="text-xs text-muted-foreground/50 tabular-nums">{items.length}</span>
+        {isRootColumn && isDragging && (
+          <span className="ml-auto text-xs text-accent/70 font-normal animate-pulse">
+            Drop to make root
+          </span>
+        )}
+      </div>
+      {/* Cards */}
+      <div className="flex flex-col gap-1.5 px-1.5 pb-2 overflow-y-auto max-h-[calc(100vh-200px)]">
+        {items.map(item => (
+          <CategoryBoardCard key={item.cat.id} item={item} onSelect={onSelect} showDescription={showDescription} />
+        ))}
+        {items.length === 0 && (
+          <div className="text-xs text-muted-foreground/40 text-center py-8">No categories</div>
+        )}
+      </div>
     </div>
   )
 }
 
-/* ── Category list view (flat alphabetical) ── */
+/* ── Board View ── */
 
-function CategoryListView({
+function CategoryBoardView({
   categories,
   articles,
-  selectedId,
+  ordering,
+  sortDirection = "asc",
   onSelect,
-  searchQuery,
+  showDescription,
+  showEmpty,
+  grouping = "tier",
 }: {
   categories: WikiCategory[]
   articles: WikiArticle[]
-  selectedId: string | null
-  onSelect: (id: string) => void
-  searchQuery: string
+  ordering: string
+  sortDirection?: "asc" | "desc"
+  onSelect: (id: string, e?: React.MouseEvent) => void
+  showDescription?: boolean
+  showEmpty?: boolean
+  grouping?: "none" | "tier" | "parent" | "family"
 }) {
-  const categoryData = useMemo(() => {
-    const getDepth = (catId: string, visited = new Set<string>()): number => {
-      if (visited.has(catId)) return 0
-      visited.add(catId)
-      const cat = categories.find(c => c.id === catId)
-      if (!cat || cat.parentIds.length === 0) return 0
-      return 1 + getDepth(cat.parentIds[0], visited)
-    }
-
-    const q = searchQuery.toLowerCase().trim()
-
-    return categories
-      .map(cat => {
-        const depth = getDepth(cat.id)
-        const catArticles = articles.filter(a => a.categoryIds?.includes(cat.id))
-        const articleCount = catArticles.filter(a => a.wikiStatus === "article").length
-        const stubCount = catArticles.filter(a => a.wikiStatus === "stub").length
-        const childCount = categories.filter(c => c.parentIds.includes(cat.id)).length
-        return { cat, depth, articleCount, stubCount, childCount }
-      })
-      .filter(item => !q || item.cat.name.toLowerCase().includes(q))
-      .sort((a, b) => a.cat.name.localeCompare(b.cat.name))
-  }, [categories, articles, searchQuery])
-
-  if (categoryData.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
-        <FolderSimple size={28} weight="thin" className="text-muted-foreground/20" />
-        <p className="text-sm text-muted-foreground/40">
-          {searchQuery ? "No matching categories" : "No categories yet"}
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-0.5 px-1.5 py-1.5">
-      {categoryData.map(({ cat, depth, articleCount, stubCount, childCount }) => (
-        <button
-          key={cat.id}
-          onClick={() => onSelect(cat.id)}
-          className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors ${
-            selectedId === cat.id ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"
-          }`}
-        >
-          <FolderSimple
-            size={16}
-            weight="duotone"
-            className={selectedId === cat.id ? "shrink-0 text-accent/70" : "shrink-0 text-muted-foreground/50"}
-          />
-          <span className={`min-w-0 flex-1 truncate text-sm ${
-            selectedId === cat.id ? "text-foreground font-medium" : "text-foreground/70"
-          }`}>
-            {cat.name}
-          </span>
-          {depth > 0 && (
-            <span className="shrink-0 rounded bg-white/[0.06] px-1.5 py-0.5 text-xs text-muted-foreground/40">
-              d{depth}
-            </span>
-          )}
-          <span className="shrink-0 text-xs tabular-nums text-muted-foreground/30">
-            {articleCount > 0 && `${articleCount}a`}
-            {articleCount > 0 && stubCount > 0 && " · "}
-            {stubCount > 0 && `${stubCount}s`}
-            {articleCount === 0 && stubCount === 0 && "—"}
-          </span>
-        </button>
-      ))}
-    </div>
-  )
-}
-
-/* ── Left panel ── */
-
-interface TreePanelProps {
-  categories: WikiCategory[]
-  articles: WikiArticle[]
-  selectedId: string | null
-  onSelect: (id: string) => void
-  externalViewMode?: "tree" | "list"
-}
-
-function TreePanel({ categories, articles, selectedId, onSelect, externalViewMode }: TreePanelProps) {
-  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
   const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
 
-  const [viewMode, setViewMode] = useState<"tree" | "list">("tree")
-  const effectiveViewMode = externalViewMode ?? viewMode
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
-  const [creating, setCreating] = useState(false)
-  const [newName, setNewName] = useState("")
-  const newInputRef = useRef<HTMLInputElement>(null)
-  const [dragActiveId, setDragActiveId] = useState<string | null>(null)
-  const [dragOverId, setDragOverId] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [recentIds, setRecentIds] = useState<string[]>([])
-
-  const handleSelectWithRecent = useCallback((id: string) => {
-    // Track last selected (1 item only)
-    setRecentIds(prev => {
-      const filtered = prev.filter(x => x !== id)
-      return [id, ...filtered].slice(0, 1)
-    })
-    onSelect(id)
-  }, [onSelect])
-
-  const rootCategories = useMemo(
-    () =>
-      categories
-        .filter((c) => c.parentIds.length === 0)
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [categories]
-  )
-
-  // Filter categories by search query
-  const filteredCategoryIds = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim()
-    if (!q) return null // null = show all
-
-    // Find matching categories
-    const matchingIds = new Set<string>()
-    for (const cat of categories) {
-      if (cat.name.toLowerCase().includes(q)) {
-        matchingIds.add(cat.id)
-        // Also add all ancestors to preserve tree structure
-        const breadcrumb = buildBreadcrumb(cat.id, categories)
-        for (const ancestor of breadcrumb) {
-          matchingIds.add(ancestor.id)
-        }
-      }
-    }
-    return matchingIds
-  }, [searchQuery, categories])
-
-  // Filtered root categories
-  const displayRoots = useMemo(() => {
-    if (!filteredCategoryIds) return rootCategories
-    return rootCategories.filter(c => filteredCategoryIds.has(c.id))
-  }, [rootCategories, filteredCategoryIds])
-
-  // Auto-expand all when searching
-  useEffect(() => {
-    if (filteredCategoryIds && filteredCategoryIds.size > 0) {
-      setExpandedIds(new Set(filteredCategoryIds))
-    }
-  }, [filteredCategoryIds])
-
-  // Auto-expand to show selectedId
-  useEffect(() => {
-    if (!selectedId) return
-    const breadcrumb = buildBreadcrumb(selectedId, categories)
-    if (breadcrumb.length > 1) {
-      setExpandedIds((prev) => {
-        const next = new Set(prev)
-        // expand all ancestors
-        for (let i = 0; i < breadcrumb.length - 1; i++) {
-          next.add(breadcrumb[i].id)
-        }
-        return next
-      })
-    }
-  }, [selectedId, categories])
-
-  const onToggleExpand = useCallback((id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }, [])
-
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   )
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const catId = event.active.data.current?.categoryId as string | undefined
-    setDragActiveId(catId ?? null)
-  }
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
 
-  const handleDragOver = (event: { over: { data: { current?: { categoryId?: string | null } } } | null }) => {
-    const overCatId = event.over?.data.current?.categoryId
-    setDragOverId(overCatId !== undefined ? (overCatId as string | null) : null)
-  }
+  // Compute enriched data for each category
+  const categoryData = useMemo(() => {
+    return categories.map(cat => {
+      const depth = getDepth(cat.id, categories)
+      const catArticles = articles.filter(a => a.categoryIds?.includes(cat.id))
+      const articleCount = catArticles.filter(a => a.wikiStatus === "article").length
+      const stubCount = catArticles.filter(a => a.wikiStatus === "stub").length
+      const childCount = categories.filter(c => c.parentIds.includes(cat.id)).length
+      return { cat, depth, articleCount, stubCount, childCount }
+    })
+  }, [categories, articles])
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const draggedCatId = event.active.data.current?.categoryId as
-      | string
-      | undefined
-    const overData = event.over?.data.current as
-      | { categoryId: string | null }
-      | undefined
+  // Sort helper
+  const sortItems = useCallback((items: CategoryDataItem[]) => {
+    const dir = sortDirection === "desc" ? -1 : 1
+    return [...items].sort((a, b) => {
+      if (ordering === "articles") return dir * (b.articleCount - a.articleCount)
+      if (ordering === "updated") return dir * (new Date(b.cat.updatedAt ?? b.cat.createdAt).getTime() - new Date(a.cat.updatedAt ?? a.cat.createdAt).getTime())
+      return dir * a.cat.name.localeCompare(b.cat.name)
+    })
+  }, [ordering, sortDirection])
 
-    setDragActiveId(null)
-    setDragOverId(null)
+  // Group into board columns
+  const boardColumns = useMemo((): { key: string; label: string; items: CategoryDataItem[]; isRoot?: boolean }[] => {
+    const effectiveGrouping = (!grouping || grouping === "none") ? "tier" : grouping
 
-    if (!draggedCatId || overData === undefined) return
-    const targetParentId = overData.categoryId
-
-    // Prevent dropping onto self
-    if (targetParentId === draggedCatId) return
-
-    // Prevent cycle: can't drop onto own descendants
-    if (targetParentId !== null) {
-      const descendants = getDescendantIds(draggedCatId, categories)
-      if (descendants.has(targetParentId)) return
+    if (effectiveGrouping === "tier") {
+      const tiers: Record<string, CategoryDataItem[]> = { "0": [], "1": [], "2+": [] }
+      for (const item of categoryData) {
+        const d = item.depth
+        const key = d >= 2 ? "2+" : String(d)
+        tiers[key].push(item)
+      }
+      return [
+        { key: "tier-0", label: "1st tier", items: sortItems(tiers["0"]), isRoot: true },
+        { key: "tier-1", label: "2nd tier", items: sortItems(tiers["1"]), isRoot: false },
+        { key: "tier-2+", label: "3rd+ tier", items: sortItems(tiers["2+"]), isRoot: false },
+      ]
     }
 
-    // Update parentIds
-    const newParentIds = targetParentId === null ? [] : [targetParentId]
-    updateWikiCategory(draggedCatId, { parentIds: newParentIds })
+    if (effectiveGrouping === "parent") {
+      const groups: Record<string, CategoryDataItem[]> = {}
+      for (const item of categoryData) {
+        const parentId = item.cat.parentIds?.[0]
+        const key = parentId ?? "_root"
+        if (!groups[key]) groups[key] = []
+        groups[key].push(item)
+      }
+      const columns: { key: string; label: string; items: CategoryDataItem[]; isRoot?: boolean }[] = []
+      // Root items first
+      if (groups["_root"]) {
+        columns.push({ key: "parent-_root", label: "Root", items: sortItems(groups["_root"]), isRoot: true })
+      }
+      // Each parent with children
+      for (const [parentId, items] of Object.entries(groups)) {
+        if (parentId === "_root") continue
+        const parent = categories.find(c => c.id === parentId)
+        columns.push({ key: `parent-${parentId}`, label: parent?.name ?? "Unknown", items: sortItems(items) })
+      }
+      return columns
+    }
 
-    // Auto-expand target
-    if (targetParentId) {
-      setExpandedIds((prev) => new Set([...prev, targetParentId]))
+    if (effectiveGrouping === "family") {
+      function getRootAncestor(cat: WikiCategory): WikiCategory {
+        let current = cat
+        const visited = new Set<string>()
+        while (current.parentIds?.[0] && !visited.has(current.id)) {
+          visited.add(current.id)
+          const parent = categories.find(c => c.id === current.parentIds![0])
+          if (!parent) break
+          current = parent
+        }
+        return current
+      }
+      const familyGroups: Record<string, { root: WikiCategory; items: CategoryDataItem[] }> = {}
+      for (const item of categoryData) {
+        const root = getRootAncestor(item.cat)
+        if (!familyGroups[root.id]) familyGroups[root.id] = { root, items: [] }
+        familyGroups[root.id].items.push(item)
+      }
+      return Object.values(familyGroups)
+        .sort((a, b) => a.root.name.localeCompare(b.root.name))
+        .map(({ root, items }) => ({
+          key: `family-${root.id}`,
+          label: root.name,
+          items: sortItems(items).sort((a, b) => a.depth - b.depth || a.cat.name.localeCompare(b.cat.name)),
+          isRoot: !root.parentIds?.[0],
+        }))
+    }
+
+    return []
+  }, [categoryData, grouping, ordering, sortDirection, showEmpty, categories, sortItems])
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveDragId(event.active.id as string)
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setActiveDragId(null)
+    const { active, over } = event
+    if (!over) return
+
+    const draggedId = active.id as string
+    const overId = over.id as string
+
+    // Prevent dropping on self
+    if (draggedId === overId || draggedId === overId.replace("card-", "")) return
+
+    // Check if dropping on a card (make child of that card)
+    if (overId.startsWith("card-")) {
+      const targetId = overId.replace("card-", "")
+      // Prevent circular reference
+      if (isDescendant(targetId, draggedId, categories)) return
+      // Update parentIds
+      updateWikiCategory(draggedId, { parentIds: [targetId] })
+      return
+    }
+
+    // Dropping on a tier column
+    if (overId.startsWith("tier-")) {
+      const tierKey = overId.replace("tier-", "")
+      if (tierKey === "0") {
+        // Make root
+        updateWikiCategory(draggedId, { parentIds: [] })
+      }
+      // For tier-1, tier-2+: keep existing parent (actual reparenting requires card-on-card drop)
+      return
+    }
+
+    // Dropping on a parent-grouped column
+    if (overId.startsWith("parent-")) {
+      const parentKey = overId.replace("parent-", "")
+      if (parentKey === "_root") {
+        updateWikiCategory(draggedId, { parentIds: [] })
+      } else {
+        // Prevent circular reference
+        if (isDescendant(parentKey, draggedId, categories)) return
+        updateWikiCategory(draggedId, { parentIds: [parentKey] })
+      }
+      return
+    }
+
+    // Dropping on a family column — set parent to the root of that family
+    if (overId.startsWith("family-")) {
+      const rootId = overId.replace("family-", "")
+      if (rootId === draggedId) return
+      if (isDescendant(rootId, draggedId, categories)) return
+      updateWikiCategory(draggedId, { parentIds: [rootId] })
+      return
     }
   }
 
-  const handleDragCancel = () => {
-    setDragActiveId(null)
-    setDragOverId(null)
-  }
-
-  // Sub-category creation state
-  const [creatingSubParentId, setCreatingSubParentId] = useState<string | null>(null)
-  const [subName, setSubName] = useState("")
-  const subInputRef = useRef<HTMLInputElement>(null)
-  const [emptyMenuPos, setEmptyMenuPos] = useState<{ x: number; y: number } | null>(null)
-
-  const handleCreateSub = useCallback((parentId: string) => {
-    setCreatingSubParentId(parentId)
-    setSubName("")
-    // Auto-expand the parent
-    setExpandedIds(prev => new Set([...prev, parentId]))
-    setTimeout(() => subInputRef.current?.focus(), 0)
-  }, [])
-
-  const handleSubConfirm = () => {
-    const trimmed = subName.trim()
-    if (trimmed && creatingSubParentId) {
-      createWikiCategory(trimmed, [creatingSubParentId])
-    }
-    setCreatingSubParentId(null)
-    setSubName("")
-  }
-
-  const handleSubKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleSubConfirm()
-    if (e.key === "Escape") {
-      setCreatingSubParentId(null)
-      setSubName("")
-    }
-  }
-
-  const handleStartCreate = () => {
-    setNewName("")
-    setCreating(true)
-    setTimeout(() => newInputRef.current?.focus(), 0)
-  }
-
-  const handleCreateConfirm = () => {
-    const trimmed = newName.trim()
-    if (trimmed) createWikiCategory(trimmed)
-    setCreating(false)
-    setNewName("")
-  }
-
-  const handleCreateKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleCreateConfirm()
-    if (e.key === "Escape") {
-      setCreating(false)
-      setNewName("")
-    }
-  }
-
-  const draggedCategory = dragActiveId
-    ? categories.find((c) => c.id === dragActiveId)
+  const draggedCategory = activeDragId
+    ? categories.find(c => c.id === activeDragId)
     : null
 
   return (
-    <div
-      className="flex h-full w-[280px] shrink-0 flex-col border-r border-white/[0.06] bg-white/[0.01]"
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      {/* header */}
-      <div className="flex items-center justify-between px-3 py-3 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          <TreeStructure
-            size={16}
-            weight="duotone"
-            className="text-muted-foreground/50"
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="flex gap-3 p-4 overflow-x-auto h-full">
+        {boardColumns.map(col => (
+          <CategoryBoardColumn
+            key={col.key}
+            columnKey={col.key}
+            label={col.label}
+            items={col.items}
+            onSelect={onSelect}
+            showDescription={showDescription}
+            activeDragId={activeDragId}
+            isRootColumn={col.isRoot}
           />
-          <span className="text-sm font-medium text-foreground/70">
-            Categories
-          </span>
-          {categories.length > 0 && (
-            <span className="text-sm text-muted-foreground/40">
-              ({categories.length})
-            </span>
-          )}
-        </div>
+        ))}
       </div>
-
-      {/* search */}
-      <div className="px-3 py-2 border-b border-white/[0.06]">
-        <div className="relative">
-          <MagnifyingGlass
-            className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/30"
-            size={14}
-            weight="regular"
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search categories…"
-            className="h-7 w-full rounded-md border border-white/[0.08] bg-white/[0.03] pl-7 pr-3 text-sm text-foreground placeholder:text-muted-foreground/30 focus:border-white/20 focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* recent categories */}
-      {!searchQuery && recentIds.length > 0 && (
-        <div className="px-3 py-2 border-b border-white/[0.06]">
-          <span className="text-xs font-medium text-muted-foreground/40 uppercase tracking-wider">Recent</span>
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {recentIds
-              .map(id => categories.find(c => c.id === id))
-              .filter(Boolean)
-              .map(cat => (
-                <button
-                  key={cat!.id}
-                  onClick={() => handleSelectWithRecent(cat!.id)}
-                  className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-                    selectedId === cat!.id
-                      ? "bg-accent/15 text-accent"
-                      : "bg-white/[0.04] text-foreground/60 hover:bg-white/[0.08] hover:text-foreground/80"
-                  }`}
-                >
-                  <FolderSimple size={12} weight="duotone" className="shrink-0" />
-                  <span className="truncate max-w-[120px]">{cat!.name}</span>
-                </button>
-              ))
-            }
-          </div>
-        </div>
-      )}
-
-      {/* tree / list */}
-      {effectiveViewMode === "tree" ? (
-        <div
-          className="relative flex-1 overflow-y-auto px-1.5 py-1.5"
-          onContextMenu={(e) => {
-            if ((e.target as HTMLElement).closest('[data-tree-node]')) return
-            e.preventDefault()
-            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-            setEmptyMenuPos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-          }}
-        >
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
-            {displayRoots.length === 0 && !creating ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
-                <FolderSimple
-                  size={28}
-                  weight="thin"
-                  className="text-muted-foreground/20"
-                />
-                <p className="text-xs text-muted-foreground/40">
-                  {searchQuery ? "No matching categories" : "No categories yet"}
-                </p>
-                {!searchQuery && (
-                  <button
-                    onClick={handleStartCreate}
-                    className="mt-1 flex items-center gap-1 rounded-md border border-white/[0.08] px-2 py-1 text-xs text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.04] transition-colors"
-                  >
-                    <Plus size={10} weight="bold" />
-                    Create
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-px">
-                {displayRoots.map((cat) => (
-                  <TreeNode
-                    key={cat.id}
-                    category={cat}
-                    categories={categories}
-                    depth={0}
-                    selectedId={selectedId}
-                    onSelect={handleSelectWithRecent}
-                    expandedIds={expandedIds}
-                    onToggleExpand={onToggleExpand}
-                    dragOverId={dragOverId}
-                    filteredIds={filteredCategoryIds}
-                    onCreateSub={handleCreateSub}
-                    creatingSubParentId={creatingSubParentId}
-                    subInputRef={subInputRef}
-                    subName={subName}
-                    onSubNameChange={setSubName}
-                    onSubConfirm={handleSubConfirm}
-                    onSubKeyDown={handleSubKeyDown}
-                  />
-                ))}
-              </div>
-            )}
-
-            <RootDropZone isDragActive={!!dragActiveId} />
-
-            <DragOverlay dropAnimation={null}>
-              {draggedCategory && (
-                <div className="flex items-center gap-1.5 rounded-md bg-[#1a1a1a] border border-white/[0.12] px-2 py-1.5 shadow-xl">
-                  <FolderSimple
-                    size={15}
-                    weight="duotone"
-                    className="text-accent/60"
-                  />
-                  <span className="text-xs text-foreground/80">
-                    {draggedCategory.name}
-                  </span>
-                </div>
-              )}
-            </DragOverlay>
-          </DndContext>
-
-          {/* inline create */}
-          {creating && (
-            <div className="mt-1 flex items-center gap-1.5 rounded-md border border-accent/30 bg-white/[0.02] px-2 py-1.5">
-              <FolderSimple
-                size={15}
-                weight="duotone"
-                className="shrink-0 text-muted-foreground/40"
-              />
-              <input
-                ref={newInputRef}
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onBlur={handleCreateConfirm}
-                onKeyDown={handleCreateKeyDown}
-                placeholder="Category name..."
-                className="flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 outline-none"
-              />
-            </div>
-          )}
-
-          {/* empty-space context menu */}
-          {emptyMenuPos && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setEmptyMenuPos(null)} />
-              <div
-                className="absolute z-20 w-44 rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1.5 shadow-xl"
-                style={{ left: emptyMenuPos.x, top: emptyMenuPos.y }}
-              >
-                <button
-                  onClick={() => {
-                    setEmptyMenuPos(null)
-                    handleStartCreate()
-                  }}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2 text-sm text-foreground/80 hover:bg-white/[0.06] hover:text-foreground transition-colors"
-                >
-                  <Plus size={14} weight="regular" />
-                  New category
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      ) : (
-        <div
-          className="relative flex-1 overflow-y-auto"
-          onContextMenu={(e) => {
-            if ((e.target as HTMLElement).closest('[data-tree-node]')) return
-            e.preventDefault()
-            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-            setEmptyMenuPos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-          }}
-        >
-          <CategoryListView
-            categories={categories}
-            articles={articles}
-            selectedId={selectedId}
-            onSelect={handleSelectWithRecent}
-            searchQuery={searchQuery}
-          />
-
-          {/* empty-space context menu */}
-          {emptyMenuPos && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setEmptyMenuPos(null)} />
-              <div
-                className="absolute z-20 w-44 rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1.5 shadow-xl"
-                style={{ left: emptyMenuPos.x, top: emptyMenuPos.y }}
-              >
-                <button
-                  onClick={() => {
-                    setEmptyMenuPos(null)
-                    handleStartCreate()
-                  }}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2 text-sm text-foreground/80 hover:bg-white/[0.06] hover:text-foreground transition-colors"
-                >
-                  <Plus size={14} weight="regular" />
-                  New category
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════
-   RIGHT PANEL: Detail View
-   ══════════════════════════════════════════════════════════ */
-
-interface DetailPanelProps {
-  categoryId: string | null
-  categories: WikiCategory[]
-  articles: WikiArticle[]
-  onSelect: (id: string) => void
-  onOpenArticle: (articleId: string) => void
-}
-
-function DetailPanel({
-  categoryId,
-  categories,
-  articles,
-  onSelect,
-  onOpenArticle,
-}: DetailPanelProps) {
-  const category = useMemo(
-    () =>
-      categoryId
-        ? categories.find((c) => c.id === categoryId) ?? null
-        : null,
-    [categoryId, categories]
-  )
-
-  const breadcrumb = useMemo(
-    () => (categoryId ? buildBreadcrumb(categoryId, categories) : []),
-    [categoryId, categories]
-  )
-
-  const children = useMemo(
-    () =>
-      categoryId
-        ? categories
-            .filter((c) => c.parentIds.includes(categoryId))
-            .sort((a, b) => a.name.localeCompare(b.name))
-        : [],
-    [categoryId, categories]
-  )
-
-  const categoryArticles = useMemo(
-    () =>
-      categoryId
-        ? articles.filter((a) => a.categoryIds?.includes(categoryId))
-        : [],
-    [categoryId, articles]
-  )
-
-  /* ── Overview when no category selected ── */
-  if (!category) {
-    const allCategoryData = categories
-      .map(cat => {
-        const getDepth = (catId: string, visited = new Set<string>()): number => {
-          if (visited.has(catId)) return 0
-          visited.add(catId)
-          const c = categories.find(x => x.id === catId)
-          if (!c || c.parentIds.length === 0) return 0
-          return 1 + getDepth(c.parentIds[0], visited)
-        }
-        const depth = getDepth(cat.id)
-        const catArticles = articles.filter(a => a.categoryIds?.includes(cat.id))
-        const articleCount = catArticles.filter(a => a.wikiStatus === "article").length
-        const stubCount = catArticles.filter(a => a.wikiStatus === "stub").length
-        const childCount = categories.filter(c => c.parentIds.includes(cat.id)).length
-        return { cat, depth, articleCount, stubCount, childCount }
-      })
-      .sort((a, b) => a.depth - b.depth || a.cat.name.localeCompare(b.cat.name))
-
-    const rootCount = allCategoryData.filter(d => d.depth === 0).length
-    const totalArticles = articles.length
-    const maxDepth = Math.max(0, ...allCategoryData.map(d => d.depth))
-
-    return (
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-6 py-6">
-          {/* Header */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight mb-1">
-              All Categories
-            </h2>
-            <p className="text-sm text-muted-foreground/60">
-              {categories.length} categories · {rootCount} root · depth {maxDepth} · {totalArticles} articles
-            </p>
-          </div>
-
-          {/* Category list */}
-          {allCategoryData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
-              <FolderOpen size={32} className="text-muted-foreground/20" weight="thin" />
-              <p className="text-sm text-muted-foreground/40">No categories yet</p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {allCategoryData.map(({ cat, depth, articleCount, stubCount, childCount }) => (
-                <button
-                  key={cat.id}
-                  onClick={() => onSelect(cat.id)}
-                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-secondary/30"
-                >
-                  <FolderSimple
-                    size={18}
-                    weight="duotone"
-                    className="shrink-0 text-muted-foreground/50"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground/80 truncate">{cat.name}</p>
-                    {cat.description && (
-                      <p className="text-xs text-muted-foreground/40 truncate mt-0.5">{cat.description}</p>
-                    )}
-                  </div>
-                  {depth > 0 && (
-                    <span className="shrink-0 rounded bg-white/[0.06] px-1.5 py-0.5 text-xs text-muted-foreground/40">
-                      depth {depth}
-                    </span>
-                  )}
-                  {childCount > 0 && (
-                    <span className="shrink-0 text-xs text-muted-foreground/30">
-                      {childCount} sub
-                    </span>
-                  )}
-                  <div className="shrink-0 flex items-center gap-2 text-xs tabular-nums">
-                    {articleCount > 0 && (
-                      <span className="text-wiki-complete/70">{articleCount} article{articleCount !== 1 ? "s" : ""}</span>
-                    )}
-                    {stubCount > 0 && (
-                      <span className="text-chart-3/70">{stubCount} stub{stubCount !== 1 ? "s" : ""}</span>
-                    )}
-                  </div>
-                  <CaretRight size={14} className="shrink-0 text-muted-foreground/20" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  const parentPath = breadcrumb.slice(0, -1)
-
-  return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="px-6 py-6">
-        {/* ── Breadcrumb ── */}
-        {parentPath.length > 0 && (
-          <nav className="mb-4 flex items-center gap-1 text-xs text-muted-foreground/60">
-            {parentPath.map((crumb, i) => (
-              <span key={crumb.id} className="flex items-center gap-1">
-                {i > 0 && <CaretRight size={10} className="shrink-0" />}
-                <button
-                  onClick={() => onSelect(crumb.id)}
-                  className="hover:text-foreground transition-colors truncate max-w-[120px]"
-                >
-                  {crumb.name}
-                </button>
-              </span>
-            ))}
-            <CaretRight size={10} className="shrink-0" />
-            <span className="text-foreground/70 font-medium truncate max-w-[160px]">
-              {category.name}
-            </span>
-          </nav>
-        )}
-
-        {/* ── Header ── */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2.5 mb-3">
-            <FolderOpen
-              size={20}
-              className="shrink-0 text-accent/70"
-              weight="duotone"
-            />
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">
-              {category.name}
-            </h2>
-          </div>
-          <DescriptionEditor
-            categoryId={category.id}
-            description={category.description}
-          />
-        </div>
-
-        {/* ── Children categories ── */}
-        <div className="mb-6">
-          <SectionDivider
-            label={`Subcategories ${
-              children.length > 0 ? `(${children.length})` : ""
-            }`}
-          />
-          {children.length === 0 ? (
-            <EmptyState message="Subcategories 없음" />
-          ) : (
-            <ul className="mt-2 space-y-0.5">
-              {children.map((child) => (
-                <li key={child.id}>
-                  <button
-                    onClick={() => onSelect(child.id)}
-                    className="group flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left transition-colors hover:bg-secondary/50"
-                  >
-                    <Folder
-                      size={14}
-                      className="shrink-0 text-muted-foreground/50 group-hover:text-accent/70 transition-colors"
-                      weight="duotone"
-                    />
-                    <span className="flex-1 min-w-0 truncate text-sm text-foreground/80 group-hover:text-foreground transition-colors">
-                      {child.name}
-                    </span>
-                    {child.description && (
-                      <span className="shrink-0 max-w-[200px] truncate text-2xs text-muted-foreground/50">
-                        {child.description}
-                      </span>
-                    )}
-                    <CaretRight
-                      size={12}
-                      className="shrink-0 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors"
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* ── Articles ── */}
-        <div>
-          <SectionDivider
-            label={`Articles ${
-              categoryArticles.length > 0
-                ? `(${categoryArticles.length})`
-                : ""
-            }`}
-          />
-          {categoryArticles.length === 0 ? (
-            <EmptyState message="No articles" />
-          ) : (
-            <ul className="mt-2 space-y-0.5">
-              {categoryArticles.map((article) => (
-                <li key={article.id}>
-                  <button
-                    onClick={() => onOpenArticle(article.id)}
-                    className="group flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left transition-colors hover:bg-secondary/50"
-                  >
-                    <FileText
-                      size={14}
-                      className="shrink-0 text-muted-foreground/50 group-hover:text-accent/70 transition-colors"
-                      weight="duotone"
-                    />
-                    <span className="flex-1 min-w-0 truncate text-sm text-foreground/80 group-hover:text-foreground transition-colors">
-                      {article.title || "Untitled"}
-                    </span>
-                    <WikiStatusBadge status={article.wikiStatus} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
+      <DragOverlay dropAnimation={null}>
+        {draggedCategory ? <CategoryBoardCardOverlay cat={draggedCategory} /> : null}
+      </DragOverlay>
+    </DndContext>
   )
 }
 
@@ -1305,40 +477,49 @@ function CategoryFullListView({
   onSelect,
   onOpenArticle,
   ordering,
+  sortDirection = "asc",
   tierFilter,
   statusFilter,
   showDescription = true,
   showEmpty = true,
   grouping,
+  displayProps,
+  onOrderingChange,
+  onSortDirectionChange,
 }: {
   categories: WikiCategory[]
   articles: WikiArticle[]
   selectedId: string | null
-  onSelect: (id: string) => void
+  onSelect: (id: string, e?: React.MouseEvent) => void
   onOpenArticle: (articleId: string) => void
-  ordering?: "name" | "articles" | "updated"
+  ordering?: CategoryOrdering
+  sortDirection?: "asc" | "desc"
   tierFilter?: string | null
   statusFilter?: string | null
   showDescription?: boolean
   showEmpty?: boolean
   grouping?: "none" | "tier" | "parent" | "family"
+  displayProps?: string[]
+  onOrderingChange?: (ordering: CategoryOrdering) => void
+  onSortDirectionChange?: (dir: "asc" | "desc") => void
 }) {
+  const showCol = (key: string) => !displayProps || displayProps.includes(key)
   const catMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories])
 
-  const getDepth = useCallback(
+  const getDepthLocal = useCallback(
     (catId: string, visited = new Set<string>()): number => {
       if (visited.has(catId)) return 0
       visited.add(catId)
       const cat = catMap.get(catId)
       if (!cat || cat.parentIds.length === 0) return 0
-      return 1 + getDepth(cat.parentIds[0], visited)
+      return 1 + getDepthLocal(cat.parentIds[0], visited)
     },
     [catMap]
   )
 
   const categoryData = useMemo(() => {
     const data = categories.map((cat) => {
-      const depth = getDepth(cat.id)
+      const depth = getDepthLocal(cat.id)
       const catArticles = articles.filter((a) =>
         a.categoryIds?.includes(cat.id)
       )
@@ -1371,20 +552,29 @@ function CategoryFullListView({
 
     // Apply ordering
     const ord = ordering ?? "name"
+    const dir = sortDirection === "desc" ? -1 : 1
     if (ord === "name") {
-      filtered.sort((a, b) => a.cat.name.localeCompare(b.cat.name))
+      filtered.sort((a, b) => dir * a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "articles") {
-      filtered.sort((a, b) => b.articleCount - a.articleCount || a.cat.name.localeCompare(b.cat.name))
+      filtered.sort((a, b) => dir * (b.articleCount - a.articleCount) || a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "updated") {
       filtered.sort((a, b) => {
         const aTime = a.cat.updatedAt ? new Date(a.cat.updatedAt).getTime() : 0
         const bTime = (b.cat as any).updatedAt ? new Date((b.cat as any).updatedAt).getTime() : 0
-        return bTime - aTime || a.cat.name.localeCompare(b.cat.name)
+        return dir * (bTime - aTime) || a.cat.name.localeCompare(b.cat.name)
       })
+    } else if (ord === "parent") {
+      filtered.sort((a, b) => dir * (a.parentName ?? "").localeCompare(b.parentName ?? "") || a.cat.name.localeCompare(b.cat.name))
+    } else if (ord === "tier") {
+      filtered.sort((a, b) => dir * (a.depth - b.depth) || a.cat.name.localeCompare(b.cat.name))
+    } else if (ord === "stubs") {
+      filtered.sort((a, b) => dir * (b.stubCount - a.stubCount) || a.cat.name.localeCompare(b.cat.name))
+    } else if (ord === "sub") {
+      filtered.sort((a, b) => dir * (b.childCount - a.childCount) || a.cat.name.localeCompare(b.cat.name))
     }
 
     return filtered
-  }, [categories, articles, getDepth, catMap, tierFilter, statusFilter, ordering, showEmpty])
+  }, [categories, articles, getDepthLocal, catMap, tierFilter, statusFilter, ordering, sortDirection, showEmpty])
 
   const grouped = useMemo(() => {
     if (!grouping || grouping === "none") return [{ key: "_all", label: "", items: categoryData }]
@@ -1440,7 +630,7 @@ function CategoryFullListView({
         if (!familyGroups[root.id]) {
           familyGroups[root.id] = { root, members: [] }
         }
-        familyGroups[root.id].members.push({ item, depth: getDepth(item.cat.id) })
+        familyGroups[root.id].members.push({ item, depth: getDepthLocal(item.cat.id) })
       }
 
       return Object.values(familyGroups)
@@ -1458,7 +648,7 @@ function CategoryFullListView({
     }
 
     return [{ key: "_all", label: "", items: categoryData }]
-  }, [categoryData, grouping, categories, getDepth])
+  }, [categoryData, grouping, categories, getDepthLocal])
 
   const [expandedCatId, setExpandedCatId] = useState<string | null>(null)
 
@@ -1475,31 +665,103 @@ function CategoryFullListView({
     return "bg-muted-foreground/10 text-muted-foreground"
   }
 
+  function handleSortClick(col: CategoryOrdering) {
+    if (ordering === col) {
+      onSortDirectionChange?.(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      onOrderingChange?.(col)
+      onSortDirectionChange?.("asc")
+    }
+  }
+
+  function SortIcon({ col }: { col: CategoryOrdering }) {
+    if (ordering !== col) {
+      return <ArrowsDownUp size={10} weight="regular" className="opacity-0 group-hover/th:opacity-50 transition-opacity" />
+    }
+    return sortDirection === "asc"
+      ? <SortAscending size={10} weight="regular" className="text-accent" />
+      : <SortDescending size={10} weight="regular" className="text-accent" />
+  }
+
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Header row */}
       <div className="sticky top-0 z-10 flex items-center border-b border-border/50 bg-background px-5 py-2.5">
-        <span className="flex-1 text-[13px] font-medium text-muted-foreground">
-          Name
-        </span>
-        <span className="w-[140px] text-[13px] font-medium text-muted-foreground">
-          Parent
-        </span>
-        <span className="w-[60px] text-center text-[13px] font-medium text-muted-foreground">
-          Tier
-        </span>
-        <span className="w-[72px] text-right text-[13px] font-medium text-muted-foreground">
-          Articles
-        </span>
-        <span className="w-[72px] text-right text-[13px] font-medium text-muted-foreground">
-          Stubs
-        </span>
-        <span className="w-[56px] text-right text-[13px] font-medium text-muted-foreground">
-          Sub
-        </span>
-        <span className="w-[80px] text-right text-[13px] font-medium text-muted-foreground">
-          Updated
-        </span>
+        <div className="flex-1">
+          <button
+            onClick={() => handleSortClick("name")}
+            className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Name
+            <SortIcon col="name" />
+          </button>
+        </div>
+        {showCol("parent") && (
+          <div className="w-[140px]">
+            <button
+              onClick={() => handleSortClick("parent")}
+              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Parent
+              <SortIcon col="parent" />
+            </button>
+          </div>
+        )}
+        {showCol("tier") && (
+          <div className="w-[60px] flex justify-center">
+            <button
+              onClick={() => handleSortClick("tier")}
+              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Tier
+              <SortIcon col="tier" />
+            </button>
+          </div>
+        )}
+        {showCol("articles") && (
+          <div className="w-[72px] flex justify-end">
+            <button
+              onClick={() => handleSortClick("articles")}
+              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Articles
+              <SortIcon col="articles" />
+            </button>
+          </div>
+        )}
+        {showCol("stubs") && (
+          <div className="w-[72px] flex justify-end">
+            <button
+              onClick={() => handleSortClick("stubs")}
+              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Stubs
+              <SortIcon col="stubs" />
+            </button>
+          </div>
+        )}
+        {showCol("sub") && (
+          <div className="w-[56px] flex justify-end">
+            <button
+              onClick={() => handleSortClick("sub")}
+              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Sub
+              <SortIcon col="sub" />
+            </button>
+          </div>
+        )}
+        {showCol("updated") && (
+          <div className="w-[80px] flex justify-end">
+            <button
+              onClick={() => handleSortClick("updated")}
+              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Updated
+              <SortIcon col="updated" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Category rows */}
@@ -1517,8 +779,9 @@ function CategoryFullListView({
               return (
               <div key={cat.id} style={grouping === "family" ? { paddingLeft: `${familyDepth * 24}px` } : undefined}>
                 <button
-                  onClick={() => {
-                    onSelect(cat.id)
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSelect(cat.id, e)
                     setExpandedCatId((prev) =>
                       prev === cat.id ? null : cat.id
                     )
@@ -1548,26 +811,38 @@ function CategoryFullListView({
                       )}
                     </div>
                   </div>
-                  <span className="w-[140px] text-note truncate text-muted-foreground/50">
-                    {parentName ?? "\u2014"}
-                  </span>
-                  <span className="w-[60px] flex justify-center">
-                    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-medium ${tierClass(depth)}`}>
-                      {tierLabel(depth)}
+                  {showCol("parent") && (
+                    <span className="w-[140px] text-note truncate text-muted-foreground/50">
+                      {parentName ?? "\u2014"}
                     </span>
-                  </span>
-                  <span className="w-[72px] text-right text-note tabular-nums text-wiki-complete/70">
-                    {articleCount > 0 ? articleCount : "\u2014"}
-                  </span>
-                  <span className="w-[72px] text-right text-note tabular-nums text-chart-3/70">
-                    {stubCount > 0 ? stubCount : "\u2014"}
-                  </span>
-                  <span className="w-[56px] text-right text-note tabular-nums text-muted-foreground/40">
-                    {childCount > 0 ? childCount : "\u2014"}
-                  </span>
-                  <span className="w-[80px] text-right text-note tabular-nums text-muted-foreground/40">
-                    {cat.updatedAt ? shortRelative(cat.updatedAt) : "\u2014"}
-                  </span>
+                  )}
+                  {showCol("tier") && (
+                    <span className="w-[60px] flex justify-center">
+                      <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-medium ${tierClass(depth)}`}>
+                        {tierLabel(depth)}
+                      </span>
+                    </span>
+                  )}
+                  {showCol("articles") && (
+                    <span className="w-[72px] text-right text-note tabular-nums text-wiki-complete/70">
+                      {articleCount > 0 ? articleCount : "\u2014"}
+                    </span>
+                  )}
+                  {showCol("stubs") && (
+                    <span className="w-[72px] text-right text-note tabular-nums text-chart-3/70">
+                      {stubCount > 0 ? stubCount : "\u2014"}
+                    </span>
+                  )}
+                  {showCol("sub") && (
+                    <span className="w-[56px] text-right text-note tabular-nums text-muted-foreground/40">
+                      {childCount > 0 ? childCount : "\u2014"}
+                    </span>
+                  )}
+                  {showCol("updated") && (
+                    <span className="w-[80px] text-right text-note tabular-nums text-muted-foreground/40">
+                      {cat.updatedAt ? shortRelative(cat.updatedAt) : "\u2014"}
+                    </span>
+                  )}
                 </button>
 
                 {/* Expanded: show articles in this category */}
@@ -1608,7 +883,250 @@ function CategoryFullListView({
 }
 
 /* ══════════════════════════════════════════════════════════
-   MAIN: 2-Panel Layout / Full List
+   CATEGORY SIDE PANEL
+   ══════════════════════════════════════════════════════════ */
+
+function CategorySidePanel({
+  categories,
+  articles,
+  selectedId,
+  selectedIds,
+  onSelect,
+  onDeleteSelected,
+  onSelectAll,
+}: {
+  categories: WikiCategory[]
+  articles: WikiArticle[]
+  selectedId: string | null
+  selectedIds: Set<string>
+  onSelect: (id: string) => void
+  onDeleteSelected: () => void
+  onSelectAll?: () => void
+}) {
+  const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
+
+  // Multi-selection state
+  if (selectedIds.size > 1) {
+    return (
+      <div className="p-4">
+        <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
+          <FolderSimple className="text-accent" size={16} weight="regular" />
+          Selected
+        </h3>
+
+        <div className="space-y-4">
+          {/* Stats card */}
+          <div className="rounded-md bg-background border border-border p-3">
+            <div className="text-xl font-bold text-foreground">{selectedIds.size}</div>
+            <div className="text-xs text-muted-foreground">categories selected</div>
+          </div>
+
+          {/* Batch Actions */}
+          <div>
+            <h4 className="text-xs font-medium text-muted-foreground mb-2">Batch Actions</h4>
+            <div className="space-y-1">
+              <button
+                onClick={onDeleteSelected}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-400/10"
+              >
+                <Trash size={16} weight="regular" />
+                Delete selected
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Single selection state
+  if (selectedId) {
+    const category = categories.find(c => c.id === selectedId)
+    if (!category) return null
+
+    const depth = getDepth(category.id, categories)
+    const tierLabel = depth === 0 ? "1st tier" : depth === 1 ? "2nd tier" : depth === 2 ? "3rd tier" : `${depth + 1}th tier`
+    const breadcrumbPath = buildBreadcrumb(category.id, categories).map(c => c.name)
+    const subcategories = categories.filter(c => c.parentIds.includes(category.id))
+    const catArticles = articles.filter(a => a.categoryIds?.includes(category.id))
+
+    return (
+      <div className="p-4">
+        <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
+          <FolderSimple className="text-accent" size={16} weight="regular" />
+          {category.name}
+        </h3>
+
+        <div className="space-y-4">
+          {/* Breadcrumb + description */}
+          {breadcrumbPath.length > 1 && (
+            <div className="text-xs text-muted-foreground/50">
+              {breadcrumbPath.join(" > ")}
+            </div>
+          )}
+
+          {/* Description (editable) */}
+          <input
+            type="text"
+            value={category.description ?? ""}
+            placeholder="Add description..."
+            onChange={(e) => updateWikiCategory(category.id, { description: e.target.value })}
+            className="w-full bg-transparent text-sm text-muted-foreground placeholder:text-muted-foreground/30 border-none focus:outline-none"
+          />
+
+          {/* Meta info card */}
+          <div className="rounded-md bg-background border border-border p-3 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground/70">Tier</span>
+              <span className="text-foreground font-medium">{tierLabel}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground/70">Created</span>
+              <span className="text-foreground tabular-nums">{shortRelative(category.createdAt)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground/70">Updated</span>
+              <span className="text-foreground tabular-nums">{shortRelative(category.updatedAt ?? category.createdAt)}</span>
+            </div>
+          </div>
+
+          {/* Content stats */}
+          <div>
+            <h4 className="text-xs font-medium text-muted-foreground mb-2">Content</h4>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+                <span className="text-foreground/80">Articles</span>
+                <span className="text-green-400 tabular-nums font-medium">{catArticles.filter(a => a.wikiStatus === "article").length || "—"}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+                <span className="text-foreground/80">Stubs</span>
+                <span className="text-orange-400 tabular-nums font-medium">{catArticles.filter(a => a.wikiStatus === "stub").length || "—"}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+                <span className="text-foreground/80">Subcategories</span>
+                <span className="text-muted-foreground/70 tabular-nums font-medium">{subcategories.length || "—"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Subcategories list */}
+          {subcategories.length > 0 && (
+            <div>
+              <h4 className="text-xs font-medium text-muted-foreground mb-2">Subcategories</h4>
+              <div className="space-y-1">
+                {subcategories.map(sub => (
+                  <button
+                    key={sub.id}
+                    onClick={() => onSelect(sub.id)}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+                  >
+                    <FolderSimple size={12} weight="regular" className="text-muted-foreground/50 shrink-0" />
+                    <span className="truncate">{sub.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Articles list */}
+          {catArticles.length > 0 && (
+            <div>
+              <h4 className="text-xs font-medium text-muted-foreground mb-2">Articles</h4>
+              <div className="space-y-1">
+                {catArticles.map(art => (
+                  <div key={art.id} className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-foreground/80">
+                    <WikiStatusBadge status={art.wikiStatus} />
+                    <span className="truncate">{art.title || "Untitled"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // No selection — All Overview
+  const totalCategories = categories.length
+  const tier1Count = categories.filter(c => getDepth(c.id, categories) === 0).length
+  const tier2Count = categories.filter(c => getDepth(c.id, categories) === 1).length
+  const tier3Count = categories.filter(c => getDepth(c.id, categories) >= 2).length
+  const totalArticles = articles.filter(a => a.wikiStatus === "article").length
+  const totalStubs = articles.filter(a => a.wikiStatus === "stub").length
+  const categoriesWithArticles = new Set(articles.flatMap(a => a.categoryIds ?? []))
+  const emptyCount = categories.filter(c => !categoriesWithArticles.has(c.id)).length
+
+  return (
+    <div className="p-4">
+      <h3 className="text-ui font-semibold text-foreground flex items-center gap-2 mb-4">
+        <FolderSimple className="text-accent" size={16} weight="regular" />
+        All Overview
+      </h3>
+
+      <div className="space-y-4">
+        {/* Stats card */}
+        <div className="rounded-md bg-background border border-border p-3">
+          <div className="text-xl font-bold text-foreground">{totalCategories}</div>
+          <div className="text-xs text-muted-foreground">total categories</div>
+        </div>
+
+        {/* Tier distribution */}
+        <div>
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">Tier Distribution</h4>
+          <div className="space-y-1">
+            {[
+              { label: "1st tier", count: tier1Count },
+              { label: "2nd tier", count: tier2Count },
+              { label: "3rd tier", count: tier3Count },
+            ].map(({ label, count }) => (
+              <div key={label} className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+                <span className="text-foreground/80">{label}</span>
+                <span className="text-foreground tabular-nums font-medium">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Content stats */}
+        <div>
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">Content</h4>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+              <span className="text-foreground/80">Articles</span>
+              <span className="text-green-400 tabular-nums font-medium">{totalArticles}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+              <span className="text-foreground/80">Stubs</span>
+              <span className="text-orange-400 tabular-nums font-medium">{totalStubs}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+              <span className="text-foreground/80">Empty categories</span>
+              <span className="text-muted-foreground/50 tabular-nums font-medium">{emptyCount}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div>
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">Quick Actions</h4>
+          <div className="space-y-1">
+            <button
+              onClick={onSelectAll}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              <CursorClick size={16} weight="regular" />
+              Select All
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAIN: Full List / Board View
    ══════════════════════════════════════════════════════════ */
 
 export function WikiCategoryPage({
@@ -1622,13 +1140,19 @@ export function WikiCategoryPage({
   categoryShowDescription,
   categoryShowEmpty,
   categoryGrouping,
+  categoryDisplayProps,
+  categorySortDirection,
+  onOrderingChange,
+  onSortDirectionChange,
 }: WikiCategoryPageProps) {
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const deleteWikiCategory = usePlotStore((s) => s.deleteWikiCategory)
 
   const [selectedCatId, setSelectedCatId] = useState<string | null>(
     categoryId
   )
+  const [selectedCatIds, setSelectedCatIds] = useState<Set<string>>(new Set())
 
   // Sync selectedCatId when categoryId prop changes
   useEffect(() => {
@@ -1638,46 +1162,95 @@ export function WikiCategoryPage({
   }, [categoryId])
 
   const handleSelect = useCallback(
-    (id: string) => {
+    (id: string, e?: React.MouseEvent) => {
+      if (e && (e.ctrlKey || e.metaKey)) {
+        // Multi-select toggle
+        setSelectedCatIds(prev => {
+          const next = new Set(prev)
+          if (next.has(id)) {
+            next.delete(id)
+          } else {
+            next.add(id)
+          }
+          return next
+        })
+        return
+      }
+      // Single select — clear multi
+      setSelectedCatIds(new Set())
       setSelectedCatId(id)
       onNavigateCategory(id)
     },
     [onNavigateCategory]
   )
 
+  const handleDeleteSelected = useCallback(() => {
+    for (const id of selectedCatIds) {
+      deleteWikiCategory(id)
+    }
+    setSelectedCatIds(new Set())
+    toast.success(`Deleted ${selectedCatIds.size} categories`)
+  }, [selectedCatIds, deleteWikiCategory])
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedCatIds(new Set(wikiCategories.map((c) => c.id)))
+  }, [wikiCategories])
+
+  // Clear selection when clicking background
+  const handleBackgroundClick = useCallback(() => {
+    setSelectedCatId(null)
+    setSelectedCatIds(new Set())
+  }, [])
+
+  // Show sidebar: always (overview when nothing selected, detail/batch when selected)
+  const showSidePanel = true
+
   return (
     <div className="flex h-full flex-1 overflow-hidden">
-      {categoryViewMode === "list" ? (
-        <CategoryFullListView
-          categories={wikiCategories}
-          articles={wikiArticles}
-          selectedId={selectedCatId}
-          onSelect={handleSelect}
-          onOpenArticle={onOpenArticle}
-          ordering={categoryOrdering}
-          tierFilter={categoryTierFilter}
-          statusFilter={categoryStatusFilter}
-          showDescription={categoryShowDescription}
-          showEmpty={categoryShowEmpty}
-          grouping={categoryGrouping}
-        />
-      ) : (
-        <>
-          <TreePanel
+      <div className="flex-1 overflow-auto" onClick={handleBackgroundClick}>
+        {categoryViewMode === "board" ? (
+          <CategoryBoardView
+            categories={wikiCategories}
+            articles={wikiArticles}
+            ordering={categoryOrdering ?? "name"}
+            sortDirection={categorySortDirection ?? "asc"}
+            onSelect={handleSelect}
+            showDescription={categoryShowDescription}
+            showEmpty={categoryShowEmpty}
+            grouping={categoryGrouping}
+          />
+        ) : (
+          <CategoryFullListView
             categories={wikiCategories}
             articles={wikiArticles}
             selectedId={selectedCatId}
             onSelect={handleSelect}
-            externalViewMode={categoryViewMode}
+            onOpenArticle={onOpenArticle}
+            ordering={categoryOrdering}
+            sortDirection={categorySortDirection ?? "asc"}
+            tierFilter={categoryTierFilter}
+            statusFilter={categoryStatusFilter}
+            showDescription={categoryShowDescription}
+            showEmpty={categoryShowEmpty}
+            grouping={categoryGrouping}
+            displayProps={categoryDisplayProps}
+            onOrderingChange={onOrderingChange}
+            onSortDirectionChange={onSortDirectionChange}
           />
-          <DetailPanel
-            categoryId={selectedCatId}
+        )}
+      </div>
+      {showSidePanel && (
+        <div className="w-[280px] shrink-0 border-l border-border/50 overflow-y-auto">
+          <CategorySidePanel
             categories={wikiCategories}
             articles={wikiArticles}
+            selectedId={selectedCatId}
+            selectedIds={selectedCatIds}
             onSelect={handleSelect}
-            onOpenArticle={onOpenArticle}
+            onDeleteSelected={handleDeleteSelected}
+            onSelectAll={handleSelectAll}
           />
-        </>
+        </div>
       )}
     </div>
   )

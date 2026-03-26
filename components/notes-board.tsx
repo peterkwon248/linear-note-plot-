@@ -270,6 +270,7 @@ interface BoardCardProps {
   showCardPreview?: boolean
   groupBy: GroupBy
   onClick: () => void
+  onDoubleClick?: () => void
   onSelect?: (noteId: string, e: React.MouseEvent) => void
   onStatus: (s: NoteStatus) => void
   onPriority: (p: NotePriority) => void
@@ -292,6 +293,7 @@ function BoardCardInner({
   showCardPreview,
   groupBy,
   onClick,
+  onDoubleClick,
   onSelect,
   onKeep,
   onSnooze,
@@ -324,6 +326,11 @@ function BoardCardInner({
         } else {
           onClick()
         }
+      }}
+      onDoubleClick={(e) => {
+        if (isDragOverlay) return
+        e.stopPropagation()
+        onDoubleClick?.()
       }}
       className={`group relative cursor-pointer rounded-md border bg-background p-2.5 transition-all hover:border-muted-foreground/30 ${
         isSelected ? "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
@@ -490,7 +497,8 @@ const BoardCard = memo(BoardCardInner, (prev, next) =>
   prev.showCardPreview === next.showCardPreview &&
   prev.isActive === next.isActive &&
   prev.isSelected === next.isSelected &&
-  prev.groupBy === next.groupBy
+  prev.groupBy === next.groupBy &&
+  prev.onDoubleClick === next.onDoubleClick
 )
 
 /* ── Field update helper for drag & drop ─────────────── */
@@ -866,7 +874,10 @@ export function NotesBoard({
                     groupBy={viewState.groupBy}
                     onClick={() => {
                       setSelectedIds(new Set())
-                      onRowClick ? onRowClick(note.id) : openNote(note.id)
+                      onRowClick?.(note.id)
+                    }}
+                    onDoubleClick={() => {
+                      openNote(note.id)
                     }}
                     onSelect={handleCardSelect}
                     onStatus={(s) => updateNote(note.id, { status: s })}
