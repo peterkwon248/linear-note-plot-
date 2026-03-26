@@ -493,20 +493,23 @@ export const SEED_WIKI_CATEGORIES: WikiCategory[] = [
     parentIds: [],
     description: "Methods and systems for organizing knowledge",
     createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
   },
   {
     id: "wcat-seed-2",
     name: "Zettelkasten",
-    parentIds: ["wcat-seed-1"],  // child of Knowledge Management
+    parentIds: ["wcat-seed-1"],
     description: "The Zettelkasten slip-box methodology",
     createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
   },
   {
     id: "wcat-seed-3",
     name: "Note Types",
-    parentIds: ["wcat-seed-1", "wcat-seed-2"],  // DAG: child of both
+    parentIds: ["wcat-seed-1", "wcat-seed-2"],
     description: "Different types of notes in knowledge systems",
     createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
   },
 ]
 

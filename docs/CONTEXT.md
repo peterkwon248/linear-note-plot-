@@ -79,11 +79,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-54. Wiki Merge/Split 시스템 — Preview 다이얼로그, Unmerge, 섹션 컨텍스트 메뉴, 드래그 Split
-55. Drag Split UX 폴리시 + Merge/Split 풀페이지 — 플로팅 드롭존, DragOverlay, 기존 아티클 드롭 타겟
 56. Wiki 카테고리 + Merge/Split 풀페이지 개선 + 블록 렌더러 강화
 57. Wiki Merge UX 수정 + 카테고리 CRUD 사이드바 추가
 58. Wiki 카테고리 시스템 완성 — 2-panel 트리 에디터, Encyclopedia 레이아웃, URL 블록, Merge/Split 개선
+59. 타이포그래피 밸런스 개선 — 위키/캘린더/스플릿 에디터 전반 폰트 크기 조정
+60. 위키 카테고리 UX 대폭 개선 — 검색 필터, RECENT 1개, 우클릭 컨텍스트 메뉴, List 뷰 (Tree/List 전환), 전용 필터(Tier/Status) + 디스플레이(Grouping/Ordering/토글/Display Properties), 칼럼(Name/Parent/Tier/Articles/Stubs/Sub/Updated), Family/Tier/Parent 그룹핑, updatedAt 필드 추가
 
 ## Three Axes — Core Design Philosophy
 
@@ -110,7 +110,10 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **View = 사이드바 섹션**: Linear의 View(상단 탭 프리셋)를 사이드바 Views 섹션으로 구현. 한눈에 전체 구조 파악 가능, 액티비티별 독립
 - **+ 버튼 = ViewHeader 우측**: top-utility-bar에서 제거, ViewHeader의 필터 아이콘 옆 `+` 아이콘으로 통일
 - **위키 카테고리 = 계층적 트리**: 태그/라벨은 flat(동등), 카테고리만 parentId 기반 트리. 위키백과식 지식 분류 체계
-- **카테고리 페이지 = 사이드바 최상위**: Overview/Merge/Split과 동급. 전체 트리 + 상세 페이지
+- **카테고리 페이지 = 사이드바 최상위**: Overview/Merge/Split과 동급. Tree + List 뷰 전환
+- **카테고리 List/Board 2모드 결정**: Tree 모드 제거 예정, List + Board(Tier별 칼럼, 드래그로 계층 이동)으로 전환
+- **카테고리 Tier 네이밍**: depth 0=1st, depth 1=2nd, depth 2=3rd (직관적 표기)
+- **Family 그룹핑**: 같은 루트 조상 아래 전체를 묶고 들여쓰기로 depth 표현 (리스트+트리 하이브리드)
 - **캘린더 플로팅 액션바 삭제**: 불필요하다고 판단 (2026-03-25)
 - **TopUtilityBar 제거**: Back/Forward/Search를 사이드바 헤더로 이동. 44px 공간 확보 (2026-03-26)
 - **사이드바 닫기/열기 = Plane식**: 닫으면 완전 숨김. ActivityBar 상단 열기 버튼. space 클릭으로 열리지 않음 (2026-03-26)
@@ -120,8 +123,11 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## TODO: Future Work (우선순위 순)
 
+### P0 — 진행 중
+- **카테고리 Board 뷰 구현** — Tier별 칼럼, 카드 드래그로 계층 이동. Tree 모드 제거 후 List+Board 2모드
+- **카테고리 리스트 모드 클릭 시 상세 패널** — Details 사이드 패널에 카테고리 정보 표시
+
 ### P1 — 다음
-- **타이포그래피 밸런스 전체 개선** — 컬럼 헤더/그룹 헤더/아이템 간 폰트 사이즈 균형 (Linear 참고)
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식, infobox 에디터 툴바에 통합
 - **커맨드 팔레트 확장** — 컨텍스트 반응형 20+개 커맨드 (Note Actions, View Actions, Navigation, Creation)
 - **풀페이지 검색 분리** — ⌘K = 풀페이지 노트 검색, ⌘/ = 커맨드 팔레트 (액션 전용)

@@ -91,6 +91,15 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Grouping/Sub-grouping 상호 배제 + 자동 리셋
   - Board 뷰에서 미지원 Rows/Group order 행 제거
   - Store migration v54→v58
+- **PR #102**: 타이포그래피 밸런스 + 위키 카테고리 UX 대폭 개선
+  - 위키/캘린더/스플릿 에디터 폰트 크기 조정
+  - 카테고리 검색 필터, RECENT 최근 1개, 우클릭 컨텍스트 메뉴(Add subcategory/Rename/Delete)
+  - 빈 공간 우클릭 "New category"
+  - List 뷰 (Tree/List 전환), 전용 필터(Tier/Status), 디스플레이(Grouping/Ordering/토글/Display Properties)
+  - 칼럼: Name/Parent/Tier/Articles/Stubs/Sub/Updated
+  - 그룹핑: Tier별/Parent별/Family별 (Family=루트 조상 기준 계보+들여쓰기)
+  - WikiCategory에 updatedAt 필드 추가 (store migration v61)
+  - 카테고리 미선택 시 All Categories overview 표시
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
