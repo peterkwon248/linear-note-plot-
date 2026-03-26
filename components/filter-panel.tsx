@@ -123,7 +123,7 @@ export function FilterPanel({
       {/* ── Sub Panel (values) — LEFT side, positioned at hovered row's y ── */}
       {activeCategory && activeCategory.values.length > 0 && (
         <div
-          className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-border-subtle bg-popover rounded-[10px] py-1 shrink-0 shadow-lg z-10 -mr-px"
+          className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-border-subtle bg-surface-overlay rounded-[10px] py-1 shrink-0 shadow-lg z-10 -mr-px"
           style={{ top: subPanelTop }}
         >
           <div className="px-2 pb-1">
@@ -134,7 +134,7 @@ export function FilterPanel({
               onChange={(e) => setSubSearch(e.target.value)}
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
-              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-note outline-none placeholder:text-muted-foreground"
             />
           </div>
           {activeCategory.values.filter((val) =>
@@ -146,7 +146,7 @@ export function FilterPanel({
             return (
               <button
                 key={val.key}
-                className="group/row w-full flex items-center gap-2.5 px-3 py-[7px] hover:bg-hover-bg transition-colors cursor-default"
+                className="group/row w-full flex items-center gap-2.5 px-3 py-2 hover:bg-hover-bg transition-colors cursor-default"
                 onClick={() =>
                   onToggle({
                     field: activeCategory.key as FilterField,
@@ -215,7 +215,7 @@ export function FilterPanel({
           return (
             <button
               key={cat.key}
-              className={`w-full flex items-center gap-2 px-3 py-[7px] transition-colors cursor-default ${
+              className={`w-full flex items-center gap-2 px-3 py-2 transition-colors cursor-default ${
                 isOpen ? "bg-active-bg" : "hover:bg-hover-bg"
               }`}
               onMouseEnter={(e) => handleCatHover(cat.key, e)}

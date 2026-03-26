@@ -31,6 +31,10 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   tag:       { viewMode: "list", sortField: "updatedAt" },
   label:     { viewMode: "list", sortField: "updatedAt" },
   savedView: { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
+  wiki:           { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
+  "wiki-category": { viewMode: "list", sortField: "title", groupBy: "tier", visibleColumns: ["parent", "tier", "articles", "stubs", "sub", "updatedAt"] },
+  graph:          { viewMode: "list", sortField: "updatedAt", groupBy: "none", toggles: { showWikilinks: true, showTagNodes: false, showLabels: false } },
+  calendar:       { viewMode: "calendar", sortField: "createdAt", groupBy: "none", toggles: { showNotes: true, showWiki: true } },
 }
 
 /** Build a ViewState for a specific context, merging defaults */

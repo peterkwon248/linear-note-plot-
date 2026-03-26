@@ -79,11 +79,10 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-60. 위키 카테고리 UX 개선 — 검색, RECENT, 우클릭, List 뷰, 전용 필터/디스플레이, Family 그룹핑
-61. 카테고리 Board 뷰 — Tree 제거, List+Board 2모드, Tier별 칼럼(1st/2nd/3rd+), dnd-kit 드래그
-62. Notes Board 더블클릭 에디터 열기 + 카테고리 전 칼럼 정렬 + 디스플레이 프로퍼티 칼럼 연동
 63. 카테고리 P0 버그 수정 — Board Select All 체크박스, Delete Undo, 사이드바→SmartSidePanel 통합
-64. 카테고리 폼 에디터 — 더블클릭 split 레이아웃, 이름/설명 인라인 편집, Parent 드롭다운, + New/Move here 서브카테고리 관리, Parent Categories 네비게이션
+64. 카테고리 폼 에디터 — 더블클릭 split 레이아웃, Parent 드롭다운, 서브카테고리 관리
+65. Unified Pipeline Phase 1~4 — Filter/Display/SidePanel 통합, Design Spine 토큰 수정
+66. Discover 추천 엔진 — keyword+tag+backlink+folder 4신호 로컬 추천, SidePanel 3탭(Detail+Discover+Peek)
 
 ## Three Axes — Core Design Philosophy
 

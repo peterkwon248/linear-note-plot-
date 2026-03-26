@@ -3,26 +3,20 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import { buildOntologyGraphData, type OntologyGraph, type OntologyNode } from "@/lib/graph"
-import { OntologyGraphCanvas, type OntologyFilters } from "@/components/ontology/ontology-graph-canvas"
-import { OntologyFilterBar } from "@/components/ontology/ontology-filter-bar"
+import { OntologyGraphCanvas } from "@/components/ontology/ontology-graph-canvas"
 import { OntologyDetailPanel } from "@/components/ontology/ontology-detail-panel"
 import { ontologyLayoutClient } from "@/lib/graph/ontology-layout-client"
-import type { Note, RelationType } from "@/lib/types"
+import type { Note } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
+import type { FilterCategory } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { GRAPH_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
-import { DEFAULT_VIEW_STATE } from "@/lib/view-engine/defaults"
-import type { FilterRule } from "@/lib/view-engine/types"
+import type { FilterRule, ViewContextKey, ViewState } from "@/lib/view-engine/types"
+import { buildViewStateForContext } from "@/lib/view-engine/defaults"
+import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
+import type { OntologyFilters } from "@/components/ontology/ontology-graph-canvas"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
-const DEFAULT_FILTERS: OntologyFilters = {
-  tagIds: [],
-  labelId: null,
-  status: "all",
-  relationTypes: "all",
-  showWikilinks: true,
-  showTagNodes: false,
-}
 
 function applyFilters(notes: Note[], filters: OntologyFilters): Note[] {
   return notes.filter((n) => {
@@ -35,12 +29,19 @@ function applyFilters(notes: Note[], filters: OntologyFilters): Note[] {
 }
 
 export function OntologyView() {
-  const [filters, setFilters] = useState<OntologyFilters>(DEFAULT_FILTERS)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [graph, setGraph] = useState<OntologyGraph | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [graphFilters, setGraphFilters] = useState<FilterRule[]>([])
-  const [graphToggles, setGraphToggles] = useState<Record<string, boolean>>({})
+
+  // Graph display state from store (unified via viewStateByContext)
+  const graphViewState = usePlotStore((s) => s.viewStateByContext["graph"]) ?? buildViewStateForContext("graph")
+  const setViewState = usePlotStore((s) => s.setViewState)
+  const updateGraphViewState = useCallback(
+    (patch: Partial<ViewState>) => setViewState("graph" as ViewContextKey, patch),
+    [setViewState]
+  )
+  const graphToggles = graphViewState?.toggles ?? { showWikilinks: true, showTagNodes: false }
 
   const handleGraphFilterToggle = (rule: FilterRule) => {
     setGraphFilters(prev => {
@@ -59,7 +60,63 @@ export function OntologyView() {
   const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
 
-  const filteredNotes = useMemo(() => applyFilters(notes, filters), [notes, filters])
+  // Convert FilterRule[] → OntologyFilters for the canvas
+  const ontologyFilters = useMemo<OntologyFilters>(() => {
+    const base = rulesToOntologyFilters(graphFilters)
+    // Merge display-panel toggles into the OntologyFilters
+    return {
+      ...base,
+      showWikilinks: graphToggles.showWikilinks ?? true,
+      showTagNodes: graphToggles.showTagNodes ?? false,
+    }
+  }, [graphFilters, graphToggles])
+
+  const filteredNotes = useMemo(() => applyFilters(notes, ontologyFilters), [notes, ontologyFilters])
+
+  // Build dynamic filter categories (inject tags/labels from store)
+  const dynamicCategories = useMemo<FilterCategory[]>(() => {
+    const base = GRAPH_VIEW_CONFIG.filterCategories
+
+    return base.map((cat) => {
+      if (cat.key === "tags") {
+        return {
+          ...cat,
+          values: tags.map((t) => ({
+            key: t.id,
+            label: t.name,
+            color: t.color,
+          })),
+        }
+      }
+      if (cat.key === "label") {
+        return {
+          ...cat,
+          values: labels.map((l) => ({
+            key: l.id,
+            label: l.name,
+            color: l.color,
+          })),
+        }
+      }
+      if (cat.key === "relationType" && graph) {
+        // Enrich relation values with edge counts
+        const counts = new Map<string, number>()
+        for (const edge of graph.edges) {
+          if (edge.kind !== "wikilink") {
+            counts.set(edge.kind, (counts.get(edge.kind) ?? 0) + 1)
+          }
+        }
+        return {
+          ...cat,
+          values: cat.values.map((v) => ({
+            ...v,
+            count: counts.get(v.key) ?? 0,
+          })),
+        }
+      }
+      return cat
+    })
+  }, [tags, labels, graph])
 
   // Build graph data (no positions — fast, synchronous)
   const tagsMapped = useMemo(
@@ -148,19 +205,6 @@ export function OntologyView() {
     [updateOntologyPositions],
   )
 
-  // Count edges per relation type
-  const relationTypeCounts = useMemo(() => {
-    const counts = new Map<RelationType, number>()
-    if (!graph) return counts
-    for (const edge of graph.edges) {
-      if (edge.kind !== "wikilink") {
-        const t = edge.kind as RelationType
-        counts.set(t, (counts.get(t) ?? 0) + 1)
-      }
-    }
-    return counts
-  }, [graph])
-
   // Search match IDs
   const searchMatchIds = useMemo(() => {
     if (!searchQuery.trim() || !graph) return null
@@ -178,11 +222,15 @@ export function OntologyView() {
       <ViewHeader
         icon={<Graph size={20} weight="regular" />}
         title="Graph"
+        searchPlaceholder="Search nodes..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        count={searchMatchIds ? searchMatchIds.size : undefined}
         showFilter
         hasActiveFilters={graphFilters.length > 0}
         filterContent={
           <FilterPanel
-            categories={GRAPH_VIEW_CONFIG.filterCategories}
+            categories={dynamicCategories}
             activeFilters={graphFilters}
             onToggle={handleGraphFilterToggle}
           />
@@ -191,11 +239,11 @@ export function OntologyView() {
         displayContent={
           <DisplayPanel
             config={GRAPH_VIEW_CONFIG.displayConfig}
-            viewState={DEFAULT_VIEW_STATE}
-            onViewStateChange={() => {}}
+            viewState={graphViewState}
+            onViewStateChange={updateGraphViewState}
             toggleStates={graphToggles}
             onToggleChange={(key, value) =>
-              setGraphToggles((prev) => ({ ...prev, [key]: value }))
+              updateGraphViewState({ toggles: { ...graphToggles, [key]: value } })
             }
           />
         }
@@ -205,30 +253,19 @@ export function OntologyView() {
           const store = usePlotStore.getState()
           if (!store.sidePanelOpen) {
             store.setSidePanelOpen(true)
-            usePlotStore.setState({ sidePanelMode: 'context' })
-          } else if (store.sidePanelMode === 'context') {
+            usePlotStore.setState({ sidePanelMode: 'detail' })
+          } else if (store.sidePanelMode === 'detail') {
             store.setSidePanelOpen(false)
           } else {
-            usePlotStore.setState({ sidePanelMode: 'context' })
+            usePlotStore.setState({ sidePanelMode: 'detail' })
           }
         }}
-      >
-        <OntologyFilterBar
-          filters={filters}
-          onChange={setFilters}
-          tags={tags}
-          labels={labels}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchMatchCount={searchMatchIds ? searchMatchIds.size : null}
-          relationTypeCounts={relationTypeCounts}
-        />
-      </ViewHeader>
+      />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {graph ? (
           <OntologyGraphCanvas
             graph={graph}
-            filters={filters}
+            filters={ontologyFilters}
             labels={labels}
             notes={filteredNotes.map((n) => ({ id: n.id, title: n.title, preview: n.preview, status: n.status, tags: n.tags }))}
             tags={tags.map((t) => ({ id: t.id, name: t.name, color: t.color }))}
@@ -242,7 +279,7 @@ export function OntologyView() {
           <div className="flex flex-1 items-center justify-center">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-              Computing layout…
+              Computing layout...
             </div>
           </div>
         )}

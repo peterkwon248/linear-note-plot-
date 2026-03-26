@@ -50,7 +50,7 @@ export const usePlotStore = create<PlotState>()(
         searchOpen: false,
         shortcutOverlayOpen: false,
         sidePanelOpen: true,
-        sidePanelMode: 'context' as import("./types").SidePanelMode,
+        sidePanelMode: 'detail' as import("./types").SidePanelMode,
         sidePanelPeekNoteId: null,
         previewNoteId: null,
 
@@ -116,7 +116,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 62,
+      version: 63,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -229,7 +229,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             </ResizablePanel>
-            {sidePanelOpen && (sidePanelMode === 'context' || (sidePanelMode === 'peek' && !!sidePanelPeekNoteId)) && (
+            {sidePanelOpen && (sidePanelMode === 'detail' || sidePanelMode === 'discover' || (sidePanelMode === 'peek' && !!sidePanelPeekNoteId)) && (
               <>
                 <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
                 <ResizablePanel defaultSize={25} minSize={15} maxSize={40}>

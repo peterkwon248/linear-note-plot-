@@ -75,7 +75,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
     <div
       draggable
       onDragStart={(e) => setNoteDragData(e, note.id)}
-      className="note-row group flex items-center gap-3 px-3 transition-colors hover:bg-secondary/50 cursor-pointer"
+      className="note-row group flex items-center gap-3 px-3 transition-colors hover:bg-hover-bg cursor-pointer"
       onClick={() => openNote(note.id)}
     >
       {/* Priority indicator */}
@@ -96,7 +96,7 @@ const NoteRow = memo(function NoteRow({ note }: { note: Note }) {
           {note.title || "Untitled"}
         </span>
         {preview && (
-          <span className="truncate text-sm text-muted-foreground">
+          <span className="truncate text-note text-muted-foreground">
             {preview}
           </span>
         )}

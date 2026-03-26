@@ -1,14 +1,13 @@
 "use client"
 
-import { useState } from "react"
 import type { SortField, GroupBy, GroupSortBy, ViewMode, ViewState } from "@/lib/view-engine/types"
 import type { ReactNode } from "react"
 import { List } from "@phosphor-icons/react/dist/ssr/List"
 import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Check } from "@phosphor-icons/react/dist/ssr/Check"
 import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
 import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
+import { ToggleSwitch } from "@/components/ui/toggle-switch"
+import { ChipDropdown } from "@/components/ui/chip-dropdown"
 
 export interface DisplayConfig {
   orderingOptions: { value: SortField; label: string }[]
@@ -65,89 +64,6 @@ export const SortIcon = () => (
     <line x1="2.5" y1="12" x2="5" y2="12" />
   </svg>
 )
-
-/* ── Toggle component ───────────────────────────────────── */
-
-function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
-  return (
-    <button
-      onClick={onChange}
-      className={`relative w-[34px] h-5 rounded-full shrink-0 transition-colors duration-200 ${
-        on ? "bg-accent" : "bg-white/[0.12]"
-      }`}
-    >
-      <div
-        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.25)] transition-all duration-200 ${
-          on ? "left-[16px]" : "left-0.5"
-        }`}
-      />
-    </button>
-  )
-}
-
-/* ── Dropdown component ─────────────────────────────────── */
-
-function ChipDropdown<T extends string>({
-  value,
-  options,
-  onChange,
-  disabledValues,
-}: {
-  value: T
-  options: { value: T; label: string }[]
-  onChange: (value: T) => void
-  disabledValues?: T[]
-}) {
-  const [open, setOpen] = useState(false)
-  const currentLabel = options.find((o) => o.value === value)?.label ?? value
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border/80 bg-surface-overlay text-note font-medium"
-      >
-        {currentLabel}
-        <CaretDown size={10} weight="bold" />
-      </button>
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-md border border-border/80 bg-surface-overlay py-1 shadow-lg">
-            {options.map((opt) => {
-              const disabled = disabledValues?.includes(opt.value)
-              return (
-                <button
-                  key={opt.value}
-                  onClick={() => {
-                    if (!disabled) {
-                      onChange(opt.value)
-                      setOpen(false)
-                    }
-                  }}
-                  disabled={disabled}
-                  className={`flex w-full items-center justify-between px-3 py-1.5 text-note ${
-                    disabled
-                      ? "text-muted-foreground/30 cursor-not-allowed"
-                      : "hover:bg-hover-bg"
-                  }`}
-                >
-                  <span>{opt.label}</span>
-                  {value === opt.value && (
-                    <span className="text-accent">
-                      <Check size={12} weight="bold" />
-                    </span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
 
 /* ── Mode config helpers ────────────────────────────────── */
 
@@ -209,7 +125,7 @@ export function DisplayPanel({
       {/* ── Section 0: View Mode (List / Board) ── */}
       {showViewMode && (
         <>
-          <div className="flex rounded-lg border border-border/80 bg-card p-0.5">
+          <div className="flex rounded-lg border border-border-subtle bg-card p-0.5">
             {MODE_DEFS.filter((d) => supportedModes.includes(d.mode)).map((def) => {
               const isActive = currentMode === def.mode
               return (
@@ -235,7 +151,7 @@ export function DisplayPanel({
               )
             })}
           </div>
-          <hr className="border-border/60" />
+          <hr className="border-border-subtle" />
         </>
       )}
 
@@ -335,7 +251,7 @@ export function DisplayPanel({
                 sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc",
               })
             }
-            className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border/80 bg-surface-overlay text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground hover:text-foreground transition-colors"
             title={viewState.sortDirection === "asc" ? "Ascending" : "Descending"}
           >
             {viewState.sortDirection === "asc" ? <SortAscending size={12} weight="regular" /> : <SortDescending size={12} weight="regular" />}
@@ -344,34 +260,30 @@ export function DisplayPanel({
       </div>
 
       {/* ── Section 3: Built-in toggles (always shown) ── */}
-      <hr className="border-border/60" />
+      <hr className="border-border-subtle" />
       <div className="flex flex-col gap-2.5">
-        <div className="flex items-center gap-2">
-          <span className="text-note flex-1">Order permanent by recency</span>
-          <Toggle
-            on={!!viewState.orderPermanentByRecency}
-            onChange={() =>
-              onViewStateChange({
-                orderPermanentByRecency: !viewState.orderPermanentByRecency,
-              })
-            }
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-note flex-1">Show thread</span>
-          <Toggle
-            on={!!viewState.showThread}
-            onChange={() =>
-              onViewStateChange({ showThread: !viewState.showThread })
-            }
-          />
-        </div>
+        <ToggleSwitch
+          label="Order permanent by recency"
+          checked={!!viewState.orderPermanentByRecency}
+          onCheckedChange={() =>
+            onViewStateChange({
+              orderPermanentByRecency: !viewState.orderPermanentByRecency,
+            })
+          }
+        />
+        <ToggleSwitch
+          label="Show thread"
+          checked={!!viewState.showThread}
+          onCheckedChange={() =>
+            onViewStateChange({ showThread: !viewState.showThread })
+          }
+        />
       </div>
 
       {/* ── Section 4: Mode-specific toggles ── */}
       {config.toggles.length > 0 && (
         <>
-          <hr className="border-border/60" />
+          <hr className="border-border-subtle" />
           <div className="flex flex-col gap-2.5">
             <p className="text-xs font-medium text-muted-foreground/50 mb-0">
               {optionsSectionLabel}
@@ -383,14 +295,14 @@ export function DisplayPanel({
                     {toggle.icon}
                   </span>
                 )}
-                <span className="text-note flex-1">{toggle.label}</span>
-                <Toggle
-                  on={
+                <ToggleSwitch
+                  label={toggle.label}
+                  checked={
                     toggle.key === "showEmptyGroups"
                       ? !!viewState.showEmptyGroups
                       : !!toggleStates[toggle.key]
                   }
-                  onChange={() => {
+                  onCheckedChange={() => {
                     if (toggle.key === "showEmptyGroups") {
                       onViewStateChange({ showEmptyGroups: !viewState.showEmptyGroups })
                     } else {
@@ -407,7 +319,7 @@ export function DisplayPanel({
       {/* ── Section 5: Display properties ── */}
       {config.properties.length > 0 && (
         <>
-          <hr className="border-border/60" />
+          <hr className="border-border-subtle" />
           <div>
             <p className="text-xs font-medium text-muted-foreground/50 mb-2.5">
               Display properties
@@ -423,7 +335,7 @@ export function DisplayPanel({
                       "inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors",
                       active
                         ? "border-accent/30 bg-accent/[0.14] text-accent/90"
-                        : "border-border/80 bg-transparent text-muted-foreground",
+                        : "border-border-subtle bg-transparent text-muted-foreground",
                     ].join(" ")}
                   >
                     {prop.icon && <span className="shrink-0">{prop.icon}</span>}

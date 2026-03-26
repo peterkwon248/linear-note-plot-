@@ -81,7 +81,7 @@ export function ActivityBar() {
             <TooltipTrigger asChild>
               <button
                 onClick={() => setSidebarCollapsed(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                 aria-label="Open sidebar"
               >
                 <SidebarSimple size={20} />
@@ -105,7 +105,7 @@ export function ActivityBar() {
                     "relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150",
                     isActive
                       ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                      : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   )}
                   aria-label={label}
                 >
@@ -135,7 +135,7 @@ export function ActivityBar() {
           <TooltipTrigger asChild>
             <button
               onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
               {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}

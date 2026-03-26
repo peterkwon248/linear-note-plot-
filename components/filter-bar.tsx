@@ -683,6 +683,15 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   label: "label",
   pinned: "pinned",
   isWiki: "content",
+  // Graph-specific fields
+  nodeType: "content",
+  relationType: "content",
+  showWikilinks: "content",
+  showTagNodes: "content",
+  // Wiki-specific fields
+  wikiStatus: "status",
+  category: "tags",
+  wikiTier: "content",
 }
 
 export function getFilterGroupKey(field: FilterField): FilterGroupKey {

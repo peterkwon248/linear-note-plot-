@@ -32,6 +32,7 @@ import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
+import { DisplayPanel } from "@/components/display-panel"
 import { CALENDAR_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import type { FilterRule, ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
@@ -121,7 +122,7 @@ function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillPr
         onClick()
       }}
       className={cn(
-        "group flex w-full items-center gap-1.5 rounded-[5px] px-2 py-[3px] text-left transition-all duration-150",
+        "group flex w-full items-center gap-1.5 rounded-[5px] px-2 py-1 text-left transition-all duration-150",
         "hover:bg-secondary/80",
         isActive
           ? "bg-accent/15 ring-1 ring-accent/40 hover:bg-accent/20"
@@ -246,7 +247,7 @@ function DayCell({
       </div>
 
       {/* Note pills */}
-      <div className="flex flex-col gap-[3px]">
+      <div className="flex flex-col gap-1">
         {visibleNotes.map((note) => {
           const label = getLabelForNote(note)
           return (
@@ -267,7 +268,7 @@ function DayCell({
               e.stopPropagation()
               if (notes[MAX_VISIBLE]) onNoteClick(notes[MAX_VISIBLE].id)
             }}
-            className="w-full rounded-[5px] px-2 py-[2px] text-left text-[10.5px] font-medium text-muted-foreground/60 transition-colors hover:bg-secondary/60 hover:text-muted-foreground"
+            className="w-full rounded-[5px] px-2 py-[2px] text-left text-2xs font-medium text-muted-foreground/60 transition-colors hover:bg-secondary/60 hover:text-muted-foreground"
           >
             +{overflowCount} more
           </button>
@@ -327,7 +328,7 @@ function DayDashboard({
   return (
     <div className="shrink-0 animate-in slide-in-from-bottom-2 duration-200 border-t border-border bg-secondary/10">
       {/* Dashboard header */}
-      <div className="flex items-center justify-between border-b border-border/60 px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-2.5">
         <div className="flex items-center gap-2">
           <span className="text-note font-semibold text-foreground">{formattedDate}</span>
           {noteCount > 0 && (
@@ -394,8 +395,8 @@ function DayDashboard({
                   key={note.id}
                   onClick={() => isActive ? onEditNote(note.id) : onNoteClick(note.id)}
                   className={cn(
-                    "group w-full rounded-lg border border-border/40 px-3 py-2.5 text-left transition-all duration-150",
-                    "hover:border-border/70 hover:bg-secondary/50",
+                    "group w-full rounded-lg border border-border-subtle px-3 py-2.5 text-left transition-all duration-150",
+                    "hover:border-border hover:bg-hover-bg",
                     isActive
                       ? "border-accent/30 bg-accent/10 ring-1 ring-accent/25 hover:bg-accent/15"
                       : "bg-card/50",
@@ -657,8 +658,22 @@ export function CalendarView({
 
   const [calendarFilters, setCalendarFilters] = useState<FilterRule[]>([])
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("month")
-  const [dateSource, setDateSource] = useState<DateSource>("createdAt")
-  const [layers, setLayers] = useState({ notes: true, wiki: true })
+
+  // Calendar display state from store (unified via viewStateByContext)
+  const calViewState = usePlotStore((s) => s.viewStateByContext["calendar"]) ?? { sortField: "createdAt" as const, toggles: { showNotes: true, showWiki: true } }
+  const setViewState = usePlotStore((s) => s.setViewState)
+  const updateCalViewState = useCallback(
+    (patch: Partial<import("@/lib/view-engine/types").ViewState>) => setViewState("calendar" as ViewContextKey, patch),
+    [setViewState]
+  )
+
+  // dateSource derived from sortField
+  const dateSource: DateSource = calViewState.sortField === "updatedAt" ? "updatedAt" : "createdAt"
+  // layers derived from toggles
+  const layers = {
+    notes: calViewState.toggles?.showNotes !== false,
+    wiki: calViewState.toggles?.showWiki !== false,
+  }
 
   /* ── Store / hooks ────────────────────────────────── */
 
@@ -849,61 +864,15 @@ export function CalendarView({
         }
         showDisplay
         displayContent={
-          <div className="w-[280px] p-3 space-y-4">
-            {/* Calendar by */}
-            <div>
-              <div className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Calendar by</div>
-              <div className="flex gap-1">
-                {(["createdAt", "updatedAt"] as const).map((src) => (
-                  <button
-                    key={src}
-                    onClick={() => setDateSource(src)}
-                    className={cn(
-                      "flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                      dateSource === src
-                        ? "bg-accent/15 text-accent"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                    )}
-                  >
-                    {src === "createdAt" ? "Created" : "Updated"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Layers */}
-            <div>
-              <div className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Layers</div>
-              <div className="space-y-1">
-                {([
-                  { key: "notes" as const, label: "Notes" },
-                  { key: "wiki" as const, label: "Wiki" },
-                ] as const).map((layer) => (
-                  <button
-                    key={layer.key}
-                    onClick={() => setLayers((l) => ({ ...l, [layer.key]: !l[layer.key] }))}
-                    className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs transition-colors hover:bg-secondary"
-                  >
-                    <span className={layers[layer.key] ? "text-foreground" : "text-muted-foreground/40"}>
-                      {layer.label}
-                    </span>
-                    <span
-                      className={cn(
-                        "flex h-4 w-4 items-center justify-center rounded border transition-colors",
-                        layers[layer.key] ? "border-accent bg-accent" : "border-border",
-                      )}
-                    >
-                      {layers[layer.key] && (
-                        <svg viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
-                          <path d="M4 8l3 3 5-5" />
-                        </svg>
-                      )}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <DisplayPanel
+            config={CALENDAR_VIEW_CONFIG.displayConfig}
+            viewState={calViewState}
+            onViewStateChange={updateCalViewState}
+            toggleStates={calViewState.toggles ?? {}}
+            onToggleChange={(key, value) =>
+              updateCalViewState({ toggles: { ...(calViewState.toggles ?? {}), [key]: value } })
+            }
+          />
         }
         showDetailPanel
         detailPanelOpen={sidePanelOpen}
@@ -911,18 +880,18 @@ export function CalendarView({
           const store = usePlotStore.getState()
           if (!store.sidePanelOpen) {
             store.setSidePanelOpen(true)
-            usePlotStore.setState({ sidePanelMode: 'context' })
-          } else if (store.sidePanelMode === 'context') {
+            usePlotStore.setState({ sidePanelMode: 'detail' })
+          } else if (store.sidePanelMode === 'detail') {
             store.setSidePanelOpen(false)
           } else {
-            usePlotStore.setState({ sidePanelMode: 'context' })
+            usePlotStore.setState({ sidePanelMode: 'detail' })
           }
         }}
         onCreateNew={!hideCreateButton ? () => { const id = createNote(createNoteOverrides ?? {}); if (id) openNote(id) } : undefined}
       />
 
       {/* ── Calendar controls bar ──────────────────── */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border/50 px-5 py-2">
+      <div className="flex shrink-0 items-center justify-between border-b border-border-subtle px-5 py-2">
         {/* Left: Calendar mode tabs */}
         <div className="flex items-center gap-1">
           {(["month", "week", "agenda"] as const).map((mode) => (

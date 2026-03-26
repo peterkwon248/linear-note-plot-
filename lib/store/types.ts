@@ -23,7 +23,7 @@ export interface EditorState {
   panelRatios: number[]  // for 3-panel mode, e.g. [0.33, 0.33, 0.34]
 }
 
-export type SidePanelMode = 'context' | 'peek'
+export type SidePanelMode = 'detail' | 'discover' | 'peek'
 
 export interface PlotState {
   // ── Data ──

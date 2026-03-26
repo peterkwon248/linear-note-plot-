@@ -59,7 +59,7 @@ function ToolbarButton({
       className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 border-0 outline-none transition-colors duration-75 ${
         disabled ? "cursor-not-allowed opacity-40 text-muted-foreground" :
         isActive ? "cursor-pointer text-foreground bg-toolbar-active" :
-        "cursor-pointer text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+        "cursor-pointer text-muted-foreground hover:text-foreground hover:bg-hover-bg"
       }`}
     >
       {children}
@@ -69,7 +69,7 @@ function ToolbarButton({
 
 function ToolbarDivider() {
   return (
-    <div className="w-px h-7 bg-foreground/10 mx-1.5 shrink-0" />
+    <div className="w-px h-7 bg-border-subtle mx-1.5 shrink-0" />
   )
 }
 
@@ -164,7 +164,7 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
         onMouseDown={handleToggle}
         title="TextH"
         className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 cursor-pointer border-0 outline-none transition-colors duration-75 ${
-          isAnyHeadingActive ? "text-foreground bg-toolbar-active" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+          isAnyHeadingActive ? "text-foreground bg-toolbar-active" : "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
         }`}
       >
         <TextH size={24} weight="regular" />
@@ -174,14 +174,14 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed -translate-x-1/2 min-w-[120px] bg-popover border border-border rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.55)] p-1 z-[1000]"
+            className="fixed -translate-x-1/2 min-w-[120px] bg-popover border border-border rounded-lg shadow-2xl p-1 z-[1000]"
             style={{ left: `${pos.left}px`, bottom: `${pos.bottom}px` }}
           >
             {headingOptions.map(({ level, label, fontSize }) => (
               <button
                 key={level}
                 onMouseDown={(e) => { e.preventDefault(); handleSelect(level) }}
-                className={`w-full py-1.5 px-3 font-semibold text-left border-0 outline-none cursor-pointer rounded-md hover:bg-foreground/[0.06] ${
+                className={`w-full py-1.5 px-3 font-semibold text-left border-0 outline-none cursor-pointer rounded-md hover:bg-hover-bg ${
                   headingActiveMap[level] ? "bg-toolbar-active text-foreground" : "text-muted-foreground"
                 }`}
                 style={{ fontSize }}
@@ -191,7 +191,7 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
             ))}
             <button
               onMouseDown={(e) => { e.preventDefault(); handleSelect(null) }}
-              className={`w-full py-1.5 px-3 text-note text-left border-0 outline-none cursor-pointer rounded-md hover:bg-foreground/[0.06] ${
+              className={`w-full py-1.5 px-3 text-note text-left border-0 outline-none cursor-pointer rounded-md hover:bg-hover-bg ${
                 !isAnyHeadingActive ? "bg-toolbar-active text-foreground" : "text-muted-foreground"
               }`}
             >
@@ -332,7 +332,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
         <ArrowClockwise size={24} weight="regular" />
       </ToolbarButton>
       <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code (Ctrl+E)">
-        <PhCode size={23} weight="regular" />
+        <PhCode size={24} weight="regular" />
       </ToolbarButton>
       {onTogglePosition && (
         <>

@@ -467,7 +467,7 @@ export function migrate(persistedState: unknown): PlotState {
     delete state.detailsOpen
   }
   if (state.sidePanelOpen === undefined) state.sidePanelOpen = true
-  if (!state.sidePanelMode) state.sidePanelMode = 'context'
+  if (!state.sidePanelMode) state.sidePanelMode = 'detail'
   // sidePanelPeekNoteId is transient (not persisted), no migration needed
   delete state.sidePeekNoteId // clean up old transient field if present
 
@@ -678,6 +678,11 @@ export function migrate(persistedState: unknown): PlotState {
       ...a,
       layout: a.layout ?? "default",
     }))
+  }
+
+  // v62: Rename sidePanelMode 'context' → 'detail', add 'discover' mode
+  if (state.sidePanelMode === 'context') {
+    state.sidePanelMode = 'detail'
   }
 
   // v62: Add updatedAt to WikiCategory

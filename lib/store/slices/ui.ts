@@ -127,7 +127,7 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
       const hasSelectedNote = !!s.selectedNoteId
       return {
         sidePanelPeekNoteId: null,
-        sidePanelMode: 'context' as const,
+        sidePanelMode: 'detail' as const,
         sidePanelOpen: hasSelectedNote ? s.sidePanelOpen : false,
       }
     }),

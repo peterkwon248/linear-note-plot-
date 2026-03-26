@@ -574,7 +574,7 @@ export function LinearSidebar() {
                 <ContextMenuSeparator />
                 <ContextMenuItem
                   onClick={() => handleDeleteView(view.id)}
-                  className="text-red-400 focus:text-red-400"
+                  className="text-destructive focus:text-destructive"
                 >
                   Delete
                 </ContextMenuItem>
@@ -795,7 +795,7 @@ export function LinearSidebar() {
                       <ContextMenuSeparator />
                       <ContextMenuItem
                         onClick={() => handleDeleteFolder(folder.id)}
-                        className="text-red-400 focus:text-red-400"
+                        className="text-destructive focus:text-destructive"
                       >
                         Delete
                       </ContextMenuItem>

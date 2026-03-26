@@ -2,59 +2,68 @@
 
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { SidePanelContext } from "./side-panel-context"
+import { SidePanelDetail } from "./side-panel-detail"
+import { SidePanelDiscover } from "./side-panel-discover"
 import { SidePanelPeek } from "./side-panel-peek"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
+import { Compass } from "@phosphor-icons/react/dist/ssr/Compass"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import type { SidePanelMode } from "@/lib/store/types"
 
 export function SmartSidePanel() {
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const sidePanelMode = usePlotStore((s) => s.sidePanelMode)
   const sidePanelPeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
-  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const setSidePanelOpen = usePlotStore((s) => s.setSidePanelOpen)
   const closeSidePeek = usePlotStore((s) => s.closeSidePeek)
 
-  // Don't render content when closed (but the ResizablePanel wrapper handles collapse)
   if (!sidePanelOpen) return null
 
-  // Context mode — works with or without selected note
-  const showContext = sidePanelMode === 'context'
-  // Peek mode needs a peek note
+  const showDetail = sidePanelMode === 'detail'
+  const showDiscover = sidePanelMode === 'discover'
   const showPeek = sidePanelMode === 'peek' && !!sidePanelPeekNoteId
 
-  // Header tabs - only show Peek tab when there's a peek note
   const hasPeekNote = !!sidePanelPeekNoteId
+
+  const setMode = (mode: SidePanelMode) => {
+    usePlotStore.setState({ sidePanelMode: mode })
+  }
+
+  const tabClass = (active: boolean) =>
+    cn(
+      "rounded-md px-2 py-1 text-note font-medium transition-colors",
+      active
+        ? "bg-secondary text-foreground"
+        : "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
+    )
 
   return (
     <aside className="flex h-full flex-col overflow-hidden bg-card">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border px-3 py-2">
         <div className="flex items-center gap-1">
-          {/* Context/Details tab */}
+          {/* Detail tab */}
           <button
-            onClick={() => usePlotStore.getState().closeSidePeek()}
-            className={cn(
-              "rounded-md px-2 py-1 text-xs font-medium transition-colors",
-              sidePanelMode === 'context'
-                ? "bg-secondary text-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-            )}
+            onClick={() => setMode('detail')}
+            className={tabClass(sidePanelMode === 'detail')}
           >
             <SidebarSimple className="inline mr-1" size={14} weight="regular" />
-            Details
+            Detail
+          </button>
+          {/* Discover tab */}
+          <button
+            onClick={() => setMode('discover')}
+            className={tabClass(sidePanelMode === 'discover')}
+          >
+            <Compass className="inline mr-1" size={14} weight="regular" />
+            Discover
           </button>
           {/* Peek tab - only when peek note exists */}
           {hasPeekNote && (
             <button
-              onClick={() => usePlotStore.setState({ sidePanelMode: 'peek' })}
-              className={cn(
-                "rounded-md px-2 py-1 text-xs font-medium transition-colors",
-                sidePanelMode === 'peek'
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              )}
+              onClick={() => setMode('peek')}
+              className={tabClass(sidePanelMode === 'peek')}
             >
               <FileText className="inline mr-1" size={14} weight="regular" />
               Peek
@@ -77,7 +86,8 @@ export function SmartSidePanel() {
       </header>
 
       {/* Content */}
-      {showContext && <SidePanelContext />}
+      {showDetail && <SidePanelDetail />}
+      {showDiscover && <SidePanelDiscover />}
       {showPeek && <SidePanelPeek />}
     </aside>
   )

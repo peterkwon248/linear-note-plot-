@@ -123,10 +123,10 @@ export function ViewHeader({
         {/* Title area */}
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">{icon}</span>
-          <h1 className="text-sm font-medium text-foreground">
+          <h1 className="text-note font-medium text-foreground">
             {title}
             {count !== undefined && (
-              <span className="ml-1.5 text-sm font-normal text-muted-foreground">
+              <span className="ml-1.5 text-note font-normal text-muted-foreground">
                 {count}
               </span>
             )}
@@ -144,7 +144,7 @@ export function ViewHeader({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-8 w-48 rounded-md border border-border bg-background pl-8 pr-7 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              className="h-8 w-48 rounded-md border border-border bg-background pl-8 pr-7 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
             {search && (
               <button
@@ -169,7 +169,7 @@ export function ViewHeader({
                 <PopoverTrigger asChild>
                   <div>
                     <HBtn active={filterOpen || hasActiveFilters}>
-                      <FunnelSimple size={15} weight="regular" />
+                      <FunnelSimple size={14} weight="regular" />
                     </HBtn>
                   </div>
                 </PopoverTrigger>
@@ -188,7 +188,7 @@ export function ViewHeader({
                 <PopoverTrigger asChild>
                   <div>
                     <HBtn active={displayOpen}>
-                      <SlidersHorizontal size={15} weight="regular" />
+                      <SlidersHorizontal size={14} weight="regular" />
                     </HBtn>
                   </div>
                 </PopoverTrigger>
@@ -204,13 +204,13 @@ export function ViewHeader({
 
             {showDetailPanel && (
               <HBtn active={detailPanelOpen} onClick={onDetailPanelToggle}>
-                <SidebarSimple size={15} weight="regular" />
+                <SidebarSimple size={14} weight="regular" />
               </HBtn>
             )}
 
             {onCreateNew && (
               <HBtn onClick={onCreateNew}>
-                <Plus size={15} weight="regular" />
+                <Plus size={14} weight="regular" />
               </HBtn>
             )}
           </div>

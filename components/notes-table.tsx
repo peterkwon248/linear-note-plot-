@@ -98,6 +98,11 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
   reads: "Reads",
   folder: "Folder",
   label: "Label",
+  articles: "Articles",
+  stubs: "Stubs",
+  sub: "Sub",
+  tier: "Tier",
+  parent: "Parent",
 }
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField: SortField; minWidth?: number }[] = [
@@ -139,7 +144,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
@@ -204,7 +209,7 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
         return (
           <div
             key={item.id}
-            className="flex items-center border-b border-border px-5 py-2.5 hover:bg-secondary/30 transition-colors"
+            className="flex items-center border-b border-border px-5 py-2.5 hover:bg-hover-bg transition-colors"
           >
             <div className="flex-1 min-w-0">
               <span className="text-sm font-medium text-foreground truncate">{item.name}</span>
@@ -864,11 +869,11 @@ export function NotesTable({
           const store = usePlotStore.getState()
           if (!store.sidePanelOpen) {
             store.setSidePanelOpen(true)
-            usePlotStore.setState({ sidePanelMode: 'context' })
-          } else if (store.sidePanelMode === 'context') {
+            usePlotStore.setState({ sidePanelMode: 'detail' })
+          } else if (store.sidePanelMode === 'detail') {
             store.setSidePanelOpen(false)
           } else {
-            usePlotStore.setState({ sidePanelMode: 'context' })
+            usePlotStore.setState({ sidePanelMode: 'detail' })
           }
         }}
         onCreateNew={!hideCreateButton ? () => { const id = createNote(createNoteOverrides ?? {}); if (id) openNote(id) } : undefined}
@@ -986,7 +991,7 @@ export function NotesTable({
                 {effectiveVisibleCols.length > 0 && (
                 <div
                   style={{ display: "grid", gridTemplateColumns: gridTemplate }}
-                  className="sticky top-0 z-10 items-center border-b border-border/30 bg-background px-5 py-2.5"
+                  className="sticky top-0 z-10 items-center border-b border-border-subtle bg-background px-5 py-2.5"
                 >
                   <div className="flex items-center justify-center">
                     <div
@@ -1471,7 +1476,7 @@ function NoteRowInner({
           {note.tags?.slice(0, 2).map((tagId) => {
             const tag = usePlotStore.getState().tags.find((t: Tag) => t.id === tagId)
             return tag ? (
-              <span key={tagId} className="text-2xs px-1.5 py-0.5 rounded border border-border/60 text-muted-foreground/60 shrink-0 truncate max-w-[56px]">
+              <span key={tagId} className="text-2xs px-1.5 py-0.5 rounded border border-border-subtle text-muted-foreground/60 shrink-0 truncate max-w-[56px]">
                 {tag.name}
               </span>
             ) : null
