@@ -6,7 +6,7 @@ type Get = () => any
 
 export function createWikiCategoriesSlice(set: Set, get: Get) {
   return {
-    createWikiCategory: (name: string, parentIds?: string[]): string => {
+    createWikiCategory: (name: string, parentIds?: string[]): string | null => {
       const id = genId()
       const ts = now()
       const category: WikiCategory = {

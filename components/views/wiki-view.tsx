@@ -26,6 +26,11 @@ import { ArrowLineDown } from "@phosphor-icons/react/dist/ssr/ArrowLineDown"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { List } from "@phosphor-icons/react/dist/ssr/List"
+import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
+import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
 import {
   Dialog,
   DialogContent,
@@ -79,6 +84,69 @@ function ToggleRow({ label, icon, checked, onChange }: { label: string; icon?: R
   )
 }
 
+/* ── CatChipDropdown (matches display-panel ChipDropdown) ── */
+function CatChipDropdown<T extends string>({ value, options, onChange, disabledValues }: {
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (value: T) => void
+  disabledValues?: T[]
+}) {
+  const [open, setOpen] = useState(false)
+  const currentLabel = options.find(o => o.value === value)?.label ?? value
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border/80 bg-surface-overlay text-note font-medium"
+      >
+        {currentLabel}
+        <CaretDown size={10} weight="bold" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-md border border-border/80 bg-surface-overlay py-1 shadow-lg">
+            {options.map(opt => {
+              const disabled = disabledValues?.includes(opt.value)
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => { if (!disabled) { onChange(opt.value); setOpen(false) } }}
+                  disabled={disabled}
+                  className={`flex w-full items-center justify-between px-3 py-1.5 text-note ${
+                    disabled ? "text-muted-foreground/30 cursor-not-allowed" : "hover:bg-hover-bg"
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  {value === opt.value && <PhCheck size={12} weight="bold" className="text-accent" />}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+/* ── CatToggle (matches display-panel Toggle) ── */
+function CatToggle({ on, onChange }: { on: boolean; onChange: () => void }) {
+  return (
+    <button
+      onClick={onChange}
+      className={cn(
+        "relative w-[34px] h-5 rounded-full shrink-0 transition-colors duration-200",
+        on ? "bg-accent" : "bg-white/[0.12]"
+      )}
+    >
+      <div className={cn(
+        "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.25)] transition-all duration-200",
+        on ? "left-[16px]" : "left-0.5"
+      )} />
+    </button>
+  )
+}
+
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
@@ -100,13 +168,17 @@ export function WikiView() {
 
   const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
 
-  const [categoryViewMode, setCategoryViewMode] = useState<"tree" | "list">("tree")
-  const [categoryOrdering, setCategoryOrdering] = useState<"name" | "articles" | "updated">("name")
+  const [categoryViewMode, setCategoryViewMode] = useState<"list" | "board">("list")
+  const [categoryOrdering, setCategoryOrdering] = useState<"name" | "articles" | "updated" | "parent" | "tier" | "stubs" | "sub">("name")
   const [categoryGrouping, setCategoryGrouping] = useState<"none" | "tier" | "parent" | "family">("none")
   const [categoryTierFilter, setCategoryTierFilter] = useState<string | null>(null)
   const [categoryStatusFilter, setCategoryStatusFilter] = useState<string | null>(null)
   const [categoryShowDescription, setCategoryShowDescription] = useState(true)
   const [categoryShowEmpty, setCategoryShowEmpty] = useState(true)
+  const [categorySortDirection, setCategorySortDirection] = useState<"asc" | "desc">("asc")
+  const [categorySubGrouping, setCategorySubGrouping] = useState<"none" | "tier" | "parent" | "family">("none")
+  const [categorySubGroupOrder, setCategorySubGroupOrder] = useState<"default" | "name" | "count">("default")
+  const [categoryDisplayProps, setCategoryDisplayProps] = useState<string[]>(["parent", "tier", "articles", "stubs", "sub", "updated"])
   const [searchQuery, setSearchQuery] = useState("")
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -952,118 +1024,213 @@ export function WikiView() {
         displayContent={
           wikiViewMode === "category" ? (
             <div className="flex flex-col gap-3 p-3">
-              {/* View Mode Tabs */}
+              {/* Section 0: View Mode tabs */}
               <div className="flex rounded-lg border border-border/80 bg-card p-0.5">
-                {(["tree", "list"] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setCategoryViewMode(mode)}
-                    className={cn(
-                      "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                      categoryViewMode === mode
-                        ? "bg-foreground/10 text-foreground shadow-sm"
-                        : "text-muted-foreground/60 hover:text-foreground/80",
-                    )}
-                  >
-                    {mode === "tree" ? (
-                      <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="9" y="3" width="6" height="3" rx="0.8"/><rect x="9" y="9" width="6" height="3" rx="0.8"/><line x1="6" y1="4.5" x2="9" y2="4.5"/><line x1="6" y1="4.5" x2="6" y2="10.5"/><line x1="6" y1="10.5" x2="9" y2="10.5"/></svg>
-                    ) : (
-                      <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="13.5" y2="4"/><line x1="2.5" y1="8" x2="13.5" y2="8"/><line x1="2.5" y1="12" x2="13.5" y2="12"/></svg>
-                    )}
-                    {mode === "tree" ? "Tree" : "List"}
-                  </button>
-                ))}
+                {(["list", "board"] as const).map((mode) => {
+                  const isActive = categoryViewMode === mode
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => {
+                        setCategoryViewMode(mode)
+                        if (mode === "board" && categoryGrouping === "none") setCategoryGrouping("tier")
+                      }}
+                      className={cn(
+                        "flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-note font-medium transition-all",
+                        isActive ? "bg-active-bg-strong text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-muted-foreground"
+                      )}
+                    >
+                      {mode === "list" ? <List size={14} weight="regular" /> : <Kanban size={14} weight="regular" />}
+                      {mode === "list" ? "List" : "Board"}
+                    </button>
+                  )
+                })}
               </div>
+              <hr className="border-border/60" />
 
-              {/* Grouping (list mode only) */}
-              {categoryViewMode === "list" && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Grouping</span>
-                  <div className="relative">
-                    <select
-                      value={categoryGrouping}
-                      onChange={(e) => setCategoryGrouping(e.target.value as any)}
-                      className="appearance-none rounded-md border border-border/60 bg-card pl-2.5 pr-7 py-1 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:border-accent/40 hover:bg-secondary/50 transition-colors"
-                    >
-                      <option value="none">No grouping</option>
-                      <option value="tier">Tier</option>
-                      <option value="parent">Parent</option>
-                      <option value="family">Family</option>
-                    </select>
-                    <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50" width={10} height={10} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="4 6 8 10 12 6"/></svg>
-                  </div>
-                </div>
-              )}
-
-              {/* Ordering (list mode only) */}
-              {categoryViewMode === "list" && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Ordering</span>
-                  <div className="relative">
-                    <select
-                      value={categoryOrdering}
-                      onChange={(e) => setCategoryOrdering(e.target.value as any)}
-                      className="appearance-none rounded-md border border-border/60 bg-card pl-2.5 pr-7 py-1 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:border-accent/40 hover:bg-secondary/50 transition-colors"
-                    >
-                      <option value="name">Name</option>
-                      <option value="articles">Articles</option>
-                      <option value="updated">Updated</option>
-                    </select>
-                    <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50" width={10} height={10} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="4 6 8 10 12 6"/></svg>
-                  </div>
-                </div>
-              )}
-
-              {/* Divider */}
-              {categoryViewMode === "list" && <div className="h-px bg-border/50" />}
-
-              {/* List options (list mode only) */}
-              {categoryViewMode === "list" && (
+              {/* Section 1: Grouping */}
+              {categoryViewMode === "board" ? (
                 <>
-                  <div className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wide">
-                    List options
-                  </div>
-                  <div className="space-y-1">
-                    <ToggleRow
-                      label="Show description"
-                      icon={<svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="13.5" y2="4"/><line x1="2.5" y1="8" x2="10" y2="8"/><line x1="2.5" y1="12" x2="7" y2="12"/></svg>}
-                      checked={categoryShowDescription}
-                      onChange={setCategoryShowDescription}
+                  <div className="flex items-center justify-between">
+                    <span className="text-note text-muted-foreground">Columns</span>
+                    <CatChipDropdown
+                      value={categoryGrouping}
+                      options={[
+                        { value: "tier" as const, label: "Tier" },
+                        { value: "parent" as const, label: "Parent" },
+                        { value: "family" as const, label: "Family" },
+                      ]}
+                      onChange={(v) => {
+                        setCategoryGrouping(v)
+                        if (v === categorySubGrouping) setCategorySubGrouping("none")
+                      }}
+                      disabledValues={categorySubGrouping !== "none" ? [categorySubGrouping] : []}
                     />
-                    <ToggleRow
-                      label="Show empty"
-                      icon={<svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M2 2h12v12H2z" rx="1.5"/></svg>}
-                      checked={categoryShowEmpty}
-                      onChange={setCategoryShowEmpty}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-note text-muted-foreground">Rows</span>
+                    <CatChipDropdown
+                      value={categorySubGrouping}
+                      options={([
+                        { value: "none" as const, label: "No grouping" },
+                        { value: "tier" as const, label: "Tier" },
+                        { value: "parent" as const, label: "Parent" },
+                        { value: "family" as const, label: "Family" },
+                      ] as const).filter(o => o.value !== categoryGrouping)}
+                      onChange={setCategorySubGrouping}
                     />
                   </div>
+                  {categorySubGrouping !== "none" && (
+                    <div className="flex items-center justify-between pl-3">
+                      <span className="text-2xs text-muted-foreground/60">Group order</span>
+                      <CatChipDropdown
+                        value={categorySubGroupOrder}
+                        options={[
+                          { value: "default" as const, label: "Default" },
+                          { value: "name" as const, label: "Name" },
+                          { value: "count" as const, label: "Count" },
+                        ]}
+                        onChange={setCategorySubGroupOrder}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-note text-muted-foreground">Grouping</span>
+                    <CatChipDropdown
+                      value={categoryGrouping}
+                      options={[
+                        { value: "none" as const, label: "No grouping" },
+                        { value: "tier" as const, label: "Tier" },
+                        { value: "parent" as const, label: "Parent" },
+                        { value: "family" as const, label: "Family" },
+                      ]}
+                      onChange={(v) => {
+                        setCategoryGrouping(v)
+                        if (v === categorySubGrouping) setCategorySubGrouping("none")
+                      }}
+                      disabledValues={categorySubGrouping !== "none" ? [categorySubGrouping] : []}
+                    />
+                  </div>
+                  {categoryGrouping !== "none" && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-note text-muted-foreground">Sub-grouping</span>
+                        <CatChipDropdown
+                          value={categorySubGrouping}
+                          options={([
+                            { value: "none" as const, label: "No grouping" },
+                            { value: "tier" as const, label: "Tier" },
+                            { value: "parent" as const, label: "Parent" },
+                            { value: "family" as const, label: "Family" },
+                          ] as const).filter(o => o.value !== categoryGrouping)}
+                          onChange={setCategorySubGrouping}
+                        />
+                      </div>
+                      {categorySubGrouping !== "none" && (
+                        <div className="flex items-center justify-between pl-3">
+                          <span className="text-2xs text-muted-foreground/60">Group order</span>
+                          <CatChipDropdown
+                            value={categorySubGroupOrder}
+                            options={[
+                              { value: "default" as const, label: "Default" },
+                              { value: "name" as const, label: "Name" },
+                              { value: "count" as const, label: "Count" },
+                            ]}
+                            onChange={setCategorySubGroupOrder}
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
                 </>
               )}
 
-              {/* Display properties (list mode only) */}
+              {/* Section 2: Ordering + Sort direction */}
+              <div className="flex items-center justify-between">
+                <span className="text-note text-muted-foreground">Ordering</span>
+                <div className="flex items-center gap-1">
+                  <CatChipDropdown
+                    value={categoryOrdering}
+                    options={[
+                      { value: "name" as const, label: "Name" },
+                      { value: "parent" as const, label: "Parent" },
+                      { value: "tier" as const, label: "Tier" },
+                      { value: "articles" as const, label: "Articles" },
+                      { value: "stubs" as const, label: "Stubs" },
+                      { value: "sub" as const, label: "Sub" },
+                      { value: "updated" as const, label: "Updated" },
+                    ]}
+                    onChange={setCategoryOrdering}
+                  />
+                  <button
+                    onClick={() => setCategorySortDirection(d => d === "asc" ? "desc" : "asc")}
+                    className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border/80 bg-surface-overlay text-muted-foreground hover:text-foreground transition-colors"
+                    title={categorySortDirection === "asc" ? "Ascending" : "Descending"}
+                  >
+                    {categorySortDirection === "asc" ? <SortAscending size={12} weight="regular" /> : <SortDescending size={12} weight="regular" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Section 3: Mode-specific options */}
+              <hr className="border-border/60" />
+              <div className="flex flex-col gap-2.5">
+                <p className="text-xs font-medium text-muted-foreground/50 mb-0">
+                  {categoryViewMode === "board" ? "Board options" : "List options"}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground/50 shrink-0">
+                    <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="13.5" y2="4"/><line x1="2.5" y1="8" x2="10" y2="8"/><line x1="2.5" y1="12" x2="7" y2="12"/></svg>
+                  </span>
+                  <span className="text-note flex-1">Show description</span>
+                  <CatToggle on={categoryShowDescription} onChange={() => setCategoryShowDescription(!categoryShowDescription)} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground/50 shrink-0">
+                    <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M2 2h12v12H2z" rx="1.5"/></svg>
+                  </span>
+                  <span className="text-note flex-1">{categoryViewMode === "board" ? "Show empty columns" : "Show empty"}</span>
+                  <CatToggle on={categoryShowEmpty} onChange={() => setCategoryShowEmpty(!categoryShowEmpty)} />
+                </div>
+              </div>
+
+              {/* Section 5: Display properties (list only) */}
               {categoryViewMode === "list" && (
                 <>
-                  <div className="h-px bg-border/50" />
-                  <div className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wide">
-                    Display properties
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { key: "parent", label: "Parent", icon: <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"><path d="M14 12.5a1 1 0 01-1 1H3a1 1 0 01-1-1V3.5a1 1 0 011-1h3.5l1.5 2H13a1 1 0 011 1z"/></svg> },
-                      { key: "tier", label: "Tier", icon: <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="3" y1="13" x2="3" y2="10"/><line x1="6.5" y1="13" x2="6.5" y2="7"/><line x1="10" y1="13" x2="10" y2="4"/></svg> },
-                      { key: "articles", label: "Articles" },
-                      { key: "stubs", label: "Stubs" },
-                      { key: "sub", label: "Sub" },
-                      { key: "updated", label: "Updated", icon: <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="12" height="11" rx="1.5"/><line x1="2" y1="7" x2="14" y2="7"/><line x1="5.3" y1="1.3" x2="5.3" y2="4.7"/><line x1="10.7" y1="1.3" x2="10.7" y2="4.7"/></svg> },
-                    ].map((prop) => (
-                      <button
-                        key={prop.key}
-                        className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
-                      >
-                        {prop.icon}
-                        {prop.label}
-                      </button>
-                    ))}
+                  <hr className="border-border/60" />
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground/50 mb-2.5">Display properties</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { key: "parent", label: "Parent" },
+                        { key: "tier", label: "Tier" },
+                        { key: "articles", label: "Articles" },
+                        { key: "stubs", label: "Stubs" },
+                        { key: "sub", label: "Sub" },
+                        { key: "updated", label: "Updated" },
+                      ].map(prop => {
+                        const active = categoryDisplayProps.includes(prop.key)
+                        return (
+                          <button
+                            key={prop.key}
+                            onClick={() => setCategoryDisplayProps(prev =>
+                              active ? prev.filter(k => k !== prop.key) : [...prev, prop.key]
+                            )}
+                            className={cn(
+                              "inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors",
+                              active
+                                ? "border-accent/30 bg-accent/[0.14] text-accent/90"
+                                : "border-border/80 bg-transparent text-muted-foreground"
+                            )}
+                          >
+                            {prop.label}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 </>
               )}
@@ -1271,6 +1438,10 @@ export function WikiView() {
           categoryShowDescription={categoryShowDescription}
           categoryShowEmpty={categoryShowEmpty}
           categoryGrouping={categoryGrouping}
+          categoryDisplayProps={categoryDisplayProps}
+          categorySortDirection={categorySortDirection}
+          onOrderingChange={setCategoryOrdering}
+          onSortDirectionChange={setCategorySortDirection}
         />
       ) : wikiViewMode === "merge" ? (
         <WikiMergePage />

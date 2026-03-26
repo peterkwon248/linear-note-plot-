@@ -972,6 +972,7 @@ function InlineCategoryTags({
   const handleCreateAndAdd = () => {
     if (!newCatName.trim()) return
     const id = createWikiCategory(newCatName.trim())
+    if (!id) return
     setArticleCategories(articleId, [...categoryIds, id])
     setNewCatName("")
     setDropdownOpen(false)
@@ -1126,6 +1127,7 @@ function ArticleCategories({
   const handleCreateAndAdd = () => {
     if (!newCatName.trim()) return
     const id = createWikiCategory(newCatName.trim())
+    if (!id) return
     setArticleCategories(articleId, [...categoryIds, id])
     setNewCatName("")
     setDropdownOpen(false)

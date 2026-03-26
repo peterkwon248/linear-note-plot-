@@ -248,7 +248,7 @@ export interface PlotState {
   deleteSavedView: (id: string) => void
 
   // ── Wiki Categories (DAG) ──
-  createWikiCategory: (name: string, parentIds?: string[]) => string
+  createWikiCategory: (name: string, parentIds?: string[]) => string | null
   updateWikiCategory: (id: string, updates: Partial<Pick<WikiCategory, 'name' | 'parentIds' | 'description'>>) => void
   deleteWikiCategory: (id: string) => void
   setArticleCategories: (articleId: string, categoryIds: string[]) => void

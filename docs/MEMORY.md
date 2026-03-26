@@ -100,6 +100,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - 그룹핑: Tier별/Parent별/Family별 (Family=루트 조상 기준 계보+들여쓰기)
   - WikiCategory에 updatedAt 필드 추가 (store migration v61)
   - 카테고리 미선택 시 All Categories overview 표시
+- **PR #103**: 카테고리 Board 뷰 + Notes Board 더블클릭 + 사이드바
+  - Tree 모드 제거, List+Board 2모드 체제 전환
+  - Board: Tier별 3칼럼(1st/2nd/3rd+), dnd-kit 드래그로 계층 이동
+  - Board/List 공용 Columns/Rows/Sub-grouping 드롭다운 (Notes DisplayPanel 벤치마킹)
+  - 전 칼럼 정렬 버튼 (7개: name/parent/tier/articles/stubs/sub/updated)
+  - Display Properties 토글 → 실제 칼럼 표시/숨김 연동
+  - Board Columns 드롭다운 → Tier/Parent/Family 보드 그룹핑 실제 반영
+  - 우측 사이드바: All Overview / Category Detail / Batch Actions 3상태
+  - Notes Board 더블클릭 → 에디터 열기 (싱글클릭=프리뷰)
+  - Tier depth 무한 허용 (제한 해제), Board에서 3rd+ 합침
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
