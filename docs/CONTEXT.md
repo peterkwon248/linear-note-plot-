@@ -79,10 +79,10 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-63. 카테고리 P0 버그 수정 — Board Select All 체크박스, Delete Undo, 사이드바→SmartSidePanel 통합
 64. 카테고리 폼 에디터 — 더블클릭 split 레이아웃, Parent 드롭다운, 서브카테고리 관리
 65. Unified Pipeline Phase 1~4 — Filter/Display/SidePanel 통합, Design Spine 토큰 수정
 66. Discover 추천 엔진 — keyword+tag+backlink+folder 4신호 로컬 추천, SidePanel 3탭(Detail+Discover+Peek)
+67. Board UX 개선 — Trash→Tools, 드래그 선택, 그룹핑 컬럼 숨김, Tags 폐기, 필터 Status shape 아이콘, Mixed status 표시
 
 ## Three Axes — Core Design Philosophy
 
@@ -125,9 +125,9 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 
 ## TODO: Future Work (우선순위 순)
 
-### P0 — 디자인 폴리시
-- **Design Spine 수립** — spacing/sizing/typography 표준화 (Linear/Plane 수준)
-- **전 화면 수치 통일** — 행 높이, 아이콘 크기, padding 일관성
+### P0 — 최우선
+- **Board 다중선택 Status 뱃지 드롭다운** — 선택된 노트들의 status별 뱃지 전부 표기. 뱃지 클릭 시 해당 status 노트 목록 드롭다운 표시
+- **Board에서 Detail/Discover 탭 연결** — 1개 선택 시 SmartSidePanel의 Detail/Discover 탭 표시 (현재 batch panel만 나옴)
 
 ### P1 — 다음
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식, infobox 에디터 툴바에 통합
