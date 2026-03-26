@@ -116,6 +116,8 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - 우측 사이드바: All Overview / Category Detail / Batch Actions 3상태
   - Notes Board 더블클릭 → 에디터 열기 (싱글클릭=프리뷰)
   - Tier depth 무한 허용 (제한 해제), Board에서 3rd+ 합침
+- **PR #120**: Unified Pipeline Phase 1~4 — Filter/Display/SidePanel 통합 + Design Spine + Discover 추천 엔진
+- **PR #121**: Board UX — Trash→Tools, 드래그 선택, 그룹핑 컬럼 숨김, Tags 폐기, 필터 Status shape 아이콘, Mixed status 표시
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

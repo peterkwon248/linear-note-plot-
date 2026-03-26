@@ -185,21 +185,29 @@ export function BoardWorkbench({
           {/* Status */}
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Status</span>
-            <StatusDropdown
-              value={commonStatus ?? "inbox"}
-              onChange={(s) => batchUpdateNotes(Array.from(selectedIds), { status: s })}
-              variant="inline"
-            />
+            {commonStatus ? (
+              <StatusDropdown
+                value={commonStatus}
+                onChange={(s) => batchUpdateNotes(Array.from(selectedIds), { status: s })}
+                variant="inline"
+              />
+            ) : (
+              <span className="text-xs text-muted-foreground/60">Mixed</span>
+            )}
           </div>
 
           {/* Priority */}
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Priority</span>
-            <PriorityDropdown
-              value={commonPriority ?? "none"}
-              onChange={(p) => batchUpdateNotes(Array.from(selectedIds), { priority: p })}
-              variant="inline"
-            />
+            {commonPriority !== null ? (
+              <PriorityDropdown
+                value={commonPriority}
+                onChange={(p) => batchUpdateNotes(Array.from(selectedIds), { priority: p })}
+                variant="inline"
+              />
+            ) : (
+              <span className="text-xs text-muted-foreground/60">Mixed</span>
+            )}
           </div>
         </div>
 

@@ -104,7 +104,8 @@
       "Bash(winget install Cloudflare.cloudflared 2>&1)",
       "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-27_0030.md)",
       "Bash(cp ~/.claude/.omc-worklog/latest.md \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\hungry-blackburn\\\\.omc\\\\worklog\\\\latest.md\")",
-      "Bash(grep -r \"visibleColumns\\\\|groupBy\" /c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/hungry-blackburn/lib/view-engine/ --include=*.ts --include=*.tsx)"
+      "Bash(grep -r \"visibleColumns\\\\|groupBy\" /c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/hungry-blackburn/lib/view-engine/ --include=*.ts --include=*.tsx)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-27_0750.md)"
     ]
   }
 }

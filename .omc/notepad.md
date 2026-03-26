@@ -1,16 +1,15 @@
-# Session Notepad (Updated: 2026-03-27 00:30)
+# Session Notepad (Updated: 2026-03-27 08:00)
 
 ## Critical Context
-- Unified Pipeline Phase 1~4 완료 (PR #120 merged)
-- Store = 20 slices (v63). Filter/Display/SidePanel 통합 완료
-- SidePanel 3탭: Detail + Discover + Peek
-- AI-Ready Features Spec 문서 공유됨 (사용자 ChatGPT 대화 정수)
+- PR #120 (Pipeline) + #121 (Board UX) merged to main
+- Store = 20 slices (v63)
+- Mixed status → "Mixed" 표시 구현 완료 (미커밋 상태로 #122에 포함)
 
-## Active Tasks
-- [ ] Phase 5: AI-Ready Smart Export (Context Pack, Prompt Clipboard 등)
+## Active Tasks (우선순위)
+- [ ] **P0**: Board 다중선택 Status 뱃지 드롭다운 (사용자 제안)
+- [ ] **P0**: Board Detail/Discover 탭 연결
+- [ ] Phase 5: AI-Ready Smart Export
 - [ ] 사이드바 뷰 / 템플릿 리디자인 / 라이브러리
-- [ ] 커맨드 팔레트 확장 + 풀페이지 검색 분리
-- [ ] Space별 Detail 컴포넌트 (Wiki/Graph/Calendar 전용)
 
 ## Blockers
 - 없음
