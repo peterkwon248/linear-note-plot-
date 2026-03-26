@@ -1,52 +1,50 @@
 ---
-session_date: "2026-03-22 19:30"
+session_date: "2026-03-27 00:30"
 project: "Plot (linear-note-plot)"
 working_directory: "C:\Users\user\Desktop\linear-note-plot-"
-duration_estimate: "~5 hours"
+duration_estimate: "~3 hours"
 ---
 
-## Completed Work (2 PRs)
+## Completed Work (PR #120 — merged to main)
 
-### PR #92: Wiki 리디자인 + 첨부파일 IDB + 시드 데이터
-- Wiki 파일 분리 (1500줄→6파일) + Dashboard/List/ArticleReader 리디자인
-- 첨부파일: data URL → IDB blob (attachment:// 스킴, useAttachmentUrl 훅)
-- Zettelkasten 튜토리얼 시드 9 notes + store v46 마이그레이션
-- 카테고리 클릭 필터 + TOC Section/Subsection + Wiki stub 템플릿
-- + Add file (WikiCollectionSidebar) + Infobox editable
+### Phase 1: 타입 계약 + Design Spine + 공유 컴포넌트
+- ViewContextKey에 wiki, wiki-category, graph, calendar 추가
+- FilterField에 graph/wiki 전용 필드, GroupBy에 tier/parent/family 추가
+- ToggleSwitch, ChipDropdown 공유 컴포넌트 추출
+- Design Spine: 12개 파일 typography/border/hover/icon/하드코딩 일괄 수정
 
-### PR #93: Wiki Block Editor (Assembly Model) 1~3단계
-- WikiArticle + WikiBlock 타입 (lib/types.ts) — Wiki ≠ Note, 별도 엔티티
-- createWikiArticlesSlice: 10개 액션 (CRUD + 블록 5종 조작)
-- 블록 렌더러: Section(번호+접기+편집)/Text(textarea)/NoteRef(검색+삽입)/Image(업로드)
-- WikiArticleView: TOC + 블록 + Infobox 사이드바
-- Section 자동 번호 (computeSectionNumbers, TOC↔본문 동기화)
-- 시드 WikiArticle 3개 + Note→WikiArticle 자동 라우팅
-- Store v48
+### Phase 2: Filter 통합
+- graph-filter-adapter.ts: OntologyFilters ↔ FilterRule[] 양방향 변환
+- Graph → ViewHeader + FilterPanel 교체, ontology-filter-bar.tsx 삭제
+
+### Phase 3: Display 통합
+- Wiki category: 14개 useState → viewStateByContext + DisplayPanel
+- Calendar/Graph: viewStateByContext + DisplayPanel 연동
+- WIKI_CATEGORY_VIEW_CONFIG 신규, SortField 확장
+
+### Phase 4: Side Panel 통합
+- SidePanelMode: detail | discover | peek (v63 migration)
+- side-panel-detail.tsx: Entity-aware Detail 라우터
+- discover-engine.ts: keyword+tag+backlink+folder 4신호 로컬 추천
+- SmartSidePanel 3탭 UI (Detail + Discover + Peek)
 
 ## Remaining Tasks
-- [ ] Wiki Block Editor 후속: 블록 드래그 이동 (dnd-kit), Section 접기/펼치기 구현
-- [ ] 기존 isWiki 노트 → WikiArticle 완전 마이그레이션 (레거시 제거)
-- [ ] NoteRef lazy load (Intersection Observer)
-- [ ] Phosphor Icons 마이그레이션
+- [ ] Phase 5: AI-Ready Smart Export
+- [ ] 사이드바 뷰 (생성/편집/삭제)
+- [ ] 템플릿 리디자인
+- [ ] 라이브러리 (이미지/URL/파일)
+- [ ] 커맨드 팔레트 확장 (6→20+개)
+- [ ] 풀페이지 검색 분리
+- [ ] Space별 Detail 컴포넌트 (Wiki/Graph/Calendar)
+- [ ] Discover Web Worker 최적화
 
 ## Key Decisions
-- Wiki = 노트 조립품 (Assembly Model) — 노트는 원재료, 위키는 노트를 블록으로 참조하여 아티클 조립
-- 에디터 타입은 isWiki/WikiArticle이 자동 결정 (유저 선택 없음)
-- Section 번호는 JS 계산 (useMemo, O(n)) — CSS counter 대신. TOC와 100% 동기화
+- 통합 파이프라인: 데이터 모델 안 건드림, UI 패턴만 통일
+- Design Spine 별도 Phase 안 함: 구조 통합에 녹임
+- Discover = AI 없는 로컬 추천
+- SidePanel 3탭: Detail + Discover + Peek
 
 ## Technical Learnings
-- Zustand persist partialize로 content가 strip됨 → seed body는 onRehydrate에서 persist
-- IDB store name = "plot-zustand" (plot-store 아님)
-- React hooks: early return 전에 모든 hooks 호출 필수
-- WikiArticle은 Note와 별도 store slice — blocks 배열이 source of truth
-
-## Files Modified (주요)
-- components/wiki-editor/wiki-block-renderer.tsx — 신규, 블록 4종 렌더러
-- components/wiki-editor/wiki-article-view.tsx — 신규, 전체 아티클 뷰
-- lib/store/slices/wiki-articles.ts — 신규, WikiArticle CRUD slice
-- lib/types.ts — WikiArticle, WikiBlock, WikiBlockType 타입
-- lib/store/seeds.ts — SEED_WIKI_ARTICLES 3개 + 영어 튜토리얼
-- lib/store/index.ts — v48, wiki-articles slice 등록
-- lib/store/migrate.ts — v47+v48 마이그레이션
-- components/views/wiki-view.tsx — WikiArticle 렌더 분기 + 자동 라우팅
-- components/views/wiki-dashboard.tsx — WikiArticles 카드 섹션
+- viewStateByContext 새 키 추가 시 ?? buildViewStateForContext() 방어 필요
+- ToggleSwitch: bg-border 다크모드 안 보임 → bg-muted-foreground/40
+- on knob: bg-background 다크모드 검정 → bg-white 고정

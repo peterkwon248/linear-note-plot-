@@ -318,9 +318,11 @@ function BoardCardInner({
   /* Visual card — no drag refs, just presentation + click */
   const cardVisual = (
     <div
+      data-board-card
+      data-note-id={note.id}
       onClick={(e) => {
         if (isDragOverlay) return
-        if (onSelect && (e.metaKey || e.ctrlKey)) {
+        if (onSelect) {
           e.stopPropagation()
           onSelect(note.id, e)
         } else {
@@ -479,7 +481,7 @@ function BoardCardInner({
   )
 
   return (
-    <div ref={setNodeRef} style={dragStyle} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={dragStyle} {...attributes} {...listeners} data-drag-id={note.id}>
       {contextWrapped}
     </div>
   )
@@ -630,6 +632,13 @@ export function NotesBoard({
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
+  // Drag-select state
+  const [dragRect, setDragRect] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null)
+  const isDragSelectingRef = useRef(false)
+  const wasDragSelectingRef = useRef(false)
+  const boardContainerRef = useRef<HTMLDivElement>(null)
+
   // DnD state
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const isColumnDrag = activeDragId?.startsWith("col-") ?? false
@@ -723,6 +732,79 @@ export function NotesBoard({
     setSelectedIds(new Set())
     setActiveDragId(null)
   }, [groups, resolvedGroups, viewState, updateViewState, updateNote, batchUpdateNotes, selectedIds, notes])
+
+  // Drag-select mouse handlers
+  const handleBoardMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only respond to primary button
+    if (e.button !== 0) return
+    const target = e.target as HTMLElement
+    // Let dnd-kit handle card drags and column headers/checkboxes
+    if (target.closest('[data-board-card]')) return
+    dragStartRef.current = { x: e.clientX, y: e.clientY }
+    isDragSelectingRef.current = false
+    e.preventDefault()
+  }, [])
+
+  useEffect(() => {
+    function handleMouseMove(e: MouseEvent) {
+      if (!dragStartRef.current) return
+      const dx = e.clientX - dragStartRef.current.x
+      const dy = e.clientY - dragStartRef.current.y
+      // Start drag-select only after 5px movement
+      if (!isDragSelectingRef.current && Math.sqrt(dx * dx + dy * dy) < 5) return
+      isDragSelectingRef.current = true
+
+      const rect = {
+        x1: dragStartRef.current.x,
+        y1: dragStartRef.current.y,
+        x2: e.clientX,
+        y2: e.clientY,
+      }
+      setDragRect(rect)
+
+      // Calculate selection from intersecting cards
+      const selLeft = Math.min(rect.x1, rect.x2)
+      const selRight = Math.max(rect.x1, rect.x2)
+      const selTop = Math.min(rect.y1, rect.y2)
+      const selBottom = Math.max(rect.y1, rect.y2)
+
+      const cards = document.querySelectorAll<HTMLElement>('[data-board-card]')
+      const newSelected = new Set<string>()
+      cards.forEach((card) => {
+        const cardRect = card.getBoundingClientRect()
+        const intersects =
+          cardRect.left < selRight &&
+          cardRect.right > selLeft &&
+          cardRect.top < selBottom &&
+          cardRect.bottom > selTop
+        if (intersects) {
+          const noteId = card.dataset.noteId
+          if (noteId) {
+            newSelected.add(noteId)
+          }
+        }
+      })
+      setSelectedIds(newSelected)
+    }
+
+    function handleMouseUp() {
+      if (isDragSelectingRef.current) {
+        setDragRect(null)
+        wasDragSelectingRef.current = true
+        // Reset after a tick so the subsequent click event is suppressed
+        requestAnimationFrame(() => { wasDragSelectingRef.current = false })
+      }
+      dragStartRef.current = null
+      isDragSelectingRef.current = false
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [])
 
   const handleCardSelect = useCallback((noteId: string, e: React.MouseEvent) => {
     setSelectedIds((prev) => {
@@ -843,10 +925,15 @@ export function NotesBoard({
       ) : (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div
+            ref={boardContainerRef}
             className="flex flex-1 gap-3 overflow-x-auto px-5 py-4"
+            onMouseDown={handleBoardMouseDown}
             onClick={(e) => {
-              // Clear selection when clicking the board background (not a card)
-              if (e.target === e.currentTarget) {
+              // Suppress click after drag-select
+              if (wasDragSelectingRef.current) return
+              // Clear selection when clicking empty space (not on a card)
+              const target = e.target as HTMLElement
+              if (!target.closest('[data-board-card]')) {
                 setSelectedIds(new Set())
               }
             }}
@@ -1022,6 +1109,19 @@ export function NotesBoard({
               </div>
             )}
           </DragOverlay>
+
+          {/* Drag-select rectangle overlay */}
+          {dragRect && (
+            <div
+              className="fixed border border-accent/40 bg-accent/10 pointer-events-none z-50"
+              style={{
+                left: Math.min(dragRect.x1, dragRect.x2),
+                top: Math.min(dragRect.y1, dragRect.y2),
+                width: Math.abs(dragRect.x2 - dragRect.x1),
+                height: Math.abs(dragRect.y2 - dragRect.y1),
+              }}
+            />
+          )}
         </DndContext>
       )}
       </div>

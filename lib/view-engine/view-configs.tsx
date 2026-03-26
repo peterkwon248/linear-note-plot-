@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
+import { CircleDashed, CircleHalf, CheckCircle } from "@phosphor-icons/react"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
 
 export interface FilterCategory {
   key: string
@@ -13,6 +15,7 @@ export interface FilterValue {
   label: string
   color?: string
   count?: number
+  icon?: ReactNode
 }
 
 export interface QuickFilter {
@@ -61,9 +64,9 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)" },
-      { key: "capture", label: "Capture", color: "#f5a623" },
-      { key: "permanent", label: "Permanent", color: "#45d483" },
+      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.inbox }} /> },
+      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.capture }} /> },
+      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.permanent }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -130,7 +133,6 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     properties: [
       { key: "status", label: "Status", icon: StatusIcon },
       { key: "folder", label: "Folder", icon: FolderIcon },
-      { key: "tags", label: "Tags", icon: TagIcon },
       { key: "links", label: "Links", icon: LinkIcon },
       { key: "wordCount", label: "Words", icon: ContentIcon },
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
@@ -237,9 +239,9 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)" },
-      { key: "capture", label: "Capture", color: "#f5a623" },
-      { key: "permanent", label: "Permanent", color: "#45d483" },
+      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.inbox }} /> },
+      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.capture }} /> },
+      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.permanent }} /> },
     ]},
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -323,9 +325,9 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)" },
-      { key: "capture", label: "Capture", color: "#f5a623" },
-      { key: "permanent", label: "Permanent", color: "#45d483" },
+      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.inbox }} /> },
+      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.capture }} /> },
+      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.permanent }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },

@@ -226,12 +226,20 @@ export function FloatingActionBar({
 
       case "permanent":
         return (
-          <button
-            onClick={handleDemoteAll}
-            className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
-          >
-            <ArrowDownLeft size={16} weight="regular" /> Demote
-          </button>
+          <>
+            <button
+              onClick={handleDemoteAll}
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
+            >
+              <ArrowDownLeft size={16} weight="regular" /> Demote
+            </button>
+            <button
+              onClick={handleTrashAll}
+              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
+            >
+              <Trash size={16} weight="regular" /> Trash
+            </button>
+          </>
         )
 
       case "all":
@@ -266,12 +274,20 @@ export function FloatingActionBar({
               </button>
             )}
             {hasPermanent && (
-              <button
-                onClick={handleDemoteAll}
-                className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
-              >
-                <ArrowDownLeft size={16} weight="regular" /> Demote
-              </button>
+              <>
+                <button
+                  onClick={handleDemoteAll}
+                  className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  <ArrowDownLeft size={16} weight="regular" /> Demote
+                </button>
+                <button
+                  onClick={handleTrashAll}
+                  className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
+                >
+                  <Trash size={16} weight="regular" /> Trash
+                </button>
+              </>
             )}
           </>
         )

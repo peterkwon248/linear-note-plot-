@@ -109,8 +109,7 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
   { id: "status", label: "Status", width: "w-[120px] shrink-0", align: "text-right", sortField: "status", minWidth: 400 },
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
-  { id: "tags", label: "Tags", width: "w-[120px] shrink-0", sortField: "title", minWidth: 600 },
-  { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links", minWidth: 640 },
+  { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
   { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
   { id: "wordCount", label: "Words", width: "w-[56px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
   { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
@@ -504,6 +503,8 @@ export function NotesTable({
   }, [selectedIds.size, flatNotes.length])
 
   const handleRowClick = useCallback((noteId: string, rowIndex: number, e: React.MouseEvent) => {
+    // If we just finished a drag-select, ignore the click
+    if (isDraggingRef.current) return
     // Shift+click: range select
     if (e.shiftKey && lastClickedRef.current !== null) {
       const start = Math.min(lastClickedRef.current, rowIndex)
@@ -543,6 +544,14 @@ export function NotesTable({
     if (target.closest('button, a, input, [role="menuitem"], [data-radix-collection-item], [data-no-drag]')) return
     // Don't start drag from checkbox area
     if (target.closest('[data-checkbox]')) return
+
+    // Click on empty space (not on a note row) → clear selection
+    if (!target.closest('[data-note-row]')) {
+      setSelectedIds(new Set())
+    }
+
+    // Prevent native drag (draggable rows) from hijacking the selection drag
+    e.preventDefault()
 
     dragStartRef.current = {
       x: e.clientX,
@@ -646,20 +655,28 @@ export function NotesTable({
     return () => ro.disconnect()
   }, [])
 
+  // Map groupBy values to column IDs to hide when grouped
+  const groupByColumnMap: Record<string, string> = {
+    status: "status",
+    folder: "folder",
+    label: "label",
+  }
+
   const effectiveVisibleCols = useMemo(() => {
+    const hiddenByGroup = groupByColumnMap[viewState.groupBy] ?? ""
     return visibleCols.filter((colId) => {
+      if (colId === hiddenByGroup) return false
       const def = COLUMN_DEFS.find((c) => c.id === colId)
       if (!def || !def.minWidth) return true // title always visible
       return containerWidth >= def.minWidth
     })
-  }, [visibleCols, containerWidth])
+  }, [visibleCols, containerWidth, viewState.groupBy])
 
   // ── Grid template for table-mode columns ──
   const gridTemplate = useMemo(() => {
     const cols = ["32px", "1fr"] // checkbox + name (always)
     if (effectiveVisibleCols.includes("status")) cols.push("120px")
     if (effectiveVisibleCols.includes("folder")) cols.push("80px")
-    if (effectiveVisibleCols.includes("tags")) cols.push("120px")
     if (effectiveVisibleCols.includes("links")) cols.push("56px")
     if (effectiveVisibleCols.includes("reads")) cols.push("56px")
     if (effectiveVisibleCols.includes("wordCount")) cols.push("56px")
@@ -792,6 +809,10 @@ export function NotesTable({
       if (isDraggingRef.current) {
         // Keep the selection, just clear the visual rect
         setDragRect(null)
+        // Keep isDraggingRef true briefly so the subsequent click event is suppressed
+        dragStartRef.current = null
+        requestAnimationFrame(() => { isDraggingRef.current = false })
+        return
       }
       dragStartRef.current = null
       isDraggingRef.current = false
@@ -806,7 +827,7 @@ export function NotesTable({
   }, []) // stable — reads latest data via refs
 
   return (
-    <main ref={tableContainerRef} className="flex h-full flex-1 flex-col overflow-hidden bg-background">
+    <main ref={tableContainerRef} onMouseDown={handleDragMouseDown} className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       {/* ── Page title ─────────────────────────────────── */}
       <ViewHeader
         icon={<FileText size={20} weight="regular" />}
@@ -986,7 +1007,7 @@ export function NotesTable({
                 </div>
               </div>
             ) : (
-              <div ref={scrollContainerRef} onMouseDown={handleDragMouseDown} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
+              <div ref={scrollContainerRef} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
                 {/* Column headers (table mode) */}
                 {effectiveVisibleCols.length > 0 && (
                 <div
@@ -1160,6 +1181,7 @@ export function NotesTable({
                             onMergeWith={() => setMergePickerOpen(true, item.note.id)}
                             onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
                             showCardPreview={viewState.toggles?.showCardPreview === true}
+                            groupBy={viewState.groupBy}
                           />
                         )}
                       </div>
@@ -1273,6 +1295,7 @@ interface NoteRowProps {
   onMergeWith: () => void
   onLinkWith: () => void
   showCardPreview?: boolean
+  groupBy?: string
 }
 
 function SourceIcon({ source }: { source: NoteSource }) {
@@ -1365,6 +1388,7 @@ function NoteRowInner({
   onMergeWith,
   onLinkWith,
   showCardPreview,
+  groupBy,
 }: NoteRowProps) {
   const visibleCols = visibleColumns
   const labels = usePlotStore((s) => s.labels)
@@ -1380,6 +1404,7 @@ function NoteRowInner({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
+          data-note-row
           draggable
           onDragStart={(e) => setNoteDragData(e, note.id)}
           style={{ display: "grid", gridTemplateColumns: gridTemplate }}
@@ -1423,7 +1448,7 @@ function NoteRowInner({
       {/* Name */}
       <div className="flex flex-col min-w-0 pr-4">
         <div className="flex items-center gap-2">
-          <StatusShapeIcon status={note.status} size={14} />
+          {groupBy !== "status" && <StatusShapeIcon status={note.status} size={14} />}
           <span className={`truncate text-foreground ${isCompact ? "text-note" : "text-ui"}`}>
             {note.title || "Untitled"}
           </span>
@@ -1467,20 +1492,6 @@ function NoteRowInner({
           })() : (
             <span className="text-xs text-muted-foreground/30">—</span>
           )}
-        </div>
-      )}
-
-      {/* Tags */}
-      {visibleCols.includes("tags") && (
-        <div className="flex items-center gap-1 px-1 overflow-hidden">
-          {note.tags?.slice(0, 2).map((tagId) => {
-            const tag = usePlotStore.getState().tags.find((t: Tag) => t.id === tagId)
-            return tag ? (
-              <span key={tagId} className="text-2xs px-1.5 py-0.5 rounded border border-border-subtle text-muted-foreground/60 shrink-0 truncate max-w-[56px]">
-                {tag.name}
-              </span>
-            ) : null
-          })}
         </div>
       )}
 
@@ -1681,5 +1692,6 @@ const NoteRow = memo(NoteRowInner, (prev, next) =>
   prev.viewMode === next.viewMode &&
   prev.visibleColumns === next.visibleColumns &&
   prev.gridTemplate === next.gridTemplate &&
-  prev.showCardPreview === next.showCardPreview
+  prev.showCardPreview === next.showCardPreview &&
+  prev.groupBy === next.groupBy
 )

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 import { StatusDropdown, PriorityDropdown, STATUS_CONFIG } from "@/components/note-fields"
@@ -22,6 +22,10 @@ import { CursorClick } from "@phosphor-icons/react/dist/ssr/CursorClick"
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { MergeDialog } from "@/components/merge-dialog"
+import { NotePickerDialog } from "@/components/note-picker-dialog"
+import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
 
 /* ── Props ────────────────────────────────────────────── */
 
@@ -58,6 +62,12 @@ export function BoardWorkbench({
   const triageTrash = usePlotStore((s) => s.triageTrash)
   const promoteToPermanent = usePlotStore((s) => s.promoteToPermanent)
   const undoPromote = usePlotStore((s) => s.undoPromote)
+  const addWikiLink = usePlotStore((s) => s.addWikiLink)
+  const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
+
+  const [mergeOpen, setMergeOpen] = useState(false)
+  const [linkOpen, setLinkOpen] = useState(false)
+  const [wikiAssemblyOpen, setWikiAssemblyOpen] = useState(false)
   const moveBackToInbox = usePlotStore((s) => s.moveBackToInbox)
 
   const selectedNotes = useMemo(
@@ -145,6 +155,7 @@ export function BoardWorkbench({
 
   if (selectedIds.size > 0) {
     return (
+      <>
       <div
         className="flex min-w-[280px] flex-1 shrink-0 flex-col rounded-lg bg-secondary/20 p-4 overflow-y-auto"
         style={{ maxHeight: "calc(100vh - 200px)" }}
@@ -223,7 +234,94 @@ export function BoardWorkbench({
             />
           </div>
         </div>
+
+        {/* Tools */}
+        <div className="mt-4 space-y-3">
+          <h4 className="text-xs font-medium text-muted-foreground">
+            Tools
+          </h4>
+          <div className="space-y-1">
+            <button
+              onClick={handleTrashAll}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <Trash className="text-destructive" size={16} weight="regular" /> Trash
+            </button>
+            <button
+              onClick={() => {
+                const ids = Array.from(selectedIds)
+                if (ids.length === 1) {
+                  setMergePickerOpen(true, ids[0])
+                } else {
+                  setMergeOpen(true)
+                }
+              }}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              <GitMerge className="text-muted-foreground" size={16} weight="regular" /> Merge
+            </button>
+            <button
+              onClick={() => setWikiAssemblyOpen(true)}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              <BookOpen className="text-muted-foreground" size={16} weight="regular" /> Wiki
+            </button>
+            <button
+              onClick={() => setLinkOpen(true)}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              <PhLink className="text-muted-foreground" size={16} weight="regular" /> Link
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Merge Dialog */}
+      {mergeOpen && (
+        <MergeDialog
+          open={mergeOpen}
+          onOpenChange={setMergeOpen}
+          noteIds={Array.from(selectedIds)}
+          onComplete={() => {
+            setMergeOpen(false)
+            onClearSelection()
+          }}
+        />
+      )}
+
+      {/* Link Dialog */}
+      <NotePickerDialog
+        open={linkOpen}
+        onOpenChange={setLinkOpen}
+        title="Link to..."
+        onSelect={(targetId: string) => {
+          const target = notes.find((n) => n.id === targetId)
+          const targetTitle = target?.title ?? "Untitled"
+          const ids = Array.from(selectedIds)
+          ids.forEach((id) => addWikiLink(id, targetTitle))
+          setLinkOpen(false)
+          onClearSelection()
+          toast(
+            ids.length === 1
+              ? `Linked to "${targetTitle}"`
+              : `Linked ${ids.length} notes to "${targetTitle}"`,
+          )
+        }}
+      />
+
+      {/* Wiki Assembly Dialog */}
+      {wikiAssemblyOpen && (
+        <WikiAssemblyDialog
+          open={wikiAssemblyOpen}
+          onOpenChange={setWikiAssemblyOpen}
+          noteIds={Array.from(selectedIds)}
+          onComplete={() => {
+            setWikiAssemblyOpen(false)
+            onClearSelection()
+          }}
+        />
+      )}
+      </>
     )
   }
 
@@ -252,7 +350,7 @@ export function BoardWorkbench({
 function WorkflowActions({
   effectiveTab,
   onKeepAll,
-  onTrashAll,
+  onTrashAll: _onTrashAll,
   onPromoteAll,
   onDemoteAll,
   onMoveBackAll,
@@ -269,7 +367,6 @@ function WorkflowActions({
   if (effectiveTab === "inbox") {
     actions.push(
       { icon: <PhCheck className="text-accent" size={16} weight="bold" />, label: "Done All", onClick: onKeepAll },
-      { icon: <Trash className="text-accent" size={16} weight="regular" />, label: "Trash All", onClick: onTrashAll },
     )
   }
 
