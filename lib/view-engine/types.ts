@@ -150,7 +150,7 @@ export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calen
 export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", "count"]
 
 export const VALID_COLUMNS: string[] = [
-  "title", "status", "folder", "tags", "links", "reads", "wordCount", "createdAt", "updatedAt",
+  "title", "status", "folder", "links", "reads", "wordCount", "createdAt", "updatedAt",
   // Wiki-category-specific columns
   "parent", "tier", "articles", "stubs", "sub",
 ]

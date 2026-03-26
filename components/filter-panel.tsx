@@ -31,6 +31,7 @@ export interface FilterValue {
   label: string
   color?: string
   count?: number
+  icon?: ReactNode
 }
 
 export interface FilterCategory {
@@ -156,12 +157,14 @@ export function FilterPanel({
                 }
               >
                 <Checkbox checked={isActive} />
-                {val.color && (
+                {val.icon ? (
+                  <span className="shrink-0 flex items-center">{val.icon}</span>
+                ) : val.color ? (
                   <span
                     className="w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: val.color }}
                   />
-                )}
+                ) : null}
                 <span className={`flex-1 text-left text-note ${isActive ? "text-foreground font-medium" : "text-foreground"}`}>
                   {val.label}
                 </span>
