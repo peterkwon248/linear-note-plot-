@@ -140,7 +140,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-03-25)
+## Current Direction (as of 2026-03-26)
 
 ### Key Design Decisions (추가)
 - **WorkspaceMode 삭제**: zen/research 모드 불필요. sidebarCollapsed + detailsOpen 독립 토글만으로 충분
@@ -153,7 +153,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Workspace 단순화**: Binary tree → 듀얼 패인. react-resizable-panels. 9개 레거시 파일 삭제
 - **위키 = 유저의 확장된 세계관**: 블록 무한 확장 대응 (IDB 분리 + virtuoso + lazy load + sectionIndex)
 
-### 이번 세션 완료 (2026-03-26)
+### 이번 세션 완료 — 카테고리 P0 + 에디터 (2026-03-26)
+- **P0 Board Select All 시각 피드백**: 카드에 hover 체크박스 + accent 하이라이트 (Notes Board 패턴 동일)
+- **P0 카테고리 Delete Undo**: pushUndo + toast Undo 버튼, 부모참조/아티클참조 전체 복원
+- **카테고리 사이드바 → SmartSidePanel 통합**: 내장 CategorySidePanel 280px 제거, SidePanelContext에서 카테고리 모드 감지하여 글로벌 Details 패널에 표시. Notes와 동일 패턴
+- **빈 공간 클릭 선택 해제**: activeCategoryId null + expandedCatId 리셋
+- **카테고리 폼 에디터**: 더블클릭 → split view (280px 리스트 + 에디터). 이름/설명 인라인 편집 (hover/focus bg 피드백), Parent 드롭다운 변경, Info 카드 (Tier/Parent/Created/Updated)
+- **서브카테고리 관리**: "+ New" 인라인 생성, "Move here" 기존 카테고리 이동 (순환참조 방지), Parent Categories 조상 체인 네비게이션
+- **디자인 브레인스토밍**: Linear/Plane 수준 폴리시를 위한 "Design Spine" 논의 시작. spacing/sizing/typography 표준화 방향 설정 예정
+
+### 이번 세션 완료 — 레이아웃 리디자인 (2026-03-26)
 - **TopUtilityBar 제거 + 사이드바 헤더 리디자인**: Back/Forward/Search를 사이드바 상단으로 이동 (Linear 스타일)
 - **사이드바 폭 260→220px**: 컴팩트화
 - **사이드바 닫기/열기 Plane식**: ActivityBar 상단 열기 버튼, 다른 space 클릭 시 사이드바 안 열림

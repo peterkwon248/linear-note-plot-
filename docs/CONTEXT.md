@@ -79,11 +79,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-58. Wiki 카테고리 시스템 완성 — 2-panel 트리 에디터, Encyclopedia 레이아웃, URL 블록, Merge/Split 개선
-59. 타이포그래피 밸런스 개선 — 위키/캘린더/스플릿 에디터 전반 폰트 크기 조정
 60. 위키 카테고리 UX 개선 — 검색, RECENT, 우클릭, List 뷰, 전용 필터/디스플레이, Family 그룹핑
-61. 카테고리 Board 뷰 — Tree 제거, List+Board 2모드, Tier별 칼럼(1st/2nd/3rd+), dnd-kit 드래그, 우측 사이드바(Overview/Detail/Batch)
+61. 카테고리 Board 뷰 — Tree 제거, List+Board 2모드, Tier별 칼럼(1st/2nd/3rd+), dnd-kit 드래그
 62. Notes Board 더블클릭 에디터 열기 + 카테고리 전 칼럼 정렬 + 디스플레이 프로퍼티 칼럼 연동
+63. 카테고리 P0 버그 수정 — Board Select All 체크박스, Delete Undo, 사이드바→SmartSidePanel 통합
+64. 카테고리 폼 에디터 — 더블클릭 split 레이아웃, 이름/설명 인라인 편집, Parent 드롭다운, + New/Move here 서브카테고리 관리, Parent Categories 네비게이션
 
 ## Three Axes — Core Design Philosophy
 
@@ -121,13 +121,14 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **우측 사이드바 = Details 패널**: ViewDistributionPanel 삭제. 사이드바 버튼으로만 열림. previewNoteId로 리스트 행 클릭 시 내용 업데이트 (2026-03-26)
 - **Priority UI 완전 삭제**: 디테일 패널에서도 제거. Pin + Labels로 충분 (2026-03-26)
 - **sidePanelOpen persist 안 함**: 앱 시작 시 항상 닫힌 상태 (2026-03-26)
+- **카테고리 사이드바 → SmartSidePanel 통합**: 내장 280px 사이드바 제거, 글로벌 Details 패널에서 표시. Notes와 동일 패턴 (2026-03-26)
+- **카테고리 더블클릭 에디터**: 싱글클릭=선택(하이라이트만), 더블클릭=폼 에디터 split view. 이름/설명 인라인 편집, Parent 드롭다운, 서브카테고리 +New/Move here (2026-03-26)
 
 ## TODO: Future Work (우선순위 순)
 
-### P0 — 남은 이슈
-- **리스트 모드 All Overview 사이드바 안 사라짐** — 미선택 시 사이드바 숨기기
-- **Board Select All 시각 피드백** — 카드에 체크박스 + 하이라이트 (Notes Board 패턴)
-- **카테고리 Delete 후 Undo** — 실수 삭제 복구 기능
+### P0 — 디자인 폴리시
+- **Design Spine 수립** — spacing/sizing/typography 표준화 (Linear/Plane 수준)
+- **전 화면 수치 통일** — 행 높이, 아이콘 크기, padding 일관성
 
 ### P1 — 다음
 - **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식, infobox 에디터 툴바에 통합

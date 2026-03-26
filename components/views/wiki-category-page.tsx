@@ -20,11 +20,17 @@ import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
 import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
 import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
 import { CursorClick } from "@phosphor-icons/react/dist/ssr/CursorClick"
+import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { pushUndo, popUndo } from "@/lib/undo-manager"
+import { setActiveCategoryView } from "@/lib/wiki-view-mode"
 
 /* ── Props ── */
 
@@ -144,10 +150,14 @@ function CategoryBoardCard({
   item,
   onSelect,
   showDescription,
+  isSelected,
+  onDoubleClick,
 }: {
   item: CategoryDataItem
   onSelect: (id: string, e?: React.MouseEvent) => void
   showDescription?: boolean
+  isSelected?: boolean
+  onDoubleClick?: (id: string) => void
 }) {
   const { cat, articleCount, stubCount, childCount } = item
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: cat.id })
@@ -164,13 +174,30 @@ function CategoryBoardCard({
       {...attributes}
       {...listeners}
       onClick={(e) => { e.stopPropagation(); !isDragging && onSelect(cat.id, e) }}
+      onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick?.(cat.id) }}
       className={cn(
-        "rounded-lg border border-border/50 bg-card p-3 transition-all select-none",
+        "group relative rounded-lg border border-border/50 bg-card p-3 transition-all select-none",
         isDragging ? "opacity-20 cursor-grabbing" : "cursor-grab",
-        isOver && !isDragging && "ring-2 ring-accent border-accent/50 bg-accent/5"
+        isOver && !isDragging && "ring-2 ring-accent border-accent/50 bg-accent/5",
+        isSelected && !isDragging && !isOver && "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
       )}
       style={{ touchAction: "none" }}
     >
+      {/* Selection checkbox */}
+      <div
+        className={cn(
+          "absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded border transition-all cursor-pointer z-10",
+          isSelected
+            ? "bg-accent border-accent"
+            : "border-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:border-muted-foreground/50 bg-background"
+        )}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect(cat.id, { ...e, ctrlKey: true } as React.MouseEvent)
+        }}
+      >
+        {isSelected && <PhCheck className="text-accent-foreground" size={10} weight="bold" />}
+      </div>
       {/* Title row */}
       <div className="flex items-center gap-2">
         <FolderSimple size={14} weight="regular" className="text-muted-foreground/60 shrink-0" />
@@ -215,6 +242,8 @@ function CategoryBoardColumn({
   showDescription,
   activeDragId,
   isRootColumn,
+  selectedIds,
+  onDoubleClick,
 }: {
   columnKey: string
   label: string
@@ -223,6 +252,8 @@ function CategoryBoardColumn({
   showDescription?: boolean
   activeDragId?: string | null
   isRootColumn?: boolean
+  selectedIds?: Set<string>
+  onDoubleClick?: (id: string) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: columnKey })
   const isDragging = !!activeDragId
@@ -248,7 +279,7 @@ function CategoryBoardColumn({
       {/* Cards */}
       <div className="flex flex-col gap-1.5 px-1.5 pb-2 overflow-y-auto max-h-[calc(100vh-200px)]">
         {items.map(item => (
-          <CategoryBoardCard key={item.cat.id} item={item} onSelect={onSelect} showDescription={showDescription} />
+          <CategoryBoardCard key={item.cat.id} item={item} onSelect={onSelect} showDescription={showDescription} isSelected={selectedIds?.has(item.cat.id)} onDoubleClick={onDoubleClick} />
         ))}
         {items.length === 0 && (
           <div className="text-xs text-muted-foreground/40 text-center py-8">No categories</div>
@@ -269,6 +300,8 @@ function CategoryBoardView({
   showDescription,
   showEmpty,
   grouping = "tier",
+  selectedIds,
+  onDoubleClick,
 }: {
   categories: WikiCategory[]
   articles: WikiArticle[]
@@ -278,6 +311,8 @@ function CategoryBoardView({
   showDescription?: boolean
   showEmpty?: boolean
   grouping?: "none" | "tier" | "parent" | "family"
+  selectedIds?: Set<string>
+  onDoubleClick?: (id: string) => void
 }) {
   const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
 
@@ -456,6 +491,8 @@ function CategoryBoardView({
             showDescription={showDescription}
             activeDragId={activeDragId}
             isRootColumn={col.isRoot}
+            selectedIds={selectedIds}
+            onDoubleClick={onDoubleClick}
           />
         ))}
       </div>
@@ -486,6 +523,7 @@ function CategoryFullListView({
   displayProps,
   onOrderingChange,
   onSortDirectionChange,
+  onDoubleClick,
 }: {
   categories: WikiCategory[]
   articles: WikiArticle[]
@@ -502,6 +540,7 @@ function CategoryFullListView({
   displayProps?: string[]
   onOrderingChange?: (ordering: CategoryOrdering) => void
   onSortDirectionChange?: (dir: "asc" | "desc") => void
+  onDoubleClick?: (id: string) => void
 }) {
   const showCol = (key: string) => !displayProps || displayProps.includes(key)
   const catMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories])
@@ -652,6 +691,11 @@ function CategoryFullListView({
 
   const [expandedCatId, setExpandedCatId] = useState<string | null>(null)
 
+  // Reset expansion when selection is cleared
+  useEffect(() => {
+    if (selectedId === null) setExpandedCatId(null)
+  }, [selectedId])
+
   const tierLabel = (depth: number) => {
     if (depth === 0) return "1st"
     if (depth === 1) return "2nd"
@@ -786,6 +830,7 @@ function CategoryFullListView({
                       prev === cat.id ? null : cat.id
                     )
                   }}
+                  onDoubleClick={() => onDoubleClick?.(cat.id)}
                   className={`flex w-full items-center px-5 py-3 text-left transition-colors hover:bg-secondary/30 ${
                     selectedId === cat.id ? "bg-secondary/40" : ""
                   }`}
@@ -883,10 +928,453 @@ function CategoryFullListView({
 }
 
 /* ══════════════════════════════════════════════════════════
+   CATEGORY EDITOR (Split-view detail panel)
+   ══════════════════════════════════════════════════════════ */
+
+function CategoryEditor({
+  categoryId,
+  categories,
+  articles,
+  onNavigateCategory,
+  onOpenArticle,
+  onClose,
+}: {
+  categoryId: string
+  categories: WikiCategory[]
+  articles: WikiArticle[]
+  onNavigateCategory: (id: string) => void
+  onOpenArticle: (articleId: string) => void
+  onClose: () => void
+}) {
+  const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
+  const deleteWikiCategory = usePlotStore((s) => s.deleteWikiCategory)
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
+
+  const categoryMaybe = categories.find((c) => c.id === categoryId)
+  if (!categoryMaybe) return null
+  const category: WikiCategory = categoryMaybe
+
+  const depth = getDepth(category.id, categories)
+  const tierLabel =
+    depth === 0
+      ? "1st tier"
+      : depth === 1
+        ? "2nd tier"
+        : depth === 2
+          ? "3rd tier"
+          : `${depth + 1}th tier`
+
+  const parentCat =
+    category.parentIds.length > 0
+      ? categories.find((c) => c.id === category.parentIds[0])
+      : null
+
+  const subcategories = categories.filter((c) =>
+    c.parentIds.includes(category.id)
+  )
+  const catArticles = articles.filter((a) =>
+    a.categoryIds?.includes(category.id)
+  )
+
+  // All categories NOT in this category's subtree (to prevent circular refs)
+  const getDescendantIds = (id: string): Set<string> => {
+    const ids = new Set<string>()
+    const queue = [id]
+    while (queue.length > 0) {
+      const current = queue.pop()!
+      ids.add(current)
+      for (const c of categories) {
+        if (c.parentIds.includes(current) && !ids.has(c.id)) {
+          queue.push(c.id)
+        }
+      }
+    }
+    return ids
+  }
+  const descendantIds = getDescendantIds(categoryId)
+  const adoptableCats = categories.filter(
+    (c) => !descendantIds.has(c.id) && !c.parentIds.includes(categoryId)
+  )
+
+  const [nameValue, setNameValue] = useState(category.name)
+  const [descValue, setDescValue] = useState(category.description ?? "")
+  const [newSubName, setNewSubName] = useState("")
+  const [showNewSub, setShowNewSub] = useState(false)
+  const [showAdoptPicker, setShowAdoptPicker] = useState(false)
+
+  // Sync local state when categoryId changes
+  useEffect(() => {
+    setNameValue(category.name)
+    setDescValue(category.description ?? "")
+  }, [category.name, category.description, categoryId])
+
+  function commitName() {
+    const trimmed = nameValue.trim()
+    if (trimmed && trimmed !== category.name) {
+      updateWikiCategory(categoryId, { name: trimmed })
+    } else {
+      setNameValue(category.name)
+    }
+  }
+
+  function commitDescription() {
+    const trimmed = descValue.trim()
+    if (trimmed !== (category.description ?? "")) {
+      updateWikiCategory(categoryId, { description: trimmed || undefined })
+    }
+  }
+
+  function handleDelete() {
+    // Snapshot for undo
+    const snapshot: WikiCategory = { ...category }
+    const orphanedParentRefs: { catId: string; parentId: string }[] = []
+    for (const c of categories) {
+      for (const pid of c.parentIds) {
+        if (pid === categoryId) {
+          orphanedParentRefs.push({ catId: c.id, parentId: pid })
+        }
+      }
+    }
+    const articleCatRefs: { articleId: string; categoryId: string }[] = []
+    for (const a of articles) {
+      for (const cid of a.categoryIds ?? []) {
+        if (cid === categoryId) {
+          articleCatRefs.push({ articleId: a.id, categoryId: cid })
+        }
+      }
+    }
+
+    deleteWikiCategory(categoryId)
+    onClose()
+
+    pushUndo(
+      `Delete category "${snapshot.name}"`,
+      () => {
+        const { wikiCategories: currentCats } = usePlotStore.getState()
+        usePlotStore.setState({ wikiCategories: [...currentCats, snapshot] })
+        if (orphanedParentRefs.length > 0) {
+          const updated = usePlotStore.getState().wikiCategories.map((c) => {
+            const refs = orphanedParentRefs.filter((r) => r.catId === c.id)
+            if (refs.length === 0) return c
+            const restoredParentIds = [
+              ...new Set([...c.parentIds, ...refs.map((r) => r.parentId)]),
+            ]
+            return { ...c, parentIds: restoredParentIds }
+          })
+          usePlotStore.setState({ wikiCategories: updated })
+        }
+        if (articleCatRefs.length > 0) {
+          const updatedArts = usePlotStore.getState().wikiArticles.map((a) => {
+            const refs = articleCatRefs.filter((r) => r.articleId === a.id)
+            if (refs.length === 0) return a
+            const restoredCatIds = [
+              ...new Set([
+                ...(a.categoryIds ?? []),
+                ...refs.map((r) => r.categoryId),
+              ]),
+            ]
+            return { ...a, categoryIds: restoredCatIds }
+          })
+          usePlotStore.setState({ wikiArticles: updatedArts })
+        }
+        toast.success(`Restored "${snapshot.name}"`)
+      },
+      () => {
+        usePlotStore.getState().deleteWikiCategory(snapshot.id)
+      }
+    )
+
+    toast.success(`Deleted "${snapshot.name}"`, {
+      action: { label: "Undo", onClick: () => popUndo() },
+    })
+  }
+
+  return (
+    <div className="flex h-full flex-col overflow-y-auto">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-6 pt-5 pb-2">
+        <button
+          onClick={onClose}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          <ArrowLeft size={16} weight="regular" />
+        </button>
+      </div>
+
+      {/* Name */}
+      <div className="px-6 pt-2 pb-1">
+        <input
+          type="text"
+          value={nameValue}
+          onChange={(e) => setNameValue(e.target.value)}
+          onBlur={commitName}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.currentTarget.blur()
+            }
+          }}
+          className="w-full bg-transparent text-xl font-semibold text-foreground placeholder:text-muted-foreground/30 border-none outline-none rounded-md px-1 -ml-1 hover:bg-secondary/30 focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
+          placeholder="Category name"
+        />
+      </div>
+
+      {/* Description */}
+      <div className="px-6 pb-4">
+        <textarea
+          value={descValue}
+          onChange={(e) => setDescValue(e.target.value)}
+          onBlur={commitDescription}
+          placeholder="Add a description..."
+          rows={2}
+          className="w-full resize-none bg-transparent text-sm text-muted-foreground placeholder:text-muted-foreground/30 border-none outline-none rounded-md px-1 -ml-1 hover:bg-secondary/30 focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
+        />
+      </div>
+
+      {/* Info card */}
+      <div className="mx-6 rounded-lg border border-border bg-background p-3 space-y-2.5">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground/70">Tier</span>
+          <span className="text-foreground font-medium">{tierLabel}</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground/70">Parent</span>
+          <select
+            value={category.parentIds[0] ?? ""}
+            onChange={(e) => {
+              const newParentId = e.target.value
+              updateWikiCategory(categoryId, {
+                parentIds: newParentId ? [newParentId] : [],
+              })
+            }}
+            className="bg-transparent text-foreground font-medium text-right border-none outline-none cursor-pointer rounded-md px-1 hover:bg-secondary/30 focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors text-sm"
+          >
+            <option value="">None (root)</option>
+            {categories
+              .filter((c) => c.id !== categoryId)
+              .map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+          </select>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground/70">Created</span>
+          <span className="text-foreground tabular-nums">
+            {shortRelative(category.createdAt)} ago
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground/70">Updated</span>
+          <span className="text-foreground tabular-nums">
+            {shortRelative(category.updatedAt ?? category.createdAt)} ago
+          </span>
+        </div>
+      </div>
+
+      {/* Parent chain (ancestors) — only for 2nd+ tier */}
+      {category.parentIds.length > 0 && (() => {
+        const ancestors = buildBreadcrumb(categoryId, categories).slice(0, -1) // exclude self
+        if (ancestors.length === 0) return null
+        return (
+          <div className="px-6 pt-5">
+            <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">
+              Parent categories ({ancestors.length})
+            </h4>
+            <div className="space-y-0.5">
+              {ancestors.map((anc, i) => (
+                <button
+                  key={anc.id}
+                  onClick={() => onNavigateCategory(anc.id)}
+                  className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+                  style={{ paddingLeft: `${12 + i * 12}px` }}
+                >
+                  <FolderOpen
+                    size={14}
+                    weight="regular"
+                    className="text-accent/50 shrink-0"
+                  />
+                  <span className="flex-1 truncate text-left">{anc.name}</span>
+                  <span className="text-xs text-muted-foreground/40 shrink-0">
+                    {getDepth(anc.id, categories) === 0 ? "root" : `${getDepth(anc.id, categories) + 1}th`}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Subcategories */}
+      <div className="px-6 pt-5">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wide">
+            Subcategories ({subcategories.length})
+          </h4>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowAdoptPicker(!showAdoptPicker)}
+              className="rounded-md px-1.5 py-0.5 text-xs text-muted-foreground/60 transition-colors hover:bg-secondary/30 hover:text-foreground"
+              title="Add existing category as subcategory"
+            >
+              Move here
+            </button>
+            <button
+              onClick={() => setShowNewSub(true)}
+              className="flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground/60 transition-colors hover:bg-secondary/30 hover:text-foreground"
+              title="Create new subcategory"
+            >
+              <PhPlus size={10} weight="bold" />
+              New
+            </button>
+          </div>
+        </div>
+
+        {/* Inline new subcategory input */}
+        {showNewSub && (
+          <div className="flex items-center gap-2 px-3 py-1.5 mb-1">
+            <FolderSimple size={14} weight="regular" className="text-accent/60 shrink-0" />
+            <input
+              autoFocus
+              type="text"
+              value={newSubName}
+              onChange={(e) => setNewSubName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newSubName.trim()) {
+                  createWikiCategory(newSubName.trim(), [categoryId])
+                  setNewSubName("")
+                  setShowNewSub(false)
+                  toast.success(`Created "${newSubName.trim()}"`)
+                }
+                if (e.key === "Escape") {
+                  setNewSubName("")
+                  setShowNewSub(false)
+                }
+              }}
+              onBlur={() => {
+                if (newSubName.trim()) {
+                  createWikiCategory(newSubName.trim(), [categoryId])
+                  toast.success(`Created "${newSubName.trim()}"`)
+                }
+                setNewSubName("")
+                setShowNewSub(false)
+              }}
+              placeholder="Subcategory name..."
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/30 border-none outline-none"
+            />
+          </div>
+        )}
+
+        {/* Adopt existing category picker */}
+        {showAdoptPicker && (
+          <div className="mb-2 rounded-md border border-border bg-background p-2 max-h-[200px] overflow-y-auto">
+            {adoptableCats.length > 0 ? (
+              <div className="space-y-0.5">
+                {adoptableCats.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      updateWikiCategory(c.id, {
+                        parentIds: [categoryId],
+                      })
+                      setShowAdoptPicker(false)
+                      toast.success(`Moved "${c.name}" under "${category.name}"`)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+                  >
+                    <FolderSimple size={12} weight="regular" className="text-muted-foreground/50 shrink-0" />
+                    <span className="truncate text-left">{c.name}</span>
+                    {c.parentIds.length > 0 && (
+                      <span className="text-xs text-muted-foreground/40 ml-auto shrink-0">
+                        in {categories.find((p) => p.id === c.parentIds[0])?.name ?? "..."}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground/40 py-2 text-center">No available categories</p>
+            )}
+          </div>
+        )}
+
+        {subcategories.length > 0 ? (
+          <div className="space-y-0.5">
+            {subcategories.map((sub) => (
+              <button
+                key={sub.id}
+                onClick={() => onNavigateCategory(sub.id)}
+                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+              >
+                <FolderSimple
+                  size={14}
+                  weight="regular"
+                  className="text-muted-foreground/50 shrink-0"
+                />
+                <span className="flex-1 truncate text-left">{sub.name}</span>
+                <CaretRight
+                  size={12}
+                  weight="regular"
+                  className="text-muted-foreground/30 shrink-0"
+                />
+              </button>
+            ))}
+          </div>
+        ) : !showNewSub && (
+          <p className="text-xs text-muted-foreground/40 px-3 py-2">
+            No subcategories
+          </p>
+        )}
+      </div>
+
+      {/* Articles */}
+      <div className="px-6 pt-4">
+        <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">
+          Articles ({catArticles.length})
+        </h4>
+        {catArticles.length > 0 ? (
+          <div className="space-y-0.5">
+            {catArticles.map((art) => (
+              <button
+                key={art.id}
+                onClick={() => onOpenArticle(art.id)}
+                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+              >
+                <WikiStatusBadge status={art.wikiStatus} />
+                <span className="flex-1 truncate text-left">
+                  {art.title || "Untitled"}
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground/40 px-3 py-2">
+            No articles
+          </p>
+        )}
+      </div>
+
+      {/* Divider + Delete */}
+      <div className="mt-auto px-6 pt-6 pb-6">
+        <div className="border-t border-border/30 pt-4">
+          <button
+            onClick={handleDelete}
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-400/10"
+          >
+            <Trash size={16} weight="regular" />
+            Delete Category
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════
    CATEGORY SIDE PANEL
    ══════════════════════════════════════════════════════════ */
 
-function CategorySidePanel({
+export function CategorySidePanel({
   categories,
   articles,
   selectedId,
@@ -1153,6 +1641,7 @@ export function WikiCategoryPage({
     categoryId
   )
   const [selectedCatIds, setSelectedCatIds] = useState<Set<string>>(new Set())
+  const [openEditorId, setOpenEditorId] = useState<string | null>(null)
 
   // Sync selectedCatId when categoryId prop changes
   useEffect(() => {
@@ -1176,21 +1665,98 @@ export function WikiCategoryPage({
         })
         return
       }
-      // Single select — clear multi
+      // Single select — clear multi, update side panel but don't open editor
       setSelectedCatIds(new Set())
       setSelectedCatId(id)
-      onNavigateCategory(id)
+      setActiveCategoryView(id)
     },
-    [onNavigateCategory]
+    []
   )
 
+  const handleDoubleClick = useCallback((id: string) => {
+    setOpenEditorId(id)
+    setSelectedCatId(id)
+    onNavigateCategory(id)
+  }, [onNavigateCategory])
+
   const handleDeleteSelected = useCallback(() => {
+    const count = selectedCatIds.size
+    if (count === 0) return
+
+    // Snapshot categories and their relationships before deletion
+    const deletedCats = wikiCategories.filter(c => selectedCatIds.has(c.id))
+    // Snapshot which other categories had these as parents
+    const orphanedParentRefs: { catId: string; parentId: string }[] = []
+    for (const c of wikiCategories) {
+      for (const pid of c.parentIds) {
+        if (selectedCatIds.has(pid)) {
+          orphanedParentRefs.push({ catId: c.id, parentId: pid })
+        }
+      }
+    }
+    // Snapshot which articles had these categories
+    const articleCatRefs: { articleId: string; categoryId: string }[] = []
+    for (const a of wikiArticles) {
+      for (const cid of (a.categoryIds ?? [])) {
+        if (selectedCatIds.has(cid)) {
+          articleCatRefs.push({ articleId: a.id, categoryId: cid })
+        }
+      }
+    }
+
+    // Perform deletion
     for (const id of selectedCatIds) {
       deleteWikiCategory(id)
     }
     setSelectedCatIds(new Set())
-    toast.success(`Deleted ${selectedCatIds.size} categories`)
-  }, [selectedCatIds, deleteWikiCategory])
+
+    // Register undo
+    pushUndo(
+      `Delete ${count} categor${count === 1 ? "y" : "ies"}`,
+      () => {
+        // Undo: restore categories
+        const { wikiCategories: currentCats } = usePlotStore.getState()
+        usePlotStore.setState({
+          wikiCategories: [
+            ...currentCats,
+            ...deletedCats,
+          ],
+        })
+        // Restore parent references
+        if (orphanedParentRefs.length > 0) {
+          const updated = usePlotStore.getState().wikiCategories.map(c => {
+            const refs = orphanedParentRefs.filter(r => r.catId === c.id)
+            if (refs.length === 0) return c
+            const restoredParentIds = [...new Set([...c.parentIds, ...refs.map(r => r.parentId)])]
+            return { ...c, parentIds: restoredParentIds }
+          })
+          usePlotStore.setState({ wikiCategories: updated })
+        }
+        // Restore article category references
+        if (articleCatRefs.length > 0) {
+          const updatedArts = usePlotStore.getState().wikiArticles.map(a => {
+            const refs = articleCatRefs.filter(r => r.articleId === a.id)
+            if (refs.length === 0) return a
+            const restoredCatIds = [...new Set([...(a.categoryIds ?? []), ...refs.map(r => r.categoryId)])]
+            return { ...a, categoryIds: restoredCatIds }
+          })
+          usePlotStore.setState({ wikiArticles: updatedArts })
+        }
+        toast.success(`Restored ${count} categor${count === 1 ? "y" : "ies"}`)
+      },
+      () => {
+        // Redo: delete again
+        const ids = new Set(deletedCats.map(c => c.id))
+        for (const id of ids) {
+          usePlotStore.getState().deleteWikiCategory(id)
+        }
+      }
+    )
+
+    toast.success(`Deleted ${count} categor${count === 1 ? "y" : "ies"}`, {
+      action: { label: "Undo", onClick: () => popUndo() },
+    })
+  }, [selectedCatIds, deleteWikiCategory, wikiCategories, wikiArticles])
 
   const handleSelectAll = useCallback(() => {
     setSelectedCatIds(new Set(wikiCategories.map((c) => c.id)))
@@ -1200,14 +1766,21 @@ export function WikiCategoryPage({
   const handleBackgroundClick = useCallback(() => {
     setSelectedCatId(null)
     setSelectedCatIds(new Set())
+    setOpenEditorId(null)
+    setActiveCategoryView(null)
   }, [])
-
-  // Show sidebar: always (overview when nothing selected, detail/batch when selected)
-  const showSidePanel = true
 
   return (
     <div className="flex h-full flex-1 overflow-hidden">
-      <div className="flex-1 overflow-auto" onClick={handleBackgroundClick}>
+      <div
+        className={cn(
+          "overflow-auto",
+          openEditorId
+            ? "w-[280px] shrink-0 border-r border-border/30"
+            : "flex-1"
+        )}
+        onClick={handleBackgroundClick}
+      >
         {categoryViewMode === "board" ? (
           <CategoryBoardView
             categories={wikiCategories}
@@ -1218,6 +1791,8 @@ export function WikiCategoryPage({
             showDescription={categoryShowDescription}
             showEmpty={categoryShowEmpty}
             grouping={categoryGrouping}
+            selectedIds={selectedCatIds}
+            onDoubleClick={handleDoubleClick}
           />
         ) : (
           <CategoryFullListView
@@ -1236,19 +1811,28 @@ export function WikiCategoryPage({
             displayProps={categoryDisplayProps}
             onOrderingChange={onOrderingChange}
             onSortDirectionChange={onSortDirectionChange}
+            onDoubleClick={handleDoubleClick}
           />
         )}
       </div>
-      {showSidePanel && (
-        <div className="w-[280px] shrink-0 border-l border-border/50 overflow-y-auto">
-          <CategorySidePanel
+      {openEditorId && (
+        <div className="flex-1 overflow-auto">
+          <CategoryEditor
+            categoryId={openEditorId}
             categories={wikiCategories}
             articles={wikiArticles}
-            selectedId={selectedCatId}
-            selectedIds={selectedCatIds}
-            onSelect={handleSelect}
-            onDeleteSelected={handleDeleteSelected}
-            onSelectAll={handleSelectAll}
+            onNavigateCategory={(id) => {
+              setOpenEditorId(id)
+              setSelectedCatId(id)
+              onNavigateCategory(id)
+            }}
+            onOpenArticle={onOpenArticle}
+            onClose={() => {
+              setOpenEditorId(null)
+              setSelectedCatId(null)
+              setSelectedCatIds(new Set())
+              setActiveCategoryView(null)
+            }}
           />
         </div>
       )}
