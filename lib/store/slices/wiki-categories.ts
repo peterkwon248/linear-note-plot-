@@ -8,11 +8,13 @@ export function createWikiCategoriesSlice(set: Set, get: Get) {
   return {
     createWikiCategory: (name: string, parentIds?: string[]): string => {
       const id = genId()
+      const ts = now()
       const category: WikiCategory = {
         id,
         name,
         parentIds: parentIds ?? [],
-        createdAt: now(),
+        createdAt: ts,
+        updatedAt: ts,
       }
       set((state: any) => ({
         wikiCategories: [...state.wikiCategories, category],
@@ -23,7 +25,7 @@ export function createWikiCategoriesSlice(set: Set, get: Get) {
     updateWikiCategory: (id: string, updates: Partial<Pick<WikiCategory, 'name' | 'parentIds' | 'description'>>) => {
       set((state: any) => ({
         wikiCategories: state.wikiCategories.map((c: WikiCategory) =>
-          c.id === id ? { ...c, ...updates } : c
+          c.id === id ? { ...c, ...updates, updatedAt: now() } : c
         ),
       }))
     },

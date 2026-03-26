@@ -130,7 +130,7 @@ function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillPr
     >
       {/* Status indicator dot */}
       <span
-        className="h-[5px] w-[5px] shrink-0 rounded-full"
+        className="h-1.5 w-1.5 shrink-0 rounded-full"
         style={{ backgroundColor: dot }}
       />
 
@@ -138,14 +138,14 @@ function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillPr
       <LayerIcon isWiki={note.isWiki} />
 
       {/* Title */}
-      <span className="flex-1 truncate text-[11.5px] font-medium leading-tight text-foreground/90 group-hover:text-foreground">
+      <span className="flex-1 truncate text-xs font-medium leading-tight text-foreground/90 group-hover:text-foreground">
         {note.title || "Untitled"}
       </span>
 
       {/* Label badge */}
       {labelColor && labelName && (
         <span
-          className="shrink-0 rounded px-1 py-px text-[9.5px] font-semibold uppercase tracking-wide"
+          className="shrink-0 rounded px-1 py-px text-xs font-semibold uppercase tracking-wide"
           style={{
             backgroundColor: `${labelColor}1a`,
             color: labelColor,
@@ -218,7 +218,7 @@ function DayCell({
       <div className="mb-0.5 flex items-center justify-between">
         <span
           className={cn(
-            "flex h-5 w-5 items-center justify-center rounded-full text-2xs font-semibold leading-none transition-colors",
+            "flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold leading-none transition-colors",
             isTodayDate
               ? "bg-accent text-accent-foreground"
               : isCurrentMonth
@@ -416,7 +416,7 @@ function DayDashboard({
                       {/* Status badge */}
                       {statusInfo && (
                         <span
-                          className="text-2xs font-medium"
+                          className="text-xs font-medium"
                           style={{ color: statusInfo.color }}
                         >
                           {statusInfo.label}
@@ -426,7 +426,7 @@ function DayDashboard({
                       {/* Label badge */}
                       {label && (
                         <span
-                          className="rounded px-1.5 py-px text-2xs font-semibold uppercase tracking-wide"
+                          className="rounded px-1.5 py-px text-xs font-semibold uppercase tracking-wide"
                           style={{
                             backgroundColor: `${label.color}1a`,
                             color: label.color,
@@ -438,7 +438,7 @@ function DayDashboard({
 
                       {/* Time */}
                       {timeStr && (
-                        <span className="text-2xs tabular-nums text-muted-foreground/50">
+                        <span className="text-xs tabular-nums text-muted-foreground/50">
                           {timeStr}
                         </span>
                       )}
@@ -447,7 +447,7 @@ function DayDashboard({
 
                   {/* Preview text */}
                   {note.preview && (
-                    <p className="mt-1 line-clamp-2 pl-4 text-[11.5px] leading-relaxed text-muted-foreground/60">
+                    <p className="mt-1 line-clamp-2 pl-4 text-xs leading-relaxed text-muted-foreground/60">
                       {note.preview}
                     </p>
                   )}
@@ -518,7 +518,7 @@ function WeekView({
                 {format(day, "EEE d")}
               </span>
               {dayNotes.length > 0 && (
-                <span className="ml-1 text-2xs text-muted-foreground/50">
+                <span className="ml-1 text-xs text-muted-foreground/50">
                   {dayNotes.length}
                 </span>
               )}
@@ -542,7 +542,7 @@ function WeekView({
               {dayNotes.length === 0 && (
                 <button
                   onClick={() => onCreateNote(day)}
-                  className="mt-1 flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 transition-colors hover:bg-secondary/50 hover:text-muted-foreground"
+                  className="mt-1 flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground/40 transition-colors hover:bg-secondary/50 hover:text-muted-foreground"
                 >
                   <PhPlus size={12} weight="regular" />
                   Add
@@ -608,7 +608,7 @@ function AgendaView({
                   >
                     {isToday(date) ? "Today" : format(date, "EEEE, MMMM d")}
                   </span>
-                  <span className="text-2xs text-muted-foreground/40">
+                  <span className="text-xs text-muted-foreground/40">
                     {notes.length}
                   </span>
                 </div>
@@ -852,7 +852,7 @@ export function CalendarView({
           <div className="w-[280px] p-3 space-y-4">
             {/* Calendar by */}
             <div>
-              <div className="text-2xs font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Calendar by</div>
+              <div className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Calendar by</div>
               <div className="flex gap-1">
                 {(["createdAt", "updatedAt"] as const).map((src) => (
                   <button
@@ -873,7 +873,7 @@ export function CalendarView({
 
             {/* Layers */}
             <div>
-              <div className="text-2xs font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Layers</div>
+              <div className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wide mb-2">Layers</div>
               <div className="space-y-1">
                 {([
                   { key: "notes" as const, label: "Notes" },
@@ -930,7 +930,7 @@ export function CalendarView({
               key={mode}
               onClick={() => setCalendarMode(mode)}
               className={cn(
-                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                 calendarMode === mode
                   ? "bg-foreground/10 text-foreground"
                   : "text-muted-foreground hover:text-foreground/70",
@@ -977,7 +977,7 @@ export function CalendarView({
               key={label}
               className="border-r border-border px-2 py-2 last:border-r-0"
             >
-              <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
                 {label}
               </span>
             </div>

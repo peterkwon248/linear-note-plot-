@@ -1316,15 +1316,15 @@ function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
 }) {
   switch (groupBy) {
     case "status":
-      return <StatusShapeIcon status={label.toLowerCase() as NoteStatus} size={8} />
+      return <StatusShapeIcon status={label.toLowerCase() as NoteStatus} size={16} />
     case "folder":
-      return <FolderOpen className="text-muted-foreground/70" size={14} weight="regular" />
+      return <FolderOpen className="text-muted-foreground/70" size={16} weight="regular" />
     case "label": {
       const labelColor = labels.find((l) => l.id === groupKey)?.color
       return labelColor ? (
-        <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: labelColor }} />
+        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: labelColor }} />
       ) : (
-        <span className="h-2 w-2 rounded-full shrink-0 bg-muted-foreground/30" />
+        <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-muted-foreground/30" />
       )
     }
     default:

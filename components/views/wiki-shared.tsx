@@ -31,7 +31,7 @@ export function WikiStatusBadge({ status }: { status: WikiStatus | string }) {
   }
   const labels: Record<string, string> = { stub: "Stub", article: "Article" }
   return (
-    <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", styles[normalized])}>
+    <span className={cn("rounded-full px-2 py-0.5 text-note font-medium", styles[normalized])}>
       {labels[normalized]}
     </span>
   )
@@ -69,8 +69,8 @@ export function StatCard({ icon: Icon, label, value, color, onClick }: {
 export function StatRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-2xs text-muted-foreground">{label}</span>
-      <span className="text-2xs font-medium text-foreground">{value}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-xs font-medium text-foreground">{value}</span>
     </div>
   )
 }
@@ -81,7 +81,7 @@ export function DashboardCard({ title, subtitle, children }: { title: string; su
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{title}</h3>
-      {subtitle && <p className="text-2xs text-muted-foreground mb-3">{subtitle}</p>}
+      {subtitle && <p className="text-xs text-muted-foreground mb-3">{subtitle}</p>}
       <div className="space-y-0.5">{children}</div>
     </div>
   )
@@ -118,7 +118,7 @@ export function ArticleRow({ note, onOpen, backlinkCount }: {
         )}
       </div>
       {backlinkCount > 0 && (
-        <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-2xs font-medium tabular-nums text-muted-foreground">
+        <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
           {backlinkCount} links
         </span>
       )}

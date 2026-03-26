@@ -56,6 +56,7 @@ export interface WikiCategory {
   parentIds: string[]  // multiple parents = DAG
   description?: string
   createdAt: string
+  updatedAt: string
 }
 
 /* ── Wiki Article (Assembly Model) ────────────────── */

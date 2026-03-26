@@ -680,5 +680,13 @@ export function migrate(persistedState: unknown): PlotState {
     }))
   }
 
+  // v62: Add updatedAt to WikiCategory
+  if (Array.isArray(state.wikiCategories)) {
+    state.wikiCategories = (state.wikiCategories as any[]).map((c: any) => ({
+      ...c,
+      updatedAt: c.updatedAt ?? c.createdAt ?? new Date().toISOString(),
+    }))
+  }
+
   return state as unknown as PlotState
 }

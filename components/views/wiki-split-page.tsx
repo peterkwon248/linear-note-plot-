@@ -30,10 +30,10 @@ function BlockLabel({ block, noteTitleMap }: { block: WikiBlock; noteTitleMap: M
     case "section":
       return (
         <div className="flex items-center gap-1.5">
-          <span className="rounded bg-white/[0.06] px-1 py-0.5 text-[9px] uppercase text-white/25">
+          <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-xs font-medium uppercase text-white/30">
             H{block.level ?? 2}
           </span>
-          <span className="font-medium text-white/85">{block.title ?? "Untitled Section"}</span>
+          <span className="font-semibold text-white/90">{block.title ?? "Untitled Section"}</span>
         </div>
       )
     case "text":
@@ -207,12 +207,12 @@ export function WikiSplitPage() {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-white/90">Split Article</h2>
-              <p className="text-2xs text-white/40">Choose an article to split</p>
+              <p className="text-xs text-white/40">Choose an article to split</p>
             </div>
             <div className="ml-auto">
               <button
                 onClick={() => setWikiViewMode("list")}
-                className="rounded-md px-3 py-1.5 text-xs text-white/50 transition-colors hover:bg-white/5 hover:text-white/70"
+                className="rounded-md px-3 py-2 text-sm text-white/50 transition-colors hover:bg-white/5 hover:text-white/70"
               >
                 Cancel
               </button>
@@ -242,8 +242,8 @@ export function WikiSplitPage() {
               >
                 <WikiStatusBadge status={a.wikiStatus} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-medium text-white/85">{a.title}</p>
-                  <p className="text-2xs text-white/30">{a.blocks.length} blocks</p>
+                  <p className="truncate text-note font-medium text-white/85">{a.title}</p>
+                  <p className="text-xs text-white/30">{a.blocks.length} blocks</p>
                 </div>
                 <ChevronRight size={14} className="shrink-0 text-white/20" />
               </button>
@@ -278,14 +278,14 @@ export function WikiSplitPage() {
           </div>
           <div>
             <h2 className="text-sm font-semibold text-white/90">Split: {article?.title}</h2>
-            <p className="text-2xs text-white/40">
+            <p className="text-xs text-white/40">
               {leftBlocks.length} blocks remaining · {rightBlocks.length} blocks to split
             </p>
           </div>
           <div className="ml-auto">
             <button
               onClick={() => setWikiViewMode("list")}
-              className="rounded-md px-3 py-1.5 text-xs text-white/50 transition-colors hover:bg-white/5 hover:text-white/70"
+              className="rounded-md px-3 py-2 text-sm text-white/50 transition-colors hover:bg-white/5 hover:text-white/70"
             >
               Cancel
             </button>
@@ -296,7 +296,7 @@ export function WikiSplitPage() {
       {/* Merge History (if any) */}
       {mergeDividers.length > 0 && (
         <div className="shrink-0 border-b border-white/[0.06] bg-chart-3/[0.03] px-6 py-3">
-          <h4 className="mb-2 text-2xs font-medium text-chart-3/80 uppercase tracking-wider">Previously Merged</h4>
+          <h4 className="mb-2 text-xs font-medium text-chart-3/80 uppercase tracking-wider">Previously Merged</h4>
           <div className="flex flex-wrap gap-2">
             {mergeDividers.map((b) => (
               <div
@@ -304,12 +304,12 @@ export function WikiSplitPage() {
                 className="inline-flex items-center gap-2 rounded-md border border-chart-3/15 bg-chart-3/5 px-3 py-1.5"
               >
                 <span className="text-xs text-white/70">{b.mergedFrom?.title}</span>
-                <span className="text-2xs text-white/30">
+                <span className="text-xs text-white/30">
                   {b.mergedFrom?.blockIds.length} blocks
                 </span>
                 <button
                   onClick={() => handleUnmerge(b.id)}
-                  className="ml-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-medium text-chart-3 transition-colors hover:bg-chart-3/10"
+                  className="ml-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-chart-3 transition-colors hover:bg-chart-3/10"
                 >
                   <Undo2 size={10} />
                   Unmerge
@@ -325,11 +325,11 @@ export function WikiSplitPage() {
         {/* Left Column: Original Article */}
         <div className="flex w-1/2 flex-col border-r border-white/[0.06]">
           <div className="shrink-0 px-4 pt-3 pb-2 flex items-center justify-between">
-            <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider">Original Article</h3>
+            <h3 className="text-note font-medium text-white/50 uppercase tracking-wider">Original Article</h3>
             {selectedBlockIds.size > 0 && (
               <button
                 onClick={moveToRight}
-                className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-1 text-2xs font-medium text-accent transition-colors hover:bg-accent/20"
+                className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
               >
                 Move {selectedBlockIds.size} →
                 <ArrowRight size={12} />
@@ -346,7 +346,7 @@ export function WikiSplitPage() {
                   key={block.id}
                   onClick={(e) => handleBlockClick(block.id, idx, e.shiftKey)}
                   className={cn(
-                    "group flex cursor-pointer items-start gap-2 rounded-md px-2.5 py-2 transition-all duration-100",
+                    "group flex cursor-pointer items-start gap-2.5 rounded-md px-3 py-2.5 transition-all duration-100",
                     isSelected
                       ? "bg-blue-500/10 ring-1 ring-blue-500/30"
                       : "hover:bg-white/[0.03]",
@@ -365,16 +365,16 @@ export function WikiSplitPage() {
                     {isSelected && <Check size={10} className="text-white" />}
                   </div>
 
-                  <div className="min-w-0 flex-1 text-2xs">
+                  <div className="min-w-0 flex-1 text-sm">
                     {isMergeDivider && (
-                      <p className="mb-0.5 text-[10px] text-chart-3/70">
+                      <p className="mb-0.5 text-2xs text-chart-3/70">
                         ↳ From: {block.mergedFrom?.title}
                       </p>
                     )}
                     <BlockLabel block={block} noteTitleMap={noteTitleMap} />
                   </div>
 
-                  <span className="mt-0.5 shrink-0 rounded bg-white/[0.04] px-1 py-0.5 text-[9px] uppercase text-white/20">
+                  <span className="mt-0.5 shrink-0 rounded bg-white/[0.04] px-1 py-0.5 text-xs uppercase text-white/20">
                     {block.type}
                   </span>
                 </div>
@@ -391,11 +391,11 @@ export function WikiSplitPage() {
         {/* Right Column: New Article */}
         <div className="flex w-1/2 flex-col">
           <div className="shrink-0 px-4 pt-3 pb-2 flex items-center justify-between">
-            <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider">New Article</h3>
+            <h3 className="text-note font-medium text-white/50 uppercase tracking-wider">New Article</h3>
             {rightBlocks.length > 0 && (
               <button
                 onClick={moveAllToLeft}
-                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-white/40 transition-colors hover:bg-white/5 hover:text-white/60"
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/40 transition-colors hover:bg-white/5 hover:text-white/60"
               >
                 <ArrowLeft size={12} />
                 Return all
@@ -407,11 +407,11 @@ export function WikiSplitPage() {
             {rightBlockData.length === 0 ? (
               <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-white/[0.08] bg-white/[0.02]">
                 <div className="text-center px-4">
-                  <Layers size={28} className="mx-auto mb-2 text-white/10" />
-                  <p className="text-xs text-white/25">
+                  <Layers size={32} className="mx-auto mb-3 text-white/10" />
+                  <p className="text-sm text-white/25">
                     Select blocks and click <span className="text-accent">Move →</span>
                   </p>
-                  <p className="mt-1 text-2xs text-white/15">or Shift+Click for range selection</p>
+                  <p className="mt-1 text-sm text-white/15">or Shift+Click for range selection</p>
                 </div>
               </div>
             ) : (
@@ -419,15 +419,15 @@ export function WikiSplitPage() {
                 {rightBlockData.map((block, idx) => (
                   <div
                     key={block.id}
-                    className="group flex items-start gap-2 rounded-md bg-white/[0.04] px-2.5 py-2"
+                    className="group flex items-start gap-2.5 rounded-md bg-white/[0.04] px-3 py-2.5"
                   >
                     <GripVertical size={12} className="mt-0.5 shrink-0 cursor-grab text-white/15" />
 
-                    <div className="min-w-0 flex-1 text-2xs">
+                    <div className="min-w-0 flex-1 text-sm">
                       <BlockLabel block={block} noteTitleMap={noteTitleMap} />
                     </div>
 
-                    <span className="mt-0.5 shrink-0 rounded bg-white/[0.04] px-1 py-0.5 text-[9px] uppercase text-white/20">
+                    <span className="mt-0.5 shrink-0 rounded bg-white/[0.04] px-1 py-0.5 text-xs uppercase text-white/20">
                       {block.type}
                     </span>
 
@@ -471,24 +471,24 @@ export function WikiSplitPage() {
         <div className="flex items-center gap-4">
           {/* Title input */}
           <div className="min-w-[200px] flex-1">
-            <label className="mb-1 block text-2xs text-white/40">New Article Title</label>
+            <label className="mb-1 block text-sm text-white/40">New Article Title</label>
             <input
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Title for the split article…"
-              className="h-8 w-full rounded-md border border-white/[0.08] bg-white/[0.03] px-3 text-xs text-white/90 placeholder:text-white/30 focus:border-white/20 focus:outline-none"
+              className="h-9 w-full rounded-md border border-white/[0.08] bg-white/[0.03] px-3 text-sm text-white/90 placeholder:text-white/30 focus:border-white/20 focus:outline-none"
             />
           </div>
 
           {/* Status */}
           <div>
-            <label className="mb-1 block text-2xs text-white/40">Status</label>
+            <label className="mb-1 block text-sm text-white/40">Status</label>
             <div className="flex gap-1 rounded-md bg-white/[0.04] p-0.5">
               <button
                 onClick={() => setNewStatus("stub")}
                 className={cn(
-                  "rounded px-2.5 py-1 text-2xs font-medium transition-colors",
+                  "rounded px-3 py-1.5 text-sm font-medium transition-colors",
                   newStatus === "stub"
                     ? "bg-chart-3/20 text-chart-3"
                     : "text-white/40 hover:text-white/60",
@@ -499,7 +499,7 @@ export function WikiSplitPage() {
               <button
                 onClick={() => setNewStatus("article")}
                 className={cn(
-                  "rounded px-2.5 py-1 text-2xs font-medium transition-colors",
+                  "rounded px-3 py-1.5 text-sm font-medium transition-colors",
                   newStatus === "article"
                     ? "bg-wiki-complete/20 text-wiki-complete"
                     : "text-white/40 hover:text-white/60",
@@ -515,14 +515,14 @@ export function WikiSplitPage() {
             <button
               onClick={handleSplit}
               disabled={rightBlocks.length === 0 || !newTitle.trim()}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Scissors size={14} />
               Split {rightBlocks.length} Block{rightBlocks.length !== 1 ? "s" : ""}
             </button>
             <button
               onClick={() => setWikiViewMode("list")}
-              className="rounded-md px-3 py-1.5 text-xs text-white/50 transition-colors hover:bg-white/5 hover:text-white/70"
+              className="rounded-md px-3 py-2 text-sm text-white/50 transition-colors hover:bg-white/5 hover:text-white/70"
             >
               Cancel
             </button>

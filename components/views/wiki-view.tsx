@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react"
 import type { FilterRule, ViewState } from "@/lib/view-engine/types"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
@@ -55,6 +55,30 @@ import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
 import { WikiCategoryPage } from "./wiki-category-page"
 
+/* ── Toggle Row (mini switch for display panel) ── */
+function ToggleRow({ label, icon, checked, onChange }: { label: string; icon?: ReactNode; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-center justify-between rounded-md px-1 py-1">
+      <div className="flex items-center gap-2 text-sm text-foreground/80">
+        {icon && <span className="text-muted-foreground/50">{icon}</span>}
+        {label}
+      </div>
+      <button
+        onClick={() => onChange(!checked)}
+        className={cn(
+          "relative h-5 w-[34px] rounded-full shrink-0 transition-colors duration-200",
+          checked ? "bg-accent" : "bg-white/[0.12]"
+        )}
+      >
+        <div className={cn(
+          "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.25)] transition-all duration-200",
+          checked ? "left-[16px]" : "left-0.5"
+        )} />
+      </button>
+    </div>
+  )
+}
+
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
@@ -74,6 +98,15 @@ export function WikiView() {
   const wikiViewMode = useWikiViewMode()
   const activeCategoryId = useActiveCategoryId()
 
+  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
+
+  const [categoryViewMode, setCategoryViewMode] = useState<"tree" | "list">("tree")
+  const [categoryOrdering, setCategoryOrdering] = useState<"name" | "articles" | "updated">("name")
+  const [categoryGrouping, setCategoryGrouping] = useState<"none" | "tier" | "parent" | "family">("none")
+  const [categoryTierFilter, setCategoryTierFilter] = useState<string | null>(null)
+  const [categoryStatusFilter, setCategoryStatusFilter] = useState<string | null>(null)
+  const [categoryShowDescription, setCategoryShowDescription] = useState(true)
+  const [categoryShowEmpty, setCategoryShowEmpty] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -813,30 +846,244 @@ export function WikiView() {
         title="Wiki"
         count={stats.articles}
         showFilter
-        hasActiveFilters={wikiFilters.length > 0}
+        hasActiveFilters={wikiViewMode === "category" ? (categoryTierFilter !== null || categoryStatusFilter !== null) : wikiFilters.length > 0}
         filterContent={
-          <FilterPanel
-            categories={WIKI_VIEW_CONFIG.filterCategories}
-            activeFilters={wikiFilters}
-            onToggle={handleWikiFilterToggle}
-          />
+          wikiViewMode === "category" ? (
+            <div className="w-[280px]">
+              {/* Search */}
+              <div className="border-b border-border/50 px-3 py-2">
+                <div className="relative">
+                  <svg className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/40" width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="7" cy="7" r="5" /><line x1="11" y1="11" x2="14" y2="14" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Filter..."
+                    className="h-7 w-full rounded-md bg-transparent pl-7 pr-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Tier */}
+              <div className="px-1 py-1">
+                <button
+                  onClick={() => setCategoryTierFilter(categoryTierFilter === "1st" ? null : "1st")}
+                  className={cn(
+                    "group/row flex w-full items-center gap-2.5 rounded-md px-2 py-[7px] text-sm transition-colors",
+                    categoryTierFilter === "1st" ? "bg-accent/10 text-accent" : "text-foreground/80 hover:bg-secondary/50"
+                  )}
+                >
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><circle cx="8" cy="8" r="5.5"/></svg>
+                  <span className="flex-1 text-left">1st tier</span>
+                  {categoryTierFilter === "1st" && <span className="text-accent text-xs">Active</span>}
+                </button>
+                <button
+                  onClick={() => setCategoryTierFilter(categoryTierFilter === "2nd" ? null : "2nd")}
+                  className={cn(
+                    "group/row flex w-full items-center gap-2.5 rounded-md px-2 py-[7px] text-sm transition-colors",
+                    categoryTierFilter === "2nd" ? "bg-accent/10 text-accent" : "text-foreground/80 hover:bg-secondary/50"
+                  )}
+                >
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.3"/></svg>
+                  <span className="flex-1 text-left">2nd tier</span>
+                  {categoryTierFilter === "2nd" && <span className="text-accent text-xs">Active</span>}
+                </button>
+                <button
+                  onClick={() => setCategoryTierFilter(categoryTierFilter === "3rd+" ? null : "3rd+")}
+                  className={cn(
+                    "group/row flex w-full items-center gap-2.5 rounded-md px-2 py-[7px] text-sm transition-colors",
+                    categoryTierFilter === "3rd+" ? "bg-accent/10 text-accent" : "text-foreground/80 hover:bg-secondary/50"
+                  )}
+                >
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.3"/><circle cx="8" cy="8" r="4" stroke="currentColor" strokeWidth="0.8" opacity="0.3"/></svg>
+                  <span className="flex-1 text-left">3rd+ tier</span>
+                  {categoryTierFilter === "3rd+" && <span className="text-accent text-xs">Active</span>}
+                </button>
+              </div>
+
+              <div className="mx-3 h-px bg-border/50" />
+
+              {/* Status */}
+              <div className="px-1 py-1">
+                <button
+                  onClick={() => setCategoryStatusFilter(categoryStatusFilter === "has-articles" ? null : "has-articles")}
+                  className={cn(
+                    "group/row flex w-full items-center gap-2.5 rounded-md px-2 py-[7px] text-sm transition-colors",
+                    categoryStatusFilter === "has-articles" ? "bg-accent/10 text-accent" : "text-foreground/80 hover:bg-secondary/50"
+                  )}
+                >
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M2 2h12v12H2z" rx="1.5"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="9" y2="9"/></svg>
+                  <span className="flex-1 text-left">Has articles</span>
+                  {categoryStatusFilter === "has-articles" && <span className="text-accent text-xs">Active</span>}
+                </button>
+                <button
+                  onClick={() => setCategoryStatusFilter(categoryStatusFilter === "has-stubs" ? null : "has-stubs")}
+                  className={cn(
+                    "group/row flex w-full items-center gap-2.5 rounded-md px-2 py-[7px] text-sm transition-colors",
+                    categoryStatusFilter === "has-stubs" ? "bg-accent/10 text-accent" : "text-foreground/80 hover:bg-secondary/50"
+                  )}
+                >
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M2 2h12v12H2z" rx="1.5"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+                  <span className="flex-1 text-left">Has stubs</span>
+                  {categoryStatusFilter === "has-stubs" && <span className="text-accent text-xs">Active</span>}
+                </button>
+                <button
+                  onClick={() => setCategoryStatusFilter(categoryStatusFilter === "empty" ? null : "empty")}
+                  className={cn(
+                    "group/row flex w-full items-center gap-2.5 rounded-md px-2 py-[7px] text-sm transition-colors",
+                    categoryStatusFilter === "empty" ? "bg-accent/10 text-accent" : "text-foreground/80 hover:bg-secondary/50"
+                  )}
+                >
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M2 2h12v12H2z" rx="1.5"/></svg>
+                  <span className="flex-1 text-left">Empty</span>
+                  {categoryStatusFilter === "empty" && <span className="text-accent text-xs">Active</span>}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <FilterPanel
+              categories={WIKI_VIEW_CONFIG.filterCategories}
+              activeFilters={wikiFilters}
+              onToggle={handleWikiFilterToggle}
+            />
+          )
         }
         showDisplay
         displayContent={
-          <DisplayPanel
-            config={WIKI_VIEW_CONFIG.displayConfig}
-            viewState={wikiViewState}
-            onViewStateChange={(patch) =>
-              setWikiViewState((prev) => ({ ...prev, ...patch }))
-            }
-            toggleStates={wikiViewState.toggles}
-            onToggleChange={(key, value) =>
-              setWikiViewState((prev) => ({
-                ...prev,
-                toggles: { ...prev.toggles, [key]: value },
-              }))
-            }
-          />
+          wikiViewMode === "category" ? (
+            <div className="flex flex-col gap-3 p-3">
+              {/* View Mode Tabs */}
+              <div className="flex rounded-lg border border-border/80 bg-card p-0.5">
+                {(["tree", "list"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setCategoryViewMode(mode)}
+                    className={cn(
+                      "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
+                      categoryViewMode === mode
+                        ? "bg-foreground/10 text-foreground shadow-sm"
+                        : "text-muted-foreground/60 hover:text-foreground/80",
+                    )}
+                  >
+                    {mode === "tree" ? (
+                      <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="9" y="3" width="6" height="3" rx="0.8"/><rect x="9" y="9" width="6" height="3" rx="0.8"/><line x1="6" y1="4.5" x2="9" y2="4.5"/><line x1="6" y1="4.5" x2="6" y2="10.5"/><line x1="6" y1="10.5" x2="9" y2="10.5"/></svg>
+                    ) : (
+                      <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="13.5" y2="4"/><line x1="2.5" y1="8" x2="13.5" y2="8"/><line x1="2.5" y1="12" x2="13.5" y2="12"/></svg>
+                    )}
+                    {mode === "tree" ? "Tree" : "List"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Grouping (list mode only) */}
+              {categoryViewMode === "list" && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Grouping</span>
+                  <div className="relative">
+                    <select
+                      value={categoryGrouping}
+                      onChange={(e) => setCategoryGrouping(e.target.value as any)}
+                      className="appearance-none rounded-md border border-border/60 bg-card pl-2.5 pr-7 py-1 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:border-accent/40 hover:bg-secondary/50 transition-colors"
+                    >
+                      <option value="none">No grouping</option>
+                      <option value="tier">Tier</option>
+                      <option value="parent">Parent</option>
+                      <option value="family">Family</option>
+                    </select>
+                    <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50" width={10} height={10} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="4 6 8 10 12 6"/></svg>
+                  </div>
+                </div>
+              )}
+
+              {/* Ordering (list mode only) */}
+              {categoryViewMode === "list" && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Ordering</span>
+                  <div className="relative">
+                    <select
+                      value={categoryOrdering}
+                      onChange={(e) => setCategoryOrdering(e.target.value as any)}
+                      className="appearance-none rounded-md border border-border/60 bg-card pl-2.5 pr-7 py-1 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:border-accent/40 hover:bg-secondary/50 transition-colors"
+                    >
+                      <option value="name">Name</option>
+                      <option value="articles">Articles</option>
+                      <option value="updated">Updated</option>
+                    </select>
+                    <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50" width={10} height={10} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="4 6 8 10 12 6"/></svg>
+                  </div>
+                </div>
+              )}
+
+              {/* Divider */}
+              {categoryViewMode === "list" && <div className="h-px bg-border/50" />}
+
+              {/* List options (list mode only) */}
+              {categoryViewMode === "list" && (
+                <>
+                  <div className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wide">
+                    List options
+                  </div>
+                  <div className="space-y-1">
+                    <ToggleRow
+                      label="Show description"
+                      icon={<svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="13.5" y2="4"/><line x1="2.5" y1="8" x2="10" y2="8"/><line x1="2.5" y1="12" x2="7" y2="12"/></svg>}
+                      checked={categoryShowDescription}
+                      onChange={setCategoryShowDescription}
+                    />
+                    <ToggleRow
+                      label="Show empty"
+                      icon={<svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M2 2h12v12H2z" rx="1.5"/></svg>}
+                      checked={categoryShowEmpty}
+                      onChange={setCategoryShowEmpty}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Display properties (list mode only) */}
+              {categoryViewMode === "list" && (
+                <>
+                  <div className="h-px bg-border/50" />
+                  <div className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wide">
+                    Display properties
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { key: "parent", label: "Parent", icon: <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"><path d="M14 12.5a1 1 0 01-1 1H3a1 1 0 01-1-1V3.5a1 1 0 011-1h3.5l1.5 2H13a1 1 0 011 1z"/></svg> },
+                      { key: "tier", label: "Tier", icon: <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="3" y1="13" x2="3" y2="10"/><line x1="6.5" y1="13" x2="6.5" y2="7"/><line x1="10" y1="13" x2="10" y2="4"/></svg> },
+                      { key: "articles", label: "Articles" },
+                      { key: "stubs", label: "Stubs" },
+                      { key: "sub", label: "Sub" },
+                      { key: "updated", label: "Updated", icon: <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="12" height="11" rx="1.5"/><line x1="2" y1="7" x2="14" y2="7"/><line x1="5.3" y1="1.3" x2="5.3" y2="4.7"/><line x1="10.7" y1="1.3" x2="10.7" y2="4.7"/></svg> },
+                    ].map((prop) => (
+                      <button
+                        key={prop.key}
+                        className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
+                      >
+                        {prop.icon}
+                        {prop.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <DisplayPanel
+              config={WIKI_VIEW_CONFIG.displayConfig}
+              viewState={wikiViewState}
+              onViewStateChange={(patch) =>
+                setWikiViewState((prev) => ({ ...prev, ...patch }))
+              }
+              toggleStates={wikiViewState.toggles}
+              onToggleChange={(key, value) =>
+                setWikiViewState((prev) => ({
+                  ...prev,
+                  toggles: { ...prev.toggles, [key]: value },
+                }))
+              }
+            />
+          )
         }
         showDetailPanel
         detailPanelOpen={sidePanelOpen}
@@ -852,162 +1099,164 @@ export function WikiView() {
           }
         }}
         actions={
-          <div className="flex items-center gap-2">
-            <Popover open={importOpen} onOpenChange={(o) => {
-              if (o) {
-                setImportOpen(true)
-                setImportStep("select-note")
-                setImportSelectedNoteId(null)
-                setImportQuery("")
-                setImportTargetQuery("")
-                setTimeout(() => importInputRef.current?.focus(), 50)
-              } else {
-                resetImport()
-              }
-            }}>
-              <PopoverTrigger asChild>
-                <button
-                  className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-secondary"
-                >
-                  <ArrowLineUp size={14} weight="regular" />
-                  Import Note
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-80 p-0">
-                {importStep === "select-note" ? (
-                  <>
-                    <div className="border-b border-border px-3 py-2">
-                      <p className="mb-1.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Step 1 — Select a note</p>
-                      <div className="relative">
-                        <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
-                        <input
-                          ref={importInputRef}
-                          type="text"
-                          value={importQuery}
-                          onChange={(e) => setImportQuery(e.target.value)}
-                          placeholder="Search notes..."
-                          className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                        />
+          wikiViewMode === "category" ? undefined : (
+            <div className="flex items-center gap-2">
+              <Popover open={importOpen} onOpenChange={(o) => {
+                if (o) {
+                  setImportOpen(true)
+                  setImportStep("select-note")
+                  setImportSelectedNoteId(null)
+                  setImportQuery("")
+                  setImportTargetQuery("")
+                  setTimeout(() => importInputRef.current?.focus(), 50)
+                } else {
+                  resetImport()
+                }
+              }}>
+                <PopoverTrigger asChild>
+                  <button
+                    className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-secondary"
+                  >
+                    <ArrowLineUp size={14} weight="regular" />
+                    Import Note
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80 p-0">
+                  {importStep === "select-note" ? (
+                    <>
+                      <div className="border-b border-border px-3 py-2">
+                        <p className="mb-1.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Step 1 — Select a note</p>
+                        <div className="relative">
+                          <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
+                          <input
+                            ref={importInputRef}
+                            type="text"
+                            value={importQuery}
+                            onChange={(e) => setImportQuery(e.target.value)}
+                            placeholder="Search notes..."
+                            className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto py-1">
-                      {importableNotes.length === 0 ? (
-                        <p className="px-3 py-4 text-center text-xs text-muted-foreground">
-                          {importQuery.trim() ? "No matching notes" : "No notes to import"}
-                        </p>
-                      ) : (
-                        importableNotes.map((note) => (
-                          <button
-                            key={note.id}
-                            onClick={() => handleImportSelectNote(note.id)}
-                            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
-                          >
-                            <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
-                            <span className="min-w-0 flex-1 truncate">
-                              {note.title || "Untitled"}
-                            </span>
-                            <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-2xs font-medium text-muted-foreground capitalize">
-                              {note.status}
-                            </span>
+                      <div className="max-h-60 overflow-y-auto py-1">
+                        {importableNotes.length === 0 ? (
+                          <p className="px-3 py-4 text-center text-xs text-muted-foreground">
+                            {importQuery.trim() ? "No matching notes" : "No notes to import"}
+                          </p>
+                        ) : (
+                          importableNotes.map((note) => (
+                            <button
+                              key={note.id}
+                              onClick={() => handleImportSelectNote(note.id)}
+                              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                            >
+                              <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+                              <span className="min-w-0 flex-1 truncate">
+                                {note.title || "Untitled"}
+                              </span>
+                              <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-2xs font-medium text-muted-foreground capitalize">
+                                {note.status}
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="border-b border-border px-3 py-2">
+                        <div className="mb-1.5 flex items-center gap-1.5">
+                          <button onClick={() => { setImportStep("select-note"); setImportTargetQuery("") }} className="text-muted-foreground hover:text-foreground transition-colors">
+                            <CaretLeft size={14} weight="bold" />
                           </button>
-                        ))
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="border-b border-border px-3 py-2">
-                      <div className="mb-1.5 flex items-center gap-1.5">
-                        <button onClick={() => { setImportStep("select-note"); setImportTargetQuery("") }} className="text-muted-foreground hover:text-foreground transition-colors">
-                          <CaretLeft size={14} weight="bold" />
+                          <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">Step 2 — Select target</p>
+                        </div>
+                        <div className="relative">
+                          <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
+                          <input
+                            ref={importTargetInputRef}
+                            type="text"
+                            value={importTargetQuery}
+                            onChange={(e) => setImportTargetQuery(e.target.value)}
+                            placeholder="Search articles, stubs, red links..."
+                            className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-72 overflow-y-auto py-1">
+                        {/* Create new article */}
+                        <button
+                          onClick={handleImportCreateNew}
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-accent transition-colors duration-150 hover:bg-secondary"
+                        >
+                          <PhPlus className="shrink-0" size={14} weight="bold" />
+                          <span className="font-medium">Create new article</span>
                         </button>
-                        <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">Step 2 — Select target</p>
+
+                        {/* Articles */}
+                        {importTargets.articles.length > 0 && (
+                          <>
+                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Articles</p>
+                            {importTargets.articles.map((a) => (
+                              <button
+                                key={a.id}
+                                onClick={() => handleImportIntoExisting(a.id)}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                              >
+                                <IconWikiArticle size={14} className="shrink-0 text-wiki-complete" />
+                                <span className="min-w-0 flex-1 truncate">{a.title}</span>
+                              </button>
+                            ))}
+                          </>
+                        )}
+
+                        {/* Stubs */}
+                        {importTargets.stubs.length > 0 && (
+                          <>
+                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Stubs</p>
+                            {importTargets.stubs.map((a) => (
+                              <button
+                                key={a.id}
+                                onClick={() => handleImportIntoExisting(a.id)}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                              >
+                                <IconWikiStub size={14} className="shrink-0 text-chart-3" />
+                                <span className="min-w-0 flex-1 truncate">{a.title}</span>
+                              </button>
+                            ))}
+                          </>
+                        )}
+
+                        {/* Red Links */}
+                        {importTargets.redLinks.length > 0 && (
+                          <>
+                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Red Links</p>
+                            {importTargets.redLinks.map((r) => (
+                              <button
+                                key={r.title}
+                                onClick={() => handleImportIntoRedLink(r.title)}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                              >
+                                <Warning size={14} weight="regular" className="shrink-0 text-destructive" />
+                                <span className="min-w-0 flex-1 truncate">{r.title}</span>
+                                <span className="shrink-0 text-2xs text-muted-foreground">{r.refCount} refs</span>
+                              </button>
+                            ))}
+                          </>
+                        )}
+
+                        {importTargets.articles.length === 0 && importTargets.stubs.length === 0 && importTargets.redLinks.length === 0 && importTargetQuery.trim() && (
+                          <p className="px-3 py-4 text-center text-xs text-muted-foreground">No matching targets</p>
+                        )}
                       </div>
-                      <div className="relative">
-                        <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="regular" />
-                        <input
-                          ref={importTargetInputRef}
-                          type="text"
-                          value={importTargetQuery}
-                          onChange={(e) => setImportTargetQuery(e.target.value)}
-                          placeholder="Search articles, stubs, red links..."
-                          className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                        />
-                      </div>
-                    </div>
-                    <div className="max-h-72 overflow-y-auto py-1">
-                      {/* Create new article */}
-                      <button
-                        onClick={handleImportCreateNew}
-                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-accent transition-colors duration-150 hover:bg-secondary"
-                      >
-                        <PhPlus className="shrink-0" size={14} weight="bold" />
-                        <span className="font-medium">Create new article</span>
-                      </button>
-
-                      {/* Articles */}
-                      {importTargets.articles.length > 0 && (
-                        <>
-                          <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Articles</p>
-                          {importTargets.articles.map((a) => (
-                            <button
-                              key={a.id}
-                              onClick={() => handleImportIntoExisting(a.id)}
-                              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
-                            >
-                              <IconWikiArticle size={14} className="shrink-0 text-wiki-complete" />
-                              <span className="min-w-0 flex-1 truncate">{a.title}</span>
-                            </button>
-                          ))}
-                        </>
-                      )}
-
-                      {/* Stubs */}
-                      {importTargets.stubs.length > 0 && (
-                        <>
-                          <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Stubs</p>
-                          {importTargets.stubs.map((a) => (
-                            <button
-                              key={a.id}
-                              onClick={() => handleImportIntoExisting(a.id)}
-                              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
-                            >
-                              <IconWikiStub size={14} className="shrink-0 text-chart-3" />
-                              <span className="min-w-0 flex-1 truncate">{a.title}</span>
-                            </button>
-                          ))}
-                        </>
-                      )}
-
-                      {/* Red Links */}
-                      {importTargets.redLinks.length > 0 && (
-                        <>
-                          <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Red Links</p>
-                          {importTargets.redLinks.map((r) => (
-                            <button
-                              key={r.title}
-                              onClick={() => handleImportIntoRedLink(r.title)}
-                              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
-                            >
-                              <Warning size={14} weight="regular" className="shrink-0 text-destructive" />
-                              <span className="min-w-0 flex-1 truncate">{r.title}</span>
-                              <span className="shrink-0 text-2xs text-muted-foreground">{r.refCount} refs</span>
-                            </button>
-                          ))}
-                        </>
-                      )}
-
-                      {importTargets.articles.length === 0 && importTargets.stubs.length === 0 && importTargets.redLinks.length === 0 && importTargetQuery.trim() && (
-                        <p className="px-3 py-4 text-center text-xs text-muted-foreground">No matching targets</p>
-                      )}
-                    </div>
-                  </>
-                )}
-              </PopoverContent>
-            </Popover>
-          </div>
+                    </>
+                  )}
+                </PopoverContent>
+              </Popover>
+            </div>
+          )
         }
-        onCreateNew={handleCreateWiki}
+        onCreateNew={wikiViewMode === "category" ? () => createWikiCategory("New Category") : handleCreateWiki}
       />
 
       {wikiViewMode === "category" ? (
@@ -1015,6 +1264,13 @@ export function WikiView() {
           categoryId={activeCategoryId}
           onOpenArticle={setSelectedWikiArticleId}
           onNavigateCategory={(catId) => setActiveCategoryView(catId)}
+          categoryViewMode={categoryViewMode}
+          categoryOrdering={categoryOrdering}
+          categoryTierFilter={categoryTierFilter}
+          categoryStatusFilter={categoryStatusFilter}
+          categoryShowDescription={categoryShowDescription}
+          categoryShowEmpty={categoryShowEmpty}
+          categoryGrouping={categoryGrouping}
         />
       ) : wikiViewMode === "merge" ? (
         <WikiMergePage />
