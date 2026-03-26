@@ -95,7 +95,7 @@ function InlineSelect<T extends string>({
         <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} weight="regular" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-surface-overlay py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
           {options.map((opt) => {
             const active = opt.value === value
             return (
@@ -776,11 +776,11 @@ export function NotesBoard({
           const store = usePlotStore.getState()
           if (!store.sidePanelOpen) {
             store.setSidePanelOpen(true)
-            usePlotStore.setState({ sidePanelMode: 'context' })
-          } else if (store.sidePanelMode === 'context') {
+            usePlotStore.setState({ sidePanelMode: 'detail' })
+          } else if (store.sidePanelMode === 'detail') {
             store.setSidePanelOpen(false)
           } else {
-            usePlotStore.setState({ sidePanelMode: 'context' })
+            usePlotStore.setState({ sidePanelMode: 'detail' })
           }
         }}
         onCreateNew={!hideCreateButton ? () => { const id = createNote(createNoteOverrides ?? {}); if (id) openNote(id) } : undefined}

@@ -3,18 +3,22 @@ import type { Note, NoteStatus, NotePriority } from "../types"
 /* ── View Context ──────────────────────────────────────── */
 
 export type ViewContextKey =
-  | "all"        // /notes
-  | "pinned"     // /pinned
-  | "inbox"      // /inbox
-  | "capture"    // /capture
-  | "permanent"  // /permanent
-  | "unlinked"   // tab filter within /notes
-  | "review"     // /review
-  | "folder"     // /folder/[id]
-  | "tag"        // /tag/[id]
-  | "label"      // /label/[id]
-  | "trash"      // /trash
-  | "savedView"  // /views/[id] — dynamic context for saved view detail
+  | "all"            // /notes
+  | "pinned"         // /pinned
+  | "inbox"          // /inbox
+  | "capture"        // /capture
+  | "permanent"      // /permanent
+  | "unlinked"       // tab filter within /notes
+  | "review"         // /review
+  | "folder"         // /folder/[id]
+  | "tag"            // /tag/[id]
+  | "label"          // /label/[id]
+  | "trash"          // /trash
+  | "savedView"      // /views/[id] — dynamic context for saved view detail
+  | "wiki"           // /wiki — wiki articles list
+  | "wiki-category"  // /wiki/categories — category management
+  | "graph"          // /ontology — graph view
+  | "calendar"       // /calendar — calendar view
 
 /* ── View State ────────────────────────────────────────── */
 
@@ -30,10 +34,17 @@ export type SortField =
   | "reads"
   | "folder"
   | "label"
+  // Wiki-category-specific sort fields
+  | "articles"
+  | "stubs"
+  | "sub"
+  | "tier"
+  | "parent"
 
 export type SortDirection = "asc" | "desc"
 
 export type GroupBy = "none" | "status" | "priority" | "date" | "folder" | "label" | "triage" | "linkCount"
+  | "tier" | "parent" | "family"  // wiki-category grouping
 
 export type GroupSortBy = "default" | "manual" | "name" | "count"
 
@@ -43,6 +54,10 @@ export type FilterField =
   | "status" | "priority" | "links" | "reads" | "folder" | "label"
   | "updatedAt" | "createdAt" | "content" | "tags" | "pinned"
   | "source" | "wordCount" | "title" | "isWiki"
+  // Graph-specific filter fields
+  | "nodeType" | "relationType" | "showWikilinks" | "showTagNodes"
+  // Wiki-specific filter fields
+  | "wikiStatus" | "category" | "wikiTier"
 
 export interface FilterRule {
   field: FilterField
@@ -117,15 +132,17 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
 export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
   "all", "pinned", "inbox", "capture", "permanent",
   "unlinked", "review", "folder", "tag", "label", "trash",
-  "savedView",
+  "savedView", "wiki", "wiki-category", "graph", "calendar",
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
   "updatedAt", "createdAt", "title", "status", "links", "reads", "folder", "label",
+  "articles", "stubs", "sub", "tier", "parent",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
   "none", "status", "priority", "date", "folder", "label", "triage", "linkCount",
+  "tier", "parent", "family",
 ]
 
 export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calendar"]
@@ -134,4 +151,6 @@ export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", 
 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "folder", "tags", "links", "reads", "wordCount", "createdAt", "updatedAt",
+  // Wiki-category-specific columns
+  "parent", "tier", "articles", "stubs", "sub",
 ]

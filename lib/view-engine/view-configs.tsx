@@ -182,23 +182,73 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+export const WIKI_CATEGORY_VIEW_CONFIG: ViewConfig = {
+  showFilter: true,
+  showDisplay: true,
+  showDetailPanel: true,
+  filterCategories: [
+    { key: "wikiTier", label: "Tier", icon: TagIcon, values: [
+      { key: "1", label: "Tier 1 (Top)" },
+      { key: "2", label: "Tier 2" },
+      { key: "3", label: "Tier 3" },
+    ]},
+    { key: "wikiStatus", label: "Status", icon: StatusIcon, values: [
+      { key: "has-articles", label: "Has articles" },
+      { key: "has-stubs", label: "Has stubs" },
+      { key: "empty", label: "Empty" },
+    ]},
+  ],
+  quickFilters: [],
+  displayConfig: {
+    supportedModes: ["list", "board"],
+    orderingOptions: [
+      { value: "title", label: "Name" },
+      { value: "parent", label: "Parent" },
+      { value: "tier", label: "Tier" },
+      { value: "articles", label: "Articles" },
+      { value: "stubs", label: "Stubs" },
+      { value: "sub", label: "Sub" },
+      { value: "updatedAt", label: "Updated" },
+    ],
+    groupingOptions: [
+      { value: "none", label: "No grouping" },
+      { value: "tier", label: "Tier" },
+      { value: "parent", label: "Parent" },
+      { value: "family", label: "Family" },
+    ],
+    toggles: [
+      { key: "showDescription", label: "Show description", icon: ContentIcon },
+      { key: "showEmptyGroups", label: "Show empty", icon: EyeIcon },
+    ],
+    properties: [
+      { key: "parent", label: "Parent" },
+      { key: "tier", label: "Tier" },
+      { key: "articles", label: "Articles" },
+      { key: "stubs", label: "Stubs" },
+      { key: "sub", label: "Sub" },
+      { key: "updatedAt", label: "Updated" },
+    ],
+  },
+}
+
 export const GRAPH_VIEW_CONFIG: ViewConfig = {
   showFilter: true,
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
-    { key: "status", label: "Node Type", icon: GraphIcon, values: [
-      { key: "notes", label: "Notes" },
-      { key: "wiki", label: "Wiki articles" },
-      { key: "stubs", label: "Wiki stubs" },
-      { key: "tags", label: "Tag nodes" },
+    { key: "status", label: "Status", icon: StatusIcon, values: [
+      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)" },
+      { key: "capture", label: "Capture", color: "#f5a623" },
+      { key: "permanent", label: "Permanent", color: "#45d483" },
     ]},
-    { key: "relations", label: "Relation", icon: LinkIcon, values: [
-      { key: "related-to", label: "related-to" },
-      { key: "extends", label: "extends" },
-      { key: "depends-on", label: "depends-on" },
-      { key: "contradicts", label: "contradicts" },
-      { key: "inspired-by", label: "inspired-by" },
+    { key: "tags", label: "Tags", icon: TagIcon, values: [] },
+    { key: "label", label: "Label", icon: LabelIcon, values: [] },
+    { key: "relationType", label: "Relations", icon: LinkIcon, values: [
+      { key: "related-to", label: "Related to", color: "#6b7280" },
+      { key: "inspired-by", label: "Inspired by", color: "#8b5cf6" },
+      { key: "contradicts", label: "Contradicts", color: "#ef4444" },
+      { key: "extends", label: "Extends", color: "#3b82f6" },
+      { key: "depends-on", label: "Depends on", color: "#f59e0b" },
     ]},
   ],
   quickFilters: [],
@@ -301,6 +351,7 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
 export const VIEW_CONFIGS: Record<string, ViewConfig> = {
   notes: NOTES_VIEW_CONFIG,
   wiki: WIKI_VIEW_CONFIG,
+  "wiki-category": WIKI_CATEGORY_VIEW_CONFIG,
   graph: GRAPH_VIEW_CONFIG,
   inbox: INBOX_VIEW_CONFIG,
   insights: INSIGHTS_VIEW_CONFIG,

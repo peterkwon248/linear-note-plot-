@@ -34,7 +34,7 @@ import { setActiveCategoryView } from "@/lib/wiki-view-mode"
 
 /* ── Props ── */
 
-type CategoryOrdering = "name" | "articles" | "updated" | "parent" | "tier" | "stubs" | "sub"
+type CategoryOrdering = "title" | "articles" | "updatedAt" | "parent" | "tier" | "stubs" | "sub"
 
 interface WikiCategoryPageProps {
   categoryId: string | null
@@ -176,7 +176,7 @@ function CategoryBoardCard({
       onClick={(e) => { e.stopPropagation(); !isDragging && onSelect(cat.id, e) }}
       onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick?.(cat.id) }}
       className={cn(
-        "group relative rounded-lg border border-border/50 bg-card p-3 transition-all select-none",
+        "group relative rounded-lg border border-border-subtle bg-card p-3 transition-all select-none",
         isDragging ? "opacity-20 cursor-grabbing" : "cursor-grab",
         isOver && !isDragging && "ring-2 ring-accent border-accent/50 bg-accent/5",
         isSelected && !isDragging && !isOver && "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
@@ -339,7 +339,7 @@ function CategoryBoardView({
     const dir = sortDirection === "desc" ? -1 : 1
     return [...items].sort((a, b) => {
       if (ordering === "articles") return dir * (b.articleCount - a.articleCount)
-      if (ordering === "updated") return dir * (new Date(b.cat.updatedAt ?? b.cat.createdAt).getTime() - new Date(a.cat.updatedAt ?? a.cat.createdAt).getTime())
+      if (ordering === "updatedAt") return dir * (new Date(b.cat.updatedAt ?? b.cat.createdAt).getTime() - new Date(a.cat.updatedAt ?? a.cat.createdAt).getTime())
       return dir * a.cat.name.localeCompare(b.cat.name)
     })
   }, [ordering, sortDirection])
@@ -590,13 +590,13 @@ function CategoryFullListView({
     if (!showEmpty) filtered = filtered.filter((d) => d.articleCount > 0 || d.stubCount > 0)
 
     // Apply ordering
-    const ord = ordering ?? "name"
+    const ord = ordering ?? "title"
     const dir = sortDirection === "desc" ? -1 : 1
-    if (ord === "name") {
+    if (ord === "title") {
       filtered.sort((a, b) => dir * a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "articles") {
       filtered.sort((a, b) => dir * (b.articleCount - a.articleCount) || a.cat.name.localeCompare(b.cat.name))
-    } else if (ord === "updated") {
+    } else if (ord === "updatedAt") {
       filtered.sort((a, b) => {
         const aTime = a.cat.updatedAt ? new Date(a.cat.updatedAt).getTime() : 0
         const bTime = (b.cat as any).updatedAt ? new Date((b.cat as any).updatedAt).getTime() : 0
@@ -730,14 +730,14 @@ function CategoryFullListView({
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Header row */}
-      <div className="sticky top-0 z-10 flex items-center border-b border-border/50 bg-background px-5 py-2.5">
+      <div className="sticky top-0 z-10 flex items-center border-b border-border-subtle bg-background px-5 py-2.5">
         <div className="flex-1">
           <button
-            onClick={() => handleSortClick("name")}
+            onClick={() => handleSortClick("title")}
             className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Name
-            <SortIcon col="name" />
+            <SortIcon col="title" />
           </button>
         </div>
         {showCol("parent") && (
@@ -795,14 +795,14 @@ function CategoryFullListView({
             </button>
           </div>
         )}
-        {showCol("updated") && (
+        {showCol("updatedAt") && (
           <div className="w-[80px] flex justify-end">
             <button
-              onClick={() => handleSortClick("updated")}
+              onClick={() => handleSortClick("updatedAt")}
               className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Updated
-              <SortIcon col="updated" />
+              <SortIcon col="updatedAt" />
             </button>
           </div>
         )}
@@ -883,7 +883,7 @@ function CategoryFullListView({
                       {childCount > 0 ? childCount : "\u2014"}
                     </span>
                   )}
-                  {showCol("updated") && (
+                  {showCol("updatedAt") && (
                     <span className="w-[80px] text-right text-note tabular-nums text-muted-foreground/40">
                       {cat.updatedAt ? shortRelative(cat.updatedAt) : "\u2014"}
                     </span>
@@ -892,7 +892,7 @@ function CategoryFullListView({
 
                 {/* Expanded: show articles in this category */}
                 {expandedCatId === cat.id && catArticles.length > 0 && (
-                  <div className="border-b border-border/30 bg-secondary/10 px-5 py-1.5">
+                  <div className="border-b border-border-subtle bg-secondary/10 px-5 py-1.5">
                     {catArticles.map((article) => (
                       <button
                         key={article.id}
@@ -1356,10 +1356,10 @@ function CategoryEditor({
 
       {/* Divider + Delete */}
       <div className="mt-auto px-6 pt-6 pb-6">
-        <div className="border-t border-border/30 pt-4">
+        <div className="border-t border-border-subtle pt-4">
           <button
             onClick={handleDelete}
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-400/10"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
             <Trash size={16} weight="regular" />
             Delete Category
@@ -1776,7 +1776,7 @@ export function WikiCategoryPage({
         className={cn(
           "overflow-auto",
           openEditorId
-            ? "w-[280px] shrink-0 border-r border-border/30"
+            ? "w-[280px] shrink-0 border-r border-border-subtle"
             : "flex-1"
         )}
         onClick={handleBackgroundClick}
@@ -1785,7 +1785,7 @@ export function WikiCategoryPage({
           <CategoryBoardView
             categories={wikiCategories}
             articles={wikiArticles}
-            ordering={categoryOrdering ?? "name"}
+            ordering={categoryOrdering ?? "title"}
             sortDirection={categorySortDirection ?? "asc"}
             onSelect={handleSelect}
             showDescription={categoryShowDescription}

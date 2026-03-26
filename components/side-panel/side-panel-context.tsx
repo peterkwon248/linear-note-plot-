@@ -178,7 +178,7 @@ function SuggestionRow({
 
   return (
     <div className="flex items-center gap-2 px-1 py-0.5 rounded group hover:bg-secondary/50 transition-colors">
-      <Sparkle className="shrink-0 text-amber-500/60" size={14} weight="regular" />
+      <Sparkle className="shrink-0 text-chart-3" size={14} weight="regular" />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
