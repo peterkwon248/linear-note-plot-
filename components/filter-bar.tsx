@@ -24,15 +24,14 @@ import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { WifiHigh } from "@phosphor-icons/react/dist/ssr/WifiHigh"
 import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
 import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
 import { Hash as PhHash } from "@phosphor-icons/react/dist/ssr/Hash"
-import { StatusBadge, PriorityBadge } from "@/components/note-fields"
+import { StatusBadge } from "@/components/note-fields"
 import type { FilterRule, FilterField, GroupBy } from "@/lib/view-engine/types"
-import type { NoteStatus, NotePriority, NoteSource, Folder, Tag as TagType, Label } from "@/lib/types"
+import type { NoteStatus, NoteSource, Folder, Tag as TagType, Label } from "@/lib/types"
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -55,9 +54,6 @@ function countContentFilters(filters: FilterRule[]) {
 export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagList?: TagType[], labelList?: Label[]): string {
   // Status
   if (rule.field === "status") return rule.value.charAt(0).toUpperCase() + rule.value.slice(1)
-  // Priority
-  if (rule.field === "priority" && rule.value === "none") return "No priority"
-  if (rule.field === "priority") return rule.value.charAt(0).toUpperCase() + rule.value.slice(1)
   // Folder
   if (rule.field === "folder" && rule.value === "_none") return "No folder"
   if (rule.field === "folder" && rule.value !== "_none" && folderList) {
@@ -155,7 +151,6 @@ export function FilterMenuItems({
   const [labelSearch, setLabelSearch] = useState("")
   const [tagSearch, setTagSearch] = useState("")
   const [statusSearch, setStatusSearch] = useState("")
-  const [prioritySearch, setPrioritySearch] = useState("")
   const [folderSearch, setFolderSearch] = useState("")
   const [sourceSearch, setSourceSearch] = useState("")
   const [linksSearch, setLinksSearch] = useState("")
@@ -163,12 +158,10 @@ export function FilterMenuItems({
   const [pinnedSearch, setPinnedSearch] = useState("")
 
   const showStatusFilter = groupBy !== "status" && groupBy !== "triage" && !isSingleStatusTab
-  const showPriorityFilter = groupBy !== "priority"
   const showFolderFilter = groupBy !== "folder"
   const showLinksFilter = groupBy !== "linkCount"
 
   const statusCount = countFieldFilters(filters, "status")
-  const priorityCount = countFieldFilters(filters, "priority")
   const folderCount = countFieldFilters(filters, "folder")
   const labelCount = countFieldFilters(filters, "label")
   const tagCount = countFieldFilters(filters, "tags")
@@ -241,43 +234,6 @@ export function FilterMenuItems({
                 <StatusBadge status={s} />
               </DropdownMenuItem>
             ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-      )}
-
-      {/* ── Priority ── */}
-      {showPriorityFilter && (
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <WifiHigh className="text-muted-foreground" size={16} weight="regular" />
-            <span className="text-sm">Priority</span>
-            <ActiveBadge count={priorityCount} />
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-48">
-            <div className="px-2 py-1.5">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                value={prioritySearch}
-                onChange={(e) => setPrioritySearch(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              />
-            </div>
-            {(["urgent", "high", "medium", "low", "none"] as NotePriority[])
-              .filter((p) => {
-                if (!prioritySearch) return true
-                const label = p === "none" ? "no priority" : p
-                return label.toLowerCase().includes(prioritySearch.toLowerCase())
-              })
-              .map((p) => (
-                <DropdownMenuItem key={p} onSelect={(e) => { e.preventDefault(); onToggleFilter("priority", p) }}>
-                  <CheckMark active={hasFilter(filters, "priority", p)} />
-                  <PriorityBadge priority={p} />
-                  <span className="ml-2 text-sm capitalize">{p === "none" ? "No priority" : p}</span>
-                </DropdownMenuItem>
-              ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
       )}
@@ -665,11 +621,11 @@ export function FilterMenuItems({
 
 /* ── FunnelSimple Grouping (for grouped chips) ──────────────── */
 
-export type FilterGroupKey = "status" | "priority" | "folder" | "label" | "tags" | "source" | "dates" | "links" | "content" | "pinned"
+export type FilterGroupKey = "status" | "folder" | "label" | "tags" | "source" | "dates" | "links" | "content" | "pinned"
 
 const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   status: "status",
-  priority: "priority",
+  priority: "status",
   folder: "folder",
   tags: "tags",
   source: "source",
@@ -700,7 +656,6 @@ export function getFilterGroupKey(field: FilterField): FilterGroupKey {
 
 export const FILTER_GROUP_META: Record<FilterGroupKey, { label: string; icon: typeof CircleDashed }> = {
   status: { label: "Status", icon: CircleDashed },
-  priority: { label: "Priority", icon: WifiHigh },
   folder: { label: "Folder", icon: FolderOpen },
   label: { label: "Label", icon: PhTag },
   tags: { label: "Tags", icon: PhHash },
@@ -726,7 +681,6 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
   const [labelSearch, setLabelSearch] = useState("")
   const [tagSearch, setTagSearch] = useState("")
   const [statusSearch, setStatusSearch] = useState("")
-  const [prioritySearch, setPrioritySearch] = useState("")
   const [folderSearch, setFolderSearch] = useState("")
   const [sourceSearch, setSourceSearch] = useState("")
 
@@ -755,23 +709,6 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
             <DropdownMenuItem key={s} onSelect={(e) => { e.preventDefault(); onToggleFilter("status", s) }}>
               <CheckMark active={hasFilter(filters, "status", s)} />
               <StatusBadge status={s} />
-            </DropdownMenuItem>
-          ))}
-        </>
-      )
-    case "priority":
-      return (
-        <>
-          {searchInput(prioritySearch, setPrioritySearch)}
-          {(["urgent", "high", "medium", "low", "none"] as NotePriority[]).filter((p) => {
-            if (!prioritySearch) return true
-            const label = p === "none" ? "no priority" : p
-            return label.toLowerCase().includes(prioritySearch.toLowerCase())
-          }).map((p) => (
-            <DropdownMenuItem key={p} onSelect={(e) => { e.preventDefault(); onToggleFilter("priority", p) }}>
-              <CheckMark active={hasFilter(filters, "priority", p)} />
-              <PriorityBadge priority={p} />
-              <span className="ml-2 text-sm capitalize">{p === "none" ? "No priority" : p}</span>
             </DropdownMenuItem>
           ))}
         </>

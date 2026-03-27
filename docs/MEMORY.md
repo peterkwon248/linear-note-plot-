@@ -150,6 +150,26 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 
 ## Current Direction (as of 2026-03-27)
 
+### 이번 세션 완료 — Phase 7 즉시 개선 + 에디터 통합 플랜 (2026-03-27)
+- **StatusDropdown 추가**: 플로팅바에 일괄 status 변경 드롭다운. 선택된 전체 노트 status 한 번에 변경
+- **Status badges per-status**: 플로팅바에서 선택된 노트의 status별 뱃지 표시 + 클릭 시 해당 노트 목록
+- **Trash 버튼 독립 배치**: renderWorkflowButtons() 밖으로 이동, 항상 표시
+- **Priority 필터 완전 제거**: filter-bar.tsx에서 Priority 관련 코드 전체 삭제
+- **GitMerge 버튼 색상 수정**: 투명→bg-accent, 다크 테마에서 보임
+- **빈 노트 자동 삭제**: openNote() 시 이전 노트가 제목+내용 비어있으면 자동 삭제
+- **리스트 우측 컬럼 폰트/아이콘 크기 + 색상 밝기 개선**
+- **우측 상단 필터/디스플레이/사이드바/+ 버튼 색상 밝기 개선**
+- **Board previewNoteId 수정**: SidePanel 열려있을 때 Detail/Discover 정보 표시
+- **< > 글로벌 화면 네비게이션**: routeHistory에 space 전환도 기록
+- **에디터 통합 프로젝트 7-Phase 플랜 수립**: `.claude/plans/editor-unification.md`
+  - Phase 1: 노트 에디터 리디자인 (shared config, title 통합, toolbar, 커스텀 노드)
+  - Phase 2: 위키 TextBlock TipTap 전환 (lazy mount)
+  - Phase 3: 템플릿 블록 레이아웃 에디터
+  - Phase 4: Partial Quote (부분 인용 + 메타데이터 8필드)
+  - Phase 5: Merge/Split 풀페이지 (섹션/문단 드래그 재배치)
+  - Phase 6: Merge/Split 히스토리 (필터 + Insights)
+  - Phase 7: 즉시 버그/개선 (완료)
+
 ### Key Design Decisions (추가)
 - **WorkspaceMode 삭제**: zen/research 모드 불필요. sidebarCollapsed + detailsOpen 독립 토글만으로 충분
 - **우측 사이드바 = Details 패널**: ViewDistributionPanel 삭제 → SmartSidePanel(Details)로 통합. 사이드바 버튼으로만 열림 (Linear 패턴)

@@ -3,11 +3,12 @@
 import { useMemo, useState, useCallback } from "react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
-import { StatusDropdown, PriorityDropdown } from "@/components/note-fields"
+import { STATUS_CONFIG, StatusDropdown } from "@/components/note-fields"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { RemindPicker } from "@/components/remind-picker"
 import { NotePickerDialog } from "@/components/note-picker-dialog"
 import type { ViewContextKey } from "@/lib/view-engine/types"
-import type { Note, NoteStatus, NotePriority } from "@/lib/types"
+import type { Note, NoteStatus } from "@/lib/types"
 import { MergeDialog } from "@/components/merge-dialog"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
 import { pushUndo } from "@/lib/undo-manager"
@@ -74,6 +75,20 @@ export function FloatingActionBar({
     [notes, selectedIds],
   )
 
+  const statusGroups = useMemo(() => {
+    const map = new Map<NoteStatus, Note[]>()
+    for (const note of selectedNotes) {
+      const arr = map.get(note.status) ?? []
+      arr.push(note)
+      map.set(note.status, arr)
+    }
+    return map
+  }, [selectedNotes])
+
+  const inboxCount = useMemo(() => selectedNotes.filter(n => n.status === 'inbox').length, [selectedNotes])
+  const captureCount = useMemo(() => selectedNotes.filter(n => n.status === 'capture').length, [selectedNotes])
+  const permanentCount = useMemo(() => selectedNotes.filter(n => n.status === 'permanent').length, [selectedNotes])
+
   /* ── Batch handlers ──────────────────────────────────── */
 
   const handleStatusChange = (status: NoteStatus) => {
@@ -86,18 +101,6 @@ export function FloatingActionBar({
       prevStatuses.forEach(({ id, status: prev }) => batchUpdateNotes([id], { status: prev }))
     }, () => batchUpdateNotes(ids, { status }))
     toast(`Updated status for ${count} note${count > 1 ? "s" : ""}`)
-  }
-
-  const handlePriorityChange = (priority: NotePriority) => {
-    const prevPriorities = ids.map((id) => {
-      const n = notes.find((n) => n.id === id)
-      return { id, priority: n?.priority ?? "none" as NotePriority }
-    })
-    batchUpdateNotes(ids, { priority })
-    pushUndo(`Priority → ${priority}`, () => {
-      prevPriorities.forEach(({ id, priority: prev }) => batchUpdateNotes([id], { priority: prev }))
-    }, () => batchUpdateNotes(ids, { priority }))
-    toast(`Updated priority for ${count} note${count > 1 ? "s" : ""}`)
   }
 
   const handleKeepAll = () => {
@@ -166,6 +169,33 @@ export function FloatingActionBar({
     toast(`Permanently deleted ${count} note${count > 1 ? "s" : ""}`, { duration: 5000 })
   }
 
+  const handleKeepInboxOnly = () => {
+    const inboxIds = selectedNotes.filter(n => n.status === 'inbox').map(n => n.id)
+    if (inboxIds.length === 0) return
+    inboxIds.forEach((id) => triageKeep(id))
+    onClearSelection()
+    pushUndo(`Triage ${inboxIds.length} to Capture`, () => inboxIds.forEach((id) => moveBackToInbox(id)), () => inboxIds.forEach((id) => triageKeep(id)))
+    toast(`Moved ${inboxIds.length} note${inboxIds.length > 1 ? "s" : ""} to Capture`)
+  }
+
+  const handlePromoteCaptureOnly = () => {
+    const captureIds = selectedNotes.filter(n => n.status === 'capture').map(n => n.id)
+    if (captureIds.length === 0) return
+    captureIds.forEach((id) => promoteToPermanent(id))
+    onClearSelection()
+    pushUndo(`Promote ${captureIds.length} to Permanent`, () => captureIds.forEach((id) => undoPromote(id)), () => captureIds.forEach((id) => promoteToPermanent(id)))
+    toast(`Promoted ${captureIds.length} note${captureIds.length > 1 ? "s" : ""} to Permanent`)
+  }
+
+  const handleDemotePermanentOnly = () => {
+    const permIds = selectedNotes.filter(n => n.status === 'permanent').map(n => n.id)
+    if (permIds.length === 0) return
+    permIds.forEach((id) => undoPromote(id))
+    onClearSelection()
+    pushUndo(`Demote ${permIds.length} to Capture`, () => permIds.forEach((id) => promoteToPermanent(id)), () => permIds.forEach((id) => undoPromote(id)))
+    toast(`Demoted ${permIds.length} note${permIds.length > 1 ? "s" : ""} to Capture`)
+  }
+
   /* ── Workflow buttons (conditional on tab) ───────────── */
 
   const renderWorkflowButtons = () => {
@@ -190,20 +220,12 @@ export function FloatingActionBar({
 
       case "inbox":
         return (
-          <>
-            <button
-              onClick={handleKeepAll}
-              className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
-            >
-              <PhCheck size={16} weight="bold" /> Done
-            </button>
-            <button
-              onClick={handleTrashAll}
-              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
-            >
-              <Trash size={16} weight="regular" /> Trash
-            </button>
-          </>
+          <button
+            onClick={handleKeepAll}
+            className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
+          >
+            <PhCheck size={16} weight="bold" /> Done
+          </button>
         )
 
       case "capture":
@@ -226,68 +248,41 @@ export function FloatingActionBar({
 
       case "permanent":
         return (
-          <>
-            <button
-              onClick={handleDemoteAll}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
-            >
-              <ArrowDownLeft size={16} weight="regular" /> Demote
-            </button>
-            <button
-              onClick={handleTrashAll}
-              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
-            >
-              <Trash size={16} weight="regular" /> Trash
-            </button>
-          </>
+          <button
+            onClick={handleDemoteAll}
+            className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
+          >
+            <ArrowDownLeft size={16} weight="regular" /> Demote
+          </button>
         )
 
       case "all":
       case "unlinked": {
-        const hasInbox = selectedNotes.some((n) => n.status === "inbox")
-        const hasCapture = selectedNotes.some((n) => n.status === "capture")
-        const hasPermanent = selectedNotes.some((n) => n.status === "permanent")
         return (
           <>
-            {hasInbox && (
-              <>
-                <button
-                  onClick={handleKeepAll}
-                  className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
-                >
-                  <PhCheck size={16} weight="bold" /> Done
-                </button>
-                <button
-                  onClick={handleTrashAll}
-                  className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
-                >
-                  <Trash size={16} weight="regular" /> Trash
-                </button>
-              </>
-            )}
-            {hasCapture && (
+            {inboxCount > 0 && (
               <button
-                onClick={handlePromoteAll}
-                className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-ui font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
+                onClick={handleKeepInboxOnly}
+                className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-3 py-2 text-ui font-medium text-accent hover:bg-accent/20 transition-colors"
               >
-                <ArrowUpRight size={16} weight="regular" /> Promote
+                <PhCheck size={16} weight="bold" /> Done {inboxCount}
               </button>
             )}
-            {hasPermanent && (
-              <>
-                <button
-                  onClick={handleDemoteAll}
-                  className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
-                >
-                  <ArrowDownLeft size={16} weight="regular" /> Demote
-                </button>
-                <button
-                  onClick={handleTrashAll}
-                  className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
-                >
-                  <Trash size={16} weight="regular" /> Trash
-                </button>
-              </>
+            {captureCount > 0 && (
+              <button
+                onClick={handlePromoteCaptureOnly}
+                className="inline-flex items-center gap-1 rounded-md bg-chart-5/10 px-3 py-2 text-ui font-medium text-chart-5 hover:bg-chart-5/20 transition-colors"
+              >
+                <ArrowUpRight size={16} weight="regular" /> Promote {captureCount}
+              </button>
+            )}
+            {permanentCount > 0 && (
+              <button
+                onClick={handleDemotePermanentOnly}
+                className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
+              >
+                <ArrowDownLeft size={16} weight="regular" /> Demote {permanentCount}
+              </button>
             )}
           </>
         )
@@ -328,23 +323,48 @@ export function FloatingActionBar({
           <>
             <Divider />
 
-            {/* Status */}
-            <div onClick={(e) => e.stopPropagation()}>
-              <StatusDropdown
-                value={selectedNotes[0]?.status ?? "inbox"}
-                onChange={handleStatusChange}
-                variant="inline"
-              />
-            </div>
+            {/* Status badges */}
+            {Array.from(statusGroups.entries()).map(([status, groupNotes]) => {
+              const cfg = STATUS_CONFIG[status]
+              return (
+                <Popover key={status}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className="inline-flex items-center gap-1 rounded-md px-2.5 py-2 text-ui font-medium transition-colors hover:opacity-80"
+                      style={{ background: cfg.bg, color: cfg.color }}
+                    >
+                      {cfg.icon}
+                      {cfg.label}
+                      <span className="ml-0.5 opacity-70">{groupNotes.length}</span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-56 p-1" sideOffset={8}>
+                    <div className="max-h-48 overflow-y-auto">
+                      {groupNotes.map((note) => (
+                        <div
+                          key={note.id}
+                          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground"
+                        >
+                          <span className="truncate">{note.title || "Untitled"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )
+            })}
 
-            {/* Priority */}
-            <div onClick={(e) => e.stopPropagation()}>
-              <PriorityDropdown
-                value={selectedNotes[0]?.priority ?? "none"}
-                onChange={handlePriorityChange}
-                variant="inline"
-              />
-            </div>
+            {/* Change all status */}
+            {statusGroups.size > 0 && (
+              <div className="flex items-center gap-1.5 ml-1">
+                <span className="text-xs text-muted-foreground/60">→</span>
+                <StatusDropdown
+                  value={Array.from(statusGroups.keys())[0]}
+                  onChange={handleStatusChange}
+                  variant="inline"
+                />
+              </div>
+            )}
 
             {/* Workflow buttons (if any) */}
             {workflowContent && (
@@ -355,6 +375,15 @@ export function FloatingActionBar({
                 </div>
               </>
             )}
+
+            {/* Trash (always visible outside trash tab) */}
+            <Divider />
+            <button
+              onClick={handleTrashAll}
+              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive hover:bg-destructive/20 transition-colors"
+            >
+              <Trash size={16} weight="regular" /> Trash
+            </button>
 
             {/* GitMerge */}
             <Divider />

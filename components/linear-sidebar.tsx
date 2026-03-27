@@ -209,18 +209,17 @@ export function LinearSidebar() {
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
 
   const handleGoBack = () => {
+    // Close editor first if open, then navigate route history
     const s = usePlotStore.getState()
     if (s.selectedNoteId) {
-      const handled = s.goBack()
-      if (handled) return
+      s.setSelectedNoteId(null)
     }
     routeGoBack()
   }
   const handleGoForward = () => {
     const s = usePlotStore.getState()
     if (s.selectedNoteId) {
-      const handled = s.goForward()
-      if (handled) return
+      s.setSelectedNoteId(null)
     }
     routeGoForward()
   }

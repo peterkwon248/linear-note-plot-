@@ -126,6 +126,7 @@ export function setActiveSpace(space: ActivitySpace): void {
   if (_activeSpace === space) return
   _activeSpace = space
   _activeRoute = DEFAULT_ROUTES[space]
+  _pushRouteHistory(_activeRoute)
   _listeners.forEach((fn) => fn())
 }
 

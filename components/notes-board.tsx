@@ -818,6 +818,13 @@ export function NotesBoard({
     })
   }, [])
 
+  // When exactly 1 note selected, set previewNoteId so SidePanel can show it
+  useEffect(() => {
+    if (selectedIds.size === 1) {
+      onRowClick?.(Array.from(selectedIds)[0])
+    }
+  }, [selectedIds.size]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSelectMany = useCallback((ids: string[]) => {
     setSelectedIds(new Set(ids))
   }, [])
@@ -931,10 +938,11 @@ export function NotesBoard({
             onClick={(e) => {
               // Suppress click after drag-select
               if (wasDragSelectingRef.current) return
-              // Clear selection when clicking empty space (not on a card)
+              // Clear selection when clicking empty space (not on a card or workbench)
               const target = e.target as HTMLElement
-              if (!target.closest('[data-board-card]')) {
+              if (!target.closest('[data-board-card]') && !target.closest('[data-board-workbench]') && !target.closest('button')) {
                 setSelectedIds(new Set())
+                usePlotStore.getState().setPreviewNoteId(null)
               }
             }}
           >

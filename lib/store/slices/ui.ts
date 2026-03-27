@@ -20,9 +20,31 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
 
   return {
     setActiveView: (view: ActiveView) => set({ activeView: view, selectedNoteId: null }),
-    setSelectedNoteId: (id: string | null) => set({ selectedNoteId: id }),
+    setSelectedNoteId: (id: string | null) => {
+      // Auto-delete empty notes when leaving editor
+      if (id === null) {
+        const state = get()
+        const prevId = state.selectedNoteId as string | null
+        if (prevId) {
+          const note = (state.notes as Note[]).find((n: Note) => n.id === prevId)
+          if (note && !note.title && !note.content) {
+            state.deleteNote(prevId)
+          }
+        }
+      }
+      set({ selectedNoteId: id })
+    },
 
     openNote: (id: string, opts?: { forceNewTab?: boolean }) => {
+      // Auto-delete empty previous note when switching to another note
+      const prevState = get()
+      const prevId = prevState.selectedNoteId as string | null
+      if (prevId && prevId !== id) {
+        const prevNote = (prevState.notes as Note[]).find((n: Note) => n.id === prevId)
+        if (prevNote && !prevNote.title && !prevNote.content) {
+          prevState.deleteNote(prevId)
+        }
+      }
       // Save current route before opening editor (for "Back" navigation)
       const currentRoute = getActiveRoute()
       if (currentRoute && !_navigating) {
@@ -76,6 +98,11 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
       const index = state.navigationIndex as number
       // At index 0 with an open note → close editor (return to table/view)
       if (index <= 0 && state.selectedNoteId) {
+        // Auto-delete empty notes
+        const note = (state.notes as Note[]).find((n: Note) => n.id === state.selectedNoteId)
+        if (note && !note.title && !note.content) {
+          state.deleteNote(state.selectedNoteId)
+        }
         set({ selectedNoteId: null, navigationIndex: -1 })
         return true
       }
