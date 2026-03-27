@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
-import { StatusDropdown, PriorityDropdown, STATUS_CONFIG } from "@/components/note-fields"
+import { StatusDropdown, STATUS_CONFIG } from "@/components/note-fields"
 import { RemindPicker } from "@/components/remind-picker"
 import type { ViewContextKey, GroupBy } from "@/lib/view-engine/types"
-import type { Note, NoteStatus, NotePriority, Folder } from "@/lib/types"
+import type { Note, NoteStatus, Folder } from "@/lib/types"
 import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
 import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
@@ -26,6 +26,7 @@ import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { MergeDialog } from "@/components/merge-dialog"
 import { NotePickerDialog } from "@/components/note-picker-dialog"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 
 /* ── Props ────────────────────────────────────────────── */
 
@@ -81,10 +82,14 @@ export function BoardWorkbench({
     return selectedNotes.every((n) => n.status === first) ? first : null
   }, [selectedNotes])
 
-  const commonPriority = useMemo<NotePriority | null>(() => {
-    if (selectedNotes.length === 0) return null
-    const first = selectedNotes[0].priority
-    return selectedNotes.every((n) => n.priority === first) ? first : null
+  const statusGroups = useMemo(() => {
+    const map = new Map<NoteStatus, Note[]>()
+    for (const note of selectedNotes) {
+      const arr = map.get(note.status) ?? []
+      arr.push(note)
+      map.set(note.status, arr)
+    }
+    return map
   }, [selectedNotes])
 
   /* ── Batch handlers ─────────────────────────────── */
@@ -157,6 +162,7 @@ export function BoardWorkbench({
     return (
       <>
       <div
+        data-board-workbench
         className="flex min-w-[280px] flex-1 shrink-0 flex-col rounded-lg bg-secondary/20 p-4 overflow-y-auto"
         style={{ maxHeight: "calc(100vh - 200px)" }}
       >
@@ -182,33 +188,53 @@ export function BoardWorkbench({
             Batch Actions
           </h4>
 
-          {/* Status */}
-          <div className="flex items-center justify-between">
+          {/* Status Badges */}
+          <div className="space-y-2">
             <span className="text-sm text-muted-foreground">Status</span>
-            {commonStatus ? (
-              <StatusDropdown
-                value={commonStatus}
-                onChange={(s) => batchUpdateNotes(Array.from(selectedIds), { status: s })}
-                variant="inline"
-              />
-            ) : (
-              <span className="text-xs text-muted-foreground/60">Mixed</span>
+            <div className="flex flex-wrap gap-1.5">
+              {Array.from(statusGroups.entries()).map(([status, groupNotes]) => {
+                const cfg = STATUS_CONFIG[status]
+                return (
+                  <Popover key={status}>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:opacity-80"
+                        style={{ background: cfg.bg, color: cfg.color }}
+                      >
+                        {cfg.icon}
+                        {cfg.label}
+                        <span className="ml-0.5 opacity-70">{groupNotes.length}</span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-56 p-1" sideOffset={4}>
+                      <div className="max-h-48 overflow-y-auto">
+                        {groupNotes.map((note) => (
+                          <button
+                            key={note.id}
+                            onClick={() => onCardClick?.(note.id)}
+                            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-secondary"
+                          >
+                            <span className="truncate text-foreground">{note.title || "Untitled"}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )
+              })}
+            </div>
+            {statusGroups.size > 1 && (
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-xs text-muted-foreground/60">Change all →</span>
+                <StatusDropdown
+                  value={commonStatus ?? "inbox"}
+                  onChange={(s) => batchUpdateNotes(Array.from(selectedIds), { status: s })}
+                  variant="inline"
+                />
+              </div>
             )}
           </div>
 
-          {/* Priority */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Priority</span>
-            {commonPriority !== null ? (
-              <PriorityDropdown
-                value={commonPriority}
-                onChange={(p) => batchUpdateNotes(Array.from(selectedIds), { priority: p })}
-                variant="inline"
-              />
-            ) : (
-              <span className="text-xs text-muted-foreground/60">Mixed</span>
-            )}
-          </div>
         </div>
 
         {/* Workflow Actions */}
@@ -220,6 +246,57 @@ export function BoardWorkbench({
           onDemoteAll={handleDemoteAll}
           onMoveBackAll={handleMoveBackAll}
         />
+
+        {/* Mixed-status workflow for All/Unlinked tabs */}
+        {effectiveTab !== "inbox" && effectiveTab !== "capture" && effectiveTab !== "permanent" && effectiveTab !== "trash" && (() => {
+          const inboxNotes = selectedNotes.filter(n => n.status === 'inbox')
+          const captureNotes = selectedNotes.filter(n => n.status === 'capture')
+          const permanentNotes = selectedNotes.filter(n => n.status === 'permanent')
+          if (inboxNotes.length === 0 && captureNotes.length === 0 && permanentNotes.length === 0) return null
+          return (
+            <div className="mt-4 space-y-3">
+              <h4 className="text-xs font-medium text-muted-foreground">Workflow</h4>
+              <div className="space-y-1">
+                {inboxNotes.length > 0 && (
+                  <button
+                    onClick={() => {
+                      inboxNotes.forEach(n => triageKeep(n.id))
+                      onClearSelection()
+                      toast(`Moved ${inboxNotes.length} note${inboxNotes.length > 1 ? "s" : ""} to Capture`)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  >
+                    <PhCheck className="text-accent" size={16} weight="bold" /> Done {inboxNotes.length}
+                  </button>
+                )}
+                {captureNotes.length > 0 && (
+                  <button
+                    onClick={() => {
+                      captureNotes.forEach(n => promoteToPermanent(n.id))
+                      onClearSelection()
+                      toast(`Promoted ${captureNotes.length} note${captureNotes.length > 1 ? "s" : ""} to Permanent`)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  >
+                    <ArrowUpRight className="text-accent" size={16} weight="regular" /> Promote {captureNotes.length}
+                  </button>
+                )}
+                {permanentNotes.length > 0 && (
+                  <button
+                    onClick={() => {
+                      permanentNotes.forEach(n => undoPromote(n.id))
+                      onClearSelection()
+                      toast(`Demoted ${permanentNotes.length} note${permanentNotes.length > 1 ? "s" : ""} to Capture`)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  >
+                    <ArrowDownLeft className="text-accent" size={16} weight="regular" /> Demote {permanentNotes.length}
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Remind */}
         <div className="mt-4 space-y-3">
@@ -337,6 +414,7 @@ export function BoardWorkbench({
 
   return (
     <div
+      data-board-workbench
       className="flex min-w-[280px] flex-1 shrink-0 flex-col rounded-lg bg-secondary/20 p-4 overflow-y-auto"
       style={{ maxHeight: "calc(100vh - 200px)" }}
     >

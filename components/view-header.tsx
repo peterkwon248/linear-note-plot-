@@ -26,7 +26,7 @@ function HBtn({
       className={`flex h-7 w-7 items-center justify-center rounded-md border-none transition-all duration-100 ${
         active
           ? "bg-active-bg text-foreground"
-          : "text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground"
+          : "text-foreground/50 hover:bg-hover-bg hover:text-foreground"
       }`}
     >
       {children}
@@ -169,7 +169,7 @@ export function ViewHeader({
                 <PopoverTrigger asChild>
                   <div>
                     <HBtn active={filterOpen || hasActiveFilters}>
-                      <FunnelSimple size={14} weight="regular" />
+                      <FunnelSimple size={16} weight="regular" />
                     </HBtn>
                   </div>
                 </PopoverTrigger>
@@ -188,7 +188,7 @@ export function ViewHeader({
                 <PopoverTrigger asChild>
                   <div>
                     <HBtn active={displayOpen}>
-                      <SlidersHorizontal size={14} weight="regular" />
+                      <SlidersHorizontal size={16} weight="regular" />
                     </HBtn>
                   </div>
                 </PopoverTrigger>
@@ -204,13 +204,13 @@ export function ViewHeader({
 
             {showDetailPanel && (
               <HBtn active={detailPanelOpen} onClick={onDetailPanelToggle}>
-                <SidebarSimple size={14} weight="regular" />
+                <SidebarSimple size={16} weight="regular" />
               </HBtn>
             )}
 
             {onCreateNew && (
               <HBtn onClick={onCreateNew}>
-                <Plus size={14} weight="regular" />
+                <Plus size={16} weight="regular" />
               </HBtn>
             )}
           </div>

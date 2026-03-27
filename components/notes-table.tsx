@@ -143,14 +143,14 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-[13px] font-medium text-foreground/50 transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
       {active ? (
-        sortDir === "asc" ? <ArrowUp className="text-muted-foreground/70" size={10} weight="regular" /> : <ArrowDown className="text-muted-foreground/70" size={10} weight="regular" />
+        sortDir === "asc" ? <ArrowUp className="text-foreground/50" size={13} weight="regular" /> : <ArrowDown className="text-foreground/50" size={13} weight="regular" />
       ) : (
-        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-50" size={10} weight="regular" />
+        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-50" size={13} weight="regular" />
       )}
     </button>
   )
@@ -1007,7 +1007,18 @@ export function NotesTable({
                 </div>
               </div>
             ) : (
-              <div ref={scrollContainerRef} className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}>
+              <div
+                ref={scrollContainerRef}
+                className={`flex-1 overflow-y-auto ${dragRect ? "select-none" : ""} ${selectedIds.size > 0 ? "pb-20" : ""}`}
+                onClick={(e) => {
+                  // Clear selection when clicking empty space (not on a row)
+                  const target = e.target as HTMLElement
+                  if (!target.closest('[data-note-row]') && !target.closest('[data-header-row]') && !target.closest('button')) {
+                    if (selectedIds.size > 0) setSelectedIds(new Set())
+                    usePlotStore.getState().setPreviewNoteId(null)
+                  }
+                }}
+              >
                 {/* Column headers (table mode) */}
                 {effectiveVisibleCols.length > 0 && (
                 <div
@@ -1485,12 +1496,12 @@ function NoteRowInner({
         <div className="flex items-center justify-center px-2">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
-            if (!folder) return <span className="text-xs text-muted-foreground/30">—</span>
+            if (!folder) return <span className="text-[13px] text-muted-foreground/50">—</span>
             return (
-              <span className="text-xs text-muted-foreground/60 truncate">{folder.name}</span>
+              <span className="text-[13px] text-foreground/60 truncate">{folder.name}</span>
             )
           })() : (
-            <span className="text-xs text-muted-foreground/30">—</span>
+            <span className="text-[13px] text-muted-foreground/50">—</span>
           )}
         </div>
       )}
@@ -1498,7 +1509,7 @@ function NoteRowInner({
       {/* Links */}
       {visibleCols.includes("links") && (
         <div className="text-center px-1">
-          <span className={`tabular-nums text-xs ${links === 0 ? "text-muted-foreground/30" : "text-muted-foreground/60"}`}>
+          <span className={`tabular-nums text-[13px] ${links === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
             {links}
           </span>
         </div>
@@ -1507,7 +1518,7 @@ function NoteRowInner({
       {/* Reads */}
       {visibleCols.includes("reads") && (
         <div className="text-center px-1">
-          <span className={`tabular-nums text-xs ${note.reads === 0 ? "text-muted-foreground/30" : "text-muted-foreground/60"}`}>
+          <span className={`tabular-nums text-[13px] ${note.reads === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
             {note.reads}
           </span>
         </div>
@@ -1516,7 +1527,7 @@ function NoteRowInner({
       {/* Word Count */}
       {visibleCols.includes("wordCount") && (
         <div className="text-right px-1">
-          <span className={`tabular-nums text-xs ${wordCount === 0 ? "text-muted-foreground/30" : "text-muted-foreground/60"}`}>
+          <span className={`tabular-nums text-[13px] ${wordCount === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
             {wordCount}
           </span>
         </div>
@@ -1527,7 +1538,7 @@ function NoteRowInner({
         <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-xs text-muted-foreground/60 cursor-default">
+              <span className="tabular-nums text-[13px] text-foreground/60 cursor-default">
                 {shortRelative(note.updatedAt)}
               </span>
             </TooltipTrigger>
@@ -1543,7 +1554,7 @@ function NoteRowInner({
         <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-xs text-muted-foreground/60 cursor-default">
+              <span className="tabular-nums text-[13px] text-foreground/60 cursor-default">
                 {absDate(note.createdAt)}
               </span>
             </TooltipTrigger>

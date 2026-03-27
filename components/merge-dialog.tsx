@@ -144,7 +144,7 @@ export function MergeDialog({
           <Button
             size="sm"
             onClick={handleMerge}
-            className="text-note"
+            className="bg-accent text-accent-foreground hover:bg-accent/90"
           >
             <GitMerge size={14} weight="regular" />
             GitMerge into &ldquo;{targetLabel}&rdquo;
