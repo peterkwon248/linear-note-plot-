@@ -20,6 +20,28 @@
   margin-top: 0.4em;
 }
 
+/* Title node styling */
+h1[data-type="title"] {
+  font-size: var(--text-title);
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  border: none;
+  outline: none;
+}
+
+h1[data-type="title"]:empty::before {
+  content: "Untitled";
+  color: hsl(var(--muted-foreground));
+  opacity: 0.4;
+}
+
+/* Ensure title has no margin-top */
+.ProseMirror > h1[data-type="title"]:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
 /* Paragraphs */
 .ProseMirror p {
   margin-bottom: 0.3em;

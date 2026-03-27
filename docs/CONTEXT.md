@@ -45,7 +45,9 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Responsive NotesTable: ONE grid for all sizes (ResizeObserver + minWidth thresholds)
 
 ### Editor
-- TipTap 3 editor (`components/editor/TipTapEditor.tsx`)
+- TipTap 3 editor — Shared config factory (`components/editor/core/shared-editor-config.ts`)
+- 4-tier extension system: `base` | `note` | `wiki` | `template`
+- Title 노드 통합: 제목과 본문이 하나의 TipTap 문서 (`components/editor/core/title-node.ts`)
 - 25+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, WikiQuoteExtension, etc.)
 - Workspace: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
 - WorkspaceMode 삭제됨 — sidebarCollapsed + detailsOpen 독립 토글
@@ -79,11 +81,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-65. Unified Pipeline Phase 1~4 — Filter/Display/SidePanel 통합, Design Spine 토큰 수정
 66. Discover 추천 엔진 — keyword+tag+backlink+folder 4신호 로컬 추천, SidePanel 3탭(Detail+Discover+Peek)
 67. Board UX 개선 — Trash→Tools, 드래그 선택, 그룹핑 컬럼 숨김, Tags 폐기, 필터 Status shape 아이콘, Mixed status 표시
 68. Phase 7 즉시 개선 — StatusDropdown 추가, Trash 버튼 독립 배치, Priority 필터 제거, GitMerge 버튼 색상, 빈 노트 자동 삭제, 리스트 컬럼 밝기/크기 개선, Board previewNoteId 수정, < > 글로벌 네비게이션
 69. 에디터 통합 프로젝트 플랜 수립 — 7-Phase 계획 (노트 TipTap 통합 + 위키 TextBlock TipTap + 템플릿 블록 에디터 + Partial Quote + Merge/Split 풀페이지 + History)
+70. 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory) + Title 노드 통합 (제목/본문 하나의 에디터)
 
 ## Three Axes — Core Design Philosophy
 
@@ -127,7 +129,7 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ## TODO: Future Work (우선순위 순)
 
 ### P0 — 에디터 통합 프로젝트 (`.claude/plans/editor-unification.md` 참조)
-- **Phase 1**: 노트 에디터 리디자인 — Shared TipTap config, Title 노드 통합, FixedToolbar 리디자인 (UpNote 참고), 커스텀 노드 (Columns/TOC/Infobox/NoteEmbed)
+- **Phase 1**: 노트 에디터 리디자인 — ~~Shared TipTap config~~ ✅ ~~Title 노드 통합~~ ✅, FixedToolbar 리디자인 (UpNote 참고), 커스텀 노드 (Columns/TOC/Infobox/NoteEmbed)
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈
 - **Phase 3**: 템플릿 블록 레이아웃 에디터 — TemplateBlock 모델, Notion-style 드래그 앤 드롭, Template→Note/Wiki 변환
 - **Phase 4**: Partial Quote — Peek에서 부분 드래그 선택 Insert, 메타데이터 8필드 (sourceHash, context, comment 등)

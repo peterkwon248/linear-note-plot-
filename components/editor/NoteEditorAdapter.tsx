@@ -26,6 +26,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
   const pendingRef = useRef<{
     content: string
     contentJson: Record<string, unknown> | null
+    title: string
   } | null>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const currentNoteIdRef = useRef(note.id)
@@ -40,6 +41,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
       const noteId = currentNoteIdRef.current
       const content = pendingRef.current.content
       updateNote(noteId, {
+        title: pendingRef.current.title,
         content,
         contentJson: pendingRef.current.contentJson,
       })
@@ -66,6 +68,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         const content = pendingRef.current.content
         const store = usePlotStore.getState()
         store.updateNote(noteId, {
+          title: pendingRef.current.title,
           content,
           contentJson: pendingRef.current.contentJson,
         })
@@ -132,7 +135,18 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
 
   const handleChange = useCallback(
     (json: Record<string, unknown>, plainText: string) => {
-      pendingRef.current = { content: plainText, contentJson: json }
+      // Extract title from the first node (title node)
+      const doc = json as { type: string; content?: Array<{ type: string; content?: Array<{ text?: string }> }> }
+      let title = ""
+      if (doc.content?.[0]?.type === "title") {
+        const titleContent = doc.content[0].content
+        title = titleContent?.map((n) => n.text || "").join("") || ""
+      }
+
+      // Body plain text (everything after title)
+      const bodyPlainText = title ? plainText.slice(title.length).trimStart() : plainText
+
+      pendingRef.current = { content: bodyPlainText, contentJson: json, title }
 
       // Debounce save at 300ms
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
@@ -141,6 +155,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
           const noteId = currentNoteIdRef.current
           const content = pendingRef.current.content
           updateNote(noteId, {
+            title: pendingRef.current.title,
             content,
             contentJson: pendingRef.current.contentJson,
           })
@@ -168,12 +183,44 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     [note.id, updateNote]
   )
 
-  // Build initial content for editor
-  const initialContent = note.contentJson && Object.keys(note.contentJson).length > 0
-    ? note.contentJson
-    : note.content
-      ? { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: note.content }] }] }
-      : {}
+  // Build initial content for editor (with title as first node)
+  const initialContent = (() => {
+    const titleNode = {
+      type: "title",
+      content: note.title ? [{ type: "text", text: note.title }] : [],
+    }
+
+    if (note.contentJson && Object.keys(note.contentJson).length > 0) {
+      const json = note.contentJson as { type: string; content?: Array<{ type: string }> }
+      // If contentJson already has a title node (saved after this update), use as-is
+      if (json.content?.[0]?.type === "title") {
+        return note.contentJson
+      }
+      // Otherwise, prepend title node to existing content
+      return {
+        type: "doc",
+        content: [titleNode, ...(json.content || [])],
+      }
+    }
+
+    if (note.content) {
+      return {
+        type: "doc",
+        content: [
+          titleNode,
+          { type: "paragraph", content: [{ type: "text", text: note.content }] },
+        ],
+      }
+    }
+
+    return {
+      type: "doc",
+      content: [
+        titleNode,
+        { type: "paragraph" },
+      ],
+    }
+  })()
 
   return (
     <div className="relative min-w-0 flex-1 flex flex-col">
