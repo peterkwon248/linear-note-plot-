@@ -28,7 +28,7 @@
 - **Side Panel**: Unified `SmartSidePanel` (v51) — Context mode (NoteInspector) + Peek mode (SidePeek), app-level, resizable
 - **Wiki sectionIndex**: `WikiSectionIndex[]` in Zustand for lightweight TOC, full blocks in IDB for scalability (v53)
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
-- **TipTap Editor**: 25+ extensions including SlashCommand, HashtagSuggestion, WikilinkSuggestion, Mathematics, WikiQuoteExtension
+- **TipTap Editor**: Shared config factory (`components/editor/core/shared-editor-config.ts`) with 4-tier system (base/note/wiki/template). Title 노드 통합 (`core/title-node.ts`) — 제목과 본문이 하나의 TipTap 문서. 25+ extensions.
 - **2-Level Routing**: `activeSpace` (inbox/notes/wiki/ontology/calendar) + `activeRoute`, `inferSpace()` 하위호환
 - **Phosphor Icons**: Lucide→Phosphor 전체 마이그레이션 완료 (PR #104, 83파일). `components/plot-icons.tsx`는 레거시
 - **Wiki Collection**: `wikiCollections: Record<string, WikiCollectionItem[]>` — per-wiki-note staging area for related material
@@ -118,6 +118,8 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Tier depth 무한 허용 (제한 해제), Board에서 3rd+ 합침
 - **PR #120**: Unified Pipeline Phase 1~4 — Filter/Display/SidePanel 통합 + Design Spine + Discover 추천 엔진
 - **PR #121**: Board UX — Trash→Tools, 드래그 선택, 그룹핑 컬럼 숨김, Tags 폐기, 필터 Status shape 아이콘, Mixed status 표시
+- **PR #122**: Phase 7 즉시 개선 + 에디터 통합 프로젝트 플랜 수립
+- **PR #123**: 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory: base/note/wiki/template) + Title 노드 통합 (제목/본문 하나의 TipTap 에디터, title-node.ts 커스텀 노드, NoteEditorAdapter 변환 로직, note-editor.tsx title input 제거)
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

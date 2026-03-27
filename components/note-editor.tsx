@@ -26,7 +26,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { pushUndo } from "@/lib/undo-manager"
 import { EditorBreadcrumb } from "@/components/editor-breadcrumb"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
@@ -52,7 +51,6 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const activeNoteId = propNoteId ?? storeSelectedNoteId
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const notes = usePlotStore((s) => s.notes)
-  const updateNote = usePlotStore((s) => s.updateNote)
   const togglePin = usePlotStore((s) => s.togglePin)
   const deleteNote = usePlotStore((s) => s.deleteNote)
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
@@ -68,7 +66,6 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
 
-  const [localTitle, setLocalTitle] = useState("")
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
   const [isReadMode, setIsReadMode] = useState(false)
   const noteIdRef = useRef(note?.id)
@@ -80,22 +77,9 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   useEffect(() => {
     noteIdRef.current = note?.id
     if (note) {
-      setLocalTitle(note.title)
       setIsReadMode(false)
     }
   }, [note?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!note) return
-    const capturedId = note.id
-    const timer = setTimeout(() => {
-      if (noteIdRef.current !== capturedId) return
-      if (localTitle !== note.title) {
-        updateNote(capturedId, { title: localTitle })
-      }
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [localTitle]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Editor keyboard shortcuts: Ctrl+S, Ctrl+Shift+P, Ctrl+Backspace
   useEffect(() => {
@@ -240,23 +224,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         </div>
       </header>
 
-      {/* Title */}
-      {isReadMode ? (
-        <h1 className="w-full bg-transparent px-6 pt-6 text-title font-semibold text-foreground">
-          {localTitle || "Untitled"}
-        </h1>
-      ) : (
-        <input
-          type="text"
-          value={localTitle}
-          onChange={(e) => setLocalTitle(e.target.value)}
-          placeholder="Untitled"
-          className="w-full bg-transparent px-6 pt-6 text-title font-semibold text-foreground outline-none placeholder:text-muted-foreground/40"
-        />
-      )}
-
-
-      {/* Content Editor */}
+      {/* Content Editor (title is now the first node inside TipTap) */}
       {/* WikiReadLayout removed — wiki rendering now handled by WikiArticleView */}
       {false ? (
         null
