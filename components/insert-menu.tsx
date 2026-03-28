@@ -20,6 +20,8 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Play as PhPlay } from "@phosphor-icons/react/dist/ssr/Play"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
+import { SpeakerHigh } from "@phosphor-icons/react/dist/ssr/SpeakerHigh"
+import { TwitchLogo } from "@phosphor-icons/react/dist/ssr/TwitchLogo"
 import { usePlotStore } from "@/lib/store"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 
@@ -28,6 +30,9 @@ interface InsertMenuProps {
   /** noteId is required to associate attachments with a note */
   noteId?: string
 }
+
+const ITEM_CLASS =
+  "flex items-center gap-2 py-1.5 px-2.5 rounded-md cursor-pointer text-muted-foreground hover:text-foreground hover:bg-hover-bg focus:text-foreground focus:bg-hover-bg text-note"
 
 export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   const imageInputRef = useRef<HTMLInputElement>(null)
@@ -142,6 +147,23 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
     editor.chain().focus().insertContent("$$\n\\sum_{i=1}^{n} x_i\n$$").run()
   }
 
+  const handleAudio = () => {
+    const url = window.prompt("Enter audio file URL:")
+    if (url) {
+      editor.chain().focus().insertContent({
+        type: "audio",
+        attrs: { src: url },
+      }).run()
+    }
+  }
+
+  const handleTwitch = () => {
+    const url = window.prompt("Enter Twitch URL:")
+    if (url) {
+      editor.chain().focus().setTwitchVideo({ src: url }).run()
+    }
+  }
+
   return (
     <>
       <input
@@ -149,229 +171,97 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
         type="file"
         accept="image/*"
         onChange={onImageSelected}
-        style={{ display: "none" }}
+        className="hidden"
       />
       <input
         ref={fileInputRef}
         type="file"
         onChange={onFileSelected}
-        style={{ display: "none" }}
+        className="hidden"
       />
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          onMouseDown={(e) => e.preventDefault()}
-          title="Insert"
-          style={{
-            height: "28px",
-            borderRadius: "6px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "4px",
-            flexShrink: 0,
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-            backgroundColor: "transparent",
-            border: "none",
-            outline: "none",
-            padding: "0 8px",
-            fontWeight: 500,
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] transition-colors duration-75"
-        >
-          <PhPlus size={14} weight="regular" />
-          <span>Insert</span>
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        style={{
-          backgroundColor: "var(--popover)",
-          border: "1px solid var(--border)",
-          borderRadius: "8px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
-          minWidth: "180px",
-          padding: "4px",
-        }}
-      >
-        <DropdownMenuItem
-          onSelect={handleImage}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <PhImage size={14} weight="regular" />
-          <span style={{ flex: 1 }}>PhImage</span>
-        </DropdownMenuItem>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            title="Insert"
+            className="h-7 rounded-md flex items-center justify-center gap-1 shrink-0 cursor-pointer text-muted-foreground bg-transparent border-0 outline-none px-2 font-medium text-note hover:text-foreground hover:bg-hover-bg transition-colors duration-75"
+          >
+            <PhPlus size={14} weight="regular" />
+            <span>Insert</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[180px] p-1">
+          {/* Media */}
+          <DropdownMenuItem onSelect={handleImage} className={ITEM_CLASS}>
+            <PhImage size={14} weight="regular" />
+            <span className="flex-1">Image</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onSelect={handleYoutube}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <PhPlay size={14} weight="regular" />
-          <span style={{ flex: 1 }}>YouTube</span>
-        </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleYoutube} className={ITEM_CLASS}>
+            <PhPlay size={14} weight="regular" />
+            <span className="flex-1">YouTube</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onSelect={handleFile}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <Paperclip size={14} weight="regular" />
-          <span style={{ flex: 1 }}>File</span>
-        </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleAudio} className={ITEM_CLASS}>
+            <SpeakerHigh size={14} weight="regular" />
+            <span className="flex-1">Audio</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuSeparator style={{ backgroundColor: "var(--border)", margin: "4px 0" }} />
+          <DropdownMenuItem onSelect={handleTwitch} className={ITEM_CLASS}>
+            <TwitchLogo size={14} weight="regular" />
+            <span className="flex-1">Twitch</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onSelect={handleTable}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <PhTable size={14} weight="regular" />
-          <span style={{ flex: 1 }}>PhTable</span>
-        </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleFile} className={ITEM_CLASS}>
+            <Paperclip size={14} weight="regular" />
+            <span className="flex-1">File</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onSelect={handleDate}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <CalendarDots size={14} weight="regular" />
-          <span style={{ flex: 1 }}>Date</span>
-        </DropdownMenuItem>
+          <DropdownMenuSeparator className="my-1" />
 
-        <DropdownMenuSeparator style={{ backgroundColor: "var(--border)", margin: "4px 0" }} />
+          {/* Structure */}
+          <DropdownMenuItem onSelect={handleTable} className={ITEM_CLASS}>
+            <PhTable size={14} weight="regular" />
+            <span className="flex-1">Table</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onSelect={handleDivider}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <PhMinus size={14} weight="regular" />
-          <span style={{ flex: 1 }}>Divider</span>
-        </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleDate} className={ITEM_CLASS}>
+            <CalendarDots size={14} weight="regular" />
+            <span className="flex-1">Date</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onSelect={handleCodeBlock}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <PhCode size={14} weight="regular" />
-          <span style={{ flex: 1 }}>PhCode Block</span>
-        </DropdownMenuItem>
+          <DropdownMenuSeparator className="my-1" />
 
-        <DropdownMenuItem
-          onSelect={handleToggle}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <CaretRight size={14} weight="regular" />
-          <span style={{ flex: 1 }}>Toggle</span>
-        </DropdownMenuItem>
+          {/* Blocks */}
+          <DropdownMenuItem onSelect={handleDivider} className={ITEM_CLASS}>
+            <PhMinus size={14} weight="regular" />
+            <span className="flex-1">Divider</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuSeparator style={{ backgroundColor: "var(--border)", margin: "4px 0" }} />
+          <DropdownMenuItem onSelect={handleCodeBlock} className={ITEM_CLASS}>
+            <PhCode size={14} weight="regular" />
+            <span className="flex-1">Code Block</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onSelect={handleInlineMath}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <MathOperations size={14} weight="regular" />
-          <span style={{ flex: 1 }}>Inline Math</span>
-        </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleToggle} className={ITEM_CLASS}>
+            <CaretRight size={14} weight="regular" />
+            <span className="flex-1">Toggle</span>
+          </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onSelect={handleBlockMath}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-          }}
-          className="text-note hover:text-foreground hover:bg-foreground/[0.06] focus:text-foreground focus:bg-foreground/[0.06]"
-        >
-          <MathOperations size={14} weight="regular" />
-          <span style={{ flex: 1 }}>Block Math</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuSeparator className="my-1" />
+
+          {/* Math */}
+          <DropdownMenuItem onSelect={handleInlineMath} className={ITEM_CLASS}>
+            <MathOperations size={14} weight="regular" />
+            <span className="flex-1">Inline Math</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={handleBlockMath} className={ITEM_CLASS}>
+            <MathOperations size={14} weight="regular" />
+            <span className="flex-1">Block Math</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </>
   )
 }

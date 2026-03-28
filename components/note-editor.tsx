@@ -40,6 +40,7 @@ import { WikiDisambig } from "@/components/editor/wiki-disambig"
 import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { shortRelative } from "@/lib/format-utils"
+import { EditorContextMenu } from "@/components/editor/editor-context-menu"
 
 interface NoteEditorProps {
   noteId?: string
@@ -230,13 +231,15 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         null
       ) : (
         /* Normal note editor */
-        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
-          {/* Infobox moved to WikiArticle view — disabled in note editor */}
-          <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
-            <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
-            <BacklinksFooter noteId={note.id} />
+        <EditorContextMenu editor={editorInstance}>
+          <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
+            {/* Infobox moved to WikiArticle view — disabled in note editor */}
+            <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
+              <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
+              <BacklinksFooter noteId={note.id} />
+            </div>
           </div>
-        </div>
+        </EditorContextMenu>
       )}
       </div>
 
@@ -360,7 +363,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
 
   return (
     <div className="flex items-center gap-1 shrink-0">
-      <span className="text-2xs text-muted-foreground/30">in</span>
+      <span className="text-sm text-muted-foreground/50">in</span>
       {visible.map((a) => (
         <button
           key={a.id}
@@ -368,7 +371,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
             import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
             import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
           }}
-          className="rounded-[4px] bg-accent/8 px-1.5 py-px text-2xs font-medium text-accent/60 hover:text-accent transition-colors duration-100"
+          className="rounded-[4px] bg-accent/15 px-2.5 py-0.5 text-sm font-medium text-accent hover:text-accent transition-colors duration-100"
         >
           {a.title}
         </button>

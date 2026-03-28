@@ -9,7 +9,6 @@ import { TextB } from "@phosphor-icons/react/dist/ssr/TextB"
 import { TextItalic } from "@phosphor-icons/react/dist/ssr/TextItalic"
 import { TextUnderline as UnderlineIcon } from "@phosphor-icons/react/dist/ssr/TextUnderline"
 import { TextStrikethrough } from "@phosphor-icons/react/dist/ssr/TextStrikethrough"
-import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
 import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
@@ -39,105 +38,6 @@ function BubbleButton({ onClick, isActive = false, title, children }: { onClick:
 
 function BubbleDivider() {
   return <div className="w-px h-4 bg-foreground/10 mx-0.5 flex-shrink-0" />
-}
-
-function BubbleHeadingDropdown({ editor }: { editor: Editor }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const headingOptions = [
-    { level: 1, label: "H1", fontSize: "18px" },
-    { level: 2, label: "H2", fontSize: "16px" },
-    { level: 3, label: "H3", fontSize: "15px" },
-    { level: 4, label: "H4", fontSize: "14px" },
-    { level: 5, label: "H5", fontSize: "13px" },
-    { level: 6, label: "H6", fontSize: "13px" },
-  ] as const
-
-  const headingState = useEditorState({
-    editor,
-    selector: ({ editor: e }) => ({
-      h1: e?.isActive("heading", { level: 1 }) ?? false,
-      h2: e?.isActive("heading", { level: 2 }) ?? false,
-      h3: e?.isActive("heading", { level: 3 }) ?? false,
-      h4: e?.isActive("heading", { level: 4 }) ?? false,
-      h5: e?.isActive("heading", { level: 5 }) ?? false,
-      h6: e?.isActive("heading", { level: 6 }) ?? false,
-    }),
-  })
-
-  const headingActiveMap: Record<number, boolean> = {
-    1: headingState.h1,
-    2: headingState.h2,
-    3: headingState.h3,
-    4: headingState.h4,
-    5: headingState.h5,
-    6: headingState.h6,
-  }
-
-  const isAnyHeadingActive = Object.values(headingActiveMap).some(Boolean)
-
-  useEffect(() => {
-    if (!isOpen) return
-    let cleanup: (() => void) | undefined
-    const id = requestAnimationFrame(() => {
-      const handleClickOutside = (e: MouseEvent) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setIsOpen(false)
-      }
-      document.addEventListener("mousedown", handleClickOutside)
-      cleanup = () => document.removeEventListener("mousedown", handleClickOutside)
-    })
-    return () => { cancelAnimationFrame(id); cleanup?.() }
-  }, [isOpen])
-
-  const handleSelect = useCallback(
-    (level: number | null) => {
-      if (level === null) editor.chain().focus().setParagraph().run()
-      else editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 | 6 }).run()
-      setIsOpen(false)
-    },
-    [editor]
-  )
-
-  return (
-    <div ref={dropdownRef} className="relative">
-      <button
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => setIsOpen((prev) => !prev)}
-        title="TextH"
-        className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors duration-75 shrink-0 ${
-          isAnyHeadingActive ? "text-foreground bg-foreground/[0.12]" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]"
-        }`}
-      >
-        <TextH size={14} weight="regular" />
-      </button>
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-2 min-w-[120px] bg-popover border border-border rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.55)] p-1 z-[1000]">
-
-          {headingOptions.map(({ level, label, fontSize }) => (
-            <button
-              key={level}
-              onMouseDown={(e) => { e.preventDefault(); handleSelect(level) }}
-              className={`w-full py-1.5 px-3 font-semibold text-left border-0 outline-none cursor-pointer rounded-md hover:bg-foreground/[0.06] ${
-                headingActiveMap[level] ? "bg-toolbar-active text-foreground" : "text-muted-foreground"
-              }`}
-              style={{ fontSize }}
-            >
-              {label}
-            </button>
-          ))}
-          <button
-            onMouseDown={(e) => { e.preventDefault(); handleSelect(null) }}
-            className={`w-full py-1.5 px-3 text-note text-left border-0 outline-none cursor-pointer rounded-md hover:bg-foreground/[0.06] ${
-              !isAnyHeadingActive ? "bg-toolbar-active text-foreground" : "text-muted-foreground"
-            }`}
-          >
-            Normal
-          </button>
-        </div>
-      )}
-    </div>
-  )
 }
 
 function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "text" | "highlight"; onClose: () => void }) {
@@ -283,8 +183,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
     >
       {activePanel === "none" ? (
         <>
-          <BubbleHeadingDropdown editor={editor} />
-          <BubbleDivider />
           <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
             <TextB size={14} weight="regular" />
           </BubbleButton>

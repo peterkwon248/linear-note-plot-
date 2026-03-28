@@ -36,7 +36,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (20): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
-- Store version: 61
+- Store version: 64
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -49,6 +49,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - 4-tier extension system: `base` | `note` | `wiki` | `template`
 - Title 노드 통합: 제목과 본문이 하나의 TipTap 문서 (`components/editor/core/title-node.ts`)
 - 25+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, WikiQuoteExtension, etc.)
+- Toolbar: h-14 (56px) bar, w-10 (40px) buttons, Phosphor weight="light". 42 configurable items via Arrange Mode (dnd-kit). Persisted in settings store
 - Workspace: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
 - WorkspaceMode 삭제됨 — sidebarCollapsed + detailsOpen 독립 토글
 - Wiki-links: `[[title]]` extracted to `Note.linksOut`
@@ -81,19 +82,21 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-66. Discover 추천 엔진 — keyword+tag+backlink+folder 4신호 로컬 추천, SidePanel 3탭(Detail+Discover+Peek)
 67. Board UX 개선 — Trash→Tools, 드래그 선택, 그룹핑 컬럼 숨김, Tags 폐기, 필터 Status shape 아이콘, Mixed status 표시
-68. Phase 7 즉시 개선 — StatusDropdown 추가, Trash 버튼 독립 배치, Priority 필터 제거, GitMerge 버튼 색상, 빈 노트 자동 삭제, 리스트 컬럼 밝기/크기 개선, Board previewNoteId 수정, < > 글로벌 네비게이션
-69. 에디터 통합 프로젝트 플랜 수립 — 7-Phase 계획 (노트 TipTap 통합 + 위키 TextBlock TipTap + 템플릿 블록 에디터 + Partial Quote + Merge/Split 풀페이지 + History)
+68. Phase 7 즉시 개선 — StatusDropdown 추가, Trash 버튼 독립 배치, Priority 필터 제거
+69. 에디터 통합 프로젝트 플랜 수립 — 7-Phase 계획
 70. 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory) + Title 노드 통합 (제목/본문 하나의 에디터)
+71. Phase 1C+ — Toolbar 리디자인 (h-14/w-10/22px/light, 42 items) + Side Panel 4탭 (Detail/Connections/Activity/Peek) + Arrange Mode (dnd-kit)
+72. Phase 1C+ 후속 — Connections Connected/Discover 모델, Relations UI 삭제, Peek wiki fallback, 브레드크럼/뱃지 폴리시
 
-## Three Axes — Core Design Philosophy
+## Two Axes — Core Design Philosophy
 
 ```
 Thread        → 깊이축  (지금 이 생각을 파고드는 실시간 전개)
 Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
-Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ```
+
+> Relations(공간축)은 UI에서 삭제 — 백링크+위키링크+Discover 추천으로 충분. store slice는 유지.
 
 ## Key Design Decisions
 
@@ -123,13 +126,16 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **우측 사이드바 = Details 패널**: ViewDistributionPanel 삭제. 사이드바 버튼으로만 열림. previewNoteId로 리스트 행 클릭 시 내용 업데이트 (2026-03-26)
 - **Priority UI 완전 삭제**: 디테일 패널에서도 제거. Pin + Labels로 충분 (2026-03-26)
 - **sidePanelOpen persist 안 함**: 앱 시작 시 항상 닫힌 상태 (2026-03-26)
+- **Relations UI 삭제**: 백링크+위키링크+Discover 추천으로 공간축 충분. store slice 유지, UI만 제거 (2026-03-28)
+- **Connections = Connected+Discover 2섹션**: Connected(← inbound notes/wiki, → outbound notes/wiki, unlinked mentions) + Discover(추천 notes/wiki/tags). 방향 화살표로 직관적 구분 (2026-03-28)
+- **Peek wiki fallback**: wiki article ID → title match → note lookup. 위키 블록 직접 편집은 Phase 2A 스코프 (2026-03-28)
 - **카테고리 사이드바 → SmartSidePanel 통합**: 내장 280px 사이드바 제거, 글로벌 Details 패널에서 표시. Notes와 동일 패턴 (2026-03-26)
 - **카테고리 더블클릭 에디터**: 싱글클릭=선택(하이라이트만), 더블클릭=폼 에디터 split view. 이름/설명 인라인 편집, Parent 드롭다운, 서브카테고리 +New/Move here (2026-03-26)
 
 ## TODO: Future Work (우선순위 순)
 
 ### P0 — 에디터 통합 프로젝트 (`.claude/plans/editor-unification.md` 참조)
-- **Phase 1**: 노트 에디터 리디자인 — ~~Shared TipTap config~~ ✅ ~~Title 노드 통합~~ ✅, FixedToolbar 리디자인 (UpNote 참고), 커스텀 노드 (Columns/TOC/Infobox/NoteEmbed)
+- **Phase 1**: 노트 에디터 리디자인 — ~~Shared TipTap config~~ ✅ ~~Title 노드 통합~~ ✅ ~~FixedToolbar 리디자인~~ ✅ ~~Arrange Mode~~ ✅, 커스텀 노드 (Columns/TOC/Infobox/NoteEmbed)
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈
 - **Phase 3**: 템플릿 블록 레이아웃 에디터 — TemplateBlock 모델, Notion-style 드래그 앤 드롭, Template→Note/Wiki 변환
 - **Phase 4**: Partial Quote — Peek에서 부분 드래그 선택 Insert, 메타데이터 8필드 (sourceHash, context, comment 등)
