@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiStatus, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -231,8 +231,7 @@ export interface PlotState {
   // Wiki
   setNoteAliases: (noteId: string, aliases: string[]) => void
   setWikiInfobox: (noteId: string, infobox: WikiInfoboxEntry[]) => void
-  createWikiStub: (title: string, aliases?: string[], stubSource?: StubSource) => string
-  convertToWiki: (noteId: string, stubSource?: StubSource) => void
+  convertToWiki: (noteId: string) => void
   revertFromWiki: (noteId: string) => void
   setWikiStatus: (noteId: string, wikiStatus: WikiStatus) => void
 
@@ -254,7 +253,7 @@ export interface PlotState {
   setArticleCategories: (articleId: string, categoryIds: string[]) => void
 
   // ── Wiki Articles (Assembly Model) ──
-  createWikiArticle: (partial: { title: string; aliases?: string[]; wikiStatus?: WikiStatus; stubSource?: StubSource; tags?: string[]; blocks?: WikiBlock[] }) => string
+  createWikiArticle: (partial: { title: string; aliases?: string[]; wikiStatus?: WikiStatus; tags?: string[]; blocks?: WikiBlock[] }) => string
   updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
   deleteWikiArticle: (articleId: string) => void
   setWikiArticleStatus: (articleId: string, wikiStatus: WikiStatus) => void

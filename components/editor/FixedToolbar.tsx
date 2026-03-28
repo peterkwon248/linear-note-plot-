@@ -52,6 +52,7 @@ import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { YoutubeLogo } from "@phosphor-icons/react/dist/ssr/YoutubeLogo"
 import { SpeakerHigh } from "@phosphor-icons/react/dist/ssr/SpeakerHigh"
 import { TwitchLogo } from "@phosphor-icons/react/dist/ssr/TwitchLogo"
+import { MonitorPlay } from "@phosphor-icons/react/dist/ssr/MonitorPlay"
 import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
 import { CalendarDots } from "@phosphor-icons/react/dist/ssr/CalendarDots"
 import { KeyReturn } from "@phosphor-icons/react/dist/ssr/KeyReturn"
@@ -196,6 +197,92 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
           </div>,
           document.body
         )}
+    </>
+  )
+}
+
+// YouTube/Audio/Twitch 를 단일 Embed 드롭다운으로 통합
+function EmbedDropdown({ editor, isVisible }: {
+  editor: Editor
+  isVisible: (id: ToolbarItemId) => boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const btnRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handle = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node) && !btnRef.current?.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handle)
+    return () => document.removeEventListener("mousedown", handle)
+  }, [open])
+
+  const anyVisible = isVisible("youtube") || isVisible("audio") || isVisible("twitch")
+  if (!anyVisible) return null
+
+  const rect = btnRef.current?.getBoundingClientRect()
+
+  const options = [
+    ...(isVisible("youtube") ? [{
+      label: "YouTube",
+      icon: YoutubeLogo,
+      action: () => {
+        const url = window.prompt("Enter YouTube URL:")
+        if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run()
+        setOpen(false)
+      },
+    }] : []),
+    ...(isVisible("audio") ? [{
+      label: "Audio",
+      icon: SpeakerHigh,
+      action: () => {
+        const url = window.prompt("Enter audio file URL:")
+        if (url) editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
+        setOpen(false)
+      },
+    }] : []),
+    ...(isVisible("twitch") ? [{
+      label: "Twitch",
+      icon: TwitchLogo,
+      action: () => {
+        const url = window.prompt("Enter Twitch URL:")
+        if (url) editor.chain().focus().setTwitchVideo({ src: url }).run()
+        setOpen(false)
+      },
+    }] : []),
+  ]
+
+  return (
+    <>
+      <div ref={btnRef}>
+        <ToolbarButton onClick={() => setOpen(!open)} title="Embed media">
+          <MonitorPlay size={22} weight="light" />
+        </ToolbarButton>
+      </div>
+      {open && rect && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-[9999] min-w-[160px] rounded-lg border border-border bg-popover shadow-lg py-1"
+          style={{ left: rect.left, bottom: window.innerHeight - rect.top + 4 }}
+        >
+          {options.map(({ label, icon: Icon, action }) => (
+            <button
+              key={label}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={action}
+              className="flex items-center gap-3 w-full px-3 py-1.5 text-sm text-foreground/80 hover:bg-secondary/50 hover:text-foreground transition-colors cursor-pointer border-0 outline-none"
+            >
+              <Icon size={16} weight="regular" />
+              <span className="flex-1 text-left">{label}</span>
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
     </>
   )
 }
@@ -520,30 +607,8 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
             <PhImage size={22} weight="light" />
           </ToolbarButton>
         )}
-        {isVisible("youtube") && (
-          <ToolbarButton onClick={() => {
-            const url = window.prompt("Enter YouTube URL:")
-            if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run()
-          }} title="YouTube">
-            <YoutubeLogo size={22} weight="light" />
-          </ToolbarButton>
-        )}
-        {isVisible("audio") && (
-          <ToolbarButton onClick={() => {
-            const url = window.prompt("Enter audio file URL:")
-            if (url) editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
-          }} title="Audio">
-            <SpeakerHigh size={22} weight="light" />
-          </ToolbarButton>
-        )}
-        {isVisible("twitch") && (
-          <ToolbarButton onClick={() => {
-            const url = window.prompt("Enter Twitch URL:")
-            if (url) editor.chain().focus().insertContent(`<iframe src="${url}" width="100%" height="400" allowfullscreen></iframe>`).run()
-          }} title="Twitch">
-            <TwitchLogo size={22} weight="light" />
-          </ToolbarButton>
-        )}
+        {/* YouTube/Audio/Twitch → 단일 Embed 드롭다운으로 통합 */}
+        <EmbedDropdown editor={editor} isVisible={isVisible} />
       </ToolbarGroup>
       {/* Math & Insert Group */}
       {(isVisible("inlineMath") || isVisible("blockMath") || isVisible("date") || isVisible("hardBreak")) && <ToolbarDivider />}

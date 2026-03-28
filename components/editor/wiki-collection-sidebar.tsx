@@ -106,12 +106,10 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
     return Array.from(redMap.entries()).map(([title, count]) => ({ title, count }))
   }, [note, notes])
 
-  const handleCreateStub = useCallback(
+  const handleCreateArticle = useCallback(
     (title: string) => {
       createWikiArticle({
         title: title.charAt(0).toUpperCase() + title.slice(1),
-        wikiStatus: "stub",
-        stubSource: "red-link",
       })
     },
     [createWikiArticle]
@@ -204,7 +202,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
                     <span className="text-xs text-muted-foreground shrink-0">{count}</span>
                   )}
                   <button
-                    onClick={() => handleCreateStub(title)}
+                    onClick={() => handleCreateArticle(title)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-secondary shrink-0"
                   >
                     Create

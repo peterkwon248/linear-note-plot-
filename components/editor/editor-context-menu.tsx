@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import * as ContextMenu from "@radix-ui/react-context-menu"
 import type { Editor } from "@tiptap/react"
 import {
@@ -45,6 +46,7 @@ import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
+import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 
 interface EditorContextMenuProps {
   editor: Editor | null
@@ -69,9 +71,16 @@ function Shortcut({ keys }: { keys: string }) {
 }
 
 export function EditorContextMenu({ editor, children }: EditorContextMenuProps) {
-  const isInList =
-    editor?.isActive("listItem") || editor?.isActive("taskItem") || false
-  const hasSelection = editor ? !editor.state.selection.empty : false
+  const [hasSelection, setHasSelection] = useState(false)
+  const [isInList, setIsInList] = useState(false)
+
+  // Recalculate on context menu open (right-click) so values are fresh
+  const handleOpenChange = (open: boolean) => {
+    if (open && editor) {
+      setHasSelection(!editor.state.selection.empty)
+      setIsInList(editor.isActive("listItem") || editor.isActive("taskItem"))
+    }
+  }
 
   function cut() {
     document.execCommand("cut")
@@ -94,7 +103,7 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
     editor?.chain().focus().selectAll().run()
   }
 
-  function wrapInBlock(blockType: "calloutBlock" | "summaryBlock") {
+  function wrapInBlock(blockType: "calloutBlock" | "summaryBlock" | "sectionBlock") {
     if (!editor) return
     const { from, to } = editor.state.selection
     const selectedSlice = editor.state.doc.slice(from, to)
@@ -110,10 +119,14 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
       content.push({ type: "paragraph", content: [{ type: "text", text }] })
     }
 
-    const blockNode: any =
-      blockType === "calloutBlock"
-        ? { type: "calloutBlock", attrs: { calloutType: "info" }, content }
-        : { type: "summaryBlock", content }
+    let blockNode: any
+    if (blockType === "calloutBlock") {
+      blockNode = { type: "calloutBlock", attrs: { calloutType: "info" }, content }
+    } else if (blockType === "sectionBlock") {
+      blockNode = { type: "sectionBlock", attrs: { id: `section-${Date.now()}`, title: "Untitled Section" }, content }
+    } else {
+      blockNode = { type: "summaryBlock", content }
+    }
 
     editor.chain().focus().deleteRange({ from, to }).insertContent(blockNode).run()
   }
@@ -138,7 +151,7 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
   }
 
   return (
-    <ContextMenu.Root>
+    <ContextMenu.Root onOpenChange={handleOpenChange}>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
         <ContextMenu.Content
@@ -258,6 +271,13 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
                   >
                     <Article size={14} />
                     Summary
+                  </ContextMenu.Item>
+                  <ContextMenu.Item
+                    className={itemCls}
+                    onSelect={() => wrapInBlock("sectionBlock")}
+                  >
+                    <BookmarkSimple size={14} />
+                    Section
                   </ContextMenu.Item>
                 </ContextMenu.SubContent>
               </ContextMenu.Portal>

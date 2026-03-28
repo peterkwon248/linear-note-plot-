@@ -35,13 +35,12 @@ type PrimarySide = "source" | "target"
 
 /* ── Helpers ── */
 
-function higherStatus(a: WikiStatus, b: WikiStatus): WikiStatus {
-  if (a === "article" || b === "article") return "article"
-  return "stub"
+function higherStatus(_a: WikiStatus, _b: WikiStatus): WikiStatus {
+  return "article"
 }
 
-function statusLabel(s: WikiStatus): string {
-  return s === "article" ? "Article" : "Stub"
+function statusLabel(_s: WikiStatus): string {
+  return "Article"
 }
 
 /* ── Component ── */
@@ -257,7 +256,7 @@ export function WikiMergePreview({
                         : "bg-chart-3/8 text-chart-3/70",
                     )}
                   >
-                    {a.wikiStatus === "article" ? "ARTICLE" : "STUB"}
+                    ARTICLE
                   </span>
                 </button>
               ))}
@@ -358,14 +357,9 @@ export function WikiMergePreview({
                   </p>
                   <div className="flex gap-2">
                     <RadioOption
-                      checked={effectiveStatus === "article"}
-                      onSelect={() => setSelectedStatus("article")}
+                      checked={true}
+                      onSelect={() => {}}
                       label="Article"
-                    />
-                    <RadioOption
-                      checked={effectiveStatus === "stub"}
-                      onSelect={() => setSelectedStatus("stub")}
-                      label="Stub"
                     />
                   </div>
                 </div>

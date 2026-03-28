@@ -38,7 +38,6 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     aliases: [],
     wikiInfobox: [],
     wikiStatus: null,
-    stubSource: null,
     ...overrides,
   }
 }

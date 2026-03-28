@@ -558,28 +558,9 @@ export function WikiMergePage() {
             <div>
               <label className="mb-1 block text-xs text-white/40">Status</label>
               <div className="flex gap-1 rounded-md bg-white/[0.04] p-0.5">
-                <button
-                  onClick={() => setMergeStatus("stub")}
-                  className={cn(
-                    "rounded px-2.5 py-1 text-xs font-medium transition-colors",
-                    mergeStatus === "stub"
-                      ? "bg-chart-3/20 text-chart-3"
-                      : "text-white/40 hover:text-white/60",
-                  )}
-                >
-                  Stub
-                </button>
-                <button
-                  onClick={() => setMergeStatus("article")}
-                  className={cn(
-                    "rounded px-2.5 py-1 text-xs font-medium transition-colors",
-                    mergeStatus === "article"
-                      ? "bg-wiki-complete/20 text-wiki-complete"
-                      : "text-white/40 hover:text-white/60",
-                  )}
-                >
+                <span className="rounded px-2.5 py-1 text-xs font-medium bg-wiki-complete/20 text-wiki-complete">
                   Article
-                </button>
+                </span>
               </div>
             </div>
 

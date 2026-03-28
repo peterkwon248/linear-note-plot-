@@ -76,7 +76,7 @@ export function WikiSplitPage() {
 
   // New article config
   const [newTitle, setNewTitle] = useState("")
-  const [newStatus, setNewStatus] = useState<"stub" | "article">("stub")
+  const [newStatus, setNewStatus] = useState<"article">("article")
 
   // Note title map
   const noteTitleMap = useMemo(() => {
@@ -485,28 +485,9 @@ export function WikiSplitPage() {
           <div>
             <label className="mb-1 block text-sm text-white/40">Status</label>
             <div className="flex gap-1 rounded-md bg-white/[0.04] p-0.5">
-              <button
-                onClick={() => setNewStatus("stub")}
-                className={cn(
-                  "rounded px-3 py-1.5 text-sm font-medium transition-colors",
-                  newStatus === "stub"
-                    ? "bg-chart-3/20 text-chart-3"
-                    : "text-white/40 hover:text-white/60",
-                )}
-              >
-                Stub
-              </button>
-              <button
-                onClick={() => setNewStatus("article")}
-                className={cn(
-                  "rounded px-3 py-1.5 text-sm font-medium transition-colors",
-                  newStatus === "article"
-                    ? "bg-wiki-complete/20 text-wiki-complete"
-                    : "text-white/40 hover:text-white/60",
-                )}
-              >
+              <span className="rounded px-3 py-1.5 text-sm font-medium bg-wiki-complete/20 text-wiki-complete">
                 Article
-              </button>
+              </span>
             </div>
           </div>
 

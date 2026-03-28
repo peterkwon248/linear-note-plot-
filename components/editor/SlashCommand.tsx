@@ -31,6 +31,7 @@ import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 
 interface CommandItem {
   title: string
@@ -233,6 +234,23 @@ const COMMANDS: CommandItem[] = [
         .focus()
         .deleteRange(range)
         .insertContent({ type: "contentBlock", content: [{ type: "paragraph" }] })
+        .run()
+    },
+  },
+  {
+    title: "Section",
+    description: "Named section with title",
+    icon: BookmarkSimple,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "sectionBlock",
+          attrs: { id: `section-${Date.now()}`, title: "Untitled Section" },
+          content: [{ type: "paragraph" }],
+        })
         .run()
     },
   },

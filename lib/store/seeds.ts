@@ -270,7 +270,6 @@ export const SEED_NOTES: Note[] = [
     aliases: [],
     wikiInfobox: [],
     wikiStatus: null,
-    stubSource: null,
   },
   {
     id: "note-2",
@@ -295,7 +294,6 @@ export const SEED_NOTES: Note[] = [
     aliases: [],
     wikiInfobox: [],
     wikiStatus: null,
-    stubSource: null,
   },
   {
     id: "note-3",
@@ -320,7 +318,6 @@ export const SEED_NOTES: Note[] = [
     aliases: [],
     wikiInfobox: [],
     wikiStatus: null,
-    stubSource: null,
   },
   {
     id: "note-4",
@@ -345,7 +342,6 @@ export const SEED_NOTES: Note[] = [
     aliases: [],
     wikiInfobox: [],
     wikiStatus: null,
-    stubSource: null,
   },
   {
     id: "note-5",
@@ -370,7 +366,6 @@ export const SEED_NOTES: Note[] = [
     aliases: [],
     wikiInfobox: [],
     wikiStatus: null,
-    stubSource: null,
   },
   {
     id: "note-6",
@@ -395,7 +390,6 @@ export const SEED_NOTES: Note[] = [
     aliases: [],
     wikiInfobox: [],
     wikiStatus: null,
-    stubSource: null,
   },
 
   // ── Wiki notes ───────────────────────────────────
@@ -427,7 +421,6 @@ export const SEED_NOTES: Note[] = [
       { key: "Core Principle", value: "Linking and indexing" },
     ],
     wikiStatus: "article",
-    stubSource: null,
   },
   {
     id: "note-wiki-2",
@@ -455,7 +448,6 @@ export const SEED_NOTES: Note[] = [
       { key: "Related Concept", value: "Zettelkasten" },
     ],
     wikiStatus: "article",
-    stubSource: null,
   },
   {
     id: "note-wiki-3",
@@ -479,8 +471,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: ["zettelkasten", "permanent note"],
     aliases: ["Literature Note"],
     wikiInfobox: [],
-    wikiStatus: "stub",
-    stubSource: "red-link",
+    wikiStatus: "article",
   },
 ]
 
@@ -524,7 +515,6 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     title: "Zettelkasten",
     aliases: ["Slip box", "Zettelkasten Method"],
     wikiStatus: "article",
-    stubSource: null,
     infobox: [
       { key: "Creator", value: "Niklas Luhmann" },
       { key: "Origin", value: "Zettelkasten (German)" },
@@ -559,8 +549,7 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     id: "wiki-article-2",
     title: "Permanent Note",
     aliases: ["Evergreen Note"],
-    wikiStatus: "stub",
-    stubSource: null,
+    wikiStatus: "article",
     infobox: [
       { key: "Origin", value: "Zettelkasten method" },
       { key: "Also known as", value: "Evergreen Note" },
@@ -584,8 +573,7 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     id: "wiki-article-3",
     title: "Fleeting Note",
     aliases: ["Quick Note", "Scratch Note"],
-    wikiStatus: "stub",
-    stubSource: "manual",
+    wikiStatus: "article",
     infobox: [],
     blocks: [
       { id: bid(), type: "section", title: "Overview", level: 2 },

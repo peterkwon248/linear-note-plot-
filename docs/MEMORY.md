@@ -47,6 +47,9 @@
 - **Toolbar Config**: `lib/editor/toolbar-config.ts` — 42 item IDs, normalizeLayout(), Arrange Mode (dnd-kit drag-and-drop). Settings store에 persist
 - **Toolbar Primitives**: `components/editor/toolbar/toolbar-primitives.tsx` — ToolbarButton(40×40), ToolbarDivider, ToolbarGroup, ToolbarSpacer. Phosphor weight="light"
 - **Editor Colors**: `lib/editor-colors.ts` — 16 TEXT_COLORS + 16 HIGHLIGHT_COLORS, 8-column grid
+- **BlockDragPlugin**: `components/editor/plugins/block-drag-plugin.ts` — 2 ProseMirror plugins (drag state + widget decorations). 모든 top-level 블록에 드래그 핸들 주입. 더블엔터 wrapper 탈출 포함
+- **Wrapper block isolating**: contentBlock, sectionBlock, calloutBlock, summaryBlock, columnsBlock 모두 `isolating:true`
+- **Custom nodes**: TocBlock(atom), CalloutBlock(wrapper,5types), SectionBlock(wrapper,titled), ContentBlock(wrapper,plain), SummaryBlock(wrapper), ColumnsBlock(wrapper,columnCell+), InfoboxBlock(atom,rows), NoteEmbed(atom)
 
 ## Store Slices (20 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
@@ -128,14 +131,20 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Connected/Discover 2-section model, Relations UI 삭제, Peek wiki fallback
   - Toolbar: h-14 bar, w-10 buttons, 42 items, Arrange Mode (dnd-kit), Color palette 16색
   - Editor context menu (우클릭), custom commands, InsertMenu 개선
-- **PR #126 (WIP)**: Phase 1 커스텀 노드 + 에디터 UX 개선
-  - NEW: TOC Block (`components/editor/nodes/toc-node.tsx`) — atom node, heading 자동인식, click-to-scroll, X 삭제
-  - NEW: Callout Block (`components/editor/nodes/callout-node.tsx`) — wrapper node, 5 types, 아이콘 타입 순환, X unwrap
-  - Align 드롭다운 통합: 3버튼(Left/Center/Right) → 1개 드롭다운 + Justified 추가
-  - BacklinksFooter 삭제 (Side Panel Connections로 대체)
+- **PR #126**: Phase 1 커스텀 노드 + 에디터 UX 개선
+  - TOC Block, Callout Block, Align 드롭다운 통합, BacklinksFooter 삭제
   - SlashCommand/InsertMenu/ContextMenu에 TOC/Callout 추가
-  - toolbar-config: alignLeft/Center/Right → textAlign 단일 항목
-  - shared-editor-config: TocBlockNode/CalloutBlockNode 등록, TextAlign justify
+- **PR #127 (WIP)**: Phase 1 블록 드래그 + 에디터 UX
+  - NEW: BlockDragPlugin (`components/editor/plugins/block-drag-plugin.ts`) — 전 블록 드래그 핸들, drop handler, 더블엔터 탈출
+  - NEW: SectionBlock (`components/editor/nodes/anchor-point-node.tsx`) — 섹션 래퍼, titled wrapper
+  - ContentBlock, SummaryBlock, CalloutBlock, ColumnsBlock에 `isolating:true` 추가
+  - Title Enter: 항상 새 빈 문단 삽입 (기존: 커서만 이동)
+  - Title Backspace: depth===1 직속 자식만 핸들링 (wrapper 내부 방해 제거)
+  - Columns 레이아웃 수정 (NodeViewWrapper inline style), InsertMenu에 Section 추가
+  - 읽기모드 가드: TOC/Infobox/Callout/Summary/Columns 전 노드
+  - URL Embed 서브메뉴 (YouTube/Audio/Twitch → 1 Embed 드롭다운)
+  - WikiStatus stub 삭제: article only (v65 migration)
+  - **KNOWN BUG**: 타이틀 바로 다음 위치로 드래그 드롭 안 됨 (resolveDropPosition DOM rect 방식으로 변경했으나 여전히 미해결)
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
@@ -166,14 +175,20 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-03-28)
+## Current Direction (as of 2026-03-29)
 
-### 이번 세션 완료 — Phase 1 커스텀 노드 + 에디터 UX (2026-03-28)
-- **TOC Block**: `components/editor/nodes/toc-node.tsx` — heading 자동인식 atom node
-- **Callout Block**: `components/editor/nodes/callout-node.tsx` — 5 types wrapper node
-- **Align 드롭다운 통합**: 3버튼 → 1개 드롭다운 + Justified
-- **BacklinksFooter 삭제**: Side Panel Connections로 대체
-- **다음**: URL Embed 합치기, TOC 수동앵커, Make Block(범용 래퍼), Stub 삭제, 타이틀 정렬, Summary/Columns/NoteEmbed/Infobox
+### 이번 세션 완료 — Phase 1 블록 드래그 + 에디터 UX (2026-03-29)
+- **BlockDragPlugin**: 모든 블록에 드래그 핸들 주입 + drop handler + 더블엔터 wrapper 탈출
+- **SectionBlock/ContentBlock**: wrapper 노드 + 드래그/이동 버튼 + isolating
+- **Title Enter/Backspace 수정**: Enter=항상 새 문단, Backspace=depth 1만 핸들링
+- **읽기모드 가드**: 전 커스텀 노드에 `editor.isEditable` 체크
+- **URL Embed 합치기**: YouTube/Audio/Twitch → 1 Embed 서브메뉴
+- **WikiStatus stub 삭제**: article only (v65)
+- **KNOWN BUG**: 타이틀 바로 다음 위치로 드래그 드롭 안 됨 — resolveDropPosition의 nodeDOM/coordsAtPos가 경계에서 불안정
+- **다음**: 드래그 첫 위치 버그 수정, NoteEmbed, Infobox row 편집, TOC 수동앵커, 타이틀 정렬
+
+### 이전 세션 완료 — Phase 1 커스텀 노드 (2026-03-28)
+- TOC Block, Callout Block, Align 드롭다운 통합, BacklinksFooter 삭제
 
 ### 이전 세션 완료 — Side Panel Connections + Peek 개선 (2026-03-28)
 - Connections Connected/Discover 2섹션, Relations UI 삭제, Peek wiki fallback

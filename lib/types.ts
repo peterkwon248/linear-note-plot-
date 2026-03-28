@@ -7,13 +7,10 @@ export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
 export type NoteSource = "manual" | "webclip" | "import" | "share" | "api" | null
 
 /** Wiki quality track — independent of workflow status */
-export type WikiStatus = "stub" | "article"
+export type WikiStatus = "article"
 
 /** Wiki article layout mode */
 export type WikiLayout = "default" | "encyclopedia"
-
-/** Reason a wiki stub was auto-created */
-export type StubSource = "red-link" | "tag" | "backlink" | "manual"
 
 /** Activity Bar spaces — top-level navigation */
 export type ActivitySpace = "inbox" | "notes" | "wiki" | "calendar" | "ontology"
@@ -125,7 +122,6 @@ export interface WikiArticle {
   title: string
   aliases: string[]
   wikiStatus: WikiStatus
-  stubSource: StubSource | null
   infobox: WikiInfoboxEntry[]
   blocks: WikiBlock[]
   sectionIndex: WikiSectionIndex[]
@@ -195,8 +191,7 @@ export interface Note {
   isWiki: boolean
   aliases: string[]
   wikiInfobox: WikiInfoboxEntry[]
-  wikiStatus: WikiStatus | null       // null = not wiki, stub/article = wiki quality
-  stubSource: StubSource | null       // reason for stub creation (null if not a stub)
+  wikiStatus: WikiStatus | null       // null = not wiki, "article" = wiki
 
   /* ── Precomputed (from content, for performance) ── */
   preview: string          // first ~120 chars of plaintext (for list display)

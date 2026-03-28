@@ -36,7 +36,6 @@ export type SortField =
   | "label"
   // Wiki-category-specific sort fields
   | "articles"
-  | "stubs"
   | "sub"
   | "tier"
   | "parent"
@@ -76,7 +75,7 @@ export interface ViewState {
   showEmptyGroups: boolean
   orderPermanentByRecency: boolean
   showThread: boolean
-  /** View-config-specific toggle states (showArchived, showStubs, compact, etc.) */
+  /** View-config-specific toggle states (showArchived, compact, etc.) */
   toggles: Record<string, boolean>
   /** Custom group ordering per groupBy dimension. null = natural order */
   groupOrder: Record<string, string[]> | null
@@ -137,7 +136,7 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
 
 export const VALID_SORT_FIELDS: SortField[] = [
   "updatedAt", "createdAt", "title", "status", "links", "reads", "folder", "label",
-  "articles", "stubs", "sub", "tier", "parent",
+  "articles", "sub", "tier", "parent",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
@@ -152,5 +151,5 @@ export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "folder", "links", "reads", "wordCount", "createdAt", "updatedAt",
   // Wiki-category-specific columns
-  "parent", "tier", "articles", "stubs", "sub",
+  "parent", "tier", "articles", "sub",
 ]

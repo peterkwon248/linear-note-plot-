@@ -99,7 +99,6 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
   folder: "Folder",
   label: "Label",
   articles: "Articles",
-  stubs: "Stubs",
   sub: "Sub",
   tier: "Tier",
   parent: "Parent",

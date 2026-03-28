@@ -8,6 +8,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
@@ -17,7 +20,6 @@ import { CalendarDots } from "@phosphor-icons/react/dist/ssr/CalendarDots"
 import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Play as PhPlay } from "@phosphor-icons/react/dist/ssr/Play"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
@@ -26,8 +28,11 @@ import { Info } from "@phosphor-icons/react/dist/ssr/Info"
 import { Article } from "@phosphor-icons/react/dist/ssr/Article"
 import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { TwitchLogo } from "@phosphor-icons/react/dist/ssr/TwitchLogo"
+import { MonitorPlay } from "@phosphor-icons/react/dist/ssr/MonitorPlay"
+import { YoutubeLogo } from "@phosphor-icons/react/dist/ssr/YoutubeLogo"
 import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
+import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { usePlotStore } from "@/lib/store"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 
@@ -199,6 +204,14 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
     }).run()
   }
 
+  const handleSection = () => {
+    editor.chain().focus().insertContent({
+      type: "sectionBlock",
+      attrs: { id: `section-${Date.now()}`, title: "Untitled Section" },
+      content: [{ type: "paragraph" }],
+    }).run()
+  }
+
   const handleNoteEmbed = () => {
     // Insert with no noteId — shows "Note not found" placeholder
     // TODO: Wire up note picker UI
@@ -238,20 +251,27 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
             <span className="flex-1">Image</span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem onSelect={handleYoutube} className={ITEM_CLASS}>
-            <PhPlay size={14} weight="regular" />
-            <span className="flex-1">YouTube</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleAudio} className={ITEM_CLASS}>
-            <SpeakerHigh size={14} weight="regular" />
-            <span className="flex-1">Audio</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleTwitch} className={ITEM_CLASS}>
-            <TwitchLogo size={14} weight="regular" />
-            <span className="flex-1">Twitch</span>
-          </DropdownMenuItem>
+          {/* YouTube/Audio/Twitch → Embed 서브메뉴로 통합 */}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className={ITEM_CLASS}>
+              <MonitorPlay size={14} weight="regular" />
+              <span className="flex-1">Embed</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="min-w-[160px] p-1">
+              <DropdownMenuItem onSelect={handleYoutube} className={ITEM_CLASS}>
+                <YoutubeLogo size={14} weight="regular" />
+                <span className="flex-1">YouTube</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleAudio} className={ITEM_CLASS}>
+                <SpeakerHigh size={14} weight="regular" />
+                <span className="flex-1">Audio</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleTwitch} className={ITEM_CLASS}>
+                <TwitchLogo size={14} weight="regular" />
+                <span className="flex-1">Twitch</span>
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
 
           <DropdownMenuItem onSelect={handleFile} className={ITEM_CLASS}>
             <Paperclip size={14} weight="regular" />
@@ -284,6 +304,11 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           <DropdownMenuItem onSelect={handleColumns} className={ITEM_CLASS}>
             <PhColumns size={14} weight="regular" />
             <span className="flex-1">Columns</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={handleSection} className={ITEM_CLASS}>
+            <BookmarkSimple size={14} weight="fill" />
+            <span className="flex-1">Section</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleNoteEmbed} className={ITEM_CLASS}>

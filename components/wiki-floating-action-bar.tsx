@@ -46,10 +46,6 @@ export function WikiFloatingActionBar({
     [articles, selectedIds],
   )
 
-  // How many are stubs (can be promoted)
-  const stubCount = selectedArticles.filter(a => a.wikiStatus === "stub" || (a.wikiStatus as string) === "draft").length
-  // How many are articles (can be demoted)
-  const articleCount = selectedArticles.filter(a => a.wikiStatus === "article" || (a.wikiStatus as string) === "complete").length
 
   const handleDelete = () => {
     // Save articles for undo
@@ -74,32 +70,6 @@ export function WikiFloatingActionBar({
         toast.success(`Restored ${deletedArticles.length} article${deletedArticles.length > 1 ? "s" : ""}`)
       }
     )
-  }
-
-  const handlePromote = () => {
-    const promoted: { id: string; prevStatus: string }[] = []
-    ids.forEach((id) => {
-      const article = articles.find(a => a.id === id)
-      if (article && (article.wikiStatus === "stub" || (article.wikiStatus as string) === "draft")) {
-        promoted.push({ id, prevStatus: article.wikiStatus })
-        setWikiArticleStatus(id, "article")
-      }
-    })
-    onClearSelection()
-    toast.success(`Promoted ${promoted.length} article${promoted.length > 1 ? "s" : ""} to Article`)
-  }
-
-  const handleDemote = () => {
-    const demoted: { id: string; prevStatus: string }[] = []
-    ids.forEach((id) => {
-      const article = articles.find(a => a.id === id)
-      if (article && (article.wikiStatus === "article" || (article.wikiStatus as string) === "complete")) {
-        demoted.push({ id, prevStatus: article.wikiStatus })
-        setWikiArticleStatus(id, "stub")
-      }
-    })
-    onClearSelection()
-    toast.success(`Demoted ${demoted.length} article${demoted.length > 1 ? "s" : ""} to Stub`)
   }
 
   const handleMerge = () => {
@@ -127,36 +97,6 @@ export function WikiFloatingActionBar({
         </button>
 
         <Divider />
-
-        {/* Promote stubs to article */}
-        {stubCount > 0 && (
-          <>
-            <button
-              onClick={handlePromote}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
-              title="Promote selected stubs to Article"
-            >
-              <ArrowUpRight size={16} weight="regular" />
-              Promote
-            </button>
-            <Divider />
-          </>
-        )}
-
-        {/* Demote articles to stub */}
-        {articleCount > 0 && (
-          <>
-            <button
-              onClick={handleDemote}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
-              title="Demote selected articles to Stub"
-            >
-              <ArrowDownRight size={16} weight="regular" />
-              Demote
-            </button>
-            <Divider />
-          </>
-        )}
 
         {/* Merge (works for 1+ selected) */}
         {(onMerge || onMultiMerge) && (

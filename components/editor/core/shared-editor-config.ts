@@ -34,6 +34,7 @@ import Mathematics from "@tiptap/extension-mathematics"
 import { Node, Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 
+import { BlockDragPlugin } from "@/components/editor/plugins/block-drag-plugin"
 import { TitleNode } from "./title-node"
 import { ResizableImage } from "../ResizableImage"
 import {
@@ -70,6 +71,7 @@ import { ColumnsBlockNode, ColumnCellNode } from "@/components/editor/nodes/colu
 import { NoteEmbedNode } from "@/components/editor/nodes/note-embed-node"
 import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
+import { SectionBlockNode } from "@/components/editor/nodes/anchor-point-node"
 
 // ── Lowlight (syntax highlighting for code blocks) ──────────────────
 const lowlight = createLowlight(common)
@@ -199,6 +201,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     CodeBlockLowlight.configure({ lowlight }),
     Typography,
     Dropcursor.configure({ color: "var(--accent)", width: 2, class: "drop-cursor" }),
+    BlockDragPlugin,
     CharacterCount,
     FontFamily,
     Youtube.configure({ inline: false, allowFullscreen: true, HTMLAttributes: { class: "youtube-embed" } }),
@@ -287,6 +290,7 @@ export function createEditorExtensions(
       noteExtensions.push(NoteEmbedNode as Extension)
       noteExtensions.push(InfoboxBlockNode as Extension)
       noteExtensions.push(ContentBlockNode as Extension)
+      noteExtensions.push(SectionBlockNode as Extension)
 
       // Custom keyboard shortcuts (Indent/Outdent, Move List)
       const CustomKeyboardShortcuts = Extension.create({

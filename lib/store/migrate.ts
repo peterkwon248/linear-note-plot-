@@ -30,11 +30,15 @@ export function migrate(persistedState: unknown): PlotState {
       // v13: Precompute preview and linksOut from content
       const content = typeof rest.content === "string" ? rest.content as string : ""
 
-      // v41: wikiStatus + stubSource
+      // v41: wikiStatus (stub removed in v65)
       const isWiki = n.isWiki ?? false
       let wikiStatus = n.wikiStatus ?? null
       if (wikiStatus === null && isWiki) {
-        wikiStatus = (content?.trim()) ? "draft" : "stub"
+        wikiStatus = "article"
+      }
+      // v65: stub → article
+      if (wikiStatus === "stub" || wikiStatus === "draft") {
+        wikiStatus = "article"
       }
 
       return {
@@ -56,7 +60,6 @@ export function migrate(persistedState: unknown): PlotState {
         aliases: (n as any).aliases ?? [],
         wikiInfobox: (n as any).wikiInfobox ?? [],
         wikiStatus,
-        stubSource: n.stubSource ?? null,
         contentJson: n.contentJson ?? null,
         // v13: Precomputed fields
         preview: n.preview ?? extractPreview(content),
@@ -598,11 +601,14 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
-  // v60: WikiStatus simplification — draft→stub, complete→article
+  // v60+v65: WikiStatus simplification — all statuses → "article"
   if (Array.isArray(state.wikiArticles)) {
     for (const article of state.wikiArticles as Record<string, unknown>[]) {
-      if (article.wikiStatus === "draft") article.wikiStatus = "stub"
-      if (article.wikiStatus === "complete") article.wikiStatus = "article"
+      if (article.wikiStatus === "draft" || article.wikiStatus === "stub" || article.wikiStatus === "complete") {
+        article.wikiStatus = "article"
+      }
+      // v65: remove stubSource field
+      delete article.stubSource
     }
   }
 
@@ -697,6 +703,18 @@ export function migrate(persistedState: unknown): PlotState {
   if (state.sidePanelMode === 'discover') {
     state.sidePanelMode = 'connections'
   }
+
+  // v65: Remove WikiStatus "stub" — everything is "article" now
+  // Notes: convert stub→article, remove stubSource field
+  if (Array.isArray(state.notes)) {
+    for (const note of state.notes as Record<string, unknown>[]) {
+      if (note.wikiStatus === "stub" || note.wikiStatus === "draft") {
+        note.wikiStatus = "article"
+      }
+      delete note.stubSource
+    }
+  }
+  // WikiArticles already handled in v60+v65 block above
 
   return state as unknown as PlotState
 }

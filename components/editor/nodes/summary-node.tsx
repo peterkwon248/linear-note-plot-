@@ -41,14 +41,16 @@ function SummaryNodeView({ node, editor }: NodeViewProps) {
             <Article size={14} weight="bold" />
             <span className="text-xs font-semibold uppercase tracking-wider">Summary</span>
           </button>
-          <button
-            type="button"
-            onClick={removeSummary}
-            className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
-            title="Remove summary block"
-          >
-            <PhX size={12} weight="bold" />
-          </button>
+          {editor.isEditable && (
+            <button
+              type="button"
+              onClick={removeSummary}
+              className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
+              title="Remove summary block"
+            >
+              <PhX size={12} weight="bold" />
+            </button>
+          )}
         </div>
 
         {/* Editable content area - hide when collapsed */}
@@ -65,6 +67,7 @@ export const SummaryBlockNode = Node.create({
   group: "block",
   content: "block+",
   defining: true,
+  isolating: true,
   selectable: true,
   draggable: true,
 

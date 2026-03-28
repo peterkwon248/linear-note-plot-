@@ -132,11 +132,6 @@ export function GraphInsightsView() {
     () => (nodeCount > 0 ? Math.round((wikiNotes.length / nodeCount) * 100) : 0),
     [wikiNotes.length, nodeCount]
   )
-  const stubCount = useMemo(
-    () => wikiNotes.filter((n) => n.wikiStatus === "stub").length,
-    [wikiNotes]
-  )
-
   /* ── Recently linked notes ── */
   const recentlyLinked = useMemo(() => {
     return [...nonTrashed]
@@ -291,9 +286,9 @@ export function GraphInsightsView() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-2xs text-muted-foreground">Stubs</p>
-                    <p className="text-base font-semibold tabular-nums text-chart-3">
-                      {stubCount}
+                    <p className="text-2xs text-muted-foreground">Articles</p>
+                    <p className="text-base font-semibold tabular-nums text-accent">
+                      {wikiNotes.length}
                     </p>
                   </div>
                 </div>

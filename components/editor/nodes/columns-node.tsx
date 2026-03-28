@@ -13,7 +13,7 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 
 function ColumnCellView({}: NodeViewProps) {
   return (
-    <NodeViewWrapper className="flex-1 min-w-0 px-2 first:pl-0 last:pr-0">
+    <NodeViewWrapper className="flex-1 min-w-0 px-2 first:pl-0 last:pr-0" style={{ flex: "1 1 0%", minWidth: 0 }}>
       <NodeViewContent className="prose-sm min-h-[2em]" />
     </NodeViewWrapper>
   )
@@ -115,40 +115,40 @@ function ColumnsNodeView({ node, editor }: NodeViewProps) {
             <PhColumns size={14} weight="bold" />
             <span className="text-xs font-semibold uppercase tracking-wider">{columnCount} Columns</span>
           </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              type="button"
-              onClick={removeColumn}
-              disabled={columnCount <= 1}
-              className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Remove column"
-            >
-              <PhMinus size={12} weight="bold" />
-            </button>
-            <button
-              type="button"
-              onClick={addColumn}
-              disabled={columnCount >= 4}
-              className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Add column"
-            >
-              <PhPlus size={12} weight="bold" />
-            </button>
-            <button
-              type="button"
-              onClick={removeColumns}
-              className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
-              title="Remove columns layout"
-            >
-              <PhX size={12} weight="bold" />
-            </button>
-          </div>
+          {editor.isEditable && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                type="button"
+                onClick={removeColumn}
+                disabled={columnCount <= 1}
+                className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Remove column"
+              >
+                <PhMinus size={12} weight="bold" />
+              </button>
+              <button
+                type="button"
+                onClick={addColumn}
+                disabled={columnCount >= 4}
+                className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Add column"
+              >
+                <PhPlus size={12} weight="bold" />
+              </button>
+              <button
+                type="button"
+                onClick={removeColumns}
+                className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+                title="Remove columns layout"
+              >
+                <PhX size={12} weight="bold" />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Column cells container - flex row */}
-        <div className="flex gap-0 divide-x divide-border/30 px-1 pb-2">
-          <NodeViewContent />
-        </div>
+        {/* Column cells container - NodeViewContent IS the flex row */}
+        <NodeViewContent className="flex gap-0 divide-x divide-border/30 px-1 pb-2" style={{ display: "flex" }} />
       </div>
     </NodeViewWrapper>
   )
@@ -159,6 +159,7 @@ export const ColumnsBlockNode = Node.create({
   group: "block",
   content: "columnCell+",
   defining: true,
+  isolating: true,
   selectable: true,
   draggable: true,
 

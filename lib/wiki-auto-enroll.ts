@@ -1,8 +1,11 @@
-import type { Note, StubSource } from "./types"
+import type { Note } from "./types"
+
+/** Signal type for how a wiki candidate was detected */
+export type EnrollmentSignal = "red-link" | "tag" | "backlink"
 
 /** Signal detection result */
 export interface EnrollmentCandidate {
-  type: StubSource         // "red-link" | "tag" | "backlink"
+  type: EnrollmentSignal   // "red-link" | "tag" | "backlink"
   title: string            // For red-link/tag: the name. For backlink: note title
   noteId?: string          // For backlink: existing note to convert
   score: number            // refCount or backlink count (for sorting)
@@ -156,8 +159,8 @@ const AUTO_ENROLL_INTERVAL = 10 * 60 * 1000 // 10 minutes
 export function runAutoEnrollment(
   getState: () => { notes: Note[]; tags: { id: string; name: string; trashed?: boolean }[] },
   actions: {
-    createWikiStub: (title: string, aliases?: string[], stubSource?: string) => string
-    convertToWiki: (noteId: string, stubSource?: string) => void
+    createWikiArticle: (partial: { title: string; aliases?: string[] }) => string
+    convertToWiki: (noteId: string) => void
   }
 ): number {
   const { notes, tags } = getState()
@@ -169,15 +172,15 @@ export function runAutoEnrollment(
     if (c.type === "red-link") {
       if (c.noteId) {
         // Existing note matches red-link title → convert to wiki
-        actions.convertToWiki(c.noteId, "red-link")
+        actions.convertToWiki(c.noteId)
       } else {
-        // No existing note → create stub
-        actions.createWikiStub(c.title, [], "red-link")
+        // No existing note → create wiki article
+        actions.createWikiArticle({ title: c.title })
       }
       enrolled++
     } else if (c.type === "backlink") {
       if (c.noteId) {
-        actions.convertToWiki(c.noteId, "backlink")
+        actions.convertToWiki(c.noteId)
         enrolled++
       }
     }
@@ -187,9 +190,9 @@ export function runAutoEnrollment(
   const tagCandidates = detectTagCandidates(notes, tags)
   for (const c of tagCandidates) {
     if (c.noteId) {
-      actions.convertToWiki(c.noteId, "tag")
+      actions.convertToWiki(c.noteId)
     } else {
-      actions.createWikiStub(c.title, [], "tag")
+      actions.createWikiArticle({ title: c.title })
     }
     enrolled++
   }
@@ -203,8 +206,8 @@ export function runAutoEnrollment(
 export function startAutoEnrollment(
   getState: () => { notes: Note[]; tags: { id: string; name: string; trashed?: boolean }[] },
   actions: {
-    createWikiStub: (title: string, aliases?: string[], stubSource?: string) => string
-    convertToWiki: (noteId: string, stubSource?: string) => void
+    createWikiArticle: (partial: { title: string; aliases?: string[] }) => string
+    convertToWiki: (noteId: string) => void
   }
 ) {
   // Defer initial run to avoid React state-update-before-mount warnings

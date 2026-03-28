@@ -66,14 +66,16 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
             <Icon size={16} weight="bold" />
             <span className="text-xs font-semibold uppercase tracking-wider">{config.label}</span>
           </button>
-          <button
-            type="button"
-            onClick={removeCallout}
-            className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
-            title="Remove callout"
-          >
-            <PhX size={12} weight="bold" />
-          </button>
+          {editor.isEditable && (
+            <button
+              type="button"
+              onClick={removeCallout}
+              className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
+              title="Remove callout"
+            >
+              <PhX size={12} weight="bold" />
+            </button>
+          )}
         </div>
 
         {/* Editable content area */}
@@ -88,6 +90,7 @@ export const CalloutBlockNode = Node.create({
   group: "block",
   content: "block+",
   defining: true,
+  isolating: true,
   selectable: true,
   draggable: true,
 

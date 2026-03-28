@@ -1,6 +1,6 @@
 "use client"
 
-import { WikiStatusDot, StubsBySourceList } from "./wiki-shared"
+import { WikiStatusDot } from "./wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note } from "@/lib/types"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
@@ -9,8 +9,6 @@ interface WikiSidebarProps {
   categories: { items: { id: string; name: string; parentIds: string[]; count: number }[]; uncategorized: number }
   recentChanges: Note[]
   redLinks: { title: string; refCount: number }[]
-  stubsBySource: [string, number][]
-  stubCount: number
   onOpenArticle: (id: string) => void
   onCreateFromRedLink: (title: string) => void
   onCategoryClick?: (categoryId: string) => void
@@ -20,8 +18,6 @@ export function WikiSidebar({
   categories,
   recentChanges,
   redLinks,
-  stubsBySource,
-  stubCount,
   onOpenArticle,
   onCreateFromRedLink,
   onCategoryClick,
@@ -120,12 +116,6 @@ export function WikiSidebar({
         </Section>
       )}
 
-      {/* Stubs by Source */}
-      {stubCount > 0 && (
-        <Section title="Stubs by Source">
-          <StubsBySourceList items={stubsBySource} />
-        </Section>
-      )}
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { IconWikiArticle } from "@/components/plot-icons"
 import { groupByInitial, INDEX_GROUPS } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
@@ -27,8 +27,8 @@ interface WikiListProps {
   backlinkCounts: Map<string, number>
 
   // Filter state
-  dashFilter: "all" | "stubs" | "articles" | "redlinks"
-  setDashFilter: (f: "all" | "stubs" | "articles" | "redlinks") => void
+  dashFilter: "all" | "articles" | "redlinks"
+  setDashFilter: (f: "all" | "articles" | "redlinks") => void
   showAllArticles: boolean
   setShowAllArticles: (show: boolean) => void
 
@@ -54,27 +54,15 @@ interface WikiListProps {
 /* ── Status Badge ── */
 
 const STATUS_COLORS: Record<string, string> = {
-  stub: "text-chart-3",
   article: "text-wiki-complete",
-  // Legacy fallbacks (pre-v60 IDB data)
-  draft: "text-chart-3",
-  complete: "text-wiki-complete",
 }
 
 const STATUS_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  stub: IconWikiStub,
   article: IconWikiArticle,
-  // Legacy fallbacks
-  draft: IconWikiStub,
-  complete: IconWikiArticle,
 }
 
-// Normalize legacy status values to new names for display
 const STATUS_LABELS: Record<string, string> = {
-  stub: "Stub",
   article: "Article",
-  draft: "Stub",
-  complete: "Article",
 }
 
 function StatusBadge({ status }: { status: string | null }) {
@@ -385,7 +373,6 @@ export function WikiList({
   const counts = {
     all: sortedFilteredWikiNotes.length + redLinks.length,
     articles: filteredWikiNotes.filter(n => n.wikiStatus === "article" || (n.wikiStatus as string) === "complete").length,
-    stubs: filteredWikiNotes.filter(n => n.wikiStatus === "stub" || (n.wikiStatus as string) === "draft").length,
     redlinks: redLinks.length,
   }
 
@@ -405,8 +392,8 @@ export function WikiList({
         <span className="h-4 w-px bg-border/50" />
 
         {/* Filter Tabs */}
-        {(["all", "articles", "stubs", "redlinks"] as const).map((tab) => {
-          const labels: Record<string, string> = { all: "All", articles: "Article", stubs: "Stub", redlinks: "Red Links" }
+        {(["all", "articles", "redlinks"] as const).map((tab) => {
+          const labels: Record<string, string> = { all: "All", articles: "Article", redlinks: "Red Links" }
           const tabCount = counts[tab as keyof typeof counts]
           return (
             <button

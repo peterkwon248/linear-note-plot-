@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import { WikiStatusDot } from "./wiki-shared"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { IconWikiArticle } from "@/components/plot-icons"
 import type { WikiArticle } from "@/lib/types"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
@@ -27,7 +27,6 @@ interface WikiDashboardProps {
     redLinks: number
     internalLinks: number
     connectedNotes: number
-    stubs: number
   }
   articleCount: number
   coverageStats: { connected: number; total: number; percent: number }
@@ -50,7 +49,6 @@ interface WikiDashboardProps {
   onOpenWikiArticle?: (id: string) => void
   onCreateFromRedLink: (title: string) => void
   onViewAll: () => void
-  onViewStubs: () => void
   onViewRedLinks?: () => void
   onCategoryClick?: (categoryId: string) => void
 }
@@ -78,7 +76,6 @@ export function WikiDashboard({
   onOpenWikiArticle,
   onCreateFromRedLink,
   onViewAll,
-  onViewStubs,
   onViewRedLinks,
   onCategoryClick,
 }: WikiDashboardProps) {
@@ -146,13 +143,6 @@ export function WikiDashboard({
             sub={`${stats.articles} articles`}
             color="text-accent"
             onClick={onViewAll}
-          />
-          <MiniStat
-            label="Stubs"
-            value={stats.stubs}
-            sub="need attention"
-            color="text-chart-3"
-            onClick={onViewStubs}
           />
           <MiniStat
             label="Red Links"
@@ -309,17 +299,12 @@ export function WikiDashboard({
                       {article.title}
                     </h4>
                     <p className="mt-0.5 text-2xs text-muted-foreground/40">
-                      {article.blocks.length} blocks · {(article.wikiStatus as string) === "complete" || article.wikiStatus === "article" ? "article" : "stub"}
+                      {article.blocks.length} blocks
                     </p>
                   </div>
-                  <span className={cn(
-                    "inline-flex items-center gap-1.5 shrink-0 text-2xs font-medium",
-                    article.wikiStatus === "stub" || (article.wikiStatus as string) === "draft" ? "text-chart-3" :
-                    "text-wiki-complete"
-                  )}>
-                    {article.wikiStatus === "stub" || (article.wikiStatus as string) === "draft" ? <IconWikiStub size={14} /> :
-                     <IconWikiArticle size={14} />}
-                    {(article.wikiStatus as string) === "complete" || article.wikiStatus === "article" ? "Article" : "Stub"}
+                  <span className="inline-flex items-center gap-1.5 shrink-0 text-2xs font-medium text-wiki-complete">
+                    <IconWikiArticle size={14} />
+                    Article
                   </span>
                 </button>
               ))}

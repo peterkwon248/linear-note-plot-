@@ -27,22 +27,15 @@ export const TitleNode = Node.create({
 
   addKeyboardShortcuts() {
     return {
-      // Enter in title → move cursor to first body paragraph
+      // Enter in title → always insert a new empty paragraph right after title
       Enter: ({ editor }) => {
         if (editor.state.selection.$from.parent.type.name === "title") {
-          // Find the first node after title and set cursor there
           const titleEnd = editor.state.doc.firstChild?.nodeSize ?? 0
-          const afterTitle = titleEnd
-          // If there's content after title, move to it. Otherwise create a paragraph.
-          if (editor.state.doc.childCount > 1) {
-            editor.commands.setTextSelection(afterTitle + 1)
-          } else {
-            editor
-              .chain()
-              .insertContentAt(afterTitle, { type: "paragraph" })
-              .setTextSelection(afterTitle + 1)
-              .run()
-          }
+          editor
+            .chain()
+            .insertContentAt(titleEnd, { type: "paragraph" })
+            .setTextSelection(titleEnd + 1)
+            .run()
           return true
         }
         return false
@@ -60,9 +53,12 @@ export const TitleNode = Node.create({
 
         // In first body node (right after title), at position 0, and node is empty
         // → move cursor to end of title
+        // Only handle direct children of doc (depth 1), NOT nested paragraphs
+        // inside wrapper blocks (contentBlock, sectionBlock, etc.)
         if (
           $from.parent.type.name !== "title" &&
-          $from.parentOffset === 0
+          $from.parentOffset === 0 &&
+          $from.depth === 1
         ) {
           const titleNode = editor.state.doc.firstChild
           if (!titleNode || titleNode.type.name !== "title") return false

@@ -26,13 +26,11 @@ export const NOTE_STATUS_HEX = {
 /* ── Wiki Status ─────────────────────────────── */
 
 export const WIKI_STATUS_COLORS = {
-  stub:    { css: "var(--chart-3)", tw: "chart-3" },
   article: { css: "var(--wiki-complete)", tw: "wiki-complete" },
 } as const
 
 /** Wiki hex — article uses violet to distinguish from permanent green */
 export const WIKI_STATUS_HEX = {
-  stub:    "#f97316",   // orange
   article: "#8b5cf6",   // violet  ← NOT green
 } as const
 
