@@ -7,11 +7,9 @@ import { ColorPicker } from "./ColorPicker"
 import { TableMenu } from "./TableMenu"
 import { InsertMenu } from "@/components/insert-menu"
 import { ToolbarButton, ToolbarDivider, ToolbarGroup, ToolbarSpacer } from "@/components/editor/toolbar/toolbar-primitives"
-import { TextB } from "@phosphor-icons/react/dist/ssr/TextB"
 import { TextItalic } from "@phosphor-icons/react/dist/ssr/TextItalic"
 import { TextUnderline as UnderlineIcon } from "@phosphor-icons/react/dist/ssr/TextUnderline"
 import { TextStrikethrough } from "@phosphor-icons/react/dist/ssr/TextStrikethrough"
-import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
 import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
 import { CodeBlock } from "@phosphor-icons/react/dist/ssr/CodeBlock"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
@@ -44,9 +42,10 @@ import {
 } from "./commands/custom-commands"
 import type { EditorTier } from "./core/shared-editor-config"
 import { useSettingsStore } from "@/lib/settings-store"
-import { normalizeLayout, type ToolbarItemId } from "@/lib/editor/toolbar-config"
+import { normalizeLayout, TOOLBAR_ITEM_LABELS, type ToolbarItemId } from "@/lib/editor/toolbar-config"
 import { ArrangeMode } from "./toolbar/arrange-mode"
 import { GearSix } from "@phosphor-icons/react/dist/ssr/GearSix"
+import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { YoutubeLogo } from "@phosphor-icons/react/dist/ssr/YoutubeLogo"
@@ -163,7 +162,7 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
           isAnyHeadingActive ? "text-foreground bg-toolbar-active" : "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
         }`}
       >
-        <TextH size={22} weight="light" />
+        <span className="text-[15px] font-semibold leading-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>H</span>
       </button>
 
       {isOpen &&
@@ -208,6 +207,10 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
   const currentLineHighlight = useSettingsStore((s) => s.currentLineHighlight)
   const setCurrentLineHighlight = useSettingsStore((s) => s.setCurrentLineHighlight)
   const [arrangeOpen, setArrangeOpen] = useState(false)
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false)
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
+  const moreMenuRef = useRef<HTMLDivElement>(null)
+  const [moreMenuPos, setMoreMenuPos] = useState({ left: 0, bottom: 0 })
 
   const normalizedLayout = normalizeLayout(toolbarLayout)
   const visibleSet = new Set(
@@ -238,6 +241,26 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       canRedo: e?.can().redo() ?? false,
     }),
   })
+
+  const updateMoreMenuPos = useCallback(() => {
+    if (!moreButtonRef.current) return
+    const rect = moreButtonRef.current.getBoundingClientRect()
+    setMoreMenuPos({
+      left: Math.min(rect.left, window.innerWidth - 320),
+      bottom: window.innerHeight - rect.top + 6,
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!moreMenuOpen) return
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (moreButtonRef.current?.contains(target) || moreMenuRef.current?.contains(target)) return
+      setMoreMenuOpen(false)
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [moreMenuOpen])
 
   if (!editor || !editorState) return null
 
@@ -279,7 +302,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       <ToolbarGroup>
         {isVisible("bold") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
-            <TextB size={22} weight="light" />
+            <span className="text-[15px] font-bold leading-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>B</span>
           </ToolbarButton>
         )}
         {isVisible("italic") && (
@@ -531,6 +554,69 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
         )}
       </ToolbarGroup>
       <ToolbarDivider />
+      {/* More actions overflow menu */}
+      <button
+        ref={moreButtonRef}
+        onMouseDown={(e) => {
+          e.preventDefault()
+          if (!moreMenuOpen) updateMoreMenuPos()
+          setMoreMenuOpen(!moreMenuOpen)
+        }}
+        title="More actions"
+        className="w-10 h-10 rounded-md flex items-center justify-center shrink-0 cursor-pointer border-0 outline-none transition-colors duration-75 text-muted-foreground hover:text-foreground hover:bg-hover-bg"
+      >
+        <DotsThree size={22} weight="bold" />
+      </button>
+      {moreMenuOpen && createPortal(
+        <div
+          ref={moreMenuRef}
+          className="fixed z-[100] w-[300px] max-h-[400px] overflow-y-auto rounded-xl border border-border bg-popover shadow-xl p-2"
+          style={{ left: moreMenuPos.left, bottom: moreMenuPos.bottom }}
+        >
+          <div className="grid grid-cols-4 gap-1">
+            {([
+              { id: "bold" as const, label: "Bold", action: () => editor.chain().focus().toggleBold().run(), active: editorState.bold },
+              { id: "italic" as const, label: "Italic", action: () => editor.chain().focus().toggleItalic().run(), active: editorState.italic },
+              { id: "underline" as const, label: "Underline", action: () => editor.chain().focus().toggleUnderline().run(), active: editorState.underline },
+              { id: "strike" as const, label: "Strike", action: () => editor.chain().focus().toggleStrike().run(), active: editorState.strike },
+              { id: "superscript" as const, label: "Super", action: () => editor.chain().focus().toggleSuperscript().run(), active: editorState.superscript },
+              { id: "subscript" as const, label: "Sub", action: () => editor.chain().focus().toggleSubscript().run(), active: editorState.subscript },
+              { id: "inlineCode" as const, label: "Code", action: () => editor.chain().focus().toggleCode().run(), active: editorState.code },
+              { id: "removeFormat" as const, label: "Clear", action: () => removeFormattingCommand(editor), active: false },
+              { id: "bulletList" as const, label: "Bullets", action: () => editor.chain().focus().toggleBulletList().run(), active: editorState.bulletList },
+              { id: "orderedList" as const, label: "Numbers", action: () => editor.chain().focus().toggleOrderedList().run(), active: editorState.orderedList },
+              { id: "taskList" as const, label: "Tasks", action: () => editor.chain().focus().toggleTaskList().run(), active: editorState.taskList },
+              { id: "blockquote" as const, label: "Quote", action: () => editor.chain().focus().toggleBlockquote().run(), active: editorState.blockquote },
+              { id: "codeBlock" as const, label: "Code Block", action: () => editor.chain().focus().toggleCodeBlock().run(), active: editorState.codeBlock },
+              { id: "divider" as const, label: "Divider", action: () => editor.chain().focus().setHorizontalRule().run(), active: false },
+              { id: "link" as const, label: "Link", action: handleSetLink, active: editorState.link },
+              { id: "alignLeft" as const, label: "Left", action: () => handleAlign("left"), active: editorState.alignLeft },
+              { id: "alignCenter" as const, label: "Center", action: () => handleAlign("center"), active: editorState.alignCenter },
+              { id: "alignRight" as const, label: "Right", action: () => handleAlign("right"), active: editorState.alignRight },
+              { id: "indent" as const, label: "Indent", action: () => indentCommand(editor), active: false },
+              { id: "outdent" as const, label: "Outdent", action: () => outdentCommand(editor), active: false },
+              { id: "undo" as const, label: "Undo", action: () => editor.chain().focus().undo().run(), active: false },
+              { id: "redo" as const, label: "Redo", action: () => editor.chain().focus().redo().run(), active: false },
+              { id: "hardBreak" as const, label: "Break", action: () => editor.chain().focus().setHardBreak().run(), active: false },
+              { id: "date" as const, label: "Date", action: () => editor.chain().focus().insertContent(format(new Date(), "yyyy-MM-dd")).run(), active: false },
+            ] satisfies { id: ToolbarItemId; label: string; action: () => void; active: boolean }[]).filter(item => isVisible(item.id)).map(item => (
+              <button
+                key={item.id}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => { item.action(); setMoreMenuOpen(false) }}
+                className={`flex flex-col items-center justify-center gap-0.5 rounded-lg p-2 text-xs transition-colors cursor-pointer border-0 outline-none ${
+                  item.active
+                    ? "bg-toolbar-active text-foreground"
+                    : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+                }`}
+              >
+                <span className="text-[11px] leading-tight truncate w-full text-center">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>,
+        document.body
+      )}
       <ToolbarButton onClick={() => setArrangeOpen(true)} title="Arrange toolbar">
         <GearSix size={22} weight="light" />
       </ToolbarButton>
