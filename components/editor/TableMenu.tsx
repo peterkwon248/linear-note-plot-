@@ -71,13 +71,13 @@ export function TableMenu({ editor }: TableMenuProps) {
         ref={buttonRef}
         onMouseDown={handleToggle}
         title="Table"
-        className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none hover:text-foreground hover:bg-foreground/[0.06] ${
+        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none hover:text-foreground hover:bg-foreground/[0.06] ${
           isInsideTable ? "text-foreground" : "text-muted-foreground"
         } ${
           isOpen ? "bg-foreground/10" : isInsideTable ? "bg-toolbar-active" : ""
         }`}
       >
-        <PhTable size={15} weight="regular" />
+        <PhTable size={22} weight="light" />
       </button>
 
       {isOpen &&
@@ -123,15 +123,15 @@ export function TableMenu({ editor }: TableMenuProps) {
                   Edit table
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <TableAction icon={<PhPlus size={13} weight="regular" />} label="Add row above" onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhPlus size={13} weight="regular" />} label="Add row below" onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhMinus size={13} weight="regular" />} label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<PhPlus size={13} weight="light" />} label="Add row above" onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhPlus size={13} weight="light" />} label="Add row below" onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhMinus size={13} weight="light" />} label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
                   <div className="h-px bg-border my-1" />
-                  <TableAction icon={<PhPlus size={13} weight="regular" />} label="Add column left" onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhPlus size={13} weight="regular" />} label="Add column right" onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhMinus size={13} weight="regular" />} label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<PhPlus size={13} weight="light" />} label="Add column left" onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhPlus size={13} weight="light" />} label="Add column right" onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhMinus size={13} weight="light" />} label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
                   <div className="h-px bg-border my-1" />
-                  <TableAction icon={<Trash size={13} weight="regular" />} label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<Trash size={13} weight="light" />} label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
                 </div>
               </>
             )}

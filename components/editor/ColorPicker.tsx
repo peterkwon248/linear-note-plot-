@@ -96,19 +96,19 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
         ref={buttonRef}
         onMouseDown={handleToggle}
         title={mode === "text" ? "Text color" : "Highlight"}
-        className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none relative hover:text-foreground hover:bg-foreground/[0.06] ${
+        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none relative hover:text-foreground hover:bg-foreground/[0.06] ${
           isActive ? "text-foreground" : "text-muted-foreground"
         } ${
           isOpen ? "bg-foreground/10" : isActive ? "bg-toolbar-active" : ""
         }`}
       >
         {mode === "text" ? (
-          <TextT size={15} weight="regular" />
+          <TextT size={22} weight="light" />
         ) : (
-          <HighlighterCircle size={15} weight="regular" />
+          <HighlighterCircle size={22} weight="light" />
         )}
         <div
-          className="absolute bottom-0.5 left-1.5 right-1.5 h-0.5 rounded-sm transition-colors duration-100"
+          className="absolute bottom-1 left-2 right-2 h-0.5 rounded-sm transition-colors duration-100"
           style={{ backgroundColor: activeColor || (mode === "text" ? "var(--muted-foreground)" : "transparent") }}
         />
       </button>
@@ -117,7 +117,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed -translate-x-1/2 p-2 rounded-[10px] bg-popover border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-[9999] w-[188px]"
+            className="fixed -translate-x-1/2 p-2 rounded-[10px] bg-popover border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-[9999] w-[300px]"
             style={{ left: `${pos.left}px`, bottom: `${pos.bottom}px` }}
           >
             <div className="flex items-center justify-between mb-2 px-0.5">
@@ -131,11 +131,11 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                 }}
                 className="w-[18px] h-[18px] rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 hover:bg-foreground/[0.08] hover:text-muted-foreground"
               >
-                <PhX size={12} weight="regular" />
+                <PhX size={12} weight="light" />
               </button>
             </div>
 
-            <div className="grid grid-cols-5 gap-1">
+            <div className="grid grid-cols-8 gap-1">
               {colors.map((color) => {
                 const isColorActive =
                   mode === "text"

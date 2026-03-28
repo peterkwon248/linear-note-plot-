@@ -40,6 +40,7 @@ import { WikiDisambig } from "@/components/editor/wiki-disambig"
 import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { shortRelative } from "@/lib/format-utils"
+import { EditorContextMenu } from "@/components/editor/editor-context-menu"
 
 interface NoteEditorProps {
   noteId?: string
@@ -230,13 +231,15 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         null
       ) : (
         /* Normal note editor */
-        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
-          {/* Infobox moved to WikiArticle view — disabled in note editor */}
-          <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
-            <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
-            <BacklinksFooter noteId={note.id} />
+        <EditorContextMenu editor={editorInstance}>
+          <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
+            {/* Infobox moved to WikiArticle view — disabled in note editor */}
+            <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
+              <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
+              <BacklinksFooter noteId={note.id} />
+            </div>
           </div>
-        </div>
+        </EditorContextMenu>
       )}
       </div>
 

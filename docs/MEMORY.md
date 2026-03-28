@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v63)
+- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v64)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -25,7 +25,7 @@
 - **Body separation**: Note content in separate IDB (`plot-note-bodies`), meta in Zustand persist
 - **Wiki block body separation**: Text block content in `plot-wiki-block-bodies` IDB, block metadata in `plot-wiki-block-meta` IDB
 - **Workspace**: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
-- **Side Panel**: Unified `SmartSidePanel` (v51) — Context mode (NoteInspector) + Peek mode (SidePeek), app-level, resizable
+- **Side Panel**: Unified `SmartSidePanel` — 4-tab: Detail(메타데이터) + Connections(백링크/관계/추천) + Activity(Thread/Reflection) + Peek(미리보기). v64
 - **Wiki sectionIndex**: `WikiSectionIndex[]` in Zustand for lightweight TOC, full blocks in IDB for scalability (v53)
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
 - **TipTap Editor**: Shared config factory (`components/editor/core/shared-editor-config.ts`) with 4-tier system (base/note/wiki/template). Title 노드 통합 (`core/title-node.ts`) — 제목과 본문이 하나의 TipTap 문서. 25+ extensions.
@@ -43,7 +43,10 @@
 - **ChipDropdown**: `components/ui/chip-dropdown.tsx` — 제네릭 드롭다운, DisplayPanel에서 추출
 - **Graph Filter Adapter**: `lib/view-engine/graph-filter-adapter.ts` — OntologyFilters ↔ FilterRule[] 변환
 - **Discover Engine**: `lib/search/discover-engine.ts` — keyword+tag+backlink+folder 4신호 로컬 추천
-- **SidePanel 3탭**: Detail(메타데이터) + Discover(추천) + Peek(미리보기), SidePanelMode v63
+- **SidePanel 4탭**: Detail(메타데이터) + Connections(백링크/관계/추천) + Activity(Thread/Reflection) + Peek(미리보기), SidePanelMode v64
+- **Toolbar Config**: `lib/editor/toolbar-config.ts` — 42 item IDs, normalizeLayout(), Arrange Mode (dnd-kit drag-and-drop). Settings store에 persist
+- **Toolbar Primitives**: `components/editor/toolbar/toolbar-primitives.tsx` — ToolbarButton(40×40), ToolbarDivider, ToolbarGroup, ToolbarSpacer. Phosphor weight="light"
+- **Editor Colors**: `lib/editor-colors.ts` — 16 TEXT_COLORS + 16 HIGHLIGHT_COLORS, 8-column grid
 
 ## Store Slices (20 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
@@ -120,6 +123,19 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #121**: Board UX — Trash→Tools, 드래그 선택, 그룹핑 컬럼 숨김, Tags 폐기, 필터 Status shape 아이콘, Mixed status 표시
 - **PR #122**: Phase 7 즉시 개선 + 에디터 통합 프로젝트 플랜 수립
 - **PR #123**: 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory: base/note/wiki/template) + Title 노드 통합 (제목/본문 하나의 TipTap 에디터, title-node.ts 커스텀 노드, NoteEditorAdapter 변환 로직, note-editor.tsx title input 제거)
+- **PR #125**: Phase 1C+ — Editor Toolbar Redesign + Side Panel 3→4탭 + Arrange Mode
+  - Side Panel: Discover→Connections+Activity 분리. 4-tab (Detail/Connections/Activity/Peek). v64 migration
+  - New: side-panel-connections.tsx (Backlinks/Relations/Discover), side-panel-activity.tsx (Thread/Reflection/History)
+  - side-panel-context.tsx 경량화 (~940줄→~400줄): Status/Workflow/Dates/Folder/Label/Tags만 유지
+  - Toolbar: h-14 bar, w-10 buttons, size={22} icons, Phosphor weight="light" (UpNote 스타일)
+  - 42 toolbar items: text format, lists, alignment, block inserts, math, settings toggles
+  - Arrange Mode: dnd-kit drag-and-drop 모달, 아이템 순서변경/숨기기, settings store persist
+  - toolbar-config.ts: 42 IDs, labels, normalizeLayout(), DEFAULT_TOOLBAR_LAYOUT
+  - toolbar-primitives.tsx: ToolbarButton/Divider/Group/Spacer 공유 컴포넌트
+  - Color palette: 10→16색, 8-column grid layout
+  - Custom commands: indent/outdent, removeFormatting, moveListItem up/down
+  - InsertMenu: inline style→Tailwind, label 수정, 새 항목 추가
+  - 10+ new packages: @tiptap/extension-subscript, superscript 등
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

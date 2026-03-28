@@ -3,11 +3,13 @@
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { SidePanelDetail } from "./side-panel-detail"
-import { SidePanelDiscover } from "./side-panel-discover"
+import { SidePanelConnections } from "./side-panel-connections"
+import { SidePanelActivity } from "./side-panel-activity"
 import { SidePanelPeek } from "./side-panel-peek"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
-import { Compass } from "@phosphor-icons/react/dist/ssr/Compass"
+import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
+import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import type { SidePanelMode } from "@/lib/store/types"
 
@@ -21,7 +23,8 @@ export function SmartSidePanel() {
   if (!sidePanelOpen) return null
 
   const showDetail = sidePanelMode === 'detail'
-  const showDiscover = sidePanelMode === 'discover'
+  const showConnections = sidePanelMode === 'connections'
+  const showActivity = sidePanelMode === 'activity'
   const showPeek = sidePanelMode === 'peek' && !!sidePanelPeekNoteId
 
   const hasPeekNote = !!sidePanelPeekNoteId
@@ -51,13 +54,21 @@ export function SmartSidePanel() {
             <SidebarSimple className="inline mr-1" size={14} weight="regular" />
             Detail
           </button>
-          {/* Discover tab */}
+          {/* Connections tab */}
           <button
-            onClick={() => setMode('discover')}
-            className={tabClass(sidePanelMode === 'discover')}
+            onClick={() => setMode('connections')}
+            className={tabClass(sidePanelMode === 'connections')}
           >
-            <Compass className="inline mr-1" size={14} weight="regular" />
-            Discover
+            <Graph className="inline mr-1" size={14} weight="regular" />
+            Connections
+          </button>
+          {/* Activity tab */}
+          <button
+            onClick={() => setMode('activity')}
+            className={tabClass(sidePanelMode === 'activity')}
+          >
+            <ClockCounterClockwise className="inline mr-1" size={14} weight="regular" />
+            Activity
           </button>
           {/* Peek tab - only when peek note exists */}
           {hasPeekNote && (
@@ -87,7 +98,8 @@ export function SmartSidePanel() {
 
       {/* Content */}
       {showDetail && <SidePanelDetail />}
-      {showDiscover && <SidePanelDiscover />}
+      {showConnections && <SidePanelConnections />}
+      {showActivity && <SidePanelActivity />}
       {showPeek && <SidePanelPeek />}
     </aside>
   )

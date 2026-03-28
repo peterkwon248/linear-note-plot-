@@ -693,5 +693,10 @@ export function migrate(persistedState: unknown): PlotState {
     }))
   }
 
+  // v64: Rename sidePanelMode 'discover' → 'connections'
+  if (state.sidePanelMode === 'discover') {
+    state.sidePanelMode = 'connections'
+  }
+
   return state as unknown as PlotState
 }

@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { DEFAULT_TOOLBAR_LAYOUT, type ToolbarLayout } from "./editor/toolbar-config"
 
 /* ── Transient UI state (not persisted) ── */
 
@@ -34,6 +35,11 @@ export interface SettingsState {
   startView: "all" | "inbox" | "pinned"
   confirmDelete: boolean
   viewMode: "list" | "board"
+
+  // Toolbar
+  toolbarLayout: ToolbarLayout
+  setToolbarLayout: (layout: ToolbarLayout) => void
+  resetToolbarLayout: () => void
 
   // Actions
   setSpellcheck: (v: boolean) => void
@@ -72,6 +78,11 @@ export const useSettingsStore = create<SettingsState>()(
       startView: "inbox",
       confirmDelete: true,
       viewMode: "list",
+
+      // Toolbar
+      toolbarLayout: DEFAULT_TOOLBAR_LAYOUT,
+      setToolbarLayout: (layout) => set({ toolbarLayout: layout }),
+      resetToolbarLayout: () => set({ toolbarLayout: DEFAULT_TOOLBAR_LAYOUT }),
 
       // Actions
       setSpellcheck: (v) => set({ spellcheck: v }),

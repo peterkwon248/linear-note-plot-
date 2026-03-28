@@ -6,6 +6,7 @@ import { Editor, useEditorState } from "@tiptap/react"
 import { ColorPicker } from "./ColorPicker"
 import { TableMenu } from "./TableMenu"
 import { InsertMenu } from "@/components/insert-menu"
+import { ToolbarButton, ToolbarDivider, ToolbarGroup, ToolbarSpacer } from "@/components/editor/toolbar/toolbar-primitives"
 import { TextB } from "@phosphor-icons/react/dist/ssr/TextB"
 import { TextItalic } from "@phosphor-icons/react/dist/ssr/TextItalic"
 import { TextUnderline as UnderlineIcon } from "@phosphor-icons/react/dist/ssr/TextUnderline"
@@ -29,48 +30,44 @@ import { TextSuperscript } from "@phosphor-icons/react/dist/ssr/TextSuperscript"
 import { TextSubscript } from "@phosphor-icons/react/dist/ssr/TextSubscript"
 import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
 import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
+import { TextIndent } from "@phosphor-icons/react/dist/ssr/TextIndent"
+import { TextOutdent } from "@phosphor-icons/react/dist/ssr/TextOutdent"
+import { Eraser } from "@phosphor-icons/react/dist/ssr/Eraser"
+import { ArrowLineUp } from "@phosphor-icons/react/dist/ssr/ArrowLineUp"
+import { ArrowLineDown } from "@phosphor-icons/react/dist/ssr/ArrowLineDown"
+import {
+  indentCommand,
+  outdentCommand,
+  removeFormattingCommand,
+  moveListItemUp,
+  moveListItemDown,
+} from "./commands/custom-commands"
+import type { EditorTier } from "./core/shared-editor-config"
+import { useSettingsStore } from "@/lib/settings-store"
+import { normalizeLayout, type ToolbarItemId } from "@/lib/editor/toolbar-config"
+import { ArrangeMode } from "./toolbar/arrange-mode"
+import { GearSix } from "@phosphor-icons/react/dist/ssr/GearSix"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
+import { YoutubeLogo } from "@phosphor-icons/react/dist/ssr/YoutubeLogo"
+import { SpeakerHigh } from "@phosphor-icons/react/dist/ssr/SpeakerHigh"
+import { TwitchLogo } from "@phosphor-icons/react/dist/ssr/TwitchLogo"
+import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
+import { CalendarDots } from "@phosphor-icons/react/dist/ssr/CalendarDots"
+import { KeyReturn } from "@phosphor-icons/react/dist/ssr/KeyReturn"
+import { Crosshair } from "@phosphor-icons/react/dist/ssr/Crosshair"
+import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
+import { Paragraph } from "@phosphor-icons/react/dist/ssr/Paragraph"
+import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
+import { format } from "date-fns"
+import { usePlotStore } from "@/lib/store"
 
 interface FixedToolbarProps {
   editor: Editor | null
   position?: 'top' | 'bottom'
   onTogglePosition?: () => void
   noteId?: string
-}
-
-function ToolbarButton({
-  onClick,
-  isActive = false,
-  disabled = false,
-  title,
-  children,
-}: {
-  onClick: () => void
-  isActive?: boolean
-  disabled?: boolean
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={() => { if (!disabled) onClick() }}
-      disabled={disabled}
-      title={title}
-      className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 border-0 outline-none transition-colors duration-75 ${
-        disabled ? "cursor-not-allowed opacity-40 text-muted-foreground" :
-        isActive ? "cursor-pointer text-foreground bg-toolbar-active" :
-        "cursor-pointer text-muted-foreground hover:text-foreground hover:bg-hover-bg"
-      }`}
-    >
-      {children}
-    </button>
-  )
-}
-
-function ToolbarDivider() {
-  return (
-    <div className="w-px h-7 bg-border-subtle mx-1.5 shrink-0" />
-  )
+  tier?: EditorTier
 }
 
 function HeadingDropdown({ editor }: { editor: Editor }) {
@@ -162,12 +159,12 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
       <button
         ref={buttonRef}
         onMouseDown={handleToggle}
-        title="TextH"
-        className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 cursor-pointer border-0 outline-none transition-colors duration-75 ${
+        title="Heading"
+        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 cursor-pointer border-0 outline-none transition-colors duration-75 ${
           isAnyHeadingActive ? "text-foreground bg-toolbar-active" : "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
         }`}
       >
-        <TextH size={24} weight="regular" />
+        <TextH size={22} weight="light" />
       </button>
 
       {isOpen &&
@@ -204,7 +201,24 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
   )
 }
 
-export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, noteId }: FixedToolbarProps) {
+export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, noteId, tier = 'note' }: FixedToolbarProps) {
+  // TODO: Hide/show buttons based on tier (wiki = minimal set, template = base + variable)
+  const toolbarLayout = useSettingsStore((s) => s.toolbarLayout)
+  const spellcheck = useSettingsStore((s) => s.spellcheck)
+  const setSpellcheck = useSettingsStore((s) => s.setSpellcheck)
+  const currentLineHighlight = useSettingsStore((s) => s.currentLineHighlight)
+  const setCurrentLineHighlight = useSettingsStore((s) => s.setCurrentLineHighlight)
+  const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
+  const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
+  const restoreSidebar = usePlotStore((s) => s.restoreSidebar)
+  const [arrangeOpen, setArrangeOpen] = useState(false)
+
+  const normalizedLayout = normalizeLayout(toolbarLayout)
+  const visibleSet = new Set(
+    normalizedLayout.items.filter((i) => i.visible).map((i) => i.id)
+  )
+  const isVisible = (id: ToolbarItemId) => visibleSet.has(id)
+
   const editorState = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -250,98 +264,296 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
 
   return (
     <div
-      className={`shrink-0 sticky bottom-0 z-10 h-14 flex items-center gap-0.5 px-4 bg-background overflow-x-auto overflow-y-hidden min-w-0 ${
+      className={`shrink-0 sticky bottom-0 z-10 h-14 flex items-center gap-0.5 px-3 bg-background overflow-x-auto overflow-y-hidden min-w-0 ${
         position === 'top' ? 'border-b border-border' : 'border-t border-border'
       }`}
     >
-      <InsertMenu editor={editor} noteId={noteId} />
+      {isVisible("insert") && (
+        <ToolbarGroup>
+          <InsertMenu editor={editor} noteId={noteId} />
+        </ToolbarGroup>
+      )}
+      {isVisible("insert") && isVisible("heading") && <ToolbarDivider />}
+      {isVisible("heading") && (
+        <ToolbarGroup>
+          <HeadingDropdown editor={editor} />
+        </ToolbarGroup>
+      )}
       <ToolbarDivider />
-      <HeadingDropdown editor={editor} />
+      <ToolbarGroup>
+        {isVisible("bold") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
+            <TextB size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("italic") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
+            <TextItalic size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("underline") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
+            <UnderlineIcon size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("strike") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="Strikethrough">
+            <TextStrikethrough size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("superscript") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleSuperscript().run()} isActive={editorState.superscript} title="Superscript">
+            <TextSuperscript size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("subscript") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleSubscript().run()} isActive={editorState.subscript} title="Subscript">
+            <TextSubscript size={22} weight="light" />
+          </ToolbarButton>
+        )}
+      </ToolbarGroup>
       <ToolbarDivider />
-
-      <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
-        <TextB size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
-        <TextItalic size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
-        <UnderlineIcon size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="TextStrikethrough">
-        <TextStrikethrough size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleSuperscript().run()} isActive={editorState.superscript} title="TextSuperscript">
-        <TextSuperscript size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleSubscript().run()} isActive={editorState.subscript} title="TextSubscript">
-        <TextSubscript size={24} weight="regular" />
-      </ToolbarButton>
-
+      <ToolbarGroup>
+        {isVisible("textColor") && <ColorPicker editor={editor} mode="text" />}
+        {isVisible("highlight") && <ColorPicker editor={editor} mode="highlight" />}
+      </ToolbarGroup>
       <ToolbarDivider />
-
-      <ColorPicker editor={editor} mode="text" />
-      <ColorPicker editor={editor} mode="highlight" />
-
+      <ToolbarGroup>
+        {isVisible("bulletList") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editorState.bulletList} title="Bullet list">
+            <ListBullets size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("orderedList") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editorState.orderedList} title="Numbered list">
+            <ListNumbers size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("taskList") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editorState.taskList} title="Checklist">
+            <CheckSquare size={22} weight="light" />
+          </ToolbarButton>
+        )}
+      </ToolbarGroup>
       <ToolbarDivider />
-
-      <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editorState.bulletList} title="Bullet list">
-        <ListBullets size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editorState.orderedList} title="Numbered list">
-        <ListNumbers size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editorState.taskList} title="Checklist">
-        <CheckSquare size={24} weight="regular" />
-      </ToolbarButton>
-
+      <ToolbarGroup>
+        {isVisible("indent") && (
+          <ToolbarButton onClick={() => indentCommand(editor)} title="Indent (Tab)">
+            <TextIndent size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("outdent") && (
+          <ToolbarButton onClick={() => outdentCommand(editor)} title="Outdent (Shift+Tab)">
+            <TextOutdent size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("moveUp") && (
+          <ToolbarButton onClick={() => moveListItemUp(editor)} title="Move list item up (Alt+Shift+Up)">
+            <ArrowLineUp size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("moveDown") && (
+          <ToolbarButton onClick={() => moveListItemDown(editor)} title="Move list item down (Alt+Shift+Down)">
+            <ArrowLineDown size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("removeFormat") && (
+          <ToolbarButton onClick={() => removeFormattingCommand(editor)} title="Remove formatting">
+            <Eraser size={22} weight="light" />
+          </ToolbarButton>
+        )}
+      </ToolbarGroup>
       <ToolbarDivider />
-
-      <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editorState.blockquote} title="Blockquote">
-        <Quotes size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editorState.codeBlock} title="PhCode block">
-        <CodeBlock size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider">
-        <PhMinus size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
-        {editorState.link ? <LinkBreak size={24} weight="regular" /> : <PhLink size={24} weight="regular" />}
-      </ToolbarButton>
-      <TableMenu editor={editor} />
-
+      <ToolbarGroup>
+        {isVisible("blockquote") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editorState.blockquote} title="Blockquote">
+            <Quotes size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("codeBlock") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editorState.codeBlock} title="Code Block">
+            <CodeBlock size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("divider") && (
+          <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider">
+            <PhMinus size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("link") && (
+          <ToolbarButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
+            {editorState.link ? <LinkBreak size={22} weight="light" /> : <PhLink size={22} weight="light" />}
+          </ToolbarButton>
+        )}
+        {isVisible("table") && <TableMenu editor={editor} />}
+      </ToolbarGroup>
       <ToolbarDivider />
-
-      <ToolbarButton onClick={() => handleAlign("left")} isActive={editorState.alignLeft} title="Align left">
-        <TextAlignLeft size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => handleAlign("center")} isActive={editorState.alignCenter} title="Align center">
-        <TextAlignCenter size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => handleAlign("right")} isActive={editorState.alignRight} title="Align right">
-        <TextAlignRight size={24} weight="regular" />
-      </ToolbarButton>
-
-      <div className="flex-1" />
-
-      <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editorState.canUndo} title="Undo (Ctrl+Z)">
-        <ArrowCounterClockwise size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editorState.canRedo} title="Redo (Ctrl+Shift+Z)">
-        <ArrowClockwise size={24} weight="regular" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code (Ctrl+E)">
-        <PhCode size={24} weight="regular" />
+      <ToolbarGroup>
+        {isVisible("alignLeft") && (
+          <ToolbarButton onClick={() => handleAlign("left")} isActive={editorState.alignLeft} title="Align left">
+            <TextAlignLeft size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("alignCenter") && (
+          <ToolbarButton onClick={() => handleAlign("center")} isActive={editorState.alignCenter} title="Align center">
+            <TextAlignCenter size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("alignRight") && (
+          <ToolbarButton onClick={() => handleAlign("right")} isActive={editorState.alignRight} title="Align right">
+            <TextAlignRight size={22} weight="light" />
+          </ToolbarButton>
+        )}
+      </ToolbarGroup>
+      {/* Block Insert Group */}
+      {(isVisible("toggle") || isVisible("image") || isVisible("youtube") || isVisible("audio") || isVisible("twitch")) && <ToolbarDivider />}
+      <ToolbarGroup>
+        {isVisible("toggle") && (
+          <ToolbarButton onClick={() => editor.chain().focus().setDetails().run()} title="Toggle (collapsible)">
+            <CaretRight size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("image") && (
+          <ToolbarButton onClick={() => {
+            const input = document.createElement('input')
+            input.type = 'file'
+            input.accept = 'image/*'
+            input.onchange = (e) => {
+              const file = (e.target as HTMLInputElement).files?.[0]
+              if (!file) return
+              const reader = new FileReader()
+              reader.onload = () => {
+                editor.chain().focus().setImage({ src: reader.result as string }).run()
+              }
+              reader.readAsDataURL(file)
+            }
+            input.click()
+          }} title="Image">
+            <PhImage size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("youtube") && (
+          <ToolbarButton onClick={() => {
+            const url = window.prompt("Enter YouTube URL:")
+            if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run()
+          }} title="YouTube">
+            <YoutubeLogo size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("audio") && (
+          <ToolbarButton onClick={() => {
+            const url = window.prompt("Enter audio file URL:")
+            if (url) editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
+          }} title="Audio">
+            <SpeakerHigh size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("twitch") && (
+          <ToolbarButton onClick={() => {
+            const url = window.prompt("Enter Twitch URL:")
+            if (url) editor.chain().focus().insertContent(`<iframe src="${url}" width="100%" height="400" allowfullscreen></iframe>`).run()
+          }} title="Twitch">
+            <TwitchLogo size={22} weight="light" />
+          </ToolbarButton>
+        )}
+      </ToolbarGroup>
+      {/* Math & Insert Group */}
+      {(isVisible("inlineMath") || isVisible("blockMath") || isVisible("date") || isVisible("hardBreak")) && <ToolbarDivider />}
+      <ToolbarGroup>
+        {isVisible("inlineMath") && (
+          <ToolbarButton onClick={() => editor.chain().focus().insertContent("$E = mc^2$").run()} title="Inline Math">
+            <MathOperations size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("blockMath") && (
+          <ToolbarButton onClick={() => editor.chain().focus().insertContent("$$\n\\sum_{i=1}^{n} x_i\n$$").run()} title="Block Math">
+            <MathOperations size={22} weight="regular" />
+          </ToolbarButton>
+        )}
+        {isVisible("date") && (
+          <ToolbarButton onClick={() => {
+            editor.chain().focus().insertContent(format(new Date(), "yyyy-MM-dd")).run()
+          }} title="Insert Date">
+            <CalendarDots size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("hardBreak") && (
+          <ToolbarButton onClick={() => editor.chain().focus().setHardBreak().run()} title="Line Break">
+            <KeyReturn size={22} weight="light" />
+          </ToolbarButton>
+        )}
+      </ToolbarGroup>
+      <ToolbarSpacer />
+      {/* Settings Toggle Group */}
+      {(isVisible("focusMode") || isVisible("spellcheck") || isVisible("currentLineHighlight") || isVisible("invisibleChars")) && (
+        <>
+          <ToolbarGroup>
+            {isVisible("focusMode") && (
+              <ToolbarButton onClick={() => {
+                if (sidebarCollapsed) restoreSidebar()
+                else setSidebarCollapsed(true)
+              }} isActive={sidebarCollapsed} title="Focus Mode">
+                <Crosshair size={22} weight="light" />
+              </ToolbarButton>
+            )}
+            {isVisible("spellcheck") && (
+              <ToolbarButton onClick={() => setSpellcheck(!spellcheck)} isActive={spellcheck} title="Spellcheck">
+                <TextAa size={22} weight="light" />
+              </ToolbarButton>
+            )}
+            {isVisible("currentLineHighlight") && (
+              <ToolbarButton onClick={() => setCurrentLineHighlight(!currentLineHighlight)} isActive={currentLineHighlight} title="Line Highlight">
+                <Paragraph size={22} weight="light" />
+              </ToolbarButton>
+            )}
+            {isVisible("invisibleChars") && (
+              <ToolbarButton onClick={() => {
+                try {
+                  editor.chain().focus().run()
+                  const ext = editor.extensionManager.extensions.find((e: { name: string }) => e.name === 'invisibleCharacters')
+                  if (ext) {
+                    const currentVisible = (ext.options as Record<string, unknown>).visible ?? false
+                    ;(ext.options as Record<string, unknown>).visible = !currentVisible
+                    editor.view.dispatch(editor.state.tr)
+                  }
+                } catch { /* noop */ }
+              }} title="Invisible Characters">
+                <Eye size={22} weight="light" />
+              </ToolbarButton>
+            )}
+          </ToolbarGroup>
+          <ToolbarDivider />
+        </>
+      )}
+      <ToolbarGroup>
+        {isVisible("undo") && (
+          <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editorState.canUndo} title="Undo (Ctrl+Z)">
+            <ArrowCounterClockwise size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("redo") && (
+          <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editorState.canRedo} title="Redo (Ctrl+Shift+Z)">
+            <ArrowClockwise size={22} weight="light" />
+          </ToolbarButton>
+        )}
+        {isVisible("inlineCode") && (
+          <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code (Ctrl+E)">
+            <PhCode size={22} weight="light" />
+          </ToolbarButton>
+        )}
+      </ToolbarGroup>
+      <ToolbarDivider />
+      <ToolbarButton onClick={() => setArrangeOpen(true)} title="Arrange toolbar">
+        <GearSix size={22} weight="light" />
       </ToolbarButton>
       {onTogglePosition && (
         <>
-          <ToolbarDivider />
           <ToolbarButton onClick={onTogglePosition} title={position === 'bottom' ? "Move toolbar to top" : "Move toolbar to bottom"}>
-            {position === 'bottom' ? <ArrowUp size={24} weight="regular" /> : <ArrowDown size={24} weight="regular" />}
+            {position === 'bottom' ? <ArrowUp size={22} weight="light" /> : <ArrowDown size={22} weight="light" />}
           </ToolbarButton>
         </>
       )}
+      <ArrangeMode open={arrangeOpen} onClose={() => setArrangeOpen(false)} />
     </div>
   )
 }

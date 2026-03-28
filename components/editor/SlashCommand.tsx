@@ -59,7 +59,7 @@ const COMMANDS: CommandItem[] = [
     },
   },
   {
-    title: "Bullet ListBullets",
+    title: "Bullet List",
     description: "Unordered list",
     icon: ListBullets,
     command: ({ editor, range }) => {
@@ -67,7 +67,7 @@ const COMMANDS: CommandItem[] = [
     },
   },
   {
-    title: "Numbered ListBullets",
+    title: "Numbered List",
     description: "Ordered list",
     icon: ListNumbers,
     command: ({ editor, range }) => {
@@ -83,7 +83,7 @@ const COMMANDS: CommandItem[] = [
     },
   },
   {
-    title: "Quotes",
+    title: "Blockquote",
     description: "Blockquote",
     icon: Quotes,
     command: ({ editor, range }) => {
@@ -91,8 +91,8 @@ const COMMANDS: CommandItem[] = [
     },
   },
   {
-    title: "PhCode Block",
-    description: "PhCode with syntax highlighting",
+    title: "Code Block",
+    description: "Code with syntax highlighting",
     icon: PhCode,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run()
@@ -115,7 +115,7 @@ const COMMANDS: CommandItem[] = [
     },
   },
   {
-    title: "PhTable",
+    title: "Table",
     description: "3×3 table with header",
     icon: PhTable,
     command: ({ editor, range }) => {
@@ -190,16 +190,7 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
     return (
       <div
         ref={containerRef}
-        style={{
-          minWidth: "220px",
-          maxHeight: "320px",
-          overflowY: "auto",
-          backgroundColor: "var(--popover)",
-          border: "1px solid var(--border)",
-          borderRadius: "10px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-          padding: "4px",
-        }}
+        className="min-w-[220px] max-h-[320px] overflow-y-auto bg-[var(--popover)] border border-[var(--border)] rounded-[10px] shadow-[0_8px_32px_rgba(0,0,0,0.2)] p-1"
       >
         {items.map((item, index) => {
           const Icon = item.icon
@@ -208,47 +199,21 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
               key={item.title}
               onClick={() => selectItem(index)}
               onMouseEnter={() => setSelectedIndex(index)}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "8px 10px",
-                borderRadius: "7px",
-                border: "none",
-                outline: "none",
-                cursor: "pointer",
-                textAlign: "left",
-                backgroundColor:
-                  index === selectedIndex
-                    ? "rgba(94, 106, 210, 0.12)"
-                    : "transparent",
-                color:
-                  index === selectedIndex
-                    ? "var(--foreground)"
-                    : "var(--muted-foreground)",
-                transition: "background 0.1s",
-              }}
+              className={[
+                "w-full flex items-center gap-[10px] px-[10px] py-2 rounded-[7px] border-none outline-none cursor-pointer text-left transition-[background] duration-100",
+                index === selectedIndex
+                  ? "bg-[rgba(94,106,210,0.12)] text-[var(--foreground)]"
+                  : "bg-transparent text-[var(--muted-foreground)]",
+              ].join(" ")}
             >
-              <div
-                style={{
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "6px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "rgba(94, 106, 210, 0.08)",
-                  flexShrink: 0,
-                }}
-              >
+              <div className="w-7 h-7 rounded-[6px] flex items-center justify-center bg-[rgba(94,106,210,0.08)] shrink-0">
                 <Icon size={15} />
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="text-note" style={{ fontWeight: 500, lineHeight: 1.3 }}>
+              <div className="flex-1 min-w-0">
+                <div className="text-note font-medium leading-[1.3]">
                   {item.title}
                 </div>
-                <div className="text-2xs" style={{ opacity: 0.6, lineHeight: 1.3, marginTop: "1px" }}>
+                <div className="text-2xs opacity-60 leading-[1.3] mt-px">
                   {item.description}
                 </div>
               </div>

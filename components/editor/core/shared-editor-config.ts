@@ -36,6 +36,12 @@ import { Plugin, PluginKey } from "@tiptap/pm/state"
 
 import { TitleNode } from "./title-node"
 import { ResizableImage } from "../ResizableImage"
+import {
+  indentCommand,
+  outdentCommand,
+  moveListItemUp,
+  moveListItemDown,
+} from "../commands/custom-commands"
 
 // Custom document node that expects title as first child
 const TitleDocument = Node.create({
@@ -49,6 +55,14 @@ import { WikilinkSuggestion } from "../WikilinkSuggestion"
 import { WikilinkDecorationExtension } from "../WikilinkDecoration"
 import { SlashCommandExtension } from "../SlashCommand"
 import { WikiQuoteExtension } from "../WikiQuoteExtension"
+import { Mention } from "@tiptap/extension-mention"
+import { Emoji } from "@tiptap/extension-emoji"
+import { InvisibleCharacters } from "@tiptap/extension-invisible-characters"
+import { Audio } from "@tiptap/extension-audio"
+import { Twitch } from "@tiptap/extension-twitch"
+import { UniqueID } from "@tiptap/extension-unique-id"
+import { FileHandler } from "@tiptap/extension-file-handler"
+import { TableOfContents } from "@tiptap/extension-table-of-contents"
 
 // ── Lowlight (syntax highlighting for code blocks) ──────────────────
 const lowlight = createLowlight(common)
@@ -167,7 +181,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     Underline,
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Color,
-    TextStyle,
+    TextStyle, // also handles fontSize via style attribute
     Superscript,
     Subscript,
     Table.configure({ resizable: true }),
@@ -185,6 +199,15 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     DetailsSummary,
     DetailsContent,
     Mathematics,
+    // -- New extensions (Phase 1C+) --
+    Audio,
+    Twitch,
+    UniqueID.configure({
+      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule'],
+    }),
+    InvisibleCharacters.configure({
+      visible: false, // disabled by default, toggled via toolbar
+    }),
   ] as Extension[]
 }
 
@@ -224,6 +247,46 @@ export function createEditorExtensions(
         SlashCommandExtension as Extension,
         WikiQuoteExtension as Extension,
       )
+      noteExtensions.push(
+        Mention.configure({
+          HTMLAttributes: { class: 'mention' },
+          suggestion: {
+            // TODO: Wire up mention suggestion popup (PR 3)
+          },
+        }) as Extension,
+        Emoji as Extension,
+      )
+      // File drag-and-drop handler
+      noteExtensions.push(
+        FileHandler.configure({
+          onDrop: () => {
+            // TODO: Wire up file drop to attachment system (PR 3)
+            return false
+          },
+          onPaste: () => {
+            // TODO: Wire up file paste to attachment system (PR 3)
+            return false
+          },
+        }) as Extension,
+      )
+      noteExtensions.push(
+        TableOfContents as Extension,
+      )
+      // DragHandle — added in PR 2 (requires React NodeView)
+
+      // Custom keyboard shortcuts (Indent/Outdent, Move List)
+      const CustomKeyboardShortcuts = Extension.create({
+        name: "customKeyboardShortcuts",
+        addKeyboardShortcuts() {
+          return {
+            Tab: ({ editor: e }) => indentCommand(e),
+            "Shift-Tab": ({ editor: e }) => outdentCommand(e),
+            "Alt-Shift-ArrowUp": ({ editor: e }) => moveListItemUp(e),
+            "Alt-Shift-ArrowDown": ({ editor: e }) => moveListItemDown(e),
+          }
+        },
+      })
+      noteExtensions.push(CustomKeyboardShortcuts as Extension)
 
       // Typewriter (requires scrollContainerRef + focusModeRef)
       if (options?.scrollContainerRef && options?.focusModeRef) {
