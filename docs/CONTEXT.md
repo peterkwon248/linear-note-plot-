@@ -87,14 +87,16 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 69. 에디터 통합 프로젝트 플랜 수립 — 7-Phase 계획
 70. 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory) + Title 노드 통합 (제목/본문 하나의 에디터)
 71. Phase 1C+ — Toolbar 리디자인 (h-14/w-10/22px/light, 42 items) + Side Panel 4탭 (Detail/Connections/Activity/Peek) + Arrange Mode (dnd-kit)
+72. Phase 1C+ 후속 — Connections Connected/Discover 모델, Relations UI 삭제, Peek wiki fallback, 브레드크럼/뱃지 폴리시
 
-## Three Axes — Core Design Philosophy
+## Two Axes — Core Design Philosophy
 
 ```
 Thread        → 깊이축  (지금 이 생각을 파고드는 실시간 전개)
 Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
-Relations     → 공간축  (다른 노트들과의 의미적 관계)
 ```
+
+> Relations(공간축)은 UI에서 삭제 — 백링크+위키링크+Discover 추천으로 충분. store slice는 유지.
 
 ## Key Design Decisions
 
@@ -124,6 +126,9 @@ Relations     → 공간축  (다른 노트들과의 의미적 관계)
 - **우측 사이드바 = Details 패널**: ViewDistributionPanel 삭제. 사이드바 버튼으로만 열림. previewNoteId로 리스트 행 클릭 시 내용 업데이트 (2026-03-26)
 - **Priority UI 완전 삭제**: 디테일 패널에서도 제거. Pin + Labels로 충분 (2026-03-26)
 - **sidePanelOpen persist 안 함**: 앱 시작 시 항상 닫힌 상태 (2026-03-26)
+- **Relations UI 삭제**: 백링크+위키링크+Discover 추천으로 공간축 충분. store slice 유지, UI만 제거 (2026-03-28)
+- **Connections = Connected+Discover 2섹션**: Connected(← inbound notes/wiki, → outbound notes/wiki, unlinked mentions) + Discover(추천 notes/wiki/tags). 방향 화살표로 직관적 구분 (2026-03-28)
+- **Peek wiki fallback**: wiki article ID → title match → note lookup. 위키 블록 직접 편집은 Phase 2A 스코프 (2026-03-28)
 - **카테고리 사이드바 → SmartSidePanel 통합**: 내장 280px 사이드바 제거, 글로벌 Details 패널에서 표시. Notes와 동일 패턴 (2026-03-26)
 - **카테고리 더블클릭 에디터**: 싱글클릭=선택(하이라이트만), 더블클릭=폼 에디터 split view. 이름/설명 인라인 편집, Parent 드롭다운, 서브카테고리 +New/Move here (2026-03-26)
 

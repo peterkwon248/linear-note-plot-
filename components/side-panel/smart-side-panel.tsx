@@ -70,10 +70,10 @@ export function SmartSidePanel() {
             <ClockCounterClockwise className="inline mr-1" size={14} weight="regular" />
             Activity
           </button>
-          {/* Peek tab - only when peek note exists */}
+          {/* Peek tab - only when peek note exists, click again to close */}
           {hasPeekNote && (
             <button
-              onClick={() => setMode('peek')}
+              onClick={() => sidePanelMode === 'peek' ? closeSidePeek() : setMode('peek')}
               className={tabClass(sidePanelMode === 'peek')}
             >
               <FileText className="inline mr-1" size={14} weight="regular" />
@@ -82,13 +82,7 @@ export function SmartSidePanel() {
           )}
         </div>
         <button
-          onClick={() => {
-            if (sidePanelMode === 'peek') {
-              closeSidePeek()
-            } else {
-              setSidePanelOpen(false)
-            }
-          }}
+          onClick={() => setSidePanelOpen(false)}
           className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           aria-label="Close panel"
         >

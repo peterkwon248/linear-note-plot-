@@ -5,12 +5,11 @@ import { usePlotStore } from "@/lib/store"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import { discoverRelated, type DiscoverResult } from "@/lib/search/discover-engine"
-import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
+import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
+import { Compass } from "@phosphor-icons/react/dist/ssr/Compass"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { IconWiki } from "@/components/plot-icons"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
@@ -49,6 +48,19 @@ function ConnectionSection({
       </button>
       {open && <div className="px-4 pb-3">{children}</div>}
     </div>
+  )
+}
+
+// ── Direction Arrow ──────────────────────────────────────
+
+function DirArrow({ dir }: { dir: "in" | "out" }) {
+  return (
+    <span className={cn(
+      "shrink-0 text-2xs font-mono leading-none",
+      dir === "in" ? "text-blue-400/60" : "text-emerald-400/60"
+    )}>
+      {dir === "in" ? "←" : "→"}
+    </span>
   )
 }
 
@@ -113,11 +125,17 @@ export function SidePanelConnections() {
   const wikiCollections = usePlotStore((s) => s.wikiCollections)
   const openSidePeek = usePlotStore((s) => s.openSidePeek)
   const addWikiLink = usePlotStore((s) => s.addWikiLink)
-  const addTagToNote = usePlotStore((s) => s.addTagToNote)
 
   const note = notes.find((n) => n.id === noteId) ?? null
 
-  // ── Inbound data ─────────────────────────────────────
+  // ── Wiki article IDs set ───────────────────────────────
+
+  const wikiArticleIds = useMemo(
+    () => new Set(wikiArticles.map((a) => a.id)),
+    [wikiArticles]
+  )
+
+  // ── CONNECTED: Inbound ─────────────────────────────────
 
   const backlinkNotes = useBacklinksFor(noteId)
 
@@ -126,19 +144,17 @@ export function SidePanelConnections() {
     [noteId, notes]
   )
 
-  // Wiki articles that reference this note (via blocks OR collections)
-  const wikiArticlesUsingNote = useMemo(() => {
+  // Wiki articles that reference this note
+  const inboundWiki = useMemo(() => {
     if (!noteId) return []
     const resultMap = new Map<string, string>()
 
-    // 1. Check wikiArticles blocks for note-ref
     for (const article of wikiArticles) {
       if (article.blocks?.some((b: { type: string; noteId?: string }) => b.type === "note-ref" && b.noteId === noteId)) {
         resultMap.set(article.id, article.title)
       }
     }
 
-    // 2. Check wikiCollections for collected notes
     for (const [wikiId, items] of Object.entries(wikiCollections ?? {})) {
       if (items.some((item) => item.type === "note" && item.sourceNoteId === noteId)) {
         if (!resultMap.has(wikiId)) {
@@ -149,30 +165,71 @@ export function SidePanelConnections() {
       }
     }
 
+    resultMap.delete(noteId!) // Exclude self
     return Array.from(resultMap, ([id, title]) => ({ id, title })).filter((a) => a.title)
   }, [noteId, wikiCollections, wikiArticles, notes])
 
-  // ── Outbound data ────────────────────────────────────
+  // ── CONNECTED: Outbound ────────────────────────────────
 
-  // Notes this note already links to via [[wikilinks]]
-  const linkedNotes = useMemo(() => {
-    if (!note) return []
-    const titleToNote = new Map(
-      notes.map((n) => [n.title.toLowerCase(), n])
-    )
-    return (note.linksOut ?? [])
-      .map((title) => titleToNote.get(title.toLowerCase()))
-      .filter(
-        (n): n is NonNullable<typeof n> => !!n && n.id !== noteId
-      )
-  }, [note, notes, noteId])
+  // Notes & wiki this note links to via [[wikilinks]] + note-ref blocks + collections
+  const outboundLinked = useMemo(() => {
+    if (!note) return [] as { id: string; title: string; isWiki: boolean }[]
+    const seen = new Set<string>()
+    const result: { id: string; title: string; isWiki: boolean }[] = []
 
-  // ── Discover engine (for suggestions) ────────────────
+    const titleToNote = new Map(notes.map((n) => [n.title.toLowerCase(), n]))
 
-  const wikiArticleIds = useMemo(
-    () => new Set(wikiArticles.map((a) => a.id)),
-    [wikiArticles]
+    // 1. [[wikilinks]]
+    for (const title of note.linksOut ?? []) {
+      const linked = titleToNote.get(title.toLowerCase())
+      if (linked && linked.id !== noteId && !seen.has(linked.id)) {
+        seen.add(linked.id)
+        result.push({ id: linked.id, title: linked.title, isWiki: wikiArticleIds.has(linked.id) })
+      }
+    }
+
+    // 2. Wiki note-ref blocks
+    const article = wikiArticles.find((a) => a.id === noteId)
+    if (article?.blocks) {
+      for (const block of article.blocks) {
+        if (block.type === "note-ref" && block.noteId && !seen.has(block.noteId)) {
+          const refNote = notes.find((n) => n.id === block.noteId)
+          if (refNote) {
+            seen.add(refNote.id)
+            result.push({ id: refNote.id, title: refNote.title, isWiki: wikiArticleIds.has(refNote.id) })
+          }
+        }
+      }
+    }
+
+    // 3. Wiki collections
+    const collections = wikiCollections?.[noteId!]
+    if (collections) {
+      for (const item of collections) {
+        if (item.type === "note" && item.sourceNoteId && !seen.has(item.sourceNoteId)) {
+          const colNote = notes.find((n) => n.id === item.sourceNoteId)
+          if (colNote) {
+            seen.add(colNote.id)
+            result.push({ id: colNote.id, title: colNote.title, isWiki: wikiArticleIds.has(colNote.id) })
+          }
+        }
+      }
+    }
+
+    return result
+  }, [note, notes, noteId, wikiArticles, wikiCollections, wikiArticleIds])
+
+  // Split outbound into notes vs wiki
+  const outboundNotes = useMemo(() => outboundLinked.filter((i) => !i.isWiki), [outboundLinked])
+  const outboundWiki = useMemo(() => outboundLinked.filter((i) => i.isWiki), [outboundLinked])
+
+  // All linked IDs (for filtering discover results)
+  const linkedIds = useMemo(
+    () => new Set(outboundLinked.map((i) => i.id)),
+    [outboundLinked]
   )
+
+  // ── DISCOVER engine ────────────────────────────────────
 
   const allNotesInput = useMemo(
     () =>
@@ -235,22 +292,22 @@ export function SidePanelConnections() {
     )
   }
 
-  // ── Derived counts ───────────────────────────────────
+  // ── Derived data ───────────────────────────────────────
 
-  const inboundCount =
-    backlinkNotes.length +
-    wikiArticlesUsingNote.length +
-    unlinkedMentions.length
-
-  const suggestedNotes = discoverResult?.relatedNotes ?? []
-  const suggestedWiki = discoverResult?.relatedWiki ?? []
+  const suggestedNotes = (discoverResult?.relatedNotes ?? []).filter((i) => !linkedIds.has(i.noteId))
+  const suggestedWiki = (discoverResult?.relatedWiki ?? []).filter((i) => !linkedIds.has(i.noteId))
   const suggestedTags = discoverResult?.suggestedTags ?? []
 
-  // Set of inbound note IDs for mutual link detection
-  const inboundIds = useMemo(() => new Set(backlinkNotes.map((n) => n.id)), [backlinkNotes])
+  const inboundIds = new Set(backlinkNotes.map((n) => n.id))
 
-  const outboundCount =
-    linkedNotes.length +
+  const connectedCount =
+    backlinkNotes.length +
+    inboundWiki.length +
+    outboundNotes.length +
+    outboundWiki.length +
+    unlinkedMentions.length
+
+  const discoverCount =
     suggestedNotes.length +
     suggestedWiki.length +
     suggestedTags.length
@@ -259,52 +316,98 @@ export function SidePanelConnections() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {/* ← Inbound */}
+      {/* Connected */}
       <ConnectionSection
-        title="Inbound"
-        icon={<ArrowDownLeft size={14} weight="regular" />}
-        count={inboundCount}
+        title="Connected"
+        icon={<LinkSimple size={14} weight="regular" />}
+        count={connectedCount}
         defaultOpen
       >
-        {inboundCount === 0 ? (
+        {connectedCount === 0 ? (
           <p className="text-sm text-muted-foreground px-2">
-            No inbound references yet
+            No connections yet
           </p>
         ) : (
           <div className="space-y-3">
-            {/* Backlinks */}
+            {/* ← Notes (backlinks) */}
             {backlinkNotes.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Backlinks</SubLabel>
+                <SubLabel>← Notes</SubLabel>
                 {backlinkNotes.map((n) => (
                   <button
                     key={n.id}
                     onClick={() => openSidePeek(n.id)}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
                   >
-                    <FileText
-                      className="shrink-0 text-muted-foreground/60"
-                      size={14}
-                      weight="regular"
-                    />
+                    <DirArrow dir="in" />
+                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
                     <span className="truncate">{n.title || "Untitled"}</span>
+                    {linkedIds.has(n.id) && (
+                      <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
+                    )}
                   </button>
                 ))}
               </div>
             )}
 
-            {/* Wiki Articles using this note */}
-            {wikiArticlesUsingNote.length > 0 && (
+            {/* ← Wiki */}
+            {inboundWiki.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Wiki Articles</SubLabel>
-                {wikiArticlesUsingNote.map((a) => (
+                <SubLabel>← Wiki</SubLabel>
+                {inboundWiki.map((a) => (
                   <button
                     key={a.id}
                     onClick={() => openSidePeek(a.id)}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
                   >
+                    <DirArrow dir="in" />
                     <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
                     <span className="truncate">{a.title}</span>
+                    {linkedIds.has(a.id) && (
+                      <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* → Notes */}
+            {outboundNotes.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>→ Notes</SubLabel>
+                {outboundNotes.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => openSidePeek(n.id)}
+                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                  >
+                    <DirArrow dir="out" />
+                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
+                    <span className="truncate">{n.title || "Untitled"}</span>
+                    {inboundIds.has(n.id) && (
+                      <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* → Wiki */}
+            {outboundWiki.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>→ Wiki</SubLabel>
+                {outboundWiki.map((w) => (
+                  <button
+                    key={w.id}
+                    onClick={() => openSidePeek(w.id)}
+                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                  >
+                    <DirArrow dir="out" />
+                    <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
+                    <span className="truncate">{w.title || "Untitled"}</span>
+                    {inboundIds.has(w.id) && (
+                      <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -319,11 +422,7 @@ export function SidePanelConnections() {
                     key={m.noteId + m.title}
                     className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-secondary/50 transition-colors"
                   >
-                    <Warning
-                      className="shrink-0 text-muted-foreground/60"
-                      size={14}
-                      weight="regular"
-                    />
+                    <Warning className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
                     <span className="truncate flex-1 text-sm text-muted-foreground">
                       {m.title}
                     </span>
@@ -344,47 +443,23 @@ export function SidePanelConnections() {
         )}
       </ConnectionSection>
 
-      {/* → Outbound */}
+      {/* Discover */}
       <ConnectionSection
-        title="Outbound"
-        icon={<ArrowUpRight size={14} weight="regular" />}
-        count={outboundCount}
+        title="Discover"
+        icon={<Compass size={14} weight="regular" />}
+        count={discoverCount}
         defaultOpen
       >
-        {outboundCount === 0 ? (
+        {discoverCount === 0 ? (
           <p className="text-sm text-muted-foreground px-2">
-            No outbound links or suggestions
+            No suggestions yet
           </p>
         ) : (
           <div className="space-y-3">
-            {/* Already Linked */}
-            {linkedNotes.length > 0 && (
-              <div className="space-y-0.5">
-                <SubLabel>Linked</SubLabel>
-                {linkedNotes.map((n) => (
-                  <button
-                    key={n.id}
-                    onClick={() => openSidePeek(n.id)}
-                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-                  >
-                    <PhLink
-                      className="shrink-0 text-muted-foreground/60"
-                      size={14}
-                      weight="regular"
-                    />
-                    <span className="truncate">{n.title || "Untitled"}</span>
-                    {inboundIds.has(n.id) && (
-                      <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Suggested Notes */}
+            {/* Notes */}
             {suggestedNotes.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Suggested Notes</SubLabel>
+                <SubLabel>Notes</SubLabel>
                 {suggestedNotes.map((item) => {
                   const sNote = notes.find((n) => n.id === item.noteId)
                   if (!sNote) return null
@@ -393,20 +468,13 @@ export function SidePanelConnections() {
                       key={item.noteId}
                       className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-secondary/50 transition-colors"
                     >
-                      <FileText
-                        className="shrink-0 text-muted-foreground/60"
-                        size={14}
-                        weight="regular"
-                      />
+                      <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
                       <button
                         onClick={() => openSidePeek(item.noteId)}
                         className="truncate flex-1 text-left text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {sNote.title || "Untitled"}
                       </button>
-                      {inboundIds.has(item.noteId) && (
-                        <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
-                      )}
                       <span className="text-2xs text-muted-foreground/40 shrink-0 tabular-nums">
                         {item.score.toFixed(1)}
                       </span>
@@ -422,10 +490,10 @@ export function SidePanelConnections() {
               </div>
             )}
 
-            {/* Suggested Wiki */}
+            {/* Wiki */}
             {suggestedWiki.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Suggested Wiki</SubLabel>
+                <SubLabel>Wiki</SubLabel>
                 {suggestedWiki.map((item) => {
                   const article = wikiArticles.find((a) => a.id === item.noteId)
                   const wNote = notes.find((n) => n.id === item.noteId)
@@ -443,9 +511,6 @@ export function SidePanelConnections() {
                       >
                         {title}
                       </button>
-                      {inboundIds.has(item.noteId) && (
-                        <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
-                      )}
                       <span className="text-2xs text-muted-foreground/40 shrink-0 tabular-nums">
                         {item.score.toFixed(1)}
                       </span>
@@ -461,10 +526,10 @@ export function SidePanelConnections() {
               </div>
             )}
 
-            {/* Suggested Tags */}
+            {/* Tags */}
             {suggestedTags.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Suggested Tags</SubLabel>
+                <SubLabel>Tags</SubLabel>
                 <div className="flex flex-col gap-1.5 px-2">
                   {suggestedTags.map((tag) => (
                     <SuggestedTagChip

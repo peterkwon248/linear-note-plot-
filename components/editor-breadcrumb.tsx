@@ -49,7 +49,7 @@ export function EditorBreadcrumb({ note, onClose }: EditorBreadcrumbProps) {
       {/* Space crumb */}
       <button
         onClick={(e) => { e.stopPropagation(); navigateToSpace() }}
-        className="shrink-0 text-base text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+        className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
       >
         {SPACE_LABELS[activeSpace]}
       </button>
@@ -57,10 +57,10 @@ export function EditorBreadcrumb({ note, onClose }: EditorBreadcrumbProps) {
       {/* Folder crumb (optional) */}
       {folder && (
         <>
-          <IconChevronRight size={14} className="shrink-0 text-muted-foreground/40" />
+          <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
           <button
             onClick={(e) => { e.stopPropagation(); navigateToFolder() }}
-            className="shrink-0 text-base text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+            className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
           >
             {folder.name}
           </button>
@@ -68,10 +68,10 @@ export function EditorBreadcrumb({ note, onClose }: EditorBreadcrumbProps) {
       )}
 
       {/* Separator before note title */}
-      <IconChevronRight size={14} className="shrink-0 text-muted-foreground/40" />
+      <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
 
       {/* Note title crumb (non-clickable, current page) */}
-      <span className="min-w-0 truncate text-base font-medium text-foreground">
+      <span className="min-w-0 truncate text-lg font-medium text-foreground">
         {note.title || "Untitled"}
       </span>
     </nav>

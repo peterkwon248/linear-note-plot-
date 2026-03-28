@@ -25,7 +25,7 @@
 - **Body separation**: Note content in separate IDB (`plot-note-bodies`), meta in Zustand persist
 - **Wiki block body separation**: Text block content in `plot-wiki-block-bodies` IDB, block metadata in `plot-wiki-block-meta` IDB
 - **Workspace**: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
-- **Side Panel**: Unified `SmartSidePanel` — 4-tab: Detail(메타데이터) + Connections(백링크/관계/추천) + Activity(Thread/Reflection) + Peek(미리보기). v64
+- **Side Panel**: Unified `SmartSidePanel` — 4-tab: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Peek(미리보기). v64
 - **Wiki sectionIndex**: `WikiSectionIndex[]` in Zustand for lightweight TOC, full blocks in IDB for scalability (v53)
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
 - **TipTap Editor**: Shared config factory (`components/editor/core/shared-editor-config.ts`) with 4-tier system (base/note/wiki/template). Title 노드 통합 (`core/title-node.ts`) — 제목과 본문이 하나의 TipTap 문서. 25+ extensions.
@@ -43,7 +43,7 @@
 - **ChipDropdown**: `components/ui/chip-dropdown.tsx` — 제네릭 드롭다운, DisplayPanel에서 추출
 - **Graph Filter Adapter**: `lib/view-engine/graph-filter-adapter.ts` — OntologyFilters ↔ FilterRule[] 변환
 - **Discover Engine**: `lib/search/discover-engine.ts` — keyword+tag+backlink+folder 4신호 로컬 추천
-- **SidePanel 4탭**: Detail(메타데이터) + Connections(백링크/관계/추천) + Activity(Thread/Reflection) + Peek(미리보기), SidePanelMode v64
+- **SidePanel 4탭**: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Peek(미리보기), SidePanelMode v64
 - **Toolbar Config**: `lib/editor/toolbar-config.ts` — 42 item IDs, normalizeLayout(), Arrange Mode (dnd-kit drag-and-drop). Settings store에 persist
 - **Toolbar Primitives**: `components/editor/toolbar/toolbar-primitives.tsx` — ToolbarButton(40×40), ToolbarDivider, ToolbarGroup, ToolbarSpacer. Phosphor weight="light"
 - **Editor Colors**: `lib/editor-colors.ts` — 16 TEXT_COLORS + 16 HIGHLIGHT_COLORS, 8-column grid
@@ -125,8 +125,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #123**: 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory: base/note/wiki/template) + Title 노드 통합 (제목/본문 하나의 TipTap 에디터, title-node.ts 커스텀 노드, NoteEditorAdapter 변환 로직, note-editor.tsx title input 제거)
 - **PR #125**: Phase 1C+ — Editor Toolbar Redesign + Side Panel 3→4탭 + Arrange Mode
   - Side Panel: Discover→Connections+Activity 분리. 4-tab (Detail/Connections/Activity/Peek). v64 migration
-  - New: side-panel-connections.tsx (Backlinks/Relations/Discover), side-panel-activity.tsx (Thread/Reflection/History)
+  - New: side-panel-connections.tsx (Connected: backlinks+wiki / Discover: suggestions+tags), side-panel-activity.tsx (Thread/Reflection/History)
   - side-panel-context.tsx 경량화 (~940줄→~400줄): Status/Workflow/Dates/Folder/Label/Tags만 유지
+  - Connected/Discover 2-section model (← inbound / → outbound directional arrows)
+  - Relations 기능 삭제 (store slice 유지, UI에서 제거)
+  - Wiki article detection: note-ref blocks + wikiCollections 양쪽 체크
+  - Peek wiki fallback: wiki article ID → title match → note lookup
+  - Peek 닫기 3가지: X button, tab toggle, Esc key
+  - Breadcrumb + "in Wiki" badge 크기/밝기 증가
+  - Peek header breadcrumb 크기/밝기 증가
+  - Editor context menu (우클릭)
   - Toolbar: h-14 bar, w-10 buttons, size={22} icons, Phosphor weight="light" (UpNote 스타일)
   - 42 toolbar items: text format, lists, alignment, block inserts, math, settings toggles
   - Arrange Mode: dnd-kit drag-and-drop 모달, 아이템 순서변경/숨기기, settings store persist
@@ -166,7 +174,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-03-27)
+## Current Direction (as of 2026-03-28)
+
+### 이번 세션 완료 — Side Panel Connections 리디자인 + Peek 개선 (2026-03-28)
+- **Connections 탭 2섹션**: Connected(← inbound: backlinks+wiki) / Discover(→ outbound: suggestions+tags)
+- **Relations UI 삭제**: store slice 유지, UI에서만 제거
+- **Wiki article detection 개선**: note-ref blocks + wikiCollections 양쪽 체크
+- **Peek wiki fallback 체인**: wiki article ID → title match → note lookup
+- **Peek 닫기 3가지**: X button, tab toggle, Esc key
+- **Breadcrumb + badge 밝기/크기 증가**: "in Wiki" badge, Peek header breadcrumb
+- **Editor context menu (우클릭)**: 기본 브라우저 컨텍스트 메뉴 대체
 
 ### 이번 세션 완료 — Phase 7 즉시 개선 + 에디터 통합 플랜 (2026-03-27)
 - **StatusDropdown 추가**: 플로팅바에 일괄 status 변경 드롭다운. 선택된 전체 노트 status 한 번에 변경
@@ -195,7 +212,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Custom Views = 사이드바 Views 섹션**: Linear식 savedView. 각 공간(Notes/Wiki/Graph/Calendar)별 독립
 - **Back/Forward = note history + browser history fallback**: note history 없으면 router.back() 호출
 - **디자인 라이브러리 13개 도입**: Phosphor/Motion/Sonner/Resizable/Radix Colors/dnd-kit/cmdk/Vaul/Iconoir/Tabler/Remix/React Spring + DESIGN-TOKENS.md에 사용 규칙 문서화
-- **Side Panel 3탭**: Detail(메타데이터) + Discover(실시간 추천) + Peek(미리보기). Entity-aware — space에 따라 다른 detail 컴포넌트 렌더
+- **Side Panel 4탭**: Detail(메타데이터) + Connections(Connected/Discover 2섹션) + Activity(Thread/Reflection) + Peek(미리보기). Relations UI 삭제. Entity-aware — space에 따라 다른 detail 컴포넌트 렌더
 - **Unified Pipeline 완료**: Filter/Display/SidePanel이 ViewConfig 기반으로 space별 주입. OntologyFilterBar 삭제, Wiki category 로컬 state → viewStateByContext 이관
 - **Design Spine 통합**: 토큰 위반 일괄 수정 (typography/border/hover/icon/하드코딩). 별도 Phase 없이 구조 통합에 녹임
 - **Discover = AI 없는 로컬 추천**: keyword overlap + tag co-occurrence + backlink proximity + folder proximity 4신호
