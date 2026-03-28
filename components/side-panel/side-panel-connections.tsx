@@ -8,7 +8,7 @@ import { discoverRelated, type DiscoverResult } from "@/lib/search/discover-engi
 import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { IconWiki } from "@/components/plot-icons"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
@@ -303,11 +303,7 @@ export function SidePanelConnections() {
                     onClick={() => openSidePeek(a.id)}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
                   >
-                    <BookOpen
-                      className="shrink-0 text-muted-foreground/60"
-                      size={14}
-                      weight="regular"
-                    />
+                    <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
                     <span className="truncate">{a.title}</span>
                   </button>
                 ))}
@@ -440,11 +436,7 @@ export function SidePanelConnections() {
                       key={item.noteId}
                       className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-secondary/50 transition-colors"
                     >
-                      <BookOpen
-                        className="shrink-0 text-muted-foreground/60"
-                        size={14}
-                        weight="regular"
-                      />
+                      <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
                       <button
                         onClick={() => openSidePeek(item.noteId)}
                         className="truncate flex-1 text-left text-sm text-muted-foreground hover:text-foreground transition-colors"
