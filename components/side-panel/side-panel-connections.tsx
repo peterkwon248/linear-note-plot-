@@ -126,22 +126,30 @@ export function SidePanelConnections() {
     [noteId, notes]
   )
 
-  // Wiki articles that collected this note as source material
+  // Wiki articles that reference this note (via blocks OR collections)
   const wikiArticlesUsingNote = useMemo(() => {
     if (!noteId) return []
-    return Object.entries(wikiCollections ?? {})
-      .filter(([, items]) =>
-        items.some((item) => item.type === "note" && item.sourceNoteId === noteId)
-      )
-      .map(([wikiId]) => {
-        const article = wikiArticles.find((a) => a.id === wikiId)
-        const articleNote = notes.find((n) => n.id === wikiId)
-        return {
-          id: wikiId,
-          title: article?.title ?? articleNote?.title ?? "Untitled",
+    const resultMap = new Map<string, string>()
+
+    // 1. Check wikiArticles blocks for note-ref
+    for (const article of wikiArticles) {
+      if (article.blocks?.some((b: { type: string; noteId?: string }) => b.type === "note-ref" && b.noteId === noteId)) {
+        resultMap.set(article.id, article.title)
+      }
+    }
+
+    // 2. Check wikiCollections for collected notes
+    for (const [wikiId, items] of Object.entries(wikiCollections ?? {})) {
+      if (items.some((item) => item.type === "note" && item.sourceNoteId === noteId)) {
+        if (!resultMap.has(wikiId)) {
+          const article = wikiArticles.find((a) => a.id === wikiId)
+          const articleNote = notes.find((n) => n.id === wikiId)
+          resultMap.set(wikiId, article?.title ?? articleNote?.title ?? "Untitled")
         }
-      })
-      .filter((a) => a.title)
+      }
+    }
+
+    return Array.from(resultMap, ([id, title]) => ({ id, title })).filter((a) => a.title)
   }, [noteId, wikiCollections, wikiArticles, notes])
 
   // ── Outbound data ────────────────────────────────────
@@ -237,6 +245,9 @@ export function SidePanelConnections() {
   const suggestedNotes = discoverResult?.relatedNotes ?? []
   const suggestedWiki = discoverResult?.relatedWiki ?? []
   const suggestedTags = discoverResult?.suggestedTags ?? []
+
+  // Set of inbound note IDs for mutual link detection
+  const inboundIds = useMemo(() => new Set(backlinkNotes.map((n) => n.id)), [backlinkNotes])
 
   const outboundCount =
     linkedNotes.length +
@@ -366,6 +377,9 @@ export function SidePanelConnections() {
                       weight="regular"
                     />
                     <span className="truncate">{n.title || "Untitled"}</span>
+                    {inboundIds.has(n.id) && (
+                      <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -394,6 +408,9 @@ export function SidePanelConnections() {
                       >
                         {sNote.title || "Untitled"}
                       </button>
+                      {inboundIds.has(item.noteId) && (
+                        <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
+                      )}
                       <span className="text-2xs text-muted-foreground/40 shrink-0 tabular-nums">
                         {item.score.toFixed(1)}
                       </span>
@@ -434,6 +451,9 @@ export function SidePanelConnections() {
                       >
                         {title}
                       </button>
+                      {inboundIds.has(item.noteId) && (
+                        <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
+                      )}
                       <span className="text-2xs text-muted-foreground/40 shrink-0 tabular-nums">
                         {item.score.toFixed(1)}
                       </span>

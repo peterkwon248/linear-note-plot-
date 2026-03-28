@@ -363,7 +363,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
 
   return (
     <div className="flex items-center gap-1 shrink-0">
-      <span className="text-2xs text-muted-foreground/30">in</span>
+      <span className="text-xs text-muted-foreground/30">in</span>
       {visible.map((a) => (
         <button
           key={a.id}
@@ -371,7 +371,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
             import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
             import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
           }}
-          className="rounded-[4px] bg-accent/8 px-1.5 py-px text-2xs font-medium text-accent/60 hover:text-accent transition-colors duration-100"
+          className="rounded-[4px] bg-accent/8 px-2 py-0.5 text-xs font-medium text-accent/60 hover:text-accent transition-colors duration-100"
         >
           {a.title}
         </button>
