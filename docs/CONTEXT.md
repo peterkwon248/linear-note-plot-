@@ -82,12 +82,10 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-67. Board UX 개선 — Trash→Tools, 드래그 선택, 그룹핑 컬럼 숨김, Tags 폐기, 필터 Status shape 아이콘, Mixed status 표시
-68. Phase 7 즉시 개선 — StatusDropdown 추가, Trash 버튼 독립 배치, Priority 필터 제거
-69. 에디터 통합 프로젝트 플랜 수립 — 7-Phase 계획
 70. 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory) + Title 노드 통합 (제목/본문 하나의 에디터)
 71. Phase 1C+ — Toolbar 리디자인 (h-14/w-10/22px/light, 42 items) + Side Panel 4탭 (Detail/Connections/Activity/Peek) + Arrange Mode (dnd-kit)
-72. Phase 1C+ 후속 — Connections Connected/Discover 모델, Relations UI 삭제, Peek wiki fallback, 브레드크럼/뱃지 폴리시
+72. Phase 1C+ 후속 — Connections Connected/Discover 모델, Relations UI 삭제, Peek wiki fallback
+73. Phase 1 커스텀 노드 시작 — TOC Block + Callout Block + Align 드롭다운 통합 + BacklinksFooter 삭제
 
 ## Two Axes — Core Design Philosophy
 
@@ -135,7 +133,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ## TODO: Future Work (우선순위 순)
 
 ### P0 — 에디터 통합 프로젝트 (`.claude/plans/editor-unification.md` 참조)
-- **Phase 1**: 노트 에디터 리디자인 — ~~Shared TipTap config~~ ✅ ~~Title 노드 통합~~ ✅ ~~FixedToolbar 리디자인~~ ✅ ~~Arrange Mode~~ ✅, 커스텀 노드 (Columns/TOC/Infobox/NoteEmbed)
+- **Phase 1**: 노트 에디터 리디자인 — ~~Shared TipTap config~~ ✅ ~~Title 노드 통합~~ ✅ ~~FixedToolbar 리디자인~~ ✅ ~~Arrange Mode~~ ✅ ~~TOC Block~~ ✅ ~~Callout Block~~ ✅ ~~Align 드롭다운~~ ✅ ~~BacklinksFooter 삭제~~ ✅, 남은: Make Block(범용래퍼), Summary, Columns, NoteEmbed, Infobox, TOC 수동앵커, 타이틀 정렬, URL Embed 합치기, Stub 삭제
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈
 - **Phase 3**: 템플릿 블록 레이아웃 에디터 — TemplateBlock 모델, Notion-style 드래그 앤 드롭, Template→Note/Wiki 변환
 - **Phase 4**: Partial Quote — Peek에서 부분 드래그 선택 Insert, 메타데이터 8필드 (sourceHash, context, comment 등)

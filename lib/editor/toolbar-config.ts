@@ -37,9 +37,7 @@ export const TOOLBAR_ITEM_IDS = [
   "divider",       // Horizontal rule
   "link",          // Link
   "table",         // Table menu
-  "alignLeft",     // Align left
-  "alignCenter",   // Align center
-  "alignRight",    // Align right
+  "textAlign",     // Text alignment dropdown (Left/Center/Right/Justify)
   "undo",          // Undo
   "redo",          // Redo
   "inlineCode",    // Inline code
@@ -89,9 +87,7 @@ export const TOOLBAR_ITEM_LABELS: Record<ToolbarItemId, string> = {
   divider: "Divider",
   link: "Link",
   table: "Table",
-  alignLeft: "Align Left",
-  alignCenter: "Align Center",
-  alignRight: "Align Right",
+  textAlign: "Text Align",
   undo: "Undo",
   redo: "Redo",
   inlineCode: "Inline Code",

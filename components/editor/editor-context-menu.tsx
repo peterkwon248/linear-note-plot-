@@ -39,6 +39,12 @@ import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
 import { Link } from "@phosphor-icons/react/dist/ssr/Link"
 import { NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { Info } from "@phosphor-icons/react/dist/ssr/Info"
+import { Article } from "@phosphor-icons/react/dist/ssr/Article"
+import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
+import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
+import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
 
 interface EditorContextMenuProps {
   editor: Editor | null
@@ -86,6 +92,49 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
 
   function selectAll() {
     editor?.chain().focus().selectAll().run()
+  }
+
+  function wrapInBlock(blockType: "calloutBlock" | "summaryBlock") {
+    if (!editor) return
+    const { from, to } = editor.state.selection
+    const selectedSlice = editor.state.doc.slice(from, to)
+
+    const content: any[] = []
+    selectedSlice.content.forEach((node) => {
+      content.push(node.toJSON())
+    })
+
+    if (content.length === 0 || content.every((c) => c.type === "text")) {
+      const text = editor.state.doc.textBetween(from, to)
+      content.length = 0
+      content.push({ type: "paragraph", content: [{ type: "text", text }] })
+    }
+
+    const blockNode: any =
+      blockType === "calloutBlock"
+        ? { type: "calloutBlock", attrs: { calloutType: "info" }, content }
+        : { type: "summaryBlock", content }
+
+    editor.chain().focus().deleteRange({ from, to }).insertContent(blockNode).run()
+  }
+
+  function wrapInContentBlock() {
+    if (!editor) return
+    const { from, to } = editor.state.selection
+    const slice = editor.state.doc.slice(from, to)
+    const content: any[] = []
+    slice.content.forEach((node) => {
+      content.push(node.toJSON())
+    })
+    if (content.length === 0 || content.every((c: any) => c.type === "text")) {
+      const text = editor.state.doc.textBetween(from, to)
+      content.length = 0
+      content.push({ type: "paragraph", content: [{ type: "text", text }] })
+    }
+    editor.chain().focus().deleteRange({ from, to }).insertContent({
+      type: "contentBlock",
+      content,
+    }).run()
   }
 
   return (
@@ -178,6 +227,42 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
               </ContextMenu.SubContent>
             </ContextMenu.Portal>
           </ContextMenu.Sub>
+
+          {/* ── Wrap in Block submenu (selection only) ────── */}
+          {hasSelection && (
+            <ContextMenu.Sub>
+              <ContextMenu.SubTrigger className={subTriggerCls}>
+                <Cube size={14} />
+                Make Block
+                <CaretRight size={12} className="ml-auto" />
+              </ContextMenu.SubTrigger>
+              <ContextMenu.Portal>
+                <ContextMenu.SubContent className={subContentCls}>
+                  <ContextMenu.Item
+                    className={itemCls}
+                    onSelect={wrapInContentBlock}
+                  >
+                    <Cube size={14} />
+                    Block
+                  </ContextMenu.Item>
+                  <ContextMenu.Item
+                    className={itemCls}
+                    onSelect={() => wrapInBlock("calloutBlock")}
+                  >
+                    <Info size={14} />
+                    Callout
+                  </ContextMenu.Item>
+                  <ContextMenu.Item
+                    className={itemCls}
+                    onSelect={() => wrapInBlock("summaryBlock")}
+                  >
+                    <Article size={14} />
+                    Summary
+                  </ContextMenu.Item>
+                </ContextMenu.SubContent>
+              </ContextMenu.Portal>
+            </ContextMenu.Sub>
+          )}
 
           {/* ── List submenu (only in list context) ───────── */}
           {isInList && (
@@ -365,6 +450,69 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
                 >
                   <MathOperations size={14} />
                   Math
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className={itemCls}
+                  onSelect={() => {
+                    editor?.chain().focus().insertContent({ type: "tocBlock" }).run()
+                  }}
+                >
+                  <ListBullets size={14} />
+                  Table of Contents
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className={itemCls}
+                  onSelect={() => {
+                    editor?.chain().focus().insertContent({ type: "calloutBlock", attrs: { calloutType: "info" }, content: [{ type: "paragraph" }] }).run()
+                  }}
+                >
+                  <Info size={14} />
+                  Callout
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className={itemCls}
+                  onSelect={() => {
+                    editor?.chain().focus().insertContent({ type: "summaryBlock", content: [{ type: "paragraph" }] }).run()
+                  }}
+                >
+                  <Article size={14} />
+                  Summary
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className={itemCls}
+                  onSelect={() => {
+                    editor?.chain().focus().insertContent({
+                      type: "columnsBlock",
+                      content: [
+                        { type: "columnCell", content: [{ type: "paragraph" }] },
+                        { type: "columnCell", content: [{ type: "paragraph" }] },
+                      ],
+                    }).run()
+                  }}
+                >
+                  <PhColumns size={14} />
+                  Columns
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className={itemCls}
+                  onSelect={() => {
+                    editor?.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: null } }).run()
+                  }}
+                >
+                  <PhNote size={14} />
+                  Embed Note
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className={itemCls}
+                  onSelect={() => {
+                    editor?.chain().focus().insertContent({
+                      type: "infoboxBlock",
+                      attrs: { title: "Info", rows: [{ label: "", value: "" }] },
+                    }).run()
+                  }}
+                >
+                  <IdentificationCard size={14} />
+                  Infobox
                 </ContextMenu.Item>
               </ContextMenu.SubContent>
             </ContextMenu.Portal>

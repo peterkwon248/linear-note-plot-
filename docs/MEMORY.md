@@ -125,25 +125,17 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #123**: 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory: base/note/wiki/template) + Title 노드 통합 (제목/본문 하나의 TipTap 에디터, title-node.ts 커스텀 노드, NoteEditorAdapter 변환 로직, note-editor.tsx title input 제거)
 - **PR #125**: Phase 1C+ — Editor Toolbar Redesign + Side Panel 3→4탭 + Arrange Mode
   - Side Panel: Discover→Connections+Activity 분리. 4-tab (Detail/Connections/Activity/Peek). v64 migration
-  - New: side-panel-connections.tsx (Connected: backlinks+wiki / Discover: suggestions+tags), side-panel-activity.tsx (Thread/Reflection/History)
-  - side-panel-context.tsx 경량화 (~940줄→~400줄): Status/Workflow/Dates/Folder/Label/Tags만 유지
-  - Connected/Discover 2-section model (← inbound / → outbound directional arrows)
-  - Relations 기능 삭제 (store slice 유지, UI에서 제거)
-  - Wiki article detection: note-ref blocks + wikiCollections 양쪽 체크
-  - Peek wiki fallback: wiki article ID → title match → note lookup
-  - Peek 닫기 3가지: X button, tab toggle, Esc key
-  - Breadcrumb + "in Wiki" badge 크기/밝기 증가
-  - Peek header breadcrumb 크기/밝기 증가
-  - Editor context menu (우클릭)
-  - Toolbar: h-14 bar, w-10 buttons, size={22} icons, Phosphor weight="light" (UpNote 스타일)
-  - 42 toolbar items: text format, lists, alignment, block inserts, math, settings toggles
-  - Arrange Mode: dnd-kit drag-and-drop 모달, 아이템 순서변경/숨기기, settings store persist
-  - toolbar-config.ts: 42 IDs, labels, normalizeLayout(), DEFAULT_TOOLBAR_LAYOUT
-  - toolbar-primitives.tsx: ToolbarButton/Divider/Group/Spacer 공유 컴포넌트
-  - Color palette: 10→16색, 8-column grid layout
-  - Custom commands: indent/outdent, removeFormatting, moveListItem up/down
-  - InsertMenu: inline style→Tailwind, label 수정, 새 항목 추가
-  - 10+ new packages: @tiptap/extension-subscript, superscript 등
+  - Connected/Discover 2-section model, Relations UI 삭제, Peek wiki fallback
+  - Toolbar: h-14 bar, w-10 buttons, 42 items, Arrange Mode (dnd-kit), Color palette 16색
+  - Editor context menu (우클릭), custom commands, InsertMenu 개선
+- **PR #126 (WIP)**: Phase 1 커스텀 노드 + 에디터 UX 개선
+  - NEW: TOC Block (`components/editor/nodes/toc-node.tsx`) — atom node, heading 자동인식, click-to-scroll, X 삭제
+  - NEW: Callout Block (`components/editor/nodes/callout-node.tsx`) — wrapper node, 5 types, 아이콘 타입 순환, X unwrap
+  - Align 드롭다운 통합: 3버튼(Left/Center/Right) → 1개 드롭다운 + Justified 추가
+  - BacklinksFooter 삭제 (Side Panel Connections로 대체)
+  - SlashCommand/InsertMenu/ContextMenu에 TOC/Callout 추가
+  - toolbar-config: alignLeft/Center/Right → textAlign 단일 항목
+  - shared-editor-config: TocBlockNode/CalloutBlockNode 등록, TextAlign justify
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
@@ -176,14 +168,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 
 ## Current Direction (as of 2026-03-28)
 
-### 이번 세션 완료 — Side Panel Connections 리디자인 + Peek 개선 (2026-03-28)
-- **Connections 탭 2섹션**: Connected(← inbound: backlinks+wiki) / Discover(→ outbound: suggestions+tags)
-- **Relations UI 삭제**: store slice 유지, UI에서만 제거
-- **Wiki article detection 개선**: note-ref blocks + wikiCollections 양쪽 체크
-- **Peek wiki fallback 체인**: wiki article ID → title match → note lookup
-- **Peek 닫기 3가지**: X button, tab toggle, Esc key
-- **Breadcrumb + badge 밝기/크기 증가**: "in Wiki" badge, Peek header breadcrumb
-- **Editor context menu (우클릭)**: 기본 브라우저 컨텍스트 메뉴 대체
+### 이번 세션 완료 — Phase 1 커스텀 노드 + 에디터 UX (2026-03-28)
+- **TOC Block**: `components/editor/nodes/toc-node.tsx` — heading 자동인식 atom node
+- **Callout Block**: `components/editor/nodes/callout-node.tsx` — 5 types wrapper node
+- **Align 드롭다운 통합**: 3버튼 → 1개 드롭다운 + Justified
+- **BacklinksFooter 삭제**: Side Panel Connections로 대체
+- **다음**: URL Embed 합치기, TOC 수동앵커, Make Block(범용 래퍼), Stub 삭제, 타이틀 정렬, Summary/Columns/NoteEmbed/Infobox
+
+### 이전 세션 완료 — Side Panel Connections + Peek 개선 (2026-03-28)
+- Connections Connected/Discover 2섹션, Relations UI 삭제, Peek wiki fallback
+- Breadcrumb/badge 밝기 증가, Editor context menu (우클릭)
 
 ### 이번 세션 완료 — Phase 7 즉시 개선 + 에디터 통합 플랜 (2026-03-27)
 - **StatusDropdown 추가**: 플로팅바에 일괄 status 변경 드롭다운. 선택된 전체 노트 status 한 번에 변경

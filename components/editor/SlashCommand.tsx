@@ -25,6 +25,12 @@ import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { Info } from "@phosphor-icons/react/dist/ssr/Info"
+import { Article } from "@phosphor-icons/react/dist/ssr/Article"
+import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
+import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
+import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
+import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
 
 interface CommandItem {
   title: string
@@ -128,6 +134,106 @@ const COMMANDS: CommandItem[] = [
     icon: MathOperations,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).insertContent("$$\n\\displaystyle \n$$").run()
+    },
+  },
+  {
+    title: "Table of Contents (TOC)",
+    description: "Auto-generated heading outline",
+    icon: Layout,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertContent({ type: "tocBlock" }).run()
+    },
+  },
+  {
+    title: "Callout",
+    description: "Colored info/warning/tip box",
+    icon: Info,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({ type: "calloutBlock", attrs: { calloutType: "info" }, content: [{ type: "paragraph" }] })
+        .run()
+    },
+  },
+  {
+    title: "Summary",
+    description: "Collapsible summary / TL;DR section",
+    icon: Article,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({ type: "summaryBlock", content: [{ type: "paragraph" }] })
+        .run()
+    },
+  },
+  {
+    title: "Columns",
+    description: "2-column side-by-side layout",
+    icon: PhColumns,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "columnsBlock",
+          content: [
+            { type: "columnCell", content: [{ type: "paragraph" }] },
+            { type: "columnCell", content: [{ type: "paragraph" }] },
+          ],
+        })
+        .run()
+    },
+  },
+  {
+    title: "Embed Note",
+    description: "Embed a note preview",
+    icon: PhNote,
+    command: ({ editor, range }) => {
+      // Insert with no noteId — shows "Note not found" placeholder
+      // TODO: Wire up note picker UI
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({ type: "noteEmbed", attrs: { noteId: null } })
+        .run()
+    },
+  },
+  {
+    title: "Infobox",
+    description: "Key-value info card",
+    icon: IdentificationCard,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "infoboxBlock",
+          attrs: {
+            title: "Info",
+            rows: [{ label: "", value: "" }],
+          },
+        })
+        .run()
+    },
+  },
+  {
+    title: "Block",
+    description: "Wrap content in a draggable block",
+    icon: Cube,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({ type: "contentBlock", content: [{ type: "paragraph" }] })
+        .run()
     },
   },
 ]
