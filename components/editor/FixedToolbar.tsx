@@ -55,7 +55,6 @@ import { TwitchLogo } from "@phosphor-icons/react/dist/ssr/TwitchLogo"
 import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
 import { CalendarDots } from "@phosphor-icons/react/dist/ssr/CalendarDots"
 import { KeyReturn } from "@phosphor-icons/react/dist/ssr/KeyReturn"
-import { Crosshair } from "@phosphor-icons/react/dist/ssr/Crosshair"
 import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
 import { Paragraph } from "@phosphor-icons/react/dist/ssr/Paragraph"
 import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
@@ -208,9 +207,6 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
   const setSpellcheck = useSettingsStore((s) => s.setSpellcheck)
   const currentLineHighlight = useSettingsStore((s) => s.currentLineHighlight)
   const setCurrentLineHighlight = useSettingsStore((s) => s.setCurrentLineHighlight)
-  const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
-  const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
-  const restoreSidebar = usePlotStore((s) => s.restoreSidebar)
   const [arrangeOpen, setArrangeOpen] = useState(false)
 
   const normalizedLayout = normalizeLayout(toolbarLayout)
@@ -485,17 +481,9 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       </ToolbarGroup>
       <ToolbarSpacer />
       {/* Settings Toggle Group */}
-      {(isVisible("focusMode") || isVisible("spellcheck") || isVisible("currentLineHighlight") || isVisible("invisibleChars")) && (
+      {(isVisible("spellcheck") || isVisible("currentLineHighlight") || isVisible("invisibleChars")) && (
         <>
           <ToolbarGroup>
-            {isVisible("focusMode") && (
-              <ToolbarButton onClick={() => {
-                if (sidebarCollapsed) restoreSidebar()
-                else setSidebarCollapsed(true)
-              }} isActive={sidebarCollapsed} title="Focus Mode">
-                <Crosshair size={22} weight="light" />
-              </ToolbarButton>
-            )}
             {isVisible("spellcheck") && (
               <ToolbarButton onClick={() => setSpellcheck(!spellcheck)} isActive={spellcheck} title="Spellcheck">
                 <TextAa size={22} weight="light" />

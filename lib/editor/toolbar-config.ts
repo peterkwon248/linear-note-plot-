@@ -52,7 +52,6 @@ export const TOOLBAR_ITEM_IDS = [
   "blockMath",     // Block math equation
   "date",          // Insert current date
   "hardBreak",     // Line break
-  "focusMode",     // Focus/typewriter mode toggle
   "spellcheck",    // Spellcheck toggle
   "currentLineHighlight", // Current line highlight toggle
   "invisibleChars", // Show invisible characters toggle
@@ -105,7 +104,6 @@ export const TOOLBAR_ITEM_LABELS: Record<ToolbarItemId, string> = {
   blockMath: "Block Math",
   date: "Date",
   hardBreak: "Line Break",
-  focusMode: "Focus Mode",
   spellcheck: "Spellcheck",
   currentLineHighlight: "Line Highlight",
   invisibleChars: "Invisible Characters",
