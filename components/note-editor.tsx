@@ -30,7 +30,6 @@ import { EditorBreadcrumb } from "@/components/editor-breadcrumb"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
-import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 import type { Editor } from "@tiptap/react"
 import type { Note, Relation, Tag } from "@/lib/types"
 import { WikiTOC } from "@/components/editor/wiki-toc"
@@ -236,7 +235,6 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
             {/* Infobox moved to WikiArticle view — disabled in note editor */}
             <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
               <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
-              <BacklinksFooter noteId={note.id} />
             </div>
           </div>
         </EditorContextMenu>
@@ -306,8 +304,6 @@ function WikiReadLayout({
           {/* Related wiki docs */}
           <WikiRelatedDocs noteId={note.id} />
 
-          {/* Backlinks */}
-          <BacklinksFooter noteId={note.id} />
         </div>
       </div>
 

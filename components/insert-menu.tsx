@@ -20,8 +20,14 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Play as PhPlay } from "@phosphor-icons/react/dist/ssr/Play"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
+import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { SpeakerHigh } from "@phosphor-icons/react/dist/ssr/SpeakerHigh"
+import { Info } from "@phosphor-icons/react/dist/ssr/Info"
+import { Article } from "@phosphor-icons/react/dist/ssr/Article"
+import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { TwitchLogo } from "@phosphor-icons/react/dist/ssr/TwitchLogo"
+import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
+import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
 import { usePlotStore } from "@/lib/store"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 
@@ -147,6 +153,28 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
     editor.chain().focus().insertContent("$$\n\\sum_{i=1}^{n} x_i\n$$").run()
   }
 
+  const handleTOC = () => {
+    editor.chain().focus().insertContent({ type: "tocBlock" }).run()
+  }
+
+  const handleCallout = () => {
+    editor.chain().focus().insertContent({ type: "calloutBlock", attrs: { calloutType: "info" }, content: [{ type: "paragraph" }] }).run()
+  }
+
+  const handleSummary = () => {
+    editor.chain().focus().insertContent({ type: "summaryBlock", content: [{ type: "paragraph" }] }).run()
+  }
+
+  const handleColumns = () => {
+    editor.chain().focus().insertContent({
+      type: "columnsBlock",
+      content: [
+        { type: "columnCell", content: [{ type: "paragraph" }] },
+        { type: "columnCell", content: [{ type: "paragraph" }] },
+      ],
+    }).run()
+  }
+
   const handleAudio = () => {
     const url = window.prompt("Enter audio file URL:")
     if (url) {
@@ -162,6 +190,19 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
     if (url) {
       editor.chain().focus().setTwitchVideo({ src: url }).run()
     }
+  }
+
+  const handleInfobox = () => {
+    editor.chain().focus().insertContent({
+      type: "infoboxBlock",
+      attrs: { title: "Info", rows: [{ label: "", value: "" }] },
+    }).run()
+  }
+
+  const handleNoteEmbed = () => {
+    // Insert with no noteId — shows "Note not found" placeholder
+    // TODO: Wire up note picker UI
+    editor.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: null } }).run()
   }
 
   return (
@@ -223,6 +264,36 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           <DropdownMenuItem onSelect={handleTable} className={ITEM_CLASS}>
             <PhTable size={14} weight="regular" />
             <span className="flex-1">Table</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={handleTOC} className={ITEM_CLASS}>
+            <ListBullets size={14} weight="regular" />
+            <span className="flex-1">Table of Contents</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={handleCallout} className={ITEM_CLASS}>
+            <Info size={14} weight="regular" />
+            <span className="flex-1">Callout</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={handleSummary} className={ITEM_CLASS}>
+            <Article size={14} weight="regular" />
+            <span className="flex-1">Summary</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={handleColumns} className={ITEM_CLASS}>
+            <PhColumns size={14} weight="regular" />
+            <span className="flex-1">Columns</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={handleNoteEmbed} className={ITEM_CLASS}>
+            <PhNote size={14} weight="regular" />
+            <span className="flex-1">Embed Note</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={handleInfobox} className={ITEM_CLASS}>
+            <IdentificationCard size={14} weight="regular" />
+            <span className="flex-1">Infobox</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleDate} className={ITEM_CLASS}>

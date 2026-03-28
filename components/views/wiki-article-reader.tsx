@@ -9,7 +9,6 @@ import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { WikiCategories } from "@/components/editor/wiki-categories"
 import { WikiDisambig } from "@/components/editor/wiki-disambig"
 import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
-import { BacklinksFooter } from "@/components/editor/backlinks-footer"
 import { WikiCollectionSidebar } from "@/components/editor/wiki-collection-sidebar"
 import { WikiStatusBadge, StatRow } from "./wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
@@ -128,8 +127,6 @@ export function WikiArticleReader({
           {/* Related wiki docs */}
           <WikiRelatedDocs noteId={note.id} onNavigate={onNavigate} />
 
-          {/* Backlinks */}
-          <BacklinksFooter noteId={note.id} onNavigate={onNavigate} />
         </div>
       </div>
 

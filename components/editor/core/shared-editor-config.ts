@@ -63,6 +63,13 @@ import { Twitch } from "@tiptap/extension-twitch"
 import { UniqueID } from "@tiptap/extension-unique-id"
 import { FileHandler } from "@tiptap/extension-file-handler"
 import { TableOfContents } from "@tiptap/extension-table-of-contents"
+import { TocBlockNode } from "@/components/editor/nodes/toc-node"
+import { CalloutBlockNode } from "@/components/editor/nodes/callout-node"
+import { SummaryBlockNode } from "@/components/editor/nodes/summary-node"
+import { ColumnsBlockNode, ColumnCellNode } from "@/components/editor/nodes/columns-node"
+import { NoteEmbedNode } from "@/components/editor/nodes/note-embed-node"
+import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
+import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
 
 // ── Lowlight (syntax highlighting for code blocks) ──────────────────
 const lowlight = createLowlight(common)
@@ -179,7 +186,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     Highlight.configure({ multicolor: true }),
     Link.configure({ openOnClick: false }),
     Underline,
-    TextAlign.configure({ types: ["heading", "paragraph"] }),
+    TextAlign.configure({ types: ["heading", "paragraph", "title"], alignments: ["left", "center", "right", "justify"] }),
     Color,
     TextStyle, // also handles fontSize via style attribute
     Superscript,
@@ -272,7 +279,14 @@ export function createEditorExtensions(
       noteExtensions.push(
         TableOfContents as Extension,
       )
-      // DragHandle — added in PR 2 (requires React NodeView)
+      noteExtensions.push(TocBlockNode as Extension)
+      noteExtensions.push(CalloutBlockNode as Extension)
+      noteExtensions.push(SummaryBlockNode as Extension)
+      noteExtensions.push(ColumnsBlockNode as Extension)
+      noteExtensions.push(ColumnCellNode as Extension)
+      noteExtensions.push(NoteEmbedNode as Extension)
+      noteExtensions.push(InfoboxBlockNode as Extension)
+      noteExtensions.push(ContentBlockNode as Extension)
 
       // Custom keyboard shortcuts (Indent/Outdent, Move List)
       const CustomKeyboardShortcuts = Extension.create({

@@ -22,6 +22,7 @@ import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
 import { TextAlignCenter } from "@phosphor-icons/react/dist/ssr/TextAlignCenter"
 import { TextAlignRight } from "@phosphor-icons/react/dist/ssr/TextAlignRight"
+import { TextAlignJustify } from "@phosphor-icons/react/dist/ssr/TextAlignJustify"
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
 import { ArrowClockwise } from "@phosphor-icons/react/dist/ssr/ArrowClockwise"
 import { TextSuperscript } from "@phosphor-icons/react/dist/ssr/TextSuperscript"
@@ -199,6 +200,85 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
   )
 }
 
+function AlignDropdown({ editor, editorState, handleAlign, isVisible }: {
+  editor: Editor
+  editorState: { textAlign: string }
+  handleAlign: (align: "left" | "center" | "right" | "justify") => void
+  isVisible: (id: ToolbarItemId) => boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const btnRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handle = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node) && !btnRef.current?.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handle)
+    return () => document.removeEventListener("mousedown", handle)
+  }, [open])
+
+  if (!isVisible("textAlign")) return null
+
+  const currentAlign = editorState.textAlign
+  const CurrentIcon = currentAlign === "center" ? TextAlignCenter
+    : currentAlign === "right" ? TextAlignRight
+    : currentAlign === "justify" ? TextAlignJustify
+    : TextAlignLeft
+
+  const options = [
+    { align: "left" as const, label: "Left", icon: TextAlignLeft, shortcut: "Ctrl+Shift+L" },
+    { align: "center" as const, label: "Center", icon: TextAlignCenter, shortcut: "Ctrl+Shift+E" },
+    { align: "right" as const, label: "Right", icon: TextAlignRight, shortcut: "Ctrl+Shift+R" },
+    { align: "justify" as const, label: "Justified", icon: TextAlignJustify, shortcut: "Ctrl+Shift+J" },
+  ]
+
+  const rect = btnRef.current?.getBoundingClientRect()
+
+  return (
+    <>
+      <div ref={btnRef}>
+        <ToolbarButton
+          onClick={() => setOpen(!open)}
+          isActive={currentAlign !== "left"}
+          title="Text alignment"
+        >
+          <CurrentIcon size={22} weight="light" />
+        </ToolbarButton>
+      </div>
+      {open && rect && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-[9999] min-w-[200px] rounded-lg border border-border bg-popover shadow-lg py-1"
+          style={{ left: rect.left, bottom: window.innerHeight - rect.top + 4 }}
+        >
+          {options.map(({ align, label, icon: Icon, shortcut }) => (
+            <button
+              key={align}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { handleAlign(align); setOpen(false) }}
+              className="flex items-center gap-3 w-full px-3 py-1.5 text-sm text-foreground/80 hover:bg-secondary/50 hover:text-foreground transition-colors cursor-pointer border-0 outline-none"
+            >
+              {currentAlign === align ? (
+                <span className="w-4 text-center text-xs">✓</span>
+              ) : (
+                <span className="w-4" />
+              )}
+              <Icon size={16} weight="regular" />
+              <span className="flex-1 text-left">{label}</span>
+              <span className="text-xs text-muted-foreground/50">{shortcut}</span>
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </>
+  )
+}
+
 export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, noteId, tier = 'note' }: FixedToolbarProps) {
   // TODO: Hide/show buttons based on tier (wiki = minimal set, template = base + variable)
   const toolbarLayout = useSettingsStore((s) => s.toolbarLayout)
@@ -234,9 +314,12 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       blockquote: e?.isActive("blockquote") ?? false,
       codeBlock: e?.isActive("codeBlock") ?? false,
       link: e?.isActive("link") ?? false,
-      alignLeft: e?.isActive({ textAlign: "left" }) ?? false,
-      alignCenter: e?.isActive({ textAlign: "center" }) ?? false,
-      alignRight: e?.isActive({ textAlign: "right" }) ?? false,
+      textAlign: (() => {
+        if (e?.isActive({ textAlign: "center" })) return "center"
+        if (e?.isActive({ textAlign: "right" })) return "right"
+        if (e?.isActive({ textAlign: "justify" })) return "justify"
+        return "left"
+      })(),
       canUndo: e?.can().undo() ?? false,
       canRedo: e?.can().redo() ?? false,
     }),
@@ -271,7 +354,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
   }
 
   // Align handler: works for both text blocks and image nodes
-  const handleAlign = (align: "left" | "center" | "right") => {
+  const handleAlign = (align: "left" | "center" | "right" | "justify") => {
     // Check if an image node is selected
     const { node } = editor.state.selection as any
     if (node?.type?.name === "image") {
@@ -408,21 +491,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       </ToolbarGroup>
       <ToolbarDivider />
       <ToolbarGroup>
-        {isVisible("alignLeft") && (
-          <ToolbarButton onClick={() => handleAlign("left")} isActive={editorState.alignLeft} title="Align left">
-            <TextAlignLeft size={22} weight="light" />
-          </ToolbarButton>
-        )}
-        {isVisible("alignCenter") && (
-          <ToolbarButton onClick={() => handleAlign("center")} isActive={editorState.alignCenter} title="Align center">
-            <TextAlignCenter size={22} weight="light" />
-          </ToolbarButton>
-        )}
-        {isVisible("alignRight") && (
-          <ToolbarButton onClick={() => handleAlign("right")} isActive={editorState.alignRight} title="Align right">
-            <TextAlignRight size={22} weight="light" />
-          </ToolbarButton>
-        )}
+        <AlignDropdown editor={editor} editorState={editorState} handleAlign={handleAlign} isVisible={isVisible} />
       </ToolbarGroup>
       {/* Block Insert Group */}
       {(isVisible("toggle") || isVisible("image") || isVisible("youtube") || isVisible("audio") || isVisible("twitch")) && <ToolbarDivider />}
@@ -590,9 +659,10 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
               { id: "codeBlock" as const, label: "Code Block", action: () => editor.chain().focus().toggleCodeBlock().run(), active: editorState.codeBlock },
               { id: "divider" as const, label: "Divider", action: () => editor.chain().focus().setHorizontalRule().run(), active: false },
               { id: "link" as const, label: "Link", action: handleSetLink, active: editorState.link },
-              { id: "alignLeft" as const, label: "Left", action: () => handleAlign("left"), active: editorState.alignLeft },
-              { id: "alignCenter" as const, label: "Center", action: () => handleAlign("center"), active: editorState.alignCenter },
-              { id: "alignRight" as const, label: "Right", action: () => handleAlign("right"), active: editorState.alignRight },
+              { id: "textAlign" as const, label: "Align", action: () => {
+                const next = editorState.textAlign === "left" ? "center" : editorState.textAlign === "center" ? "right" : editorState.textAlign === "right" ? "justify" : "left"
+                handleAlign(next as "left" | "center" | "right" | "justify")
+              }, active: editorState.textAlign !== "left" },
               { id: "indent" as const, label: "Indent", action: () => indentCommand(editor), active: false },
               { id: "outdent" as const, label: "Outdent", action: () => outdentCommand(editor), active: false },
               { id: "undo" as const, label: "Undo", action: () => editor.chain().focus().undo().run(), active: false },
