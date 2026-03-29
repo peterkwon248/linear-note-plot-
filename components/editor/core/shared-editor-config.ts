@@ -31,10 +31,9 @@ import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight"
 import { common, createLowlight } from "lowlight"
 import { Details, DetailsSummary, DetailsContent } from "@tiptap/extension-details"
 import Mathematics from "@tiptap/extension-mathematics"
-import { Node, Extension } from "@tiptap/core"
+import { Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 
-import { TitleNode } from "./title-node"
 import { ResizableImage } from "../ResizableImage"
 import {
   indentCommand,
@@ -43,12 +42,6 @@ import {
   moveListItemDown,
 } from "../commands/custom-commands"
 
-// Custom document node that expects title as first child
-const TitleDocument = Node.create({
-  name: "doc",
-  topNode: true,
-  content: "title block+",
-})
 import { CurrentLineHighlightExtension } from "../CurrentLineHighlight"
 import { HashtagSuggestion } from "../HashtagSuggestion"
 import { WikilinkSuggestion } from "../WikilinkSuggestion"
@@ -70,6 +63,8 @@ import { ColumnsBlockNode, ColumnCellNode } from "@/components/editor/nodes/colu
 import { NoteEmbedNode } from "@/components/editor/nodes/note-embed-node"
 import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
+import GlobalDragHandle from "tiptap-extension-global-drag-handle"
+import AutoJoiner from "tiptap-extension-auto-joiner"
 
 // ── Lowlight (syntax highlighting for code blocks) ──────────────────
 const lowlight = createLowlight(common)
@@ -157,8 +152,6 @@ export interface EditorConfigOptions {
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>
   focusModeRef?: React.MutableRefObject<boolean>
   currentLineHighlightRef?: React.MutableRefObject<boolean>
-  /** When true, disables StarterKit's built-in document node (for title-document override) */
-  disableDocument?: boolean
 }
 
 // ── Factory ──────────────────────────────────────────────────────────
@@ -171,11 +164,9 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
       heading: { levels: [1, 2, 3, 4, 5, 6] },
       dropcursor: false,
       codeBlock: false,
-      ...(options?.disableDocument ? { document: false } : {}),
     }),
     Placeholder.configure({
       placeholder: ({ node }: { node: { type: { name: string } } }) => {
-        if (node.type.name === "title") return ""
         if (node.type.name === "heading") return "Heading"
         if (node.type.name === "codeBlock") return "Write code..."
         return placeholderText
@@ -186,7 +177,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     Highlight.configure({ multicolor: true }),
     Link.configure({ openOnClick: false }),
     Underline,
-    TextAlign.configure({ types: ["heading", "paragraph", "title"], alignments: ["left", "center", "right", "justify"] }),
+    TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right", "justify"] }),
     Color,
     TextStyle, // also handles fontSize via style attribute
     Superscript,
@@ -198,7 +189,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     ResizableImage.configure({ inline: false, allowBase64: true }),
     CodeBlockLowlight.configure({ lowlight }),
     Typography,
-    Dropcursor.configure({ color: "var(--accent)", width: 2, class: "drop-cursor" }),
+    Dropcursor.configure({ color: "transparent", width: 40, class: "drop-cursor" }),
     CharacterCount,
     FontFamily,
     Youtube.configure({ inline: false, allowFullscreen: true, HTMLAttributes: { class: "youtube-embed" } }),
@@ -238,12 +229,27 @@ export function createEditorExtensions(
       return base
 
     case "note": {
-      // For note tier, disable StarterKit's document and use TitleDocument instead
-      const noteBase = createBaseExtensions({ ...options, disableDocument: true })
       const noteExtensions: Extension[] = [
-        TitleDocument as Extension,
-        TitleNode as Extension,
-        ...noteBase,
+        ...base,
+        // Global drag handle — 모든 블록에 자동 드래그 핸들 제공
+        // customNodes: data-type 속성 기반으로 커스텀 노드 감지
+        GlobalDragHandle.configure({
+          dragHandleWidth: 24,
+          scrollTreshold: 100,
+          excludedTags: [],
+          customNodes: [
+            "content-block",
+            "callout-block",
+            "toc-block",
+            "summary-block",
+            "columns-block",
+            "note-embed",
+            "infobox-block",
+          ],
+        }) as Extension,
+        AutoJoiner.configure({
+          elementsToJoin: ["bulletList", "orderedList"],
+        }) as Extension,
       ]
 
       // Hashtag & wikilink suggestions

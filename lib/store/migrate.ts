@@ -698,5 +698,8 @@ export function migrate(persistedState: unknown): PlotState {
     state.sidePanelMode = 'connections'
   }
 
+  // v65: Title node removal — no Zustand state changes needed
+  // (IDB body migration handled in onRehydrateStorage)
+
   return state as unknown as PlotState
 }

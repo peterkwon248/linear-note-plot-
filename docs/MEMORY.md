@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v64)
+- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v65)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -28,7 +28,9 @@
 - **Side Panel**: Unified `SmartSidePanel` — 4-tab: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Peek(미리보기). v64
 - **Wiki sectionIndex**: `WikiSectionIndex[]` in Zustand for lightweight TOC, full blocks in IDB for scalability (v53)
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
-- **TipTap Editor**: Shared config factory (`components/editor/core/shared-editor-config.ts`) with 4-tier system (base/note/wiki/template). Title 노드 통합 (`core/title-node.ts`) — 제목과 본문이 하나의 TipTap 문서. 25+ extensions.
+- **TipTap Editor**: Shared config factory (`components/editor/core/shared-editor-config.ts`) with 4-tier system (base/note/wiki/template). **Title 노드 폐기 (v65)** — 첫 번째 블록(H2)이 자동으로 타이틀 역할 (UpNote 스타일). title-node.ts 삭제됨. 25+ extensions.
+- **Block Drag**: `tiptap-extension-global-drag-handle` + `tiptap-extension-auto-joiner` 설치. 핸들 UI는 임시 숨김 (dnd-kit Phase에서 커스텀 핸들로 교체 예정). 커스텀 노드 7종에 `not-draggable` 클래스 적용.
+- **Dropcursor Slot**: Dropcursor를 슬롯 인디케이터 스타일로 변경 (반투명 배경 + dashed 테두리, width: 40px)
 - **2-Level Routing**: `activeSpace` (inbox/notes/wiki/ontology/calendar) + `activeRoute`, `inferSpace()` 하위호환
 - **Phosphor Icons**: Lucide→Phosphor 전체 마이그레이션 완료 (PR #104, 83파일). `components/plot-icons.tsx`는 레거시
 - **Wiki Collection**: `wikiCollections: Record<string, WikiCollectionItem[]>` — per-wiki-note staging area for related material
@@ -128,14 +130,18 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Connected/Discover 2-section model, Relations UI 삭제, Peek wiki fallback
   - Toolbar: h-14 bar, w-10 buttons, 42 items, Arrange Mode (dnd-kit), Color palette 16색
   - Editor context menu (우클릭), custom commands, InsertMenu 개선
-- **PR #126 (WIP)**: Phase 1 커스텀 노드 + 에디터 UX 개선
-  - NEW: TOC Block (`components/editor/nodes/toc-node.tsx`) — atom node, heading 자동인식, click-to-scroll, X 삭제
-  - NEW: Callout Block (`components/editor/nodes/callout-node.tsx`) — wrapper node, 5 types, 아이콘 타입 순환, X unwrap
-  - Align 드롭다운 통합: 3버튼(Left/Center/Right) → 1개 드롭다운 + Justified 추가
-  - BacklinksFooter 삭제 (Side Panel Connections로 대체)
-  - SlashCommand/InsertMenu/ContextMenu에 TOC/Callout 추가
-  - toolbar-config: alignLeft/Center/Right → textAlign 단일 항목
-  - shared-editor-config: TocBlockNode/CalloutBlockNode 등록, TextAlign justify
+- **PR #126**: Phase 1 커스텀 노드 + 에디터 UX 개선
+  - TOC Block, Callout Block, Align 드롭다운 통합, BacklinksFooter 삭제
+- **PR #127 (WIP)**: Title 노드 폐기 + 블록 드래그 인프라
+  - title-node.ts 삭제, TitleDocument 제거 → StarterKit 기본 doc (content: "block+")
+  - 첫 번째 블록(H2)이 자동 타이틀 역할 (UpNote 스타일)
+  - NoteEditorAdapter 타이틀 추출: 첫 블록 텍스트 = Note.title
+  - IDB body 마이그레이션: title 노드 → heading level 2 (v65)
+  - GlobalDragHandle + AutoJoiner 설치 (tiptap-extension-global-drag-handle)
+  - 커스텀 노드 7종 not-draggable 처리
+  - Dropcursor 슬롯 인디케이터 스타일
+  - 드래그 핸들 UI 임시 숨김 (dnd-kit Phase에서 교체 예정)
+  - dnd-kit 블록 리오더 플랜 완성 (`.omc/plans/dnd-kit-block-reorder.md`)
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

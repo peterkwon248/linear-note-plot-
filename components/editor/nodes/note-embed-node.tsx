@@ -37,7 +37,7 @@ function NoteEmbedView({ node, deleteNode }: NodeViewProps) {
               return nodes
                 .map((n: any) => {
                   if (n.type === "text") return n.text || ""
-                  if (n.type === "title") return "" // Skip title
+                  if (n.type === "heading") return "" // Skip heading (title)
                   if (n.content) return extractText(n.content)
                   return ""
                 })
@@ -63,7 +63,7 @@ function NoteEmbedView({ node, deleteNode }: NodeViewProps) {
       <NodeViewWrapper>
         <div
           contentEditable={false}
-          className="border border-border/50 rounded-lg p-3 my-2 select-none bg-secondary/20"
+          className="not-draggable border border-border/50 rounded-lg p-3 my-2 select-none bg-secondary/20"
         >
           <div className="flex items-center gap-2 text-muted-foreground/50">
             <PhNote size={14} weight="bold" />
@@ -86,7 +86,7 @@ function NoteEmbedView({ node, deleteNode }: NodeViewProps) {
     <NodeViewWrapper>
       <div
         contentEditable={false}
-        className="border border-border/50 rounded-lg p-3 my-2 select-none hover:border-border transition-colors cursor-pointer group"
+        className="not-draggable border border-border/50 rounded-lg p-3 my-2 select-none hover:border-border transition-colors cursor-pointer group"
         onClick={handleOpen}
       >
         {/* Header */}
