@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import { useEditor, EditorContent, useEditorState } from "@tiptap/react"
 import "katex/dist/katex.min.css"
 import { EditorToolbar } from "./EditorToolbar"
+import { TableBubbleMenu } from "./TableBubbleMenu"
 import { BlockDragOverlay } from "./dnd/block-drag-overlay"
 import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
@@ -181,6 +182,7 @@ export function TipTapEditor({
         <BlockDragOverlay editor={editor}>
           <EditorContent editor={editor} className="w-full" />
         </BlockDragOverlay>
+        {editor && <TableBubbleMenu editor={editor} />}
       </div>
       {editor && (
         <div

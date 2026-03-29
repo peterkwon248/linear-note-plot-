@@ -124,7 +124,7 @@ function SortableBlockSlot({
         style={{
           position: "absolute",
           left: 2,
-          top: Math.max(0, (pos.height - 24) / 2),
+          top: 2,
           width: 24,
           height: 24,
           borderRadius: 4,

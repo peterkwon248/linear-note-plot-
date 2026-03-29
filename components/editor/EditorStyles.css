@@ -613,6 +613,8 @@
   margin: 1em 0;
 }
 
+
+
 /* Placeholder */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
