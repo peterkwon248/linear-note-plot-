@@ -108,7 +108,7 @@ function ColumnsNodeView({ node, editor }: NodeViewProps) {
 
   return (
     <NodeViewWrapper>
-      <div className="border border-border/30 border-dashed rounded-lg my-2 relative group">
+      <div className="not-draggable border border-border/30 border-dashed rounded-lg my-2 relative group">
         {/* Header controls */}
         <div className="flex items-center justify-between px-3 py-1.5" contentEditable={false}>
           <div className="flex items-center gap-1.5 text-muted-foreground">

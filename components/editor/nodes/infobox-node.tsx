@@ -41,7 +41,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) 
     <NodeViewWrapper>
       <div
         contentEditable={false}
-        className="border border-border/50 rounded-lg my-2 overflow-hidden select-none group"
+        className="not-draggable border border-border/50 rounded-lg my-2 overflow-hidden select-none group"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 bg-secondary/30 border-b border-border/30">

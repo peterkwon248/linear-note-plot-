@@ -101,7 +101,18 @@
       "Bash(ipconfig | grep -A 2 \"Wi-Fi\\\\|Ethernet\\\\|이더넷\\\\|무선\" | grep \"IPv4\" | head -3)",
       "Bash(ipconfig | grep \"IPv4\")",
       "Bash(cloudflared --version 2>&1 || echo \"NOT_INSTALLED\")",
-      "Bash(winget install Cloudflare.cloudflared 2>&1)"
+      "Bash(winget install Cloudflare.cloudflared 2>&1)",
+      "WebFetch(domain:tiptap.dev)",
+      "WebFetch(domain:novel.sh)",
+      "WebFetch(domain:discuss.prosemirror.net)",
+      "WebFetch(domain:angelika.me)",
+      "Bash(echo \"EXIT:$?\")",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:www.thenerdystudent.com)",
+      "WebFetch(domain:noteapps.info)",
+      "WebFetch(domain:www.howtogeek.com)",
+      "WebFetch(domain:news.ycombinator.com)",
+      "WebFetch(domain:www.omgubuntu.co.uk)"
     ]
   }
 }

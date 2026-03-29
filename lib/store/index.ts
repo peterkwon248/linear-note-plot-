@@ -116,7 +116,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 64,
+      version: 65,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -138,6 +138,36 @@ export const usePlotStore = create<PlotState>()(
           // Side panel should always start closed (not persisted)
           state.sidePanelOpen = false
           state.previewNoteId = null
+
+          // v65: Migrate IDB note bodies — convert title nodes to heading level 2
+          if (typeof indexedDB !== "undefined" && !localStorage.getItem("plot-title-migrated")) {
+            const openReq = indexedDB.open("plot-note-bodies", 1)
+            openReq.onsuccess = () => {
+              const db = openReq.result
+              try {
+                const tx = db.transaction("bodies", "readwrite")
+                const store = tx.objectStore("bodies")
+                const cursorReq = store.openCursor()
+                cursorReq.onsuccess = () => {
+                  const cursor = cursorReq.result
+                  if (!cursor) {
+                    localStorage.setItem("plot-title-migrated", "1")
+                    return
+                  }
+                  const body = cursor.value
+                  if (body?.content && Array.isArray(body.content)) {
+                    const firstNode = body.content[0]
+                    if (firstNode?.type === "title") {
+                      firstNode.type = "heading"
+                      firstNode.attrs = { ...firstNode.attrs, level: 2 }
+                      cursor.update(body)
+                    }
+                  }
+                  cursor.continue()
+                }
+              } catch { /* IDB store might not exist yet */ }
+            }
+          }
 
           // Persist seed note bodies to IDB (content is stripped during partialize)
           // Only runs if seed notes exist and have empty content (just rehydrated)

@@ -53,7 +53,7 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
   return (
     <NodeViewWrapper>
       <div
-        className={`${config.bg} ${config.border} border-l-4 rounded-r-lg my-2 relative group`}
+        className={`not-draggable ${config.bg} ${config.border} border-l-4 rounded-r-lg my-2 relative group`}
       >
         {/* Header bar with icon (click to cycle type) + remove button */}
         <div className="flex items-center justify-between px-3 pt-2 pb-0" contentEditable={false}>

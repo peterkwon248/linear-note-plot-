@@ -135,15 +135,14 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
 
   const handleChange = useCallback(
     (json: Record<string, unknown>, plainText: string) => {
-      // Extract title from the first node (title node)
+      // Extract title from the first block (any type — heading, paragraph, etc.)
       const doc = json as { type: string; content?: Array<{ type: string; content?: Array<{ text?: string }> }> }
       let title = ""
-      if (doc.content?.[0]?.type === "title") {
-        const titleContent = doc.content[0].content
-        title = titleContent?.map((n) => n.text || "").join("") || ""
+      if (doc.content?.[0]?.content) {
+        title = doc.content[0].content.map((n) => n.text || "").join("") || ""
       }
 
-      // Body plain text (everything after title)
+      // Body plain text (everything after first block text)
       const bodyPlainText = title ? plainText.slice(title.length).trimStart() : plainText
 
       pendingRef.current = { content: bodyPlainText, contentJson: json, title }
@@ -183,31 +182,26 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     [note.id, updateNote]
   )
 
-  // Build initial content for editor (with title as first node)
+  // Build initial content for editor (first block = title, UpNote style)
   const initialContent = (() => {
-    const titleNode = {
-      type: "title",
-      content: note.title ? [{ type: "text", text: note.title }] : [],
+    if (note.contentJson && Object.keys(note.contentJson).length > 0) {
+      // contentJson already has the full document — use as-is
+      // (IDB migration converts old title nodes to heading)
+      return note.contentJson
     }
 
-    if (note.contentJson && Object.keys(note.contentJson).length > 0) {
-      const json = note.contentJson as { type: string; content?: Array<{ type: string }> }
-      // If contentJson already has a title node (saved after this update), use as-is
-      if (json.content?.[0]?.type === "title") {
-        return note.contentJson
-      }
-      // Otherwise, prepend title node to existing content
-      return {
-        type: "doc",
-        content: [titleNode, ...(json.content || [])],
-      }
+    // Fallback: build from title + content strings
+    const headingNode = {
+      type: "heading",
+      attrs: { level: 2 },
+      content: note.title ? [{ type: "text", text: note.title }] : [],
     }
 
     if (note.content) {
       return {
         type: "doc",
         content: [
-          titleNode,
+          headingNode,
           { type: "paragraph", content: [{ type: "text", text: note.content }] },
         ],
       }
@@ -216,7 +210,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     return {
       type: "doc",
       content: [
-        titleNode,
+        headingNode,
         { type: "paragraph" },
       ],
     }

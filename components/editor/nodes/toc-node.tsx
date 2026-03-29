@@ -57,7 +57,7 @@ function TocNodeView({ editor, getPos, deleteNode }: NodeViewProps) {
     <NodeViewWrapper>
       <div
         contentEditable={false}
-        className="bg-secondary/30 border border-border/50 rounded-lg p-4 my-2 select-none"
+        className="not-draggable bg-secondary/30 border border-border/50 rounded-lg p-4 my-2 select-none"
       >
         {/* Header */}
         <div className="flex items-center gap-2 mb-3 text-muted-foreground">

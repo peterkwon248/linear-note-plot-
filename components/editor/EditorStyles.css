@@ -1,5 +1,27 @@
 /* TipTap ProseMirror Editor Styles */
 
+/* ── Global Drag Handle (임시 숨김 — dnd-kit Phase에서 커스텀 핸들로 교체 예정) ── */
+.drag-handle {
+  display: none !important;
+}
+
+/* ── Drop Cursor — Slot Indicator ─────────────────────────── */
+/* 드래그 시 드롭 위치에 블록 높이의 반투명 슬롯 표시 */
+.drop-cursor {
+  background: hsl(var(--accent) / 0.08) !important;
+  border: 1.5px dashed hsl(var(--accent) / 0.35) !important;
+  border-radius: 6px !important;
+  transition: opacity 100ms ease;
+  margin: 2px 0;
+}
+
+/* Dragging state */
+.ProseMirror.dragging .ProseMirror-selectednode {
+  outline: 2px solid hsl(var(--accent) / 0.4);
+  border-radius: 6px;
+  opacity: 0.5;
+}
+
 .ProseMirror[contenteditable="false"] {
   cursor: default;
 }
@@ -20,26 +42,31 @@
   margin-top: 0.4em;
 }
 
-/* Title node styling */
-h1[data-type="title"] {
+/* First block = note title (UpNote style) */
+.ProseMirror > *:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Title heading — first h2 looks like a clean title input */
+.ProseMirror > h2:first-child {
   font-size: var(--text-title);
   font-weight: 600;
   line-height: 1.2;
   margin-bottom: 0.5rem;
   border: none;
   outline: none;
+  letter-spacing: -0.01em;
 }
 
-h1[data-type="title"]:empty::before {
+/* Placeholder for empty title */
+.ProseMirror > h2:first-child.is-empty::before {
   content: "Untitled";
   color: hsl(var(--muted-foreground));
   opacity: 0.4;
-}
-
-/* Ensure title has no margin-top */
-.ProseMirror > h1[data-type="title"]:first-child {
-  margin-top: 0;
-  padding-top: 0;
+  pointer-events: none;
+  float: left;
+  height: 0;
 }
 
 /* Paragraphs */

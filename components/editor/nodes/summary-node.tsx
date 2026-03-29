@@ -28,7 +28,7 @@ function SummaryNodeView({ node, editor }: NodeViewProps) {
 
   return (
     <NodeViewWrapper>
-      <div className="border border-border/50 border-dashed rounded-lg my-2 relative group">
+      <div className="not-draggable border border-border/50 border-dashed rounded-lg my-2 relative group">
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2" contentEditable={false}>
           <button
