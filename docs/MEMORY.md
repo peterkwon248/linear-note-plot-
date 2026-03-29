@@ -29,8 +29,9 @@
 - **Wiki sectionIndex**: `WikiSectionIndex[]` in Zustand for lightweight TOC, full blocks in IDB for scalability (v53)
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
 - **TipTap Editor**: Shared config factory (`components/editor/core/shared-editor-config.ts`) with 4-tier system (base/note/wiki/template). **Title 노드 폐기 (v65)** — 첫 번째 블록(H2)이 자동으로 타이틀 역할 (UpNote 스타일). title-node.ts 삭제됨. 25+ extensions.
-- **Block Drag**: `tiptap-extension-global-drag-handle` + `tiptap-extension-auto-joiner` 설치. 핸들 UI는 임시 숨김 (dnd-kit Phase에서 커스텀 핸들로 교체 예정). 커스텀 노드 7종에 `not-draggable` 클래스 적용.
-- **Dropcursor Slot**: Dropcursor를 슬롯 인디케이터 스타일로 변경 (반투명 배경 + dashed 테두리, width: 40px)
+- **Block Drag (dnd-kit)**: `components/editor/dnd/` — useBlockPositions + useBlockReorder 훅 + BlockDragOverlay 컴포넌트. ProseMirror DOM 위 투명 오버레이 레이어. 드래그 핸들(⠿) hover 시 블록 왼쪽에 표시. DOM 클론 프리뷰. GlobalDragHandle 제거됨.
+- **Dropcursor Slot**: Dropcursor를 슬롯 인디케이터 스타일로 변경 (반투명 배경 + dashed 테두리)
+- **EditorStyles.css CSS 변수**: globals.css가 hex 값 사용 → `hsl(var(--xxx))` 패턴 전부 `var(--xxx)` 또는 `color-mix()`로 변환 완료
 - **2-Level Routing**: `activeSpace` (inbox/notes/wiki/ontology/calendar) + `activeRoute`, `inferSpace()` 하위호환
 - **Phosphor Icons**: Lucide→Phosphor 전체 마이그레이션 완료 (PR #104, 83파일). `components/plot-icons.tsx`는 레거시
 - **Wiki Collection**: `wikiCollections: Record<string, WikiCollectionItem[]>` — per-wiki-note staging area for related material
@@ -132,16 +133,17 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Editor context menu (우클릭), custom commands, InsertMenu 개선
 - **PR #126**: Phase 1 커스텀 노드 + 에디터 UX 개선
   - TOC Block, Callout Block, Align 드롭다운 통합, BacklinksFooter 삭제
-- **PR #127 (WIP)**: Title 노드 폐기 + 블록 드래그 인프라
-  - title-node.ts 삭제, TitleDocument 제거 → StarterKit 기본 doc (content: "block+")
-  - 첫 번째 블록(H2)이 자동 타이틀 역할 (UpNote 스타일)
-  - NoteEditorAdapter 타이틀 추출: 첫 블록 텍스트 = Note.title
-  - IDB body 마이그레이션: title 노드 → heading level 2 (v65)
-  - GlobalDragHandle + AutoJoiner 설치 (tiptap-extension-global-drag-handle)
-  - 커스텀 노드 7종 not-draggable 처리
-  - Dropcursor 슬롯 인디케이터 스타일
-  - 드래그 핸들 UI 임시 숨김 (dnd-kit Phase에서 교체 예정)
-  - dnd-kit 블록 리오더 플랜 완성 (`.omc/plans/dnd-kit-block-reorder.md`)
+- **PR #128**: Title 노드 폐기 (UpNote 스타일) + 블록 드래그 인프라
+  - title-node.ts 삭제, TitleDocument 제거, Store v65
+  - 첫 번째 블록(H2)이 자동 타이틀 역할
+  - GlobalDragHandle + AutoJoiner 설치, 커스텀 노드 not-draggable
+- **PR #129 (WIP)**: dnd-kit 블록 리오더 + 에디터 UX 개선
+  - dnd-kit Phase 1~4 구현: useBlockPositions, useBlockReorder, BlockDragOverlay
+  - GlobalDragHandle 제거 → 커스텀 dnd-kit 오버레이 핸들
+  - Backspace at heading start → paragraph 변환
+  - H 드롭다운 위치 수정 (업노트 스타일, 버튼 오른쪽)
+  - EditorStyles.css `hsl(var())` → `var()` / `color-mix()` 전면 수정 (테이블 테두리 버그 해결)
+  - H2 타이틀 크기 28px
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

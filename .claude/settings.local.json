@@ -112,7 +112,9 @@
       "WebFetch(domain:noteapps.info)",
       "WebFetch(domain:www.howtogeek.com)",
       "WebFetch(domain:news.ycombinator.com)",
-      "WebFetch(domain:www.omgubuntu.co.uk)"
+      "WebFetch(domain:www.omgubuntu.co.uk)",
+      "Bash(cp \"$HOME/.claude/.omc-worklog/latest.md\" \"$HOME/.claude/.omc-worklog/2026-03-29_1000.md\")",
+      "Bash(cp \"$HOME/.claude/.omc-worklog/latest.md\" \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\vigorous-matsumoto\\\\.omc\\\\worklog\\\\latest.md\")"
     ]
   }
 }
