@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import { useEditor, EditorContent, useEditorState } from "@tiptap/react"
 import "katex/dist/katex.min.css"
 import { EditorToolbar } from "./EditorToolbar"
+import { BlockDragOverlay } from "./dnd/block-drag-overlay"
 import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
 import { createEditorExtensions } from "./core/shared-editor-config"
@@ -177,7 +178,9 @@ export function TipTapEditor({
       data-code-font={codeFontFamily}
     >
       <div ref={editorWrapRef} className="flex-1">
-        <EditorContent editor={editor} className="w-full" />
+        <BlockDragOverlay editor={editor}>
+          <EditorContent editor={editor} className="w-full" />
+        </BlockDragOverlay>
       </div>
       {editor && (
         <div

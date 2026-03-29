@@ -73,7 +73,7 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
   const [isOpen, setIsOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ left: 0, bottom: 0 })
+  const [pos, setPos] = useState({ left: 0, top: 0 })
 
   const headingOptions = [
     { level: 1, label: "H1", fontSize: "20px" },
@@ -111,8 +111,8 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
     if (!buttonRef.current) return
     const rect = buttonRef.current.getBoundingClientRect()
     setPos({
-      left: rect.left + rect.width / 2,
-      bottom: window.innerHeight - rect.top + 6,
+      left: rect.left,
+      top: rect.top - 6,
     })
   }, [])
 
@@ -170,8 +170,8 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed -translate-x-1/2 min-w-[120px] bg-popover border border-border rounded-lg shadow-2xl p-1 z-[1000]"
-            style={{ left: `${pos.left}px`, bottom: `${pos.bottom}px` }}
+            className="fixed -translate-y-full min-w-[120px] bg-popover border border-border rounded-lg shadow-2xl p-1 z-[1000]"
+            style={{ left: `${pos.left}px`, top: `${pos.top}px` }}
           >
             {headingOptions.map(({ level, label, fontSize }) => (
               <button

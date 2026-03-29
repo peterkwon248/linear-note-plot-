@@ -63,8 +63,6 @@ import { ColumnsBlockNode, ColumnCellNode } from "@/components/editor/nodes/colu
 import { NoteEmbedNode } from "@/components/editor/nodes/note-embed-node"
 import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
-import GlobalDragHandle from "tiptap-extension-global-drag-handle"
-import AutoJoiner from "tiptap-extension-auto-joiner"
 
 // ── Lowlight (syntax highlighting for code blocks) ──────────────────
 const lowlight = createLowlight(common)
@@ -201,7 +199,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     Audio,
     Twitch,
     UniqueID.configure({
-      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule'],
+      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock'],
     }),
     InvisibleCharacters.configure({
       visible: false, // disabled by default, toggled via toolbar
@@ -231,25 +229,6 @@ export function createEditorExtensions(
     case "note": {
       const noteExtensions: Extension[] = [
         ...base,
-        // Global drag handle — 모든 블록에 자동 드래그 핸들 제공
-        // customNodes: data-type 속성 기반으로 커스텀 노드 감지
-        GlobalDragHandle.configure({
-          dragHandleWidth: 24,
-          scrollTreshold: 100,
-          excludedTags: [],
-          customNodes: [
-            "content-block",
-            "callout-block",
-            "toc-block",
-            "summary-block",
-            "columns-block",
-            "note-embed",
-            "infobox-block",
-          ],
-        }) as Extension,
-        AutoJoiner.configure({
-          elementsToJoin: ["bulletList", "orderedList"],
-        }) as Extension,
       ]
 
       // Hashtag & wikilink suggestions
@@ -303,6 +282,17 @@ export function createEditorExtensions(
             "Shift-Tab": ({ editor: e }) => outdentCommand(e),
             "Alt-Shift-ArrowUp": ({ editor: e }) => moveListItemUp(e),
             "Alt-Shift-ArrowDown": ({ editor: e }) => moveListItemDown(e),
+            // Backspace at start of heading → convert to paragraph (UpNote style)
+            Backspace: ({ editor: e }) => {
+              const { $from } = e.state.selection
+              if (
+                $from.parent.type.name === "heading" &&
+                $from.parentOffset === 0
+              ) {
+                return e.commands.setParagraph()
+              }
+              return false
+            },
           }
         },
       })

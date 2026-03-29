@@ -1,25 +1,10 @@
 /* TipTap ProseMirror Editor Styles */
 
-/* ── Global Drag Handle (임시 숨김 — dnd-kit Phase에서 커스텀 핸들로 교체 예정) ── */
-.drag-handle {
-  display: none !important;
-}
-
-/* ── Drop Cursor — Slot Indicator ─────────────────────────── */
-/* 드래그 시 드롭 위치에 블록 높이의 반투명 슬롯 표시 */
+/* ── Drop Cursor (text/image drag — ProseMirror native) ──── */
 .drop-cursor {
-  background: hsl(var(--accent) / 0.08) !important;
-  border: 1.5px dashed hsl(var(--accent) / 0.35) !important;
+  background: color-mix(in srgb, var(--accent) 8%, transparent) !important;
+  border: 1.5px dashed color-mix(in srgb, var(--accent) 35%, transparent) !important;
   border-radius: 6px !important;
-  transition: opacity 100ms ease;
-  margin: 2px 0;
-}
-
-/* Dragging state */
-.ProseMirror.dragging .ProseMirror-selectednode {
-  outline: 2px solid hsl(var(--accent) / 0.4);
-  border-radius: 6px;
-  opacity: 0.5;
 }
 
 .ProseMirror[contenteditable="false"] {
@@ -30,7 +15,7 @@
   outline: none;
   min-height: 300px;
   padding: 0;
-  color: hsl(var(--foreground));
+  color: var(--foreground);
   font-size: 15px;
   line-height: 1.75;
   letter-spacing: -0.01em;
@@ -50,19 +35,19 @@
 
 /* Title heading — first h2 looks like a clean title input */
 .ProseMirror > h2:first-child {
-  font-size: var(--text-title);
+  font-size: 28px;
   font-weight: 600;
   line-height: 1.2;
   margin-bottom: 0.5rem;
   border: none;
   outline: none;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 /* Placeholder for empty title */
 .ProseMirror > h2:first-child.is-empty::before {
   content: "Untitled";
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
   opacity: 0.4;
   pointer-events: none;
   float: left;
@@ -88,7 +73,7 @@
 .ProseMirror h6 {
   margin-top: 0.4em;
   margin-bottom: 0.15em;
-  color: hsl(var(--foreground));
+  color: var(--foreground);
 }
 
 .ProseMirror h1:first-child,
@@ -139,7 +124,7 @@
   line-height: 1.55;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
 }
 
 /* Text alignment */
@@ -186,7 +171,7 @@
 }
 
 .ProseMirror li::marker {
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
 }
 
 /* Task Lists */
@@ -233,7 +218,7 @@
   height: 18px;
   min-width: 18px;
   min-height: 18px;
-  border: 2px solid hsl(var(--border));
+  border: 2px solid var(--border);
   border-radius: 5px;
   cursor: pointer;
   position: relative;
@@ -281,7 +266,7 @@
 
 .ProseMirror li[data-type="taskItem"][data-checked="true"] > div {
   text-decoration: line-through;
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
 }
 
 /* Blockquote */
@@ -294,7 +279,7 @@
   margin-bottom: 0.75em;
   background: color-mix(in srgb, var(--accent) 6%, transparent);
   border-radius: 0 8px 8px 0;
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
 }
 
 .ProseMirror blockquote p {
@@ -329,8 +314,8 @@
 
 /* Code Block */
 .ProseMirror pre {
-  background-color: hsl(var(--secondary));
-  border: 1px solid hsl(var(--border));
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px 20px;
   overflow-x: auto;
@@ -340,7 +325,7 @@
 
 .ProseMirror pre code {
   background: none;
-  color: hsl(var(--foreground));
+  color: var(--foreground);
   padding: 0;
   font-size: 13px;
   display: block;
@@ -412,8 +397,8 @@
 /* Image dropdown menu (portaled to body) */
 .image-node-dropdown {
   min-width: 170px;
-  background: hsl(var(--popover));
-  border: 1px solid hsl(var(--border));
+  background: var(--popover);
+  border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 4px;
@@ -433,7 +418,7 @@
   padding: 7px 10px;
   border-radius: 6px;
   cursor: pointer;
-  color: hsl(var(--foreground) / 0.8);
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
   font-size: 13px;
   background: transparent;
   border: none;
@@ -443,8 +428,8 @@
 }
 
 .image-node-dropdown-item:hover {
-  background: hsl(var(--accent) / 0.08);
-  color: hsl(var(--foreground));
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--foreground);
 }
 
 .image-node-dropdown-danger:hover {
@@ -469,27 +454,27 @@
   border: 1px solid transparent;
   outline: none;
   border-radius: 6px;
-  background: hsl(var(--muted) / 0.4);
-  color: hsl(var(--muted-foreground));
+  background: color-mix(in srgb, var(--muted) 40%, transparent);
+  color: var(--muted-foreground);
   cursor: pointer;
   transition: all 0.1s;
 }
 
 .image-node-align-btn:hover {
-  background: hsl(var(--accent));
-  color: hsl(var(--foreground));
-  border-color: hsl(var(--border));
+  background: var(--accent);
+  color: var(--foreground);
+  border-color: var(--border);
 }
 
 .image-node-align-active {
   background: color-mix(in srgb, var(--accent) 15%, transparent);
-  color: hsl(var(--foreground));
+  color: var(--foreground);
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .image-node-dropdown-separator {
   height: 1px;
-  background: hsl(var(--border));
+  background: var(--border);
   margin: 4px 0;
 }
 
@@ -542,7 +527,7 @@
 /* Horizontal Rule */
 .ProseMirror hr {
   border: none;
-  border-top: 1px solid hsl(var(--border));
+  border-top: 1px solid var(--border);
   margin: 2em 0;
 }
 
@@ -578,12 +563,12 @@
   table-layout: fixed;
   overflow: hidden;
   border-radius: 8px;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid var(--border);
 }
 
 .ProseMirror th,
 .ProseMirror td {
-  border: 1px solid hsl(var(--border));
+  border: 1px solid var(--border);
   padding: 10px 14px;
   vertical-align: top;
   position: relative;
@@ -593,7 +578,7 @@
 }
 
 .ProseMirror th {
-  background-color: hsl(var(--muted));
+  background-color: var(--muted);
   font-weight: 600;
   font-size: 13px;
 }
@@ -631,7 +616,7 @@
 /* Placeholder */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: hsl(var(--muted-foreground) / 0.4);
+  color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
   pointer-events: none;
   height: 0;
   float: left;
@@ -783,7 +768,7 @@
 /* ── Details / Toggle Block ─────────────────────────────────────── */
 
 .ProseMirror .details-block {
-  border: 1px solid hsl(var(--border));
+  border: 1px solid var(--border);
   border-radius: 8px;
   margin: 0.75em 0;
   overflow: hidden;
@@ -794,8 +779,8 @@
   cursor: pointer;
   font-weight: 500;
   font-size: 14px;
-  color: hsl(var(--foreground));
-  background: hsl(var(--muted) / 0.3);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--muted) 30%, transparent);
   list-style: none;
   display: flex;
   align-items: center;
@@ -805,13 +790,13 @@
 }
 
 .ProseMirror .details-block summary:hover {
-  background: hsl(var(--muted) / 0.5);
+  background: color-mix(in srgb, var(--muted) 50%, transparent);
 }
 
 .ProseMirror .details-block summary::before {
   content: "\25B6";
   font-size: 10px;
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
   transition: transform 0.2s ease;
   display: inline-block;
   flex-shrink: 0;
@@ -839,7 +824,7 @@
   padding: 4px 8px;
   font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
   font-size: 13px;
-  color: hsl(var(--foreground));
+  color: var(--foreground);
   outline: none;
   min-width: 40px;
 }
@@ -869,7 +854,7 @@
   margin: 1em 0;
   border-radius: 10px;
   overflow: hidden;
-  background: hsl(var(--muted));
+  background: var(--muted);
 }
 
 .ProseMirror .youtube-embed iframe {
@@ -932,8 +917,8 @@
   min-width: 100px;
   overflow: hidden;
   border-radius: 6px;
-  border: 1px solid hsl(var(--border));
-  background: hsl(var(--popover));
+  border: 1px solid var(--border);
+  background: var(--popover);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -943,7 +928,7 @@
   padding: 6px 12px;
   text-align: left;
   font-size: 13px;
-  color: hsl(var(--foreground));
+  color: var(--foreground);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -951,7 +936,7 @@
 }
 
 .wikilink-dropdown-btn:hover {
-  background: hsl(var(--secondary));
+  background: var(--secondary);
 }
 
 .wikilink-dropdown-btn:first-child {
@@ -996,7 +981,7 @@
 
 .wiki-read-content .ProseMirror h2 {
   padding-bottom: 0.3em;
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: 1px solid var(--border);
   margin-top: 1.2em;
 }
 
@@ -1014,9 +999,9 @@
 .wiki-categories {
   margin-top: 2em;
   padding-top: 1em;
-  border-top: 1px solid hsl(var(--border));
+  border-top: 1px solid var(--border);
   font-size: 13px;
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
@@ -1029,7 +1014,7 @@
 }
 
 .wiki-categories button {
-  color: hsl(var(--accent));
+  color: var(--accent);
   cursor: pointer;
   transition: color 0.15s;
   background: none;
@@ -1043,6 +1028,6 @@
 }
 
 .wiki-categories .wiki-cat-sep {
-  color: hsl(var(--muted-foreground) / 0.4);
+  color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
   margin: 0 2px;
 }
