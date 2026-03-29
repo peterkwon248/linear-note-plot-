@@ -33,6 +33,7 @@ import { Details, DetailsSummary, DetailsContent } from "@tiptap/extension-detai
 import Mathematics from "@tiptap/extension-mathematics"
 import { Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
+import { CellSelection, deleteRow as pmDeleteRow, deleteColumn as pmDeleteColumn } from "prosemirror-tables"
 
 import { ResizableImage } from "../ResizableImage"
 import {
@@ -182,8 +183,36 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     Subscript,
     Table.configure({ resizable: true }),
     TableRow,
-    TableCell,
-    TableHeader,
+    TableCell.extend({
+      addAttributes() {
+        return {
+          ...this.parent?.(),
+          backgroundColor: {
+            default: null,
+            parseHTML: (el: HTMLElement) => el.style.backgroundColor || null,
+            renderHTML: (attrs: Record<string, unknown>) => {
+              if (!attrs.backgroundColor) return {}
+              return { style: `background-color: ${attrs.backgroundColor}` }
+            },
+          },
+        }
+      },
+    }),
+    TableHeader.extend({
+      addAttributes() {
+        return {
+          ...this.parent?.(),
+          backgroundColor: {
+            default: null,
+            parseHTML: (el: HTMLElement) => el.style.backgroundColor || null,
+            renderHTML: (attrs: Record<string, unknown>) => {
+              if (!attrs.backgroundColor) return {}
+              return { style: `background-color: ${attrs.backgroundColor}` }
+            },
+          },
+        }
+      },
+    }),
     ResizableImage.configure({ inline: false, allowBase64: true }),
     CodeBlockLowlight.configure({ lowlight }),
     Typography,
@@ -276,27 +305,109 @@ export function createEditorExtensions(
       // Custom keyboard shortcuts (Indent/Outdent, Move List)
       const CustomKeyboardShortcuts = Extension.create({
         name: "customKeyboardShortcuts",
+        priority: 1000, // Higher priority to override default handlers
         addKeyboardShortcuts() {
           return {
-            Tab: ({ editor: e }) => indentCommand(e),
-            "Shift-Tab": ({ editor: e }) => outdentCommand(e),
+            Tab: ({ editor: e }) => {
+              // In table → go to next cell (TipTap default)
+              if (e.isActive("table")) return e.commands.goToNextCell()
+              return indentCommand(e)
+            },
+            "Shift-Tab": ({ editor: e }) => {
+              // In table → go to previous cell
+              if (e.isActive("table")) return e.commands.goToPreviousCell()
+              return outdentCommand(e)
+            },
             "Alt-Shift-ArrowUp": ({ editor: e }) => moveListItemUp(e),
             "Alt-Shift-ArrowDown": ({ editor: e }) => moveListItemDown(e),
             // Backspace at start of heading → convert to paragraph (UpNote style)
             Backspace: ({ editor: e }) => {
               const { $from } = e.state.selection
+
+              // Heading → paragraph
               if (
                 $from.parent.type.name === "heading" &&
                 $from.parentOffset === 0
               ) {
                 return e.commands.setParagraph()
               }
+
+              // Empty paragraph after table → delete paragraph + table
+              if (
+                $from.parent.type.name === "paragraph" &&
+                $from.parent.textContent === "" &&
+                $from.parentOffset === 0
+              ) {
+                const resolvedPos = e.state.doc.resolve($from.before($from.depth))
+                const indexInDoc = resolvedPos.index(0)
+                if (indexInDoc > 0) {
+                  const prevNode = e.state.doc.child(indexInDoc - 1)
+                  if (prevNode.type.name === "table") {
+                    // Delete empty paragraph + table above
+                    const tableStart = $from.before($from.depth) - prevNode.nodeSize
+                    const paraEnd = $from.after($from.depth)
+                    const { tr } = e.state
+                    tr.delete(tableStart, paraEnd)
+                    e.view.dispatch(tr)
+                    return true
+                  }
+                }
+              }
+
               return false
             },
           }
         },
       })
       noteExtensions.push(CustomKeyboardShortcuts as Extension)
+
+      // Table keyboard — Delete key intercept (must be after Table extension)
+      // prosemirror-tables의 tableEditing()이 Delete를 deleteCellSelection으로 선점하므로
+      // addProseMirrorPlugins로 그보다 먼저 실행되는 플러그인을 등록
+      const TableKeyboard = Extension.create({
+        name: "tableKeyboard",
+        addProseMirrorPlugins() {
+          return [
+            new Plugin({
+              key: new PluginKey("tableKeyboard"),
+              props: {
+                handleKeyDown(view, event) {
+                  if (event.key !== "Delete") return false
+
+                  const { state, dispatch } = view
+                  const { selection } = state
+                  if (!(selection instanceof CellSelection)) return false
+
+                  // Check if selected cells are all empty
+                  const text = state.doc.textBetween(selection.from, selection.to).trim()
+                  if (text !== "") return false // has text → default (clear content)
+
+                  // Row selection → delete rows
+                  if (selection.isRowSelection()) {
+                    return pmDeleteRow(state, dispatch)
+                  }
+                  // Col selection → delete columns
+                  if (selection.isColSelection()) {
+                    return pmDeleteColumn(state, dispatch)
+                  }
+                  // Partial selection → try row first, then col
+                  if (pmDeleteRow(state)) {
+                    return pmDeleteRow(state, dispatch)
+                  }
+                  if (pmDeleteColumn(state)) {
+                    return pmDeleteColumn(state, dispatch)
+                  }
+
+                  return false
+                },
+              },
+            }),
+          ]
+        },
+      })
+      noteExtensions.push(TableKeyboard as Extension)
+
+      // Table UI is handled by TableBubbleMenu component in TipTapEditor
 
       // Typewriter (requires scrollContainerRef + focusModeRef)
       if (options?.scrollContainerRef && options?.focusModeRef) {

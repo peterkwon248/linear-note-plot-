@@ -32,6 +32,10 @@
 - **Block Drag (dnd-kit)**: `components/editor/dnd/` — useBlockPositions + useBlockReorder 훅 + BlockDragOverlay 컴포넌트. ProseMirror DOM 위 투명 오버레이 레이어. 드래그 핸들(⠿) hover 시 블록 왼쪽에 표시. DOM 클론 프리뷰. GlobalDragHandle 제거됨.
 - **Dropcursor Slot**: Dropcursor를 슬롯 인디케이터 스타일로 변경 (반투명 배경 + dashed 테두리)
 - **EditorStyles.css CSS 변수**: globals.css가 hex 값 사용 → `hsl(var(--xxx))` 패턴 전부 `var(--xxx)` 또는 `color-mix()`로 변환 완료
+- **Table BubbleMenu**: `components/editor/TableBubbleMenu.tsx` — 테이블 셀 focus 시 floating 툴바. Row/Col 추가삭제, Merge/Split, Align, Bold, 셀 배경색(7색), Header 토글, 스마트 삭제(CellSelection→행삭제, 아니면→테이블삭제)
+- **Table Delete Key**: prosemirror-tables의 `CellSelection` + `deleteRow`/`deleteColumn` 직접 import. `addProseMirrorPlugins`로 tableEditing보다 먼저 실행되는 플러그인 등록. 빈 셀 선택 + Delete → 행/열 삭제.
+- **Table Cell Background**: TableCell/TableHeader를 extend해서 `backgroundColor` 속성 추가. `setCellAttribute("backgroundColor", rgba)` 사용.
+- **Table Tab Navigation**: 테이블 안에서 Tab → `goToNextCell()`, Shift+Tab → `goToPreviousCell()`
 - **2-Level Routing**: `activeSpace` (inbox/notes/wiki/ontology/calendar) + `activeRoute`, `inferSpace()` 하위호환
 - **Phosphor Icons**: Lucide→Phosphor 전체 마이그레이션 완료 (PR #104, 83파일). `components/plot-icons.tsx`는 레거시
 - **Wiki Collection**: `wikiCollections: Record<string, WikiCollectionItem[]>` — per-wiki-note staging area for related material
@@ -137,13 +141,15 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - title-node.ts 삭제, TitleDocument 제거, Store v65
   - 첫 번째 블록(H2)이 자동 타이틀 역할
   - GlobalDragHandle + AutoJoiner 설치, 커스텀 노드 not-draggable
-- **PR #129 (WIP)**: dnd-kit 블록 리오더 + 에디터 UX 개선
-  - dnd-kit Phase 1~4 구현: useBlockPositions, useBlockReorder, BlockDragOverlay
-  - GlobalDragHandle 제거 → 커스텀 dnd-kit 오버레이 핸들
-  - Backspace at heading start → paragraph 변환
-  - H 드롭다운 위치 수정 (업노트 스타일, 버튼 오른쪽)
-  - EditorStyles.css `hsl(var())` → `var()` / `color-mix()` 전면 수정 (테이블 테두리 버그 해결)
-  - H2 타이틀 크기 28px
+- **PR #129**: dnd-kit 블록 리오더 + 에디터 UX 개선
+  - dnd-kit Phase 1~4, GlobalDragHandle 제거, Backspace heading→paragraph
+  - H 드롭다운 위치 수정, EditorStyles.css hsl(var()) 전면 수정, H2 타이틀 28px
+- **PR #130 (WIP)**: 테이블 UX 대폭 개선
+  - TableBubbleMenu (Row/Col/Merge/Split/Align/Bold/Color/Header/Delete)
+  - Delete 키 빈 셀 선택 → 행/열 삭제 (prosemirror-tables 직접 import)
+  - Tab/Shift+Tab 셀 이동, TableCell backgroundColor extend
+  - Backspace after table → table 삭제
+  - 드래그 핸들 최상단 위치
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

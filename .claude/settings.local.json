@@ -114,7 +114,12 @@
       "WebFetch(domain:news.ycombinator.com)",
       "WebFetch(domain:www.omgubuntu.co.uk)",
       "Bash(cp \"$HOME/.claude/.omc-worklog/latest.md\" \"$HOME/.claude/.omc-worklog/2026-03-29_1000.md\")",
-      "Bash(cp \"$HOME/.claude/.omc-worklog/latest.md\" \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\vigorous-matsumoto\\\\.omc\\\\worklog\\\\latest.md\")"
+      "Bash(cp \"$HOME/.claude/.omc-worklog/latest.md\" \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\vigorous-matsumoto\\\\.omc\\\\worklog\\\\latest.md\")",
+      "Bash(cp \"$HOME/.claude/.omc-worklog/latest.md\" \"$HOME/.claude/.omc-worklog/2026-03-29_1500.md\")",
+      "WebFetch(domain:bear.app)",
+      "WebFetch(domain:help.craft.io)",
+      "WebFetch(domain:rickdegraaf.com)",
+      "Bash(grep -r BubbleMenu C:UsersuserDesktoplinear-note-plot-.claudeworktreesvigorous-matsumotonode_modules@tiptapreactdist --include=*.d.ts -l)"
     ]
   }
 }
