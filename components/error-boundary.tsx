@@ -45,19 +45,19 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             <Warning className="h-5 w-5 text-destructive" />
           </div>
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-foreground">Something went wrong</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-note font-medium text-foreground">Something went wrong</p>
+            <p className="text-2xs text-muted-foreground">
               An unexpected error occurred while rendering this content.
             </p>
           </div>
           {process.env.NODE_ENV === 'development' && this.state.error && (
-            <pre className="max-w-full overflow-auto rounded border border-border bg-muted px-3 py-2 text-left text-xs text-muted-foreground">
+            <pre className="max-w-full overflow-auto rounded border border-border bg-muted px-3 py-2 text-left text-2xs text-muted-foreground">
               {this.state.error.message}
             </pre>
           )}
           <button
             onClick={this.handleReset}
-            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-2xs font-medium text-foreground transition-colors hover:bg-muted"
           >
             Try again
           </button>

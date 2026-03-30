@@ -55,6 +55,36 @@
   --active-bg: rgba(0,0,0, 0.04);
   --active-bg-strong: rgba(0,0,0, 0.06);
   --toolbar-active: rgba(94,106,210, 0.15);
+
+  /* Editor Spine */
+  --editor-font-size: 15px;
+  --editor-line-height: 1.75;
+  --editor-letter-spacing: -0.01em;
+  --editor-h1: 28px;
+  --editor-h2: 23px;
+  --editor-h3: 19px;
+  --editor-h4: 16px;
+  --editor-h5: 14.5px;
+  --editor-h6: 13px;
+  --editor-block-gap: 0.4em;
+  --editor-code-bg: rgba(0,0,0,0.05);
+  --editor-code-radius: 4px;
+  --editor-link-color: var(--accent);
+
+  /* Editor Layout */
+  --editor-max-width: 720px;
+  --editor-padding-x: 48px;
+  --editor-padding-y: 32px;
+
+  /* Layout Spine */
+  --header-height: 52px;
+  --activity-bar-width: 44px;
+  --sidebar-default-width: 220px;
+
+  /* Transition Spine */
+  --transition-fast: 120ms;
+  --transition-default: 160ms;
+  --transition-slow: 200ms;
 }
 
 .dark {
@@ -116,6 +146,9 @@
 
   /* 에디터 툴바 */
   --toolbar-active: rgba(99,102,241, 0.2);
+
+  /* Editor Spine (dark) */
+  --editor-code-bg: rgba(255,255,255,0.08);
 }
 
 @theme inline {

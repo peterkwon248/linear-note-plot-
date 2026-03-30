@@ -89,7 +89,7 @@ function InlineSelect<T extends string>({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
+        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
       >
         {current?.label ?? value}
         <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} weight="regular" />
@@ -102,7 +102,7 @@ function InlineSelect<T extends string>({
               <button
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setOpen(false) }}
-                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-note transition-colors hover:bg-accent hover:text-accent-foreground ${
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
@@ -241,12 +241,12 @@ function BoardColumn({
         {headerColor && (
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: headerColor.color }} />
         )}
-        <span className="text-sm font-semibold text-foreground">{group.label}</span>
-        <span className="text-xs text-muted-foreground">{group.notes.length}</span>
+        <span className="text-note font-semibold text-foreground">{group.label}</span>
+        <span className="text-2xs text-muted-foreground">{group.notes.length}</span>
       </div>
       {/* Drop feedback banner */}
       {isCardOver && activeDragId && !activeDragId.startsWith("col-") && (
-        <div className="mx-1.5 mb-1 rounded-md bg-accent/10 px-2.5 py-1.5 text-center text-xs font-medium text-accent animate-in fade-in duration-150">
+        <div className="mx-1.5 mb-1 rounded-md bg-accent/10 px-2.5 py-1.5 text-center text-2xs font-medium text-accent animate-in fade-in duration-150">
           Move {dragCount && dragCount > 1 ? `${dragCount} notes` : "here"}
         </div>
       )}
@@ -367,7 +367,7 @@ function BoardCardInner({
 
       {/* Preview text */}
       {showCardPreview !== false && note.preview && (
-        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground leading-relaxed">
+        <p className="mt-1 line-clamp-1 text-2xs text-muted-foreground leading-relaxed">
           {note.preview}
         </p>
       )}
@@ -402,22 +402,22 @@ function BoardCardInner({
       <ContextMenuContent className="w-52">
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
-            <ContextMenuItem onClick={onKeep} className="text-sm">
+            <ContextMenuItem onClick={onKeep} className="text-note">
               <PhCheck className="mr-2 text-accent" size={16} weight="bold" /> Done
             </ContextMenuItem>
             <ContextMenuSub>
-              <ContextMenuSubTrigger className="text-sm">
+              <ContextMenuSubTrigger className="text-note">
                 <Alarm className="mr-2 text-muted-foreground" size={16} weight="regular" /> Snooze
               </ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-44">
-                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-sm">3 hours</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-sm">Tomorrow 10:00 AM</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-sm">In 3 days</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-sm">Next week 10:00 AM</ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-sm">In 1 week</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-note">3 hours</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-note">Tomorrow 10:00 AM</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-note">In 3 days</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-note">Next week 10:00 AM</ContextMenuItem>
+                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-note">In 1 week</ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
-            <ContextMenuItem onClick={onTrash} className="text-sm text-destructive focus:text-destructive">
+            <ContextMenuItem onClick={onTrash} className="text-note text-destructive focus:text-destructive">
               <Trash className="mr-2" size={16} weight="regular" /> Trash
             </ContextMenuItem>
             <ContextMenuSeparator />
@@ -425,10 +425,10 @@ function BoardCardInner({
         )}
         {note.status === "capture" && (
           <>
-            <ContextMenuItem onClick={onPromote} className="text-sm">
+            <ContextMenuItem onClick={onPromote} className="text-note">
               <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" /> Promote to Permanent
             </ContextMenuItem>
-            <ContextMenuItem onClick={onMoveBack} className="text-sm">
+            <ContextMenuItem onClick={onMoveBack} className="text-note">
               <InboxIcon className="mr-2 text-muted-foreground" size={16} weight="regular" /> Back to Inbox
             </ContextMenuItem>
             <ContextMenuSeparator />
@@ -436,7 +436,7 @@ function BoardCardInner({
         )}
         {note.status === "permanent" && (
           <>
-            <ContextMenuItem onClick={onDemote} className="text-sm">
+            <ContextMenuItem onClick={onDemote} className="text-note">
               <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" /> Demote to Capture
             </ContextMenuItem>
             <ContextMenuSeparator />
@@ -444,28 +444,28 @@ function BoardCardInner({
         )}
         {/* Remind me (all notes) */}
         <ContextMenuSub>
-          <ContextMenuSubTrigger className="text-sm">
+          <ContextMenuSubTrigger className="text-note">
             <Bell className="mr-2 text-muted-foreground" size={16} weight="regular" />
             Remind me
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-48">
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Later today</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Tomorrow</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>In 3 days</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Next week</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>In 1 week</span>
             </ContextMenuItem>
@@ -473,7 +473,7 @@ function BoardCardInner({
         </ContextMenuSub>
         <ContextMenuSeparator />
 
-        <ContextMenuItem onClick={onClick} className="text-sm">
+        <ContextMenuItem onClick={onClick} className="text-note">
           <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" /> Open
         </ContextMenuItem>
       </ContextMenuContent>
@@ -908,7 +908,7 @@ export function NotesBoard({
             <span className="text-note text-foreground">{folderName}</span>
             <button
               onClick={() => setActiveFolderId(null)}
-              className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
             >
               <PhX size={12} weight="regular" />
             </button>
@@ -924,7 +924,7 @@ export function NotesBoard({
           <div>
             <FileText className="mx-auto mb-3 text-muted-foreground/40" size={40} weight="regular" />
             <p className="text-ui text-muted-foreground">No notes found</p>
-            <p className="mt-1 text-sm text-muted-foreground/60">
+            <p className="mt-1 text-note text-muted-foreground/60">
               {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
             </p>
           </div>
@@ -1025,7 +1025,7 @@ export function NotesBoard({
                             {!isExpanded && hiddenCount > 0 && (
                               <button
                                 onClick={() => setExpandedColumns((prev) => new Set([...prev, group.key]))}
-                                className="mx-1.5 mb-1.5 rounded-md py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                                className="mx-1.5 mb-1.5 rounded-md py-1.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                               >
                                 + {hiddenCount} more
                               </button>
@@ -1040,7 +1040,7 @@ export function NotesBoard({
                         {!isExpanded && hiddenCount > 0 && (
                           <button
                             onClick={() => setExpandedColumns((prev) => new Set([...prev, group.key]))}
-                            className="mx-1.5 mb-1.5 rounded-md py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                            className="mx-1.5 mb-1.5 rounded-md py-1.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                           >
                             + {hiddenCount} more
                           </button>
@@ -1074,8 +1074,8 @@ export function NotesBoard({
               if (!group) return null
               return (
                 <div className="w-[260px] rounded-lg bg-secondary/40 border border-accent/30 px-3 py-2.5 opacity-80 shadow-lg">
-                  <span className="text-sm font-semibold text-foreground">{group.label}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">{group.notes.length}</span>
+                  <span className="text-note font-semibold text-foreground">{group.label}</span>
+                  <span className="ml-2 text-2xs text-muted-foreground">{group.notes.length}</span>
                 </div>
               )
             })()}

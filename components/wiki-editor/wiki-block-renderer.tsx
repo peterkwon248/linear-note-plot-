@@ -130,8 +130,8 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
           <span className={cn(
             "shrink-0 font-semibold text-accent/50 tabular-nums",
             level === 2 && "text-lg",
-            level === 3 && "text-base",
-            level >= 4 && "text-sm",
+            level === 3 && "text-ui",
+            level >= 4 && "text-note",
           )}>
             {sectionNumber}.
           </span>
@@ -147,8 +147,8 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             className={cn(
               "flex-1 bg-transparent outline-none border-b border-accent/40 font-semibold text-foreground",
               level === 2 && "text-lg",
-              level === 3 && "text-base",
-              level >= 4 && "text-sm",
+              level === 3 && "text-ui",
+              level >= 4 && "text-note",
             )}
           />
         ) : (
@@ -157,8 +157,8 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             className={cn(
               "font-semibold text-foreground flex-1",
               level === 2 && "text-lg",
-              level === 3 && "text-base",
-              level >= 4 && "text-sm",
+              level === 3 && "text-ui",
+              level >= 4 && "text-note",
               editable && "cursor-text hover:text-accent/80 transition-colors duration-100",
             )}
           >
@@ -194,7 +194,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
               {onSplitSection && (
                 <button
                   onClick={() => { setMenuOpen(false); onSplitSection(block.id) }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                 >
                   <ArrowSquareUpRight size={14} weight="regular" />
                   Move to new article
@@ -206,14 +206,14 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                 <div className="relative">
                   <button
                     onClick={() => setMoveSubmenuOpen(!moveSubmenuOpen)}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                   >
                     <ArrowSquareOut size={14} weight="regular" />
                     <span className="flex-1 text-left">Move to article</span>
                     <CaretRight size={10} weight="regular" className="text-muted-foreground/40" />
                   </button>
                   {moveSubmenuOpen && (
-                    <div className="absolute left-full top-0 ml-1 w-48 rounded-lg border border-border/60 bg-popover shadow-lg py-1 z-10">
+                    <div className="absolute left-full top-0 ml-1 w-48 rounded-lg border border-border-subtle bg-surface-overlay shadow-lg py-1 z-10">
                       {otherArticles.map((a) => (
                         <button
                           key={a.id}
@@ -222,7 +222,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                             setMoveSubmenuOpen(false)
                             onMoveToArticle(block.id, a.id)
                           }}
-                          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                         >
                           <BookOpen size={12} weight="regular" className="shrink-0 text-muted-foreground/50" />
                           <span className="truncate">{a.title}</span>
@@ -239,7 +239,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                   {(onSplitSection || (onMoveToArticle && otherArticles.length > 0)) && <div className="my-1 h-px bg-border/40" />}
                   <button
                     onClick={() => { setMenuOpen(false); handleUnmerge() }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-chart-3 hover:bg-active-bg transition-colors"
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-chart-3 hover:bg-active-bg transition-colors"
                   >
                     <ArrowSquareUpRight size={14} weight="regular" />
                     Unmerge section
@@ -252,7 +252,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                   {(onSplitSection || block.mergedFrom || (onMoveToArticle && otherArticles.length > 0)) && <div className="my-1 h-px bg-border/40" />}
                   <button
                     onClick={() => { setMenuOpen(false); onDelete() }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-destructive hover:bg-active-bg transition-colors"
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
                   >
                     <Trash size={14} weight="regular" />
                     Delete section
@@ -327,14 +327,14 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
           value={editContent}
           onChange={handleInput}
           onBlur={handleFinishEdit}
-          className="w-full bg-transparent outline-none border border-accent/20 rounded-md px-3 py-2 text-sm leading-relaxed text-foreground/85 resize-none focus:border-accent/40"
+          className="w-full bg-transparent outline-none border border-accent/20 rounded-md px-3 py-2 text-note leading-relaxed text-foreground/85 resize-none focus:border-accent/40"
           placeholder="Write something..."
         />
       ) : (
         <div
           onClick={handleStartEdit}
           className={cn(
-            "text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap rounded-md px-3 py-2",
+            "text-note leading-relaxed text-foreground/85 whitespace-pre-wrap rounded-md px-3 py-2",
             editable && "cursor-text hover:bg-hover-bg transition-colors duration-100",
           )}
         >
@@ -374,7 +374,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
   if (picking && editable) {
     return (
       <div className="rounded-lg border border-accent/30 bg-card/50 overflow-hidden">
-        <div className="flex items-center gap-2 border-b border-border/30 px-3 py-2">
+        <div className="flex items-center gap-2 border-b border-border-subtle px-3 py-2">
           <MagnifyingGlass className="text-muted-foreground/50 shrink-0" size={14} weight="regular" />
           <input
             ref={inputRef}
@@ -383,7 +383,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Escape") setPicking(false) }}
             placeholder="MagnifyingGlass notes to embed..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/30"
+            className="flex-1 bg-transparent text-note outline-none placeholder:text-muted-foreground/30"
           />
           <button
             onClick={() => setPicking(false)}
@@ -394,13 +394,13 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
         </div>
         <div className="max-h-48 overflow-y-auto py-1">
           {filteredNotes.length === 0 ? (
-            <p className="px-3 py-3 text-center text-xs text-muted-foreground/40">No notes found</p>
+            <p className="px-3 py-3 text-center text-2xs text-muted-foreground/40">No notes found</p>
           ) : (
             filteredNotes.map((n) => (
               <button
                 key={n.id}
                 onClick={() => handlePickNote(n.id)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-hover-bg transition-colors duration-75"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-note hover:bg-hover-bg transition-colors duration-100"
               >
                 <FileText className="shrink-0 text-muted-foreground/50" size={14} weight="regular" />
                 <span className="truncate text-foreground/80">{n.title || "Untitled"}</span>
@@ -416,17 +416,17 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
   // No note selected
   if (!note) {
     return (
-      <div className="group/noteref rounded-lg border border-dashed border-border/50 bg-secondary/10 px-4 py-3">
+      <div className="group/noteref rounded-lg border border-dashed border-border-subtle bg-secondary/10 px-4 py-3">
         {editable ? (
           <button
             onClick={() => setPicking(true)}
-            className="flex items-center gap-2 text-sm text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            className="flex items-center gap-2 text-note text-muted-foreground/40 hover:text-muted-foreground transition-colors"
           >
             <PhPlus size={14} weight="regular" />
             Select a note to embed
           </button>
         ) : (
-          <p className="text-sm text-muted-foreground/40 italic">Note not found</p>
+          <p className="text-note text-muted-foreground/40 italic">Note not found</p>
         )}
       </div>
     )
@@ -434,7 +434,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
 
   // Note content display
   return (
-    <div className="group/noteref relative rounded-lg border border-border/40 bg-card/30 transition-colors duration-100 hover:border-accent/20">
+    <div className="group/noteref relative rounded-lg border border-border-subtle bg-card/30 transition-colors duration-100 hover:border-accent/20">
       {editable && (
         <div className="absolute -left-6 top-3 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
@@ -447,7 +447,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
           )}
         </div>
       )}
-      <div className="flex items-center gap-2 border-b border-border/30 px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-2">
         <FileText className="text-accent/60" size={14} weight="regular" />
         <span className="text-2xs font-medium uppercase tracking-wide text-accent/50">From Note</span>
         <span className="text-note font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
@@ -468,7 +468,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
           </button>
         )}
       </div>
-      <div className="px-4 py-3 text-sm leading-relaxed text-foreground/75 whitespace-pre-wrap">
+      <div className="px-4 py-3 text-note leading-relaxed text-foreground/75 whitespace-pre-wrap">
         {note.content ? (
           note.content.length > 500 ? note.content.slice(0, 500) + "..." : note.content
         ) : (
@@ -519,13 +519,13 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
         {editable ? (
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex h-28 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border/50 bg-secondary/10 text-sm text-muted-foreground/40 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
+            className="flex h-28 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-note text-muted-foreground/40 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
           >
             <UploadSimple size={16} weight="regular" />
             UploadSimple image
           </button>
         ) : (
-          <div className="flex h-28 items-center justify-center rounded-lg border border-dashed border-border/50 bg-secondary/10 text-xs text-muted-foreground/40">
+          <div className="flex h-28 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/40">
             <PhImage className="mr-2" size={20} weight="regular" />
             No image
           </div>
@@ -549,20 +549,20 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
         </div>
       )}
       {loading ? (
-        <div className="flex h-32 items-center justify-center rounded-lg bg-secondary/30 text-xs text-muted-foreground/40">
+        <div className="flex h-32 items-center justify-center rounded-lg bg-secondary/30 text-2xs text-muted-foreground/40">
           Loading image...
         </div>
       ) : url ? (
         <figure>
           <img src={url} alt={block.caption || ""} className="max-w-full rounded-lg" />
           {block.caption && (
-            <figcaption className="mt-1.5 text-center text-xs text-muted-foreground/50">
+            <figcaption className="mt-1.5 text-center text-2xs text-muted-foreground/50">
               {block.caption}
             </figcaption>
           )}
         </figure>
       ) : (
-        <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border/50 bg-secondary/10 text-xs text-muted-foreground/40">
+        <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/40">
           <PhImage className="mr-2" size={20} weight="regular" />
           Image not found
         </div>
@@ -609,7 +609,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
           onChange={(e) => setEditUrl(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
           placeholder="https://..."
-          className="w-full bg-transparent outline-none border-b border-accent/20 pb-1 text-sm text-foreground/85 placeholder:text-muted-foreground/30"
+          className="w-full bg-transparent outline-none border-b border-accent/20 pb-1 text-note text-foreground/85 placeholder:text-muted-foreground/30"
         />
         <input
           value={editTitle}
@@ -617,7 +617,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
           onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
           onBlur={handleFinishEdit}
           placeholder="Label (optional)"
-          className="w-full bg-transparent outline-none border-b border-accent/10 pb-1 text-xs text-muted-foreground/60 placeholder:text-muted-foreground/30"
+          className="w-full bg-transparent outline-none border-b border-accent/10 pb-1 text-2xs text-muted-foreground/60 placeholder:text-muted-foreground/30"
         />
       </div>
     )
@@ -637,13 +637,13 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
         {editable ? (
           <button
             onClick={handleStartEdit}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border/50 bg-secondary/10 text-sm text-muted-foreground/40 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-note text-muted-foreground/40 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
           >
             <PhLink size={16} weight="regular" />
             Add URL
           </button>
         ) : (
-          <div className="flex h-14 items-center justify-center rounded-lg border border-dashed border-border/50 bg-secondary/10 text-xs text-muted-foreground/40">
+          <div className="flex h-14 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/40">
             <PhLink className="mr-2" size={16} weight="regular" />
             No URL
           </div>
@@ -687,7 +687,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
         >
           <PhLink size={16} className="shrink-0 text-white/40" />
           <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-medium text-white/80">
+            <div className="truncate text-2xs font-medium text-white/80">
               {block.urlTitle || block.url}
             </div>
             <div className="truncate text-2xs text-white/40">{block.url}</div>
@@ -749,14 +749,14 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full z-20 mt-1 rounded-lg border border-border/60 bg-popover shadow-[0_4px_12px_rgba(0,0,0,0.2)] py-1 min-w-[180px]">
+          <div className="absolute top-full z-20 mt-1 rounded-lg border border-border-subtle bg-surface-overlay shadow-[0_4px_12px_rgba(0,0,0,0.2)] py-1 min-w-[180px]">
             {items.map(({ type, level, label, desc }, idx) => (
               <button
                 key={`${type}-${level ?? "default"}-${idx}`}
                 onClick={() => { onAdd(type, level); setOpen(false) }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-75"
+                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
               >
-                <span className="text-sm font-medium text-foreground/80">{label}</span>
+                <span className="text-note font-medium text-foreground/80">{label}</span>
                 <span className="text-2xs text-muted-foreground/30">{desc}</span>
               </button>
             ))}

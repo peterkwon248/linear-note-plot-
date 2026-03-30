@@ -291,7 +291,7 @@ export function NotePickerDialog({
                     ) : groupKey === "priority" ? (
                       <>
                         <PriorityBadge priority={value as NotePriority} />
-                        <span className="ml-1 text-sm">{label}</span>
+                        <span className="ml-1 text-note">{label}</span>
                       </>
                     ) : groupKey === "tags" && value !== "_none" ? (
                       <>
@@ -301,10 +301,10 @@ export function NotePickerDialog({
                             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
                           ) : null
                         })()}
-                        <span className="text-sm">{label}</span>
+                        <span className="text-note">{label}</span>
                       </>
                     ) : (
-                      <span className="text-sm">{label}</span>
+                      <span className="text-note">{label}</span>
                     )}
                   </DropdownMenuItem>
                 ))}
@@ -312,13 +312,13 @@ export function NotePickerDialog({
                 <div className="flex items-center justify-between px-2 py-1">
                   <button
                     onClick={() => selectAllInGroup(groupKey)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
+                    className="text-2xs text-muted-foreground hover:text-foreground"
                   >
                     Select all
                   </button>
                   <button
                     onClick={() => clearGroup(groupKey)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
+                    className="text-2xs text-muted-foreground hover:text-foreground"
                   >
                     Clear
                   </button>
@@ -327,7 +327,7 @@ export function NotePickerDialog({
               {/* × button to remove chip — outside the dropdown */}
               <button
                 onClick={() => clearGroup(groupKey)}
-                className="shrink-0 -ml-0.5 rounded-sm p-0.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-foreground"
+                className="shrink-0 -ml-0.5 rounded-sm p-0.5 text-muted-foreground/50 transition-colors hover:bg-hover-bg hover:text-foreground"
               >
                 <PhX size={10} weight="regular" />
               </button>
@@ -340,7 +340,7 @@ export function NotePickerDialog({
           <button
             key={group.key}
             onClick={() => activateGroup(group.key)}
-            className="shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <PhPlus size={12} weight="regular" />
             {group.label}
@@ -371,7 +371,7 @@ export function NotePickerDialog({
             {activeGroupKeys.length > 0 && (
               <button
                 onClick={() => setActiveFilters({})}
-                className="text-xs text-accent hover:underline"
+                className="text-2xs text-accent hover:underline"
               >
                 Clear filters
               </button>
@@ -388,11 +388,11 @@ export function NotePickerDialog({
             >
               <FileText className="shrink-0 text-muted-foreground/40" size={16} weight="regular" />
               <div className="flex-1 min-w-0">
-                <span className="truncate text-sm font-medium text-foreground block">
+                <span className="truncate text-note font-medium text-foreground block">
                   {note.title || "Untitled"}
                 </span>
                 {note.preview && (
-                  <p className="truncate text-xs text-muted-foreground/50 mt-0.5">
+                  <p className="truncate text-2xs text-muted-foreground/50 mt-0.5">
                     {note.preview}
                   </p>
                 )}

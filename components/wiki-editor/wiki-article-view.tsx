@@ -61,7 +61,7 @@ function FloatingDragDropBar({
 
   return (
     <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-6 fade-in duration-300">
-      <div className="flex items-stretch gap-2.5 rounded-xl border border-border bg-popover px-4 py-3 shadow-2xl">
+      <div className="flex items-stretch gap-2.5 rounded-lg border border-border bg-surface-overlay px-4 py-3 shadow-2xl">
         {/* New Article drop zone */}
         <div
           ref={newRef}
@@ -69,11 +69,11 @@ function FloatingDragDropBar({
             "flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-6 min-h-[80px] min-w-[120px] transition-all duration-200 cursor-default",
             isOverNew
               ? "border-accent bg-accent/10 text-accent scale-[1.03] shadow-md shadow-accent/10 animate-pulse"
-              : "border-border/60 text-muted-foreground/60 hover:border-border hover:text-muted-foreground/80 hover:scale-[1.01]"
+              : "border-border-subtle text-muted-foreground/60 hover:border-border hover:text-muted-foreground/80 hover:scale-[1.01]"
           )}
         >
           <Scissors size={20} weight="regular" />
-          <span className="text-xs font-medium whitespace-nowrap">
+          <span className="text-2xs font-medium whitespace-nowrap">
             {isOverNew ? "Drop to split" : "New Article"}
           </span>
         </div>
@@ -102,11 +102,11 @@ function ExistingArticleDropTarget({ articleId, title, isOver }: { articleId: st
         "flex flex-col items-center justify-center gap-1 rounded-lg border px-4 min-h-[80px] min-w-[100px] max-w-[160px] transition-all duration-200 cursor-default",
         isOver
           ? "border-accent bg-accent/10 text-accent scale-[1.03] shadow-md shadow-accent/10 animate-pulse"
-          : "border-border/40 text-muted-foreground/50 hover:border-border/60 hover:text-muted-foreground/70 hover:scale-[1.01]"
+          : "border-border-subtle text-muted-foreground/50 hover:border-border-subtle hover:text-muted-foreground/70 hover:scale-[1.01]"
       )}
     >
       <BookOpen size={16} weight="regular" className="shrink-0" />
-      <span className="text-xs font-medium truncate max-w-full text-center">{title}</span>
+      <span className="text-2xs font-medium truncate max-w-full text-center">{title}</span>
     </div>
   )
 }
@@ -386,7 +386,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
           <BookOpen className="text-muted-foreground/40" size={20} weight="regular" />
         </div>
-        <p className="text-sm text-muted-foreground/60">Article not found</p>
+        <p className="text-note text-muted-foreground/60">Article not found</p>
       </div>
     )
   }
@@ -472,7 +472,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   const outerContent = (
     <div className="flex flex-1 min-h-0 overflow-hidden">
       {/* TOC Sidebar */}
-      <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border/50 px-3 py-4">
+      <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border-subtle px-3 py-4">
         <div className="sticky top-0">
           <h4 className="text-2xs text-muted-foreground uppercase tracking-wider mb-2">
             Contents
@@ -488,7 +488,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
                       block: "start",
                     })
                   }}
-                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-note text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors duration-100"
+                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-note text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
                   style={{ paddingLeft: `${(s.level - 2) * 12 + 8}px` }}
                 >
                   <span className="shrink-0 text-accent font-semibold text-2xs">{s.number}.</span>
@@ -602,7 +602,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
           )}
 
           {article.blocks.length === 0 && !editable && (
-            <p className="py-8 text-center text-sm text-muted-foreground/40">
+            <p className="py-8 text-center text-note text-muted-foreground/40">
               This article has no content yet.
             </p>
           )}
@@ -612,7 +612,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
           <div className="sticky bottom-0 z-20 border-t border-border bg-popover px-4 py-3">
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground mb-1.5">
+                <p className="text-2xs text-muted-foreground mb-1.5">
                   {selectedBlockIds.size} block{selectedBlockIds.size !== 1 ? "s" : ""} selected
                 </p>
                 <input
@@ -620,12 +620,12 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
                   value={splitTitle}
                   onChange={(e) => setSplitTitle(e.target.value)}
                   placeholder="New article title..."
-                  className="h-8 w-full rounded-md border border-border bg-secondary/50 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent"
+                  className="h-8 w-full rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent"
                 />
               </div>
               <button
                 onClick={() => { setSplitMode(false); setSelectedBlockIds(new Set()); setSplitTitle("") }}
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
+                className="rounded-md px-3 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
               >
                 Cancel
               </button>
@@ -642,7 +642,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
                   }
                 }}
                 disabled={selectedBlockIds.size === 0 || !splitTitle.trim()}
-                className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Scissors size={12} weight="regular" className="inline mr-1" />
                 Extract
@@ -653,7 +653,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
       </div>
 
       {/* Right Sidebar: Infobox + Quality + Activity */}
-      <aside className="w-[240px] shrink-0 overflow-y-auto border-l border-border/50 px-4 py-5 space-y-4">
+      <aside className="w-[240px] shrink-0 overflow-y-auto border-l border-border-subtle px-4 py-5 space-y-4">
         {/* Infobox */}
         <WikiInfobox
           noteId={articleId}
@@ -676,7 +676,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
             return (
               <>
                 <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  <span className={`rounded-full px-2 py-0.5 text-2xs font-medium ${
                     isArticle ? "bg-emerald-500/10 text-emerald-500" : "bg-yellow-500/10 text-yellow-500"
                   }`}>
                     {label}
@@ -686,14 +686,14 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
                   {!isArticle && (
                     <button
                       onClick={() => setWikiArticleStatus(articleId, "article")}
-                      className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
+                      className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-2xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
                     >
                       <CaretUp size={12} weight="regular" />
                       Promote to Article
                     </button>
                   )}
                   {isArticle && (
-                    <span className="flex items-center gap-1 text-xs text-emerald-400">
+                    <span className="flex items-center gap-1 text-2xs text-emerald-400">
                       <PhCheck size={12} weight="bold" />
                       Article
                     </span>
@@ -730,11 +730,11 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
 
         {/* Split / Delete article */}
         {(editable || onDelete) && (
-          <div className="pt-2 border-t border-border/30 space-y-0.5">
+          <div className="pt-2 border-t border-border-subtle space-y-0.5">
             {editable && !splitMode && (
               <button
                 onClick={() => setSplitMode(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground/70 hover:text-foreground hover:bg-secondary/60 transition-colors duration-100"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-2xs text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors duration-100"
               >
                 <Scissors size={12} weight="regular" />
                 Split wiki
@@ -743,7 +743,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
             {onDelete && (
               <button
                 onClick={onDelete}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-2xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
               >
                 <Trash size={12} weight="regular" />
                 Delete article
@@ -777,8 +777,8 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
         {/* Drag split title prompt (floating dialog) */}
         {dragSplitPrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
-            <div className="w-[340px] rounded-xl border border-border bg-popover p-4 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
-              <p className="text-sm font-medium text-foreground">New article title</p>
+            <div className="w-[340px] rounded-lg border border-border bg-surface-overlay p-4 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
+              <p className="text-note font-medium text-foreground">New article title</p>
               <input
                 autoFocus
                 type="text"
@@ -788,11 +788,11 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
                   if (e.key === "Enter") handleConfirmDragSplit()
                   if (e.key === "Escape") setDragSplitPrompt(null)
                 }}
-                className="h-8 w-full rounded-md border border-border bg-secondary/50 px-3 text-sm text-foreground focus:outline-none focus:border-accent"
+                className="h-8 w-full rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground focus:outline-none focus:border-accent"
               />
               <div className="flex justify-end gap-2">
-                <button onClick={() => setDragSplitPrompt(null)} className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors">Cancel</button>
-                <button onClick={handleConfirmDragSplit} className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent/90 transition-colors">Split</button>
+                <button onClick={() => setDragSplitPrompt(null)} className="rounded-md px-3 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-hover-bg transition-colors">Cancel</button>
+                <button onClick={handleConfirmDragSplit} className="rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-white hover:bg-accent/90 transition-colors">Split</button>
               </div>
             </div>
           </div>
@@ -815,10 +815,10 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
               : "Block"
             return (
               <div
-                className="rounded-lg border border-accent/30 bg-popover/95 px-4 py-2.5 shadow-xl backdrop-blur-sm max-w-[400px]"
+                className="rounded-lg border border-accent/30 bg-surface-overlay/95 px-4 py-2.5 shadow-xl backdrop-blur-sm max-w-[400px]"
                 style={{ transform: "rotate(-1.5deg)" }}
               >
-                <p className="text-xs font-medium text-foreground truncate">
+                <p className="text-2xs font-medium text-foreground truncate">
                   {previewText}
                 </p>
                 {block.type === "section" && childCount > 0 && (
@@ -1029,7 +1029,7 @@ function InlineCategoryTags({
                   <button
                     key={cat.id}
                     onClick={() => handleAdd(cat.id)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-foreground/80 transition-colors hover:bg-white/[0.06]"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-2xs text-foreground/80 transition-colors hover:bg-white/[0.06]"
                   >
                     <span className="truncate">{getBreadcrumb(cat)}</span>
                   </button>
@@ -1050,12 +1050,12 @@ function InlineCategoryTags({
                   if (e.key === "Escape") setDropdownOpen(false)
                 }}
                 placeholder="New category..."
-                className="flex-1 rounded-md bg-transparent px-1.5 py-1 text-xs text-foreground outline-none placeholder:text-muted-foreground/30"
+                className="flex-1 rounded-md bg-transparent px-1.5 py-1 text-2xs text-foreground outline-none placeholder:text-muted-foreground/30"
               />
               <button
                 onClick={handleCreateAndAdd}
                 disabled={!newCatName.trim()}
-                className="rounded-md px-2 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent/10 disabled:opacity-30"
+                className="rounded-md px-2 py-1 text-2xs font-medium text-accent transition-colors hover:bg-accent/10 disabled:opacity-30"
               >
                 Create
               </button>
@@ -1172,27 +1172,27 @@ function ArticleCategories({
         <div className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-medium text-muted-foreground/50 transition-colors hover:bg-secondary/50 hover:text-foreground/70"
+            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-medium text-muted-foreground/50 transition-colors hover:bg-hover-bg hover:text-foreground/70"
           >
             <PhPlus size={12} weight="regular" />
             Add category
           </button>
           {dropdownOpen && (
-            <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-lg border border-border/50 bg-popover p-1 shadow-lg">
+            <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-lg border border-border-subtle bg-surface-overlay p-1 shadow-lg">
               {availableCategories.length > 0 && (
                 <div className="max-h-40 overflow-y-auto">
                   {availableCategories.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => handleAdd(cat.id)}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-foreground/80 transition-colors hover:bg-hover-bg"
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-2xs text-foreground/80 transition-colors hover:bg-hover-bg"
                     >
                       <span className="truncate">{getBreadcrumb(cat)}</span>
                     </button>
                   ))}
                 </div>
               )}
-              <div className="border-t border-border/30 pt-1 mt-1">
+              <div className="border-t border-border-subtle pt-1 mt-1">
                 <div className="flex items-center gap-1 px-1">
                   <input
                     type="text"
@@ -1200,13 +1200,13 @@ function ArticleCategories({
                     onChange={(e) => setNewCatName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleCreateAndAdd() }}
                     placeholder="New category..."
-                    className="flex-1 rounded-md bg-transparent px-1.5 py-1 text-xs text-foreground outline-none placeholder:text-muted-foreground/30"
+                    className="flex-1 rounded-md bg-transparent px-1.5 py-1 text-2xs text-foreground outline-none placeholder:text-muted-foreground/30"
                     autoFocus
                   />
                   <button
                     onClick={handleCreateAndAdd}
                     disabled={!newCatName.trim()}
-                    className="rounded-md px-2 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent/10 disabled:opacity-30"
+                    className="rounded-md px-2 py-1 text-2xs font-medium text-accent transition-colors hover:bg-accent/10 disabled:opacity-30"
                   >
                     Create
                   </button>
@@ -1214,7 +1214,7 @@ function ArticleCategories({
               </div>
               <button
                 onClick={() => setDropdownOpen(false)}
-                className="mt-1 w-full rounded-md px-2 py-1 text-center text-2xs text-muted-foreground/40 transition-colors hover:bg-secondary/30"
+                className="mt-1 w-full rounded-md px-2 py-1 text-center text-2xs text-muted-foreground/40 transition-colors hover:bg-hover-bg"
               >
                 Close
               </button>

@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-70. 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory) + Title 노드 통합 (제목/본문 하나의 에디터)
 71. Phase 1C+ — Toolbar 리디자인 + Side Panel 5탭 (Detail/Connections/Activity/Peek/Bookmarks) + Arrange Mode
 72. Phase 1 커스텀 노드 — TOC Block + Callout Block + Columns Block (CSS Grid, resize handle) + Summary Block + Infobox Block + NoteEmbed
 73. 플로팅 TOC (Notion 스타일) — 에디터 우측 자동 사이드바, scrollspy, 헤딩 2개+ 자동 표시, 타이틀 제외
 74. @멘션 시스템 — 노트/위키/태그/날짜 통합 검색, 인라인 칩, 카테고리별 그룹핑 + 앵커/북마크 시스템 (인라인 마커 + 블록 구분선)
+75. Design Spine 8-Phase 전체 폴리싱 — 102파일, hover/active/border 통일, typography 4단계 표준화, editor CSS 변수화, surface/radius/grid/colors/icons/empty-states/transitions
 
 ## Two Axes — Core Design Philosophy
 

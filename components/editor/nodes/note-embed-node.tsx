@@ -63,11 +63,11 @@ function NoteEmbedView({ node, deleteNode }: NodeViewProps) {
       <NodeViewWrapper>
         <div
           contentEditable={false}
-          className="not-draggable border border-border/50 rounded-lg p-3 my-2 select-none bg-secondary/20"
+          className="not-draggable border border-border-subtle rounded-lg p-3 my-2 select-none bg-secondary/20"
         >
           <div className="flex items-center gap-2 text-muted-foreground/50">
             <PhNote size={14} weight="bold" />
-            <span className="text-xs italic">Note not found</span>
+            <span className="text-2xs italic">Note not found</span>
             <button
               type="button"
               onClick={() => deleteNode()}
@@ -86,13 +86,13 @@ function NoteEmbedView({ node, deleteNode }: NodeViewProps) {
     <NodeViewWrapper>
       <div
         contentEditable={false}
-        className="not-draggable border border-border/50 rounded-lg p-3 my-2 select-none hover:border-border transition-colors cursor-pointer group"
+        className="not-draggable border border-border-subtle rounded-lg p-3 my-2 select-none hover:border-border transition-colors cursor-pointer group"
         onClick={handleOpen}
       >
         {/* Header */}
         <div className="flex items-center gap-2 mb-1">
           <PhNote size={14} weight="bold" className="text-accent shrink-0" />
-          <span className="text-sm font-medium text-foreground truncate flex-1">
+          <span className="text-note font-medium text-foreground truncate flex-1">
             {note.title || "Untitled"}
           </span>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -122,11 +122,11 @@ function NoteEmbedView({ node, deleteNode }: NodeViewProps) {
         </div>
         {/* Body preview */}
         {bodyPreview ? (
-          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+          <p className="text-2xs text-muted-foreground line-clamp-2 leading-relaxed">
             {bodyPreview}
           </p>
         ) : (
-          <p className="text-xs text-muted-foreground/40 italic">Empty note</p>
+          <p className="text-2xs text-muted-foreground/40 italic">Empty note</p>
         )}
       </div>
     </NodeViewWrapper>

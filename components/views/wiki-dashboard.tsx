@@ -117,17 +117,17 @@ export function WikiDashboard({
                 }
               }}
               placeholder="MagnifyingGlass wiki articles..."
-              className="h-9 w-full rounded-lg border border-border/60 bg-secondary/30 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-colors"
+              className="h-9 w-full rounded-lg border border-border-subtle bg-secondary/30 pl-9 pr-3 text-note text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-colors"
             />
           </div>
           {showSearchDropdown && (
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border/60 bg-popover shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border-subtle bg-surface-overlay shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
               <div className="max-h-64 overflow-y-auto py-1">
                 {searchResults.map((note) => (
                   <button
                     key={note.id}
                     onMouseDown={(e) => { e.preventDefault(); onOpenWikiArticle?.(note.id); setSearchQuery("") }}
-                    className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-100 hover:bg-hover-bg"
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-100 hover:bg-hover-bg"
                   >
                     <WikiStatusDot status={note.wikiStatus} />
                     <span className="truncate">{note.title || "Untitled"}</span>
@@ -172,7 +172,7 @@ export function WikiDashboard({
         {featured && (
           <button
             onClick={() => onOpenWikiArticle?.(featured.id)}
-            className="group mb-6 flex w-full items-start gap-4 rounded-xl border border-border/50 bg-card/30 p-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
+            className="group mb-6 flex w-full items-start gap-4 rounded-lg border border-border-subtle bg-card/30 p-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
               <Sparkle className="text-accent" size={16} weight="regular" />
@@ -181,10 +181,10 @@ export function WikiDashboard({
               <div className="mb-0.5 flex items-center gap-2">
                 <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">Featured Article</span>
               </div>
-              <h3 className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
+              <h3 className="text-note font-semibold text-foreground group-hover:text-accent transition-colors">
                 {featured.title || "Untitled"}
               </h3>
-              <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">
+              <p className="mt-0.5 text-2xs text-muted-foreground/60 line-clamp-1">
                 Updated {shortRelative(featured.updatedAt)}
                 {(featured.categoryIds?.length ?? 0) > 0 && ` · ${featured.categoryIds!.length} categories`}
               </p>
@@ -202,14 +202,14 @@ export function WikiDashboard({
                 <button
                   key={cat.id}
                   onClick={() => onCategoryClick?.(cat.id)}
-                  className="rounded-[5px] bg-secondary/50 px-2 py-1 text-[11.5px] font-medium text-foreground/80 transition-colors hover:bg-secondary cursor-pointer"
+                  className="rounded-[5px] bg-secondary/50 px-2 py-1 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg cursor-pointer"
                 >
                   {cat.name}
                   <span className="ml-1 text-muted-foreground/40 tabular-nums">{cat.count}</span>
                 </button>
               ))}
               {categories.uncategorized > 0 && (
-                <span className="rounded-[5px] bg-chart-3/5 px-2 py-1 text-[11.5px] font-medium text-chart-3/70">
+                <span className="rounded-[5px] bg-chart-3/5 px-2 py-1 text-2xs font-medium text-chart-3/70">
                   Uncategorized
                   <span className="ml-1 tabular-nums">{categories.uncategorized}</span>
                 </span>
@@ -260,7 +260,7 @@ export function WikiDashboard({
             {redLinks.length > 0 && (
               <ContentCard title="Red Links" icon={Warning} iconColor="text-destructive/60">
                 {redLinks.slice(0, 6).map((item) => (
-                  <div key={item.title} className="group flex items-center gap-2 rounded-md px-2.5 py-[7px] transition-colors duration-100 hover:bg-hover-bg">
+                  <div key={item.title} className="group flex items-center gap-2 rounded-md px-2.5 py-2 transition-colors duration-100 hover:bg-hover-bg">
                     <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-destructive/60" />
                     <span className="min-w-0 flex-1 truncate text-note text-destructive/80">{item.title}</span>
                     <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/50 group-hover:hidden">{item.refCount} refs</span>
@@ -302,7 +302,7 @@ export function WikiDashboard({
                 <button
                   key={article.id}
                   onClick={() => onOpenWikiArticle?.(article.id)}
-                  className="group flex items-start gap-3 rounded-xl border border-border/40 bg-card/30 p-3 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
+                  className="group flex items-start gap-3 rounded-lg border border-border-subtle bg-card/30 p-3 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
                 >
                   <div className="min-w-0 flex-1">
                     <h4 className="text-note font-semibold text-foreground group-hover:text-accent transition-colors">
@@ -333,8 +333,8 @@ export function WikiDashboard({
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
               <BookOpen className="text-muted-foreground" size={20} weight="regular" />
             </div>
-            <p className="text-sm font-medium text-muted-foreground">No wiki articles yet</p>
-            <p className="text-xs text-muted-foreground/60">Create your first article or import existing notes</p>
+            <p className="text-note font-medium text-muted-foreground">No wiki articles yet</p>
+            <p className="text-2xs text-muted-foreground/60">Create your first article or import existing notes</p>
           </div>
         )}
       </div>
@@ -370,7 +370,7 @@ function MiniStat({
     <Wrapper
       onClick={onClick}
       className={cn(
-        "rounded-lg border border-border/40 bg-card/50 px-3 py-2.5 text-left",
+        "rounded-lg border border-border-subtle bg-card/50 px-3 py-2.5 text-left",
         onClick && "cursor-pointer transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
       )}
     >
@@ -391,7 +391,7 @@ function CoverageStat({
   total: number
 }) {
   return (
-    <div className="rounded-lg border border-border/40 bg-card/50 px-3 py-2.5">
+    <div className="rounded-lg border border-border-subtle bg-card/50 px-3 py-2.5">
       <p className="text-xl font-semibold tabular-nums text-chart-5">{percent}%</p>
       <p className="text-2xs font-medium text-foreground/70">Coverage</p>
       <div className="mt-1.5 h-1 w-full rounded-full bg-secondary/60">
@@ -417,8 +417,8 @@ function ContentCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-xl border border-border/40 bg-card/30">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
+    <div className="rounded-lg border border-border-subtle bg-card/30">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle">
         <Icon className={cn("h-3.5 w-3.5", iconColor)} strokeWidth={1.5} />
         <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/50">{title}</h3>
       </div>
@@ -441,7 +441,7 @@ function ArticleItem({
   return (
     <button
       onClick={onClick}
-      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-[7px] text-left transition-colors duration-100 hover:bg-hover-bg"
+      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
     >
       <WikiStatusDot status={status as any} />
       <span className="min-w-0 flex-1 truncate text-note text-foreground/90">{title}</span>

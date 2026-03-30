@@ -685,10 +685,10 @@ export function WikiView() {
                   updateWikiArticle(selectedWikiArticleId, { layout: next })
                 }}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium transition-colors duration-150",
+                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note font-medium transition-colors duration-150",
                   selectedWikiArticle.layout === "encyclopedia"
                     ? "bg-accent/15 text-accent hover:bg-accent/25"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                 )}
                 title={selectedWikiArticle.layout === "encyclopedia" ? "Switch to default layout" : "Switch to encyclopedia layout"}
               >
@@ -699,7 +699,7 @@ export function WikiView() {
               {isEditingWikiArticle ? (
                 <button
                   onClick={() => setIsEditingWikiArticle(false)}
-                  className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
+                  className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-note font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
                 >
                   <PhCheck size={14} weight="bold" />
                   Done
@@ -707,7 +707,7 @@ export function WikiView() {
               ) : (
                 <button
                   onClick={() => setIsEditingWikiArticle(true)}
-                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
+                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
                 >
                   <PencilLine size={14} weight="regular" />
                   Edit
@@ -719,7 +719,7 @@ export function WikiView() {
           <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
             <button
               onClick={() => { setSelectedWikiArticleId(null); setIsEditingWikiArticle(false) }}
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors duration-150 hover:bg-hover-bg hover:text-foreground"
             >
               <ArrowLeft size={14} weight="regular" />
               Back
@@ -761,7 +761,7 @@ export function WikiView() {
               <Popover>
                 <PopoverTrigger asChild>
                   <button
-                    className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
+                    className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground transition-colors duration-150 hover:bg-hover-bg hover:text-foreground"
                     aria-label="More actions"
                   >
                     <DotsThree size={16} weight="bold" />
@@ -771,7 +771,7 @@ export function WikiView() {
                   {selectedNote?.wikiStatus !== "stub" && (
                     <button
                       onClick={() => handleDemote(selectedArticleId)}
-                      className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                      className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                     >
                       <ArrowLineDown className="text-muted-foreground" size={14} weight="regular" />
                       Demote to Stub
@@ -779,7 +779,7 @@ export function WikiView() {
                   )}
                   <button
                     onClick={() => { toggleTrash(selectedArticleId); setSelectedArticleId(null) }}
-                    className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-destructive transition-colors duration-150 hover:bg-destructive/10"
+                    className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-note text-destructive transition-colors duration-150 hover:bg-destructive/10"
                   >
                     <Warning size={14} weight="regular" />
                     Move to Trash
@@ -789,7 +789,7 @@ export function WikiView() {
               {isEditingArticle ? (
                 <button
                   onClick={handleDoneEditing}
-                  className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
+                  className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-note font-medium text-white transition-colors duration-150 hover:bg-emerald-700"
                 >
                   <PhCheck size={14} weight="bold" />
                   Done
@@ -797,7 +797,7 @@ export function WikiView() {
               ) : (
                 <button
                   onClick={handleEditArticle}
-                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
+                  className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
                 >
                   <PencilLine size={14} weight="regular" />
                   Edit
@@ -810,7 +810,7 @@ export function WikiView() {
           <div className="flex items-center gap-2 border-b border-border px-5 py-1.5">
             <button
               onClick={handleBack}
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors duration-150 hover:bg-hover-bg hover:text-foreground"
             >
               <ArrowLeft size={14} weight="regular" />
               Back
@@ -916,7 +916,7 @@ export function WikiView() {
               }}>
                 <PopoverTrigger asChild>
                   <button
-                    className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-secondary"
+                    className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1 text-note font-medium text-foreground transition-colors duration-150 hover:bg-hover-bg"
                   >
                     <ArrowLineUp size={14} weight="regular" />
                     Import Note
@@ -935,13 +935,13 @@ export function WikiView() {
                             value={importQuery}
                             onChange={(e) => setImportQuery(e.target.value)}
                             placeholder="Search notes..."
-                            className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                            className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none"
                           />
                         </div>
                       </div>
                       <div className="max-h-60 overflow-y-auto py-1">
                         {importableNotes.length === 0 ? (
-                          <p className="px-3 py-4 text-center text-xs text-muted-foreground">
+                          <p className="px-3 py-4 text-center text-2xs text-muted-foreground">
                             {importQuery.trim() ? "No matching notes" : "No notes to import"}
                           </p>
                         ) : (
@@ -949,7 +949,7 @@ export function WikiView() {
                             <button
                               key={note.id}
                               onClick={() => handleImportSelectNote(note.id)}
-                              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                             >
                               <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
                               <span className="min-w-0 flex-1 truncate">
@@ -980,7 +980,7 @@ export function WikiView() {
                             value={importTargetQuery}
                             onChange={(e) => setImportTargetQuery(e.target.value)}
                             placeholder="Search articles, stubs, red links..."
-                            className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                            className="h-8 w-full rounded-md bg-secondary/50 pl-8 pr-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none"
                           />
                         </div>
                       </div>
@@ -988,7 +988,7 @@ export function WikiView() {
                         {/* Create new article */}
                         <button
                           onClick={handleImportCreateNew}
-                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-accent transition-colors duration-150 hover:bg-secondary"
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-accent transition-colors duration-150 hover:bg-hover-bg"
                         >
                           <PhPlus className="shrink-0" size={14} weight="bold" />
                           <span className="font-medium">Create new article</span>
@@ -1002,7 +1002,7 @@ export function WikiView() {
                               <button
                                 key={a.id}
                                 onClick={() => handleImportIntoExisting(a.id)}
-                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                               >
                                 <IconWikiArticle size={14} className="shrink-0 text-wiki-complete" />
                                 <span className="min-w-0 flex-1 truncate">{a.title}</span>
@@ -1019,7 +1019,7 @@ export function WikiView() {
                               <button
                                 key={a.id}
                                 onClick={() => handleImportIntoExisting(a.id)}
-                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                               >
                                 <IconWikiStub size={14} className="shrink-0 text-chart-3" />
                                 <span className="min-w-0 flex-1 truncate">{a.title}</span>
@@ -1036,7 +1036,7 @@ export function WikiView() {
                               <button
                                 key={r.title}
                                 onClick={() => handleImportIntoRedLink(r.title)}
-                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground transition-colors duration-150 hover:bg-secondary"
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                               >
                                 <Warning size={14} weight="regular" className="shrink-0 text-destructive" />
                                 <span className="min-w-0 flex-1 truncate">{r.title}</span>
@@ -1047,7 +1047,7 @@ export function WikiView() {
                         )}
 
                         {importTargets.articles.length === 0 && importTargets.stubs.length === 0 && importTargets.redLinks.length === 0 && importTargetQuery.trim() && (
-                          <p className="px-3 py-4 text-center text-xs text-muted-foreground">No matching targets</p>
+                          <p className="px-3 py-4 text-center text-2xs text-muted-foreground">No matching targets</p>
                         )}
                       </div>
                     </>

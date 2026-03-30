@@ -115,11 +115,11 @@ export function WikiFloatingActionBar({
 
   return (
     <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 fade-in duration-200">
-      <div className="flex items-center gap-1 rounded-xl border border-border bg-popover px-3 py-2 shadow-2xl">
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-surface-overlay px-3 py-2 shadow-2xl">
         {/* Selection info */}
         <button
           onClick={onClearSelection}
-          className="mr-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-active-bg transition-colors"
+          className="mr-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-active-bg transition-colors"
         >
           <Lightning size={14} weight="fill" className="text-accent" />
           {count} selected
@@ -133,7 +133,7 @@ export function WikiFloatingActionBar({
           <>
             <button
               onClick={handlePromote}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
               title="Promote selected stubs to Article"
             >
               <ArrowUpRight size={16} weight="regular" />
@@ -148,7 +148,7 @@ export function WikiFloatingActionBar({
           <>
             <button
               onClick={handleDemote}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
               title="Demote selected articles to Stub"
             >
               <ArrowDownRight size={16} weight="regular" />
@@ -163,7 +163,7 @@ export function WikiFloatingActionBar({
           <>
             <button
               onClick={handleMerge}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
               title={count >= 2 ? "Open merge page with selected articles" : "Merge into another article"}
             >
               <GitMerge size={16} weight="regular" />
@@ -178,7 +178,7 @@ export function WikiFloatingActionBar({
           <>
             <button
               onClick={() => { onSplit(ids[0]); onClearSelection() }}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <Scissors size={16} weight="regular" />
               Split
@@ -190,7 +190,7 @@ export function WikiFloatingActionBar({
         {/* Delete */}
         <button
           onClick={handleDelete}
-          className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20"
+          className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-2xs font-medium text-destructive transition-colors hover:bg-destructive/20"
         >
           <Trash size={16} weight="regular" />
           Delete

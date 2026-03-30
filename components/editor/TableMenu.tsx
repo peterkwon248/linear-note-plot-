@@ -71,20 +71,20 @@ export function TableMenu({ editor }: TableMenuProps) {
         ref={buttonRef}
         onMouseDown={handleToggle}
         title="Table"
-        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none hover:text-foreground hover:bg-foreground/[0.06] ${
+        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none hover:text-foreground hover:bg-hover-bg ${
           isInsideTable ? "text-foreground" : "text-muted-foreground"
         } ${
           isOpen ? "bg-foreground/10" : isInsideTable ? "bg-toolbar-active" : ""
         }`}
       >
-        <PhTable size={22} weight="light" />
+        <PhTable size={20} weight="light" />
       </button>
 
       {isOpen &&
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed -translate-x-1/2 p-2.5 rounded-[10px] bg-popover border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-[9999] min-w-[180px]"
+            className="fixed -translate-x-1/2 p-2.5 rounded-lg bg-surface-overlay border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-[9999] min-w-[180px]"
             style={{ left: `${pos.left}px`, bottom: `${pos.bottom}px` }}
           >
             {!isInsideTable ? (
@@ -93,7 +93,7 @@ export function TableMenu({ editor }: TableMenuProps) {
                   Insert table
                 </div>
                 <div
-                  className="grid gap-[3px] mb-2"
+                  className="grid gap-1 mb-2"
                   style={{ gridTemplateColumns: `repeat(${maxCols}, 1fr)` }}
                   onMouseLeave={() => { setHoverRow(0); setHoverCol(0) }}
                 >
@@ -123,15 +123,15 @@ export function TableMenu({ editor }: TableMenuProps) {
                   Edit table
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <TableAction icon={<PhPlus size={13} weight="light" />} label="Add row above" onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhPlus size={13} weight="light" />} label="Add row below" onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhMinus size={13} weight="light" />} label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<PhPlus size={12} weight="light" />} label="Add row above" onClick={() => { editor.chain().focus().addRowBefore().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhPlus size={12} weight="light" />} label="Add row below" onClick={() => { editor.chain().focus().addRowAfter().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhMinus size={12} weight="light" />} label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setIsOpen(false) }} danger />
                   <div className="h-px bg-border my-1" />
-                  <TableAction icon={<PhPlus size={13} weight="light" />} label="Add column left" onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhPlus size={13} weight="light" />} label="Add column right" onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
-                  <TableAction icon={<PhMinus size={13} weight="light" />} label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<PhPlus size={12} weight="light" />} label="Add column left" onClick={() => { editor.chain().focus().addColumnBefore().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhPlus size={12} weight="light" />} label="Add column right" onClick={() => { editor.chain().focus().addColumnAfter().run(); setIsOpen(false) }} />
+                  <TableAction icon={<PhMinus size={12} weight="light" />} label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsOpen(false) }} danger />
                   <div className="h-px bg-border my-1" />
-                  <TableAction icon={<Trash size={13} weight="light" />} label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
+                  <TableAction icon={<Trash size={12} weight="light" />} label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setIsOpen(false) }} danger />
                 </div>
               </>
             )}
@@ -146,7 +146,7 @@ function TableAction({ icon, label, onClick, danger = false }: { icon: React.Rea
   return (
     <button
       onMouseDown={(e) => { e.preventDefault(); onClick() }}
-      className={`flex items-center gap-2 py-[5px] px-1.5 rounded-[5px] font-medium bg-transparent border-0 cursor-pointer transition-colors duration-100 w-full text-left text-xs hover:bg-foreground/[0.06] ${
+      className={`flex items-center gap-2 py-1.5 px-1.5 rounded-md font-medium bg-transparent border-0 cursor-pointer transition-colors duration-100 w-full text-left text-2xs hover:bg-hover-bg ${
         danger ? "text-destructive" : "text-foreground"
       }`}
     >

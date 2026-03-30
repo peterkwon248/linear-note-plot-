@@ -62,21 +62,21 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
       options={{ placement: "top-start", offset: 8 }}
       shouldShow={({ editor: e }: { editor: Editor }) => e.isActive("table")}
     >
-      <div className="flex items-center gap-0.5 rounded-lg border border-border bg-popover p-1 shadow-lg relative">
+      <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-overlay p-1 shadow-lg relative">
         {/* ── Row ── */}
         <button type="button" className={`${btn} ${btnMuted}`} title="Add row above"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addRowBefore().run() }}>
-          <ArrowUp size={13} weight="bold" />
+          <ArrowUp size={12} weight="bold" />
         </button>
         <button type="button" className={`${btn} ${btnMuted}`} title="Add row below"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addRowAfter().run() }}>
-          <ArrowDown size={13} weight="bold" />
+          <ArrowDown size={12} weight="bold" />
         </button>
         <button type="button"
           className={`${btn} ${state.isInHeaderRow ? btnDisabled : btnMuted}`}
           title={state.isInHeaderRow ? "Cannot delete header row" : "Delete row"}
           onMouseDown={(e) => { e.preventDefault(); if (!state.isInHeaderRow) editor.chain().focus().deleteRow().run() }}>
-          <Minus size={13} weight="bold" />
+          <Minus size={12} weight="bold" />
         </button>
 
         <div className={divider} />
@@ -84,30 +84,30 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         {/* ── Col ── */}
         <button type="button" className={`${btn} ${btnMuted}`} title="Add column left"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addColumnBefore().run() }}>
-          <ArrowLeft size={13} weight="bold" />
+          <ArrowLeft size={12} weight="bold" />
         </button>
         <button type="button" className={`${btn} ${btnMuted}`} title="Add column right"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addColumnAfter().run() }}>
-          <ArrowRight size={13} weight="bold" />
+          <ArrowRight size={12} weight="bold" />
         </button>
         <button type="button"
           className={`${btn} ${!editor.can().deleteColumn() ? btnDisabled : btnMuted}`}
           title="Delete column"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().deleteColumn().run() }}>
-          <Minus size={13} weight="bold" />
+          <Minus size={12} weight="bold" />
         </button>
 
         <div className={divider} />
 
         {/* ── Merge/Split ── */}
         {state.canMerge && (
-          <button type="button" className={`${btn} ${btnMuted} !w-auto px-2 text-[11px]`} title="Merge cells"
+          <button type="button" className={`${btn} ${btnMuted} !w-auto px-2 text-2xs`} title="Merge cells"
             onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().mergeCells().run() }}>
             Merge
           </button>
         )}
         {state.canSplit && (
-          <button type="button" className={`${btn} ${btnMuted} !w-auto px-2 text-[11px]`} title="Split cell"
+          <button type="button" className={`${btn} ${btnMuted} !w-auto px-2 text-2xs`} title="Split cell"
             onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().splitCell().run() }}>
             Split
           </button>
@@ -117,15 +117,15 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         {/* ── Align ── */}
         <button type="button" className={`${btn} ${state.alignLeft ? btnActive : btnMuted}`} title="Align left"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("left").run() }}>
-          <TextAlignLeft size={13} weight="bold" />
+          <TextAlignLeft size={12} weight="bold" />
         </button>
         <button type="button" className={`${btn} ${state.alignCenter ? btnActive : btnMuted}`} title="Align center"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("center").run() }}>
-          <TextAlignCenter size={13} weight="bold" />
+          <TextAlignCenter size={12} weight="bold" />
         </button>
         <button type="button" className={`${btn} ${state.alignRight ? btnActive : btnMuted}`} title="Align right"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("right").run() }}>
-          <TextAlignRight size={13} weight="bold" />
+          <TextAlignRight size={12} weight="bold" />
         </button>
 
         <div className={divider} />
@@ -133,13 +133,13 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         {/* ── Bold ── */}
         <button type="button" className={`${btn} ${state.isBold ? btnActive : btnMuted}`} title="Bold"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run() }}>
-          <TextB size={13} weight="bold" />
+          <TextB size={12} weight="bold" />
         </button>
 
         {/* ── Cell color ── */}
         <button type="button" className={`${btn} ${btnMuted}`} title="Cell background color"
           onMouseDown={(e) => { e.preventDefault(); setShowColors(!showColors) }}>
-          <PaintBucket size={13} weight="bold" />
+          <PaintBucket size={12} weight="bold" />
         </button>
 
         {/* ── Header toggle ── */}
@@ -147,7 +147,7 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
           className={`${btn} ${state.isInHeaderRow ? btnActive : btnMuted}`}
           title="Toggle header row"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHeaderRow().run() }}>
-          <Rows size={13} weight="bold" />
+          <Rows size={12} weight="bold" />
         </button>
 
         <div className={divider} />
@@ -168,18 +168,18 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
               editor.chain().focus().deleteTable().run()
             }
           }}>
-          <Trash size={13} weight="bold" />
+          <Trash size={12} weight="bold" />
         </button>
 
         {/* ── Color picker popover ── */}
         {showColors && (
-          <div className="absolute top-full left-0 mt-1 flex gap-1 rounded-lg border border-border bg-popover p-1.5 shadow-lg z-50">
+          <div className="absolute top-full left-0 mt-1 flex gap-1 rounded-lg border border-border bg-surface-overlay p-1.5 shadow-lg z-50">
             {CELL_COLORS.map((c) => (
               <button
                 key={c.label}
                 type="button"
                 title={c.label}
-                className="w-6 h-6 rounded border border-border/50 hover:scale-110 transition-transform"
+                className="w-6 h-6 rounded border border-border-subtle hover:scale-110 transition-transform"
                 style={{ background: c.value || "var(--background)" }}
                 onMouseDown={(e) => {
                   e.preventDefault()

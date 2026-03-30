@@ -296,7 +296,7 @@ export function SearchView() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="MagnifyingGlass notes, tags, and more..."
-            className="h-12 w-full rounded-lg border border-border bg-background pl-12 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+            className="h-12 w-full rounded-lg border border-border bg-background pl-12 pr-12 text-ui text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
           />
           {query && (
             <button
@@ -317,7 +317,7 @@ export function SearchView() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-3.5 py-2.5 text-sm font-medium transition-colors ${
+              className={`px-3.5 py-2.5 text-note font-medium transition-colors ${
                 activeTab === tab.key
                   ? "border-b-2 border-accent text-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -335,7 +335,7 @@ export function SearchView() {
           {/* Empty query: recent notes */}
           {!hasFuzzyQuery && (
             <div>
-              <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
                 Recent Notes
               </h3>
               <div className="space-y-0.5">
@@ -343,7 +343,7 @@ export function SearchView() {
                   <button
                     key={note.id}
                     onClick={() => handleNoteSelect(note.id)}
-                    className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                   >
                     {note.pinned ? (
                       <PushPin className="shrink-0 text-muted-foreground" size={16} weight="regular" />
@@ -354,14 +354,14 @@ export function SearchView() {
                       <div className="truncate text-foreground">
                         {note.title || "Untitled"}
                       </div>
-                      <div className="truncate text-sm text-muted-foreground">
+                      <div className="truncate text-note text-muted-foreground">
                         {noteSublabel(note)}
                       </div>
                     </div>
                   </button>
                 ))}
                 {recentNotes.length === 0 && (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
+                  <p className="py-8 text-center text-note text-muted-foreground">
                     No notes yet
                   </p>
                 )}
@@ -376,7 +376,7 @@ export function SearchView() {
               {(activeTab === "all" || activeTab === "wiki") &&
                 matchedWikiNotes.length > 0 && (
                   <section>
-                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
                       Wiki Articles
                     </h3>
                     <div className="space-y-0.5">
@@ -384,7 +384,7 @@ export function SearchView() {
                         <button
                           key={note.id}
                           onClick={() => handleWikiSelect(note.id)}
-                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                         >
                           <BookOpen className="shrink-0 text-accent" size={16} weight="regular" />
                           <div className="min-w-0 flex-1">
@@ -396,7 +396,7 @@ export function SearchView() {
                                 Wiki
                               </span>
                             </div>
-                            <div className="truncate text-sm text-muted-foreground">
+                            <div className="truncate text-note text-muted-foreground">
                               {noteSublabel(note)}
                             </div>
                           </div>
@@ -410,27 +410,27 @@ export function SearchView() {
               {(activeTab === "all" || activeTab === "wiki") &&
                 matchedRedLinks.length > 0 && (
                   <section>
-                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
                       Red Links
                     </h3>
                     <div className="space-y-0.5">
                       {matchedRedLinks.map((rl) => (
                         <div
                           key={rl.title}
-                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-secondary"
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-hover-bg"
                         >
                           <WarningCircle className="shrink-0 text-destructive" size={16} weight="regular" />
                           <div className="min-w-0 flex-1">
                             <span className="truncate text-destructive">
                               {highlightQuery(rl.title, query)}
                             </span>
-                            <div className="truncate text-sm text-muted-foreground">
+                            <div className="truncate text-note text-muted-foreground">
                               {rl.refCount} mention{rl.refCount !== 1 ? "s" : ""}
                             </div>
                           </div>
                           <button
                             onClick={() => handleCreateWikiFromQuery(rl.title)}
-                            className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                            className="shrink-0 rounded-sm border border-border px-2 py-1 text-2xs text-muted-foreground transition-colors hover:border-accent hover:text-accent"
                           >
                             + Create
                           </button>
@@ -444,7 +444,7 @@ export function SearchView() {
               {(activeTab === "all" || activeTab === "notes") &&
                 noteResults.length > 0 && (
                   <section>
-                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
                       Notes
                     </h3>
                     <div className="space-y-0.5">
@@ -452,7 +452,7 @@ export function SearchView() {
                         <button
                           key={note.id}
                           onClick={() => handleNoteSelect(note.id)}
-                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                         >
                           {note.pinned ? (
                             <PushPin className="shrink-0 text-muted-foreground" size={16} weight="regular" />
@@ -463,7 +463,7 @@ export function SearchView() {
                             <div className="truncate text-foreground">
                               {highlightQuery(note.title || "Untitled", query)}
                             </div>
-                            <div className="truncate text-sm text-muted-foreground">
+                            <div className="truncate text-note text-muted-foreground">
                               {noteSublabel(note)}
                             </div>
                           </div>
@@ -477,7 +477,7 @@ export function SearchView() {
               {(activeTab === "all" || activeTab === "tags") &&
                 matchedTags.length > 0 && (
                   <section>
-                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
                       Tags
                     </h3>
                     <div className="space-y-0.5">
@@ -485,7 +485,7 @@ export function SearchView() {
                         <button
                           key={tag.id}
                           onClick={() => handleTagSelect(tag.id)}
-                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                         >
                           <PhTag className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           <div className="min-w-0 flex-1">
@@ -493,7 +493,7 @@ export function SearchView() {
                               {highlightQuery(`#${tag.name}`, query)}
                             </span>
                           </div>
-                          <span className="text-xs tabular-nums text-muted-foreground">
+                          <span className="text-2xs tabular-nums text-muted-foreground">
                             {tagNoteCounts.get(tag.name) ?? 0} notes
                           </span>
                         </button>
@@ -506,7 +506,7 @@ export function SearchView() {
               {(activeTab === "all" || activeTab === "labels") &&
                 matchedLabels.length > 0 && (
                   <section>
-                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
                       Labels
                     </h3>
                     <div className="space-y-0.5">
@@ -514,7 +514,7 @@ export function SearchView() {
                         <button
                           key={label.id}
                           onClick={() => handleLabelSelect(label.id)}
-                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                         >
                           <BookmarkSimple className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -536,7 +536,7 @@ export function SearchView() {
               {(activeTab === "all" || activeTab === "templates") &&
                 matchedTemplates.length > 0 && (
                   <section>
-                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
                       Templates
                     </h3>
                     <div className="space-y-0.5">
@@ -544,10 +544,10 @@ export function SearchView() {
                         <button
                           key={tmpl.id}
                           onClick={handleTemplateSelect}
-                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                         >
                           {tmpl.icon ? (
-                            <span className="shrink-0 text-sm leading-none">{tmpl.icon}</span>
+                            <span className="shrink-0 text-note leading-none">{tmpl.icon}</span>
                           ) : (
                             <Layout className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           )}
@@ -556,7 +556,7 @@ export function SearchView() {
                               {highlightQuery(tmpl.name, query)}
                             </div>
                             {tmpl.description && (
-                              <div className="truncate text-sm text-muted-foreground">
+                              <div className="truncate text-note text-muted-foreground">
                                 {tmpl.description}
                               </div>
                             )}
@@ -571,7 +571,7 @@ export function SearchView() {
               {(activeTab === "all" || activeTab === "folders") &&
                 matchedFolders.length > 0 && (
                   <section>
-                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
                       Folders
                     </h3>
                     <div className="space-y-0.5">
@@ -579,7 +579,7 @@ export function SearchView() {
                         <button
                           key={folder.id}
                           onClick={() => handleFolderSelect(folder.id)}
-                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                         >
                           <FolderOpen className="shrink-0 text-muted-foreground" size={16} weight="regular" />
                           <span className="text-foreground">
@@ -593,7 +593,7 @@ export function SearchView() {
 
               {/* No results */}
               {hasNoResults && (
-                <div className="py-12 text-center text-sm text-muted-foreground">
+                <div className="py-12 text-center text-note text-muted-foreground">
                   {isIndexing
                     ? "Building search index..."
                     : `No results for "${query}"`}
@@ -608,7 +608,7 @@ export function SearchView() {
                   <div className="border-t border-border pt-4">
                     <button
                       onClick={() => handleCreateWikiFromQuery(query.trim())}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                     >
                       <BookOpen className="shrink-0" size={16} weight="regular" />
                       Create &apos;{query.trim()}&apos; as wiki article

@@ -239,7 +239,7 @@ export function FloatingActionBar({
             </button>
             <button
               onClick={handleMoveBackAll}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
             >
               <Tray size={16} weight="regular" /> Back to Inbox
             </button>
@@ -250,7 +250,7 @@ export function FloatingActionBar({
         return (
           <button
             onClick={handleDemoteAll}
-            className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
+            className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
           >
             <ArrowDownLeft size={16} weight="regular" /> Demote
           </button>
@@ -279,7 +279,7 @@ export function FloatingActionBar({
             {permanentCount > 0 && (
               <button
                 onClick={handleDemotePermanentOnly}
-                className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary transition-colors"
+                className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
               >
                 <ArrowDownLeft size={16} weight="regular" /> Demote {permanentCount}
               </button>
@@ -296,7 +296,7 @@ export function FloatingActionBar({
   const workflowContent = renderWorkflowButtons()
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 rounded-xl border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 rounded-lg border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
       <div className="flex items-center gap-1 px-4 py-2.5">
         {/* Selection info */}
         <div className="flex items-center gap-1.5 px-1.5">
@@ -306,7 +306,7 @@ export function FloatingActionBar({
           </span>
           <button
             onClick={onClearSelection}
-            className="rounded-md p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="rounded-md p-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
           >
             <PhX size={16} weight="regular" />
           </button>
@@ -343,7 +343,7 @@ export function FloatingActionBar({
                       {groupNotes.map((note) => (
                         <div
                           key={note.id}
-                          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground"
+                          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-note text-foreground"
                         >
                           <span className="truncate">{note.title || "Untitled"}</span>
                         </div>
@@ -357,7 +357,7 @@ export function FloatingActionBar({
             {/* Change all status */}
             {statusGroups.size > 0 && (
               <div className="flex items-center gap-1.5 ml-1">
-                <span className="text-xs text-muted-foreground/60">→</span>
+                <span className="text-2xs text-muted-foreground/60">→</span>
                 <StatusDropdown
                   value={Array.from(statusGroups.keys())[0]}
                   onChange={handleStatusChange}
@@ -395,7 +395,7 @@ export function FloatingActionBar({
                   setMergeOpen(true)
                 }
               }}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
               <GitMerge size={16} weight="regular" /> GitMerge
             </button>
@@ -403,7 +403,7 @@ export function FloatingActionBar({
             {/* Wiki Assembly */}
             <button
               onClick={() => setWikiAssemblyOpen(true)}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
               <BookOpen size={16} weight="regular" /> Wiki
             </button>
@@ -412,7 +412,7 @@ export function FloatingActionBar({
             <Divider />
             <button
               onClick={() => setLinkOpen(true)}
-              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
               <PhLink size={16} weight="regular" /> Link
             </button>

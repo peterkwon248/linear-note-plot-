@@ -51,7 +51,7 @@ export function OntologyDetailPanel({
       {/* Header */}
       <div className="px-4 py-3 border-b border-border flex items-start justify-between gap-2">
         <div className="flex-1">
-          <h2 className="text-sm font-bold line-clamp-2">{note.title}</h2>
+          <h2 className="text-note font-bold line-clamp-2">{note.title}</h2>
           <div className="flex items-center gap-2 mt-2">
             {label && (
               <div className="flex items-center gap-1">
@@ -79,7 +79,7 @@ export function OntologyDetailPanel({
 
       {/* Preview */}
       {note.preview && (
-        <div className="px-4 py-2 text-xs text-muted-foreground italic">
+        <div className="px-4 py-2 text-2xs text-muted-foreground italic">
           {note.preview.substring(0, 150)}
           {note.preview.length > 150 ? "..." : ""}
         </div>
@@ -107,7 +107,7 @@ export function OntologyDetailPanel({
               return (
                 <div
                   key={rel.id}
-                  className="px-4 py-1 text-xs hover:bg-secondary/50 rounded cursor-pointer flex items-center gap-1"
+                  className="px-4 py-1 text-2xs hover:bg-hover-bg rounded cursor-pointer flex items-center gap-1"
                   onClick={() => onOpenNote(otherNoteId)}
                 >
                   <div
@@ -140,7 +140,7 @@ export function OntologyDetailPanel({
             {backlinks.map((backlink) => (
               <div
                 key={backlink.id}
-                className="px-4 py-1 text-xs hover:bg-secondary/50 rounded cursor-pointer flex items-center gap-1"
+                className="px-4 py-1 text-2xs hover:bg-hover-bg rounded cursor-pointer flex items-center gap-1"
                 onClick={() => onOpenNote(backlink.id)}
               >
                 <span className="text-muted-foreground">←</span>
@@ -161,7 +161,7 @@ export function OntologyDetailPanel({
             {unlinkedMentions.map((m) => (
               <div
                 key={m.noteId + m.title}
-                className="px-4 py-1 text-xs hover:bg-secondary/50 rounded flex items-center gap-1 group"
+                className="px-4 py-1 text-2xs hover:bg-hover-bg rounded flex items-center gap-1 group"
               >
                 <span className="text-muted-foreground/60">⚡</span>
                 <span className="truncate flex-1 text-foreground">{m.title}</span>
@@ -204,7 +204,7 @@ export function OntologyDetailPanel({
       {/* Open Note Button */}
       <button
         onClick={() => onOpenNote(noteId)}
-        className="mx-4 mb-4 mt-auto px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 flex items-center justify-center gap-1 transition-colors"
+        className="mx-4 mb-4 mt-auto px-3 py-1.5 text-2xs bg-primary text-primary-foreground rounded hover:bg-primary/90 flex items-center justify-center gap-1 transition-colors"
       >
         <ArrowSquareOut size={12} weight="regular" />
         Open Note

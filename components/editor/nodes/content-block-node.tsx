@@ -23,7 +23,7 @@ function ContentBlockView({ node, editor }: NodeViewProps) {
 
   return (
     <NodeViewWrapper>
-      <div className="not-draggable flex my-1 group relative rounded-md hover:bg-secondary/20 transition-colors">
+      <div className="not-draggable flex my-1 group relative rounded-md hover:bg-hover-bg transition-colors">
         {/* Drag handle on the left */}
         <div
           contentEditable={false}

@@ -96,16 +96,16 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
         ref={buttonRef}
         onMouseDown={handleToggle}
         title={mode === "text" ? "Text color" : "Highlight"}
-        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none relative hover:text-foreground hover:bg-foreground/[0.06] ${
+        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ease-in-out cursor-pointer border-0 outline-none relative hover:text-foreground hover:bg-hover-bg ${
           isActive ? "text-foreground" : "text-muted-foreground"
         } ${
           isOpen ? "bg-foreground/10" : isActive ? "bg-toolbar-active" : ""
         }`}
       >
         {mode === "text" ? (
-          <TextT size={22} weight="light" />
+          <TextT size={20} weight="light" />
         ) : (
-          <HighlighterCircle size={22} weight="light" />
+          <HighlighterCircle size={20} weight="light" />
         )}
         <div
           className="absolute bottom-1 left-2 right-2 h-0.5 rounded-sm transition-colors duration-100"
@@ -117,7 +117,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed -translate-x-1/2 p-2 rounded-[10px] bg-popover border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-[9999] w-[300px]"
+            className="fixed -translate-x-1/2 p-2 rounded-lg bg-surface-overlay border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-[9999] w-[300px]"
             style={{ left: `${pos.left}px`, bottom: `${pos.bottom}px` }}
           >
             <div className="flex items-center justify-between mb-2 px-0.5">
@@ -129,7 +129,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                   e.preventDefault()
                   setIsOpen(false)
                 }}
-                className="w-[18px] h-[18px] rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 hover:bg-foreground/[0.08] hover:text-muted-foreground"
+                className="w-[18px] h-[18px] rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 hover:bg-hover-bg hover:text-muted-foreground"
               >
                 <PhX size={12} weight="light" />
               </button>

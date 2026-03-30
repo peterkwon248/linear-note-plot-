@@ -285,7 +285,7 @@ export function DisplayPanel({
         <>
           <hr className="border-border-subtle" />
           <div className="flex flex-col gap-2.5">
-            <p className="text-xs font-medium text-muted-foreground/50 mb-0">
+            <p className="text-2xs font-medium text-muted-foreground/50 mb-0">
               {optionsSectionLabel}
             </p>
             {config.toggles.map((toggle) => (
@@ -321,7 +321,7 @@ export function DisplayPanel({
         <>
           <hr className="border-border-subtle" />
           <div>
-            <p className="text-xs font-medium text-muted-foreground/50 mb-2.5">
+            <p className="text-2xs font-medium text-muted-foreground/50 mb-2.5">
               Display properties
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -332,7 +332,7 @@ export function DisplayPanel({
                     key={prop.key}
                     onClick={() => handlePropertyToggle(prop.key)}
                     className={[
-                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors",
+                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-2xs font-medium transition-colors",
                       active
                         ? "border-accent/30 bg-accent/[0.14] text-accent/90"
                         : "border-border-subtle bg-transparent text-muted-foreground",

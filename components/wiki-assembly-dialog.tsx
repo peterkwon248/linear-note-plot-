@@ -102,7 +102,7 @@ export function WikiAssemblyDialog({
 
         {/* Title input */}
         <div className="px-5 py-2">
-          <label className="text-xs font-medium text-muted-foreground/70 mb-1.5 block">
+          <label className="text-2xs font-medium text-muted-foreground/70 mb-1.5 block">
             Article Title
           </label>
           <input
@@ -110,7 +110,7 @@ export function WikiAssemblyDialog({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter wiki article title..."
-            className="w-full rounded-md border border-border bg-secondary/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent"
+            className="w-full rounded-md border border-border bg-secondary/30 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent"
           />
         </div>
 
@@ -124,7 +124,7 @@ export function WikiAssemblyDialog({
               >
                 <BookOpen className="shrink-0 text-muted-foreground/50" size={14} weight="regular" />
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm text-foreground">
+                  <p className="truncate text-note text-foreground">
                     {note.title || "Untitled"}
                   </p>
                 </div>
@@ -139,7 +139,7 @@ export function WikiAssemblyDialog({
         {/* Info banner */}
         <div className="mx-5 mb-3 flex items-center gap-2 rounded-md bg-secondary/30 px-3 py-2">
           <BookOpen className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
-          <p className="text-xs text-muted-foreground/70 leading-relaxed">
+          <p className="text-2xs text-muted-foreground/70 leading-relaxed">
             Notes will be referenced, not archived. Original notes remain unchanged.
           </p>
         </div>

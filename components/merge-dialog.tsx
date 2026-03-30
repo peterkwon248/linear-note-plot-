@@ -108,11 +108,11 @@ export function MergeDialog({
             {mergeNotesList.map((note) => (
               <label
                 key={note.id}
-                className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-secondary/40 has-[button[data-state=checked]]:bg-secondary/60"
+                className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-hover-bg has-[button[data-state=checked]]:bg-secondary/60"
               >
                 <RadioGroupItem value={note.id} />
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm text-foreground">
+                  <p className="truncate text-note text-foreground">
                     {note.title || "Untitled"}
                   </p>
                 </div>
@@ -127,7 +127,7 @@ export function MergeDialog({
         {/* Info */}
         <div className="mx-5 mb-3 flex items-center gap-2 rounded-md bg-secondary/30 px-3 py-2">
           <Trash className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
-          <p className="text-xs text-muted-foreground/70 leading-relaxed">
+          <p className="text-2xs text-muted-foreground/70 leading-relaxed">
             Source notes will be trashed. Content, tags, and reads will be merged into the target.
           </p>
         </div>

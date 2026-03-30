@@ -36,7 +36,7 @@ function StatCard({
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2 mb-1">
         <Icon className={cn("h-4 w-4", color)} strokeWidth={1.5} />
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+        <span className="text-2xs font-medium text-muted-foreground">{label}</span>
       </div>
       <p className="text-2xl font-semibold tabular-nums text-foreground">
         {value}
@@ -61,7 +61,7 @@ function DashboardCard({
 }) {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+      <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
         {title}
       </h3>
       {subtitle && (
@@ -184,7 +184,7 @@ export function GraphInsightsView() {
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="flex items-center gap-2 mb-1">
                 <TrendUp className="text-chart-5" size={16} weight="regular" />
-                <span className="text-xs font-medium text-muted-foreground">Density</span>
+                <span className="text-2xs font-medium text-muted-foreground">Density</span>
               </div>
               <p className="text-2xl font-semibold tabular-nums text-foreground">
                 {density}
@@ -210,7 +210,7 @@ export function GraphInsightsView() {
               subtitle="No connections detected"
             >
               {orphans.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-2 px-2">
+                <p className="text-2xs text-muted-foreground py-2 px-2">
                   No orphan nodes — your graph is well connected.
                 </p>
               ) : (
@@ -218,10 +218,10 @@ export function GraphInsightsView() {
                   <button
                     key={note.id}
                     onClick={() => openNote(note.id)}
-                    className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-secondary"
+                    className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-hover-bg"
                   >
                     <FileText className="shrink-0 text-chart-3" size={12} weight="regular" />
-                    <span className="min-w-0 flex-1 truncate text-xs text-foreground">
+                    <span className="min-w-0 flex-1 truncate text-2xs text-foreground">
                       {note.title || "Untitled"}
                     </span>
                     <span className="hidden shrink-0 text-2xs font-medium text-accent group-hover:block">
@@ -243,7 +243,7 @@ export function GraphInsightsView() {
               subtitle="Most connected nodes"
             >
               {hubs.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-2 px-2">
+                <p className="text-2xs text-muted-foreground py-2 px-2">
                   No hub nodes yet (5+ connections required).
                 </p>
               ) : (
@@ -251,10 +251,10 @@ export function GraphInsightsView() {
                   <button
                     key={note.id}
                     onClick={() => openNote(note.id)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-secondary"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-hover-bg"
                   >
                     <Lightning className="shrink-0 text-chart-2" size={12} weight="regular" />
-                    <span className="min-w-0 flex-1 truncate text-xs text-foreground">
+                    <span className="min-w-0 flex-1 truncate text-2xs text-foreground">
                       {note.title || "Untitled"}
                     </span>
                     <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
@@ -274,25 +274,25 @@ export function GraphInsightsView() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-2xs text-muted-foreground">Total Notes</p>
-                    <p className="text-base font-semibold tabular-nums text-foreground">
+                    <p className="text-ui font-semibold tabular-nums text-foreground">
                       {nodeCount}
                     </p>
                   </div>
                   <div>
                     <p className="text-2xs text-muted-foreground">Wiki Articles</p>
-                    <p className="text-base font-semibold tabular-nums text-accent">
+                    <p className="text-ui font-semibold tabular-nums text-accent">
                       {wikiNotes.length}
                     </p>
                   </div>
                   <div>
                     <p className="text-2xs text-muted-foreground">Coverage</p>
-                    <p className="text-base font-semibold tabular-nums text-foreground">
+                    <p className="text-ui font-semibold tabular-nums text-foreground">
                       {wikiPercent}%
                     </p>
                   </div>
                   <div>
                     <p className="text-2xs text-muted-foreground">Stubs</p>
-                    <p className="text-base font-semibold tabular-nums text-chart-3">
+                    <p className="text-ui font-semibold tabular-nums text-chart-3">
                       {stubCount}
                     </p>
                   </div>
@@ -320,7 +320,7 @@ export function GraphInsightsView() {
               subtitle="Recently linked notes"
             >
               {recentlyLinked.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-2 px-2">
+                <p className="text-2xs text-muted-foreground py-2 px-2">
                   No linked notes yet.
                 </p>
               ) : (
@@ -328,10 +328,10 @@ export function GraphInsightsView() {
                   <button
                     key={note.id}
                     onClick={() => openNote(note.id)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-secondary"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-150 hover:bg-hover-bg"
                   >
                     <PhClock className="shrink-0 text-muted-foreground" size={12} weight="regular" />
-                    <span className="min-w-0 flex-1 truncate text-xs text-foreground">
+                    <span className="min-w-0 flex-1 truncate text-2xs text-foreground">
                       {note.title || "Untitled"}
                     </span>
                     <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">

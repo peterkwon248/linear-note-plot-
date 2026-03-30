@@ -13,7 +13,7 @@ export function SidePanelActivity() {
 
   if (!noteId) return (
     <div className="flex flex-1 items-center justify-center p-8 text-center">
-      <p className="text-sm text-muted-foreground">Select a note to see activity</p>
+      <p className="text-note text-muted-foreground">Select a note to see activity</p>
     </div>
   )
 
@@ -33,9 +33,9 @@ export function SidePanelActivity() {
       <div className="px-4 py-3">
         <div className="mb-2 flex items-center gap-2">
           <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
-          <span className="text-xs font-medium text-muted-foreground">History</span>
+          <span className="text-2xs font-medium text-muted-foreground">History</span>
         </div>
-        <span className="text-sm text-muted-foreground">Coming soon</span>
+        <span className="text-note text-muted-foreground">Coming soon</span>
       </div>
     </div>
   )

@@ -113,7 +113,7 @@ export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTO
                 "flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-note transition-colors duration-150",
                 activeIndex === h.index
                   ? "border-l-2 border-accent text-accent bg-accent/5 font-medium"
-                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                  : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
               )}
               style={{ paddingLeft: `${(h.level - minLevel) * 12 + 8}px` }}
             >
@@ -158,14 +158,14 @@ export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTO
         <div className="mt-2 space-y-0.5">
           <button
             onClick={() => setAddingLevel(2)}
-            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-secondary/30 transition-colors duration-100"
+            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors duration-100"
           >
             <PhPlus size={12} weight="regular" />
             Section
           </button>
           <button
             onClick={() => setAddingLevel(3)}
-            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/30 hover:text-muted-foreground hover:bg-secondary/30 transition-colors duration-100"
+            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/30 hover:text-muted-foreground hover:bg-hover-bg transition-colors duration-100"
             style={{ paddingLeft: "20px" }}
           >
             <PhPlus size={10} weight="regular" />

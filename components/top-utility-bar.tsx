@@ -35,26 +35,26 @@ export function TopUtilityBar() {
         <TooltipTrigger asChild>
           <button
             onClick={handleGoBack}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             aria-label="Go back"
           >
             <IconChevronLeft size={16} />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">Back</TooltipContent>
+        <TooltipContent side="bottom" className="text-2xs">Back</TooltipContent>
       </Tooltip>
 
       <Tooltip>
         <TooltipTrigger asChild>
           <button
             onClick={handleGoForward}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             aria-label="Go forward"
           >
             <IconChevronRight size={16} />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">Forward</TooltipContent>
+        <TooltipContent side="bottom" className="text-2xs">Forward</TooltipContent>
       </Tooltip>
 
       <div className="w-2" />
@@ -62,7 +62,7 @@ export function TopUtilityBar() {
       {/* Search trigger — opens SearchDialog, not a real input */}
       <button
         onClick={() => setSearchOpen(true)}
-        className="flex h-[30px] max-w-[260px] flex-1 items-center gap-2 rounded-md border border-border px-2.5 text-sm text-muted-foreground transition-colors hover:border-foreground/20"
+        className="flex h-[30px] max-w-[260px] flex-1 items-center gap-2 rounded-md border border-border px-2.5 text-note text-muted-foreground transition-colors hover:border-foreground/20"
       >
         <IconSearch size={14} className="shrink-0" />
         <span className="flex-1 text-left">Search…</span>

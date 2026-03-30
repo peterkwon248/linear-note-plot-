@@ -40,7 +40,7 @@ export function SidePanelBookmarks() {
 
   if (!note) {
     return (
-      <div className="p-4 text-muted-foreground text-sm">No note selected</div>
+      <div className="p-4 text-muted-foreground text-note">No note selected</div>
     )
   }
 
@@ -48,14 +48,14 @@ export function SidePanelBookmarks() {
     <div className="flex-1 overflow-y-auto p-3">
       <div className="flex items-center gap-2 mb-3 text-muted-foreground">
         <BookmarkSimple size={14} weight="bold" />
-        <span className="text-xs font-semibold uppercase tracking-wider">Bookmarks</span>
-        <span className="text-xs text-muted-foreground/50">{bookmarks.length}</span>
+        <span className="text-2xs font-semibold uppercase tracking-wider">Bookmarks</span>
+        <span className="text-2xs text-muted-foreground/50">{bookmarks.length}</span>
       </div>
 
       {bookmarks.length === 0 ? (
-        <p className="text-xs text-muted-foreground/50 italic px-1">
+        <p className="text-2xs text-muted-foreground/50 italic px-1">
           No bookmarks. Use{" "}
-          <kbd className="text-xs bg-secondary px-1 rounded">/bookmark</kbd> to add one.
+          <kbd className="text-2xs bg-secondary px-1 rounded">/bookmark</kbd> to add one.
         </p>
       ) : (
         <ul className="space-y-0.5">
@@ -65,8 +65,8 @@ export function SidePanelBookmarks() {
               className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
             >
               <MapPin size={12} weight="fill" className="text-muted-foreground/50 flex-shrink-0" />
-              <span className="text-sm text-foreground/80 flex-1 truncate">{b.label}</span>
-              <span className="text-xs text-muted-foreground/40">
+              <span className="text-note text-foreground/80 flex-1 truncate">{b.label}</span>
+              <span className="text-2xs text-muted-foreground/40">
                 {b.type === "divider" ? "divider" : "inline"}
               </span>
             </li>

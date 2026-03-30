@@ -76,8 +76,8 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
     if (items.length === 0) return null
 
     return (
-      <div className="z-50 min-w-[200px] max-w-[300px] overflow-hidden rounded-md border border-border bg-popover shadow-md">
-        <div className="px-2 py-1 border-b border-border/50">
+      <div className="z-50 min-w-[200px] max-w-[300px] overflow-hidden rounded-md border border-border bg-surface-overlay shadow-md">
+        <div className="px-2 py-1 border-b border-border-subtle">
           <span className="text-2xs font-medium text-muted-foreground">
             Link to...
           </span>
@@ -90,13 +90,13 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
               className={[
                 "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",
                 index === selectedIndex
-                  ? "bg-secondary text-foreground"
-                  : "text-foreground hover:bg-secondary/50",
+                  ? "bg-active-bg text-foreground"
+                  : "text-foreground hover:bg-hover-bg",
               ].join(" ")}
             >
               {item.isNewNote ? (
                 <>
-                  <span className="text-muted-foreground text-xs">+</span>
+                  <span className="text-muted-foreground text-2xs">+</span>
                   <span className="text-muted-foreground">
                     Create as Note{" "}
                     <span className="font-medium text-foreground">

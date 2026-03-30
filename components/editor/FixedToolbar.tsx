@@ -159,18 +159,18 @@ function HeadingDropdown({ editor }: { editor: Editor }) {
         ref={buttonRef}
         onMouseDown={handleToggle}
         title="Heading"
-        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 cursor-pointer border-0 outline-none transition-colors duration-75 ${
+        className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 cursor-pointer border-0 outline-none transition-colors duration-100 ${
           isAnyHeadingActive ? "text-foreground bg-toolbar-active" : "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
         }`}
       >
-        <span className="text-[15px] font-semibold leading-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>H</span>
+        <span className="text-ui font-semibold leading-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>H</span>
       </button>
 
       {isOpen &&
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed -translate-y-full min-w-[120px] bg-popover border border-border rounded-lg shadow-2xl p-1 z-[1000]"
+            className="fixed -translate-y-full min-w-[120px] bg-surface-overlay border border-border rounded-lg shadow-2xl p-1 z-[1000]"
             style={{ left: `${pos.left}px`, top: `${pos.top}px` }}
           >
             {headingOptions.map(({ level, label, fontSize }) => (
@@ -246,13 +246,13 @@ function AlignDropdown({ editor, editorState, handleAlign, isVisible }: {
           isActive={currentAlign !== "left"}
           title="Text alignment"
         >
-          <CurrentIcon size={22} weight="light" />
+          <CurrentIcon size={20} weight="light" />
         </ToolbarButton>
       </div>
       {open && rect && createPortal(
         <div
           ref={menuRef}
-          className="fixed z-[9999] min-w-[200px] rounded-lg border border-border bg-popover shadow-lg py-1"
+          className="fixed z-[9999] min-w-[200px] rounded-lg border border-border bg-surface-overlay shadow-lg py-1"
           style={{ left: rect.left, bottom: window.innerHeight - rect.top + 4 }}
         >
           {options.map(({ align, label, icon: Icon, shortcut }) => (
@@ -260,16 +260,16 @@ function AlignDropdown({ editor, editorState, handleAlign, isVisible }: {
               key={align}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => { handleAlign(align); setOpen(false) }}
-              className="flex items-center gap-3 w-full px-3 py-1.5 text-sm text-foreground/80 hover:bg-secondary/50 hover:text-foreground transition-colors cursor-pointer border-0 outline-none"
+              className="flex items-center gap-3 w-full px-3 py-1.5 text-note text-foreground/80 hover:bg-hover-bg hover:text-foreground transition-colors cursor-pointer border-0 outline-none"
             >
               {currentAlign === align ? (
-                <span className="w-4 text-center text-xs">✓</span>
+                <span className="w-4 text-center text-2xs">✓</span>
               ) : (
                 <span className="w-4" />
               )}
               <Icon size={16} weight="regular" />
               <span className="flex-1 text-left">{label}</span>
-              <span className="text-xs text-muted-foreground/50">{shortcut}</span>
+              <span className="text-2xs text-muted-foreground/50">{shortcut}</span>
             </button>
           ))}
         </div>,
@@ -385,32 +385,32 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       <ToolbarGroup>
         {isVisible("bold") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
-            <span className="text-[15px] font-bold leading-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>B</span>
+            <span className="text-ui font-bold leading-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>B</span>
           </ToolbarButton>
         )}
         {isVisible("italic") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
-            <TextItalic size={22} weight="light" />
+            <TextItalic size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("underline") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
-            <UnderlineIcon size={22} weight="light" />
+            <UnderlineIcon size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("strike") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="Strikethrough">
-            <TextStrikethrough size={22} weight="light" />
+            <TextStrikethrough size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("superscript") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleSuperscript().run()} isActive={editorState.superscript} title="Superscript">
-            <TextSuperscript size={22} weight="light" />
+            <TextSuperscript size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("subscript") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleSubscript().run()} isActive={editorState.subscript} title="Subscript">
-            <TextSubscript size={22} weight="light" />
+            <TextSubscript size={20} weight="light" />
           </ToolbarButton>
         )}
       </ToolbarGroup>
@@ -423,17 +423,17 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       <ToolbarGroup>
         {isVisible("bulletList") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editorState.bulletList} title="Bullet list">
-            <ListBullets size={22} weight="light" />
+            <ListBullets size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("orderedList") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editorState.orderedList} title="Numbered list">
-            <ListNumbers size={22} weight="light" />
+            <ListNumbers size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("taskList") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editorState.taskList} title="Checklist">
-            <CheckSquare size={22} weight="light" />
+            <CheckSquare size={20} weight="light" />
           </ToolbarButton>
         )}
       </ToolbarGroup>
@@ -441,27 +441,27 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       <ToolbarGroup>
         {isVisible("indent") && (
           <ToolbarButton onClick={() => indentCommand(editor)} title="Indent (Tab)">
-            <TextIndent size={22} weight="light" />
+            <TextIndent size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("outdent") && (
           <ToolbarButton onClick={() => outdentCommand(editor)} title="Outdent (Shift+Tab)">
-            <TextOutdent size={22} weight="light" />
+            <TextOutdent size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("moveUp") && (
           <ToolbarButton onClick={() => moveListItemUp(editor)} title="Move list item up (Alt+Shift+Up)">
-            <ArrowLineUp size={22} weight="light" />
+            <ArrowLineUp size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("moveDown") && (
           <ToolbarButton onClick={() => moveListItemDown(editor)} title="Move list item down (Alt+Shift+Down)">
-            <ArrowLineDown size={22} weight="light" />
+            <ArrowLineDown size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("removeFormat") && (
           <ToolbarButton onClick={() => removeFormattingCommand(editor)} title="Remove formatting">
-            <Eraser size={22} weight="light" />
+            <Eraser size={20} weight="light" />
           </ToolbarButton>
         )}
       </ToolbarGroup>
@@ -469,22 +469,22 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       <ToolbarGroup>
         {isVisible("blockquote") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editorState.blockquote} title="Blockquote">
-            <Quotes size={22} weight="light" />
+            <Quotes size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("codeBlock") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editorState.codeBlock} title="Code Block">
-            <CodeBlock size={22} weight="light" />
+            <CodeBlock size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("divider") && (
           <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider">
-            <PhMinus size={22} weight="light" />
+            <PhMinus size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("link") && (
           <ToolbarButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
-            {editorState.link ? <LinkBreak size={22} weight="light" /> : <PhLink size={22} weight="light" />}
+            {editorState.link ? <LinkBreak size={20} weight="light" /> : <PhLink size={20} weight="light" />}
           </ToolbarButton>
         )}
         {isVisible("table") && <TableMenu editor={editor} />}
@@ -498,7 +498,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       <ToolbarGroup>
         {isVisible("toggle") && (
           <ToolbarButton onClick={() => editor.chain().focus().setDetails().run()} title="Toggle (collapsible)">
-            <CaretRight size={22} weight="light" />
+            <CaretRight size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("image") && (
@@ -517,7 +517,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
             }
             input.click()
           }} title="Image">
-            <PhImage size={22} weight="light" />
+            <PhImage size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("youtube") && (
@@ -525,7 +525,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
             const url = window.prompt("Enter YouTube URL:")
             if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run()
           }} title="YouTube">
-            <YoutubeLogo size={22} weight="light" />
+            <YoutubeLogo size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("audio") && (
@@ -533,7 +533,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
             const url = window.prompt("Enter audio file URL:")
             if (url) editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
           }} title="Audio">
-            <SpeakerHigh size={22} weight="light" />
+            <SpeakerHigh size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("twitch") && (
@@ -541,7 +541,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
             const url = window.prompt("Enter Twitch URL:")
             if (url) editor.chain().focus().insertContent(`<iframe src="${url}" width="100%" height="400" allowfullscreen></iframe>`).run()
           }} title="Twitch">
-            <TwitchLogo size={22} weight="light" />
+            <TwitchLogo size={20} weight="light" />
           </ToolbarButton>
         )}
       </ToolbarGroup>
@@ -550,24 +550,24 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       <ToolbarGroup>
         {isVisible("inlineMath") && (
           <ToolbarButton onClick={() => editor.chain().focus().insertContent("$E = mc^2$").run()} title="Inline Math">
-            <MathOperations size={22} weight="light" />
+            <MathOperations size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("blockMath") && (
           <ToolbarButton onClick={() => editor.chain().focus().insertContent("$$\n\\sum_{i=1}^{n} x_i\n$$").run()} title="Block Math">
-            <MathOperations size={22} weight="regular" />
+            <MathOperations size={20} weight="regular" />
           </ToolbarButton>
         )}
         {isVisible("date") && (
           <ToolbarButton onClick={() => {
             editor.chain().focus().insertContent(format(new Date(), "yyyy-MM-dd")).run()
           }} title="Insert Date">
-            <CalendarDots size={22} weight="light" />
+            <CalendarDots size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("hardBreak") && (
           <ToolbarButton onClick={() => editor.chain().focus().setHardBreak().run()} title="Line Break">
-            <KeyReturn size={22} weight="light" />
+            <KeyReturn size={20} weight="light" />
           </ToolbarButton>
         )}
       </ToolbarGroup>
@@ -578,12 +578,12 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
           <ToolbarGroup>
             {isVisible("spellcheck") && (
               <ToolbarButton onClick={() => setSpellcheck(!spellcheck)} isActive={spellcheck} title="Spellcheck">
-                <TextAa size={22} weight="light" />
+                <TextAa size={20} weight="light" />
               </ToolbarButton>
             )}
             {isVisible("currentLineHighlight") && (
               <ToolbarButton onClick={() => setCurrentLineHighlight(!currentLineHighlight)} isActive={currentLineHighlight} title="Line Highlight">
-                <Paragraph size={22} weight="light" />
+                <Paragraph size={20} weight="light" />
               </ToolbarButton>
             )}
             {isVisible("invisibleChars") && (
@@ -598,7 +598,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
                   }
                 } catch { /* noop */ }
               }} title="Invisible Characters">
-                <Eye size={22} weight="light" />
+                <Eye size={20} weight="light" />
               </ToolbarButton>
             )}
           </ToolbarGroup>
@@ -608,17 +608,17 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       <ToolbarGroup>
         {isVisible("undo") && (
           <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editorState.canUndo} title="Undo (Ctrl+Z)">
-            <ArrowCounterClockwise size={22} weight="light" />
+            <ArrowCounterClockwise size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("redo") && (
           <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editorState.canRedo} title="Redo (Ctrl+Shift+Z)">
-            <ArrowClockwise size={22} weight="light" />
+            <ArrowClockwise size={20} weight="light" />
           </ToolbarButton>
         )}
         {isVisible("inlineCode") && (
           <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code (Ctrl+E)">
-            <PhCode size={22} weight="light" />
+            <PhCode size={20} weight="light" />
           </ToolbarButton>
         )}
       </ToolbarGroup>
@@ -632,14 +632,14 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
           setMoreMenuOpen(!moreMenuOpen)
         }}
         title="More actions"
-        className="w-10 h-10 rounded-md flex items-center justify-center shrink-0 cursor-pointer border-0 outline-none transition-colors duration-75 text-muted-foreground hover:text-foreground hover:bg-hover-bg"
+        className="w-10 h-10 rounded-md flex items-center justify-center shrink-0 cursor-pointer border-0 outline-none transition-colors duration-100 text-muted-foreground hover:text-foreground hover:bg-hover-bg"
       >
-        <DotsThree size={22} weight="bold" />
+        <DotsThree size={20} weight="bold" />
       </button>
       {moreMenuOpen && createPortal(
         <div
           ref={moreMenuRef}
-          className="fixed z-[100] w-[300px] max-h-[400px] overflow-y-auto rounded-xl border border-border bg-popover shadow-xl p-2"
+          className="fixed z-[100] w-[300px] max-h-[400px] overflow-y-auto rounded-lg border border-border bg-surface-overlay shadow-xl p-2"
           style={{ left: moreMenuPos.left, bottom: moreMenuPos.bottom }}
         >
           <div className="grid grid-cols-4 gap-1">
@@ -674,13 +674,13 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
                 key={item.id}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => { item.action(); setMoreMenuOpen(false) }}
-                className={`flex flex-col items-center justify-center gap-0.5 rounded-lg p-2 text-xs transition-colors cursor-pointer border-0 outline-none ${
+                className={`flex flex-col items-center justify-center gap-0.5 rounded-lg p-2 text-2xs transition-colors cursor-pointer border-0 outline-none ${
                   item.active
                     ? "bg-toolbar-active text-foreground"
                     : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                 }`}
               >
-                <span className="text-[11px] leading-tight truncate w-full text-center">{item.label}</span>
+                <span className="text-2xs leading-tight truncate w-full text-center">{item.label}</span>
               </button>
             ))}
           </div>
@@ -688,12 +688,12 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
         document.body
       )}
       <ToolbarButton onClick={() => setArrangeOpen(true)} title="Arrange toolbar">
-        <GearSix size={22} weight="light" />
+        <GearSix size={20} weight="light" />
       </ToolbarButton>
       {onTogglePosition && (
         <>
           <ToolbarButton onClick={onTogglePosition} title={position === 'bottom' ? "Move toolbar to top" : "Move toolbar to bottom"}>
-            {position === 'bottom' ? <ArrowUp size={22} weight="light" /> : <ArrowDown size={22} weight="light" />}
+            {position === 'bottom' ? <ArrowUp size={20} weight="light" /> : <ArrowDown size={20} weight="light" />}
           </ToolbarButton>
         </>
       )}

@@ -97,7 +97,7 @@ export function WikiArticleReader({
   return (
     <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex">
       {/* Left: TOC sidebar */}
-      <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border/50 px-3 py-4">
+      <aside className="w-[200px] shrink-0 overflow-y-auto border-r border-border-subtle px-3 py-4">
         <div className="sticky top-0">
           <WikiTOC content={note.content} className="w-full" onAddSection={handleAddSection} />
         </div>
@@ -131,7 +131,7 @@ export function WikiArticleReader({
       </div>
 
       {/* Right: Infobox sidebar */}
-      <aside className="w-[240px] shrink-0 overflow-y-auto border-l border-border/50 px-4 py-5 space-y-4">
+      <aside className="w-[240px] shrink-0 overflow-y-auto border-l border-border-subtle px-4 py-5 space-y-4">
         {/* Infobox — always editable, shows "Add infobox" when empty */}
         <WikiInfobox
           noteId={note.id}
@@ -167,14 +167,14 @@ export function WikiArticleReader({
                 {isStub && (
                   <button
                     onClick={() => setWikiStatus(note.id, "article")}
-                    className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
+                    className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-2xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
                   >
                     <CaretUp size={12} weight="regular" />
                     Promote to Article
                   </button>
                 )}
                 {isArticle && (
-                  <span className="flex items-center gap-1 text-xs text-emerald-400">
+                  <span className="flex items-center gap-1 text-2xs text-emerald-400">
                     <PhCheck size={12} weight="bold" />
                     Article
                   </span>
@@ -186,7 +186,7 @@ export function WikiArticleReader({
 
         {/* Activity stats */}
         <div className="space-y-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <h4 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
             Activity
           </h4>
           <div className="space-y-1.5">

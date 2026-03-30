@@ -88,20 +88,20 @@ function InlineSelect<T extends string>({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
+        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
       >
         {current?.label ?? value}
         <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} weight="regular" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-surface-overlay py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
           {options.map((opt) => {
             const active = opt.value === value
             return (
               <button
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setOpen(false) }}
-                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-note transition-colors hover:bg-accent hover:text-accent-foreground ${
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
@@ -417,7 +417,7 @@ export function LabelsView() {
         <div className="flex items-center gap-3 border-b border-border px-6 py-4">
           <button
             onClick={() => setSelectedLabelId(null)}
-            className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft size={16} weight="regular" />
           </button>
@@ -426,14 +426,14 @@ export function LabelsView() {
             style={{ backgroundColor: selectedLabel.color }}
           />
           <h1 className="text-ui font-semibold text-foreground">{selectedLabel.name}</h1>
-          <span className="text-sm text-muted-foreground">{labelNoteCount} notes</span>
+          <span className="text-note text-muted-foreground">{labelNoteCount} notes</span>
           <div className="flex-1" />
           <button
             onClick={() => {
               deleteLabel(selectedLabelId)
               setSelectedLabelId(null)
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm text-red-400 hover:bg-red-400/10 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-note text-red-400 hover:bg-red-400/10 transition-colors"
           >
             <Trash size={14} weight="regular" />
             Delete label
@@ -455,7 +455,7 @@ export function LabelsView() {
           <div className="flex-1" />
           <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
                 <SlidersHorizontal size={16} weight="regular" />
                 Display
               </button>
@@ -487,7 +487,7 @@ export function LabelsView() {
                   />
                   <button
                     onClick={() => updateLabelView({ sortDirection: labelViewState.sortDirection === "asc" ? "desc" : "asc" })}
-                    className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                    className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                   >
                     {labelViewState.sortDirection === "asc"
                       ? <ArrowUp size={14} weight="regular" />
@@ -517,7 +517,7 @@ export function LabelsView() {
         {/* Notes list */}
         <div className="flex-1 overflow-y-auto">
           {labelNotes.length === 0 ? (
-            <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center h-32 text-note text-muted-foreground">
               No notes with this label
             </div>
           ) : (
@@ -526,15 +526,15 @@ export function LabelsView() {
                 <button
                   key={note.id}
                   onClick={() => openNote(note.id)}
-                  className="flex w-full items-center gap-4 px-6 py-3 text-left hover:bg-secondary/50 transition-colors"
+                  className="flex w-full items-center gap-4 px-6 py-3 text-left hover:bg-hover-bg transition-colors"
                 >
                   <span className="flex-1 truncate text-ui text-foreground">
                     {note.title || "Untitled"}
                   </span>
-                  <span className="text-sm text-muted-foreground capitalize">
+                  <span className="text-note text-muted-foreground capitalize">
                     {note.status}
                   </span>
-                  <span className="text-sm text-muted-foreground tabular-nums">
+                  <span className="text-note text-muted-foreground tabular-nums">
                     {formatRelativeTime(note.updatedAt)}
                   </span>
                 </button>
@@ -575,19 +575,19 @@ export function LabelsView() {
                   onChange={(e) => setNewName(e.target.value)}
                   onKeyDown={handleCreateKeyDown}
                   placeholder="Label name"
-                  className="h-8 w-full max-w-xs rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="h-8 w-full max-w-xs rounded-md border border-border bg-background px-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <ColorPickerGrid value={newColor} onChange={setNewColor} />
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleCreate}
-                    className="px-3 py-1.5 rounded-md text-sm bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+                    className="px-3 py-1.5 rounded-md text-note bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
                   >
                     Create
                   </button>
                   <button
                     onClick={() => { setCreating(false); setNewName("") }}
-                    className="px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                    className="px-3 py-1.5 rounded-md text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     Cancel
                   </button>
@@ -597,15 +597,15 @@ export function LabelsView() {
 
             {labels.length === 0 && !creating ? (
               <div className="flex flex-col items-center justify-center h-32 gap-2">
-                <span className="text-sm text-muted-foreground">No labels yet</span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-note text-muted-foreground">No labels yet</span>
+                <span className="text-2xs text-muted-foreground">
                   Click &quot;New label&quot; to create one
                 </span>
               </div>
             ) : (
               <div>
                 {/* Header row */}
-                <div className="flex items-center gap-3 border-b border-border/30 px-6 py-2">
+                <div className="flex items-center gap-3 border-b border-border-subtle px-6 py-2">
                   <button
                     onClick={toggleAll}
                     className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
@@ -615,7 +615,7 @@ export function LabelsView() {
                     )}
                   </button>
                   <button
-                    className="flex flex-1 items-center gap-1 text-left text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
                     onClick={() => setLabelSortBy(labelSortBy === "name-asc" ? "name-desc" : "name-asc")}
                   >
                     Name
@@ -626,7 +626,7 @@ export function LabelsView() {
                     )}
                   </button>
                   <button
-                    className="flex w-16 items-center justify-end gap-1 text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
                     onClick={() => setLabelSortBy(labelSortBy === "count-desc" ? "count-asc" : "count-desc")}
                   >
                     Notes
@@ -656,7 +656,7 @@ export function LabelsView() {
                       key={label.id}
                       data-label-index={index}
                       className={`flex items-start gap-3 px-6 py-2.5 transition-colors group cursor-default${
-                        checkedLabels.has(label.id) ? " bg-accent/10" : " hover:bg-secondary/50"
+                        checkedLabels.has(label.id) ? " bg-accent/10" : " hover:bg-hover-bg"
                       }`}
                       onClick={(e) => {
                         if ((e.target as HTMLElement).closest('button, input, [data-no-drag]')) return
@@ -685,7 +685,7 @@ export function LabelsView() {
                             onChange={(e) => setEditName(e.target.value)}
                             onKeyDown={handleEditKeyDown}
                             onBlur={handleEditSubmit}
-                            className="h-7 w-full max-w-xs rounded border border-border bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                            className="h-7 w-full max-w-xs rounded border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                           />
                           <ColorPickerGrid value={editColor} onChange={setEditColor} />
                         </div>
@@ -699,7 +699,7 @@ export function LabelsView() {
                       )}
                       {!isEditing && (
                         <>
-                          <span className="w-16 text-right text-sm text-muted-foreground tabular-nums self-center">
+                          <span className="w-16 text-right text-note text-muted-foreground tabular-nums self-center">
                             {labelCounts[label.id] || 0}
                           </span>
                           <div className="w-16 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -710,7 +710,7 @@ export function LabelsView() {
                                 setEditName(label.name)
                                 setEditColor(label.color)
                               }}
-                              className="flex items-center justify-center h-6 w-6 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                              className="flex items-center justify-center h-6 w-6 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
                             >
                               <PencilSimple size={12} weight="regular" />
                             </button>
@@ -743,7 +743,7 @@ export function LabelsView() {
             onClick={() => {
               setCreating(true)
             }}
-            className="text-sm"
+            className="text-note"
           >
             <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
             New label
@@ -753,7 +753,7 @@ export function LabelsView() {
 
       {/* Floating action bar */}
       {checkedLabels.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
+        <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
           <div className="flex items-center gap-1 px-4 py-2.5">
             <div className="flex items-center gap-1.5 px-1.5">
               <Lightning className="text-accent" size={16} weight="regular" />
@@ -762,7 +762,7 @@ export function LabelsView() {
               </span>
               <button
                 onClick={() => setCheckedLabels(new Set())}
-                className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
               >
                 <PhX size={16} weight="regular" />
               </button>

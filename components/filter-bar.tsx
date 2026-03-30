@@ -174,7 +174,7 @@ export function FilterMenuItems({
   return (
     <>
       {/* ── Quick Filters (presets) ── */}
-      <DropdownMenuItem className="text-xs font-medium text-muted-foreground" disabled>
+      <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>
         <Lightning className="mr-1" size={14} weight="regular" /> Quick Filters
       </DropdownMenuItem>
       <DropdownMenuItem onSelect={(e) => {
@@ -184,14 +184,14 @@ export function FilterMenuItems({
           { field: "links", operator: "eq", value: "0" },
         ])
       }}>
-        <span className="text-sm">Needs attention</span>
+        <span className="text-note">Needs attention</span>
         <span className="ml-auto text-2xs text-muted-foreground">stale + unlinked</span>
       </DropdownMenuItem>
       <DropdownMenuItem onSelect={(e) => {
         e.preventDefault()
         onSetFilters([{ field: "updatedAt", operator: "gt", value: "7d" }])
       }}>
-        <span className="text-sm">Active work</span>
+        <span className="text-note">Active work</span>
         <span className="ml-auto text-2xs text-muted-foreground">updated &lt; 7d</span>
       </DropdownMenuItem>
       <DropdownMenuItem onSelect={(e) => {
@@ -201,7 +201,7 @@ export function FilterMenuItems({
           { field: "reads", operator: "eq", value: "0" },
         ])
       }}>
-        <span className="text-sm">Orphans</span>
+        <span className="text-note">Orphans</span>
         <span className="ml-auto text-2xs text-muted-foreground">unlinked + unread</span>
       </DropdownMenuItem>
       <DropdownMenuSeparator />
@@ -211,7 +211,7 @@ export function FilterMenuItems({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <CircleDashed className="text-muted-foreground" size={16} weight="regular" />
-            <span className="text-sm">Status</span>
+            <span className="text-note">Status</span>
             <ActiveBadge count={statusCount} />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48">
@@ -219,7 +219,7 @@ export function FilterMenuItems({
               <input
                 type="text"
                 placeholder="FunnelSimple..."
-                className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+                className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
                 value={statusSearch}
                 onChange={(e) => setStatusSearch(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
@@ -243,7 +243,7 @@ export function FilterMenuItems({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <FolderOpen className="text-muted-foreground" size={16} weight="regular" />
-            <span className="text-sm">Folder</span>
+            <span className="text-note">Folder</span>
             <ActiveBadge count={folderCount} />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-52 max-h-80 overflow-y-auto">
@@ -251,7 +251,7 @@ export function FilterMenuItems({
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 value={folderSearch}
                 onChange={(e) => setFolderSearch(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
@@ -261,7 +261,7 @@ export function FilterMenuItems({
             {!folderSearch && (
               <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", "_none") }}>
                 <CheckMark active={hasFilter(filters, "folder", "_none")} />
-                <span className="text-sm text-muted-foreground">No folder</span>
+                <span className="text-note text-muted-foreground">No folder</span>
               </DropdownMenuItem>
             )}
             {folders.length > 0 && !folderSearch && <DropdownMenuSeparator />}
@@ -270,7 +270,7 @@ export function FilterMenuItems({
               .map((folder) => (
                 <DropdownMenuItem key={folder.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", folder.id) }}>
                   <CheckMark active={hasFilter(filters, "folder", folder.id)} />
-                  <span className="text-sm">{folder.name}</span>
+                  <span className="text-note">{folder.name}</span>
                 </DropdownMenuItem>
               ))}
           </DropdownMenuSubContent>
@@ -282,24 +282,24 @@ export function FilterMenuItems({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <PhTag className="text-muted-foreground" size={16} weight="regular" />
-            <span className="text-sm">Label</span>
+            <span className="text-note">Label</span>
             <ActiveBadge count={labelCount} />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48 max-h-80 overflow-y-auto">
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("label", "_none") }}>
               <CheckMark active={hasFilter(filters, "label", "_none")} />
-              <span className="text-sm text-muted-foreground">No label</span>
+              <span className="text-note text-muted-foreground">No label</span>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("label", "_any") }}>
               <CheckMark active={hasFilter(filters, "label", "_any")} />
-              <span className="text-sm">Has label</span>
+              <span className="text-note">Has label</span>
             </DropdownMenuItem>
             {labels.length > 0 && <DropdownMenuSeparator />}
             <div className="px-2 py-1.5">
               <input
                 type="text"
                 placeholder="FunnelSimple..."
-                className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+                className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
                 value={labelSearch}
                 onChange={(e) => setLabelSearch(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
@@ -312,7 +312,7 @@ export function FilterMenuItems({
                 <DropdownMenuItem key={label.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("label", label.id) }}>
                   <CheckMark active={hasFilter(filters, "label", label.id)} />
                   <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: label.color }} />
-                  <span className="text-sm">{label.name}</span>
+                  <span className="text-note">{label.name}</span>
                 </DropdownMenuItem>
               ))}
           </DropdownMenuSubContent>
@@ -323,26 +323,26 @@ export function FilterMenuItems({
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
           <PhHash className="text-muted-foreground" size={16} weight="regular" />
-          <span className="text-sm">Tags</span>
+          <span className="text-note">Tags</span>
           <ActiveBadge count={tagCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-52 max-h-80 overflow-y-auto">
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_any") }}>
             <CheckMark active={hasFilter(filters, "tags", "_any")} />
             <PhTag className="text-muted-foreground" size={16} weight="regular" />
-            <span className="text-sm">Has tags</span>
+            <span className="text-note">Has tags</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_none") }}>
             <CheckMark active={hasFilter(filters, "tags", "_none")} />
             <PhTag className="text-muted-foreground" size={16} weight="regular" />
-            <span className="text-sm">No tags</span>
+            <span className="text-note">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
           <div className="px-2 py-1.5">
             <input
               type="text"
               placeholder="FunnelSimple..."
-              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
               value={tagSearch}
               onChange={(e) => setTagSearch(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -358,7 +358,7 @@ export function FilterMenuItems({
                   className="h-2.5 w-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: tag.color }}
                 />
-                <span className="text-sm">{tag.name}</span>
+                <span className="text-note">{tag.name}</span>
               </DropdownMenuItem>
             ))}
         </DropdownMenuSubContent>
@@ -370,7 +370,7 @@ export function FilterMenuItems({
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
           <Globe className="text-muted-foreground" size={16} weight="regular" />
-          <span className="text-sm">Source</span>
+          <span className="text-note">Source</span>
           <ActiveBadge count={sourceCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-48">
@@ -378,7 +378,7 @@ export function FilterMenuItems({
             <input
               type="text"
               placeholder="Search..."
-              className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               value={sourceSearch}
               onChange={(e) => setSourceSearch(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -396,7 +396,7 @@ export function FilterMenuItems({
               return (
                 <DropdownMenuItem key={src} onSelect={(e) => { e.preventDefault(); onToggleFilter("source", src) }}>
                   <CheckMark active={hasFilter(filters, "source", src)} />
-                  <span className="text-sm">{srcLabels[src]}</span>
+                  <span className="text-note">{srcLabels[src]}</span>
                 </DropdownMenuItem>
               )
             })}
@@ -405,7 +405,7 @@ export function FilterMenuItems({
               {!sourceSearch && <DropdownMenuSeparator />}
               <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("source", "_none") }}>
                 <CheckMark active={hasFilter(filters, "source", "_none")} />
-                <span className="text-sm text-muted-foreground">No source</span>
+                <span className="text-note text-muted-foreground">No source</span>
               </DropdownMenuItem>
             </>
           )}
@@ -416,7 +416,7 @@ export function FilterMenuItems({
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
           <PhClock className="text-muted-foreground" size={16} weight="regular" />
-          <span className="text-sm">Dates</span>
+          <span className="text-note">Dates</span>
           <ActiveBadge count={dateCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-52">
@@ -425,15 +425,15 @@ export function FilterMenuItems({
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "24h", "gt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "24h", "gt")} />
-            <span className="text-sm">Today</span>
+            <span className="text-note">Today</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "7d", "gt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "7d", "gt")} />
-            <span className="text-sm">This week</span>
+            <span className="text-note">This week</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "30d", "gt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "30d", "gt")} />
-            <span className="text-sm">This month</span>
+            <span className="text-note">This month</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>
@@ -441,15 +441,15 @@ export function FilterMenuItems({
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "7d", "lt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "7d", "lt")} />
-            <span className="text-sm">7+ days ago</span>
+            <span className="text-note">7+ days ago</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "30d", "lt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "30d", "lt")} />
-            <span className="text-sm">30+ days ago</span>
+            <span className="text-note">30+ days ago</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "90d", "lt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "90d", "lt")} />
-            <span className="text-sm">90+ days ago</span>
+            <span className="text-note">90+ days ago</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>
@@ -457,15 +457,15 @@ export function FilterMenuItems({
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("createdAt", "24h", "gt") }}>
             <CheckMark active={hasFilter(filters, "createdAt", "24h", "gt")} />
-            <span className="text-sm">Today</span>
+            <span className="text-note">Today</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("createdAt", "7d", "gt") }}>
             <CheckMark active={hasFilter(filters, "createdAt", "7d", "gt")} />
-            <span className="text-sm">This week</span>
+            <span className="text-note">This week</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("createdAt", "30d", "gt") }}>
             <CheckMark active={hasFilter(filters, "createdAt", "30d", "gt")} />
-            <span className="text-sm">This month</span>
+            <span className="text-note">This month</span>
           </DropdownMenuItem>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
@@ -477,7 +477,7 @@ export function FilterMenuItems({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <PhLink className="text-muted-foreground" size={16} weight="regular" />
-            <span className="text-sm">Links</span>
+            <span className="text-note">Links</span>
             <ActiveBadge count={linksCount} />
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48">
@@ -485,7 +485,7 @@ export function FilterMenuItems({
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 value={linksSearch}
                 onChange={(e) => setLinksSearch(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
@@ -495,32 +495,32 @@ export function FilterMenuItems({
             {"unlinked".includes(linksSearch.toLowerCase()) && (
               <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "0") }}>
                 <CheckMark active={hasFilter(filters, "links", "0")} />
-                <span className="text-sm">Unlinked</span>
+                <span className="text-note">Unlinked</span>
               </DropdownMenuItem>
             )}
             {"has links".includes(linksSearch.toLowerCase()) && (
               <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "0", "gt") }}>
                 <CheckMark active={hasFilter(filters, "links", "0", "gt")} />
-                <span className="text-sm">Has links</span>
+                <span className="text-note">Has links</span>
               </DropdownMenuItem>
             )}
             {!linksSearch && <DropdownMenuSeparator />}
             {"3+ links".includes(linksSearch.toLowerCase()) && (
               <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "2", "gt") }}>
                 <CheckMark active={hasFilter(filters, "links", "2", "gt")} />
-                <span className="text-sm">3+ links</span>
+                <span className="text-note">3+ links</span>
               </DropdownMenuItem>
             )}
             {"5+ links".includes(linksSearch.toLowerCase()) && (
               <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "4", "gt") }}>
                 <CheckMark active={hasFilter(filters, "links", "4", "gt")} />
-                <span className="text-sm">5+ links</span>
+                <span className="text-note">5+ links</span>
               </DropdownMenuItem>
             )}
             {"10+ links".includes(linksSearch.toLowerCase()) && (
               <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "9", "gt") }}>
                 <CheckMark active={hasFilter(filters, "links", "9", "gt")} />
-                <span className="text-sm">10+ links</span>
+                <span className="text-note">10+ links</span>
               </DropdownMenuItem>
             )}
           </DropdownMenuSubContent>
@@ -531,7 +531,7 @@ export function FilterMenuItems({
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
           <FileText className="text-muted-foreground" size={16} weight="regular" />
-          <span className="text-sm">Content</span>
+          <span className="text-note">Content</span>
           <ActiveBadge count={contentCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-52">
@@ -539,7 +539,7 @@ export function FilterMenuItems({
             <input
               type="text"
               placeholder="Search..."
-              className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               value={contentSearch}
               onChange={(e) => setContentSearch(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -550,21 +550,21 @@ export function FilterMenuItems({
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("content", "empty") }}>
               <CheckMark active={hasFilter(filters, "content", "empty")} />
               <FileMagnifyingGlass className="text-muted-foreground" size={16} weight="regular" />
-              <span className="text-sm">Empty body</span>
+              <span className="text-note">Empty body</span>
             </DropdownMenuItem>
           )}
           {"untitled".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("title", "empty") }}>
               <CheckMark active={hasFilter(filters, "title", "empty")} />
               <TextT className="text-muted-foreground" size={16} weight="regular" />
-              <span className="text-sm">Untitled</span>
+              <span className="text-note">Untitled</span>
             </DropdownMenuItem>
           )}
           {"unread".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("reads", "0") }}>
               <CheckMark active={hasFilter(filters, "reads", "0")} />
               <PhEye className="text-muted-foreground" size={16} weight="regular" />
-              <span className="text-sm">Unread</span>
+              <span className="text-note">Unread</span>
             </DropdownMenuItem>
           )}
           {(!contentSearch || "word count short long".includes(contentSearch.toLowerCase())) && <DropdownMenuSeparator />}
@@ -577,21 +577,21 @@ export function FilterMenuItems({
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "50", "lt") }}>
               <CheckMark active={hasFilter(filters, "wordCount", "50", "lt")} />
               <TextAa className="text-muted-foreground" size={16} weight="regular" />
-              <span className="text-sm">Short (&lt; 50 words)</span>
+              <span className="text-note">Short (&lt; 50 words)</span>
             </DropdownMenuItem>
           )}
           {"long 200 words".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "199", "gt") }}>
               <CheckMark active={hasFilter(filters, "wordCount", "199", "gt")} />
               <TextAa className="text-muted-foreground" size={16} weight="regular" />
-              <span className="text-sm">Long (200+ words)</span>
+              <span className="text-note">Long (200+ words)</span>
             </DropdownMenuItem>
           )}
           {"very long 500 words".includes(contentSearch.toLowerCase()) && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "499", "gt") }}>
               <CheckMark active={hasFilter(filters, "wordCount", "499", "gt")} />
               <TextAa className="text-muted-foreground" size={16} weight="regular" />
-              <span className="text-sm">Very long (500+ words)</span>
+              <span className="text-note">Very long (500+ words)</span>
             </DropdownMenuItem>
           )}
         </DropdownMenuSubContent>
@@ -601,17 +601,17 @@ export function FilterMenuItems({
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
           <PushPin className="text-muted-foreground" size={16} weight="regular" />
-          <span className="text-sm">Pinned</span>
+          <span className="text-note">Pinned</span>
           <ActiveBadge count={pinnedCount} />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="w-44">
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("pinned", "true") }}>
             <CheckMark active={hasFilter(filters, "pinned", "true")} />
-            <span className="text-sm">Pinned only</span>
+            <span className="text-note">Pinned only</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("pinned", "false") }}>
             <CheckMark active={hasFilter(filters, "pinned", "false")} />
-            <span className="text-sm">Not pinned</span>
+            <span className="text-note">Not pinned</span>
           </DropdownMenuItem>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
@@ -689,7 +689,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
       <input
         type="text"
         placeholder="FunnelSimple..."
-        className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+        className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onClick={(e) => e.stopPropagation()}
@@ -720,14 +720,14 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
           {!folderSearch && (
             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", "_none") }}>
               <CheckMark active={hasFilter(filters, "folder", "_none")} />
-              <span className="text-sm text-muted-foreground">No folder</span>
+              <span className="text-note text-muted-foreground">No folder</span>
             </DropdownMenuItem>
           )}
           {folders.length > 0 && !folderSearch && <DropdownMenuSeparator />}
           {folders.filter((folder) => !folderSearch || folder.name.toLowerCase().includes(folderSearch.toLowerCase())).map((folder) => (
             <DropdownMenuItem key={folder.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("folder", folder.id) }}>
               <CheckMark active={hasFilter(filters, "folder", folder.id)} />
-              <span className="text-sm">{folder.name}</span>
+              <span className="text-note">{folder.name}</span>
             </DropdownMenuItem>
           ))}
         </>
@@ -737,18 +737,18 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
         <>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("label", "_none") }}>
             <CheckMark active={hasFilter(filters, "label", "_none")} />
-            <span className="text-sm text-muted-foreground">No label</span>
+            <span className="text-note text-muted-foreground">No label</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("label", "_any") }}>
             <CheckMark active={hasFilter(filters, "label", "_any")} />
-            <span className="text-sm">Has label</span>
+            <span className="text-note">Has label</span>
           </DropdownMenuItem>
           {labels.length > 0 && <DropdownMenuSeparator />}
           <div className="px-2 py-1.5">
             <input
               type="text"
               placeholder="FunnelSimple..."
-              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
               value={labelSearch}
               onChange={(e) => setLabelSearch(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -761,7 +761,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
               <DropdownMenuItem key={label.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("label", label.id) }}>
                 <CheckMark active={hasFilter(filters, "label", label.id)} />
                 <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: label.color }} />
-                <span className="text-sm">{label.name}</span>
+                <span className="text-note">{label.name}</span>
               </DropdownMenuItem>
             ))}
         </>
@@ -772,19 +772,19 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_any") }}>
             <CheckMark active={hasFilter(filters, "tags", "_any")} />
             <PhTag className="text-muted-foreground" size={16} weight="regular" />
-            <span className="text-sm">Has tags</span>
+            <span className="text-note">Has tags</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", "_none") }}>
             <CheckMark active={hasFilter(filters, "tags", "_none")} />
             <PhTag className="text-muted-foreground" size={16} weight="regular" />
-            <span className="text-sm">No tags</span>
+            <span className="text-note">No tags</span>
           </DropdownMenuItem>
           {tags.length > 0 && <DropdownMenuSeparator />}
           <div className="px-2 py-1.5">
             <input
               type="text"
               placeholder="FunnelSimple..."
-              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+              className="w-full bg-transparent border-b border-border px-2 py-1.5 text-2xs outline-none placeholder:text-muted-foreground"
               value={tagSearch}
               onChange={(e) => setTagSearch(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -797,7 +797,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
               <DropdownMenuItem key={tag.id} onSelect={(e) => { e.preventDefault(); onToggleFilter("tags", tag.id) }}>
                 <CheckMark active={hasFilter(filters, "tags", tag.id)} />
                 <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
-                <span className="text-sm">{tag.name}</span>
+                <span className="text-note">{tag.name}</span>
               </DropdownMenuItem>
             ))}
         </>
@@ -813,7 +813,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
           }).map((src) => (
             <DropdownMenuItem key={src} onSelect={(e) => { e.preventDefault(); onToggleFilter("source", src) }}>
               <CheckMark active={hasFilter(filters, "source", src)} />
-              <span className="text-sm">{srcLabels[src]}</span>
+              <span className="text-note">{srcLabels[src]}</span>
             </DropdownMenuItem>
           ))}
           {(!sourceSearch || "no source".includes(sourceSearch.toLowerCase())) && (
@@ -821,7 +821,7 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
               {!sourceSearch && <DropdownMenuSeparator />}
               <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("source", "_none") }}>
                 <CheckMark active={hasFilter(filters, "source", "_none")} />
-                <span className="text-sm text-muted-foreground">No source</span>
+                <span className="text-note text-muted-foreground">No source</span>
               </DropdownMenuItem>
             </>
           )}
@@ -834,43 +834,43 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
           <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>Updated</DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "24h", "gt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "24h", "gt")} />
-            <span className="text-sm">Today</span>
+            <span className="text-note">Today</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "7d", "gt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "7d", "gt")} />
-            <span className="text-sm">This week</span>
+            <span className="text-note">This week</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "30d", "gt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "30d", "gt")} />
-            <span className="text-sm">This month</span>
+            <span className="text-note">This month</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>Stale</DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "7d", "lt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "7d", "lt")} />
-            <span className="text-sm">7+ days ago</span>
+            <span className="text-note">7+ days ago</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "30d", "lt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "30d", "lt")} />
-            <span className="text-sm">30+ days ago</span>
+            <span className="text-note">30+ days ago</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("updatedAt", "90d", "lt") }}>
             <CheckMark active={hasFilter(filters, "updatedAt", "90d", "lt")} />
-            <span className="text-sm">90+ days ago</span>
+            <span className="text-note">90+ days ago</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>Created</DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("createdAt", "24h", "gt") }}>
             <CheckMark active={hasFilter(filters, "createdAt", "24h", "gt")} />
-            <span className="text-sm">Today</span>
+            <span className="text-note">Today</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("createdAt", "7d", "gt") }}>
             <CheckMark active={hasFilter(filters, "createdAt", "7d", "gt")} />
-            <span className="text-sm">This week</span>
+            <span className="text-note">This week</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("createdAt", "30d", "gt") }}>
             <CheckMark active={hasFilter(filters, "createdAt", "30d", "gt")} />
-            <span className="text-sm">This month</span>
+            <span className="text-note">This month</span>
           </DropdownMenuItem>
         </>
       )
@@ -879,24 +879,24 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
         <>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "0") }}>
             <CheckMark active={hasFilter(filters, "links", "0")} />
-            <span className="text-sm">Unlinked</span>
+            <span className="text-note">Unlinked</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "0", "gt") }}>
             <CheckMark active={hasFilter(filters, "links", "0", "gt")} />
-            <span className="text-sm">Has links</span>
+            <span className="text-note">Has links</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "2", "gt") }}>
             <CheckMark active={hasFilter(filters, "links", "2", "gt")} />
-            <span className="text-sm">3+ links</span>
+            <span className="text-note">3+ links</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "4", "gt") }}>
             <CheckMark active={hasFilter(filters, "links", "4", "gt")} />
-            <span className="text-sm">5+ links</span>
+            <span className="text-note">5+ links</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("links", "9", "gt") }}>
             <CheckMark active={hasFilter(filters, "links", "9", "gt")} />
-            <span className="text-sm">10+ links</span>
+            <span className="text-note">10+ links</span>
           </DropdownMenuItem>
         </>
       )
@@ -905,29 +905,29 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
         <>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("content", "empty") }}>
             <CheckMark active={hasFilter(filters, "content", "empty")} />
-            <span className="text-sm">Empty body</span>
+            <span className="text-note">Empty body</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("title", "empty") }}>
             <CheckMark active={hasFilter(filters, "title", "empty")} />
-            <span className="text-sm">Untitled</span>
+            <span className="text-note">Untitled</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("reads", "0") }}>
             <CheckMark active={hasFilter(filters, "reads", "0")} />
-            <span className="text-sm">Unread</span>
+            <span className="text-note">Unread</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-2xs font-medium text-muted-foreground" disabled>Word Count</DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "50", "lt") }}>
             <CheckMark active={hasFilter(filters, "wordCount", "50", "lt")} />
-            <span className="text-sm">Short (&lt; 50 words)</span>
+            <span className="text-note">Short (&lt; 50 words)</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "199", "gt") }}>
             <CheckMark active={hasFilter(filters, "wordCount", "199", "gt")} />
-            <span className="text-sm">Long (200+ words)</span>
+            <span className="text-note">Long (200+ words)</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("wordCount", "499", "gt") }}>
             <CheckMark active={hasFilter(filters, "wordCount", "499", "gt")} />
-            <span className="text-sm">Very long (500+ words)</span>
+            <span className="text-note">Very long (500+ words)</span>
           </DropdownMenuItem>
         </>
       )
@@ -936,11 +936,11 @@ export function FilterFieldContent({ groupKey, filters, folders, tags, labels = 
         <>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("pinned", "true") }}>
             <CheckMark active={hasFilter(filters, "pinned", "true")} />
-            <span className="text-sm">Pinned only</span>
+            <span className="text-note">Pinned only</span>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleFilter("pinned", "false") }}>
             <CheckMark active={hasFilter(filters, "pinned", "false")} />
-            <span className="text-sm">Not pinned</span>
+            <span className="text-note">Not pinned</span>
           </DropdownMenuItem>
         </>
       )
@@ -958,7 +958,7 @@ export function FilterButton({ hideLabel, ...props }: FilterButtonProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+        <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
           <FunnelSimple size={16} weight="regular" />
           {!hideLabel && "FunnelSimple"}
           {props.filters.length > 0 && (
@@ -999,7 +999,7 @@ export function FilterChipBar({
       {filters.map((f, i) => (
         <span
           key={i}
-          className="inline-flex items-center gap-[5px] rounded-[6px] border border-accent/30 bg-accent/[0.14] py-[3px] pl-2.5 pr-1 text-xs font-medium text-accent/90"
+          className="inline-flex items-center gap-1.5 rounded-md border border-accent/30 bg-accent/[0.14] py-1 pl-2.5 pr-1 text-2xs font-medium text-accent/90"
         >
           {formatFilterLabel(f, folders, tags, labels)}
           <button
@@ -1014,7 +1014,7 @@ export function FilterChipBar({
       {/* + Add more */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="inline-flex items-center justify-center rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+          <button className="inline-flex items-center justify-center rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
             <PhPlus size={16} weight="regular" />
           </button>
         </DropdownMenuTrigger>
@@ -1027,7 +1027,7 @@ export function FilterChipBar({
       <div className="ml-auto">
         <button
           onClick={onClearAll}
-          className="border-none bg-transparent px-1 py-0.5 text-xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+          className="border-none bg-transparent px-1 py-0.5 text-2xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
         >
           Clear all
         </button>

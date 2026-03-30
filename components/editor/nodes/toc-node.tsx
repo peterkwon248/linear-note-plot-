@@ -103,12 +103,12 @@ function TocNodeView({ editor, getPos, deleteNode }: NodeViewProps) {
     <NodeViewWrapper>
       <div
         contentEditable={false}
-        className="not-draggable bg-secondary/30 border border-border/50 rounded-lg p-4 my-2 select-none"
+        className="not-draggable bg-secondary/30 border border-border-subtle rounded-lg p-4 my-2 select-none"
       >
         {/* Header */}
         <div className="flex items-center gap-2 mb-3 text-muted-foreground">
           <ListBullets size={14} weight="bold" />
-          <span className="text-xs font-semibold uppercase tracking-wider flex-1">
+          <span className="text-2xs font-semibold uppercase tracking-wider flex-1">
             Table of Contents
           </span>
           <button
@@ -123,7 +123,7 @@ function TocNodeView({ editor, getPos, deleteNode }: NodeViewProps) {
 
         {/* TOC items */}
         {items.length === 0 ? (
-          <p className="text-xs text-muted-foreground/50 italic">
+          <p className="text-2xs text-muted-foreground/50 italic">
             No headings found. Add headings to populate the outline.
           </p>
         ) : (
@@ -137,7 +137,7 @@ function TocNodeView({ editor, getPos, deleteNode }: NodeViewProps) {
                   type="button"
                   onClick={() => handleClick(item)}
                   className={[
-                    "w-full text-left text-sm leading-relaxed rounded px-1 py-0.5 transition-colors duration-75 cursor-pointer flex items-center gap-1.5",
+                    "w-full text-left text-note leading-relaxed rounded px-1 py-0.5 transition-colors duration-100 cursor-pointer flex items-center gap-1.5",
                     item.isActive
                       ? "text-foreground font-medium"
                       : "text-muted-foreground hover:text-foreground hover:bg-hover-bg",

@@ -16,15 +16,15 @@
   min-height: 300px;
   padding: 0;
   color: var(--foreground);
-  font-size: 15px;
-  line-height: 1.75;
-  letter-spacing: -0.01em;
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
+  letter-spacing: var(--editor-letter-spacing);
   word-break: keep-all;
   overflow-wrap: break-word;
 }
 
 .ProseMirror > * + * {
-  margin-top: 0.4em;
+  margin-top: var(--editor-block-gap);
 }
 
 /* First block = note title (UpNote style) */
@@ -35,7 +35,7 @@
 
 /* Title heading — first h2 looks like a clean title input */
 .ProseMirror > h2:first-child {
-  font-size: 28px;
+  font-size: var(--editor-h1);
   font-weight: 600;
   line-height: 1.2;
   margin-bottom: 0.5rem;
@@ -71,7 +71,7 @@
 .ProseMirror h4,
 .ProseMirror h5,
 .ProseMirror h6 {
-  margin-top: 0.4em;
+  margin-top: var(--editor-block-gap);
   margin-bottom: 0.15em;
   color: var(--foreground);
 }
@@ -86,40 +86,40 @@
 }
 
 .ProseMirror h1 {
-  font-size: 28px;
+  font-size: var(--editor-h1);
   font-weight: 700;
   line-height: 1.35;
   letter-spacing: -0.02em;
 }
 
 .ProseMirror h2 {
-  font-size: 23px;
+  font-size: var(--editor-h2);
   font-weight: 650;
   line-height: 1.4;
   letter-spacing: -0.015em;
 }
 
 .ProseMirror h3 {
-  font-size: 19px;
+  font-size: var(--editor-h3);
   font-weight: 600;
   line-height: 1.45;
   letter-spacing: -0.01em;
 }
 
 .ProseMirror h4 {
-  font-size: 16px;
+  font-size: var(--editor-h4);
   font-weight: 600;
   line-height: 1.5;
 }
 
 .ProseMirror h5 {
-  font-size: 14.5px;
+  font-size: var(--editor-h5);
   font-weight: 600;
   line-height: 1.55;
 }
 
 .ProseMirror h6 {
-  font-size: 13px;
+  font-size: var(--editor-h6);
   font-weight: 600;
   line-height: 1.55;
   text-transform: uppercase;
@@ -246,7 +246,7 @@
   top: 1px;
   width: 5px;
   height: 9px;
-  border: solid #FFFFFF;
+  border: solid var(--accent-foreground);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -297,17 +297,17 @@
 
 /* Inline Code */
 .ProseMirror code {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--editor-code-bg);
   color: var(--accent);
   padding: 0.15em 0.45em;
-  border-radius: 5px;
+  border-radius: var(--editor-code-radius);
   font-size: 0.87em;
   font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .dark .ProseMirror code {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--editor-code-bg);
   color: #E0A8F0;
   border-color: rgba(255, 255, 255, 0.06);
 }
@@ -434,7 +434,7 @@
 
 .image-node-dropdown-danger:hover {
   background: rgba(220, 38, 38, 0.12);
-  color: #F87171;
+  color: var(--destructive);
 }
 
 /* Image alignment row */
@@ -533,9 +533,9 @@
 
 /* Links */
 .ProseMirror a {
-  color: #7B8CDE;
+  color: var(--editor-link-color);
   text-decoration: underline;
-  text-decoration-color: rgba(123, 140, 222, 0.4);
+  text-decoration-color: color-mix(in srgb, var(--editor-link-color) 40%, transparent);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
   cursor: pointer;
@@ -543,8 +543,8 @@
 }
 
 .ProseMirror a:hover {
-  color: #9AA8E8;
-  text-decoration-color: rgba(123, 140, 222, 0.7);
+  color: color-mix(in srgb, var(--editor-link-color) 80%, white);
+  text-decoration-color: color-mix(in srgb, var(--editor-link-color) 70%, transparent);
 }
 
 /* Highlight */
@@ -881,9 +881,9 @@
 
 /* Existing note — blue link */
 .ProseMirror .wikilink-exists {
-  color: #7B8CDE;
+  color: var(--editor-link-color);
   text-decoration: underline;
-  text-decoration-color: rgba(123, 140, 222, 0.4);
+  text-decoration-color: color-mix(in srgb, var(--editor-link-color) 40%, transparent);
   text-underline-offset: 2px;
   border-radius: 2px;
   cursor: pointer;
@@ -891,16 +891,16 @@
 }
 
 .ProseMirror .wikilink-exists:hover {
-  text-decoration-color: rgba(123, 140, 222, 0.8);
-  background: rgba(123, 140, 222, 0.08);
+  text-decoration-color: color-mix(in srgb, var(--editor-link-color) 80%, transparent);
+  background: color-mix(in srgb, var(--editor-link-color) 8%, transparent);
 }
 
 /* Dangling/non-existent note — red dashed link */
 .ProseMirror .wikilink-dangling {
-  color: #e06c75;
+  color: var(--destructive);
   text-decoration: underline;
   text-decoration-style: dashed;
-  text-decoration-color: rgba(224, 108, 117, 0.4);
+  text-decoration-color: hsl(from var(--destructive) h s l / 0.4);
   text-underline-offset: 2px;
   cursor: pointer;
   transition: all 0.15s;
@@ -963,7 +963,7 @@
   opacity: 0.5;
   transition: opacity 0.15s;
   cursor: pointer;
-  color: #7B8CDE;
+  color: var(--editor-link-color);
   user-select: none;
   vertical-align: text-bottom;
   border-radius: 3px;
@@ -971,7 +971,7 @@
 
 .wikilink-nav-icon:hover {
   opacity: 1;
-  background: rgba(123, 140, 222, 0.15);
+  background: color-mix(in srgb, var(--editor-link-color) 15%, transparent);
 }
 
 /* ── Wiki Read Mode Typography ────────────────────────────────────── */

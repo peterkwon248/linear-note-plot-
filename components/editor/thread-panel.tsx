@@ -51,14 +51,14 @@ function StepTreeNode({
     <div>
       <div className="relative group/step">
         <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
-        <p className="text-sm text-foreground whitespace-pre-wrap">{node.step.text}</p>
+        <p className="text-note text-foreground whitespace-pre-wrap">{node.step.text}</p>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
+          <span className="text-2xs text-muted-foreground">
             {format(new Date(node.step.at), "h:mm a")}
           </span>
           <button
             onClick={() => onReply(node.step.id)}
-            className="opacity-0 group-hover/step:opacity-100 text-2xs text-muted-foreground hover:text-foreground transition-opacity duration-75 flex items-center gap-0.5"
+            className="opacity-0 group-hover/step:opacity-100 text-2xs text-muted-foreground hover:text-foreground transition-opacity duration-100 flex items-center gap-0.5"
           >
             <ArrowBendUpLeft size={10} weight="regular" />
             ArrowBendUpLeft
@@ -81,7 +81,7 @@ function DoneStepTreeNode({ node }: { node: StepNode }) {
     <div>
       <div className="relative">
         <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
-        <p className="text-xs text-muted-foreground whitespace-pre-wrap">{node.step.text}</p>
+        <p className="text-2xs text-muted-foreground whitespace-pre-wrap">{node.step.text}</p>
         <span className="text-2xs text-muted-foreground/60">
           {format(new Date(node.step.at), "h:mm a")}
         </span>
@@ -106,8 +106,8 @@ function DoneThreadItem({ thread, nestedReplies }: { thread: Thread; nestedRepli
   )
 
   return (
-    <div className="group/done border border-border/50 rounded-md overflow-hidden">
-      <div className="flex w-full items-center hover:bg-secondary/30 transition-colors">
+    <div className="group/done border border-border-subtle rounded-md overflow-hidden">
+      <div className="flex w-full items-center hover:bg-hover-bg transition-colors">
         <button
           onClick={() => setExpanded(!expanded)}
           className="flex flex-1 items-center gap-2 px-3 py-2 text-left"
@@ -118,10 +118,10 @@ function DoneThreadItem({ thread, nestedReplies }: { thread: Thread; nestedRepli
             <CaretRight className="text-muted-foreground shrink-0" size={12} weight="regular" />
           )}
           <PhCheck className="text-green-500 shrink-0" size={12} weight="bold" />
-          <span className="text-xs text-muted-foreground">
+          <span className="text-2xs text-muted-foreground">
             {format(new Date(thread.startedAt), "MMM d, h:mm a")}
           </span>
-          <span className="text-xs text-muted-foreground ml-auto">
+          <span className="text-2xs text-muted-foreground ml-auto">
             {thread.steps.length} step{thread.steps.length !== 1 ? "s" : ""}
           </span>
         </button>
@@ -144,7 +144,7 @@ function DoneThreadItem({ thread, nestedReplies }: { thread: Thread; nestedRepli
               thread.steps.map((step) => (
                 <div key={step.id} className="relative">
                   <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
-                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{step.text}</p>
+                  <p className="text-2xs text-muted-foreground whitespace-pre-wrap">{step.text}</p>
                   <span className="text-2xs text-muted-foreground/60">
                     {format(new Date(step.at), "h:mm a")}
                   </span>
@@ -231,7 +231,7 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
       {/* Header */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors"
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-hover-bg transition-colors"
       >
         {collapsed ? (
           <CaretRight className="text-muted-foreground shrink-0" size={14} weight="regular" />
@@ -239,7 +239,7 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
           <CaretDown className="text-muted-foreground shrink-0" size={14} weight="regular" />
         )}
         <Chat className="text-muted-foreground shrink-0" size={14} weight="regular" />
-        <span className="text-xs font-medium text-muted-foreground">Thread</span>
+        <span className="text-2xs font-medium text-muted-foreground">Thread</span>
         {activeBadgeCount > 0 && (
           <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-500/20 px-1 text-2xs font-medium text-cyan-500">
             {activeBadgeCount}
@@ -269,8 +269,8 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
                     activeThread.steps.map((step) => (
                       <div key={step.id} className="relative">
                         <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
-                        <p className="text-sm text-foreground whitespace-pre-wrap">{step.text}</p>
-                        <span className="text-xs text-muted-foreground">
+                        <p className="text-note text-foreground whitespace-pre-wrap">{step.text}</p>
+                        <span className="text-2xs text-muted-foreground">
                           {format(new Date(step.at), "h:mm a")}
                         </span>
                       </div>
@@ -306,7 +306,7 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
                   placeholder="Add a step... (Enter to add, Shift+Enter for newline)"
                   rows={1}
                   className={cn(
-                    "flex-1 resize-none bg-transparent text-sm text-foreground",
+                    "flex-1 resize-none bg-transparent text-note text-foreground",
                     "placeholder:text-muted-foreground/50 outline-none",
                     "min-h-[28px] leading-relaxed"
                   )}
@@ -318,14 +318,14 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
               <div className="flex justify-end gap-1">
                 <button
                   onClick={() => { deleteThread(activeThread.id) }}
-                  className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                  className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-2xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                 >
                   <Trash size={12} weight="regular" />
                   Delete
                 </button>
                 <button
                   onClick={handleEndThread}
-                  className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                 >
                   <PhCheck size={12} weight="bold" />
                   End Thread
@@ -336,7 +336,7 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
             /* Start Thread button (shown when no active thread) */
             <button
               onClick={handleStartThread}
-              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors border border-border/50"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors border border-border-subtle"
             >
               <PhPlus size={12} weight="regular" />
               Start Thread

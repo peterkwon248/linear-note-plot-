@@ -56,10 +56,10 @@ export function SidePanelPeek() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Mini action bar with note title + actions */}
-      <div className="flex items-center justify-between border-b border-border/50 px-3 py-1.5">
+      <div className="flex items-center justify-between border-b border-border-subtle px-3 py-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
           <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
-          <span className="text-sm text-foreground truncate">{note.title || "Untitled"}</span>
+          <span className="text-note text-foreground truncate">{note.title || "Untitled"}</span>
         </div>
         <div className="flex items-center gap-0.5">
           {/* Open side by side (Phase 2 placeholder) */}
@@ -71,7 +71,7 @@ export function SidePanelPeek() {
                 close()
               }
             }}
-            className="rounded-[6px] p-1 text-muted-foreground transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
+            className="rounded-md p-1 text-muted-foreground transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
             title="Open side by side"
           >
             <Columns size={14} weight="regular" />
@@ -79,7 +79,7 @@ export function SidePanelPeek() {
           {/* Open in full view */}
           <button
             onClick={handleOpenInTab}
-            className="rounded-[6px] p-1 text-muted-foreground transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
+            className="rounded-md p-1 text-muted-foreground transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
             title="Open in full view"
           >
             <ArrowSquareOut size={14} weight="regular" />
@@ -87,7 +87,7 @@ export function SidePanelPeek() {
           {/* Edit toggle */}
           <button
             onClick={() => setEditing((prev) => !prev)}
-            className={`rounded-[6px] p-1 transition-colors duration-100 hover:bg-hover-bg ${
+            className={`rounded-md p-1 transition-colors duration-100 hover:bg-hover-bg ${
               editing ? "text-accent" : "text-muted-foreground hover:text-foreground"
             }`}
             title={editing ? "Switch to View" : "Switch to Edit"}
@@ -101,7 +101,7 @@ export function SidePanelPeek() {
           {/* Close peek */}
           <button
             onClick={closeSidePeek}
-            className="rounded-[6px] p-1 text-muted-foreground transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
+            className="rounded-md p-1 text-muted-foreground transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
             title="Close peek (Esc)"
           >
             <PhX size={14} weight="regular" />

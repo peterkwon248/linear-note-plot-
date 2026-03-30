@@ -87,20 +87,20 @@ function InlineSelect<T extends string>({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary"
+        className="flex items-center gap-1.5 rounded-md bg-secondary/60 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
       >
         {current?.label ?? value}
         <CaretDown className={`text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`} size={14} weight="regular" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-md border border-border bg-surface-overlay py-1 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
           {options.map((opt) => {
             const active = opt.value === value
             return (
               <button
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setOpen(false) }}
-                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-note transition-colors hover:bg-accent hover:text-accent-foreground ${
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
@@ -413,14 +413,14 @@ export function TagsView() {
         <div className="flex items-center gap-3 border-b border-border px-6 py-4">
           <button
             onClick={() => setSelectedTagId(null)}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <ArrowLeft size={16} weight="regular" />
           </button>
           <h1 className="text-ui font-semibold text-foreground">
             #{selectedTag.name}
           </h1>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-note text-muted-foreground">
             {tagNoteCount} notes
           </span>
           <div className="flex-1" />
@@ -429,7 +429,7 @@ export function TagsView() {
               deleteTag(selectedTagId)
               setSelectedTagId(null)
             }}
-            className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm text-red-400 transition-colors hover:bg-red-400/10"
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note text-red-400 transition-colors hover:bg-red-400/10"
           >
             <Trash size={14} weight="regular" />
             Delete tag
@@ -451,7 +451,7 @@ export function TagsView() {
           <div className="flex-1" />
           <Popover open={displayPopoverOpen} onOpenChange={setDisplayPopoverOpen}>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
                 <SlidersHorizontal size={16} weight="regular" />
                 Display
               </button>
@@ -483,7 +483,7 @@ export function TagsView() {
                   />
                   <button
                     onClick={() => updateTagView({ sortDirection: tagViewState.sortDirection === "asc" ? "desc" : "asc" })}
-                    className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                    className="flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                   >
                     {tagViewState.sortDirection === "asc"
                       ? <ArrowUp size={14} weight="regular" />
@@ -513,7 +513,7 @@ export function TagsView() {
         {/* Notes list */}
         <div className="flex-1 overflow-y-auto">
           {tagNotes.length === 0 ? (
-            <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-32 items-center justify-center text-note text-muted-foreground">
               No notes with this tag
             </div>
           ) : (
@@ -522,15 +522,15 @@ export function TagsView() {
                 <button
                   key={note.id}
                   onClick={() => openNote(note.id)}
-                  className="flex w-full items-center gap-4 px-6 py-3 text-left transition-colors hover:bg-secondary/50"
+                  className="flex w-full items-center gap-4 px-6 py-3 text-left transition-colors hover:bg-hover-bg"
                 >
                   <span className="flex-1 truncate text-ui text-foreground">
                     {note.title || "Untitled"}
                   </span>
-                  <span className="text-sm capitalize text-muted-foreground">
+                  <span className="text-note capitalize text-muted-foreground">
                     {note.status}
                   </span>
-                  <span className="text-sm tabular-nums text-muted-foreground">
+                  <span className="text-note tabular-nums text-muted-foreground">
                     {formatRelativeTime(note.updatedAt)}
                   </span>
                 </button>
@@ -576,7 +576,7 @@ export function TagsView() {
                   onKeyDown={handleTagInputKeyDown}
                   onBlur={() => { if (!tagInput.trim()) setCreatingTag(false) }}
                   placeholder="tag1, tag2, tag3 — Enter to create"
-                  className="h-8 flex-1 rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="h-8 flex-1 rounded-md border border-border bg-background px-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <button onClick={() => { setTagInput(""); setCreatingTag(false) }} className="text-muted-foreground hover:text-foreground transition-colors">
                   <PhX size={14} weight="regular" />
@@ -586,14 +586,14 @@ export function TagsView() {
 
             {sortedTags.length === 0 && !creatingTag && (
               <div className="flex h-32 flex-col items-center justify-center gap-2">
-                <span className="text-sm text-muted-foreground">No tags yet</span>
-                <span className="text-xs text-muted-foreground">Click + to create a tag</span>
+                <span className="text-note text-muted-foreground">No tags yet</span>
+                <span className="text-2xs text-muted-foreground">Click + to create a tag</span>
               </div>
             )}
             {sortedTags.length > 0 && (
               <div>
                 {/* Header row with select-all checkbox */}
-                <div className="flex items-center gap-3 border-b border-border/30 px-6 py-2">
+                <div className="flex items-center gap-3 border-b border-border-subtle px-6 py-2">
                   <button
                     onClick={toggleAll}
                     className="flex h-4 w-4 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
@@ -604,7 +604,7 @@ export function TagsView() {
                       )}
                   </button>
                   <button
-                    className="flex flex-1 items-center gap-1 text-left text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
                     onClick={() => setTagSortBy(tagSortBy === "name-asc" ? "name-desc" : "name-asc")}
                   >
                     Name
@@ -615,7 +615,7 @@ export function TagsView() {
                     )}
                   </button>
                   <button
-                    className="flex w-16 items-center justify-end gap-1 text-xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
                     onClick={() => setTagSortBy(tagSortBy === "count-desc" ? "count-asc" : "count-desc")}
                   >
                     Notes
@@ -641,7 +641,7 @@ export function TagsView() {
                     key={tag.id}
                     data-tag-index={index}
                     className={`group flex items-center gap-3 px-6 py-2.5 transition-colors ${
-                      checkedTags.has(tag.id) ? "bg-accent/10" : "hover:bg-secondary/50"
+                      checkedTags.has(tag.id) ? "bg-accent/10" : "hover:bg-hover-bg"
                     }`}
                     onClick={(e) => {
                       // Only handle if click is on the row background (not buttons)
@@ -664,7 +664,7 @@ export function TagsView() {
                       <span className="text-muted-foreground">#</span>
                       {tag.name}
                     </button>
-                    <span className="w-16 text-right text-sm tabular-nums text-muted-foreground">
+                    <span className="w-16 text-right text-note tabular-nums text-muted-foreground">
                       {tagCounts[tag.id] || 0}
                     </span>
                   </div>
@@ -686,7 +686,7 @@ export function TagsView() {
             onClick={() => {
               setTimeout(() => tagInputRef.current?.focus(), 100)
             }}
-            className="text-sm"
+            className="text-note"
           >
             <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
             New tag
@@ -696,7 +696,7 @@ export function TagsView() {
 
       {/* Floating action bar (bottom) */}
       {checkedTags.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
+        <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
           <div className="flex items-center gap-1 px-4 py-2.5">
             <div className="flex items-center gap-1.5 px-1.5">
               <Lightning className="text-accent" size={16} weight="regular" />
@@ -705,7 +705,7 @@ export function TagsView() {
               </span>
               <button
                 onClick={() => setCheckedTags(new Set())}
-                className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
               >
                 <PhX size={16} weight="regular" />
               </button>

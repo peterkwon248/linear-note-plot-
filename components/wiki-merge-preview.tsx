@@ -225,7 +225,7 @@ export function WikiMergePreview({
                   placeholder="Search articles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-md border border-border bg-secondary/50 py-1.5 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-accent/50"
+                  className="w-full rounded-md border border-border bg-secondary/50 py-1.5 pl-8 pr-3 text-note text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-accent/50"
                   autoFocus
                 />
               </div>
@@ -237,7 +237,7 @@ export function WikiMergePreview({
                 <button
                   key={a.id}
                   onClick={() => selectTarget(a.id)}
-                  className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-secondary/40"
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                 >
                   <BookOpen
                     className="shrink-0 text-muted-foreground/40"
@@ -245,7 +245,7 @@ export function WikiMergePreview({
                     weight="regular"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm text-foreground">
+                    <p className="truncate text-note text-foreground">
                       {a.title || "Untitled"}
                     </p>
                   </div>
@@ -262,7 +262,7 @@ export function WikiMergePreview({
                 </button>
               ))}
               {filteredArticles.length === 0 && (
-                <p className="py-8 text-center text-xs text-muted-foreground/40">
+                <p className="py-8 text-center text-2xs text-muted-foreground/40">
                   No articles found
                 </p>
               )}
@@ -272,7 +272,7 @@ export function WikiMergePreview({
             <div className="flex justify-end border-t border-border px-5 py-3">
               <button
                 onClick={onClose}
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary"
+                className="rounded-md px-3 py-1.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg"
               >
                 Cancel
               </button>
@@ -308,7 +308,7 @@ export function WikiMergePreview({
                 {/* Swap button */}
                 <button
                   onClick={handleSwap}
-                  className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                   title="Swap merge direction"
                 >
                   <ArrowsLeftRight size={14} />
@@ -332,7 +332,7 @@ export function WikiMergePreview({
               <div className="space-y-3">
                 {/* Title selection */}
                 <div>
-                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                  <p className="mb-1.5 text-2xs font-medium text-muted-foreground">
                     Title
                   </p>
                   <div className="space-y-1">
@@ -353,7 +353,7 @@ export function WikiMergePreview({
 
                 {/* Status selection */}
                 <div>
-                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                  <p className="mb-1.5 text-2xs font-medium text-muted-foreground">
                     Status
                   </p>
                   <div className="flex gap-2">
@@ -374,17 +374,17 @@ export function WikiMergePreview({
               {/* ── Result preview ── */}
               {primary && secondary && (
                 <div className="rounded-lg border border-border bg-secondary/30 p-3">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Result
                   </p>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="text-note font-medium text-foreground">
                         {effectiveTitle || "Untitled"}
                       </span>
                       <WikiStatusBadge status={effectiveStatus} />
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-2xs text-muted-foreground">
                       {primary.blocks.length} blocks from {primary.title} +{" "}
                       {secondary.blocks.length} blocks from {secondary.title}
                     </p>
@@ -401,7 +401,7 @@ export function WikiMergePreview({
                       </div>
                     )}
                     {mergedInfoboxCount > 0 && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-2xs text-muted-foreground">
                         Infobox: {mergedInfoboxCount} entries
                       </p>
                     )}
@@ -420,22 +420,22 @@ export function WikiMergePreview({
                   setSelectedTitle("")
                   setSelectedStatus(null)
                 }}
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary"
+                className="rounded-md px-3 py-1.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg"
               >
                 Back
               </button>
               <div className="flex gap-2">
                 <button
                   onClick={onClose}
-                  className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary"
+                  className="rounded-md px-3 py-1.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+                  className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground transition-colors hover:bg-accent/90"
                 >
-                  <GitMerge size={13} weight="bold" />
+                  <GitMerge size={12} weight="bold" />
                   Confirm Merge
                 </button>
               </div>
@@ -467,7 +467,7 @@ function ArticleCard({
           : "border-border bg-secondary/20",
       )}
     >
-      <p className="truncate text-sm font-medium text-foreground">
+      <p className="truncate text-note font-medium text-foreground">
         {article.title || "Untitled"}
       </p>
       <div className="mt-1 flex items-center gap-2">
@@ -502,10 +502,10 @@ function RadioOption({
     <button
       onClick={onSelect}
       className={cn(
-        "flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors",
+        "flex items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs transition-colors",
         checked
           ? "bg-accent/10 text-accent"
-          : "text-muted-foreground hover:bg-secondary/50",
+          : "text-muted-foreground hover:bg-hover-bg",
       )}
     >
       <span

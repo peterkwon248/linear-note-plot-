@@ -16,7 +16,7 @@ export function SettingRow({
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="text-ui font-medium text-foreground">{label}</span>
         {description && (
-          <span className="text-sm text-muted-foreground">{description}</span>
+          <span className="text-note text-muted-foreground">{description}</span>
         )}
       </div>
       <div className="flex shrink-0 items-center">{children}</div>

@@ -22,7 +22,7 @@ export function ChipDropdown<T extends string>({
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border/80 bg-surface-overlay text-note font-medium"
+        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border-subtle bg-surface-overlay text-note font-medium"
       >
         {currentLabel}
         <CaretDown size={10} weight="bold" />
@@ -31,7 +31,7 @@ export function ChipDropdown<T extends string>({
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-md border border-border/80 bg-surface-overlay py-1 shadow-lg">
+          <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-md border border-border-subtle bg-surface-overlay py-1 shadow-lg">
             {options.map((opt) => {
               const disabled = disabledValues?.includes(opt.value)
               return (

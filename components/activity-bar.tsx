@@ -73,7 +73,7 @@ export function ActivityBar() {
   }
 
   return (
-    <div className="flex h-full w-11 shrink-0 flex-col items-center border-r border-border bg-background pt-2">
+    <div className="flex h-full w-11 shrink-0 flex-col items-center border-r border-border bg-sidebar-bg pt-2">
       {/* Sidebar open button — only when collapsed */}
       {sidebarCollapsed && (
         <div className="flex flex-col items-center mb-1">
@@ -87,7 +87,7 @@ export function ActivityBar() {
                 <SidebarSimple size={20} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">Open sidebar</TooltipContent>
+            <TooltipContent side="right" className="text-2xs">Open sidebar</TooltipContent>
           </Tooltip>
         </div>
       )}
@@ -104,7 +104,7 @@ export function ActivityBar() {
                   className={cn(
                     "relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150",
                     isActive
-                      ? "bg-secondary text-foreground"
+                      ? "bg-active-bg-strong text-foreground"
                       : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
                   )}
                   aria-label={label}
@@ -115,7 +115,7 @@ export function ActivityBar() {
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="text-xs">
+              <TooltipContent side="right" className="text-2xs">
                 {label}
                 {shortcut && (
                   <span className="ml-2 text-muted-foreground">{shortcut}</span>
@@ -141,7 +141,7 @@ export function ActivityBar() {
               {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right" className="text-xs">
+          <TooltipContent side="right" className="text-2xs">
             {theme === "dark" ? "Light mode" : "Dark mode"}
           </TooltipContent>
         </Tooltip>

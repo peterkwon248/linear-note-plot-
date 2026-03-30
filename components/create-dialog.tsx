@@ -46,7 +46,7 @@ export function CreateItemDialog({
           <div>
             <label
               htmlFor="create-item-name"
-              className="text-sm font-medium text-foreground"
+              className="text-note font-medium text-foreground"
             >
               Name
             </label>
@@ -57,11 +57,11 @@ export function CreateItemDialog({
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter name..."
               autoFocus
-              className="mt-1.5 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="mt-1.5 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-note shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-foreground">Color</label>
+            <label className="text-note font-medium text-foreground">Color</label>
             <div className="mt-1.5 flex gap-2">
               {PRESET_COLORS.map((c) => (
                 <button
@@ -82,14 +82,14 @@ export function CreateItemDialog({
             <button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-note font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!name.trim()}
-              className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-note font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
             >
               Create
             </button>

@@ -40,7 +40,7 @@ export function SmartSidePanel() {
     cn(
       "rounded-md px-2 py-1 text-note font-medium transition-colors",
       active
-        ? "bg-secondary text-foreground"
+        ? "bg-active-bg text-foreground"
         : "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
     )
 
@@ -94,7 +94,7 @@ export function SmartSidePanel() {
         </div>
         <button
           onClick={() => setSidePanelOpen(false)}
-          className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           aria-label="Close panel"
         >
           <PhX size={14} weight="regular" />

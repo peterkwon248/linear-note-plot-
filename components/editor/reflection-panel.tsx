@@ -56,7 +56,7 @@ export function ReflectionPanel({ noteId }: ReflectionPanelProps) {
       {/* Header */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors"
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-hover-bg transition-colors"
       >
         {collapsed ? (
           <CaretRight className="text-muted-foreground shrink-0" size={14} weight="regular" />
@@ -64,7 +64,7 @@ export function ReflectionPanel({ noteId }: ReflectionPanelProps) {
           <CaretDown className="text-muted-foreground shrink-0" size={14} weight="regular" />
         )}
         <BookOpen className="text-muted-foreground shrink-0" size={14} weight="regular" />
-        <span className="text-xs font-medium text-muted-foreground">Reflections</span>
+        <span className="text-2xs font-medium text-muted-foreground">Reflections</span>
         {noteReflections.length > 0 && (
           <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500/20 px-1 text-2xs font-medium text-amber-500">
             {noteReflections.length}
@@ -95,7 +95,7 @@ export function ReflectionPanel({ noteId }: ReflectionPanelProps) {
                 placeholder="이 노트를 돌아보며... (Enter to save, Esc to cancel)"
                 rows={2}
                 className={cn(
-                  "w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground",
+                  "w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-note text-foreground",
                   "placeholder:text-muted-foreground/50 outline-none focus:border-amber-500/50",
                   "min-h-[60px] leading-relaxed"
                 )}
@@ -104,14 +104,14 @@ export function ReflectionPanel({ noteId }: ReflectionPanelProps) {
               <div className="flex justify-end gap-1">
                 <button
                   onClick={() => { setComposing(false); setText("") }}
-                  className="rounded-md px-2.5 py-1 text-xs text-muted-foreground hover:bg-secondary transition-colors"
+                  className="rounded-md px-2.5 py-1 text-2xs text-muted-foreground hover:bg-hover-bg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAdd}
                   disabled={!text.trim()}
-                  className="rounded-md px-2.5 py-1 text-xs text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-40"
+                  className="rounded-md px-2.5 py-1 text-2xs text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-40"
                 >
                   Save
                 </button>
@@ -120,7 +120,7 @@ export function ReflectionPanel({ noteId }: ReflectionPanelProps) {
           ) : (
             <button
               onClick={handleStartComposing}
-              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors border border-border/50"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors border border-border-subtle"
             >
               <PhPlus size={12} weight="regular" />
               Add Reflection
@@ -139,12 +139,12 @@ function ReflectionEntry({ reflection }: { reflection: Reflection }) {
   return (
     <div className="relative">
       <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-amber-500" />
-      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+      <p className="text-note text-foreground whitespace-pre-wrap leading-relaxed">
         {reflection.text}
       </p>
       <span className={cn(
         "text-2xs",
-        isRecent ? "text-amber-500/60" : "text-muted-foreground/60"
+        isRecent ? "text-chart-3/60" : "text-muted-foreground/60"
       )}>
         {format(createdDate, "yyyy.MM.dd h:mm a")}
       </span>

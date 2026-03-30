@@ -52,12 +52,12 @@ export function StatCard({ icon: Icon, label, value, color, onClick }: {
       onClick={onClick}
       className={cn(
         "rounded-lg border border-border bg-card p-4 text-left",
-        onClick && "transition-colors duration-150 hover:bg-secondary/50 hover:border-accent/30 cursor-pointer"
+        onClick && "transition-colors duration-150 hover:bg-hover-bg hover:border-accent/30 cursor-pointer"
       )}
     >
       <div className="flex items-center gap-2 mb-1">
         <Icon className={cn("h-4 w-4", color)} strokeWidth={1.5} />
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+        <span className="text-2xs font-medium text-muted-foreground">{label}</span>
       </div>
       <p className="text-2xl font-semibold tabular-nums text-foreground">{value}</p>
     </Wrapper>
@@ -69,8 +69,8 @@ export function StatCard({ icon: Icon, label, value, color, onClick }: {
 export function StatRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-xs font-medium text-foreground">{value}</span>
+      <span className="text-2xs text-muted-foreground">{label}</span>
+      <span className="text-2xs font-medium text-foreground">{value}</span>
     </div>
   )
 }
@@ -80,8 +80,8 @@ export function StatRow({ label, value }: { label: string; value: string }) {
 export function DashboardCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{title}</h3>
-      {subtitle && <p className="text-xs text-muted-foreground mb-3">{subtitle}</p>}
+      <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{title}</h3>
+      {subtitle && <p className="text-2xs text-muted-foreground mb-3">{subtitle}</p>}
       <div className="space-y-0.5">{children}</div>
     </div>
   )
@@ -92,7 +92,7 @@ export function DashboardCard({ title, subtitle, children }: { title: string; su
 export function SidebarSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-6">
-      <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h4>
+      <h4 className="mb-2.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h4>
       {children}
     </div>
   )
@@ -108,21 +108,21 @@ export function ArticleRow({ note, onOpen, backlinkCount }: {
   return (
     <button
       onClick={() => onOpen(note.id)}
-      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-secondary/50"
+      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-hover-bg"
     >
       <WikiStatusDot status={note.wikiStatus} />
       <div className="min-w-0 flex-1">
-        <span className="text-sm font-medium text-foreground">{note.title || "Untitled"}</span>
+        <span className="text-note font-medium text-foreground">{note.title || "Untitled"}</span>
         {note.preview && (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{note.preview}</p>
+          <p className="mt-0.5 truncate text-2xs text-muted-foreground">{note.preview}</p>
         )}
       </div>
       {backlinkCount > 0 && (
-        <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+        <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-2xs font-medium tabular-nums text-muted-foreground">
           {backlinkCount} links
         </span>
       )}
-      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+      <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
         {shortRelative(note.updatedAt)}
       </span>
     </button>
@@ -150,10 +150,10 @@ export function StubsBySourceList({ items }: { items: [string, number][] }) {
     <div className="space-y-2">
       {items.map(([source, count]) => (
         <div key={source} className="flex items-center justify-between">
-          <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", STUB_SOURCE_COLORS[source] ?? "bg-secondary text-muted-foreground")}>
+          <span className={cn("rounded-full px-2 py-0.5 text-2xs font-medium", STUB_SOURCE_COLORS[source] ?? "bg-secondary text-muted-foreground")}>
             {STUB_SOURCE_LABELS[source] ?? source}
           </span>
-          <span className="text-xs tabular-nums font-medium text-foreground">{count}</span>
+          <span className="text-2xs tabular-nums font-medium text-foreground">{count}</span>
         </div>
       ))}
     </div>

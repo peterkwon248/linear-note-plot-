@@ -32,7 +32,7 @@ export function WikiDisambig({ noteId, noteTitle, onNavigate }: WikiDisambigProp
   if (matches.length === 0) return null
 
   return (
-    <div className="rounded-lg bg-accent/5 border border-accent/15 p-3 text-sm text-muted-foreground mb-6">
+    <div className="rounded-lg bg-accent/5 border border-accent/15 p-3 text-note text-muted-foreground mb-6">
       {matches.map((match) => (
         <p key={match.id}>
           <strong className="text-foreground">{noteTitle}</strong> redirects here.

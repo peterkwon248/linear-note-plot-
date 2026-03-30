@@ -35,7 +35,7 @@ export function WikiRelatedDocs({ noteId, onNavigate }: WikiRelatedDocsProps) {
 
   return (
     <div className="border-t border-border mt-8 pt-6">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+      <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
         Related Articles
       </h3>
       <div className="flex flex-wrap gap-2">
@@ -43,7 +43,7 @@ export function WikiRelatedDocs({ noteId, onNavigate }: WikiRelatedDocsProps) {
           <button
             key={doc.id}
             onClick={() => handleNavigate(doc.id)}
-            className="flex items-center gap-2 rounded-md bg-secondary border border-border px-3 py-1.5 text-sm cursor-pointer transition-colors duration-150 hover:bg-secondary/80"
+            className="flex items-center gap-2 rounded-md bg-secondary border border-border px-3 py-1.5 text-note cursor-pointer transition-colors duration-150 hover:bg-hover-bg"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
             <span className="text-foreground">{doc.title}</span>

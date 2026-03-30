@@ -15,7 +15,7 @@ export function ShortcutRow({
         {keys.map((key, i) => (
           <kbd
             key={`${key}-${i}`}
-            className="inline-flex min-w-[24px] items-center justify-center rounded border border-border bg-secondary px-1.5 py-0.5 font-mono text-xs text-muted-foreground"
+            className="inline-flex min-w-[24px] items-center justify-center rounded border border-border bg-secondary px-1.5 py-0.5 font-mono text-2xs text-muted-foreground"
           >
             {key}
           </kbd>
