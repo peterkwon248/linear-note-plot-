@@ -27,8 +27,8 @@ function BubbleButton({ onClick, isActive = false, title, children }: { onClick:
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       title={title}
-      className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors duration-75 flex-shrink-0 ${
-        isActive ? "text-foreground bg-foreground/[0.12]" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]"
+      className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors duration-100 flex-shrink-0 ${
+        isActive ? "text-foreground bg-foreground/[0.12]" : "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
       }`}
     >
       {children}
@@ -54,7 +54,7 @@ function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "
   }
 
   return (
-    <div className="flex items-center gap-[3px] px-0.5">
+    <div className="flex items-center gap-1 px-0.5">
       {colors.map((color) => (
         <button
           key={color.label}
@@ -176,7 +176,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   return (
     <div
       ref={menuRef}
-      className={`fixed z-[100] flex items-center gap-0.5 px-1.5 py-1 rounded-[10px] bg-popover border border-border shadow-[0_4px_24px_rgba(0,0,0,0.55)] transition-all duration-150 ${
+      className={`fixed z-[100] flex items-center gap-0.5 px-1.5 py-1 rounded-lg bg-surface-overlay border border-border shadow-[0_4px_24px_rgba(0,0,0,0.55)] transition-all duration-150 ${
         isVisible ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
       }`}
       style={{ top: `${position.top}px`, left: `${position.left}px` }}

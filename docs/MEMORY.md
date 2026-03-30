@@ -185,9 +185,28 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-03-30)
+## Current Direction (as of 2026-03-31)
 
-### 이번 세션 완료 — 에디터 Phase 1 확장 (2026-03-30)
+### 이번 세션 완료 — Design Spine 8-Phase 전체 폴리싱 (2026-03-31)
+- **Phase 1 Interaction Tokens**: hover:bg-secondary→hover:bg-hover-bg (51파일), border-border/XX→border-border-subtle (24파일), active 상태 bg-active-bg/bg-active-bg-strong (5파일)
+- **Phase 2 Typography**: text-sm→text-note (59파일), text-xs→text-2xs (70파일), arbitrary px→토큰 (13파일)
+- **Phase 3 Editor Typography**: EditorStyles.css hardcoded px → 14개 CSS 변수 (--editor-h1~h6, --editor-font-size 등)
+- **Phase 4 Editor Layout**: px-10 py-6 패딩 (max-width 제거, UpNote식 전체 폭)
+- **Phase 5 Surface+Radius**: rounded-[10px]→rounded-lg, bg-popover→bg-surface-overlay (25건), activity-bar bg-sidebar-bg 통일
+- **Phase 6 4px Grid**: py-[7px]→py-2, gap-[3px]→gap-1 등 8건 수정 + 레이아웃 CSS 변수 3개
+- **Phase 7 Colors+Icons**: size={13}→12, size={22}→20, EditorStyles.css #F87171→var(--destructive)
+- **Phase 8 Empty States+Motion**: 빈 상태 안내 3곳 (notes-table, note-editor, side-panel-context), duration-75→100 (12건), 트랜지션 CSS 변수 3개
+- **총 102파일 변경, tsc 빌드 0건**
+- **정체성 재정의 논의**: 노트앱→"세상에서 가장 빠른 개인 워크스페이스" (plot-discussion 14개 문서)
+- **다음 (우선순위순)**:
+  1. 정체성 전환 구조 변경 (Home 공간, Notes→Pages, Note/Wiki 통합)
+  2. Turn Into 메뉴 (블록 타입 변환)
+  3. 인라인 쿼리 뷰 (/query → view-engine 재활용)
+  4. 투두 시스템 (TaskIndex 파생 데이터)
+  5. 노트참조 통합 인터랙션 (호버+Peek+인라인펼치기)
+  6. isWiki 리팩토링
+
+### 이전 세션 완료 — 에디터 Phase 1 확장 (2026-03-30)
 - **Columns Block 완성**: CSS Grid 기반, renderHTML columnCell, resize handle(드래그 너비 조절), 테이블 스타일 border
 - **플로팅 TOC**: Notion 스타일 에디터 우측 자동 사이드바, scrollspy, 타이틀 제외
 - **인라인 TOC 수정**: 첫 heading(타이틀) 제외 로직 추가

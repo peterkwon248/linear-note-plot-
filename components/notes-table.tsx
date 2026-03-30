@@ -41,6 +41,7 @@ import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
 import { ShareNetwork } from "@phosphor-icons/react/dist/ssr/ShareNetwork"
 import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
 import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { NotePencil as PhNotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
 import {
   Tooltip,
   TooltipContent,
@@ -143,14 +144,14 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-[13px] font-medium text-foreground/50 transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-note font-medium text-foreground/50 transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
       {active ? (
-        sortDir === "asc" ? <ArrowUp className="text-foreground/50" size={13} weight="regular" /> : <ArrowDown className="text-foreground/50" size={13} weight="regular" />
+        sortDir === "asc" ? <ArrowUp className="text-foreground/50" size={12} weight="regular" /> : <ArrowDown className="text-foreground/50" size={12} weight="regular" />
       ) : (
-        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-50" size={13} weight="regular" />
+        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-50" size={12} weight="regular" />
       )}
     </button>
   )
@@ -197,10 +198,10 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
     <div className="flex-1 overflow-y-auto">
       {/* Header row */}
       <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
-        <div className="flex-1 text-sm font-medium text-muted-foreground">Name</div>
-        <div className="w-16 shrink-0 text-center text-sm font-medium text-muted-foreground">Color</div>
-        <div className="w-32 shrink-0 text-right text-sm font-medium text-muted-foreground">Trashed</div>
-        <div className="w-32 shrink-0 text-right text-sm font-medium text-muted-foreground">Actions</div>
+        <div className="flex-1 text-note font-medium text-muted-foreground">Name</div>
+        <div className="w-16 shrink-0 text-center text-note font-medium text-muted-foreground">Color</div>
+        <div className="w-32 shrink-0 text-right text-note font-medium text-muted-foreground">Trashed</div>
+        <div className="w-32 shrink-0 text-right text-note font-medium text-muted-foreground">Actions</div>
       </div>
       {items.map((item) => {
         const color = (item as Tag).color ?? ""
@@ -211,7 +212,7 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
             className="flex items-center border-b border-border px-5 py-2.5 hover:bg-hover-bg transition-colors"
           >
             <div className="flex-1 min-w-0">
-              <span className="text-sm font-medium text-foreground truncate">{item.name}</span>
+              <span className="text-note font-medium text-foreground truncate">{item.name}</span>
             </div>
             <div className="w-16 shrink-0 flex items-center justify-center">
               {color ? (
@@ -220,16 +221,16 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
                   style={{ backgroundColor: color }}
                 />
               ) : (
-                <span className="text-xs text-muted-foreground">—</span>
+                <span className="text-2xs text-muted-foreground">—</span>
               )}
             </div>
-            <div className="w-32 shrink-0 text-right text-sm text-muted-foreground">
+            <div className="w-32 shrink-0 text-right text-note text-muted-foreground">
               {trashedAt ? shortRelative(trashedAt) : "—"}
             </div>
             <div className="w-32 shrink-0 flex items-center justify-end gap-1.5">
               <button
                 onClick={() => handleRestore(item.id)}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                 title="Restore"
               >
                 <ArrowCounterClockwise size={14} weight="regular" />
@@ -237,7 +238,7 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
               </button>
               <button
                 onClick={() => handleDelete(item.id, item.name)}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
                 title="Delete permanently"
               >
                 <Trash size={14} weight="regular" />
@@ -844,7 +845,7 @@ export function NotesTable({
                 setCollapsedGroups(new Set(allKeys))
               }
             }}
-            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
             title={groups.every(g => collapsedGroups.has(g.key)) ? "Expand all groups" : "Collapse all groups"}
           >
             <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -939,7 +940,7 @@ export function NotesTable({
         {/* ── Sort order chip ── */}
         {viewState.sortField !== "updatedAt" && (
           <div className="flex items-center px-5 pb-1">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-xs font-medium">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-2xs font-medium">
               Order by {SORT_FIELD_LABELS[viewState.sortField]}
               <span>{viewState.sortDirection === "asc" ? "↑" : "↓"}</span>
               <button
@@ -965,7 +966,7 @@ export function NotesTable({
             <span className="text-note text-foreground">{folderName}</span>
             <button
               onClick={() => setActiveFolderId(null)}
-              className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="ml-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
             >
               <PhX size={12} weight="regular" />
             </button>
@@ -977,7 +978,7 @@ export function NotesTable({
       {effectiveTab === "unlinked" && flatNotes.length > 0 && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-3">
           <PhLink className="text-muted-foreground" size={14} weight="regular" />
-          <span className="text-xs text-muted-foreground">
+          <span className="text-2xs text-muted-foreground">
             These notes have no links. Add <span className="font-mono text-foreground/70">[[wiki-links]]</span> to connect them to your knowledge graph.
           </span>
         </div>
@@ -991,20 +992,18 @@ export function NotesTable({
         <ContextMenuTrigger asChild>
           <div className="flex-1 flex flex-col">
             {virtualItems.length === 0 ? (
-              <div className="flex flex-1 items-center justify-center text-center">
-                <div>
-                  <FileText className="mx-auto mb-3 text-muted-foreground/40" size={40} weight="regular" />
-                  <p className="text-ui text-muted-foreground">
-                    {context === "trash" ? "Trash is empty" : "No notes found"}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground/60">
-                    {context === "trash"
-                      ? "Deleted notes will appear here."
-                      : viewState.filters.length > 0
-                        ? "Try adjusting your filters."
-                        : "Create your first note to get started."}
-                  </p>
-                </div>
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+                <PhNotePencil size={32} weight="light" className="text-muted-foreground/40" />
+                <p className="text-note">
+                  {context === "trash" ? "Trash is empty" : "No notes yet"}
+                </p>
+                <p className="text-2xs text-muted-foreground/60">
+                  {context === "trash"
+                    ? "Deleted notes will appear here."
+                    : viewState.filters.length > 0
+                      ? "Try adjusting your filters."
+                      : "Press + to create your first note"}
+                </p>
               </div>
             ) : (
               <div
@@ -1097,7 +1096,7 @@ export function NotesTable({
                             className={`flex items-center gap-2.5 px-5 py-2 mt-4 mb-0.5 select-none transition-colors ${
                               reorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
-                              reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/20"
+                              reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-hover-bg"
                             } ${
                               reorderSource === item.groupKey ? "opacity-50 bg-secondary/30" : ""
                             }`}
@@ -1110,7 +1109,7 @@ export function NotesTable({
                             <span className="text-note font-semibold text-foreground/80">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-xs text-muted-foreground/60 tabular-nums">{item.count}</span>
+                            <span className="text-2xs text-muted-foreground/60 tabular-nums">{item.count}</span>
                           </div>
                           ) : (
                           <div
@@ -1121,7 +1120,7 @@ export function NotesTable({
                             className={`flex items-center gap-2 px-5 py-2.5 bg-secondary/20 mt-3 mb-0.5 select-none transition-colors ${
                               reorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
-                              reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/30"
+                              reorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-hover-bg"
                             } ${
                               reorderSource === item.groupKey ? "opacity-50 bg-secondary/30" : ""
                             }`}
@@ -1134,7 +1133,7 @@ export function NotesTable({
                             <span className="text-note font-semibold text-foreground/80">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-xs text-muted-foreground/60 tabular-nums">{item.count}</span>
+                            <span className="text-2xs text-muted-foreground/60 tabular-nums">{item.count}</span>
                           </div>
                           )
                         ) : item.type === "subheader" ? (
@@ -1146,7 +1145,7 @@ export function NotesTable({
                             className={`flex items-center gap-2 pl-10 pr-5 py-1.5 select-none transition-colors ${
                               subReorderSource ? "cursor-grabbing" : "cursor-pointer"
                             } ${
-                              subReorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-secondary/20"
+                              subReorderTarget === item.groupKey ? "bg-accent/10 border-l-2 border-l-accent" : "hover:bg-hover-bg"
                             } ${
                               subReorderSource === item.groupKey ? "opacity-50 bg-secondary/30" : ""
                             }`}
@@ -1156,10 +1155,10 @@ export function NotesTable({
                           >
                             <CaretDown className={`text-muted-foreground/50 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey.split("::")[1] ?? item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-xs font-medium text-foreground/60">
+                            <span className="text-2xs font-medium text-foreground/60">
                               {resolveGroupLabel(item.groupBy, item.groupKey.split("::")[1] ?? item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-xs text-muted-foreground/50 tabular-nums">{item.count}</span>
+                            <span className="text-2xs text-muted-foreground/50 tabular-nums">{item.count}</span>
                           </div>
                         ) : (
                           <NoteRow
@@ -1226,7 +1225,7 @@ export function NotesTable({
                     toast(`Restored ${flatNotes.length} note${flatNotes.length !== 1 ? "s" : ""}`)
                   }}
                   disabled={flatNotes.length === 0}
-                  className="text-sm"
+                  className="text-note"
                 >
                   <ArrowCounterClockwise className="mr-2 text-muted-foreground" size={16} weight="regular" />
                   Restore all
@@ -1240,7 +1239,7 @@ export function NotesTable({
                     }
                   }}
                   disabled={flatNotes.length === 0}
-                  className="text-sm text-destructive focus:text-destructive"
+                  className="text-note text-destructive focus:text-destructive"
                 >
                   <Trash className="mr-2" size={16} weight="regular" />
                   Empty trash
@@ -1252,7 +1251,7 @@ export function NotesTable({
                   const id = createNote(createNoteOverrides ?? {})
                   openNote(id)
                 }}
-                className="text-sm"
+                className="text-note"
               >
                 <PhPlus className="mr-2 text-muted-foreground" size={16} weight="regular" />
                 New note
@@ -1480,7 +1479,7 @@ function NoteRowInner({
           <SourceIcon source={note.source} />
         </div>
         {showCardPreview && note.preview && (
-          <span className="text-xs text-muted-foreground/50 truncate pl-[22px] mt-0.5">{note.preview}</span>
+          <span className="text-2xs text-muted-foreground/50 truncate pl-[22px] mt-0.5">{note.preview}</span>
         )}
       </div>
 
@@ -1496,12 +1495,12 @@ function NoteRowInner({
         <div className="flex items-center justify-center px-2">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
-            if (!folder) return <span className="text-[13px] text-muted-foreground/50">—</span>
+            if (!folder) return <span className="text-note text-muted-foreground/50">—</span>
             return (
-              <span className="text-[13px] text-foreground/60 truncate">{folder.name}</span>
+              <span className="text-note text-foreground/60 truncate">{folder.name}</span>
             )
           })() : (
-            <span className="text-[13px] text-muted-foreground/50">—</span>
+            <span className="text-note text-muted-foreground/50">—</span>
           )}
         </div>
       )}
@@ -1509,7 +1508,7 @@ function NoteRowInner({
       {/* Links */}
       {visibleCols.includes("links") && (
         <div className="text-center px-1">
-          <span className={`tabular-nums text-[13px] ${links === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
+          <span className={`tabular-nums text-note ${links === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
             {links}
           </span>
         </div>
@@ -1518,7 +1517,7 @@ function NoteRowInner({
       {/* Reads */}
       {visibleCols.includes("reads") && (
         <div className="text-center px-1">
-          <span className={`tabular-nums text-[13px] ${note.reads === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
+          <span className={`tabular-nums text-note ${note.reads === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
             {note.reads}
           </span>
         </div>
@@ -1527,7 +1526,7 @@ function NoteRowInner({
       {/* Word Count */}
       {visibleCols.includes("wordCount") && (
         <div className="text-right px-1">
-          <span className={`tabular-nums text-[13px] ${wordCount === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
+          <span className={`tabular-nums text-note ${wordCount === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
             {wordCount}
           </span>
         </div>
@@ -1538,11 +1537,11 @@ function NoteRowInner({
         <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-[13px] text-foreground/60 cursor-default">
+              <span className="tabular-nums text-note text-foreground/60 cursor-default">
                 {shortRelative(note.updatedAt)}
               </span>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
+            <TooltipContent side="top" className="text-2xs">
               {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
             </TooltipContent>
           </Tooltip>
@@ -1554,11 +1553,11 @@ function NoteRowInner({
         <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-[13px] text-foreground/60 cursor-default">
+              <span className="tabular-nums text-note text-foreground/60 cursor-default">
                 {absDate(note.createdAt)}
               </span>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
+            <TooltipContent side="top" className="text-2xs">
               {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
             </TooltipContent>
           </Tooltip>
@@ -1571,36 +1570,36 @@ function NoteRowInner({
         {/* Inbox actions */}
         {note.status === "inbox" && note.triageStatus !== "trashed" && (
           <>
-            <ContextMenuItem onClick={onKeep} className="text-sm">
+            <ContextMenuItem onClick={onKeep} className="text-note">
               <PhCheck className="mr-2 text-accent" size={16} weight="bold" />
               Done
               <span className="ml-auto text-2xs text-muted-foreground">D</span>
             </ContextMenuItem>
             <ContextMenuSub>
-              <ContextMenuSubTrigger className="text-sm">
+              <ContextMenuSubTrigger className="text-note">
                 <Alarm className="mr-2 text-muted-foreground" size={16} weight="regular" />
                 Snooze
                 <span className="ml-auto text-2xs text-muted-foreground">S</span>
               </ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-44">
-                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-sm">
+                <ContextMenuItem onClick={() => onSnooze("3h")} className="text-note">
                   3 hours
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-sm">
+                <ContextMenuItem onClick={() => onSnooze("tomorrow")} className="text-note">
                   Tomorrow 10:00 AM
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-sm">
+                <ContextMenuItem onClick={() => onSnooze("3-days")} className="text-note">
                   In 3 days
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-sm">
+                <ContextMenuItem onClick={() => onSnooze("next-week")} className="text-note">
                   Next week 10:00 AM
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-sm">
+                <ContextMenuItem onClick={() => onSnooze("1-week")} className="text-note">
                   In 1 week
                 </ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
-            <ContextMenuItem onClick={onTrash} className="text-sm text-destructive focus:text-destructive">
+            <ContextMenuItem onClick={onTrash} className="text-note text-destructive focus:text-destructive">
               <Trash className="mr-2" size={16} weight="regular" />
               Trash
               <span className="ml-auto text-2xs">T</span>
@@ -1612,12 +1611,12 @@ function NoteRowInner({
         {/* Capture actions */}
         {note.status === "capture" && (
           <>
-            <ContextMenuItem onClick={onPromote} className="text-sm">
+            <ContextMenuItem onClick={onPromote} className="text-note">
               <ArrowUpRight className="mr-2 text-chart-5" size={16} weight="regular" />
               Promote to Permanent
               <span className="ml-auto text-2xs text-muted-foreground">P</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={onMoveBack} className="text-sm">
+            <ContextMenuItem onClick={onMoveBack} className="text-note">
               <Tray className="mr-2 text-muted-foreground" size={16} weight="regular" />
               Back to Inbox
               <span className="ml-auto text-2xs text-muted-foreground">B</span>
@@ -1629,7 +1628,7 @@ function NoteRowInner({
         {/* Permanent actions */}
         {note.status === "permanent" && (
           <>
-            <ContextMenuItem onClick={onDemote} className="text-sm">
+            <ContextMenuItem onClick={onDemote} className="text-note">
               <ArrowDownLeft className="mr-2 text-muted-foreground" size={16} weight="regular" />
               Demote to Capture
               <span className="ml-auto text-2xs text-muted-foreground">D</span>
@@ -1640,28 +1639,28 @@ function NoteRowInner({
 
         {/* Remind me (all notes) */}
         <ContextMenuSub>
-          <ContextMenuSubTrigger className="text-sm">
+          <ContextMenuSubTrigger className="text-note">
             <Bell className="mr-2 text-muted-foreground" size={16} weight="regular" />
             Remind me
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-48">
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3h"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Later today</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("tomorrow"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Tomorrow</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("3-days"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>In 3 days</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("next-week"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>Next week</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-sm">
+            <ContextMenuItem onClick={() => onRemind(getSnoozeTime("1-week"))} className="text-note">
               <PhClock className="mr-2 text-muted-foreground" size={16} weight="regular" />
               <span>In 1 week</span>
             </ContextMenuItem>
@@ -1670,15 +1669,15 @@ function NoteRowInner({
         <ContextMenuSeparator />
 
         {/* Common actions */}
-        <ContextMenuItem onClick={onOpen} className="text-sm">
+        <ContextMenuItem onClick={onOpen} className="text-note">
           <FileText className="mr-2 text-muted-foreground" size={16} weight="regular" />
           Open
         </ContextMenuItem>
-        <ContextMenuItem onClick={onMergeWith} className="text-sm">
+        <ContextMenuItem onClick={onMergeWith} className="text-note">
           <GitMerge className="mr-2 text-muted-foreground" size={16} weight="regular" />
           GitMerge with...
         </ContextMenuItem>
-        <ContextMenuItem onClick={onLinkWith} className="text-sm">
+        <ContextMenuItem onClick={onLinkWith} className="text-note">
           <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />
           Link to...
         </ContextMenuItem>

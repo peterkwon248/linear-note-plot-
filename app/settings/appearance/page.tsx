@@ -40,7 +40,7 @@ export default function AppearancePage() {
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
-                className={`flex flex-1 flex-col items-center gap-2 rounded-lg border px-4 py-3 text-sm transition-colors ${
+                className={`flex flex-1 flex-col items-center gap-2 rounded-lg border px-4 py-3 text-note transition-colors ${
                   theme === t.id
                     ? "border-accent bg-accent/10 text-foreground"
                     : "border-border bg-secondary/50 text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground"

@@ -41,17 +41,17 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) 
     <NodeViewWrapper>
       <div
         contentEditable={false}
-        className="not-draggable border border-border/50 rounded-lg my-2 overflow-hidden select-none group"
+        className="not-draggable border border-border-subtle rounded-lg my-2 overflow-hidden select-none group"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2 bg-secondary/30 border-b border-border/30">
+        <div className="flex items-center justify-between px-3 py-2 bg-secondary/30 border-b border-border-subtle">
           <div className="flex items-center gap-1.5">
             <PhTable size={14} weight="bold" className="text-muted-foreground shrink-0" />
             <input
               type="text"
               value={title}
               onChange={(e) => updateTitle(e.target.value)}
-              className="text-xs font-semibold uppercase tracking-wider bg-transparent border-none outline-none text-muted-foreground w-full"
+              className="text-2xs font-semibold uppercase tracking-wider bg-transparent border-none outline-none text-muted-foreground w-full"
               placeholder="Infobox Title"
             />
           </div>
@@ -66,21 +66,21 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) 
         </div>
 
         {/* Rows */}
-        <div className="divide-y divide-border/20">
+        <div className="divide-y divide-border-subtle">
           {rows.map((row, index) => (
             <div key={index} className="flex items-center group/row">
               <input
                 type="text"
                 value={row.label}
                 onChange={(e) => updateRow(index, "label", e.target.value)}
-                className="w-[120px] shrink-0 px-3 py-1.5 text-xs font-medium text-muted-foreground bg-secondary/20 border-r border-border/20 outline-none placeholder:text-muted-foreground/30"
+                className="w-[120px] shrink-0 px-3 py-1.5 text-2xs font-medium text-muted-foreground bg-secondary/20 border-r border-border-subtle outline-none placeholder:text-muted-foreground/30"
                 placeholder="Label"
               />
               <input
                 type="text"
                 value={row.value}
                 onChange={(e) => updateRow(index, "value", e.target.value)}
-                className="flex-1 px-3 py-1.5 text-xs text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
+                className="flex-1 px-3 py-1.5 text-2xs text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
                 placeholder="Value"
               />
               <button
@@ -99,7 +99,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) 
         <button
           type="button"
           onClick={addRow}
-          className="w-full flex items-center justify-center gap-1 px-3 py-1.5 text-xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-secondary/20 transition-colors border-t border-border/20"
+          className="w-full flex items-center justify-center gap-1 px-3 py-1.5 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors border-t border-border-subtle"
         >
           <PhPlus size={11} />
           <span>Add row</span>

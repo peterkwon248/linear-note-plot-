@@ -105,8 +105,8 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
     }
 
     return (
-      <div className="z-50 min-w-[220px] max-w-[320px] overflow-hidden rounded-md border border-border bg-popover shadow-md">
-        <div className="px-2 py-1 border-b border-border/50">
+      <div className="z-50 min-w-[220px] max-w-[320px] overflow-hidden rounded-md border border-border bg-surface-overlay shadow-md">
+        <div className="px-2 py-1 border-b border-border-subtle">
           <span className="text-2xs font-medium text-muted-foreground">
             Mention...
           </span>
@@ -115,7 +115,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
           {grouped.map((group) => (
             <div key={group.type}>
               <div className="px-2 py-0.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60">
                   {categoryLabels[group.type]}
                 </span>
               </div>
@@ -126,8 +126,8 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
                   className={[
                     "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",
                     globalIndex === selectedIndex
-                      ? "bg-secondary text-foreground"
-                      : "text-foreground hover:bg-secondary/50",
+                      ? "bg-active-bg text-foreground"
+                      : "text-foreground hover:bg-hover-bg",
                   ].join(" ")}
                 >
                   <ItemIcon item={item} />

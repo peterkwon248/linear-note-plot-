@@ -225,7 +225,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           <button
             onMouseDown={(e) => e.preventDefault()}
             title="Insert"
-            className="h-7 rounded-md flex items-center justify-center gap-1 shrink-0 cursor-pointer text-muted-foreground bg-transparent border-0 outline-none px-2 font-medium text-note hover:text-foreground hover:bg-hover-bg transition-colors duration-75"
+            className="h-7 rounded-md flex items-center justify-center gap-1 shrink-0 cursor-pointer text-muted-foreground bg-transparent border-0 outline-none px-2 font-medium text-note hover:text-foreground hover:bg-hover-bg transition-colors duration-100"
           >
             <PhPlus size={14} weight="regular" />
             <span>Insert</span>

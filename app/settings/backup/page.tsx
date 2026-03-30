@@ -65,7 +65,7 @@ export default function BackupPage() {
               a.click()
               URL.revokeObjectURL(url)
             }}
-            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-ui text-foreground transition-colors hover:bg-secondary/80"
+            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-ui text-foreground transition-colors hover:bg-hover-bg"
           >
             Export JSON
           </button>
@@ -77,7 +77,7 @@ export default function BackupPage() {
         >
           <button
             onClick={handleExportMarkdown}
-            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-ui text-foreground transition-colors hover:bg-secondary/80"
+            className="rounded-md border border-border bg-secondary px-3 py-1.5 text-ui text-foreground transition-colors hover:bg-hover-bg"
           >
             Export Markdown
           </button>

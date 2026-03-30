@@ -354,7 +354,7 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
     return (
       <div
         ref={containerRef}
-        className="min-w-[220px] max-h-[320px] overflow-y-auto bg-[var(--popover)] border border-[var(--border)] rounded-[10px] shadow-[0_8px_32px_rgba(0,0,0,0.2)] p-1"
+        className="min-w-[220px] max-h-[320px] overflow-y-auto bg-surface-overlay border border-[var(--border)] rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.2)] p-1"
       >
         {items.map((item, index) => {
           const Icon = item.icon
@@ -370,7 +370,7 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
                   : "bg-transparent text-[var(--muted-foreground)]",
               ].join(" ")}
             >
-              <div className="w-7 h-7 rounded-[6px] flex items-center justify-center bg-[rgba(94,106,210,0.08)] shrink-0">
+              <div className="w-7 h-7 rounded-md flex items-center justify-center bg-[rgba(94,106,210,0.08)] shrink-0">
                 <Icon size={15} />
               </div>
               <div className="flex-1 min-w-0">

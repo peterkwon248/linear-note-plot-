@@ -1106,7 +1106,7 @@ export function OntologyGraphCanvas({
     >
       {/* ── Node cap warning banner ─────────────────── */}
       {isCapped && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-400/90 pointer-events-none select-none">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-2xs text-amber-400/90 pointer-events-none select-none">
           Showing top {MAX_VISIBLE_NODES} of {graph.nodes.length} nodes. Use filters to narrow down.
         </div>
       )}
@@ -1585,7 +1585,7 @@ export function OntologyGraphCanvas({
             className="fixed z-50 pointer-events-none"
             style={{ left: tooltip.screenX + 16, top: tooltip.screenY - 8 }}
           >
-            <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-3 max-w-[240px]">
+            <div className="bg-surface-overlay/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-3 max-w-[240px]">
               <p className="text-note font-medium text-foreground line-clamp-2">{note.title}</p>
               {note.preview && (
                 <p className="text-2xs text-muted-foreground mt-1 line-clamp-2">{note.preview}</p>
@@ -1603,7 +1603,7 @@ export function OntologyGraphCanvas({
               {noteTags.length > 0 && (
                 <div className="flex gap-1 mt-1.5 flex-wrap">
                   {noteTags.slice(0, 4).map((t: any) => (
-                    <span key={t.id} className="flex items-center gap-0.5 text-[9px] px-1 py-0.5 rounded bg-secondary/70">
+                    <span key={t.id} className="flex items-center gap-0.5 text-2xs px-1 py-0.5 rounded bg-secondary/70">
                       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
                       {t.name}
                     </span>

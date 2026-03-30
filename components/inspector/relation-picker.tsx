@@ -42,8 +42,8 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
     <div className="mt-2 rounded-md border border-border bg-popover p-2 space-y-2">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">Add Relation</span>
-        <button onClick={onClose} className="p-0.5 rounded hover:bg-secondary">
+        <span className="text-2xs font-medium text-muted-foreground">Add Relation</span>
+        <button onClick={onClose} className="p-0.5 rounded hover:bg-hover-bg">
           <PhX className="text-muted-foreground" size={14} weight="regular" />
         </button>
       </div>
@@ -58,7 +58,7 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
               "text-2xs px-2 py-0.5 rounded-full border transition-colors",
               t === selectedType
                 ? "border-foreground/30 bg-secondary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-hover-bg"
             )}
           >
             {RELATION_TYPE_CONFIG[t].label}
@@ -87,7 +87,7 @@ export function RelationPicker({ sourceNoteId, onAdd, onClose }: RelationPickerP
             <button
               key={n.id}
               onClick={() => onAdd(n.id, selectedType)}
-              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
             >
               <span className="truncate">{n.title || "Untitled"}</span>
             </button>

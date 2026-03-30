@@ -70,15 +70,15 @@ function SortableItem({
       >
         <DotsSixVertical size={16} weight="regular" />
       </button>
-      <span className="flex-1 text-sm text-foreground select-none">
+      <span className="flex-1 text-note text-foreground select-none">
         {TOOLBAR_ITEM_LABELS[item.id as ToolbarItemId] ?? item.id}
       </span>
       <button
         onClick={() => onToggle(item.id)}
         className={`p-1 rounded-md transition-colors ${
           item.visible
-            ? "text-foreground hover:bg-secondary"
-            : "text-muted-foreground/40 hover:bg-secondary hover:text-muted-foreground"
+            ? "text-foreground hover:bg-hover-bg"
+            : "text-muted-foreground/40 hover:bg-hover-bg hover:text-muted-foreground"
         }`}
       >
         {item.visible ? (
@@ -146,23 +146,23 @@ export function ArrangeMode({ open, onClose }: ArrangeModeProps) {
       <div className="absolute inset-0 bg-black/60" onClick={handleDone} />
 
       {/* Modal */}
-      <div className="relative w-[380px] max-h-[80vh] bg-popover border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative w-[380px] max-h-[80vh] bg-surface-overlay border border-border rounded-lg shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h2 className="text-sm font-semibold text-foreground">
+          <h2 className="text-note font-semibold text-foreground">
             Arrange Toolbar
           </h2>
           <div className="flex items-center gap-1">
             <button
               onClick={handleReset}
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <ArrowCounterClockwise size={14} weight="light" />
               Reset
             </button>
             <button
               onClick={handleDone}
-              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <PhX size={16} weight="light" />
             </button>
@@ -195,7 +195,7 @@ export function ArrangeMode({ open, onClose }: ArrangeModeProps) {
         <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-border">
           <button
             onClick={handleDone}
-            className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="rounded-md bg-accent px-4 py-1.5 text-note font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
             Done
           </button>

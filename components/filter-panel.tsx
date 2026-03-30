@@ -124,7 +124,7 @@ export function FilterPanel({
       {/* ── Sub Panel (values) — LEFT side, positioned at hovered row's y ── */}
       {activeCategory && activeCategory.values.length > 0 && (
         <div
-          className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-border-subtle bg-surface-overlay rounded-[10px] py-1 shrink-0 shadow-lg z-10 -mr-px"
+          className="absolute right-full w-[220px] max-h-[400px] overflow-y-auto border border-border-subtle bg-surface-overlay rounded-lg py-1 shrink-0 shadow-lg z-10 -mr-px"
           style={{ top: subPanelTop }}
         >
           <div className="px-2 pb-1">
@@ -169,7 +169,7 @@ export function FilterPanel({
                   {val.label}
                 </span>
                 {val.count !== undefined && (
-                  <span className="text-xs text-muted-foreground/50 tabular-nums">{val.count}</span>
+                  <span className="text-2xs text-muted-foreground/50 tabular-nums">{val.count}</span>
                 )}
               </button>
             )
@@ -225,7 +225,7 @@ export function FilterPanel({
               onClick={() => setOpenCat(isOpen ? null : cat.key)}
             >
               <span
-                className={`text-sm leading-none flex ${activeCount > 0 || isOpen ? "text-foreground" : "text-muted-foreground"}`}
+                className={`text-note leading-none flex ${activeCount > 0 || isOpen ? "text-foreground" : "text-muted-foreground"}`}
               >
                 {cat.icon}
               </span>

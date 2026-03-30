@@ -201,15 +201,15 @@ function CategoryBoardCard({
       {/* Title row */}
       <div className="flex items-center gap-2">
         <FolderSimple size={14} weight="regular" className="text-muted-foreground/60 shrink-0" />
-        <span className="text-sm font-medium text-foreground truncate">{cat.name}</span>
+        <span className="text-note font-medium text-foreground truncate">{cat.name}</span>
       </div>
       {/* Description */}
       {showDescription && cat.description && (
-        <p className="text-xs text-muted-foreground/50 mt-1 line-clamp-1">{cat.description}</p>
+        <p className="text-2xs text-muted-foreground/50 mt-1 line-clamp-1">{cat.description}</p>
       )}
       {/* Stats row */}
       {(articleCount > 0 || stubCount > 0 || childCount > 0) && (
-        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground/50">
+        <div className="flex items-center gap-3 mt-2 text-2xs text-muted-foreground/50">
           {articleCount > 0 && <span className="text-green-400">{articleCount} article{articleCount > 1 ? "s" : ""}</span>}
           {stubCount > 0 && <span className="text-orange-400">{stubCount} stub{stubCount > 1 ? "s" : ""}</span>}
           {childCount > 0 && <span>{childCount} sub</span>}
@@ -226,7 +226,7 @@ function CategoryBoardCardOverlay({ cat }: { cat: WikiCategory }) {
     <div className="rounded-lg border border-accent/50 bg-card p-3 shadow-lg w-[236px] opacity-90">
       <div className="flex items-center gap-2">
         <FolderSimple size={14} weight="regular" className="text-muted-foreground/60 shrink-0" />
-        <span className="text-sm font-medium text-foreground truncate">{cat.name}</span>
+        <span className="text-note font-medium text-foreground truncate">{cat.name}</span>
       </div>
     </div>
   )
@@ -267,11 +267,11 @@ function CategoryBoardColumn({
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-foreground/80">
+      <div className="flex items-center gap-2 px-3 py-2.5 text-note font-semibold text-foreground/80">
         <span>{label}</span>
-        <span className="text-xs text-muted-foreground/50 tabular-nums">{items.length}</span>
+        <span className="text-2xs text-muted-foreground/50 tabular-nums">{items.length}</span>
         {isRootColumn && isDragging && (
-          <span className="ml-auto text-xs text-accent/70 font-normal animate-pulse">
+          <span className="ml-auto text-2xs text-accent/70 font-normal animate-pulse">
             Drop to make root
           </span>
         )}
@@ -282,7 +282,7 @@ function CategoryBoardColumn({
           <CategoryBoardCard key={item.cat.id} item={item} onSelect={onSelect} showDescription={showDescription} isSelected={selectedIds?.has(item.cat.id)} onDoubleClick={onDoubleClick} />
         ))}
         {items.length === 0 && (
-          <div className="text-xs text-muted-foreground/40 text-center py-8">No categories</div>
+          <div className="text-2xs text-muted-foreground/40 text-center py-8">No categories</div>
         )}
       </div>
     </div>
@@ -734,7 +734,7 @@ function CategoryFullListView({
         <div className="flex-1">
           <button
             onClick={() => handleSortClick("title")}
-            className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Name
             <SortIcon col="title" />
@@ -744,7 +744,7 @@ function CategoryFullListView({
           <div className="w-[140px]">
             <button
               onClick={() => handleSortClick("parent")}
-              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Parent
               <SortIcon col="parent" />
@@ -755,7 +755,7 @@ function CategoryFullListView({
           <div className="w-[60px] flex justify-center">
             <button
               onClick={() => handleSortClick("tier")}
-              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Tier
               <SortIcon col="tier" />
@@ -766,7 +766,7 @@ function CategoryFullListView({
           <div className="w-[72px] flex justify-end">
             <button
               onClick={() => handleSortClick("articles")}
-              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Articles
               <SortIcon col="articles" />
@@ -777,7 +777,7 @@ function CategoryFullListView({
           <div className="w-[72px] flex justify-end">
             <button
               onClick={() => handleSortClick("stubs")}
-              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Stubs
               <SortIcon col="stubs" />
@@ -788,7 +788,7 @@ function CategoryFullListView({
           <div className="w-[56px] flex justify-end">
             <button
               onClick={() => handleSortClick("sub")}
-              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Sub
               <SortIcon col="sub" />
@@ -799,7 +799,7 @@ function CategoryFullListView({
           <div className="w-[80px] flex justify-end">
             <button
               onClick={() => handleSortClick("updatedAt")}
-              className="group/th inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Updated
               <SortIcon col="updatedAt" />
@@ -813,8 +813,8 @@ function CategoryFullListView({
         <Fragment key={group.key}>
           {group.label && (
             <div className="flex items-center gap-2.5 px-5 py-2 mt-3 mb-0.5">
-              <span className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wide">{group.label}</span>
-              <span className="text-xs text-muted-foreground/40 tabular-nums">{group.items.length}</span>
+              <span className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide">{group.label}</span>
+              <span className="text-2xs text-muted-foreground/40 tabular-nums">{group.items.length}</span>
             </div>
           )}
           {group.items.map(
@@ -831,7 +831,7 @@ function CategoryFullListView({
                     )
                   }}
                   onDoubleClick={() => onDoubleClick?.(cat.id)}
-                  className={`flex w-full items-center px-5 py-3 text-left transition-colors hover:bg-secondary/30 ${
+                  className={`flex w-full items-center px-5 py-3 text-left transition-colors hover:bg-hover-bg ${
                     selectedId === cat.id ? "bg-secondary/40" : ""
                   }`}
                 >
@@ -850,7 +850,7 @@ function CategoryFullListView({
                         {cat.name}
                       </span>
                       {showDescription && cat.description && (
-                        <span className="text-xs text-muted-foreground/40 truncate block mt-0.5">
+                        <span className="text-2xs text-muted-foreground/40 truncate block mt-0.5">
                           {cat.description}
                         </span>
                       )}
@@ -897,7 +897,7 @@ function CategoryFullListView({
                       <button
                         key={article.id}
                         onClick={() => onOpenArticle(article.id)}
-                        className="flex w-full items-center gap-2.5 rounded-md px-4 py-2 text-left text-note text-foreground/60 transition-colors hover:bg-secondary/30 hover:text-foreground/80"
+                        className="flex w-full items-center gap-2.5 rounded-md px-4 py-2 text-left text-note text-foreground/60 transition-colors hover:bg-hover-bg hover:text-foreground/80"
                       >
                         <WikiStatusBadge status={article.wikiStatus} />
                         <span className="truncate">
@@ -920,7 +920,7 @@ function CategoryFullListView({
             weight="thin"
             className="text-muted-foreground/20"
           />
-          <p className="text-sm text-muted-foreground/40">No categories yet</p>
+          <p className="text-note text-muted-foreground/40">No categories yet</p>
         </div>
       )}
     </div>
@@ -1095,7 +1095,7 @@ function CategoryEditor({
       <div className="flex items-center gap-3 px-6 pt-5 pb-2">
         <button
           onClick={onClose}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
         >
           <ArrowLeft size={16} weight="regular" />
         </button>
@@ -1113,7 +1113,7 @@ function CategoryEditor({
               e.currentTarget.blur()
             }
           }}
-          className="w-full bg-transparent text-xl font-semibold text-foreground placeholder:text-muted-foreground/30 border-none outline-none rounded-md px-1 -ml-1 hover:bg-secondary/30 focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
+          className="w-full bg-transparent text-xl font-semibold text-foreground placeholder:text-muted-foreground/30 border-none outline-none rounded-md px-1 -ml-1 hover:bg-hover-bg focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
           placeholder="Category name"
         />
       </div>
@@ -1126,17 +1126,17 @@ function CategoryEditor({
           onBlur={commitDescription}
           placeholder="Add a description..."
           rows={2}
-          className="w-full resize-none bg-transparent text-sm text-muted-foreground placeholder:text-muted-foreground/30 border-none outline-none rounded-md px-1 -ml-1 hover:bg-secondary/30 focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
+          className="w-full resize-none bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/30 border-none outline-none rounded-md px-1 -ml-1 hover:bg-hover-bg focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
         />
       </div>
 
       {/* Info card */}
       <div className="mx-6 rounded-lg border border-border bg-background p-3 space-y-2.5">
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-note">
           <span className="text-muted-foreground/70">Tier</span>
           <span className="text-foreground font-medium">{tierLabel}</span>
         </div>
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-note">
           <span className="text-muted-foreground/70">Parent</span>
           <select
             value={category.parentIds[0] ?? ""}
@@ -1146,7 +1146,7 @@ function CategoryEditor({
                 parentIds: newParentId ? [newParentId] : [],
               })
             }}
-            className="bg-transparent text-foreground font-medium text-right border-none outline-none cursor-pointer rounded-md px-1 hover:bg-secondary/30 focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors text-sm"
+            className="bg-transparent text-foreground font-medium text-right border-none outline-none cursor-pointer rounded-md px-1 hover:bg-hover-bg focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors text-note"
           >
             <option value="">None (root)</option>
             {categories
@@ -1158,13 +1158,13 @@ function CategoryEditor({
               ))}
           </select>
         </div>
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-note">
           <span className="text-muted-foreground/70">Created</span>
           <span className="text-foreground tabular-nums">
             {shortRelative(category.createdAt)} ago
           </span>
         </div>
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-note">
           <span className="text-muted-foreground/70">Updated</span>
           <span className="text-foreground tabular-nums">
             {shortRelative(category.updatedAt ?? category.createdAt)} ago
@@ -1178,7 +1178,7 @@ function CategoryEditor({
         if (ancestors.length === 0) return null
         return (
           <div className="px-6 pt-5">
-            <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">
+            <h4 className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">
               Parent categories ({ancestors.length})
             </h4>
             <div className="space-y-0.5">
@@ -1186,7 +1186,7 @@ function CategoryEditor({
                 <button
                   key={anc.id}
                   onClick={() => onNavigateCategory(anc.id)}
-                  className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+                  className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
                   style={{ paddingLeft: `${12 + i * 12}px` }}
                 >
                   <FolderOpen
@@ -1195,7 +1195,7 @@ function CategoryEditor({
                     className="text-accent/50 shrink-0"
                   />
                   <span className="flex-1 truncate text-left">{anc.name}</span>
-                  <span className="text-xs text-muted-foreground/40 shrink-0">
+                  <span className="text-2xs text-muted-foreground/40 shrink-0">
                     {getDepth(anc.id, categories) === 0 ? "root" : `${getDepth(anc.id, categories) + 1}th`}
                   </span>
                 </button>
@@ -1208,20 +1208,20 @@ function CategoryEditor({
       {/* Subcategories */}
       <div className="px-6 pt-5">
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wide">
+          <h4 className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide">
             Subcategories ({subcategories.length})
           </h4>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowAdoptPicker(!showAdoptPicker)}
-              className="rounded-md px-1.5 py-0.5 text-xs text-muted-foreground/60 transition-colors hover:bg-secondary/30 hover:text-foreground"
+              className="rounded-md px-1.5 py-0.5 text-2xs text-muted-foreground/60 transition-colors hover:bg-hover-bg hover:text-foreground"
               title="Add existing category as subcategory"
             >
               Move here
             </button>
             <button
               onClick={() => setShowNewSub(true)}
-              className="flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground/60 transition-colors hover:bg-secondary/30 hover:text-foreground"
+              className="flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-2xs text-muted-foreground/60 transition-colors hover:bg-hover-bg hover:text-foreground"
               title="Create new subcategory"
             >
               <PhPlus size={10} weight="bold" />
@@ -1260,7 +1260,7 @@ function CategoryEditor({
                 setShowNewSub(false)
               }}
               placeholder="Subcategory name..."
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/30 border-none outline-none"
+              className="flex-1 bg-transparent text-note text-foreground placeholder:text-muted-foreground/30 border-none outline-none"
             />
           </div>
         )}
@@ -1280,12 +1280,12 @@ function CategoryEditor({
                       setShowAdoptPicker(false)
                       toast.success(`Moved "${c.name}" under "${category.name}"`)
                     }}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
                   >
                     <FolderSimple size={12} weight="regular" className="text-muted-foreground/50 shrink-0" />
                     <span className="truncate text-left">{c.name}</span>
                     {c.parentIds.length > 0 && (
-                      <span className="text-xs text-muted-foreground/40 ml-auto shrink-0">
+                      <span className="text-2xs text-muted-foreground/40 ml-auto shrink-0">
                         in {categories.find((p) => p.id === c.parentIds[0])?.name ?? "..."}
                       </span>
                     )}
@@ -1293,7 +1293,7 @@ function CategoryEditor({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground/40 py-2 text-center">No available categories</p>
+              <p className="text-2xs text-muted-foreground/40 py-2 text-center">No available categories</p>
             )}
           </div>
         )}
@@ -1304,7 +1304,7 @@ function CategoryEditor({
               <button
                 key={sub.id}
                 onClick={() => onNavigateCategory(sub.id)}
-                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
               >
                 <FolderSimple
                   size={14}
@@ -1321,7 +1321,7 @@ function CategoryEditor({
             ))}
           </div>
         ) : !showNewSub && (
-          <p className="text-xs text-muted-foreground/40 px-3 py-2">
+          <p className="text-2xs text-muted-foreground/40 px-3 py-2">
             No subcategories
           </p>
         )}
@@ -1329,7 +1329,7 @@ function CategoryEditor({
 
       {/* Articles */}
       <div className="px-6 pt-4">
-        <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">
+        <h4 className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">
           Articles ({catArticles.length})
         </h4>
         {catArticles.length > 0 ? (
@@ -1338,7 +1338,7 @@ function CategoryEditor({
               <button
                 key={art.id}
                 onClick={() => onOpenArticle(art.id)}
-                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
               >
                 <WikiStatusBadge status={art.wikiStatus} />
                 <span className="flex-1 truncate text-left">
@@ -1348,7 +1348,7 @@ function CategoryEditor({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground/40 px-3 py-2">
+          <p className="text-2xs text-muted-foreground/40 px-3 py-2">
             No articles
           </p>
         )}
@@ -1359,7 +1359,7 @@ function CategoryEditor({
         <div className="border-t border-border-subtle pt-4">
           <button
             onClick={handleDelete}
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
             <Trash size={16} weight="regular" />
             Delete Category
@@ -1406,16 +1406,16 @@ export function CategorySidePanel({
           {/* Stats card */}
           <div className="rounded-md bg-background border border-border p-3">
             <div className="text-xl font-bold text-foreground">{selectedIds.size}</div>
-            <div className="text-xs text-muted-foreground">categories selected</div>
+            <div className="text-2xs text-muted-foreground">categories selected</div>
           </div>
 
           {/* Batch Actions */}
           <div>
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Batch Actions</h4>
+            <h4 className="text-2xs font-medium text-muted-foreground mb-2">Batch Actions</h4>
             <div className="space-y-1">
               <button
                 onClick={onDeleteSelected}
-                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-400/10"
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-red-400 transition-colors hover:bg-red-400/10"
               >
                 <Trash size={16} weight="regular" />
                 Delete selected
@@ -1448,7 +1448,7 @@ export function CategorySidePanel({
         <div className="space-y-4">
           {/* Breadcrumb + description */}
           {breadcrumbPath.length > 1 && (
-            <div className="text-xs text-muted-foreground/50">
+            <div className="text-2xs text-muted-foreground/50">
               {breadcrumbPath.join(" > ")}
             </div>
           )}
@@ -1459,20 +1459,20 @@ export function CategorySidePanel({
             value={category.description ?? ""}
             placeholder="Add description..."
             onChange={(e) => updateWikiCategory(category.id, { description: e.target.value })}
-            className="w-full bg-transparent text-sm text-muted-foreground placeholder:text-muted-foreground/30 border-none focus:outline-none"
+            className="w-full bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/30 border-none focus:outline-none"
           />
 
           {/* Meta info card */}
           <div className="rounded-md bg-background border border-border p-3 space-y-2">
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-note">
               <span className="text-muted-foreground/70">Tier</span>
               <span className="text-foreground font-medium">{tierLabel}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-note">
               <span className="text-muted-foreground/70">Created</span>
               <span className="text-foreground tabular-nums">{shortRelative(category.createdAt)}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-note">
               <span className="text-muted-foreground/70">Updated</span>
               <span className="text-foreground tabular-nums">{shortRelative(category.updatedAt ?? category.createdAt)}</span>
             </div>
@@ -1480,17 +1480,17 @@ export function CategorySidePanel({
 
           {/* Content stats */}
           <div>
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Content</h4>
+            <h4 className="text-2xs font-medium text-muted-foreground mb-2">Content</h4>
             <div className="space-y-1">
-              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
                 <span className="text-foreground/80">Articles</span>
                 <span className="text-green-400 tabular-nums font-medium">{catArticles.filter(a => a.wikiStatus === "article").length || "—"}</span>
               </div>
-              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
                 <span className="text-foreground/80">Stubs</span>
                 <span className="text-orange-400 tabular-nums font-medium">{catArticles.filter(a => a.wikiStatus === "stub").length || "—"}</span>
               </div>
-              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
                 <span className="text-foreground/80">Subcategories</span>
                 <span className="text-muted-foreground/70 tabular-nums font-medium">{subcategories.length || "—"}</span>
               </div>
@@ -1500,13 +1500,13 @@ export function CategorySidePanel({
           {/* Subcategories list */}
           {subcategories.length > 0 && (
             <div>
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">Subcategories</h4>
+              <h4 className="text-2xs font-medium text-muted-foreground mb-2">Subcategories</h4>
               <div className="space-y-1">
                 {subcategories.map(sub => (
                   <button
                     key={sub.id}
                     onClick={() => onSelect(sub.id)}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-foreground/80 transition-colors hover:bg-secondary/30"
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
                   >
                     <FolderSimple size={12} weight="regular" className="text-muted-foreground/50 shrink-0" />
                     <span className="truncate">{sub.name}</span>
@@ -1519,10 +1519,10 @@ export function CategorySidePanel({
           {/* Articles list */}
           {catArticles.length > 0 && (
             <div>
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">Articles</h4>
+              <h4 className="text-2xs font-medium text-muted-foreground mb-2">Articles</h4>
               <div className="space-y-1">
                 {catArticles.map(art => (
-                  <div key={art.id} className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-foreground/80">
+                  <div key={art.id} className="flex items-center gap-2 rounded-md px-3 py-1.5 text-note text-foreground/80">
                     <WikiStatusBadge status={art.wikiStatus} />
                     <span className="truncate">{art.title || "Untitled"}</span>
                   </div>
@@ -1556,19 +1556,19 @@ export function CategorySidePanel({
         {/* Stats card */}
         <div className="rounded-md bg-background border border-border p-3">
           <div className="text-xl font-bold text-foreground">{totalCategories}</div>
-          <div className="text-xs text-muted-foreground">total categories</div>
+          <div className="text-2xs text-muted-foreground">total categories</div>
         </div>
 
         {/* Tier distribution */}
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-2">Tier Distribution</h4>
+          <h4 className="text-2xs font-medium text-muted-foreground mb-2">Tier Distribution</h4>
           <div className="space-y-1">
             {[
               { label: "1st tier", count: tier1Count },
               { label: "2nd tier", count: tier2Count },
               { label: "3rd tier", count: tier3Count },
             ].map(({ label, count }) => (
-              <div key={label} className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+              <div key={label} className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
                 <span className="text-foreground/80">{label}</span>
                 <span className="text-foreground tabular-nums font-medium">{count}</span>
               </div>
@@ -1578,17 +1578,17 @@ export function CategorySidePanel({
 
         {/* Content stats */}
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-2">Content</h4>
+          <h4 className="text-2xs font-medium text-muted-foreground mb-2">Content</h4>
           <div className="space-y-1">
-            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
               <span className="text-foreground/80">Articles</span>
               <span className="text-green-400 tabular-nums font-medium">{totalArticles}</span>
             </div>
-            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
               <span className="text-foreground/80">Stubs</span>
               <span className="text-orange-400 tabular-nums font-medium">{totalStubs}</span>
             </div>
-            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
               <span className="text-foreground/80">Empty categories</span>
               <span className="text-muted-foreground/50 tabular-nums font-medium">{emptyCount}</span>
             </div>
@@ -1597,11 +1597,11 @@ export function CategorySidePanel({
 
         {/* Quick Actions */}
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-2">Quick Actions</h4>
+          <h4 className="text-2xs font-medium text-muted-foreground mb-2">Quick Actions</h4>
           <div className="space-y-1">
             <button
               onClick={onSelectAll}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
             >
               <CursorClick size={16} weight="regular" />
               Select All

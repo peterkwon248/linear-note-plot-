@@ -367,8 +367,8 @@ function ColumnsNodeView({ node, editor }: NodeViewProps) {
           contentEditable={false}
         >
           <div className="flex items-center gap-1.5 text-muted-foreground/60">
-            <PhColumns size={13} weight="bold" />
-            <span className="text-[11px] font-medium uppercase tracking-wider">
+            <PhColumns size={12} weight="bold" />
+            <span className="text-2xs font-medium uppercase tracking-wider">
               {columnCount} Columns
             </span>
           </div>

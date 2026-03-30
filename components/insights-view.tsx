@@ -83,7 +83,7 @@ function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
         <TrendUp className="text-muted-foreground" size={14} weight="regular" />
-        <span className="text-xs font-medium text-muted-foreground">7-Day PhActivity</span>
+        <span className="text-2xs font-medium text-muted-foreground">7-Day PhActivity</span>
       </div>
       <div className="flex items-end gap-1.5 h-16">
         {data.map((d) => {
@@ -103,7 +103,7 @@ function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
                   title={`${d.count} events`}
                 />
               </div>
-              <span className={`text-[9px] ${isToday ? "text-accent font-medium" : "text-muted-foreground/60"}`}>
+              <span className={`text-2xs ${isToday ? "text-accent font-medium" : "text-muted-foreground/60"}`}>
                 {dayLabel}
               </span>
             </div>
@@ -125,14 +125,14 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-2.5">
         <PhEye className="text-muted-foreground" size={14} weight="regular" />
-        <span className="text-xs font-medium text-muted-foreground">Most Opened</span>
+        <span className="text-2xs font-medium text-muted-foreground">Most Opened</span>
       </div>
       <div className="space-y-0.5">
         {items.map((item, i) => (
           <button
             key={item.noteId}
             onClick={() => openNote(item.noteId)}
-            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors hover:bg-secondary"
+            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors hover:bg-hover-bg"
           >
             <span className="text-2xs text-muted-foreground/50 w-4 text-right">{i + 1}</span>
             <FileText className="text-muted-foreground shrink-0" size={12} weight="regular" />
@@ -158,7 +158,7 @@ function LifecycleStats({ notes }: { notes: any[] }) {
     <div className="rounded-lg border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2 mb-3">
         <PhActivity className="text-muted-foreground" size={14} weight="regular" />
-        <span className="text-xs font-medium text-muted-foreground">Note Lifecycle</span>
+        <span className="text-2xs font-medium text-muted-foreground">Note Lifecycle</span>
       </div>
       <div className="grid grid-cols-4 gap-2">
         {[
@@ -205,7 +205,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="text-sm font-semibold text-foreground">{result.label}</span>
+            <span className="text-note font-semibold text-foreground">{result.label}</span>
             <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-2xs font-medium ${config.badge}`}>
               {result.count}
             </span>
@@ -216,7 +216,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
         {/* Expand toggle */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
         >
           {expanded ? <CaretUp size={16} weight="regular" /> : <CaretDown size={16} weight="regular" />}
         </button>
@@ -229,7 +229,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
             <button
               key={note.id}
               onClick={() => openNote(note.id)}
-              className="block w-full truncate rounded px-2 py-1 text-left text-note text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+              className="block w-full truncate rounded px-2 py-1 text-left text-note text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               {note.title || "Untitled"}
             </button>
@@ -237,7 +237,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
           {!expanded && remaining > 0 && (
             <button
               onClick={() => setExpanded(true)}
-              className="px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              className="px-2 py-1 text-2xs text-muted-foreground transition-colors hover:text-foreground"
             >
               Show {remaining} more...
             </button>
@@ -250,7 +250,7 @@ function InsightCard({ result }: { result: AnalysisResult }) {
         <div className="mt-3 pl-5">
           <button
             onClick={() => setExpanded(true)}
-            className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1 px-2 py-1 text-2xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <CaretDown size={12} weight="regular" />
             Show {matchedNotes.length} notes...
@@ -319,7 +319,7 @@ export function InsightsView() {
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
         {/* ── PhActivity Dashboard ────────────────────── */}
         <section>
-          <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60 mb-3">
+          <h3 className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60 mb-3">
             PhActivity
           </h3>
 
@@ -356,7 +356,7 @@ export function InsightsView() {
         {/* ── Health Issues ─────────────────────────── */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60">
+            <h3 className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60">
               Health
             </h3>
             {total > 0 && (
@@ -386,8 +386,8 @@ export function InsightsView() {
           {total === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-secondary/30 py-10 text-center">
               <Lightbulb className="mb-3 text-muted-foreground/30" size={32} weight="regular" />
-              <p className="text-sm font-medium text-foreground/70">All good!</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">No issues detected.</p>
+              <p className="text-note font-medium text-foreground/70">All good!</p>
+              <p className="mt-0.5 text-2xs text-muted-foreground">No issues detected.</p>
             </div>
           ) : (
             <div className="space-y-3">

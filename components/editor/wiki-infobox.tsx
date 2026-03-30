@@ -73,13 +73,13 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
     return (
       <div className={cn("rounded-lg border border-border bg-card/50 overflow-hidden", className)}>
         <div className="flex items-center justify-between border-b border-border bg-secondary/30 px-3 py-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
             Info
           </span>
           {editable && (
             <button
               onClick={handleStartEdit}
-              className="rounded p-0.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              className="rounded p-0.5 text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
               <PencilSimple size={12} weight="regular" />
             </button>
@@ -103,7 +103,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
   return (
     <div className={cn("rounded-lg border border-primary/30 bg-card/50 overflow-hidden", className)}>
       <div className="flex items-center justify-between border-b border-border bg-secondary/30 px-3 py-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
           Edit Infobox
         </span>
         <div className="flex items-center gap-1">
@@ -115,7 +115,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
           </button>
           <button
             onClick={handleCancel}
-            className="rounded p-1 text-muted-foreground hover:bg-secondary transition-colors"
+            className="rounded p-1 text-muted-foreground hover:bg-hover-bg transition-colors"
           >
             <PhX size={14} weight="regular" />
           </button>

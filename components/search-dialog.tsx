@@ -257,7 +257,7 @@ export function SearchDialog() {
       <div className="relative">
         {/* Mode badge — always shown */}
         <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center">
-          <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+          <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-2xs font-medium text-accent-foreground">
             {commandPaletteMode === "commands" && <Terminal size={14} weight="regular" />}
             {commandPaletteMode === "links" && <PhLink size={14} weight="regular" />}
             {MODE_LABELS[commandPaletteMode]}
@@ -267,7 +267,7 @@ export function SearchDialog() {
           <div className="flex h-12 items-center gap-2 border-b px-3">
             <PhBrain className="shrink-0 opacity-50" size={16} weight="regular" />
             <input
-              className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-full rounded-md bg-transparent py-3 text-note outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Enter thinking step text..."
               value={thinkingStepText}
               onChange={(e) => setThinkingStepText(e.target.value)}
@@ -634,7 +634,7 @@ export function SearchDialog() {
                           <div className="truncate">
                             {highlightQuery(note.title || "Untitled", query)}
                           </div>
-                          <div className="truncate text-xs text-muted-foreground leading-tight">
+                          <div className="truncate text-2xs text-muted-foreground leading-tight">
                             {noteSublabel(note)}
                           </div>
                         </div>
@@ -657,7 +657,7 @@ export function SearchDialog() {
                         <PhLink className="shrink-0 self-start mt-0.5" size={16} weight="regular" />
                         <div className="flex-1 min-w-0">
                           <div className="truncate">{note.title || "Untitled"}</div>
-                          <div className="truncate text-xs text-muted-foreground leading-tight">
+                          <div className="truncate text-2xs text-muted-foreground leading-tight">
                             {noteSublabel(note)}
                           </div>
                         </div>

@@ -64,7 +64,7 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
             title={`${config.label} — click to change type`}
           >
             <Icon size={16} weight="bold" />
-            <span className="text-xs font-semibold uppercase tracking-wider">{config.label}</span>
+            <span className="text-2xs font-semibold uppercase tracking-wider">{config.label}</span>
           </button>
           <button
             type="button"

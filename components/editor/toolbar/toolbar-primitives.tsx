@@ -34,7 +34,7 @@ export function ToolbarButton({
       title={title}
       className={cn(
         sizeClasses,
-        "rounded-md flex items-center justify-center shrink-0 border-0 outline-none transition-colors duration-75",
+        "rounded-md flex items-center justify-center shrink-0 border-0 outline-none transition-colors duration-100",
         disabled
           ? "cursor-not-allowed opacity-40 text-muted-foreground"
           : isActive

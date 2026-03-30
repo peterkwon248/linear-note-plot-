@@ -31,6 +31,7 @@ import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { GitBranch } from "@phosphor-icons/react/dist/ssr/GitBranch"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
 import { cn } from "@/lib/utils"
 import { format, formatDistanceToNow } from "date-fns"
 import { usePlotStore } from "@/lib/store"
@@ -58,7 +59,7 @@ function InspectorSection({
     <div className={cn("px-4 py-3", className)}>
       <div className="mb-2 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="text-2xs font-medium text-muted-foreground">
           {title}
         </span>
       </div>
@@ -134,7 +135,7 @@ export function SidePanelContext() {
       return (
         <div className="flex flex-1 items-center justify-center p-8 text-center">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Select a category to see details</p>
+            <p className="text-note text-muted-foreground">Select a category to see details</p>
           </div>
         </div>
       )
@@ -153,10 +154,9 @@ export function SidePanelContext() {
   }
 
   if (!note) return (
-    <div className="flex flex-1 items-center justify-center p-8 text-center">
-      <div className="space-y-2">
-        <p className="text-sm text-muted-foreground">Select a note to see details</p>
-      </div>
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
+      <PhInfo size={24} weight="light" className="text-muted-foreground/40" />
+      <p className="text-note text-center">Select a note to see details</p>
     </div>
   )
 
@@ -179,13 +179,13 @@ export function SidePanelContext() {
       {/* Status Badges */}
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
         {note.pinned && (
-          <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-xs font-medium text-chart-3">
+          <span className="flex items-center gap-1 rounded-md bg-chart-3/10 px-2 py-0.5 text-2xs font-medium text-chart-3">
             <PushPin size={14} weight="regular" />
             Pinned
           </span>
         )}
         {/* Stage badge */}
-        <span className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${
+        <span className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium ${
           note.status === "inbox"
             ? "bg-accent/10 text-accent"
             : note.status === "capture"
@@ -198,13 +198,13 @@ export function SidePanelContext() {
           {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : "Inbox"}
         </span>
         {note.status === "capture" && isReadyToPromote(note, backlinks) && (
-          <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-xs font-medium text-chart-5">
+          <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-2xs font-medium text-chart-5">
             <Sparkle size={14} weight="regular" />
             Ready to promote
           </span>
         )}
         {note.parentNoteId && (
-          <span className="flex items-center gap-1 rounded-md bg-chart-1/10 px-2 py-0.5 text-xs font-medium text-chart-1">
+          <span className="flex items-center gap-1 rounded-md bg-chart-1/10 px-2 py-0.5 text-2xs font-medium text-chart-1">
             <GitBranch size={14} weight="regular" />
             Chain
           </span>
@@ -216,34 +216,34 @@ export function SidePanelContext() {
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/10">
           <button
             onClick={() => { triageKeep(note.id); toast("Done — moved to Capture"); advanceToNextInbox() }}
-            className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-2xs font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
             <PhCheck size={14} weight="bold" />
             Done
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
+              <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-foreground transition-colors hover:bg-hover-bg">
                 <Alarm size={14} weight="regular" />
                 Snooze
                 <CaretDown className="text-muted-foreground" size={10} weight="regular" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44">
-              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("3h")); toast("Snoozed"); advanceToNextInbox() }} className="text-sm">
+              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("3h")); toast("Snoozed"); advanceToNextInbox() }} className="text-note">
                 3 hours
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("tomorrow")); toast("Snoozed"); advanceToNextInbox() }} className="text-sm">
+              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("tomorrow")); toast("Snoozed"); advanceToNextInbox() }} className="text-note">
                 Tomorrow 10:00 AM
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("next-week")); toast("Snoozed"); advanceToNextInbox() }} className="text-sm">
+              <DropdownMenuItem onClick={() => { triageSnooze(note.id, getSnoozeTime("next-week")); toast("Snoozed"); advanceToNextInbox() }} className="text-note">
                 Next week 10:00 AM
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <button
             onClick={() => { triageTrash(note.id); toast("Trashed"); advanceToNextInbox() }}
-            className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
             <Trash size={14} weight="regular" />
             Trash
@@ -256,10 +256,10 @@ export function SidePanelContext() {
           <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
             <button
               onClick={() => { promoteToPermanent(note.id); toast("Promoted to Permanent") }}
-              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium transition-colors ${
                 isReadyToPromote(note, backlinks)
                   ? "bg-chart-5 text-primary-foreground hover:bg-chart-5/80"
-                  : "border border-border bg-card text-foreground hover:bg-secondary"
+                  : "border border-border bg-card text-foreground hover:bg-hover-bg"
               }`}
             >
               <ArrowUpRight size={14} weight="regular" />
@@ -267,7 +267,7 @@ export function SidePanelContext() {
             </button>
             <button
               onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
-              className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <Tray size={14} weight="regular" />
               Back to Inbox
@@ -276,7 +276,7 @@ export function SidePanelContext() {
           {staleSuggest && (
             <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
               <Warning className="shrink-0 text-destructive" size={14} weight="regular" />
-              <span className="text-xs text-destructive">14+ days untouched.</span>
+              <span className="text-2xs text-destructive">14+ days untouched.</span>
               <button
                 onClick={() => { moveBackToInbox(note.id); toast("Moved back to Inbox") }}
                 className="ml-auto text-2xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
@@ -288,7 +288,7 @@ export function SidePanelContext() {
           {!staleSuggest && stale && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
               <Warning className="shrink-0 text-chart-3" size={14} weight="regular" />
-              <span className="text-xs text-chart-3">Review needed - 7+ days untouched.</span>
+              <span className="text-2xs text-chart-3">Review needed - 7+ days untouched.</span>
             </div>
           )}
         </div>
@@ -299,7 +299,7 @@ export function SidePanelContext() {
           <div className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary/10">
             <button
               onClick={() => { undoPromote(note.id); toast("Demoted to Capture") }}
-              className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <ArrowDownLeft size={14} weight="regular" />
               Demote to Capture
@@ -308,7 +308,7 @@ export function SidePanelContext() {
           {linkCount === 0 && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
               <PhLink className="shrink-0 text-chart-3" size={14} weight="regular" />
-              <span className="text-xs text-chart-3">Unlinked - add connections to strengthen graph.</span>
+              <span className="text-2xs text-chart-3">Unlinked - add connections to strengthen graph.</span>
             </div>
           )}
         </div>
@@ -318,14 +318,14 @@ export function SidePanelContext() {
       <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Created</span>
-            <span className="text-sm text-foreground">
+            <span className="text-note text-muted-foreground">Created</span>
+            <span className="text-note text-foreground">
               {format(new Date(note.createdAt), "MMM d, yyyy")}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Updated</span>
-            <span className="text-sm text-foreground">
+            <span className="text-note text-muted-foreground">Updated</span>
+            <span className="text-note text-foreground">
               {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
             </span>
           </div>
@@ -349,7 +349,7 @@ export function SidePanelContext() {
       <InspectorSection title="Folder" icon={<FolderOpen size={16} weight="regular" />}>
         <Popover open={folderOpen} onOpenChange={setFolderOpen}>
           <PopoverTrigger asChild>
-            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary/60">
+            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg">
               <span className="flex items-center gap-2">
                 {currentFolder && (
                   <span
@@ -369,7 +369,7 @@ export function SidePanelContext() {
                 setFolderOpen(false)
               }}
               className={cn(
-                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary",
+                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note transition-colors hover:bg-hover-bg",
                 !note.folderId ? "text-foreground" : "text-muted-foreground"
               )}
             >
@@ -383,7 +383,7 @@ export function SidePanelContext() {
                   setFolderOpen(false)
                 }}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary",
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note transition-colors hover:bg-hover-bg",
                   note.folderId === folder.id ? "text-foreground" : "text-muted-foreground"
                 )}
               >
@@ -418,7 +418,7 @@ export function SidePanelContext() {
           {noteTags.map((tag) => (
             <span
               key={tag.id}
-              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium"
               style={{
                 backgroundColor: `${tag.color}18`,
                 color: tag.color,
@@ -427,7 +427,7 @@ export function SidePanelContext() {
               {tag.name}
               <button
                 onClick={() => removeTagFromNote(note.id, tag.id)}
-                className="rounded-full p-0.5 transition-colors hover:bg-foreground/10"
+                className="rounded-full p-0.5 transition-colors hover:bg-hover-bg"
               >
                 <PhX size={10} weight="regular" />
               </button>
@@ -436,7 +436,7 @@ export function SidePanelContext() {
           {availableTags.length > 0 && (
             <Popover open={tagOpen} onOpenChange={setTagOpen}>
               <PopoverTrigger asChild>
-                <button className="flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
+                <button className="flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground">
                   <PhPlus size={10} weight="regular" />
                   Add
                 </button>
@@ -449,7 +449,7 @@ export function SidePanelContext() {
                       addTagToNote(note.id, tag.id)
                       setTagOpen(false)
                     }}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note text-muted-foreground transition-colors hover:bg-hover-bg"
                   >
                     <span
                       className="h-2 w-2 rounded-full"
@@ -462,7 +462,7 @@ export function SidePanelContext() {
             </Popover>
           )}
           {noteTags.length === 0 && availableTags.length === 0 && (
-            <span className="text-sm text-muted-foreground">No tags available</span>
+            <span className="text-note text-muted-foreground">No tags available</span>
           )}
         </div>
       </InspectorSection>
@@ -476,7 +476,7 @@ export function SidePanelContext() {
             {headings.map((h, i) => (
               <div
                 key={i}
-                className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-default"
+                className="flex items-center gap-1.5 text-note text-muted-foreground transition-colors hover:text-foreground cursor-default"
                 style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
               >
                 <span className="shrink-0 text-2xs font-mono text-muted-foreground/50">
@@ -487,7 +487,7 @@ export function SidePanelContext() {
             ))}
           </div>
         ) : (
-          <span className="text-sm text-muted-foreground">No headings found</span>
+          <span className="text-note text-muted-foreground">No headings found</span>
         )}
       </InspectorSection>
 
@@ -497,20 +497,20 @@ export function SidePanelContext() {
       <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Words</span>
-            <span className="text-sm tabular-nums text-foreground">{wordCount}</span>
+            <span className="text-note text-muted-foreground">Words</span>
+            <span className="text-note tabular-nums text-foreground">{wordCount}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Characters</span>
-            <span className="text-sm tabular-nums text-foreground">{charCount}</span>
+            <span className="text-note text-muted-foreground">Characters</span>
+            <span className="text-note tabular-nums text-foreground">{charCount}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Headings</span>
-            <span className="text-sm tabular-nums text-foreground">{headings.length}</span>
+            <span className="text-note text-muted-foreground">Headings</span>
+            <span className="text-note tabular-nums text-foreground">{headings.length}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Source</span>
-            <span className="text-sm text-foreground capitalize">{note.source ?? "manual"}</span>
+            <span className="text-note text-muted-foreground">Source</span>
+            <span className="text-note text-foreground capitalize">{note.source ?? "manual"}</span>
           </div>
         </div>
       </InspectorSection>
@@ -522,14 +522,14 @@ export function SidePanelContext() {
         <div className="flex flex-col gap-1.5">
           <button
             onClick={() => setMergePickerOpen(true, note.id)}
-            className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <GitMerge size={14} weight="regular" />
             GitMerge with...
           </button>
           <button
             onClick={() => setLinkPickerOpen(true, note.id)}
-            className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           >
             <PhLink size={14} weight="regular" />
             Link to...
@@ -541,7 +541,7 @@ export function SidePanelContext() {
 
       {/* Attachments (placeholder) */}
       <InspectorSection title="Attachments" icon={<Paperclip size={16} weight="regular" />}>
-        <span className="text-sm text-muted-foreground">No attachments</span>
+        <span className="text-note text-muted-foreground">No attachments</span>
       </InspectorSection>
 
     </div>

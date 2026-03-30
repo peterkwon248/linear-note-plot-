@@ -285,7 +285,7 @@ export function SidePanelConnections() {
   if (!note) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-note text-muted-foreground">
           Select a note to see connections
         </p>
       </div>
@@ -324,7 +324,7 @@ export function SidePanelConnections() {
         defaultOpen
       >
         {connectedCount === 0 ? (
-          <p className="text-sm text-muted-foreground px-2">
+          <p className="text-note text-muted-foreground px-2">
             No connections yet
           </p>
         ) : (
@@ -337,7 +337,7 @@ export function SidePanelConnections() {
                   <button
                     key={n.id}
                     onClick={() => openSidePeek(n.id)}
-                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="in" />
                     <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
@@ -358,7 +358,7 @@ export function SidePanelConnections() {
                   <button
                     key={a.id}
                     onClick={() => openSidePeek(a.id)}
-                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="in" />
                     <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
@@ -379,7 +379,7 @@ export function SidePanelConnections() {
                   <button
                     key={n.id}
                     onClick={() => openSidePeek(n.id)}
-                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="out" />
                     <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
@@ -400,7 +400,7 @@ export function SidePanelConnections() {
                   <button
                     key={w.id}
                     onClick={() => openSidePeek(w.id)}
-                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="out" />
                     <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
@@ -420,10 +420,10 @@ export function SidePanelConnections() {
                 {unlinkedMentions.map((m) => (
                   <div
                     key={m.noteId + m.title}
-                    className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-secondary/50 transition-colors"
+                    className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-hover-bg transition-colors"
                   >
                     <Warning className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
-                    <span className="truncate flex-1 text-sm text-muted-foreground">
+                    <span className="truncate flex-1 text-note text-muted-foreground">
                       {m.title}
                     </span>
                     <span className="text-2xs text-muted-foreground/40">
@@ -451,7 +451,7 @@ export function SidePanelConnections() {
         defaultOpen
       >
         {discoverCount === 0 ? (
-          <p className="text-sm text-muted-foreground px-2">
+          <p className="text-note text-muted-foreground px-2">
             No suggestions yet
           </p>
         ) : (
@@ -466,12 +466,12 @@ export function SidePanelConnections() {
                   return (
                     <div
                       key={item.noteId}
-                      className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-secondary/50 transition-colors"
+                      className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-hover-bg transition-colors"
                     >
                       <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
                       <button
                         onClick={() => openSidePeek(item.noteId)}
-                        className="truncate flex-1 text-left text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="truncate flex-1 text-left text-note text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {sNote.title || "Untitled"}
                       </button>
@@ -502,12 +502,12 @@ export function SidePanelConnections() {
                   return (
                     <div
                       key={item.noteId}
-                      className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-secondary/50 transition-colors"
+                      className="flex items-center gap-2 group px-2 py-0.5 rounded hover:bg-hover-bg transition-colors"
                     >
                       <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
                       <button
                         onClick={() => openSidePeek(item.noteId)}
-                        className="truncate flex-1 text-left text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="truncate flex-1 text-left text-note text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {title}
                       </button>

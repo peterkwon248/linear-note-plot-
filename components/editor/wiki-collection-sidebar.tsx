@@ -125,7 +125,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
         {/* Related section */}
         <SidebarSection title="Related">
           {relatedNotes.length === 0 ? (
-            <p className="text-xs text-muted-foreground px-1">No related notes</p>
+            <p className="text-2xs text-muted-foreground px-1">No related notes</p>
           ) : (
             <div className="flex flex-col gap-1">
               {relatedNotes.map((n) => (
@@ -141,7 +141,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
                       }
                     }}
                     title="Click: insert [[link]] · Shift+click: insert as quote"
-                    className="flex items-center gap-1.5 flex-1 min-w-0 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 rounded-md px-2 py-1 hover:bg-secondary text-left"
+                    className="flex items-center gap-1.5 flex-1 min-w-0 text-note text-muted-foreground hover:text-foreground transition-colors duration-150 rounded-md px-2 py-1 hover:bg-hover-bg text-left"
                   >
                     <FileText className="shrink-0" size={14} weight="regular" />
                     <span className="truncate">{n.title || "Untitled"}</span>
@@ -151,7 +151,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
                       addToCollection(noteId, { type: "note", sourceNoteId: n.id })
                     }
                     title="Add to collection"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground shrink-0"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground shrink-0"
                   >
                     <PhPlus size={14} weight="regular" />
                   </button>
@@ -165,7 +165,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
         <SidebarSection title="Collected">
           <div className="flex flex-col gap-1">
             {collectionItems.length === 0 ? (
-              <p className="text-xs text-muted-foreground px-1">Nothing collected yet</p>
+              <p className="text-2xs text-muted-foreground px-1">Nothing collected yet</p>
             ) : (
               collectionItems.map((item) => (
                 <CollectionItemRow
@@ -193,19 +193,19 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
         {/* Red Links section */}
         <SidebarSection title="Red Links">
           {redLinks.length === 0 ? (
-            <p className="text-xs text-muted-foreground px-1">No broken links</p>
+            <p className="text-2xs text-muted-foreground px-1">No broken links</p>
           ) : (
             <div className="flex flex-col gap-1">
               {redLinks.map(({ title, count }) => (
                 <div key={title} className="flex items-center gap-1.5 group">
                   <CircleDashed className="shrink-0 text-destructive" size={12} weight="regular" />
-                  <span className="flex-1 min-w-0 text-sm text-foreground truncate">{title}</span>
+                  <span className="flex-1 min-w-0 text-note text-foreground truncate">{title}</span>
                   {count > 1 && (
-                    <span className="text-xs text-muted-foreground shrink-0">{count}</span>
+                    <span className="text-2xs text-muted-foreground shrink-0">{count}</span>
                   )}
                   <button
                     onClick={() => handleCreateStub(title)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-secondary shrink-0"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-2xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-hover-bg shrink-0"
                   >
                     Create
                   </button>
@@ -224,7 +224,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
 function SidebarSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h3>
       {children}
@@ -268,7 +268,7 @@ function CollectionItemRow({
               }
             }}
             title="Click: insert [[link]] · Shift+click: insert as quote"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 truncate block w-full text-left"
+            className="text-note text-muted-foreground hover:text-foreground transition-colors duration-150 truncate block w-full text-left"
           >
             {sourceNote?.title || "Untitled"}
           </button>
@@ -278,20 +278,20 @@ function CollectionItemRow({
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 truncate"
+            className="flex items-center gap-1 text-note text-muted-foreground hover:text-foreground transition-colors duration-150 truncate"
           >
             <span className="truncate">{item.urlTitle || item.url}</span>
             <ArrowSquareOut className="shrink-0" size={12} weight="regular" />
           </a>
         )}
         {item.type === "text" && (
-          <span className="text-sm text-muted-foreground truncate block">{item.text}</span>
+          <span className="text-note text-muted-foreground truncate block">{item.text}</span>
         )}
         {(item.type === "file" || item.type === "image") && (
-          <span className="text-sm text-muted-foreground truncate block">
+          <span className="text-note text-muted-foreground truncate block">
             {item.fileName || "File"}
             {item.fileSize && (
-              <span className="ml-1 text-xs text-muted-foreground/50">
+              <span className="ml-1 text-2xs text-muted-foreground/50">
                 ({item.fileSize < 1024 * 1024
                   ? `${(item.fileSize / 1024).toFixed(0)} KB`
                   : `${(item.fileSize / (1024 * 1024)).toFixed(1)} MB`
@@ -304,7 +304,7 @@ function CollectionItemRow({
 
       <button
         onClick={onRemove}
-        className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground shrink-0"
+        className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground shrink-0"
       >
         <PhX size={14} weight="regular" />
       </button>
@@ -341,7 +341,7 @@ function AddNotePopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md px-2 py-1 transition-colors duration-150">
+        <button className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-bg rounded-md px-2 py-1 transition-colors duration-150">
           <PhPlus size={12} weight="regular" />
           Add note
         </button>
@@ -354,12 +354,12 @@ function AddNotePopover({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="MagnifyingGlass notes..."
-            className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+            className="flex-1 text-note bg-transparent outline-none placeholder:text-muted-foreground"
           />
         </div>
         <div className="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
           {nonWikiNotes.length === 0 ? (
-            <p className="text-xs text-muted-foreground px-2 py-1">No notes found</p>
+            <p className="text-2xs text-muted-foreground px-2 py-1">No notes found</p>
           ) : (
             nonWikiNotes.map((n) => (
               <button
@@ -369,7 +369,7 @@ function AddNotePopover({
                   setOpen(false)
                   setQuery("")
                 }}
-                className="flex items-center gap-2 text-sm text-left px-2 py-1.5 rounded hover:bg-secondary transition-colors duration-150 truncate"
+                className="flex items-center gap-2 text-note text-left px-2 py-1.5 rounded hover:bg-hover-bg transition-colors duration-150 truncate"
               >
                 <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
                 <span className="truncate">{n.title || "Untitled"}</span>
@@ -404,7 +404,7 @@ function AddUrlPopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md px-2 py-1 transition-colors duration-150">
+        <button className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-bg rounded-md px-2 py-1 transition-colors duration-150">
           <PhPlus size={12} weight="regular" />
           Add URL
         </button>
@@ -416,20 +416,20 @@ function AddUrlPopover({
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           placeholder="https://..."
-          className="w-full text-sm bg-transparent border border-border rounded-md px-2 py-1.5 outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
+          className="w-full text-note bg-transparent border border-border rounded-md px-2 py-1.5 outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
         />
         <input
           value={urlTitle}
           onChange={(e) => setUrlTitle(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           placeholder="Title (optional)"
-          className="w-full text-sm bg-transparent border border-border rounded-md px-2 py-1.5 outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
+          className="w-full text-note bg-transparent border border-border rounded-md px-2 py-1.5 outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
         />
         <button
           onClick={handleAdd}
           disabled={!url.trim()}
           className={cn(
-            "w-full text-sm rounded-md px-3 py-1.5 transition-colors duration-150",
+            "w-full text-note rounded-md px-3 py-1.5 transition-colors duration-150",
             url.trim()
               ? "bg-primary text-primary-foreground hover:bg-primary/90"
               : "bg-secondary text-muted-foreground cursor-not-allowed"
@@ -462,7 +462,7 @@ function AddMemoPopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md px-2 py-1 transition-colors duration-150">
+        <button className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-bg rounded-md px-2 py-1 transition-colors duration-150">
           <PhPlus size={12} weight="regular" />
           Add memo
         </button>
@@ -474,13 +474,13 @@ function AddMemoPopover({
           onChange={(e) => setText(e.target.value)}
           placeholder="Write a memo..."
           rows={4}
-          className="w-full text-sm bg-transparent border border-border rounded-md px-2 py-1.5 outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring resize-none"
+          className="w-full text-note bg-transparent border border-border rounded-md px-2 py-1.5 outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring resize-none"
         />
         <button
           onClick={handleAdd}
           disabled={!text.trim()}
           className={cn(
-            "w-full text-sm rounded-md px-3 py-1.5 transition-colors duration-150",
+            "w-full text-note rounded-md px-3 py-1.5 transition-colors duration-150",
             text.trim()
               ? "bg-primary text-primary-foreground hover:bg-primary/90"
               : "bg-secondary text-muted-foreground cursor-not-allowed"
@@ -539,7 +539,7 @@ function AddFileButton({
       />
       <button
         onClick={() => fileInputRef.current?.click()}
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md px-2 py-1 transition-colors duration-150"
+        className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-bg rounded-md px-2 py-1 transition-colors duration-150"
       >
         <PhPlus size={12} weight="regular" />
         Add file

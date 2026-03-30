@@ -45,7 +45,7 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 px-4 py-2.5 w-full text-left"
       >
-        <span className="text-sm font-bold text-white/80">Contents</span>
+        <span className="text-note font-bold text-white/80">Contents</span>
         <CaretDown
           size={14}
           weight="bold"
@@ -71,7 +71,7 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
                       block: "start",
                     })
                   }}
-                  className="text-sm text-accent/70 hover:text-accent transition-colors"
+                  className="text-note text-accent/70 hover:text-accent transition-colors"
                 >
                   {num}. {s.title}
                 </button>
@@ -117,11 +117,11 @@ function EncyclopediaSectionHeading({
           {sectionNumber}. {block.title || "Untitled Section"}
         </h2>
       ) : level === 3 ? (
-        <h3 className="text-sm font-bold text-white/80">
+        <h3 className="text-note font-bold text-white/80">
           {sectionNumber}. {block.title || "Untitled Section"}
         </h3>
       ) : (
-        <h4 className="text-xs font-bold text-white/70">
+        <h4 className="text-2xs font-bold text-white/70">
           {sectionNumber}. {block.title || "Untitled Section"}
         </h4>
       )}
@@ -209,11 +209,11 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArti
       {/* Category tag row */}
       {categoryNames.length > 0 && (
         <div className="flex flex-wrap gap-1.5 px-10 pt-4 pb-2">
-          <span className="text-xs text-white/40">분류:</span>
+          <span className="text-2xs text-white/40">분류:</span>
           {categoryNames.map((name) => (
             <span
               key={name}
-              className="text-xs text-accent/70 hover:text-accent cursor-pointer transition-colors"
+              className="text-2xs text-accent/70 hover:text-accent cursor-pointer transition-colors"
             >
               {name}
             </span>
@@ -225,7 +225,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArti
       <div className="px-10 pt-2 pb-4">
         <h1 className="text-3xl font-bold text-white/90">{article.title}</h1>
         {article.aliases.length > 0 && (
-          <p className="mt-1 text-sm text-white/40">
+          <p className="mt-1 text-note text-white/40">
             {article.aliases.join(", ")}
           </p>
         )}
@@ -237,16 +237,16 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArti
         {article.infobox.length > 0 && (
           <div className="float-right ml-6 mb-4 w-[320px] rounded-lg border border-white/[0.08] bg-white/[0.02] overflow-hidden">
             <div className="bg-accent/20 px-4 py-2 text-center">
-              <h3 className="text-base font-bold text-white/90">{article.title}</h3>
+              <h3 className="text-ui font-bold text-white/90">{article.title}</h3>
             </div>
             <table className="w-full">
               <tbody>
                 {article.infobox.map((entry) => (
                   <tr key={entry.key} className="border-t border-white/[0.06]">
-                    <td className="px-3 py-2 text-xs font-medium text-white/50 w-[100px] text-right align-top">
+                    <td className="px-3 py-2 text-2xs font-medium text-white/50 w-[100px] text-right align-top">
                       {entry.key}
                     </td>
-                    <td className="px-3 py-2 text-sm text-white/80">
+                    <td className="px-3 py-2 text-note text-white/80">
                       {entry.value}
                     </td>
                   </tr>
@@ -280,7 +280,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArti
         })}
 
         {article.blocks.length === 0 && (
-          <p className="py-8 text-center text-sm text-white/40">
+          <p className="py-8 text-center text-note text-white/40">
             This article has no content yet.
           </p>
         )}

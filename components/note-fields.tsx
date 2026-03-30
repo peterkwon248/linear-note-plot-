@@ -103,7 +103,7 @@ export function StatusBadge({ status }: { status: NoteStatus }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.capture
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium leading-none"
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium leading-none"
       style={{ backgroundColor: cfg.bg, color: cfg.color }}
     >
       {cfg.icon}
@@ -118,7 +118,7 @@ export function PriorityBadge({ priority }: { priority: NotePriority }) {
   const cfg = PRIORITY_CONFIG[priority]
   return (
     <span
-      className="inline-flex items-center gap-1 text-sm"
+      className="inline-flex items-center gap-1 text-note"
       style={{ color: cfg.color }}
     >
       {cfg.icon}
@@ -144,7 +144,7 @@ export function StatusDropdown({
       <DropdownMenuTrigger asChild>
         {variant === "inline" ? (
           <button
-            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium leading-none transition-colors hover:brightness-125"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium leading-none transition-colors hover:brightness-125"
             style={{ backgroundColor: current.bg, color: current.color }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -153,7 +153,7 @@ export function StatusDropdown({
           </button>
         ) : (
           <button
-            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary/60"
+            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
             onClick={(e) => e.stopPropagation()}
           >
             <span className="flex items-center gap-2" style={{ color: current.color }}>
@@ -207,7 +207,7 @@ export function PriorityDropdown({
       <DropdownMenuTrigger asChild>
         {variant === "inline" ? (
           <button
-            className="inline-flex items-center rounded-md p-1 transition-colors hover:bg-secondary"
+            className="inline-flex items-center rounded-md p-1 transition-colors hover:bg-hover-bg"
             style={{ color: current.color }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -215,7 +215,7 @@ export function PriorityDropdown({
           </button>
         ) : (
           <button
-            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary/60"
+            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
             onClick={(e) => e.stopPropagation()}
           >
             <span className="flex items-center gap-2" style={{ color: current.color }}>
@@ -256,7 +256,7 @@ export function PriorityDropdown({
 export function LabelBadge({ label }: { label: { name: string; color: string } }) {
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-none"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium leading-none"
       style={{ backgroundColor: `${label.color}18`, color: label.color }}
     >
       <PhTag size={10} weight="regular" />
@@ -285,7 +285,7 @@ export function LabelDropdown({
       <DropdownMenuTrigger asChild>
         {variant === "inline" ? (
           <button
-            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-none transition-colors hover:brightness-125"
+            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium leading-none transition-colors hover:brightness-125"
             style={current ? { backgroundColor: `${current.color}18`, color: current.color } : {}}
             onClick={(e) => e.stopPropagation()}
           >
@@ -294,7 +294,7 @@ export function LabelDropdown({
           </button>
         ) : (
           <button
-            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground transition-colors hover:bg-secondary/60"
+            className="flex w-full items-center justify-between rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-note text-foreground transition-colors hover:bg-hover-bg"
             onClick={(e) => e.stopPropagation()}
           >
             <span className="flex items-center gap-2">
@@ -402,7 +402,7 @@ export function TagPicker({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
-            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             onClick={(e) => e.stopPropagation()}
           >
             <PhPlus size={12} weight="regular" />
@@ -431,7 +431,7 @@ export function TagPicker({
               return (
                 <button
                   key={t.id}
-                  className="flex w-full items-center justify-between px-3 py-1.5 text-note transition-colors hover:bg-secondary/50"
+                  className="flex w-full items-center justify-between px-3 py-1.5 text-note transition-colors hover:bg-hover-bg"
                   onClick={(e) => {
                     e.stopPropagation()
                     if (isSelected) onRemoveTag(noteId, t.id)
@@ -448,7 +448,7 @@ export function TagPicker({
             })}
             {showCreate && (
               <button
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-accent transition-colors hover:bg-secondary/50"
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-accent transition-colors hover:bg-hover-bg"
                 onClick={(e) => {
                   e.stopPropagation()
                   onCreateTag(search.trim(), pickColor(search.trim()))
@@ -509,7 +509,7 @@ export function LabelPicker({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-none transition-colors hover:bg-secondary"
+          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium leading-none transition-colors hover:bg-hover-bg"
           style={current ? { backgroundColor: `${current.color}18`, color: current.color } : {}}
           onClick={(e) => e.stopPropagation()}
         >
@@ -543,7 +543,7 @@ export function LabelPicker({
         <div className="max-h-48 overflow-y-auto py-1">
           {currentLabelId && (
             <button
-              className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-muted-foreground transition-colors hover:bg-secondary/50"
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-muted-foreground transition-colors hover:bg-hover-bg"
               onClick={(e) => {
                 e.stopPropagation()
                 onSetLabel(noteId, null)
@@ -557,7 +557,7 @@ export function LabelPicker({
           {filtered.map((l) => (
             <button
               key={l.id}
-              className="flex w-full items-center justify-between px-3 py-1.5 text-note transition-colors hover:bg-secondary/50"
+              className="flex w-full items-center justify-between px-3 py-1.5 text-note transition-colors hover:bg-hover-bg"
               onClick={(e) => {
                 e.stopPropagation()
                 onSetLabel(noteId, l.id)
@@ -573,7 +573,7 @@ export function LabelPicker({
           ))}
           {showCreate && (
             <button
-              className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-accent transition-colors hover:bg-secondary/50"
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-note text-accent transition-colors hover:bg-hover-bg"
               onClick={(e) => {
                 e.stopPropagation()
                 onCreateLabel(search.trim(), pickColor(search.trim()))

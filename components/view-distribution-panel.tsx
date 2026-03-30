@@ -46,15 +46,15 @@ export function ViewDistributionPanel({
   const items = getDistribution(activeTab)
 
   return (
-    <div className="flex h-full w-[280px] shrink-0 flex-col border-l border-border/50 bg-background">
+    <div className="flex h-full w-[280px] shrink-0 flex-col border-l border-border-subtle bg-background">
       {/* ── Tab pills + Close ── */}
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-border/50 px-3 py-2">
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-border-subtle px-3 py-2">
         <div className="flex flex-1 items-center gap-1 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors duration-100 ${
+              className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-2xs transition-colors duration-100 ${
                 activeTab === tab.key
                   ? "bg-foreground/10 font-medium text-foreground"
                   : "text-muted-foreground hover:text-foreground/70"
@@ -94,13 +94,13 @@ export function ViewDistributionPanel({
             <span className="flex-1 truncate text-note text-foreground/80">
               {item.label}
             </span>
-            <span className="shrink-0 text-xs tabular-nums text-muted-foreground/50">
+            <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/50">
               {item.count}
             </span>
           </button>
         ))}
         {items.length === 0 && (
-          <div className="px-3 py-6 text-center text-xs text-muted-foreground/40">
+          <div className="px-3 py-6 text-center text-2xs text-muted-foreground/40">
             No data
           </div>
         )}

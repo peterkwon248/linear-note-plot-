@@ -277,7 +277,7 @@ export function OntologyView() {
           />
         ) : (
           <div className="flex flex-1 items-center justify-center">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-note text-muted-foreground">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
               Computing layout...
             </div>

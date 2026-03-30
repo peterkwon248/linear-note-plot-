@@ -52,19 +52,19 @@ interface EditorContextMenuProps {
 }
 
 const itemCls =
-  "flex items-center gap-2 py-1.5 px-2.5 rounded-md text-sm text-muted-foreground outline-none cursor-pointer hover:bg-hover-bg hover:text-foreground data-[highlighted]:bg-hover-bg data-[highlighted]:text-foreground"
+  "flex items-center gap-2 py-1.5 px-2.5 rounded-md text-note text-muted-foreground outline-none cursor-pointer hover:bg-hover-bg hover:text-foreground data-[highlighted]:bg-hover-bg data-[highlighted]:text-foreground"
 
 const subTriggerCls =
-  "flex items-center gap-2 py-1.5 px-2.5 rounded-md text-sm text-muted-foreground outline-none cursor-pointer hover:bg-hover-bg hover:text-foreground data-[highlighted]:bg-hover-bg data-[highlighted]:text-foreground data-[state=open]:bg-hover-bg data-[state=open]:text-foreground"
+  "flex items-center gap-2 py-1.5 px-2.5 rounded-md text-note text-muted-foreground outline-none cursor-pointer hover:bg-hover-bg hover:text-foreground data-[highlighted]:bg-hover-bg data-[highlighted]:text-foreground data-[state=open]:bg-hover-bg data-[state=open]:text-foreground"
 
 const subContentCls =
-  "min-w-[180px] rounded-lg bg-popover border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-1 z-[9999]"
+  "min-w-[180px] rounded-lg bg-surface-overlay border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-1 z-[9999]"
 
 const separatorCls = "my-1 h-px bg-border"
 
 function Shortcut({ keys }: { keys: string }) {
   return (
-    <span className="ml-auto text-[10px] text-muted-foreground/50 pl-4">{keys}</span>
+    <span className="ml-auto text-2xs text-muted-foreground/50 pl-4">{keys}</span>
   )
 }
 
@@ -142,7 +142,7 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
         <ContextMenu.Content
-          className="min-w-[200px] rounded-lg bg-popover border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-1 z-[9999]"
+          className="min-w-[200px] rounded-lg bg-surface-overlay border border-border shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-1 z-[9999]"
         >
           {/* ── Clipboard ─────────────────────────────────── */}
           <ContextMenu.Item className={itemCls} onSelect={cut}>
@@ -547,7 +547,7 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
                 >
                   <NotePencil size={14} />
                   Link to Note
-                  <span className="ml-auto text-[10px] text-muted-foreground/40">TODO</span>
+                  <span className="ml-auto text-2xs text-muted-foreground/40">TODO</span>
                 </ContextMenu.Item>
               </ContextMenu.SubContent>
             </ContextMenu.Portal>

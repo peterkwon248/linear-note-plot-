@@ -16,14 +16,14 @@ export function WikiCategories({ noteTagIds, allTags }: WikiCategoriesProps) {
 
   return (
     <div>
-      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+      <h4 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
         Categories
       </h4>
       <div className="flex flex-wrap gap-1.5">
         {resolved.map((tag) => (
           <span
             key={tag.id}
-            className="rounded-full bg-accent/10 text-accent px-2.5 py-0.5 text-xs font-medium"
+            className="rounded-full bg-accent/10 text-accent px-2.5 py-0.5 text-2xs font-medium"
           >
             {tag.name}
           </span>

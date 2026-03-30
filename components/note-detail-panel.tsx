@@ -55,7 +55,7 @@ function PanelSection({
     <div className="px-5 py-3">
       <div className="mb-2.5 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="text-2xs font-medium text-muted-foreground">
           {title}
         </span>
         {count !== undefined && (
@@ -82,11 +82,11 @@ function MetaRow({
 }) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <span className="flex items-center gap-2 text-sm text-muted-foreground">
+      <span className="flex items-center gap-2 text-note text-muted-foreground">
         {icon}
         {label}
       </span>
-      <span className="text-sm text-foreground">{children}</span>
+      <span className="text-note text-foreground">{children}</span>
     </div>
   )
 }
@@ -103,11 +103,11 @@ function NoteLink({
   return (
     <button
       onClick={() => onOpen(note.id)}
-      className="group/link flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50"
+      className="group/link flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-hover-bg"
     >
       <FileText className="shrink-0 text-muted-foreground/60" size={16} weight="regular" />
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-sm text-foreground group-hover/link:text-accent">
+        <span className="truncate text-note text-foreground group-hover/link:text-accent">
           {note.title || "Untitled"}
         </span>
       </div>
@@ -290,14 +290,14 @@ export function NoteDetailPanel({
         <div className="flex items-center gap-1">
           <button
             onClick={onEditNote}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             aria-label="Open in editor"
           >
             <ArrowSquareOut size={16} weight="regular" />
           </button>
           <button
             onClick={onClose}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             aria-label="Close panel"
           >
             <PhX size={16} weight="regular" />
@@ -310,7 +310,7 @@ export function NoteDetailPanel({
         <div className="flex shrink-0 items-center gap-2 border-b border-border bg-secondary/20 px-4 py-2">
           <button
             onClick={handleDone}
-            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/80"
+            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground transition-colors hover:bg-accent/80"
           >
             <PhCheck size={14} weight="bold" />
             Done
@@ -319,7 +319,7 @@ export function NoteDetailPanel({
           <RemindPicker
             onSelect={(date) => handleSnooze(date)}
             triggerContent={
-              <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+              <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-note font-medium text-foreground transition-colors hover:bg-hover-bg">
                 <Alarm size={14} weight="regular" />
                 Snooze
                 <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-2xs font-mono leading-none text-muted-foreground">S</kbd>
@@ -329,7 +329,7 @@ export function NoteDetailPanel({
           />
           <button
             onClick={handleTrash}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-note font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
             <Trash size={14} weight="regular" />
             Trash
@@ -343,10 +343,10 @@ export function NoteDetailPanel({
           <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
             <button
               onClick={handlePromote}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note font-medium transition-colors ${
                 ready
                   ? "bg-chart-5 text-primary-foreground hover:bg-chart-5/80"
-                  : "border border-border bg-card text-foreground hover:bg-secondary"
+                  : "border border-border bg-card text-foreground hover:bg-hover-bg"
               }`}
             >
               <ArrowUpRight size={14} weight="regular" />
@@ -355,7 +355,7 @@ export function NoteDetailPanel({
             </button>
             <button
               onClick={handleMoveBack}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <Tray size={14} weight="regular" />
               Back to Inbox
@@ -364,7 +364,7 @@ export function NoteDetailPanel({
             <RemindPicker
               onSelect={(date) => { setReminder(noteId, date); toast("Reminder set", { description: format(new Date(date), "MMM d, h:mm a") }) }}
               triggerContent={
-                <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+                <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-note font-medium text-foreground transition-colors hover:bg-hover-bg">
                   <Bell size={14} weight="regular" />
                   Remind
                 </button>
@@ -374,10 +374,10 @@ export function NoteDetailPanel({
           {staleSuggest && (
             <div className="flex items-center gap-2 bg-destructive/5 px-4 py-2">
               <Warning className="text-destructive" size={16} weight="regular" />
-              <span className="text-sm text-destructive">Untouched for 14+ days.</span>
+              <span className="text-note text-destructive">Untouched for 14+ days.</span>
               <button
                 onClick={handleMoveBack}
-                className="ml-auto text-xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
+                className="ml-auto text-2xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
               >
                 Move back to Inbox?
               </button>
@@ -386,7 +386,7 @@ export function NoteDetailPanel({
           {!staleSuggest && stale && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
               <Warning className="text-chart-3" size={16} weight="regular" />
-              <span className="text-sm text-chart-3">Review needed - untouched for 7+ days.</span>
+              <span className="text-note text-chart-3">Review needed - untouched for 7+ days.</span>
             </div>
           )}
           {showCaptureAgeNudge && (
@@ -405,7 +405,7 @@ export function NoteDetailPanel({
           <div className="flex items-center gap-2 px-4 py-2 bg-secondary/20">
             <button
               onClick={handleDemote}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-note font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <ArrowDownLeft size={14} weight="regular" />
               Demote to Capture
@@ -414,7 +414,7 @@ export function NoteDetailPanel({
             <RemindPicker
               onSelect={(date) => { setReminder(noteId, date); toast("Reminder set", { description: format(new Date(date), "MMM d, h:mm a") }) }}
               triggerContent={
-                <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+                <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-note font-medium text-foreground transition-colors hover:bg-hover-bg">
                   <Bell size={14} weight="regular" />
                   Remind
                 </button>
@@ -424,7 +424,7 @@ export function NoteDetailPanel({
           {linkCount === 0 && (
             <div className="flex items-center gap-2 bg-chart-3/5 px-4 py-2">
               <PhLink className="text-chart-3" size={16} weight="regular" />
-              <span className="text-sm text-chart-3">
+              <span className="text-note text-chart-3">
                 Unlinked permanent note — add connections to strengthen your knowledge graph.
                 {suggestions.length > 0 && (
                   <span className="ml-1 text-chart-3/80">
@@ -441,11 +441,11 @@ export function NoteDetailPanel({
       <div className="flex-1 overflow-y-auto">
         {/* Note title */}
         <div className="border-b border-border px-5 py-4">
-          <h2 className="text-base font-semibold leading-tight text-foreground text-balance">
+          <h2 className="text-ui font-semibold leading-tight text-foreground text-balance">
             {note.title || "Untitled"}
           </h2>
           {preview && (
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground line-clamp-3">
+            <p className="mt-2 text-note leading-relaxed text-muted-foreground line-clamp-3">
               {preview}
             </p>
           )}
@@ -461,7 +461,7 @@ export function NoteDetailPanel({
               <MetaRow label="FolderSimple" icon={<FolderSimple size={14} weight="regular" />}>
                 <span className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: noteFolder.color }} />
-                  <span className="text-sm">{noteFolder.name}</span>
+                  <span className="text-note">{noteFolder.name}</span>
                 </span>
               </MetaRow>
             )}
@@ -499,12 +499,12 @@ export function NoteDetailPanel({
             </MetaRow>
             {note.reviewAt && note.status !== "inbox" && (
               <div className="flex items-center justify-between py-1.5">
-                <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="flex items-center gap-2 text-note text-muted-foreground">
                   <Bell size={14} weight="regular" />
                   Reminder
                 </span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm text-foreground">{format(new Date(note.reviewAt), "MMM d, h:mm a")}</span>
+                  <span className="text-note text-foreground">{format(new Date(note.reviewAt), "MMM d, h:mm a")}</span>
                   <button onClick={() => clearReminder(noteId)} className="text-muted-foreground hover:text-destructive transition-colors">
                     <PhX size={14} weight="regular" />
                   </button>
@@ -529,7 +529,7 @@ export function NoteDetailPanel({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground/60">
+            <p className="text-note text-muted-foreground/60">
               No other notes reference this note yet.
             </p>
           )}
@@ -551,13 +551,13 @@ export function NoteDetailPanel({
                 return (
                   <div
                     key={s.noteId}
-                    className="group/link flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-secondary/50"
+                    className="group/link flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-hover-bg"
                   >
                     <FileText className="shrink-0 text-muted-foreground/60" size={16} weight="regular" />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <button
                         onClick={() => onOpenNote(candidateNote.id)}
-                        className="truncate text-left text-sm text-foreground hover:text-accent"
+                        className="truncate text-left text-note text-foreground hover:text-accent"
                       >
                         {candidateNote.title || "Untitled"}
                       </button>
@@ -570,7 +570,7 @@ export function NoteDetailPanel({
                     </span>
                     <button
                       onClick={() => handleLinkSuggestion(candidateNote.title)}
-                      className="shrink-0 rounded-md border border-border bg-card px-2 py-0.5 text-2xs font-medium text-foreground transition-colors hover:bg-secondary"
+                      className="shrink-0 rounded-md border border-border bg-card px-2 py-0.5 text-2xs font-medium text-foreground transition-colors hover:bg-hover-bg"
                     >
                       Link
                     </button>
@@ -579,7 +579,7 @@ export function NoteDetailPanel({
               })}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground/60">
+            <p className="text-note text-muted-foreground/60">
               No suggestions found. Try adding tags or organizing notes into folders.
             </p>
           )}
@@ -598,7 +598,7 @@ export function NoteDetailPanel({
                     pushUndo("Restore note", () => toggleTrash(note.id), () => toggleTrash(note.id))
                     toast("Note restored")
                   }}
-                  className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
+                  className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-accent transition-colors hover:bg-accent/10"
                 >
                   <ArrowCounterClockwise size={14} weight="regular" />
                   Restore
@@ -609,7 +609,7 @@ export function NoteDetailPanel({
                     toast("Note permanently deleted")
                     onClose()
                   }}
-                  className="inline-flex items-center gap-2 rounded-md border border-destructive/30 bg-card px-3 py-1.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+                  className="inline-flex items-center gap-2 rounded-md border border-destructive/30 bg-card px-3 py-1.5 text-note font-medium text-destructive transition-colors hover:bg-destructive/10"
                 >
                   <Trash size={14} weight="regular" />
                   Delete permanently
@@ -619,14 +619,14 @@ export function NoteDetailPanel({
               <>
                 <button
                   onClick={() => setMergePickerOpen(true, note.id)}
-                  className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                 >
                   <GitMerge size={14} weight="regular" />
                   GitMerge with...
                 </button>
                 <button
                   onClick={() => setLinkPickerOpen(true, note.id)}
-                  className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-note font-medium text-foreground transition-colors hover:bg-hover-bg"
                 >
                   <PhLink size={14} weight="regular" />
                   Link to...

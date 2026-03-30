@@ -100,7 +100,7 @@ function TemplateViewSwitcher({
         <button
           className={cn(
             "inline-flex items-center justify-center rounded-md p-1.5",
-            "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            "text-muted-foreground hover:text-foreground hover:bg-hover-bg",
             "transition-colors"
           )}
           title="View mode"
@@ -120,7 +120,7 @@ function TemplateViewSwitcher({
               "flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors",
               viewMode === mode
                 ? "bg-secondary/80 text-foreground"
-                : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
@@ -159,13 +159,13 @@ function TemplateFormDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in duration-150">
-      <div className="w-full max-w-lg rounded-xl border border-border bg-card shadow-xl animate-in zoom-in-95 duration-150">
+      <div className="w-full max-w-lg rounded-lg border border-border bg-card shadow-xl animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-ui font-semibold text-foreground">{dialogTitle}</h2>
           <button
             onClick={onCancel}
-            className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
           >
             <PhX size={16} weight="regular" />
           </button>
@@ -175,7 +175,7 @@ function TemplateFormDialog({
         <div className="space-y-4 px-6 py-5">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Name</label>
+            <label className="block text-note font-medium text-muted-foreground mb-1.5">Name</label>
             <input
               ref={nameRef}
               type="text"
@@ -183,35 +183,35 @@ function TemplateFormDialog({
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               placeholder="Template name"
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Description</label>
+            <label className="block text-note font-medium text-muted-foreground mb-1.5">Description</label>
             <input
               type="text"
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               placeholder="Brief description"
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 
           {/* Icon + Color row */}
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Icon</label>
+              <label className="block text-note font-medium text-muted-foreground mb-1.5">Icon</label>
               <div className="flex flex-wrap gap-1.5">
                 {ICON_OPTIONS.map((emoji) => (
                   <button
                     key={emoji}
                     onClick={() => setForm((f) => ({ ...f, icon: emoji }))}
-                    className={`flex h-8 w-8 items-center justify-center rounded-md text-base transition-colors ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-md text-ui transition-colors ${
                       form.icon === emoji
                         ? "bg-accent/20 ring-1 ring-accent"
-                        : "hover:bg-secondary"
+                        : "hover:bg-hover-bg"
                     }`}
                   >
                     {emoji}
@@ -220,7 +220,7 @@ function TemplateFormDialog({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Color</label>
+              <label className="block text-note font-medium text-muted-foreground mb-1.5">Color</label>
               <div className="flex flex-wrap gap-1.5">
                 {PRESET_COLORS.map((c) => (
                   <button
@@ -239,11 +239,11 @@ function TemplateFormDialog({
           {/* Status + Priority row */}
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Status</label>
+              <label className="block text-note font-medium text-muted-foreground mb-1.5">Status</label>
               <select
                 value={form.status}
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as NoteStatus }))}
-                className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                className="h-9 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
               >
                 <option value="inbox">Inbox</option>
                 <option value="capture">Capture</option>
@@ -251,11 +251,11 @@ function TemplateFormDialog({
               </select>
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Priority</label>
+              <label className="block text-note font-medium text-muted-foreground mb-1.5">Priority</label>
               <select
                 value={form.priority}
                 onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as NotePriority }))}
-                className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                className="h-9 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
               >
                 <option value="none">None</option>
                 <option value="low">Low</option>
@@ -271,14 +271,14 @@ function TemplateFormDialog({
         <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="px-4 py-2 rounded-md text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!form.name.trim()}
-            className="px-4 py-2 rounded-md text-sm bg-accent text-accent-foreground hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-md text-note bg-accent text-accent-foreground hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Create
           </button>
@@ -354,16 +354,16 @@ function TemplateEditor({
         <div className="flex items-center gap-2">
           {topBarSlot}
           <span
-            className="flex h-7 w-7 items-center justify-center rounded-md text-base"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-ui"
             style={{ backgroundColor: `${color}20` }}
           >
             {icon}
           </span>
-          <span className="text-sm font-medium text-muted-foreground">Editing template</span>
+          <span className="text-note font-medium text-muted-foreground">Editing template</span>
         </div>
         <button
           onClick={() => onUse(template.id)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-note bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
         >
           <FileText size={14} weight="regular" />
           Use Template
@@ -387,20 +387,20 @@ function TemplateEditor({
           value={description}
           onChange={(e) => handleDescription(e.target.value)}
           placeholder="Brief description"
-          className="w-full bg-transparent text-sm text-muted-foreground placeholder:text-muted-foreground/50 focus:outline-none border-b border-transparent focus:border-border pb-1 transition-colors"
+          className="w-full bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/50 focus:outline-none border-b border-transparent focus:border-border pb-1 transition-colors"
         />
 
         {/* Icon + Color picker row */}
         <div className="flex gap-6 items-start">
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Icon</label>
+            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Icon</label>
             <div className="flex flex-wrap gap-1.5">
               {ICON_OPTIONS.map((emoji) => (
                 <button
                   key={emoji}
                   onClick={() => handleIcon(emoji)}
-                  className={`flex h-8 w-8 items-center justify-center rounded-md text-base transition-colors ${
-                    icon === emoji ? "bg-accent/20 ring-1 ring-accent" : "hover:bg-secondary"
+                  className={`flex h-8 w-8 items-center justify-center rounded-md text-ui transition-colors ${
+                    icon === emoji ? "bg-accent/20 ring-1 ring-accent" : "hover:bg-hover-bg"
                   }`}
                 >
                   {emoji}
@@ -409,7 +409,7 @@ function TemplateEditor({
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Color</label>
+            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Color</label>
             <div className="flex flex-wrap gap-1.5">
               {PRESET_COLORS.map((c) => (
                 <button
@@ -428,7 +428,7 @@ function TemplateEditor({
         {/* Title template + Status + Priority row */}
         <div className="flex gap-4 items-end">
           <div className="flex-[2]">
-            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
               Title Template
               <span className="ml-2 text-muted-foreground/60 normal-case tracking-normal font-normal">
                 {"{date}"} {"{time}"} {"{year}"}
@@ -439,15 +439,15 @@ function TemplateEditor({
               value={title}
               onChange={(e) => handleTitle(e.target.value)}
               placeholder="e.g. Meeting - {date}"
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-note text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Status</label>
+            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Status</label>
             <select
               value={status}
               onChange={(e) => handleStatus(e.target.value as NoteStatus)}
-              className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              className="h-9 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             >
               <option value="inbox">Inbox</option>
               <option value="capture">Capture</option>
@@ -455,11 +455,11 @@ function TemplateEditor({
             </select>
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Priority</label>
+            <label className="block text-2xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Priority</label>
             <select
               value={priority}
               onChange={(e) => handlePriority(e.target.value as NotePriority)}
-              className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              className="h-9 w-full rounded-md border border-border bg-background px-2 text-note text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             >
               <option value="none">None</option>
               <option value="low">Low</option>
@@ -473,7 +473,7 @@ function TemplateEditor({
         {/* Content template — fills remaining space */}
         <div className="flex flex-col flex-1 min-h-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Content</label>
+            <label className="text-2xs font-medium text-muted-foreground uppercase tracking-wide">Content</label>
             <div className="h-3 w-px bg-border mx-0.5" />
             <span className="text-2xs text-muted-foreground/60">Insert variable:</span>
             {PLACEHOLDER_VARS.map(({ key, label, desc }) => (
@@ -555,7 +555,7 @@ function TemplateCard({
       <ContextMenuTrigger asChild>
         <div
           onClick={() => onSelect(tmpl.id)}
-          className="group relative flex flex-col rounded-xl border border-border bg-card hover:bg-secondary/30 transition-colors cursor-pointer overflow-hidden"
+          className="group relative flex flex-col rounded-lg border border-border bg-card hover:bg-hover-bg transition-colors cursor-pointer overflow-hidden"
         >
           {/* Card top accent */}
           <div className="h-1 w-full shrink-0" style={{ backgroundColor: tmpl.color }} />
@@ -571,11 +571,11 @@ function TemplateCard({
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-semibold text-foreground truncate">{tmpl.name}</span>
+                  <span className="text-note font-semibold text-foreground truncate">{tmpl.name}</span>
                   {tmpl.pinned && <PushPin className="text-accent shrink-0" size={12} weight="regular" />}
                 </div>
                 {tmpl.description && (
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{tmpl.description}</p>
+                  <p className="text-2xs text-muted-foreground truncate mt-0.5">{tmpl.description}</p>
                 )}
               </div>
             </div>
@@ -583,12 +583,12 @@ function TemplateCard({
             {/* Title + Content preview */}
             <div className="bg-secondary/40 rounded-md px-2.5 py-2 space-y-1">
               {tmpl.title && (
-                <p className="text-xs font-semibold text-foreground/70 truncate">
+                <p className="text-2xs font-semibold text-foreground/70 truncate">
                   {tmpl.title}
                 </p>
               )}
               {tmpl.content ? (
-                <div className="text-xs text-muted-foreground/70 line-clamp-3 leading-relaxed space-y-0.5">
+                <div className="text-2xs text-muted-foreground/70 line-clamp-3 leading-relaxed space-y-0.5">
                   {tmpl.content.split("\n").filter(Boolean).slice(0, 4).map((line, i) => (
                     <p key={i} className={cn(
                       line.startsWith("#") && "font-semibold text-muted-foreground/90",
@@ -600,7 +600,7 @@ function TemplateCard({
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground/40 italic">Empty template</p>
+                <p className="text-2xs text-muted-foreground/40 italic">Empty template</p>
               )}
             </div>
 
@@ -624,14 +624,14 @@ function TemplateCard({
           <div className="absolute top-3 right-3 hidden group-hover:flex items-center gap-1">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(tmpl.id) }}
-              className="flex items-center justify-center h-6 w-6 rounded-md bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="flex items-center justify-center h-6 w-6 rounded-md bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Edit"
             >
               <Layout size={14} weight="regular" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(tmpl.id) }}
-              className="flex items-center justify-center h-6 w-6 rounded-md bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-400 hover:bg-secondary transition-colors"
+              className="flex items-center justify-center h-6 w-6 rounded-md bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-400 hover:bg-hover-bg transition-colors"
               title="Delete"
             >
               <Trash size={14} weight="regular" />
@@ -694,7 +694,7 @@ function TemplateSortDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+        <button className="flex items-center gap-1.5 rounded-md px-2 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground">
           <ArrowsDownUp size={14} weight="regular" />
           {TEMPLATE_SORT_OPTIONS.find((o) => o.value === value)?.label ?? "Sort"}
         </button>
@@ -829,7 +829,7 @@ export function TemplatesView() {
               <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
               <button
                 onClick={() => setShowCreateDialog(true)}
-                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground hover:bg-accent/90"
+                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground hover:bg-accent/90"
               >
                 <PhPlus size={14} weight="regular" />
                 New
@@ -843,10 +843,10 @@ export function TemplatesView() {
           {templates.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 gap-2 px-4">
               <Layout className="text-muted-foreground/30" size={32} weight="regular" />
-              <span className="text-xs text-muted-foreground text-center">No templates yet</span>
+              <span className="text-2xs text-muted-foreground text-center">No templates yet</span>
               <button
                 onClick={() => setShowCreateDialog(true)}
-                className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+                className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-2xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
               >
                 <PhPlus size={12} weight="regular" />
                 New template
@@ -895,7 +895,7 @@ export function TemplatesView() {
               <div className="flex items-center gap-1 mr-1">
                 <button
                   onClick={() => setViewMode("list-editor")}
-                  className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                  className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   title="Back to list"
                 >
                   <ArrowLeft size={16} weight="regular" />
@@ -908,10 +908,10 @@ export function TemplatesView() {
           // Fallback: no template selected in focus mode
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
             <Layout className="text-muted-foreground/30" size={48} weight="regular" />
-            <p className="text-sm font-medium text-muted-foreground">No template selected</p>
+            <p className="text-note font-medium text-muted-foreground">No template selected</p>
             <button
               onClick={() => setViewMode("list-editor")}
-              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-note bg-secondary text-foreground hover:bg-hover-bg transition-colors"
             >
               <ArrowLeft size={14} weight="regular" />
               Back to list
@@ -949,7 +949,7 @@ export function TemplatesView() {
               <TemplateViewSwitcher viewMode={viewMode} onChangeMode={handleSetViewMode} />
               <button
                 onClick={() => setShowCreateDialog(true)}
-                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground hover:bg-accent/90"
+                className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-note font-medium text-accent-foreground hover:bg-accent/90"
               >
                 <PhPlus size={14} weight="regular" />
                 New
@@ -963,10 +963,10 @@ export function TemplatesView() {
           {templates.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 gap-2 px-4">
               <Layout className="text-muted-foreground/30" size={32} weight="regular" />
-              <span className="text-xs text-muted-foreground text-center">No templates yet</span>
+              <span className="text-2xs text-muted-foreground text-center">No templates yet</span>
               <button
                 onClick={() => setShowCreateDialog(true)}
-                className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+                className="mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-2xs bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
               >
                 <PhPlus size={12} weight="regular" />
                 New template
@@ -981,12 +981,12 @@ export function TemplatesView() {
                     className={`group w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors ${
                       selectedTemplateId === tmpl.id
                         ? "bg-accent/10 border-l-2 border-accent"
-                        : "border-l-2 border-transparent hover:bg-secondary/60"
+                        : "border-l-2 border-transparent hover:bg-hover-bg"
                     }`}
                   >
                     {/* Icon */}
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sm"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-note"
                       style={{ backgroundColor: `${tmpl.color}20` }}
                     >
                       {tmpl.icon}
@@ -995,11 +995,11 @@ export function TemplatesView() {
                     {/* Name + description */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium text-foreground truncate">{tmpl.name}</span>
+                        <span className="text-note font-medium text-foreground truncate">{tmpl.name}</span>
                         {tmpl.pinned && <PushPin className="text-accent shrink-0" size={12} weight="regular" />}
                       </div>
                       {tmpl.description && (
-                        <div className="text-xs text-muted-foreground truncate">{tmpl.description}</div>
+                        <div className="text-2xs text-muted-foreground truncate">{tmpl.description}</div>
                       )}
                     </div>
                   </button>
@@ -1053,13 +1053,13 @@ export function TemplatesView() {
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
             <Layout className="text-muted-foreground/30" size={48} weight="regular" />
-            <p className="text-sm font-medium text-muted-foreground">Select a template to edit</p>
-            <p className="text-xs text-muted-foreground/60 max-w-xs">
+            <p className="text-note font-medium text-muted-foreground">Select a template to edit</p>
+            <p className="text-2xs text-muted-foreground/60 max-w-xs">
               Choose a template from the list on the left, or create a new one to get started.
             </p>
             <button
               onClick={() => setShowCreateDialog(true)}
-              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-note bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
             >
               <PhPlus size={14} weight="regular" />
               New template

@@ -84,7 +84,7 @@ function StatusBadge({ status }: { status: string | null }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-xs font-medium",
+        "inline-flex items-center gap-1.5 text-2xs font-medium",
         STATUS_COLORS[status] ?? "text-muted-foreground/50"
       )}
     >
@@ -98,7 +98,7 @@ function StatusBadge({ status }: { status: string | null }) {
 
 function ColumnHeaders({ hasSelection }: { hasSelection?: boolean }) {
   return (
-    <div className="flex items-center px-5 py-2 text-xs font-medium text-muted-foreground/50 border-b border-border/30">
+    <div className="flex items-center px-5 py-2 text-2xs font-medium text-muted-foreground/50 border-b border-border-subtle">
       {hasSelection && <span className="w-7 shrink-0" />}
       <span className="w-[100px]">Status</span>
       <span className="min-w-0 flex-1">Title</span>
@@ -139,7 +139,7 @@ function ArticleTableRow({
   return (
     <div
       className={cn(
-        "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75",
+        "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-100",
         isSelected && "bg-accent/5"
       )}
       onContextMenu={(e) => {
@@ -188,7 +188,7 @@ function ArticleTableRow({
           {note.title || "Untitled"}
         </span>
       </button>
-      <span className="w-[60px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
+      <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
         {backlinkCount > 0 ? backlinkCount : "\u2014"}
       </span>
 
@@ -208,7 +208,7 @@ function ArticleTableRow({
               {onMerge && (
                 <button
                   onClick={() => { setMenuOpen(false); onMerge() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                 >
                   <GitMerge size={14} weight="regular" /> Merge into...
                 </button>
@@ -216,7 +216,7 @@ function ArticleTableRow({
               {onSplit && (
                 <button
                   onClick={() => { setMenuOpen(false); onSplit() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-foreground/80 hover:bg-active-bg transition-colors"
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                 >
                   <Scissors size={14} weight="regular" /> Split wiki
                 </button>
@@ -227,7 +227,7 @@ function ArticleTableRow({
               {onDelete && (
                 <button
                   onClick={() => { setMenuOpen(false); onDelete() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-destructive hover:bg-active-bg transition-colors"
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
                 >
                   <Trash size={14} weight="regular" /> Delete
                 </button>
@@ -237,7 +237,7 @@ function ArticleTableRow({
         ) : null}
       </span>
 
-      <span className="w-[70px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
+      <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
         {shortRelative(note.updatedAt)}
       </span>
     </div>
@@ -263,7 +263,7 @@ function RedLinkRow({
 }) {
   return (
     <div className={cn(
-      "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-75",
+      "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-100",
       isSelected && "bg-accent/5"
     )}>
       {/* Checkbox */}
@@ -293,7 +293,7 @@ function RedLinkRow({
         className="flex flex-1 items-center text-left min-w-0"
       >
         <span className="w-[100px] shrink-0">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive">
+          <span className="inline-flex items-center gap-1.5 text-2xs font-medium text-destructive">
             <Warning size={14} weight="regular" />
             Red Link
           </span>
@@ -302,11 +302,11 @@ function RedLinkRow({
           {title}
         </span>
       </button>
-      <span className="w-[60px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
+      <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
         {refCount > 0 ? `${refCount}` : "\u2014"}
       </span>
       <span className="w-[36px]" />
-      <span className="w-[70px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
+      <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
         {"\u2014"}
       </span>
     </div>
@@ -327,7 +327,7 @@ function IndexTableRow({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center px-5 py-2 hover:bg-hover-bg transition-colors duration-75 cursor-pointer text-left"
+      className="flex w-full items-center px-5 py-2 hover:bg-hover-bg transition-colors duration-100 cursor-pointer text-left"
     >
       <span className="w-[100px] shrink-0">
         <StatusBadge status={note.wikiStatus} />
@@ -335,10 +335,10 @@ function IndexTableRow({
       <span className="min-w-0 flex-1 truncate text-note text-foreground/90">
         {note.title || "Untitled"}
       </span>
-      <span className="w-[60px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
+      <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
         {backlinkCount > 0 ? backlinkCount : "\u2014"}
       </span>
-      <span className="w-[70px] shrink-0 text-right text-xs tabular-nums text-muted-foreground/60">
+      <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
         {shortRelative(note.updatedAt)}
       </span>
     </button>
@@ -353,7 +353,7 @@ function EmptyState() {
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
         <BookOpen className="text-muted-foreground/40" size={20} weight="regular" />
       </div>
-      <p className="text-sm text-muted-foreground/60">No articles found</p>
+      <p className="text-note text-muted-foreground/60">No articles found</p>
     </div>
   )
 }
@@ -392,7 +392,7 @@ export function WikiList({
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── Controls Bar ── */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-5 py-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-border-subtle px-5 py-2">
         {/* Back to Overview */}
         <button
           onClick={() => { setWikiViewMode("dashboard"); onClearCategoryFilter?.() }}
@@ -416,7 +416,7 @@ export function WikiList({
                 setShowAllArticles(false)
               }}
               className={cn(
-                "rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-100",
+                "rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
                 tab === "redlinks" && "text-destructive/70",
                 dashFilter === tab && !showAllArticles
                   ? tab === "redlinks" ? "bg-destructive/10 text-destructive" : "bg-foreground/10 text-foreground"
@@ -437,7 +437,7 @@ export function WikiList({
         {categoryFilterLabel && (
           <>
             <span className="h-4 w-px bg-border/50" />
-            <span className="flex items-center gap-1 rounded-md bg-accent/10 px-2 py-1 text-xs font-medium text-accent">
+            <span className="flex items-center gap-1 rounded-md bg-accent/10 px-2 py-1 text-2xs font-medium text-accent">
               {categoryFilterLabel}
               <button
                 onClick={onClearCategoryFilter}
@@ -455,7 +455,7 @@ export function WikiList({
         <button
           onClick={() => setShowAllArticles(!showAllArticles)}
           className={cn(
-            "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-100",
+            "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
             showAllArticles
               ? "bg-foreground/10 text-foreground"
               : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
@@ -474,7 +474,7 @@ export function WikiList({
           <div>
             {Array.from(groupedArticles.entries()).map(([group, articles]) => (
               <div key={group} id={`wiki-group-${group}`}>
-                <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-xs font-medium text-muted-foreground/50 border-b border-border/20">
+                <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-2xs font-medium text-muted-foreground/50 border-b border-border-subtle">
                   {group}
                 </div>
                 {(articles as WikiArticle[]).map(note => (

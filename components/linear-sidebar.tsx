@@ -88,7 +88,7 @@ function NavLink({
       </span>
       <span className="truncate text-left flex-1">{label}</span>
       {count !== undefined && (
-        <span className="text-xs text-sidebar-count tabular-nums">
+        <span className="text-2xs text-sidebar-count tabular-nums">
           {count}
         </span>
       )}
@@ -166,7 +166,7 @@ function Section({
       <div className="flex w-full items-center gap-1.5 px-2.5 py-1">
         <button
           onClick={() => setOpen(!open)}
-          className="flex flex-1 items-center gap-1.5 text-xs font-medium text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          className="flex flex-1 items-center gap-1.5 text-2xs font-medium text-sidebar-muted hover:text-sidebar-foreground transition-colors"
         >
           <span>{title}</span>
           {open ? (
@@ -518,7 +518,7 @@ export function LinearSidebar() {
               onKeyDown={handleNewViewKeyDown}
               onBlur={handleNewViewSubmit}
               placeholder="View name"
-              className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-sm text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
+              className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-note text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
         )}
@@ -555,7 +555,7 @@ export function LinearSidebar() {
                       onChange={(e) => setRenameValue(e.target.value)}
                       onKeyDown={handleRenameKeyDown}
                       onBlur={handleRenameSubmit}
-                      className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-sm text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                      className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-note text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                       onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
@@ -604,9 +604,9 @@ export function LinearSidebar() {
             <IconClock size={16} />
           </button>
           {recentlyViewedOpen && (
-            <div className="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border bg-popover shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border bg-surface-overlay shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="px-3 py-2 border-b border-border">
-                <span className="text-xs font-medium text-muted-foreground">Recently Viewed</span>
+                <span className="text-2xs font-medium text-muted-foreground">Recently Viewed</span>
               </div>
               {recentlyViewed.length === 0 ? (
                 <div className="px-3 py-4 text-center text-note text-muted-foreground">
@@ -728,7 +728,7 @@ export function LinearSidebar() {
                     onKeyDown={handleNewFolderKeyDown}
                     onBlur={handleNewFolderSubmit}
                     placeholder="Folder name"
-                    className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-sm text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
+                    className="w-full rounded-md border border-sidebar-border bg-sidebar-bg px-2.5 py-1 text-note text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus:ring-1 focus:ring-accent"
                   />
                 </div>
               )}
@@ -764,14 +764,14 @@ export function LinearSidebar() {
                             onChange={(e) => setRenameValue(e.target.value)}
                             onKeyDown={handleRenameKeyDown}
                             onBlur={handleRenameSubmit}
-                            className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-sm text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                            className="flex-1 rounded border border-sidebar-border bg-sidebar-bg px-1.5 py-0.5 text-note text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                             onClick={(e) => e.stopPropagation()}
                           />
                         ) : (
                           <span className="truncate text-left flex-1">{folder.name}</span>
                         )}
                         {!isRenaming && count > 0 && (
-                          <span className="text-xs text-sidebar-count tabular-nums">{count}</span>
+                          <span className="text-2xs text-sidebar-count tabular-nums">{count}</span>
                         )}
                       </button>
                     </ContextMenuTrigger>
@@ -1038,11 +1038,11 @@ export function LinearSidebar() {
 
                 return (
                   <div className="flex flex-col gap-1.5 px-2.5">
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Created</span>
                       <span className="text-sidebar-foreground tabular-nums">{created}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Updated</span>
                       <span className="text-sidebar-foreground tabular-nums">{updated}</span>
                     </div>
@@ -1114,7 +1114,7 @@ export function LinearSidebar() {
                   { label: "Permanent", bg: "bg-chart-5" },
                   { label: "Wiki", bg: "bg-wiki-complete" },
                 ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-2 text-xs">
+                  <div key={item.label} className="flex items-center gap-2 text-2xs">
                     <span className={`h-2 w-2 rounded-full ${item.bg}`} />
                     <span className="text-sidebar-foreground">{item.label}</span>
                   </div>
@@ -1170,27 +1170,27 @@ export function LinearSidebar() {
 
                 return (
                   <div className="flex flex-col gap-2 px-2.5">
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Nodes</span>
                       <span className="text-sidebar-foreground tabular-nums">{totalNodes}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Edges</span>
                       <span className="text-sidebar-foreground tabular-nums">{totalEdges}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Orphans</span>
                       <span className={`tabular-nums ${orphanCount > 0 ? "text-chart-3" : "text-sidebar-foreground"}`}>{orphanCount}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Hubs (5+)</span>
                       <span className="text-sidebar-foreground tabular-nums">{hubCount}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Density</span>
                       <span className="text-sidebar-foreground tabular-nums">{density}%</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Wiki Coverage</span>
                       <span className="text-sidebar-foreground tabular-nums">{wikiPercent}%</span>
                     </div>
@@ -1217,7 +1217,7 @@ export function LinearSidebar() {
             {/* Triage stats card */}
             <div className="mx-1 mb-2 rounded-lg bg-sidebar-hover p-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-sidebar-muted">Inbox</span>
+                <span className="text-2xs text-sidebar-muted">Inbox</span>
                 <span className="text-lg font-semibold tabular-nums text-sidebar-foreground">
                   {inboxCount}
                 </span>

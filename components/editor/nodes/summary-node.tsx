@@ -28,7 +28,7 @@ function SummaryNodeView({ node, editor }: NodeViewProps) {
 
   return (
     <NodeViewWrapper>
-      <div className="not-draggable border border-border/50 border-dashed rounded-lg my-2 relative group">
+      <div className="not-draggable border border-border-subtle border-dashed rounded-lg my-2 relative group">
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2" contentEditable={false}>
           <button
@@ -39,7 +39,7 @@ function SummaryNodeView({ node, editor }: NodeViewProps) {
           >
             {collapsed ? <CaretRight size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
             <Article size={14} weight="bold" />
-            <span className="text-xs font-semibold uppercase tracking-wider">Summary</span>
+            <span className="text-2xs font-semibold uppercase tracking-wider">Summary</span>
           </button>
           <button
             type="button"

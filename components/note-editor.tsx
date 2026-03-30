@@ -15,6 +15,7 @@ import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine"
+import { Cursor as PhCursor } from "@phosphor-icons/react/dist/ssr/Cursor"
 import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
 import {
   DropdownMenu,
@@ -119,7 +120,13 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
     return () => window.removeEventListener("keydown", handler)
   }, [note, togglePin, deleteNote, setSelectedNoteId, confirmDelete])
 
-  if (!note) return null
+  if (!note) return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+      <PhCursor size={32} weight="light" className="text-muted-foreground/40" />
+      <p className="text-note">Select a note to start editing</p>
+      <p className="text-2xs text-muted-foreground/60">Or press + to create a new one</p>
+    </div>
+  )
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background">
@@ -139,7 +146,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
               <button
                 onClick={() => togglePin(note.id)}
                 className={cn(
-                  "rounded-md p-1.5 transition-colors hover:bg-secondary",
+                  "rounded-md p-1.5 transition-colors hover:bg-hover-bg",
                   note.pinned ? "text-chart-3" : "text-muted-foreground"
                 )}
               >
@@ -153,7 +160,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary">
+              <button className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-hover-bg">
                 <DotsThree size={16} weight="bold" />
               </button>
             </DropdownMenuTrigger>
@@ -194,7 +201,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
               <button
                 onClick={() => setIsReadMode((prev) => !prev)}
                 className={cn(
-                  "rounded-md p-1.5 transition-colors hover:bg-secondary",
+                  "rounded-md p-1.5 transition-colors hover:bg-hover-bg",
                   isReadMode ? "text-accent" : "text-muted-foreground"
                 )}
               >
@@ -212,7 +219,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
               <button
                 onClick={toggleDetailsOpen}
                 className={cn(
-                  "rounded-md p-1.5 transition-colors hover:bg-secondary",
+                  "rounded-md p-1.5 transition-colors hover:bg-hover-bg",
                   detailsOpen ? "text-foreground" : "text-muted-foreground"
                 )}
               >
@@ -233,7 +240,7 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         <EditorContextMenu editor={editorInstance}>
           <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
             {/* Infobox moved to WikiArticle view — disabled in note editor */}
-            <div className="px-6 py-4 min-w-0 flex-1 flex flex-col">
+            <div className="min-w-0 w-full flex-1 flex flex-col px-10 py-6">
               <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
             </div>
           </div>
@@ -293,7 +300,7 @@ function WikiReadLayout({
 
           {/* Aliases as subtitle */}
           {note.aliases && note.aliases.length > 0 && (
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-note text-muted-foreground mb-6">
               {note.aliases.join(" · ")}
             </p>
           )}
@@ -326,7 +333,7 @@ function WikiReadLayout({
 
         {/* Activity stats */}
         <div className="space-y-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <h4 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
             Activity
           </h4>
           <div className="space-y-1.5">
@@ -359,7 +366,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
 
   return (
     <div className="flex items-center gap-1 shrink-0">
-      <span className="text-sm text-muted-foreground/50">in</span>
+      <span className="text-note text-muted-foreground/50">in</span>
       {visible.map((a) => (
         <button
           key={a.id}
@@ -367,7 +374,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
             import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
             import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
           }}
-          className="rounded-[4px] bg-accent/15 px-2.5 py-0.5 text-sm font-medium text-accent hover:text-accent transition-colors duration-100"
+          className="rounded-[4px] bg-accent/15 px-2.5 py-0.5 text-note font-medium text-accent hover:text-accent transition-colors duration-100"
         >
           {a.title}
         </button>
@@ -387,7 +394,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
                   import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
                   import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
                 }}
-                className="flex w-full items-center rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                className="flex w-full items-center rounded-md px-2 py-1.5 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
               >
                 {a.title}
               </button>
