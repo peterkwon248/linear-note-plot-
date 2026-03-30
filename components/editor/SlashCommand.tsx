@@ -31,6 +31,7 @@ import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 
 interface CommandItem {
   title: string
@@ -171,7 +172,7 @@ const COMMANDS: CommandItem[] = [
     },
   },
   {
-    title: "Columns",
+    title: "2 Columns",
     description: "2-column side-by-side layout",
     icon: PhColumns,
     command: ({ editor, range }) => {
@@ -182,6 +183,47 @@ const COMMANDS: CommandItem[] = [
         .insertContent({
           type: "columnsBlock",
           content: [
+            { type: "columnCell", content: [{ type: "paragraph" }] },
+            { type: "columnCell", content: [{ type: "paragraph" }] },
+          ],
+        })
+        .run()
+    },
+  },
+  {
+    title: "3 Columns",
+    description: "3-column layout",
+    icon: PhColumns,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "columnsBlock",
+          content: [
+            { type: "columnCell", content: [{ type: "paragraph" }] },
+            { type: "columnCell", content: [{ type: "paragraph" }] },
+            { type: "columnCell", content: [{ type: "paragraph" }] },
+          ],
+        })
+        .run()
+    },
+  },
+  {
+    title: "4 Columns",
+    description: "4-column layout",
+    icon: PhColumns,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "columnsBlock",
+          content: [
+            { type: "columnCell", content: [{ type: "paragraph" }] },
+            { type: "columnCell", content: [{ type: "paragraph" }] },
             { type: "columnCell", content: [{ type: "paragraph" }] },
             { type: "columnCell", content: [{ type: "paragraph" }] },
           ],
@@ -202,6 +244,22 @@ const COMMANDS: CommandItem[] = [
         .deleteRange(range)
         .insertContent({ type: "noteEmbed", attrs: { noteId: null } })
         .run()
+    },
+  },
+  {
+    title: "Bookmark",
+    description: "Inline anchor point for quick navigation",
+    icon: BookmarkSimple,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertContent({ type: "anchorMark", attrs: { label: "Bookmark" } }).run()
+    },
+  },
+  {
+    title: "Bookmark Divider",
+    description: "Section divider with bookmark label",
+    icon: BookmarkSimple,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertContent({ type: "anchorDivider", attrs: { label: "Section" } }).run()
     },
   },
   {

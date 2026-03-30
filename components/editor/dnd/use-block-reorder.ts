@@ -50,3 +50,98 @@ export function useBlockReorder(editor: Editor | null) {
     [editor]
   )
 }
+
+/**
+ * Returns a function that handles side-drop: wrapping two blocks
+ * into a columnsBlock with two columnCells, or adding a new column
+ * to an existing columnsBlock. Single ProseMirror transaction.
+ */
+export function useSideDrop(editor: Editor | null) {
+  return useCallback(
+    (
+      draggedBlockIndex: number,
+      targetBlockIndex: number,
+      side: "left" | "right",
+      blocks: BlockPosition[]
+    ) => {
+      if (!editor) return
+      if (draggedBlockIndex === targetBlockIndex) return
+      if (draggedBlockIndex < 0 || targetBlockIndex < 0) return
+      if (draggedBlockIndex >= blocks.length || targetBlockIndex >= blocks.length) return
+
+      const draggedBlock = blocks[draggedBlockIndex]
+      const targetBlock = blocks[targetBlockIndex]
+
+      const draggedNode = editor.state.doc.nodeAt(draggedBlock.docPos)
+      const targetNode = editor.state.doc.nodeAt(targetBlock.docPos)
+      if (!draggedNode || !targetNode) return
+
+      const columnsBlockType = editor.schema.nodes.columnsBlock
+      const columnCellType = editor.schema.nodes.columnCell
+      if (!columnsBlockType || !columnCellType) return
+
+      const { tr } = editor.state
+
+      // Check if target is already a columnsBlock — add a new column to it
+      if (targetNode.type.name === "columnsBlock") {
+        // Wrap dragged node in a columnCell
+        const newCell = columnCellType.create(null, [draggedNode])
+
+        // Delete dragged block first
+        tr.delete(draggedBlock.docPos, draggedBlock.docPos + draggedBlock.nodeSize)
+
+        // Map target position after deletion
+        const mappedTargetPos = tr.mapping.map(targetBlock.docPos)
+        const mappedTargetNode = tr.doc.nodeAt(mappedTargetPos)
+        if (!mappedTargetNode) return
+
+        if (side === "left") {
+          // Insert as first column cell (inside the columnsBlock, at +1)
+          tr.insert(mappedTargetPos + 1, newCell)
+        } else {
+          // Insert as last column cell (before closing of columnsBlock)
+          tr.insert(mappedTargetPos + mappedTargetNode.nodeSize - 1, newCell)
+        }
+
+        editor.view.dispatch(tr)
+        return
+      }
+
+      // Target is a regular block: wrap both in a new columnsBlock
+      const draggedCell = columnCellType.create(null, [draggedNode])
+      const targetCell = columnCellType.create(null, [targetNode])
+
+      const cells =
+        side === "left"
+          ? [draggedCell, targetCell]
+          : [targetCell, draggedCell]
+
+      const columnsNode = columnsBlockType.create(null, cells)
+
+      // Determine operation order based on positions to keep indices valid.
+      // Always delete the block that comes later in the doc first.
+      if (draggedBlock.docPos > targetBlock.docPos) {
+        // Dragged is after target: delete dragged first, then replace target
+        tr.delete(draggedBlock.docPos, draggedBlock.docPos + draggedBlock.nodeSize)
+        const mappedTargetStart = tr.mapping.map(targetBlock.docPos)
+        const mappedTargetEnd = tr.mapping.map(targetBlock.docPos + targetBlock.nodeSize)
+        tr.replaceWith(mappedTargetStart, mappedTargetEnd, columnsNode)
+      } else {
+        // Dragged is before target: replace target first, then delete dragged
+        tr.replaceWith(
+          targetBlock.docPos,
+          targetBlock.docPos + targetBlock.nodeSize,
+          columnsNode
+        )
+        const mappedDragStart = tr.mapping.map(draggedBlock.docPos)
+        const mappedDragEnd = tr.mapping.map(
+          draggedBlock.docPos + draggedBlock.nodeSize
+        )
+        tr.delete(mappedDragStart, mappedDragEnd)
+      }
+
+      editor.view.dispatch(tr)
+    },
+    [editor]
+  )
+}

@@ -1033,3 +1033,340 @@
   color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
   margin: 0 2px;
 }
+
+/* ── Columns Block ───────────────────────────────────────────────── */
+
+/* ── Columns Block — CSS Grid Layout ─────────────────────────────── */
+
+/* Grid container */
+.ProseMirror .columns-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0;
+  border: 1px solid hsl(var(--muted-foreground) / 0.12);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Support custom column widths via CSS variable */
+.ProseMirror .columns-grid[style*="--columns-template"] {
+  grid-template-columns: var(--columns-template);
+  grid-auto-columns: unset;
+}
+
+/* Make ProseMirror's auto-inserted wrapper transparent to grid */
+.ProseMirror .columns-grid > [data-node-view-wrapper] {
+  display: contents;
+}
+
+/* Individual column cells */
+.ProseMirror .column-cell {
+  min-height: 3em;
+  padding: 8px 16px;
+  position: relative;
+  border-right: 1px solid hsl(var(--muted-foreground) / 0.15);
+}
+
+.ProseMirror .column-cell:last-child {
+  border-right: none;
+}
+
+/* ── Column Resize Handles ───────────────────────────────────────── */
+
+/* Each handle wrapper — absolutely positioned at column boundary */
+.column-resize-handle-wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  transform: translateX(-50%);
+  cursor: col-resize;
+  z-index: 10;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+/* The visible line */
+.column-resize-handle-line {
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background 0.15s, width 0.15s;
+  margin: 4px 0;
+}
+
+/* Hover: blue accent line */
+.column-resize-handle-wrapper:hover .column-resize-handle-line {
+  background: var(--accent);
+  width: 3px;
+}
+
+/* Active dragging state */
+.column-resize-handle-wrapper:active .column-resize-handle-line {
+  background: var(--accent);
+  width: 3px;
+}
+
+/* ── Side-drop indicator (block drag → auto-create columns) ── */
+.side-drop-indicator {
+  position: absolute;
+  width: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 20;
+  transition: opacity 0.1s;
+}
+
+/* ── Floating TOC Sidebar ──────────────────────────────────────── */
+.floating-toc {
+  position: absolute;
+  top: 80px;
+  right: 0;
+  z-index: 20;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.floating-toc-inner {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 4px;
+  transition: width 0.2s ease, background 0.2s ease, padding 0.2s ease,
+    border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 8px;
+  width: 24px;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.floating-toc-inner:hover {
+  width: 220px;
+  background: hsl(var(--card) / 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: hsl(var(--border) / 0.5);
+  padding: 8px 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.dark .floating-toc-inner:hover {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Individual TOC item */
+.floating-toc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 2px 0;
+  white-space: nowrap;
+  transition: color 0.15s;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+}
+
+/* Dash indicator */
+.floating-toc-dash {
+  flex-shrink: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: hsl(var(--muted-foreground) / 0.3);
+  transition: background 0.15s, width 0.15s;
+}
+
+.floating-toc-item[data-active="true"] .floating-toc-dash {
+  background: var(--accent);
+}
+
+.floating-toc-item:hover .floating-toc-dash {
+  background: hsl(var(--foreground) / 0.6);
+}
+
+/* Text label — hidden when collapsed, visible when expanded */
+.floating-toc-label {
+  font-size: 12px;
+  line-height: 1.4;
+  color: hsl(var(--muted-foreground));
+  opacity: 0;
+  transition: opacity 0.15s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.floating-toc-inner:hover .floating-toc-label {
+  opacity: 1;
+}
+
+.floating-toc-item[data-active="true"] .floating-toc-label {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.floating-toc-item:hover .floating-toc-label {
+  color: var(--foreground);
+}
+
+.floating-toc-bookmark-icon {
+  color: hsl(var(--muted-foreground) / 0.5);
+}
+
+.floating-toc-item[data-active="true"] .floating-toc-bookmark-icon {
+  color: hsl(var(--accent-foreground));
+}
+
+.floating-toc-item:hover .floating-toc-bookmark-icon {
+  color: hsl(var(--foreground) / 0.6);
+}
+
+/* ── Anchor / Bookmark ─────────────────────────────────────────── */
+
+/* Inline anchor mark */
+.ProseMirror .anchor-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: hsl(var(--accent) / 0.1);
+  color: hsl(var(--accent-foreground));
+  font-size: 13px;
+  line-height: 1.4;
+  vertical-align: baseline;
+  cursor: default;
+  transition: background 0.15s;
+}
+
+.ProseMirror .anchor-mark:hover {
+  background: hsl(var(--accent) / 0.2);
+}
+
+.ProseMirror .anchor-mark .anchor-icon {
+  flex-shrink: 0;
+  color: hsl(var(--accent-foreground));
+  opacity: 0.7;
+}
+
+.ProseMirror .anchor-mark .anchor-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: hsl(var(--accent-foreground));
+}
+
+.ProseMirror .anchor-mark .anchor-label-input {
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: hsl(var(--foreground));
+  width: auto;
+  min-width: 40px;
+  padding: 0;
+}
+
+/* Block anchor divider */
+.ProseMirror .anchor-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  user-select: none;
+  position: relative;
+}
+
+.ProseMirror .anchor-divider .anchor-divider-line {
+  flex: 1;
+  height: 1px;
+  background: hsl(var(--muted-foreground) / 0.2);
+}
+
+.ProseMirror .anchor-divider .anchor-divider-center {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.ProseMirror .anchor-divider:hover .anchor-divider-center {
+  background: hsl(var(--hover-bg));
+}
+
+.ProseMirror .anchor-divider .anchor-divider-icon {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.6;
+}
+
+.ProseMirror .anchor-divider .anchor-divider-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  letter-spacing: 0.02em;
+}
+
+.ProseMirror .anchor-divider .anchor-divider-label-input {
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: hsl(var(--foreground));
+  text-align: center;
+  min-width: 40px;
+  padding: 0;
+}
+
+.ProseMirror .anchor-divider .anchor-divider-delete {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 2px;
+  border-radius: 4px;
+  color: hsl(var(--muted-foreground) / 0.5);
+  cursor: pointer;
+}
+
+.ProseMirror .anchor-divider .anchor-divider-delete:hover {
+  color: hsl(var(--foreground));
+  background: hsl(var(--hover-bg));
+}
+
+.ProseMirror .anchor-divider:hover .anchor-divider-delete {
+  opacity: 1;
+}
+
+/* ── @Mention Chips ────────────────────────────────────────────── */
+
+.ProseMirror .mention {
+  display: inline;
+  background: hsl(var(--accent) / 0.1);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-weight: 500;
+  font-size: inherit;
+  line-height: inherit;
+  color: hsl(var(--accent-foreground));
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.ProseMirror .mention:hover {
+  background: hsl(var(--accent) / 0.2);
+  text-decoration: underline;
+}
