@@ -196,7 +196,14 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Side-drop 개선**: 포인터 좌표 기반 블록 감지, sideDropState 우선 처리
 - **컬럼 구분선 개선**: muted-foreground 0.25 → 테이블 스타일 border
 - **SidePanelMode 확장**: 'bookmarks' 추가 (5탭 체제)
-- **다음**: 노트참조 통합 인터랙션(호버+Peek+인라인펼치기), isWiki 리팩토링, Design Spine, Turn Into
+- **Make Block 폐기 결정**: Turn Into가 대체. 래퍼 감싸기 UX 직관적이지 않음
+- **디자인 방향 = Notion 블록 디자인 참고**: Linear 레이아웃 + Notion 에디터 블록 폴리싱
+- **다음 (우선순위순)**:
+  1. Design Spine 수립 (CSS 변수 기반, Notion 참고) → 전체 블록 폴리싱
+  2. Turn Into 메뉴 (블록 타입 변환)
+  3. 노트참조 통합 인터랙션 (호버+Peek+인라인펼치기)
+  4. isWiki 리팩토링
+  5. 웹 클리퍼 + 가져오기/내보내기
 
 ### 이번 세션 완료 — Phase 1 커스텀 노드 + 에디터 UX (2026-03-28)
 - **TOC Block**: `components/editor/nodes/toc-node.tsx` — heading 자동인식 atom node
@@ -247,6 +254,9 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **필터 Status shape 아이콘**: CircleDashed(Inbox), CircleHalf(Capture), CheckCircle(Permanent)
 - **Workspace 단순화**: Binary tree → 듀얼 패인. react-resizable-panels. 9개 레거시 파일 삭제
 - **위키 = 유저의 확장된 세계관**: 블록 무한 확장 대응 (IDB 분리 + virtuoso + lazy load + sectionIndex)
+- **Make Block 폐기**: Turn Into가 대체. 래퍼 감싸기 UX는 직관적이지 않음 (2026-03-30)
+- **디자인 폴리싱 방향 = Notion**: Linear 레이아웃 유지 + 에디터 블록 디자인은 Notion 수준 참고 (2026-03-30)
+- **Design Spine = CSS 변수 기반**: 블록 공통 padding/radius/border/font-size를 변수화, 하나 바꾸면 전체 반영 (2026-03-30)
 
 ### 이번 세션 완료 — 카테고리 P0 + 에디터 (2026-03-26)
 - **P0 Board Select All 시각 피드백**: 카드에 hover 체크박스 + accent 하이라이트 (Notes Board 패턴 동일)

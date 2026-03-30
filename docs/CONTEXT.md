@@ -135,21 +135,28 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **플로팅 TOC = Notion 스타일**: 에디터 우측 자동 사이드바, 대시 인디케이터, hover 확장, scrollspy. 첫 heading(타이틀) 제외 (2026-03-30)
 - **앵커/북마크 2종**: 인라인 마커(anchorMark) + 블록 구분선(anchorDivider). TOC + 사이드패널 Bookmarks 탭 통합 (2026-03-30)
 - **Columns = CSS Grid + 테이블 스타일 border**: renderHTML 기반 columnCell, resize handle, 외곽선+셀간 border-right (2026-03-30)
+- **Make Block 폐기**: Turn Into가 대체. 래퍼로 감싸는 UX가 직관적이지 않음 (2026-03-30)
+- **디자인 폴리싱 방향 = Notion**: Linear 레이아웃 + Notion 에디터 블록 디자인 참고 (2026-03-30)
 
 ## TODO: Future Work (우선순위 순)
 
-### P0 — 에디터 통합 프로젝트 (`.claude/plans/editor-unification.md` 참조)
-- **Phase 1**: 노트 에디터 리디자인 — ~~Shared TipTap config~~ ✅ ~~Title 노드 통합~~ ✅ ~~FixedToolbar 리디자인~~ ✅ ~~Arrange Mode~~ ✅ ~~TOC Block~~ ✅ ~~Callout Block~~ ✅ ~~Columns~~ ✅ ~~NoteEmbed~~ ✅ ~~Infobox~~ ✅ ~~Summary~~ ✅ ~~플로팅 TOC~~ ✅ ~~@멘션~~ ✅ ~~앵커/북마크~~ ✅, 남은: 노트참조 통합 인터랙션(호버프리뷰+Peek+인라인펼치기), Turn Into, Design Spine, isWiki 리팩토링
+### P0 — Design Spine + 에디터 완성
+- **Design Spine 수립** ← **최우선**: CSS 변수 기반 spacing/sizing/typography 표준. Notion 블록 디자인 참고. 변수 5-6개로 전체 블록 일괄 폴리싱
+- **전체 블록 폴리싱**: Design Spine 적용 → TOC/Table/Columns/Callout/Toggle/멘션칩/앵커 일괄 Notion 수준으로
+- **Turn Into 메뉴**: 블록 타입 변환 (H1↔H2, bullet↔numbered, 문단↔콜아웃 등). ~~Make Block 폐기~~
+- **노트참조 통합 인터랙션**: 멘션/위키링크/noteEmbed 공통 — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동, 인라인 본문 펼치기(노트만, 위키 제외)
 - **isWiki 리팩토링**: Note.isWiki 플래그 제거. 노트와 WikiArticle은 완전 별도 엔티티. 30개 파일 96곳 수정 필요
-- **노트참조 통합 인터랙션**: 멘션/위키링크/noteEmbed 공통 — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동, 인라인 본문 펼치기(노트만)
-- **Design Spine 수립**: spacing/sizing/typography 표준화 → 전체 에디터 블록 일괄 폴리싱
+
+### P0 — 에디터 통합 프로젝트 후속 Phase
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈
 - **Phase 3**: 템플릿 블록 레이아웃 에디터 — TemplateBlock 모델, Notion-style 드래그 앤 드롭, Template→Note/Wiki 변환
 - **Phase 4**: Partial Quote — Peek에서 부분 드래그 선택 Insert, 메타데이터 8필드 (sourceHash, context, comment 등)
 - **Phase 5**: Merge/Split 풀페이지 — 노트 섹션/문단 단위 드래그 재배치, Split 플로팅바+우클릭 추가, 위키 Merge 개선
 - **Phase 6**: Merge/Split 히스토리 — 필터 History 추가, Insights 이력 탭, Undo/Re-merge, Detail 패널 History 섹션
 
-### P1 — 다음
+### P1 — 필수 기능
+- **웹 클리퍼** — 브라우저에서 웹페이지/선택 텍스트를 노트로 저장
+- **가져오기/내보내기** — Markdown, JSON, 타 앱(Notion/Obsidian) 호환
 - **커맨드 팔레트 확장** — 컨텍스트 반응형 20+개 커맨드 (Note Actions, View Actions, Navigation, Creation)
 - **풀페이지 검색 분리** — ⌘K = 풀페이지 노트 검색, ⌘/ = 커맨드 팔레트 (액션 전용)
 
