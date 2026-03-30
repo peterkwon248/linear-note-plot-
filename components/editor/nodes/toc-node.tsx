@@ -6,6 +6,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
 
 interface TocItem {
   id: string
@@ -14,6 +15,7 @@ interface TocItem {
   pos: number
   isActive: boolean
   isScrolledOver: boolean
+  type: "heading" | "bookmark"
 }
 
 function TocNodeView({ editor, getPos, deleteNode }: NodeViewProps) {
@@ -21,26 +23,70 @@ function TocNodeView({ editor, getPos, deleteNode }: NodeViewProps) {
 
   useEffect(() => {
     const update = () => {
-      const content = editor.storage?.tableOfContents?.content as TocItem[] | undefined
-      setItems(content ?? [])
+      const headings: TocItem[] = []
+      let skippedTitle = false
+      editor.state.doc.descendants((node, pos) => {
+        if (node.type.name === "heading") {
+          // Skip the very first heading — it's the note title
+          if (!skippedTitle) {
+            skippedTitle = true
+            return
+          }
+          const level = node.attrs.level as number
+          const text = node.textContent
+          const id = node.attrs.id || `heading-${pos}`
+          headings.push({
+            id,
+            level,
+            textContent: text,
+            pos: pos + 1, // +1 to place cursor inside heading
+            isActive: false,
+            isScrolledOver: false,
+            type: "heading",
+          })
+        } else if (node.type.name === "anchorMark" || node.type.name === "anchorDivider") {
+          headings.push({
+            id: node.attrs.id || `anchor-${pos}`,
+            level: 99,
+            textContent: node.attrs.label || "Bookmark",
+            pos: pos + 1,
+            isActive: false,
+            isScrolledOver: false,
+            type: "bookmark",
+          })
+        }
+      })
+      setItems(headings)
     }
 
     update()
     editor.on("update", update)
+    // Also listen for selectionUpdate to track active heading
+    editor.on("selectionUpdate", update)
     return () => {
       editor.off("update", update)
+      editor.off("selectionUpdate", update)
     }
   }, [editor])
 
   const handleClick = (item: TocItem) => {
     const pos = item.pos
     editor.commands.setTextSelection(pos)
+    // Find the heading DOM element and scroll to it
     try {
-      const domInfo = editor.view.domAtPos(pos)
-      const element = domInfo.node as HTMLElement
-      element?.scrollIntoView?.({ behavior: "smooth", block: "center" })
+      const resolvedPos = editor.state.doc.resolve(pos)
+      const headingNode = resolvedPos.parent
+      const domNode = editor.view.nodeDOM(pos - 1) as HTMLElement | null
+      if (domNode) {
+        domNode.scrollIntoView({ behavior: "smooth", block: "start" })
+      }
     } catch {
-      // ignore if DOM pos resolution fails
+      // Fallback: try domAtPos
+      try {
+        const domInfo = editor.view.domAtPos(pos)
+        const element = (domInfo.node as HTMLElement)?.closest?.("h1, h2, h3, h4, h5, h6") || domInfo.node as HTMLElement
+        element?.scrollIntoView?.({ behavior: "smooth", block: "start" })
+      } catch { /* ignore */ }
     }
   }
 
@@ -85,18 +131,21 @@ function TocNodeView({ editor, getPos, deleteNode }: NodeViewProps) {
             {items.map((item) => (
               <li
                 key={item.id}
-                className={indentClass[item.level] ?? ""}
+                className={item.type === "bookmark" ? "" : (indentClass[item.level] ?? "")}
               >
                 <button
                   type="button"
                   onClick={() => handleClick(item)}
                   className={[
-                    "w-full text-left text-sm leading-relaxed rounded px-1 py-0.5 transition-colors duration-75 cursor-pointer",
+                    "w-full text-left text-sm leading-relaxed rounded px-1 py-0.5 transition-colors duration-75 cursor-pointer flex items-center gap-1.5",
                     item.isActive
                       ? "text-foreground font-medium"
                       : "text-muted-foreground hover:text-foreground hover:bg-hover-bg",
                   ].join(" ")}
                 >
+                  {item.type === "bookmark" && (
+                    <MapPin size={10} weight="fill" className="flex-shrink-0 opacity-50" />
+                  )}
                   {item.textContent || <span className="opacity-40 italic">Untitled</span>}
                 </button>
               </li>

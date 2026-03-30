@@ -6,11 +6,13 @@ import { SidePanelDetail } from "./side-panel-detail"
 import { SidePanelConnections } from "./side-panel-connections"
 import { SidePanelActivity } from "./side-panel-activity"
 import { SidePanelPeek } from "./side-panel-peek"
+import { SidePanelBookmarks } from "./side-panel-bookmarks"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import type { SidePanelMode } from "@/lib/store/types"
 
 export function SmartSidePanel() {
@@ -26,6 +28,7 @@ export function SmartSidePanel() {
   const showConnections = sidePanelMode === 'connections'
   const showActivity = sidePanelMode === 'activity'
   const showPeek = sidePanelMode === 'peek' && !!sidePanelPeekNoteId
+  const showBookmarks = sidePanelMode === 'bookmarks'
 
   const hasPeekNote = !!sidePanelPeekNoteId
 
@@ -70,6 +73,14 @@ export function SmartSidePanel() {
             <ClockCounterClockwise className="inline mr-1" size={14} weight="regular" />
             Activity
           </button>
+          {/* Bookmarks tab */}
+          <button
+            onClick={() => setMode('bookmarks')}
+            className={tabClass(sidePanelMode === 'bookmarks')}
+          >
+            <BookmarkSimple className="inline mr-1" size={14} weight="regular" />
+            Bookmarks
+          </button>
           {/* Peek tab - only when peek note exists, click again to close */}
           {hasPeekNote && (
             <button
@@ -95,6 +106,7 @@ export function SmartSidePanel() {
       {showConnections && <SidePanelConnections />}
       {showActivity && <SidePanelActivity />}
       {showPeek && <SidePanelPeek />}
+      {showBookmarks && <SidePanelBookmarks />}
     </aside>
   )
 }

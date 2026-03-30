@@ -48,7 +48,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - TipTap 3 editor — Shared config factory (`components/editor/core/shared-editor-config.ts`)
 - 4-tier extension system: `base` | `note` | `wiki` | `template`
 - Title 노드 통합: 제목과 본문이 하나의 TipTap 문서 (`components/editor/core/title-node.ts`)
-- 25+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, WikiQuoteExtension, etc.)
+- 25+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, WikiQuoteExtension, @mention (노트/위키/태그/날짜 통합), Floating TOC, Anchor/Bookmark, etc.)
 - Toolbar: h-14 (56px) bar, w-10 (40px) buttons, Phosphor weight="light". 42 configurable items via Arrange Mode (dnd-kit). Persisted in settings store
 - Workspace: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
 - WorkspaceMode 삭제됨 — sidebarCollapsed + detailsOpen 독립 토글
@@ -83,9 +83,10 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 70. 에디터 Phase 1A+1B — Shared TipTap config 추출 (4-tier factory) + Title 노드 통합 (제목/본문 하나의 에디터)
-71. Phase 1C+ — Toolbar 리디자인 (h-14/w-10/22px/light, 42 items) + Side Panel 4탭 (Detail/Connections/Activity/Peek) + Arrange Mode (dnd-kit)
-72. Phase 1C+ 후속 — Connections Connected/Discover 모델, Relations UI 삭제, Peek wiki fallback
-73. Phase 1 커스텀 노드 시작 — TOC Block + Callout Block + Align 드롭다운 통합 + BacklinksFooter 삭제
+71. Phase 1C+ — Toolbar 리디자인 + Side Panel 5탭 (Detail/Connections/Activity/Peek/Bookmarks) + Arrange Mode
+72. Phase 1 커스텀 노드 — TOC Block + Callout Block + Columns Block (CSS Grid, resize handle) + Summary Block + Infobox Block + NoteEmbed
+73. 플로팅 TOC (Notion 스타일) — 에디터 우측 자동 사이드바, scrollspy, 헤딩 2개+ 자동 표시, 타이틀 제외
+74. @멘션 시스템 — 노트/위키/태그/날짜 통합 검색, 인라인 칩, 카테고리별 그룹핑 + 앵커/북마크 시스템 (인라인 마커 + 블록 구분선)
 
 ## Two Axes — Core Design Philosophy
 
@@ -129,11 +130,19 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Peek wiki fallback**: wiki article ID → title match → note lookup. 위키 블록 직접 편집은 Phase 2A 스코프 (2026-03-28)
 - **카테고리 사이드바 → SmartSidePanel 통합**: 내장 280px 사이드바 제거, 글로벌 Details 패널에서 표시. Notes와 동일 패턴 (2026-03-26)
 - **카테고리 더블클릭 에디터**: 싱글클릭=선택(하이라이트만), 더블클릭=폼 에디터 split view. 이름/설명 인라인 편집, Parent 드롭다운, 서브카테고리 +New/Move here (2026-03-26)
+- **노트 ≠ 위키**: Note와 WikiArticle은 완전 별도 엔티티. Note.isWiki는 레거시 — 리팩토링 예정 (2026-03-30)
+- **@멘션 = 노트/위키/태그/날짜 통합**: `@` 트리거, WikiArticle 별도 검색, 카테고리별 그룹핑 (2026-03-30)
+- **플로팅 TOC = Notion 스타일**: 에디터 우측 자동 사이드바, 대시 인디케이터, hover 확장, scrollspy. 첫 heading(타이틀) 제외 (2026-03-30)
+- **앵커/북마크 2종**: 인라인 마커(anchorMark) + 블록 구분선(anchorDivider). TOC + 사이드패널 Bookmarks 탭 통합 (2026-03-30)
+- **Columns = CSS Grid + 테이블 스타일 border**: renderHTML 기반 columnCell, resize handle, 외곽선+셀간 border-right (2026-03-30)
 
 ## TODO: Future Work (우선순위 순)
 
 ### P0 — 에디터 통합 프로젝트 (`.claude/plans/editor-unification.md` 참조)
-- **Phase 1**: 노트 에디터 리디자인 — ~~Shared TipTap config~~ ✅ ~~Title 노드 통합~~ ✅ ~~FixedToolbar 리디자인~~ ✅ ~~Arrange Mode~~ ✅ ~~TOC Block~~ ✅ ~~Callout Block~~ ✅ ~~Align 드롭다운~~ ✅ ~~BacklinksFooter 삭제~~ ✅, 남은: Make Block(범용래퍼), Summary, Columns, NoteEmbed, Infobox, TOC 수동앵커, 타이틀 정렬, URL Embed 합치기, Stub 삭제
+- **Phase 1**: 노트 에디터 리디자인 — ~~Shared TipTap config~~ ✅ ~~Title 노드 통합~~ ✅ ~~FixedToolbar 리디자인~~ ✅ ~~Arrange Mode~~ ✅ ~~TOC Block~~ ✅ ~~Callout Block~~ ✅ ~~Columns~~ ✅ ~~NoteEmbed~~ ✅ ~~Infobox~~ ✅ ~~Summary~~ ✅ ~~플로팅 TOC~~ ✅ ~~@멘션~~ ✅ ~~앵커/북마크~~ ✅, 남은: 노트참조 통합 인터랙션(호버프리뷰+Peek+인라인펼치기), Turn Into, Design Spine, isWiki 리팩토링
+- **isWiki 리팩토링**: Note.isWiki 플래그 제거. 노트와 WikiArticle은 완전 별도 엔티티. 30개 파일 96곳 수정 필요
+- **노트참조 통합 인터랙션**: 멘션/위키링크/noteEmbed 공통 — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동, 인라인 본문 펼치기(노트만)
+- **Design Spine 수립**: spacing/sizing/typography 표준화 → 전체 에디터 블록 일괄 폴리싱
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈
 - **Phase 3**: 템플릿 블록 레이아웃 에디터 — TemplateBlock 모델, Notion-style 드래그 앤 드롭, Template→Note/Wiki 변환
 - **Phase 4**: Partial Quote — Peek에서 부분 드래그 선택 Insert, 메타데이터 8필드 (sourceHash, context, comment 등)

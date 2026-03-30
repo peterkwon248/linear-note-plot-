@@ -47,6 +47,7 @@ import { CurrentLineHighlightExtension } from "../CurrentLineHighlight"
 import { HashtagSuggestion } from "../HashtagSuggestion"
 import { WikilinkSuggestion } from "../WikilinkSuggestion"
 import { WikilinkDecorationExtension } from "../WikilinkDecoration"
+import { mentionSuggestionConfig } from "../MentionSuggestion"
 import { SlashCommandExtension } from "../SlashCommand"
 import { WikiQuoteExtension } from "../WikiQuoteExtension"
 import { Mention } from "@tiptap/extension-mention"
@@ -64,6 +65,8 @@ import { ColumnsBlockNode, ColumnCellNode } from "@/components/editor/nodes/colu
 import { NoteEmbedNode } from "@/components/editor/nodes/note-embed-node"
 import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
+import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
+import { AnchorDividerNode } from "@/components/editor/nodes/anchor-divider-node"
 
 // ── Lowlight (syntax highlighting for code blocks) ──────────────────
 const lowlight = createLowlight(common)
@@ -228,7 +231,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     Audio,
     Twitch,
     UniqueID.configure({
-      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock'],
+      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock', 'anchorMark', 'anchorDivider'],
     }),
     InvisibleCharacters.configure({
       visible: false, // disabled by default, toggled via toolbar
@@ -271,9 +274,7 @@ export function createEditorExtensions(
       noteExtensions.push(
         Mention.configure({
           HTMLAttributes: { class: 'mention' },
-          suggestion: {
-            // TODO: Wire up mention suggestion popup (PR 3)
-          },
+          suggestion: mentionSuggestionConfig,
         }) as Extension,
         Emoji as Extension,
       )
@@ -301,6 +302,8 @@ export function createEditorExtensions(
       noteExtensions.push(NoteEmbedNode as Extension)
       noteExtensions.push(InfoboxBlockNode as Extension)
       noteExtensions.push(ContentBlockNode as Extension)
+      noteExtensions.push(AnchorMarkNode as Extension)
+      noteExtensions.push(AnchorDividerNode as Extension)
 
       // Custom keyboard shortcuts (Indent/Outdent, Move List)
       const CustomKeyboardShortcuts = Extension.create({

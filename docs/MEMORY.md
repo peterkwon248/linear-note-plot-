@@ -25,7 +25,7 @@
 - **Body separation**: Note content in separate IDB (`plot-note-bodies`), meta in Zustand persist
 - **Wiki block body separation**: Text block content in `plot-wiki-block-bodies` IDB, block metadata in `plot-wiki-block-meta` IDB
 - **Workspace**: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
-- **Side Panel**: Unified `SmartSidePanel` — 4-tab: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Peek(미리보기). v64
+- **Side Panel**: Unified `SmartSidePanel` — 5-tab: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Peek(미리보기) + Bookmarks(앵커/북마크). v64
 - **Wiki sectionIndex**: `WikiSectionIndex[]` in Zustand for lightweight TOC, full blocks in IDB for scalability (v53)
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
 - **TipTap Editor**: Shared config factory (`components/editor/core/shared-editor-config.ts`) with 4-tier system (base/note/wiki/template). **Title 노드 폐기 (v65)** — 첫 번째 블록(H2)이 자동으로 타이틀 역할 (UpNote 스타일). title-node.ts 삭제됨. 25+ extensions.
@@ -50,10 +50,14 @@
 - **ChipDropdown**: `components/ui/chip-dropdown.tsx` — 제네릭 드롭다운, DisplayPanel에서 추출
 - **Graph Filter Adapter**: `lib/view-engine/graph-filter-adapter.ts` — OntologyFilters ↔ FilterRule[] 변환
 - **Discover Engine**: `lib/search/discover-engine.ts` — keyword+tag+backlink+folder 4신호 로컬 추천
-- **SidePanel 4탭**: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Peek(미리보기), SidePanelMode v64
+- **SidePanel 5탭**: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Peek(미리보기) + Bookmarks(앵커/북마크), SidePanelMode v64
 - **Toolbar Config**: `lib/editor/toolbar-config.ts` — 42 item IDs, normalizeLayout(), Arrange Mode (dnd-kit drag-and-drop). Settings store에 persist
 - **Toolbar Primitives**: `components/editor/toolbar/toolbar-primitives.tsx` — ToolbarButton(40×40), ToolbarDivider, ToolbarGroup, ToolbarSpacer. Phosphor weight="light"
 - **Editor Colors**: `lib/editor-colors.ts` — 16 TEXT_COLORS + 16 HIGHLIGHT_COLORS, 8-column grid
+- **Floating TOC**: `components/editor/floating-toc.tsx` — Notion 스타일 에디터 우측 자동 사이드바. 대시 인디케이터(H2=16px, H3=10px), hover 확장(220px), scrollspy. 첫 heading(타이틀) 자동 제외. heading 2개+ 일 때만 표시
+- **@Mention**: `components/editor/MentionSuggestion.tsx` — @tiptap/extension-mention 기반. 노트/위키(WikiArticle)/태그/날짜 4종 통합 검색. WikilinkSuggestion.tsx 패턴 복제. 날짜 파싱: `lib/mention-date-parser.ts`
+- **Anchor/Bookmark**: `components/editor/nodes/anchor-node.tsx` (인라인) + `components/editor/nodes/anchor-divider-node.tsx` (블록 구분선). 플로팅 TOC + 사이드패널 Bookmarks 탭에 통합
+- **Side-drop Columns**: 블록 드래그 시 좌/우 15% 영역 감지 → 자동 columnsBlock 생성. `components/editor/dnd/block-drag-overlay.tsx`의 handleDragMove에서 포인터 좌표 기반 감지
 
 ## Store Slices (20 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
@@ -144,6 +148,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **PR #129**: dnd-kit 블록 리오더 + 에디터 UX 개선
   - dnd-kit Phase 1~4, GlobalDragHandle 제거, Backspace heading→paragraph
   - H 드롭다운 위치 수정, EditorStyles.css hsl(var()) 전면 수정, H2 타이틀 28px
+- **PR #131 (WIP)**: 에디터 Phase 1 확장 — Columns 완성, 플로팅 TOC, @멘션, 앵커/북마크, Side-drop 개선
 - **PR #130 (WIP)**: 테이블 UX 대폭 개선
   - TableBubbleMenu (Row/Col/Merge/Split/Align/Bold/Color/Header/Delete)
   - Delete 키 빈 셀 선택 → 행/열 삭제 (prosemirror-tables 직접 import)
@@ -180,7 +185,18 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-03-28)
+## Current Direction (as of 2026-03-30)
+
+### 이번 세션 완료 — 에디터 Phase 1 확장 (2026-03-30)
+- **Columns Block 완성**: CSS Grid 기반, renderHTML columnCell, resize handle(드래그 너비 조절), 테이블 스타일 border
+- **플로팅 TOC**: Notion 스타일 에디터 우측 자동 사이드바, scrollspy, 타이틀 제외
+- **인라인 TOC 수정**: 첫 heading(타이틀) 제외 로직 추가
+- **@멘션 시스템**: 노트/WikiArticle/태그/날짜 4종 통합, 카테고리별 그룹핑, 인라인 칩
+- **앵커/북마크**: anchorMark(인라인) + anchorDivider(블록 구분선), TOC 통합, Bookmarks 사이드패널 탭
+- **Side-drop 개선**: 포인터 좌표 기반 블록 감지, sideDropState 우선 처리
+- **컬럼 구분선 개선**: muted-foreground 0.25 → 테이블 스타일 border
+- **SidePanelMode 확장**: 'bookmarks' 추가 (5탭 체제)
+- **다음**: 노트참조 통합 인터랙션(호버+Peek+인라인펼치기), isWiki 리팩토링, Design Spine, Turn Into
 
 ### 이번 세션 완료 — Phase 1 커스텀 노드 + 에디터 UX (2026-03-28)
 - **TOC Block**: `components/editor/nodes/toc-node.tsx` — heading 자동인식 atom node
@@ -220,7 +236,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Custom Views = 사이드바 Views 섹션**: Linear식 savedView. 각 공간(Notes/Wiki/Graph/Calendar)별 독립
 - **Back/Forward = note history + browser history fallback**: note history 없으면 router.back() 호출
 - **디자인 라이브러리 13개 도입**: Phosphor/Motion/Sonner/Resizable/Radix Colors/dnd-kit/cmdk/Vaul/Iconoir/Tabler/Remix/React Spring + DESIGN-TOKENS.md에 사용 규칙 문서화
-- **Side Panel 4탭**: Detail(메타데이터) + Connections(Connected/Discover 2섹션) + Activity(Thread/Reflection) + Peek(미리보기). Relations UI 삭제. Entity-aware — space에 따라 다른 detail 컴포넌트 렌더
+- **Side Panel 5탭**: Detail(메타데이터) + Connections(Connected/Discover 2섹션) + Activity(Thread/Reflection) + Peek(미리보기) + Bookmarks(앵커/북마크). Relations UI 삭제. Entity-aware — space에 따라 다른 detail 컴포넌트 렌더
 - **Unified Pipeline 완료**: Filter/Display/SidePanel이 ViewConfig 기반으로 space별 주입. OntologyFilterBar 삭제, Wiki category 로컬 state → viewStateByContext 이관
 - **Design Spine 통합**: 토큰 위반 일괄 수정 (typography/border/hover/icon/하드코딩). 별도 Phase 없이 구조 통합에 녹임
 - **Discover = AI 없는 로컬 추천**: keyword overlap + tag co-occurrence + backlink proximity + folder proximity 4신호

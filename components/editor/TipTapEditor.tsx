@@ -6,6 +6,7 @@ import "katex/dist/katex.min.css"
 import { EditorToolbar } from "./EditorToolbar"
 import { TableBubbleMenu } from "./TableBubbleMenu"
 import { BlockDragOverlay } from "./dnd/block-drag-overlay"
+import { FloatingToc } from "./floating-toc"
 import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
 import { createEditorExtensions } from "./core/shared-editor-config"
@@ -178,11 +179,12 @@ export function TipTapEditor({
       data-tab-size={tabSize}
       data-code-font={codeFontFamily}
     >
-      <div ref={editorWrapRef} className="flex-1">
+      <div ref={editorWrapRef} className="flex-1 relative">
         <BlockDragOverlay editor={editor}>
           <EditorContent editor={editor} className="w-full" />
         </BlockDragOverlay>
         {editor && <TableBubbleMenu editor={editor} />}
+        {editor && <FloatingToc editor={editor} />}
       </div>
       {editor && (
         <div

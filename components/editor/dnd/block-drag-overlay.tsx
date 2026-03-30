@@ -11,6 +11,7 @@ import {
   DragOverlay,
   type DragStartEvent,
   type DragEndEvent,
+  type DragMoveEvent,
 } from "@dnd-kit/core"
 import {
   SortableContext,
@@ -20,7 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import type { Editor } from "@tiptap/core"
 import { useBlockPositions, getBlockDomRect, type BlockPosition } from "./use-block-positions"
-import { useBlockReorder } from "./use-block-reorder"
+import { useBlockReorder, useSideDrop } from "./use-block-reorder"
 import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
 
 // ── SortableBlockSlot ───────────────────────────────────────
@@ -193,6 +194,53 @@ function BlockPreview({ block, editor }: { block: BlockPosition; editor: Editor 
 
 // ── BlockDragOverlay ─────────────────────────────────────────
 
+// ── Side-drop state type ──────────────────────────────────────
+interface SideDropState {
+  blockId: string
+  side: "left" | "right"
+}
+
+// ── SideDropIndicator ────────────────────────────────────────
+function SideDropIndicator({
+  sideDropState,
+  blocks,
+  editor,
+  containerRef,
+}: {
+  sideDropState: SideDropState
+  blocks: BlockPosition[]
+  editor: Editor
+  containerRef: React.RefObject<HTMLDivElement | null>
+}) {
+  const block = blocks.find((b) => b.id === sideDropState.blockId)
+  if (!block) return null
+
+  const container = containerRef.current
+  if (!container) return null
+
+  const blockRect = getBlockDomRect(editor, block.docPos)
+  if (!blockRect) return null
+
+  const containerRect = container.getBoundingClientRect()
+  const top = blockRect.top - containerRect.top
+  const height = blockRect.height
+  const left =
+    sideDropState.side === "left"
+      ? blockRect.left - containerRect.left
+      : blockRect.right - containerRect.left - 2
+
+  return (
+    <div
+      className="side-drop-indicator"
+      style={{
+        top,
+        left,
+        height,
+      }}
+    />
+  )
+}
+
 export function BlockDragOverlay({
   editor,
   children,
@@ -202,7 +250,9 @@ export function BlockDragOverlay({
 }) {
   const blocks = useBlockPositions(editor)
   const reorder = useBlockReorder(editor)
+  const sideDrop = useSideDrop(editor)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [sideDropState, setSideDropState] = useState<SideDropState | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const sensors = useSensors(
@@ -218,26 +268,98 @@ export function BlockDragOverlay({
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string)
+    setSideDropState(null)
     // Blur editor focus to prevent keyboard shortcuts during drag
     if (editor) editor.commands.blur()
   }, [editor])
 
+  // Side-drop detection during drag move
+  // We use pointer coordinates to find the nearest block and check edge zones,
+  // rather than relying on dnd-kit's `over` (which tracks sortable handle zones).
+  const handleDragMove = useCallback(
+    (event: DragMoveEvent) => {
+      if (!editor || !containerRef.current) {
+        setSideDropState(null)
+        return
+      }
+
+      const activeId_ = event.active.id as string
+
+      // Compute current pointer position
+      const activatorEvt = event.activatorEvent as PointerEvent
+      const pointerX = activatorEvt.clientX + (event.delta.x ?? 0)
+      const pointerY = activatorEvt.clientY + (event.delta.y ?? 0)
+
+      // Find which block the pointer is vertically over
+      let hoverBlock: BlockPosition | null = null
+      for (const block of blocks) {
+        if (block.id === activeId_) continue // skip self
+        const rect = getBlockDomRect(editor, block.docPos)
+        if (!rect) continue
+        if (pointerY >= rect.top && pointerY <= rect.bottom) {
+          hoverBlock = block
+          break
+        }
+      }
+
+      if (!hoverBlock) {
+        setSideDropState(null)
+        return
+      }
+
+      const blockRect = getBlockDomRect(editor, hoverBlock.docPos)
+      if (!blockRect) {
+        setSideDropState(null)
+        return
+      }
+
+      const blockWidth = blockRect.width
+      const relativeX = pointerX - blockRect.left
+      const threshold = blockWidth * 0.15 // 15% edges
+
+      if (relativeX <= threshold) {
+        setSideDropState({ blockId: hoverBlock.id, side: "left" })
+      } else if (relativeX >= blockWidth - threshold) {
+        setSideDropState({ blockId: hoverBlock.id, side: "right" })
+      } else {
+        setSideDropState(null)
+      }
+    },
+    [editor, blocks]
+  )
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
+      const currentSideDrop = sideDropState
       setActiveId(null)
+      setSideDropState(null)
+
       const { active, over } = event
+
+      // Side-drop takes priority (uses sideDropState, not dnd-kit's `over`)
+      if (currentSideDrop) {
+        const fromIndex = blocks.findIndex((b) => b.id === active.id)
+        const toIndex = blocks.findIndex((b) => b.id === currentSideDrop.blockId)
+        if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+          sideDrop(fromIndex, toIndex, currentSideDrop.side, blocks)
+        }
+        return
+      }
+
+      // Regular reorder
       if (!over || active.id === over.id) return
       const fromIndex = blocks.findIndex((b) => b.id === active.id)
       const toIndex = blocks.findIndex((b) => b.id === over.id)
       if (fromIndex === -1 || toIndex === -1) return
       reorder(fromIndex, toIndex, blocks)
     },
-    [blocks, reorder]
+    [blocks, reorder, sideDrop, sideDropState]
   )
 
   // Cancel handler — restore state cleanly
   const handleDragCancel = useCallback(() => {
     setActiveId(null)
+    setSideDropState(null)
   }, [])
 
   const blockIds = blocks.map((b) => b.id)
@@ -253,6 +375,7 @@ export function BlockDragOverlay({
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
@@ -274,6 +397,16 @@ export function BlockDragOverlay({
             )}
           </DragOverlay>
         </DndContext>
+      )}
+
+      {/* Side-drop vertical indicator */}
+      {sideDropState && editor && (
+        <SideDropIndicator
+          sideDropState={sideDropState}
+          blocks={blocks}
+          editor={editor}
+          containerRef={containerRef}
+        />
       )}
     </div>
   )
