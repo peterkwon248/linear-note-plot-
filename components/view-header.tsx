@@ -26,7 +26,7 @@ function HBtn({
       className={`flex h-7 w-7 items-center justify-center rounded-md border-none transition-all duration-100 ${
         active
           ? "bg-active-bg text-foreground"
-          : "text-foreground/50 hover:bg-hover-bg hover:text-foreground"
+          : "text-foreground/65 hover:bg-hover-bg hover:text-foreground"
       }`}
     >
       {children}

@@ -117,7 +117,9 @@
       "Bash(/dev/null wc:*)",
       "Bash(__NEW_LINE_becd7dd6ca785696__ find:*)",
       "Bash(grep -v \":0$\")",
-      "Bash(sort -t: -k2 -rn)"
+      "Bash(sort -t: -k2 -rn)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-31_0630.md)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/inspiring-chaum/.omc/worklog/latest.md\")"
     ]
   }
 }

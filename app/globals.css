@@ -100,7 +100,7 @@
   --secondary: #27272a;
   --secondary-foreground: #fafafa;
   --muted: #27272a;
-  --muted-foreground: #a1a1aa;
+  --muted-foreground: #b0b0b8;
   --accent: #6366f1;
   --accent-foreground: #fafafa;
   --destructive: #ef4444;
@@ -118,7 +118,7 @@
   /* Sidebar: solid charcoal, opacity-based hierarchy */
   --sidebar-bg: #1c1c20;
   --sidebar-foreground: rgba(255,255,255, 0.65);
-  --sidebar-muted: rgba(255,255,255, 0.38);
+  --sidebar-muted: rgba(255,255,255, 0.50);
   --sidebar-hover: rgba(255,255,255, 0.05);
   --sidebar-border: rgba(255,255,255, 0.06);
   --sidebar-primary: #6366f1;
@@ -132,8 +132,8 @@
   --sidebar-active: rgba(255,255,255, 0.08);
   --sidebar-active-text: rgba(255,255,255, 0.93);
   --sidebar-hover-text: rgba(255,255,255, 0.85);
-  --sidebar-icon: rgba(255,255,255, 0.45);
-  --sidebar-count: rgba(255,255,255, 0.35);
+  --sidebar-icon: rgba(255,255,255, 0.55);
+  --sidebar-count: rgba(255,255,255, 0.45);
 
   /* Surface 계층 */
   --surface-overlay: #1d1d20;

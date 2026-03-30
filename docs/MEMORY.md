@@ -198,13 +198,17 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Phase 8 Empty States+Motion**: 빈 상태 안내 3곳 (notes-table, note-editor, side-panel-context), duration-75→100 (12건), 트랜지션 CSS 변수 3개
 - **총 102파일 변경, tsc 빌드 0건**
 - **정체성 재정의 논의**: 노트앱→"세상에서 가장 빠른 개인 워크스페이스" (plot-discussion 14개 문서)
-- **다음 (우선순위순)**:
-  1. 정체성 전환 구조 변경 (Home 공간, Notes→Pages, Note/Wiki 통합)
-  2. Turn Into 메뉴 (블록 타입 변환)
-  3. 인라인 쿼리 뷰 (/query → view-engine 재활용)
-  4. 투두 시스템 (TaskIndex 파생 데이터)
-  5. 노트참조 통합 인터랙션 (호버+Peek+인라인펼치기)
-  6. isWiki 리팩토링
+- **구조 변경 리서칭 완료**: Plane(오픈소스) + Notion(UX) + Plot 현재 코드 심층 분석 → `docs/plot-discussion/15-RESTRUCTURING-RESEARCH.md`
+- **다크모드 밝기 미세 조정**: sidebar-muted 0.38→0.50, sidebar-icon 0.45→0.55, muted-foreground #a1a1aa→#b0b0b8, ViewHeader 버튼 /50→/65
+- **outdated 디자인 문서 4개 삭제**: DESIGN-TOKENS.md(32KB), DESIGN-AUDIT.md, PLOT-DESIGN-AUDIT.md, PLOT-DESIGN-POLISH-FINAL.md — globals.css가 단일 진실
+- **다음 (우선순위순 — 구조 변경 먼저)**:
+  1. Note/Wiki 통합 + isWiki 제거 (데이터 모델 확정, noteType 디스크리미네이터)
+  2. Home 공간 추가 (Inbox→Home 흡수, 위젯 대시보드)
+  3. Notes→Pages 네이밍 + 새 페이지 생성 경험 (Notion식 빈 캔버스+힌트)
+  4. 인라인 쿼리 뷰 (/query → view-engine 재활용 TipTap 노드)
+  5. 투두 시스템 (TaskIndex 파생 데이터, 체크박스 인덱싱)
+  6. Turn Into 메뉴 (구조 확정 후)
+  7. 에디터 Phase 2~6 (위키 구조 확정 후)
 
 ### 이전 세션 완료 — 에디터 Phase 1 확장 (2026-03-30)
 - **Columns Block 완성**: CSS Grid 기반, renderHTML columnCell, resize handle(드래그 너비 조절), 테이블 스타일 border
