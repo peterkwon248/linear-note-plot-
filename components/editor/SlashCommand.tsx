@@ -32,6 +32,8 @@ import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
+import { Database } from "@phosphor-icons/react/dist/ssr/Database"
+import { nanoid } from "nanoid"
 
 interface CommandItem {
   title: string
@@ -291,6 +293,19 @@ const COMMANDS: CommandItem[] = [
         .focus()
         .deleteRange(range)
         .insertContent({ type: "contentBlock", content: [{ type: "paragraph" }] })
+        .run()
+    },
+  },
+  {
+    title: "Query",
+    description: "Inline filtered notes table",
+    icon: Database,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({ type: "queryBlock", attrs: { queryId: nanoid(8) } })
         .run()
     },
   },

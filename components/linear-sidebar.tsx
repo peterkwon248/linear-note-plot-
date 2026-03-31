@@ -40,6 +40,7 @@ import { GitFork } from "@phosphor-icons/react/dist/ssr/GitFork"
 import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
 import { Island } from "@phosphor-icons/react/dist/ssr/Island"
 import { ChartPie } from "@phosphor-icons/react/dist/ssr/ChartPie"
+import { CheckSquare as CheckSquareIcon } from "@phosphor-icons/react/dist/ssr/CheckSquare"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import { setHomeSection, useHomeSection } from "@/lib/home-section"
@@ -369,6 +370,7 @@ export function LinearSidebar() {
   const permanentCount = useMemo(() => notes.filter((n) => n.status === "permanent" && !n.trashed).length, [notes])
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
   const wikiCount = useMemo(() => notes.filter((n) => n.noteType === "wiki" && !n.trashed).length, [notes])
+  const todoTaskCount = usePlotStore((s) => s.todoTasks.filter((t) => !t.checked).length)
 
   // Sorted folders: pinned first (by pinnedOrder), then unpinned by lastAccessedAt desc (null last)
   const sortedFolders = useMemo(() => {
@@ -1166,6 +1168,13 @@ export function LinearSidebar() {
                 icon={<IconCalendar size={20} />}
                 label="Calendar"
                 active={isActive("/calendar")}
+              />
+              <NavLink
+                href="/todos"
+                icon={<CheckSquareIcon size={20} />}
+                label="Todos"
+                count={todoTaskCount > 0 ? todoTaskCount : undefined}
+                active={isActive("/todos")}
               />
             </div>
 

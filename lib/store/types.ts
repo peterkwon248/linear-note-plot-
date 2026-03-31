@@ -2,6 +2,7 @@ import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, Note
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
+import type { TaskItem } from "@/lib/todo-index"
 
 export interface EditorTab {
   id: string           // nanoid
@@ -316,6 +317,12 @@ export interface PlotState {
   setActivePane: (pane: 'primary' | 'secondary') => void
   closeEditorTab: (tabId: string) => void
   setActiveEditorTab: (tabId: string) => void
+
+  // ── Todo Index (derived cache, not persisted) ──
+  todoTasks: TaskItem[]
+  rebuildTodoIndex: () => Promise<void>
+  toggleTaskChecked: (noteId: string, position: number) => Promise<void>
+  addQuickTask: (text: string) => Promise<void>
 
   // ── Internal ──
   _hydrateNoteBodies: (bodies: NoteBody[]) => void

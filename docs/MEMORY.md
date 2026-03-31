@@ -197,14 +197,19 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Ontology 네이밍**: Activity Bar "Graph" → "Ontology". 사이드바 Graph NavLink 아이콘 → ChartBar
 - **사이드바 All Notes 제거**: Notes 스페이스 진입 = 전체 노트 보기
 - **경쟁 분석 문서**: `docs/plot-discussion/16-COMPETITIVE-POSITIONING.md` — 블록 기반 앱 6개 오픈소스 검증
+- **인라인 쿼리 뷰 MVP**: /query 슬래시커맨드, QueryBlockNode (TipTap atom 노드), 프리셋 피커 (Status/Folder/Label), 호버-reveal 설정 바, InlineQueryTable, ViewContextKey `query-${string}` 패턴
+- **투두 시스템 MVP**: `lib/todo-index.ts` (체크박스 인덱싱 엔진), `lib/body-helpers.ts::extractTasks`, Store 통합 (todoTasks/rebuildTodoIndex/toggleTaskChecked/addQuickTask), TodoView (진행률+Incomplete/Completed), Calendar 공간 하위 배치
+- **Wiki View all 버튼**: 6개 초과 시 "View all N articles" 버튼
+- **Template Page Architecture 문서화**: `docs/plot-discussion/17-TEMPLATE-PAGE-ARCHITECTURE.md` — Activity Bar = 시스템 기본 템플릿 페이지. 유저 커스텀 페이지 무한 추가. IKEA 전략
+- **Home Dashboard TODO 문서화**: `docs/plot-discussion/18-HOME-DASHBOARD-TODO.md` — 카드 클릭 버그, 투두 고도화, 인라인 쿼리 개선 목록
+- **BlockNote 리서치**: 전환 비추 결론. 데이터 포맷 비호환, PropSchema 원시 타입 한계, 멀티컬럼 유료/GPL
 - **다음 (우선순위순)**:
-  1. Notes→Pages 네이밍 + 새 페이지 생성 경험 (Notion식 빈 캔버스+힌트)
-  2. 인라인 쿼리 뷰 (/query → view-engine 재활용 TipTap 노드)
-  3. 투두 시스템 (TaskIndex 파생 데이터, 체크박스 인덱싱)
-  4. Turn Into 메뉴 (블록 타입 변환)
-  5. 에디터 Phase 2~6 (위키 블록 TipTap 전환 등)
-  6. Turn Into 메뉴 (구조 확정 후)
-  7. 에디터 Phase 2~6 (위키 구조 확정 후)
+  1. 디자인 리부트 (현재 TipTap 유지, components/ 디자인만 새로)
+  2. Home 대시보드 카드 클릭 동작 수정 (필터 연동)
+  3. 투두 고도화 (dueDate 파싱, Things 3식 분류, TickTick 수준 UI)
+  4. 인라인 쿼리 뷰 개선 (뷰 전환, Tags 프리셋, Linked View)
+  5. Turn Into 메뉴
+  6. Notes→Pages 네이밍 (기능 워크스페이스급 달성 후)
 
 ### 이전 세션 완료 — 에디터 Phase 1 확장 (2026-03-30)
 - **Columns Block 완성**: CSS Grid 기반, renderHTML columnCell, resize handle(드래그 너비 조절), 테이블 스타일 border

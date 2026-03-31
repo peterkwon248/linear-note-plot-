@@ -16,7 +16,7 @@ export const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/capture", "/permanent", 
 export const WORKFLOW_ROUTES = ["/inbox", "/capture", "/permanent"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/home", "/tags", "/labels", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights"]
+export const VIEW_ROUTES = ["/home", "/tags", "/labels", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights", "/todos"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
@@ -92,7 +92,7 @@ export function routeGoForward(): boolean {
 export function inferSpace(route: string): ActivitySpace {
   if (route === "/home") return "home"
   if (route === "/wiki") return "wiki"
-  if (route.startsWith("/calendar")) return "calendar"
+  if (route.startsWith("/calendar") || route === "/todos") return "calendar"
   if (route === "/ontology" || route === "/graph-insights") return "ontology"
   // /notes, /inbox, /tags, /labels, /templates, /insights, /capture, /permanent, /trash, /pinned, /search
   return "notes"

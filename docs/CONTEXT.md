@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-74. @멘션 시스템 — 노트/위키/태그/날짜 통합 검색, 인라인 칩, 카테고리별 그룹핑 + 앵커/북마크 시스템 (인라인 마커 + 블록 구분선)
-75. Design Spine 8-Phase 전체 폴리싱 — 102파일, hover/active/border 통일, typography 4단계 표준화, editor CSS 변수화, surface/radius/grid/colors/icons/empty-states/transitions
-76. isWiki→noteType 리팩토링 (v66) — 35파일. Note.isWiki boolean 삭제 → `noteType: "note" | "wiki"` 디스크리미네이터. 확장 가능한 타입 시스템
-77. WikiStatus/Stub 제거 (v67) — ~25파일. stub/article 구분 폐지. 위키 문서는 존재하거나 Red Link(computed)만. Coverage→Uncategorized 대시보드 지표 교체
-78. Home 공간 + Knowledge Intelligence Panel — Activity Bar Inbox→Home 교체. 대시보드 4섹션(Today/Insights/Discover/Recent). 사이드바 Intelligence Panel(Unlinked Mentions/Suggestions/Red Links/Orphans/Knowledge Health). 사이드바 드릴다운 → 메인 영역 상세 뷰. Ontology 네이밍
+76. isWiki→noteType (v66) + WikiStatus/Stub 제거 (v67) — 60파일. Note 타입 시스템 정리
+77. Home 공간 + Knowledge Intelligence Panel — Activity Bar Inbox→Home. 대시보드 4섹션 + 사이드바 드릴다운. Ontology 네이밍
+78. 인라인 쿼리 뷰 MVP — /query 슬래시커맨드, 프리셋 피커 (Status/Folder/Label), 호버-reveal 설정 바, 경량 테이블
+79. 투두 시스템 MVP — 체크박스 인덱싱 (contentJson → TaskIndex), Todo 뷰, 인라인 추가, 체크 토글, Calendar 공간 하위
+80. Template Page Architecture 문서화 — Activity Bar = 시스템 기본 템플릿 페이지. 유저 커스텀 페이지 무한 추가. 좌측=페이지 사이드바, 우측=문서 사이드바
 
 ## Two Axes — Core Design Philosophy
 

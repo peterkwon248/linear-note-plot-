@@ -51,6 +51,56 @@ export function extractLinksOut(content: string): string[] {
  * Scans text and section blocks for [[links]] in content/title fields.
  * Returns unique lowercased link targets.
  */
+/**
+ * Extract task items (checkboxes) from TipTap contentJson.
+ * Recursively walks the JSON tree looking for taskItem nodes.
+ */
+export function extractTasks(contentJson: Record<string, unknown> | null): Array<{ text: string; checked: boolean; position: number }> {
+  if (!contentJson) return []
+  const tasks: Array<{ text: string; checked: boolean; position: number }> = []
+  let pos = 0
+
+  function walk(node: Record<string, unknown>) {
+    if (node.type === "taskItem") {
+      const attrs = (node.attrs as Record<string, unknown>) ?? {}
+      const checked = attrs.checked === true
+      // Extract text from child paragraphs
+      const textParts: string[] = []
+      const content = node.content as Array<Record<string, unknown>> | undefined
+      if (content) {
+        for (const child of content) {
+          if (child.type === "paragraph" || child.type === "text") {
+            collectText(child, textParts)
+          }
+        }
+      }
+      tasks.push({ text: textParts.join("").trim(), checked, position: pos++ })
+    }
+    // Recurse into children
+    const content = node.content as Array<Record<string, unknown>> | undefined
+    if (content && node.type !== "taskItem") {
+      for (const child of content) {
+        walk(child)
+      }
+    }
+  }
+
+  function collectText(node: Record<string, unknown>, parts: string[]) {
+    if (node.type === "text" && typeof node.text === "string") {
+      parts.push(node.text)
+    }
+    const content = node.content as Array<Record<string, unknown>> | undefined
+    if (content) {
+      for (const child of content) {
+        collectText(child, parts)
+      }
+    }
+  }
+
+  walk(contentJson)
+  return tasks
+}
+
 export function extractLinksFromWikiBlocks(blocks: { type: string; content?: string; title?: string }[]): string[] {
   const links = new Set<string>()
   for (const block of blocks) {
