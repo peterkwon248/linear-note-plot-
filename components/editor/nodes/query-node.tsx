@@ -30,6 +30,11 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Table as TableIcon } from "@phosphor-icons/react/dist/ssr/Table"
 import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
 import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
+import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { Tag } from "@phosphor-icons/react/dist/ssr/Tag"
 
 /* ── Constants ────────────────────────────────────────────── */
 
@@ -384,9 +389,150 @@ function FilterAddDropdown({
   )
 }
 
+/* ── QueryPresetPicker ────────────────────────────────────── */
+
+function QueryPresetPicker({
+  onSelect,
+  onCancel,
+}: {
+  onSelect: (filters: FilterRule[], label: string) => void
+  onCancel: () => void
+}) {
+  const folders = usePlotStore((s) => s.folders)
+  const labels = usePlotStore((s) => s.labels)
+
+  const presets: { icon: React.ReactNode; label: string; filters: FilterRule[] }[] = [
+    {
+      icon: <Tray size={16} className="text-muted-foreground" />,
+      label: "Inbox notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "inbox" }],
+    },
+    {
+      icon: <CheckCircle size={16} className="text-muted-foreground" />,
+      label: "Permanent notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "permanent" }],
+    },
+    {
+      icon: <CircleHalf size={16} className="text-muted-foreground" />,
+      label: "Capture notes",
+      filters: [{ field: "status" as FilterField, operator: "eq" as FilterOperator, value: "capture" }],
+    },
+    {
+      icon: <PushPin size={16} className="text-muted-foreground" />,
+      label: "Pinned notes",
+      filters: [{ field: "pinned" as FilterField, operator: "eq" as FilterOperator, value: "true" }],
+    },
+    {
+      icon: <ListBullets size={16} className="text-muted-foreground" />,
+      label: "All notes",
+      filters: [],
+    },
+  ]
+
+  const folderPresets = folders.map((f) => ({
+    icon: <FolderOpen size={16} className="text-muted-foreground" />,
+    label: f.name,
+    filters: [{ field: "folder" as FilterField, operator: "eq" as FilterOperator, value: f.id }] as FilterRule[],
+  }))
+
+  const labelPresets = labels
+    .filter((l) => !l.trashed)
+    .map((l) => ({
+      icon: <Tag size={16} className="text-muted-foreground" />,
+      label: l.name,
+      filters: [{ field: "label" as FilterField, operator: "eq" as FilterOperator, value: l.id }] as FilterRule[],
+    }))
+
+  return (
+    <NodeViewWrapper>
+      <div contentEditable={false} className="my-2 rounded-lg border border-border-subtle bg-surface-overlay p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-foreground">Insert Query View</h3>
+          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground">
+            <PhX size={16} />
+          </button>
+        </div>
+
+        <p className="text-2xs text-muted-foreground mb-4">Choose what to display</p>
+
+        {/* Status presets */}
+        <div className="space-y-1 mb-3">
+          {presets.map((preset) => (
+            <button
+              key={preset.label}
+              onClick={() => onSelect(preset.filters, preset.label)}
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-hover-bg"
+            >
+              {preset.icon}
+              <span>{preset.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Folders section */}
+        {folderPresets.length > 0 && (
+          <>
+            <p className="text-2xs text-muted-foreground mb-1 mt-3 px-3">Folders</p>
+            <div className="space-y-1">
+              {folderPresets.map((preset) => (
+                <button
+                  key={preset.label}
+                  onClick={() => onSelect(preset.filters, preset.label)}
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-hover-bg"
+                >
+                  {preset.icon}
+                  <span>{preset.label}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Labels section */}
+        {labelPresets.length > 0 && (
+          <>
+            <p className="text-2xs text-muted-foreground mb-1 mt-3 px-3">Labels</p>
+            <div className="space-y-1">
+              {labelPresets.map((preset) => (
+                <button
+                  key={preset.label}
+                  onClick={() => onSelect(preset.filters, preset.label)}
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-hover-bg"
+                >
+                  {preset.icon}
+                  <span>{preset.label}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </NodeViewWrapper>
+  )
+}
+
 /* ── QueryNodeView ────────────────────────────────────────── */
 
-function QueryNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+function QueryNodeView({ node, updateAttributes, editor, deleteNode, selected }: NodeViewProps) {
+  const configured = node.attrs.configured === true || node.attrs.configured === "true"
+
+  // If not configured yet, show preset picker
+  if (!configured) {
+    return (
+      <QueryPresetPicker
+        onSelect={(filters, _label) => {
+          updateAttributes({
+            configured: true,
+            filters: JSON.stringify(filters),
+          })
+        }}
+        onCancel={() => {
+          deleteNode()
+        }}
+      />
+    )
+  }
+
   const queryId = node.attrs.queryId as string
   const maxRows = (node.attrs.maxRows as number) ?? 20
 
@@ -516,79 +662,100 @@ function QueryNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
     }
   }, [attrsFilters])
 
+  // Hover state for toolbar reveal
+  const [isHovered, setIsHovered] = useState(false)
+
   return (
     <NodeViewWrapper
       data-type="query-block"
       className={`my-3 rounded-lg border ${selected ? "border-accent/50 ring-1 ring-accent/20" : "border-border-subtle"} bg-surface-overlay overflow-hidden`}
     >
-      <div contentEditable={false}>
-        {/* Header */}
+      <div
+        contentEditable={false}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Header - always visible */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle">
           <div className="flex items-center gap-1.5 text-2xs font-medium text-muted-foreground">
             <TableIcon size={14} />
             <span>Query</span>
             <span className="text-muted-foreground/60">({flatCount} results)</span>
           </div>
-          <button
-            type="button"
-            onClick={deleteNode}
-            className="p-0.5 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <PhX size={12} />
-          </button>
+          {/* Actions - show on hover */}
+          {isHovered && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => updateAttributes({ configured: false })}
+                className="px-1.5 py-0.5 rounded text-2xs hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Change query
+              </button>
+              <button
+                type="button"
+                onClick={deleteNode}
+                className="p-0.5 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <PhX size={12} />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Toolbar */}
-        <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border-subtle/50 flex-wrap">
-          {/* Filter */}
-          <FilterAddDropdown onAdd={handleAddFilter} />
+        {/* Settings toolbar - only on hover */}
+        {isHovered && (
+          <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border-subtle/50 flex-wrap">
+            {/* Filter */}
+            <FilterAddDropdown onAdd={handleAddFilter} />
 
-          {/* Sort */}
-          <div className="inline-flex items-center gap-1">
+            {/* Sort */}
+            <div className="inline-flex items-center gap-1">
+              <select
+                value={viewState.sortField}
+                onChange={(e) => handleSortFieldChange(e.target.value)}
+                className="bg-transparent border-none text-2xs text-muted-foreground hover:text-foreground cursor-pointer py-1 px-1 rounded hover:bg-hover-bg transition-colors"
+              >
+                {SORT_FIELD_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    Sort: {opt.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() =>
+                  updateAttributes({
+                    sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc",
+                  })
+                }
+                className="p-0.5 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
+                title={viewState.sortDirection === "asc" ? "Ascending" : "Descending"}
+              >
+                {viewState.sortDirection === "asc" ? (
+                  <SortAscending size={12} />
+                ) : (
+                  <SortDescending size={12} />
+                )}
+              </button>
+            </div>
+
+            {/* Group */}
             <select
-              value={viewState.sortField}
-              onChange={(e) => handleSortFieldChange(e.target.value)}
+              value={viewState.groupBy}
+              onChange={(e) => handleGroupChange(e.target.value)}
               className="bg-transparent border-none text-2xs text-muted-foreground hover:text-foreground cursor-pointer py-1 px-1 rounded hover:bg-hover-bg transition-colors"
             >
-              {SORT_FIELD_OPTIONS.map((opt) => (
+              {GROUP_BY_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  Sort: {opt.label}
+                  Group: {opt.label}
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              onClick={() =>
-                updateAttributes({
-                  sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc",
-                })
-              }
-              className="p-0.5 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
-              title={viewState.sortDirection === "asc" ? "Ascending" : "Descending"}
-            >
-              {viewState.sortDirection === "asc" ? (
-                <SortAscending size={12} />
-              ) : (
-                <SortDescending size={12} />
-              )}
-            </button>
           </div>
+        )}
 
-          {/* Group */}
-          <select
-            value={viewState.groupBy}
-            onChange={(e) => handleGroupChange(e.target.value)}
-            className="bg-transparent border-none text-2xs text-muted-foreground hover:text-foreground cursor-pointer py-1 px-1 rounded hover:bg-hover-bg transition-colors"
-          >
-            {GROUP_BY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                Group: {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Filter chips */}
+        {/* Filter chips - show on hover or when filters exist */}
         {currentFilters.length > 0 && (
           <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border-subtle/50 flex-wrap">
             {currentFilters.map((filter, idx) => (
@@ -599,19 +766,21 @@ function QueryNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
                 <span className="font-medium">{filter.field}</span>
                 <span>{filter.operator === "eq" ? "is" : "is not"}</span>
                 <span className="text-foreground">{filter.value}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFilter(idx)}
-                  className="ml-0.5 hover:text-foreground transition-colors"
-                >
-                  <PhX size={10} />
-                </button>
+                {isHovered && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFilter(idx)}
+                    className="ml-0.5 hover:text-foreground transition-colors"
+                  >
+                    <PhX size={10} />
+                  </button>
+                )}
               </span>
             ))}
           </div>
         )}
 
-        {/* Table */}
+        {/* Table - always visible */}
         <InlineQueryTable
           groups={groups}
           flatNotes={flatNotes}
@@ -644,6 +813,13 @@ export const QueryBlockNode = TiptapNode.create({
         parseHTML: (el: HTMLElement) => el.getAttribute("data-query-id"),
         renderHTML: (attrs: Record<string, unknown>) => ({
           "data-query-id": attrs.queryId,
+        }),
+      },
+      configured: {
+        default: false,
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-configured") === "true",
+        renderHTML: (attrs: Record<string, unknown>) => ({
+          "data-configured": String(attrs.configured),
         }),
       },
       filters: {

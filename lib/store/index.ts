@@ -31,6 +31,8 @@ import { createWikiCategoriesSlice } from "./slices/wiki-categories"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
+import { todoIndex } from "@/lib/todo-index"
+import { getAllBodies, getBody, saveBody } from "@/lib/note-body-store"
 
 export const usePlotStore = create<PlotState>()(
   persist(
@@ -90,6 +92,7 @@ export const usePlotStore = create<PlotState>()(
         _viewStateHydrated: false,
         navigationHistory: [] as string[],
         navigationIndex: -1,
+        todoTasks: [],
 
         // ── Slices ──
         ...createNotesSlice(set, get, appendEvent),
@@ -112,6 +115,120 @@ export const usePlotStore = create<PlotState>()(
         ...createSavedViewsSlice(set),
         ...createWikiCategoriesSlice(set, get),
         ...createWikiArticlesSlice(set, get),
+
+        // ── Todo Index ──
+        rebuildTodoIndex: async () => {
+          const state = get()
+          const tasks = await todoIndex.buildFromScratch(state.notes, getAllBodies)
+          set({ todoTasks: tasks })
+        },
+
+        toggleTaskChecked: async (noteId: string, position: number) => {
+          const body = await getBody(noteId)
+          if (!body?.contentJson) return
+
+          // Walk contentJson to find the nth taskItem and toggle checked
+          let taskPos = 0
+          function toggleInTree(node: any): any {
+            if (node.type === "taskItem") {
+              if (taskPos === position) {
+                taskPos++
+                return { ...node, attrs: { ...node.attrs, checked: !node.attrs?.checked } }
+              }
+              taskPos++
+              return node
+            }
+            if (node.content) {
+              return { ...node, content: node.content.map(toggleInTree) }
+            }
+            return node
+          }
+
+          const newJson = toggleInTree(body.contentJson)
+          await saveBody({ ...body, contentJson: newJson })
+
+          // Update the note's updatedAt to trigger re-render
+          const state = get()
+          const note = state.notes.find((n: any) => n.id === noteId)
+          if (note) {
+            state.updateNote(noteId, { updatedAt: new Date().toISOString() })
+          }
+
+          // Rebuild todo index for this note
+          todoIndex.upsertNote(noteId, note?.title ?? "", newJson)
+          set({ todoTasks: todoIndex.getAllTasks() })
+        },
+
+        addQuickTask: async (text: string) => {
+          const state = get()
+          // Find or create "Quick Tasks" note
+          let quickNote = state.notes.find((n: any) => n.title === "Quick Tasks" && !n.trashed)
+          let noteId: string
+
+          if (!quickNote) {
+            // Create new Quick Tasks note
+            noteId = state.createNote({ title: "Quick Tasks", status: "inbox" as const })
+            // Build initial contentJson with the task
+            const contentJson = {
+              type: "doc",
+              content: [
+                { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Quick Tasks" }] },
+                {
+                  type: "taskList",
+                  content: [
+                    {
+                      type: "taskItem",
+                      attrs: { checked: false },
+                      content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+                    },
+                  ],
+                },
+              ],
+            }
+            const content = `## Quick Tasks\n- [ ] ${text}`
+            await saveBody({ id: noteId, content, contentJson })
+            state.updateNote(noteId, { content, contentJson: null })
+          } else {
+            noteId = quickNote.id
+            // Append task to existing Quick Tasks note
+            const body = await getBody(noteId)
+            const contentJson = (body?.contentJson ?? { type: "doc", content: [] }) as any
+
+            const newTaskItem = {
+              type: "taskItem",
+              attrs: { checked: false },
+              content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+            }
+
+            // Find the last taskList and append, or create one
+            let appended = false
+            if (contentJson.content) {
+              for (let i = contentJson.content.length - 1; i >= 0; i--) {
+                if (contentJson.content[i].type === "taskList") {
+                  contentJson.content[i].content.push(newTaskItem)
+                  appended = true
+                  break
+                }
+              }
+              if (!appended) {
+                contentJson.content.push({
+                  type: "taskList",
+                  content: [newTaskItem],
+                })
+              }
+            }
+
+            const content = (body?.content ?? "") + `\n- [ ] ${text}`
+            await saveBody({ id: noteId, content, contentJson })
+            state.updateNote(noteId, { updatedAt: new Date().toISOString() })
+          }
+
+          // Rebuild todo index
+          const updatedBody = await getBody(noteId)
+          const note = get().notes.find((n: any) => n.id === noteId)
+          todoIndex.upsertNote(noteId, note?.title ?? "Quick Tasks", updatedBody?.contentJson as any)
+          set({ todoTasks: todoIndex.getAllTasks() })
+        },
       }
     },
     {
@@ -120,7 +237,7 @@ export const usePlotStore = create<PlotState>()(
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, previewNoteId, sidePanelOpen, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, previewNoteId, sidePanelOpen, todoTasks, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
@@ -177,6 +294,13 @@ export const usePlotStore = create<PlotState>()(
               note.content = seed.content
               persistBody({ id: seed.id, content: seed.content, contentJson: null })
             }
+          }
+
+          // Build todo index from note bodies
+          if (typeof indexedDB !== "undefined") {
+            todoIndex.buildFromScratch(state.notes, getAllBodies).then((tasks) => {
+              usePlotStore.setState({ todoTasks: tasks })
+            })
           }
 
           // Load wiki article blocks from IDB (block metadata + text bodies)

@@ -29,6 +29,7 @@ import { CalendarView } from "@/components/calendar-view"
 import { SearchView } from "@/components/views/search-view"
 import { GraphInsightsView } from "@/components/views/graph-insights-view"
 import { HomeView } from "@/components/views/home-view"
+import { TodoView } from "@/components/views/todo-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
@@ -225,6 +226,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {(mountedViews.has("/graph-insights") || activeRoute === "/graph-insights") && (
                   <div className={activeRoute === "/graph-insights" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <GraphInsightsView />
+                  </div>
+                )}
+
+                {(mountedViews.has("/todos") || activeRoute === "/todos") && (
+                  <div className={activeRoute === "/todos" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <TodoView />
                   </div>
                 )}
 
