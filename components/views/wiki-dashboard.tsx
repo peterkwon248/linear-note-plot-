@@ -279,7 +279,7 @@ export function WikiDashboard({
           <div className="mt-6">
             <SectionLabel>Wiki Articles</SectionLabel>
             <div className="grid grid-cols-1 gap-2 min-[700px]:grid-cols-2">
-              {wikiArticles.map((article) => (
+              {wikiArticles.slice(0, 6).map((article) => (
                 <button
                   key={article.id}
                   onClick={() => onOpenWikiArticle?.(article.id)}
@@ -296,6 +296,14 @@ export function WikiDashboard({
                 </button>
               ))}
             </div>
+            {wikiArticles.length > 6 && (
+              <button
+                onClick={onViewAll}
+                className="mt-3 w-full rounded-lg border border-border-subtle py-2 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+              >
+                View all {wikiArticles.length} articles
+              </button>
+            )}
           </div>
         )}
 
