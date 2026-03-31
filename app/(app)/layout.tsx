@@ -28,6 +28,7 @@ import { WikiView } from "@/components/views/wiki-view"
 import { CalendarView } from "@/components/calendar-view"
 import { SearchView } from "@/components/views/search-view"
 import { GraphInsightsView } from "@/components/views/graph-insights-view"
+import { HomeView } from "@/components/views/home-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
@@ -167,6 +168,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
 
                 {/* View routes: mount-once, keep-alive */}
+                {(mountedViews.has("/home") || activeRoute === "/home") && (
+                  <div className={activeRoute === "/home" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <HomeView />
+                  </div>
+                )}
+
                 {(mountedViews.has("/tags") || activeRoute === "/tags") && (
                   <div className={activeRoute === "/tags" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <TagsView />

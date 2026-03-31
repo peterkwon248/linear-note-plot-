@@ -3,8 +3,6 @@
 import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
-import { WikiStatusDot } from "./wiki-shared"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
 import type { WikiArticle } from "@/lib/types"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
@@ -13,7 +11,6 @@ import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
 import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 
@@ -23,14 +20,12 @@ interface WikiDashboardProps {
   wikiNotes: WikiArticle[]
   wikiArticles: WikiArticle[]
   stats: {
-    articles: number
+    total: number
     redLinks: number
     internalLinks: number
     connectedNotes: number
-    stubs: number
   }
   articleCount: number
-  coverageStats: { connected: number; total: number; percent: number }
   redLinks: { title: string; refCount: number }[]
   recentChanges: WikiArticle[]
   mostConnected: { note: WikiArticle; count: number }[]
@@ -50,7 +45,6 @@ interface WikiDashboardProps {
   onOpenWikiArticle?: (id: string) => void
   onCreateFromRedLink: (title: string) => void
   onViewAll: () => void
-  onViewStubs: () => void
   onViewRedLinks?: () => void
   onCategoryClick?: (categoryId: string) => void
 }
@@ -62,7 +56,6 @@ export function WikiDashboard({
   wikiArticles,
   stats,
   articleCount,
-  coverageStats,
   redLinks,
   recentChanges,
   mostConnected,
@@ -78,22 +71,20 @@ export function WikiDashboard({
   onOpenWikiArticle,
   onCreateFromRedLink,
   onViewAll,
-  onViewStubs,
   onViewRedLinks,
   onCategoryClick,
 }: WikiDashboardProps) {
 
-  // Featured article: most recently edited complete article
+  // Featured article: most recently edited article
   const featured = useMemo(() => {
     return wikiNotes
-      .filter((n) => n.wikiStatus === "article")
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       [0] ?? null
   }, [wikiNotes])
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="px-6 py-6">
+      <div className="mx-auto max-w-5xl px-6 py-6">
 
         {/* ── MagnifyingGlass ── */}
         <div className="relative mb-6">
@@ -129,7 +120,6 @@ export function WikiDashboard({
                     onMouseDown={(e) => { e.preventDefault(); onOpenWikiArticle?.(note.id); setSearchQuery("") }}
                     className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-100 hover:bg-hover-bg"
                   >
-                    <WikiStatusDot status={note.wikiStatus} />
                     <span className="truncate">{note.title || "Untitled"}</span>
                   </button>
                 ))}
@@ -139,20 +129,13 @@ export function WikiDashboard({
         </div>
 
         {/* ── Top Stats Row ── */}
-        <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-3">
           <MiniStat
-            label="Articles"
+            label="Wiki Articles"
             value={articleCount}
-            sub={`${stats.articles} articles`}
+            sub={`${stats.total} total`}
             color="text-accent"
             onClick={onViewAll}
-          />
-          <MiniStat
-            label="Stubs"
-            value={stats.stubs}
-            sub="need attention"
-            color="text-chart-3"
-            onClick={onViewStubs}
           />
           <MiniStat
             label="Red Links"
@@ -161,10 +144,11 @@ export function WikiDashboard({
             color="text-destructive"
             onClick={onViewRedLinks}
           />
-          <CoverageStat
-            percent={coverageStats.percent}
-            connected={coverageStats.connected}
-            total={coverageStats.total}
+          <MiniStat
+            label="Uncategorized"
+            value={wikiArticles.filter(a => !a.categoryIds || a.categoryIds.length === 0).length}
+            sub="need categories"
+            color="text-orange-400"
           />
         </div>
 
@@ -230,7 +214,6 @@ export function WikiDashboard({
                   <ArticleItem
                     key={note.id}
                     title={note.title || "Untitled"}
-                    status={note.wikiStatus}
                     meta={shortRelative(note.updatedAt)}
                     onClick={() => onOpenWikiArticle?.(note.id)}
                   />
@@ -245,7 +228,6 @@ export function WikiDashboard({
                   <ArticleItem
                     key={note.id}
                     title={note.title || "Untitled"}
-                    status={note.wikiStatus}
                     meta={`${count} links`}
                     onClick={() => onOpenWikiArticle?.(note.id)}
                   />
@@ -283,7 +265,6 @@ export function WikiDashboard({
                   <ArticleItem
                     key={note.id}
                     title={note.title || "Untitled"}
-                    status={note.wikiStatus}
                     meta={`${daysAgo}d ago`}
                     onClick={() => onOpenWikiArticle?.(note.id)}
                   />
@@ -309,18 +290,9 @@ export function WikiDashboard({
                       {article.title}
                     </h4>
                     <p className="mt-0.5 text-2xs text-muted-foreground/40">
-                      {article.blocks.length} blocks · {(article.wikiStatus as string) === "complete" || article.wikiStatus === "article" ? "article" : "stub"}
+                      {article.blocks.length} blocks
                     </p>
                   </div>
-                  <span className={cn(
-                    "inline-flex items-center gap-1.5 shrink-0 text-2xs font-medium",
-                    article.wikiStatus === "stub" || (article.wikiStatus as string) === "draft" ? "text-chart-3" :
-                    "text-wiki-complete"
-                  )}>
-                    {article.wikiStatus === "stub" || (article.wikiStatus as string) === "draft" ? <IconWikiStub size={14} /> :
-                     <IconWikiArticle size={14} />}
-                    {(article.wikiStatus as string) === "complete" || article.wikiStatus === "article" ? "Article" : "Stub"}
-                  </span>
                 </button>
               ))}
             </div>
@@ -381,29 +353,6 @@ function MiniStat({
   )
 }
 
-function CoverageStat({
-  percent,
-  connected,
-  total,
-}: {
-  percent: number
-  connected: number
-  total: number
-}) {
-  return (
-    <div className="rounded-lg border border-border-subtle bg-card/50 px-3 py-2.5">
-      <p className="text-xl font-semibold tabular-nums text-chart-5">{percent}%</p>
-      <p className="text-2xs font-medium text-foreground/70">Coverage</p>
-      <div className="mt-1.5 h-1 w-full rounded-full bg-secondary/60">
-        <div
-          className="h-full rounded-full bg-chart-5 transition-all duration-200"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <p className="mt-0.5 text-2xs text-muted-foreground/40 tabular-nums">{connected} / {total}</p>
-    </div>
-  )
-}
 
 function ContentCard({
   title,
@@ -429,12 +378,10 @@ function ContentCard({
 
 function ArticleItem({
   title,
-  status,
   meta,
   onClick,
 }: {
   title: string
-  status: string | null
   meta: string
   onClick: () => void
 }) {
@@ -443,7 +390,6 @@ function ArticleItem({
       onClick={onClick}
       className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
     >
-      <WikiStatusDot status={status as any} />
       <span className="min-w-0 flex-1 truncate text-note text-foreground/90">{title}</span>
       <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/40">{meta}</span>
     </button>

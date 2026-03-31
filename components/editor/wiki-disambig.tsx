@@ -21,7 +21,7 @@ export function WikiDisambig({ noteId, noteTitle, onNavigate }: WikiDisambigProp
     const titleLower = noteTitle.toLowerCase()
     return notes.filter(
       (n) =>
-        n.isWiki &&
+        n.noteType === "wiki" &&
         n.id !== noteId &&
         !n.trashed &&
         (n.title.toLowerCase() === titleLower ||

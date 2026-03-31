@@ -32,7 +32,7 @@ export interface SettingsState {
 
   // Preferences
   language: string
-  startView: "all" | "inbox" | "pinned"
+  startView: "home" | "all" | "inbox" | "pinned"
   confirmDelete: boolean
   viewMode: "list" | "board"
 
@@ -75,7 +75,7 @@ export const useSettingsStore = create<SettingsState>()(
 
       // Preferences defaults
       language: "en",
-      startView: "inbox",
+      startView: "home",
       confirmDelete: true,
       viewMode: "list",
 

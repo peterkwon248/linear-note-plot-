@@ -133,7 +133,7 @@ export const WikilinkDecorationExtension = Extension.create({
               setActiveRoute("/wiki")
               navigateToWikiArticle(wikiArticle.id)
             } else {
-              const newId = store.createWikiArticle({ title, wikiStatus: "stub", stubSource: "red-link" })
+              const newId = store.createWikiArticle({ title })
               if (newId) {
                 setActiveRoute("/wiki")
                 navigateToWikiArticle(newId)

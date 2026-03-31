@@ -19,7 +19,6 @@ import {
   Layers,
   FileText,
 } from "lucide-react"
-import { WikiStatusBadge } from "@/components/views/wiki-shared"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 
@@ -76,7 +75,6 @@ export function WikiSplitPage() {
 
   // New article config
   const [newTitle, setNewTitle] = useState("")
-  const [newStatus, setNewStatus] = useState<"stub" | "article">("stub")
 
   // Note title map
   const noteTitleMap = useMemo(() => {
@@ -168,7 +166,7 @@ export function WikiSplitPage() {
   // Split action
   const handleSplit = () => {
     if (!selectedArticleId || rightBlocks.length === 0 || !newTitle.trim()) return
-    const newId = splitWikiArticle(selectedArticleId, rightBlocks, newTitle.trim(), newStatus)
+    const newId = splitWikiArticle(selectedArticleId, rightBlocks, newTitle.trim())
     if (newId) {
       toast.success(`Split "${newTitle}" from "${article?.title}"`)
       navigateToWikiArticle(newId)
@@ -240,7 +238,6 @@ export function WikiSplitPage() {
                 onClick={() => selectArticle(a.id)}
                 className="flex w-full items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-left transition-colors hover:bg-white/[0.05] hover:border-white/[0.1]"
               >
-                <WikiStatusBadge status={a.wikiStatus} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-note font-medium text-white/85">{a.title}</p>
                   <p className="text-2xs text-white/30">{a.blocks.length} blocks</p>
@@ -479,35 +476,6 @@ export function WikiSplitPage() {
               placeholder="Title for the split article…"
               className="h-9 w-full rounded-md border border-white/[0.08] bg-white/[0.03] px-3 text-note text-white/90 placeholder:text-white/30 focus:border-white/20 focus:outline-none"
             />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="mb-1 block text-note text-white/40">Status</label>
-            <div className="flex gap-1 rounded-md bg-white/[0.04] p-0.5">
-              <button
-                onClick={() => setNewStatus("stub")}
-                className={cn(
-                  "rounded px-3 py-1.5 text-note font-medium transition-colors",
-                  newStatus === "stub"
-                    ? "bg-chart-3/20 text-chart-3"
-                    : "text-white/40 hover:text-white/60",
-                )}
-              >
-                Stub
-              </button>
-              <button
-                onClick={() => setNewStatus("article")}
-                className={cn(
-                  "rounded px-3 py-1.5 text-note font-medium transition-colors",
-                  newStatus === "article"
-                    ? "bg-wiki-complete/20 text-wiki-complete"
-                    : "text-white/40 hover:text-white/60",
-                )}
-              >
-                Article
-              </button>
-            </div>
           </div>
 
           {/* Actions */}

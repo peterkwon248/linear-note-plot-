@@ -36,7 +36,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (20): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
-- Store version: 64
+- Store version: 67
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-71. Phase 1C+ — Toolbar 리디자인 + Side Panel 5탭 (Detail/Connections/Activity/Peek/Bookmarks) + Arrange Mode
-72. Phase 1 커스텀 노드 — TOC Block + Callout Block + Columns Block (CSS Grid, resize handle) + Summary Block + Infobox Block + NoteEmbed
-73. 플로팅 TOC (Notion 스타일) — 에디터 우측 자동 사이드바, scrollspy, 헤딩 2개+ 자동 표시, 타이틀 제외
 74. @멘션 시스템 — 노트/위키/태그/날짜 통합 검색, 인라인 칩, 카테고리별 그룹핑 + 앵커/북마크 시스템 (인라인 마커 + 블록 구분선)
 75. Design Spine 8-Phase 전체 폴리싱 — 102파일, hover/active/border 통일, typography 4단계 표준화, editor CSS 변수화, surface/radius/grid/colors/icons/empty-states/transitions
+76. isWiki→noteType 리팩토링 (v66) — 35파일. Note.isWiki boolean 삭제 → `noteType: "note" | "wiki"` 디스크리미네이터. 확장 가능한 타입 시스템
+77. WikiStatus/Stub 제거 (v67) — ~25파일. stub/article 구분 폐지. 위키 문서는 존재하거나 Red Link(computed)만. Coverage→Uncategorized 대시보드 지표 교체
+78. Home 공간 + Knowledge Intelligence Panel — Activity Bar Inbox→Home 교체. 대시보드 4섹션(Today/Insights/Discover/Recent). 사이드바 Intelligence Panel(Unlinked Mentions/Suggestions/Red Links/Orphans/Knowledge Health). 사이드바 드릴다운 → 메인 영역 상세 뷰. Ontology 네이밍
 
 ## Two Axes — Core Design Philosophy
 
@@ -100,12 +100,15 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ## Key Design Decisions
 
 - **LLM/API 사용 안 함** — 전부 규칙 기반 + 통계 기반 + 그래프 알고리즘. 오프라인, 프라이버시, 비용 0
-- **Activity Bar 5-space**: Inbox / Notes / Wiki / Calendar / Graph
+- **Activity Bar 5-space**: Home / Notes / Wiki / Calendar / Ontology (2026-03-31)
 - **Wiki 사이드바 4-항목**: Overview / Merge / Split / Categories (+ Views 섹션). Categories = 2-panel 트리 에디터
 - **Wiki Layout 프리셋**: `"default" | "encyclopedia"` — article별 전환. Encyclopedia = 나무위키식 (인라인 인포박스, 목차, 분류 태그)
 - **Wiki URL 블록**: 유튜브 iframe embed + 일반 링크 카드. AddBlockButton에서 추가
-- **WikiStatus 2단계**: stub(미완성) → article(완성). Red Link = computed (참조만 존재). draft/complete 제거 (v60)
-- **위키 강등 = article→stub 1단계**: stub은 바닥(강등 없음, 삭제만)
+- **WikiStatus 삭제**: stub/article 구분 폐지 (v67). 위키 문서는 존재하거나 Red Link(computed)만 (2026-03-31)
+- **isWiki→noteType**: `Note.isWiki: boolean` 삭제 → `noteType: "note" | "wiki"` 디스크리미네이터 (v66, 2026-03-31)
+- **Home = Knowledge Intelligence Panel**: Inbox 독립 공간 폐지 → Home 대시보드. 사이드바에 Unlinked Mentions/Suggestions/Orphans/Knowledge Health 실시간 지식 인텔리전스. 사이드바 클릭 → 메인 영역 드릴다운 (Linear 패턴) (2026-03-31)
+- **Ontology 네이밍**: Activity Bar "Graph" → "Ontology". 사이드바 Graph 아이콘 → ChartBar (2026-03-31)
+- **Wiki Coverage→Uncategorized**: 대시보드 3번째 지표. Coverage(모호) 제거 → Uncategorized(카테고리 없는 문서 수) (2026-03-31)
 - **Display = List/Board만**: Insights/Calendar는 사이드바/Activity Bar 전용
 - **Graph Health → /graph-insights 페이지**: 사이드바는 필터/컨트롤 패널
 - **필터/디스플레이 먼저, 사이드바 정리 나중에**: 기능이 동작해야 사이드바 의미 있음
@@ -130,7 +133,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Peek wiki fallback**: wiki article ID → title match → note lookup. 위키 블록 직접 편집은 Phase 2A 스코프 (2026-03-28)
 - **카테고리 사이드바 → SmartSidePanel 통합**: 내장 280px 사이드바 제거, 글로벌 Details 패널에서 표시. Notes와 동일 패턴 (2026-03-26)
 - **카테고리 더블클릭 에디터**: 싱글클릭=선택(하이라이트만), 더블클릭=폼 에디터 split view. 이름/설명 인라인 편집, Parent 드롭다운, 서브카테고리 +New/Move here (2026-03-26)
-- **노트 ≠ 위키**: Note와 WikiArticle은 완전 별도 엔티티. Note.isWiki는 레거시 — 리팩토링 예정 (2026-03-30)
+- **노트 ≠ 위키**: Note와 WikiArticle은 완전 별도 엔티티. isWiki→noteType 리팩토링 완료 (2026-03-31)
 - **@멘션 = 노트/위키/태그/날짜 통합**: `@` 트리거, WikiArticle 별도 검색, 카테고리별 그룹핑 (2026-03-30)
 - **플로팅 TOC = Notion 스타일**: 에디터 우측 자동 사이드바, 대시 인디케이터, hover 확장, scrollspy. 첫 heading(타이틀) 제외 (2026-03-30)
 - **앵커/북마크 2종**: 인라인 마커(anchorMark) + 블록 구분선(anchorDivider). TOC + 사이드패널 Bookmarks 탭 통합 (2026-03-30)
@@ -140,12 +143,10 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 
 ## TODO: Future Work (우선순위 순)
 
-### P0 — Design Spine + 에디터 완성
-- **Design Spine 수립** ← **최우선**: CSS 변수 기반 spacing/sizing/typography 표준. Notion 블록 디자인 참고. 변수 5-6개로 전체 블록 일괄 폴리싱
-- **전체 블록 폴리싱**: Design Spine 적용 → TOC/Table/Columns/Callout/Toggle/멘션칩/앵커 일괄 Notion 수준으로
-- **Turn Into 메뉴**: 블록 타입 변환 (H1↔H2, bullet↔numbered, 문단↔콜아웃 등). ~~Make Block 폐기~~
+### P0 — 구조 변경 + 에디터 완성
+- **Notes→Pages 네이밍**: Activity Bar/사이드바 유저 대면 UI에서 "Pages"로 표기. 내부 코드 Note 유지
+- **Turn Into 메뉴**: 블록 타입 변환 (H1↔H2, bullet↔numbered, 문단↔콜아웃 등)
 - **노트참조 통합 인터랙션**: 멘션/위키링크/noteEmbed 공통 — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동, 인라인 본문 펼치기(노트만, 위키 제외)
-- **isWiki 리팩토링**: Note.isWiki 플래그 제거. 노트와 WikiArticle은 완전 별도 엔티티. 30개 파일 96곳 수정 필요
 
 ### P0 — 에디터 통합 프로젝트 후속 Phase
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈

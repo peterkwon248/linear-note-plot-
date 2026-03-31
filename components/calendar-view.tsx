@@ -136,7 +136,7 @@ function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillPr
       />
 
       {/* Layer type icon */}
-      <LayerIcon isWiki={note.isWiki} />
+      <LayerIcon isWiki={note.noteType === "wiki"} />
 
       {/* Title */}
       <span className="flex-1 truncate text-2xs font-medium leading-tight text-foreground/90 group-hover:text-foreground">
@@ -695,8 +695,8 @@ export function CalendarView({
 
     // Apply layer filters
     if (!layers.notes && !layers.wiki) return []
-    if (!layers.notes) result = result.filter((n) => n.isWiki)
-    if (!layers.wiki) result = result.filter((n) => !n.isWiki)
+    if (!layers.notes) result = result.filter((n) => n.noteType === "wiki")
+    if (!layers.wiki) result = result.filter((n) => n.noteType !== "wiki")
 
     // Apply user filters
     for (const rule of calendarFilters) {

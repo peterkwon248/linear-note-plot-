@@ -241,7 +241,7 @@ export function SidePanelConnections() {
           tags: n.tags,
           linksOut: n.linksOut,
           folderId: n.folderId,
-          isWiki: n.isWiki || wikiArticleIds.has(n.id),
+          isWiki: n.noteType === "wiki" || wikiArticleIds.has(n.id),
           preview: n.preview,
         })),
     [notes, wikiArticleIds]

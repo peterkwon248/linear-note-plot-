@@ -25,7 +25,6 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
@@ -143,7 +142,6 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   const removeWikiBlock = usePlotStore((s) => s.removeWikiBlock)
   const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
   const reorderWikiBlocks = usePlotStore((s) => s.reorderWikiBlocks)
-  const setWikiArticleStatus = usePlotStore((s) => s.setWikiArticleStatus)
   const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
   const splitWikiArticle = usePlotStore((s) => s.splitWikiArticle)
 
@@ -664,45 +662,6 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
 
         {/* Categories (WikiCategory DAG) */}
         <ArticleCategories articleId={articleId} categoryIds={article.categoryIds ?? []} editable={editable} />
-
-        {/* Quality */}
-        <div className="space-y-2">
-          <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
-            Quality
-          </h4>
-          {(() => {
-            const isArticle = article.wikiStatus === "article" || (article.wikiStatus as string) === "complete"
-            const label = isArticle ? "Article" : "Stub"
-            return (
-              <>
-                <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-2xs font-medium ${
-                    isArticle ? "bg-emerald-500/10 text-emerald-500" : "bg-yellow-500/10 text-yellow-500"
-                  }`}>
-                    {label}
-                  </span>
-                </div>
-                <div className="flex gap-1.5">
-                  {!isArticle && (
-                    <button
-                      onClick={() => setWikiArticleStatus(articleId, "article")}
-                      className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-2xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
-                    >
-                      <CaretUp size={12} weight="regular" />
-                      Promote to Article
-                    </button>
-                  )}
-                  {isArticle && (
-                    <span className="flex items-center gap-1 text-2xs text-emerald-400">
-                      <PhCheck size={12} weight="bold" />
-                      Article
-                    </span>
-                  )}
-                </div>
-              </>
-            )
-          })()}
-        </div>
 
         {/* Sources -- auto-extracted from blocks */}
         <SourcesList blocks={article.blocks} />

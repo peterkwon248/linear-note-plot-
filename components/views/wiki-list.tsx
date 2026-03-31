@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
-import { groupByInitial, INDEX_GROUPS } from "@/lib/korean-utils"
+import { groupByInitial } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import type { WikiArticle } from "@/lib/types"
@@ -27,8 +26,8 @@ interface WikiListProps {
   backlinkCounts: Map<string, number>
 
   // Filter state
-  dashFilter: "all" | "stubs" | "articles" | "redlinks"
-  setDashFilter: (f: "all" | "stubs" | "articles" | "redlinks") => void
+  dashFilter: "all" | "redlinks"
+  setDashFilter: (f: "all" | "redlinks") => void
   showAllArticles: boolean
   setShowAllArticles: (show: boolean) => void
 
@@ -51,56 +50,12 @@ interface WikiListProps {
   onSelect?: (id: string, opts: { multi?: boolean; shift?: boolean; index?: number }) => void
 }
 
-/* ── Status Badge ── */
-
-const STATUS_COLORS: Record<string, string> = {
-  stub: "text-chart-3",
-  article: "text-wiki-complete",
-  // Legacy fallbacks (pre-v60 IDB data)
-  draft: "text-chart-3",
-  complete: "text-wiki-complete",
-}
-
-const STATUS_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  stub: IconWikiStub,
-  article: IconWikiArticle,
-  // Legacy fallbacks
-  draft: IconWikiStub,
-  complete: IconWikiArticle,
-}
-
-// Normalize legacy status values to new names for display
-const STATUS_LABELS: Record<string, string> = {
-  stub: "Stub",
-  article: "Article",
-  draft: "Stub",
-  complete: "Article",
-}
-
-function StatusBadge({ status }: { status: string | null }) {
-  if (!status) return null
-  const Icon = STATUS_ICONS[status]
-  const label = STATUS_LABELS[status] ?? status
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 text-2xs font-medium",
-        STATUS_COLORS[status] ?? "text-muted-foreground/50"
-      )}
-    >
-      {Icon && <Icon size={14} />}
-      {label}
-    </span>
-  )
-}
-
 /* ── Column Header ── */
 
 function ColumnHeaders({ hasSelection }: { hasSelection?: boolean }) {
   return (
     <div className="flex items-center px-5 py-2 text-2xs font-medium text-muted-foreground/50 border-b border-border-subtle">
       {hasSelection && <span className="w-7 shrink-0" />}
-      <span className="w-[100px]">Status</span>
       <span className="min-w-0 flex-1">Title</span>
       <span className="w-[60px] text-right">Links</span>
       <span className="w-[36px]" />
@@ -181,9 +136,6 @@ function ArticleTableRow({
         }}
         className="flex flex-1 items-center text-left min-w-0"
       >
-        <span className="w-[100px] shrink-0">
-          <StatusBadge status={note.wikiStatus} />
-        </span>
         <span className="min-w-0 flex-1 truncate text-note font-medium text-foreground/90">
           {note.title || "Untitled"}
         </span>
@@ -329,9 +281,6 @@ function IndexTableRow({
       onClick={onClick}
       className="flex w-full items-center px-5 py-2 hover:bg-hover-bg transition-colors duration-100 cursor-pointer text-left"
     >
-      <span className="w-[100px] shrink-0">
-        <StatusBadge status={note.wikiStatus} />
-      </span>
       <span className="min-w-0 flex-1 truncate text-note text-foreground/90">
         {note.title || "Untitled"}
       </span>
@@ -384,8 +333,6 @@ export function WikiList({
 
   const counts = {
     all: sortedFilteredWikiNotes.length + redLinks.length,
-    articles: filteredWikiNotes.filter(n => n.wikiStatus === "article" || (n.wikiStatus as string) === "complete").length,
-    stubs: filteredWikiNotes.filter(n => n.wikiStatus === "stub" || (n.wikiStatus as string) === "draft").length,
     redlinks: redLinks.length,
   }
 
@@ -405,8 +352,8 @@ export function WikiList({
         <span className="h-4 w-px bg-border/50" />
 
         {/* Filter Tabs */}
-        {(["all", "articles", "stubs", "redlinks"] as const).map((tab) => {
-          const labels: Record<string, string> = { all: "All", articles: "Article", stubs: "Stub", redlinks: "Red Links" }
+        {(["all", "redlinks"] as const).map((tab) => {
+          const labels: Record<string, string> = { all: "All", redlinks: "Red Links" }
           const tabCount = counts[tab as keyof typeof counts]
           return (
             <button
@@ -420,7 +367,7 @@ export function WikiList({
                 tab === "redlinks" && "text-destructive/70",
                 dashFilter === tab && !showAllArticles
                   ? tab === "redlinks" ? "bg-destructive/10 text-destructive" : "bg-foreground/10 text-foreground"
-                  : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
+                  : tab === "redlinks" ? "text-destructive/50 hover:bg-hover-bg hover:text-destructive/70" : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
               )}
             >
               {labels[tab]}
@@ -493,7 +440,7 @@ export function WikiList({
         /* ── Filtered Article Table ── */
         <div className="flex-1 overflow-y-auto">
           <ColumnHeaders hasSelection={!!onSelect} />
-          {sortedFilteredWikiNotes.length === 0 && (dashFilter === "all" ? redLinks.length === 0 : dashFilter !== "redlinks") ? (
+          {sortedFilteredWikiNotes.length === 0 && redLinks.length === 0 ? (
             <EmptyState />
           ) : (
             <div>

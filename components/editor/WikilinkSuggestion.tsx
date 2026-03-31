@@ -171,7 +171,7 @@ export const WikilinkSuggestion = Extension.create({
                   new Date(a.updatedAt).getTime()
               )
               .slice(0, 8)
-              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.isWiki ?? false }))
+              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.noteType === "wiki" }))
           }
 
           // Title matches: exact > startsWith > contains, then by length
@@ -207,13 +207,13 @@ export const WikilinkSuggestion = Extension.create({
               title: n.title,
               status: n.status,
               isAlias: true,
-              isWiki: n.isWiki ?? false,
+              isWiki: n.noteType === "wiki",
             }))
 
           const combined: WikilinkItem[] = [
             ...titleMatches
               .slice(0, 6)
-              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.isWiki ?? false })),
+              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.noteType === "wiki" })),
             ...aliasMatches.slice(0, 2),
           ].slice(0, 8)
 

@@ -10,11 +10,9 @@ import { WikiCategories } from "@/components/editor/wiki-categories"
 import { WikiDisambig } from "@/components/editor/wiki-disambig"
 import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
 import { WikiCollectionSidebar } from "@/components/editor/wiki-collection-sidebar"
-import { WikiStatusBadge, StatRow } from "./wiki-shared"
+import { StatRow } from "./wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
-import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 
 export function WikiArticleReader({
   noteId,
@@ -28,7 +26,6 @@ export function WikiArticleReader({
   const notes = usePlotStore((s) => s.notes)
   const allTags = usePlotStore((s) => s.tags)
   const relations = usePlotStore((s) => s.relations)
-  const setWikiStatus = usePlotStore((s) => s.setWikiStatus)
   const updateNote = usePlotStore((s) => s.updateNote)
   const backlinks = useBacklinksFor(noteId)
   const editorRef = useRef<any>(null)
@@ -144,45 +141,6 @@ export function WikiArticleReader({
         {note.tags.length > 0 && (
           <WikiCategories noteTagIds={note.tags} allTags={allTags.filter((t) => !t.trashed)} />
         )}
-
-        {/* Wiki Quality Track */}
-        {note.isWiki && note.wikiStatus && (() => {
-          const isArticle = note.wikiStatus === "article" || (note.wikiStatus as string) === "complete"
-          const isStub = !isArticle
-          return (
-            <div className="space-y-2">
-              <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
-                Quality
-              </h4>
-              <div className="flex items-center gap-2">
-                <WikiStatusBadge status={note.wikiStatus} />
-                {note.stubSource && isStub && (
-                  <span className="text-2xs text-muted-foreground">
-                    via {note.stubSource}
-                  </span>
-                )}
-              </div>
-              {/* Promotion buttons */}
-              <div className="flex gap-1.5">
-                {isStub && (
-                  <button
-                    onClick={() => setWikiStatus(note.id, "article")}
-                    className="flex items-center gap-1 rounded-md bg-emerald-500/8 px-2 py-1 text-2xs font-medium text-emerald-400 transition-colors duration-100 hover:bg-emerald-500/15"
-                  >
-                    <CaretUp size={12} weight="regular" />
-                    Promote to Article
-                  </button>
-                )}
-                {isArticle && (
-                  <span className="flex items-center gap-1 text-2xs text-emerald-400">
-                    <PhCheck size={12} weight="bold" />
-                    Article
-                  </span>
-                )}
-              </div>
-            </div>
-          )
-        })()}
 
         {/* Activity stats */}
         <div className="space-y-2">

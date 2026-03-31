@@ -98,12 +98,10 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         preview: extractPreview(content),
         linksOut: extractLinksOut(content),
         ...workflowDefaults(template.status),
-        isWiki: false,
+        noteType: "note" as const,
         source: "manual",
         aliases: [],
         wikiInfobox: [],
-        wikiStatus: null,
-        stubSource: null,
       }
 
       set((s: any) => ({

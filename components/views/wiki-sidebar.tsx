@@ -1,16 +1,14 @@
 "use client"
 
-import { WikiStatusDot, StubsBySourceList } from "./wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note } from "@/lib/types"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import type React from "react"
 
 interface WikiSidebarProps {
   categories: { items: { id: string; name: string; parentIds: string[]; count: number }[]; uncategorized: number }
   recentChanges: Note[]
   redLinks: { title: string; refCount: number }[]
-  stubsBySource: [string, number][]
-  stubCount: number
   onOpenArticle: (id: string) => void
   onCreateFromRedLink: (title: string) => void
   onCategoryClick?: (categoryId: string) => void
@@ -20,8 +18,6 @@ export function WikiSidebar({
   categories,
   recentChanges,
   redLinks,
-  stubsBySource,
-  stubCount,
   onOpenArticle,
   onCreateFromRedLink,
   onCategoryClick,
@@ -81,7 +77,7 @@ export function WikiSidebar({
                 onClick={() => onOpenArticle(note.id)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
               >
-                <WikiStatusDot status={note.wikiStatus} />
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent/50" />
                 <span className="min-w-0 flex-1 truncate text-2xs text-foreground/80">
                   {note.title || "Untitled"}
                 </span>
@@ -117,13 +113,6 @@ export function WikiSidebar({
               </div>
             ))}
           </div>
-        </Section>
-      )}
-
-      {/* Stubs by Source */}
-      {stubCount > 0 && (
-        <Section title="Stubs by Source">
-          <StubsBySourceList items={stubsBySource} />
         </Section>
       )}
     </div>

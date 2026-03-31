@@ -1,0 +1,661 @@
+"use client"
+
+import { useMemo } from "react"
+import { usePlotStore } from "@/lib/store"
+import { setActiveRoute } from "@/lib/table-route"
+import { useHomeSection, setHomeSection } from "@/lib/home-section"
+import type { HomeSection } from "@/lib/home-section"
+import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
+import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { Clock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
+import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
+import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
+import { GitFork } from "@phosphor-icons/react/dist/ssr/GitFork"
+import { Island } from "@phosphor-icons/react/dist/ssr/Island"
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
+import { Circle } from "@phosphor-icons/react/dist/ssr/Circle"
+
+/* ── Helpers ──────────────────────────────────────────── */
+
+function getGreeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return "Good morning"
+  if (h < 18) return "Good afternoon"
+  return "Good evening"
+}
+
+function todayString(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function formatDate(): string {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+}
+
+function relativeTime(dateStr: string): string {
+  const now = Date.now()
+  const then = new Date(dateStr).getTime()
+  const diff = now - then
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return "just now"
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
+/* ── Back button ─────────────────────────────────────── */
+
+function BackToOverview() {
+  return (
+    <button
+      onClick={() => setHomeSection("overview")}
+      className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <ArrowLeft size={14} />
+      <span>Back to Overview</span>
+    </button>
+  )
+}
+
+/* ── Section header ──────────────────────────────────── */
+
+function SectionHeader({
+  icon,
+  title,
+  count,
+}: {
+  icon: React.ReactNode
+  title: string
+  count: number
+}) {
+  return (
+    <div className="mb-4 flex items-center gap-2.5">
+      <span className="text-muted-foreground">{icon}</span>
+      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+      <span className="text-sm text-muted-foreground tabular-nums">({count})</span>
+    </div>
+  )
+}
+
+/* ── Detail: Unlinked Mentions ───────────────────────── */
+
+function UnlinkedMentionsDetail() {
+  const notes = usePlotStore((s) => s.notes)
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+
+  const nonTrashedNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
+
+  const allUnlinked = useMemo(() => {
+    const mentionMap = new Map<
+      string,
+      { noteId: string; title: string; count: number; foundIn: { id: string; title: string }[] }
+    >()
+
+    for (const note of nonTrashedNotes) {
+      const mentions = detectUnlinkedMentions(note.id, nonTrashedNotes)
+      for (const m of mentions) {
+        const existing = mentionMap.get(m.noteId)
+        if (existing) {
+          existing.count += m.count
+          if (!existing.foundIn.find((f) => f.id === note.id)) {
+            existing.foundIn.push({ id: note.id, title: note.title || "Untitled" })
+          }
+        } else {
+          mentionMap.set(m.noteId, {
+            noteId: m.noteId,
+            title: m.title,
+            count: m.count,
+            foundIn: [{ id: note.id, title: note.title || "Untitled" }],
+          })
+        }
+      }
+    }
+
+    return Array.from(mentionMap.values()).sort((a, b) => b.count - a.count)
+  }, [nonTrashedNotes])
+
+  function navigateToNote(noteId: string) {
+    setSelectedNoteId(noteId)
+    setActiveRoute("/notes")
+  }
+
+  return (
+    <div>
+      <BackToOverview />
+      <SectionHeader
+        icon={<LinkSimple size={20} />}
+        title="Unlinked Mentions"
+        count={allUnlinked.length}
+      />
+      {allUnlinked.length === 0 ? (
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-sm text-muted-foreground">
+          No unlinked mentions found.
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay">
+          {allUnlinked.map((m, i) => (
+            <div
+              key={m.noteId}
+              className={`px-4 py-3 ${i !== allUnlinked.length - 1 ? "border-b border-border-subtle" : ""}`}
+            >
+              <div className="flex items-center gap-2">
+                <FileText size={14} className="shrink-0 text-muted-foreground" />
+                <span className="font-medium text-sm text-foreground">&ldquo;{m.title}&rdquo;</span>
+                <span className="text-2xs text-muted-foreground">
+                  found in {m.foundIn.length} note{m.foundIn.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="mt-1.5 ml-5 space-y-0.5">
+                {m.foundIn.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => navigateToNote(f.id)}
+                    className="flex items-center gap-1.5 text-2xs text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <span className="text-border-subtle">&bull;</span>
+                    <span>{f.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Detail: Connection Suggestions ──────────────────── */
+
+function SuggestionsDetail() {
+  const notes = usePlotStore((s) => s.notes)
+  const relationSuggestions = usePlotStore((s) => s.relationSuggestions)
+  const acceptRelationSuggestion = usePlotStore((s) => s.acceptRelationSuggestion)
+  const dismissRelationSuggestion = usePlotStore((s) => s.dismissRelationSuggestion)
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+
+  const allPending = useMemo(() => {
+    return relationSuggestions
+      .filter((s) => s.status === "pending")
+      .map((s) => {
+        const source = notes.find((n) => n.id === s.sourceNoteId)
+        const target = notes.find((n) => n.id === s.targetNoteId)
+        return {
+          id: s.id,
+          sourceId: s.sourceNoteId,
+          targetId: s.targetNoteId,
+          sourceTitle: source?.title || "Untitled",
+          targetTitle: target?.title || "Untitled",
+          reason: s.reason || "co-occurrence",
+        }
+      })
+  }, [relationSuggestions, notes])
+
+  function navigateToNote(noteId: string) {
+    setSelectedNoteId(noteId)
+    setActiveRoute("/notes")
+  }
+
+  return (
+    <div>
+      <BackToOverview />
+      <SectionHeader
+        icon={<GitFork size={20} />}
+        title="Connection Suggestions"
+        count={allPending.length}
+      />
+      {allPending.length === 0 ? (
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-sm text-muted-foreground">
+          No pending suggestions.
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay">
+          {allPending.map((s, i) => (
+            <div
+              key={s.id}
+              className={`px-4 py-3 ${i !== allPending.length - 1 ? "border-b border-border-subtle" : ""}`}
+            >
+              <div className="flex items-center gap-2">
+                <GitFork size={14} className="shrink-0 text-muted-foreground" />
+                <button
+                  onClick={() => navigateToNote(s.sourceId)}
+                  className="text-sm font-medium text-foreground transition-colors hover:underline"
+                >
+                  {s.sourceTitle}
+                </button>
+                <span className="text-2xs text-muted-foreground">&harr;</span>
+                <button
+                  onClick={() => navigateToNote(s.targetId)}
+                  className="text-sm font-medium text-foreground transition-colors hover:underline"
+                >
+                  {s.targetTitle}
+                </button>
+              </div>
+              <div className="mt-1.5 ml-5 flex items-center gap-3">
+                <span className="text-2xs text-muted-foreground">
+                  Reason: {s.reason}
+                </span>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => acceptRelationSuggestion(s.id)}
+                    className="rounded border border-border-subtle bg-surface-overlay px-2 py-0.5 text-2xs text-foreground transition-colors hover:bg-hover-bg"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => dismissRelationSuggestion(s.id)}
+                    className="rounded border border-border-subtle bg-surface-overlay px-2 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Detail: Red Links ───────────────────────────────── */
+
+function RedLinksDetail() {
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+
+  const nonTrashedNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
+
+  const allRedLinks = useMemo(() => {
+    const existingTitles = new Set<string>()
+    for (const n of nonTrashedNotes) {
+      existingTitles.add(n.title.toLowerCase())
+      if (n.aliases) n.aliases.forEach((a) => existingTitles.add(a.toLowerCase()))
+    }
+    for (const w of wikiArticles) {
+      existingTitles.add(w.title.toLowerCase())
+      w.aliases.forEach((a) => existingTitles.add(a.toLowerCase()))
+    }
+
+    const redMap = new Map<string, { title: string; refs: number; referencedBy: { id: string; title: string }[] }>()
+    for (const n of nonTrashedNotes) {
+      for (const link of n.linksOut) {
+        if (!existingTitles.has(link.toLowerCase())) {
+          const existing = redMap.get(link.toLowerCase())
+          if (existing) {
+            existing.refs++
+            if (!existing.referencedBy.find((r) => r.id === n.id)) {
+              existing.referencedBy.push({ id: n.id, title: n.title || "Untitled" })
+            }
+          } else {
+            redMap.set(link.toLowerCase(), {
+              title: link,
+              refs: 1,
+              referencedBy: [{ id: n.id, title: n.title || "Untitled" }],
+            })
+          }
+        }
+      }
+    }
+
+    return Array.from(redMap.values()).sort((a, b) => b.refs - a.refs)
+  }, [nonTrashedNotes, wikiArticles])
+
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+
+  function navigateToNote(noteId: string) {
+    setSelectedNoteId(noteId)
+    setActiveRoute("/notes")
+  }
+
+  return (
+    <div>
+      <BackToOverview />
+      <SectionHeader
+        icon={<LinkBreak size={20} />}
+        title="Red Links"
+        count={allRedLinks.length}
+      />
+      {allRedLinks.length === 0 ? (
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-sm text-muted-foreground">
+          No red links found.
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay">
+          {allRedLinks.map((r, i) => (
+            <div
+              key={r.title}
+              className={`px-4 py-3 ${i !== allRedLinks.length - 1 ? "border-b border-border-subtle" : ""}`}
+            >
+              <div className="flex items-center gap-2">
+                <Circle size={10} weight="fill" className="shrink-0 text-red-400" />
+                <span className="font-medium text-sm text-red-400">{r.title}</span>
+                <span className="text-2xs text-muted-foreground">
+                  referenced by {r.referencedBy.length} note{r.referencedBy.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="mt-1.5 ml-5 space-y-0.5">
+                {r.referencedBy.map((ref) => (
+                  <button
+                    key={ref.id}
+                    onClick={() => navigateToNote(ref.id)}
+                    className="flex items-center gap-1.5 text-2xs text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <span className="text-border-subtle">&bull;</span>
+                    <span>{ref.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Detail: Orphans ─────────────────────────────────── */
+
+function OrphansDetail() {
+  const notes = usePlotStore((s) => s.notes)
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+
+  const nonTrashedNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
+
+  const allOrphans = useMemo(() => {
+    const incomingSet = new Set<string>()
+    for (const n of nonTrashedNotes) {
+      for (const link of n.linksOut) {
+        const target = nonTrashedNotes.find(
+          (t) => t.title.toLowerCase() === link.toLowerCase(),
+        )
+        if (target) incomingSet.add(target.id)
+      }
+    }
+    return nonTrashedNotes
+      .filter((n) => n.linksOut.length === 0 && !incomingSet.has(n.id))
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  }, [nonTrashedNotes])
+
+  function navigateToNote(noteId: string) {
+    setSelectedNoteId(noteId)
+    setActiveRoute("/notes")
+  }
+
+  return (
+    <div>
+      <BackToOverview />
+      <SectionHeader
+        icon={<Island size={20} />}
+        title="Orphan Notes"
+        count={allOrphans.length}
+      />
+      {allOrphans.length === 0 ? (
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-sm text-muted-foreground">
+          No orphan notes found.
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay">
+          {allOrphans.map((note, i) => (
+            <button
+              key={note.id}
+              onClick={() => navigateToNote(note.id)}
+              className={`flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-hover-bg ${
+                i !== allOrphans.length - 1 ? "border-b border-border-subtle" : ""
+              }`}
+            >
+              <span className="flex items-center gap-2 truncate">
+                <FileText size={14} className="shrink-0 text-muted-foreground" />
+                <span className="truncate text-sm text-foreground">
+                  {note.title || "Untitled"}
+                </span>
+              </span>
+              <span className="ml-3 shrink-0 text-2xs text-muted-foreground">
+                {relativeTime(note.createdAt)}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Main Component ──────────────────────────────────── */
+
+export function HomeView() {
+  const homeSection = useHomeSection()
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+
+  const today = todayString()
+
+  const inboxCount = useMemo(
+    () => notes.filter((n) => n.status === "inbox" && !n.trashed).length,
+    [notes],
+  )
+
+  const reviewDueCount = useMemo(
+    () =>
+      notes.filter(
+        (n) => n.reviewAt && new Date(n.reviewAt) <= new Date(),
+      ).length,
+    [notes],
+  )
+
+  const editedTodayCount = useMemo(
+    () => notes.filter((n) => n.updatedAt.startsWith(today)).length,
+    [notes, today],
+  )
+
+  const totalNotes = useMemo(
+    () => notes.filter((n) => !n.trashed).length,
+    [notes],
+  )
+
+  const orphanCount = useMemo(
+    () =>
+      notes.filter(
+        (n) => !n.trashed && n.linksOut.length === 0,
+      ).length,
+    [notes],
+  )
+
+  const recentNotes = useMemo(
+    () =>
+      [...notes]
+        .filter((n) => !n.trashed)
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+        .slice(0, 7),
+    [notes],
+  )
+
+  function navigateToNote(noteId: string) {
+    setSelectedNoteId(noteId)
+    setActiveRoute("/notes")
+  }
+
+  /* ── Detail view routing ── */
+  if (homeSection !== "overview") {
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-5xl px-8 py-8">
+          {homeSection === "unlinked" && <UnlinkedMentionsDetail />}
+          {homeSection === "suggestions" && <SuggestionsDetail />}
+          {homeSection === "redlinks" && <RedLinksDetail />}
+          {homeSection === "orphans" && <OrphansDetail />}
+        </div>
+      </div>
+    )
+  }
+
+  /* ── Overview dashboard (default) ── */
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto max-w-5xl px-8 py-8">
+        {/* ── Section 1: Today ── */}
+        <section className="mb-8">
+          <h1 className="text-2xl font-semibold text-foreground">
+            {getGreeting()}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {formatDate()}
+          </p>
+
+          <div className="mt-5 grid grid-cols-3 gap-3">
+            {/* Inbox */}
+            <button
+              onClick={() => setActiveRoute("/inbox")}
+              className="flex flex-col items-start gap-2 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
+            >
+              <Tray size={18} className="text-muted-foreground" />
+              <div>
+                <p className="text-2xl font-semibold text-foreground">
+                  {inboxCount}
+                </p>
+                <p className="text-2xs text-muted-foreground">Inbox</p>
+              </div>
+            </button>
+
+            {/* Review Due */}
+            <button
+              onClick={() => setActiveRoute("/notes")}
+              className="flex flex-col items-start gap-2 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
+            >
+              <Clock size={18} className="text-muted-foreground" />
+              <div>
+                <p className="text-2xl font-semibold text-foreground">
+                  {reviewDueCount}
+                </p>
+                <p className="text-2xs text-muted-foreground">Review Due</p>
+              </div>
+            </button>
+
+            {/* Edited Today */}
+            <button
+              onClick={() => setActiveRoute("/notes")}
+              className="flex flex-col items-start gap-2 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
+            >
+              <PencilSimple size={18} className="text-muted-foreground" />
+              <div>
+                <p className="text-2xl font-semibold text-foreground">
+                  {editedTodayCount}
+                </p>
+                <p className="text-2xs text-muted-foreground">Edited Today</p>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        {/* ── Section 2: Insights ── */}
+        <section className="mb-8">
+          <h2 className="text-note font-medium text-foreground">Insights</h2>
+          <div className="mt-3 grid grid-cols-4 gap-3">
+            <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4">
+              <FileText
+                size={16}
+                className="mb-2 text-muted-foreground"
+              />
+              <p className="text-2xl font-semibold text-foreground">
+                {totalNotes}
+              </p>
+              <p className="text-2xs text-muted-foreground">Total Notes</p>
+            </div>
+
+            <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4">
+              <Graph
+                size={16}
+                className="mb-2 text-muted-foreground"
+              />
+              <p className="text-2xl font-semibold text-foreground">
+                {wikiArticles.length}
+              </p>
+              <p className="text-2xs text-muted-foreground">Wiki Articles</p>
+            </div>
+
+            <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4">
+              <LinkBreak
+                size={16}
+                className="mb-2 text-muted-foreground"
+              />
+              <p className="text-2xl font-semibold text-foreground">
+                {orphanCount}
+              </p>
+              <p className="text-2xs text-muted-foreground">Orphans</p>
+            </div>
+
+            <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4">
+              <FileText
+                size={16}
+                className="mb-2 text-muted-foreground"
+              />
+              <p className="text-2xl font-semibold text-foreground">
+                &mdash;
+              </p>
+              <p className="text-2xs text-muted-foreground">Red Links</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Section 3: Discover ── */}
+        <section className="mb-8">
+          <h2 className="text-note font-medium text-foreground">Discover</h2>
+          <div className="mt-3 rounded-lg border border-border-subtle bg-surface-overlay p-4">
+            <p className="text-sm text-muted-foreground">
+              Unlinked mention suggestions and discovery features coming soon.
+            </p>
+          </div>
+        </section>
+
+        {/* ── Section 4: Recent ── */}
+        <section>
+          <h2 className="text-note font-medium text-foreground">Recent</h2>
+          <div className="mt-3 rounded-lg border border-border-subtle bg-surface-overlay">
+            {recentNotes.length === 0 ? (
+              <div className="p-4 text-sm text-muted-foreground">
+                No notes yet.
+              </div>
+            ) : (
+              recentNotes.map((note, i) => (
+                <button
+                  key={note.id}
+                  onClick={() => navigateToNote(note.id)}
+                  className={`flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-hover-bg ${
+                    i !== recentNotes.length - 1
+                      ? "border-b border-border-subtle"
+                      : ""
+                  }`}
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    <ClockCounterClockwise
+                      size={14}
+                      className="shrink-0 text-muted-foreground"
+                    />
+                    <span className="truncate text-sm text-foreground">
+                      {note.title || "Untitled"}
+                    </span>
+                  </span>
+                  <span className="ml-3 shrink-0 text-2xs text-muted-foreground">
+                    {relativeTime(note.updatedAt)}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  )
+}

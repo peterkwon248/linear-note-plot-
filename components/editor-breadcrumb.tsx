@@ -12,7 +12,7 @@ interface EditorBreadcrumbProps {
 }
 
 const SPACE_LABELS: Record<ActivitySpace, string> = {
-  inbox: "Inbox",
+  home: "Home",
   notes: "Notes",
   wiki: "Wiki",
   calendar: "Calendar",

@@ -158,7 +158,7 @@ export function SearchView() {
 
   // All non-trashed wiki notes
   const wikiNotes = useMemo(
-    () => notes.filter((n) => !n.trashed && n.isWiki),
+    () => notes.filter((n) => !n.trashed && n.noteType === "wiki"),
     [notes],
   )
 
@@ -247,7 +247,7 @@ export function SearchView() {
   }
 
   function handleCreateWikiFromQuery(title: string) {
-    const id = createWikiArticle({ title, wikiStatus: "stub", stubSource: "manual" })
+    const id = createWikiArticle({ title })
     if (id) {
       navigateToWikiArticle(id)
       setActiveRoute("/wiki")

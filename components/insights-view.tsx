@@ -152,7 +152,7 @@ function LifecycleStats({ notes }: { notes: any[] }) {
   const inbox = active.filter((n) => n.status === "inbox").length
   const capture = active.filter((n) => n.status === "capture").length
   const permanent = active.filter((n) => n.status === "permanent").length
-  const wiki = active.filter((n) => n.isWiki).length
+  const wiki = active.filter((n) => n.noteType === "wiki").length
 
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-4">

@@ -24,7 +24,7 @@ export function WikiRelatedDocs({ noteId, onNavigate }: WikiRelatedDocsProps) {
     return notes.filter(
       (n) =>
         n.id !== noteId &&
-        n.isWiki &&
+        n.noteType === "wiki" &&
         !n.trashed &&
         (linkedTitles.has(n.title.toLowerCase()) ||
           n.aliases?.some((a) => linkedTitles.has(a.toLowerCase())))

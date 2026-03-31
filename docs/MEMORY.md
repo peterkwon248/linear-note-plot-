@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v65)
+- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v67)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -187,26 +187,22 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 
 ## Current Direction (as of 2026-03-31)
 
-### 이번 세션 완료 — Design Spine 8-Phase 전체 폴리싱 (2026-03-31)
-- **Phase 1 Interaction Tokens**: hover:bg-secondary→hover:bg-hover-bg (51파일), border-border/XX→border-border-subtle (24파일), active 상태 bg-active-bg/bg-active-bg-strong (5파일)
-- **Phase 2 Typography**: text-sm→text-note (59파일), text-xs→text-2xs (70파일), arbitrary px→토큰 (13파일)
-- **Phase 3 Editor Typography**: EditorStyles.css hardcoded px → 14개 CSS 변수 (--editor-h1~h6, --editor-font-size 등)
-- **Phase 4 Editor Layout**: px-10 py-6 패딩 (max-width 제거, UpNote식 전체 폭)
-- **Phase 5 Surface+Radius**: rounded-[10px]→rounded-lg, bg-popover→bg-surface-overlay (25건), activity-bar bg-sidebar-bg 통일
-- **Phase 6 4px Grid**: py-[7px]→py-2, gap-[3px]→gap-1 등 8건 수정 + 레이아웃 CSS 변수 3개
-- **Phase 7 Colors+Icons**: size={13}→12, size={22}→20, EditorStyles.css #F87171→var(--destructive)
-- **Phase 8 Empty States+Motion**: 빈 상태 안내 3곳 (notes-table, note-editor, side-panel-context), duration-75→100 (12건), 트랜지션 CSS 변수 3개
-- **총 102파일 변경, tsc 빌드 0건**
-- **정체성 재정의 논의**: 노트앱→"세상에서 가장 빠른 개인 워크스페이스" (plot-discussion 14개 문서)
-- **구조 변경 리서칭 완료**: Plane(오픈소스) + Notion(UX) + Plot 현재 코드 심층 분석 → `docs/plot-discussion/15-RESTRUCTURING-RESEARCH.md`
-- **다크모드 밝기 미세 조정**: sidebar-muted 0.38→0.50, sidebar-icon 0.45→0.55, muted-foreground #a1a1aa→#b0b0b8, ViewHeader 버튼 /50→/65
-- **outdated 디자인 문서 4개 삭제**: DESIGN-TOKENS.md(32KB), DESIGN-AUDIT.md, PLOT-DESIGN-AUDIT.md, PLOT-DESIGN-POLISH-FINAL.md — globals.css가 단일 진실
-- **다음 (우선순위순 — 구조 변경 먼저)**:
-  1. Note/Wiki 통합 + isWiki 제거 (데이터 모델 확정, noteType 디스크리미네이터)
-  2. Home 공간 추가 (Inbox→Home 흡수, 위젯 대시보드)
-  3. Notes→Pages 네이밍 + 새 페이지 생성 경험 (Notion식 빈 캔버스+힌트)
-  4. 인라인 쿼리 뷰 (/query → view-engine 재활용 TipTap 노드)
-  5. 투두 시스템 (TaskIndex 파생 데이터, 체크박스 인덱싱)
+### 이번 세션 완료 — 구조 변경 3종 + Home 공간 (2026-03-31)
+- **isWiki→noteType (v66)**: 35파일. `Note.isWiki: boolean` 삭제 → `noteType: NoteType` (`"note" | "wiki"`). 확장 가능한 디스크리미네이터
+- **WikiStatus/Stub 제거 (v67)**: ~25파일. `WikiStatus`, `StubSource` 타입 삭제. stub/article 구분 폐지. `Note.wikiStatus`, `Note.stubSource`, `WikiArticle.wikiStatus`, `WikiArticle.stubSource` 필드 제거
+- **Wiki Coverage→Uncategorized**: 대시보드 3번째 지표. Coverage(모호) → Uncategorized(카테고리 없는 문서 수)
+- **Home 공간**: Activity Bar `Inbox→Home` 교체. `ActivitySpace` 타입에서 `"inbox"→"home"`. 대시보드 4섹션 (Today/Insights/Discover/Recent)
+- **Knowledge Intelligence Panel**: Home 사이드바 = 지식 인텔리전스 (Unlinked Mentions/Suggestions/Red Links/Orphans/Knowledge Health). 다른 앱에 없는 차별화 요소
+- **사이드바 드릴다운**: Home 사이드바 View all → 메인 영역 상세 뷰 전환 (Linear My Issues 패턴). `lib/home-section.ts` 외부 스토어
+- **Ontology 네이밍**: Activity Bar "Graph" → "Ontology". 사이드바 Graph NavLink 아이콘 → ChartBar
+- **사이드바 All Notes 제거**: Notes 스페이스 진입 = 전체 노트 보기
+- **경쟁 분석 문서**: `docs/plot-discussion/16-COMPETITIVE-POSITIONING.md` — 블록 기반 앱 6개 오픈소스 검증
+- **다음 (우선순위순)**:
+  1. Notes→Pages 네이밍 + 새 페이지 생성 경험 (Notion식 빈 캔버스+힌트)
+  2. 인라인 쿼리 뷰 (/query → view-engine 재활용 TipTap 노드)
+  3. 투두 시스템 (TaskIndex 파생 데이터, 체크박스 인덱싱)
+  4. Turn Into 메뉴 (블록 타입 변환)
+  5. 에디터 Phase 2~6 (위키 블록 TipTap 전환 등)
   6. Turn Into 메뉴 (구조 확정 후)
   7. 에디터 Phase 2~6 (위키 구조 확정 후)
 

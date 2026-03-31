@@ -127,16 +127,11 @@ export function GraphInsightsView() {
   )
 
   /* ── Wiki coverage ── */
-  const wikiNotes = useMemo(() => nonTrashed.filter((n) => n.isWiki), [nonTrashed])
+  const wikiNotes = useMemo(() => nonTrashed.filter((n) => n.noteType === "wiki"), [nonTrashed])
   const wikiPercent = useMemo(
     () => (nodeCount > 0 ? Math.round((wikiNotes.length / nodeCount) * 100) : 0),
     [wikiNotes.length, nodeCount]
   )
-  const stubCount = useMemo(
-    () => wikiNotes.filter((n) => n.wikiStatus === "stub").length,
-    [wikiNotes]
-  )
-
   /* ── Recently linked notes ── */
   const recentlyLinked = useMemo(() => {
     return [...nonTrashed]
@@ -288,12 +283,6 @@ export function GraphInsightsView() {
                     <p className="text-2xs text-muted-foreground">Coverage</p>
                     <p className="text-ui font-semibold tabular-nums text-foreground">
                       {wikiPercent}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-2xs text-muted-foreground">Stubs</p>
-                    <p className="text-ui font-semibold tabular-nums text-chart-3">
-                      {stubCount}
                     </p>
                   </div>
                 </div>

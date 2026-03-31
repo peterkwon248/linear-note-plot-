@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, StubSource, WikiStatus, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -231,10 +231,9 @@ export interface PlotState {
   // Wiki
   setNoteAliases: (noteId: string, aliases: string[]) => void
   setWikiInfobox: (noteId: string, infobox: WikiInfoboxEntry[]) => void
-  createWikiStub: (title: string, aliases?: string[], stubSource?: StubSource) => string
-  convertToWiki: (noteId: string, stubSource?: StubSource) => void
+  createWikiStub: (title: string, aliases?: string[]) => string
+  convertToWiki: (noteId: string) => void
   revertFromWiki: (noteId: string) => void
-  setWikiStatus: (noteId: string, wikiStatus: WikiStatus) => void
 
   // Wiki Collections
   addToCollection: (wikiNoteId: string, item: Omit<WikiCollectionItem, 'id' | 'addedAt'>) => void
@@ -254,25 +253,23 @@ export interface PlotState {
   setArticleCategories: (articleId: string, categoryIds: string[]) => void
 
   // ── Wiki Articles (Assembly Model) ──
-  createWikiArticle: (partial: { title: string; aliases?: string[]; wikiStatus?: WikiStatus; stubSource?: StubSource; tags?: string[]; blocks?: WikiBlock[] }) => string
+  createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[] }) => string
   updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
   deleteWikiArticle: (articleId: string) => void
-  setWikiArticleStatus: (articleId: string, wikiStatus: WikiStatus) => void
   setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => void
   addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => string
   removeWikiBlock: (articleId: string, blockId: string) => void
   updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => void
   moveWikiBlock: (articleId: string, blockId: string, targetIndex: number) => void
   reorderWikiBlocks: (articleId: string, blockIds: string[]) => void
-  mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string; status?: WikiStatus }) => void
-  splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string, status?: WikiStatus) => string | null
+  mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string }) => void
+  splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string) => string | null
   unmergeWikiArticle: (articleId: string, dividerBlockId: string) => string | null
   mergeMultipleWikiArticles: (sourceIds: string[], options: {
     title: string
     mode: "new" | "into"
     targetId?: string
     blockOrder: WikiBlock[]
-    status: WikiStatus
     categories?: string[]
     categoryIds?: string[]
     tags?: string[]
