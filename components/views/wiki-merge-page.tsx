@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
-import type { WikiArticle, WikiBlock, WikiStatus } from "@/lib/types"
+import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import {
@@ -18,7 +18,6 @@ import {
   FileText,
   Layers,
 } from "lucide-react"
-import { WikiStatusBadge } from "@/components/views/wiki-shared"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 
@@ -66,8 +65,6 @@ export function WikiMergePage() {
   const [mergeTitle, setMergeTitle] = useState("")
   const [mergeMode, setMergeMode] = useState<"new" | "existing">("existing")
   const [survivorId, setSurvivorId] = useState<string | null>(null)
-  const [mergeStatus, setMergeStatus] = useState<WikiStatus>("article")
-
   // Category state
   const [categories, setCategories] = useState<string[]>([])
   const [newCategory, setNewCategory] = useState("")
@@ -195,7 +192,6 @@ export function WikiMergePage() {
       mode: mergeMode === "existing" ? "into" : "new",
       targetId: mergeMode === "existing" ? (survivorId ?? undefined) : undefined,
       blockOrder,
-      status: mergeStatus,
       categoryIds: categories,
     })
 
@@ -300,9 +296,6 @@ export function WikiMergePage() {
                     {isSelected && <Check size={10} className="text-white" />}
                   </div>
 
-                  {/* Status badge */}
-                  <WikiStatusBadge status={a.wikiStatus} />
-
                   {/* Title + block count */}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-note font-medium text-white/85">{a.title}</p>
@@ -349,7 +342,6 @@ export function WikiMergePage() {
                   >
                     <GripVertical size={12} className="shrink-0 cursor-grab text-white/20" />
                     <span className="text-2xs tabular-nums text-white/25 w-4 text-center">{idx + 1}</span>
-                    <WikiStatusBadge status={a.wikiStatus} />
                     <span className="min-w-0 flex-1 truncate text-note text-white/80">{a.title}</span>
                     <span className="shrink-0 text-2xs text-white/25">{a.blocks.length}</span>
                     {/* Move up/down */}
@@ -553,35 +545,6 @@ export function WikiMergePage() {
                 </div>
               </div>
             )}
-
-            {/* Status */}
-            <div>
-              <label className="mb-1 block text-2xs text-white/40">Status</label>
-              <div className="flex gap-1 rounded-md bg-white/[0.04] p-0.5">
-                <button
-                  onClick={() => setMergeStatus("stub")}
-                  className={cn(
-                    "rounded px-2.5 py-1 text-2xs font-medium transition-colors",
-                    mergeStatus === "stub"
-                      ? "bg-chart-3/20 text-chart-3"
-                      : "text-white/40 hover:text-white/60",
-                  )}
-                >
-                  Stub
-                </button>
-                <button
-                  onClick={() => setMergeStatus("article")}
-                  className={cn(
-                    "rounded px-2.5 py-1 text-2xs font-medium transition-colors",
-                    mergeStatus === "article"
-                      ? "bg-wiki-complete/20 text-wiki-complete"
-                      : "text-white/40 hover:text-white/60",
-                  )}
-                >
-                  Article
-                </button>
-              </div>
-            </div>
 
             {/* Categories */}
             <div className="min-w-[200px] flex-1">

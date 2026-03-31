@@ -19,8 +19,7 @@ export interface OntologyNode {
   status: NoteStatus
   labelId: string | null
   isWiki: boolean
-  nodeType: "note" | "wiki-article" | "wiki-stub" | "tag"
-  wikiStatus: "stub" | "article" | null
+  nodeType: "note" | "wiki" | "tag"
   tagColor?: string  // only for tag nodes
 }
 
@@ -64,29 +63,25 @@ export function buildOntologyGraphData(
   notes: Note[],
   relations: Relation[],
   tags?: Array<{ id: string; name: string; color: string }>,
-  wikiArticles?: Array<{ title: string; aliases: string[]; wikiStatus: "stub" | "article"; noteIds?: string[] }>,
+  wikiArticles?: Array<{ title: string; aliases: string[]; noteIds?: string[] }>,
 ): OntologyGraphData {
   if (notes.length === 0) return { nodeData: [], edges: [], forceConfig: computeForceConfig(0) }
 
   // Build wiki title lookup from WikiArticle Assembly Model
   const wikiTitleSet = new Set<string>()
-  const wikiStatusByTitle = new Map<string, "stub" | "article">()
   // Also track by noteId (from note-ref blocks in WikiArticles)
-  const wikiStatusByNoteId = new Map<string, "stub" | "article">()
+  const wikiNoteIdSet = new Set<string>()
   if (wikiArticles) {
     for (const wa of wikiArticles) {
       const lower = wa.title.toLowerCase()
       wikiTitleSet.add(lower)
-      wikiStatusByTitle.set(lower, wa.wikiStatus)
       for (const alias of wa.aliases) {
-        const aliasLower = alias.toLowerCase()
-        wikiTitleSet.add(aliasLower)
-        wikiStatusByTitle.set(aliasLower, wa.wikiStatus)
+        wikiTitleSet.add(alias.toLowerCase())
       }
       // Index by referenced noteIds (note-ref blocks)
       if (wa.noteIds) {
         for (const noteId of wa.noteIds) {
-          wikiStatusByNoteId.set(noteId, wa.wikiStatus)
+          wikiNoteIdSet.add(noteId)
         }
       }
     }
@@ -136,29 +131,8 @@ export function buildOntologyGraphData(
 
   // 4. Build note node data (no x/y)
   const nodeData: Omit<OntologyNode, "x" | "y">[] = notes.map((n) => {
-    let nodeType: OntologyNode["nodeType"]
-    // Check WikiArticle Assembly Model first (new system)
-    // Priority 1: note is directly referenced by a WikiArticle block (note-ref by noteId)
-    const wikiStatusById = wikiStatusByNoteId.get(n.id)
-    if (wikiStatusById) {
-      if (wikiStatusById === "article") nodeType = "wiki-article"
-      else if (wikiStatusById === "stub") nodeType = "wiki-stub"
-      else nodeType = "wiki-article"
-    }
-    // Priority 2: note title/alias matches a WikiArticle title
-    else {
-      const noteTitleLower = n.title.toLowerCase()
-      const wikiArticleStatus = wikiStatusByTitle.get(noteTitleLower)
-      if (wikiArticleStatus) {
-        if (wikiArticleStatus === "article") nodeType = "wiki-article"
-        else if (wikiArticleStatus === "stub") nodeType = "wiki-stub"
-        else nodeType = "wiki-article"
-      }
-      // Fallback to legacy Note.isWiki flag
-      else if (n.isWiki && n.wikiStatus === "article") nodeType = "wiki-article"
-      else if (n.isWiki && n.wikiStatus === "stub") nodeType = "wiki-stub"
-      else nodeType = "note"
-    }
+    const isWiki = n.noteType === "wiki" || wikiTitleSet.has(n.title.toLowerCase()) || wikiNoteIdSet.has(n.id)
+    const nodeType: OntologyNode["nodeType"] = isWiki ? "wiki" : "note"
 
     return {
       id: n.id,
@@ -166,9 +140,8 @@ export function buildOntologyGraphData(
       connectionCount: connectionCount.get(n.id) ?? 0,
       status: n.status,
       labelId: n.labelId,
-      isWiki: !!n.isWiki || wikiTitleSet.has(n.title.toLowerCase()) || wikiStatusByNoteId.has(n.id),
+      isWiki,
       nodeType,
-      wikiStatus: n.wikiStatus ?? null,
     }
   })
 
@@ -202,7 +175,6 @@ export function buildOntologyGraphData(
         labelId: null,
         isWiki: false,
         nodeType: "tag",
-        wikiStatus: null,
         tagColor: tag.color,
       })
 

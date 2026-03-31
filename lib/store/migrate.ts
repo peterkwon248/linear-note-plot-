@@ -30,12 +30,8 @@ export function migrate(persistedState: unknown): PlotState {
       // v13: Precompute preview and linksOut from content
       const content = typeof rest.content === "string" ? rest.content as string : ""
 
-      // v41: wikiStatus + stubSource
+      // v41: wikiStatus + stubSource (legacy — v67 will delete these fields)
       const isWiki = n.isWiki ?? false
-      let wikiStatus = n.wikiStatus ?? null
-      if (wikiStatus === null && isWiki) {
-        wikiStatus = (content?.trim()) ? "draft" : "stub"
-      }
 
       return {
         ...rest,
@@ -52,11 +48,9 @@ export function migrate(persistedState: unknown): PlotState {
         snoozeCount: n.snoozeCount ?? 0,
         archivedAt: n.archivedAt ?? null,
         parentNoteId: n.parentNoteId ?? null,
-        isWiki: isWiki,
+        noteType: isWiki ? "wiki" : "note",
         aliases: (n as any).aliases ?? [],
         wikiInfobox: (n as any).wikiInfobox ?? [],
-        wikiStatus,
-        stubSource: n.stubSource ?? null,
         contentJson: n.contentJson ?? null,
         // v13: Precomputed fields
         preview: n.preview ?? extractPreview(content),
@@ -700,6 +694,46 @@ export function migrate(persistedState: unknown): PlotState {
 
   // v65: Title node removal — no Zustand state changes needed
   // (IDB body migration handled in onRehydrateStorage)
+
+  // v66: Replace isWiki boolean with noteType discriminator
+  if (Array.isArray(state.notes)) {
+    for (const note of state.notes as Record<string, unknown>[]) {
+      if (!note.noteType) {
+        note.noteType = note.isWiki ? "wiki" : "note"
+      }
+      delete note.isWiki
+    }
+  }
+
+  // v66: Rewrite persisted isWiki filter rules to noteType
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+    for (const key of Object.keys(vsMap)) {
+      const vs = vsMap[key]
+      if (Array.isArray(vs.filters)) {
+        vs.filters = (vs.filters as any[]).map((f: any) => {
+          if (f.field === "isWiki") {
+            return { field: "noteType", operator: f.operator, value: f.value === "true" ? "wiki" : "note" }
+          }
+          return f
+        })
+      }
+    }
+  }
+
+  // v67: Remove WikiStatus/StubSource — stub/article distinction eliminated
+  if (Array.isArray(state.notes)) {
+    for (const note of state.notes as Record<string, unknown>[]) {
+      delete note.wikiStatus
+      delete note.stubSource
+    }
+  }
+  if (Array.isArray(state.wikiArticles)) {
+    for (const article of state.wikiArticles as Record<string, unknown>[]) {
+      delete article.wikiStatus
+      delete article.stubSource
+    }
+  }
 
   return state as unknown as PlotState
 }

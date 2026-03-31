@@ -1,4 +1,4 @@
-import type { WikiArticle, WikiBlock, WikiStatus, StubSource, WikiMergeSnapshot } from "../../types"
+import type { WikiArticle, WikiBlock, WikiMergeSnapshot } from "../../types"
 import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, removeArticleBlocks, type AppendEventFn } from "../helpers"
 import { buildSectionIndex } from "../../wiki-section-index"
 import { extractLinksFromWikiBlocks } from "../../body-helpers"
@@ -13,8 +13,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
     createWikiArticle: (partial: {
       title: string
       aliases?: string[]
-      wikiStatus?: WikiStatus
-      stubSource?: StubSource
       tags?: string[]
       blocks?: WikiBlock[]
     }) => {
@@ -30,8 +28,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         id,
         title: partial.title,
         aliases: partial.aliases ?? [],
-        wikiStatus: partial.wikiStatus ?? "stub",
-        stubSource: partial.stubSource ?? "manual",
         infobox: [],
         blocks,
         sectionIndex: buildSectionIndex(blocks),
@@ -82,14 +78,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       removeArticleBlocks(articleId)
       set((state: any) => ({
         wikiArticles: state.wikiArticles.filter((a: WikiArticle) => a.id !== articleId),
-      }))
-    },
-
-    setWikiArticleStatus: (articleId: string, wikiStatus: WikiStatus) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
-          a.id === articleId ? { ...a, wikiStatus, updatedAt: now() } : a
-        ),
       }))
     },
 
@@ -198,7 +186,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }))
     },
 
-    mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string; status?: WikiStatus }) => {
+    mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string }) => {
       const state = get()
       const primary = (state.wikiArticles as WikiArticle[]).find((a) => a.id === primaryId)
       const secondary = (state.wikiArticles as WikiArticle[]).find((a) => a.id === secondaryId)
@@ -214,7 +202,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         mergedFrom: {
           articleId: secondary.id,
           title: secondary.title,
-          wikiStatus: secondary.wikiStatus,
           aliases: [...secondary.aliases],
           tags: [...secondary.tags],
           infobox: [...secondary.infobox],
@@ -226,11 +213,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
 
       // Concat blocks: primary + divider + secondary
       const mergedBlocks = [...primary.blocks, dividerBlock, ...secondary.blocks]
-
-      // Status: use option override, else keep higher rank
-      const STATUS_RANK: Record<string, number> = { article: 2, complete: 2, stub: 1, draft: 1 }
-      const mergedStatus = options?.status
-        ?? ((STATUS_RANK[secondary.wikiStatus] ?? 0) > (STATUS_RANK[primary.wikiStatus] ?? 0) ? secondary.wikiStatus : primary.wikiStatus)
 
       // Infobox: merge (primary values take precedence for duplicate keys)
       const primaryKeys = new Set(primary.infobox.map((e) => e.key))
@@ -249,7 +231,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
             title: mergedTitle,
             blocks: mergedBlocks,
             sectionIndex,
-            wikiStatus: mergedStatus,
             infobox: mergedInfobox,
             aliases: [...new Set([...a.aliases, secondary.title, ...secondary.aliases].filter((al) => al !== mergedTitle))],
             tags: [...new Set([...a.tags, ...secondary.tags])],
@@ -270,7 +251,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }))
     },
 
-    splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string, status?: WikiStatus): string | null => {
+    splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string): string | null => {
       const state = get()
       const source = (state.wikiArticles as WikiArticle[]).find((a) => a.id === sourceId)
       if (!source) return null
@@ -287,8 +268,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         id: newId,
         title: newTitle,
         aliases: [],
-        wikiStatus: status ?? "stub",
-        stubSource: "manual",
         infobox: [],
         blocks: extractedBlocks,
         sectionIndex: buildSectionIndex(extractedBlocks),
@@ -350,8 +329,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         id: restoredId,
         title: snapshot.title,
         aliases: snapshot.aliases,
-        wikiStatus: snapshot.wikiStatus,
-        stubSource: null,
         infobox: snapshot.infobox,
         blocks: extractedBlocks,
         sectionIndex: buildSectionIndex(extractedBlocks),
@@ -394,7 +371,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         mode: "new" | "into"
         targetId?: string
         blockOrder: WikiBlock[]
-        status: WikiStatus
         categories?: string[]
         categoryIds?: string[]
         tags?: string[]
@@ -413,7 +389,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       const mergeHistory: WikiMergeSnapshot[] = sources.map((src) => ({
         articleId: src.id,
         title: src.title,
-        wikiStatus: src.wikiStatus,
         aliases: [...src.aliases],
         tags: [...src.tags],
         infobox: [...src.infobox],
@@ -473,7 +448,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
                 title: options.title,
                 blocks,
                 sectionIndex,
-                wikiStatus: options.status,
                 aliases: Array.from(allAliases),
                 tags: Array.from(allTags),
                 categoryIds: options.categoryIds ?? a.categoryIds,
@@ -506,8 +480,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           id: newId,
           title: options.title,
           aliases: Array.from(allAliases),
-          wikiStatus: options.status,
-          stubSource: null,
           infobox: mergedInfobox,
           blocks,
           sectionIndex,
@@ -569,8 +541,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         id: restoredId,
         title: snapshot.title,
         aliases: [...snapshot.aliases],
-        wikiStatus: snapshot.wikiStatus,
-        stubSource: null,
         infobox: [...snapshot.infobox],
         blocks: restorationBlocks,
         sectionIndex: buildSectionIndex(restorationBlocks),

@@ -146,9 +146,9 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
-    { key: "isWiki", label: "Wiki Status", icon: StatusIcon, values: [
-      { key: "article", label: "Article", color: "#8b5cf6" },
-      { key: "stub", label: "Stub", color: "rgba(255,255,255,0.32)" },
+    { key: "noteType", label: "Note Type", icon: StatusIcon, values: [
+      { key: "wiki", label: "Wiki", color: "#8b5cf6" },
+      { key: "note", label: "Note", color: "rgba(255,255,255,0.32)" },
     ]},
     { key: "tags", label: "Category", icon: TagIcon, values: [] },
     { key: "links", label: "Backlinks", icon: LinkIcon, values: [
@@ -194,11 +194,6 @@ export const WIKI_CATEGORY_VIEW_CONFIG: ViewConfig = {
       { key: "2", label: "Tier 2" },
       { key: "3", label: "Tier 3" },
     ]},
-    { key: "wikiStatus", label: "Status", icon: StatusIcon, values: [
-      { key: "has-articles", label: "Has articles" },
-      { key: "has-stubs", label: "Has stubs" },
-      { key: "empty", label: "Empty" },
-    ]},
   ],
   quickFilters: [],
   displayConfig: {
@@ -207,8 +202,6 @@ export const WIKI_CATEGORY_VIEW_CONFIG: ViewConfig = {
       { value: "title", label: "Name" },
       { value: "parent", label: "Parent" },
       { value: "tier", label: "Tier" },
-      { value: "articles", label: "Articles" },
-      { value: "stubs", label: "Stubs" },
       { value: "sub", label: "Sub" },
       { value: "updatedAt", label: "Updated" },
     ],
@@ -225,8 +218,6 @@ export const WIKI_CATEGORY_VIEW_CONFIG: ViewConfig = {
     properties: [
       { key: "parent", label: "Parent" },
       { key: "tier", label: "Tier" },
-      { key: "articles", label: "Articles" },
-      { key: "stubs", label: "Stubs" },
       { key: "sub", label: "Sub" },
       { key: "updatedAt", label: "Updated" },
     ],

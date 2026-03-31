@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { IconWiki, IconWikiStub, IconWikiArticle } from "@/components/plot-icons"
+import { IconWiki } from "@/components/plot-icons"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
@@ -23,7 +23,6 @@ import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { ArrowLineUp } from "@phosphor-icons/react/dist/ssr/ArrowLineUp"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { ArrowLineDown } from "@phosphor-icons/react/dist/ssr/ArrowLineDown"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
@@ -35,8 +34,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
-import { startAutoEnrollment, stopAutoEnrollment } from "@/lib/wiki-auto-enroll"
-import type { StubSource } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { useWikiViewMode, setWikiViewMode, setPendingMergeIds, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
@@ -59,7 +56,6 @@ import { WikiCategoryPage } from "./wiki-category-page"
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
-  const createWikiStub = usePlotStore((s) => s.createWikiStub)
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
@@ -87,7 +83,7 @@ export function WikiView() {
 
   // Derived convenience aliases for passing to children
   const categoryViewMode = (catViewState.viewMode === "board" ? "board" : "list") as "list" | "board"
-  const categoryOrdering = catViewState.sortField as "title" | "articles" | "updatedAt" | "parent" | "tier" | "stubs" | "sub"
+  const categoryOrdering = catViewState.sortField as "title" | "articles" | "updatedAt" | "parent" | "tier" | "sub"
   const categoryGrouping = catViewState.groupBy as "none" | "tier" | "parent" | "family"
   const categorySortDirection = catViewState.sortDirection
   const categoryShowDescription = catViewState.toggles?.showDescription !== false
@@ -113,7 +109,7 @@ export function WikiView() {
   const [wikiMergeSourceId, setWikiMergeSourceId] = useState<string | null>(null)
 
   // Dashboard filter
-  const [dashFilter, setDashFilter] = useState<"all" | "stubs" | "articles" | "redlinks">("all")
+  const [dashFilter, setDashFilter] = useState<"all" | "redlinks">("all")
 
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
@@ -160,29 +156,6 @@ export function WikiView() {
         : [...prev, rule]
     })
   }
-
-  // Auto-enrollment
-  const setWikiStatus = usePlotStore((s) => s.setWikiStatus)
-  const convertToWiki = usePlotStore((s) => s.convertToWiki)
-  const tags = usePlotStore((s) => s.tags)
-
-  useEffect(() => {
-    const getState = () => ({
-      notes: usePlotStore.getState().notes,
-      tags: usePlotStore.getState().tags,
-    })
-    const store = usePlotStore.getState()
-    const actions = {
-      createWikiStub: (title: string, aliases?: string[], stubSource?: string) =>
-        store.createWikiStub(title, aliases, stubSource as StubSource | undefined),
-      convertToWiki: (noteId: string, stubSource?: string) =>
-        store.convertToWiki(noteId, stubSource as StubSource | undefined),
-    }
-    // Auto-enrollment disabled — WikiArticle (Assembly Model) replaces Note-based wiki
-    // TODO: Re-enable with createWikiArticle instead of createWikiStub/convertToWiki
-    // startAutoEnrollment(getState, actions)
-    // return () => stopAutoEnrollment()
-  }, [])
 
   // Article reader state (Note-based legacy)
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
@@ -265,7 +238,7 @@ export function WikiView() {
 
   const handleCreateFromRedLink = useCallback(
     (title: string) => {
-      const id = createWikiArticle({ title, wikiStatus: "stub", stubSource: "red-link" })
+      const id = createWikiArticle({ title })
       if (id) setSelectedWikiArticleId(id)
     },
     [createWikiArticle]
@@ -284,39 +257,18 @@ export function WikiView() {
     setSelectedArticleId(null)
   }, [])
 
-  const handleDemote = useCallback(
-    (noteId: string) => {
-      const note = notes.find((n) => n.id === noteId)
-      if (!note) return
-      const status = note.wikiStatus
-      if (status === "article") {
-        setWikiStatus(noteId, "stub")
-        toast.success(`"${note.title || "Untitled"}" demoted to Stub`)
-      }
-      // stub has no demotion — it's the bottom of the lifecycle
-    },
-    [notes, setWikiStatus]
-  )
-
   // Wiki data comes from wikiArticles (separate entity since v47)
   const wikiNotes = wikiArticles
 
-  // Filter by wikiStatus
+  // Filter wiki notes
   const filteredWikiNotes = useMemo(() => {
     let result = wikiNotes
-    // Apply status filter
-    if (dashFilter === "stubs") result = result.filter(n => n.wikiStatus === "stub" || (n.wikiStatus as string) === "draft")
-    else if (dashFilter === "articles") result = result.filter(n => n.wikiStatus === "article" || (n.wikiStatus as string) === "complete")
-    // Apply toggle-based filtering
-    if (wikiViewState.toggles.showStubs === false) {
-      result = result.filter(n => n.wikiStatus !== "stub")
-    }
     // Apply category filter from sidebar
     if (categoryFilterTagId) {
       result = result.filter(n => (n.categoryIds ?? []).includes(categoryFilterTagId))
     }
     return result
-  }, [wikiNotes, dashFilter, categoryFilterTagId, wikiViewState.toggles.showStubs])
+  }, [wikiNotes, categoryFilterTagId])
 
   // Sorted by updatedAt descending for articles table-list
   const sortedFilteredWikiNotes = useMemo(
@@ -495,10 +447,9 @@ export function WikiView() {
   // Filtered targets for import step 2
   const importTargets = useMemo(() => {
     const q = importTargetQuery.toLowerCase().trim()
-    const articles = wikiArticles.filter(a => (a.wikiStatus === "article" || (a.wikiStatus as string) === "complete") && (q.length === 0 || a.title.toLowerCase().includes(q)))
-    const stubs = wikiArticles.filter(a => (a.wikiStatus === "stub" || (a.wikiStatus as string) === "draft") && (q.length === 0 || a.title.toLowerCase().includes(q)))
+    const articles = wikiArticles.filter(a => q.length === 0 || a.title.toLowerCase().includes(q))
     const rl = redLinks.filter(r => q.length === 0 || r.title.toLowerCase().includes(q))
-    return { articles, stubs, redLinks: rl }
+    return { articles, redLinks: rl }
   }, [wikiArticles, redLinks, importTargetQuery])
 
   // Stats
@@ -528,46 +479,19 @@ export function WikiView() {
     }
 
     return {
-      articles: wikiNotes.filter(n => n.wikiStatus === "article" || n.wikiStatus === "complete" as string).length,
+      total: wikiNotes.length,
       redLinks: redLinkCount,
       internalLinks: internalLinkCount,
       connectedNotes: connectedNoteIds.size,
-      stubs: wikiNotes.filter(n => n.wikiStatus === "stub" || n.wikiStatus === "draft" as string).length,
     }
   }, [wikiNotes, redLinks, notes])
 
-  // Article count: articles only (excludes stubs)
+  // Article count: total wiki articles
   const articleCount = useMemo(
-    () => wikiNotes.filter((n) => n.wikiStatus === "article" || n.wikiStatus === "complete" as string).length,
+    () => wikiNotes.length,
     [wikiNotes]
   )
 
-  // Coverage stats: how many non-trashed notes are connected to wiki
-  const coverageStats = useMemo(() => {
-    const nonTrashedNotes = notes.filter((n) => !n.trashed)
-    const total = nonTrashedNotes.length
-    if (total === 0) return { connected: 0, total: 0, percent: 0 }
-
-    const wikiTitleSet = new Set(
-      wikiArticles.flatMap((w) => [
-        w.title.toLowerCase(),
-        ...w.aliases.map((a) => a.toLowerCase()),
-      ])
-    )
-
-    const connectedIds = new Set<string>()
-
-    // Notes that reference wiki articles (via linksOut)
-    for (const n of nonTrashedNotes) {
-      if (n.linksOut.some((link) => wikiTitleSet.has(link.toLowerCase()))) {
-        connectedIds.add(n.id)
-      }
-    }
-
-    const connected = connectedIds.size
-    const percent = Math.round((connected / total) * 100)
-    return { connected, total, percent }
-  }, [notes, wikiArticles])
 
   // MagnifyingGlass results (simple title/alias filter)
   const searchResults = useMemo(() => {
@@ -652,17 +576,6 @@ export function WikiView() {
         )
         return { note: n, daysAgo }
       })
-  }, [wikiNotes])
-
-  // Card data: stubs grouped by source
-  const stubsBySource = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const n of wikiNotes) {
-      if (n.wikiStatus !== "stub") continue
-      const src = n.stubSource ?? "manual"
-      counts.set(src, (counts.get(src) ?? 0) + 1)
-    }
-    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
   }, [wikiNotes])
 
   // ── WikiArticle View (Assembly Model) ──
@@ -768,15 +681,6 @@ export function WikiView() {
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-48 p-1">
-                  {selectedNote?.wikiStatus !== "stub" && (
-                    <button
-                      onClick={() => handleDemote(selectedArticleId)}
-                      className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
-                    >
-                      <ArrowLineDown className="text-muted-foreground" size={14} weight="regular" />
-                      Demote to Stub
-                    </button>
-                  )}
                   <button
                     onClick={() => { toggleTrash(selectedArticleId); setSelectedArticleId(null) }}
                     className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-note text-destructive transition-colors duration-150 hover:bg-destructive/10"
@@ -833,7 +737,7 @@ export function WikiView() {
       <ViewHeader
         icon={<IconWiki size={20} />}
         title="Wiki"
-        count={stats.articles}
+        count={stats.total}
         showFilter
         hasActiveFilters={wikiViewMode === "category" ? categoryFilters.length > 0 : wikiFilters.length > 0}
         filterContent={
@@ -997,31 +901,14 @@ export function WikiView() {
                         {/* Articles */}
                         {importTargets.articles.length > 0 && (
                           <>
-                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Articles</p>
+                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Wiki Articles</p>
                             {importTargets.articles.map((a) => (
                               <button
                                 key={a.id}
                                 onClick={() => handleImportIntoExisting(a.id)}
                                 className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                               >
-                                <IconWikiArticle size={14} className="shrink-0 text-wiki-complete" />
-                                <span className="min-w-0 flex-1 truncate">{a.title}</span>
-                              </button>
-                            ))}
-                          </>
-                        )}
-
-                        {/* Stubs */}
-                        {importTargets.stubs.length > 0 && (
-                          <>
-                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Stubs</p>
-                            {importTargets.stubs.map((a) => (
-                              <button
-                                key={a.id}
-                                onClick={() => handleImportIntoExisting(a.id)}
-                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
-                              >
-                                <IconWikiStub size={14} className="shrink-0 text-chart-3" />
+                                <BookOpen size={14} weight="regular" className="shrink-0 text-muted-foreground" />
                                 <span className="min-w-0 flex-1 truncate">{a.title}</span>
                               </button>
                             ))}
@@ -1046,7 +933,7 @@ export function WikiView() {
                           </>
                         )}
 
-                        {importTargets.articles.length === 0 && importTargets.stubs.length === 0 && importTargets.redLinks.length === 0 && importTargetQuery.trim() && (
+                        {importTargets.articles.length === 0 && importTargets.redLinks.length === 0 && importTargetQuery.trim() && (
                           <p className="px-3 py-4 text-center text-2xs text-muted-foreground">No matching targets</p>
                         )}
                       </div>
@@ -1068,7 +955,7 @@ export function WikiView() {
           categoryViewMode={categoryViewMode}
           categoryOrdering={categoryOrdering}
           categoryTierFilter={categoryFilters.find(f => f.field === "wikiTier")?.value ?? null}
-          categoryStatusFilter={categoryFilters.find(f => f.field === "wikiStatus")?.value ?? null}
+          categoryStatusFilter={null}
           categoryShowDescription={categoryShowDescription}
           categoryShowEmpty={categoryShowEmpty}
           categoryGrouping={categoryGrouping}
@@ -1091,7 +978,6 @@ export function WikiView() {
             wikiArticles={wikiArticles}
             stats={stats}
             articleCount={articleCount}
-            coverageStats={coverageStats}
             redLinks={redLinks}
             recentChanges={recentChanges}
             mostConnected={mostConnected}
@@ -1107,7 +993,6 @@ export function WikiView() {
             onOpenWikiArticle={setSelectedWikiArticleId}
             onCreateFromRedLink={handleCreateFromRedLink}
             onViewAll={() => { setWikiViewMode("list"); setDashFilter("all") }}
-            onViewStubs={() => { setWikiViewMode("list"); setDashFilter("stubs") }}
             onViewRedLinks={() => { setWikiViewMode("list"); setDashFilter("redlinks") }}
             onCategoryClick={(categoryId) => {
               setWikiCategoryFilter(categoryId)

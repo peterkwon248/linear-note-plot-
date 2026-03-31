@@ -3,7 +3,6 @@
 import { useState, useRef, useMemo, useEffect, useCallback, Fragment } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { WikiCategory, WikiArticle } from "@/lib/types"
-import { WikiStatusBadge } from "./wiki-shared"
 import { shortRelative } from "@/lib/format-utils"
 import {
   DndContext,
@@ -34,7 +33,7 @@ import { setActiveCategoryView } from "@/lib/wiki-view-mode"
 
 /* ── Props ── */
 
-type CategoryOrdering = "title" | "articles" | "updatedAt" | "parent" | "tier" | "stubs" | "sub"
+type CategoryOrdering = "title" | "articles" | "updatedAt" | "parent" | "tier" | "sub"
 
 interface WikiCategoryPageProps {
   categoryId: string | null
@@ -139,8 +138,7 @@ function getMaxDescendantDepth(catId: string, categories: WikiCategory[]): numbe
 interface CategoryDataItem {
   cat: WikiCategory
   depth: number
-  articleCount: number
-  stubCount: number
+  count: number
   childCount: number
 }
 
@@ -159,7 +157,7 @@ function CategoryBoardCard({
   isSelected?: boolean
   onDoubleClick?: (id: string) => void
 }) {
-  const { cat, articleCount, stubCount, childCount } = item
+  const { cat, count, childCount } = item
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: cat.id })
   const { setNodeRef: dropRef, isOver } = useDroppable({ id: `card-${cat.id}` })
 
@@ -208,10 +206,9 @@ function CategoryBoardCard({
         <p className="text-2xs text-muted-foreground/50 mt-1 line-clamp-1">{cat.description}</p>
       )}
       {/* Stats row */}
-      {(articleCount > 0 || stubCount > 0 || childCount > 0) && (
+      {(count > 0 || childCount > 0) && (
         <div className="flex items-center gap-3 mt-2 text-2xs text-muted-foreground/50">
-          {articleCount > 0 && <span className="text-green-400">{articleCount} article{articleCount > 1 ? "s" : ""}</span>}
-          {stubCount > 0 && <span className="text-orange-400">{stubCount} stub{stubCount > 1 ? "s" : ""}</span>}
+          {count > 0 && <span className="text-accent/70">{count} article{count > 1 ? "s" : ""}</span>}
           {childCount > 0 && <span>{childCount} sub</span>}
         </div>
       )}
@@ -326,11 +323,9 @@ function CategoryBoardView({
   const categoryData = useMemo(() => {
     return categories.map(cat => {
       const depth = getDepth(cat.id, categories)
-      const catArticles = articles.filter(a => a.categoryIds?.includes(cat.id))
-      const articleCount = catArticles.filter(a => a.wikiStatus === "article").length
-      const stubCount = catArticles.filter(a => a.wikiStatus === "stub").length
+      const count = articles.filter(a => a.categoryIds?.includes(cat.id)).length
       const childCount = categories.filter(c => c.parentIds.includes(cat.id)).length
-      return { cat, depth, articleCount, stubCount, childCount }
+      return { cat, depth, count, childCount }
     })
   }, [categories, articles])
 
@@ -338,7 +333,7 @@ function CategoryBoardView({
   const sortItems = useCallback((items: CategoryDataItem[]) => {
     const dir = sortDirection === "desc" ? -1 : 1
     return [...items].sort((a, b) => {
-      if (ordering === "articles") return dir * (b.articleCount - a.articleCount)
+      if (ordering === "articles") return dir * (b.count - a.count)
       if (ordering === "updatedAt") return dir * (new Date(b.cat.updatedAt ?? b.cat.createdAt).getTime() - new Date(a.cat.updatedAt ?? a.cat.createdAt).getTime())
       return dir * a.cat.name.localeCompare(b.cat.name)
     })
@@ -562,17 +557,12 @@ function CategoryFullListView({
       const catArticles = articles.filter((a) =>
         a.categoryIds?.includes(cat.id)
       )
-      const articleCount = catArticles.filter(
-        (a) => a.wikiStatus === "article"
-      ).length
-      const stubCount = catArticles.filter(
-        (a) => a.wikiStatus === "stub"
-      ).length
+      const count = catArticles.length
       const childCount = categories.filter((c) =>
         c.parentIds.includes(cat.id)
       ).length
       const parentName = cat.parentIds.length > 0 ? catMap.get(cat.parentIds[0])?.name ?? null : null
-      return { cat, depth, articleCount, stubCount, childCount, catArticles, parentName }
+      return { cat, depth, count, childCount, catArticles, parentName }
     })
 
     // Apply tier filter
@@ -582,12 +572,11 @@ function CategoryFullListView({
     else if (tierFilter === "3rd+") filtered = filtered.filter((d) => d.depth >= 2)
 
     // Apply status filter
-    if (statusFilter === "has-articles") filtered = filtered.filter((d) => d.articleCount > 0)
-    else if (statusFilter === "has-stubs") filtered = filtered.filter((d) => d.stubCount > 0)
-    else if (statusFilter === "empty") filtered = filtered.filter((d) => d.articleCount === 0 && d.stubCount === 0)
+    if (statusFilter === "empty") filtered = filtered.filter((d) => d.count === 0)
+    else if (statusFilter === "has-articles") filtered = filtered.filter((d) => d.count > 0)
 
     // Apply showEmpty toggle
-    if (!showEmpty) filtered = filtered.filter((d) => d.articleCount > 0 || d.stubCount > 0)
+    if (!showEmpty) filtered = filtered.filter((d) => d.count > 0)
 
     // Apply ordering
     const ord = ordering ?? "title"
@@ -595,7 +584,7 @@ function CategoryFullListView({
     if (ord === "title") {
       filtered.sort((a, b) => dir * a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "articles") {
-      filtered.sort((a, b) => dir * (b.articleCount - a.articleCount) || a.cat.name.localeCompare(b.cat.name))
+      filtered.sort((a, b) => dir * (b.count - a.count) || a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "updatedAt") {
       filtered.sort((a, b) => {
         const aTime = a.cat.updatedAt ? new Date(a.cat.updatedAt).getTime() : 0
@@ -606,8 +595,6 @@ function CategoryFullListView({
       filtered.sort((a, b) => dir * (a.parentName ?? "").localeCompare(b.parentName ?? "") || a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "tier") {
       filtered.sort((a, b) => dir * (a.depth - b.depth) || a.cat.name.localeCompare(b.cat.name))
-    } else if (ord === "stubs") {
-      filtered.sort((a, b) => dir * (b.stubCount - a.stubCount) || a.cat.name.localeCompare(b.cat.name))
     } else if (ord === "sub") {
       filtered.sort((a, b) => dir * (b.childCount - a.childCount) || a.cat.name.localeCompare(b.cat.name))
     }
@@ -773,17 +760,6 @@ function CategoryFullListView({
             </button>
           </div>
         )}
-        {showCol("stubs") && (
-          <div className="w-[72px] flex justify-end">
-            <button
-              onClick={() => handleSortClick("stubs")}
-              className="group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Stubs
-              <SortIcon col="stubs" />
-            </button>
-          </div>
-        )}
         {showCol("sub") && (
           <div className="w-[56px] flex justify-end">
             <button
@@ -818,7 +794,7 @@ function CategoryFullListView({
             </div>
           )}
           {group.items.map(
-            ({ cat, depth, articleCount, stubCount, childCount, catArticles, parentName }) => {
+            ({ cat, depth, count, childCount, catArticles, parentName }) => {
               const familyDepth = (group as any).depthMap?.[cat.id] ?? 0
               return (
               <div key={cat.id} style={grouping === "family" ? { paddingLeft: `${familyDepth * 24}px` } : undefined}>
@@ -869,13 +845,8 @@ function CategoryFullListView({
                     </span>
                   )}
                   {showCol("articles") && (
-                    <span className="w-[72px] text-right text-note tabular-nums text-wiki-complete/70">
-                      {articleCount > 0 ? articleCount : "\u2014"}
-                    </span>
-                  )}
-                  {showCol("stubs") && (
-                    <span className="w-[72px] text-right text-note tabular-nums text-chart-3/70">
-                      {stubCount > 0 ? stubCount : "\u2014"}
+                    <span className="w-[72px] text-right text-note tabular-nums text-muted-foreground/60">
+                      {count > 0 ? count : "\u2014"}
                     </span>
                   )}
                   {showCol("sub") && (
@@ -899,7 +870,6 @@ function CategoryFullListView({
                         onClick={() => onOpenArticle(article.id)}
                         className="flex w-full items-center gap-2.5 rounded-md px-4 py-2 text-left text-note text-foreground/60 transition-colors hover:bg-hover-bg hover:text-foreground/80"
                       >
-                        <WikiStatusBadge status={article.wikiStatus} />
                         <span className="truncate">
                           {article.title}
                         </span>
@@ -1340,7 +1310,6 @@ function CategoryEditor({
                 onClick={() => onOpenArticle(art.id)}
                 className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
               >
-                <WikiStatusBadge status={art.wikiStatus} />
                 <span className="flex-1 truncate text-left">
                   {art.title || "Untitled"}
                 </span>
@@ -1484,11 +1453,7 @@ export function CategorySidePanel({
             <div className="space-y-1">
               <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
                 <span className="text-foreground/80">Articles</span>
-                <span className="text-green-400 tabular-nums font-medium">{catArticles.filter(a => a.wikiStatus === "article").length || "—"}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
-                <span className="text-foreground/80">Stubs</span>
-                <span className="text-orange-400 tabular-nums font-medium">{catArticles.filter(a => a.wikiStatus === "stub").length || "—"}</span>
+                <span className="text-accent/70 tabular-nums font-medium">{catArticles.length || "—"}</span>
               </div>
               <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
                 <span className="text-foreground/80">Subcategories</span>
@@ -1523,7 +1488,6 @@ export function CategorySidePanel({
               <div className="space-y-1">
                 {catArticles.map(art => (
                   <div key={art.id} className="flex items-center gap-2 rounded-md px-3 py-1.5 text-note text-foreground/80">
-                    <WikiStatusBadge status={art.wikiStatus} />
                     <span className="truncate">{art.title || "Untitled"}</span>
                   </div>
                 ))}
@@ -1540,8 +1504,7 @@ export function CategorySidePanel({
   const tier1Count = categories.filter(c => getDepth(c.id, categories) === 0).length
   const tier2Count = categories.filter(c => getDepth(c.id, categories) === 1).length
   const tier3Count = categories.filter(c => getDepth(c.id, categories) >= 2).length
-  const totalArticles = articles.filter(a => a.wikiStatus === "article").length
-  const totalStubs = articles.filter(a => a.wikiStatus === "stub").length
+  const totalArticles = articles.length
   const categoriesWithArticles = new Set(articles.flatMap(a => a.categoryIds ?? []))
   const emptyCount = categories.filter(c => !categoriesWithArticles.has(c.id)).length
 
@@ -1581,12 +1544,8 @@ export function CategorySidePanel({
           <h4 className="text-2xs font-medium text-muted-foreground mb-2">Content</h4>
           <div className="space-y-1">
             <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
-              <span className="text-foreground/80">Articles</span>
-              <span className="text-green-400 tabular-nums font-medium">{totalArticles}</span>
-            </div>
-            <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
-              <span className="text-foreground/80">Stubs</span>
-              <span className="text-orange-400 tabular-nums font-medium">{totalStubs}</span>
+              <span className="text-foreground/80">Wiki Articles</span>
+              <span className="text-accent/70 tabular-nums font-medium">{totalArticles}</span>
             </div>
             <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
               <span className="text-foreground/80">Empty categories</span>

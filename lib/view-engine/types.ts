@@ -35,8 +35,6 @@ export type SortField =
   | "folder"
   | "label"
   // Wiki-category-specific sort fields
-  | "articles"
-  | "stubs"
   | "sub"
   | "tier"
   | "parent"
@@ -53,11 +51,11 @@ export type FilterOperator = "eq" | "neq" | "gt" | "lt"
 export type FilterField =
   | "status" | "priority" | "links" | "reads" | "folder" | "label"
   | "updatedAt" | "createdAt" | "content" | "tags" | "pinned"
-  | "source" | "wordCount" | "title" | "isWiki"
+  | "source" | "wordCount" | "title" | "noteType"
   // Graph-specific filter fields
   | "nodeType" | "relationType" | "showWikilinks" | "showTagNodes"
   // Wiki-specific filter fields
-  | "wikiStatus" | "category" | "wikiTier"
+  | "category" | "wikiTier"
 
 export interface FilterRule {
   field: FilterField
@@ -137,7 +135,7 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
 
 export const VALID_SORT_FIELDS: SortField[] = [
   "updatedAt", "createdAt", "title", "status", "links", "reads", "folder", "label",
-  "articles", "stubs", "sub", "tier", "parent",
+  "sub", "tier", "parent",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
@@ -152,5 +150,5 @@ export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "folder", "links", "reads", "wordCount", "createdAt", "updatedAt",
   // Wiki-category-specific columns
-  "parent", "tier", "articles", "stubs", "sub",
+  "parent", "tier", "sub",
 ]

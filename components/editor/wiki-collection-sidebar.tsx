@@ -92,7 +92,7 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
     if (!note) return []
     const wikiTitleSet = new Set(
       notes
-        .filter((n) => n.isWiki && !n.trashed)
+        .filter((n) => n.noteType === "wiki" && !n.trashed)
         .flatMap((n) => [n.title.toLowerCase(), ...(n.aliases?.map((a) => a.toLowerCase()) ?? [])])
     )
 
@@ -110,8 +110,6 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
     (title: string) => {
       createWikiArticle({
         title: title.charAt(0).toUpperCase() + title.slice(1),
-        wikiStatus: "stub",
-        stubSource: "red-link",
       })
     },
     [createWikiArticle]
@@ -329,7 +327,7 @@ function AddNotePopover({
       notes
         .filter(
           (n) =>
-            !n.isWiki &&
+            n.noteType !== "wiki" &&
             !n.trashed &&
             (query === "" ||
               n.title.toLowerCase().includes(query.toLowerCase()))

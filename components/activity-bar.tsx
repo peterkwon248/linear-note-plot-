@@ -7,6 +7,7 @@ import {
   setActiveSpace,
   DEFAULT_ROUTES,
 } from "@/lib/table-route"
+import { setHomeSection } from "@/lib/home-section"
 import { usePlotStore } from "@/lib/store"
 import type { ActivitySpace } from "@/lib/types"
 import {
@@ -15,7 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
-  IconInbox,
+  IconHome,
   IconNotes,
   IconWiki,
   IconCalendar,
@@ -34,11 +35,11 @@ const SPACES: {
   icon: (props: { size?: number }) => React.ReactNode
   shortcut: string
 }[] = [
-  { id: "inbox",    label: "Inbox",    icon: IconInbox,    shortcut: "G then I" },
+  { id: "home",     label: "Home",     icon: IconHome,     shortcut: "G then H" },
   { id: "notes",    label: "Notes",    icon: IconNotes,    shortcut: "G then N" },
   { id: "wiki",     label: "Wiki",     icon: IconWiki,     shortcut: "" },
   { id: "calendar", label: "Calendar", icon: IconCalendar, shortcut: "" },
-  { id: "ontology", label: "Graph",    icon: Graph,        shortcut: "" },
+  { id: "ontology", label: "Ontology",  icon: Graph,        shortcut: "" },
 ]
 
 /* ── Component ──────────────────────────────────────── */
@@ -59,6 +60,10 @@ export function ActivityBar() {
     if (space === activeSpace) {
       // Same space → do nothing (use dedicated sidebar toggle button)
       return
+    }
+    // Reset home section when leaving home space
+    if (space !== "home") {
+      setHomeSection("overview")
     }
     // Different space → switch (don't touch sidebar state)
     setActiveSpace(space)

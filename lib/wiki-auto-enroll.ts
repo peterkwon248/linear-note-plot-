@@ -1,8 +1,8 @@
-import type { Note, StubSource } from "./types"
+import type { Note } from "./types"
 
 /** Signal detection result */
 export interface EnrollmentCandidate {
-  type: StubSource         // "red-link" | "tag" | "backlink"
+  type: string             // "red-link" | "tag" | "backlink"
   title: string            // For red-link/tag: the name. For backlink: note title
   noteId?: string          // For backlink: existing note to convert
   score: number            // refCount or backlink count (for sorting)
@@ -14,7 +14,7 @@ export interface EnrollmentCandidate {
  */
 export function detectEnrollmentCandidates(notes: Note[]): EnrollmentCandidate[] {
   const activeNotes = notes.filter(n => !n.trashed)
-  const wikiNotes = activeNotes.filter(n => n.isWiki)
+  const wikiNotes = activeNotes.filter(n => n.noteType === "wiki")
 
   // Build wiki title set (title + aliases, lowercased)
   const wikiTitleSet = new Set<string>()
@@ -28,7 +28,7 @@ export function detectEnrollmentCandidates(notes: Note[]): EnrollmentCandidate[]
   // Also build a map of all note titles (lowercased) -> noteId for existing note matching
   const titleToNoteId = new Map<string, string>()
   for (const n of activeNotes) {
-    if (!n.isWiki) {
+    if (n.noteType !== "wiki") {
       titleToNoteId.set(n.title.toLowerCase(), n.id)
     }
   }
@@ -81,7 +81,7 @@ export function detectEnrollmentCandidates(notes: Note[]): EnrollmentCandidate[]
   for (const [noteId, count] of backlinkCounts) {
     if (count < 3) continue
     const note = activeNotes.find(n => n.id === noteId)
-    if (!note || note.isWiki || note.status === "inbox") continue
+    if (!note || note.noteType === "wiki" || note.status === "inbox") continue
     candidates.push({
       type: "backlink",
       title: note.title,
@@ -102,7 +102,7 @@ export function detectTagCandidates(
   tags: { id: string; name: string; trashed?: boolean }[]
 ): EnrollmentCandidate[] {
   const activeNotes = notes.filter(n => !n.trashed)
-  const wikiNotes = activeNotes.filter(n => n.isWiki)
+  const wikiNotes = activeNotes.filter(n => n.noteType === "wiki")
 
   const wikiTitleSet = new Set<string>()
   for (const n of wikiNotes) {
@@ -113,7 +113,7 @@ export function detectTagCandidates(
   // Build a map of note titles for matching existing notes
   const titleToNoteId = new Map<string, string>()
   for (const n of activeNotes) {
-    if (!n.isWiki) titleToNoteId.set(n.title.toLowerCase(), n.id)
+    if (n.noteType !== "wiki") titleToNoteId.set(n.title.toLowerCase(), n.id)
   }
 
   const tagNoteCounts = new Map<string, number>()
@@ -156,8 +156,8 @@ const AUTO_ENROLL_INTERVAL = 10 * 60 * 1000 // 10 minutes
 export function runAutoEnrollment(
   getState: () => { notes: Note[]; tags: { id: string; name: string; trashed?: boolean }[] },
   actions: {
-    createWikiStub: (title: string, aliases?: string[], stubSource?: string) => string
-    convertToWiki: (noteId: string, stubSource?: string) => void
+    createWikiStub: (title: string, aliases?: string[]) => string
+    convertToWiki: (noteId: string) => void
   }
 ): number {
   const { notes, tags } = getState()
@@ -169,15 +169,15 @@ export function runAutoEnrollment(
     if (c.type === "red-link") {
       if (c.noteId) {
         // Existing note matches red-link title → convert to wiki
-        actions.convertToWiki(c.noteId, "red-link")
+        actions.convertToWiki(c.noteId)
       } else {
         // No existing note → create stub
-        actions.createWikiStub(c.title, [], "red-link")
+        actions.createWikiStub(c.title, [])
       }
       enrolled++
     } else if (c.type === "backlink") {
       if (c.noteId) {
-        actions.convertToWiki(c.noteId, "backlink")
+        actions.convertToWiki(c.noteId)
         enrolled++
       }
     }
@@ -187,9 +187,9 @@ export function runAutoEnrollment(
   const tagCandidates = detectTagCandidates(notes, tags)
   for (const c of tagCandidates) {
     if (c.noteId) {
-      actions.convertToWiki(c.noteId, "tag")
+      actions.convertToWiki(c.noteId)
     } else {
-      actions.createWikiStub(c.title, [], "tag")
+      actions.createWikiStub(c.title, [])
     }
     enrolled++
   }
@@ -203,8 +203,8 @@ export function runAutoEnrollment(
 export function startAutoEnrollment(
   getState: () => { notes: Note[]; tags: { id: string; name: string; trashed?: boolean }[] },
   actions: {
-    createWikiStub: (title: string, aliases?: string[], stubSource?: string) => string
-    convertToWiki: (noteId: string, stubSource?: string) => void
+    createWikiStub: (title: string, aliases?: string[]) => string
+    convertToWiki: (noteId: string) => void
   }
 ) {
   // Defer initial run to avoid React state-update-before-mount warnings

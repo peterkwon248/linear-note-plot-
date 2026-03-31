@@ -99,8 +99,6 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
   reads: "Reads",
   folder: "Folder",
   label: "Label",
-  articles: "Articles",
-  stubs: "Stubs",
   sub: "Sub",
   tier: "Tier",
   parent: "Parent",
@@ -317,8 +315,8 @@ export function NotesTable({
     const trashedTemplates = storeTemplates.filter((t) => t.trashed)
     return {
       all: trashed.length + trashedTags.length + trashedLabels.length + trashedTemplates.length,
-      notes: trashed.filter((n) => !n.isWiki).length,
-      wiki: trashed.filter((n) => n.isWiki).length,
+      notes: trashed.filter((n) => n.noteType !== "wiki").length,
+      wiki: trashed.filter((n) => n.noteType === "wiki").length,
       tags: trashedTags.length,
       labels: trashedLabels.length,
       templates: trashedTemplates.length,
@@ -327,8 +325,8 @@ export function NotesTable({
 
   const trashFilterFn = useCallback((note: Note): boolean => {
     if (!isTrashView || trashFilter === "all") return true
-    if (trashFilter === "wiki") return note.isWiki === true
-    return !note.isWiki
+    if (trashFilter === "wiki") return note.noteType === "wiki"
+    return note.noteType !== "wiki"
   }, [isTrashView, trashFilter])
 
   const flatNotes = useMemo(

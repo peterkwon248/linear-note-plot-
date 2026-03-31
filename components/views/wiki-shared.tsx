@@ -1,41 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { WikiStatus } from "@/lib/types"
 import type { Icon as PhIcon } from "@phosphor-icons/react"
-/* ── Wiki Status Dot ── */
-
-// Normalize legacy status values (draft→stub, complete→article)
-function normalizeStatus(status: string): "stub" | "article" {
-  if (status === "complete" || status === "article") return "article"
-  return "stub"
-}
-
-export function WikiStatusDot({ status }: { status: WikiStatus | string | null }) {
-  if (!status) return <span className="h-2 w-2 rounded-full shrink-0 bg-muted-foreground/30" />
-  const normalized = normalizeStatus(status)
-  const colors: Record<string, string> = {
-    stub: "bg-chart-3",
-    article: "bg-wiki-complete",
-  }
-  return <span className={cn("h-2 w-2 rounded-full shrink-0", colors[normalized])} />
-}
-
-/* ── Wiki Status Badge ── */
-
-export function WikiStatusBadge({ status }: { status: WikiStatus | string }) {
-  const normalized = normalizeStatus(status)
-  const styles: Record<string, string> = {
-    stub: "bg-chart-3/10 text-chart-3",
-    article: "bg-wiki-complete/10 text-wiki-complete",
-  }
-  const labels: Record<string, string> = { stub: "Stub", article: "Article" }
-  return (
-    <span className={cn("rounded-full px-2 py-0.5 text-note font-medium", styles[normalized])}>
-      {labels[normalized]}
-    </span>
-  )
-}
 
 /* ── Stat Card ── */
 
@@ -101,7 +67,7 @@ export function SidebarSection({ title, children }: { title: string; children: R
 /* ── Article Row ── */
 
 export function ArticleRow({ note, onOpen, backlinkCount }: {
-  note: { id: string; title: string; wikiStatus: WikiStatus | null; preview?: string; updatedAt: string }
+  note: { id: string; title: string; preview?: string; updatedAt: string }
   onOpen: (id: string) => void
   backlinkCount: number
 }) {
@@ -110,7 +76,6 @@ export function ArticleRow({ note, onOpen, backlinkCount }: {
       onClick={() => onOpen(note.id)}
       className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-hover-bg"
     >
-      <WikiStatusDot status={note.wikiStatus} />
       <div className="min-w-0 flex-1">
         <span className="text-note font-medium text-foreground">{note.title || "Untitled"}</span>
         {note.preview && (
@@ -126,37 +91,6 @@ export function ArticleRow({ note, onOpen, backlinkCount }: {
         {shortRelative(note.updatedAt)}
       </span>
     </button>
-  )
-}
-
-/* ── Stubs by Source ── */
-
-export const STUB_SOURCE_LABELS: Record<string, string> = {
-  "red-link": "Red Links",
-  "tag": "Tags",
-  "backlink": "Backlinks",
-  "manual": "Manual",
-}
-
-export const STUB_SOURCE_COLORS: Record<string, string> = {
-  "red-link": "bg-destructive/10 text-destructive",
-  "tag": "bg-accent/10 text-accent",
-  "backlink": "bg-blue-500/10 text-blue-500",
-  "manual": "bg-secondary text-muted-foreground",
-}
-
-export function StubsBySourceList({ items }: { items: [string, number][] }) {
-  return (
-    <div className="space-y-2">
-      {items.map(([source, count]) => (
-        <div key={source} className="flex items-center justify-between">
-          <span className={cn("rounded-full px-2 py-0.5 text-2xs font-medium", STUB_SOURCE_COLORS[source] ?? "bg-secondary text-muted-foreground")}>
-            {STUB_SOURCE_LABELS[source] ?? source}
-          </span>
-          <span className="text-2xs tabular-nums font-medium text-foreground">{count}</span>
-        </div>
-      ))}
-    </div>
   )
 }
 

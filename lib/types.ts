@@ -6,17 +6,14 @@ export type TriageStatus = "untriaged" | "kept" | "snoozed" | "trashed"
 /** Source of note creation */
 export type NoteSource = "manual" | "webclip" | "import" | "share" | "api" | null
 
-/** Wiki quality track — independent of workflow status */
-export type WikiStatus = "stub" | "article"
+/** Note type discriminator — replaces legacy isWiki boolean */
+export type NoteType = "note" | "wiki"
 
 /** Wiki article layout mode */
 export type WikiLayout = "default" | "encyclopedia"
 
-/** Reason a wiki stub was auto-created */
-export type StubSource = "red-link" | "tag" | "backlink" | "manual"
-
 /** Activity Bar spaces — top-level navigation */
-export type ActivitySpace = "inbox" | "notes" | "wiki" | "calendar" | "ontology"
+export type ActivitySpace = "home" | "notes" | "wiki" | "calendar" | "ontology"
 
 export interface WikiInfoboxEntry {
   key: string
@@ -94,7 +91,6 @@ export interface WikiBlock {
 export interface WikiMergeSnapshot {
   articleId: string
   title: string
-  wikiStatus: WikiStatus
   aliases: string[]
   tags: string[]
   infobox: WikiInfoboxEntry[]
@@ -124,8 +120,6 @@ export interface WikiArticle {
   id: string
   title: string
   aliases: string[]
-  wikiStatus: WikiStatus
-  stubSource: StubSource | null
   infobox: WikiInfoboxEntry[]
   blocks: WikiBlock[]
   sectionIndex: WikiSectionIndex[]
@@ -192,11 +186,9 @@ export interface Note {
   parentNoteId: string | null
 
   /* ── Wiki ──────────────────────────────────────── */
-  isWiki: boolean
+  noteType: NoteType
   aliases: string[]
   wikiInfobox: WikiInfoboxEntry[]
-  wikiStatus: WikiStatus | null       // null = not wiki, stub/article = wiki quality
-  stubSource: StubSource | null       // reason for stub creation (null if not a stub)
 
   /* ── Precomputed (from content, for performance) ── */
   preview: string          // first ~120 chars of plaintext (for list display)

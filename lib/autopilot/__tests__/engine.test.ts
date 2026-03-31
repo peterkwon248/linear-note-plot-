@@ -32,13 +32,11 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     snoozeCount: 0,
     trashedAt: null,
     parentNoteId: null,
-    isWiki: false,
+    noteType: "note" as const,
     preview: "This is a test note with some preview text for testing",
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
-    wikiStatus: null,
-    stubSource: null,
     ...overrides,
   }
 }

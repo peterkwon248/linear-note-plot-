@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import type { WikiArticle, WikiStatus } from "@/lib/types"
-import { WikiStatusBadge } from "@/components/views/wiki-shared"
+import type { WikiArticle } from "@/lib/types"
 import { pushUndo } from "@/lib/undo-manager"
 import { toast } from "sonner"
 
@@ -32,17 +31,6 @@ interface WikiMergePreviewProps {
 
 type Step = "select-target" | "preview"
 type PrimarySide = "source" | "target"
-
-/* ── Helpers ── */
-
-function higherStatus(a: WikiStatus, b: WikiStatus): WikiStatus {
-  if (a === "article" || b === "article") return "article"
-  return "stub"
-}
-
-function statusLabel(s: WikiStatus): string {
-  return s === "article" ? "Article" : "Stub"
-}
 
 /* ── Component ── */
 
@@ -73,16 +61,11 @@ export function WikiMergePreview({
 
   // Derived defaults — recompute when primary/secondary change
   const defaultTitle = primary?.title ?? source.title
-  const defaultStatus = target
-    ? higherStatus(source.wikiStatus, target.wikiStatus)
-    : source.wikiStatus
 
   const [selectedTitle, setSelectedTitle] = useState<string>("")
-  const [selectedStatus, setSelectedStatus] = useState<WikiStatus | null>(null)
 
   // Effective values (fallback to defaults)
   const effectiveTitle = selectedTitle || defaultTitle
-  const effectiveStatus = selectedStatus ?? defaultStatus
 
   // Filtered list for step 1
   const filteredArticles = useMemo(() => {
@@ -105,7 +88,6 @@ export function WikiMergePreview({
       // Reset selections with correct defaults for new target
       const newPrimary = t // default primarySide is "target"
       setSelectedTitle(newPrimary.title)
-      setSelectedStatus(higherStatus(source.wikiStatus, t.wikiStatus))
     }
     setStep("preview")
   }
@@ -129,7 +111,6 @@ export function WikiMergePreview({
 
     mergeWikiArticles(primary.id, secondary.id, {
       title: effectiveTitle,
-      status: effectiveStatus,
     })
 
     pushUndo(
@@ -142,7 +123,6 @@ export function WikiMergePreview({
         usePlotStore.getState().updateWikiArticle(primary.id, {
           title: primarySnapshot.title,
           blocks: primarySnapshot.blocks,
-          wikiStatus: primarySnapshot.wikiStatus,
           aliases: primarySnapshot.aliases,
           tags: primarySnapshot.tags,
           infobox: primarySnapshot.infobox,
@@ -152,7 +132,6 @@ export function WikiMergePreview({
         // Redo: re-merge
         usePlotStore.getState().mergeWikiArticles(primary.id, secondary.id, {
           title: effectiveTitle,
-          status: effectiveStatus,
         })
       },
     )
@@ -169,7 +148,6 @@ export function WikiMergePreview({
           usePlotStore.getState().updateWikiArticle(primary.id, {
             title: primarySnapshot.title,
             blocks: primarySnapshot.blocks,
-            wikiStatus: primarySnapshot.wikiStatus,
             aliases: primarySnapshot.aliases,
             tags: primarySnapshot.tags,
             infobox: primarySnapshot.infobox,
@@ -249,16 +227,6 @@ export function WikiMergePreview({
                       {a.title || "Untitled"}
                     </p>
                   </div>
-                  <span
-                    className={cn(
-                      "shrink-0 rounded-[4px] px-1.5 py-px text-2xs font-semibold uppercase tracking-wide",
-                      a.wikiStatus === "article"
-                        ? "bg-wiki-article/8 text-wiki-article/70"
-                        : "bg-chart-3/8 text-chart-3/70",
-                    )}
-                  >
-                    {a.wikiStatus === "article" ? "ARTICLE" : "STUB"}
-                  </span>
                 </button>
               ))}
               {filteredArticles.length === 0 && (
@@ -351,24 +319,6 @@ export function WikiMergePreview({
                   </div>
                 </div>
 
-                {/* Status selection */}
-                <div>
-                  <p className="mb-1.5 text-2xs font-medium text-muted-foreground">
-                    Status
-                  </p>
-                  <div className="flex gap-2">
-                    <RadioOption
-                      checked={effectiveStatus === "article"}
-                      onSelect={() => setSelectedStatus("article")}
-                      label="Article"
-                    />
-                    <RadioOption
-                      checked={effectiveStatus === "stub"}
-                      onSelect={() => setSelectedStatus("stub")}
-                      label="Stub"
-                    />
-                  </div>
-                </div>
               </div>
 
               {/* ── Result preview ── */}
@@ -382,7 +332,6 @@ export function WikiMergePreview({
                       <span className="text-note font-medium text-foreground">
                         {effectiveTitle || "Untitled"}
                       </span>
-                      <WikiStatusBadge status={effectiveStatus} />
                     </div>
                     <p className="text-2xs text-muted-foreground">
                       {primary.blocks.length} blocks from {primary.title} +{" "}
@@ -418,7 +367,6 @@ export function WikiMergePreview({
                   setTargetId(null)
                   setPrimarySide("target")
                   setSelectedTitle("")
-                  setSelectedStatus(null)
                 }}
                 className="rounded-md px-3 py-1.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg"
               >
@@ -470,9 +418,6 @@ function ArticleCard({
       <p className="truncate text-note font-medium text-foreground">
         {article.title || "Untitled"}
       </p>
-      <div className="mt-1 flex items-center gap-2">
-        <WikiStatusBadge status={article.wikiStatus} />
-      </div>
       <div className="mt-1.5 space-y-0.5 text-2xs text-muted-foreground">
         <p>{article.blocks.length} blocks</p>
         <p>{article.tags.length} tags</p>

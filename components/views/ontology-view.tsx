@@ -127,7 +127,6 @@ export function OntologyView() {
     () => wikiArticles.map((a) => ({
       title: a.title,
       aliases: a.aliases,
-      wikiStatus: a.wikiStatus,
       // Extract noteIds from note-ref blocks so graph can identify which notes belong to this article
       noteIds: a.blocks.filter((b) => b.type === "note-ref" && b.noteId).map((b) => b.noteId as string),
     })),
