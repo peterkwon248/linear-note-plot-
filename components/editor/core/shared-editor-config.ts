@@ -67,6 +67,7 @@ import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
 import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
 import { AnchorDividerNode } from "@/components/editor/nodes/anchor-divider-node"
+import { QueryBlockNode } from "@/components/editor/nodes/query-node"
 
 // ── Lowlight (syntax highlighting for code blocks) ──────────────────
 const lowlight = createLowlight(common)
@@ -231,7 +232,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     Audio,
     Twitch,
     UniqueID.configure({
-      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock', 'anchorMark', 'anchorDivider'],
+      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock', 'anchorMark', 'anchorDivider', 'queryBlock'],
     }),
     InvisibleCharacters.configure({
       visible: false, // disabled by default, toggled via toolbar
@@ -304,6 +305,7 @@ export function createEditorExtensions(
       noteExtensions.push(ContentBlockNode as Extension)
       noteExtensions.push(AnchorMarkNode as Extension)
       noteExtensions.push(AnchorDividerNode as Extension)
+      noteExtensions.push(QueryBlockNode as Extension)
 
       // Custom keyboard shortcuts (Indent/Outdent, Move List)
       const CustomKeyboardShortcuts = Extension.create({

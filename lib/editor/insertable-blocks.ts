@@ -205,6 +205,20 @@ export const INSERTABLE_BLOCKS: InsertableBlock[] = [
     category: "math",
   },
 
+  // ── Query ───────────────────────────────────────────────
+  {
+    id: "queryBlock",
+    title: "Query",
+    description: "Inline filtered notes table",
+    iconName: "Database",
+    keywords: ["query", "database", "table", "filter", "view", "inline"],
+    command: (editor) => {
+      const { nanoid } = require("nanoid")
+      editor.chain().focus().insertContent({ type: "queryBlock", attrs: { queryId: nanoid(8) } }).run()
+    },
+    category: "structure",
+  },
+
   // ── Note-specific ───────────────────────────────────────
   {
     id: "date",

@@ -19,6 +19,7 @@ export type ViewContextKey =
   | "wiki-category"  // /wiki/categories — category management
   | "graph"          // /ontology — graph view
   | "calendar"       // /calendar — calendar view
+  | `query-${string}` // inline query blocks in editor
 
 /* ── View State ────────────────────────────────────────── */
 
