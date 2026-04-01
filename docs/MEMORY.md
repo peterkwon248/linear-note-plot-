@@ -200,24 +200,17 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 
 ## Current Direction (as of 2026-04-01)
 
+### 방향 결정 (2026-04-01)
+- **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** — Notes/Wiki/Calendar/Ontology 각각 최적화된 UX. IKEA 전략 유지
+- **~~Notes→Pages 네이밍~~ 폐기** — 통합 템플릿 방향에서 나온 것. 독립 공간에서는 "Notes"가 맞음
+- **~~Template Page Architecture~~ 폐기** — 관련 문서 삭제 (01,02,03,04,15,17)
+
 ### 다음 우선순위
-1. **드래그 핸들(⠿) 클릭 → 블록 메뉴** — 노션식. distance:5 활용해 클릭/드래그 구분
-2. **KaTeX/Math 렌더링 수정** — Mathematics 확장 디버깅
-3. **Turn Into 메뉴** — 블록 타입 변환
-4. **Notes→Pages 네이밍** — UI 레이블 변경
-- **인라인 쿼리 뷰 MVP**: /query 슬래시커맨드, QueryBlockNode (TipTap atom 노드), 프리셋 피커 (Status/Folder/Label), 호버-reveal 설정 바, InlineQueryTable, ViewContextKey `query-${string}` 패턴
-- **투두 시스템 MVP**: `lib/todo-index.ts` (체크박스 인덱싱 엔진), `lib/body-helpers.ts::extractTasks`, Store 통합 (todoTasks/rebuildTodoIndex/toggleTaskChecked/addQuickTask), TodoView (진행률+Incomplete/Completed), Calendar 공간 하위 배치
-- **Wiki View all 버튼**: 6개 초과 시 "View all N articles" 버튼
-- **Template Page Architecture 문서화**: `docs/plot-discussion/17-TEMPLATE-PAGE-ARCHITECTURE.md` — Activity Bar = 시스템 기본 템플릿 페이지. 유저 커스텀 페이지 무한 추가. IKEA 전략
-- **Home Dashboard TODO 문서화**: `docs/plot-discussion/18-HOME-DASHBOARD-TODO.md` — 카드 클릭 버그, 투두 고도화, 인라인 쿼리 개선 목록
-- **BlockNote 리서치**: 전환 비추 결론. 데이터 포맷 비호환, PropSchema 원시 타입 한계, 멀티컬럼 유료/GPL
-- **다음 (우선순위순)**:
-  1. 디자인 리부트 (현재 TipTap 유지, components/ 디자인만 새로)
-  2. Home 대시보드 카드 클릭 동작 수정 (필터 연동)
-  3. 투두 고도화 (dueDate 파싱, Things 3식 분류, TickTick 수준 UI)
-  4. 인라인 쿼리 뷰 개선 (뷰 전환, Tags 프리셋, Linked View)
-  5. Turn Into 메뉴
-  6. Notes→Pages 네이밍 (기능 워크스페이스급 달성 후)
+1. **노트참조 통합 인터랙션** — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동
+2. Home 대시보드 카드 클릭 → 필터 연동
+3. 투두 고도화 (dueDate, Today/Upcoming 분류)
+4. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
+5. 디자인 리부트
 
 ### 이전 세션 완료 — 에디터 Phase 1 확장 (2026-03-30)
 - **Columns Block 완성**: CSS Grid 기반, renderHTML columnCell, resize handle(드래그 너비 조절), 테이블 스타일 border

@@ -132,11 +132,25 @@ const COMMANDS: CommandItem[] = [
     },
   },
   {
-    title: "Math",
-    description: "LaTeX math equation",
+    title: "Math (Inline)",
+    description: "Inline LaTeX equation",
     icon: MathOperations,
     command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertContent("$$\n\\displaystyle \n$$").run()
+      editor.chain().focus().deleteRange(range).insertContent({
+        type: "inlineMath",
+        attrs: { latex: " " },
+      }).run()
+    },
+  },
+  {
+    title: "Math (Block)",
+    description: "Block LaTeX equation",
+    icon: MathOperations,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertContent({
+        type: "blockMath",
+        attrs: { latex: " " },
+      }).run()
     },
   },
   {
