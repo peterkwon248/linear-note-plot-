@@ -148,11 +148,17 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   }
 
   const handleInlineMath = () => {
-    editor.chain().focus().insertContent("$E = mc^2$").run()
+    editor.chain().focus().insertContent({
+      type: "inlineMath",
+      attrs: { latex: " " },
+    }).run()
   }
 
   const handleBlockMath = () => {
-    editor.chain().focus().insertContent("$$\n\\sum_{i=1}^{n} x_i\n$$").run()
+    editor.chain().focus().insertContent({
+      type: "blockMath",
+      attrs: { latex: " " },
+    }).run()
   }
 
   const handleTOC = () => {

@@ -23,6 +23,260 @@ import type { Editor } from "@tiptap/core"
 import { useBlockPositions, getBlockDomRect, type BlockPosition } from "./use-block-positions"
 import { useBlockReorder, useSideDrop } from "./use-block-reorder"
 import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { Copy } from "@phosphor-icons/react/dist/ssr/Copy"
+import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
+import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
+import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
+import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
+import { Paragraph } from "@phosphor-icons/react/dist/ssr/Paragraph"
+import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
+import { ListNumbers } from "@phosphor-icons/react/dist/ssr/ListNumbers"
+import { CheckSquare } from "@phosphor-icons/react/dist/ssr/CheckSquare"
+import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
+import { Code } from "@phosphor-icons/react/dist/ssr/Code"
+import { Info } from "@phosphor-icons/react/dist/ssr/Info"
+import { CaretDown as PhToggle } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
+import { Minus as PhDivider } from "@phosphor-icons/react/dist/ssr/Minus"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
+import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
+import { Database } from "@phosphor-icons/react/dist/ssr/Database"
+import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
+import { nanoid } from "nanoid"
+
+// ── BlockMenu (dropdown on handle click) ────────────────────
+
+const menuItemCls = "flex items-center gap-2 py-1.5 px-2.5 rounded-md text-[13px] text-[hsl(var(--muted-foreground))] cursor-pointer hover:bg-[hsl(var(--hover-bg))] hover:text-[hsl(var(--foreground))] transition-colors"
+
+function BlockMenu({
+  editor,
+  block,
+  onClose,
+}: {
+  editor: Editor
+  block: BlockPosition
+  onClose: () => void
+}) {
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose()
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [onClose])
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    document.addEventListener("keydown", handler)
+    return () => document.removeEventListener("keydown", handler)
+  }, [onClose])
+
+  // block.docPos comes from doc.forEach offset — this IS the absolute position for top-level nodes
+  // doc.forEach offset and doc.descendants pos are identical for top-level children
+  const pos = block.docPos
+  const size = block.nodeSize
+
+  const execAndClose = (fn: () => void) => {
+    // Execute action first, THEN close menu (setTimeout ensures state doesn't unmount mid-action)
+    try { fn() } catch (e) { console.error("[BlockMenu]", e) }
+    setTimeout(() => onClose(), 0)
+  }
+
+  const deleteBlock = () => execAndClose(() => {
+    const { tr } = editor.state
+    tr.delete(pos, pos + size)
+    editor.view.dispatch(tr)
+    editor.commands.focus()
+  })
+
+  const duplicateBlock = () => execAndClose(() => {
+    const node = editor.state.doc.nodeAt(pos)
+    if (!node) return
+    const { tr } = editor.state
+    const copy = node.type.create({ ...node.attrs, id: undefined }, node.content, node.marks)
+    tr.insert(pos + size, copy)
+    editor.view.dispatch(tr)
+    editor.commands.focus()
+  })
+
+  const moveUp = () => execAndClose(() => {
+    const node = editor.state.doc.nodeAt(pos)
+    if (!node || pos === 0) return
+    let prevPos = -1
+    let prevNode: any = null
+    editor.state.doc.forEach((child, offset) => {
+      if (offset + child.nodeSize === pos) { prevPos = offset; prevNode = child }
+    })
+    if (prevPos < 0 || !prevNode) return
+    const { tr } = editor.state
+    tr.replaceWith(prevPos, pos + node.nodeSize, [node, prevNode])
+    editor.view.dispatch(tr)
+    editor.commands.focus()
+  })
+
+  const moveDown = () => execAndClose(() => {
+    const node = editor.state.doc.nodeAt(pos)
+    if (!node) return
+    const afterPos = pos + node.nodeSize
+    const nextNode = editor.state.doc.nodeAt(afterPos)
+    if (!nextNode) return
+    const { tr } = editor.state
+    tr.replaceWith(pos, afterPos + nextNode.nodeSize, [nextNode, node])
+    editor.view.dispatch(tr)
+    editor.commands.focus()
+  })
+
+  /* ── Turn Into items ─────────────────── */
+  const turnIntoItems: { label: string; icon: React.ReactNode; action: () => void }[] = [
+    { label: "Paragraph", icon: <Paragraph size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(pos + 1).setParagraph().run()
+    })},
+    { label: "Heading 1", icon: <TextH size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(pos + 1).setHeading({ level: 1 }).run()
+    })},
+    { label: "Heading 2", icon: <TextH size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(pos + 1).setHeading({ level: 2 }).run()
+    })},
+    { label: "Heading 3", icon: <TextH size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(pos + 1).setHeading({ level: 3 }).run()
+    })},
+    { label: "Bullet List", icon: <ListBullets size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(pos + 1).toggleBulletList().run()
+    })},
+    { label: "Numbered List", icon: <ListNumbers size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(pos + 1).toggleOrderedList().run()
+    })},
+    { label: "Checklist", icon: <CheckSquare size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(pos + 1).toggleTaskList().run()
+    })},
+    { label: "Blockquote", icon: <Quotes size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(pos + 1).toggleBlockquote().run()
+    })},
+    { label: "Code Block", icon: <Code size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(pos + 1).toggleCodeBlock().run()
+    })},
+  ]
+
+  /* ── Insert Below items ────────────── */
+  const insertPos = pos + size // position right after this block
+  const insertBelow = (content: any) => execAndClose(() => {
+    editor.chain().focus().insertContentAt(insertPos, content).run()
+  })
+
+  const insertBelowItems: { label: string; icon: React.ReactNode; action: () => void }[] = [
+    { label: "Table", icon: <PhTable size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(insertPos).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+    })},
+    { label: "Divider", icon: <PhDivider size={14} />, action: () => insertBelow({ type: "horizontalRule" }) },
+    { label: "Callout", icon: <Info size={14} />, action: () => insertBelow({ type: "calloutBlock", attrs: { calloutType: "info" }, content: [{ type: "paragraph" }] }) },
+    { label: "Toggle", icon: <PhToggle size={14} />, action: () => execAndClose(() => {
+      editor.chain().focus().setTextSelection(insertPos).setDetails().run()
+    })},
+    { label: "Columns", icon: <PhColumns size={14} />, action: () => insertBelow({ type: "columnsBlock", content: [{ type: "columnCell", content: [{ type: "paragraph" }] }, { type: "columnCell", content: [{ type: "paragraph" }] }] }) },
+    { label: "TOC", icon: <ListNumbers size={14} />, action: () => insertBelow({ type: "tocBlock", attrs: { entries: [] } }) },
+    { label: "Query", icon: <Database size={14} />, action: () => insertBelow({ type: "queryBlock", attrs: { queryId: nanoid(8) } }) },
+    { label: "Code Block", icon: <Code size={14} />, action: () => insertBelow({ type: "codeBlock" }) },
+    { label: "Math (Block)", icon: <MathOperations size={14} />, action: () => insertBelow({ type: "blockMath", attrs: { latex: " " } }) },
+  ]
+
+  /* ── Submenu state ─────────────────── */
+  const [subMenu, setSubMenu] = useState<"turnInto" | "insertBelow" | null>(null)
+
+  return (
+    <div
+      ref={menuRef}
+      style={{
+        position: "absolute",
+        top: 28,
+        left: 0,
+        zIndex: 9999,
+        background: "var(--surface-overlay, hsl(var(--popover)))",
+        borderRadius: 8,
+        border: "1px solid hsl(var(--border))",
+        padding: 4,
+        minWidth: 180,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+      }}
+    >
+      {/* Turn Into */}
+      <div style={{ position: "relative" }}>
+        <button
+          type="button"
+          className={menuItemCls}
+          onMouseEnter={() => setSubMenu("turnInto")}
+          onClick={() => setSubMenu(subMenu === "turnInto" ? null : "turnInto")}
+        >
+          <ArrowsClockwise size={14} /> <span style={{ flex: 1 }}>Turn Into</span> <CaretRight size={12} />
+        </button>
+        {subMenu === "turnInto" && (
+          <div style={{
+            position: "absolute", left: "100%", top: 0, marginLeft: 4, zIndex: 10000,
+            background: "var(--surface-overlay, hsl(var(--popover)))", borderRadius: 8,
+            border: "1px solid hsl(var(--border))", padding: 4, minWidth: 160,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5)", maxHeight: 300, overflowY: "auto",
+          }}>
+            {turnIntoItems.map((item) => (
+              <button key={item.label} type="button" className={menuItemCls} onClick={item.action}>
+                {item.icon} {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Insert Below */}
+      <div style={{ position: "relative" }}>
+        <button
+          type="button"
+          className={menuItemCls}
+          onMouseEnter={() => setSubMenu("insertBelow")}
+          onClick={() => setSubMenu(subMenu === "insertBelow" ? null : "insertBelow")}
+        >
+          <Plus size={14} /> <span style={{ flex: 1 }}>Insert Below</span> <CaretRight size={12} />
+        </button>
+        {subMenu === "insertBelow" && (
+          <div style={{
+            position: "absolute", left: "100%", top: 0, marginLeft: 4, zIndex: 10000,
+            background: "var(--surface-overlay, hsl(var(--popover)))", borderRadius: 8,
+            border: "1px solid hsl(var(--border))", padding: 4, minWidth: 160,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5)", maxHeight: 300, overflowY: "auto",
+          }}>
+            {insertBelowItems.map((item) => (
+              <button key={item.label} type="button" className={menuItemCls} onClick={item.action}>
+                {item.icon} {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ height: 1, background: "hsl(var(--border))", margin: "4px 0" }} />
+
+      <button type="button" className={menuItemCls} onClick={duplicateBlock}>
+        <Copy size={14} /> Duplicate
+      </button>
+      <button type="button" className={menuItemCls} onClick={moveUp}>
+        <ArrowUp size={14} /> Move Up
+      </button>
+      <button type="button" className={menuItemCls} onClick={moveDown}>
+        <ArrowDown size={14} /> Move Down
+      </button>
+      <div style={{ height: 1, background: "hsl(var(--border))", margin: "4px 0" }} />
+      <button type="button" className={menuItemCls} onClick={deleteBlock} style={{ color: "hsl(var(--destructive, 0 84% 60%))" }}>
+        <Trash size={14} /> Delete
+      </button>
+    </div>
+  )
+}
 
 // ── SortableBlockSlot ───────────────────────────────────────
 
@@ -48,6 +302,7 @@ function SortableBlockSlot({
   } = useSortable({ id: block.id })
 
   const [hovered, setHovered] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [pos, setPos] = useState<{ top: number; height: number } | null>(null)
 
   // Compute position relative to container
@@ -109,8 +364,8 @@ function SortableBlockSlot({
     left: -28, // handle in left gutter (outside content area)
     width: 28,
     height: pos.height,
-    pointerEvents: "none",
-    zIndex: 10,
+    pointerEvents: menuOpen ? "auto" : "none",
+    zIndex: menuOpen ? 9999 : 10,
     transform: CSS.Transform.toString(transform),
     transition: transition ?? undefined,
   }
@@ -121,7 +376,16 @@ function SortableBlockSlot({
         ref={setActivatorNodeRef}
         {...listeners}
         onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseLeave={() => { if (!menuOpen) setHovered(false) }}
+        onPointerUp={(e) => {
+          // Short click (no drag) → open block menu
+          // Using pointerUp to avoid conflict with dnd-kit's pointerDown listeners
+          if (!isDragging) {
+            e.stopPropagation()
+            e.preventDefault()
+            setMenuOpen((v) => !v)
+          }
+        }}
         style={{
           position: "absolute",
           left: 2,
@@ -134,21 +398,29 @@ function SortableBlockSlot({
           alignItems: "center",
           justifyContent: "center",
           pointerEvents: "auto",
-          opacity: hovered || isDraggingAny ? 1 : 0,
+          opacity: hovered || isDraggingAny || menuOpen ? 1 : 0,
           transition: "opacity 150ms ease",
-          background: hovered ? "hsl(var(--hover-bg))" : "transparent",
+          background: hovered || menuOpen ? "hsl(var(--hover-bg))" : "transparent",
         }}
       >
         <DotsSixVertical
           size={14}
           weight="bold"
           style={{
-            color: hovered
+            color: hovered || menuOpen
               ? "hsl(var(--muted-foreground))"
               : "hsl(var(--muted-foreground) / 0.4)",
           }}
         />
       </div>
+      {/* Block menu dropdown */}
+      {menuOpen && (
+        <BlockMenu
+          editor={editor}
+          block={block}
+          onClose={() => { setMenuOpen(false); setHovered(false) }}
+        />
+      )}
     </div>
   )
 }

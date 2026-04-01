@@ -76,30 +76,9 @@ Plot = IKEA (조합이 한정적이지만 충분히 예쁘고, 5분이면 완성
 
 ---
 
-## 네이밍: Notes → Pages
+## ~~네이밍: Notes → Pages~~ (폐기 — 독립 공간 유지, 2026-04-01)
 
-Activity Bar와 유저 대면 UI에서는 "Pages"로 표기. 내부 코드는 `Note` 타입 유지.
-
-```
-외부 명칭 (유저가 보는 것):  Pages
-내부 명칭 (코드/데이터):     Note (63,000줄 리팩토링 불필요)
-```
-
-Activity Bar 아이콘 텍스트 + 사이드바 헤더만 변경.
-
----
-
-## 페이지 레이아웃 프리셋
-
-```
-Standard    = 현재 Plot 에디터 (전폭 텍스트)
-Wide        = 더 넓은 에디터 (사이드바 자동 접힘)
-Side-by-side = 좌/우 분할 (기존 듀얼 패널)
-Dashboard   = 인라인 쿼리 뷰 여러 개 배치
-Journal     = 날짜 헤더 + 좁은 폭 + 세리프 폰트
-```
-
-구현: Note 메타에 `layout: "standard" | "wide" | "dashboard" | "journal"` 추가. 템플릿이 자동 세팅. CSS 변수 몇 개 + 에디터 wrapper의 max-width / padding 조정.
+## ~~페이지 레이아웃 프리셋~~ (폐기 — 통합 템플릿 방향 폐기, 2026-04-01)
 
 ---
 

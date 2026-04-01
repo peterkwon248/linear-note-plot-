@@ -859,7 +859,8 @@
 
 /* ── Mathematics / KaTeX ────────────────────────────────────────── */
 
-.ProseMirror .Tiptap-mathematics-editor {
+.ProseMirror .Tiptap-mathematics-editor,
+.tiptap-mathematics-editor {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
   border-radius: 6px;
@@ -871,19 +872,22 @@
   min-width: 40px;
 }
 
-.ProseMirror .Tiptap-mathematics-editor:focus {
+.ProseMirror .Tiptap-mathematics-editor,
+.tiptap-mathematics-editor:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
-.ProseMirror .Tiptap-mathematics-render {
+.ProseMirror .Tiptap-mathematics-render,
+.tiptap-mathematics-render {
   cursor: pointer;
   transition: background 0.15s;
   padding: 2px 4px;
   border-radius: 4px;
 }
 
-.ProseMirror .Tiptap-mathematics-render:hover {
+.ProseMirror .Tiptap-mathematics-render,
+.tiptap-mathematics-render:hover {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 

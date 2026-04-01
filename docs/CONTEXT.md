@@ -84,7 +84,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 78. 인라인 쿼리 뷰 MVP — /query 슬래시커맨드, 프리셋 피커 (Status/Folder/Label), 호버-reveal 설정 바, 경량 테이블
 79. 투두 시스템 MVP — 체크박스 인덱싱 (contentJson → TaskIndex), Todo 뷰, 인라인 추가, 체크 토글, Calendar 공간 하위
-80. Template Page Architecture 문서화 — Activity Bar = 시스템 기본 템플릿 페이지. 유저 커스텀 페이지 무한 추가
+80. 에디터 블록 UX + TOC 리디자인 + 블록 메뉴 (Turn Into/Insert Below) + KaTeX 수정
 81. 에디터 블록 UX 개선 — Columns 테두리 다크모드 수정, Tab 컬럼 이동, Toggle persist+노션식 리디자인(배경 제거), Merge Blocks(hardBreak 병합), 인포박스 읽기모드 readOnly, Side-drop 컬럼 자동생성 제거
 82. TOC 리디자인 + 에디터 인프라 — 수동 TOC(블록피커 1클릭 추가 + 링크 + 편집 + 드래그), Add to TOC 우클릭, Delete Block 우클릭 메뉴, All Notes 사이드바 추가, Memo 라벨 자동 부여
 
@@ -100,6 +100,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ## Key Design Decisions
 
 - **LLM/API 사용 안 함** — 전부 규칙 기반 + 통계 기반 + 그래프 알고리즘. 오프라인, 프라이버시, 비용 0
+- **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** — 5개 공간이 각각 최적화된 UX 제공. "유저는 노트만 쓰고 앱이 알아서" = IKEA 전략. 노션식 "빈 캔버스 + 블록 조합" 방향 포기 (2026-04-01)
 - **Activity Bar 5-space**: Home / Notes / Wiki / Calendar / Ontology (2026-03-31)
 - **Wiki 사이드바 4-항목**: Overview / Merge / Split / Categories (+ Views 섹션). Categories = 2-panel 트리 에디터
 - **Wiki Layout 프리셋**: `"default" | "encyclopedia"` — article별 전환. Encyclopedia = 나무위키식 (인라인 인포박스, 목차, 분류 태그)
@@ -150,11 +151,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 
 ## TODO: Future Work (우선순위 순)
 
-### P0 — 구조 변경 + 에디터 완성
-- **드래그 핸들(⠿) 클릭 → 블록 메뉴**: 노션식. 짧은 클릭=메뉴, 드래그=이동. distance:5 activationConstraint 활용
-- **KaTeX/Math 렌더링 수정**: $E=mc^2$ raw 텍스트로 보임. Mathematics 확장 렌더링 디버깅 필요
-- **Notes→Pages 네이밍**: Activity Bar/사이드바 유저 대면 UI에서 "Pages"로 표기. 내부 코드 Note 유지
-- **Turn Into 메뉴**: 블록 타입 변환 (H1↔H2, bullet↔numbered, 문단↔콜아웃 등)
+### P0 — 에디터 완성
 - **노트참조 통합 인터랙션**: 멘션/위키링크/noteEmbed 공통 — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동, 인라인 본문 펼치기(노트만, 위키 제외)
 
 ### P0 — 에디터 통합 프로젝트 후속 Phase

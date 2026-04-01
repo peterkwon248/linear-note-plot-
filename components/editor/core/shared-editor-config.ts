@@ -6,6 +6,7 @@
  * only need to call `createEditorExtensions(tier, options)`.
  */
 
+import { InputRule } from "@tiptap/core"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import TaskList from "@tiptap/extension-task-list"
@@ -229,6 +230,29 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     DetailsContent,
     // Toggle delete: use right-click "Delete Block" or Backspace/Delete key
     Mathematics,
+    // Single-dollar $...$ inline math input rule (Mathematics only supports $$...$$)
+    Extension.create({
+      name: "singleDollarMath",
+      addInputRules() {
+        const inlineMathType = this.editor.schema.nodes.inlineMath
+        if (!inlineMathType) return []
+        return [
+          new InputRule({
+            find: /(^|[^$])\$([^$\n]+?)\$$/,
+            handler: ({ state, range, match }) => {
+              const latex = match[2]
+              if (!latex?.trim()) return
+              const { tr } = state
+              // Adjust range to not include the prefix character
+              const prefixLength = match[1]?.length ?? 0
+              const start = range.from + prefixLength
+              const end = range.to
+              tr.replaceWith(start, end, inlineMathType.create({ latex: latex.trim() }))
+            },
+          }),
+        ]
+      },
+    }),
     // -- New extensions (Phase 1C+) --
     Audio,
     Twitch,
