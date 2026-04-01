@@ -308,7 +308,7 @@
 
 .dark .ProseMirror code {
   background-color: var(--editor-code-bg);
-  color: #E0A8F0;
+  color: var(--editor-inline-code-color);
   border-color: rgba(255, 255, 255, 0.06);
 }
 
@@ -327,7 +327,7 @@
   background: none;
   color: var(--foreground);
   padding: 0;
-  font-size: 13px;
+  font-size: var(--editor-code-font-size);
   display: block;
   line-height: 1.65;
   font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
@@ -419,7 +419,7 @@
   border-radius: 6px;
   cursor: pointer;
   color: color-mix(in srgb, var(--foreground) 80%, transparent);
-  font-size: 13px;
+  font-size: var(--editor-ui-sm);
   background: transparent;
   border: none;
   outline: none;
@@ -574,13 +574,13 @@
   position: relative;
   min-width: 80px;
   text-align: left;
-  font-size: 14px;
+  font-size: var(--editor-table-cell);
 }
 
 .ProseMirror th {
   background-color: var(--muted);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--editor-ui-sm);
 }
 
 .ProseMirror .selectedCell::after {
@@ -866,7 +866,7 @@
   border-radius: 6px;
   padding: 4px 8px;
   font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-  font-size: 13px;
+  font-size: var(--editor-code-font-size);
   color: var(--foreground);
   outline: none;
   min-width: 40px;
@@ -973,7 +973,7 @@
   width: 100%;
   padding: 6px 12px;
   text-align: left;
-  font-size: 13px;
+  font-size: var(--editor-ui-sm);
   color: var(--foreground);
   background: transparent;
   border: none;
@@ -1002,7 +1002,7 @@
   margin-left: 2px;
   width: 16px;
   height: 16px;
-  font-size: 12px;
+  font-size: var(--editor-ui-xs);
   line-height: 1;
   opacity: 0.5;
   transition: opacity 0.15s;
@@ -1046,7 +1046,7 @@
   margin-top: 2em;
   padding-top: 1em;
   border-top: 1px solid var(--border);
-  font-size: 13px;
+  font-size: var(--editor-ui-sm);
   color: var(--muted-foreground);
   display: flex;
   align-items: baseline;
@@ -1236,7 +1236,7 @@
 
 /* Text label — hidden when collapsed, visible when expanded */
 .floating-toc-label {
-  font-size: 12px;
+  font-size: var(--editor-ui-xs);
   line-height: 1.4;
   color: hsl(var(--muted-foreground));
   opacity: 0;
@@ -1282,7 +1282,7 @@
   border-radius: 4px;
   background: hsl(var(--accent) / 0.1);
   color: hsl(var(--accent-foreground));
-  font-size: 13px;
+  font-size: var(--editor-ui-sm);
   line-height: 1.4;
   vertical-align: baseline;
   cursor: default;
@@ -1300,13 +1300,13 @@
 }
 
 .ProseMirror .anchor-mark .anchor-label {
-  font-size: 12px;
+  font-size: var(--editor-ui-xs);
   font-weight: 500;
   color: hsl(var(--accent-foreground));
 }
 
 .ProseMirror .anchor-mark .anchor-label-input {
-  font-size: 12px;
+  font-size: var(--editor-ui-xs);
   font-weight: 500;
   background: transparent;
   border: none;
@@ -1353,14 +1353,14 @@
 }
 
 .ProseMirror .anchor-divider .anchor-divider-label {
-  font-size: 12px;
+  font-size: var(--editor-ui-xs);
   font-weight: 500;
   color: hsl(var(--muted-foreground));
   letter-spacing: 0.02em;
 }
 
 .ProseMirror .anchor-divider .anchor-divider-label-input {
-  font-size: 12px;
+  font-size: var(--editor-ui-xs);
   font-weight: 500;
   background: transparent;
   border: none;

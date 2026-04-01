@@ -138,7 +138,7 @@ function ReflectionEntry({ reflection }: { reflection: Reflection }) {
 
   return (
     <div className="relative">
-      <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-amber-500" />
+      <div className="absolute -left-4 top-1.5 w-2 h-2 rounded-full bg-amber-500" />
       <p className="text-note text-foreground whitespace-pre-wrap leading-relaxed">
         {reflection.text}
       </p>

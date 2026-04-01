@@ -59,7 +59,7 @@ function FloatingDragDropBar({
   const displayArticles = otherArticles.slice(0, 3)
 
   return (
-    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-6 fade-in duration-300">
+    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-6 fade-in duration-200">
       <div className="flex items-stretch gap-2.5 rounded-lg border border-border bg-surface-overlay px-4 py-3 shadow-2xl">
         {/* New Article drop zone */}
         <div
@@ -381,7 +381,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete }: WikiA
   if (!article) {
     return (
       <div className="flex flex-col items-center gap-3 py-20 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
           <BookOpen className="text-muted-foreground/40" size={20} weight="regular" />
         </div>
         <p className="text-note text-muted-foreground/60">Article not found</p>
@@ -859,7 +859,7 @@ function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
                 })
               }
             }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-[6px] text-left transition-colors duration-100 hover:bg-hover-bg"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-100 hover:bg-hover-bg"
           >
             <span className="shrink-0 text-2xs font-semibold text-accent/40 tabular-nums w-4">
               {i + 1}
@@ -981,7 +981,7 @@ function InlineCategoryTags({
           Add
         </button>
         {dropdownOpen && (
-          <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-white/[0.08] bg-[#1a1a1a] p-1 shadow-xl">
+          <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-white/[0.08] bg-popover p-1 shadow-xl">
             {availableCategories.length > 0 && (
               <div className="max-h-44 overflow-y-auto">
                 {availableCategories.map((cat) => (
@@ -1036,7 +1036,7 @@ function TagBadges({ tagIds }: { tagIds: string[] }) {
         return (
           <span
             key={tagId}
-            className="rounded-[5px] bg-secondary/50 px-1.5 py-0.5 text-2xs font-medium text-foreground/70"
+            className="rounded-sm bg-secondary/50 px-1.5 py-0.5 text-2xs font-medium text-foreground/70"
           >
             {tag?.name ?? tagId}
           </span>
@@ -1104,7 +1104,7 @@ function ArticleCategories({
         {assignedCategories.map((cat) => (
           <span
             key={cat.id}
-            className="group inline-flex items-center gap-0.5 rounded-[5px] bg-secondary/50 px-1.5 py-0.5 text-2xs font-medium text-foreground/70"
+            className="group inline-flex items-center gap-0.5 rounded-sm bg-secondary/50 px-1.5 py-0.5 text-2xs font-medium text-foreground/70"
             title={getBreadcrumb(cat)}
           >
             {cat.parentIds.length > 0 && (

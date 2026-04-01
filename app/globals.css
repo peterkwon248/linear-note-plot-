@@ -69,7 +69,12 @@
   --editor-block-gap: 0.4em;
   --editor-code-bg: rgba(0,0,0,0.05);
   --editor-code-radius: 4px;
+  --editor-code-font-size: 13px;
+  --editor-inline-code-color: var(--accent);
   --editor-link-color: var(--accent);
+  --editor-ui-sm: 13px;
+  --editor-ui-xs: 12px;
+  --editor-table-cell: 14px;
 
   /* Editor Layout */
   --editor-max-width: 720px;
@@ -82,9 +87,9 @@
   --sidebar-default-width: 220px;
 
   /* Transition Spine */
-  --transition-fast: 120ms;
-  --transition-default: 160ms;
-  --transition-slow: 200ms;
+  --transition-fast: 120ms ease;
+  --transition-default: 160ms ease;
+  --transition-slow: 200ms ease;
 }
 
 .dark {
@@ -149,6 +154,7 @@
 
   /* Editor Spine (dark) */
   --editor-code-bg: rgba(255,255,255,0.08);
+  --editor-inline-code-color: #E0A8F0;
 }
 
 @theme inline {

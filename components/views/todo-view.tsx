@@ -46,7 +46,7 @@ export function TodoView() {
           <div className="mt-2 flex items-center gap-3">
             <div className="flex-1 h-1.5 rounded-full bg-secondary/60">
               <div
-                className="h-full rounded-full bg-chart-5 transition-all duration-300"
+                className="h-full rounded-full bg-chart-5 transition-all duration-200"
                 style={{ width: `${percent}%` }}
               />
             </div>
@@ -71,7 +71,7 @@ export function TodoView() {
               }
             }}
             placeholder="Add a task..."
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
+            className="flex-1 bg-transparent text-note text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
           />
           {newTaskText.trim() && (
             <span className="text-2xs text-muted-foreground">Enter to add</span>
@@ -161,13 +161,13 @@ function TaskRow({
         className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
       >
         {task.checked ? (
-          <CheckSquare size={18} weight="fill" className="text-chart-5" />
+          <CheckSquare size={20} weight="fill" className="text-chart-5" />
         ) : (
-          <Square size={18} />
+          <Square size={20} />
         )}
       </button>
       <span
-        className={`flex-1 text-sm truncate ${
+        className={`flex-1 text-note truncate ${
           task.checked ? "line-through text-muted-foreground/50" : "text-foreground"
         }`}
       >

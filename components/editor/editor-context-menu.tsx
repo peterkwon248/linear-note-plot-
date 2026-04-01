@@ -562,8 +562,21 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
                 <ContextMenu.Item
                   className={itemCls}
                   onSelect={() => {
-                    // Image insertion — trigger via command or slash menu
-                    editor?.chain().focus().run()
+                    if (!editor) return
+                    const input = document.createElement("input")
+                    input.type = "file"
+                    input.accept = "image/*"
+                    input.onchange = () => {
+                      const file = input.files?.[0]
+                      if (!file) return
+                      const reader = new FileReader()
+                      reader.onload = () => {
+                        const src = reader.result as string
+                        editor.chain().focus().setImage({ src }).run()
+                      }
+                      reader.readAsDataURL(file)
+                    }
+                    input.click()
                   }}
                 >
                   <Image size={14} />
@@ -628,7 +641,9 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
                 <ContextMenu.Item
                   className={itemCls}
                   onSelect={() => {
-                    editor?.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: null } }).run()
+                    if (editor) {
+                      window.dispatchEvent(new CustomEvent("plot:embed-note-pick", { detail: { editor } }))
+                    }
                   }}
                 >
                   <PhNote size={14} />
@@ -674,12 +689,15 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
                   Insert Link
                 </ContextMenu.Item>
                 <ContextMenu.Item
-                  className={`${itemCls} opacity-50 cursor-not-allowed`}
-                  disabled
+                  className={itemCls}
+                  onSelect={() => {
+                    if (editor) {
+                      window.dispatchEvent(new CustomEvent("plot:link-note-pick", { detail: { editor } }))
+                    }
+                  }}
                 >
                   <NotePencil size={14} />
                   Link to Note
-                  <span className="ml-auto text-2xs text-muted-foreground/40">TODO</span>
                 </ContextMenu.Item>
               </ContextMenu.SubContent>
             </ContextMenu.Portal>
@@ -692,15 +710,13 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
               <ContextMenu.Item
                 className={itemCls}
                 onSelect={() => {
-                  // TODO: implement extract-as-note
-                  const selectedText = editor?.state.selection
-                    ? editor.state.doc.textBetween(
-                        editor.state.selection.from,
-                        editor.state.selection.to,
-                        " "
-                      )
-                    : ""
-                  console.log("Extract as note:", selectedText)
+                  if (!editor) return
+                  const { from, to } = editor.state.selection
+                  const selectedText = editor.state.doc.textBetween(from, to, " ")
+                  if (!selectedText.trim()) return
+                  window.dispatchEvent(new CustomEvent("plot:extract-as-note", {
+                    detail: { editor, selectedText, from, to }
+                  }))
                 }}
               >
                 <NotePencil size={14} />

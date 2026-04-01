@@ -206,12 +206,27 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **~~Template Page Architecture~~ 폐기** — 관련 문서 삭제 (01,02,03,04,15,17)
 
 ### 다음 우선순위
-1. **Synced Block (노트 임베드 본문 편집)** — 노션 Synced Block. nested TipTap editor + IDB body 동기화. WikiBlock 패턴 참고
-2. **노트참조 통합 인터랙션** — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동
-3. Home 대시보드 카드 클릭 → 필터 연동
-4. 투두 고도화 (dueDate, Today/Upcoming 분류)
-5. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
-6. 디자인 리부트
+1. **Wiki UX 개선** — 아티클 아이콘+카테고리 리스트 표시, 컨텍스트 패널(SmartSidePanel) 연결, 생성일 표시
+2. **Synced Block (노트 임베드 본문 편집)** — 노션 Synced Block. nested TipTap editor + IDB body 동기화
+3. **노트참조 통합 인터랙션** — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동
+4. Home 대시보드 카드 클릭 → 필터 연동
+5. 투두 고도화 (dueDate, Today/Upcoming 분류)
+6. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
+
+### 이번 세션 완료 — 버그 수정 + Design Spine 8-Phase (2026-04-01)
+- **버그/미완성 수정 8건**: Wiki Dashboard placeholder, Embed Note picker, 우클릭 메뉴 4항목(Embed/Link to Note/Extract as Note/Image), Home Red Links 카운트, orphanCount 일치, internalLinkCount 연산, Discover 섹션 4카드, Wiki 3탭(All/Articles/Red Links)
+- **Design Spine Phase 1~8 전부 완료**:
+  - Phase 1: hover/active 토큰 통일 (hover:bg-secondary/muted → hover:bg-hover-bg)
+  - Phase 2: Typography 표준화 (text-sm → text-note, 20건)
+  - Phase 3: Editor CSS 토큰화 (15곳 → CSS 변수, 5개 신규 변수: --editor-code-font-size, --editor-inline-code-color, --editor-ui-sm, --editor-ui-xs, --editor-table-cell)
+  - Phase 4: Editor max-width 720px + padding 48px (note-editor.tsx)
+  - Phase 5: Border Radius 3단계 규칙 (rounded-sm/md/lg, 15곳)
+  - Phase 6: 4px Grid + Magic Number 제거 (12곳)
+  - Phase 7: Hardcoded hex 4건 → 시맨틱 토큰, 아이콘 사이즈 9건 표준화
+  - Phase 8: 트랜지션 CSS 변수 (--transition-fast/default/slow) + duration 통일
+- **Wiki Overview 필터 제거**: dashboard 모드에서 showFilter=false
+- **Wiki noteType 필터 제거**: WIKI_VIEW_CONFIG에서 noteType 카테고리 삭제
+- **커스텀 이벤트 패턴**: `plot:embed-note-pick`, `plot:link-note-pick`, `plot:extract-as-note` — SlashCommand/ContextMenu → NoteEditor 통신
 
 ### 이전 세션 완료 — 에디터 Phase 1 확장 (2026-03-30)
 - **Columns Block 완성**: CSS Grid 기반, renderHTML columnCell, resize handle(드래그 너비 조절), 테이블 스타일 border

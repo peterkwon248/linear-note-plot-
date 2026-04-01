@@ -41,6 +41,7 @@ import { WikiRelatedDocs } from "@/components/editor/wiki-related-docs"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { shortRelative } from "@/lib/format-utils"
 import { EditorContextMenu } from "@/components/editor/editor-context-menu"
+import { NotePickerDialog } from "@/components/note-picker-dialog"
 
 interface NoteEditorProps {
   noteId?: string
@@ -69,6 +70,10 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
   const [isReadMode, setIsReadMode] = useState(false)
+  const [embedPickerOpen, setEmbedPickerOpen] = useState(false)
+  const embedEditorRef = useRef<Editor | null>(null)
+  const [linkNotePickerOpen, setLinkNotePickerOpen] = useState(false)
+  const linkNoteEditorRef = useRef<Editor | null>(null)
   const noteIdRef = useRef(note?.id)
 
   const handleEditorReady = useCallback((editor: unknown) => {
@@ -119,6 +124,68 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [note, togglePin, deleteNote, setSelectedNoteId, confirmDelete])
+
+  // Listen for embed note picker requests from SlashCommand / context menu
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ editor: Editor }>) => {
+      embedEditorRef.current = e.detail.editor
+      setEmbedPickerOpen(true)
+    }
+    window.addEventListener("plot:embed-note-pick", handler as EventListener)
+    return () => window.removeEventListener("plot:embed-note-pick", handler as EventListener)
+  }, [])
+
+  const handleEmbedNoteSelect = useCallback((selectedNoteId: string) => {
+    const editor = embedEditorRef.current
+    if (editor) {
+      editor.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: selectedNoteId } }).run()
+    }
+    setEmbedPickerOpen(false)
+    embedEditorRef.current = null
+  }, [])
+
+  // Listen for link-to-note picker requests from context menu
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ editor: Editor }>) => {
+      linkNoteEditorRef.current = e.detail.editor
+      setLinkNotePickerOpen(true)
+    }
+    window.addEventListener("plot:link-note-pick", handler as EventListener)
+    return () => window.removeEventListener("plot:link-note-pick", handler as EventListener)
+  }, [])
+
+  const handleLinkNoteSelect = useCallback((selectedNoteId: string) => {
+    const ed = linkNoteEditorRef.current
+    if (ed) {
+      const state = usePlotStore.getState()
+      const targetNote = state.notes.find(n => n.id === selectedNoteId)
+      if (targetNote) {
+        const title = targetNote.title || "Untitled"
+        ed.chain().focus().insertContent(`[[${title}]]`).run()
+      }
+    }
+    setLinkNotePickerOpen(false)
+    linkNoteEditorRef.current = null
+  }, [])
+
+  // Listen for extract-as-note requests from context menu
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ editor: Editor; selectedText: string; from: number; to: number }>) => {
+      const { editor: ed, selectedText, from, to } = e.detail
+      if (!ed || !selectedText.trim()) return
+      const title = selectedText.split("\n")[0].slice(0, 100).trim()
+      const state = usePlotStore.getState()
+      const currentNoteId = state.selectedNoteId
+      state.createNote({ title, content: selectedText })
+      // Restore selection to original note (createNote switches selectedNoteId)
+      if (currentNoteId) {
+        usePlotStore.getState().setSelectedNoteId(currentNoteId)
+      }
+      ed.chain().focus().deleteRange({ from, to }).insertContent(`[[${title}]]`).run()
+    }
+    window.addEventListener("plot:extract-as-note", handler as EventListener)
+    return () => window.removeEventListener("plot:extract-as-note", handler as EventListener)
+  }, [])
 
   if (!note) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
@@ -240,7 +307,16 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         <EditorContextMenu editor={editorInstance}>
           <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
             {/* Infobox moved to WikiArticle view — disabled in note editor */}
-            <div className="min-w-0 w-full flex-1 flex flex-col px-10 py-6">
+            <div
+              className="min-w-0 w-full flex-1 flex flex-col mx-auto"
+              style={{
+                maxWidth: "var(--editor-max-width)",
+                paddingLeft: "var(--editor-padding-x)",
+                paddingRight: "var(--editor-padding-x)",
+                paddingTop: "var(--editor-padding-y)",
+                paddingBottom: "var(--editor-padding-y)",
+              }}
+            >
               <NoteEditorAdapter note={note} onEditorReady={handleEditorReady} editable={!isReadMode} />
             </div>
           </div>
@@ -250,6 +326,20 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
 
       {/* FixedToolbar — outside SURFACE, full width (hidden in read mode) */}
       {!isReadMode && <FixedToolbar editor={editorInstance} noteId={activeNoteId ?? undefined} />}
+
+      <NotePickerDialog
+        open={embedPickerOpen}
+        onOpenChange={setEmbedPickerOpen}
+        title="Embed a note"
+        excludeIds={activeNoteId ? [activeNoteId] : []}
+        onSelect={handleEmbedNoteSelect}
+      />
+      <NotePickerDialog
+        open={linkNotePickerOpen}
+        onOpenChange={setLinkNotePickerOpen}
+        title="Link to note"
+        onSelect={handleLinkNoteSelect}
+      />
     </div>
   )
 }
@@ -374,7 +464,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
             import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
             import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
           }}
-          className="rounded-[4px] bg-accent/15 px-2.5 py-0.5 text-note font-medium text-accent hover:text-accent transition-colors duration-100"
+          className="rounded-sm bg-accent/15 px-2.5 py-0.5 text-note font-medium text-accent hover:text-accent transition-colors duration-100"
         >
           {a.title}
         </button>
@@ -382,7 +472,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
       {overflow > 0 && (
         <Popover>
           <PopoverTrigger asChild>
-            <button className="rounded-[4px] bg-secondary/50 px-1.5 py-px text-2xs font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100">
+            <button className="rounded-sm bg-secondary/50 px-1.5 py-px text-2xs font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100">
               +{overflow} more
             </button>
           </PopoverTrigger>

@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-80. 에디터 블록 UX + TOC 리디자인 + 블록 메뉴 (Turn Into/Insert Below) + KaTeX 수정
-81. Columns 테두리/Tab, Toggle 노션식 리디자인, Merge Blocks, 인포박스 읽기모드, Side-drop 제거
 82. 수동 TOC(블록피커), Add to TOC/Delete Block 우클릭, All Notes 사이드바, Memo 라벨 자동
 83. 블록 메뉴 Turn Into(9종)+Insert Below(9종), KaTeX 싱글 달러 InputRule, Math 빈 상태 시작
 84. Embed Note 피커 연결 (NotePickerDialog), 독립 공간 구조 확정, 불필요 docs 6개 삭제
+85. 버그 수정 8건 (Wiki placeholder, Embed Note picker, 우클릭 메뉴 4항목, Home Red Links/Orphans, Discover 4카드, Wiki 3탭)
+86. Design Spine 8-Phase 전부 완료 (hover/typography/editor CSS변수/max-width/radius/grid/colors/transitions)
 
 ## Two Axes — Core Design Philosophy
 

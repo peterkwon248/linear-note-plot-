@@ -252,14 +252,10 @@ const COMMANDS: CommandItem[] = [
     description: "Embed a note preview",
     icon: PhNote,
     command: ({ editor, range }) => {
-      // Insert with no noteId — shows "Note not found" placeholder
-      // TODO: Wire up note picker UI
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent({ type: "noteEmbed", attrs: { noteId: null } })
-        .run()
+      // Delete the slash command range first
+      editor.chain().focus().deleteRange(range).run()
+      // Open note picker via custom event — NoteEditor listens for this
+      window.dispatchEvent(new CustomEvent("plot:embed-note-pick", { detail: { editor } }))
     },
   },
   {
@@ -393,14 +389,14 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
               onClick={() => selectItem(index)}
               onMouseEnter={() => setSelectedIndex(index)}
               className={[
-                "w-full flex items-center gap-[10px] px-[10px] py-2 rounded-[7px] border-none outline-none cursor-pointer text-left transition-[background] duration-100",
+                "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md border-none outline-none cursor-pointer text-left transition-[background] duration-100",
                 index === selectedIndex
                   ? "bg-[rgba(94,106,210,0.12)] text-[var(--foreground)]"
                   : "bg-transparent text-[var(--muted-foreground)]",
               ].join(" ")}
             >
               <div className="w-7 h-7 rounded-md flex items-center justify-center bg-[rgba(94,106,210,0.08)] shrink-0">
-                <Icon size={15} />
+                <Icon size={14} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-note font-medium leading-[1.3]">

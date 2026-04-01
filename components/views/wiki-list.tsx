@@ -26,8 +26,8 @@ interface WikiListProps {
   backlinkCounts: Map<string, number>
 
   // Filter state
-  dashFilter: "all" | "redlinks"
-  setDashFilter: (f: "all" | "redlinks") => void
+  dashFilter: "all" | "articles" | "redlinks"
+  setDashFilter: (f: "all" | "articles" | "redlinks") => void
   showAllArticles: boolean
   setShowAllArticles: (show: boolean) => void
 
@@ -299,7 +299,7 @@ function IndexTableRow({
 function EmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
+      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
         <BookOpen className="text-muted-foreground/40" size={20} weight="regular" />
       </div>
       <p className="text-note text-muted-foreground/60">No articles found</p>
@@ -333,6 +333,7 @@ export function WikiList({
 
   const counts = {
     all: sortedFilteredWikiNotes.length + redLinks.length,
+    articles: sortedFilteredWikiNotes.length,
     redlinks: redLinks.length,
   }
 
@@ -352,8 +353,8 @@ export function WikiList({
         <span className="h-4 w-px bg-border/50" />
 
         {/* Filter Tabs */}
-        {(["all", "redlinks"] as const).map((tab) => {
-          const labels: Record<string, string> = { all: "All", redlinks: "Red Links" }
+        {(["all", "articles", "redlinks"] as const).map((tab) => {
+          const labels: Record<string, string> = { all: "All", articles: "Articles", redlinks: "Red Links" }
           const tabCount = counts[tab as keyof typeof counts]
           return (
             <button

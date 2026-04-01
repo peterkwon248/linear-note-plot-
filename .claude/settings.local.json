@@ -119,7 +119,8 @@
       "Bash(grep -v \":0$\")",
       "Bash(sort -t: -k2 -rn)",
       "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-03-31_0630.md)",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/inspiring-chaum/.omc/worklog/latest.md\")"
+      "Bash(cp ~/.claude/.omc-worklog/latest.md \"C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/inspiring-chaum/.omc/worklog/latest.md\")",
+      "Bash(grep -rn \"hover:bg-secondary\\\\|hover:bg-muted\\\\|border-border/\" /c/Users/user/Desktop/linear-note-plot-/app --include=*.tsx --include=*.ts --include=*.jsx --include=*.js)"
     ]
   }
 }

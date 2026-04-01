@@ -202,7 +202,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title="Text color">
             <div className="relative">
               <TextT size={14} weight="regular" />
-              <div className="absolute -bottom-[3px] left-px right-px h-0.5 rounded-sm" style={{ backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
+              <div className="absolute -bottom-1 left-px right-px h-0.5 rounded-sm" style={{ backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
             </div>
           </BubbleButton>
           <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title="Highlight">

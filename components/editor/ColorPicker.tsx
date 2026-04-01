@@ -129,7 +129,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                   e.preventDefault()
                   setIsOpen(false)
                 }}
-                className="w-[18px] h-[18px] rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 hover:bg-hover-bg hover:text-muted-foreground"
+                className="w-5 h-5 rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 hover:bg-hover-bg hover:text-muted-foreground"
               >
                 <PhX size={12} weight="light" />
               </button>
@@ -152,7 +152,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                       applyColor(color.value)
                     }}
                     title={color.label}
-                    className={`w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer bg-transparent transition-all duration-100 outline-none p-0 hover:border-foreground/20 ${
+                    className={`w-8 h-8 rounded-md flex items-center justify-center cursor-pointer bg-transparent transition-all duration-100 outline-none p-0 hover:border-foreground/20 ${
                       isColorActive ? "border-2 border-accent" : "border border-border"
                     }`}
                   >

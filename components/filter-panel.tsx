@@ -19,7 +19,7 @@ const ChevronRightSmall = () => (
 )
 
 const CheckIcon = () => (
-  <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 8.5 6.5 12 13 5" />
   </svg>
 )

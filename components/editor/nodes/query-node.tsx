@@ -447,7 +447,7 @@ function QueryPresetPicker({
     <NodeViewWrapper>
       <div contentEditable={false} className="my-2 rounded-lg border border-border-subtle bg-surface-overlay p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-foreground">Insert Query View</h3>
+          <h3 className="text-note font-medium text-foreground">Insert Query View</h3>
           <button onClick={onCancel} className="text-muted-foreground hover:text-foreground">
             <PhX size={16} />
           </button>
@@ -461,7 +461,7 @@ function QueryPresetPicker({
             <button
               key={preset.label}
               onClick={() => onSelect(preset.filters, preset.label)}
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-hover-bg"
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-note text-foreground transition-colors hover:bg-hover-bg"
             >
               {preset.icon}
               <span>{preset.label}</span>
@@ -478,7 +478,7 @@ function QueryPresetPicker({
                 <button
                   key={preset.label}
                   onClick={() => onSelect(preset.filters, preset.label)}
-                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-hover-bg"
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-note text-foreground transition-colors hover:bg-hover-bg"
                 >
                   {preset.icon}
                   <span>{preset.label}</span>
@@ -497,7 +497,7 @@ function QueryPresetPicker({
                 <button
                   key={preset.label}
                   onClick={() => onSelect(preset.filters, preset.label)}
-                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-hover-bg"
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-note text-foreground transition-colors hover:bg-hover-bg"
                 >
                   {preset.icon}
                   <span>{preset.label}</span>

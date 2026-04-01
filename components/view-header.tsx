@@ -119,7 +119,7 @@ export function ViewHeader({
 
   return (
     <>
-      <div className="flex h-[52px] shrink-0 items-center gap-2 border-b border-border px-4">
+      <div className="flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
         {/* Title area */}
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">{icon}</span>
