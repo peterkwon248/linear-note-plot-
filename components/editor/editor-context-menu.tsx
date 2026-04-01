@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useCallback } from "react"
 import * as ContextMenu from "@radix-ui/react-context-menu"
 import type { Editor } from "@tiptap/react"
 import {
@@ -27,6 +28,7 @@ import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
 import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
 import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
+import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { ListNumbers } from "@phosphor-icons/react/dist/ssr/ListNumbers"
 import { CheckSquare } from "@phosphor-icons/react/dist/ssr/CheckSquare"
 import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
@@ -44,7 +46,9 @@ import { Article } from "@phosphor-icons/react/dist/ssr/Article"
 import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 
 interface EditorContextMenuProps {
   editor: Editor | null
@@ -69,9 +73,19 @@ function Shortcut({ keys }: { keys: string }) {
 }
 
 export function EditorContextMenu({ editor, children }: EditorContextMenuProps) {
-  const isInList =
-    editor?.isActive("listItem") || editor?.isActive("taskItem") || false
-  const hasSelection = editor ? !editor.state.selection.empty : false
+  const [hasSelection, setHasSelection] = useState(false)
+  const [isInList, setIsInList] = useState(false)
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && editor) {
+        // Capture selection state at the moment the menu opens
+        setHasSelection(!editor.state.selection.empty)
+        setIsInList(editor.isActive("listItem") || editor.isActive("taskItem"))
+      }
+    },
+    [editor],
+  )
 
   function cut() {
     document.execCommand("cut")
@@ -137,8 +151,110 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
     }).run()
   }
 
+  function mergeBlocks() {
+    if (!editor) return
+    const { from, to } = editor.state.selection
+    // Collect text from each top-level block in the selection, join with hardBreak
+    const texts: { text: string; marks?: any[] }[] = []
+    editor.state.doc.nodesBetween(from, to, (node, pos) => {
+      if (node.isBlock && node.isTextblock) {
+        const inlineContent: any[] = []
+        node.content.forEach((child) => {
+          inlineContent.push(child.toJSON())
+        })
+        if (inlineContent.length > 0) {
+          texts.push({ text: "", marks: undefined }) // placeholder
+          // Store full inline content for rich text preservation
+          ;(texts[texts.length - 1] as any).inlineContent = inlineContent
+        } else {
+          texts.push({ text: node.textContent })
+        }
+        return false // don't descend into this node's children
+      }
+      return true
+    })
+    if (texts.length <= 1) return // nothing to merge
+
+    // Build merged paragraph content with hardBreaks between blocks
+    const mergedContent: any[] = []
+    texts.forEach((entry, i) => {
+      const inlines = (entry as any).inlineContent
+      if (inlines) {
+        mergedContent.push(...inlines)
+      } else if (entry.text) {
+        mergedContent.push({ type: "text", text: entry.text })
+      }
+      if (i < texts.length - 1) {
+        mergedContent.push({ type: "hardBreak" })
+      }
+    })
+
+    // Expand selection to full blocks
+    const $from = editor.state.doc.resolve(from)
+    const $to = editor.state.doc.resolve(to)
+    const blockFrom = $from.start($from.depth)
+    const blockTo = $to.end($to.depth)
+    // Find the outermost block boundaries
+    let rangeFrom = blockFrom
+    let rangeTo = blockTo
+    // Walk up to find top-level block positions
+    const startBlock = $from.start(1) // depth 1 = top-level block start
+    const endBlock = $to.end(1)
+    rangeFrom = startBlock > 0 ? startBlock - 1 : rangeFrom
+    rangeTo = endBlock < editor.state.doc.content.size ? endBlock + 1 : rangeTo
+
+    editor.chain().focus()
+      .deleteRange({ from: rangeFrom, to: rangeTo })
+      .insertContent({ type: "paragraph", content: mergedContent })
+      .run()
+  }
+
+  function addToToc() {
+    if (!editor) return
+    const { from, to } = editor.state.selection
+    const selectedText = editor.state.doc.textBetween(from, to, " ")
+    if (!selectedText.trim()) return
+
+    // Find the nearest heading/anchor that contains the selection for linking
+    let targetId = ""
+    const $from = editor.state.doc.resolve(from)
+    for (let d = $from.depth; d >= 0; d--) {
+      const node = $from.node(d)
+      if (node.type.name === "heading" && node.attrs.id) {
+        targetId = node.attrs.id
+        break
+      }
+    }
+
+    // Find the first TOC block in the document and add the entry
+    let tocPos: number | null = null
+    let tocNode: any = null
+    editor.state.doc.descendants((node, pos) => {
+      if (node.type.name === "tocBlock" && tocPos === null) {
+        tocPos = pos
+        tocNode = node
+        return false
+      }
+    })
+
+    if (tocPos !== null && tocNode) {
+      // Add entry to existing TOC block
+      const existingEntries = (tocNode.attrs.entries as any[]) || []
+      const newEntries = [...existingEntries, { label: selectedText.trim(), targetId, indent: 0 }]
+      const tr = editor.state.tr
+      tr.setNodeMarkup(tocPos, undefined, { ...tocNode.attrs, entries: newEntries })
+      editor.view.dispatch(tr)
+    } else {
+      // No TOC block exists — insert one with this entry at the top of the document
+      editor.chain().focus().insertContentAt(0, {
+        type: "tocBlock",
+        attrs: { entries: [{ label: selectedText.trim(), targetId, indent: 0 }] },
+      }).run()
+    }
+  }
+
   return (
-    <ContextMenu.Root>
+    <ContextMenu.Root onOpenChange={handleOpenChange}>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
         <ContextMenu.Content
@@ -228,40 +344,56 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
             </ContextMenu.Portal>
           </ContextMenu.Sub>
 
-          {/* ── Wrap in Block submenu (selection only) ────── */}
+          {/* ── Merge / Wrap Block (selection only) ────── */}
           {hasSelection && (
-            <ContextMenu.Sub>
-              <ContextMenu.SubTrigger className={subTriggerCls}>
-                <Cube size={14} />
-                Make Block
-                <CaretRight size={12} className="ml-auto" />
-              </ContextMenu.SubTrigger>
-              <ContextMenu.Portal>
-                <ContextMenu.SubContent className={subContentCls}>
-                  <ContextMenu.Item
-                    className={itemCls}
-                    onSelect={wrapInContentBlock}
-                  >
-                    <Cube size={14} />
-                    Block
-                  </ContextMenu.Item>
-                  <ContextMenu.Item
-                    className={itemCls}
-                    onSelect={() => wrapInBlock("calloutBlock")}
-                  >
-                    <Info size={14} />
-                    Callout
-                  </ContextMenu.Item>
-                  <ContextMenu.Item
-                    className={itemCls}
-                    onSelect={() => wrapInBlock("summaryBlock")}
-                  >
-                    <Article size={14} />
-                    Summary
-                  </ContextMenu.Item>
-                </ContextMenu.SubContent>
-              </ContextMenu.Portal>
-            </ContextMenu.Sub>
+            <>
+              <ContextMenu.Item
+                className={itemCls}
+                onSelect={mergeBlocks}
+              >
+                <GitMerge size={14} />
+                Merge Blocks
+              </ContextMenu.Item>
+              <ContextMenu.Sub>
+                <ContextMenu.SubTrigger className={subTriggerCls}>
+                  <Cube size={14} />
+                  Wrap in
+                  <CaretRight size={12} className="ml-auto" />
+                </ContextMenu.SubTrigger>
+                <ContextMenu.Portal>
+                  <ContextMenu.SubContent className={subContentCls}>
+                    <ContextMenu.Item
+                      className={itemCls}
+                      onSelect={() => wrapInBlock("calloutBlock")}
+                    >
+                      <Info size={14} />
+                      Callout
+                    </ContextMenu.Item>
+                    <ContextMenu.Item
+                      className={itemCls}
+                      onSelect={() => wrapInBlock("summaryBlock")}
+                    >
+                      <Article size={14} />
+                      Summary
+                    </ContextMenu.Item>
+                    <ContextMenu.Item
+                      className={itemCls}
+                      onSelect={wrapInContentBlock}
+                    >
+                      <Cube size={14} />
+                      Block
+                    </ContextMenu.Item>
+                  </ContextMenu.SubContent>
+                </ContextMenu.Portal>
+              </ContextMenu.Sub>
+              <ContextMenu.Item
+                className={itemCls}
+                onSelect={addToToc}
+              >
+                <BookmarkSimple size={14} />
+                Add to TOC
+              </ContextMenu.Item>
+            </>
           )}
 
           {/* ── List submenu (only in list context) ───────── */}
@@ -576,6 +708,36 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
               </ContextMenu.Item>
             </>
           )}
+          <ContextMenu.Separator className={separatorCls} />
+
+          {/* ── Delete Block ─────────────────────────────── */}
+          <ContextMenu.Item
+            className={itemCls + " text-destructive"}
+            onSelect={() => {
+              if (!editor) return
+              const { $from } = editor.state.selection
+              // Walk up to find the outermost deletable block (skip inline wrappers like detailsSummary/detailsContent)
+              const skipTypes = new Set(["detailsSummary", "detailsContent", "listItem", "taskItem", "columnCell"])
+              let targetDepth = -1
+              for (let d = $from.depth; d >= 1; d--) {
+                const node = $from.node(d)
+                if (node.type.name === "doc") break
+                if (!skipTypes.has(node.type.name)) {
+                  targetDepth = d
+                  // For compound blocks (details, columns), keep going up to find the container
+                  if (node.type.name === "details" || node.type.name === "columnsBlock") break
+                }
+              }
+              if (targetDepth >= 1) {
+                const start = $from.start(targetDepth) - 1
+                const node = $from.node(targetDepth)
+                editor.chain().focus().deleteRange({ from: start, to: start + node.nodeSize }).run()
+              }
+            }}
+          >
+            <Trash size={14} />
+            Delete Block
+          </ContextMenu.Item>
         </ContextMenu.Content>
       </ContextMenu.Portal>
     </ContextMenu.Root>

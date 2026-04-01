@@ -273,59 +273,13 @@ export function BlockDragOverlay({
     if (editor) editor.commands.blur()
   }, [editor])
 
-  // Side-drop detection during drag move
-  // We use pointer coordinates to find the nearest block and check edge zones,
-  // rather than relying on dnd-kit's `over` (which tracks sortable handle zones).
+  // Side-drop disabled — columns are created via Insert menu only.
+  // Drag reorder remains fully functional.
   const handleDragMove = useCallback(
-    (event: DragMoveEvent) => {
-      if (!editor || !containerRef.current) {
-        setSideDropState(null)
-        return
-      }
-
-      const activeId_ = event.active.id as string
-
-      // Compute current pointer position
-      const activatorEvt = event.activatorEvent as PointerEvent
-      const pointerX = activatorEvt.clientX + (event.delta.x ?? 0)
-      const pointerY = activatorEvt.clientY + (event.delta.y ?? 0)
-
-      // Find which block the pointer is vertically over
-      let hoverBlock: BlockPosition | null = null
-      for (const block of blocks) {
-        if (block.id === activeId_) continue // skip self
-        const rect = getBlockDomRect(editor, block.docPos)
-        if (!rect) continue
-        if (pointerY >= rect.top && pointerY <= rect.bottom) {
-          hoverBlock = block
-          break
-        }
-      }
-
-      if (!hoverBlock) {
-        setSideDropState(null)
-        return
-      }
-
-      const blockRect = getBlockDomRect(editor, hoverBlock.docPos)
-      if (!blockRect) {
-        setSideDropState(null)
-        return
-      }
-
-      const blockWidth = blockRect.width
-      const relativeX = pointerX - blockRect.left
-      const threshold = blockWidth * 0.15 // 15% edges
-
-      if (relativeX <= threshold) {
-        setSideDropState({ blockId: hoverBlock.id, side: "left" })
-      } else if (relativeX >= blockWidth - threshold) {
-        setSideDropState({ blockId: hoverBlock.id, side: "right" })
-      } else {
-        setSideDropState(null)
-      }
+    (_event: DragMoveEvent) => {
+      setSideDropState(null)
     },
-    [editor, blocks]
+    []
   )
 
   const handleDragEnd = useCallback(

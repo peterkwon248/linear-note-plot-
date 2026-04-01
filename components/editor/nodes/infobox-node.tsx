@@ -14,7 +14,8 @@ interface InfoboxRow {
   value: string
 }
 
-function InfoboxNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) {
+function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeViewProps) {
+  const editable = editor.isEditable
   const title = (node.attrs.title as string) || "Info"
   const rows = (node.attrs.rows as InfoboxRow[]) || []
 
@@ -41,7 +42,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) 
     <NodeViewWrapper>
       <div
         contentEditable={false}
-        className="not-draggable border border-border-subtle rounded-lg my-2 overflow-hidden select-none group"
+        className="not-draggable border border-border-subtle rounded-lg my-2 overflow-hidden select-none group/infobox"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 bg-secondary/30 border-b border-border-subtle">
@@ -51,18 +52,21 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) 
               type="text"
               value={title}
               onChange={(e) => updateTitle(e.target.value)}
+              readOnly={!editable}
               className="text-2xs font-semibold uppercase tracking-wider bg-transparent border-none outline-none text-muted-foreground w-full"
               placeholder="Infobox Title"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => deleteNode()}
-            className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
-            title="Remove infobox"
-          >
-            <PhX size={12} weight="bold" />
-          </button>
+          {editable && (
+            <button
+              type="button"
+              onClick={() => deleteNode()}
+              className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
+              title="Remove infobox"
+            >
+              <PhX size={12} weight="bold" />
+            </button>
+          )}
         </div>
 
         {/* Rows */}
@@ -73,6 +77,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) 
                 type="text"
                 value={row.label}
                 onChange={(e) => updateRow(index, "label", e.target.value)}
+                readOnly={!editable}
                 className="w-[120px] shrink-0 px-3 py-1.5 text-2xs font-medium text-muted-foreground bg-secondary/20 border-r border-border-subtle outline-none placeholder:text-muted-foreground/30"
                 placeholder="Label"
               />
@@ -80,30 +85,35 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) 
                 type="text"
                 value={row.value}
                 onChange={(e) => updateRow(index, "value", e.target.value)}
+                readOnly={!editable}
                 className="flex-1 px-3 py-1.5 text-2xs text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
                 placeholder="Value"
               />
-              <button
-                type="button"
-                onClick={() => removeRow(index)}
-                className="px-2 text-muted-foreground/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
-                title="Remove row"
-              >
-                <PhTrash size={11} />
-              </button>
+              {editable && (
+                <button
+                  type="button"
+                  onClick={() => removeRow(index)}
+                  className="px-2 text-muted-foreground/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
+                  title="Remove row"
+                >
+                  <PhTrash size={11} />
+                </button>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Add row button */}
-        <button
-          type="button"
-          onClick={addRow}
-          className="w-full flex items-center justify-center gap-1 px-3 py-1.5 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors border-t border-border-subtle"
-        >
-          <PhPlus size={11} />
-          <span>Add row</span>
-        </button>
+        {/* Add row button — hidden in read mode, hover-only in edit mode */}
+        {editable && (
+          <button
+            type="button"
+            onClick={addRow}
+            className="w-full flex items-center justify-center gap-1 px-3 py-1.5 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors border-t border-border-subtle opacity-0 group-hover/infobox:opacity-100"
+          >
+            <PhPlus size={11} />
+            <span>Add row</span>
+          </button>
+        )}
       </div>
     </NodeViewWrapper>
   )

@@ -296,6 +296,22 @@ export const usePlotStore = create<PlotState>()(
             }
           }
 
+          // Backfill "Memo" label for notes without a label
+          {
+            let memoLabel = state.labels.find((l: any) => l.name === "Memo" && !l.trashed)
+            if (!memoLabel) {
+              memoLabel = { id: "label-memo", name: "Memo", color: "#f5a623" }
+              state.labels = [...state.labels, memoLabel]
+            }
+            let changed = false
+            for (const note of state.notes) {
+              if (!note.labelId && !note.trashed) {
+                note.labelId = memoLabel.id
+                changed = true
+              }
+            }
+          }
+
           // Build todo index from note bodies
           if (typeof indexedDB !== "undefined") {
             todoIndex.buildFromScratch(state.notes, getAllBodies).then((tasks) => {

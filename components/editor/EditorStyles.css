@@ -769,52 +769,92 @@
 
 /* ── Details / Toggle Block ─────────────────────────────────────── */
 
+/* ── Toggle / Details Block (Notion-style, no box) ─────────────── */
+/* DOM structure:
+   <div class="details-block [is-open]">  ← NodeView dom
+     <button></button>                    ← toggle arrow
+     <div>                                ← contentDOM wrapper
+       <summary>Title text</summary>
+       <div data-type="detailsContent">Body</div>
+     </div>
+   </div>
+*/
+
 .ProseMirror .details-block {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin: 0.75em 0;
-  overflow: hidden;
+  margin: 0.25em 0;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
 }
 
-.ProseMirror .details-block summary {
-  padding: 10px 14px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--foreground);
-  background: color-mix(in srgb, var(--muted) 30%, transparent);
-  list-style: none;
+/* Toggle button (▶ arrow) */
+.ProseMirror .details-block > button:first-child {
+  width: 20px;
+  height: 1.5em;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  user-select: none;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 4px;
   transition: background 0.15s;
 }
 
-.ProseMirror .details-block summary:hover {
+.ProseMirror .details-block > button:first-child:hover {
   background: color-mix(in srgb, var(--muted) 50%, transparent);
 }
 
-.ProseMirror .details-block summary::before {
+.ProseMirror .details-block > button:first-child::before {
   content: "\25B6";
-  font-size: 10px;
+  font-size: 9px;
   color: var(--muted-foreground);
   transition: transform 0.2s ease;
   display: inline-block;
-  flex-shrink: 0;
 }
 
-.ProseMirror .details-block[open] summary::before {
+.ProseMirror .details-block.is-open > button:first-child::before {
   transform: rotate(90deg);
+}
+
+/* Content wrapper — takes remaining space */
+.ProseMirror .details-block > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Summary (title) — like normal text, no background */
+.ProseMirror .details-block summary {
+  padding: 0;
+  margin: 0;
+  cursor: text;
+  font-weight: 500;
+  font-size: inherit;
+  line-height: 1.5em;
+  color: var(--foreground);
+  background: none;
+  list-style: none;
+  display: block;
+  user-select: text;
 }
 
 .ProseMirror .details-block summary::-webkit-details-marker {
   display: none;
 }
 
-.ProseMirror .details-block > div:last-child {
-  padding: 10px 14px;
-  font-size: 14px;
+/* Content body — indented with left border */
+.ProseMirror .details-block [data-type="detailsContent"] {
+  padding: 4px 0 4px 8px;
+  font-size: inherit;
+  border-left: 2px solid color-mix(in srgb, var(--muted-foreground) 20%, transparent);
+  margin-left: 0;
+}
+
+/* Hide content when closed */
+.ProseMirror .details-block:not(.is-open) [data-type="detailsContent"] {
+  display: none;
 }
 
 /* ── Mathematics / KaTeX ────────────────────────────────────────── */
@@ -1044,7 +1084,7 @@
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   gap: 0;
-  border: 1px solid hsl(var(--muted-foreground) / 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -1065,7 +1105,7 @@
   min-height: 3em;
   padding: 8px 16px;
   position: relative;
-  border-right: 1px solid hsl(var(--muted-foreground) / 0.15);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .ProseMirror .column-cell:last-child {

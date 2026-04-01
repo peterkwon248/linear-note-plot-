@@ -11,6 +11,21 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       const id = genId()
       const { activeView } = get()
       const content = partial?.content ?? ""
+
+      // Auto-assign "Memo" label if no label specified
+      let labelId = partial?.labelId ?? null
+      if (!labelId) {
+        const state = get()
+        let memoLabel = state.labels.find((l: any) => l.name === "Memo" && !l.trashed)
+        if (!memoLabel) {
+          // Create "Memo" label if it doesn't exist
+          const memoId = genId()
+          memoLabel = { id: memoId, name: "Memo", color: "#f5a623" }
+          set((s: any) => ({ labels: [...s.labels, memoLabel] }))
+        }
+        labelId = memoLabel.id
+      }
+
       const newNote: Note = {
         id,
         title: partial?.title ?? "",
@@ -27,7 +42,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         trashed: false,
         createdAt: now(),
         updatedAt: now(),
-        labelId: partial?.labelId ?? null,
+        labelId,
         preview: extractPreview(content),
         linksOut: extractLinksOut(content),
         noteType: partial?.noteType ?? "note" as const,

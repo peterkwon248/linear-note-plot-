@@ -224,9 +224,10 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     CharacterCount,
     FontFamily,
     Youtube.configure({ inline: false, allowFullscreen: true, HTMLAttributes: { class: "youtube-embed" } }),
-    Details.configure({ HTMLAttributes: { class: "details-block" } }),
+    Details.configure({ HTMLAttributes: { class: "details-block" }, persist: true }),
     DetailsSummary,
     DetailsContent,
+    // Toggle delete: use right-click "Delete Block" or Backspace/Delete key
     Mathematics,
     // -- New extensions (Phase 1C+) --
     Audio,
@@ -248,6 +249,48 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
  * - **wiki**: Lightweight wiki TextBlock editing (base only)
  * - **template**: Template editing (base + slash commands)
  */
+/** Inject X delete buttons into .details-block elements */
+function injectDetailsDeleteButtons(editor: any) {
+  if (!editor?.view?.dom || !editor.isEditable) return;
+  editor.view.dom.querySelectorAll('[data-type="details"], .details-block').forEach((block: HTMLElement) => {
+    if (block.querySelector(".details-delete-btn")) return;
+    block.style.position = "relative";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "details-delete-btn";
+    btn.title = "Remove toggle";
+    btn.textContent = "\u2715";
+    Object.assign(btn.style, {
+      position: "absolute", top: "4px", right: "6px", zIndex: "2",
+      width: "22px", height: "22px", display: "flex", alignItems: "center",
+      justifyContent: "center", background: "none", border: "none",
+      cursor: "pointer", borderRadius: "4px", fontSize: "11px",
+      color: "var(--muted-foreground)", opacity: "0", transition: "opacity 0.15s, color 0.15s",
+    });
+    block.addEventListener("mouseenter", () => { btn.style.opacity = "0.5"; });
+    block.addEventListener("mouseleave", () => { btn.style.opacity = "0"; });
+    btn.addEventListener("mouseenter", () => { btn.style.opacity = "1"; btn.style.color = "#ef4444"; });
+    btn.addEventListener("mouseleave", () => { btn.style.opacity = "0.5"; btn.style.color = "var(--muted-foreground)"; });
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      try {
+        const pos = editor.view.posAtDOM(block, 0);
+        if (pos == null) return;
+        const $pos = editor.state.doc.resolve(pos);
+        for (let d = $pos.depth; d >= 0; d--) {
+          if ($pos.node(d).type.name === "details") {
+            const start = $pos.start(d) - 1;
+            const node = $pos.node(d);
+            editor.chain().focus().deleteRange({ from: start, to: start + node.nodeSize }).run();
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+    });
+    block.appendChild(btn);
+  });
+}
+
 export function createEditorExtensions(
   tier: EditorTier,
   options?: EditorConfigOptions,
@@ -314,11 +357,53 @@ export function createEditorExtensions(
         addKeyboardShortcuts() {
           return {
             Tab: ({ editor: e }) => {
+              // In columnCell → move to next sibling columnCell
+              const { $from } = e.state.selection
+              for (let d = $from.depth; d >= 0; d--) {
+                if ($from.node(d).type.name === "columnCell") {
+                  const parent = $from.node(d - 1)
+                  if (parent?.type.name === "columnsBlock") {
+                    const parentStart = $from.start(d - 1)
+                    const cellIndex = $from.index(d - 1)
+                    if (cellIndex + 1 < parent.childCount) {
+                      let nextCellStart = parentStart
+                      for (let i = 0; i <= cellIndex; i++) {
+                        nextCellStart += parent.child(i).nodeSize
+                      }
+                      // +1 to enter inside the columnCell node
+                      e.commands.setTextSelection(nextCellStart + 1)
+                      return true
+                    }
+                  }
+                  break
+                }
+              }
               // In table → go to next cell (TipTap default)
               if (e.isActive("table")) return e.commands.goToNextCell()
               return indentCommand(e)
             },
             "Shift-Tab": ({ editor: e }) => {
+              // In columnCell → move to previous sibling columnCell
+              const { $from } = e.state.selection
+              for (let d = $from.depth; d >= 0; d--) {
+                if ($from.node(d).type.name === "columnCell") {
+                  const parent = $from.node(d - 1)
+                  if (parent?.type.name === "columnsBlock") {
+                    const parentStart = $from.start(d - 1)
+                    const cellIndex = $from.index(d - 1)
+                    if (cellIndex > 0) {
+                      let prevCellStart = parentStart
+                      for (let i = 0; i < cellIndex - 1; i++) {
+                        prevCellStart += parent.child(i).nodeSize
+                      }
+                      // +1 to enter inside the columnCell node
+                      e.commands.setTextSelection(prevCellStart + 1)
+                      return true
+                    }
+                  }
+                  break
+                }
+              }
               // In table → go to previous cell
               if (e.isActive("table")) return e.commands.goToPreviousCell()
               return outdentCommand(e)
