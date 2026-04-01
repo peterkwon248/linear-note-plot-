@@ -206,11 +206,12 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **~~Template Page Architecture~~ 폐기** — 관련 문서 삭제 (01,02,03,04,15,17)
 
 ### 다음 우선순위
-1. **노트참조 통합 인터랙션** — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동
-2. Home 대시보드 카드 클릭 → 필터 연동
-3. 투두 고도화 (dueDate, Today/Upcoming 분류)
-4. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
-5. 디자인 리부트
+1. **Synced Block (노트 임베드 본문 편집)** — 노션 Synced Block. nested TipTap editor + IDB body 동기화. WikiBlock 패턴 참고
+2. **노트참조 통합 인터랙션** — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동
+3. Home 대시보드 카드 클릭 → 필터 연동
+4. 투두 고도화 (dueDate, Today/Upcoming 분류)
+5. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
+6. 디자인 리부트
 
 ### 이전 세션 완료 — 에디터 Phase 1 확장 (2026-03-30)
 - **Columns Block 완성**: CSS Grid 기반, renderHTML columnCell, resize handle(드래그 너비 조절), 테이블 스타일 border

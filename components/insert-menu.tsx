@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { format } from "date-fns"
 import { Editor } from "@tiptap/react"
 import {
@@ -32,6 +32,7 @@ import { Database } from "@phosphor-icons/react/dist/ssr/Database"
 import { usePlotStore } from "@/lib/store"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { nanoid } from "nanoid"
+import { NotePickerDialog } from "@/components/note-picker-dialog"
 
 interface InsertMenuProps {
   editor: Editor
@@ -45,6 +46,7 @@ const ITEM_CLASS =
 export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [notePickerOpen, setNotePickerOpen] = useState(false)
   const addAttachment = usePlotStore((s) => s.addAttachment)
 
   const handleImage = () => {
@@ -208,9 +210,11 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   }
 
   const handleNoteEmbed = () => {
-    // Insert with no noteId — shows "Note not found" placeholder
-    // TODO: Wire up note picker UI
-    editor.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: null } }).run()
+    setNotePickerOpen(true)
+  }
+
+  const onNoteSelected = (selectedNoteId: string) => {
+    editor.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: selectedNoteId } }).run()
   }
 
   const handleQuery = () => {
@@ -350,6 +354,13 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <NotePickerDialog
+        open={notePickerOpen}
+        onOpenChange={setNotePickerOpen}
+        title="Embed a note"
+        excludeIds={noteId ? [noteId] : []}
+        onSelect={onNoteSelected}
+      />
     </>
   )
 }

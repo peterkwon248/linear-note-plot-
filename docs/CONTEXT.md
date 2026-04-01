@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-78. 인라인 쿼리 뷰 MVP — /query 슬래시커맨드, 프리셋 피커 (Status/Folder/Label), 호버-reveal 설정 바, 경량 테이블
-79. 투두 시스템 MVP — 체크박스 인덱싱 (contentJson → TaskIndex), Todo 뷰, 인라인 추가, 체크 토글, Calendar 공간 하위
 80. 에디터 블록 UX + TOC 리디자인 + 블록 메뉴 (Turn Into/Insert Below) + KaTeX 수정
-81. 에디터 블록 UX 개선 — Columns 테두리 다크모드 수정, Tab 컬럼 이동, Toggle persist+노션식 리디자인(배경 제거), Merge Blocks(hardBreak 병합), 인포박스 읽기모드 readOnly, Side-drop 컬럼 자동생성 제거
-82. TOC 리디자인 + 에디터 인프라 — 수동 TOC(블록피커 1클릭 추가 + 링크 + 편집 + 드래그), Add to TOC 우클릭, Delete Block 우클릭 메뉴, All Notes 사이드바 추가, Memo 라벨 자동 부여
+81. Columns 테두리/Tab, Toggle 노션식 리디자인, Merge Blocks, 인포박스 읽기모드, Side-drop 제거
+82. 수동 TOC(블록피커), Add to TOC/Delete Block 우클릭, All Notes 사이드바, Memo 라벨 자동
+83. 블록 메뉴 Turn Into(9종)+Insert Below(9종), KaTeX 싱글 달러 InputRule, Math 빈 상태 시작
+84. Embed Note 피커 연결 (NotePickerDialog), 독립 공간 구조 확정, 불필요 docs 6개 삭제
 
 ## Two Axes — Core Design Philosophy
 
@@ -148,11 +148,14 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **인포박스 읽기모드**: readOnly + 삭제/추가 버튼 숨김. Add row = hover-only (2026-04-01)
 - **Memo 라벨 자동 부여**: 노트 생성 시 labelId 없으면 "Memo" 라벨 자동 할당. 없으면 자동 생성. 기존 노트도 rehydrate 시 backfill (2026-04-01)
 - **Delete Block 우클릭 메뉴**: 모든 블록에 적용. details/columns 같은 compound 블록은 skipTypes로 올바른 depth 탐색 (2026-04-01)
+- **드래그 핸들 블록 메뉴**: ⠿ 짧게 클릭=메뉴(Turn Into/Insert Below/Duplicate/Move/Delete), 누르고 5px 이동=드래그. pointerUp + pointerEvents 전환 (2026-04-01)
+- **Embed Note = 노트 피커**: Insert→Embed Note 클릭 시 NotePickerDialog 열림. 선택한 noteId로 미리보기 카드 삽입. Synced Block(본문 편집)은 Phase 2+ (2026-04-01)
 
 ## TODO: Future Work (우선순위 순)
 
-### P0 — 에디터 완성
-- **노트참조 통합 인터랙션**: 멘션/위키링크/noteEmbed 공통 — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동, 인라인 본문 펼치기(노트만, 위키 제외)
+### P0 — 최우선
+- **Synced Block (노트 임베드 본문 편집)**: 노트 A에서 노트 B를 임베드하면 B의 본문 전체가 인라인 TipTap 에디터로 표시 + 편집 시 원본 동기화. 노션 Synced Block과 동일. 위키 블록(WikiBlock) 패턴 참고 (nested editor + IDB body 분리)
+- **노트참조 통합 인터랙션**: 멘션/위키링크/noteEmbed 공통 — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동
 
 ### P0 — 에디터 통합 프로젝트 후속 Phase
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈
