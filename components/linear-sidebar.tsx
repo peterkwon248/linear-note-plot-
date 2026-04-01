@@ -818,6 +818,13 @@ export function LinearSidebar() {
           <>
             <div className="space-y-px">
               <NavLink
+                href="/notes"
+                icon={<IconNotes size={20} />}
+                label="All Notes"
+                count={allNotesCount > 0 ? allNotesCount : undefined}
+                active={isActive("/notes")}
+              />
+              <NavLink
                 href="/inbox"
                 icon={<IconInbox size={20} />}
                 label="Inbox"

@@ -156,6 +156,19 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Backspace after table → table 삭제
   - 드래그 핸들 최상단 위치
 
+- **PR #138**: 에디터 블록 UX 일괄 개선 + TOC 리디자인
+  - Columns: 다크모드 테두리 opacity→rgba(255,255,255,0.2), Tab→다음 컬럼 이동
+  - Toggle: persist:true, 노션식 리디자인(배경/테두리 제거, flex 레이아웃), 접기/펴기 CSS 수정
+  - TOC: 자동 헤딩 수집 제거 → 수동 편집 + BlockPicker(+버튼=문서 내 블록 검색, 1클릭 추가+링크), 더블클릭 편집, 드래그 순서변경, Tab 들여쓰기, id 기반 scrollToId
+  - Merge Blocks: 우클릭 메뉴, 멀티선택→hardBreak 병합. Make Block→Wrap in 리네이밍
+  - Add to TOC: 우클릭 메뉴, 텍스트 선택→TOC 항목 자동 추가
+  - Delete Block: 우클릭 메뉴 맨 아래, 모든 블록 적용, compound 블록(details/columns) skipTypes
+  - 인포박스: 읽기모드 readOnly+버튼 숨김, Add row hover-only (group/infobox)
+  - Side-drop 컬럼 자동생성 제거 (Insert 메뉴로만)
+  - All Notes 사이드바 Inbox 위 추가
+  - Memo 라벨 자동 부여 (createNote + rehydrate backfill)
+  - onOpenChange로 컨텍스트 메뉴 selection 캡처 수정
+
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
 **사상**: 팔란티어 × 제텔카스텐. Layer 1(Raw Data) → Layer 2(Ontology) → Layer 3(Wiki) → Layer 4(Insights). LLM/API 사용 안 함.
@@ -185,18 +198,13 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-03-31)
+## Current Direction (as of 2026-04-01)
 
-### 이번 세션 완료 — 구조 변경 3종 + Home 공간 (2026-03-31)
-- **isWiki→noteType (v66)**: 35파일. `Note.isWiki: boolean` 삭제 → `noteType: NoteType` (`"note" | "wiki"`). 확장 가능한 디스크리미네이터
-- **WikiStatus/Stub 제거 (v67)**: ~25파일. `WikiStatus`, `StubSource` 타입 삭제. stub/article 구분 폐지. `Note.wikiStatus`, `Note.stubSource`, `WikiArticle.wikiStatus`, `WikiArticle.stubSource` 필드 제거
-- **Wiki Coverage→Uncategorized**: 대시보드 3번째 지표. Coverage(모호) → Uncategorized(카테고리 없는 문서 수)
-- **Home 공간**: Activity Bar `Inbox→Home` 교체. `ActivitySpace` 타입에서 `"inbox"→"home"`. 대시보드 4섹션 (Today/Insights/Discover/Recent)
-- **Knowledge Intelligence Panel**: Home 사이드바 = 지식 인텔리전스 (Unlinked Mentions/Suggestions/Red Links/Orphans/Knowledge Health). 다른 앱에 없는 차별화 요소
-- **사이드바 드릴다운**: Home 사이드바 View all → 메인 영역 상세 뷰 전환 (Linear My Issues 패턴). `lib/home-section.ts` 외부 스토어
-- **Ontology 네이밍**: Activity Bar "Graph" → "Ontology". 사이드바 Graph NavLink 아이콘 → ChartBar
-- **사이드바 All Notes 제거**: Notes 스페이스 진입 = 전체 노트 보기
-- **경쟁 분석 문서**: `docs/plot-discussion/16-COMPETITIVE-POSITIONING.md` — 블록 기반 앱 6개 오픈소스 검증
+### 다음 우선순위
+1. **드래그 핸들(⠿) 클릭 → 블록 메뉴** — 노션식. distance:5 활용해 클릭/드래그 구분
+2. **KaTeX/Math 렌더링 수정** — Mathematics 확장 디버깅
+3. **Turn Into 메뉴** — 블록 타입 변환
+4. **Notes→Pages 네이밍** — UI 레이블 변경
 - **인라인 쿼리 뷰 MVP**: /query 슬래시커맨드, QueryBlockNode (TipTap atom 노드), 프리셋 피커 (Status/Folder/Label), 호버-reveal 설정 바, InlineQueryTable, ViewContextKey `query-${string}` 패턴
 - **투두 시스템 MVP**: `lib/todo-index.ts` (체크박스 인덱싱 엔진), `lib/body-helpers.ts::extractTasks`, Store 통합 (todoTasks/rebuildTodoIndex/toggleTaskChecked/addQuickTask), TodoView (진행률+Incomplete/Completed), Calendar 공간 하위 배치
 - **Wiki View all 버튼**: 6개 초과 시 "View all N articles" 버튼

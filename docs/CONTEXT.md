@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-76. isWiki→noteType (v66) + WikiStatus/Stub 제거 (v67) — 60파일. Note 타입 시스템 정리
-77. Home 공간 + Knowledge Intelligence Panel — Activity Bar Inbox→Home. 대시보드 4섹션 + 사이드바 드릴다운. Ontology 네이밍
 78. 인라인 쿼리 뷰 MVP — /query 슬래시커맨드, 프리셋 피커 (Status/Folder/Label), 호버-reveal 설정 바, 경량 테이블
 79. 투두 시스템 MVP — 체크박스 인덱싱 (contentJson → TaskIndex), Todo 뷰, 인라인 추가, 체크 토글, Calendar 공간 하위
-80. Template Page Architecture 문서화 — Activity Bar = 시스템 기본 템플릿 페이지. 유저 커스텀 페이지 무한 추가. 좌측=페이지 사이드바, 우측=문서 사이드바
+80. Template Page Architecture 문서화 — Activity Bar = 시스템 기본 템플릿 페이지. 유저 커스텀 페이지 무한 추가
+81. 에디터 블록 UX 개선 — Columns 테두리 다크모드 수정, Tab 컬럼 이동, Toggle persist+노션식 리디자인(배경 제거), Merge Blocks(hardBreak 병합), 인포박스 읽기모드 readOnly, Side-drop 컬럼 자동생성 제거
+82. TOC 리디자인 + 에디터 인프라 — 수동 TOC(블록피커 1클릭 추가 + 링크 + 편집 + 드래그), Add to TOC 우클릭, Delete Block 우클릭 메뉴, All Notes 사이드바 추가, Memo 라벨 자동 부여
 
 ## Two Axes — Core Design Philosophy
 
@@ -140,10 +140,19 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Columns = CSS Grid + 테이블 스타일 border**: renderHTML 기반 columnCell, resize handle, 외곽선+셀간 border-right (2026-03-30)
 - **Make Block 폐기**: Turn Into가 대체. 래퍼로 감싸는 UX가 직관적이지 않음 (2026-03-30)
 - **디자인 폴리싱 방향 = Notion**: Linear 레이아웃 + Notion 에디터 블록 디자인 참고 (2026-03-30)
+- **TOC = 수동 + 블록피커**: 자동 헤딩 수집 제거. + 버튼 = 문서 내 모든 블록 검색 피커, 1클릭으로 항목+링크 생성. 더블클릭 편집, 드래그 순서변경, Tab 들여쓰기 (2026-04-01)
+- **Merge Blocks**: 멀티 선택 → hardBreak로 하나의 paragraph 병합 (Make Block 대체). Wrap in(Callout/Summary/Block) 별도 유지 (2026-04-01)
+- **Toggle = 노션식 (배경 없음)**: border/background 제거. ▶+텍스트 flex 한 줄. 접힌 내용은 left-border 들여쓰기 (2026-04-01)
+- **Side-drop 컬럼 자동생성 제거**: 드래그로 columns 안 만들어짐. Insert 메뉴로만 생성 (2026-04-01)
+- **인포박스 읽기모드**: readOnly + 삭제/추가 버튼 숨김. Add row = hover-only (2026-04-01)
+- **Memo 라벨 자동 부여**: 노트 생성 시 labelId 없으면 "Memo" 라벨 자동 할당. 없으면 자동 생성. 기존 노트도 rehydrate 시 backfill (2026-04-01)
+- **Delete Block 우클릭 메뉴**: 모든 블록에 적용. details/columns 같은 compound 블록은 skipTypes로 올바른 depth 탐색 (2026-04-01)
 
 ## TODO: Future Work (우선순위 순)
 
 ### P0 — 구조 변경 + 에디터 완성
+- **드래그 핸들(⠿) 클릭 → 블록 메뉴**: 노션식. 짧은 클릭=메뉴, 드래그=이동. distance:5 activationConstraint 활용
+- **KaTeX/Math 렌더링 수정**: $E=mc^2$ raw 텍스트로 보임. Mathematics 확장 렌더링 디버깅 필요
 - **Notes→Pages 네이밍**: Activity Bar/사이드바 유저 대면 UI에서 "Pages"로 표기. 내부 코드 Note 유지
 - **Turn Into 메뉴**: 블록 타입 변환 (H1↔H2, bullet↔numbered, 문단↔콜아웃 등)
 - **노트참조 통합 인터랙션**: 멘션/위키링크/noteEmbed 공통 — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동, 인라인 본문 펼치기(노트만, 위키 제외)

@@ -28,8 +28,10 @@ import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { TwitchLogo } from "@phosphor-icons/react/dist/ssr/TwitchLogo"
 import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
+import { Database } from "@phosphor-icons/react/dist/ssr/Database"
 import { usePlotStore } from "@/lib/store"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
+import { nanoid } from "nanoid"
 
 interface InsertMenuProps {
   editor: Editor
@@ -205,6 +207,10 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
     editor.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: null } }).run()
   }
 
+  const handleQuery = () => {
+    editor.chain().focus().insertContent({ type: "queryBlock", attrs: { queryId: nanoid(8) } }).run()
+  }
+
   return (
     <>
       <input
@@ -264,6 +270,11 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           <DropdownMenuItem onSelect={handleTable} className={ITEM_CLASS}>
             <PhTable size={14} weight="regular" />
             <span className="flex-1">Table</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={handleQuery} className={ITEM_CLASS}>
+            <Database size={14} weight="regular" />
+            <span className="flex-1">Query</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleTOC} className={ITEM_CLASS}>
