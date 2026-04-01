@@ -763,7 +763,7 @@ export function LinearSidebar() {
                         openNote(item.id, { forceNewTab: e.ctrlKey || e.metaKey })
                         setRecentlyViewedOpen(false)
                       }}
-                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-secondary/50"
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-sidebar-hover"
                     >
                       <IconDoc size={14} className="shrink-0 text-muted-foreground" />
                       <span className="truncate text-note text-foreground">{item.title}</span>

@@ -912,7 +912,7 @@ export function NotesTable({
                 }`}
               >
                 {tab.label}
-                <span className="ml-1.5 rounded-[3px] bg-foreground/15 px-1.5 py-0.5 text-2xs font-medium tabular-nums text-foreground">{trashTabCounts[tab.id]}</span>
+                <span className="ml-1.5 rounded-sm bg-foreground/15 px-1.5 py-0.5 text-2xs font-medium tabular-nums text-foreground">{trashTabCounts[tab.id]}</span>
                 {trashFilter === tab.id && (
                   <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-accent" />
                 )}
@@ -1477,7 +1477,7 @@ function NoteRowInner({
           <SourceIcon source={note.source} />
         </div>
         {showCardPreview && note.preview && (
-          <span className="text-2xs text-muted-foreground/50 truncate pl-[22px] mt-0.5">{note.preview}</span>
+          <span className="text-2xs text-muted-foreground/50 truncate pl-6 mt-0.5">{note.preview}</span>
         )}
       </div>
 

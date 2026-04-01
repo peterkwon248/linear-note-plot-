@@ -62,7 +62,7 @@ export function TopUtilityBar() {
       {/* Search trigger — opens SearchDialog, not a real input */}
       <button
         onClick={() => setSearchOpen(true)}
-        className="flex h-[30px] max-w-[260px] flex-1 items-center gap-2 rounded-md border border-border px-2.5 text-note text-muted-foreground transition-colors hover:border-foreground/20"
+        className="flex h-8 max-w-[260px] flex-1 items-center gap-2 rounded-md border border-border px-2.5 text-note text-muted-foreground transition-colors hover:border-foreground/20"
       >
         <IconSearch size={14} className="shrink-0" />
         <span className="flex-1 text-left">Search…</span>

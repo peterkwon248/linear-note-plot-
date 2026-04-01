@@ -1003,7 +1003,7 @@ export function FilterChipBar({
           {formatFilterLabel(f, folders, tags, labels)}
           <button
             onClick={() => onRemoveFilter(i)}
-            className="flex h-[18px] w-[18px] items-center justify-center rounded text-accent/60 transition-colors hover:bg-accent/25"
+            className="flex h-5 w-5 items-center justify-center rounded text-accent/60 transition-colors hover:bg-accent/25"
           >
             <PhX size={10} weight="regular" />
           </button>

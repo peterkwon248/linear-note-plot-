@@ -106,7 +106,7 @@ export function TableMenu({ editor }: TableMenuProps) {
                         key={idx}
                         onMouseEnter={() => { setHoverRow(r); setHoverCol(c) }}
                         onMouseDown={(e) => { e.preventDefault(); insertTable(r, c) }}
-                        className={`w-[22px] h-[22px] rounded-sm border cursor-pointer transition-all duration-[50ms] ${
+                        className={`w-5 h-5 rounded-sm border cursor-pointer transition-all duration-[50ms] ${
                           isHighlighted ? "border-[rgba(94,106,210,0.6)] bg-toolbar-active" : "border-border"
                         }`}
                       />

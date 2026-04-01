@@ -18,6 +18,7 @@ import { Island } from "@phosphor-icons/react/dist/ssr/Island"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
 import { Circle } from "@phosphor-icons/react/dist/ssr/Circle"
+import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -60,7 +61,7 @@ function BackToOverview() {
   return (
     <button
       onClick={() => setHomeSection("overview")}
-      className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      className="mb-6 flex items-center gap-1.5 text-note text-muted-foreground transition-colors hover:text-foreground"
     >
       <ArrowLeft size={14} />
       <span>Back to Overview</span>
@@ -83,7 +84,7 @@ function SectionHeader({
     <div className="mb-4 flex items-center gap-2.5">
       <span className="text-muted-foreground">{icon}</span>
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-      <span className="text-sm text-muted-foreground tabular-nums">({count})</span>
+      <span className="text-note text-muted-foreground tabular-nums">({count})</span>
     </div>
   )
 }
@@ -139,7 +140,7 @@ function UnlinkedMentionsDetail() {
         count={allUnlinked.length}
       />
       {allUnlinked.length === 0 ? (
-        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-note text-muted-foreground">
           No unlinked mentions found.
         </div>
       ) : (
@@ -151,7 +152,7 @@ function UnlinkedMentionsDetail() {
             >
               <div className="flex items-center gap-2">
                 <FileText size={14} className="shrink-0 text-muted-foreground" />
-                <span className="font-medium text-sm text-foreground">&ldquo;{m.title}&rdquo;</span>
+                <span className="font-medium text-note text-foreground">&ldquo;{m.title}&rdquo;</span>
                 <span className="text-2xs text-muted-foreground">
                   found in {m.foundIn.length} note{m.foundIn.length !== 1 ? "s" : ""}
                 </span>
@@ -216,7 +217,7 @@ function SuggestionsDetail() {
         count={allPending.length}
       />
       {allPending.length === 0 ? (
-        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-note text-muted-foreground">
           No pending suggestions.
         </div>
       ) : (
@@ -230,14 +231,14 @@ function SuggestionsDetail() {
                 <GitFork size={14} className="shrink-0 text-muted-foreground" />
                 <button
                   onClick={() => navigateToNote(s.sourceId)}
-                  className="text-sm font-medium text-foreground transition-colors hover:underline"
+                  className="text-note font-medium text-foreground transition-colors hover:underline"
                 >
                   {s.sourceTitle}
                 </button>
                 <span className="text-2xs text-muted-foreground">&harr;</span>
                 <button
                   onClick={() => navigateToNote(s.targetId)}
-                  className="text-sm font-medium text-foreground transition-colors hover:underline"
+                  className="text-note font-medium text-foreground transition-colors hover:underline"
                 >
                   {s.targetTitle}
                 </button>
@@ -328,7 +329,7 @@ function RedLinksDetail() {
         count={allRedLinks.length}
       />
       {allRedLinks.length === 0 ? (
-        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-note text-muted-foreground">
           No red links found.
         </div>
       ) : (
@@ -340,7 +341,7 @@ function RedLinksDetail() {
             >
               <div className="flex items-center gap-2">
                 <Circle size={10} weight="fill" className="shrink-0 text-red-400" />
-                <span className="font-medium text-sm text-red-400">{r.title}</span>
+                <span className="font-medium text-note text-red-400">{r.title}</span>
                 <span className="text-2xs text-muted-foreground">
                   referenced by {r.referencedBy.length} note{r.referencedBy.length !== 1 ? "s" : ""}
                 </span>
@@ -402,7 +403,7 @@ function OrphansDetail() {
         count={allOrphans.length}
       />
       {allOrphans.length === 0 ? (
-        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-note text-muted-foreground">
           No orphan notes found.
         </div>
       ) : (
@@ -417,7 +418,7 @@ function OrphansDetail() {
             >
               <span className="flex items-center gap-2 truncate">
                 <FileText size={14} className="shrink-0 text-muted-foreground" />
-                <span className="truncate text-sm text-foreground">
+                <span className="truncate text-note text-foreground">
                   {note.title || "Untitled"}
                 </span>
               </span>
@@ -465,13 +466,43 @@ export function HomeView() {
     [notes],
   )
 
-  const orphanCount = useMemo(
-    () =>
-      notes.filter(
-        (n) => !n.trashed && n.linksOut.length === 0,
-      ).length,
-    [notes],
-  )
+  const nonTrashedNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
+
+  const orphanCount = useMemo(() => {
+    const incomingSet = new Set<string>()
+    for (const n of nonTrashedNotes) {
+      for (const link of n.linksOut) {
+        const target = nonTrashedNotes.find(
+          (t) => t.title.toLowerCase() === link.toLowerCase(),
+        )
+        if (target) incomingSet.add(target.id)
+      }
+    }
+    return nonTrashedNotes.filter(
+      (n) => n.linksOut.length === 0 && !incomingSet.has(n.id),
+    ).length
+  }, [nonTrashedNotes])
+
+  const redLinkCount = useMemo(() => {
+    const existingTitles = new Set<string>()
+    for (const n of nonTrashedNotes) {
+      existingTitles.add(n.title.toLowerCase())
+      if (n.aliases) n.aliases.forEach((a) => existingTitles.add(a.toLowerCase()))
+    }
+    for (const w of wikiArticles) {
+      existingTitles.add(w.title.toLowerCase())
+      w.aliases.forEach((a) => existingTitles.add(a.toLowerCase()))
+    }
+    const seen = new Set<string>()
+    for (const n of nonTrashedNotes) {
+      for (const link of n.linksOut) {
+        if (!existingTitles.has(link.toLowerCase())) {
+          seen.add(link.toLowerCase())
+        }
+      }
+    }
+    return seen.size
+  }, [nonTrashedNotes, wikiArticles])
 
   const recentNotes = useMemo(
     () =>
@@ -510,7 +541,7 @@ export function HomeView() {
           <h1 className="text-2xl font-semibold text-foreground">
             {getGreeting()}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-note text-muted-foreground">
             {formatDate()}
           </p>
 
@@ -520,7 +551,7 @@ export function HomeView() {
               onClick={() => setActiveRoute("/inbox")}
               className="flex flex-col items-start gap-2 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
             >
-              <Tray size={18} className="text-muted-foreground" />
+              <Tray size={20} className="text-muted-foreground" />
               <div>
                 <p className="text-2xl font-semibold text-foreground">
                   {inboxCount}
@@ -534,7 +565,7 @@ export function HomeView() {
               onClick={() => setActiveRoute("/notes")}
               className="flex flex-col items-start gap-2 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
             >
-              <Clock size={18} className="text-muted-foreground" />
+              <Clock size={20} className="text-muted-foreground" />
               <div>
                 <p className="text-2xl font-semibold text-foreground">
                   {reviewDueCount}
@@ -548,7 +579,7 @@ export function HomeView() {
               onClick={() => setActiveRoute("/notes")}
               className="flex flex-col items-start gap-2 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
             >
-              <PencilSimple size={18} className="text-muted-foreground" />
+              <PencilSimple size={20} className="text-muted-foreground" />
               <div>
                 <p className="text-2xl font-semibold text-foreground">
                   {editedTodayCount}
@@ -602,7 +633,7 @@ export function HomeView() {
                 className="mb-2 text-muted-foreground"
               />
               <p className="text-2xl font-semibold text-foreground">
-                &mdash;
+                {redLinkCount}
               </p>
               <p className="text-2xs text-muted-foreground">Red Links</p>
             </div>
@@ -612,10 +643,47 @@ export function HomeView() {
         {/* ── Section 3: Discover ── */}
         <section className="mb-8">
           <h2 className="text-note font-medium text-foreground">Discover</h2>
-          <div className="mt-3 rounded-lg border border-border-subtle bg-surface-overlay p-4">
-            <p className="text-sm text-muted-foreground">
-              Unlinked mention suggestions and discovery features coming soon.
-            </p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setHomeSection("unlinked")}
+              className="flex items-start gap-3 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:border-border hover:bg-hover-bg"
+            >
+              <LinkBreak size={16} className="shrink-0 mt-0.5 text-muted-foreground" />
+              <div>
+                <p className="text-note font-medium text-foreground">Unlinked Mentions</p>
+                <p className="text-2xs text-muted-foreground mt-0.5">Find notes that reference each other but aren't linked yet</p>
+              </div>
+            </button>
+            <button
+              onClick={() => setHomeSection("suggestions")}
+              className="flex items-start gap-3 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:border-border hover:bg-hover-bg"
+            >
+              <Sparkle size={16} className="shrink-0 mt-0.5 text-muted-foreground" />
+              <div>
+                <p className="text-note font-medium text-foreground">Connection Suggestions</p>
+                <p className="text-2xs text-muted-foreground mt-0.5">Discover potential relationships between your notes</p>
+              </div>
+            </button>
+            <button
+              onClick={() => setHomeSection("redlinks")}
+              className="flex items-start gap-3 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:border-border hover:bg-hover-bg"
+            >
+              <FileText size={16} className="shrink-0 mt-0.5 text-muted-foreground" />
+              <div>
+                <p className="text-note font-medium text-foreground">Red Links</p>
+                <p className="text-2xs text-muted-foreground mt-0.5">Topics referenced but not yet created as notes</p>
+              </div>
+            </button>
+            <button
+              onClick={() => setHomeSection("orphans")}
+              className="flex items-start gap-3 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:border-border hover:bg-hover-bg"
+            >
+              <Island size={16} className="shrink-0 mt-0.5 text-muted-foreground" />
+              <div>
+                <p className="text-note font-medium text-foreground">Orphan Notes</p>
+                <p className="text-2xs text-muted-foreground mt-0.5">Notes with no incoming or outgoing links</p>
+              </div>
+            </button>
           </div>
         </section>
 
@@ -624,7 +692,7 @@ export function HomeView() {
           <h2 className="text-note font-medium text-foreground">Recent</h2>
           <div className="mt-3 rounded-lg border border-border-subtle bg-surface-overlay">
             {recentNotes.length === 0 ? (
-              <div className="p-4 text-sm text-muted-foreground">
+              <div className="p-4 text-note text-muted-foreground">
                 No notes yet.
               </div>
             ) : (
@@ -643,7 +711,7 @@ export function HomeView() {
                       size={14}
                       className="shrink-0 text-muted-foreground"
                     />
-                    <span className="truncate text-sm text-foreground">
+                    <span className="truncate text-note text-foreground">
                       {note.title || "Untitled"}
                     </span>
                   </span>

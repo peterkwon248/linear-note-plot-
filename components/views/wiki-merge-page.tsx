@@ -461,7 +461,7 @@ export function WikiMergePage() {
                       <ChevronUp size={12} />
                     </button>
                     {titleDropdownOpen && (
-                      <div className="absolute left-0 bottom-full z-50 mb-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
+                      <div className="absolute left-0 bottom-full z-50 mb-1 w-full rounded-lg border border-white/[0.08] bg-popover py-1 shadow-xl">
                         {selectedArticles.map(a => (
                           <button
                             key={a.id}
@@ -525,7 +525,7 @@ export function WikiMergePage() {
                     <ChevronUp size={12} className="ml-2 shrink-0 text-white/30" />
                   </button>
                   {survivorDropdownOpen && (
-                    <div className="absolute left-0 bottom-full z-50 mb-1 w-full rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
+                    <div className="absolute left-0 bottom-full z-50 mb-1 w-full rounded-lg border border-white/[0.08] bg-popover py-1 shadow-xl">
                       {selectedArticles.map(a => (
                         <button
                           key={a.id}
@@ -571,7 +571,7 @@ export function WikiMergePage() {
                     Add
                   </button>
                   {categoryDropdownOpen && (
-                    <div className="absolute left-0 bottom-full z-50 mb-1 min-w-[160px] rounded-lg border border-white/[0.08] bg-[#1a1a1a] py-1 shadow-xl">
+                    <div className="absolute left-0 bottom-full z-50 mb-1 min-w-[160px] rounded-lg border border-white/[0.08] bg-popover py-1 shadow-xl">
                       {showNewCategoryInput ? (
                         <div className="px-2 py-1">
                           <input

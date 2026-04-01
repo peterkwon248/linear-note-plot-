@@ -56,7 +56,7 @@ export function WikiSidebar({
               ))
             }
             {categories.uncategorized > 0 && (
-              <span className="inline-block rounded-[5px] bg-chart-3/5 px-1.5 py-0.5 text-2xs font-medium text-chart-3/60">
+              <span className="inline-block rounded-sm bg-chart-3/5 px-1.5 py-0.5 text-2xs font-medium text-chart-3/60">
                 Uncategorized
                 <span className="ml-0.5 tabular-nums">{categories.uncategorized}</span>
               </span>

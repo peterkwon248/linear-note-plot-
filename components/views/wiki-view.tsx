@@ -109,7 +109,7 @@ export function WikiView() {
   const [wikiMergeSourceId, setWikiMergeSourceId] = useState<string | null>(null)
 
   // Dashboard filter
-  const [dashFilter, setDashFilter] = useState<"all" | "redlinks">("all")
+  const [dashFilter, setDashFilter] = useState<"all" | "articles" | "redlinks">("all")
 
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
@@ -456,8 +456,17 @@ export function WikiView() {
   const stats = useMemo(() => {
     const articleCount = wikiNotes.length
     const redLinkCount = redLinks.length
-    // WikiArticle doesn't track linksOut — use 0 for now
-    const internalLinkCount = 0
+    // Count unique internal links across all wiki notes + wiki articles
+    const linkSet = new Set<string>()
+    for (const n of wikiNotes) {
+      for (const link of n.linksOut ?? []) linkSet.add(link.toLowerCase())
+    }
+    for (const a of wikiArticles) {
+      if (a.linksOut) {
+        for (const link of a.linksOut) linkSet.add(link.toLowerCase())
+      }
+    }
+    const internalLinkCount = linkSet.size
 
     // Connected notes: unique non-wiki notes that have backlinks TO wiki articles
     const wikiTitles = new Set(
@@ -484,7 +493,7 @@ export function WikiView() {
       internalLinks: internalLinkCount,
       connectedNotes: connectedNoteIds.size,
     }
-  }, [wikiNotes, redLinks, notes])
+  }, [wikiNotes, wikiArticles, redLinks, notes])
 
   // Article count: total wiki articles
   const articleCount = useMemo(
@@ -738,7 +747,7 @@ export function WikiView() {
         icon={<IconWiki size={20} />}
         title="Wiki"
         count={stats.total}
-        showFilter
+        showFilter={wikiViewMode !== "dashboard"}
         hasActiveFilters={wikiViewMode === "category" ? categoryFilters.length > 0 : wikiFilters.length > 0}
         filterContent={
           wikiViewMode === "category" ? (

@@ -252,9 +252,9 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
                   onMouseDown={(e) => e.preventDefault()}
                   title={align === "left" ? "Left" : align === "center" ? "Center" : "Right"}
                 >
-                  {align === "left" && <TextAlignLeft size={15} weight="regular" />}
-                  {align === "center" && <TextAlignCenter size={15} weight="regular" />}
-                  {align === "right" && <TextAlignRight size={15} weight="regular" />}
+                  {align === "left" && <TextAlignLeft size={14} weight="regular" />}
+                  {align === "center" && <TextAlignCenter size={14} weight="regular" />}
+                  {align === "right" && <TextAlignRight size={14} weight="regular" />}
                 </button>
               ))}
             </div>

@@ -50,7 +50,7 @@ function StepTreeNode({
   return (
     <div>
       <div className="relative group/step">
-        <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
+        <div className="absolute -left-4 top-1.5 w-2 h-2 rounded-full bg-cyan-500" />
         <p className="text-note text-foreground whitespace-pre-wrap">{node.step.text}</p>
         <div className="flex items-center gap-2">
           <span className="text-2xs text-muted-foreground">
@@ -80,7 +80,7 @@ function DoneStepTreeNode({ node }: { node: StepNode }) {
   return (
     <div>
       <div className="relative">
-        <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
+        <div className="absolute -left-4 top-1.5 w-2 h-2 rounded-full bg-cyan-500" />
         <p className="text-2xs text-muted-foreground whitespace-pre-wrap">{node.step.text}</p>
         <span className="text-2xs text-muted-foreground/60">
           {format(new Date(node.step.at), "h:mm a")}
@@ -143,7 +143,7 @@ function DoneThreadItem({ thread, nestedReplies }: { thread: Thread; nestedRepli
             ) : (
               thread.steps.map((step) => (
                 <div key={step.id} className="relative">
-                  <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
+                  <div className="absolute -left-4 top-1.5 w-2 h-2 rounded-full bg-cyan-500" />
                   <p className="text-2xs text-muted-foreground whitespace-pre-wrap">{step.text}</p>
                   <span className="text-2xs text-muted-foreground/60">
                     {format(new Date(step.at), "h:mm a")}
@@ -268,7 +268,7 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
                   ) : (
                     activeThread.steps.map((step) => (
                       <div key={step.id} className="relative">
-                        <div className="absolute -left-[17px] top-[6px] w-2 h-2 rounded-full bg-cyan-500" />
+                        <div className="absolute -left-4 top-1.5 w-2 h-2 rounded-full bg-cyan-500" />
                         <p className="text-note text-foreground whitespace-pre-wrap">{step.text}</p>
                         <span className="text-2xs text-muted-foreground">
                           {format(new Date(step.at), "h:mm a")}

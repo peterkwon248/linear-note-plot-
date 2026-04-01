@@ -1492,7 +1492,7 @@ export function OntologyGraphCanvas({
         <button
           tabIndex={-1}
           onClick={() => adjustSpread("cluster")}
-          className="rounded-l-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="rounded-l-md p-1.5 text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
           title="Cluster nodes"
         >
           <ArrowsIn size={16} weight="regular" />
@@ -1500,7 +1500,7 @@ export function OntologyGraphCanvas({
         <button
           tabIndex={-1}
           onClick={() => adjustSpread("spread")}
-          className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="p-1.5 text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
           title="Spread nodes"
         >
           <ArrowsOut size={16} weight="regular" />
@@ -1509,7 +1509,7 @@ export function OntologyGraphCanvas({
         <button
           tabIndex={-1}
           onClick={() => zoomBy(ZOOM_STEP)}
-          className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="p-1.5 text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
           title="Zoom in"
         >
           <MagnifyingGlassPlus size={16} weight="regular" />
@@ -1517,7 +1517,7 @@ export function OntologyGraphCanvas({
         <button
           tabIndex={-1}
           onClick={() => zoomBy(-ZOOM_STEP)}
-          className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="p-1.5 text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
           title="Zoom out"
         >
           <MagnifyingGlassMinus size={16} weight="regular" />
@@ -1526,7 +1526,7 @@ export function OntologyGraphCanvas({
         <button
           tabIndex={-1}
           onClick={resetView}
-          className="rounded-r-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="rounded-r-md p-1.5 text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
           title="Reset view"
         >
           <ArrowCounterClockwise size={16} weight="regular" />

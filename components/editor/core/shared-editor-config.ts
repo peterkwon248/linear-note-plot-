@@ -293,7 +293,7 @@ function injectDetailsDeleteButtons(editor: any) {
     });
     block.addEventListener("mouseenter", () => { btn.style.opacity = "0.5"; });
     block.addEventListener("mouseleave", () => { btn.style.opacity = "0"; });
-    btn.addEventListener("mouseenter", () => { btn.style.opacity = "1"; btn.style.color = "#ef4444"; });
+    btn.addEventListener("mouseenter", () => { btn.style.opacity = "1"; btn.style.color = "var(--destructive)"; });
     btn.addEventListener("mouseleave", () => { btn.style.opacity = "0.5"; btn.style.color = "var(--muted-foreground)"; });
     btn.addEventListener("click", (e) => {
       e.stopPropagation();

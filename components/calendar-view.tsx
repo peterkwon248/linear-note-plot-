@@ -122,7 +122,7 @@ function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillPr
         onClick()
       }}
       className={cn(
-        "group flex w-full items-center gap-1.5 rounded-[5px] px-2 py-1 text-left transition-all duration-150",
+        "group flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left transition-all duration-150",
         "hover:bg-hover-bg",
         isActive
           ? "bg-accent/15 ring-1 ring-accent/40 hover:bg-accent/20"
@@ -268,7 +268,7 @@ function DayCell({
               e.stopPropagation()
               if (notes[MAX_VISIBLE]) onNoteClick(notes[MAX_VISIBLE].id)
             }}
-            className="w-full rounded-[5px] px-2 py-[2px] text-left text-2xs font-medium text-muted-foreground/60 transition-colors hover:bg-hover-bg hover:text-muted-foreground"
+            className="w-full rounded-md px-2 py-px text-left text-2xs font-medium text-muted-foreground/60 transition-colors hover:bg-hover-bg hover:text-muted-foreground"
           >
             +{overflowCount} more
           </button>
@@ -405,7 +405,7 @@ function DayDashboard({
                   {/* Top row: dot + title + status badge + label badge + time */}
                   <div className="flex items-center gap-2">
                     <span
-                      className="h-[6px] w-[6px] shrink-0 rounded-full"
+                      className="h-1.5 w-1.5 shrink-0 rounded-full"
                       style={{ backgroundColor: dot }}
                     />
 
@@ -962,7 +962,7 @@ export function CalendarView({
             <div className="min-h-0 flex-1 overflow-y-auto">
               {filteredNotes.length === 0 && (
                 <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
                     <CalendarDots className="text-muted-foreground/50" size={20} weight="regular" />
                   </div>
                   <div>

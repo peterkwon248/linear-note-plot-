@@ -146,10 +146,6 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
-    { key: "noteType", label: "Note Type", icon: StatusIcon, values: [
-      { key: "wiki", label: "Wiki", color: "#8b5cf6" },
-      { key: "note", label: "Note", color: "rgba(255,255,255,0.32)" },
-    ]},
     { key: "tags", label: "Category", icon: TagIcon, values: [] },
     { key: "links", label: "Backlinks", icon: LinkIcon, values: [
       { key: "5+", label: "5+ backlinks" },

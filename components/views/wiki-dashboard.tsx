@@ -32,7 +32,7 @@ interface WikiDashboardProps {
   staleDocuments: { note: WikiArticle; daysAgo: number }[]
   categories: { items: { id: string; name: string; parentIds: string[]; count: number }[]; uncategorized: number }
 
-  // MagnifyingGlass
+  // Search
   searchQuery: string
   setSearchQuery: (q: string) => void
   searchFocused: boolean
@@ -86,7 +86,7 @@ export function WikiDashboard({
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-5xl px-6 py-6">
 
-        {/* ── MagnifyingGlass ── */}
+        {/* ── Search ── */}
         <div className="relative mb-6">
           <div className="relative">
             <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" size={14} weight="regular" />
@@ -107,7 +107,7 @@ export function WikiDashboard({
                   searchInputRef.current?.blur()
                 }
               }}
-              placeholder="MagnifyingGlass wiki articles..."
+              placeholder="Search wiki articles..."
               className="h-9 w-full rounded-lg border border-border-subtle bg-secondary/30 pl-9 pr-3 text-note text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-colors"
             />
           </div>
@@ -186,14 +186,14 @@ export function WikiDashboard({
                 <button
                   key={cat.id}
                   onClick={() => onCategoryClick?.(cat.id)}
-                  className="rounded-[5px] bg-secondary/50 px-2 py-1 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg cursor-pointer"
+                  className="rounded-sm bg-secondary/50 px-2 py-1 text-2xs font-medium text-foreground/80 transition-colors hover:bg-hover-bg cursor-pointer"
                 >
                   {cat.name}
                   <span className="ml-1 text-muted-foreground/40 tabular-nums">{cat.count}</span>
                 </button>
               ))}
               {categories.uncategorized > 0 && (
-                <span className="rounded-[5px] bg-chart-3/5 px-2 py-1 text-2xs font-medium text-chart-3/70">
+                <span className="rounded-sm bg-chart-3/5 px-2 py-1 text-2xs font-medium text-chart-3/70">
                   Uncategorized
                   <span className="ml-1 tabular-nums">{categories.uncategorized}</span>
                 </span>
@@ -310,7 +310,7 @@ export function WikiDashboard({
         {/* ── Empty State ── */}
         {wikiNotes.length === 0 && (
           <div className="flex flex-col items-center gap-3 py-20 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/60">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
               <BookOpen className="text-muted-foreground" size={20} weight="regular" />
             </div>
             <p className="text-note font-medium text-muted-foreground">No wiki articles yet</p>
