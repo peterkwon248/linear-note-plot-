@@ -153,6 +153,9 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 
 ## TODO: Future Work (우선순위 순)
 
+### P0 — 최우선
+- **컬럼 구분선 드래그 개선**: 잔상 제거, 드래그 중 라이브 그리드 프리뷰 (현재 핸들만 이동 → 그리드 실시간 반영으로 전환 필요)
+
 ### P0 — 에디터 통합 프로젝트 후속 Phase
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈
 - **Phase 3**: 템플릿 블록 레이아웃 에디터 — TemplateBlock 모델, Notion-style 드래그 앤 드롭, Template→Note/Wiki 변환
