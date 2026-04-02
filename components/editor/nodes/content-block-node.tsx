@@ -5,8 +5,14 @@ import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from "@tiptap
 import type { NodeViewProps } from "@tiptap/react"
 import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
+import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
-function ContentBlockView({ node, editor }: NodeViewProps) {
+function ContentBlockView({ node, updateAttributes, editor }: NodeViewProps) {
+  const width = node.attrs.width as number | null
+  const height = node.attrs.height as number | null
+  const { containerRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
   // Remove block wrapper, keeping inner content
   const unwrap = () => {
     let blockPos: number | null = null
@@ -23,7 +29,15 @@ function ContentBlockView({ node, editor }: NodeViewProps) {
 
   return (
     <NodeViewWrapper>
-      <div className="not-draggable flex my-1 group relative rounded-md hover:bg-hover-bg transition-colors">
+      <div
+        ref={containerRef}
+        className={`not-draggable flex my-1 group relative rounded-md hover:bg-hover-bg transition-colors block-resize-wrapper ${isResizing ? "is-resizing" : ""}`}
+        style={{
+          ...(width ? { width: `${width}px` } : {}),
+          ...(height ? { height: `${height}px`, overflowY: "auto" as const } : {}),
+        }}
+      >
+        {editor?.isEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
         {/* Drag handle on the left */}
         <div
           contentEditable={false}
@@ -45,6 +59,16 @@ function ContentBlockView({ node, editor }: NodeViewProps) {
           contentEditable={false}
           className="flex items-start pt-1 pl-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
         >
+          {(width || height) && (
+            <button
+              type="button"
+              onClick={() => updateAttributes({ width: null, height: null })}
+              className="flex items-center justify-center w-5 h-5 rounded text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+              title="Reset size"
+            >
+              <ArrowsIn size={10} weight="bold" />
+            </button>
+          )}
           <button
             type="button"
             onClick={unwrap}
@@ -66,6 +90,27 @@ export const ContentBlockNode = Node.create({
   defining: true,
   selectable: true,
   draggable: true,
+
+  addAttributes() {
+    return {
+      width: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const w = el.getAttribute("data-width")
+          return w ? parseInt(w, 10) : null
+        },
+        renderHTML: (attrs: Record<string, any>) => attrs.width ? { "data-width": attrs.width } : {},
+      },
+      height: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const h = el.getAttribute("data-height")
+          return h ? parseInt(h, 10) : null
+        },
+        renderHTML: (attrs: Record<string, any>) => attrs.height ? { "data-height": attrs.height } : {},
+      },
+    }
+  },
 
   parseHTML() {
     return [{ tag: 'div[data-type="content-block"]' }]

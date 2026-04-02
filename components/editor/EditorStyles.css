@@ -955,67 +955,99 @@
   background: rgba(224, 108, 117, 0.08);
 }
 
-/* ── Wikilink Navigation Dropdown ─────────────────────────────────── */
+/* Wikilink dropdown + nav icon removed — unified hover/click interactions */
 
-.wikilink-dropdown {
-  display: none;
-  flex-direction: column;
-  min-width: 100px;
-  overflow: hidden;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--popover);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+/* ── Block Resize Handles ────────────────────────────────────────── */
+
+.block-resize-wrapper {
+  position: relative;
 }
 
-.wikilink-dropdown-btn {
-  display: block;
-  width: 100%;
-  padding: 6px 12px;
-  text-align: left;
-  font-size: var(--editor-ui-sm);
-  color: var(--foreground);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-
-.wikilink-dropdown-btn:hover {
-  background: var(--secondary);
-}
-
-.wikilink-dropdown-btn:first-child {
-  border-radius: 5px 5px 0 0;
-}
-
-.wikilink-dropdown-btn:last-child {
-  border-radius: 0 0 5px 5px;
-}
-
-/* ── Wikilink Navigation Icon ─────────────────────────────────────── */
-
-.wikilink-nav-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 2px;
-  width: 16px;
-  height: 16px;
-  font-size: var(--editor-ui-xs);
-  line-height: 1;
-  opacity: 0.5;
+/* Edge handles (left/right) */
+.block-resize-handle {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  opacity: 0;
   transition: opacity 0.15s;
-  cursor: pointer;
-  color: var(--editor-link-color);
-  user-select: none;
-  vertical-align: text-bottom;
-  border-radius: 3px;
+}
+.block-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.block-resize-handle--left { left: -3px; }
+.block-resize-handle--left::after { left: 1px; }
+.block-resize-handle--right { right: -3px; }
+.block-resize-handle--right::after { right: 1px; }
+
+/* Corner handles (4 corners) */
+.block-resize-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  z-index: 11;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.block-resize-corner::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.block-resize-corner--tl { top: -3px; left: -3px; cursor: nwse-resize; }
+.block-resize-corner--tl::after { top: 3px; left: 3px; }
+.block-resize-corner--tr { top: -3px; right: -3px; cursor: nesw-resize; }
+.block-resize-corner--tr::after { top: 3px; right: 3px; }
+.block-resize-corner--bl { bottom: -3px; left: -3px; cursor: nesw-resize; }
+.block-resize-corner--bl::after { bottom: 3px; left: 3px; }
+.block-resize-corner--br { bottom: -3px; right: -3px; cursor: nwse-resize; }
+.block-resize-corner--br::after { bottom: 3px; right: 3px; }
+
+.block-resize-wrapper:hover .block-resize-handle,
+.block-resize-wrapper:hover .block-resize-corner,
+.block-resize-wrapper.is-resizing .block-resize-handle,
+.block-resize-wrapper.is-resizing .block-resize-corner {
+  opacity: 1;
 }
 
-.wikilink-nav-icon:hover {
-  opacity: 1;
-  background: color-mix(in srgb, var(--editor-link-color) 15%, transparent);
+/* ── Synced Block (Inline Note Embed) ─────────────────────────────── */
+
+.synced-block {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  transition: background 0.15s;
+}
+
+.synced-block:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.synced-block-editor .ProseMirror {
+  min-height: 40px;
+  padding: 4px 0;
+  font-size: inherit;
+  line-height: inherit;
+  outline: none;
+}
+
+.synced-block-editor .ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--muted-foreground);
+  opacity: 0.4;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
 /* ── Wiki Read Mode Typography ────────────────────────────────────── */
@@ -1110,6 +1142,15 @@
   padding: 8px 16px;
   position: relative;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: text;
+}
+
+/* Gapcursor visibility */
+.ProseMirror .ProseMirror-gapcursor {
+  position: relative;
+}
+.ProseMirror .ProseMirror-gapcursor::after {
+  border-top: 1px solid var(--foreground);
 }
 
 .ProseMirror .column-cell:last-child {

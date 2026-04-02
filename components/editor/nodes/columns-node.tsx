@@ -8,6 +8,9 @@ import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
+import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
 /* ----------------------------------------------------------------
  * Column Cell Node
@@ -25,7 +28,7 @@ export const ColumnCellNode = Node.create({
 
   addAttributes() {
     return {
-      /** Column width as fraction, e.g. 0.5 = 50%. null = equal (1fr) */
+      /** Column width in pixels. null = equal (1fr) */
       colWidth: { default: null, parseHTML: (el) => el.getAttribute("data-col-width") ? parseFloat(el.getAttribute("data-col-width")!) : null },
     }
   },
@@ -36,14 +39,12 @@ export const ColumnCellNode = Node.create({
 
   renderHTML({ node, HTMLAttributes }) {
     const width = node.attrs.colWidth as number | null
-    const style = width ? `width: ${(width * 100).toFixed(1)}%` : undefined
     return [
       "div",
       mergeAttributes(HTMLAttributes, {
         "data-type": "column-cell",
         "data-col-width": width ?? undefined,
         class: "column-cell",
-        style,
       }),
       0,
     ]
@@ -80,88 +81,79 @@ function ResizeHandle({
       e.stopPropagation()
       dragging.current = true
 
-      const pos = findPos()
-      if (pos === null) return
-      const columnsNode = editor.state.doc.nodeAt(pos)
-      if (!columnsNode) return
-
-      // Get the columns-grid container for total width
-      const gridEl = (e.target as HTMLElement).closest(".not-draggable")?.querySelector(".columns-grid")
-      if (!gridEl) return
-      // The actual grid is the [data-node-view-wrapper] inside (display:contents makes columns-grid zero-width)
-      const nvw = gridEl.querySelector("[data-node-view-wrapper]") as HTMLElement | null
-      const containerWidth = nvw?.getBoundingClientRect().width ?? gridEl.getBoundingClientRect().width
-      if (containerWidth <= 0) return
-
       const startX = e.clientX
-      const colCount = columnsNode.childCount
 
-      // Current widths as fractions (default to equal)
-      const widths: number[] = []
-      columnsNode.forEach((child) => {
-        widths.push((child.attrs.colWidth as number) ?? 1 / colCount)
-      })
+      // Find left cell and measure its pixel width
+      const handleWrapper = (e.target as HTMLElement).closest(".column-resize-handle-wrapper")
+      const parentDiv = handleWrapper?.parentElement
+      const cells = parentDiv?.querySelectorAll(".column-cell")
+      if (!cells || cells.length < 2) return
 
-      const leftIdx = index
-      const rightIdx = index + 1
-      const startLeft = widths[leftIdx]
-      const startRight = widths[rightIdx]
+      const leftCellEl = cells[index] as HTMLElement
+      const rightCellEl = cells[index + 1] as HTMLElement
+      const startLeftW = leftCellEl.offsetWidth
+      const startRightW = rightCellEl.offsetWidth
+      const totalW = startLeftW + startRightW
+      const minW = 60
 
-      const onMouseMove = (ev: MouseEvent) => {
-        if (!dragging.current) return
+      // Capture position ONCE on mousedown (node reference is still valid here)
+      const columnsPos = findPos()
+      if (columnsPos === null) return
+
+      // Get the handle element to move it visually
+      const handleEl = (e.target as HTMLElement).closest(".column-resize-handle-wrapper") as HTMLElement | null
+      const handleStartLeft = parseFloat(handleEl?.style.left || "0") || left
+
+      const move = (ev: MouseEvent) => {
+        if (!ev.buttons) { finish(ev); return }
         const dx = ev.clientX - startX
-        const delta = dx / containerWidth
-
-        const minWidth = 0.15 // 15% minimum
-        let newLeft = startLeft + delta
-        let newRight = startRight - delta
-        if (newLeft < minWidth) { newLeft = minWidth; newRight = startLeft + startRight - minWidth }
-        if (newRight < minWidth) { newRight = minWidth; newLeft = startLeft + startRight - minWidth }
-
-        widths[leftIdx] = newLeft
-        widths[rightIdx] = newRight
-
-        // Live preview: update CSS grid-template-columns
-        if (nvw) {
-          nvw.style.gridTemplateColumns = widths.map((w) => `${(w * 100).toFixed(1)}%`).join(" ")
+        // Just move the handle visually — NO transactions during drag
+        if (handleEl) {
+          const clampedDx = Math.max(minW - startLeftW, Math.min(totalW - minW - startLeftW, dx))
+          handleEl.style.left = `${handleStartLeft + clampedDx}px`
         }
       }
 
-      const onMouseUp = () => {
+      const finish = (ev: MouseEvent) => {
         dragging.current = false
-        document.removeEventListener("mousemove", onMouseMove)
-        document.removeEventListener("mouseup", onMouseUp)
+        document.removeEventListener("mousemove", move)
+        document.removeEventListener("mouseup", finish)
         document.body.style.cursor = ""
         document.body.style.userSelect = ""
 
-        // Commit widths to node attrs
-        const currentPos = findPos()
-        if (currentPos === null) return
+        const dx = ev.clientX - startX
+        if (Math.abs(dx) < 2) return // allow clicks
+
+        // Calculate final pixel widths
+        const newLeftW = Math.max(minW, Math.min(totalW - minW, startLeftW + dx))
+        const newRightW = totalW - newLeftW
+
+        // Single commit with pixel values (→ fr units in CSS grid)
+        const node = editor.state.doc.nodeAt(columnsPos)
+        if (!node || node.type.name !== "columnsBlock") return
+
         const { tr } = editor.state
-        let offset = 1 // skip opening of columnsBlock
-        const currentColumnsNode = editor.state.doc.nodeAt(currentPos)
-        if (!currentColumnsNode) return
-
-        currentColumnsNode.forEach((child, childOffset, childIndex) => {
-          tr.setNodeMarkup(currentPos + 1 + childOffset, undefined, {
-            ...child.attrs,
-            colWidth: widths[childIndex],
-          })
-        })
-
+        let cellOffset = 0
+        for (let i = 0; i < node.childCount; i++) {
+          const child = node.child(i)
+          const cellPos = columnsPos + 1 + cellOffset
+          if (i === index) {
+            tr.setNodeMarkup(cellPos, undefined, { ...child.attrs, colWidth: Math.round(newLeftW) })
+          } else if (i === index + 1) {
+            tr.setNodeMarkup(cellPos, undefined, { ...child.attrs, colWidth: Math.round(newRightW) })
+          }
+          cellOffset += child.nodeSize
+        }
         editor.view.dispatch(tr)
-
-        // Clear inline style (CSS will use data-col-width via grid)
-        if (nvw) nvw.style.gridTemplateColumns = ""
         onResized?.()
       }
 
       document.body.style.cursor = "col-resize"
       document.body.style.userSelect = "none"
-      document.addEventListener("mousemove", onMouseMove)
-      document.addEventListener("mouseup", onMouseUp)
+      document.addEventListener("mousemove", move)
+      document.addEventListener("mouseup", finish)
     },
-    [editor, findPos, index, node, onResized],
+    [editor, findPos, index, onResized],
   )
 
   return (
@@ -195,7 +187,6 @@ function ColumnsGridWithHandles({
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [handlePositions, setHandlePositions] = useState<number[]>([])
-
   // Measure column-cell boundaries to position resize handles
   useEffect(() => {
     const measure = () => {
@@ -213,9 +204,7 @@ function ColumnsGridWithHandles({
     }
 
     measure()
-    // Re-measure on window resize
     window.addEventListener("resize", measure)
-    // Use MutationObserver for content changes
     const observer = new MutationObserver(measure)
     if (containerRef.current) {
       observer.observe(containerRef.current, { childList: true, subtree: true, attributes: true })
@@ -265,8 +254,11 @@ function ColumnsGridWithHandles({
  * Columns Block Node View
  * -------------------------------------------------------------- */
 
-function ColumnsNodeView({ node, editor }: NodeViewProps) {
+function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
   const columnCount = node.childCount
+  const width = node.attrs.width as number | null
+  const height = node.attrs.height as number | null
+  const { containerRef: resizeRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
 
   const findPos = useCallback((): number | null => {
     let found: number | null = null
@@ -342,13 +334,18 @@ function ColumnsNodeView({ node, editor }: NodeViewProps) {
     editor.view.dispatch(tr)
   }
 
-  // Build grid-template-columns from colWidth attrs
+  // Build grid-template-columns from colWidth attrs (pixel values)
   const gridTemplate = (() => {
     const widths: string[] = []
     let hasCustom = false
     node.forEach((child) => {
       const w = child.attrs.colWidth as number | null
-      if (w !== null) {
+      if (w !== null && w > 1) {
+        // Pixel value — convert to fr proportionally for responsive layout
+        hasCustom = true
+        widths.push(`${w}fr`)
+      } else if (w !== null && w > 0 && w <= 1) {
+        // Legacy fraction value — convert to percentage
         hasCustom = true
         widths.push(`${(w * 100).toFixed(1)}%`)
       } else {
@@ -360,7 +357,15 @@ function ColumnsNodeView({ node, editor }: NodeViewProps) {
 
   return (
     <NodeViewWrapper>
-      <div className="not-draggable my-2 relative group/columns">
+      <div
+        ref={resizeRef}
+        className={`not-draggable my-2 relative group/columns block-resize-wrapper ${isResizing ? "is-resizing" : ""}`}
+        style={{
+          ...(width ? { width: `${width}px` } : {}),
+          ...(height ? { height: `${height}px`, overflowY: "auto" as const } : {}),
+        }}
+      >
+        {editor?.isEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
         {/* Header — visible on hover */}
         <div
           className="flex items-center justify-between px-1 py-1 opacity-0 group-hover/columns:opacity-100 transition-opacity"
@@ -391,6 +396,16 @@ function ColumnsNodeView({ node, editor }: NodeViewProps) {
             >
               <PhPlus size={12} weight="bold" />
             </button>
+            {(width || height) && (
+              <button
+                type="button"
+                onClick={() => updateAttributes({ width: null, height: null })}
+                className="rounded p-0.5 text-muted-foreground/40 hover:text-foreground hover:bg-hover-bg transition-colors"
+                title="Reset size"
+              >
+                <ArrowsIn size={12} weight="bold" />
+              </button>
+            )}
             <button
               type="button"
               onClick={removeColumns}
@@ -422,6 +437,27 @@ export const ColumnsBlockNode = Node.create({
   defining: true,
   selectable: true,
   draggable: true,
+
+  addAttributes() {
+    return {
+      width: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const w = el.getAttribute("data-width")
+          return w ? parseInt(w, 10) : null
+        },
+        renderHTML: (attrs: Record<string, any>) => attrs.width ? { "data-width": attrs.width } : {},
+      },
+      height: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const h = el.getAttribute("data-height")
+          return h ? parseInt(h, 10) : null
+        },
+        renderHTML: (attrs: Record<string, any>) => attrs.height ? { "data-height": attrs.height } : {},
+      },
+    }
+  },
 
   parseHTML() {
     return [{ tag: 'div[data-type="columns-block"]' }]

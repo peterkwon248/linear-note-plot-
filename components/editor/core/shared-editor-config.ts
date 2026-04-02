@@ -25,6 +25,7 @@ import { TableCell } from "@tiptap/extension-table-cell"
 import { TableHeader } from "@tiptap/extension-table-header"
 import Typography from "@tiptap/extension-typography"
 import Dropcursor from "@tiptap/extension-dropcursor"
+import Gapcursor from "@tiptap/extension-gapcursor"
 import CharacterCount from "@tiptap/extension-character-count"
 import FontFamily from "@tiptap/extension-font-family"
 import Youtube from "@tiptap/extension-youtube"
@@ -69,6 +70,57 @@ import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
 import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
 import { AnchorDividerNode } from "@/components/editor/nodes/anchor-divider-node"
 import { QueryBlockNode } from "@/components/editor/nodes/query-node"
+import { handleMentionClick } from "@/lib/note-reference-actions"
+import { showNotePreviewById, hideNotePreview } from "@/components/editor/note-hover-preview"
+
+// ── Mention Interaction Extension ────────────────────────────────────
+// Adds hover preview + click (Peek) + Ctrl+click (navigate) to @mentions.
+// Uses DOM event delegation on the editor view.
+
+const MentionInteractionExtension = Extension.create({
+  name: "mentionInteraction",
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey("mentionInteraction"),
+        props: {
+          handleDOMEvents: {
+            mouseover(_view, event) {
+              const target = (event.target as HTMLElement).closest(".mention") as HTMLElement | null
+              if (!target) return false
+
+              const id = target.getAttribute("data-id")
+              if (!id) return false
+
+              // Skip tags (they start with # or don't resolve to notes)
+              showNotePreviewById(target, id)
+              return false
+            },
+
+            mouseout(_view, event) {
+              const target = (event.target as HTMLElement).closest(".mention") as HTMLElement | null
+              if (!target) return false
+              hideNotePreview()
+              return false
+            },
+
+            click(_view, event) {
+              const target = (event.target as HTMLElement).closest(".mention") as HTMLElement | null
+              if (!target) return false
+
+              const id = target.getAttribute("data-id")
+              if (!id) return false
+
+              handleMentionClick(id, event)
+              return true // prevent default
+            },
+          },
+        },
+      }),
+    ]
+  },
+})
 
 // ── Lowlight (syntax highlighting for code blocks) ──────────────────
 const lowlight = createLowlight(common)
@@ -222,6 +274,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     CodeBlockLowlight.configure({ lowlight }),
     Typography,
     Dropcursor.configure({ color: "transparent", width: 40, class: "drop-cursor" }),
+    Gapcursor,
     CharacterCount,
     FontFamily,
     Youtube.configure({ inline: false, allowFullscreen: true, HTMLAttributes: { class: "youtube-embed" } }),
@@ -344,6 +397,7 @@ export function createEditorExtensions(
           HTMLAttributes: { class: 'mention' },
           suggestion: mentionSuggestionConfig,
         }) as Extension,
+        MentionInteractionExtension as Extension,
         Emoji as Extension,
       )
       // File drag-and-drop handler

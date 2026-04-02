@@ -308,9 +308,8 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
           <div className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col">
             {/* Infobox moved to WikiArticle view — disabled in note editor */}
             <div
-              className="min-w-0 w-full flex-1 flex flex-col mx-auto"
+              className="min-w-0 w-full flex-1 flex flex-col"
               style={{
-                maxWidth: "var(--editor-max-width)",
                 paddingLeft: "var(--editor-padding-x)",
                 paddingRight: "var(--editor-padding-x)",
                 paddingTop: "var(--editor-padding-y)",

@@ -85,6 +85,10 @@ function BlockMenu({
   const pos = block.docPos
   const size = block.nodeSize
 
+  // Check if the block is an atom node (e.g. noteEmbed, image) — Turn Into doesn't apply
+  const nodeAtPos = editor.state.doc.nodeAt(pos)
+  const isAtomNode = nodeAtPos?.type.isAtom ?? false
+
   const execAndClose = (fn: () => void) => {
     // Execute action first, THEN close menu (setTimeout ensures state doesn't unmount mid-action)
     try { fn() } catch (e) { console.error("[BlockMenu]", e) }
@@ -207,31 +211,33 @@ function BlockMenu({
         boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
       }}
     >
-      {/* Turn Into */}
-      <div style={{ position: "relative" }}>
-        <button
-          type="button"
-          className={menuItemCls}
-          onMouseEnter={() => setSubMenu("turnInto")}
-          onClick={() => setSubMenu(subMenu === "turnInto" ? null : "turnInto")}
-        >
-          <ArrowsClockwise size={14} /> <span style={{ flex: 1 }}>Turn Into</span> <CaretRight size={12} />
-        </button>
-        {subMenu === "turnInto" && (
-          <div style={{
-            position: "absolute", left: "100%", top: 0, marginLeft: 4, zIndex: 10000,
-            background: "var(--surface-overlay, hsl(var(--popover)))", borderRadius: 8,
-            border: "1px solid hsl(var(--border))", padding: 4, minWidth: 160,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.5)", maxHeight: 300, overflowY: "auto",
-          }}>
-            {turnIntoItems.map((item) => (
-              <button key={item.label} type="button" className={menuItemCls} onClick={item.action}>
-                {item.icon} {item.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Turn Into — hidden for atom nodes (noteEmbed, image, etc.) */}
+      {!isAtomNode && (
+        <div style={{ position: "relative" }}>
+          <button
+            type="button"
+            className={menuItemCls}
+            onMouseEnter={() => setSubMenu("turnInto")}
+            onClick={() => setSubMenu(subMenu === "turnInto" ? null : "turnInto")}
+          >
+            <ArrowsClockwise size={14} /> <span style={{ flex: 1 }}>Turn Into</span> <CaretRight size={12} />
+          </button>
+          {subMenu === "turnInto" && (
+            <div style={{
+              position: "absolute", left: "100%", top: 0, marginLeft: 4, zIndex: 10000,
+              background: "var(--surface-overlay, hsl(var(--popover)))", borderRadius: 8,
+              border: "1px solid hsl(var(--border))", padding: 4, minWidth: 160,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.5)", maxHeight: 300, overflowY: "auto",
+            }}>
+              {turnIntoItems.map((item) => (
+                <button key={item.label} type="button" className={menuItemCls} onClick={item.action}>
+                  {item.icon} {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Insert Below */}
       <div style={{ position: "relative" }}>
@@ -545,13 +551,64 @@ export function BlockDragOverlay({
     if (editor) editor.commands.blur()
   }, [editor])
 
-  // Side-drop disabled — columns are created via Insert menu only.
-  // Drag reorder remains fully functional.
+  // Side-drop: detect left/right 15% zones during drag to create columns
   const handleDragMove = useCallback(
-    (_event: DragMoveEvent) => {
-      setSideDropState(null)
+    (event: DragMoveEvent) => {
+      if (!containerRef.current || !editor) {
+        setSideDropState(null)
+        return
+      }
+
+      const pointer = (event.activatorEvent as PointerEvent)
+      if (!pointer) { setSideDropState(null); return }
+
+      // Use current pointer position from the delta
+      const pointerX = pointer.clientX + (event.delta?.x ?? 0)
+      const pointerY = pointer.clientY + (event.delta?.y ?? 0)
+
+      // Find which block the pointer is over (vertically)
+      let targetBlock: BlockPosition | null = null
+      for (const block of blocks) {
+        if (block.id === activeId) continue // skip self
+        const rect = getBlockDomRect(editor, block.docPos)
+        if (!rect) continue
+        if (pointerY >= rect.top && pointerY <= rect.bottom) {
+          targetBlock = block
+          break
+        }
+      }
+
+      if (!targetBlock) {
+        setSideDropState(null)
+        return
+      }
+
+      const rect = getBlockDomRect(editor, targetBlock.docPos)
+      if (!rect) { setSideDropState(null); return }
+
+      const targetNode = editor.state.doc.nodeAt(targetBlock.docPos)
+
+      // For columnsBlock: left/right half picks which column cell to insert into
+      if (targetNode?.type.name === "columnsBlock") {
+        const relXCol = pointerX - rect.left
+        const side = relXCol < rect.width / 2 ? "left" : "right"
+        setSideDropState({ blockId: targetBlock.id, side })
+        return
+      }
+
+      // For regular blocks: 15% edge zones trigger column creation
+      const threshold = rect.width * 0.15
+      const relX = pointerX - rect.left
+
+      if (relX < threshold) {
+        setSideDropState({ blockId: targetBlock.id, side: "left" })
+      } else if (relX > rect.width - threshold) {
+        setSideDropState({ blockId: targetBlock.id, side: "right" })
+      } else {
+        setSideDropState(null)
+      }
     },
-    []
+    [blocks, editor, activeId]
   )
 
   const handleDragEnd = useCallback(
