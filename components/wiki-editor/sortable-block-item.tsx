@@ -4,6 +4,7 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import type { WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
+import type { WikiBlockVariant } from "./wiki-block-renderer"
 
 interface SortableBlockItemProps {
   block: WikiBlock
@@ -20,6 +21,12 @@ interface SortableBlockItemProps {
   onSplitSection?: (blockId: string) => void
   /** Callback to move section to an existing article */
   onMoveToArticle?: (blockId: string, targetArticleId: string) => void
+  /** Layout variant passed through to WikiBlockRenderer */
+  variant?: WikiBlockVariant
+  /** For encyclopedia variant: toggle collapsed state of a section */
+  onToggleCollapse?: () => void
+  /** For encyclopedia variant: whether section is currently collapsed */
+  collapsed?: boolean
 }
 
 export function SortableBlockItem({
@@ -33,6 +40,9 @@ export function SortableBlockItem({
   articleId,
   onSplitSection,
   onMoveToArticle,
+  variant,
+  onToggleCollapse,
+  collapsed,
 }: SortableBlockItemProps) {
   const {
     attributes,
@@ -61,6 +71,9 @@ export function SortableBlockItem({
         articleId={articleId}
         onSplitSection={onSplitSection}
         onMoveToArticle={onMoveToArticle}
+        variant={variant}
+        onToggleCollapse={onToggleCollapse}
+        collapsed={collapsed}
       />
       {editable && onAddBlock && (
         <AddBlockButton onAdd={onAddBlock} nearestSectionLevel={nearestSectionLevel} />

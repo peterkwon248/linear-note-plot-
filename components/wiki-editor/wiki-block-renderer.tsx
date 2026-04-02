@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import type { WikiBlock } from "@/lib/types"
@@ -9,6 +9,7 @@ import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { useWikiBlockContent, useWikiBlockContentJson } from "@/hooks/use-wiki-block-content"
 import { useEditor, EditorContent } from "@tiptap/react"
 import { createEditorExtensions } from "@/components/editor/core/shared-editor-config"
+import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { saveBlockBody } from "@/lib/wiki-block-body-store"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -30,6 +31,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 /* ── Block Renderer ── */
 
+export type WikiBlockVariant = "default" | "encyclopedia"
+
 interface WikiBlockRendererProps {
   block: WikiBlock
   editable?: boolean
@@ -45,12 +48,18 @@ interface WikiBlockRendererProps {
   onSplitSection?: (blockId: string) => void
   /** Callback to move this section to an existing article */
   onMoveToArticle?: (blockId: string, targetArticleId: string) => void
+  /** Layout variant — encyclopedia renders namu-wiki style section headings */
+  variant?: WikiBlockVariant
+  /** Callback to toggle section collapse (encyclopedia only) */
+  onToggleCollapse?: () => void
+  /** Whether this section is collapsed (encyclopedia only) */
+  collapsed?: boolean
 }
 
-export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection, onMoveToArticle }: WikiBlockRendererProps) {
+export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection, onMoveToArticle, variant = "default", onToggleCollapse, collapsed }: WikiBlockRendererProps) {
   switch (block.type) {
     case "section":
-      return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} onSplitSection={onSplitSection} onMoveToArticle={onMoveToArticle} />
+      return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} onSplitSection={onSplitSection} onMoveToArticle={onMoveToArticle} variant={variant} onToggleCollapse={onToggleCollapse} collapsed={collapsed} />
     case "text":
       return <TextBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "note-ref":
@@ -66,15 +75,19 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
 
 /* ── Section Block ── */
 
-function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection, onMoveToArticle }: WikiBlockRendererProps) {
-  const collapsed = block.collapsed ?? false
-  const toggleCollapsed = () => onUpdate?.({ collapsed: !collapsed })
+function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection, onMoveToArticle, variant = "default", onToggleCollapse, collapsed: externalCollapsed }: WikiBlockRendererProps) {
+  const internalCollapsed = block.collapsed ?? false
+  const collapsed = variant === "encyclopedia" ? (externalCollapsed ?? false) : internalCollapsed
+  const toggleCollapsed = variant === "encyclopedia"
+    ? () => onToggleCollapse?.()
+    : () => onUpdate?.({ collapsed: !internalCollapsed })
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(block.title || "")
   const [menuOpen, setMenuOpen] = useState(false)
   const [moveSubmenuOpen, setMoveSubmenuOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const level = block.level ?? 2
+  const fontScale = block.fontSize ?? 1
 
   // Get other articles for "Move to existing article" submenu
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -108,9 +121,14 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
     }
   }, [articleId, block.id, block.mergedFrom])
 
+  const isEnc = variant === "encyclopedia"
+
   return (
     <div className="group/section">
-      <div className="flex items-center gap-1">
+      <div className={cn(
+        "flex items-center gap-1",
+        isEnc && "mt-8 mb-3 border-b border-white/[0.08] pb-1 gap-2",
+      )}>
         {editable && (
           <button
             className="opacity-0 group-hover/section:opacity-30 hover:!opacity-100 p-0.5 text-muted-foreground cursor-grab transition-opacity duration-100"
@@ -130,12 +148,15 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
         </button>
 
         {sectionNumber && (
-          <span className={cn(
-            "shrink-0 font-semibold text-accent/50 tabular-nums",
-            level === 2 && "text-lg",
-            level === 3 && "text-ui",
-            level >= 4 && "text-note",
-          )}>
+          <span
+            className={cn(
+              "shrink-0 font-semibold text-accent/50 tabular-nums",
+              level === 2 && "text-lg",
+              level === 3 && "text-ui",
+              level >= 4 && "text-note",
+            )}
+            style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}
+          >
             {sectionNumber}.
           </span>
         )}
@@ -153,6 +174,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
               level === 3 && "text-ui",
               level >= 4 && "text-note",
             )}
+            style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}
           />
         ) : (
           <div
@@ -164,6 +186,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
               level >= 4 && "text-note",
               editable && "cursor-text hover:text-accent/80 transition-colors duration-100",
             )}
+            style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}
           >
             {block.title || "Untitled Section"}
           </div>
@@ -250,9 +273,36 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                 </>
               )}
 
+              {/* Font size options */}
+              <div className="my-1 h-px bg-border/40" />
+              <div className="px-2.5 py-1.5">
+                <span className="text-2xs text-muted-foreground/50">Size</span>
+                <div className="flex items-center gap-1 mt-1">
+                  {[
+                    { label: "S", value: 0.8 },
+                    { label: "M", value: 1 },
+                    { label: "L", value: 1.2 },
+                    { label: "XL", value: 1.5 },
+                  ].map((opt) => (
+                    <button
+                      key={opt.label}
+                      onClick={() => { onUpdate?.({ fontSize: opt.value === 1 ? undefined : opt.value }); setMenuOpen(false) }}
+                      className={cn(
+                        "flex-1 rounded px-1.5 py-1 text-2xs font-medium transition-colors",
+                        (fontScale === opt.value || (opt.value === 1 && !block.fontSize))
+                          ? "bg-accent/20 text-accent"
+                          : "text-foreground/60 hover:bg-active-bg"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {onDelete && (
                 <>
-                  {(onSplitSection || block.mergedFrom || (onMoveToArticle && otherArticles.length > 0)) && <div className="my-1 h-px bg-border/40" />}
+                  <div className="my-1 h-px bg-border/40" />
                   <button
                     onClick={() => { setMenuOpen(false); onDelete() }}
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
@@ -280,16 +330,12 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
   const { content, contentJson, loading } = useWikiBlockContentJson(block.id, block.content, block.contentJson)
   const [editing, setEditing] = useState(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const blockRef = useRef<HTMLDivElement>(null)
 
   const handleStartEdit = () => {
     if (!editable) return
     setEditing(true)
   }
-
-  // Cleanup
-  const handleStopEdit = useCallback(() => {
-    setEditing(false)
-  }, [])
 
   // Debounced save
   const handleChange = useCallback(
@@ -304,6 +350,17 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
     },
     [block.id, onUpdate]
   )
+
+  // Click-outside to close editor (replaces blur — blur conflicts with drag-and-drop)
+  useEffect(() => {
+    if (!editing) return
+    const handleMouseDown = (e: MouseEvent) => {
+      if (blockRef.current?.contains(e.target as Node)) return
+      setEditing(false)
+    }
+    document.addEventListener("mousedown", handleMouseDown)
+    return () => document.removeEventListener("mousedown", handleMouseDown)
+  }, [editing])
 
   // Build initial content for TipTap
   const initialContent = useMemo(() => {
@@ -324,7 +381,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
   }, [content, contentJson])
 
   return (
-    <div className="group/text relative">
+    <div ref={blockRef} className="group/text relative">
       {editable && (
         <div className="absolute -left-6 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
@@ -343,7 +400,6 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
           key={block.id}
           content={initialContent}
           onChange={handleChange}
-          onBlur={handleStopEdit}
         />
       ) : (
         <div
@@ -366,11 +422,9 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
 function WikiTextEditor({
   content,
   onChange,
-  onBlur,
 }: {
   content: Record<string, unknown>
   onChange: (json: Record<string, unknown>, plainText: string) => void
-  onBlur: () => void
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -386,80 +440,32 @@ function WikiTextEditor({
         e.getText()
       )
     },
-    onBlur: () => {
-      onBlur()
-    },
   })
 
+  // Click on empty area → focus editor (must be before early return to keep hook order stable)
+  const handleContainerClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (target.closest('button, input, [role="menu"]')) return
+    editor?.commands.focus("end")
+  }, [editor])
+
   if (!editor) return null
 
   return (
-    <div className="border border-accent/20 rounded-md focus-within:border-accent/40 transition-colors">
+    <div
+      onClick={handleContainerClick}
+      className="border border-accent/20 rounded-md focus-within:border-accent/40 transition-colors cursor-text"
+    >
       <EditorContent
         editor={editor}
-        className="w-full prose prose-sm dark:prose-invert max-w-none focus:outline-none text-note leading-relaxed text-foreground/85 px-3 py-2"
+        className="w-full prose prose-sm dark:prose-invert max-w-none focus:outline-none text-note leading-relaxed text-foreground/85 px-3 py-2 min-h-[120px]"
       />
-      {/* Bottom fixed toolbar */}
-      <WikiTextToolbar editor={editor} />
+      {/* Full toolbar shared with note editor */}
+      <FixedToolbar editor={editor} tier="wiki" position="bottom" />
     </div>
   )
 }
 
-/** Bottom toolbar for wiki TextBlock TipTap editor */
-function WikiTextToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
-  if (!editor) return null
-
-  const Btn = ({ active, onMouseDown, children }: { active: boolean; onMouseDown: (e: React.MouseEvent) => void; children: React.ReactNode }) => (
-    <button
-      type="button"
-      onMouseDown={(e) => { e.preventDefault(); onMouseDown(e) }}
-      className={cn(
-        "flex items-center justify-center rounded w-8 h-8 text-xs transition-colors",
-        active ? "bg-accent/20 text-accent" : "text-foreground/50 hover:text-foreground/80 hover:bg-hover-bg"
-      )}
-    >
-      {children}
-    </button>
-  )
-
-  return (
-    <div className="flex items-center gap-0.5 border-t border-accent/10 px-2 py-1 bg-white/[0.02]">
-      <Btn active={editor.isActive("bold")} onMouseDown={() => editor.chain().focus().toggleBold().run()}>
-        <span className="font-bold text-sm">B</span>
-      </Btn>
-      <Btn active={editor.isActive("italic")} onMouseDown={() => editor.chain().focus().toggleItalic().run()}>
-        <span className="italic text-sm">I</span>
-      </Btn>
-      <Btn active={editor.isActive("strike")} onMouseDown={() => editor.chain().focus().toggleStrike().run()}>
-        <span className="line-through text-sm">S</span>
-      </Btn>
-      <Btn active={editor.isActive("code")} onMouseDown={() => editor.chain().focus().toggleCode().run()}>
-        <span className="font-mono text-xs">{`</>`}</span>
-      </Btn>
-
-      <div className="w-px h-5 bg-white/[0.08] mx-1" />
-
-      <Btn active={editor.isActive("heading", { level: 2 })} onMouseDown={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-        <span className="font-bold text-xs">H2</span>
-      </Btn>
-      <Btn active={editor.isActive("heading", { level: 3 })} onMouseDown={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
-        <span className="font-bold text-xs">H3</span>
-      </Btn>
-
-      <div className="w-px h-5 bg-white/[0.08] mx-1" />
-
-      <Btn active={editor.isActive("bulletList")} onMouseDown={() => editor.chain().focus().toggleBulletList().run()}>
-        <span className="text-sm">•≡</span>
-      </Btn>
-      <Btn active={editor.isActive("orderedList")} onMouseDown={() => editor.chain().focus().toggleOrderedList().run()}>
-        <span className="text-xs">1.</span>
-      </Btn>
-      <Btn active={editor.isActive("blockquote")} onMouseDown={() => editor.chain().focus().toggleBlockquote().run()}>
-        <span className="text-sm">&ldquo;</span>
-      </Btn>
-    </div>
-  )
-}
 
 /* ── Note Reference Block ── */
 

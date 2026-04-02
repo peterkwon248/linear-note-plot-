@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-86. Design Spine 8-Phase 전부 완료 (hover/typography/editor CSS변수/max-width/radius/grid/colors/transitions)
-87. 노트참조 통합 인터랙션 (호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동) + Synced Block (NoteEmbed Sync 토글)
-88. 블록 리사이즈 (8종 코너+엣지 핸들, width/height 조절) + Side-drop 컬럼 복원 + Move out of Column 우클릭 + Gapcursor + Turn Into atom 숨김 + 컬럼 구분선 드래그
-89. 위키 TextBlock TipTap 전환 + Encyclopedia 편집 버그 수정 — textarea→TipTap 리치텍스트 에디터, contentJson 필드, IDB body JSON, Encyclopedia editable 전달 수정
-90. Encyclopedia 폴리싱 — Contents 드래그 리사이즈, 폰트 크기 업(섹션 헤딩/Contents 항목), 하단 고정 미니 툴바 (B/I/S/Code/H2/H3/List/Quote)
+88. 블록 리사이즈 + Side-drop 컬럼 복원 + Move out of Column + Gapcursor + 컬럼 구분선 드래그
+89. 위키 TextBlock TipTap 전환 + Encyclopedia 편집 버그 수정
+90. Encyclopedia 폴리싱 — Contents 드래그 리사이즈, 폰트 크기 업, 하단 미니 툴바
+91. Phase 2A 위키 FixedToolbar — wiki tier 확장(SlashCommand/Callout/Columns 등), 미니 8버튼→풀 42아이템 FixedToolbar, click-outside blur 패턴
+92. Encyclopedia 편집 통일 — DndContext+SortableBlockItem 전면 리팩토링, 인포박스 WikiInfobox 교체, 섹션 fontSize S/M/L/XL, Contents 대각선 리사이즈+fontScale
 
 ## Two Axes — Core Design Philosophy
 

@@ -72,7 +72,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
         updateNote(noteId, {
           content: plainText,
           contentJson: json,
-          updatedAt: Date.now(),
+          updatedAt: new Date().toISOString(),
         })
       }, 300)
     },

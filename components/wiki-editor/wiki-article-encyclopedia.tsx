@@ -3,11 +3,29 @@
 import { useState, useMemo, useCallback, useRef } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock, WikiSectionIndex } from "@/lib/types"
-import { WikiBlockRenderer } from "./wiki-block-renderer"
-import { useWikiBlockContent } from "@/hooks/use-wiki-block-content"
+import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
+import { SortableBlockItem } from "./sortable-block-item"
+import { ArticleCategories } from "./wiki-article-view"
+import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { cn } from "@/lib/utils"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { toast } from "sonner"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable"
 
 /* ── Section number computation (reused from wiki-article-view) ── */
 
@@ -40,7 +58,32 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState<number | null>(null)
 
+  // Base width for font scaling (default 300px = scale 1.0)
+  const BASE_WIDTH = 300
+  const fontScale = width ? Math.max(0.75, Math.min(1.5, width / BASE_WIDTH)) : 1
+
+  // Right-edge resize (width only)
   const handleResizeStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault()
+    const el = containerRef.current
+    if (!el) return
+    const startX = e.clientX
+    const startW = el.offsetWidth
+
+    const onMove = (ev: PointerEvent) => {
+      const newW = Math.max(180, Math.min(600, startW + ev.clientX - startX))
+      setWidth(newW)
+    }
+    const onUp = () => {
+      document.removeEventListener("pointermove", onMove)
+      document.removeEventListener("pointerup", onUp)
+    }
+    document.addEventListener("pointermove", onMove)
+    document.addEventListener("pointerup", onUp)
+  }, [])
+
+  // Corner resize (diagonal — width + font scale)
+  const handleCornerResizeStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault()
     const el = containerRef.current
     if (!el) return
@@ -71,7 +114,7 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 px-4 py-3 w-full text-left"
       >
-        <span className="text-sm font-bold text-white/80">Contents</span>
+        <span className="font-bold text-white/80" style={{ fontSize: `${fontScale}rem` }}>Contents</span>
         <CaretDown
           size={14}
           weight="bold"
@@ -92,12 +135,13 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
               >
                 <button
                   onClick={() => {
-                    document.getElementById(`enc-block-${s.id}`)?.scrollIntoView({
+                    document.getElementById(`wiki-block-${s.id}`)?.scrollIntoView({
                       behavior: "smooth",
                       block: "start",
                     })
                   }}
-                  className="text-sm text-accent/70 hover:text-accent transition-colors"
+                  className="text-accent/70 hover:text-accent transition-colors"
+                  style={{ fontSize: `${Math.max(11, fontScale * 13)}px` }}
                 >
                   {num}. {s.title}
                 </button>
@@ -106,72 +150,22 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
           })}
         </div>
       )}
-      {/* Resize handle */}
+      {/* Right-edge resize handle (width only) */}
       <div
         onPointerDown={handleResizeStart}
-        className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize group hover:bg-accent/20 rounded-r-lg transition-colors"
+        className="absolute right-0 top-0 bottom-4 w-1.5 cursor-col-resize group hover:bg-accent/20 rounded-r-lg transition-colors"
       >
         <div className="absolute right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full bg-white/10 group-hover:bg-accent/50 transition-colors" />
       </div>
-    </div>
-  )
-}
-
-/* ── Encyclopedia Block — section headings with namu-wiki styling ── */
-
-function EncyclopediaSectionHeading({
-  block,
-  sectionNumber,
-  collapsed,
-  onToggle,
-}: {
-  block: WikiBlock
-  sectionNumber: string
-  collapsed: boolean
-  onToggle: () => void
-}) {
-  const level = block.level ?? 2
-  return (
-    <div
-      id={`enc-block-${block.id}`}
-      className="mt-8 mb-3 border-b border-white/[0.08] pb-1 flex items-center gap-2"
-    >
-      <button
-        onClick={onToggle}
-        className="p-0.5 text-white/40 hover:text-white/70 transition-colors"
+      {/* Corner resize handle (diagonal — scales font) */}
+      <div
+        onPointerDown={handleCornerResizeStart}
+        className="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize group hover:bg-accent/20 rounded-br-lg transition-colors"
       >
-        {collapsed
-          ? <CaretRight size={14} weight="bold" />
-          : <CaretDown size={14} weight="bold" />
-        }
-      </button>
-      {level === 2 ? (
-        <h2 className="text-xl font-bold text-white/90">
-          {sectionNumber}. {block.title || "Untitled Section"}
-        </h2>
-      ) : level === 3 ? (
-        <h3 className="text-base font-bold text-white/80">
-          {sectionNumber}. {block.title || "Untitled Section"}
-        </h3>
-      ) : (
-        <h4 className="text-sm font-bold text-white/70">
-          {sectionNumber}. {block.title || "Untitled Section"}
-        </h4>
-      )}
-    </div>
-  )
-}
-
-/* ── Block renderer for encyclopedia layout ── */
-
-function EncyclopediaContentBlock({ block, editable }: { block: WikiBlock; editable: boolean }) {
-  const isImage = block.type === "image"
-  return (
-    <div
-      id={`enc-block-${block.id}`}
-      className={isImage ? "max-h-[400px] overflow-hidden" : undefined}
-    >
-      <WikiBlockRenderer block={block} editable={editable} />
+        <svg className="absolute right-1 bottom-1 text-white/15 group-hover:text-accent/50 transition-colors" width="6" height="6" viewBox="0 0 6 6">
+          <path d="M6 0L6 6L0 6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+      </div>
     </div>
   )
 }
@@ -185,8 +179,11 @@ interface WikiArticleEncyclopediaProps {
 }
 
 export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArticleEncyclopediaProps) {
-  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
+  const removeWikiBlock = usePlotStore((s) => s.removeWikiBlock)
   const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
+  const reorderWikiBlocks = usePlotStore((s) => s.reorderWikiBlocks)
+  const splitWikiArticle = usePlotStore((s) => s.splitWikiArticle)
 
   // Section numbers
   const sectionNumbers = useMemo(
@@ -194,13 +191,109 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArti
     [article.blocks]
   )
 
-  // Category names from IDs
-  const categoryNames = useMemo(() => {
-    const ids = article.categoryIds ?? []
-    return ids
-      .map((id) => wikiCategories.find((c) => c.id === id)?.name)
-      .filter(Boolean) as string[]
-  }, [article.categoryIds, wikiCategories])
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  )
+
+  // Add / delete blocks
+  const handleAddBlock = useCallback((type: WikiBlock["type"], afterBlockId?: string, level?: number) => {
+    if (type === "url") {
+      const url = window.prompt("Enter URL:")
+      if (!url) return
+      addWikiBlock(article.id, { type: "url", url, urlTitle: "" }, afterBlockId)
+      return
+    }
+    const block: Omit<WikiBlock, "id"> = { type }
+    if (type === "section") { block.title = ""; block.level = level ?? 2 }
+    if (type === "text") { block.content = "" }
+    addWikiBlock(article.id, block, afterBlockId)
+  }, [article.id, addWikiBlock])
+
+  const handleDeleteBlock = useCallback((blockId: string) => {
+    removeWikiBlock(article.id, blockId)
+  }, [article.id, removeWikiBlock])
+
+  // Split section to new article
+  const handleSplitSection = useCallback((sectionBlockId: string) => {
+    const blocks = article.blocks
+    const sectionIdx = blocks.findIndex((b) => b.id === sectionBlockId)
+    if (sectionIdx === -1) return
+
+    const sectionBlock = blocks[sectionIdx]
+    const sectionLevel = sectionBlock.level ?? 2
+
+    const blockIds: string[] = [sectionBlockId]
+    for (let i = sectionIdx + 1; i < blocks.length; i++) {
+      const b = blocks[i]
+      if (b.type === "section" && (b.level ?? 2) <= sectionLevel) break
+      blockIds.push(b.id)
+    }
+
+    const title = sectionBlock.title || "Untitled Section"
+    const newId = splitWikiArticle(article.id, blockIds, title)
+    if (newId) {
+      toast.success(`Moved "${title}" to new article`)
+      navigateToWikiArticle(newId)
+    }
+  }, [article, splitWikiArticle])
+
+  // Move section to existing article
+  const handleMoveToArticle = useCallback((sectionBlockId: string, targetArticleId: string) => {
+    const blocks = article.blocks
+    const sectionIdx = blocks.findIndex((b) => b.id === sectionBlockId)
+    if (sectionIdx === -1) return
+
+    const sectionBlock = blocks[sectionIdx]
+    const sectionLevel = sectionBlock.level ?? 2
+
+    const blockIds: string[] = [sectionBlockId]
+    if (sectionBlock.type === "section") {
+      for (let i = sectionIdx + 1; i < blocks.length; i++) {
+        const b = blocks[i]
+        if (b.type === "section" && (b.level ?? 2) <= sectionLevel) break
+        blockIds.push(b.id)
+      }
+    }
+
+    const store = usePlotStore.getState()
+    const targetArticle = store.wikiArticles.find((a) => a.id === targetArticleId)
+    if (!targetArticle) return
+
+    const blocksToMove = blocks.filter((b) => blockIds.includes(b.id))
+    const remainingBlocks = blocks.filter((b) => !blockIds.includes(b.id))
+
+    store.updateWikiArticle(targetArticleId, {
+      blocks: [...targetArticle.blocks, ...blocksToMove],
+    })
+    store.updateWikiArticle(article.id, {
+      blocks: remainingBlocks,
+    })
+
+    toast.success(`Moved ${blockIds.length} block(s) to "${targetArticle.title}"`)
+  }, [article])
+
+  // DnD handlers — simplified (reorder only, no split/move-to-article via drag)
+  const handleDragStart = useCallback((_event: DragStartEvent) => {
+    // reserved for future drag state if needed
+  }, [])
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = article.blocks.findIndex((b) => b.id === active.id)
+    const newIndex = article.blocks.findIndex((b) => b.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const newOrder = arrayMove(
+      article.blocks.map((b) => b.id),
+      oldIndex,
+      newIndex
+    )
+    reorderWikiBlocks(article.id, newOrder)
+  }, [article, reorderWikiBlocks])
 
   // Collapse state: track collapsed sections locally (not persisted in encyclopedia view)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
@@ -238,20 +331,14 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArti
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {/* Category tag row */}
-      {categoryNames.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 px-10 pt-4 pb-2">
-          <span className="text-2xs text-white/40">분류:</span>
-          {categoryNames.map((name) => (
-            <span
-              key={name}
-              className="text-2xs text-accent/70 hover:text-accent cursor-pointer transition-colors"
-            >
-              {name}
-            </span>
-          ))}
-        </div>
-      )}
+      {/* Category tag row — editable when isEditing */}
+      <div className="px-10 pt-4 pb-2">
+        <ArticleCategories
+          articleId={article.id}
+          categoryIds={article.categoryIds ?? []}
+          editable={isEditing}
+        />
+      </div>
 
       {/* Title */}
       <div className="px-10 pt-2 pb-4">
@@ -265,26 +352,14 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArti
 
       {/* Main content area */}
       <div className="px-10 pb-8">
-        {/* Infobox (float right) */}
-        {article.infobox.length > 0 && (
-          <div className="float-right ml-6 mb-4 w-[320px] rounded-lg border border-white/[0.08] bg-white/[0.02] overflow-hidden">
-            <div className="bg-accent/20 px-4 py-2 text-center">
-              <h3 className="text-ui font-bold text-white/90">{article.title}</h3>
-            </div>
-            <table className="w-full">
-              <tbody>
-                {article.infobox.map((entry) => (
-                  <tr key={entry.key} className="border-t border-white/[0.06]">
-                    <td className="px-3 py-2 text-2xs font-medium text-white/50 w-[100px] text-right align-top">
-                      {entry.key}
-                    </td>
-                    <td className="px-3 py-2 text-note text-white/80">
-                      {entry.value}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Infobox (float right) — editable when isEditing */}
+        {(article.infobox.length > 0 || isEditing) && (
+          <div className="float-right ml-6 mb-4 w-[320px]">
+            <WikiInfobox
+              noteId={article.id}
+              entries={article.infobox}
+              editable={isEditing}
+            />
           </div>
         )}
 
@@ -295,23 +370,61 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArti
         />
 
         {/* Block rendering */}
-        {visibleBlocks.map((block) => {
-          if (block.type === "section") {
-            const num = sectionNumbers.get(block.id) ?? ""
+        {isEditing ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={visibleBlocks.map((b) => b.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {visibleBlocks.map((block) => {
+                const num = block.type === "section" ? sectionNumbers.get(block.id) : undefined
+                return (
+                  <SortableBlockItem
+                    key={block.id}
+                    block={block}
+                    editable={true}
+                    sectionNumber={num}
+                    articleId={article.id}
+                    onUpdate={(patch) => updateWikiBlock(article.id, block.id, patch)}
+                    onDelete={() => handleDeleteBlock(block.id)}
+                    onSplitSection={handleSplitSection}
+                    onMoveToArticle={handleMoveToArticle}
+                    onAddBlock={(type, level) => handleAddBlock(type, block.id, level)}
+                    variant="encyclopedia"
+                    onToggleCollapse={() => toggleSection(block.id)}
+                    collapsed={collapsedSections.has(block.id)}
+                  />
+                )
+              })}
+            </SortableContext>
+          </DndContext>
+        ) : (
+          visibleBlocks.map((block) => {
+            const num = block.type === "section" ? sectionNumbers.get(block.id) : undefined
             return (
-              <EncyclopediaSectionHeading
+              <WikiBlockRenderer
                 key={block.id}
                 block={block}
+                editable={false}
                 sectionNumber={num}
+                variant="encyclopedia"
+                onToggleCollapse={() => toggleSection(block.id)}
                 collapsed={collapsedSections.has(block.id)}
-                onToggle={() => toggleSection(block.id)}
               />
             )
-          }
-          return <EncyclopediaContentBlock key={block.id} block={block} editable={isEditing} />
-        })}
+          })
+        )}
 
-        {article.blocks.length === 0 && (
+        {/* Add block at end when editing */}
+        {isEditing && <AddBlockButton onAdd={(type) => handleAddBlock(type)} />}
+
+        {/* Empty state */}
+        {article.blocks.length === 0 && !isEditing && (
           <p className="py-8 text-center text-note text-white/40">
             This article has no content yet.
           </p>
