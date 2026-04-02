@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useRef } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock, WikiSectionIndex } from "@/lib/types"
 import { WikiBlockRenderer } from "./wiki-block-renderer"
@@ -37,15 +37,41 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
   sectionNumbers: Map<string, string>
 }) {
   const [open, setOpen] = useState(true)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState<number | null>(null)
+
+  const handleResizeStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault()
+    const el = containerRef.current
+    if (!el) return
+    const startX = e.clientX
+    const startW = el.offsetWidth
+
+    const onMove = (ev: PointerEvent) => {
+      const newW = Math.max(180, Math.min(600, startW + ev.clientX - startX))
+      setWidth(newW)
+    }
+    const onUp = () => {
+      document.removeEventListener("pointermove", onMove)
+      document.removeEventListener("pointerup", onUp)
+    }
+    document.addEventListener("pointermove", onMove)
+    document.addEventListener("pointerup", onUp)
+  }, [])
+
   if (sections.length === 0) return null
 
   return (
-    <div className="mb-6 rounded-lg border border-white/[0.08] bg-white/[0.02] inline-block min-w-[200px] max-w-[400px]">
+    <div
+      ref={containerRef}
+      className="mb-6 rounded-lg border border-white/[0.08] bg-white/[0.02] inline-block min-w-[180px] relative"
+      style={width ? { width } : { maxWidth: 400 }}
+    >
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-4 py-2.5 w-full text-left"
+        className="flex items-center gap-2 px-4 py-3 w-full text-left"
       >
-        <span className="text-note font-bold text-white/80">Contents</span>
+        <span className="text-sm font-bold text-white/80">Contents</span>
         <CaretDown
           size={14}
           weight="bold"
@@ -56,7 +82,7 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
         />
       </button>
       {open && (
-        <div className="px-4 pb-3 space-y-0.5">
+        <div className="px-4 pb-3.5 space-y-1">
           {sections.map((s) => {
             const num = sectionNumbers.get(s.id) ?? ""
             return (
@@ -71,7 +97,7 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
                       block: "start",
                     })
                   }}
-                  className="text-note text-accent/70 hover:text-accent transition-colors"
+                  className="text-sm text-accent/70 hover:text-accent transition-colors"
                 >
                   {num}. {s.title}
                 </button>
@@ -80,6 +106,13 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
           })}
         </div>
       )}
+      {/* Resize handle */}
+      <div
+        onPointerDown={handleResizeStart}
+        className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize group hover:bg-accent/20 rounded-r-lg transition-colors"
+      >
+        <div className="absolute right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full bg-white/10 group-hover:bg-accent/50 transition-colors" />
+      </div>
     </div>
   )
 }
@@ -113,15 +146,15 @@ function EncyclopediaSectionHeading({
         }
       </button>
       {level === 2 ? (
-        <h2 className="text-lg font-bold text-white/90">
+        <h2 className="text-xl font-bold text-white/90">
           {sectionNumber}. {block.title || "Untitled Section"}
         </h2>
       ) : level === 3 ? (
-        <h3 className="text-note font-bold text-white/80">
+        <h3 className="text-base font-bold text-white/80">
           {sectionNumber}. {block.title || "Untitled Section"}
         </h3>
       ) : (
-        <h4 className="text-2xs font-bold text-white/70">
+        <h4 className="text-sm font-bold text-white/70">
           {sectionNumber}. {block.title || "Untitled Section"}
         </h4>
       )}
