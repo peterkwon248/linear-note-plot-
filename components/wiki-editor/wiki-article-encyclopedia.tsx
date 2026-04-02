@@ -129,17 +129,16 @@ function EncyclopediaSectionHeading({
   )
 }
 
-/* ── Read-only block renderer for encyclopedia layout ── */
+/* ── Block renderer for encyclopedia layout ── */
 
-function EncyclopediaContentBlock({ block }: { block: WikiBlock }) {
-  // Delegate to existing WikiBlockRenderer in read-only mode
+function EncyclopediaContentBlock({ block, editable }: { block: WikiBlock; editable: boolean }) {
   const isImage = block.type === "image"
   return (
     <div
       id={`enc-block-${block.id}`}
       className={isImage ? "max-h-[400px] overflow-hidden" : undefined}
     >
-      <WikiBlockRenderer block={block} editable={false} />
+      <WikiBlockRenderer block={block} editable={editable} />
     </div>
   )
 }
@@ -276,7 +275,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack }: WikiArti
               />
             )
           }
-          return <EncyclopediaContentBlock key={block.id} block={block} />
+          return <EncyclopediaContentBlock key={block.id} block={block} editable={isEditing} />
         })}
 
         {article.blocks.length === 0 && (

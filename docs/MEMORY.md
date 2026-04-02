@@ -190,6 +190,14 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - 에디터 max-width 제거 (text-align left/right 정확하게 동작)
   - onOpenChange로 컨텍스트 메뉴 selection 캡처 수정
 
+- **PR #142 (WIP)**: 위키 TextBlock TipTap 전환 + Encyclopedia 편집 버그 수정
+  - TextBlock: textarea → lazy-mount TipTap 에디터 (wiki tier = base extensions)
+  - WikiBlock.contentJson 필드 추가 (TipTap JSON, content는 plaintext fallback)
+  - WikiBlockBody.contentJson IDB 저장 지원
+  - `useWikiBlockContentJson` 훅 신규 (IDB에서 content + contentJson 로드)
+  - debounce 300ms 저장 (IDB + store 동시)
+  - Encyclopedia 레이아웃 editable 버그 수정: EncyclopediaContentBlock에 isEditing prop 전달
+
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
 **사상**: 팔란티어 × 제텔카스텐. Layer 1(Raw Data) → Layer 2(Ontology) → Layer 3(Wiki) → Layer 4(Insights). LLM/API 사용 안 함.
@@ -227,12 +235,11 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **~~Template Page Architecture~~ 폐기** — 관련 문서 삭제 (01,02,03,04,15,17)
 
 ### 다음 우선순위
-1. **Wiki UX 개선** — 아티클 아이콘+카테고리 리스트 표시, 컨텍스트 패널(SmartSidePanel) 연결, 생성일 표시
-2. **Synced Block (노트 임베드 본문 편집)** — 노션 Synced Block. nested TipTap editor + IDB body 동기화
-3. **노트참조 통합 인터랙션** — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동
-4. Home 대시보드 카드 클릭 → 필터 연동
-5. 투두 고도화 (dueDate, Today/Upcoming 분류)
-6. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
+1. **Phase 2 진행 중**: 위키 TextBlock TipTap 전환 (완료) + Contents/Infobox 리사이즈 (TODO)
+2. Home 대시보드 카드 클릭 → 필터 연동
+3. 투두 고도화 (dueDate, Today/Upcoming 분류)
+4. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
+5. 디자인 리부트
 
 ### 이번 세션 완료 — 버그 수정 + Design Spine 8-Phase (2026-04-01)
 - **버그/미완성 수정 8건**: Wiki Dashboard placeholder, Embed Note picker, 우클릭 메뉴 4항목(Embed/Link to Note/Extract as Note/Image), Home Red Links 카운트, orphanCount 일치, internalLinkCount 연산, Discover 섹션 4카드, Wiki 3탭(All/Articles/Red Links)

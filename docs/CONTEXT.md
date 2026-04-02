@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-84. Embed Note 피커 연결 (NotePickerDialog), 독립 공간 구조 확정, 불필요 docs 6개 삭제
 85. 버그 수정 8건 (Wiki placeholder, Embed Note picker, 우클릭 메뉴 4항목, Home Red Links/Orphans, Discover 4카드, Wiki 3탭)
 86. Design Spine 8-Phase 전부 완료 (hover/typography/editor CSS변수/max-width/radius/grid/colors/transitions)
 87. 노트참조 통합 인터랙션 (호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동) + Synced Block (NoteEmbed Sync 토글)
 88. 블록 리사이즈 (8종 코너+엣지 핸들, width/height 조절) + Side-drop 컬럼 복원 + Move out of Column 우클릭 + Gapcursor + Turn Into atom 숨김 + 컬럼 구분선 드래그
+89. 위키 TextBlock TipTap 전환 + Encyclopedia 편집 버그 수정 — textarea→TipTap 리치텍스트 에디터, contentJson 필드, IDB body JSON, Encyclopedia editable 전달 수정
 
 ## Two Axes — Core Design Philosophy
 
