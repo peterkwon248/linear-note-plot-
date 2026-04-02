@@ -8,6 +8,9 @@ import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Trash as PhTrash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
+import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
 interface InfoboxRow {
   label: string
@@ -18,6 +21,9 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
   const editable = editor.isEditable
   const title = (node.attrs.title as string) || "Info"
   const rows = (node.attrs.rows as InfoboxRow[]) || []
+  const width = node.attrs.width as number | null
+  const height = node.attrs.height as number | null
+  const { containerRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
 
   const updateTitle = useCallback((newTitle: string) => {
     updateAttributes({ title: newTitle })
@@ -41,9 +47,15 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
   return (
     <NodeViewWrapper>
       <div
+        ref={containerRef}
         contentEditable={false}
-        className="not-draggable border border-border-subtle rounded-lg my-2 overflow-hidden select-none group/infobox"
+        className={`not-draggable border border-border-subtle rounded-lg my-2 overflow-hidden select-none group/infobox block-resize-wrapper ${isResizing ? "is-resizing" : ""}`}
+        style={{
+          ...(width ? { width: `${width}px` } : {}),
+          ...(height ? { height: `${height}px`, overflowY: "auto" as const } : {}),
+        }}
       >
+        {editor?.isEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 bg-secondary/30 border-b border-border-subtle">
           <div className="flex items-center gap-1.5">
@@ -58,14 +70,26 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
             />
           </div>
           {editable && (
-            <button
-              type="button"
-              onClick={() => deleteNode()}
-              className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
-              title="Remove infobox"
-            >
-              <PhX size={12} weight="bold" />
-            </button>
+            <div className="flex items-center gap-0.5">
+              {(width || height) && (
+                <button
+                  type="button"
+                  onClick={() => updateAttributes({ width: null, height: null })}
+                  className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
+                  title="Reset size"
+                >
+                  <ArrowsIn size={12} weight="bold" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => deleteNode()}
+                className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
+                title="Remove infobox"
+              >
+                <PhX size={12} weight="bold" />
+              </button>
+            </div>
           )}
         </div>
 
@@ -140,6 +164,22 @@ export const InfoboxBlockNode = Node.create({
           catch { return [{ label: "", value: "" }] }
         },
         renderHTML: (attributes: Record<string, unknown>) => ({ "data-rows": JSON.stringify(attributes.rows) }),
+      },
+      width: {
+        default: null,
+        parseHTML: (el) => {
+          const w = el.getAttribute("data-width")
+          return w ? parseInt(w, 10) : null
+        },
+        renderHTML: (attrs) => attrs.width ? { "data-width": attrs.width } : {},
+      },
+      height: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const h = el.getAttribute("data-height")
+          return h ? parseInt(h, 10) : null
+        },
+        renderHTML: (attrs: Record<string, any>) => attrs.height ? { "data-height": attrs.height } : {},
       },
     }
   },

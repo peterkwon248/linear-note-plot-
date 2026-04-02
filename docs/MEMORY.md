@@ -57,7 +57,13 @@
 - **Floating TOC**: `components/editor/floating-toc.tsx` — Notion 스타일 에디터 우측 자동 사이드바. 대시 인디케이터(H2=16px, H3=10px), hover 확장(220px), scrollspy. 첫 heading(타이틀) 자동 제외. heading 2개+ 일 때만 표시
 - **@Mention**: `components/editor/MentionSuggestion.tsx` — @tiptap/extension-mention 기반. 노트/위키(WikiArticle)/태그/날짜 4종 통합 검색. WikilinkSuggestion.tsx 패턴 복제. 날짜 파싱: `lib/mention-date-parser.ts`
 - **Anchor/Bookmark**: `components/editor/nodes/anchor-node.tsx` (인라인) + `components/editor/nodes/anchor-divider-node.tsx` (블록 구분선). 플로팅 TOC + 사이드패널 Bookmarks 탭에 통합
-- **Side-drop Columns**: 블록 드래그 시 좌/우 15% 영역 감지 → 자동 columnsBlock 생성. `components/editor/dnd/block-drag-overlay.tsx`의 handleDragMove에서 포인터 좌표 기반 감지
+- **Side-drop Columns**: 블록 드래그 시 좌/우 15% 영역 감지 → 자동 columnsBlock 생성. columnsBlock 위 드래그 시 기존 셀에 삽입 (3컬럼 방지). `block-drag-overlay.tsx`의 handleDragMove
+- **Note Hover Preview**: `components/editor/note-hover-preview.tsx` — 싱글턴 컨트롤러, 300ms delay show / 200ms delay hide, portal 기반 팝오버
+- **Note Reference Actions**: `lib/note-reference-actions.ts` — 통합 클릭 핸들러 (Peek/Navigate), title→id 해석, wikilink/mention 공용
+- **Synced Block**: NoteEmbed `synced` 속성 토글, base 티어 인라인 TipTap (재귀 방지), 300ms 디바운스 원본 노트 저장
+- **Block Resize**: `useBlockResize` 훅 + `BlockResizeHandles` 컴포넌트 (코너 4 + 엣지 2), width/height 속성, 리셋 버튼 헤더 통합
+- **Move out of Column**: `editor-context-menu.tsx` — columnCell 내 블록을 columnsBlock 아래로 이동, cellNode.forEach + cellStart 계산
+- **Column Resize (pixel)**: colWidth를 pixel 값으로 저장, CSS grid `fr` 단위로 변환, 양쪽 셀 동시 업데이트
 
 ## Store Slices (20 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
@@ -167,6 +173,21 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Side-drop 컬럼 자동생성 제거 (Insert 메뉴로만)
   - All Notes 사이드바 Inbox 위 추가
   - Memo 라벨 자동 부여 (createNote + rehydrate backfill)
+
+- **PR #139**: 노트참조 통합 인터랙션 + Synced Block + 블록 리사이즈 + 컬럼 UX
+  - 노트참조 통합: 호버 프리뷰 (note-hover-preview.tsx, 300ms delay, IDB body), 클릭→Peek, Ctrl+클릭→이동
+  - 공통 유틸: `lib/note-reference-actions.ts` (handleWikilinkClick, handleMentionClick, resolveNoteByTitle/ById)
+  - WikilinkDecoration: 드롭다운/아이콘 제거 → mouseover/click 통합 인터랙션
+  - MentionInteractionExtension: ProseMirror Plugin DOM 이벤트 위임 (@mention 클릭/호버)
+  - NoteEmbed → Synced Block: `synced` 속성 토글, base 티어 인라인 TipTap, 300ms 디바운스 저장
+  - 블록 리사이즈: `useBlockResize` 훅 + `BlockResizeHandles` 컴포넌트 (8종 블록 적용: TOC/Columns/NoteEmbed/Infobox/Callout/Query/Summary/ContentBlock)
+  - width + height 속성 추가, 코너 드래그=가로+세로, 엣지 드래그=가로만, 리셋 버튼 (헤더 통합)
+  - Side-drop 컬럼 복원: 15% 엣지 감지 → 컬럼 생성, columnsBlock 위 드래그 → 기존 셀에 삽입
+  - Move out of Column: 우클릭 메뉴, columnCell 내 블록 → columnsBlock 아래로 이동
+  - Turn Into: atom 노드에서 숨김
+  - Gapcursor 추가 (빈 컬럼 셀 클릭 가능)
+  - 컬럼 구분선 드래그: pixel 기반 colWidth, 양쪽 셀 동시 업데이트, fr 단위 그리드 (잔상 이슈 잔존)
+  - 에디터 max-width 제거 (text-align left/right 정확하게 동작)
   - onOpenChange로 컨텍스트 메뉴 selection 캡처 수정
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE

@@ -5,6 +5,8 @@ import { ReactNodeViewRenderer, NodeViewWrapper } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
 import { useMemo, useEffect, useState, useCallback, useRef } from "react"
 import { nanoid } from "nanoid"
+import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
+import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
@@ -35,6 +37,7 @@ import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { Tag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
 
 /* ── Constants ────────────────────────────────────────────── */
 
@@ -515,6 +518,9 @@ function QueryPresetPicker({
 
 function QueryNodeView({ node, updateAttributes, editor, deleteNode, selected }: NodeViewProps) {
   const configured = node.attrs.configured === true || node.attrs.configured === "true"
+  const width = node.attrs.width as number | null
+  const height = node.attrs.height as number | null
+  const { containerRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
 
   // If not configured yet, show preset picker
   if (!configured) {
@@ -666,15 +672,19 @@ function QueryNodeView({ node, updateAttributes, editor, deleteNode, selected }:
   const [isHovered, setIsHovered] = useState(false)
 
   return (
-    <NodeViewWrapper
-      data-type="query-block"
-      className={`my-3 rounded-lg border ${selected ? "border-accent/50 ring-1 ring-accent/20" : "border-border-subtle"} bg-surface-overlay overflow-hidden`}
-    >
+    <NodeViewWrapper data-type="query-block">
       <div
+        ref={containerRef}
         contentEditable={false}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        className={`my-3 rounded-lg border ${selected ? "border-accent/50 ring-1 ring-accent/20" : "border-border-subtle"} bg-surface-overlay overflow-hidden block-resize-wrapper ${isResizing ? "is-resizing" : ""}`}
+        style={{
+          ...(width ? { width: `${width}px` } : {}),
+          ...(height ? { height: `${height}px`, overflowY: "auto" as const } : {}),
+        }}
       >
+        {editor?.isEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
         {/* Header - always visible */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle">
           <div className="flex items-center gap-1.5 text-2xs font-medium text-muted-foreground">
@@ -692,6 +702,16 @@ function QueryNodeView({ node, updateAttributes, editor, deleteNode, selected }:
               >
                 Change query
               </button>
+              {(width || height) && (
+                <button
+                  type="button"
+                  onClick={() => updateAttributes({ width: null, height: null })}
+                  className="p-0.5 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground transition-colors"
+                  title="Reset size"
+                >
+                  <ArrowsIn size={12} />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={deleteNode}
@@ -868,6 +888,22 @@ export const QueryBlockNode = TiptapNode.create({
         renderHTML: (attrs: Record<string, unknown>) => ({
           "data-max-rows": String(attrs.maxRows),
         }),
+      },
+      width: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const w = el.getAttribute("data-width")
+          return w ? parseInt(w, 10) : null
+        },
+        renderHTML: (attrs: Record<string, any>) => attrs.width ? { "data-width": attrs.width } : {},
+      },
+      height: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const h = el.getAttribute("data-height")
+          return h ? parseInt(h, 10) : null
+        },
+        renderHTML: (attrs: Record<string, any>) => attrs.height ? { "data-height": attrs.height } : {},
       },
     }
   },

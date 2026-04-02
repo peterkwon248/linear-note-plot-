@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-82. 수동 TOC(블록피커), Add to TOC/Delete Block 우클릭, All Notes 사이드바, Memo 라벨 자동
-83. 블록 메뉴 Turn Into(9종)+Insert Below(9종), KaTeX 싱글 달러 InputRule, Math 빈 상태 시작
 84. Embed Note 피커 연결 (NotePickerDialog), 독립 공간 구조 확정, 불필요 docs 6개 삭제
 85. 버그 수정 8건 (Wiki placeholder, Embed Note picker, 우클릭 메뉴 4항목, Home Red Links/Orphans, Discover 4카드, Wiki 3탭)
 86. Design Spine 8-Phase 전부 완료 (hover/typography/editor CSS변수/max-width/radius/grid/colors/transitions)
+87. 노트참조 통합 인터랙션 (호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동) + Synced Block (NoteEmbed Sync 토글)
+88. 블록 리사이즈 (8종 코너+엣지 핸들, width/height 조절) + Side-drop 컬럼 복원 + Move out of Column 우클릭 + Gapcursor + Turn Into atom 숨김 + 컬럼 구분선 드래그
 
 ## Two Axes — Core Design Philosophy
 
@@ -154,8 +154,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ## TODO: Future Work (우선순위 순)
 
 ### P0 — 최우선
-- **Synced Block (노트 임베드 본문 편집)**: 노트 A에서 노트 B를 임베드하면 B의 본문 전체가 인라인 TipTap 에디터로 표시 + 편집 시 원본 동기화. 노션 Synced Block과 동일. 위키 블록(WikiBlock) 패턴 참고 (nested editor + IDB body 분리)
-- **노트참조 통합 인터랙션**: 멘션/위키링크/noteEmbed 공통 — 호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동
+- **컬럼 구분선 드래그 개선**: 잔상 제거, 드래그 중 라이브 그리드 프리뷰 (현재 핸들만 이동 → 그리드 실시간 반영으로 전환 필요)
 
 ### P0 — 에디터 통합 프로젝트 후속 Phase
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈

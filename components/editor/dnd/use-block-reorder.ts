@@ -82,11 +82,8 @@ export function useSideDrop(editor: Editor | null) {
 
       const { tr } = editor.state
 
-      // Check if target is already a columnsBlock — add a new column to it
+      // Check if target is already a columnsBlock — insert INTO existing column cell
       if (targetNode.type.name === "columnsBlock") {
-        // Wrap dragged node in a columnCell
-        const newCell = columnCellType.create(null, [draggedNode])
-
         // Delete dragged block first
         tr.delete(draggedBlock.docPos, draggedBlock.docPos + draggedBlock.nodeSize)
 
@@ -95,13 +92,20 @@ export function useSideDrop(editor: Editor | null) {
         const mappedTargetNode = tr.doc.nodeAt(mappedTargetPos)
         if (!mappedTargetNode) return
 
-        if (side === "left") {
-          // Insert as first column cell (inside the columnsBlock, at +1)
-          tr.insert(mappedTargetPos + 1, newCell)
-        } else {
-          // Insert as last column cell (before closing of columnsBlock)
-          tr.insert(mappedTargetPos + mappedTargetNode.nodeSize - 1, newCell)
+        // Find the target column cell (first for left, last for right)
+        const cellCount = mappedTargetNode.childCount
+        if (cellCount === 0) return
+
+        const cellIndex = side === "left" ? 0 : cellCount - 1
+        let cellPos = mappedTargetPos + 1 // start of first child
+        for (let i = 0; i < cellIndex; i++) {
+          cellPos += mappedTargetNode.child(i).nodeSize
         }
+        const cellNode = mappedTargetNode.child(cellIndex)
+
+        // Insert dragged node at the end of the column cell content
+        const insertPos = cellPos + cellNode.nodeSize - 1 // before cell closing tag
+        tr.insert(insertPos, draggedNode)
 
         editor.view.dispatch(tr)
         return

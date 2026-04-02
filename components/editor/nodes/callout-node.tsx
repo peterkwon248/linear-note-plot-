@@ -9,6 +9,9 @@ import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle"
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
+import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
 const CALLOUT_TYPES = {
   info: { label: "Info", icon: Info, border: "border-l-blue-500", bg: "bg-blue-500/5", text: "text-blue-400" },
@@ -24,6 +27,9 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
   const calloutType = (node.attrs.calloutType as CalloutType) || "info"
   const config = CALLOUT_TYPES[calloutType]
   const Icon = config.icon
+  const width = node.attrs.width as number | null
+  const height = node.attrs.height as number | null
+  const { containerRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
 
   // Cycle through types on icon click
   const cycleType = () => {
@@ -53,8 +59,14 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
   return (
     <NodeViewWrapper>
       <div
-        className={`not-draggable ${config.bg} ${config.border} border-l-4 rounded-r-lg my-2 relative group`}
+        ref={containerRef}
+        className={`not-draggable ${config.bg} ${config.border} border-l-4 rounded-r-lg my-2 relative group block-resize-wrapper ${isResizing ? "is-resizing" : ""}`}
+        style={{
+          ...(width ? { width: `${width}px` } : {}),
+          ...(height ? { height: `${height}px`, overflowY: "auto" as const } : {}),
+        }}
       >
+        {editor?.isEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
         {/* Header bar with icon (click to cycle type) + remove button */}
         <div className="flex items-center justify-between px-3 pt-2 pb-0" contentEditable={false}>
           <button
@@ -66,14 +78,26 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
             <Icon size={16} weight="bold" />
             <span className="text-2xs font-semibold uppercase tracking-wider">{config.label}</span>
           </button>
-          <button
-            type="button"
-            onClick={removeCallout}
-            className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
-            title="Remove callout"
-          >
-            <PhX size={12} weight="bold" />
-          </button>
+          <div className="flex items-center gap-0.5">
+            {(width || height) && (
+              <button
+                type="button"
+                onClick={() => updateAttributes({ width: null, height: null })}
+                className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
+                title="Reset size"
+              >
+                <ArrowsIn size={12} weight="bold" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={removeCallout}
+              className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
+              title="Remove callout"
+            >
+              <PhX size={12} weight="bold" />
+            </button>
+          </div>
         </div>
 
         {/* Editable content area */}
@@ -97,6 +121,22 @@ export const CalloutBlockNode = Node.create({
         default: "info",
         parseHTML: (element: HTMLElement) => element.getAttribute("data-callout-type") || "info",
         renderHTML: (attributes: Record<string, string>) => ({ "data-callout-type": attributes.calloutType }),
+      },
+      width: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const w = el.getAttribute("data-width")
+          return w ? parseInt(w, 10) : null
+        },
+        renderHTML: (attrs: Record<string, any>) => attrs.width ? { "data-width": attrs.width } : {},
+      },
+      height: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const h = el.getAttribute("data-height")
+          return h ? parseInt(h, 10) : null
+        },
+        renderHTML: (attrs: Record<string, any>) => attrs.height ? { "data-height": attrs.height } : {},
       },
     }
   },

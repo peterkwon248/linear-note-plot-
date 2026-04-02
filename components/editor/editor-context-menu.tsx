@@ -49,6 +49,7 @@ import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 
 interface EditorContextMenuProps {
   editor: Editor | null
@@ -75,6 +76,7 @@ function Shortcut({ keys }: { keys: string }) {
 export function EditorContextMenu({ editor, children }: EditorContextMenuProps) {
   const [hasSelection, setHasSelection] = useState(false)
   const [isInList, setIsInList] = useState(false)
+  const [isInColumn, setIsInColumn] = useState(false)
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -82,10 +84,68 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
         // Capture selection state at the moment the menu opens
         setHasSelection(!editor.state.selection.empty)
         setIsInList(editor.isActive("listItem") || editor.isActive("taskItem"))
+        // Check if inside a columnCell
+        const { $from } = editor.state.selection
+        let inCol = false
+        for (let d = $from.depth; d >= 1; d--) {
+          if ($from.node(d).type.name === "columnCell") { inCol = true; break }
+        }
+        setIsInColumn(inCol)
       }
     },
     [editor],
   )
+
+  /** Move the current block out of its column, placing it after the columnsBlock */
+  function moveOutOfColumn() {
+    if (!editor) return
+    const state = editor.state
+    const { $from } = state.selection
+
+    // 1. Find columnCell and columnsBlock depths
+    let cellDepth = -1
+    let columnsDepth = -1
+    for (let d = $from.depth; d >= 1; d--) {
+      const name = $from.node(d).type.name
+      if (name === "columnCell" && cellDepth === -1) cellDepth = d
+      if (name === "columnsBlock") { columnsDepth = d; break }
+    }
+    if (cellDepth === -1 || columnsDepth === -1) return
+
+    // 2. Find the block node that is direct child of columnCell
+    // Walk doc children of the columnCell to find which one contains $from.pos
+    const cellNode = $from.node(cellDepth)
+    const cellStart = $from.start(cellDepth) // content start of columnCell
+
+    let blockNode = null
+    let blockFrom = -1
+    let blockTo = -1
+    let offset = cellStart
+    for (let i = 0; i < cellNode.childCount; i++) {
+      const child = cellNode.child(i)
+      const childEnd = offset + child.nodeSize
+      if ($from.pos >= offset && $from.pos < childEnd) {
+        blockNode = child
+        blockFrom = offset
+        blockTo = childEnd
+        break
+      }
+      offset = childEnd
+    }
+    if (!blockNode) return
+
+    // 3. Find columnsBlock end position
+    const columnsEnd = $from.start(columnsDepth) - 1 + $from.node(columnsDepth).nodeSize
+
+    // 4. Delete first, then insert at mapped position
+    const { tr } = state
+    tr.delete(blockFrom, blockTo)
+    const mappedEnd = tr.mapping.map(columnsEnd)
+    tr.insert(mappedEnd, blockNode)
+
+    editor.view.dispatch(tr)
+    editor.commands.focus()
+  }
 
   function cut() {
     document.execCommand("cut")
@@ -724,6 +784,17 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
               </ContextMenu.Item>
             </>
           )}
+          {/* ── Move out of Column ──────────────────────── */}
+          {isInColumn && (
+            <ContextMenu.Item
+              className={itemCls}
+              onSelect={moveOutOfColumn}
+            >
+              <ArrowSquareOut size={14} />
+              Move out of Column
+            </ContextMenu.Item>
+          )}
+
           <ContextMenu.Separator className={separatorCls} />
 
           {/* ── Delete Block ─────────────────────────────── */}
