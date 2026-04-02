@@ -1048,7 +1048,7 @@ function TagBadges({ tagIds }: { tagIds: string[] }) {
 
 /* ── ArticleCategories (WikiCategory DAG) ── */
 
-function ArticleCategories({
+export function ArticleCategories({
   articleId,
   categoryIds,
   editable,

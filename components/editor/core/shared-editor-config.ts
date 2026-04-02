@@ -376,8 +376,142 @@ export function createEditorExtensions(
 
   switch (tier) {
     case "base":
-    case "wiki":
       return base
+
+    case "wiki": {
+      const wikiExtensions: Extension[] = [...base]
+
+      // Slash commands + WikiQuote for wiki text blocks
+      wikiExtensions.push(
+        SlashCommandExtension as Extension,
+        WikiQuoteExtension as Extension,
+      )
+
+      // Custom block nodes (shared with note tier)
+      wikiExtensions.push(CalloutBlockNode as Extension)
+      wikiExtensions.push(SummaryBlockNode as Extension)
+      wikiExtensions.push(ColumnsBlockNode as Extension)
+      wikiExtensions.push(ColumnCellNode as Extension)
+      wikiExtensions.push(InfoboxBlockNode as Extension)
+      wikiExtensions.push(ContentBlockNode as Extension)
+      wikiExtensions.push(AnchorMarkNode as Extension)
+      wikiExtensions.push(AnchorDividerNode as Extension)
+
+      // Custom keyboard shortcuts (Tab indent, column navigation, etc.)
+      const WikiKeyboardShortcuts = Extension.create({
+        name: "customKeyboardShortcuts",
+        priority: 1000,
+        addKeyboardShortcuts() {
+          return {
+            Tab: ({ editor: e }) => {
+              const { $from } = e.state.selection
+              for (let d = $from.depth; d >= 0; d--) {
+                if ($from.node(d).type.name === "columnCell") {
+                  const parent = $from.node(d - 1)
+                  if (parent?.type.name === "columnsBlock") {
+                    const parentStart = $from.start(d - 1)
+                    const cellIndex = $from.index(d - 1)
+                    if (cellIndex + 1 < parent.childCount) {
+                      let nextCellStart = parentStart
+                      for (let i = 0; i <= cellIndex; i++) {
+                        nextCellStart += parent.child(i).nodeSize
+                      }
+                      e.commands.setTextSelection(nextCellStart + 1)
+                      return true
+                    }
+                  }
+                  break
+                }
+              }
+              if (e.isActive("table")) return e.commands.goToNextCell()
+              return indentCommand(e)
+            },
+            "Shift-Tab": ({ editor: e }) => {
+              const { $from } = e.state.selection
+              for (let d = $from.depth; d >= 0; d--) {
+                if ($from.node(d).type.name === "columnCell") {
+                  const parent = $from.node(d - 1)
+                  if (parent?.type.name === "columnsBlock") {
+                    const parentStart = $from.start(d - 1)
+                    const cellIndex = $from.index(d - 1)
+                    if (cellIndex > 0) {
+                      let prevCellStart = parentStart
+                      for (let i = 0; i < cellIndex - 1; i++) {
+                        prevCellStart += parent.child(i).nodeSize
+                      }
+                      e.commands.setTextSelection(prevCellStart + 1)
+                      return true
+                    }
+                  }
+                  break
+                }
+              }
+              if (e.isActive("table")) return e.commands.goToPreviousCell()
+              return outdentCommand(e)
+            },
+            "Alt-Shift-ArrowUp": ({ editor: e }) => moveListItemUp(e),
+            "Alt-Shift-ArrowDown": ({ editor: e }) => moveListItemDown(e),
+            Backspace: ({ editor: e }) => {
+              const { $from } = e.state.selection
+              if ($from.parent.type.name === "heading" && $from.parentOffset === 0) {
+                return e.commands.setParagraph()
+              }
+              if (
+                $from.parent.type.name === "paragraph" &&
+                $from.parent.textContent === "" &&
+                $from.parentOffset === 0
+              ) {
+                const resolvedPos = e.state.doc.resolve($from.before($from.depth))
+                const indexInDoc = resolvedPos.index(0)
+                if (indexInDoc > 0) {
+                  const prevNode = e.state.doc.child(indexInDoc - 1)
+                  if (prevNode.type.name === "table") {
+                    const tableStart = $from.before($from.depth) - prevNode.nodeSize
+                    const paraEnd = $from.after($from.depth)
+                    const { tr } = e.state
+                    tr.delete(tableStart, paraEnd)
+                    e.view.dispatch(tr)
+                    return true
+                  }
+                }
+              }
+              return false
+            },
+          }
+        },
+      })
+      wikiExtensions.push(WikiKeyboardShortcuts as Extension)
+
+      // Table keyboard (Delete key for row/col delete)
+      const WikiTableKeyboard = Extension.create({
+        name: "tableKeyboard",
+        addProseMirrorPlugins() {
+          return [
+            new Plugin({
+              key: new PluginKey("tableKeyboard"),
+              props: {
+                handleKeyDown(view, event) {
+                  if (event.key !== "Delete") return false
+                  const { state, dispatch } = view
+                  const { selection } = state
+                  if (!(selection instanceof CellSelection)) return false
+                  const text = state.doc.textBetween(selection.from, selection.to).trim()
+                  if (text !== "") return false
+                  if (selection.isRowSelection()) return pmDeleteRow(state, dispatch)
+                  if (selection.isColSelection()) return pmDeleteColumn(state, dispatch)
+                  if (pmDeleteRow(state)) return pmDeleteRow(state, dispatch)
+                  if (pmDeleteColumn(state)) return pmDeleteColumn(state, dispatch)
+                  return false
+                },
+              },
+            }),
+          ]
+        },
+      })
+      wikiExtensions.push(WikiTableKeyboard as Extension)
+
+      return wikiExtensions
+    }
 
     case "note": {
       const noteExtensions: Extension[] = [

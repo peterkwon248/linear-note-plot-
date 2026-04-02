@@ -85,6 +85,8 @@ export interface WikiBlock {
   url?: string
   /** URL: title/label for the link */
   urlTitle?: string
+  /** Section: custom font size multiplier (1 = default, 0.8 = small, 1.2 = large, 1.5 = x-large) */
+  fontSize?: number
   /** Merge history: snapshot of the merged article for unmerge */
   mergedFrom?: WikiMergeSnapshot
 }

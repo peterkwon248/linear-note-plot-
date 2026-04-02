@@ -64,6 +64,11 @@
 - **Block Resize**: `useBlockResize` 훅 + `BlockResizeHandles` 컴포넌트 (코너 4 + 엣지 2), width/height 속성, 리셋 버튼 헤더 통합
 - **Move out of Column**: `editor-context-menu.tsx` — columnCell 내 블록을 columnsBlock 아래로 이동, cellNode.forEach + cellStart 계산
 - **Column Resize (pixel)**: colWidth를 pixel 값으로 저장, CSS grid `fr` 단위로 변환, 양쪽 셀 동시 업데이트
+- **Wiki Editor Tier**: shared-editor-config.ts wiki tier = base + SlashCommand + WikiQuote + Callout/Summary/Columns/Infobox/Anchor/ContentBlock + 키보드 단축키 + 테이블 키보드. 노트 에디터 FixedToolbar 재사용 (tier="wiki")
+- **Wiki Click-Outside Close**: TextBlock 편집 시 blur 대신 document mousedown click-outside 패턴. blockRef.contains()로 드래그 핸들/툴바 내부 클릭 허용
+- **Encyclopedia Edit = Default Edit**: DndContext + SortableBlockItem + WikiBlockRenderer(variant="encyclopedia"). 드래그/Split/Move/Delete/AddBlock/카테고리 전부 Default와 동일
+- **WikiBlock.fontSize**: 섹션 블록 커스텀 폰트 크기 (0.8=S, 1=M, 1.2=L, 1.5=XL). style={{ fontSize: `${fontScale}em` }}
+- **Contents TOC fontScale**: 대각선 리사이즈 핸들(우하단 코너). width/BASE_WIDTH 비율로 0.75~1.5 스케일. 제목+항목 fontSize 연동
 
 ## Store Slices (20 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
@@ -241,11 +246,20 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **~~Template Page Architecture~~ 폐기** — 관련 문서 삭제 (01,02,03,04,15,17)
 
 ### 다음 우선순위
-1. **Phase 2 계속**: 위키 에디터 툴바 리서치 (나무위키/위키피디아 참고) → 풀 에디터 수준 툴바로 업그레이드. Contents/Infobox 리사이즈
-2. Home 대시보드 카드 클릭 → 필터 연동
-3. 투두 고도화 (dueDate, Today/Upcoming 분류)
-4. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
-5. 디자인 리부트
+1. Home 대시보드 카드 클릭 → 필터 연동
+2. 투두 고도화 (dueDate, Today/Upcoming 분류)
+3. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
+4. 디자인 리부트
+
+### 이번 세션 완료 — Phase 2A 위키 에디터 풀 툴바 + Encyclopedia 편집 통일 (2026-04-02)
+- **위키 에디터 리서치**: Wikipedia VisualEditor, 나무위키, Fandom, GitBook, Outline, Confluence 에디터 구조 조사
+- **Phase 2A: 위키 TextBlock FixedToolbar 연결**: wiki tier에 SlashCommand/Callout/Columns 등 확장 추가, FixedToolbar를 wiki tier에서 재사용 (42아이템 풀 툴바), WikiTextToolbar(55줄) 삭제
+- **TextBlock blur 버그 수정**: onBlur → document mousedown click-outside 패턴 전환. 드래그 핸들/툴바 클릭 시 에디터 안 닫힘
+- **Encyclopedia 편집 기능 완전 통일**: DndContext + SortableBlockItem으로 전면 리팩토링. 드래그 리오더, 섹션 ⋯ 메뉴(Split/Move/Delete), Add Block, 카테고리 편집 — Default와 동일
+- **인포박스 편집**: Encyclopedia 읽기 전용 테이블 → WikiInfobox 컴포넌트 교체 (편집 모드에서 행 추가/삭제)
+- **섹션 폰트 크기 조절**: WikiBlock.fontSize 속성 + ⋯ 메뉴 S/M/L/XL 4단계 선택
+- **Contents TOC 대각선 리사이즈**: 코너 핸들 + fontScale 연동 (width 비례로 글자 크기 변동)
+- **WikiBlockRenderer variant prop**: "default" | "encyclopedia" — SectionBlock이 variant에 따라 스타일 분기
 
 ### 이번 세션 완료 — 버그 수정 + Design Spine 8-Phase (2026-04-01)
 - **버그/미완성 수정 8건**: Wiki Dashboard placeholder, Embed Note picker, 우클릭 메뉴 4항목(Embed/Link to Note/Extract as Note/Image), Home Red Links 카운트, orphanCount 일치, internalLinkCount 연산, Discover 섹션 4카드, Wiki 3탭(All/Articles/Red Links)

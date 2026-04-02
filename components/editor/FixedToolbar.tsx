@@ -280,7 +280,6 @@ function AlignDropdown({ editor, editorState, handleAlign, isVisible }: {
 }
 
 export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, noteId, tier = 'note' }: FixedToolbarProps) {
-  // TODO: Hide/show buttons based on tier (wiki = minimal set, template = base + variable)
   const toolbarLayout = useSettingsStore((s) => s.toolbarLayout)
   const spellcheck = useSettingsStore((s) => s.spellcheck)
   const setSpellcheck = useSettingsStore((s) => s.setSpellcheck)
@@ -292,11 +291,18 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
   const moreMenuRef = useRef<HTMLDivElement>(null)
   const [moreMenuPos, setMoreMenuPos] = useState({ left: 0, bottom: 0 })
 
+  // Items hidden in wiki tier (no note-specific features, no UX options)
+  const WIKI_HIDDEN_ITEMS: Set<ToolbarItemId> = new Set([
+    "spellcheck", "currentLineHighlight", "invisibleChars",
+    "moveUp", "moveDown",
+  ] as ToolbarItemId[])
+
   const normalizedLayout = normalizeLayout(toolbarLayout)
   const visibleSet = new Set(
     normalizedLayout.items.filter((i) => i.visible).map((i) => i.id)
   )
-  const isVisible = (id: ToolbarItemId) => visibleSet.has(id)
+  const isVisible = (id: ToolbarItemId) =>
+    visibleSet.has(id) && !(tier === "wiki" && WIKI_HIDDEN_ITEMS.has(id))
 
   const editorState = useEditorState({
     editor,
@@ -687,17 +693,17 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
         </div>,
         document.body
       )}
-      <ToolbarButton onClick={() => setArrangeOpen(true)} title="Arrange toolbar">
-        <GearSix size={20} weight="light" />
-      </ToolbarButton>
-      {onTogglePosition && (
-        <>
-          <ToolbarButton onClick={onTogglePosition} title={position === 'bottom' ? "Move toolbar to top" : "Move toolbar to bottom"}>
-            {position === 'bottom' ? <ArrowUp size={20} weight="light" /> : <ArrowDown size={20} weight="light" />}
-          </ToolbarButton>
-        </>
+      {tier !== "wiki" && (
+        <ToolbarButton onClick={() => setArrangeOpen(true)} title="Arrange toolbar">
+          <GearSix size={20} weight="light" />
+        </ToolbarButton>
       )}
-      <ArrangeMode open={arrangeOpen} onClose={() => setArrangeOpen(false)} />
+      {onTogglePosition && tier !== "wiki" && (
+        <ToolbarButton onClick={onTogglePosition} title={position === 'bottom' ? "Move toolbar to top" : "Move toolbar to bottom"}>
+          {position === 'bottom' ? <ArrowUp size={20} weight="light" /> : <ArrowDown size={20} weight="light" />}
+        </ToolbarButton>
+      )}
+      {tier !== "wiki" && <ArrangeMode open={arrangeOpen} onClose={() => setArrangeOpen(false)} />}
     </div>
   )
 }
