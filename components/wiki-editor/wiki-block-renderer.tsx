@@ -394,11 +394,69 @@ function WikiTextEditor({
   if (!editor) return null
 
   return (
-    <div className="border border-accent/20 rounded-md px-3 py-2 focus-within:border-accent/40 transition-colors">
+    <div className="border border-accent/20 rounded-md focus-within:border-accent/40 transition-colors">
       <EditorContent
         editor={editor}
-        className="w-full prose prose-sm dark:prose-invert max-w-none focus:outline-none text-note leading-relaxed text-foreground/85"
+        className="w-full prose prose-sm dark:prose-invert max-w-none focus:outline-none text-note leading-relaxed text-foreground/85 px-3 py-2"
       />
+      {/* Bottom fixed toolbar */}
+      <WikiTextToolbar editor={editor} />
+    </div>
+  )
+}
+
+/** Bottom toolbar for wiki TextBlock TipTap editor */
+function WikiTextToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
+  if (!editor) return null
+
+  const Btn = ({ active, onMouseDown, children }: { active: boolean; onMouseDown: (e: React.MouseEvent) => void; children: React.ReactNode }) => (
+    <button
+      type="button"
+      onMouseDown={(e) => { e.preventDefault(); onMouseDown(e) }}
+      className={cn(
+        "flex items-center justify-center rounded w-8 h-8 text-xs transition-colors",
+        active ? "bg-accent/20 text-accent" : "text-foreground/50 hover:text-foreground/80 hover:bg-hover-bg"
+      )}
+    >
+      {children}
+    </button>
+  )
+
+  return (
+    <div className="flex items-center gap-0.5 border-t border-accent/10 px-2 py-1 bg-white/[0.02]">
+      <Btn active={editor.isActive("bold")} onMouseDown={() => editor.chain().focus().toggleBold().run()}>
+        <span className="font-bold text-sm">B</span>
+      </Btn>
+      <Btn active={editor.isActive("italic")} onMouseDown={() => editor.chain().focus().toggleItalic().run()}>
+        <span className="italic text-sm">I</span>
+      </Btn>
+      <Btn active={editor.isActive("strike")} onMouseDown={() => editor.chain().focus().toggleStrike().run()}>
+        <span className="line-through text-sm">S</span>
+      </Btn>
+      <Btn active={editor.isActive("code")} onMouseDown={() => editor.chain().focus().toggleCode().run()}>
+        <span className="font-mono text-xs">{`</>`}</span>
+      </Btn>
+
+      <div className="w-px h-5 bg-white/[0.08] mx-1" />
+
+      <Btn active={editor.isActive("heading", { level: 2 })} onMouseDown={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+        <span className="font-bold text-xs">H2</span>
+      </Btn>
+      <Btn active={editor.isActive("heading", { level: 3 })} onMouseDown={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+        <span className="font-bold text-xs">H3</span>
+      </Btn>
+
+      <div className="w-px h-5 bg-white/[0.08] mx-1" />
+
+      <Btn active={editor.isActive("bulletList")} onMouseDown={() => editor.chain().focus().toggleBulletList().run()}>
+        <span className="text-sm">•≡</span>
+      </Btn>
+      <Btn active={editor.isActive("orderedList")} onMouseDown={() => editor.chain().focus().toggleOrderedList().run()}>
+        <span className="text-xs">1.</span>
+      </Btn>
+      <Btn active={editor.isActive("blockquote")} onMouseDown={() => editor.chain().focus().toggleBlockquote().run()}>
+        <span className="text-sm">&ldquo;</span>
+      </Btn>
     </div>
   )
 }

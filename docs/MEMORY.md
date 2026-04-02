@@ -190,13 +190,19 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - 에디터 max-width 제거 (text-align left/right 정확하게 동작)
   - onOpenChange로 컨텍스트 메뉴 selection 캡처 수정
 
-- **PR #142 (WIP)**: 위키 TextBlock TipTap 전환 + Encyclopedia 편집 버그 수정
+- **PR #143**: 위키 TextBlock TipTap 전환 + Encyclopedia 편집 버그 수정
   - TextBlock: textarea → lazy-mount TipTap 에디터 (wiki tier = base extensions)
   - WikiBlock.contentJson 필드 추가 (TipTap JSON, content는 plaintext fallback)
   - WikiBlockBody.contentJson IDB 저장 지원
   - `useWikiBlockContentJson` 훅 신규 (IDB에서 content + contentJson 로드)
   - debounce 300ms 저장 (IDB + store 동시)
   - Encyclopedia 레이아웃 editable 버그 수정: EncyclopediaContentBlock에 isEditing prop 전달
+
+- **PR #144 (WIP)**: Encyclopedia 폴리싱 + 위키 에디터 툴바 초안
+  - Contents 박스: CSS resize → pointer drag 리사이즈 (우측 핸들, 180~600px)
+  - Encyclopedia 폰트 크기 업: 섹션 H2 text-lg→xl, H3 text-note→base, H4 text-2xs→sm, Contents 항목 text-note→sm
+  - WikiTextEditor 하단 고정 미니 툴바: B/I/S/Code + H2/H3 + BulletList/OrderedList/Blockquote
+  - **TODO**: 나무위키/위키피디아 에디터 툴바 리서치 후 풀 에디터 수준으로 업그레이드 필요
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
@@ -235,7 +241,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **~~Template Page Architecture~~ 폐기** — 관련 문서 삭제 (01,02,03,04,15,17)
 
 ### 다음 우선순위
-1. **Phase 2 진행 중**: 위키 TextBlock TipTap 전환 (완료) + Contents/Infobox 리사이즈 (TODO)
+1. **Phase 2 계속**: 위키 에디터 툴바 리서치 (나무위키/위키피디아 참고) → 풀 에디터 수준 툴바로 업그레이드. Contents/Infobox 리사이즈
 2. Home 대시보드 카드 클릭 → 필터 연동
 3. 투두 고도화 (dueDate, Today/Upcoming 분류)
 4. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
