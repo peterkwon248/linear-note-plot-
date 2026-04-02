@@ -73,8 +73,10 @@ export interface WikiBlock {
   collapsed?: boolean
   /** Note reference: ID of the source note whose content is embedded */
   noteId?: string
-  /** Text: directly authored wiki content (markdown) */
+  /** Text: directly authored wiki content (plaintext) */
   content?: string
+  /** Text: TipTap JSON document (rich text) — used when available, content is plaintext fallback */
+  contentJson?: Record<string, unknown>
   /** Image: attachment blob ID in IDB */
   attachmentId?: string
   /** Image: caption text */

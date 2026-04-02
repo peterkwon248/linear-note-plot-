@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-84. Embed Note 피커 연결 (NotePickerDialog), 독립 공간 구조 확정, 불필요 docs 6개 삭제
 85. 버그 수정 8건 (Wiki placeholder, Embed Note picker, 우클릭 메뉴 4항목, Home Red Links/Orphans, Discover 4카드, Wiki 3탭)
 86. Design Spine 8-Phase 전부 완료 (hover/typography/editor CSS변수/max-width/radius/grid/colors/transitions)
 87. 노트참조 통합 인터랙션 (호버 프리뷰, 클릭→Peek, Ctrl+클릭→이동) + Synced Block (NoteEmbed Sync 토글)
 88. 블록 리사이즈 (8종 코너+엣지 핸들, width/height 조절) + Side-drop 컬럼 복원 + Move out of Column 우클릭 + Gapcursor + Turn Into atom 숨김 + 컬럼 구분선 드래그
+89. 위키 TextBlock TipTap 전환 + Encyclopedia 편집 버그 수정 — textarea→TipTap 리치텍스트 에디터, contentJson 필드, IDB body JSON, Encyclopedia editable 전달 수정
 
 ## Two Axes — Core Design Philosophy
 
@@ -152,9 +152,6 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Embed Note = 노트 피커**: Insert→Embed Note 클릭 시 NotePickerDialog 열림. 선택한 noteId로 미리보기 카드 삽입. Synced Block(본문 편집)은 Phase 2+ (2026-04-01)
 
 ## TODO: Future Work (우선순위 순)
-
-### P0 — 최우선
-- **컬럼 구분선 드래그 개선**: 잔상 제거, 드래그 중 라이브 그리드 프리뷰 (현재 핸들만 이동 → 그리드 실시간 반영으로 전환 필요)
 
 ### P0 — 에디터 통합 프로젝트 후속 Phase
 - **Phase 2**: 위키 TextBlock TipTap 전환 — lazy mount (클릭 시만), Block body JSON 지원, Contents/Infobox 리사이즈

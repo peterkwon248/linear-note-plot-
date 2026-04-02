@@ -50,3 +50,47 @@ export function useWikiBlockBodies(blockIds: string[]): Map<string, string> {
 
   return bodies
 }
+
+/**
+ * Loads wiki block content + contentJson from IDB.
+ * Returns both plaintext and TipTap JSON for the TipTap editor.
+ */
+export function useWikiBlockContentJson(
+  blockId: string,
+  inMemoryContent?: string,
+  inMemoryJson?: Record<string, unknown>
+): { content: string; contentJson: Record<string, unknown> | null; loading: boolean } {
+  const [state, setState] = useState<{
+    content: string
+    contentJson: Record<string, unknown> | null
+    loading: boolean
+  }>({
+    content: inMemoryContent ?? "",
+    contentJson: inMemoryJson ?? null,
+    loading: !inMemoryContent && !inMemoryJson,
+  })
+
+  useEffect(() => {
+    if (inMemoryContent || inMemoryJson) {
+      setState({ content: inMemoryContent ?? "", contentJson: inMemoryJson ?? null, loading: false })
+      return
+    }
+
+    let cancelled = false
+    getBlockBody(blockId).then((body) => {
+      if (cancelled) return
+      if (body) {
+        setState({
+          content: body.content,
+          contentJson: body.contentJson ?? null,
+          loading: false,
+        })
+      } else {
+        setState({ content: "", contentJson: null, loading: false })
+      }
+    })
+    return () => { cancelled = true }
+  }, [blockId, inMemoryContent, inMemoryJson])
+
+  return state
+}

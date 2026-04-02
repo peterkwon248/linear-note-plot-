@@ -10,7 +10,8 @@ const STORE_NAME = "bodies"
 
 export interface WikiBlockBody {
   id: string       // blockId
-  content: string  // markdown text
+  content: string  // plaintext
+  contentJson?: Record<string, unknown> | null  // TipTap JSON (rich text)
 }
 
 function openDB(): Promise<IDBDatabase> {

@@ -6,7 +6,10 @@ import { usePlotStore } from "@/lib/store"
 import type { WikiBlock } from "@/lib/types"
 import { useAttachmentUrl } from "@/lib/use-attachment-url"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
-import { useWikiBlockContent } from "@/hooks/use-wiki-block-content"
+import { useWikiBlockContent, useWikiBlockContentJson } from "@/hooks/use-wiki-block-content"
+import { useEditor, EditorContent } from "@tiptap/react"
+import { createEditorExtensions } from "@/components/editor/core/shared-editor-config"
+import { saveBlockBody } from "@/lib/wiki-block-body-store"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
@@ -274,37 +277,51 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
 /* ── Text Block ── */
 
 function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
-  const content = useWikiBlockContent(block.id, block.content)
+  const { content, contentJson, loading } = useWikiBlockContentJson(block.id, block.content, block.contentJson)
   const [editing, setEditing] = useState(false)
-  const [editContent, setEditContent] = useState(content || "")
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleStartEdit = () => {
     if (!editable) return
-    setEditContent(content || "")
     setEditing(true)
-    setTimeout(() => {
-      const ta = textareaRef.current
-      if (ta) {
-        ta.focus()
-        ta.style.height = "auto"
-        ta.style.height = ta.scrollHeight + "px"
-      }
-    }, 0)
   }
 
-  const handleFinishEdit = () => {
+  // Cleanup
+  const handleStopEdit = useCallback(() => {
     setEditing(false)
-    if (editContent !== (content || "")) {
-      onUpdate?.({ content: editContent })
-    }
-  }
+  }, [])
 
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditContent(e.target.value)
-    e.target.style.height = "auto"
-    e.target.style.height = e.target.scrollHeight + "px"
-  }
+  // Debounced save
+  const handleChange = useCallback(
+    (json: Record<string, unknown>, plainText: string) => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(() => {
+        // Save to IDB
+        saveBlockBody({ id: block.id, content: plainText, contentJson: json })
+        // Update store
+        onUpdate?.({ content: plainText, contentJson: json })
+      }, 300)
+    },
+    [block.id, onUpdate]
+  )
+
+  // Build initial content for TipTap
+  const initialContent = useMemo(() => {
+    if (contentJson && Object.keys(contentJson).length > 0) {
+      return contentJson
+    }
+    if (content) {
+      return {
+        type: "doc",
+        content: content.split("\n").map((line) =>
+          line.trim()
+            ? { type: "paragraph", content: [{ type: "text", text: line }] }
+            : { type: "paragraph" }
+        ),
+      }
+    }
+    return { type: "doc", content: [{ type: "paragraph" }] }
+  }, [content, contentJson])
 
   return (
     <div className="group/text relative">
@@ -321,14 +338,12 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
         </div>
       )}
 
-      {editing ? (
-        <textarea
-          ref={textareaRef}
-          value={editContent}
-          onChange={handleInput}
-          onBlur={handleFinishEdit}
-          className="w-full bg-transparent outline-none border border-accent/20 rounded-md px-3 py-2 text-note leading-relaxed text-foreground/85 resize-none focus:border-accent/40"
-          placeholder="Write something..."
+      {editing && !loading ? (
+        <WikiTextEditor
+          key={block.id}
+          content={initialContent}
+          onChange={handleChange}
+          onBlur={handleStopEdit}
         />
       ) : (
         <div
@@ -343,6 +358,47 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+/** Lazy-mounted TipTap editor for wiki TextBlock (wiki tier = base extensions only) */
+function WikiTextEditor({
+  content,
+  onChange,
+  onBlur,
+}: {
+  content: Record<string, unknown>
+  onChange: (json: Record<string, unknown>, plainText: string) => void
+  onBlur: () => void
+}) {
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: createEditorExtensions("wiki", {
+      placeholder: "Write something...",
+    }),
+    content: content && Object.keys(content).length > 0 ? content : undefined,
+    editable: true,
+    autofocus: "end",
+    onUpdate: ({ editor: e }) => {
+      onChange(
+        e.getJSON() as Record<string, unknown>,
+        e.getText()
+      )
+    },
+    onBlur: () => {
+      onBlur()
+    },
+  })
+
+  if (!editor) return null
+
+  return (
+    <div className="border border-accent/20 rounded-md px-3 py-2 focus-within:border-accent/40 transition-colors">
+      <EditorContent
+        editor={editor}
+        className="w-full prose prose-sm dark:prose-invert max-w-none focus:outline-none text-note leading-relaxed text-foreground/85"
+      />
     </div>
   )
 }
