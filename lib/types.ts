@@ -130,6 +130,8 @@ export interface WikiArticle {
   tags: string[]
   categoryIds?: string[]           // references to WikiCategory.id (DAG)
   layout?: WikiLayout              // article layout mode (default: "default")
+  fontSize?: number                // global font size multiplier (0.85=S, 1=M default, 1.15=L, 1.3=XL)
+  contentAlign?: "left" | "center" // content alignment (undefined = "left")
   linksOut?: string[]              // extracted [[wiki-links]] from text blocks
   mergeHistory?: WikiMergeSnapshot[]  // snapshots from N→1 merge for unmerge
   createdAt: string

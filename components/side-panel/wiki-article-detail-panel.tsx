@@ -1,0 +1,243 @@
+"use client"
+
+import { useMemo } from "react"
+import { usePlotStore } from "@/lib/store"
+import { format, formatDistanceToNow } from "date-fns"
+import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
+import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { IconWiki } from "@/components/plot-icons"
+import type { WikiArticle } from "@/lib/types"
+
+function InspectorSection({
+  title,
+  icon,
+  children,
+}: {
+  title: string
+  icon: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <div className="px-4 py-3">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-muted-foreground">{icon}</span>
+        <span className="text-2xs font-medium text-muted-foreground">
+          {title}
+        </span>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+export function WikiArticleDetailPanel({ article }: { article: WikiArticle | null }) {
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const tags = usePlotStore((s) => s.tags)
+
+  const articleCategories = useMemo(() => {
+    if (!article?.categoryIds?.length) return []
+    return wikiCategories.filter((c) => article.categoryIds!.includes(c.id))
+  }, [article?.categoryIds, wikiCategories])
+
+  const articleTags = useMemo(() => {
+    if (!article?.tags?.length) return []
+    return tags.filter((t) => article.tags.includes(t.id) && !t.trashed)
+  }, [article?.tags, tags])
+
+  const stats = useMemo(() => {
+    if (!article) return { blocks: 0, sections: 0, images: 0, noteRefs: 0, textBlocks: 0 }
+    const blocks = article.blocks ?? []
+    return {
+      blocks: blocks.length,
+      sections: blocks.filter((b) => b.type === "section").length,
+      images: blocks.filter((b) => b.type === "image").length,
+      noteRefs: blocks.filter((b) => b.type === "note-ref").length,
+      textBlocks: blocks.filter((b) => b.type === "text").length,
+    }
+  }, [article])
+
+  if (!article) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
+        <PhInfo size={24} weight="light" className="text-muted-foreground/40" />
+        <p className="text-note text-center">Select a wiki article to see details</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      {/* Title & Type Badge */}
+      <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
+        <span className="flex items-center gap-1 rounded-md bg-chart-1/10 px-2 py-0.5 text-2xs font-medium text-chart-1">
+          <IconWiki size={14} />
+          Wiki Article
+        </span>
+        {article.layout && article.layout !== "default" && (
+          <span className="flex items-center gap-1 rounded-md bg-chart-2/10 px-2 py-0.5 text-2xs font-medium text-chart-2">
+            <Layout size={14} weight="regular" />
+            {article.layout.charAt(0).toUpperCase() + article.layout.slice(1)}
+          </span>
+        )}
+      </div>
+
+      {/* Aliases */}
+      {article.aliases.length > 0 && (
+        <>
+          <InspectorSection title="Aliases" icon={<PhInfo size={16} weight="regular" />}>
+            <div className="flex flex-wrap gap-1.5">
+              {article.aliases.map((alias, i) => (
+                <span
+                  key={i}
+                  className="rounded-md bg-secondary/50 px-2 py-0.5 text-note text-foreground/80"
+                >
+                  {alias}
+                </span>
+              ))}
+            </div>
+          </InspectorSection>
+          <div className="mx-4 border-b border-border" />
+        </>
+      )}
+
+      {/* Categories */}
+      {articleCategories.length > 0 && (
+        <>
+          <InspectorSection title="Categories" icon={<PhTag size={16} weight="regular" />}>
+            <div className="flex flex-wrap gap-1.5">
+              {articleCategories.map((cat) => (
+                <span
+                  key={cat.id}
+                  className="rounded-full bg-accent/10 px-2.5 py-0.5 text-2xs font-medium text-accent"
+                >
+                  {cat.name}
+                </span>
+              ))}
+            </div>
+          </InspectorSection>
+          <div className="mx-4 border-b border-border" />
+        </>
+      )}
+
+      {/* Tags */}
+      {articleTags.length > 0 && (
+        <>
+          <InspectorSection title="Tags" icon={<PhTag size={16} weight="regular" />}>
+            <div className="flex flex-wrap gap-1.5">
+              {articleTags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium"
+                  style={{
+                    backgroundColor: `${tag.color}18`,
+                    color: tag.color,
+                  }}
+                >
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+          </InspectorSection>
+          <div className="mx-4 border-b border-border" />
+        </>
+      )}
+
+      {/* Infobox */}
+      {article.infobox.length > 0 && (
+        <>
+          <InspectorSection title="Infobox" icon={<FileText size={16} weight="regular" />}>
+            <div className="space-y-2">
+              {article.infobox.map((entry, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <span className="text-note text-muted-foreground">{entry.key}</span>
+                  <span className="text-note text-foreground max-w-[60%] truncate text-right">{entry.value}</span>
+                </div>
+              ))}
+            </div>
+          </InspectorSection>
+          <div className="mx-4 border-b border-border" />
+        </>
+      )}
+
+      {/* Sections (Outline) */}
+      <InspectorSection title="Outline" icon={<TextAlignLeft size={16} weight="regular" />}>
+        {stats.sections > 0 ? (
+          <div className="space-y-1">
+            {article.blocks
+              .filter((b) => b.type === "section")
+              .map((section) => (
+                <div
+                  key={section.id}
+                  className="flex items-center gap-1.5 text-note text-muted-foreground transition-colors hover:text-foreground cursor-default"
+                  style={{ paddingLeft: `${((section.level ?? 2) - 2) * 12}px` }}
+                >
+                  <span className="shrink-0 text-2xs font-mono text-muted-foreground/50">
+                    {"H" + (section.level ?? 2)}
+                  </span>
+                  <span className="truncate">{section.title ?? "Untitled section"}</span>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <span className="text-note text-muted-foreground">No sections</span>
+        )}
+      </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* Dates */}
+      <InspectorSection title="Dates" icon={<CalendarBlank size={16} weight="regular" />}>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-note text-muted-foreground">Created</span>
+            <span className="text-note text-foreground">
+              {format(new Date(article.createdAt), "MMM d, yyyy")}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-note text-muted-foreground">Updated</span>
+            <span className="text-note text-foreground">
+              {formatDistanceToNow(new Date(article.updatedAt), { addSuffix: true })}
+            </span>
+          </div>
+        </div>
+      </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* Properties */}
+      <InspectorSection title="Properties" icon={<FileText size={16} weight="regular" />}>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-note text-muted-foreground">Blocks</span>
+            <span className="text-note tabular-nums text-foreground">{stats.blocks}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-note text-muted-foreground">Sections</span>
+            <span className="text-note tabular-nums text-foreground">{stats.sections}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-note text-muted-foreground">Text blocks</span>
+            <span className="text-note tabular-nums text-foreground">{stats.textBlocks}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-note text-muted-foreground">Note refs</span>
+            <span className="text-note tabular-nums text-foreground">{stats.noteRefs}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-note text-muted-foreground">Images</span>
+            <span className="text-note tabular-nums text-foreground">{stats.images}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-note text-muted-foreground">Layout</span>
+            <span className="text-note text-foreground capitalize">{article.layout ?? "default"}</span>
+          </div>
+        </div>
+      </InspectorSection>
+    </div>
+  )
+}

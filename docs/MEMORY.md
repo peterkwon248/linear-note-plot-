@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v67)
+- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v69)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -208,6 +208,26 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Encyclopedia 폰트 크기 업: 섹션 H2 text-lg→xl, H3 text-note→base, H4 text-2xs→sm, Contents 항목 text-note→sm
   - WikiTextEditor 하단 고정 미니 툴바: B/I/S/Code + H2/H3 + BulletList/OrderedList/Blockquote
   - **TODO**: 나무위키/위키피디아 에디터 툴바 리서치 후 풀 에디터 수준으로 업그레이드 필요
+
+- **PR #146**: 위키 Phase 2B 대규모 업데이트
+  - TextBlock 리치 읽기 모드: `@tiptap/html` generateHTML + createRenderExtensions (렌더링 전용 확장 세트)
+  - Encyclopedia 하단 참조 섹션: Sources + See Also + Article Info (위키피디아 스타일)
+  - SidePanel Context 시스템: `SidePanelContext` 타입 (note | wiki), `useSidePanelEntity` 공용 훅, 4탭 위키 대응
+  - WikiArticleDetailPanel 신규: 위키 문서 Detail 패널 (타입, aliases, categories, infobox, sections, dates)
+  - 카테고리 UI 전면 개편: InlineCategoryTags 트리 드롭다운 피커, 검색=생성 패턴, 노드 옆 [+] 서브카테고리, 플랫 표시 (위키피디아식) + hover tooltip breadcrumb
+  - 글로벌 fontSize (Aa 버튼): WikiArticle.fontSize 필드, em 기반 wrapper 적용, S/M/L/XL 통일 (0.85/1/1.15/1.3)
+  - contentAlign (Left/Center): WikiArticle.contentAlign 필드, Center=max-w-4xl mx-auto
+  - 섹션 전체 접기/펼치기: chevron 토글 버튼
+  - 타이틀/Aliases 인라인 편집: 양쪽 레이아웃 (default + encyclopedia)
+  - Add block Content 그룹: Table/Infobox/Callout/Blockquote/Toggle/Spacer (Text 블록 + 초기 contentJson)
+  - Copy to new article: 비파괴적 섹션 복사 (splitWikiArticle의 copy 버전)
+  - 시드 카테고리 7개 추가 (v68 마이그레이션): CS, Philosophy, Productivity 등
+  - 섹션 헤딩 사이즈 업: H2 text-2xl, H3 text-xl, H4+ text-lg
+  - 섹션 번호 밝기 업: text-accent/50 → text-accent/80
+  - FROM NOTE 리치 렌더링: IDB body 로드 + generateHTML + note.updatedAt 실시간 반영
+  - Bookmarks 탭 layout.tsx 누락 수정
+  - before-work 스킬 개선: docs/plot-discussion/*.md 전체 읽기 필수화
+  - Store v67 → v69
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

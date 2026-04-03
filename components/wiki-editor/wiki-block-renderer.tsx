@@ -8,7 +8,8 @@ import { useAttachmentUrl } from "@/lib/use-attachment-url"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { useWikiBlockContent, useWikiBlockContentJson } from "@/hooks/use-wiki-block-content"
 import { useEditor, EditorContent } from "@tiptap/react"
-import { createEditorExtensions } from "@/components/editor/core/shared-editor-config"
+import { createEditorExtensions, createRenderExtensions } from "@/components/editor/core/shared-editor-config"
+import { generateHTML } from "@tiptap/html"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { saveBlockBody } from "@/lib/wiki-block-body-store"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
@@ -25,9 +26,18 @@ import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { ArrowSquareUpRight } from "@phosphor-icons/react/dist/ssr/ArrowSquareUpRight"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { CopySimple } from "@phosphor-icons/react/dist/ssr/CopySimple"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
+/* ── Cached render-only extensions for generateHTML ── */
+
+let _renderExts: ReturnType<typeof createRenderExtensions> | null = null
+function getRenderExtensions() {
+  if (!_renderExts) _renderExts = createRenderExtensions()
+  return _renderExts
+}
 
 /* ── Block Renderer ── */
 
@@ -127,7 +137,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
     <div className="group/section">
       <div className={cn(
         "flex items-center gap-1",
-        isEnc && "mt-8 mb-3 border-b border-white/[0.08] pb-1 gap-2",
+        isEnc ? "mt-10 mb-4 border-b border-white/[0.08] pb-1.5 gap-2" : "mt-8 mb-2",
       )}>
         {editable && (
           <button
@@ -150,10 +160,10 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
         {sectionNumber && (
           <span
             className={cn(
-              "shrink-0 font-semibold text-accent/50 tabular-nums",
-              level === 2 && "text-lg",
-              level === 3 && "text-ui",
-              level >= 4 && "text-note",
+              "shrink-0 font-semibold text-accent/80 tabular-nums",
+              level === 2 && "text-2xl",
+              level === 3 && "text-xl",
+              level >= 4 && "text-lg",
             )}
             style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}
           >
@@ -170,9 +180,9 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
             className={cn(
               "flex-1 bg-transparent outline-none border-b border-accent/40 font-semibold text-foreground",
-              level === 2 && "text-lg",
-              level === 3 && "text-ui",
-              level >= 4 && "text-note",
+              level === 2 && "text-2xl",
+              level === 3 && "text-xl",
+              level >= 4 && "text-lg",
             )}
             style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}
           />
@@ -181,9 +191,9 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             onClick={handleStartEdit}
             className={cn(
               "font-semibold text-foreground flex-1",
-              level === 2 && "text-lg",
-              level === 3 && "text-ui",
-              level >= 4 && "text-note",
+              level === 2 && "text-2xl",
+              level === 3 && "text-xl",
+              level >= 4 && "text-lg",
               editable && "cursor-text hover:text-accent/80 transition-colors duration-100",
             )}
             style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}
@@ -218,13 +228,39 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             </PopoverTrigger>
             <PopoverContent align="end" className="w-52 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
               {onSplitSection && (
-                <button
-                  onClick={() => { setMenuOpen(false); onSplitSection(block.id) }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-                >
-                  <ArrowSquareUpRight size={14} weight="regular" />
-                  Move to new article
-                </button>
+                <>
+                  <button
+                    onClick={() => { setMenuOpen(false); onSplitSection(block.id) }}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+                  >
+                    <ArrowSquareUpRight size={14} weight="regular" />
+                    Move to new article
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false)
+                      // Collect this section + its child blocks until next same-or-higher level section
+                      if (!articleId) return
+                      const store = usePlotStore.getState()
+                      const article = store.wikiArticles.find((a) => a.id === articleId)
+                      if (!article) return
+                      const idx = article.blocks.findIndex((b) => b.id === block.id)
+                      if (idx === -1) return
+                      const ids = [block.id]
+                      for (let i = idx + 1; i < article.blocks.length; i++) {
+                        const b = article.blocks[i]
+                        if (b.type === "section" && (b.level ?? 2) <= level) break
+                        ids.push(b.id)
+                      }
+                      const newId = store.copyToNewArticle(articleId, ids, block.title || "Untitled")
+                      if (newId) toast.success(`Copied "${block.title}" to new article`)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+                  >
+                    <CopySimple size={14} weight="regular" />
+                    Copy to new article
+                  </button>
+                </>
               )}
 
               {/* Move to existing article submenu */}
@@ -279,10 +315,10 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                 <span className="text-2xs text-muted-foreground/50">Size</span>
                 <div className="flex items-center gap-1 mt-1">
                   {[
-                    { label: "S", value: 0.8 },
+                    { label: "S", value: 0.85 },
                     { label: "M", value: 1 },
-                    { label: "L", value: 1.2 },
-                    { label: "XL", value: 1.5 },
+                    { label: "L", value: 1.15 },
+                    { label: "XL", value: 1.3 },
                   ].map((opt) => (
                     <button
                       key={opt.label}
@@ -331,6 +367,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
   const [editing, setEditing] = useState(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const blockRef = useRef<HTMLDivElement>(null)
+  const textFontScale = block.fontSize ?? 1
 
   const handleStartEdit = () => {
     if (!editable) return
@@ -380,8 +417,22 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
     return { type: "doc", content: [{ type: "paragraph" }] }
   }, [content, contentJson])
 
+  // Rich HTML for read mode (from contentJson → generateHTML)
+  const renderedHtml = useMemo(() => {
+    if (!contentJson || Object.keys(contentJson).length === 0) return null
+    try {
+      const html = generateHTML(contentJson as any, getRenderExtensions())
+      return html
+    } catch (err) {
+      console.error("[WikiTextBlock] generateHTML failed:", err, "contentJson:", JSON.stringify(contentJson).slice(0, 200))
+      return null
+    }
+  }, [contentJson])
+
+  const textSizeStyle = textFontScale !== 1 ? { fontSize: `${textFontScale}em` } : undefined
+
   return (
-    <div ref={blockRef} className="group/text relative">
+    <div ref={blockRef} className="group/text relative mb-4">
       {editable && (
         <div className="absolute -left-6 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
@@ -395,22 +446,52 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
         </div>
       )}
 
+      {/* Text size toggle (edit mode, hover) */}
+      {editable && !editing && (
+        <div className="absolute -right-1 top-0 opacity-0 group-hover/text:opacity-100 transition-opacity duration-100 flex items-center gap-0.5 bg-popover border border-white/[0.08] rounded-md px-1 py-0.5 shadow-sm z-10" style={{ fontSize: '13px' }}>
+          {[
+            { label: "S", value: 0.85 },
+            { label: "M", value: 1 },
+            { label: "L", value: 1.15 },
+            { label: "XL", value: 1.3 },
+          ].map((opt) => (
+            <button
+              key={opt.label}
+              onClick={(e) => { e.stopPropagation(); onUpdate?.({ fontSize: opt.value === 1 ? undefined : opt.value }) }}
+              className={cn(
+                "px-1.5 py-0.5 text-2xs font-medium rounded transition-colors",
+                (textFontScale === opt.value || (opt.value === 1 && !block.fontSize))
+                  ? "bg-accent/20 text-accent"
+                  : "text-foreground/50 hover:text-foreground/80 hover:bg-active-bg"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {editing && !loading ? (
         <WikiTextEditor
           key={block.id}
           content={initialContent}
           onChange={handleChange}
+          style={textSizeStyle}
         />
       ) : (
         <div
           onClick={handleStartEdit}
           className={cn(
-            "text-note leading-relaxed text-foreground/85 whitespace-pre-wrap rounded-md px-3 py-2",
+            "prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground/85 rounded-md px-3 py-2",
             editable && "cursor-text hover:bg-hover-bg transition-colors duration-100",
+            !renderedHtml && "whitespace-pre-wrap",
           )}
+          style={textSizeStyle}
         >
-          {content || (
-            <span className="text-muted-foreground/30 italic">Write something...</span>
+          {renderedHtml ? (
+            <div dangerouslySetInnerHTML={{ __html: renderedHtml }} />
+          ) : (
+            content || <span className="text-muted-foreground/30 italic">Write something...</span>
           )}
         </div>
       )}
@@ -422,9 +503,11 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
 function WikiTextEditor({
   content,
   onChange,
+  style,
 }: {
   content: Record<string, unknown>
   onChange: (json: Record<string, unknown>, plainText: string) => void
+  style?: React.CSSProperties
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -455,10 +538,11 @@ function WikiTextEditor({
     <div
       onClick={handleContainerClick}
       className="border border-accent/20 rounded-md focus-within:border-accent/40 transition-colors cursor-text"
+      style={style}
     >
       <EditorContent
         editor={editor}
-        className="w-full prose prose-sm dark:prose-invert max-w-none focus:outline-none text-note leading-relaxed text-foreground/85 px-3 py-2 min-h-[120px]"
+        className="w-full prose dark:prose-invert max-w-none focus:outline-none text-base leading-relaxed text-foreground/85 px-3 py-2 min-h-[120px]"
       />
       {/* Full toolbar shared with note editor */}
       <FixedToolbar editor={editor} tier="wiki" position="bottom" />
@@ -475,6 +559,25 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
   const [picking, setPicking] = useState(!block.noteId) // auto-open picker if no note selected
   const [query, setQuery] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Load note body from IDB for rich rendering — re-fetch when note is updated
+  const noteUpdatedAt = note?.updatedAt
+  const [noteBodyJson, setNoteBodyJson] = useState<Record<string, unknown> | null>(null)
+  const [noteBodyText, setNoteBodyText] = useState<string>("")
+  useEffect(() => {
+    if (!block.noteId) return
+    let cancelled = false
+    import("@/lib/note-body-store").then(({ getBody }) => {
+      getBody(block.noteId!).then((body) => {
+        if (cancelled) return
+        if (body) {
+          setNoteBodyJson(body.contentJson ?? null)
+          setNoteBodyText(body.content ?? "")
+        }
+      })
+    })
+    return () => { cancelled = true }
+  }, [block.noteId, noteUpdatedAt])
 
   const filteredNotes = useMemo(() => {
     if (!query.trim()) return notes.filter(n => !n.trashed).slice(0, 8)
@@ -569,7 +672,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
       )}
       <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-2">
         <FileText className="text-accent/60" size={14} weight="regular" />
-        <span className="text-2xs font-medium uppercase tracking-wide text-accent/50">From Note</span>
+        <span className="text-2xs font-medium uppercase tracking-wide text-accent/80">From Note</span>
         <span className="text-note font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
         <button
           onClick={() => usePlotStore.getState().openSidePeek(block.noteId!)}
@@ -588,9 +691,14 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
           </button>
         )}
       </div>
-      <div className="px-4 py-3 text-note leading-relaxed text-foreground/75 whitespace-pre-wrap">
-        {note.content ? (
-          note.content.length > 500 ? note.content.slice(0, 500) + "..." : note.content
+      <div className="px-4 py-3 text-base leading-relaxed text-foreground/75">
+        {noteBodyJson && Object.keys(noteBodyJson).length > 0 ? (
+          <div
+            className="prose dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: (() => { try { return generateHTML(noteBodyJson as any, getRenderExtensions()) } catch { return "" } })() }}
+          />
+        ) : noteBodyText ? (
+          <div className="whitespace-pre-wrap">{noteBodyText}</div>
         ) : (
           <span className="text-muted-foreground/30 italic">Empty note</span>
         )}
@@ -830,7 +938,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
 /* ── Add Block Button ── */
 
 export function AddBlockButton({ onAdd, nearestSectionLevel }: {
-  onAdd: (type: WikiBlock["type"], level?: number) => void
+  onAdd: (type: string, level?: number) => void
   /** Level of the nearest section block above this insertion point (2, 3, or 4) */
   nearestSectionLevel?: number
 }) {
@@ -844,15 +952,24 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
   // Only show Subsection option when a parent section exists and it's below max depth
   const canAddSubsection = nearestSectionLevel != null && nearestSectionLevel < 4
 
-  const items: { type: WikiBlock["type"]; level?: number; label: string; desc: string }[] = [
+  const structureItems: { type: string; level?: number; label: string; desc: string }[] = [
     { type: "section", label: "Section", desc: "H2 heading divider" },
     ...(canAddSubsection
-      ? [{ type: "section" as const, level: subsectionLevel, label: "Subsection", desc: `H${subsectionLevel} under current section` }]
+      ? [{ type: "section", level: subsectionLevel, label: "Subsection", desc: `H${subsectionLevel} under current section` }]
       : []),
     { type: "text", label: "Text", desc: "Write directly" },
     { type: "note-ref", label: "Note", desc: "Embed a note" },
     { type: "image", label: "Image", desc: "Upload image" },
     { type: "url", label: "URL", desc: "Embed a link" },
+  ]
+
+  const contentItems: { type: string; label: string; desc: string }[] = [
+    { type: "text:table", label: "Table", desc: "Data table" },
+    { type: "text:infobox", label: "Infobox", desc: "Key-value info panel" },
+    { type: "text:callout", label: "Callout", desc: "Highlighted note" },
+    { type: "text:blockquote", label: "Blockquote", desc: "Quote block" },
+    { type: "text:toggle", label: "Toggle", desc: "Collapsible section" },
+    { type: "text:spacer", label: "Spacer", desc: "Empty space" },
   ]
 
   return (
@@ -870,7 +987,7 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div className="absolute top-full z-20 mt-1 rounded-lg border border-border-subtle bg-surface-overlay shadow-[0_4px_12px_rgba(0,0,0,0.2)] py-1 min-w-[180px]">
-            {items.map(({ type, level, label, desc }, idx) => (
+            {structureItems.map(({ type, level, label, desc }, idx) => (
               <button
                 key={`${type}-${level ?? "default"}-${idx}`}
                 onClick={() => { onAdd(type, level); setOpen(false) }}
@@ -880,6 +997,20 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
                 <span className="text-2xs text-muted-foreground/30">{desc}</span>
               </button>
             ))}
+            <div className="my-1 border-t border-white/[0.06]" />
+            <div className="px-3 py-1 text-2xs text-muted-foreground/30">Content</div>
+            {contentItems.map(({ type, label, desc }) => (
+              <button
+                key={type}
+                onClick={() => { onAdd(type); setOpen(false) }}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
+              >
+                <span className="text-note font-medium text-foreground/80">{label}</span>
+                <span className="text-2xs text-muted-foreground/30">{desc}</span>
+              </button>
+            ))}
+            <div className="my-1 border-t border-white/[0.06]" />
+            <div className="px-3 py-1 text-2xs text-muted-foreground/20 italic">Use / in text for more</div>
           </div>
         </>
       )}

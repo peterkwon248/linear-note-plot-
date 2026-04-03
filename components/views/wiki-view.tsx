@@ -26,6 +26,7 @@ import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
 import {
   Dialog,
   DialogContent,
@@ -165,6 +166,11 @@ export function WikiView() {
   const [selectedWikiArticleId, setSelectedWikiArticleId] = useState<string | null>(null)
   const [isEditingWikiArticle, setIsEditingWikiArticle] = useState(false)
 
+  // Collapse/Expand all sections: null = idle, "collapse" | "expand" = command
+  const [collapseAllCmd, setCollapseAllCmd] = useState<"collapse" | "expand" | null>(null)
+  // Track whether all sections are currently collapsed (reported by child)
+  const [allSectionsCollapsed, setAllSectionsCollapsed] = useState(false)
+
   // Navigate to WikiArticle when triggered from outside (e.g., "Referenced in" badge)
   const pendingArticleId = usePendingWikiArticle()
   useEffect(() => {
@@ -178,6 +184,18 @@ export function WikiView() {
   useEffect(() => {
     setIsEditingArticle(false)
   }, [selectedArticleId])
+
+  // Sync sidePanelContext when wiki article selection changes
+  useEffect(() => {
+    if (selectedWikiArticleId) {
+      usePlotStore.getState().setSidePanelContext({ type: "wiki", id: selectedWikiArticleId })
+    } else if (selectedArticleId) {
+      // Legacy note-based article — treat as note context
+      usePlotStore.getState().setSidePanelContext({ type: "note", id: selectedArticleId })
+    } else {
+      usePlotStore.getState().setSidePanelContext(null)
+    }
+  }, [selectedWikiArticleId, selectedArticleId])
 
   // Navigate to notes view (for non-wiki notes)
   const navigateToNote = useCallback(
@@ -600,6 +618,86 @@ export function WikiView() {
           title={selectedWikiArticle.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
+              {/* Font size dropdown */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                    title="Font size"
+                  >
+                    <TextAa size={18} weight="regular" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-auto p-2.5" sideOffset={4}>
+                  <div className="flex items-center gap-1.5">
+                    {([
+                      { label: "S", value: 0.85 },
+                      { label: "M", value: 1 },
+                      { label: "L", value: 1.15 },
+                      { label: "XL", value: 1.3 },
+                    ] as const).map((opt) => {
+                      const active = (selectedWikiArticle.fontSize ?? 1) === opt.value
+                      return (
+                        <button
+                          key={opt.label}
+                          onClick={() => updateWikiArticle(selectedWikiArticleId, { fontSize: opt.value === 1 ? undefined : opt.value })}
+                          className={cn(
+                            "px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-100",
+                            active
+                              ? "bg-accent/20 text-accent"
+                              : "text-foreground/60 hover:bg-hover-bg"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="my-1.5 border-t border-white/[0.08]" />
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => updateWikiArticle(selectedWikiArticleId, { contentAlign: undefined })}
+                      className={cn("px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                        !selectedWikiArticle.contentAlign || selectedWikiArticle.contentAlign === "left"
+                          ? "bg-accent/20 text-accent"
+                          : "text-foreground/60 hover:bg-hover-bg"
+                      )}
+                    >
+                      Left
+                    </button>
+                    <button
+                      onClick={() => updateWikiArticle(selectedWikiArticleId, { contentAlign: "center" })}
+                      className={cn("px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                        selectedWikiArticle.contentAlign === "center"
+                          ? "bg-accent/20 text-accent"
+                          : "text-foreground/60 hover:bg-hover-bg"
+                      )}
+                    >
+                      Center
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Collapse/Expand all sections */}
+              {selectedWikiArticle.blocks.some((b) => b.type === "section") && (
+                <button
+                  onClick={() => {
+                    setCollapseAllCmd(allSectionsCollapsed ? "expand" : "collapse")
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                  title={allSectionsCollapsed ? "Expand all sections" : "Collapse all sections"}
+                >
+                  <svg width={17} height={17} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    {allSectionsCollapsed ? (
+                      <path d="M4 6l4 4 4-4" />
+                    ) : (
+                      <path d="M12 10l-4-4-4 4" />
+                    )}
+                  </svg>
+                </button>
+              )}
+
               {/* Layout toggle */}
               <button
                 onClick={() => {
@@ -654,11 +752,19 @@ export function WikiView() {
             article={selectedWikiArticle}
             isEditing={isEditingWikiArticle}
             onBack={() => { setSelectedWikiArticleId(null); setIsEditingWikiArticle(false) }}
+            collapseAllCmd={collapseAllCmd}
+            onCollapseAllDone={() => setCollapseAllCmd(null)}
+            onAllCollapsedChange={setAllSectionsCollapsed}
+            fontSize={selectedWikiArticle.fontSize}
           />
         ) : (
           <WikiArticleView
             articleId={selectedWikiArticleId}
             editable={isEditingWikiArticle}
+            collapseAllCmd={collapseAllCmd}
+            onCollapseAllDone={() => setCollapseAllCmd(null)}
+            onAllCollapsedChange={setAllSectionsCollapsed}
+            fontSize={selectedWikiArticle.fontSize}
             onDelete={() => {
               deleteWikiArticle(selectedWikiArticleId)
               setSelectedWikiArticleId(null)

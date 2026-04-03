@@ -12,7 +12,7 @@ interface SortableBlockItemProps {
   sectionNumber?: string
   onUpdate?: (patch: Partial<Omit<WikiBlock, "id">>) => void
   onDelete?: () => void
-  onAddBlock?: (type: WikiBlock["type"], level?: number) => void
+  onAddBlock?: (type: string, level?: number) => void
   /** Level of the nearest section block at/above this block, for Subsection affordance */
   nearestSectionLevel?: number
   /** Parent article ID — needed for unmerge and split operations */

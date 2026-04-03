@@ -742,4 +742,84 @@ export function createEditorExtensions(
   }
 }
 
+/**
+ * Render-only extensions for `generateHTML()`.
+ * No keyboard shortcuts, no plugins, no interactive features.
+ * Reuses the module-scope `lowlight` instance.
+ */
+export function createRenderExtensions(): Extension[] {
+  return [
+    StarterKit.configure({
+      heading: { levels: [1, 2, 3, 4, 5, 6] },
+      dropcursor: false,
+      codeBlock: false,
+    }),
+    TaskList,
+    TaskItem.configure({ nested: true }),
+    Highlight.configure({ multicolor: true }),
+    Link.configure({ openOnClick: false }),
+    Underline,
+    TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right", "justify"] }),
+    Color,
+    TextStyle,
+    Superscript,
+    Subscript,
+    Table.configure({ resizable: false }),
+    TableRow,
+    TableCell.extend({
+      addAttributes() {
+        return {
+          ...this.parent?.(),
+          backgroundColor: {
+            default: null,
+            parseHTML: (el: HTMLElement) => el.style.backgroundColor || null,
+            renderHTML: (attrs: Record<string, unknown>) => {
+              if (!attrs.backgroundColor) return {}
+              return { style: `background-color: ${attrs.backgroundColor}` }
+            },
+          },
+        }
+      },
+    }),
+    TableHeader.extend({
+      addAttributes() {
+        return {
+          ...this.parent?.(),
+          backgroundColor: {
+            default: null,
+            parseHTML: (el: HTMLElement) => el.style.backgroundColor || null,
+            renderHTML: (attrs: Record<string, unknown>) => {
+              if (!attrs.backgroundColor) return {}
+              return { style: `background-color: ${attrs.backgroundColor}` }
+            },
+          },
+        }
+      },
+    }),
+    ResizableImage.configure({ inline: false, allowBase64: true }),
+    CodeBlockLowlight.configure({ lowlight }),
+    Typography,
+    Gapcursor,
+    CharacterCount,
+    FontFamily,
+    Youtube.configure({ inline: false, allowFullscreen: true, HTMLAttributes: { class: "youtube-embed" } }),
+    Details.configure({ HTMLAttributes: { class: "details-block" }, persist: true }),
+    DetailsSummary,
+    DetailsContent,
+    Mathematics,
+    Audio,
+    Twitch,
+    // Wiki-specific nodes
+    WikiQuoteExtension,
+    CalloutBlockNode,
+    SummaryBlockNode,
+    ColumnsBlockNode,
+    ColumnCellNode,
+    InfoboxBlockNode,
+    ContentBlockNode,
+    AnchorMarkNode,
+    AnchorDividerNode,
+  ] as Extension[]
+}
+
 export { TypewriterExtension }

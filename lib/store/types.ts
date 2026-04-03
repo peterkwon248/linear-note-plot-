@@ -26,6 +26,11 @@ export interface EditorState {
 
 export type SidePanelMode = 'detail' | 'connections' | 'activity' | 'peek' | 'bookmarks'
 
+export type SidePanelContext =
+  | { type: "note"; id: string }
+  | { type: "wiki"; id: string }
+  | null
+
 export interface PlotState {
   // ── Data ──
   notes: Note[]
@@ -56,6 +61,10 @@ export interface PlotState {
 
   // Preview (list row click — shows details in side panel without opening editor)
   previewNoteId: string | null
+
+  // Side Panel Context (entity-aware — works for both notes and wiki articles)
+  sidePanelContext: SidePanelContext
+  setSidePanelContext: (ctx: SidePanelContext) => void
 
   // Navigation History
   navigationHistory: string[]  // stack of note IDs
@@ -265,6 +274,7 @@ export interface PlotState {
   reorderWikiBlocks: (articleId: string, blockIds: string[]) => void
   mergeWikiArticles: (primaryId: string, secondaryId: string, options?: { title?: string }) => void
   splitWikiArticle: (sourceId: string, blockIds: string[], newTitle: string) => string | null
+  copyToNewArticle: (sourceId: string, blockIds: string[], newTitle: string) => string | null
   unmergeWikiArticle: (articleId: string, dividerBlockId: string) => string | null
   mergeMultipleWikiArticles: (sourceIds: string[], options: {
     title: string

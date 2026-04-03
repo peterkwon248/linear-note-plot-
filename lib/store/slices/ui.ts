@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid"
 import type { Note, ActiveView } from "../../types"
+import type { SidePanelContext } from "../types"
 import type { ViewState, ViewContextKey } from "../../view-engine/types"
 import type { WorkspaceTab } from "../../workspace/types"
 import { now, type AppendEventFn } from "../helpers"
@@ -32,7 +33,7 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
           }
         }
       }
-      set({ selectedNoteId: id })
+      set({ selectedNoteId: id, sidePanelContext: id ? { type: "note", id } : null })
     },
 
     openNote: (id: string, opts?: { forceNewTab?: boolean }) => {
@@ -147,7 +148,10 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
 
     setPreviewNoteId: (id: string | null) => set({
       previewNoteId: id,
+      sidePanelContext: id ? { type: "note", id } : null,
     }),
+
+    setSidePanelContext: (ctx: SidePanelContext) => set({ sidePanelContext: ctx }),
 
     openSidePeek: (noteId: string) => set({ sidePanelPeekNoteId: noteId, sidePanelMode: 'peek' as const, sidePanelOpen: true }),
     closeSidePeek: () => set((s: any) => {
