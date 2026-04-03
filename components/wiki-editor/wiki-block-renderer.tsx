@@ -78,6 +78,8 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
       return <ImageBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "url":
       return <UrlBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+    case "table":
+      return <TableBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     default:
       return null
   }
@@ -418,17 +420,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
     return { type: "doc", content: [{ type: "paragraph" }] }
   }, [content, contentJson])
 
-  // Rich HTML for read mode (from contentJson → generateHTML)
-  const renderedHtml = useMemo(() => {
-    if (!contentJson || Object.keys(contentJson).length === 0) return null
-    try {
-      const html = generateHTML(contentJson as any, getRenderExtensions())
-      return html
-    } catch (err) {
-      console.error("[WikiTextBlock] generateHTML failed:", err, "contentJson:", JSON.stringify(contentJson).slice(0, 200))
-      return null
-    }
-  }, [contentJson])
+  const hasRichContent = !!(contentJson && Object.keys(contentJson).length > 0)
 
   const textSizeStyle = textFontScale !== 1 ? { fontSize: `${textFontScale}em` } : undefined
 
@@ -505,20 +497,40 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
         <div
           onClick={handleStartEdit}
           className={cn(
-            "prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground/85 rounded-md px-3 py-2",
+            "rounded-md px-3 py-2",
             editable && "cursor-text hover:bg-hover-bg transition-colors duration-100",
-            !renderedHtml && "whitespace-pre-wrap",
           )}
           style={textSizeStyle}
         >
-          {renderedHtml ? (
-            <div dangerouslySetInnerHTML={{ __html: renderedHtml }} />
+          {hasRichContent ? (
+            <ReadOnlyBlock content={initialContent} />
           ) : (
-            content || <span className="text-muted-foreground/30 italic">Write something...</span>
+            <div className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground/85 whitespace-pre-wrap">
+              {content || <span className="text-muted-foreground/30 italic">Write something...</span>}
+            </div>
           )}
         </div>
       )}
     </div>
+  )
+}
+
+/** Read-only TipTap renderer — renders all custom nodes (Table, Callout, Toggle, etc.) correctly */
+function ReadOnlyBlock({ content }: { content: Record<string, unknown> }) {
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: createEditorExtensions("wiki", { placeholder: "" }),
+    content: content && Object.keys(content).length > 0 ? content : undefined,
+    editable: false,
+  })
+
+  if (!editor) return null
+
+  return (
+    <EditorContent
+      editor={editor}
+      className="w-full prose dark:prose-invert max-w-none focus:outline-none text-base leading-relaxed text-foreground/85 [&_.ProseMirror]:p-0"
+    />
   )
 }
 
@@ -1063,6 +1075,283 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
   )
 }
 
+/* ── Table Block ── */
+
+function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const headers = block.tableHeaders ?? []
+  const rows = block.tableRows ?? []
+  const aligns = block.tableColumnAligns ?? []
+  const caption = block.tableCaption ?? ""
+
+  // Editing state for inline cell editing
+  const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null)
+  const [cellValue, setCellValue] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Focus input when editingCell changes
+  useEffect(() => {
+    if (editingCell) {
+      setTimeout(() => inputRef.current?.focus(), 0)
+    }
+  }, [editingCell])
+
+  return (
+    <div className="group/table relative mb-4">
+      {/* Drag handle on left */}
+      {editable && (
+        <div className="absolute -left-6 top-1 opacity-0 group-hover/table:opacity-30 hover:!opacity-100 transition-opacity duration-100">
+          <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
+            <DotsSixVertical size={14} weight="regular" />
+          </button>
+        </div>
+      )}
+
+      {/* Menu on right */}
+      {editable && (
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+              className="absolute right-1 top-1 opacity-0 group-hover/table:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+            >
+              <DotsThree size={14} weight="bold" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+            {onDelete && (
+              <button
+                onClick={() => { setMenuOpen(false); onDelete() }}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+              >
+                <Trash size={14} weight="regular" />
+                Delete table
+              </button>
+            )}
+          </PopoverContent>
+        </Popover>
+      )}
+
+      <figure className="my-2">
+        {/* Caption */}
+        {(caption || editable) && (
+          <figcaption className="text-center text-sm font-semibold text-foreground/70 mb-2">
+            {editable ? (
+              <input
+                value={caption}
+                onChange={(e) => onUpdate?.({ tableCaption: e.target.value })}
+                placeholder="Table caption..."
+                className="bg-transparent text-center outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
+              />
+            ) : caption}
+          </figcaption>
+        )}
+
+        {/* Table */}
+        <table className="border-collapse rounded-lg overflow-hidden mx-auto" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
+          <thead>
+            <tr>
+              {headers.map((h, ci) => (
+                <th
+                  key={ci}
+                  className="font-semibold text-center px-3 py-2.5 relative group/th"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    textAlign: aligns[ci] ?? 'center',
+                    minWidth: 100,
+                  }}
+                >
+                  {/* Delete column button */}
+                  {editable && headers.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onUpdate?.({
+                          tableHeaders: headers.filter((_, i) => i !== ci),
+                          tableRows: rows.map(r => r.filter((_, i) => i !== ci)),
+                          tableColumnAligns: aligns.filter((_, i) => i !== ci),
+                        })
+                      }}
+                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-destructive/80 text-white text-[9px] leading-none items-center justify-center hidden group-hover/th:flex transition-all z-10"
+                      title="Delete column"
+                    >
+                      ×
+                    </button>
+                  )}
+                  {editable && editingCell?.row === -1 && editingCell?.col === ci ? (
+                    <input
+                      ref={inputRef}
+                      value={cellValue}
+                      onChange={(e) => setCellValue(e.target.value)}
+                      onBlur={() => {
+                        const newHeaders = [...headers]
+                        newHeaders[ci] = cellValue
+                        onUpdate?.({ tableHeaders: newHeaders })
+                        setEditingCell(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === "Tab") {
+                          e.preventDefault()
+                          const newHeaders = [...headers]
+                          newHeaders[ci] = cellValue
+                          onUpdate?.({ tableHeaders: newHeaders })
+                          if (e.key === "Tab") {
+                            const nextCol = e.shiftKey ? ci - 1 : ci + 1
+                            if (nextCol >= 0 && nextCol < headers.length) {
+                              setCellValue(headers[nextCol])
+                              setEditingCell({ row: -1, col: nextCol })
+                            } else if (!e.shiftKey && rows.length > 0) {
+                              setCellValue(rows[0][0] ?? "")
+                              setEditingCell({ row: 0, col: 0 })
+                            } else {
+                              setEditingCell(null)
+                            }
+                          } else {
+                            setEditingCell(null)
+                          }
+                        }
+                        if (e.key === "Escape") setEditingCell(null)
+                      }}
+                      className="bg-transparent text-center outline-none w-full font-semibold"
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      onClick={() => {
+                        if (!editable) return
+                        setCellValue(h)
+                        setEditingCell({ row: -1, col: ci })
+                      }}
+                      className={editable ? "cursor-text" : ""}
+                    >
+                      {h || (editable ? "..." : "")}
+                    </span>
+                  )}
+                </th>
+              ))}
+              {/* Add column button */}
+              {editable && (
+                <th
+                  className="w-8 cursor-pointer text-center hover:bg-white/[0.04] transition-colors"
+                  style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                  onClick={() => {
+                    onUpdate?.({
+                      tableHeaders: [...headers, `Header ${headers.length + 1}`],
+                      tableRows: rows.map(r => [...r, ""]),
+                      tableColumnAligns: [...aligns, "center"],
+                    })
+                  }}
+                >
+                  <PhPlus size={12} weight="regular" className="mx-auto text-muted-foreground/30" />
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, ri) => (
+              <tr key={ri} className="group/row relative">
+                {row.map((cell, ci) => (
+                  <td
+                    key={ci}
+                    className="px-3 py-2"
+                    style={{
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      textAlign: aligns[ci] ?? 'center',
+                    }}
+                  >
+                    {editable && editingCell?.row === ri && editingCell?.col === ci ? (
+                      <input
+                        ref={inputRef}
+                        value={cellValue}
+                        onChange={(e) => setCellValue(e.target.value)}
+                        onBlur={() => {
+                          const newRows = rows.map(r => [...r])
+                          newRows[ri][ci] = cellValue
+                          onUpdate?.({ tableRows: newRows })
+                          setEditingCell(null)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === "Tab") {
+                            e.preventDefault()
+                            const newRows = rows.map(r => [...r])
+                            newRows[ri][ci] = cellValue
+                            onUpdate?.({ tableRows: newRows })
+                            if (e.key === "Tab") {
+                              let nextRow = ri, nextCol = e.shiftKey ? ci - 1 : ci + 1
+                              if (nextCol >= headers.length) { nextCol = 0; nextRow = ri + 1 }
+                              if (nextCol < 0) { nextCol = headers.length - 1; nextRow = ri - 1 }
+                              if (nextRow >= 0 && nextRow < rows.length) {
+                                setCellValue(rows[nextRow]?.[nextCol] ?? "")
+                                setEditingCell({ row: nextRow, col: nextCol })
+                              } else if (nextRow === -1) {
+                                setCellValue(headers[nextCol] ?? "")
+                                setEditingCell({ row: -1, col: nextCol })
+                              } else {
+                                setEditingCell(null)
+                              }
+                            } else {
+                              // Enter: move down
+                              if (ri + 1 < rows.length) {
+                                setCellValue(rows[ri + 1]?.[ci] ?? "")
+                                setEditingCell({ row: ri + 1, col: ci })
+                              } else {
+                                setEditingCell(null)
+                              }
+                            }
+                          }
+                          if (e.key === "Escape") setEditingCell(null)
+                        }}
+                        className="bg-transparent outline-none w-full"
+                        style={{ textAlign: aligns[ci] ?? 'center' }}
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        onClick={() => {
+                          if (!editable) return
+                          setCellValue(cell)
+                          setEditingCell({ row: ri, col: ci })
+                        }}
+                        className={cn("block min-h-[1.2em]", editable && "cursor-text")}
+                      >
+                        {cell}
+                      </span>
+                    )}
+                  </td>
+                ))}
+                {editable && (
+                  <td
+                    className="w-8 text-center cursor-pointer hover:bg-destructive/10 transition-colors"
+                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                    onClick={() => onUpdate?.({ tableRows: rows.filter((_, i) => i !== ri) })}
+                    title="Delete row"
+                  >
+                    <span className="text-destructive/50 hover:text-destructive text-xs">×</span>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Add row button */}
+        {editable && (
+          <button
+            onClick={() => {
+              onUpdate?.({ tableRows: [...rows, new Array(headers.length).fill("")] })
+            }}
+            className="mt-1 flex w-full items-center justify-center gap-1 rounded-b-lg py-1.5 text-2xs text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-white/[0.03] transition-colors"
+          >
+            <PhPlus size={10} weight="regular" />
+            Add row
+          </button>
+        )}
+      </figure>
+    </div>
+  )
+}
+
 /* ── Add Block Button ── */
 
 export function AddBlockButton({ onAdd, nearestSectionLevel }: {
@@ -1089,10 +1378,10 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
     { type: "note-ref", label: "Note", desc: "Embed a note" },
     { type: "image", label: "Image", desc: "Upload image" },
     { type: "url", label: "URL", desc: "Embed a link" },
+    { type: "table", label: "Table", desc: "Data table" },
   ]
 
   const contentItems: { type: string; label: string; desc: string }[] = [
-    { type: "text:table", label: "Table", desc: "Data table" },
     { type: "text:callout", label: "Callout", desc: "Highlighted note" },
     { type: "text:blockquote", label: "Blockquote", desc: "Quote block" },
     { type: "text:toggle", label: "Toggle", desc: "Collapsible section" },

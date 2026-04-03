@@ -85,6 +85,14 @@ export interface WikiBlock {
   url?: string
   /** URL: title/label for the link */
   urlTitle?: string
+  /** Table: caption text */
+  tableCaption?: string
+  /** Table: header row cells */
+  tableHeaders?: string[]
+  /** Table: data rows (array of string arrays) */
+  tableRows?: string[][]
+  /** Table: column alignment */
+  tableColumnAligns?: ("left" | "center" | "right")[]
   /** Section: custom font size multiplier (1 = default, 0.8 = small, 1.2 = large, 1.5 = x-large) */
   fontSize?: number
   /** Merge history: snapshot of the merged article for unmerge */

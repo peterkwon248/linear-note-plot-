@@ -146,25 +146,6 @@ function computeSectionNumbers(blocks: WikiBlock[]): Map<string, string> {
 
 function getInitialContentJson(subtype: string): Record<string, unknown> {
   switch (subtype) {
-    case "table":
-      return {
-        type: "doc",
-        content: [{
-          type: "table",
-          content: [
-            { type: "tableRow", content: [
-              { type: "tableHeader", content: [{ type: "paragraph", content: [{ type: "text", text: "Header 1" }] }] },
-              { type: "tableHeader", content: [{ type: "paragraph", content: [{ type: "text", text: "Header 2" }] }] },
-              { type: "tableHeader", content: [{ type: "paragraph", content: [{ type: "text", text: "Header 3" }] }] },
-            ]},
-            { type: "tableRow", content: [
-              { type: "tableCell", content: [{ type: "paragraph" }] },
-              { type: "tableCell", content: [{ type: "paragraph" }] },
-              { type: "tableCell", content: [{ type: "paragraph" }] },
-            ]},
-          ]
-        }]
-      }
     case "infobox":
       return {
         type: "doc",
@@ -173,19 +154,19 @@ function getInitialContentJson(subtype: string): Record<string, unknown> {
     case "callout":
       return {
         type: "doc",
-        content: [{ type: "calloutBlock", content: [{ type: "paragraph" }] }]
+        content: [{ type: "calloutBlock", content: [{ type: "paragraph", content: [{ type: "text", text: "Callout text here" }] }] }]
       }
     case "blockquote":
       return {
         type: "doc",
-        content: [{ type: "blockquote", content: [{ type: "paragraph" }] }]
+        content: [{ type: "blockquote", content: [{ type: "paragraph", content: [{ type: "text", text: "Quote text here" }] }] }]
       }
     case "toggle":
       return {
         type: "doc",
         content: [{ type: "details", content: [
-          { type: "detailsSummary", content: [{ type: "paragraph" }] },
-          { type: "detailsContent", content: [{ type: "paragraph" }] },
+          { type: "detailsSummary", content: [{ type: "paragraph", content: [{ type: "text", text: "Toggle title" }] }] },
+          { type: "detailsContent", content: [{ type: "paragraph", content: [{ type: "text", text: "Toggle content" }] }] },
         ]}]
       }
     case "divider":
@@ -362,6 +343,18 @@ export function WikiArticleView({ articleId, editable = false, onDelete, collaps
   }, [dragSplitPrompt, article, articleId, splitWikiArticle])
 
   const handleAddBlock = useCallback((type: string, afterBlockId?: string, level?: number) => {
+    if (type === "table") {
+      const block: Omit<WikiBlock, "id"> = {
+        type: "table",
+        tableCaption: "",
+        tableHeaders: ["Header 1", "Header 2", "Header 3"],
+        tableRows: [["", "", ""]],
+        tableColumnAligns: ["center", "center", "center"],
+      }
+      addWikiBlock(articleId, block, afterBlockId)
+      return
+    }
+
     if (type === "url") {
       const url = window.prompt("Enter URL:")
       if (!url) return
