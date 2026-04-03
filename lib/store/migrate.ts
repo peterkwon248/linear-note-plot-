@@ -735,5 +735,45 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v68: Add more seed wiki categories if only the original 3 exist
+  if (Array.isArray(state.wikiCategories)) {
+    const cats = state.wikiCategories as { id: string; name: string; parentIds: string[] }[]
+    const existingIds = new Set(cats.map((c) => c.id))
+    const newCats = [
+      { id: "wcat-seed-4", name: "Computer Science", parentIds: [], description: "Fundamentals of computing and programming" },
+      { id: "wcat-seed-5", name: "Algorithms", parentIds: ["wcat-seed-4"], description: "Algorithm design and analysis" },
+      { id: "wcat-seed-6", name: "Data Structures", parentIds: ["wcat-seed-4"], description: "Organizing and storing data efficiently" },
+      { id: "wcat-seed-7", name: "Philosophy", parentIds: [], description: "Fundamental questions about existence, knowledge, and ethics" },
+      { id: "wcat-seed-8", name: "Epistemology", parentIds: ["wcat-seed-7"], description: "Theory of knowledge" },
+      { id: "wcat-seed-9", name: "Productivity", parentIds: [], description: "Methods and tools for personal effectiveness" },
+      { id: "wcat-seed-10", name: "Note-taking", parentIds: ["wcat-seed-9", "wcat-seed-1"], description: "Strategies for effective note-taking" },
+    ]
+    const now = new Date().toISOString()
+    for (const nc of newCats) {
+      if (!existingIds.has(nc.id)) {
+        cats.push({ ...nc, createdAt: now, updatedAt: now } as any)
+      }
+    }
+  }
+
+  // v69: Restore "Overview" section to Zettelkasten article if it was accidentally split out
+  if (Array.isArray(state.wikiArticles)) {
+    const articles = state.wikiArticles as any[]
+    const overviewIdx = articles.findIndex((a) => a.title === "Overview" && a.id !== "wiki-article-1")
+    const zettelIdx = articles.findIndex((a) => a.id === "wiki-article-1")
+    if (overviewIdx !== -1 && zettelIdx !== -1) {
+      const overviewArticle = articles[overviewIdx]
+      const zettel = articles[zettelIdx]
+      // Merge overview blocks back to front of Zettelkasten
+      const hasOverviewSection = zettel.blocks?.some((b: any) => b.type === "section" && b.title === "Overview")
+      if (!hasOverviewSection && overviewArticle.blocks?.length > 0) {
+        zettel.blocks = [...overviewArticle.blocks, ...(zettel.blocks ?? [])]
+        zettel.updatedAt = new Date().toISOString()
+      }
+      // Remove the standalone Overview article
+      articles.splice(overviewIdx, 1)
+    }
+  }
+
   return state as unknown as PlotState
 }

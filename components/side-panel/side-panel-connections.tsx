@@ -112,9 +112,122 @@ function SubLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
+// ── Wiki Article Connections ─────────────────────────────
+
+function WikiArticleConnections() {
+  const ctx = usePlotStore((s) => s.sidePanelContext)
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const openSidePeek = usePlotStore((s) => s.openSidePeek)
+
+  const articleId = ctx?.type === "wiki" ? ctx.id : null
+  const article = useMemo(
+    () => wikiArticles.find((a) => a.id === articleId) ?? null,
+    [wikiArticles, articleId]
+  )
+
+  // Notes referenced by this article (note-ref blocks)
+  const referencedNotes = useMemo(() => {
+    if (!article?.blocks) return []
+    const noteIds = article.blocks
+      .filter((b) => b.type === "note-ref" && b.noteId)
+      .map((b) => b.noteId!)
+    const unique = [...new Set(noteIds)]
+    return unique
+      .map((id) => notes.find((n) => n.id === id))
+      .filter((n): n is NonNullable<typeof n> => !!n && !n.trashed)
+  }, [article, notes])
+
+  // Other wiki articles that reference this article (have note-ref blocks pointing here)
+  const referencedBy = useMemo(() => {
+    if (!articleId) return []
+    return wikiArticles.filter(
+      (a) =>
+        a.id !== articleId &&
+        a.blocks?.some((b) => b.type === "note-ref" && b.noteId === articleId)
+    )
+  }, [articleId, wikiArticles])
+
+  if (!article) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-center">
+        <p className="text-note text-muted-foreground">
+          Select a wiki article to see connections
+        </p>
+      </div>
+    )
+  }
+
+  const totalCount = referencedNotes.length + referencedBy.length
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <ConnectionSection
+        title="Connected"
+        icon={<LinkSimple size={14} weight="regular" />}
+        count={totalCount}
+        defaultOpen
+      >
+        {totalCount === 0 ? (
+          <p className="text-note text-muted-foreground px-2">
+            No connections yet
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {referencedNotes.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>Referenced Notes</SubLabel>
+                {referencedNotes.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => openSidePeek(n.id)}
+                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    <DirArrow dir="out" />
+                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
+                    <span className="truncate">{n.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {referencedBy.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>Referenced By</SubLabel>
+                {referencedBy.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => openSidePeek(a.id)}
+                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    <DirArrow dir="in" />
+                    <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
+                    <span className="truncate">{a.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </ConnectionSection>
+    </div>
+  )
+}
+
 // ── Main Component ───────────────────────────────────────
 
 export function SidePanelConnections() {
+  // Check sidePanelContext for wiki branch
+  const sidePanelContext = usePlotStore((s) => s.sidePanelContext)
+
+  if (sidePanelContext?.type === "wiki") {
+    return <WikiArticleConnections />
+  }
+
+  return <NoteConnections />
+}
+
+function NoteConnections() {
   // Store selectors
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const previewNoteId = usePlotStore((s) => s.previewNoteId)

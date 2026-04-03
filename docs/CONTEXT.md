@@ -36,7 +36,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (20): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
-- Store version: 67
+- Store version: 69
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-88. 블록 리사이즈 + Side-drop 컬럼 복원 + Move out of Column + Gapcursor + 컬럼 구분선 드래그
-89. 위키 TextBlock TipTap 전환 + Encyclopedia 편집 버그 수정
-90. Encyclopedia 폴리싱 — Contents 드래그 리사이즈, 폰트 크기 업, 하단 미니 툴바
-91. Phase 2A 위키 FixedToolbar — wiki tier 확장(SlashCommand/Callout/Columns 등), 미니 8버튼→풀 42아이템 FixedToolbar, click-outside blur 패턴
-92. Encyclopedia 편집 통일 — DndContext+SortableBlockItem 전면 리팩토링, 인포박스 WikiInfobox 교체, 섹션 fontSize S/M/L/XL, Contents 대각선 리사이즈+fontScale
+91. Phase 2A 위키 FixedToolbar — wiki tier 확장, 풀 42아이템 FixedToolbar, click-outside blur
+92. Encyclopedia 편집 통일 — DndContext+SortableBlockItem, 인포박스 WikiInfobox 교체
+93. TextBlock 리치 읽기 모드 + Encyclopedia 하단 참조 섹션 — generateHTML, Sources/See Also/Article Info
+94. SidePanel Context 시스템 — 위키 공간 사이드패널 지원 (Detail/Connections/Activity/Bookmarks), useSidePanelEntity 훅
+95. 위키 디스플레이 시스템 — 글로벌 fontSize(Aa), contentAlign(Left/Center), 섹션 접기/펼치기, 카테고리 트리 피커, Add block Content 그룹(Table/Infobox/Callout/Blockquote/Toggle/Spacer), Copy to new article
 
 ## Two Axes — Core Design Philosophy
 
@@ -152,9 +152,6 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Embed Note = 노트 피커**: Insert→Embed Note 클릭 시 NotePickerDialog 열림. 선택한 noteId로 미리보기 카드 삽입. Synced Block(본문 편집)은 Phase 2+ (2026-04-01)
 
 ## TODO: Future Work (우선순위 순)
-
-### P0 — 최우선
-- **컬럼 구분선 드래그 개선**: 잔상 제거, 드래그 중 라이브 그리드 프리뷰 (현재 핸들만 이동 → 그리드 실시간 반영으로 전환 필요)
 
 ### P0 — 에디터 통합 프로젝트 후속 Phase
 - **Phase 2**: 위키 TextBlock 에디터 고도화 — 나무위키/위키피디아 수준 에디터 툴바 리서치 후 적용 (현재 미니 툴바 → 풀 에디터 툴바로 업그레이드), Contents/Infobox 리사이즈

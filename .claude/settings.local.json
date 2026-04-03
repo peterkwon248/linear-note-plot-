@@ -147,7 +147,8 @@
       "WebFetch(domain:2du.pythonanywhere.com)",
       "WebFetch(domain:www.gaonwiki.com)",
       "WebFetch(domain:openna.mu.io.kr)",
-      "WebFetch(domain:femiwiki.com)"
+      "WebFetch(domain:femiwiki.com)",
+      "Bash(echo \"EXIT CODE: $?\")"
     ]
   }
 }

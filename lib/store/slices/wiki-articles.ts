@@ -97,7 +97,9 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
           if (a.id !== articleId) return a
           const blocks = [...a.blocks]
-          if (afterBlockId) {
+          if (afterBlockId === "__prepend__") {
+            blocks.unshift(newBlock)
+          } else if (afterBlockId) {
             const idx = blocks.findIndex((b) => b.id === afterBlockId)
             blocks.splice(idx + 1, 0, newBlock)
           } else {
@@ -110,8 +112,8 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         }),
       }))
       // Persist text block body to IDB
-      if (newBlock.type === "text" && newBlock.content) {
-        persistBlockBody({ id: newBlock.id, content: newBlock.content })
+      if (newBlock.type === "text" && (newBlock.content || newBlock.contentJson)) {
+        persistBlockBody({ id: newBlock.id, content: newBlock.content ?? "", contentJson: newBlock.contentJson })
       }
       return newBlock.id
     },
@@ -298,6 +300,52 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       persistArticleBlocks(sourceId, remainingBlocks)
       persistArticleBlocks(newId, extractedBlocks)
       for (const b of extractedBlocks) {
+        if (b.type === "text" && b.content) {
+          persistBlockBody({ id: b.id, content: b.content })
+        }
+      }
+
+      return newId
+    },
+
+    /** Copy blocks to a new article WITHOUT removing from source (non-destructive) */
+    copyToNewArticle: (sourceId: string, blockIds: string[], newTitle: string): string | null => {
+      const state = get()
+      const source = (state.wikiArticles as WikiArticle[]).find((a) => a.id === sourceId)
+      if (!source) return null
+
+      const blockIdSet = new Set(blockIds)
+      const blocksToCopy = source.blocks.filter((b) => blockIdSet.has(b.id))
+      if (blocksToCopy.length === 0) return null
+
+      // Deep-clone blocks with new IDs
+      const clonedBlocks = blocksToCopy.map((b) => ({
+        ...b,
+        id: genId(),
+      }))
+
+      const newId = genId()
+      const newArticle: WikiArticle = {
+        id: newId,
+        title: newTitle,
+        aliases: [],
+        infobox: [],
+        blocks: clonedBlocks,
+        sectionIndex: buildSectionIndex(clonedBlocks),
+        tags: [...source.tags],
+        linksOut: extractLinksFromWikiBlocks(clonedBlocks),
+        createdAt: now(),
+        updatedAt: now(),
+      }
+
+      // Source is NOT modified — only add the new article
+      set((state: any) => ({
+        wikiArticles: [...state.wikiArticles, newArticle],
+      }))
+
+      // Persist new article blocks + bodies
+      persistArticleBlocks(newId, clonedBlocks)
+      for (const b of clonedBlocks) {
         if (b.type === "text" && b.content) {
           persistBlockBody({ id: b.id, content: b.content })
         }

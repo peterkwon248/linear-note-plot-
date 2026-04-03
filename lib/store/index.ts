@@ -55,6 +55,7 @@ export const usePlotStore = create<PlotState>()(
         sidePanelMode: 'detail' as import("./types").SidePanelMode,
         sidePanelPeekNoteId: null,
         previewNoteId: null,
+        sidePanelContext: null,
 
         sidebarWidth: 220,
         sidebarLastWidth: 220,
@@ -233,11 +234,11 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 67,
+      version: 69,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, previewNoteId, sidePanelOpen, todoTasks, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, previewNoteId, sidePanelOpen, sidePanelContext, todoTasks, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
