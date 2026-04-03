@@ -448,6 +448,9 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
           </>
         )}
 
+        {/* Add block at top when editing */}
+        {isEditing && <AddBlockButton onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)} />}
+
         {/* Block rendering */}
         {isEditing ? (
           <DndContext
@@ -500,7 +503,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         )}
 
         {/* Add block at end when editing */}
-        {isEditing && <AddBlockButton onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)} />}
+        {isEditing && <AddBlockButton onAdd={(type, level) => handleAddBlock(type, undefined, level)} />}
 
         {/* Empty state */}
         {article.blocks.length === 0 && !isEditing && (

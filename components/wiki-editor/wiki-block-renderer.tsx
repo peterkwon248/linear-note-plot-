@@ -365,6 +365,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
 function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
   const { content, contentJson, loading } = useWikiBlockContentJson(block.id, block.content, block.contentJson)
   const [editing, setEditing] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const blockRef = useRef<HTMLDivElement>(null)
   const textFontScale = block.fontSize ?? 1
@@ -434,41 +435,63 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
   return (
     <div ref={blockRef} className="group/text relative mb-4">
       {editable && (
-        <div className="absolute -left-6 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
+        <div className="absolute -left-6 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
             <DotsSixVertical size={14} weight="regular" />
           </button>
-          {onDelete && (
-            <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash size={12} weight="regular" />
-            </button>
-          )}
         </div>
       )}
 
-      {/* Text size toggle (edit mode, hover) */}
-      {editable && !editing && (
-        <div className="absolute -right-1 top-0 opacity-0 group-hover/text:opacity-100 transition-opacity duration-100 flex items-center gap-0.5 bg-popover border border-white/[0.08] rounded-md px-1 py-0.5 shadow-sm z-10" style={{ fontSize: '13px' }}>
-          {[
-            { label: "S", value: 0.85 },
-            { label: "M", value: 1 },
-            { label: "L", value: 1.15 },
-            { label: "XL", value: 1.3 },
-          ].map((opt) => (
+      {/* Block actions menu */}
+      {editable && (
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
             <button
-              key={opt.label}
-              onClick={(e) => { e.stopPropagation(); onUpdate?.({ fontSize: opt.value === 1 ? undefined : opt.value }) }}
-              className={cn(
-                "px-1.5 py-0.5 text-2xs font-medium rounded transition-colors",
-                (textFontScale === opt.value || (opt.value === 1 && !block.fontSize))
-                  ? "bg-accent/20 text-accent"
-                  : "text-foreground/50 hover:text-foreground/80 hover:bg-active-bg"
-              )}
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+              className="absolute right-1 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
             >
-              {opt.label}
+              <DotsThree size={14} weight="bold" />
             </button>
-          ))}
-        </div>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+            <div className="px-2.5 py-1.5">
+              <span className="text-2xs text-muted-foreground/50">Size</span>
+              <div className="flex items-center gap-1 mt-1">
+                {[
+                  { label: "S", value: 0.85 },
+                  { label: "M", value: 1 },
+                  { label: "L", value: 1.15 },
+                  { label: "XL", value: 1.3 },
+                ].map((opt) => (
+                  <button
+                    key={opt.label}
+                    onClick={() => { onUpdate?.({ fontSize: opt.value === 1 ? undefined : opt.value }); setMenuOpen(false) }}
+                    className={cn(
+                      "flex-1 rounded px-1.5 py-1 text-2xs font-medium transition-colors",
+                      (textFontScale === opt.value || (opt.value === 1 && !block.fontSize))
+                        ? "bg-accent/20 text-accent"
+                        : "text-foreground/60 hover:bg-active-bg"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {onDelete && (
+              <>
+                <div className="my-1 h-px bg-border/40" />
+                <button
+                  onClick={() => { setMenuOpen(false); onDelete() }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+                >
+                  <Trash size={14} weight="regular" />
+                  Delete block
+                </button>
+              </>
+            )}
+          </PopoverContent>
+        </Popover>
       )}
 
       {editing && !loading ? (
@@ -558,6 +581,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
   const note = useMemo(() => notes.find((n) => n.id === block.noteId), [notes, block.noteId])
   const [picking, setPicking] = useState(!block.noteId) // auto-open picker if no note selected
   const [query, setQuery] = useState("")
+  const [menuOpen, setMenuOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Load note body from IDB for rich rendering — re-fetch when note is updated
@@ -659,37 +683,59 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
   return (
     <div className="group/noteref relative rounded-lg border border-border-subtle bg-card/30 transition-colors duration-100 hover:border-accent/20">
       {editable && (
-        <div className="absolute -left-6 top-3 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
+        <div className="absolute -left-6 top-3 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
             <DotsSixVertical size={14} weight="regular" />
           </button>
-          {onDelete && (
-            <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash size={12} weight="regular" />
-            </button>
-          )}
         </div>
       )}
+
+      {/* Block actions menu */}
+      {editable && (
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+              className="absolute right-2 top-2 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+            >
+              <DotsThree size={14} weight="bold" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+            <button
+              onClick={() => { setMenuOpen(false); setPicking(true) }}
+              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+            >
+              <FileText size={14} weight="regular" />
+              Change note
+            </button>
+            <button
+              onClick={() => { setMenuOpen(false); usePlotStore.getState().openSidePeek(block.noteId!) }}
+              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+            >
+              <ArrowSquareOut size={14} weight="regular" />
+              Open in peek
+            </button>
+            {onDelete && (
+              <>
+                <div className="my-1 h-px bg-border/40" />
+                <button
+                  onClick={() => { setMenuOpen(false); onDelete() }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+                >
+                  <Trash size={14} weight="regular" />
+                  Delete block
+                </button>
+              </>
+            )}
+          </PopoverContent>
+        </Popover>
+      )}
+
       <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-2">
         <FileText className="text-accent/60" size={14} weight="regular" />
         <span className="text-2xs font-medium uppercase tracking-wide text-accent/80">From Note</span>
         <span className="text-note font-medium text-foreground/80 flex-1 truncate">{note.title || "Untitled"}</span>
-        <button
-          onClick={() => usePlotStore.getState().openSidePeek(block.noteId!)}
-          className="flex items-center gap-1 text-2xs text-muted-foreground/30 hover:text-accent transition-colors"
-          title="Open in side panel"
-        >
-          <ArrowSquareOut size={12} weight="regular" />
-          Open
-        </button>
-        {editable && (
-          <button
-            onClick={() => setPicking(true)}
-            className="text-2xs text-muted-foreground/30 hover:text-muted-foreground transition-colors"
-          >
-            Change
-          </button>
-        )}
       </div>
       <div className="px-4 py-3 text-base leading-relaxed text-foreground/75">
         {noteBodyJson && Object.keys(noteBodyJson).length > 0 ? (
@@ -713,6 +759,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
   const src = block.attachmentId ? `attachment://${block.attachmentId}` : ""
   const { url, loading } = useAttachmentUrl(src)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
   const addAttachment = usePlotStore((s) => s.addAttachment)
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -737,11 +784,25 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
     return (
       <div className="group/image relative">
         {editable && onDelete && (
-          <div className="absolute -left-6 top-2 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 transition-opacity duration-100">
-            <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash size={12} weight="regular" />
-            </button>
-          </div>
+          <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+            <PopoverTrigger asChild>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+                className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+              >
+                <DotsThree size={14} weight="bold" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+              <button
+                onClick={() => { setMenuOpen(false); onDelete() }}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+              >
+                <Trash size={14} weight="regular" />
+                Delete block
+              </button>
+            </PopoverContent>
+          </Popover>
         )}
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelected} style={{ display: "none" }} />
         {editable ? (
@@ -765,17 +826,48 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
   return (
     <div className="group/image relative">
       {editable && (
-        <div className="absolute -left-6 top-2 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
+        <div className="absolute -left-6 top-2 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
             <DotsSixVertical size={14} weight="regular" />
           </button>
-          {onDelete && (
-            <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash size={12} weight="regular" />
-            </button>
-          )}
         </div>
       )}
+
+      {/* Block actions menu */}
+      {editable && (
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+              className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+            >
+              <DotsThree size={14} weight="bold" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+            <button
+              onClick={() => { setMenuOpen(false); fileInputRef.current?.click() }}
+              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+            >
+              <UploadSimple size={14} weight="regular" />
+              Replace image
+            </button>
+            {onDelete && (
+              <>
+                <div className="my-1 h-px bg-border/40" />
+                <button
+                  onClick={() => { setMenuOpen(false); onDelete() }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+                >
+                  <Trash size={14} weight="regular" />
+                  Delete block
+                </button>
+              </>
+            )}
+          </PopoverContent>
+        </Popover>
+      )}
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelected} style={{ display: "none" }} />
       {loading ? (
         <div className="flex h-32 items-center justify-center rounded-lg bg-secondary/30 text-2xs text-muted-foreground/40">
           Loading image...
@@ -808,6 +900,7 @@ function getYoutubeVideoId(url: string): string | null {
 
 function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
   const [editing, setEditing] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [editUrl, setEditUrl] = useState(block.url || "")
   const [editTitle, setEditTitle] = useState(block.urlTitle || "")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -856,11 +949,25 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
     return (
       <div className="group/url relative">
         {editable && onDelete && (
-          <div className="absolute -left-6 top-2 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 transition-opacity duration-100">
-            <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash size={12} weight="regular" />
-            </button>
-          </div>
+          <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+            <PopoverTrigger asChild>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+                className="absolute right-1 top-1 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+              >
+                <DotsThree size={14} weight="bold" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+              <button
+                onClick={() => { setMenuOpen(false); onDelete() }}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+              >
+                <Trash size={14} weight="regular" />
+                Delete block
+              </button>
+            </PopoverContent>
+          </Popover>
         )}
         {editable ? (
           <button
@@ -885,16 +992,46 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
   return (
     <div className="group/url relative">
       {editable && (
-        <div className="absolute -left-6 top-2 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 flex flex-col gap-0.5 transition-opacity duration-100">
+        <div className="absolute -left-6 top-2 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
             <DotsSixVertical size={14} weight="regular" />
           </button>
-          {onDelete && (
-            <button onClick={onDelete} className="p-0.5 text-muted-foreground hover:text-destructive">
-              <Trash size={12} weight="regular" />
-            </button>
-          )}
         </div>
+      )}
+
+      {/* Block actions menu */}
+      {editable && (
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+              className="absolute right-1 top-1 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+            >
+              <DotsThree size={14} weight="bold" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+            <button
+              onClick={() => { setMenuOpen(false); handleStartEdit() }}
+              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+            >
+              <PhLink size={14} weight="regular" />
+              Edit URL
+            </button>
+            {onDelete && (
+              <>
+                <div className="my-1 h-px bg-border/40" />
+                <button
+                  onClick={() => { setMenuOpen(false); onDelete() }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+                >
+                  <Trash size={14} weight="regular" />
+                  Delete block
+                </button>
+              </>
+            )}
+          </PopoverContent>
+        </Popover>
       )}
 
       {youtubeId ? (
@@ -921,15 +1058,6 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
             <div className="truncate text-2xs text-white/40">{block.url}</div>
           </div>
         </a>
-      )}
-
-      {editable && (
-        <button
-          onClick={handleStartEdit}
-          className="mt-1 text-2xs text-muted-foreground/30 hover:text-muted-foreground transition-colors"
-        >
-          Edit URL
-        </button>
       )}
     </div>
   )
@@ -965,7 +1093,6 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
 
   const contentItems: { type: string; label: string; desc: string }[] = [
     { type: "text:table", label: "Table", desc: "Data table" },
-    { type: "text:infobox", label: "Infobox", desc: "Key-value info panel" },
     { type: "text:callout", label: "Callout", desc: "Highlighted note" },
     { type: "text:blockquote", label: "Blockquote", desc: "Quote block" },
     { type: "text:toggle", label: "Toggle", desc: "Collapsible section" },

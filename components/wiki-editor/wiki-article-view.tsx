@@ -725,6 +725,11 @@ export function WikiArticleView({ articleId, editable = false, onDelete, collaps
             ))
           )}
 
+          {/* Add block at bottom */}
+          {editable && (
+            <AddBlockButton onAdd={(type, level) => handleAddBlock(type, undefined, level)} />
+          )}
+
           {article.blocks.length === 0 && !editable && (
             <p className="py-8 text-center text-note text-muted-foreground/40">
               This article has no content yet.
