@@ -93,6 +93,8 @@ export interface WikiBlock {
   tableRows?: string[][]
   /** Table: column alignment */
   tableColumnAligns?: ("left" | "center" | "right")[]
+  /** Table: block position alignment (left/center/right) */
+  tableAlign?: "left" | "center" | "right"
   /** Section: custom font size multiplier (1 = default, 0.8 = small, 1.2 = large, 1.5 = x-large) */
   fontSize?: number
   /** Merge history: snapshot of the merged article for unmerge */
