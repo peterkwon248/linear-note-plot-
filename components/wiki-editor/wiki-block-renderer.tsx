@@ -1119,14 +1119,41 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+            {/* Table position */}
+            <div className="px-2.5 py-1.5">
+              <span className="text-2xs text-muted-foreground/50">Position</span>
+              <div className="flex items-center gap-1 mt-1">
+                {([
+                  { label: "←", value: "left" as const },
+                  { label: "↔", value: "center" as const },
+                  { label: "→", value: "right" as const },
+                ]).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => { onUpdate?.({ tableAlign: opt.value === "center" ? undefined : opt.value }); setMenuOpen(false) }}
+                    className={cn(
+                      "flex-1 rounded px-1.5 py-1 text-xs font-medium transition-colors",
+                      (block.tableAlign ?? "center") === opt.value
+                        ? "bg-accent/20 text-accent"
+                        : "text-foreground/60 hover:bg-active-bg"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             {onDelete && (
-              <button
-                onClick={() => { setMenuOpen(false); onDelete() }}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
-              >
-                <Trash size={14} weight="regular" />
-                Delete table
-              </button>
+              <>
+                <div className="my-0.5 h-px bg-border/40" />
+                <button
+                  onClick={() => { setMenuOpen(false); onDelete() }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+                >
+                  <Trash size={14} weight="regular" />
+                  Delete table
+                </button>
+              </>
             )}
           </PopoverContent>
         </Popover>
@@ -1148,7 +1175,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
         )}
 
         {/* Table */}
-        <table className="border-collapse rounded-lg overflow-hidden mx-auto" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
+        <table className={cn("border-collapse rounded-lg overflow-hidden", block.tableAlign === "left" ? "mr-auto" : block.tableAlign === "right" ? "ml-auto" : "mx-auto")} style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
           <thead>
             <tr>
               {headers.map((h, ci) => (

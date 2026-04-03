@@ -575,10 +575,16 @@
   min-width: 80px;
   text-align: left;
   font-size: var(--editor-table-cell);
+  background-color: rgba(255, 255, 255, 0.015);
+}
+
+/* Striped rows */
+.ProseMirror tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .ProseMirror th {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.08);
   font-weight: 600;
   font-size: var(--editor-ui-sm);
   text-align: center;
@@ -590,6 +596,10 @@
 :root:not(.dark) .ProseMirror th,
 :root:not(.dark) .ProseMirror td {
   border: 1px solid var(--border);
+  background-color: transparent;
+}
+:root:not(.dark) .ProseMirror tr:nth-child(even) td {
+  background-color: rgba(0, 0, 0, 0.02);
 }
 :root:not(.dark) .ProseMirror th {
   background-color: var(--muted);
