@@ -69,6 +69,11 @@
 - **Encyclopedia Edit = Default Edit**: DndContext + SortableBlockItem + WikiBlockRenderer(variant="encyclopedia"). 드래그/Split/Move/Delete/AddBlock/카테고리 전부 Default와 동일
 - **WikiBlock.fontSize**: 섹션 블록 커스텀 폰트 크기 (0.8=S, 1=M, 1.2=L, 1.5=XL). style={{ fontSize: `${fontScale}em` }}
 - **Contents TOC fontScale**: 대각선 리사이즈 핸들(우하단 코너). width/BASE_WIDTH 비율로 0.75~1.5 스케일. 제목+항목 fontSize 연동
+- **Partial Quote**: WikiQuote 8필드 (sourceNoteId/sourceTitle/quotedText/quotedAt + originalText/sourceHash/context/comment). Peek/호버에서 텍스트 선택 → `plot:insert-wiki-quote` 커스텀 이벤트 → note-editor.tsx 리스너
+- **Hover Preview Command Center**: `note-hover-preview.tsx` — 리치 HTML (generateHTML + createRenderExtensions), 메타데이터 바 (folder/time/backlinks), 액션바 (Open/Peek/Quote/⋯), 텍스트 선택 Quote
+- **Wikilink Context Menu**: `wikilink-context-menu.tsx` — WikilinkDecoration contextmenu 이벤트 → `plot:wikilink-context-menu` CustomEvent → floating 메뉴
+- **pendingFilters**: `table-route.ts` 외부 스토어. Home 카드 클릭 시 필터 주입 → notes-table.tsx에서 소비 후 클리어
+- **Orphan Actions**: `lib/orphan-actions.ts` — discover engine 재활용, 4종 제안 (link/move/tag/delete)
 
 ## Store Slices (20 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
@@ -228,6 +233,8 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Bookmarks 탭 layout.tsx 누락 수정
   - before-work 스킬 개선: docs/plot-discussion/*.md 전체 읽기 필수화
   - Store v67 → v69
+
+- **PR #150 (WIP)**: Home 필터 연동 + Phase 4 Partial Quote + 호버 프리뷰 리디자인 + 위키링크 컨텍스트 메뉴 + 고아 노트 제안
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

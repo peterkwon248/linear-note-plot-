@@ -13,6 +13,10 @@ export const WikiQuoteExtension = Node.create({
       sourceTitle: { default: "" },
       quotedText: { default: "" },
       quotedAt: { default: null },
+      originalText: { default: null },
+      sourceHash: { default: null },
+      context: { default: null },
+      comment: { default: null },
     }
   },
 

@@ -27,7 +27,7 @@ function BubbleButton({ onClick, isActive = false, title, children }: { onClick:
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       title={title}
-      className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors duration-100 flex-shrink-0 ${
+      className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors duration-100 flex-shrink-0 ${
         isActive ? "text-foreground bg-foreground/[0.12]" : "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
       }`}
     >
@@ -176,7 +176,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   return (
     <div
       ref={menuRef}
-      className={`fixed z-[100] flex items-center gap-0.5 px-1.5 py-1 rounded-lg bg-surface-overlay border border-border shadow-[0_4px_24px_rgba(0,0,0,0.55)] transition-all duration-150 ${
+      className={`fixed z-[100] flex items-center gap-0.5 px-2 py-1.5 rounded-lg bg-surface-overlay border border-border shadow-[0_4px_24px_rgba(0,0,0,0.55)] transition-all duration-150 ${
         isVisible ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
       }`}
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
@@ -184,37 +184,37 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       {activePanel === "none" ? (
         <>
           <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
-            <TextB size={14} weight="regular" />
+            <TextB size={16} weight="regular" />
           </BubbleButton>
           <BubbleButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
-            <TextItalic size={14} weight="regular" />
+            <TextItalic size={16} weight="regular" />
           </BubbleButton>
           <BubbleButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
-            <UnderlineIcon size={14} weight="regular" />
+            <UnderlineIcon size={16} weight="regular" />
           </BubbleButton>
           <BubbleButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="TextStrikethrough">
-            <TextStrikethrough size={14} weight="regular" />
+            <TextStrikethrough size={16} weight="regular" />
           </BubbleButton>
           <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code">
-            <PhCode size={14} weight="regular" />
+            <PhCode size={16} weight="regular" />
           </BubbleButton>
           <BubbleDivider />
           <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title="Text color">
             <div className="relative">
-              <TextT size={14} weight="regular" />
+              <TextT size={16} weight="regular" />
               <div className="absolute -bottom-1 left-px right-px h-0.5 rounded-sm" style={{ backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
             </div>
           </BubbleButton>
           <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title="Highlight">
-            <HighlighterCircle size={14} weight="regular" />
+            <HighlighterCircle size={16} weight="regular" />
           </BubbleButton>
           <BubbleDivider />
           <BubbleButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
-            {editorState.link ? <LinkBreak size={14} weight="regular" /> : <PhLink size={14} weight="regular" />}
+            {editorState.link ? <LinkBreak size={16} weight="regular" /> : <PhLink size={16} weight="regular" />}
           </BubbleButton>
           <BubbleDivider />
           <BubbleButton onClick={handleExtractAsNote} title="Extract as Note">
-            <FileArrowUp size={14} weight="regular" />
+            <FileArrowUp size={16} weight="regular" />
           </BubbleButton>
         </>
       ) : (

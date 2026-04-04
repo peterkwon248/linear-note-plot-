@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { usePlotStore } from "@/lib/store"
-import { setActiveRoute } from "@/lib/table-route"
+import { setActiveRoute, setPendingFilters } from "@/lib/table-route"
 import { useHomeSection, setHomeSection } from "@/lib/home-section"
 import type { HomeSection } from "@/lib/home-section"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
@@ -19,6 +19,12 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
 import { Circle } from "@phosphor-icons/react/dist/ssr/Circle"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { getOrphanActions, type OrphanAction } from "@/lib/orphan-actions"
+import { toast } from "sonner"
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -371,6 +377,9 @@ function RedLinksDetail() {
 function OrphansDetail() {
   const notes = usePlotStore((s) => s.notes)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const tags = usePlotStore((s) => s.tags)
+  const folders = usePlotStore((s) => s.folders)
+  const updateNote = usePlotStore((s) => s.updateNote)
 
   const nonTrashedNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
 
@@ -389,9 +398,71 @@ function OrphansDetail() {
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   }, [nonTrashedNotes])
 
+  const backlinksMap = useMemo(() => {
+    const map: Record<string, string[]> = {}
+    for (const n of nonTrashedNotes) {
+      for (const link of n.linksOut) {
+        const target = nonTrashedNotes.find(
+          (t) => t.title.toLowerCase() === link.toLowerCase(),
+        )
+        if (target) {
+          if (!map[target.id]) map[target.id] = []
+          map[target.id].push(n.id)
+        }
+      }
+    }
+    return map
+  }, [nonTrashedNotes])
+
+  const orphanActionsMap = useMemo(() => {
+    const map = new Map<string, OrphanAction[]>()
+    const activeTags = tags.filter((t) => !t.trashed)
+    for (const orphan of allOrphans.slice(0, 20)) {
+      const actions = getOrphanActions(orphan, nonTrashedNotes, backlinksMap, activeTags, folders)
+      if (actions.length > 0) map.set(orphan.id, actions)
+    }
+    return map
+  }, [allOrphans, nonTrashedNotes, backlinksMap, tags, folders])
+
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
+
   function navigateToNote(noteId: string) {
     setSelectedNoteId(noteId)
     setActiveRoute("/notes")
+  }
+
+  function handleAction(noteId: string, action: OrphanAction) {
+    switch (action.type) {
+      case "link":
+        if (action.targetTitle) {
+          const note = nonTrashedNotes.find((n) => n.id === noteId)
+          if (note) {
+            const newContent = (note.content || "") + `\n[[${action.targetTitle}]]`
+            updateNote(noteId, { content: newContent, linksOut: [...note.linksOut, action.targetTitle] })
+            toast.success(`Linked to "${action.targetTitle}"`)
+          }
+        }
+        break
+      case "move":
+        if (action.targetId) {
+          updateNote(noteId, { folderId: action.targetId })
+          toast.success(`Moved to "${action.targetTitle}"`)
+        }
+        break
+      case "tag":
+        if (action.targetId) {
+          const note = nonTrashedNotes.find((n) => n.id === noteId)
+          if (note) {
+            updateNote(noteId, { tags: [...(note.tags || []), action.targetId] })
+            toast.success(`Added #${action.targetTitle}`)
+          }
+        }
+        break
+      case "delete":
+        updateNote(noteId, { trashed: true, trashedAt: new Date().toISOString() } as any)
+        toast.success("Moved to trash")
+        break
+    }
   }
 
   return (
@@ -409,23 +480,45 @@ function OrphansDetail() {
       ) : (
         <div className="rounded-lg border border-border-subtle bg-surface-overlay">
           {allOrphans.map((note, i) => (
-            <button
+            <div
               key={note.id}
-              onClick={() => navigateToNote(note.id)}
-              className={`flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-hover-bg ${
-                i !== allOrphans.length - 1 ? "border-b border-border-subtle" : ""
-              }`}
+              className={`${i !== allOrphans.length - 1 ? "border-b border-border-subtle" : ""}`}
             >
-              <span className="flex items-center gap-2 truncate">
-                <FileText size={14} className="shrink-0 text-muted-foreground" />
-                <span className="truncate text-note text-foreground">
-                  {note.title || "Untitled"}
+              <button
+                onClick={() => navigateToNote(note.id)}
+                className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-hover-bg"
+              >
+                <span className="flex items-center gap-2 truncate">
+                  <FileText size={14} className="shrink-0 text-muted-foreground" />
+                  <span className="truncate text-note text-foreground">
+                    {note.title || "Untitled"}
+                  </span>
                 </span>
-              </span>
-              <span className="ml-3 shrink-0 text-2xs text-muted-foreground">
-                {relativeTime(note.createdAt)}
-              </span>
-            </button>
+                <span className="ml-3 shrink-0 text-2xs text-muted-foreground">
+                  {relativeTime(note.createdAt)}
+                </span>
+              </button>
+              {orphanActionsMap.get(note.id)?.filter((a) => !dismissed.has(`${note.id}:${a.type}:${a.targetId ?? ""}`)).map((action, ai) => (
+                <div key={ai} className="flex items-center gap-2 px-4 pb-2 ml-5">
+                  <button
+                    onClick={() => handleAction(note.id, action)}
+                    className="flex items-center gap-1.5 rounded-md border border-border-subtle px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+                  >
+                    {action.type === "link" && <Lightning size={12} />}
+                    {action.type === "move" && <FolderOpen size={12} />}
+                    {action.type === "tag" && <PhTag size={12} />}
+                    {action.type === "delete" && <Trash size={12} />}
+                    <span>{action.label}</span>
+                  </button>
+                  <button
+                    onClick={() => setDismissed((prev) => new Set(prev).add(`${note.id}:${action.type}:${action.targetId ?? ""}`))}
+                    className="text-2xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              ))}
+            </div>
           ))}
         </div>
       )}
@@ -562,7 +655,10 @@ export function HomeView() {
 
             {/* Review Due */}
             <button
-              onClick={() => setActiveRoute("/notes")}
+              onClick={() => {
+                setPendingFilters([{ field: "reviewAt", operator: "lt", value: today }])
+                setActiveRoute("/notes")
+              }}
               className="flex flex-col items-start gap-2 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
             >
               <Clock size={20} className="text-muted-foreground" />
@@ -576,7 +672,10 @@ export function HomeView() {
 
             {/* Edited Today */}
             <button
-              onClick={() => setActiveRoute("/notes")}
+              onClick={() => {
+                setPendingFilters([{ field: "updatedAt", operator: "eq", value: today }])
+                setActiveRoute("/notes")
+              }}
               className="flex flex-col items-start gap-2 rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
             >
               <PencilSimple size={20} className="text-muted-foreground" />
@@ -594,7 +693,10 @@ export function HomeView() {
         <section className="mb-8">
           <h2 className="text-note font-medium text-foreground">Insights</h2>
           <div className="mt-3 grid grid-cols-4 gap-3">
-            <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4">
+            <button
+              onClick={() => setActiveRoute("/notes")}
+              className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
+            >
               <FileText
                 size={16}
                 className="mb-2 text-muted-foreground"
@@ -603,9 +705,12 @@ export function HomeView() {
                 {totalNotes}
               </p>
               <p className="text-2xs text-muted-foreground">Total Notes</p>
-            </div>
+            </button>
 
-            <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4">
+            <button
+              onClick={() => setActiveRoute("/wiki")}
+              className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
+            >
               <Graph
                 size={16}
                 className="mb-2 text-muted-foreground"
@@ -614,9 +719,12 @@ export function HomeView() {
                 {wikiArticles.length}
               </p>
               <p className="text-2xs text-muted-foreground">Wiki Articles</p>
-            </div>
+            </button>
 
-            <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4">
+            <button
+              onClick={() => setHomeSection("orphans")}
+              className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
+            >
               <LinkBreak
                 size={16}
                 className="mb-2 text-muted-foreground"
@@ -625,9 +733,12 @@ export function HomeView() {
                 {orphanCount}
               </p>
               <p className="text-2xs text-muted-foreground">Orphans</p>
-            </div>
+            </button>
 
-            <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4">
+            <button
+              onClick={() => setHomeSection("redlinks")}
+              className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-left transition-colors hover:bg-hover-bg"
+            >
               <FileText
                 size={16}
                 className="mb-2 text-muted-foreground"
@@ -636,7 +747,7 @@ export function HomeView() {
                 {redLinkCount}
               </p>
               <p className="text-2xs text-muted-foreground">Red Links</p>
-            </div>
+            </button>
           </div>
         </section>
 

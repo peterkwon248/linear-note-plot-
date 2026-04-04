@@ -65,6 +65,20 @@ export const WikilinkDecorationExtension = Extension.create({
               hideNotePreview()
               return false
             },
+
+            contextmenu(_view: any, event: MouseEvent) {
+              const target = event.target as HTMLElement
+              if (!target.classList?.contains("wikilink") && !target.closest?.(".wikilink")) return false
+              const wikilinkEl = target.classList.contains("wikilink") ? target : target.closest(".wikilink") as HTMLElement
+              const title = wikilinkEl?.getAttribute("data-wikilink")
+              if (!title) return false
+              event.preventDefault()
+              event.stopPropagation()
+              window.dispatchEvent(new CustomEvent("plot:wikilink-context-menu", {
+                detail: { title, x: event.clientX, y: event.clientY }
+              }))
+              return true
+            },
           },
         },
       }),

@@ -63,7 +63,7 @@ import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
-import { setActiveFolderId } from "@/lib/table-route"
+import { setActiveFolderId, usePendingFilters, clearPendingFilters } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
 import { NOTE_STATUS_HEX } from "@/lib/colors"
 import { pushUndo } from "@/lib/undo-manager"
@@ -304,6 +304,15 @@ export function NotesTable({
   const setSearchQuery = usePlotStore((s) => s.setSearchQuery)
 
   const { flatNotes: rawFlatNotes, groups: rawGroups, viewState, updateViewState } = useNotesView(effectiveTab, { backlinksMap, folderId, tagId, labelId })
+
+  // ── Pending filters from Home cards ──
+  const pendingFilters = usePendingFilters()
+  useEffect(() => {
+    if (pendingFilters && pendingFilters.length > 0) {
+      updateViewState({ filters: pendingFilters })
+      clearPendingFilters()
+    }
+  }, [pendingFilters, updateViewState])
 
   // ── Trash sub-filter ──
   const storeTemplates = usePlotStore((s) => s.templates)
