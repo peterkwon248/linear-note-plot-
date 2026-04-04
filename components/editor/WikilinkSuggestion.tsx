@@ -153,7 +153,30 @@ export const WikilinkSuggestion = Extension.create({
         allowedPrefixes: [" ", "\n", null],
         pluginKey: wikilinkSuggestionKey,
 
+        // Don't trigger inside a completed [[...]] wikilink
+        allow: ({ editor }: { editor: any }) => {
+          const { state } = editor
+          const { from, $from } = state.selection
+          // Get the full text of the current text block
+          const blockText = $from.parent.textContent
+          const offsetInBlock = from - $from.start()
+          // Find all [[...]] patterns and check if cursor is inside one
+          const re = /\[\[.*?\]\]/g
+          let match
+          while ((match = re.exec(blockText)) !== null) {
+            const start = match.index
+            const end = start + match[0].length
+            if (offsetInBlock >= start && offsetInBlock <= end) {
+              return false // cursor is inside a completed wikilink
+            }
+          }
+          return true
+        },
+
         items: ({ query }: { query: string }) => {
+          // If query contains ]], the wikilink is already closed — don't suggest
+          if (query.includes("]]")) return []
+
           const store = usePlotStore.getState()
           const notes = store.notes
           const currentNoteId = store.selectedNoteId

@@ -85,13 +85,22 @@ function matchesRule(note: Note, rule: FilterRule): boolean {
     }
 
     case "updatedAt": {
-      // value is a relative time threshold like "24h", "7d", "30d"
+      const noteTime = new Date(note.updatedAt).getTime()
+      // Support ISO date prefix (e.g., "2026-04-04" for "today")
+      if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const targetEnd = new Date(value + "T23:59:59.999Z").getTime()
+        const targetStart = new Date(value + "T00:00:00.000Z").getTime()
+        switch (operator) {
+          case "eq": return noteTime >= targetStart && noteTime <= targetEnd
+          case "lt": return noteTime < targetStart
+          case "gt": return noteTime > targetEnd
+          default: return true
+        }
+      }
+      // Fallback: relative time threshold like "24h", "7d", "30d"
       const ms = parseRelativeTime(value)
       if (ms === null) return true
       const cutoff = Date.now() - ms
-      const noteTime = new Date(note.updatedAt).getTime()
-      // "gt" means "more recent than cutoff" (within the time window)
-      // "lt" means "older than cutoff" (outside the time window)
       switch (operator) {
         case "gt": return noteTime > cutoff
         case "lt": return noteTime < cutoff
@@ -100,10 +109,21 @@ function matchesRule(note: Note, rule: FilterRule): boolean {
     }
 
     case "createdAt": {
+      const noteTime = new Date(note.createdAt).getTime()
+      // Support ISO date prefix (e.g., "2026-04-04")
+      if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const targetEnd = new Date(value + "T23:59:59.999Z").getTime()
+        const targetStart = new Date(value + "T00:00:00.000Z").getTime()
+        switch (operator) {
+          case "eq": return noteTime >= targetStart && noteTime <= targetEnd
+          case "lt": return noteTime < targetStart
+          case "gt": return noteTime > targetEnd
+          default: return true
+        }
+      }
       const ms = parseRelativeTime(value)
       if (ms === null) return true
       const cutoff = Date.now() - ms
-      const noteTime = new Date(note.createdAt).getTime()
       switch (operator) {
         case "gt": return noteTime > cutoff
         case "lt": return noteTime < cutoff
@@ -167,6 +187,31 @@ function matchesRule(note: Note, rule: FilterRule): boolean {
 
     case "noteType": {
       return compareString(note.noteType, operator, value)
+    }
+
+    case "reviewAt": {
+      if (!note.reviewAt) return operator === "eq" ? false : true
+      const noteTime = new Date(note.reviewAt).getTime()
+      // Support ISO date prefix (e.g., "2026-04-04")
+      if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const targetEnd = new Date(value + "T23:59:59.999Z").getTime()
+        const targetStart = new Date(value + "T00:00:00.000Z").getTime()
+        switch (operator) {
+          case "eq": return noteTime >= targetStart && noteTime <= targetEnd
+          case "lt": return noteTime < targetStart
+          case "gt": return noteTime > targetEnd
+          default: return true
+        }
+      }
+      // Fallback: relative time
+      const ms = parseRelativeTime(value)
+      if (ms === null) return true
+      const cutoff = Date.now() - ms
+      switch (operator) {
+        case "gt": return noteTime > cutoff
+        case "lt": return noteTime < cutoff
+        default: return true
+      }
     }
 
     default:

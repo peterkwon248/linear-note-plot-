@@ -51,7 +51,7 @@ export type FilterOperator = "eq" | "neq" | "gt" | "lt"
 
 export type FilterField =
   | "status" | "priority" | "links" | "reads" | "folder" | "label"
-  | "updatedAt" | "createdAt" | "content" | "tags" | "pinned"
+  | "updatedAt" | "createdAt" | "content" | "tags" | "pinned" | "reviewAt"
   | "source" | "wordCount" | "title" | "noteType"
   // Graph-specific filter fields
   | "nodeType" | "relationType" | "showWikilinks" | "showTagNodes"

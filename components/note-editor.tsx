@@ -187,6 +187,25 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
     return () => window.removeEventListener("plot:extract-as-note", handler as EventListener)
   }, [])
 
+  // Listen for wiki quote insertion from Peek panel
+  useEffect(() => {
+    function handleInsertQuote(e: Event) {
+      const detail = (e as CustomEvent).detail
+      if (!editorInstance) return
+      // Insert after current block to avoid breaking [[wikilinks]]
+      const { state } = editorInstance
+      const { $from } = state.selection
+      const endOfBlock = $from.end()
+      const insertPos = Math.min(endOfBlock + 1, state.doc.content.size)
+      editorInstance.chain().focus().insertContentAt(insertPos, [
+        { type: "paragraph" },
+        { type: "wikiQuote", attrs: detail },
+      ]).run()
+    }
+    window.addEventListener("plot:insert-wiki-quote", handleInsertQuote)
+    return () => window.removeEventListener("plot:insert-wiki-quote", handleInsertQuote)
+  }, [editorInstance])
+
   if (!note) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
       <PhCursor size={32} weight="light" className="text-muted-foreground/40" />

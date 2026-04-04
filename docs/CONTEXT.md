@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-91. Phase 2A 위키 FixedToolbar — wiki tier 확장, 풀 42아이템 FixedToolbar, click-outside blur
-92. Encyclopedia 편집 통일 — DndContext+SortableBlockItem, 인포박스 WikiInfobox 교체
-93. TextBlock 리치 읽기 모드 + Encyclopedia 하단 참조 섹션 — generateHTML, Sources/See Also/Article Info
-94. SidePanel Context 시스템 — 위키 공간 사이드패널 지원 (Detail/Connections/Activity/Bookmarks), useSidePanelEntity 훅
-95. 위키 디스플레이 시스템 — 글로벌 fontSize(Aa), contentAlign(Left/Center), 섹션 접기/펼치기, 카테고리 트리 피커, Add block Content 그룹(Table/Infobox/Callout/Blockquote/Toggle/Spacer), Copy to new article
+96. Home 카드 → 필터 연동 + 사이드바 View all hover-only + 고아 노트 제안 시스템
+97. Phase 4 Partial Quote — WikiQuote 8필드, Peek/호버 Quote 버튼, quote-hash.ts
+98. 호버 프리뷰 리디자인 — 리치 HTML + 메타데이터 바 + 액션바 (Open/Peek/Quote/⋯)
+99. 위키링크 우클릭 컨텍스트 메뉴 — wikilink-context-menu.tsx
+100. 버블 메뉴 사이즈 업 + WikiQuote 삭제 버튼
 
 ## Two Axes — Core Design Philosophy
 
@@ -154,8 +154,8 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ## TODO: Future Work (우선순위 순)
 
 ### P0 — 에디터 통합 프로젝트 후속 Phase
-- **Phase 2**: 위키 TextBlock 에디터 고도화 — 나무위키/위키피디아 수준 에디터 툴바 리서치 후 적용 (현재 미니 툴바 → 풀 에디터 툴바로 업그레이드), Contents/Infobox 리사이즈
-- **Phase 3**: 템플릿 블록 레이아웃 에디터 — TemplateBlock 모델, Notion-style 드래그 앤 드롭, Template→Note/Wiki 변환
+- ~~**Phase 2**: 위키 TextBlock 에디터 고도화~~ **완료** (PR #143~#149: TipTap 전환, 풀 FixedToolbar, 독립 테이블, 블록 메뉴 통일)
+- ~~**Phase 3**: 템플릿 블록 레이아웃 에디터~~ **P4로 이동** (Template Page Architecture 폐기 결정으로 범위 재정의 필요. 템플릿 시스템 자체는 유지하되 블록 에디터 고도화는 나중에)
 - **Phase 4**: Partial Quote — Peek에서 부분 드래그 선택 Insert, 메타데이터 8필드 (sourceHash, context, comment 등)
 - **Phase 5**: Merge/Split 풀페이지 — 노트 섹션/문단 단위 드래그 재배치, Split 플로팅바+우클릭 추가, 위키 Merge 개선
 - **Phase 6**: Merge/Split 히스토리 — 필터 History 추가, Insights 이력 탭, Undo/Re-merge, Detail 패널 History 섹션
@@ -172,10 +172,11 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **View 시스템 v2** — 사이드바 Views에 필터+디스플레이+정렬 프리셋 저장. "Save as View"로 현재 상태 저장
 
 ### P3 — 구조/확장
-- **Wiki 대시보드 반응형 모드** — Articles/Stubs/Red Links 카드 클릭시 콘텐츠 전환 (Linear All/Active/Backlog 패턴)
+- **Wiki 대시보드 반응형 모드** — Articles/Red Links 카드 클릭시 콘텐츠 전환 (Linear All/Active/Backlog 패턴). WikiStatus 삭제(v67)로 Stubs 개념 없음
 - **멀티패널 뷰 타입 확장** — Wiki/Calendar/Graph + 에디터 조합 스플릿 ("참조하면서 쓰기")
 
 ### P4 — 나중에
+- 템플릿 블록 레이아웃 에디터 (범위 재정의 후 진행. Template→Note/Wiki 변환 폐기, 순수 에디터 UX 개선만)
 - J/K 리스트 네비게이션 (Linear식)
 - 노트 가져오기/내보내기 (import/export)
 - 그래프 사이드바 → 클러스터 + 인사이트 리워크

@@ -39,6 +39,7 @@ let _activeFolderId: string | null = null
 let _activeTagId: string | null = null
 let _activeLabelId: string | null = null
 let _activeViewId: string | null = null
+let _pendingFilters: import("./view-engine/types").FilterRule[] | null = null
 
 /* ── Route History Stack (global back/forward) ──────── */
 
@@ -198,6 +199,22 @@ export function syncFromPathname(pathname: string): void {
   }
 }
 
+/* ── Pending Filters (one-shot injection from Home cards) ── */
+
+export function getPendingFilters(): import("./view-engine/types").FilterRule[] | null {
+  return _pendingFilters
+}
+
+export function setPendingFilters(filters: import("./view-engine/types").FilterRule[]): void {
+  _pendingFilters = filters
+  _listeners.forEach((fn) => fn())
+}
+
+export function clearPendingFilters(): void {
+  _pendingFilters = null
+  // Don't notify — consumer already processed
+}
+
 /* ── React hooks ──────────────────────────────────────── */
 
 /** Subscribe to the active sidebar route. Returns null for fallback routes. */
@@ -228,4 +245,9 @@ export function useActiveLabelId(): string | null {
 /** Subscribe to the active view ID. Returns null when no view is selected. */
 export function useActiveViewId(): string | null {
   return useSyncExternalStore(subscribeActiveRoute, getActiveViewId, () => null)
+}
+
+/** Subscribe to pending filters (one-shot injection from Home). */
+export function usePendingFilters(): import("./view-engine/types").FilterRule[] | null {
+  return useSyncExternalStore(subscribeActiveRoute, getPendingFilters, () => null)
 }

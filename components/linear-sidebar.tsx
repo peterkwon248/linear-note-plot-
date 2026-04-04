@@ -32,6 +32,7 @@ import { PRESET_COLORS } from "@/lib/colors"
 import { setWikiViewMode, useWikiViewMode, setCategoryOverview } from "@/lib/wiki-view-mode"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar"
@@ -178,7 +179,7 @@ function Section({
 
   return (
     <div className="mt-8">
-      <div className="flex w-full items-center gap-1.5 px-2.5 py-1">
+      <div className="group flex w-full items-center gap-1.5 px-2.5 py-1">
         <button
           onClick={() => setOpen(!open)}
           className={`flex flex-1 items-center gap-1.5 text-2xs font-medium transition-colors ${
@@ -200,14 +201,14 @@ function Section({
         {onHeaderClick && (
           <button
             onClick={onHeaderClick}
-            className={`rounded px-1.5 py-0.5 text-2xs transition-colors ${
+            className={`rounded p-0.5 transition-all duration-150 ${
               active
-                ? "bg-sidebar-active text-sidebar-active-text"
-                : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+                ? "opacity-100 text-sidebar-active-text"
+                : "opacity-0 group-hover:opacity-100 text-sidebar-muted hover:text-sidebar-foreground"
             }`}
             title={`View all ${title.toLowerCase()}`}
           >
-            View all
+            <ArrowRight size={12} />
           </button>
         )}
         {trailing}
