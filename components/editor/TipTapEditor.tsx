@@ -116,6 +116,54 @@ export function TipTapEditor({
     if (editor) onEditorReady?.(editor)
   }, [editor]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Listen for wikilink change events — only respond if this editor is editable (not preview)
+  useEffect(() => {
+    if (!editor || !editable) return
+    function handleChangeLink(e: Event) {
+      const { oldTitle, newTitle } = (e as CustomEvent).detail as { oldTitle: string; newTitle: string }
+      if (!oldTitle || !newTitle || !editor) return
+
+      const doc = editor.state.doc
+      const tr = editor.state.tr
+      let changed = false
+
+      const replacements: Array<{ from: number; to: number; replacement: string }> = []
+
+      doc.descendants((node, pos) => {
+        if (!node.isText || !node.text) return
+        const text = node.text
+        const patterns = [`[[${oldTitle}]]`, `[[wiki:${oldTitle}]]`]
+        for (const pattern of patterns) {
+          let idx = text.indexOf(pattern)
+          while (idx !== -1) {
+            const from = pos + idx
+            const to = from + pattern.length
+            const isWiki = pattern.startsWith("[[wiki:")
+            const replacement = isWiki ? `[[wiki:${newTitle}]]` : `[[${newTitle}]]`
+            replacements.push({ from, to, replacement })
+            idx = text.indexOf(pattern, idx + 1)
+          }
+        }
+      })
+
+      if (replacements.length === 0) return
+
+      replacements.sort((a, b) => b.from - a.from)
+      for (const { from, to, replacement } of replacements) {
+        tr.replaceWith(from, to, editor.state.schema.text(replacement))
+        changed = true
+      }
+
+      if (changed) {
+        editor.view.dispatch(tr)
+        import("sonner").then(({ toast }) => toast.success(`Link changed to [[${newTitle}]]`))
+      }
+    }
+
+    window.addEventListener("plot:change-wikilink", handleChangeLink)
+    return () => window.removeEventListener("plot:change-wikilink", handleChangeLink)
+  }, [editor, editable])
+
   // Sync spellcheck dynamically
   useEffect(() => {
     if (editor) {

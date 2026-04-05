@@ -120,7 +120,7 @@ const MentionInteractionExtension = Extension.create({
               if (resolved) {
                 showNotePreview(target as HTMLElement, resolved.id, resolved.type)
                 // Pin after a short delay (let preview render first)
-                setTimeout(() => togglePreviewPin(), 350)
+                setTimeout(() => togglePreviewPin(), 500)
                 event.preventDefault()
                 return true
               }

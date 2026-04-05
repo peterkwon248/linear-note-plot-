@@ -5,7 +5,7 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view"
 import type { EditorView } from "@tiptap/pm/view"
 import { usePlotStore } from "@/lib/store"
 import { handleWikilinkClick } from "@/lib/note-reference-actions"
-import { showNotePreviewByTitle, hideNotePreview, togglePreviewPin, isPreviewShowing } from "@/components/editor/note-hover-preview"
+import { showNotePreview, showNotePreviewByTitle, hideNotePreview, togglePreviewPin, isPreviewShowing, isPreviewPinned } from "@/components/editor/note-hover-preview"
 import { resolveNoteByTitle } from "@/lib/note-reference-actions"
 import { isWikiStub } from "@/lib/wiki-utils"
 
@@ -52,13 +52,23 @@ export const WikilinkDecorationExtension = Extension.create({
                 }))
                 return true
               }
-              // Existing links: toggle preview pin if preview is showing
+              // Existing links: toggle pin or show+pin
               const resolved = resolveNoteByTitle(title)
-              if (resolved && isPreviewShowing(resolved.id)) {
+              if (!resolved) return false
+              if (isPreviewPinned()) {
+                // Already pinned → unpin
                 togglePreviewPin()
                 return true
               }
-              return false
+              if (isPreviewShowing()) {
+                // Preview visible → pin it
+                togglePreviewPin()
+                return true
+              }
+              // Preview not visible → show immediately + pin after delay
+              showNotePreview(target, resolved.id, resolved.type)
+              setTimeout(() => togglePreviewPin(), 500)
+              return true
             }
 
             handleWikilinkClick(title, event)
