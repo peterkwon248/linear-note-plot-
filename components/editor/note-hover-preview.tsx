@@ -178,11 +178,15 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   const wikiArticle = usePlotStore((s) => s.wikiArticles.find((a) => a.id === noteId))
   const folders = usePlotStore((s) => s.folders)
   const allNotes = usePlotStore((s) => s.notes)
+  const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const [pos, setPos] = useState({ x, y })
   const [showMore, setShowMore] = useState(false)
   const [editing, setEditing] = useState(false)
   const [quoteActive, setQuoteActive] = useState(false)
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
+  const [showBacklinks, setShowBacklinks] = useState(false)
+  const [showBlocks, setShowBlocks] = useState(false)
+  const [showCategories, setShowCategories] = useState(false)
 
   // Pin state: synced from module-level _pinned via listener
   const [pinned, setPinnedLocal] = useState(_pinned)
@@ -202,11 +206,25 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
     return folders.find((f) => f.id === note.folderId)?.name || null
   }, [note?.folderId, folders])
 
-  const backlinkCount = useMemo(() => {
-    if (!title) return 0
+  const backlinks = useMemo(() => {
+    if (!title) return []
     const lower = title.toLowerCase()
-    return allNotes.filter((n) => !n.trashed && n.linksOut.some((l) => l.toLowerCase() === lower)).length
+    return allNotes.filter((n) => !n.trashed && n.linksOut.some((l) => l.toLowerCase() === lower))
   }, [allNotes, title])
+
+  const backlinkCount = backlinks.length
+
+  // ── Close backlinks dropdown on outside click ──
+  useEffect(() => {
+    if (!showBacklinks) return
+    function handleMouseDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setShowBacklinks(false)
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown)
+    return () => document.removeEventListener("mousedown", handleMouseDown)
+  }, [showBacklinks])
 
   // ── Quote selection tracking ──
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -406,7 +424,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         </span>
       </div>
       {/* Metadata */}
-      <div className="px-4 py-1.5 flex items-center gap-1.5 text-2xs text-muted-foreground/60">
+      <div className="relative px-4 py-1.5 flex items-center gap-1.5 text-2xs text-muted-foreground/60">
         {folderName && (
           <>
             <FolderSimple size={10} weight="regular" />
@@ -418,8 +436,37 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         {backlinkCount > 0 && (
           <>
             <span>·</span>
-            <Link size={10} weight="regular" />
-            <span>{backlinkCount}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowBacklinks((prev) => !prev) }}
+              className="inline-flex items-center gap-0.5 hover:text-foreground transition-colors cursor-pointer"
+              title="Show referencing notes"
+            >
+              <Link size={10} weight="regular" />
+              <span>{backlinkCount}</span>
+            </button>
+            {showBacklinks && (
+              <div className="absolute left-4 top-full mt-1 w-64 rounded-md border border-border-subtle bg-surface-overlay py-1 shadow-lg z-20">
+                <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                  Referenced by
+                </p>
+                {backlinks.slice(0, 10).map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowBacklinks(false)
+                      import("@/lib/table-route").then(({ setActiveRoute }) => setActiveRoute("/notes"))
+                      usePlotStore.getState().openNote(n.id)
+                      hideNotePreviewImmediate()
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+                  >
+                    <span className="truncate">{n.title || "Untitled"}</span>
+                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/40 capitalize">{n.status}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </>
         )}
         {noteType === "wiki" && wikiArticle && (
@@ -427,15 +474,55 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             {wikiArticle.blocks.length > 0 && (
               <>
                 <span>·</span>
-                <Cube size={10} weight="regular" />
-                <span>{wikiArticle.blocks.length}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowBlocks(prev => !prev); setShowCategories(false); setShowBacklinks(false) }}
+                  className="inline-flex items-center gap-0.5 hover:text-foreground transition-colors cursor-pointer"
+                  title="Show blocks"
+                >
+                  <Cube size={10} weight="regular" />
+                  <span>{wikiArticle.blocks.length}</span>
+                </button>
+                {showBlocks && (
+                  <div className="absolute left-4 top-full mt-1 w-56 rounded-md border border-border-subtle bg-surface-overlay py-1 shadow-lg z-20 max-h-48 overflow-y-auto">
+                    <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                      Blocks
+                    </p>
+                    {wikiArticle.blocks.map((b) => (
+                      <div key={b.id} className="flex items-center gap-2 px-3 py-1 text-2xs text-muted-foreground">
+                        <span className="shrink-0 text-[10px] text-muted-foreground/40 uppercase w-12">{b.type}</span>
+                        <span className="truncate">{b.title || b.content?.slice(0, 40) || "—"}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
             {(wikiArticle.categoryIds?.length ?? 0) > 0 && (
               <>
                 <span>·</span>
-                <FolderSimple size={10} weight="regular" />
-                <span>{wikiArticle.categoryIds!.length} categories</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowCategories(prev => !prev); setShowBlocks(false); setShowBacklinks(false) }}
+                  className="inline-flex items-center gap-0.5 hover:text-foreground transition-colors cursor-pointer"
+                  title="Show categories"
+                >
+                  <FolderSimple size={10} weight="regular" />
+                  <span>{wikiArticle.categoryIds!.length}</span>
+                </button>
+                {showCategories && (
+                  <div className="absolute left-4 top-full mt-1 w-auto min-w-48 max-w-72 rounded-md border border-border-subtle bg-surface-overlay py-1 shadow-lg z-20">
+                    <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                      Categories
+                    </p>
+                    {wikiArticle.categoryIds!.map((catId) => {
+                      const cat = wikiCategories.find((c: { id: string }) => c.id === catId)
+                      return (
+                        <div key={catId} className="px-3 py-1.5 text-2xs text-muted-foreground whitespace-nowrap">
+                          {cat?.name || catId}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </>
             )}
           </>

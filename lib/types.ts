@@ -81,6 +81,8 @@ export interface WikiBlock {
   attachmentId?: string
   /** Image: caption text */
   caption?: string
+  /** Image: display width as percentage (25-100), default 100 */
+  imageWidth?: number
   /** URL: embedded link */
   url?: string
   /** URL: title/label for the link */

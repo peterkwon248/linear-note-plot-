@@ -771,8 +771,16 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
   const src = block.attachmentId ? `attachment://${block.attachmentId}` : ""
   const { url, loading } = useAttachmentUrl(src)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const addAttachment = usePlotStore((s) => s.addAttachment)
+
+  const currentWidth = block.imageWidth ?? 100
+  const SIZE_PRESETS = [
+    { label: "S", value: 25 },
+    { label: "M", value: 50 },
+    { label: "L", value: 100 },
+  ]
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -864,6 +872,23 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
               <UploadSimple size={14} weight="regular" />
               Replace image
             </button>
+            <div className="my-1 h-px bg-border/40" />
+            <div className="flex items-center gap-1 px-2.5 py-1.5">
+              {SIZE_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  onClick={() => { onUpdate?.({ imageWidth: preset.value }); setMenuOpen(false) }}
+                  className={cn(
+                    "flex-1 rounded px-2 py-0.5 text-2xs font-medium transition-colors",
+                    currentWidth === preset.value
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
             {onDelete && (
               <>
                 <div className="my-1 h-px bg-border/40" />
@@ -885,8 +910,47 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
           Loading image...
         </div>
       ) : url ? (
-        <figure>
-          <img src={url} alt={block.caption || ""} className="max-w-full rounded-lg" />
+        <figure className="relative inline-block" style={{ width: `${currentWidth}%` }}>
+          <div className="relative">
+            <img
+              ref={imgRef}
+              src={url}
+              alt={block.caption || ""}
+              className="w-full rounded-lg"
+            />
+            {editable && (
+              <div
+                className="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize bg-accent/50 rounded-tl-sm opacity-0 group-hover/image:opacity-100 transition-opacity"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  const startX = e.clientX
+                  const startWidth = imgRef.current?.offsetWidth || 0
+                  const containerWidth = imgRef.current?.parentElement?.parentElement?.offsetWidth || 1
+
+                  function onMouseMove(ev: MouseEvent) {
+                    const delta = ev.clientX - startX
+                    const newPx = Math.max(100, startWidth + delta)
+                    const newPercent = Math.round(Math.min(100, Math.max(25, (newPx / containerWidth) * 100)))
+                    if (imgRef.current?.parentElement?.parentElement) {
+                      (imgRef.current.parentElement.parentElement as HTMLElement).style.width = `${newPercent}%`
+                    }
+                  }
+
+                  function onMouseUp(ev: MouseEvent) {
+                    document.removeEventListener("mousemove", onMouseMove)
+                    document.removeEventListener("mouseup", onMouseUp)
+                    const delta = ev.clientX - startX
+                    const newPx = Math.max(100, startWidth + delta)
+                    const newPercent = Math.round(Math.min(100, Math.max(25, (newPx / containerWidth) * 100)))
+                    onUpdate?.({ imageWidth: newPercent })
+                  }
+
+                  document.addEventListener("mousemove", onMouseMove)
+                  document.addEventListener("mouseup", onMouseUp)
+                }}
+              />
+            )}
+          </div>
           {block.caption && (
             <figcaption className="mt-1.5 text-center text-2xs text-muted-foreground/50">
               {block.caption}
