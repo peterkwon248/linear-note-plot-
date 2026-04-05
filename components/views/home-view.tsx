@@ -602,7 +602,7 @@ export function HomeView() {
       [...notes]
         .filter((n) => !n.trashed)
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-        .slice(0, 7),
+        .slice(0, 5),
     [notes],
   )
 

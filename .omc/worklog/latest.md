@@ -1,35 +1,34 @@
 ---
-session_date: "2026-04-04 22:00"
+session_date: "2026-04-05 09:00"
 project: "Plot (linear-note-plot-)"
 working_directory: "C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/intelligent-hypatia"
-duration_estimate: "~4 hours"
+duration_estimate: "~3 hours"
 ---
 
 ## Completed Work
-- before-work/after-work 개선 (worklog 필수 업데이트 + CONTEXT.md 크로스체크)
-- Home 카드 → 필터 연동 (pendingFilters 인프라)
-- 사이드바 "View all" → hover-only ArrowRight 아이콘
-- 고아 노트 제안 시스템 (orphan-actions.ts)
-- CONTEXT.md TODO 정리 (Phase 2 완료, Phase 3→P4, stubs 제거)
-- Phase 4 Partial Quote (WikiQuote 8필드, quote-hash.ts, Peek/호버 Quote)
-- 호버 프리뷰 리디자인 (리치 HTML + 메타 + 액션바)
-- 위키링크 우클릭 컨텍스트 메뉴 (wikilink-context-menu.tsx)
-- 버블 메뉴 사이즈 업 + WikiQuote 삭제 버튼
+- WikilinkSuggestion 버그 근본 수정 (allow() stale state → state param)
+- Quote UX 단순화 (quoteMode 제거, 선택→Quote=즉시삽입)
+- [[드롭다운 WikiArticle 추가 (Notes/Wiki 섹션 분리, IconWiki 통일)
+- Stub 부활 (isWikiStub heuristic, 3-way 링크 색상, Wiki 대시보드 Stubs 카운트+탭)
+- 호버 프리뷰 Edit 모드 (Preview↔Edit 전환, NoteEditorAdapter, pin 기능)
+- Home Recent 5개 제한
+- Create Note + Create Wiki 아이콘/레이아웃 개선
 
 ## Remaining Tasks
-- [ ] "Link to..." 버그 — WikilinkSuggestion이 완성된 [[...]] 안에서 트리거됨. items()/allow() 체크 안 먹힘. suggestion 플러그인 소스 디버깅 필요
-- [ ] Quote UX 단순화 — 텍스트 선택 → Quote 클릭 = 즉시 삽입 (quoteMode 제거). 현재는 Quote→드래그→Insert Quote 3단계
-- [ ] 호버 프리뷰 Edit 모드 — Preview↔Edit 2모드 전환. NoteEditorAdapter editable prop 활용. Edit 시 hidePreview 비활성화, X로만 닫기
-- [ ] Plain text copy — 호버 프리뷰 ⋯ 메뉴에 "Copy as text" 추가
-- [ ] 위키링크 뒤 Enter 안 되는 버그 조사
+- [ ] Unresolved Links 전환 — Red Link→회색 점선, Wiki Red Links 제거→Home 통합, 클릭 시 노트/위키 팝업
+- [ ] 인사이트 중앙 허브 — 온톨로지 사이드바 Insights 섹션, 세이브매트릭스급 지표
+- [ ] 호버 프리뷰 Edit 모드 테스트/버그 수정
+- [ ] Plain text copy (⋯ 메뉴)
+- [ ] Change link 기능
 
 ## Key Decisions
-- 호버 프리뷰 = 2모드 컴포넌트 (Preview + Edit). Edit = 인라인 Peek
-- Quote UX는 "선택 → Quote" 2단계가 직관적 (quoteMode 3단계 폐기 예정)
-- WikiQuote는 atom:true 유지 (편집 불가, 원본 보존 목적)
-- "Link to..." 버그는 suggestion 플러그인 내부 이슈. allow/items 수준 체크로는 불충분
+- Stub = heuristic (블록 ≤4 + text 비어있음), 상태 필드 없음
+- Red Link → "Unresolved Links" 개념 전환 (미구현, 다음 세션)
+- 온톨로지 = 인사이트 중앙 허브 (미구현, 설계만)
+- [[드롭다운에 Create Note + Create Wiki 2옵션
+- Home Recent 7→5개
 
 ## Notes for Next Session
-- "Link to..." 디버깅: @tiptap/suggestion 소스에서 char 매칭 로직 확인 필요
-- 호버 프리뷰 Edit 모드: SidePanelPeek의 editing 토글 패턴 참고
-- docs/CONTEXT.md의 TODO가 현재 상태와 일치하는지 다시 확인
+- "Unresolved Links" 전환이 큰 작업 — Wiki dashboard/list에서 Red Links 제거 + Home에 새 섹션
+- 인사이트 허브는 설계 문서 작성 후 구현
+- WikilinkSuggestion allow() 수정이 정상 동작하는지 재확인

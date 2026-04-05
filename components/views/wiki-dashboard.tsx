@@ -26,6 +26,7 @@ interface WikiDashboardProps {
     connectedNotes: number
   }
   articleCount: number
+  stubCount: number
   redLinks: { title: string; refCount: number }[]
   recentChanges: WikiArticle[]
   mostConnected: { note: WikiArticle; count: number }[]
@@ -45,6 +46,7 @@ interface WikiDashboardProps {
   onOpenWikiArticle?: (id: string) => void
   onCreateFromRedLink: (title: string) => void
   onViewAll: () => void
+  onViewStubs?: () => void
   onViewRedLinks?: () => void
   onCategoryClick?: (categoryId: string) => void
 }
@@ -56,6 +58,7 @@ export function WikiDashboard({
   wikiArticles,
   stats,
   articleCount,
+  stubCount,
   redLinks,
   recentChanges,
   mostConnected,
@@ -71,6 +74,7 @@ export function WikiDashboard({
   onOpenWikiArticle,
   onCreateFromRedLink,
   onViewAll,
+  onViewStubs,
   onViewRedLinks,
   onCategoryClick,
 }: WikiDashboardProps) {
@@ -136,6 +140,13 @@ export function WikiDashboard({
             sub={`${stats.total} total`}
             color="text-accent"
             onClick={onViewAll}
+          />
+          <MiniStat
+            label="Stubs"
+            value={stubCount}
+            sub="need content"
+            color="text-amber-500"
+            onClick={onViewStubs}
           />
           <MiniStat
             label="Red Links"

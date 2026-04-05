@@ -53,6 +53,7 @@ import { WikiMergePreview } from "@/components/wiki-merge-preview"
 import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
 import { WikiCategoryPage } from "./wiki-category-page"
+import { isWikiStub } from "@/lib/wiki-utils"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -110,7 +111,7 @@ export function WikiView() {
   const [wikiMergeSourceId, setWikiMergeSourceId] = useState<string | null>(null)
 
   // Dashboard filter
-  const [dashFilter, setDashFilter] = useState<"all" | "articles" | "redlinks">("all")
+  const [dashFilter, setDashFilter] = useState<"all" | "articles" | "stubs" | "redlinks">("all")
 
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
@@ -513,10 +514,16 @@ export function WikiView() {
     }
   }, [wikiNotes, wikiArticles, redLinks, notes])
 
-  // Article count: total wiki articles
+  // Stub count: wiki articles with minimal content
+  const stubCount = useMemo(
+    () => wikiArticles.filter(isWikiStub).length,
+    [wikiArticles]
+  )
+
+  // Article count: total wiki articles minus stubs
   const articleCount = useMemo(
-    () => wikiNotes.length,
-    [wikiNotes]
+    () => wikiNotes.length - stubCount,
+    [wikiNotes, stubCount]
   )
 
 
@@ -1093,6 +1100,7 @@ export function WikiView() {
             wikiArticles={wikiArticles}
             stats={stats}
             articleCount={articleCount}
+            stubCount={stubCount}
             redLinks={redLinks}
             recentChanges={recentChanges}
             mostConnected={mostConnected}
@@ -1108,6 +1116,7 @@ export function WikiView() {
             onOpenWikiArticle={setSelectedWikiArticleId}
             onCreateFromRedLink={handleCreateFromRedLink}
             onViewAll={() => { setWikiViewMode("list"); setDashFilter("all") }}
+            onViewStubs={() => { setWikiViewMode("list"); setDashFilter("stubs") }}
             onViewRedLinks={() => { setWikiViewMode("list"); setDashFilter("redlinks") }}
             onCategoryClick={(categoryId) => {
               setWikiCategoryFilter(categoryId)
@@ -1144,6 +1153,8 @@ export function WikiView() {
             onCreateFromRedLink={handleCreateFromRedLink}
             selectedIds={selectedArticleIds}
             onSelect={(id, opts) => handleArticleSelect(id, opts)}
+            stubCount={stubCount}
+            wikiArticles={wikiArticles}
           />
           {selectedArticleIds.size > 0 && (
             <WikiFloatingActionBar

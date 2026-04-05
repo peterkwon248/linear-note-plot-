@@ -14,6 +14,11 @@ import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Copy } from "@phosphor-icons/react/dist/ssr/Copy"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
+import { FixedToolbar } from "@/components/editor/FixedToolbar"
+import type { Editor } from "@tiptap/react"
 
 // ── Types ─────────────────────────────────────────────────────────
 
@@ -144,8 +149,10 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   const [bodyPreview, setBodyPreview] = useState("")
   const [bodyJson, setBodyJson] = useState<Record<string, unknown> | null>(null)
   const [pos, setPos] = useState({ x, y })
-  const [quoteMode, setQuoteMode] = useState(false)
   const [showMore, setShowMore] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
+  const [pinned, setPinned] = useState(false)
   const title = note?.title || wikiArticle?.title || "Untitled"
   const status = note?.status
 
@@ -322,7 +329,8 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
     <div
       ref={ref}
       onMouseEnter={cancelHidePreview}
-      onMouseLeave={hideNotePreview}
+      onMouseLeave={(editing || pinned) ? undefined : hideNotePreview}
+      onClick={() => { if (!pinned) setPinned(true) }}
       className="fixed z-[9999] w-[520px] rounded-lg border border-border-subtle bg-surface shadow-lg overflow-hidden animate-in fade-in duration-150"
       style={{ left: pos.x, top: pos.y }}
     >
@@ -360,27 +368,35 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           </>
         )}
       </div>
-      {/* Quote mode hint */}
-      {quoteMode && !quoteSelection && (
-        <div className="mx-4 mb-2 rounded bg-accent/10 px-2 py-1.5 text-2xs text-accent">
-          Select text to quote into your note
+      {/* Body */}
+      {editing ? (
+        <>
+          {editorInstance && <FixedToolbar editor={editorInstance} position="top" noteId={noteId} />}
+          <div className="flex-1 overflow-y-auto px-4 py-3 max-h-[80vh]">
+            <NoteEditorAdapter
+              key={`${noteId}-edit`}
+              note={note!}
+              editable={true}
+              onEditorReady={(ed) => setEditorInstance(ed as Editor)}
+            />
+          </div>
+        </>
+      ) : (
+        <div ref={bodyRef} className="px-4 pb-3 max-h-[80vh] overflow-y-auto select-text">
+          {bodyJson && (bodyJson as any).type === "doc" ? (
+            <div
+              className="ProseMirror prose-preview text-note leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-note [&_h2]:font-semibold [&_h2]:mt-2 [&_h2]:mb-1 [&_h3]:text-2xs [&_h3]:font-medium [&_h3]:mt-2 [&_h3]:mb-0.5 [&_p]:my-0.5 [&_ul]:my-0.5 [&_ol]:my-0.5 [&_li]:my-0 [&_blockquote]:my-1 [&_blockquote]:pl-2 [&_blockquote]:border-l-2 [&_pre]:my-1 [&_pre]:text-2xs [&_code]:text-2xs text-foreground/80"
+              dangerouslySetInnerHTML={{ __html: generateHTML(bodyJson, getRenderExtensions()) }}
+            />
+          ) : bodyPreview ? (
+            <p className="text-2xs text-muted-foreground leading-relaxed whitespace-pre-line">
+              {bodyPreview}
+            </p>
+          ) : (
+            <p className="text-2xs text-muted-foreground/50 italic">Empty note</p>
+          )}
         </div>
       )}
-      {/* Body */}
-      <div ref={bodyRef} className="px-4 pb-3 max-h-[80vh] overflow-y-auto select-text">
-        {bodyJson && (bodyJson as any).type === "doc" ? (
-          <div
-            className="ProseMirror prose-preview text-note leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-note [&_h2]:font-semibold [&_h2]:mt-2 [&_h2]:mb-1 [&_h3]:text-2xs [&_h3]:font-medium [&_h3]:mt-2 [&_h3]:mb-0.5 [&_p]:my-0.5 [&_ul]:my-0.5 [&_ol]:my-0.5 [&_li]:my-0 [&_blockquote]:my-1 [&_blockquote]:pl-2 [&_blockquote]:border-l-2 [&_pre]:my-1 [&_pre]:text-2xs [&_code]:text-2xs text-foreground/80"
-            dangerouslySetInnerHTML={{ __html: generateHTML(bodyJson, getRenderExtensions()) }}
-          />
-        ) : bodyPreview ? (
-          <p className="text-2xs text-muted-foreground leading-relaxed whitespace-pre-line">
-            {bodyPreview}
-          </p>
-        ) : (
-          <p className="text-2xs text-muted-foreground/50 italic">Empty note</p>
-        )}
-      </div>
       {/* Floating Quote button — positioned to the right of the preview card */}
       {quoteSelection && ref.current && createPortal(
         <button
@@ -409,23 +425,44 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           <span>Open</span>
         </button>
         <button
-          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handlePeek() }}
-          className="flex items-center gap-1 rounded px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-          title="Open in peek panel"
-        >
-          <Eye size={12} />
-          <span>Peek</span>
-        </button>
-        <button
-          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setQuoteMode(!quoteMode) }}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (editing) {
+              setEditing(false)
+              setEditorInstance(null)
+            } else {
+              setEditing(true)
+            }
+          }}
           className={`flex items-center gap-1 rounded px-2 py-1 text-2xs transition-colors hover:bg-hover-bg ${
-            quoteMode ? "text-accent" : "text-muted-foreground hover:text-foreground"
+            editing ? "text-accent" : "text-muted-foreground hover:text-foreground"
           }`}
-          title="Select text to quote"
+          title={editing ? "Switch to preview" : "Edit inline"}
         >
-          <Quotes size={12} />
-          <span>Quote</span>
+          {editing ? <Eye size={12} /> : <PencilSimple size={12} />}
+          <span>{editing ? "Preview" : "Edit"}</span>
         </button>
+        {!editing && (
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (quoteSelection) {
+                handleInsertQuote()
+              } else {
+                import("sonner").then(({ toast }) => toast.info("Select text first"))
+              }
+            }}
+            className={`flex items-center gap-1 rounded px-2 py-1 text-2xs transition-colors hover:bg-hover-bg ${
+              quoteSelection ? "text-accent" : "text-muted-foreground hover:text-foreground"
+            }`}
+            title="Quote selected text"
+          >
+            <Quotes size={12} />
+            <span>Quote</span>
+          </button>
+        )}
         <div className="relative ml-auto">
           <button
             onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setShowMore(!showMore) }}
@@ -453,6 +490,15 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             </div>
           )}
         </div>
+        {(editing || pinned) && (
+          <button
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setPinned(false); setEditing(false); setEditorInstance(null); hideNotePreviewImmediate() }}
+            className="flex items-center gap-1 rounded px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+            title="Close"
+          >
+            <PhX size={12} />
+          </button>
+        )}
       </div>
     </div>
   )

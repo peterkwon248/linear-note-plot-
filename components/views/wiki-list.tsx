@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { groupByInitial } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
+import { isWikiStub } from "@/lib/wiki-utils"
 import type { WikiArticle } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
@@ -26,8 +27,8 @@ interface WikiListProps {
   backlinkCounts: Map<string, number>
 
   // Filter state
-  dashFilter: "all" | "articles" | "redlinks"
-  setDashFilter: (f: "all" | "articles" | "redlinks") => void
+  dashFilter: "all" | "articles" | "stubs" | "redlinks"
+  setDashFilter: (f: "all" | "articles" | "stubs" | "redlinks") => void
   showAllArticles: boolean
   setShowAllArticles: (show: boolean) => void
 
@@ -44,6 +45,10 @@ interface WikiListProps {
   onMergeArticle?: (sourceId: string) => void
   onSplitArticle?: (id: string) => void
   onDeleteArticle?: (id: string) => void
+
+  // Stub support
+  stubCount?: number
+  wikiArticles?: WikiArticle[]
 
   // Selection
   selectedIds?: Set<string>
@@ -325,6 +330,8 @@ export function WikiList({
   onDeleteArticle,
   redLinks,
   onCreateFromRedLink,
+  stubCount,
+  wikiArticles,
   selectedIds,
   onSelect,
 }: WikiListProps) {
@@ -334,6 +341,7 @@ export function WikiList({
   const counts = {
     all: sortedFilteredWikiNotes.length + redLinks.length,
     articles: sortedFilteredWikiNotes.length,
+    stubs: stubCount ?? 0,
     redlinks: redLinks.length,
   }
 
@@ -353,8 +361,8 @@ export function WikiList({
         <span className="h-4 w-px bg-border/50" />
 
         {/* Filter Tabs */}
-        {(["all", "articles", "redlinks"] as const).map((tab) => {
-          const labels: Record<string, string> = { all: "All", articles: "Articles", redlinks: "Red Links" }
+        {(["all", "articles", "stubs", "redlinks"] as const).map((tab) => {
+          const labels: Record<string, string> = { all: "All", articles: "Articles", stubs: "Stubs", redlinks: "Red Links" }
           const tabCount = counts[tab as keyof typeof counts]
           return (
             <button
@@ -366,9 +374,14 @@ export function WikiList({
               className={cn(
                 "rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
                 tab === "redlinks" && "text-destructive/70",
+                tab === "stubs" && "text-amber-500/70",
                 dashFilter === tab && !showAllArticles
-                  ? tab === "redlinks" ? "bg-destructive/10 text-destructive" : "bg-foreground/10 text-foreground"
-                  : tab === "redlinks" ? "text-destructive/50 hover:bg-hover-bg hover:text-destructive/70" : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
+                  ? tab === "redlinks" ? "bg-destructive/10 text-destructive"
+                    : tab === "stubs" ? "bg-amber-500/10 text-amber-500"
+                    : "bg-foreground/10 text-foreground"
+                  : tab === "redlinks" ? "text-destructive/50 hover:bg-hover-bg hover:text-destructive/70"
+                    : tab === "stubs" ? "text-amber-500/50 hover:bg-hover-bg hover:text-amber-500/70"
+                    : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
               )}
             >
               {labels[tab]}
@@ -446,7 +459,13 @@ export function WikiList({
           ) : (
             <div>
               {/* Article/Stub rows */}
-              {dashFilter !== "redlinks" && sortedFilteredWikiNotes.map((note, idx) => (
+              {dashFilter !== "redlinks" && sortedFilteredWikiNotes
+                .filter((note) => {
+                  if (dashFilter !== "stubs") return true
+                  const article = wikiArticles?.find((a) => a.id === note.id)
+                  return article ? isWikiStub(article) : false
+                })
+                .map((note, idx) => (
                 <ArticleTableRow
                   key={note.id}
                   note={note}
@@ -473,6 +492,8 @@ export function WikiList({
                   onSelect={onSelect ? (opts) => onSelect(`rl-${rl.title}`, opts) : undefined}
                 />
               ))}
+              {/* Empty state for stubs filter with no stubs */}
+              {dashFilter === "stubs" && (stubCount ?? 0) === 0 && <EmptyState />}
               {/* Empty state for redlinks filter with no red links */}
               {dashFilter === "redlinks" && redLinks.length === 0 && <EmptyState />}
             </div>
