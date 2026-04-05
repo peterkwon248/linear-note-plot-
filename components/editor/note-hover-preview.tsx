@@ -17,6 +17,8 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
+import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { Link } from "@phosphor-icons/react/dist/ssr/Link"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
@@ -412,12 +414,30 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             <span>·</span>
           </>
         )}
-        <span>{relativeTime(note?.updatedAt || "")}</span>
+        <span>{relativeTime(note?.updatedAt || wikiArticle?.updatedAt || "")}</span>
         {backlinkCount > 0 && (
           <>
             <span>·</span>
-            <ArrowBendUpLeft size={10} />
+            <Link size={10} weight="regular" />
             <span>{backlinkCount}</span>
+          </>
+        )}
+        {noteType === "wiki" && wikiArticle && (
+          <>
+            {wikiArticle.blocks.length > 0 && (
+              <>
+                <span>·</span>
+                <Cube size={10} weight="regular" />
+                <span>{wikiArticle.blocks.length}</span>
+              </>
+            )}
+            {(wikiArticle.categoryIds?.length ?? 0) > 0 && (
+              <>
+                <span>·</span>
+                <FolderSimple size={10} weight="regular" />
+                <span>{wikiArticle.categoryIds!.length} categories</span>
+              </>
+            )}
           </>
         )}
       </div>
@@ -426,7 +446,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         <div ref={bodyRef} className="overflow-y-auto" style={{ height: 400 }}>
           <WikiArticleView
             articleId={noteId}
-            editable={false}
+            editable={editing}
             preview={true}
           />
         </div>
@@ -458,7 +478,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           <ArrowSquareOut size={12} />
           <span>Open</span>
         </button>
-        {note && (
+        {(note || noteType === "wiki") && (
           <button
             onMouseDown={(e) => {
               e.preventDefault()

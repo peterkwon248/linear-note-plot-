@@ -1,16 +1,14 @@
-# Session Notepad (Updated: 2026-04-05 12:00)
+# Session Notepad (Updated: 2026-04-05 20:00)
 
 ## Critical Context
-- PR #152 merged to main — Unresolved Links + 호버 프리뷰 TipTap + Pin + Note/Wiki 링크 구분
-- 4-way wikilink: Note=보라, Wiki=teal칩(`[[wiki:Title]]`), Stub=amber, Dangling=gray
-- 호버 프리뷰 640px, 항상 NoteEditorAdapter(editable 토글)
+- PR #152~155 merged — Unresolved Links + 호버 프리뷰 TipTap + Pin + Note/Wiki 구분 + Quote UX + Change link + 위키 프리뷰
+- 같은 제목 Note+Wiki 허용, [[wiki:Title]] prefix로 구분, CSS 클래스 기반 resolve
+- 시드 데이터 재구성 완료 (isWiki 잔재 삭제, 9노트 + 3위키)
 
 ## Active Tasks (우선순위)
-- [ ] **P0**: 멘션 타입 시각 구분 (@Note:/@Wiki:/@Tag: prefix)
-- [ ] **P0**: 멘션 핀 고정 재검증
-- [ ] **P1**: 위키 호버 프리뷰 (wiki-article-view 임베드)
-- [ ] **P1**: 위키 프리뷰 에디터 (인라인 편집)
-- [ ] **P2**: Change link 기능
+- [ ] **P1**: 위키 프리뷰 에디터 (editable 토글)
+- [ ] **P1**: 위키 프리뷰 헤더 메타데이터 (블록 수=Cube, 카테고리, 백링크=Link 아이콘)
+- [ ] **P2**: 메타데이터 클릭 → 참조 노트 목록
 - [ ] **P2**: 인사이트 중앙 허브
 
 ## Blockers
