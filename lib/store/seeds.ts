@@ -113,8 +113,8 @@ Jot down any thought quickly. Notes go through three stages:
 - **Permanent** — a finished, polished note
 
 ### 2. Organize Knowledge with Wiki
-Turn concepts you reference repeatedly into a [[Zettelkasten]] wiki page. Wiki pages are your personal encyclopedia.
-- Link with double brackets like \`[[Zettelkasten]]\`
+Turn concepts you reference repeatedly into a [[wiki:Zettelkasten]] wiki page. Wiki pages are your personal encyclopedia.
+- Link with double brackets like \`[[wiki:Zettelkasten]]\`
 - Frequently referenced notes are automatically suggested as wiki candidates
 
 ### 3. Discover Connections
@@ -123,11 +123,11 @@ Explore how your notes connect visually in the Graph View.
 - Classify with tags and folders, distinguish types with labels
 
 ## Next Steps
-- Read the [[Zettelkasten]] wiki
-- Check out [[How to Take Reading Notes]]
+- Read the [[wiki:Zettelkasten]] wiki
+- Check out [[My Reading Notes]]
 - Create your very first note!`
 
-const NOTE_2_CONTENT = `# How to Take Reading Notes
+const NOTE_2_CONTENT = `# My Reading Notes
 
 Good reading notes don't just copy the original text verbatim.
 
@@ -137,19 +137,21 @@ Good reading notes don't just copy the original text verbatim.
 Underline the important parts as you read.
 
 ### Step 2: Rewrite in Your Own Words
-Rewrite the highlighted passages **in your own words**. This is what's called a [[Fleeting Note]].
+Rewrite the highlighted passages **in your own words**. This is what's called a [[wiki:Fleeting Note]].
 
 ### Step 3: Connect
 Think about how it relates to your existing notes.
-- "This concept aligns with the core principle of [[Zettelkasten]]"
+- "This concept aligns with the core principle of [[wiki:Zettelkasten]]"
 - "This is the opposite viewpoint from something I read before"
 
 ## Example
 > "Creativity is not about creating something from nothing, but about finding new combinations of existing ideas."
 
-Rewritten: **Creative thinking is the art of connection. It's not about inventing something new, but about weaving existing ideas together in new ways.** — This is why [[Zettelkasten]] emphasizes linking.`
+Rewritten: **Creative thinking is the art of connection. It's not about inventing something new, but about weaving existing ideas together in new ways.** — This is why [[wiki:Zettelkasten]] emphasizes linking.`
 
-const NOTE_3_CONTENT = `## Goals
+const NOTE_3_CONTENT = `# Build a Personal Wiki
+
+## Goals
 Systematically build my own personal wiki.
 
 ## Principles
@@ -159,94 +161,59 @@ Systematically build my own personal wiki.
 
 ## Progress
 - [x] Install Plot and configure basics
-- [x] Study the [[Zettelkasten]] methodology
+- [x] Study the [[wiki:Zettelkasten]] methodology
 - [ ] Write seed wiki pages for each area of interest
 - [ ] Establish a weekly review routine`
 
-const NOTE_4_CONTENT = `Just like compound interest, knowledge accelerates as it accumulates.
+const NOTE_4_CONTENT = `# Compound Interest of Knowledge
+
+Just like compound interest, knowledge accelerates as it accumulates.
 
 With 10 notes there's not much to connect,
 but with 100 notes, every new note links to several existing ones.
 
-→ A core insight of [[Zettelkasten]]
+→ A core insight of [[wiki:Zettelkasten]]
 → Even if the effect is small at first, consistent accumulation is key`
 
-const NOTE_5_CONTENT = `## Attendees
-- Me
+const NOTE_5_CONTENT = `# Weekly Review 2026-W14
 
-## What I Learned This Week
+## What I Did This Week
 - Started organizing concepts using Plot's wiki feature
-- Applied [[How to Take Reading Notes]] to summarize a book I read
+- Applied [[My Reading Notes]] method to summarize a book
 
 ## To-Do Next Week
 - [ ] Add 3 new wiki pages
 - [ ] Identify existing notes to promote to wiki`
 
-const NOTE_6_CONTENT = "To organize later: effective tag usage, folders vs tags comparison"
+const NOTE_6_CONTENT = "Quick Memo: to organize later — effective tag usage, folders vs tags comparison"
 
-const WIKI_1_CONTENT = `# Zettelkasten
+const NOTE_7_CONTENT = `My first encounter with Zettelkasten was through Sönke Ahrens' book "How to Take Smart Notes."
 
-Zettelkasten is a knowledge management methodology devised by the German sociologist Niklas Luhmann.
+The key takeaway: **writing is thinking.** You don't just store information — you actively process it by restating ideas in your own words.
 
-## Overview
+I've been using [[wiki:Zettelkasten]] principles in Plot for 2 weeks now. The most powerful aspect is how [[wiki:Permanent Note]]s naturally form clusters over time.
 
-"Zettelkasten" is German for "slip box." Luhmann used this system to produce 70 books and over 400 academic papers across 40 years.
+What surprised me: the system gets MORE useful as it grows, not less. Every new note creates potential connections with all existing ones.`
 
-## Core Principles
+const NOTE_8_CONTENT = `My criteria for promoting a note to Permanent status:
 
-### 1. Atomic Notes
-Each note contains exactly one idea. This is called a [[Permanent Note]].
+1. **Standalone** — Does it make sense without context?
+2. **Atomic** — Is it about ONE idea only?
+3. **Connected** — Can I link it to at least 2 existing notes?
 
-### 2. Write in Your Own Words
-Don't copy the original text verbatim — restate it in your own language. A quick initial jotting is called a [[Fleeting Note]].
+The hardest part is step 1. Most of my [[wiki:Fleeting Note]]s are too context-dependent.
 
-### 3. Linking
-Every time you write a new note, find and create connections to existing notes. As these links accumulate, unexpected insights emerge.
+Goal: Convert at least 3 fleeting notes to [[wiki:Permanent Note]]s every week.`
 
-### 4. Indexing
-Create structure notes that serve as entry points. In Plot, this corresponds to **wiki pages**.
+const NOTE_9_CONTENT = `Should fleeting notes have an expiration date?
 
-## Zettelkasten in Plot
+In [[wiki:Zettelkasten]], a [[wiki:Fleeting Note]] is meant to be temporary. But I keep accumulating them without processing.
 
-| Zettelkasten Concept | Plot Feature |
-|---|---|
-| Slip box | Notes list |
-| Permanent note | Permanent-status note |
-| Index card | Wiki page |
-| Link | \`[[wikilink]]\` |
-| Structure note | Tags + Folders |
-
-## See Also
-- [[Permanent Note]]
-- [[Fleeting Note]]`
-
-const WIKI_2_CONTENT = `# Permanent Note
-
-A Permanent Note is the final, refined note preserved in the [[Zettelkasten]] system.
-
-## Characteristics
-
-1. **Written in your own words** — ideas restated in your own language, not direct quotes
-2. **Atomic** — one idea per note
-3. **Context-independent** — understandable without other notes
-4. **Connected** — linked to at least one other note
-
-## Difference from Fleeting Notes
-
-While a [[Fleeting Note]] is a quick, temporary jotting, a Permanent Note is the polished result you've invested time refining.
-
-In Plot, changing a note's status to **Permanent** represents this transition.`
-
-const WIKI_3_CONTENT = `# Fleeting Note
-
-A Fleeting Note is a quick, temporary memo recorded in the [[Zettelkasten]] system. It is later refined into a [[Permanent Note]].
-
-In Plot, notes in the Inbox status correspond to fleeting notes.`
+Maybe I should set a 7-day rule: if a fleeting note isn't promoted within a week, review and either promote or delete it.`
 
 /* ── Seed notes ─────────────────────────────────────── */
 
 export const SEED_NOTES: Note[] = [
-  // ── Regular notes ────────────────────────────────
   {
     id: "note-1",
     title: "Getting Started with Plot",
@@ -265,14 +232,14 @@ export const SEED_NOTES: Note[] = [
     ...workflowDefaults("permanent"),
     noteType: "note" as const,
     summary: "Core concepts and getting started guide for the Plot app",
-    preview: "Getting Started with Plot Plot is an app that combines notes, wiki, and a knowledge graph into one. Get Started in 3 Minutes",
-    linksOut: ["zettelkasten", "how to take reading notes"],
+    preview: "Getting Started with Plot — Plot is an app that combines notes, wiki, and a knowledge graph into one.",
+    linksOut: ["zettelkasten", "my reading notes"],
     aliases: [],
     wikiInfobox: [],
   },
   {
     id: "note-2",
-    title: "How to Take Reading Notes",
+    title: "My Reading Notes",
     content: NOTE_2_CONTENT,
     contentJson: null,
     folderId: null,
@@ -288,14 +255,14 @@ export const SEED_NOTES: Note[] = [
     ...workflowDefaults("capture"),
     noteType: "note" as const,
     summary: "A 3-step method for writing effective reading notes",
-    preview: "How to Take Reading Notes Good reading notes don't just copy the original text verbatim. 3-Step Method Step 1: Highlight",
+    preview: "My Reading Notes — Good reading notes don't just copy the original text verbatim.",
     linksOut: ["fleeting note", "zettelkasten"],
     aliases: [],
     wikiInfobox: [],
   },
   {
     id: "note-3",
-    title: "Project: Build a Personal Wiki",
+    title: "Build a Personal Wiki",
     content: NOTE_3_CONTENT,
     contentJson: null,
     folderId: "folder-1",
@@ -311,14 +278,14 @@ export const SEED_NOTES: Note[] = [
     ...workflowDefaults("permanent"),
     noteType: "note" as const,
     summary: "Personal wiki building project plan and progress",
-    preview: "Goals Systematically build my own personal wiki. Principles 1. Add or improve one wiki page every day 2. Connect every",
+    preview: "Build a Personal Wiki — Goals: Systematically build my own personal wiki.",
     linksOut: ["zettelkasten"],
     aliases: [],
     wikiInfobox: [],
   },
   {
     id: "note-4",
-    title: "Idea: Compound Interest of Knowledge",
+    title: "Compound Interest of Knowledge",
     content: NOTE_4_CONTENT,
     contentJson: null,
     folderId: null,
@@ -334,19 +301,19 @@ export const SEED_NOTES: Note[] = [
     ...workflowDefaults("inbox"),
     noteType: "note" as const,
     summary: null,
-    preview: "Just like compound interest, knowledge accelerates as it accumulates. With 10 notes there's not much to connect, but with",
+    preview: "Just like compound interest, knowledge accelerates as it accumulates.",
     linksOut: ["zettelkasten"],
     aliases: [],
     wikiInfobox: [],
   },
   {
     id: "note-5",
-    title: "Weekly Review Notes",
+    title: "Weekly Review 2026-W14",
     content: NOTE_5_CONTENT,
     contentJson: null,
     folderId: "folder-2",
     tags: ["tag-3"],
-    labelId: "label-3",
+    labelId: "label-4",
     status: "inbox",
     priority: "none",
     reads: 0,
@@ -357,14 +324,14 @@ export const SEED_NOTES: Note[] = [
     ...workflowDefaults("inbox"),
     noteType: "note" as const,
     summary: null,
-    preview: "Attendees Me What I Learned This Week Started organizing concepts using Plot's wiki feature Applied How to Take Reading Notes",
-    linksOut: ["how to take reading notes"],
+    preview: "Weekly Review 2026-W14 — Applied My Reading Notes method to summarize a book.",
+    linksOut: ["my reading notes"],
     aliases: [],
     wikiInfobox: [],
   },
   {
     id: "note-6",
-    title: "Memo",
+    title: "Quick Memo",
     content: NOTE_6_CONTENT,
     contentJson: null,
     folderId: null,
@@ -380,88 +347,78 @@ export const SEED_NOTES: Note[] = [
     ...workflowDefaults("inbox"),
     noteType: "note" as const,
     summary: null,
-    preview: "To organize later: effective tag usage, folders vs tags comparison",
+    preview: "Quick Memo: to organize later — effective tag usage, folders vs tags comparison",
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
   },
-
-  // ── Wiki notes ───────────────────────────────────
   {
-    id: "note-wiki-1",
+    id: "note-7",
     title: "Zettelkasten",
-    content: WIKI_1_CONTENT,
-    contentJson: null,
-    folderId: null,
-    tags: ["tag-2", "tag-1"],
-    labelId: null,
-    status: "permanent",
-    priority: "high",
-    reads: 12,
-    pinned: false,
-    trashed: false,
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    ...workflowDefaults("permanent"),
-    noteType: "note" as const,
-    summary: "A knowledge management methodology devised by Niklas Luhmann",
-    preview: "Zettelkasten Zettelkasten is a knowledge management methodology devised by the German sociologist Niklas Luhmann. Overview",
-    linksOut: ["permanent note", "fleeting note"],
-    aliases: ["Slip Box", "Zettelkasten Method"],
-    wikiInfobox: [
-      { key: "Creator", value: "Niklas Luhmann" },
-      { key: "Origin", value: "Zettelkasten (German)" },
-      { key: "Meaning", value: "Slip box" },
-      { key: "Core Principle", value: "Linking and indexing" },
-    ],
-  },
-  {
-    id: "note-wiki-2",
-    title: "Permanent Note",
-    content: WIKI_2_CONTENT,
+    content: NOTE_7_CONTENT,
     contentJson: null,
     folderId: null,
     tags: ["tag-2"],
-    labelId: null,
-    status: "permanent",
-    priority: "medium",
-    reads: 4,
-    pinned: false,
-    trashed: false,
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000).toISOString(),
-    ...workflowDefaults("permanent"),
-    noteType: "note" as const,
-    summary: "The final, refined note preserved in the Zettelkasten system",
-    preview: "Permanent Note A Permanent Note is the final, refined note preserved in the Zettelkasten system. Characteristics 1. Written",
-    linksOut: ["zettelkasten", "fleeting note"],
-    aliases: ["Evergreen Note"],
-    wikiInfobox: [
-      { key: "Also Known As", value: "Evergreen Note" },
-      { key: "Related Concept", value: "Zettelkasten" },
-    ],
-  },
-  {
-    id: "note-wiki-3",
-    title: "Fleeting Note",
-    content: WIKI_3_CONTENT,
-    contentJson: null,
-    folderId: null,
-    tags: ["tag-2"],
-    labelId: null,
+    labelId: "label-2",
     status: "permanent",
     priority: "none",
     reads: 2,
     pinned: false,
     trashed: false,
-    createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
+    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     ...workflowDefaults("permanent"),
     noteType: "note" as const,
-    summary: "A quick, temporary memo in the Zettelkasten system",
-    preview: "Fleeting Note A Fleeting Note is a quick, temporary memo recorded in the Zettelkasten system. It is later refined into a",
+    summary: null,
+    preview: "My first encounter with Zettelkasten was through Sönke Ahrens' book \"How to Take Smart Notes.\" The key takeaway: writing is thinking.",
     linksOut: ["zettelkasten", "permanent note"],
-    aliases: ["Literature Note"],
+    aliases: [],
+    wikiInfobox: [],
+  },
+  {
+    id: "note-8",
+    title: "Permanent Note",
+    content: NOTE_8_CONTENT,
+    contentJson: null,
+    folderId: null,
+    tags: ["tag-2", "tag-1"],
+    labelId: "label-1",
+    status: "capture",
+    priority: "none",
+    reads: 1,
+    pinned: false,
+    trashed: false,
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    ...workflowDefaults("capture"),
+    noteType: "note" as const,
+    summary: null,
+    preview: "My criteria for promoting a note to Permanent status: Standalone — Does it make sense without context? Atomic — Is it about ONE idea only?",
+    linksOut: ["permanent note", "fleeting note"],
+    aliases: [],
+    wikiInfobox: [],
+  },
+  {
+    id: "note-9",
+    title: "Fleeting Note",
+    content: NOTE_9_CONTENT,
+    contentJson: null,
+    folderId: null,
+    tags: ["tag-2"],
+    labelId: null,
+    status: "inbox",
+    priority: "none",
+    reads: 0,
+    pinned: false,
+    trashed: false,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    ...workflowDefaults("inbox"),
+    noteType: "note" as const,
+    summary: null,
+    preview: "Should fleeting notes have an expiration date? In Zettelkasten, a fleeting note is meant to be temporary. But I keep accumulating them.",
+    linksOut: ["fleeting note", "zettelkasten"],
+    aliases: [],
     wikiInfobox: [],
   },
 ]
@@ -558,7 +515,7 @@ const bid = () => crypto.randomUUID()
 
 const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
   {
-    id: "wiki-article-1",
+    id: "wiki-1",
     title: "Zettelkasten",
     aliases: ["Slip box", "Zettelkasten Method"],
     infobox: [
@@ -573,18 +530,14 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
       { id: bid(), type: "section", title: "Core Principles", level: 2 },
       { id: bid(), type: "section", title: "Atomic Notes", level: 3 },
       { id: bid(), type: "text", content: "Each note contains exactly one idea. This is called a Permanent Note." },
-      { id: bid(), type: "note-ref", noteId: "note-2" },
-      { id: bid(), type: "section", title: "Write in Your Own Words", level: 3 },
-      { id: bid(), type: "text", content: "Don't copy the original text verbatim — restate it in your own language. A quick initial jotting is called a Fleeting Note." },
       { id: bid(), type: "section", title: "Linking", level: 3 },
       { id: bid(), type: "text", content: "Every time you write a new note, find and create connections to existing notes. As these links accumulate, unexpected insights emerge." },
       { id: bid(), type: "section", title: "Indexing", level: 3 },
       { id: bid(), type: "text", content: "Create structure notes that serve as entry points. In Plot, this corresponds to wiki pages — like this one." },
       { id: bid(), type: "section", title: "Zettelkasten in Plot", level: 2 },
       { id: bid(), type: "text", content: "Here's how Zettelkasten concepts map to Plot features:\n\n• Slip box → Notes list\n• Permanent note → Permanent-status note\n• Index card → Wiki article\n• Link → [[wikilink]]\n• Structure note → Tags + Folders" },
-      { id: bid(), type: "section", title: "Related Notes", level: 2 },
-      { id: bid(), type: "note-ref", noteId: "note-1" },
-      { id: bid(), type: "note-ref", noteId: "note-4" },
+      { id: bid(), type: "section", title: "See Also", level: 2 },
+      { id: bid(), type: "note-ref", noteId: "note-2" },
     ],
     tags: ["tag-2", "tag-1"],
     categoryIds: ["wcat-seed-1", "wcat-seed-2"],
@@ -592,7 +545,7 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
   },
   {
-    id: "wiki-article-2",
+    id: "wiki-2",
     title: "Permanent Note",
     aliases: ["Evergreen Note"],
     infobox: [
@@ -600,11 +553,12 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
       { key: "Also known as", value: "Evergreen Note" },
     ],
     blocks: [
-      { id: bid(), type: "section", title: "Overview", level: 2 },
+      { id: bid(), type: "section", title: "Definition", level: 2 },
       { id: bid(), type: "text", content: "A Permanent Note is the final, refined output in the Zettelkasten system. Unlike fleeting notes (quick jottings) or literature notes (reading highlights), a permanent note is:\n\n1. Written in your own words\n2. Atomic — one idea per note\n3. Context-independent — understandable on its own\n4. Connected — linked to at least one other note" },
-      { id: bid(), type: "section", title: "In Plot", level: 2 },
+      { id: bid(), type: "section", title: "Characteristics", level: 2 },
+      { id: bid(), type: "text", content: "Permanent notes are meant to last. They are revisited, refined, and connected over time. The goal is not quantity but quality — each permanent note should represent a distinct, durable insight." },
+      { id: bid(), type: "section", title: "In Practice", level: 2 },
       { id: bid(), type: "text", content: "In Plot, changing a note's status to \"Permanent\" signals that it has been refined into an evergreen idea. These notes are the building blocks of wiki articles." },
-      { id: bid(), type: "section", title: "From Notes", level: 2 },
       { id: bid(), type: "note-ref", noteId: "note-2" },
       { id: bid(), type: "section", title: "See Also", level: 2 },
       { id: bid(), type: "text", content: "Related concepts: Fleeting Note, Literature Note" },
@@ -615,17 +569,18 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     updatedAt: new Date(Date.now() - 86400000).toISOString(),
   },
   {
-    id: "wiki-article-3",
+    id: "wiki-3",
     title: "Fleeting Note",
     aliases: ["Quick Note", "Scratch Note"],
     infobox: [],
     blocks: [
-      { id: bid(), type: "section", title: "Overview", level: 2 },
+      { id: bid(), type: "section", title: "Definition", level: 2 },
       { id: bid(), type: "text", content: "A Fleeting Note is a quick, temporary note captured in the moment. It's not meant to be permanent — it's raw material to be processed later into a Permanent Note." },
-      { id: bid(), type: "section", title: "In Plot", level: 2 },
-      { id: bid(), type: "text", content: "Inbox-status notes in Plot serve as fleeting notes. They should be reviewed regularly and either promoted to Capture/Permanent or discarded." },
-      { id: bid(), type: "section", title: "Details", level: 2 },
+      { id: bid(), type: "section", title: "In Practice", level: 2 },
+      { id: bid(), type: "text", content: "Inbox-status notes in Plot serve as fleeting notes. They should be reviewed regularly and either promoted to Capture/Permanent or discarded. The key habit is not to hoard fleeting notes — process them within a day or two." },
+      { id: bid(), type: "note-ref", noteId: "note-2" },
       { id: bid(), type: "section", title: "See Also", level: 2 },
+      { id: bid(), type: "text", content: "Related concepts: Permanent Note, Literature Note" },
     ],
     tags: ["tag-2"],
     categoryIds: ["wcat-seed-3"],

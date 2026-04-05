@@ -115,6 +115,7 @@ function ExistingArticleDropTarget({ articleId, title, isOver }: { articleId: st
 interface WikiArticleViewProps {
   articleId: string
   editable?: boolean
+  preview?: boolean
   onDelete?: () => void
   collapseAllCmd?: "collapse" | "expand" | null
   onCollapseAllDone?: () => void
@@ -184,7 +185,7 @@ function getInitialContentJson(subtype: string): Record<string, unknown> {
   }
 }
 
-export function WikiArticleView({ articleId, editable = false, onDelete, collapseAllCmd, onCollapseAllDone, onAllCollapsedChange, fontSize }: WikiArticleViewProps) {
+export function WikiArticleView({ articleId, editable = false, preview = false, onDelete, collapseAllCmd, onCollapseAllDone, onAllCollapsedChange, fontSize }: WikiArticleViewProps) {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
   const removeWikiBlock = usePlotStore((s) => s.removeWikiBlock)
@@ -563,7 +564,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete, collaps
   const outerContent = (
     <div className="flex flex-1 min-h-0 overflow-hidden" style={fontSize ? { fontSize: `${fontSize}em` } : undefined}>
       {/* TOC Sidebar */}
-      <aside className="min-w-[200px] max-w-[280px] w-auto shrink-0 overflow-y-auto border-r border-border-subtle px-3 py-4">
+      {!preview && <aside className="min-w-[200px] max-w-[280px] w-auto shrink-0 overflow-y-auto border-r border-border-subtle px-3 py-4">
         <div className="sticky top-0">
           <h4 className="text-2xs text-muted-foreground uppercase tracking-wider mb-2">
             Contents
@@ -591,11 +592,11 @@ export function WikiArticleView({ articleId, editable = false, onDelete, collaps
             <p className="px-2 text-2xs text-muted-foreground/40">No sections yet</p>
           )}
         </div>
-      </aside>
+      </aside>}
 
       {/* Blocks Content */}
       <div className="flex-1 overflow-y-auto flex flex-col" id="wiki-article-scroll-container">
-        <div className={cn("px-8 py-6 space-y-1 flex-1", article.contentAlign === "center" ? "max-w-4xl mx-auto" : "max-w-[780px]")}>
+        <div className={cn("px-8 py-6 space-y-1 flex-1", !preview && (article.contentAlign === "center" ? "max-w-4xl mx-auto" : "max-w-[780px]"))}>
           {/* Title (editable) */}
           {editable ? (
             <input
@@ -775,7 +776,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete, collaps
       </div>
 
       {/* Right Sidebar: Infobox + Quality + Activity */}
-      <aside className="w-[240px] shrink-0 overflow-y-auto border-l border-border-subtle px-4 py-5 space-y-4">
+      {!preview && <aside className="w-[240px] shrink-0 overflow-y-auto border-l border-border-subtle px-4 py-5 space-y-4">
         {/* Infobox */}
         <WikiInfobox
           noteId={articleId}
@@ -831,7 +832,7 @@ export function WikiArticleView({ articleId, editable = false, onDelete, collaps
             )}
           </div>
         )}
-      </aside>
+      </aside>}
     </div>
   )
 

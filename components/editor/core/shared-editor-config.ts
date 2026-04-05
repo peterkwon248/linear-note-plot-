@@ -115,9 +115,10 @@ const MentionInteractionExtension = Extension.create({
                 return true
               }
 
-              // Preview not showing → show immediately + pin
+              // Preview not showing → force show + pin
               const resolved = resolveNoteById(id)
               if (resolved) {
+                if (isPreviewPinned()) togglePreviewPin()
                 showNotePreview(target as HTMLElement, resolved.id, resolved.type)
                 // Pin after a short delay (let preview render first)
                 setTimeout(() => togglePreviewPin(), 500)
