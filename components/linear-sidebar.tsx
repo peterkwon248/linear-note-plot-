@@ -1421,9 +1421,9 @@ export function LinearSidebar() {
               </Section>
             )}
 
-            {/* Red Links */}
+            {/* Unresolved Links */}
             {redLinkData.total > 0 && (
-              <Section title="Red Links" count={redLinkData.total} onHeaderClick={() => setHomeSection("redlinks")} active={homeSection === "redlinks"}>
+              <Section title="Unresolved Links" count={redLinkData.total} onHeaderClick={() => setHomeSection("redlinks")} active={homeSection === "redlinks"}>
                 {redLinkData.top3.map((r) => (
                   <div
                     key={r.title}

@@ -90,14 +90,14 @@ export function WikiSidebar({
         )}
       </Section>
 
-      {/* Red Links */}
+      {/* Unresolved Links */}
       {redLinks.length > 0 && (
-        <Section title="Red Links">
+        <Section title="Unresolved Links">
           <div className="space-y-px">
             {redLinks.slice(0, 5).map((item) => (
               <div key={item.title} className="group flex items-center gap-2 rounded-md px-2 py-2 transition-colors duration-100 hover:bg-hover-bg">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive/60" />
-                <span className="min-w-0 flex-1 truncate text-2xs text-destructive/70">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/60" />
+                <span className="min-w-0 flex-1 truncate text-2xs text-muted-foreground/70">
                   {item.title}
                 </span>
                 <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/30 group-hover:hidden">

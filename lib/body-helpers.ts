@@ -42,7 +42,12 @@ export function extractHashtags(content: string, { includeEos = false } = {}): s
 export function extractLinksOut(content: string): string[] {
   const matches = content.match(/\[\[([^\]]+)\]\]/g)
   if (!matches) return []
-  const unique = new Set(matches.map((m) => m.slice(2, -2).toLowerCase()))
+  const unique = new Set(matches.map((m) => {
+    let title = m.slice(2, -2).toLowerCase()
+    // Strip "wiki:" prefix (used for explicit wiki links)
+    if (title.startsWith("wiki:")) title = title.slice(5)
+    return title
+  }))
   return Array.from(unique)
 }
 

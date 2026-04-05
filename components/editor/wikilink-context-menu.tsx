@@ -4,11 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { resolveNoteByTitle } from "@/lib/note-reference-actions"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
 import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Copy } from "@phosphor-icons/react/dist/ssr/Copy"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { toast } from "sonner"
 
 interface MenuState {
@@ -25,6 +27,7 @@ export function WikilinkContextMenu() {
   const openSidePeek = usePlotStore((s) => s.openSidePeek)
   const openInSecondary = usePlotStore((s) => s.openInSecondary)
   const createNote = usePlotStore((s) => s.createNote)
+  const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
 
   // Listen for custom event
   useEffect(() => {
@@ -98,9 +101,23 @@ export function WikilinkContextMenu() {
     close()
   }
 
+  function handleCreateWiki() {
+    const store = usePlotStore.getState()
+    // Check if wiki article already exists
+    const existing = store.wikiArticles.find(
+      (a: { title: string }) => a.title.toLowerCase() === currentMenu.title.toLowerCase()
+    )
+    const articleId = existing
+      ? existing.id
+      : createWikiArticle({ title: currentMenu.title, aliases: [] })
+    setActiveRoute("/wiki")
+    navigateToWikiArticle(articleId)
+    close()
+  }
+
   // Clamp position to viewport
   const menuWidth = 180
-  const menuHeight = isDangling ? 120 : 160
+  const menuHeight = isDangling ? 140 : 160
   const vw = typeof window !== "undefined" ? window.innerWidth : 1920
   const vh = typeof window !== "undefined" ? window.innerHeight : 1080
   const x = Math.min(currentMenu.x, vw - menuWidth - 8)
@@ -123,7 +140,8 @@ export function WikilinkContextMenu() {
         </>
       ) : (
         <>
-          <MenuItem icon={<Plus size={14} />} label={`Create "${titleDisplay}"`} onClick={handleCreateNote} />
+          <MenuItem icon={<NotePencil size={14} />} label="Create Note" onClick={handleCreateNote} />
+          <MenuItem icon={<BookOpen size={14} />} label="Create Wiki" onClick={handleCreateWiki} />
           <div className="my-1 border-t border-border-subtle" />
           <MenuItem icon={<Copy size={14} />} label={`Copy [[${titleDisplay}]]`} onClick={handleCopyLink} />
         </>

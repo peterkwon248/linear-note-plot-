@@ -45,13 +45,6 @@ cat docs/MEMORY.md 2>/dev/null || echo "No docs/MEMORY.md found"
 - Fallback: `.omc/worklog/latest.md` (project-level)
 - If both exist, merge (project-level has priority for project context)
 
-### 1-1b. Cross-Check: Worklog vs CONTEXT.md (MANDATORY)
-After reading both worklog and CONTEXT.md, compare worklog "Remaining Tasks" against CONTEXT.md "Key Design Decisions".
-- If a remaining task references a direction that CONTEXT.md explicitly discards → mark as STALE/DISCARDED
-- CONTEXT.md is ALWAYS the source of truth (it's git-synced across machines)
-- Worklog is a session memo that may be outdated
-- When in doubt, trust CONTEXT.md over worklog
-
 ### 1-2. Git Recent Activity
 ```bash
 git log --oneline -10 --since="7 days ago" 2>/dev/null
@@ -114,11 +107,6 @@ Format the briefing as follows:
 [Summarize completed work from worklog]
 
 ### Remaining Tasks (from last session)
-⚠️ MANDATORY: Cross-check worklog remaining tasks against `docs/CONTEXT.md` Key Design Decisions section.
-If any worklog task contradicts a CONTEXT.md decision (e.g., a feature direction was discarded),
-DROP that task and note it as "[DISCARDED per CONTEXT.md: reason]".
-CONTEXT.md = source of truth (git-synced). Worklog = session memo (can be stale).
-
 1. [ ] [task] - [context with enough detail to resume cold]
 2. [ ] [task] - [context]
 

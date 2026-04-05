@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-101. WikilinkSuggestion 버그 수정 — allow() stale state 수정 (state param 사용)
-102. Quote UX 단순화 — quoteMode 제거, 선택→Quote=즉시삽입
-103. [[드롭다운 WikiArticle 추가 — Notes/Wiki 섹션 분리, IconWiki 통일
-104. Stub 부활 — isWikiStub() heuristic, WikilinkDecoration 3-way 색상, Wiki 대시보드 Stubs 카운트
-105. 호버 프리뷰 Edit 모드 — Preview↔Edit 2모드 전환, 프리뷰 pin 기능
+106. Unresolved Links 전환 — Red Links→gray 점선, Wiki Red Links UI 제거, Home 통합, Create Note+Wiki 드롭다운
+107. 호버 프리뷰 TipTap 통합 — generateHTML 폐기, 항상 NoteEditorAdapter(editable 토글), 640px 카드
+108. 호버 프리뷰 Pin UX — 위키링크/멘션 클릭 pin 토글, accent 테두리+PushPin, data-hover-preview 가드
+109. Note/Wiki 링크 시각 구분 — 4-way: Note=보라밑줄, Wiki=teal칩, Stub=amber점선, Dangling=gray점선, [[wiki:Title]] prefix
+110. Plain text copy — ⋯ 메뉴 "Copy text" 추가
 
 ## Two Axes — Core Design Philosophy
 

@@ -35,6 +35,7 @@ import { Details, DetailsSummary, DetailsContent } from "@tiptap/extension-detai
 import Mathematics from "@tiptap/extension-mathematics"
 import { Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
+import type { EditorView } from "@tiptap/pm/view"
 import { CellSelection, deleteRow as pmDeleteRow, deleteColumn as pmDeleteColumn } from "prosemirror-tables"
 
 import { ResizableImage } from "../ResizableImage"
@@ -71,7 +72,7 @@ import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
 import { AnchorDividerNode } from "@/components/editor/nodes/anchor-divider-node"
 import { QueryBlockNode } from "@/components/editor/nodes/query-node"
 import { handleMentionClick } from "@/lib/note-reference-actions"
-import { showNotePreviewById, hideNotePreview } from "@/components/editor/note-hover-preview"
+import { showNotePreviewById, hideNotePreview, togglePreviewPin, isPreviewShowing } from "@/components/editor/note-hover-preview"
 
 // ── Mention Interaction Extension ────────────────────────────────────
 // Adds hover preview + click (Peek) + Ctrl+click (navigate) to @mentions.
@@ -86,14 +87,35 @@ const MentionInteractionExtension = Extension.create({
         key: new PluginKey("mentionInteraction"),
         props: {
           handleDOMEvents: {
-            mouseover(_view, event) {
+            mousedown(_view, event) {
               const target = (event.target as HTMLElement).closest(".mention") as HTMLElement | null
               if (!target) return false
+              if (target.closest("[data-hover-preview]")) return false
 
               const id = target.getAttribute("data-id")
               if (!id) return false
 
-              // Skip tags (they start with # or don't resolve to notes)
+              // Toggle pin if preview is showing for this mention
+              if (isPreviewShowing(id)) {
+                event.preventDefault()
+                event.stopPropagation()
+                togglePreviewPin()
+                return true
+              }
+
+              // Normal click → peek/navigate (use setTimeout to let mousedown complete)
+              setTimeout(() => handleMentionClick(id, event), 0)
+              return true
+            },
+
+            mouseover(_view, event) {
+              const target = (event.target as HTMLElement).closest(".mention") as HTMLElement | null
+              if (!target) return false
+              if (target.closest("[data-hover-preview]")) return false
+
+              const id = target.getAttribute("data-id")
+              if (!id) return false
+
               showNotePreviewById(target, id)
               return false
             },
@@ -101,19 +123,9 @@ const MentionInteractionExtension = Extension.create({
             mouseout(_view, event) {
               const target = (event.target as HTMLElement).closest(".mention") as HTMLElement | null
               if (!target) return false
+              if (target.closest("[data-hover-preview]")) return false
               hideNotePreview()
               return false
-            },
-
-            click(_view, event) {
-              const target = (event.target as HTMLElement).closest(".mention") as HTMLElement | null
-              if (!target) return false
-
-              const id = target.getAttribute("data-id")
-              if (!id) return false
-
-              handleMentionClick(id, event)
-              return true // prevent default
             },
           },
         },
