@@ -192,18 +192,32 @@ export function WikilinkContextMenu() {
     setSelectedIndex(0)
   }
 
-  function handleSelectNewLink(newTitle: string) {
+  function handleSelectNewLink(newTitle: string, isWiki: boolean) {
+    // Wiki links use [[wiki:Title]] prefix, note links use [[Title]]
+    const effectiveNewTitle = isWiki ? `wiki:${newTitle}` : newTitle
     window.dispatchEvent(
       new CustomEvent("plot:change-wikilink", {
-        detail: { oldTitle: currentMenu.title, newTitle },
+        detail: { oldTitle: currentMenu.title, newTitle: effectiveNewTitle },
       })
     )
-    // Switch preview to the new note (keeps pin state + position)
-    const newResolved = resolveNoteByTitle(newTitle)
-    if (newResolved) {
-      import("@/components/editor/note-hover-preview").then(({ switchPreviewNote }) => {
-        switchPreviewNote(newResolved.id, newResolved.type)
-      })
+    // Switch preview to the new note/wiki
+    const store = usePlotStore.getState()
+    if (isWiki) {
+      const wiki = store.wikiArticles.find(
+        (a: { title: string }) => a.title.toLowerCase() === newTitle.toLowerCase()
+      )
+      if (wiki) {
+        import("@/components/editor/note-hover-preview").then(({ switchPreviewNote }) => {
+          switchPreviewNote(wiki.id, "wiki")
+        })
+      }
+    } else {
+      const newResolved = resolveNoteByTitle(newTitle)
+      if (newResolved) {
+        import("@/components/editor/note-hover-preview").then(({ switchPreviewNote }) => {
+          switchPreviewNote(newResolved.id, newResolved.type)
+        })
+      }
     }
     close()
   }
@@ -218,7 +232,8 @@ export function WikilinkContextMenu() {
     } else if (e.key === "Enter") {
       e.preventDefault()
       if (allResults[selectedIndex]) {
-        handleSelectNewLink(allResults[selectedIndex].title)
+        const isWikiResult = selectedIndex >= filteredResults.notes.length
+        handleSelectNewLink(allResults[selectedIndex].title, isWikiResult)
       }
     }
   }
@@ -260,7 +275,7 @@ export function WikilinkContextMenu() {
                   return (
                     <button
                       key={note.id}
-                      onClick={() => handleSelectNewLink(note.title)}
+                      onClick={() => handleSelectNewLink(note.title, false)}
                       className={`flex w-full items-center gap-2 px-3 py-1.5 text-2xs text-left transition-colors ${
                         globalIdx === selectedIndex
                           ? "bg-hover-bg text-foreground"
@@ -284,7 +299,7 @@ export function WikilinkContextMenu() {
                   return (
                     <button
                       key={wiki.id}
-                      onClick={() => handleSelectNewLink(wiki.title)}
+                      onClick={() => handleSelectNewLink(wiki.title, true)}
                       className={`flex w-full items-center gap-2 px-3 py-1.5 text-2xs text-left transition-colors ${
                         globalIdx === selectedIndex
                           ? "bg-hover-bg text-foreground"

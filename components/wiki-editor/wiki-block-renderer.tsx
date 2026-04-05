@@ -112,9 +112,12 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
 
   const handleStartEdit = () => {
     if (!editable) return
-    setEditTitle(block.title || "")
+    setEditTitle(block.title || "Untitled Section")
     setEditing(true)
-    setTimeout(() => inputRef.current?.focus(), 0)
+    setTimeout(() => {
+      const el = inputRef.current
+      if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length) }
+    }, 0)
   }
 
   const handleFinishEdit = () => {
@@ -181,7 +184,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             onBlur={handleFinishEdit}
             onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
             className={cn(
-              "flex-1 bg-transparent outline-none border-b border-accent/40 font-semibold text-foreground",
+              "flex-1 min-w-[120px] bg-transparent outline-none border-b border-accent/40 font-semibold text-foreground",
               level === 2 && "text-2xl",
               level === 3 && "text-xl",
               level >= 4 && "text-lg",
@@ -192,7 +195,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
           <div
             onClick={handleStartEdit}
             className={cn(
-              "font-semibold text-foreground flex-1",
+              "font-semibold text-foreground",
               level === 2 && "text-2xl",
               level === 3 && "text-xl",
               level >= 4 && "text-lg",
@@ -853,56 +856,14 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
         </div>
       )}
 
-      {/* Block actions menu */}
-      {editable && (
-        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-          <PopoverTrigger asChild>
-            <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-              className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-70 hover:!opacity-100 p-1 rounded bg-background/80 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
-            >
-              <DotsThree size={14} weight="bold" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
-            <button
-              onClick={() => { setMenuOpen(false); fileInputRef.current?.click() }}
-              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-            >
-              <UploadSimple size={14} weight="regular" />
-              Replace image
-            </button>
-            <div className="my-1 h-px bg-border/40" />
-            <div className="flex items-center gap-1 px-2.5 py-1.5">
-              {SIZE_PRESETS.map((preset) => (
-                <button
-                  key={preset.label}
-                  onClick={() => { onUpdate?.({ imageWidth: preset.value }); setMenuOpen(false) }}
-                  className={cn(
-                    "flex-1 rounded px-2 py-0.5 text-2xs font-medium transition-colors",
-                    currentWidth === preset.value
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
-                  )}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-            {onDelete && (
-              <>
-                <div className="my-1 h-px bg-border/40" />
-                <button
-                  onClick={() => { setMenuOpen(false); onDelete() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
-                >
-                  <Trash size={14} weight="regular" />
-                  Delete block
-                </button>
-              </>
-            )}
-          </PopoverContent>
-        </Popover>
+      {/* Block actions for empty image — simple delete only */}
+      {editable && !url && !loading && onDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete() }}
+          className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-70 hover:!opacity-100 p-1 rounded bg-background/80 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+        >
+          <Trash size={14} weight="regular" />
+        </button>
       )}
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelected} style={{ display: "none" }} />
       {loading ? (
@@ -911,6 +872,57 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
         </div>
       ) : url ? (
         <figure className="relative inline-block" style={{ width: `${currentWidth}%` }}>
+          {/* ⋯ menu inside figure — follows image size */}
+          {editable && (
+            <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+                  className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-70 hover:!opacity-100 p-1 rounded bg-background/80 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+                >
+                  <DotsThree size={14} weight="bold" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+                <button
+                  onClick={() => { setMenuOpen(false); fileInputRef.current?.click() }}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+                >
+                  <UploadSimple size={14} weight="regular" />
+                  Replace image
+                </button>
+                <div className="my-1 h-px bg-border/40" />
+                <div className="flex items-center gap-1 px-2.5 py-1.5">
+                  {SIZE_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      onClick={() => { onUpdate?.({ imageWidth: preset.value }); setMenuOpen(false) }}
+                      className={cn(
+                        "flex-1 rounded px-2 py-0.5 text-2xs font-medium transition-colors",
+                        currentWidth === preset.value
+                          ? "bg-accent text-accent-foreground"
+                          : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                      )}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                {onDelete && (
+                  <>
+                    <div className="my-1 h-px bg-border/40" />
+                    <button
+                      onClick={() => { setMenuOpen(false); onDelete() }}
+                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+                    >
+                      <Trash size={14} weight="regular" />
+                      Delete block
+                    </button>
+                  </>
+                )}
+              </PopoverContent>
+            </Popover>
+          )}
           <div className="relative">
             <img
               ref={imgRef}

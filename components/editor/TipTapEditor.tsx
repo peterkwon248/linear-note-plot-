@@ -127,19 +127,23 @@ export function TipTapEditor({
       const tr = editor.state.tr
       let changed = false
 
+      // Strip wiki: prefix from titles for pattern matching
+      const cleanOld = oldTitle.startsWith("wiki:") ? oldTitle.slice(5) : oldTitle
+      const cleanNew = newTitle.startsWith("wiki:") ? newTitle.slice(5) : newTitle
+      const newIsWiki = newTitle.startsWith("wiki:")
+
       const replacements: Array<{ from: number; to: number; replacement: string }> = []
 
       doc.descendants((node, pos) => {
         if (!node.isText || !node.text) return
         const text = node.text
-        const patterns = [`[[${oldTitle}]]`, `[[wiki:${oldTitle}]]`]
+        const patterns = [`[[${cleanOld}]]`, `[[wiki:${cleanOld}]]`]
         for (const pattern of patterns) {
           let idx = text.indexOf(pattern)
           while (idx !== -1) {
             const from = pos + idx
             const to = from + pattern.length
-            const isWiki = pattern.startsWith("[[wiki:")
-            const replacement = isWiki ? `[[wiki:${newTitle}]]` : `[[${newTitle}]]`
+            const replacement = newIsWiki ? `[[wiki:${cleanNew}]]` : `[[${cleanNew}]]`
             replacements.push({ from, to, replacement })
             idx = text.indexOf(pattern, idx + 1)
           }
@@ -156,7 +160,7 @@ export function TipTapEditor({
 
       if (changed) {
         editor.view.dispatch(tr)
-        import("sonner").then(({ toast }) => toast.success(`Link changed to [[${newTitle}]]`))
+        import("sonner").then(({ toast }) => toast.success(`Link changed to [[${cleanNew}]]`))
       }
     }
 
