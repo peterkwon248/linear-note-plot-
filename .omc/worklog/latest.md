@@ -1,26 +1,25 @@
 ---
-session_date: "2026-04-05 21:30"
+session_date: "2026-04-06 07:00"
 project: "Plot (linear-note-plot-)"
 working_directory: "C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/happy-bhabha"
-duration_estimate: "~12 hours"
+duration_estimate: "~2 hours (continuation)"
 ---
 
-## Completed Work (PR #152~157)
-- PR #152: Unresolved Links 전환 + 호버 프리뷰 TipTap 통합 + Pin UX + Note/Wiki 링크 시각 구분
-- PR #153: 멘션 타입 구분 (Note:/Wiki:/#/Date:) + 핀/배경/들여쓰기
-- PR #154: Quote UX 2-click + Change link + 프리뷰 고정높이 400px + pin 강화
-- PR #155: 위키 호버 프리뷰 + 시드 데이터 재구성 + Note/Wiki 정확 구분
-- PR #156: 위키 프리뷰 에디터 + 메타데이터 + 이미지 ⋯ 가시성
-- PR #157: 이미지 리사이즈 S/M/L + 백링크/블록/카테고리 드롭다운
+## Completed Work (PR #158)
+- 이미지 리사이즈: S(25%)/M(50%)/L(100%) 프리셋 + 우하단 모서리 드래그. WikiBlock.imageWidth 필드
+- 백링크 드롭다운: Link 아이콘 클릭 → Referenced by 노트 목록 (최대 10개)
+- 블록/카테고리 드롭다운: Cube/FolderSimple 클릭 → 목록 표시
+- 이미지 ⋯ 메뉴: figure 내부 배치 (이미지 크기 추적)
+- 섹션 ⋯: title flex-1 제거 → 타이틀 바로 옆 배치
+- 섹션 편집 UX: Untitled Section 텍스트 유지 + 커서 끝 배치
+- Popover z-index: z-50 → z-[10001] (프리뷰 카드 위 정상 표시 — 블록 삭제 버그 해결)
+- Change link: Note/Wiki 정확 구분 ([[wiki:]] prefix 처리)
+- 카테고리 드롭다운: whitespace-nowrap + auto width
 
 ## Remaining Tasks
-- [ ] **P0: 인라인 에디터 블록 삭제 버그** — 호버 프리뷰 인라인 위키 에디터에서 이미지/섹션 블록 삭제 불가. 원인: 카드 overflow-hidden + Popover z-index. wiki-block-renderer.tsx Popover가 카드 밖으로 못 나감
-- [ ] 인사이트 중앙 허브
-
-## Key Decisions
-- 인라인 위키 에디터에서 인포박스/참조노트는 프리뷰에 안 넣음 (C안 채택 — Open으로 wiki 공간에서 보기)
-- 블록/카테고리 드롭다운은 정보 확인용 (클릭 이동 없음). 백링크만 클릭→이동
+- [ ] **위키 Quote** — 노트에서 위키 프리뷰 내용을 Quote. WikiQuote 스키마에 sourceArticleId 추가 + QuoteNode 렌더링 wiki 분기. 작업량 1~2시간
+- [ ] **인사이트 중앙 허브** — 온톨로지 사이드바 Insights 섹션
 
 ## Notes for Next Session
-- 인라인 에디터 블록 삭제: overflow-hidden 문제. createPortal로 Popover를 document.body에 렌더하면 해결 가능
+- 위키 Quote가 최우선. WikiQuote 스키마 변경 (sourceNoteId → sourceNoteId | sourceArticleId) + 위키 프리뷰 body에서 텍스트 선택 → Quote 삽입 경로 구현
 - dev 서버: port 3002
