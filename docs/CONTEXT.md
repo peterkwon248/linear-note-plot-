@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-96. Home 카드 → 필터 연동 + 사이드바 View all hover-only + 고아 노트 제안 시스템
-97. Phase 4 Partial Quote — WikiQuote 8필드, Peek/호버 Quote 버튼, quote-hash.ts
-98. 호버 프리뷰 리디자인 — 리치 HTML + 메타데이터 바 + 액션바 (Open/Peek/Quote/⋯)
-99. 위키링크 우클릭 컨텍스트 메뉴 — wikilink-context-menu.tsx
-100. 버블 메뉴 사이즈 업 + WikiQuote 삭제 버튼
+101. WikilinkSuggestion 버그 수정 — allow() stale state 수정 (state param 사용)
+102. Quote UX 단순화 — quoteMode 제거, 선택→Quote=즉시삽입
+103. [[드롭다운 WikiArticle 추가 — Notes/Wiki 섹션 분리, IconWiki 통일
+104. Stub 부활 — isWikiStub() heuristic, WikilinkDecoration 3-way 색상, Wiki 대시보드 Stubs 카운트
+105. 호버 프리뷰 Edit 모드 — Preview↔Edit 2모드 전환, 프리뷰 pin 기능
 
 ## Two Axes — Core Design Philosophy
 
@@ -135,6 +135,10 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **카테고리 사이드바 → SmartSidePanel 통합**: 내장 280px 사이드바 제거, 글로벌 Details 패널에서 표시. Notes와 동일 패턴 (2026-03-26)
 - **카테고리 더블클릭 에디터**: 싱글클릭=선택(하이라이트만), 더블클릭=폼 에디터 split view. 이름/설명 인라인 편집, Parent 드롭다운, 서브카테고리 +New/Move here (2026-03-26)
 - **노트 ≠ 위키**: Note와 WikiArticle은 완전 별도 엔티티. isWiki→noteType 리팩토링 완료 (2026-03-31)
+- **Stub 부활 (heuristic 방식)**: 상태 필드 없이 블록 수 + 내용 비어있음으로 판정. 기본 템플릿(Overview/Details/See Also) 에서 변경 없으면 stub. 블록/내용 추가 → article 자동 승격 (2026-04-05)
+- **[[드롭다운 Create Note + Create Wiki**: 노트는 inbox에 생성, 위키는 빈 WikiArticle(stub) 생성. 위키 아이콘 = IconWiki (액티비티바 통일) (2026-04-05)
+- **Auto Create 방향 결정 (미구현)**: Red Link → "Unresolved Links"로 개념 전환. 빨간색→회색 점선, 클릭 시 노트/위키 선택 팝업. Wiki에서 Red Links 제거 → Home "Unresolved Links"로 통합 (2026-04-05)
+- **인사이트 중앙 허브 방향 결정 (미구현)**: 온톨로지 = 모든 인사이트의 원천 (Single Source of Insights). Notes/Wiki 각 공간 인사이트는 온톨로지에서 파생. 세이브매트릭스급 지표 (Knowledge WAR, Link Density, Stub Conversion Rate 등) (2026-04-05)
 - **@멘션 = 노트/위키/태그/날짜 통합**: `@` 트리거, WikiArticle 별도 검색, 카테고리별 그룹핑 (2026-03-30)
 - **플로팅 TOC = Notion 스타일**: 에디터 우측 자동 사이드바, 대시 인디케이터, hover 확장, scrollspy. 첫 heading(타이틀) 제외 (2026-03-30)
 - **앵커/북마크 2종**: 인라인 마커(anchorMark) + 블록 구분선(anchorDivider). TOC + 사이드패널 Bookmarks 탭 통합 (2026-03-30)
@@ -154,6 +158,8 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ## TODO: Future Work (우선순위 순)
 
 ### P0 — 에디터 통합 프로젝트 후속 Phase
+- **Unresolved Links 전환**: Red Link → 회색 점선 "Unresolved Links". Wiki Red Links 탭/카드 제거 → Home "Unresolved Links" 섹션으로 통합. 클릭 시 노트/위키 선택 팝업
+- **인사이트 중앙 허브**: 온톨로지 사이드바에 Insights 섹션, 각 공간에 파생 인사이트 배포
 - ~~**Phase 2**: 위키 TextBlock 에디터 고도화~~ **완료** (PR #143~#149: TipTap 전환, 풀 FixedToolbar, 독립 테이블, 블록 메뉴 통일)
 - ~~**Phase 3**: 템플릿 블록 레이아웃 에디터~~ **P4로 이동** (Template Page Architecture 폐기 결정으로 범위 재정의 필요. 템플릿 시스템 자체는 유지하되 블록 에디터 고도화는 나중에)
 - **Phase 4**: Partial Quote — Peek에서 부분 드래그 선택 Insert, 메타데이터 8필드 (sourceHash, context, comment 등)

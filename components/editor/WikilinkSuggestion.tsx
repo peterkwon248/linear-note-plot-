@@ -14,7 +14,7 @@ import React, {
   forwardRef,
 } from "react"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { IconWiki } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -25,6 +25,8 @@ interface WikilinkItem {
   isAlias?: boolean
   isWiki?: boolean
   isNewNote?: boolean
+  isNewWiki?: boolean
+  itemType?: "note" | "wiki"
 }
 
 interface WikilinkListProps {
@@ -75,6 +77,9 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
 
     if (items.length === 0) return null
 
+    const sectionLabels: Record<string, string> = { note: "Notes", wiki: "Wiki" }
+    const sectionOrder = ["note", "wiki"]
+
     return (
       <div className="z-50 min-w-[200px] max-w-[300px] overflow-hidden rounded-md border border-border bg-surface-overlay shadow-md">
         <div className="px-2 py-1 border-b border-border-subtle">
@@ -82,53 +87,75 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
             Link to...
           </span>
         </div>
-        <div className="max-h-[240px] overflow-y-auto py-1">
-          {items.map((item, index) => (
-            <button
-              key={item.id}
-              onClick={() => selectItem(index)}
-              className={[
-                "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",
-                index === selectedIndex
-                  ? "bg-active-bg text-foreground"
-                  : "text-foreground hover:bg-hover-bg",
-              ].join(" ")}
-            >
-              {item.isNewNote ? (
-                <>
-                  <span className="text-muted-foreground text-2xs">+</span>
-                  <span className="text-muted-foreground">
-                    Create as Note{" "}
-                    <span className="font-medium text-foreground">
-                      [[{item.title}]]
+        <div className="max-h-[320px] overflow-y-auto py-1">
+          {(() => {
+            // Group items by type, preserving global index for keyboard nav
+            const grouped = new Map<string, Array<{ item: WikilinkItem; globalIndex: number }>>()
+            items.forEach((item, index) => {
+              const type = item.isNewNote ? "note" : item.isNewWiki ? "wiki" : (item.itemType || "note")
+              if (!grouped.has(type)) grouped.set(type, [])
+              grouped.get(type)!.push({ item, globalIndex: index })
+            })
+
+            return sectionOrder.map(type => {
+              const group = grouped.get(type)
+              if (!group || group.length === 0) return null
+              return (
+                <div key={type}>
+                  <div className="px-2 py-0.5">
+                    <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                      {sectionLabels[type]}
                     </span>
-                  </span>
-                </>
-              ) : (
-                <>
-                  {item.isWiki ? (
-                    <BookOpen className="shrink-0 text-muted-foreground" size={14} weight="regular" />
-                  ) : (
-                    <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
-                  )}
-                  <span className="truncate">{item.title}</span>
-                  {item.isAlias && (
-                    <span className="shrink-0 text-2xs italic text-muted-foreground">
-                      (alias)
-                    </span>
-                  )}
-                  {item.isWiki && (
-                    <span className="shrink-0 text-2xs font-medium text-muted-foreground bg-secondary rounded px-1 py-0.5">
-                      Wiki
-                    </span>
-                  )}
-                  <span className="ml-auto shrink-0 rounded px-1 py-0.5 text-2xs font-medium bg-secondary text-muted-foreground">
-                    {item.status}
-                  </span>
-                </>
-              )}
-            </button>
-          ))}
+                  </div>
+                  {group.map(({ item, globalIndex }) => (
+                    <button
+                      key={item.id}
+                      onClick={() => selectItem(globalIndex)}
+                      className={[
+                        "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",
+                        globalIndex === selectedIndex
+                          ? "bg-active-bg text-foreground"
+                          : "text-foreground hover:bg-hover-bg",
+                      ].join(" ")}
+                    >
+                      {item.isNewNote ? (
+                        <>
+                          <span className="text-muted-foreground text-2xs">+</span>
+                          <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+                          <span className="truncate font-medium text-foreground">{item.title}</span>
+                          <span className="ml-auto shrink-0 text-2xs text-muted-foreground">+ Create Note</span>
+                        </>
+                      ) : item.isNewWiki ? (
+                        <>
+                          <span className="text-accent text-2xs">+</span>
+                          <IconWiki size={14} className="shrink-0 text-accent" />
+                          <span className="truncate font-medium text-foreground">{item.title}</span>
+                          <span className="ml-auto shrink-0 text-2xs text-accent">+ Create Wiki</span>
+                        </>
+                      ) : (
+                        <>
+                          {item.isWiki ? (
+                            <IconWiki size={14} className="shrink-0 text-accent" />
+                          ) : (
+                            <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+                          )}
+                          <span className="truncate">{item.title}</span>
+                          {item.isAlias && (
+                            <span className="shrink-0 text-2xs italic text-muted-foreground/50">
+                              alias
+                            </span>
+                          )}
+                          <span className={`ml-auto shrink-0 rounded px-1 py-0.5 text-2xs font-medium bg-secondary ${item.isWiki ? "text-accent/60" : "text-muted-foreground"}`}>
+                            {item.status}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )
+            })
+          })()}
         </div>
       </div>
     )
@@ -154,20 +181,24 @@ export const WikilinkSuggestion = Extension.create({
         pluginKey: wikilinkSuggestionKey,
 
         // Don't trigger inside a completed [[...]] wikilink
-        allow: ({ editor }: { editor: any }) => {
-          const { state } = editor
-          const { from, $from } = state.selection
-          // Get the full text of the current text block
+        // Use `state` param (NEW state during apply()), NOT `editor.state` (stale)
+        allow: ({ state: newState, range }: { editor: any; state: any; range: any }) => {
+          try {
+            // Check if matched range text contains ]] — wikilink already closed
+            const end = Math.min(range.to + 3, newState.doc.content.size)
+            const text = newState.doc.textBetween(range.from, end)
+            if (text.includes("]]")) return false
+          } catch { /* ignore */ }
+          // Check cursor inside [[...]] via block text regex
+          const { from } = newState.selection
+          const $from = newState.selection.$from
           const blockText = $from.parent.textContent
           const offsetInBlock = from - $from.start()
-          // Find all [[...]] patterns and check if cursor is inside one
           const re = /\[\[.*?\]\]/g
           let match
           while ((match = re.exec(blockText)) !== null) {
-            const start = match.index
-            const end = start + match[0].length
-            if (offsetInBlock >= start && offsetInBlock <= end) {
-              return false // cursor is inside a completed wikilink
+            if (offsetInBlock >= match.index && offsetInBlock <= match.index + match[0].length) {
+              return false
             }
           }
           return true
@@ -184,17 +215,27 @@ export const WikilinkSuggestion = Extension.create({
           // Strip trailing ] characters (user typed closing brackets before suggestion resolves)
           const q = query.trim().replace(/[\]]+$/g, '').toLowerCase().trim()
 
-          // Empty query: show recent 8 notes/wikis
+          const wikiArticles = (store as any).wikiArticles ?? []
+
+          // Empty query: show recent 8 notes/wikis + recent 3 wiki articles
           if (q.length === 0) {
             const pool = notes.filter((n) => !n.trashed && n.title.trim() && n.id !== currentNoteId)
-            return pool
+            const noteItems: WikilinkItem[] = pool
               .sort(
                 (a, b) =>
                   new Date(b.updatedAt).getTime() -
                   new Date(a.updatedAt).getTime()
               )
               .slice(0, 8)
-              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.noteType === "wiki" }))
+              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.noteType === "wiki", itemType: "note" as const }))
+
+            const wikiMatches: WikilinkItem[] = wikiArticles
+              .filter((w: any) => w.title?.trim())
+              .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+              .slice(0, 3)
+              .map((w: any) => ({ id: w.id, title: w.title, status: "article", isWiki: true, itemType: "wiki" as const }))
+
+            return [...noteItems, ...wikiMatches]
           }
 
           // Title matches: exact > startsWith > contains, then by length
@@ -231,31 +272,57 @@ export const WikilinkSuggestion = Extension.create({
               status: n.status,
               isAlias: true,
               isWiki: n.noteType === "wiki",
+              itemType: "note" as const,
             }))
 
           const combined: WikilinkItem[] = [
             ...titleMatches
               .slice(0, 6)
-              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.noteType === "wiki" })),
+              .map((n) => ({ id: n.id, title: n.title, status: n.status, isWiki: n.noteType === "wiki", itemType: "note" as const })),
             ...aliasMatches.slice(0, 2),
           ].slice(0, 8)
 
+          // Search WikiArticles
+          const wikiMatches: WikilinkItem[] = wikiArticles
+            .filter((w: any) => w.title?.trim() && w.title.toLowerCase().includes(q))
+            .sort((a: any, b: any) => {
+              const aExact = a.title.toLowerCase() === q ? 0 : 1
+              const bExact = b.title.toLowerCase() === q ? 0 : 1
+              if (aExact !== bExact) return aExact - bExact
+              return a.title.length - b.title.length
+            })
+            .slice(0, 4)
+            .map((w: any) => ({ id: w.id, title: w.title, status: "article", isWiki: true, itemType: "wiki" as const }))
+
+          // Combine: notes first, then wiki, then create option
+          const finalResults: WikilinkItem[] = [...combined, ...wikiMatches]
+
           // "Create as Note" option if no exact match
-          const hasExact = pool.some(
-            (n) =>
-              n.title.toLowerCase() === q ||
-              n.aliases?.some((a) => a.toLowerCase() === q)
+          const hasExact = [...pool, ...wikiArticles].some(
+            (n: any) =>
+              n.title?.toLowerCase() === q ||
+              n.aliases?.some?.((a: string) => a.toLowerCase() === q)
           )
           if (!hasExact && q.length > 0) {
-            combined.push({
+            finalResults.push({
               id: `__new_note__${q}`,
               title: q,
               status: "inbox",
               isNewNote: true,
+              itemType: "note",
+            })
+            // "Create as Wiki" option
+            finalResults.push({
+              id: `__new_wiki__${q}`,
+              title: q,
+              status: "article",
+              isNewWiki: true,
+              isWiki: true,
+              itemType: "wiki",
             })
           }
 
-          return combined
+          return finalResults
         },
 
         render: () => {
@@ -358,6 +425,13 @@ export const WikilinkSuggestion = Extension.create({
               (n) => n.title.toLowerCase() === props.title.toLowerCase()
             )
             if (!exists) store.createNote({ title: props.title })
+          }
+
+          if (props.isNewWiki) {
+            const wikiExists = ((store as any).wikiArticles ?? []).some(
+              (w: any) => w.title.toLowerCase() === props.title.toLowerCase()
+            )
+            if (!wikiExists) (store as any).createWikiArticle({ title: props.title })
           }
 
           editor

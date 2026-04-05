@@ -977,6 +977,20 @@
   background: rgba(224, 108, 117, 0.08);
 }
 
+/* Stub wiki article — amber dashed link */
+.ProseMirror .wikilink-stub {
+  color: #f59e0b;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 2px;
+}
+
+.ProseMirror .wikilink-stub:hover {
+  text-decoration-color: rgba(245, 158, 11, 0.8);
+  background: rgba(245, 158, 11, 0.08);
+}
+
 /* Wikilink dropdown + nav icon removed — unified hover/click interactions */
 
 /* ── Block Resize Handles ────────────────────────────────────────── */

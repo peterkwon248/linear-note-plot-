@@ -6,6 +6,7 @@ import type { EditorView } from "@tiptap/pm/view"
 import { usePlotStore } from "@/lib/store"
 import { handleWikilinkClick } from "@/lib/note-reference-actions"
 import { showNotePreviewByTitle, hideNotePreview } from "@/components/editor/note-hover-preview"
+import { isWikiStub } from "@/lib/wiki-utils"
 
 const wikilinkDecoKey = new PluginKey("wikilinkDecoration")
 
@@ -94,7 +95,8 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
   const decorations: Decoration[] = []
 
   // Build a lookup set of existing note titles + aliases (lowercased)
-  const notes = usePlotStore.getState().notes
+  const store = usePlotStore.getState()
+  const notes = store.notes
   const titleSet = new Set<string>()
   for (const note of notes) {
     if (note.trashed) continue
@@ -104,6 +106,14 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
         if (alias.trim()) titleSet.add(alias.toLowerCase())
       }
     }
+  }
+
+  // Also check WikiArticles
+  const wikiArticles = store.wikiArticles ?? []
+  const wikiTitleMap = new Map<string, typeof wikiArticles[0]>()
+  for (const w of wikiArticles) {
+    wikiTitleMap.set(w.title.toLowerCase(), w)
+    if (w.aliases) w.aliases.forEach((a: string) => wikiTitleMap.set(a.toLowerCase(), w))
   }
 
   state.doc.descendants((node, pos) => {
@@ -117,12 +127,19 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
       const from = pos + match.index
       const to = from + match[0].length
       const innerTitle = match[1]
-      const exists = titleSet.has(innerTitle.toLowerCase())
+      const lowerTitle = innerTitle.toLowerCase()
+      const noteExists = titleSet.has(lowerTitle)
+      const wikiArticle = wikiTitleMap.get(lowerTitle)
 
       const bracketClass = "wikilink-bracket"
-      const linkClass = exists
-        ? "wikilink wikilink-exists"
-        : "wikilink wikilink-dangling"
+      let linkClass: string
+      if (noteExists) {
+        linkClass = "wikilink wikilink-exists"
+      } else if (wikiArticle) {
+        linkClass = isWikiStub(wikiArticle) ? "wikilink wikilink-stub" : "wikilink wikilink-exists"
+      } else {
+        linkClass = "wikilink wikilink-dangling"
+      }
 
       // [[ bracket — visually hidden
       decorations.push(
