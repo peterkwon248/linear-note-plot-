@@ -53,7 +53,17 @@ export const WikilinkDecorationExtension = Extension.create({
                 return true
               }
               // Existing links: toggle pin or show+pin
-              const resolved = resolveNoteByTitle(title)
+              // Use CSS class to determine correct entity type
+              const isWikiLink = target.classList.contains("wikilink-wiki") || target.classList.contains("wikilink-stub")
+              let resolved: { id: string; type: "note" | "wiki" } | null = null
+              if (isWikiLink) {
+                const store = usePlotStore.getState()
+                const wiki = store.wikiArticles.find(
+                  (a: { title: string; aliases: string[] }) => a.title.toLowerCase() === title.toLowerCase() || a.aliases.some((al: string) => al.toLowerCase() === title.toLowerCase())
+                )
+                if (wiki) resolved = { id: wiki.id, type: "wiki" }
+              }
+              if (!resolved) resolved = resolveNoteByTitle(title)
               if (!resolved) return false
               if (isPreviewPinned()) {
                 // Already pinned → unpin
@@ -65,7 +75,9 @@ export const WikilinkDecorationExtension = Extension.create({
                 togglePreviewPin()
                 return true
               }
-              // Preview not visible → show immediately + pin after delay
+              // Preview not visible → force show + pin after delay
+              // Reset pin state first (in case previous pin wasn't cleared)
+              if (isPreviewPinned()) togglePreviewPin()
               showNotePreview(target, resolved.id, resolved.type)
               setTimeout(() => togglePreviewPin(), 500)
               return true
@@ -79,14 +91,26 @@ export const WikilinkDecorationExtension = Extension.create({
             mouseover(_view: EditorView, event: MouseEvent) {
               const target = event.target as HTMLElement
               if (!target.classList?.contains("wikilink")) return false
-              // Skip hover preview trigger inside hover preview card (prevents recursive preview)
               if (target.closest?.("[data-hover-preview]")) return false
 
               const title = target.getAttribute("data-wikilink")
               if (!title) return false
 
+              // Use class to determine if this is a wiki link (wikilink-wiki or wikilink-stub)
+              const isWikiLink = target.classList.contains("wikilink-wiki") || target.classList.contains("wikilink-stub")
+              if (isWikiLink) {
+                // Resolve as wiki article directly
+                const store = usePlotStore.getState()
+                const wiki = store.wikiArticles.find(
+                  (a: { title: string; aliases: string[] }) => a.title.toLowerCase() === title.toLowerCase() || a.aliases.some((al: string) => al.toLowerCase() === title.toLowerCase())
+                )
+                if (wiki) {
+                  showNotePreview(target, wiki.id, "wiki")
+                  return false
+                }
+              }
               showNotePreviewByTitle(target, title)
-              return false // don't prevent default
+              return false
             },
 
             mouseout(_view: EditorView, event: MouseEvent) {

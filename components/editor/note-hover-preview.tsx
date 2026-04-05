@@ -19,6 +19,7 @@ import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
+import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import type { Editor } from "@tiptap/react"
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -300,10 +301,19 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   // ── Action handlers ──
   function handleOpen() {
     hideNotePreviewImmediate()
-    import("@/lib/table-route").then(({ setActiveRoute }) => {
-      setActiveRoute("/notes")
-    })
-    store.getState().openNote(noteId)
+    if (noteType === "wiki") {
+      import("@/lib/table-route").then(({ setActiveRoute }) => {
+        setActiveRoute("/wiki")
+      })
+      import("@/lib/wiki-article-nav").then(({ navigateToWikiArticle }) => {
+        navigateToWikiArticle(noteId)
+      })
+    } else {
+      import("@/lib/table-route").then(({ setActiveRoute }) => {
+        setActiveRoute("/notes")
+      })
+      store.getState().openNote(noteId)
+    }
   }
 
   function handlePeek() {
@@ -412,7 +422,15 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         )}
       </div>
       {/* Body */}
-      {note ? (
+      {noteType === "wiki" ? (
+        <div ref={bodyRef} className="overflow-y-auto" style={{ height: 400 }}>
+          <WikiArticleView
+            articleId={noteId}
+            editable={false}
+            preview={true}
+          />
+        </div>
+      ) : note ? (
         <>
           {editing && editorInstance && <FixedToolbar editor={editorInstance} position="top" noteId={noteId} />}
           <div ref={bodyRef} className="overflow-y-auto px-4 py-3" style={{ height: 400 }}>
@@ -461,9 +479,9 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             <span>{editing ? "Preview" : "Edit"}</span>
           </button>
         )}
-        {!editing && (
+        {!editing && noteType !== "wiki" && (
           <div className="relative">
-          <button
+            <button
             onMouseDown={(e) => {
               e.preventDefault()
               e.stopPropagation()
