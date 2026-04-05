@@ -331,6 +331,7 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
           attrs: {
             id: props.id,
             label: props.label,
+            mentionType: (props as unknown as MentionItem).mentionType,
           },
         },
         { type: "text", text: " " },
