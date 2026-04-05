@@ -72,7 +72,8 @@ import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
 import { AnchorDividerNode } from "@/components/editor/nodes/anchor-divider-node"
 import { QueryBlockNode } from "@/components/editor/nodes/query-node"
 import { handleMentionClick } from "@/lib/note-reference-actions"
-import { showNotePreviewById, hideNotePreview, togglePreviewPin, isPreviewShowing } from "@/components/editor/note-hover-preview"
+import { showNotePreview, showNotePreviewById, hideNotePreview, togglePreviewPin, isPreviewShowing, isPreviewPinned } from "@/components/editor/note-hover-preview"
+import { resolveNoteById } from "@/lib/note-reference-actions"
 
 // ── Mention Interaction Extension ────────────────────────────────────
 // Adds hover preview + click (Peek) + Ctrl+click (navigate) to @mentions.
@@ -87,24 +88,44 @@ const MentionInteractionExtension = Extension.create({
         key: new PluginKey("mentionInteraction"),
         props: {
           handleDOMEvents: {
-            mousedown(_view, event) {
-              const target = (event.target as HTMLElement).closest(".mention") as HTMLElement | null
+            click(_view, event) {
+              const target = (event.target as HTMLElement)?.closest(".mention") as HTMLElement | null
               if (!target) return false
               if (target.closest("[data-hover-preview]")) return false
 
               const id = target.getAttribute("data-id")
               if (!id) return false
 
-              // Toggle pin if preview is showing for this mention
-              if (isPreviewShowing(id)) {
+              const mentionType = target.getAttribute("data-mention-type")
+              if (mentionType === "tag" || mentionType === "date") return false
+
+              // If already pinned → unpin
+              if (isPreviewPinned()) {
                 event.preventDefault()
                 event.stopPropagation()
                 togglePreviewPin()
                 return true
               }
 
-              // Normal click → peek/navigate (use setTimeout to let mousedown complete)
-              setTimeout(() => handleMentionClick(id, event), 0)
+              // If preview showing → pin it
+              if (isPreviewShowing()) {
+                event.preventDefault()
+                event.stopPropagation()
+                togglePreviewPin()
+                return true
+              }
+
+              // Preview not showing → show immediately + pin
+              const resolved = resolveNoteById(id)
+              if (resolved) {
+                showNotePreview(target as HTMLElement, resolved.id, resolved.type)
+                // Pin after a short delay (let preview render first)
+                setTimeout(() => togglePreviewPin(), 350)
+                event.preventDefault()
+                return true
+              }
+
+              handleMentionClick(id, event)
               return true
             },
 
@@ -539,9 +560,29 @@ export function createEditorExtensions(
         WikiQuoteExtension as Extension,
       )
       noteExtensions.push(
-        Mention.configure({
+        Mention.extend({
+          addAttributes() {
+            return {
+              ...this.parent?.(),
+              mentionType: {
+                default: "note",
+                parseHTML: (element: HTMLElement) => element.getAttribute("data-mention-type") || "note",
+                renderHTML: (attributes: Record<string, unknown>) => {
+                  return { "data-mention-type": attributes.mentionType || "note" }
+                },
+              },
+            }
+          },
+        }).configure({
           HTMLAttributes: { class: 'mention' },
           suggestion: mentionSuggestionConfig,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          renderLabel({ node }: { options: any; node: any }) {
+            const mentionType = node.attrs.mentionType || "note"
+            const prefixMap: Record<string, string> = { note: "Note : ", wiki: "Wiki : ", tag: "# ", date: "Date : " }
+            const prefix = prefixMap[mentionType] || "@ "
+            return `${prefix}${node.attrs.label ?? node.attrs.id}`
+          },
         }) as Extension,
         MentionInteractionExtension as Extension,
         Emoji as Extension,

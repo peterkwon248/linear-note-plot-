@@ -937,12 +937,15 @@
 
 /* ── Wikilink Decorations ─────────────────────────────────────────── */
 
-/* Hidden brackets [[ and ]] */
+/* Hidden brackets [[ and ]], including wiki: prefix */
 .ProseMirror .wikilink-bracket {
   font-size: 0;
   letter-spacing: 0;
   color: transparent;
   user-select: none;
+  position: absolute;
+  width: 0;
+  overflow: hidden;
 }
 
 /* Existing note — blue link */
@@ -1506,4 +1509,32 @@
 .ProseMirror .mention:hover {
   background: hsl(var(--accent) / 0.2);
   text-decoration: underline;
+}
+
+/* Mention type variants */
+.ProseMirror .mention[data-mention-type="wiki"] {
+  background: rgba(45, 212, 191, 0.1);
+  color: #2dd4bf;
+}
+
+.ProseMirror .mention[data-mention-type="wiki"]:hover {
+  background: rgba(45, 212, 191, 0.2);
+}
+
+.ProseMirror .mention[data-mention-type="tag"] {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.ProseMirror .mention[data-mention-type="tag"]:hover {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.ProseMirror .mention[data-mention-type="date"] {
+  background: rgba(168, 85, 247, 0.1);
+  color: #a855f7;
+}
+
+.ProseMirror .mention[data-mention-type="date"]:hover {
+  background: rgba(168, 85, 247, 0.2);
 }

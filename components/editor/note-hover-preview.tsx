@@ -341,7 +341,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
       onMouseEnter={cancelHidePreview}
       onMouseLeave={pinned ? undefined : hideNotePreview}
       data-hover-preview
-      className={`fixed z-[9999] w-[640px] rounded-lg border bg-surface shadow-lg overflow-hidden animate-in fade-in duration-150 transition-colors ${
+      className={`fixed z-[9999] w-[640px] rounded-lg border bg-background shadow-lg overflow-hidden animate-in fade-in duration-150 transition-colors ${
         pinned ? "border-accent/40 shadow-xl" : "border-border-subtle"
       }`}
       style={{ left: pos.x, top: pos.y }}
