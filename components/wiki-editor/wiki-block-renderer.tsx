@@ -800,7 +800,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
             <PopoverTrigger asChild>
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-                className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+                className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-70 hover:!opacity-100 p-1 rounded bg-background/80 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
               >
                 <DotsThree size={14} weight="bold" />
               </button>
@@ -851,7 +851,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
           <PopoverTrigger asChild>
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-              className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+              className="absolute right-1 top-1 opacity-0 group-hover/image:opacity-70 hover:!opacity-100 p-1 rounded bg-background/80 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
             >
               <DotsThree size={14} weight="bold" />
             </button>
