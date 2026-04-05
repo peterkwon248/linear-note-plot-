@@ -270,7 +270,7 @@ export function WikiList({
   const groupedArticles = groupByInitial(filteredWikiNotes, (n: WikiArticle) => n.title || "Untitled")
 
   const counts = {
-    all: sortedFilteredWikiNotes.length + redLinks.length,
+    all: sortedFilteredWikiNotes.length,
     articles: sortedFilteredWikiNotes.length,
     stubs: stubCount ?? 0,
     redlinks: redLinks.length,

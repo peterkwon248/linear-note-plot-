@@ -105,7 +105,8 @@
       "Bash(cp .omc/worklog/latest.md ~/.claude/.omc-worklog/latest.md)",
       "Bash(cp .omc/worklog/latest.md ~/.claude/.omc-worklog/2026-04-05_1200.md)",
       "Bash(cp .omc/worklog/latest.md ~/.claude/.omc-worklog/2026-04-05_2000.md)",
-      "Bash(cp .omc/worklog/latest.md ~/.claude/.omc-worklog/2026-04-05_2130.md)"
+      "Bash(cp .omc/worklog/latest.md ~/.claude/.omc-worklog/2026-04-05_2130.md)",
+      "Bash(cp .omc/worklog/latest.md ~/.claude/.omc-worklog/2026-04-06_0700.md)"
     ]
   }
 }
