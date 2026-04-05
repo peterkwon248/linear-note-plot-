@@ -16,6 +16,7 @@ import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
@@ -45,8 +46,9 @@ function clearTimers() {
   if (_hideTimer) { clearTimeout(_hideTimer); _hideTimer = null }
 }
 
-/** Show preview after 300ms delay */
+/** Show preview after 300ms delay. Ignored if currently pinned. */
 export function showNotePreview(target: HTMLElement, noteId: string, noteType: "note" | "wiki") {
+  if (_pinned) return
   clearTimers()
   _showTimer = setTimeout(() => {
     const rect = target.getBoundingClientRect()
@@ -124,6 +126,13 @@ export function isPreviewPinned(): boolean {
   return _pinned
 }
 
+/** Switch the preview to a different note (keeps position and pin state) */
+export function switchPreviewNote(noteId: string, noteType: "note" | "wiki") {
+  if (!_state) return
+  _state = { ..._state, noteId, noteType }
+  notify()
+}
+
 // ── React component ───────────────────────────────────────────────
 
 export function NoteHoverPreview() {
@@ -169,6 +178,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   const [pos, setPos] = useState({ x, y })
   const [showMore, setShowMore] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [quoteActive, setQuoteActive] = useState(false)
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
 
   // Pin state: synced from module-level _pinned via listener
@@ -320,12 +330,18 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
     let newX = x
     let newY = y
 
-    if (newX + rect.width > vw - 16) {
-      newX = vw - rect.width - 16
-    }
+    // Clamp horizontal
+    if (newX + rect.width > vw - 16) newX = vw - rect.width - 16
+    if (newX < 16) newX = 16
+
+    // Clamp vertical — prefer below, flip above if needed, then clamp to viewport
     if (newY + rect.height > vh - 16) {
-      newY = y - rect.height - 8 - (ref.current.parentElement ? 0 : 20)
+      newY = y - rect.height - 8
     }
+    if (newY < 16) newY = 16
+    // If card is taller than viewport, pin to top
+    if (rect.height > vh - 32) newY = 16
+
     if (newX !== pos.x || newY !== pos.y) {
       setPos({ x: newX, y: newY })
     }
@@ -333,7 +349,10 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
 
   useEffect(() => {
     adjustPosition()
-  }, [adjustPosition, editing])
+    // Re-adjust after content renders (new note content may change card height)
+    const timer = setTimeout(adjustPosition, 100)
+    return () => clearTimeout(timer)
+  }, [adjustPosition, editing, noteId])
 
   return (
     <div
@@ -341,7 +360,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
       onMouseEnter={cancelHidePreview}
       onMouseLeave={pinned ? undefined : hideNotePreview}
       data-hover-preview
-      className={`fixed z-[9999] w-[640px] rounded-lg border bg-background shadow-lg overflow-hidden animate-in fade-in duration-150 transition-colors ${
+      className={`fixed z-[9999] w-[640px] max-h-[calc(100vh-32px)] flex flex-col rounded-lg border bg-background shadow-lg overflow-hidden animate-in fade-in duration-150 transition-colors ${
         pinned ? "border-accent/40 shadow-xl" : "border-border-subtle"
       }`}
       style={{ left: pos.x, top: pos.y }}
@@ -396,7 +415,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
       {note ? (
         <>
           {editing && editorInstance && <FixedToolbar editor={editorInstance} position="top" noteId={noteId} />}
-          <div ref={bodyRef} className="flex-1 overflow-y-auto px-4 py-3 max-h-[80vh]">
+          <div ref={bodyRef} className="overflow-y-auto px-4 py-3" style={{ height: 400 }}>
             <NoteEditorAdapter
               key={noteId}
               note={note}
@@ -410,23 +429,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           <p className="text-2xs text-muted-foreground/50 italic">Empty note</p>
         </div>
       )}
-      {/* Floating Quote button — positioned to the right of the preview card */}
-      {quoteSelection && ref.current && createPortal(
-        <button
-          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleInsertQuote() }}
-          style={{
-            position: "fixed",
-            top: quoteSelection.rect.top + quoteSelection.rect.height / 2 - 18,
-            left: ref.current.getBoundingClientRect().right + 8,
-            zIndex: 10001,
-          }}
-          className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-4 py-2.5 text-note font-semibold text-accent shadow-xl backdrop-blur-sm transition-colors hover:bg-accent/20"
-        >
-          <Quotes size={16} weight="bold" />
-          <span>Quote</span>
-        </button>,
-        document.body
-      )}
+      {/* Floating Quote button removed — Quote is now in action bar with select-all-first UX */}
       {/* Action bar */}
       <div data-action-bar className="flex items-center gap-0.5 px-3 py-1.5 border-t border-border-subtle">
         <button
@@ -459,24 +462,65 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           </button>
         )}
         {!editing && (
+          <div className="relative">
           <button
             onMouseDown={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              if (quoteSelection) {
-                handleInsertQuote()
+              if (quoteActive) {
+                // 2nd click: insert quote with current selection (or all if unchanged)
+                if (!quoteSelection) {
+                  // Re-select all if user cleared selection
+                  const bodyEl = bodyRef.current
+                  if (bodyEl) {
+                    const range = document.createRange()
+                    range.selectNodeContents(bodyEl)
+                    const sel = window.getSelection()
+                    sel?.removeAllRanges()
+                    sel?.addRange(range)
+                    const rect = range.getBoundingClientRect()
+                    if (rect.width > 0) {
+                      setQuoteSelection({ text: sel?.toString().trim() || "", rect })
+                    }
+                  }
+                  // Insert after state update
+                  setTimeout(() => handleInsertQuote(), 10)
+                } else {
+                  handleInsertQuote()
+                }
+                setQuoteActive(false)
               } else {
-                import("sonner").then(({ toast }) => toast.info("Select text first"))
+                // 1st click: select all text in body + activate quote mode
+                const bodyEl = bodyRef.current
+                if (bodyEl) {
+                  const range = document.createRange()
+                  range.selectNodeContents(bodyEl)
+                  const sel = window.getSelection()
+                  sel?.removeAllRanges()
+                  sel?.addRange(range)
+                  const rect = range.getBoundingClientRect()
+                  if (rect.width > 0) {
+                    setQuoteSelection({ text: sel?.toString().trim() || "", rect })
+                  }
+                }
+                setQuoteActive(true)
               }
             }}
             className={`flex items-center gap-1 rounded px-2 py-1 text-2xs transition-colors hover:bg-hover-bg ${
-              quoteSelection ? "text-accent" : "text-muted-foreground hover:text-foreground"
+              quoteActive ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"
             }`}
-            title="Quote selected text"
+            title={quoteActive ? "Insert quote" : "Select all for quoting"}
           >
             <Quotes size={12} />
             <span>Quote</span>
           </button>
+          {quoteActive && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-foreground/90 px-2.5 py-1 text-[10px] text-background shadow-lg animate-in fade-in slide-in-from-bottom-1 duration-150">
+              Drag to adjust, then click Quote again
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-foreground/90" />
+            </div>
+          )}
+          </div>
         )}
         <div className="relative ml-auto">
           <button
@@ -494,6 +538,21 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
               >
                 <Columns size={12} />
                 <span>Side by side</span>
+              </button>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  setShowMore(false)
+                  // Trigger wikilink context menu in change-link mode at button position
+                  const rect = (e.target as HTMLElement).getBoundingClientRect()
+                  window.dispatchEvent(new CustomEvent("plot:wikilink-context-menu-change", {
+                    detail: { title, x: rect.left, y: rect.top }
+                  }))
+                }}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+              >
+                <ArrowsClockwise size={12} />
+                <span>Change link</span>
               </button>
               <button
                 onMouseDown={(e) => { e.preventDefault(); handleCopyLink() }}
