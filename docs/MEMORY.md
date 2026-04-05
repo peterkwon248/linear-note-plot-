@@ -77,6 +77,9 @@
 - **Stub 부활**: `lib/wiki-utils.ts` isWikiStub() — 블록 ≤4개 + 모든 text block 비어있음 = stub. 상태 필드 없이 heuristic
 - **WikilinkDecoration 3-way**: exists(보라색) / stub(주황색 점선) / dangling(빨간색). wikiArticles titleMap 추가, isWikiStub() 연동
 - **[[드롭다운 섹션 분리**: Notes / Wiki 2섹션, Create Note + Create Wiki 2옵션. IconWiki 통일
+- **Wikilink 4-way 시각 시스템**: `wikilink-exists`(보라밑줄) / `wikilink-wiki`(teal칩) / `wikilink-stub`(amber점선) / `wikilink-dangling`(gray점선). `[[wiki:Title]]` prefix로 타입 구분, `wiki:`는 bracket처럼 숨겨짐
+- **호버 프리뷰 TipTap 통합**: Preview/Edit 동일 렌더링 — 항상 NoteEditorAdapter(editable 토글). generateHTML 폐기. 640px 카드
+- **호버 프리뷰 Pin 시스템**: 모듈 레벨 `_pinned` + `_pinListeners`. 위키링크/멘션 클릭으로 `togglePreviewPin()`. Pin 시 accent 테두리 + PushPin 아이콘. `data-hover-preview` 가드로 프리뷰 안 재귀 방지
 
 ## Store Slices (20 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
@@ -238,7 +241,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Store v67 → v69
 
 - **PR #150 (WIP)**: Home 필터 연동 + Phase 4 Partial Quote + 호버 프리뷰 리디자인 + 위키링크 컨텍스트 메뉴 + 고아 노트 제안
-- **PR #151 (WIP)**: Stub 부활 + Create Wiki + WikilinkSuggestion 버그 수정 + Quote UX + 호버 프리뷰 Edit 모드 + [[드롭다운 WikiArticle
+- **PR #151**: Stub 부활 + Create Wiki + WikilinkSuggestion 버그 수정 + Quote UX + 호버 프리뷰 Edit 모드 + [[드롭다운 WikiArticle
+- **PR #152 (WIP)**: Unresolved Links 전환 + 호버 프리뷰 TipTap 통합 + Pin UX + Note/Wiki 링크 시각 구분
+  - "Red Links" → "Unresolved Links" 리브랜딩 (11파일)
+  - 호버 프리뷰: generateHTML 폐기 → 항상 NoteEditorAdapter (editable 토글). 640px 카드
+  - Pin: 모듈 레벨 상태, 위키링크/멘션 클릭으로 토글, accent 테두리 + PushPin 아이콘
+  - data-hover-preview 가드 (프리뷰 안 재귀 방지)
+  - 4-way wikilink: Note=보라밑줄, Wiki=teal칩, Stub=amber점선, Dangling=gray점선
+  - `[[wiki:Title]]` prefix 방식 — Wiki 선택 시 자동 삽입, `wiki:` 숨김
+  - Plain text copy (⋯ 메뉴 "Copy text")
+  - 호버 프리뷰 버그 수정 4건 (mouseup 누수, quote deps, pin bubbling, note assertion)
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

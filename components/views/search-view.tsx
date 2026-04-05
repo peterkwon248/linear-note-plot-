@@ -406,12 +406,12 @@ export function SearchView() {
                   </section>
                 )}
 
-              {/* Red Links */}
+              {/* Unresolved Links */}
               {(activeTab === "all" || activeTab === "wiki") &&
                 matchedRedLinks.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Red Links
+                      Unresolved Links
                     </h3>
                     <div className="space-y-0.5">
                       {matchedRedLinks.map((rl) => (

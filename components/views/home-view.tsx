@@ -276,9 +276,9 @@ function SuggestionsDetail() {
   )
 }
 
-/* ── Detail: Red Links ───────────────────────────────── */
+/* ── Detail: Unresolved Links ───────────────────────── */
 
-function RedLinksDetail() {
+function UnresolvedLinksDetail() {
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
 
@@ -331,12 +331,12 @@ function RedLinksDetail() {
       <BackToOverview />
       <SectionHeader
         icon={<LinkBreak size={20} />}
-        title="Red Links"
+        title="Unresolved Links"
         count={allRedLinks.length}
       />
       {allRedLinks.length === 0 ? (
         <div className="rounded-lg border border-border-subtle bg-surface-overlay p-4 text-note text-muted-foreground">
-          No red links found.
+          No unresolved links found.
         </div>
       ) : (
         <div className="rounded-lg border border-border-subtle bg-surface-overlay">
@@ -346,8 +346,8 @@ function RedLinksDetail() {
               className={`px-4 py-3 ${i !== allRedLinks.length - 1 ? "border-b border-border-subtle" : ""}`}
             >
               <div className="flex items-center gap-2">
-                <Circle size={10} weight="fill" className="shrink-0 text-red-400" />
-                <span className="font-medium text-note text-red-400">{r.title}</span>
+                <LinkBreak size={14} weight="regular" className="shrink-0 text-muted-foreground" />
+                <span className="font-medium text-note text-foreground">{r.title}</span>
                 <span className="text-2xs text-muted-foreground">
                   referenced by {r.referencedBy.length} note{r.referencedBy.length !== 1 ? "s" : ""}
                 </span>
@@ -618,7 +618,7 @@ export function HomeView() {
         <div className="mx-auto max-w-5xl px-8 py-8">
           {homeSection === "unlinked" && <UnlinkedMentionsDetail />}
           {homeSection === "suggestions" && <SuggestionsDetail />}
-          {homeSection === "redlinks" && <RedLinksDetail />}
+          {homeSection === "redlinks" && <UnresolvedLinksDetail />}
           {homeSection === "orphans" && <OrphansDetail />}
         </div>
       </div>
@@ -746,7 +746,7 @@ export function HomeView() {
               <p className="text-2xl font-semibold text-foreground">
                 {redLinkCount}
               </p>
-              <p className="text-2xs text-muted-foreground">Red Links</p>
+              <p className="text-2xs text-muted-foreground">Unresolved Links</p>
             </button>
           </div>
         </section>
@@ -781,7 +781,7 @@ export function HomeView() {
             >
               <FileText size={16} className="shrink-0 mt-0.5 text-muted-foreground" />
               <div>
-                <p className="text-note font-medium text-foreground">Red Links</p>
+                <p className="text-note font-medium text-foreground">Unresolved Links</p>
                 <p className="text-2xs text-muted-foreground mt-0.5">Topics referenced but not yet created as notes</p>
               </div>
             </button>

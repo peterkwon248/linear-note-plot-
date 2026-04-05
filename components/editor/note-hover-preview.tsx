@@ -4,8 +4,6 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
 import { resolveNoteByTitle, resolveNoteById } from "@/lib/note-reference-actions"
-import { generateHTML } from "@tiptap/html"
-import { createRenderExtensions } from "@/components/editor/core/shared-editor-config"
 import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
 import { ArrowBendUpLeft } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
@@ -16,6 +14,8 @@ import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Copy } from "@phosphor-icons/react/dist/ssr/Copy"
 import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
@@ -76,8 +76,9 @@ export function showNotePreviewById(target: HTMLElement, id: string) {
   }
 }
 
-/** Hide preview after 200ms delay (cancellable by re-enter) */
+/** Hide preview after 200ms delay (cancellable by re-enter). Skipped if pinned. */
 export function hideNotePreview() {
+  if (_pinned) return
   clearTimers()
   _hideTimer = setTimeout(() => {
     _state = null
@@ -94,7 +95,33 @@ export function cancelHidePreview() {
 export function hideNotePreviewImmediate() {
   clearTimers()
   _state = null
+  _pinned = false
   notify()
+}
+
+// ── Pin state (module-level so WikilinkDecoration can access) ────
+let _pinned = false
+let _pinListeners = new Set<() => void>()
+
+function notifyPin() {
+  for (const fn of _pinListeners) fn()
+}
+
+/** Toggle pin state. Returns new pinned value. */
+export function togglePreviewPin(): boolean {
+  _pinned = !_pinned
+  notifyPin()
+  return _pinned
+}
+
+/** Check if preview is currently showing for a given noteId */
+export function isPreviewShowing(noteId?: string): boolean {
+  if (!_state) return false
+  return noteId ? _state.noteId === noteId : true
+}
+
+export function isPreviewPinned(): boolean {
+  return _pinned
 }
 
 // ── React component ───────────────────────────────────────────────
@@ -121,13 +148,6 @@ export function NoteHoverPreview() {
   )
 }
 
-// ── Cached render extensions (module-level singleton) ─────────────
-let _renderExts: ReturnType<typeof createRenderExtensions> | null = null
-function getRenderExtensions() {
-  if (!_renderExts) _renderExts = createRenderExtensions()
-  return _renderExts
-}
-
 function relativeTime(dateStr: string): string {
   if (!dateStr) return ""
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -146,13 +166,18 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   const wikiArticle = usePlotStore((s) => s.wikiArticles.find((a) => a.id === noteId))
   const folders = usePlotStore((s) => s.folders)
   const allNotes = usePlotStore((s) => s.notes)
-  const [bodyPreview, setBodyPreview] = useState("")
-  const [bodyJson, setBodyJson] = useState<Record<string, unknown> | null>(null)
   const [pos, setPos] = useState({ x, y })
   const [showMore, setShowMore] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
-  const [pinned, setPinned] = useState(false)
+
+  // Pin state: synced from module-level _pinned via listener
+  const [pinned, setPinnedLocal] = useState(_pinned)
+  useEffect(() => {
+    const listener = () => setPinnedLocal(_pinned)
+    _pinListeners.add(listener)
+    return () => { _pinListeners.delete(listener) }
+  }, [])
   const title = note?.title || wikiArticle?.title || "Untitled"
   const status = note?.status
 
@@ -219,10 +244,10 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
 
     return () => {
       el.removeEventListener("mousedown", onMouseDown)
-      document.removeEventListener("mouseup", onMouseUp)
+      el.removeEventListener("mouseup", onMouseUp)
       if (rafId) cancelAnimationFrame(rafId)
     }
-  }, [bodyPreview, bodyJson])
+  }, [editing])
 
   const handleInsertQuote = useCallback(async () => {
     if (!quoteSelection) return
@@ -286,21 +311,6 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
     hideNotePreviewImmediate()
   }
 
-  // Fetch body from IDB
-  useEffect(() => {
-    if (!noteId) return
-    import("@/lib/note-body-store").then(({ getBody }) => {
-      getBody(noteId).then((body) => {
-        if (body?.content) {
-          setBodyPreview(body.content.replace(/^#{1,6}\s+/gm, "").trim())
-        }
-        if (body?.contentJson) {
-          setBodyJson(body.contentJson as Record<string, unknown>)
-        }
-      })
-    })
-  }, [noteId])
-
   // Adjust position to stay within viewport
   const adjustPosition = useCallback(() => {
     if (!ref.current) return
@@ -323,17 +333,31 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
 
   useEffect(() => {
     adjustPosition()
-  }, [adjustPosition, bodyPreview, bodyJson])
+  }, [adjustPosition, editing])
 
   return (
     <div
       ref={ref}
       onMouseEnter={cancelHidePreview}
-      onMouseLeave={(editing || pinned) ? undefined : hideNotePreview}
-      onClick={() => { if (!pinned) setPinned(true) }}
-      className="fixed z-[9999] w-[520px] rounded-lg border border-border-subtle bg-surface shadow-lg overflow-hidden animate-in fade-in duration-150"
+      onMouseLeave={pinned ? undefined : hideNotePreview}
+      data-hover-preview
+      className={`fixed z-[9999] w-[640px] rounded-lg border bg-surface shadow-lg overflow-hidden animate-in fade-in duration-150 transition-colors ${
+        pinned ? "border-accent/40 shadow-xl" : "border-border-subtle"
+      }`}
       style={{ left: pos.x, top: pos.y }}
     >
+      {/* Pin indicator */}
+      {pinned && (
+        <button
+          data-pin-button
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation() }}
+          onClick={(e) => { e.stopPropagation(); _pinned = false; notifyPin() }}
+          className="absolute top-2 right-2 z-10 flex items-center justify-center rounded-full bg-accent/10 p-1 text-accent transition-colors hover:bg-accent/20"
+          title="Unpin"
+        >
+          <PushPin size={10} weight="fill" />
+        </button>
+      )}
       {/* Header */}
       <div className="px-4 pt-3 pb-1 flex items-center gap-2">
         {noteType === "wiki" && (
@@ -369,32 +393,21 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         )}
       </div>
       {/* Body */}
-      {editing ? (
+      {note ? (
         <>
-          {editorInstance && <FixedToolbar editor={editorInstance} position="top" noteId={noteId} />}
-          <div className="flex-1 overflow-y-auto px-4 py-3 max-h-[80vh]">
+          {editing && editorInstance && <FixedToolbar editor={editorInstance} position="top" noteId={noteId} />}
+          <div ref={bodyRef} className="flex-1 overflow-y-auto px-4 py-3 max-h-[80vh]">
             <NoteEditorAdapter
-              key={`${noteId}-edit`}
-              note={note!}
-              editable={true}
+              key={noteId}
+              note={note}
+              editable={editing}
               onEditorReady={(ed) => setEditorInstance(ed as Editor)}
             />
           </div>
         </>
       ) : (
-        <div ref={bodyRef} className="px-4 pb-3 max-h-[80vh] overflow-y-auto select-text">
-          {bodyJson && (bodyJson as any).type === "doc" ? (
-            <div
-              className="ProseMirror prose-preview text-note leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-note [&_h2]:font-semibold [&_h2]:mt-2 [&_h2]:mb-1 [&_h3]:text-2xs [&_h3]:font-medium [&_h3]:mt-2 [&_h3]:mb-0.5 [&_p]:my-0.5 [&_ul]:my-0.5 [&_ol]:my-0.5 [&_li]:my-0 [&_blockquote]:my-1 [&_blockquote]:pl-2 [&_blockquote]:border-l-2 [&_pre]:my-1 [&_pre]:text-2xs [&_code]:text-2xs text-foreground/80"
-              dangerouslySetInnerHTML={{ __html: generateHTML(bodyJson, getRenderExtensions()) }}
-            />
-          ) : bodyPreview ? (
-            <p className="text-2xs text-muted-foreground leading-relaxed whitespace-pre-line">
-              {bodyPreview}
-            </p>
-          ) : (
-            <p className="text-2xs text-muted-foreground/50 italic">Empty note</p>
-          )}
+        <div className="px-4 pb-3">
+          <p className="text-2xs text-muted-foreground/50 italic">Empty note</p>
         </div>
       )}
       {/* Floating Quote button — positioned to the right of the preview card */}
@@ -415,7 +428,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         document.body
       )}
       {/* Action bar */}
-      <div className="flex items-center gap-0.5 px-3 py-1.5 border-t border-border-subtle">
+      <div data-action-bar className="flex items-center gap-0.5 px-3 py-1.5 border-t border-border-subtle">
         <button
           onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOpen() }}
           className="flex items-center gap-1 rounded px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
@@ -424,25 +437,27 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           <ArrowSquareOut size={12} />
           <span>Open</span>
         </button>
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            if (editing) {
-              setEditing(false)
-              setEditorInstance(null)
-            } else {
-              setEditing(true)
-            }
-          }}
-          className={`flex items-center gap-1 rounded px-2 py-1 text-2xs transition-colors hover:bg-hover-bg ${
-            editing ? "text-accent" : "text-muted-foreground hover:text-foreground"
-          }`}
-          title={editing ? "Switch to preview" : "Edit inline"}
-        >
-          {editing ? <Eye size={12} /> : <PencilSimple size={12} />}
-          <span>{editing ? "Preview" : "Edit"}</span>
-        </button>
+        {note && (
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (editing) {
+                setEditing(false)
+                setEditorInstance(null)
+              } else {
+                setEditing(true)
+              }
+            }}
+            className={`flex items-center gap-1 rounded px-2 py-1 text-2xs transition-colors hover:bg-hover-bg ${
+              editing ? "text-accent" : "text-muted-foreground hover:text-foreground"
+            }`}
+            title={editing ? "Switch to preview" : "Edit inline"}
+          >
+            {editing ? <Eye size={12} /> : <PencilSimple size={12} />}
+            <span>{editing ? "Preview" : "Edit"}</span>
+          </button>
+        )}
         {!editing && (
           <button
             onMouseDown={(e) => {
@@ -487,12 +502,27 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                 <Copy size={12} />
                 <span>Copy [[link]]</span>
               </button>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  const text = editorInstance?.getText() || note?.content || note?.preview || ""
+                  if (text.trim()) {
+                    navigator.clipboard.writeText(text.trim())
+                    import("sonner").then(({ toast }) => toast.success("Copied as plain text"))
+                  }
+                  setShowMore(false)
+                }}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+              >
+                <TextT size={12} />
+                <span>Copy text</span>
+              </button>
             </div>
           )}
         </div>
         {(editing || pinned) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setPinned(false); setEditing(false); setEditorInstance(null); hideNotePreviewImmediate() }}
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(false); setEditorInstance(null); hideNotePreviewImmediate() }}
             className="flex items-center gap-1 rounded px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             title="Close"
           >
@@ -504,17 +534,4 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   )
 }
 
-// ── Helpers ───────────────────────────────────────────────────────
 
-function extractPlainText(nodes: any[]): string {
-  return nodes
-    .map((n: any) => {
-      if (n.type === "text") return n.text || ""
-      if (n.type === "heading") return "" // skip title heading
-      if (n.content) return extractPlainText(n.content)
-      return ""
-    })
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim()
-}

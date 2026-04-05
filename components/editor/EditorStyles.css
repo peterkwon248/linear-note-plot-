@@ -961,20 +961,36 @@
   background: color-mix(in srgb, var(--editor-link-color) 8%, transparent);
 }
 
-/* Dangling/non-existent note — red dashed link */
+/* Unresolved link — gray dashed */
 .ProseMirror .wikilink-dangling {
-  color: var(--destructive);
+  color: var(--muted-foreground);
   text-decoration: underline;
   text-decoration-style: dashed;
-  text-decoration-color: hsl(from var(--destructive) h s l / 0.4);
+  text-decoration-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
   text-underline-offset: 2px;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .ProseMirror .wikilink-dangling:hover {
-  text-decoration-color: rgba(224, 108, 117, 0.8);
-  background: rgba(224, 108, 117, 0.08);
+  text-decoration-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent);
+  background: color-mix(in srgb, var(--muted-foreground) 8%, transparent);
+}
+
+/* Wiki article — teal chip */
+.ProseMirror .wikilink-wiki {
+  color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.08);
+  padding: 1px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.ProseMirror .wikilink-wiki:hover {
+  background: rgba(45, 212, 191, 0.15);
+  color: #5eead4;
 }
 
 /* Stub wiki article — amber dashed link */

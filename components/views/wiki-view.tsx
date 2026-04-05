@@ -111,7 +111,7 @@ export function WikiView() {
   const [wikiMergeSourceId, setWikiMergeSourceId] = useState<string | null>(null)
 
   // Dashboard filter
-  const [dashFilter, setDashFilter] = useState<"all" | "articles" | "stubs" | "redlinks">("all")
+  const [dashFilter, setDashFilter] = useState<"all" | "articles" | "stubs">("all")
 
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
@@ -474,7 +474,6 @@ export function WikiView() {
   // Stats
   const stats = useMemo(() => {
     const articleCount = wikiNotes.length
-    const redLinkCount = redLinks.length
     // Count unique internal links across all wiki notes + wiki articles
     const linkSet = new Set<string>()
     for (const n of wikiNotes) {
@@ -508,11 +507,10 @@ export function WikiView() {
 
     return {
       total: wikiNotes.length,
-      redLinks: redLinkCount,
       internalLinks: internalLinkCount,
       connectedNotes: connectedNoteIds.size,
     }
-  }, [wikiNotes, wikiArticles, redLinks, notes])
+  }, [wikiNotes, wikiArticles, notes])
 
   // Stub count: wiki articles with minimal content
   const stubCount = useMemo(
@@ -1037,17 +1035,17 @@ export function WikiView() {
                           </>
                         )}
 
-                        {/* Red Links */}
+                        {/* Unresolved Links */}
                         {importTargets.redLinks.length > 0 && (
                           <>
-                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Red Links</p>
+                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Unresolved Links</p>
                             {importTargets.redLinks.map((r) => (
                               <button
                                 key={r.title}
                                 onClick={() => handleImportIntoRedLink(r.title)}
                                 className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-note text-foreground transition-colors duration-150 hover:bg-hover-bg"
                               >
-                                <Warning size={14} weight="regular" className="shrink-0 text-destructive" />
+                                <Warning size={14} weight="regular" className="shrink-0 text-muted-foreground" />
                                 <span className="min-w-0 flex-1 truncate">{r.title}</span>
                                 <span className="shrink-0 text-2xs text-muted-foreground">{r.refCount} refs</span>
                               </button>
@@ -1117,7 +1115,6 @@ export function WikiView() {
             onCreateFromRedLink={handleCreateFromRedLink}
             onViewAll={() => { setWikiViewMode("list"); setDashFilter("all") }}
             onViewStubs={() => { setWikiViewMode("list"); setDashFilter("stubs") }}
-            onViewRedLinks={() => { setWikiViewMode("list"); setDashFilter("redlinks") }}
             onCategoryClick={(categoryId) => {
               setWikiCategoryFilter(categoryId)
               setWikiViewMode("list")

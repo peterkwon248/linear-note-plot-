@@ -5,7 +5,8 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view"
 import type { EditorView } from "@tiptap/pm/view"
 import { usePlotStore } from "@/lib/store"
 import { handleWikilinkClick } from "@/lib/note-reference-actions"
-import { showNotePreviewByTitle, hideNotePreview } from "@/components/editor/note-hover-preview"
+import { showNotePreviewByTitle, hideNotePreview, togglePreviewPin, isPreviewShowing } from "@/components/editor/note-hover-preview"
+import { resolveNoteByTitle } from "@/lib/note-reference-actions"
 import { isWikiStub } from "@/lib/wiki-utils"
 
 const wikilinkDecoKey = new PluginKey("wikilinkDecoration")
@@ -36,12 +37,29 @@ export const WikilinkDecorationExtension = Extension.create({
           handleClick(view: EditorView, _pos: number, event: MouseEvent) {
             const target = event.target as HTMLElement
             if (!target.classList?.contains("wikilink")) return false
+            // Skip click handling inside hover preview (use action bar buttons instead)
+            if (target.closest?.("[data-hover-preview]")) return false
 
             const title = target.getAttribute("data-wikilink")
             if (!title) return false
 
-            // In edit mode without modifier, let cursor placement happen
-            if (view.editable && !event.ctrlKey && !event.metaKey) return false
+            // In edit mode without modifier key
+            if (view.editable && !event.ctrlKey && !event.metaKey) {
+              // Dangling links: open create dropdown on plain click
+              if (target.classList.contains("wikilink-dangling")) {
+                window.dispatchEvent(new CustomEvent("plot:wikilink-context-menu", {
+                  detail: { title, x: event.clientX, y: event.clientY }
+                }))
+                return true
+              }
+              // Existing links: toggle preview pin if preview is showing
+              const resolved = resolveNoteByTitle(title)
+              if (resolved && isPreviewShowing(resolved.id)) {
+                togglePreviewPin()
+                return true
+              }
+              return false
+            }
 
             handleWikilinkClick(title, event)
             return true
@@ -51,6 +69,8 @@ export const WikilinkDecorationExtension = Extension.create({
             mouseover(_view: EditorView, event: MouseEvent) {
               const target = event.target as HTMLElement
               if (!target.classList?.contains("wikilink")) return false
+              // Skip hover preview trigger inside hover preview card (prevents recursive preview)
+              if (target.closest?.("[data-hover-preview]")) return false
 
               const title = target.getAttribute("data-wikilink")
               if (!title) return false
@@ -62,6 +82,8 @@ export const WikilinkDecorationExtension = Extension.create({
             mouseout(_view: EditorView, event: MouseEvent) {
               const target = event.target as HTMLElement
               if (!target.classList?.contains("wikilink")) return false
+              // Skip inside hover preview card
+              if (target.closest?.("[data-hover-preview]")) return false
 
               hideNotePreview()
               return false
@@ -126,31 +148,44 @@ function computeWikilinkDecorations(state: EditorState): DecorationSet {
     while ((match = WIKILINK_REGEX.exec(node.text)) !== null) {
       const from = pos + match.index
       const to = from + match[0].length
-      const innerTitle = match[1]
+      const innerRaw = match[1]
+
+      // Parse "wiki:" prefix for explicit wiki links
+      const isExplicitWiki = innerRaw.startsWith("wiki:")
+      const innerTitle = isExplicitWiki ? innerRaw.slice(5) : innerRaw
       const lowerTitle = innerTitle.toLowerCase()
       const noteExists = titleSet.has(lowerTitle)
       const wikiArticle = wikiTitleMap.get(lowerTitle)
 
       const bracketClass = "wikilink-bracket"
       let linkClass: string
-      if (noteExists) {
+      if (isExplicitWiki) {
+        // Explicit wiki link via [[wiki:Title]]
+        if (wikiArticle) {
+          linkClass = isWikiStub(wikiArticle) ? "wikilink wikilink-stub" : "wikilink wikilink-wiki"
+        } else {
+          linkClass = "wikilink wikilink-dangling"
+        }
+      } else if (wikiArticle && !noteExists) {
+        // Implicit wiki-only link
+        linkClass = isWikiStub(wikiArticle) ? "wikilink wikilink-stub" : "wikilink wikilink-wiki"
+      } else if (noteExists) {
         linkClass = "wikilink wikilink-exists"
-      } else if (wikiArticle) {
-        linkClass = isWikiStub(wikiArticle) ? "wikilink wikilink-stub" : "wikilink wikilink-exists"
       } else {
         linkClass = "wikilink wikilink-dangling"
       }
 
-      // [[ bracket — visually hidden
+      // [[ bracket — visually hidden (includes "wiki:" prefix if present)
+      const bracketEnd = from + 2 + (isExplicitWiki ? 5 : 0)
       decorations.push(
-        Decoration.inline(from, from + 2, {
+        Decoration.inline(from, bracketEnd, {
           class: bracketClass,
         })
       )
 
       // title text — styled as link
       decorations.push(
-        Decoration.inline(from + 2, to - 2, {
+        Decoration.inline(bracketEnd, to - 2, {
           class: linkClass,
           "data-wikilink": innerTitle,
         })

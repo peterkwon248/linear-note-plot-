@@ -188,8 +188,8 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
           </div>
         </SidebarSection>
 
-        {/* Red Links section */}
-        <SidebarSection title="Red Links">
+        {/* Unresolved Links section */}
+        <SidebarSection title="Unresolved Links">
           {redLinks.length === 0 ? (
             <p className="text-2xs text-muted-foreground px-1">No broken links</p>
           ) : (

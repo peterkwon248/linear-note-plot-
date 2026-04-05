@@ -27,8 +27,8 @@ interface WikiListProps {
   backlinkCounts: Map<string, number>
 
   // Filter state
-  dashFilter: "all" | "articles" | "stubs" | "redlinks"
-  setDashFilter: (f: "all" | "articles" | "stubs" | "redlinks") => void
+  dashFilter: "all" | "articles" | "stubs"
+  setDashFilter: (f: "all" | "articles" | "stubs") => void
   showAllArticles: boolean
   setShowAllArticles: (show: boolean) => void
 
@@ -201,75 +201,6 @@ function ArticleTableRow({
   )
 }
 
-/* ── Red Link Row ── */
-
-function RedLinkRow({
-  title,
-  refCount,
-  onClick,
-  isSelected,
-  selectionActive,
-  onSelect,
-}: {
-  title: string
-  refCount: number
-  onClick: () => void
-  isSelected?: boolean
-  selectionActive?: boolean
-  onSelect?: (opts: { multi?: boolean }) => void
-}) {
-  return (
-    <div className={cn(
-      "group flex w-full items-center px-5 py-2.5 hover:bg-hover-bg transition-colors duration-100",
-      isSelected && "bg-accent/5"
-    )}>
-      {/* Checkbox */}
-      {onSelect && (
-        <div
-          className={cn(
-            "w-7 shrink-0 flex items-center justify-center cursor-pointer",
-            selectionActive || isSelected ? "visible" : "invisible group-hover:visible"
-          )}
-          onClick={(e) => {
-            e.stopPropagation()
-            onSelect({ multi: true })
-          }}
-        >
-          <div className={cn(
-            "h-4 w-4 rounded border flex items-center justify-center transition-colors",
-            isSelected
-              ? "bg-accent border-accent text-white"
-              : "border-muted-foreground/30 hover:border-muted-foreground/50"
-          )}>
-            {isSelected && <PhCheck size={10} weight="bold" />}
-          </div>
-        </div>
-      )}
-      <button
-        onClick={onClick}
-        className="flex flex-1 items-center text-left min-w-0"
-      >
-        <span className="w-[100px] shrink-0">
-          <span className="inline-flex items-center gap-1.5 text-2xs font-medium text-destructive">
-            <Warning size={14} weight="regular" />
-            Red Link
-          </span>
-        </span>
-        <span className="min-w-0 flex-1 truncate text-note font-medium text-destructive/80">
-          {title}
-        </span>
-      </button>
-      <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
-        {refCount > 0 ? `${refCount}` : "\u2014"}
-      </span>
-      <span className="w-[36px]" />
-      <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
-        {"\u2014"}
-      </span>
-    </div>
-  )
-}
-
 /* ── Index Row (used in alphabetical view) ── */
 
 function IndexTableRow({
@@ -361,8 +292,8 @@ export function WikiList({
         <span className="h-4 w-px bg-border/50" />
 
         {/* Filter Tabs */}
-        {(["all", "articles", "stubs", "redlinks"] as const).map((tab) => {
-          const labels: Record<string, string> = { all: "All", articles: "Articles", stubs: "Stubs", redlinks: "Red Links" }
+        {(["all", "articles", "stubs"] as const).map((tab) => {
+          const labels: Record<string, string> = { all: "All", articles: "Articles", stubs: "Stubs" }
           const tabCount = counts[tab as keyof typeof counts]
           return (
             <button
@@ -373,14 +304,11 @@ export function WikiList({
               }}
               className={cn(
                 "rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
-                tab === "redlinks" && "text-destructive/70",
                 tab === "stubs" && "text-amber-500/70",
                 dashFilter === tab && !showAllArticles
-                  ? tab === "redlinks" ? "bg-destructive/10 text-destructive"
-                    : tab === "stubs" ? "bg-amber-500/10 text-amber-500"
+                  ? tab === "stubs" ? "bg-amber-500/10 text-amber-500"
                     : "bg-foreground/10 text-foreground"
-                  : tab === "redlinks" ? "text-destructive/50 hover:bg-hover-bg hover:text-destructive/70"
-                    : tab === "stubs" ? "text-amber-500/50 hover:bg-hover-bg hover:text-amber-500/70"
+                  : tab === "stubs" ? "text-amber-500/50 hover:bg-hover-bg hover:text-amber-500/70"
                     : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
               )}
             >
@@ -454,12 +382,12 @@ export function WikiList({
         /* ── Filtered Article Table ── */
         <div className="flex-1 overflow-y-auto">
           <ColumnHeaders hasSelection={!!onSelect} />
-          {sortedFilteredWikiNotes.length === 0 && redLinks.length === 0 ? (
+          {sortedFilteredWikiNotes.length === 0 ? (
             <EmptyState />
           ) : (
             <div>
               {/* Article/Stub rows */}
-              {dashFilter !== "redlinks" && sortedFilteredWikiNotes
+              {sortedFilteredWikiNotes
                 .filter((note) => {
                   if (dashFilter !== "stubs") return true
                   const article = wikiArticles?.find((a) => a.id === note.id)
@@ -480,22 +408,8 @@ export function WikiList({
                   onSelect={onSelect ? (opts) => onSelect(note.id, { ...opts, index: idx }) : undefined}
                 />
               ))}
-              {/* Red Link rows */}
-              {(dashFilter === "all" || dashFilter === "redlinks") && redLinks.map(rl => (
-                <RedLinkRow
-                  key={`rl-${rl.title}`}
-                  title={rl.title}
-                  refCount={rl.refCount}
-                  onClick={() => onCreateFromRedLink(rl.title)}
-                  isSelected={selectedIds?.has(`rl-${rl.title}`)}
-                  selectionActive={selectionActive}
-                  onSelect={onSelect ? (opts) => onSelect(`rl-${rl.title}`, opts) : undefined}
-                />
-              ))}
               {/* Empty state for stubs filter with no stubs */}
               {dashFilter === "stubs" && (stubCount ?? 0) === 0 && <EmptyState />}
-              {/* Empty state for redlinks filter with no red links */}
-              {dashFilter === "redlinks" && redLinks.length === 0 && <EmptyState />}
             </div>
           )}
         </div>

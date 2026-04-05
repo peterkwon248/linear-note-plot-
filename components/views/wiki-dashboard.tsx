@@ -21,7 +21,6 @@ interface WikiDashboardProps {
   wikiArticles: WikiArticle[]
   stats: {
     total: number
-    redLinks: number
     internalLinks: number
     connectedNotes: number
   }
@@ -149,13 +148,6 @@ export function WikiDashboard({
             onClick={onViewStubs}
           />
           <MiniStat
-            label="Red Links"
-            value={stats.redLinks}
-            sub="missing articles"
-            color="text-destructive"
-            onClick={onViewRedLinks}
-          />
-          <MiniStat
             label="Uncategorized"
             value={wikiArticles.filter(a => !a.categoryIds || a.categoryIds.length === 0).length}
             sub="need categories"
@@ -249,26 +241,6 @@ export function WikiDashboard({
 
           {/* Right Column */}
           <div className="space-y-5">
-            {/* Red Links */}
-            {redLinks.length > 0 && (
-              <ContentCard title="Red Links" icon={Warning} iconColor="text-destructive/60">
-                {redLinks.slice(0, 6).map((item) => (
-                  <div key={item.title} className="group flex items-center gap-2 rounded-md px-2.5 py-2 transition-colors duration-100 hover:bg-hover-bg">
-                    <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-destructive/60" />
-                    <span className="min-w-0 flex-1 truncate text-note text-destructive/80">{item.title}</span>
-                    <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/50 group-hover:hidden">{item.refCount} refs</span>
-                    <button
-                      onClick={() => onCreateFromRedLink(item.title)}
-                      className="hidden shrink-0 items-center gap-0.5 text-2xs font-medium text-accent group-hover:flex"
-                    >
-                      <PhPlus size={12} weight="regular" />
-                      Create
-                    </button>
-                  </div>
-                ))}
-              </ContentCard>
-            )}
-
             {/* Stale Documents */}
             {staleDocuments.length > 0 && (
               <ContentCard title="Needs Review" icon={FileText}>
