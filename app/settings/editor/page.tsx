@@ -11,8 +11,6 @@ import {
 } from "@/components/settings-ui"
 
 export default function EditorPage() {
-  const spellcheck = useSettingsStore((s) => s.spellcheck)
-  const setSpellcheck = useSettingsStore((s) => s.setSpellcheck)
   const lineNumbers = useSettingsStore((s) => s.lineNumbers)
   const setLineNumbers = useSettingsStore((s) => s.setLineNumbers)
   const wordWrap = useSettingsStore((s) => s.wordWrap)
@@ -21,28 +19,17 @@ export default function EditorPage() {
   const setTabSize = useSettingsStore((s) => s.setTabSize)
   const codeFontFamily = useSettingsStore((s) => s.codeFontFamily)
   const setCodeFontFamily = useSettingsStore((s) => s.setCodeFontFamily)
-  const currentLineHighlight = useSettingsStore((s) => s.currentLineHighlight)
-  const setCurrentLineHighlight = useSettingsStore((s) => s.setCurrentLineHighlight)
-
   return (
     <>
       <SettingsPageTitle>Editor</SettingsPageTitle>
 
       <SettingsCard title="Editing">
-        <SettingRow label="Spellcheck" description="Enable browser spellcheck in the editor">
-          <Switch checked={spellcheck} onCheckedChange={setSpellcheck} />
-        </SettingRow>
-        <Divider />
         <SettingRow label="Line numbers" description="Show line numbers in the editor gutter">
           <Switch checked={lineNumbers} onCheckedChange={setLineNumbers} />
         </SettingRow>
         <Divider />
         <SettingRow label="Word wrap" description="Wrap long lines instead of horizontal scroll">
           <Switch checked={wordWrap} onCheckedChange={setWordWrap} />
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Current line highlight" description="Highlight the line where the cursor is located">
-          <Switch checked={currentLineHighlight} onCheckedChange={setCurrentLineHighlight} />
         </SettingRow>
       </SettingsCard>
 

@@ -6,6 +6,7 @@ import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
+import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { Virtuoso } from "react-virtuoso"
@@ -198,6 +199,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(new Set())
   const [splitTitle, setSplitTitle] = useState("")
   const [dragOverDropzone, setDragOverDropzone] = useState(false)
+  const [urlBlockDialog, setUrlBlockDialog] = useState<{ open: boolean; afterBlockId?: string }>({ open: false })
   // Improvement 1: isDragging state
   const [isDragging, setIsDragging] = useState(false)
   // Improvement 2: drag split title prompt
@@ -357,10 +359,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     }
 
     if (type === "url") {
-      const url = window.prompt("Enter URL:")
-      if (!url) return
-      const block: Omit<WikiBlock, "id"> = { type: "url", url, urlTitle: "" }
-      addWikiBlock(articleId, block, afterBlockId)
+      setUrlBlockDialog({ open: true, afterBlockId })
       return
     }
 
@@ -833,6 +832,16 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
           </div>
         )}
       </aside>}
+      <UrlInputDialog
+        open={urlBlockDialog.open}
+        mode="link"
+        onClose={() => setUrlBlockDialog({ open: false })}
+        onSubmit={(url) => {
+          const block: Omit<WikiBlock, "id"> = { type: "url", url, urlTitle: "" }
+          addWikiBlock(articleId, block, urlBlockDialog.afterBlockId)
+          setUrlBlockDialog({ open: false })
+        }}
+      />
     </div>
   )
 

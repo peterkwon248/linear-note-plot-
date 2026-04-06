@@ -35,7 +35,9 @@ import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { Asterisk } from "@phosphor-icons/react/dist/ssr/Asterisk"
 import { Database } from "@phosphor-icons/react/dist/ssr/Database"
+import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
 import { nanoid } from "nanoid"
+import { detectUrlType } from "@/lib/editor/url-detect"
 
 interface CommandItem {
   title: string
@@ -339,6 +341,27 @@ const COMMANDS: CommandItem[] = [
         .deleteRange(range)
         .insertContent({ type: "queryBlock", attrs: { queryId: nanoid(8) } })
         .run()
+    },
+  },
+  {
+    title: "Embed",
+    description: "Embed URL (YouTube, audio, or link)",
+    icon: LinkSimple,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run()
+      setTimeout(() => {
+        // TODO: replace with dialog when slash command supports React
+        const url = window.prompt("Enter URL to embed:")
+        if (!url) return
+        const type = detectUrlType(url)
+        if (type === "youtube") {
+          editor.chain().focus().setYoutubeVideo({ src: url }).run()
+        } else if (type === "audio") {
+          editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
+        } else {
+          editor.chain().focus().insertContent({ type: "linkCard", attrs: { url } }).run()
+        }
+      }, 50)
     },
   },
 ]

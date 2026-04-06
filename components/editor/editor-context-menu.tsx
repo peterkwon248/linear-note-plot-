@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import * as ContextMenu from "@radix-ui/react-context-menu"
+import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import type { Editor } from "@tiptap/react"
 import {
   indentCommand,
@@ -77,6 +78,7 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
   const [hasSelection, setHasSelection] = useState(false)
   const [isInList, setIsInList] = useState(false)
   const [isInColumn, setIsInColumn] = useState(false)
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false)
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -739,10 +741,7 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
                 <ContextMenu.Item
                   className={itemCls}
                   onSelect={() => {
-                    const url = window.prompt("Enter URL:")
-                    if (url) {
-                      editor?.chain().focus().setLink({ href: url }).run()
-                    }
+                    setLinkDialogOpen(true)
                   }}
                 >
                   <Link size={14} />
@@ -827,6 +826,15 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
           </ContextMenu.Item>
         </ContextMenu.Content>
       </ContextMenu.Portal>
+      <UrlInputDialog
+        open={linkDialogOpen}
+        mode="link"
+        onClose={() => setLinkDialogOpen(false)}
+        onSubmit={(url) => {
+          editor?.chain().focus().setLink({ href: url }).run()
+          setLinkDialogOpen(false)
+        }}
+      />
     </ContextMenu.Root>
   )
 }

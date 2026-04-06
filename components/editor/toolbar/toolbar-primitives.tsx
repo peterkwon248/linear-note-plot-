@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 /* ── ToolbarButton ───────────────────────────────────────── */
 
 interface ToolbarButtonProps {
-  onClick: () => void
+  onClick?: () => void
   isActive?: boolean
   disabled?: boolean
   title: string
@@ -29,7 +29,7 @@ export function ToolbarButton({
   return (
     <button
       onMouseDown={(e) => e.preventDefault()}
-      onClick={() => { if (!disabled) onClick() }}
+      onClick={() => { if (!disabled && onClick) onClick() }}
       disabled={disabled}
       title={title}
       className={cn(

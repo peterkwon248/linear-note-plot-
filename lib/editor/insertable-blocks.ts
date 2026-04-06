@@ -4,6 +4,7 @@
  */
 import type { Editor } from "@tiptap/core"
 import type { ComponentType } from "react"
+import { detectUrlType } from "@/lib/editor/url-detect"
 
 export interface InsertableBlock {
   id: string
@@ -144,47 +145,26 @@ export const INSERTABLE_BLOCKS: InsertableBlock[] = [
     category: "media",
   },
   {
-    id: "youtube",
-    title: "YouTube",
-    description: "Embed a YouTube video",
-    iconName: "Play",
-    keywords: ["youtube", "video", "embed"],
+    id: "embed",
+    title: "Embed URL",
+    description: "Embed a URL (YouTube, audio, or link card)",
+    iconName: "LinkSimple",
+    keywords: ["embed", "url", "link", "youtube", "video", "audio", "sound"],
     command: (editor) => {
-      const url = window.prompt("Enter YouTube URL:")
-      if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run()
-    },
-    category: "media",
-  },
-  {
-    id: "audio",
-    title: "Audio",
-    description: "Embed an audio file",
-    iconName: "SpeakerHigh",
-    keywords: ["audio", "sound", "music", "mp3"],
-    command: (editor) => {
-      const url = window.prompt("Enter audio file URL:")
-      if (url) {
-        editor.chain().focus().insertContent({
-          type: "audio",
-          attrs: { src: url },
-        }).run()
+      // TODO: replace with dialog when insertable-blocks supports React
+      const url = window.prompt("Enter URL to embed:")
+      if (!url) return
+      const type = detectUrlType(url)
+      if (type === "youtube") {
+        editor.chain().focus().setYoutubeVideo({ src: url }).run()
+      } else if (type === "audio") {
+        editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
+      } else {
+        editor.chain().focus().insertContent({ type: "linkCard", attrs: { url } }).run()
       }
     },
     category: "media",
   },
-  {
-    id: "twitch",
-    title: "Twitch",
-    description: "Embed a Twitch stream",
-    iconName: "TwitchLogo",
-    keywords: ["twitch", "stream", "gaming"],
-    command: (editor) => {
-      const url = window.prompt("Enter Twitch URL:")
-      if (url) editor.chain().focus().setTwitchVideo({ src: url }).run()
-    },
-    category: "media",
-  },
-
   // ── Math ────────────────────────────────────────────────
   {
     id: "inlineMath",

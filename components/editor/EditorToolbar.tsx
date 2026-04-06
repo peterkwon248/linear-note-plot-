@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useRef, useEffect } from "react"
 import { Editor, useEditorState } from "@tiptap/react"
+import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from "@/lib/editor-colors"
 import { usePlotStore } from "@/lib/store"
 import { toast } from "sonner"
@@ -87,6 +88,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const [activePanel, setActivePanel] = useState<"none" | "textColor" | "highlightColor">("none")
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false)
 
   const editorState = useEditorState({
     editor,
@@ -165,8 +167,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   const handleSetLink = () => {
     if (!editor || !editorState) return
     if (editorState.link) { editor.chain().unsetLink().run(); return }
-    const url = window.prompt("Enter URL:")
-    if (url) editor.chain().setLink({ href: url }).run()
+    setLinkDialogOpen(true)
   }
 
   const activeTextColor = editor ? (editor.getAttributes("textStyle").color || null) : null
@@ -174,52 +175,63 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   if (!editor || !editorState) return null
 
   return (
-    <div
-      ref={menuRef}
-      className={`fixed z-[100] flex items-center gap-0.5 px-2 py-1.5 rounded-lg bg-surface-overlay border border-border shadow-[0_4px_24px_rgba(0,0,0,0.55)] transition-all duration-150 ${
-        isVisible ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
-      }`}
-      style={{ top: `${position.top}px`, left: `${position.left}px` }}
-    >
-      {activePanel === "none" ? (
-        <>
-          <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
-            <TextB size={16} weight="regular" />
-          </BubbleButton>
-          <BubbleButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
-            <TextItalic size={16} weight="regular" />
-          </BubbleButton>
-          <BubbleButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
-            <UnderlineIcon size={16} weight="regular" />
-          </BubbleButton>
-          <BubbleButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="TextStrikethrough">
-            <TextStrikethrough size={16} weight="regular" />
-          </BubbleButton>
-          <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code">
-            <PhCode size={16} weight="regular" />
-          </BubbleButton>
-          <BubbleDivider />
-          <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title="Text color">
-            <div className="relative">
-              <TextT size={16} weight="regular" />
-              <div className="absolute -bottom-1 left-px right-px h-0.5 rounded-sm" style={{ backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
-            </div>
-          </BubbleButton>
-          <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title="Highlight">
-            <HighlighterCircle size={16} weight="regular" />
-          </BubbleButton>
-          <BubbleDivider />
-          <BubbleButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
-            {editorState.link ? <LinkBreak size={16} weight="regular" /> : <PhLink size={16} weight="regular" />}
-          </BubbleButton>
-          <BubbleDivider />
-          <BubbleButton onClick={handleExtractAsNote} title="Extract as Note">
-            <FileArrowUp size={16} weight="regular" />
-          </BubbleButton>
-        </>
-      ) : (
-        <InlineColorPalette editor={editor} mode={activePanel === "textColor" ? "text" : "highlight"} onClose={() => setActivePanel("none")} />
-      )}
-    </div>
+    <>
+      <div
+        ref={menuRef}
+        className={`fixed z-[100] flex items-center gap-0.5 px-2 py-1.5 rounded-lg bg-surface-overlay border border-border shadow-[0_4px_24px_rgba(0,0,0,0.55)] transition-all duration-150 ${
+          isVisible ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+        }`}
+        style={{ top: `${position.top}px`, left: `${position.left}px` }}
+      >
+        {activePanel === "none" ? (
+          <>
+            <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
+              <TextB size={16} weight="regular" />
+            </BubbleButton>
+            <BubbleButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
+              <TextItalic size={16} weight="regular" />
+            </BubbleButton>
+            <BubbleButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
+              <UnderlineIcon size={16} weight="regular" />
+            </BubbleButton>
+            <BubbleButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="TextStrikethrough">
+              <TextStrikethrough size={16} weight="regular" />
+            </BubbleButton>
+            <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code">
+              <PhCode size={16} weight="regular" />
+            </BubbleButton>
+            <BubbleDivider />
+            <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title="Text color">
+              <div className="relative">
+                <TextT size={16} weight="regular" />
+                <div className="absolute -bottom-1 left-px right-px h-0.5 rounded-sm" style={{ backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
+              </div>
+            </BubbleButton>
+            <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title="Highlight">
+              <HighlighterCircle size={16} weight="regular" />
+            </BubbleButton>
+            <BubbleDivider />
+            <BubbleButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
+              {editorState.link ? <LinkBreak size={16} weight="regular" /> : <PhLink size={16} weight="regular" />}
+            </BubbleButton>
+            <BubbleDivider />
+            <BubbleButton onClick={handleExtractAsNote} title="Extract as Note">
+              <FileArrowUp size={16} weight="regular" />
+            </BubbleButton>
+          </>
+        ) : (
+          <InlineColorPalette editor={editor} mode={activePanel === "textColor" ? "text" : "highlight"} onClose={() => setActivePanel("none")} />
+        )}
+      </div>
+      <UrlInputDialog
+        open={linkDialogOpen}
+        mode="link"
+        onClose={() => setLinkDialogOpen(false)}
+        onSubmit={(url) => {
+          editor.chain().focus().setLink({ href: url }).run()
+          setLinkDialogOpen(false)
+        }}
+      />
+    </>
   )
 }

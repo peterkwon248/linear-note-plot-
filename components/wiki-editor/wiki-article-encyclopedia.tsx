@@ -7,6 +7,7 @@ import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { InlineCategoryTags } from "./wiki-article-view"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
+import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -194,9 +195,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
     }
 
     if (type === "url") {
-      const url = window.prompt("Enter URL:")
-      if (!url) return
-      addWikiBlock(article.id, { type: "url", url, urlTitle: "" }, afterBlockId)
+      setUrlBlockDialog({ open: true, afterBlockId })
       return
     }
 
@@ -301,6 +300,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
 
   // Collapse state: track collapsed sections locally (not persisted in encyclopedia view)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
+  const [urlBlockDialog, setUrlBlockDialog] = useState<{ open: boolean; afterBlockId?: string }>({ open: false })
 
   const toggleSection = useCallback((blockId: string) => {
     setCollapsedSections((prev) => {
@@ -511,6 +511,15 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         {/* ── Bottom Reference Sections ── */}
         <EncyclopediaFooter article={article} />
       </div>
+      <UrlInputDialog
+        open={urlBlockDialog.open}
+        mode="link"
+        onClose={() => setUrlBlockDialog({ open: false })}
+        onSubmit={(url) => {
+          addWikiBlock(article.id, { type: "url", url, urlTitle: "" }, urlBlockDialog.afterBlockId)
+          setUrlBlockDialog({ open: false })
+        }}
+      />
     </div>
   )
 }
