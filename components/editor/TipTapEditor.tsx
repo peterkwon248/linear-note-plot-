@@ -28,11 +28,9 @@ export function TipTapEditor({
   placeholder = "Start writing...",
   onEditorReady,
 }: TipTapEditorProps) {
-  const spellcheck = useSettingsStore((s) => s.spellcheck)
   const wordWrap = useSettingsStore((s) => s.wordWrap)
   const tabSize = useSettingsStore((s) => s.tabSize)
   const codeFontFamily = useSettingsStore((s) => s.codeFontFamily)
-  const currentLineHighlight = useSettingsStore((s) => s.currentLineHighlight)
 
   // Focus Mode detection for Typewriter Mode
   const sidebarCollapsed = usePlotStore((s) => s.sidebarCollapsed)
@@ -43,8 +41,6 @@ export function TipTapEditor({
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const focusModeRef = useRef(false)
   focusModeRef.current = focusMode
-  const currentLineHighlightRef = useRef(false)
-  currentLineHighlightRef.current = currentLineHighlight
 
   // Find the nearest scrollable ancestor for typewriter mode
   useEffect(() => {
@@ -66,7 +62,6 @@ export function TipTapEditor({
       placeholder,
       scrollContainerRef,
       focusModeRef,
-      currentLineHighlightRef,
     }),
     content: content && Object.keys(content).length > 0 ? content : undefined,
     editable,
@@ -78,7 +73,6 @@ export function TipTapEditor({
     },
     editorProps: {
       attributes: {
-        spellcheck: spellcheck ? "true" : "false",
         class:
           "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-ui leading-[1.75] text-foreground",
       },
@@ -168,46 +162,6 @@ export function TipTapEditor({
     return () => window.removeEventListener("plot:change-wikilink", handleChangeLink)
   }, [editor, editable])
 
-  // Sync spellcheck dynamically
-  useEffect(() => {
-    if (editor) {
-      editor.setOptions({
-        editorProps: {
-          attributes: {
-            spellcheck: spellcheck ? "true" : "false",
-            class:
-              "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px] text-ui leading-[1.75] text-foreground",
-          },
-          handleDOMEvents: {
-            dragover: (_view, event) => {
-              const types = event.dataTransfer?.types ?? []
-              if (
-                types.includes("application/x-plot-view") ||
-                types.includes("application/x-plot-note") ||
-                types.includes("application/x-plot-tab") ||
-                types.includes("application/x-plot-leaf")
-              ) {
-                return true
-              }
-              return false
-            },
-            drop: (_view, event) => {
-              const types = event.dataTransfer?.types ?? []
-              if (
-                types.includes("application/x-plot-view") ||
-                types.includes("application/x-plot-note") ||
-                types.includes("application/x-plot-tab") ||
-                types.includes("application/x-plot-leaf")
-              ) {
-                return true
-              }
-              return false
-            },
-          },
-        },
-      })
-    }
-  }, [editor, spellcheck])
 
   // Sync editable prop
   if (editor && editor.isEditable !== editable) {

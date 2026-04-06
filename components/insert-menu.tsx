@@ -17,22 +17,22 @@ import { CalendarDots } from "@phosphor-icons/react/dist/ssr/CalendarDots"
 import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Play as PhPlay } from "@phosphor-icons/react/dist/ssr/Play"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
-import { SpeakerHigh } from "@phosphor-icons/react/dist/ssr/SpeakerHigh"
+import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
 import { Info } from "@phosphor-icons/react/dist/ssr/Info"
 import { Article } from "@phosphor-icons/react/dist/ssr/Article"
 import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
-import { TwitchLogo } from "@phosphor-icons/react/dist/ssr/TwitchLogo"
 import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
 import { Database } from "@phosphor-icons/react/dist/ssr/Database"
 import { usePlotStore } from "@/lib/store"
+import { detectUrlType } from "@/lib/editor/url-detect"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { nanoid } from "nanoid"
 import { NotePickerDialog } from "@/components/note-picker-dialog"
+import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 
 interface InsertMenuProps {
   editor: Editor
@@ -47,6 +47,7 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [notePickerOpen, setNotePickerOpen] = useState(false)
+  const [embedDialogOpen, setEmbedDialogOpen] = useState(false)
   const addAttachment = usePlotStore((s) => s.addAttachment)
 
   const handleImage = () => {
@@ -138,11 +139,20 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
     editor.chain().focus().toggleCodeBlock().run()
   }
 
-  const handleYoutube = () => {
-    const url = window.prompt("Enter YouTube URL:")
-    if (url) {
+  const handleEmbed = () => {
+    setEmbedDialogOpen(true)
+  }
+
+  const handleEmbedSubmit = (url: string) => {
+    const type = detectUrlType(url)
+    if (type === "youtube") {
       editor.chain().focus().setYoutubeVideo({ src: url }).run()
+    } else if (type === "audio") {
+      editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
+    } else {
+      editor.chain().focus().insertContent({ type: "linkCard", attrs: { url } }).run()
     }
+    setEmbedDialogOpen(false)
   }
 
   const handleToggle = () => {
@@ -183,23 +193,6 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
         { type: "columnCell", content: [{ type: "paragraph" }] },
       ],
     }).run()
-  }
-
-  const handleAudio = () => {
-    const url = window.prompt("Enter audio file URL:")
-    if (url) {
-      editor.chain().focus().insertContent({
-        type: "audio",
-        attrs: { src: url },
-      }).run()
-    }
-  }
-
-  const handleTwitch = () => {
-    const url = window.prompt("Enter Twitch URL:")
-    if (url) {
-      editor.chain().focus().setTwitchVideo({ src: url }).run()
-    }
   }
 
   const handleInfobox = () => {
@@ -254,19 +247,9 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
             <span className="flex-1">Image</span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem onSelect={handleYoutube} className={ITEM_CLASS}>
-            <PhPlay size={14} weight="regular" />
-            <span className="flex-1">YouTube</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleAudio} className={ITEM_CLASS}>
-            <SpeakerHigh size={14} weight="regular" />
-            <span className="flex-1">Audio</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleTwitch} className={ITEM_CLASS}>
-            <TwitchLogo size={14} weight="regular" />
-            <span className="flex-1">Twitch</span>
+          <DropdownMenuItem onSelect={handleEmbed} className={ITEM_CLASS}>
+            <LinkSimple size={14} weight="regular" />
+            <span className="flex-1">Embed URL</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleFile} className={ITEM_CLASS}>
@@ -360,6 +343,12 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
         title="Embed a note"
         excludeIds={noteId ? [noteId] : []}
         onSelect={onNoteSelected}
+      />
+      <UrlInputDialog
+        open={embedDialogOpen}
+        mode="embed"
+        onClose={() => setEmbedDialogOpen(false)}
+        onSubmit={handleEmbedSubmit}
       />
     </>
   )

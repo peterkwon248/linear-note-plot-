@@ -83,6 +83,10 @@
 - **Footnote/Reference 시스템**: FootnoteRef 인라인 atom 노드 (`components/editor/nodes/footnote-node.tsx`). attrs: id/referenceId/content/comment. 문서 순서 기반 자동 번호 계산. 호버 팝오버(300ms delay, 200ms hide). 하단 FootnotesFooter 자동 렌더링 (`components/editor/footnotes-footer.tsx`). `[N]` 양방향 네비게이션 (본문↔하단). 하단 싱글클릭 인라인 편집. `[[`/`@` 드롭다운 References 섹션 통합.
 - **Reference store**: `references: Record<string, Reference>` — title/content/fields(인포박스식 키-값)/tags. CRUD 3액션. `/footnote` 또는 `[[`/`@`에서 생성. Library에서 관리 예정.
 - **WikiQuote 폐기**: WikiEmbed가 상위 대체. WikiQuoteExtension.ts, WikiQuoteNode.tsx, lib/quote-hash.ts 삭제. 호버 프리뷰/사이드패널 peek/note-editor 에서 Quote 관련 코드 전부 제거.
+- **Smart Link / LinkCard**: `components/editor/nodes/link-card-node.tsx` — atom block, favicon+title+description+domain. URL paste → 자동 LinkCard. YouTube/Audio는 기존 확장이 처리
+- **URL 감지 유틸**: `lib/editor/url-detect.ts` — detectUrlType(youtube/audio/generic), isValidUrl, extractDomain
+- **UrlInputDialog**: `components/editor/url-input-dialog.tsx` — Portal 기반 공용 다이얼로그 (link/embed 2모드). window.prompt 전면 대체
+- **Embed 통합**: YouTube+Audio+LinkCard를 1개 Embed 버튼으로 통합. URL 패턴 자동 감지
 
 ## Store Slices (21 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references
@@ -276,6 +280,16 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - **SlashCommand Footnote 항목**: Asterisk 아이콘, nanoid(8) id, 빈 content로 삽입
   - **`[[`/`@` References 섹션**: WikilinkSuggestion + MentionSuggestion에 References 섹션 추가. 기존 Reference 검색/선택 → footnoteRef 삽입. Create Reference 항상 표시 (q.length > 0). 새 Reference 자동 생성 + referenceId 연결
   - **명칭 결정**: 에디터/유저 접점 = "Footnote", 저장소/Library = "References"
+
+- **PR #162 (WIP)**: Smart Link + 툴바 정리 + 커스텀 다이얼로그
+  - **툴바 미사용 기능 제거**: Twitch, SpellCheck, InvisibleChars, CurrentLineHighlight 전부 삭제. CurrentLineHighlight.ts 파일 삭제, settings-store에서 관련 필드 제거
+  - **Smart Link — LinkCard TipTap 노드**: `components/editor/nodes/link-card-node.tsx` 신규. atom block, favicon(Google API), 더블클릭 제목/설명 편집, 새 탭 열기
+  - **URL 감지 유틸**: `lib/editor/url-detect.ts` 신규 (detectUrlType: youtube/audio/generic, isValidUrl, extractDomain)
+  - **URL Paste Handler**: 일반 URL 붙여넣기 → 자동 LinkCard 삽입 (YouTube/Audio는 기존 확장이 처리, 텍스트 선택 중이면 하이퍼링크)
+  - **YouTube+Audio→Embed 통합**: 2버튼 → 1버튼. toolbar-config, FixedToolbar, insert-menu, insertable-blocks, SlashCommand(`/embed`) 전부 통합
+  - **커스텀 URL 다이얼로그**: `components/editor/url-input-dialog.tsx` 신규. Portal 기반, link/embed 2모드, URL 타입 감지 힌트. `window.prompt` 전면 교체 (FixedToolbar, EditorToolbar, editor-context-menu, insert-menu, wiki-article-view, wiki-article-encyclopedia)
+  - **Link+Embed 나란히 배치**: toolbar-config에서 embed를 link 바로 뒤로 이동
+  - **전체 툴바 버튼 설명 추가**: 30개 버튼 title 속성에 "Name — description (shortcut)" 형식 영어 설명
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 

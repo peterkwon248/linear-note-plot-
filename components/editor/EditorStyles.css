@@ -711,11 +711,6 @@
   font-family: var(--font-sans, 'Geist', system-ui, -apple-system, sans-serif);
 }
 
-/* Current Line Highlight — disabled */
-.ProseMirror .current-line-highlight {
-  background-color: transparent;
-}
-
 /* Scrollbar for code blocks */
 .ProseMirror pre::-webkit-scrollbar {
   height: 6px;
@@ -1791,4 +1786,79 @@
   resize: none;
   outline: none;
   font-family: inherit;
+}
+
+/* Link Card */
+.link-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.link-card:hover {
+  background-color: color-mix(in srgb, var(--foreground) 3%, transparent);
+}
+
+.ProseMirror .link-card-wrapper.ProseMirror-selectednode .link-card {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.link-card-favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.link-card-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.link-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-card-description {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-card-domain {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.link-card-external {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.link-card:hover .link-card-external {
+  opacity: 1;
 }

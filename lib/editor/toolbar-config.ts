@@ -36,6 +36,7 @@ export const TOOLBAR_ITEM_IDS = [
   "codeBlock",     // Code Block
   "divider",       // Horizontal rule
   "link",          // Link
+  "embed",         // Embed URL (YouTube, audio, or link card)
   "table",         // Table menu
   "textAlign",     // Text alignment dropdown (Left/Center/Right/Justify)
   "undo",          // Undo
@@ -43,16 +44,10 @@ export const TOOLBAR_ITEM_IDS = [
   "inlineCode",    // Inline code
   "toggle",        // Collapsible section (Details)
   "image",         // Image upload
-  "youtube",       // YouTube embed
-  "audio",         // Audio embed
-  "twitch",        // Twitch embed
   "inlineMath",    // Inline math formula
   "blockMath",     // Block math equation
   "date",          // Insert current date
   "hardBreak",     // Line break
-  "spellcheck",    // Spellcheck toggle
-  "currentLineHighlight", // Current line highlight toggle
-  "invisibleChars", // Show invisible characters toggle
 ] as const
 
 export type ToolbarItemId = typeof TOOLBAR_ITEM_IDS[number]
@@ -93,16 +88,11 @@ export const TOOLBAR_ITEM_LABELS: Record<ToolbarItemId, string> = {
   inlineCode: "Inline Code",
   toggle: "Toggle (Collapse)",
   image: "Image",
-  youtube: "YouTube",
-  audio: "Audio",
-  twitch: "Twitch",
+  embed: "Embed URL",
   inlineMath: "Inline Math",
   blockMath: "Block Math",
   date: "Date",
   hardBreak: "Line Break",
-  spellcheck: "Spellcheck",
-  currentLineHighlight: "Line Highlight",
-  invisibleChars: "Invisible Characters",
 }
 
 /** Default toolbar layout -- all items visible in standard order */

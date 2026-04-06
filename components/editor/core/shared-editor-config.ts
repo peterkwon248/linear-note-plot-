@@ -46,7 +46,6 @@ import {
   moveListItemDown,
 } from "../commands/custom-commands"
 
-import { CurrentLineHighlightExtension } from "../CurrentLineHighlight"
 import { HashtagSuggestion } from "../HashtagSuggestion"
 import { WikilinkSuggestion } from "../WikilinkSuggestion"
 import { WikilinkNode } from "@/components/editor/nodes/wikilink-node"
@@ -55,9 +54,7 @@ import { mentionSuggestionConfig } from "../MentionSuggestion"
 import { SlashCommandExtension } from "../SlashCommand"
 import { Mention } from "@tiptap/extension-mention"
 import { Emoji } from "@tiptap/extension-emoji"
-import { InvisibleCharacters } from "@tiptap/extension-invisible-characters"
 import { Audio } from "@tiptap/extension-audio"
-import { Twitch } from "@tiptap/extension-twitch"
 import { UniqueID } from "@tiptap/extension-unique-id"
 import { FileHandler } from "@tiptap/extension-file-handler"
 import { TableOfContents } from "@tiptap/extension-table-of-contents"
@@ -66,6 +63,8 @@ import { CalloutBlockNode } from "@/components/editor/nodes/callout-node"
 import { SummaryBlockNode } from "@/components/editor/nodes/summary-node"
 import { ColumnsBlockNode, ColumnCellNode } from "@/components/editor/nodes/columns-node"
 import { NoteEmbedNode } from "@/components/editor/nodes/note-embed-node"
+import { LinkCardNode } from "@/components/editor/nodes/link-card-node"
+import { isValidUrl, detectUrlType } from "@/lib/editor/url-detect"
 import { WikiEmbedNode } from "@/components/editor/nodes/wiki-embed-node"
 import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
@@ -243,7 +242,6 @@ export interface EditorConfigOptions {
   placeholder?: string
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>
   focusModeRef?: React.MutableRefObject<boolean>
-  currentLineHighlightRef?: React.MutableRefObject<boolean>
 }
 
 // ── Factory ──────────────────────────────────────────────────────────
@@ -344,12 +342,9 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     }),
     // -- New extensions (Phase 1C+) --
     Audio,
-    Twitch,
+    LinkCardNode,
     UniqueID.configure({
-      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock', 'anchorMark', 'anchorDivider', 'queryBlock'],
-    }),
-    InvisibleCharacters.configure({
-      visible: false, // disabled by default, toggled via toolbar
+      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock', 'anchorMark', 'anchorDivider', 'queryBlock', 'linkCard'],
     }),
   ] as Extension[]
 }
@@ -621,6 +616,38 @@ export function createEditorExtensions(
       noteExtensions.push(FootnoteRefExtension as Extension)
       noteExtensions.push(QueryBlockNode as Extension)
 
+      // Smart Link paste handler: plain URL → linkCard (YouTube/Audio handled by their own extensions)
+      const SmartLinkPaste = Extension.create({
+        name: "smartLinkPaste",
+        addProseMirrorPlugins() {
+          return [
+            new Plugin({
+              key: new PluginKey("smartLinkPaste"),
+              props: {
+                handlePaste: (view: EditorView, event: ClipboardEvent) => {
+                  const text = event.clipboardData?.getData("text/plain")?.trim()
+                  if (!text || !isValidUrl(text)) return false
+                  // If text is selected, let Link extension handle it (adds hyperlink)
+                  const { from, to } = view.state.selection
+                  if (from !== to) return false
+                  // YouTube/Audio URLs are handled by their own paste rules — skip
+                  const urlType = detectUrlType(text)
+                  if (urlType !== "generic") return false
+                  // Insert linkCard node
+                  const { tr } = view.state
+                  const node = view.state.schema.nodes.linkCard?.create({ url: text })
+                  if (!node) return false
+                  tr.replaceSelectionWith(node)
+                  view.dispatch(tr)
+                  return true
+                },
+              },
+            }),
+          ]
+        },
+      })
+      noteExtensions.push(SmartLinkPaste as Extension)
+
       // Custom keyboard shortcuts (Indent/Outdent, Move List)
       const CustomKeyboardShortcuts = Extension.create({
         name: "customKeyboardShortcuts",
@@ -780,15 +807,6 @@ export function createEditorExtensions(
         )
       }
 
-      // Current line highlight (requires enabledRef)
-      if (options?.currentLineHighlightRef) {
-        noteExtensions.push(
-          CurrentLineHighlightExtension.configure({
-            enabledRef: options.currentLineHighlightRef,
-          }) as Extension,
-        )
-      }
-
       return noteExtensions
     }
 
@@ -867,7 +885,7 @@ export function createRenderExtensions(): Extension[] {
     DetailsContent,
     Mathematics,
     Audio,
-    Twitch,
+    LinkCardNode,
     // Custom block nodes
     CalloutBlockNode,
     SummaryBlockNode,

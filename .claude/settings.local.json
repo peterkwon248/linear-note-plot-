@@ -101,7 +101,9 @@
       "Bash(ipconfig | grep -A 2 \"Wi-Fi\\\\|Ethernet\\\\|이더넷\\\\|무선\" | grep \"IPv4\" | head -3)",
       "Bash(ipconfig | grep \"IPv4\")",
       "Bash(cloudflared --version 2>&1 || echo \"NOT_INSTALLED\")",
-      "Bash(winget install Cloudflare.cloudflared 2>&1)"
+      "Bash(winget install Cloudflare.cloudflared 2>&1)",
+      "Bash(ls \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\determined-jackson\\\\node_modules\\\\@phosphor-icons\\\\react\\\\dist\\\\ssr\\\\Paperclip\"*)",
+      "Bash(NEXT_TELEMETRY_DISABLED=1 npx next build)"
     ]
   }
 }
