@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-106. Unresolved Links 전환 — Red Links→gray 점선, Wiki Red Links UI 제거, Home 통합, Create Note+Wiki 드롭다운
-107. 호버 프리뷰 TipTap 통합 — generateHTML 폐기, 항상 NoteEditorAdapter(editable 토글), 640px 카드
-108. 호버 프리뷰 Pin UX — 위키링크/멘션 클릭 pin 토글, accent 테두리+PushPin, data-hover-preview 가드
-109. Note/Wiki 링크 시각 구분 — 4-way: Note=보라밑줄, Wiki=teal칩, Stub=amber점선, Dangling=gray점선, [[wiki:Title]] prefix
-110. Plain text copy — ⋯ 메뉴 "Copy text" 추가
+111. WikiEmbed — 노트 안에 위키 문서 라이브 임베드 (전체 + 부분 섹션). TipTap atom node view + WikiArticleEncyclopedia 렌더
+112. Wiki→TipTap 변환 함수 — 위키 내용을 노트로 복사 (독립 사본). Copy to note 프리뷰 메뉴
+113. Wiki Quote 활성화 + 프리뷰 Encyclopedia 렌더링 — 위키 호버 프리뷰에서 Quote/Embed 버튼, 인포박스+Contents 표시
+114. Articles/Stubs 카운트 버그 수정 — wiki-list.tsx 필터 로직 수정
+115. Wikilink atom 노드 전환 — 텍스트 기반 WikilinkDecoration → atom inline 노드 (커서 진입 불가, 찢어짐 방지)
 
 ## Two Axes — Core Design Philosophy
 
@@ -155,38 +155,36 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **드래그 핸들 블록 메뉴**: ⠿ 짧게 클릭=메뉴(Turn Into/Insert Below/Duplicate/Move/Delete), 누르고 5px 이동=드래그. pointerUp + pointerEvents 전환 (2026-04-01)
 - **Embed Note = 노트 피커**: Insert→Embed Note 클릭 시 NotePickerDialog 열림. 선택한 noteId로 미리보기 카드 삽입. Synced Block(본문 편집)은 Phase 2+ (2026-04-01)
 
-## TODO: Future Work (우선순위 순)
+## TODO: Future Work (우선순위 순, MEMORY.md 기준 2026-04-06 sync)
 
-### P0 — 에디터 통합 프로젝트 후속 Phase
-- **Unresolved Links 전환**: Red Link → 회색 점선 "Unresolved Links". Wiki Red Links 탭/카드 제거 → Home "Unresolved Links" 섹션으로 통합. 클릭 시 노트/위키 선택 팝업
-- **인사이트 중앙 허브**: 온톨로지 사이드바에 Insights 섹션, 각 공간에 파생 인사이트 배포
-- ~~**Phase 2**: 위키 TextBlock 에디터 고도화~~ **완료** (PR #143~#149: TipTap 전환, 풀 FixedToolbar, 독립 테이블, 블록 메뉴 통일)
-- ~~**Phase 3**: 템플릿 블록 레이아웃 에디터~~ **P4로 이동** (Template Page Architecture 폐기 결정으로 범위 재정의 필요. 템플릿 시스템 자체는 유지하되 블록 에디터 고도화는 나중에)
-- **Phase 4**: Partial Quote — Peek에서 부분 드래그 선택 Insert, 메타데이터 8필드 (sourceHash, context, comment 등)
-- **Phase 5**: Merge/Split 풀페이지 — 노트 섹션/문단 단위 드래그 재배치, Split 플로팅바+우클릭 추가, 위키 Merge 개선
-- **Phase 6**: Merge/Split 히스토리 — 필터 History 추가, Insights 이력 탭, Undo/Re-merge, Detail 패널 History 섹션
+### P0 — 즉시 (위키 인프라)
+1. **WikiEmbed** — 노트 안에 위키 문서 라이브 임베드 (TipTap node view)
+2. **위키→TipTap 변환 함수** — 위키 내용을 노트로 복사 (독립 사본)
+3. **Wiki Quote 개선** — 위키 프리뷰에서 드래그 선택 Quote (select-all 스킵)
 
-### P1 — 필수 기능
-- **웹 클리퍼** — 브라우저에서 웹페이지/선택 텍스트를 노트로 저장
-- **가져오기/내보내기** — Markdown, JSON, 타 앱(Notion/Obsidian) 호환
-- **커맨드 팔레트 확장** — 컨텍스트 반응형 20+개 커맨드 (Note Actions, View Actions, Navigation, Creation)
-- **풀페이지 검색 분리** — ⌘K = 풀페이지 노트 검색, ⌘/ = 커맨드 팔레트 (액션 전용)
+### P1 — 위키 고도화
+4. **각주 (Footnote)** — 나무위키식 `[1]` 인라인 마크 + 호버 말풍선 + 하단 목록. 참조/주석 통합
+5. **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
+6. **나무위키 틀** — 계보/계승 테이블, 네비게이션 박스, 시리즈 박스
 
-### P2 — 핵심 기능
-- **사이드바 View 편집 버튼** — 닫기 버튼 왼쪽에 + 배치, 클릭시 View 편집 모드
-- **사이드바 닫기 아이콘 변경** — chevron 제거, panel collapse 아이콘으로
-- **View 시스템 v2** — 사이드바 Views에 필터+디스플레이+정렬 프리셋 저장. "Save as View"로 현재 상태 저장
+### P2 — 새 공간 + 뷰 확장
+7. **Library (6번째 공간)** — 이미지+파일+URL 독립 엔티티. Activity Bar 추가
+8. **Side Panel 풀페이지 확장** — 모든 탭에 "Open full" 버튼. Thread 풀페이지 = 코멘트뷰
+9. **동음이의어 해소 페이지** — 멀티 링크 매칭 시 선택 화면
 
-### P3 — 구조/확장
-- **Wiki 대시보드 반응형 모드** — Articles/Red Links 카드 클릭시 콘텐츠 전환 (Linear All/Active/Backlog 패턴). WikiStatus 삭제(v67)로 Stubs 개념 없음
-- **멀티패널 뷰 타입 확장** — Wiki/Calendar/Graph + 에디터 조합 스플릿 ("참조하면서 쓰기")
+### P3 — 지능 + 검색
+10. **요약 엔진** — 첫 N문장 + 키워드(TF-IDF) + 헤딩 목차 + 하이라이트 집계 + 링크 밀도
+11. **인사이트 중앙 허브** — 온톨로지 Insights 섹션, 각 공간 파생 인사이트
+12. **풀페이지 검색 분리** — ⌘K=검색, ⌘/=커맨드
 
-### P4 — 나중에
-- 템플릿 블록 레이아웃 에디터 (범위 재정의 후 진행. Template→Note/Wiki 변환 폐기, 순수 에디터 UX 개선만)
-- J/K 리스트 네비게이션 (Linear식)
-- 노트 가져오기/내보내기 (import/export)
-- 그래프 사이드바 → 클러스터 + 인사이트 리워크
-- 리스트 가상화 (react-window, 1만개 대응)
+### P4 — 기존 항목
+- 웹 클리퍼, 가져오기/내보내기
+- 커맨드 팔레트 확장 (20+개)
+- View 시스템 v2 ("Save as View")
+- Merge/Split 풀페이지 + 히스토리
+- 리스트 가상화 (1만개 대응)
+
+> 상세: `docs/BRAINSTORM-2026-04-06.md` 참조
 
 ## Calendar 리디자인 설계 (확정)
 

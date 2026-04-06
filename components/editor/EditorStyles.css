@@ -1010,6 +1010,40 @@
   background: rgba(245, 158, 11, 0.08);
 }
 
+/* ── Wikilink Atom Node Styles ──────────────────────────────────── */
+
+/* Note link — purple underline */
+.ProseMirror .wikilink-node.wikilink-note {
+  color: var(--editor-link-color);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--editor-link-color) 40%, transparent);
+  text-underline-offset: 2px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ProseMirror .wikilink-node.wikilink-note:hover {
+  text-decoration-color: color-mix(in srgb, var(--editor-link-color) 80%, transparent);
+  background: color-mix(in srgb, var(--editor-link-color) 8%, transparent);
+}
+
+/* Wiki link — teal chip */
+.ProseMirror .wikilink-node.wikilink-wiki {
+  color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.08);
+  padding: 1px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.ProseMirror .wikilink-node.wikilink-wiki:hover {
+  background: rgba(45, 212, 191, 0.15);
+  color: #5eead4;
+}
+
 /* Wikilink dropdown + nav icon removed — unified hover/click interactions */
 
 /* ── Block Resize Handles ────────────────────────────────────────── */

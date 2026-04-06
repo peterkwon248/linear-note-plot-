@@ -29,6 +29,7 @@ import { Info } from "@phosphor-icons/react/dist/ssr/Info"
 import { Article } from "@phosphor-icons/react/dist/ssr/Article"
 import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
@@ -256,6 +257,15 @@ const COMMANDS: CommandItem[] = [
       editor.chain().focus().deleteRange(range).run()
       // Open note picker via custom event — NoteEditor listens for this
       window.dispatchEvent(new CustomEvent("plot:embed-note-pick", { detail: { editor } }))
+    },
+  },
+  {
+    title: "Embed Wiki",
+    description: "Embed a wiki article",
+    icon: BookOpen,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run()
+      window.dispatchEvent(new CustomEvent("plot:embed-wiki-pick", { detail: { editor } }))
     },
   },
   {

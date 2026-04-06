@@ -255,6 +255,17 @@ export const usePlotStore = create<PlotState>()(
           state._viewStateHydrated = true
           // Side panel should always start closed (not persisted)
           state.sidePanelOpen = false
+
+          // Force re-seed if notes are empty (user deleted all data)
+          if (state.notes.length === 0) {
+            state.notes = SEED_NOTES
+            state.wikiArticles = SEED_WIKI_ARTICLES
+            state.wikiCategories = SEED_WIKI_CATEGORIES
+            state.folders = SEED_FOLDERS
+            state.tags = SEED_TAGS
+            state.labels = SEED_LABELS
+            state.templates = SEED_TEMPLATES
+          }
           state.previewNoteId = null
 
           // v65: Migrate IDB note bodies — convert title nodes to heading level 2
