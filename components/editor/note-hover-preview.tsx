@@ -8,7 +8,6 @@ import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
 import { ArrowBendUpLeft } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
-import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { Copy } from "@phosphor-icons/react/dist/ssr/Copy"
@@ -184,8 +183,8 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   const [pos, setPos] = useState({ x, y })
   const [showMore, setShowMore] = useState(false)
   const [editing, setEditing] = useState(false)
-  const [quoteActive, setQuoteActive] = useState(false)
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
   const [showBacklinks, setShowBacklinks] = useState(false)
   const [showBlocks, setShowBlocks] = useState(false)
   const [showCategories, setShowCategories] = useState(false)
@@ -229,98 +228,6 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
     document.addEventListener("mousedown", handleMouseDown)
     return () => document.removeEventListener("mousedown", handleMouseDown)
   }, [showBacklinks])
-
-  // ── Quote selection tracking ──
-  const bodyRef = useRef<HTMLDivElement>(null)
-  const [quoteSelection, setQuoteSelection] = useState<{ text: string; rect: DOMRect } | null>(null)
-
-  // Poll-based selection detection (more reliable than events in portal + ProseMirror context)
-  useEffect(() => {
-    const el = bodyRef.current
-    if (!el) return
-
-    let rafId: number | null = null
-    let isMouseDown = false
-
-    function checkSelection() {
-      const sel = window.getSelection()
-      if (!sel || sel.isCollapsed || !sel.toString().trim()) {
-        setQuoteSelection(null)
-        return
-      }
-      try {
-        const range = sel.getRangeAt(0)
-        if (!el?.contains(range.startContainer)) {
-          setQuoteSelection(null)
-          return
-        }
-        const rect = range.getBoundingClientRect()
-        if (rect.width > 0) {
-          setQuoteSelection({ text: sel.toString().trim(), rect })
-        }
-      } catch {
-        setQuoteSelection(null)
-      }
-    }
-
-    function onMouseDown() {
-      isMouseDown = true
-    }
-    function onMouseUp() {
-      isMouseDown = false
-      // Capture selection IMMEDIATELY before ProseMirror can steal it
-      checkSelection()
-      // Also check after a delay as fallback
-      setTimeout(checkSelection, 50)
-    }
-
-    el.addEventListener("mousedown", onMouseDown)
-    el.addEventListener("mouseup", onMouseUp)
-
-    return () => {
-      el.removeEventListener("mousedown", onMouseDown)
-      el.removeEventListener("mouseup", onMouseUp)
-      if (rafId) cancelAnimationFrame(rafId)
-    }
-  }, [editing])
-
-  const handleInsertQuote = useCallback(async () => {
-    if (!quoteSelection) return
-
-    const sel = window.getSelection()
-    const range = sel?.getRangeAt(0)
-    const parentText = range?.startContainer.parentElement?.textContent || ""
-    const startIdx = parentText.indexOf(quoteSelection.text)
-    const beforeText = startIdx > 0 ? parentText.slice(Math.max(0, startIdx - 100), startIdx).trim() : ""
-    const afterText = parentText.slice(startIdx + quoteSelection.text.length, startIdx + quoteSelection.text.length + 100).trim()
-    const context = [beforeText, afterText].filter(Boolean).join(" [...] ") || null
-    const originalText = range?.startContainer.parentElement?.textContent || quoteSelection.text
-
-    let sourceHash: string | null = null
-    try {
-      const { getBody } = await import("@/lib/note-body-store")
-      const { computeSourceHash } = await import("@/lib/quote-hash")
-      const body = await getBody(noteId)
-      if (body?.content) sourceHash = computeSourceHash(body.content)
-    } catch { /* ignore */ }
-
-    window.dispatchEvent(new CustomEvent("plot:insert-wiki-quote", {
-      detail: {
-        sourceNoteId: noteId,
-        sourceTitle: title,
-        quotedText: quoteSelection.text,
-        quotedAt: new Date().toISOString(),
-        originalText,
-        sourceHash,
-        context,
-        comment: null,
-      }
-    }))
-
-    window.getSelection()?.removeAllRanges()
-    setQuoteSelection(null)
-    hideNotePreviewImmediate()
-  }, [quoteSelection, noteId, title])
 
   // ── Action handlers ──
   function handleOpen() {
@@ -656,64 +563,6 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             )}
           </div>
         )}
-        {/* Note: Quote button (unchanged) */}
-        {!editing && noteType !== "wiki" && (
-          <div className="relative">
-            <button
-            onMouseDown={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              if (quoteActive) {
-                if (!quoteSelection) {
-                  const bodyEl = bodyRef.current
-                  if (bodyEl) {
-                    const range = document.createRange()
-                    range.selectNodeContents(bodyEl)
-                    const sel = window.getSelection()
-                    sel?.removeAllRanges()
-                    sel?.addRange(range)
-                    const rect = range.getBoundingClientRect()
-                    if (rect.width > 0) {
-                      setQuoteSelection({ text: sel?.toString().trim() || "", rect })
-                    }
-                  }
-                  setTimeout(() => handleInsertQuote(), 10)
-                } else {
-                  handleInsertQuote()
-                }
-                setQuoteActive(false)
-              } else {
-                const bodyEl = bodyRef.current
-                if (bodyEl) {
-                  const range = document.createRange()
-                  range.selectNodeContents(bodyEl)
-                  const sel = window.getSelection()
-                  sel?.removeAllRanges()
-                  sel?.addRange(range)
-                  const rect = range.getBoundingClientRect()
-                  if (rect.width > 0) {
-                    setQuoteSelection({ text: sel?.toString().trim() || "", rect })
-                  }
-                }
-                setQuoteActive(true)
-              }
-            }}
-            className={`flex items-center gap-1 rounded px-2 py-1 text-2xs transition-colors hover:bg-hover-bg ${
-              quoteActive ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"
-            }`}
-            title={quoteActive ? "Insert quote" : "Select all for quoting"}
-          >
-            <Quotes size={12} />
-            <span>Quote</span>
-          </button>
-          {quoteActive && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-foreground/90 px-2.5 py-1 text-[10px] text-background shadow-lg animate-in fade-in slide-in-from-bottom-1 duration-150">
-              Drag to adjust, then click Quote again
-              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-foreground/90" />
-            </div>
-          )}
-          </div>
-        )}
         <div className="relative ml-auto">
           <button
             onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setShowMore(!showMore) }}
@@ -781,12 +630,12 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                     const newNoteId = usePlotStore.getState().createNote({
                       title: `${article.title} (copy)`,
                       content,
-                      contentJson: contentJson as Record<string, unknown>,
+                      contentJson: contentJson as unknown as Record<string, unknown>,
                       status: "capture" as const,
                     })
                     if (newNoteId) {
                       const { saveBody } = await import("@/lib/note-body-store")
-                      await saveBody({ id: newNoteId, content, contentJson: contentJson as Record<string, unknown> })
+                      await saveBody({ id: newNoteId, content, contentJson: contentJson as unknown as Record<string, unknown> })
                       usePlotStore.getState().openNote(newNoteId)
                       import("sonner").then(({ toast }) => toast.success(`Copied "${article.title}" to new note`))
                     }

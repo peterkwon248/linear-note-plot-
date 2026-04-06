@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -120,6 +120,9 @@ export interface PlotState {
 
   // ── Wiki Articles (Assembly Model) ──
   wikiArticles: WikiArticle[]
+
+  // ── References (Bibliography/Citations) ──
+  references: Record<string, Reference>
 
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
@@ -287,6 +290,11 @@ export interface PlotState {
     aliases?: string[]
   }) => string
   unmergeFromHistory: (articleId: string, snapshotIndex: number) => string[]
+
+  // ── References ──
+  createReference: (partial: { title: string; content: string; fields?: Array<{ key: string; value: string }>; tags?: string[] }) => string
+  updateReference: (id: string, updates: Partial<Omit<Reference, "id" | "createdAt">>) => void
+  deleteReference: (id: string) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

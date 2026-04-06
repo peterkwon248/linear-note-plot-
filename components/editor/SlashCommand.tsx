@@ -33,6 +33,7 @@ import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
+import { Asterisk } from "@phosphor-icons/react/dist/ssr/Asterisk"
 import { Database } from "@phosphor-icons/react/dist/ssr/Database"
 import { nanoid } from "nanoid"
 
@@ -282,6 +283,17 @@ const COMMANDS: CommandItem[] = [
     icon: BookmarkSimple,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).insertContent({ type: "anchorDivider", attrs: { label: "Section" } }).run()
+    },
+  },
+  {
+    title: "Footnote",
+    description: "Add a footnote reference",
+    icon: Asterisk,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertContent({
+        type: "footnoteRef",
+        attrs: { id: nanoid(8), content: "" },
+      }).run()
     },
   },
   {

@@ -14,6 +14,7 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Tag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
+import { Asterisk } from "@phosphor-icons/react/dist/ssr/Asterisk"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"
 import type { SuggestionOptions, SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
@@ -24,8 +25,9 @@ import type { MentionNodeAttrs } from "@tiptap/extension-mention"
 interface MentionItem {
   id: string
   label: string
-  mentionType: "note" | "wiki" | "tag" | "date"
+  mentionType: "note" | "wiki" | "tag" | "date" | "reference"
   color?: string // for tags
+  referenceContent?: string // Reference.content
 }
 
 interface MentionListProps {
@@ -44,9 +46,10 @@ const categoryLabels: Record<MentionItem["mentionType"], string> = {
   note: "Notes",
   wiki: "Wiki",
   tag: "Tags",
+  reference: "References",
 }
 
-const categoryOrder: MentionItem["mentionType"][] = ["date", "note", "wiki", "tag"]
+const categoryOrder: MentionItem["mentionType"][] = ["date", "note", "wiki", "tag", "reference"]
 
 // ── Dropdown Component ────────────────────────────────────────────────────────
 
@@ -130,8 +133,19 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
                       : "text-foreground hover:bg-hover-bg",
                   ].join(" ")}
                 >
-                  <ItemIcon item={item} />
-                  <span className="truncate">{item.label}</span>
+                  {item.id.startsWith("__new_ref__") ? (
+                    <>
+                      <span className="text-amber-500 text-2xs">+</span>
+                      <ItemIcon item={item} />
+                      <span className="truncate font-medium">{item.label}</span>
+                      <span className="ml-auto shrink-0 text-2xs text-amber-500">+ Create Ref</span>
+                    </>
+                  ) : (
+                    <>
+                      <ItemIcon item={item} />
+                      <span className="truncate">{item.label}</span>
+                    </>
+                  )}
                 </button>
               ))}
             </div>
@@ -162,6 +176,8 @@ function ItemIcon({ item }: { item: MentionItem }) {
       return <BookOpen className="shrink-0 text-muted-foreground" size={14} weight="regular" />
     case "note":
       return <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+    case "reference":
+      return <Asterisk className="shrink-0 text-amber-500" size={14} weight="regular" />
   }
 }
 
@@ -252,7 +268,32 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
       })
     }
 
-    return results.slice(0, 10)
+    // 5. Reference search
+    const references = (store as any).references ?? {}
+    const refEntries = Object.values(references) as Array<{ id: string; title: string; content: string; updatedAt: string }>
+    const matchedRefs = q.length === 0
+      ? refEntries.filter((r) => r.title?.trim()).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 3)
+      : refEntries.filter((r) => r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q)).slice(0, 3)
+    for (const r of matchedRefs) {
+      results.push({
+        id: r.id,
+        label: r.title,
+        mentionType: "reference",
+        referenceContent: r.content,
+      })
+    }
+
+    // 6. Create Reference option (always when query exists)
+    if (q.length > 0) {
+      results.push({
+        id: `__new_ref__${q}`,
+        label: q,
+        mentionType: "reference",
+        referenceContent: q,
+      })
+    }
+
+    return results.slice(0, 12)
   },
 
   render: () => {
@@ -321,6 +362,43 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
     range,
     props,
   }) => {
+    const item = props as unknown as MentionItem
+
+    // Reference → footnoteRef 삽입
+    if (item.mentionType === "reference") {
+      const store = usePlotStore.getState()
+      let refId = item.id
+      let refContent = item.referenceContent || item.label
+
+      // Create new Reference if __new_ref__
+      if (item.id.startsWith("__new_ref__")) {
+        refId = (store as any).createReference({
+          title: item.label,
+          content: item.label,
+          fields: [],
+        })
+        refContent = item.label
+      }
+
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent([
+          {
+            type: "footnoteRef",
+            attrs: {
+              id: crypto.randomUUID().slice(0, 8),
+              referenceId: refId,
+              content: refContent,
+            },
+          },
+          { type: "text", text: " " },
+        ])
+        .run()
+      return
+    }
+
     editor
       .chain()
       .focus()
@@ -331,7 +409,7 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
           attrs: {
             id: props.id,
             label: props.label,
-            mentionType: (props as unknown as MentionItem).mentionType,
+            mentionType: item.mentionType,
           },
         },
         { type: "text", text: " " },
