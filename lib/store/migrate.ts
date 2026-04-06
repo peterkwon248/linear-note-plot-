@@ -775,5 +775,8 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v70: References — bibliography/citation store
+  if (!state.references) state.references = {}
+
   return state as unknown as PlotState
 }

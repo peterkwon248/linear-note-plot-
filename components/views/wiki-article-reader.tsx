@@ -70,21 +70,6 @@ export function WikiArticleReader({
               toast.success(`Inserted [[${title}]]`, { duration: 1500 })
             }
           }}
-          onInsertQuote={(sourceNoteId: string, sourceTitle: string, quotedText: string) => {
-            const editor = editorRef.current
-            if (editor) {
-              editor.chain().focus().insertContent({
-                type: "wikiQuote",
-                attrs: {
-                  sourceNoteId,
-                  sourceTitle,
-                  quotedText,
-                  quotedAt: new Date().toISOString(),
-                },
-              }).run()
-              toast.success(`Quote from "${sourceTitle}" inserted`, { duration: 1500 })
-            }
-          }}
         />
       </div>
     )

@@ -14,6 +14,7 @@ import React, {
   forwardRef,
 } from "react"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { Asterisk } from "@phosphor-icons/react/dist/ssr/Asterisk"
 import { IconWiki } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -26,7 +27,11 @@ interface WikilinkItem {
   isWiki?: boolean
   isNewNote?: boolean
   isNewWiki?: boolean
-  itemType?: "note" | "wiki"
+  isReference?: boolean
+  isNewReference?: boolean
+  referenceId?: string
+  referenceContent?: string
+  itemType?: "note" | "wiki" | "reference"
 }
 
 interface WikilinkListProps {
@@ -77,8 +82,8 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
 
     if (items.length === 0) return null
 
-    const sectionLabels: Record<string, string> = { note: "Notes", wiki: "Wiki" }
-    const sectionOrder = ["note", "wiki"]
+    const sectionLabels: Record<string, string> = { note: "Notes", wiki: "Wiki", reference: "References" }
+    const sectionOrder = ["note", "wiki", "reference"]
 
     return (
       <div className="z-50 min-w-[200px] max-w-[300px] overflow-hidden rounded-md border border-border bg-surface-overlay shadow-md">
@@ -92,7 +97,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
             // Group items by type, preserving global index for keyboard nav
             const grouped = new Map<string, Array<{ item: WikilinkItem; globalIndex: number }>>()
             items.forEach((item, index) => {
-              const type = item.isNewNote ? "note" : item.isNewWiki ? "wiki" : (item.itemType || "note")
+              const type = item.isNewReference ? "reference" : item.isNewNote ? "note" : item.isNewWiki ? "wiki" : (item.itemType || "note")
               if (!grouped.has(type)) grouped.set(type, [])
               grouped.get(type)!.push({ item, globalIndex: index })
             })
@@ -118,7 +123,22 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                           : "text-foreground hover:bg-hover-bg",
                       ].join(" ")}
                     >
-                      {item.isNewNote ? (
+                      {item.isNewReference ? (
+                        <>
+                          <span className="text-amber-500 text-2xs">+</span>
+                          <Asterisk className="shrink-0 text-amber-500" size={14} weight="regular" />
+                          <span className="truncate font-medium text-foreground">{item.title}</span>
+                          <span className="ml-auto shrink-0 text-2xs text-amber-500">+ Create Ref</span>
+                        </>
+                      ) : item.isReference ? (
+                        <>
+                          <Asterisk className="shrink-0 text-amber-500" size={14} weight="regular" />
+                          <span className="truncate">{item.title}</span>
+                          <span className="ml-auto shrink-0 text-2xs text-muted-foreground/60 truncate max-w-[100px]">
+                            {item.referenceContent}
+                          </span>
+                        </>
+                      ) : item.isNewNote ? (
                         <>
                           <span className="text-muted-foreground text-2xs">+</span>
                           <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
@@ -235,7 +255,24 @@ export const WikilinkSuggestion = Extension.create({
               .slice(0, 3)
               .map((w: any) => ({ id: w.id, title: w.title, status: "article", isWiki: true, itemType: "wiki" as const }))
 
-            return [...noteItems, ...wikiMatches]
+            // Recent References
+            const references = (store as any).references ?? {}
+            const refEntries = Object.values(references) as Array<{ id: string; title: string; content: string; updatedAt: string }>
+            const recentRefs: WikilinkItem[] = refEntries
+              .filter((r) => r.title?.trim())
+              .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+              .slice(0, 3)
+              .map((r) => ({
+                id: r.id,
+                title: r.title,
+                status: "",
+                isReference: true,
+                referenceId: r.id,
+                referenceContent: r.content,
+                itemType: "reference" as const,
+              }))
+
+            return [...noteItems, ...wikiMatches, ...recentRefs]
           }
 
           // Title matches: exact > startsWith > contains, then by length
@@ -294,8 +331,25 @@ export const WikilinkSuggestion = Extension.create({
             .slice(0, 4)
             .map((w: any) => ({ id: w.id, title: w.title, status: "article", isWiki: true, itemType: "wiki" as const }))
 
-          // Combine: notes first, then wiki, then create option
-          const finalResults: WikilinkItem[] = [...combined, ...wikiMatches]
+          // Search References
+          const references = (store as any).references ?? {}
+          const refEntries = Object.values(references) as Array<{ id: string; title: string; content: string; updatedAt: string }>
+          const refMatches: WikilinkItem[] = refEntries
+            .filter((r) => r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q))
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+            .slice(0, 3)
+            .map((r) => ({
+              id: r.id,
+              title: r.title,
+              status: "",
+              isReference: true,
+              referenceId: r.id,
+              referenceContent: r.content,
+              itemType: "reference" as const,
+            }))
+
+          // Combine: notes first, then wiki, then references, then create option
+          const finalResults: WikilinkItem[] = [...combined, ...wikiMatches, ...refMatches]
 
           // "Create as Note" option if no exact match
           const hasExact = [...pool, ...wikiArticles].some(
@@ -319,6 +373,17 @@ export const WikilinkSuggestion = Extension.create({
               isNewWiki: true,
               isWiki: true,
               itemType: "wiki",
+            })
+          }
+
+          // "Create as Reference" — always show when query exists
+          if (q.length > 0) {
+            finalResults.push({
+              id: `__new_ref__${q}`,
+              title: q,
+              status: "",
+              isNewReference: true,
+              itemType: "reference",
             })
           }
 
@@ -419,6 +484,38 @@ export const WikilinkSuggestion = Extension.create({
           props: WikilinkItem
         }) => {
           const store = usePlotStore.getState()
+
+          // Reference 항목 선택 → footnoteRef 삽입
+          if (props.isReference || props.isNewReference) {
+            let refId = props.referenceId
+
+            if (props.isNewReference) {
+              refId = (store as any).createReference({
+                title: props.title,
+                content: props.title,
+                fields: [],
+              })
+            }
+
+            editor
+              .chain()
+              .focus()
+              .deleteRange(range)
+              .insertContent([
+                {
+                  type: "footnoteRef",
+                  attrs: {
+                    id: crypto.randomUUID().slice(0, 8),
+                    referenceId: refId,
+                    content: props.referenceContent || props.title,
+                  },
+                },
+                { type: "text", text: " " },
+              ])
+              .run()
+            return
+          }
+
           if (props.isNewNote) {
             // Create regular note
             const exists = store.notes.some(

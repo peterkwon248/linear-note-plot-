@@ -53,7 +53,6 @@ import { WikilinkNode } from "@/components/editor/nodes/wikilink-node"
 import { WikilinkInteractionExtension } from "@/components/editor/wikilink-interaction"
 import { mentionSuggestionConfig } from "../MentionSuggestion"
 import { SlashCommandExtension } from "../SlashCommand"
-import { WikiQuoteExtension } from "../WikiQuoteExtension"
 import { Mention } from "@tiptap/extension-mention"
 import { Emoji } from "@tiptap/extension-emoji"
 import { InvisibleCharacters } from "@tiptap/extension-invisible-characters"
@@ -72,6 +71,7 @@ import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
 import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
 import { AnchorDividerNode } from "@/components/editor/nodes/anchor-divider-node"
+import { FootnoteRefExtension } from "@/components/editor/nodes/footnote-node"
 import { QueryBlockNode } from "@/components/editor/nodes/query-node"
 import { handleMentionClick } from "@/lib/note-reference-actions"
 import { showNotePreview, showNotePreviewById, hideNotePreview, togglePreviewPin, isPreviewShowing, isPreviewPinned } from "@/components/editor/note-hover-preview"
@@ -417,10 +417,9 @@ export function createEditorExtensions(
     case "wiki": {
       const wikiExtensions: Extension[] = [...base]
 
-      // Slash commands + WikiQuote for wiki text blocks
+      // Slash commands for wiki text blocks
       wikiExtensions.push(
         SlashCommandExtension as Extension,
-        WikiQuoteExtension as Extension,
       )
 
       // Custom block nodes (shared with note tier)
@@ -432,6 +431,7 @@ export function createEditorExtensions(
       wikiExtensions.push(ContentBlockNode as Extension)
       wikiExtensions.push(AnchorMarkNode as Extension)
       wikiExtensions.push(AnchorDividerNode as Extension)
+      wikiExtensions.push(FootnoteRefExtension as Extension)
       wikiExtensions.push(WikiEmbedNode as Extension)
 
       // Custom keyboard shortcuts (Tab indent, column navigation, etc.)
@@ -562,7 +562,6 @@ export function createEditorExtensions(
         WikilinkNode as Extension,
         WikilinkInteractionExtension as Extension,
         SlashCommandExtension as Extension,
-        WikiQuoteExtension as Extension,
       )
       noteExtensions.push(
         Mention.extend({
@@ -619,6 +618,7 @@ export function createEditorExtensions(
       noteExtensions.push(ContentBlockNode as Extension)
       noteExtensions.push(AnchorMarkNode as Extension)
       noteExtensions.push(AnchorDividerNode as Extension)
+      noteExtensions.push(FootnoteRefExtension as Extension)
       noteExtensions.push(QueryBlockNode as Extension)
 
       // Custom keyboard shortcuts (Indent/Outdent, Move List)
@@ -868,8 +868,7 @@ export function createRenderExtensions(): Extension[] {
     Mathematics,
     Audio,
     Twitch,
-    // Wiki-specific nodes
-    WikiQuoteExtension,
+    // Custom block nodes
     CalloutBlockNode,
     SummaryBlockNode,
     ColumnsBlockNode,
@@ -878,6 +877,7 @@ export function createRenderExtensions(): Extension[] {
     ContentBlockNode,
     AnchorMarkNode,
     AnchorDividerNode,
+    FootnoteRefExtension,
   ] as Extension[]
 }
 

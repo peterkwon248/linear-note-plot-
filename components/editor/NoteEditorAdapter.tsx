@@ -6,6 +6,7 @@ import { usePlotStore } from "@/lib/store"
 import type { Note } from "@/lib/types"
 import { suggestLinks } from "@/lib/queries/notes"
 import { LinkSuggestion } from "@/components/link-suggestion"
+import { FootnotesFooter } from "./footnotes-footer"
 import { extractHashtags } from "@/lib/body-helpers"
 import { pickColor } from "@/components/note-fields"
 
@@ -21,6 +22,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
 
   const [suggestions, setSuggestions] = useState<Note[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [editorInstance, setEditorInstance] = useState<any>(null)
 
   // Track the latest content to debounce saves
   const pendingRef = useRef<{
@@ -216,6 +218,11 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     }
   })()
 
+  const handleEditorReady = useCallback((editor: unknown) => {
+    setEditorInstance(editor)
+    onEditorReady?.(editor)
+  }, [onEditorReady])
+
   return (
     <div className="relative min-w-0 flex-1 flex flex-col">
       <TipTapEditor
@@ -224,8 +231,9 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         onChange={editable ? handleChange : undefined}
         editable={editable}
         placeholder="Type / for commands, or start writing..."
-        onEditorReady={onEditorReady}
+        onEditorReady={handleEditorReady}
       />
+      <FootnotesFooter editor={editorInstance} />
       <LinkSuggestion
         suggestions={suggestions}
         onSelect={handleSuggestionSelect}

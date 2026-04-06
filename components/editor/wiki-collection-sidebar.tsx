@@ -26,10 +26,9 @@ interface WikiCollectionSidebarProps {
   noteId: string
   onNavigate: (id: string) => void
   onInsertLink?: (title: string) => void
-  onInsertQuote?: (sourceNoteId: string, sourceTitle: string, quotedText: string) => void
 }
 
-export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInsertQuote }: WikiCollectionSidebarProps) {
+export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink }: WikiCollectionSidebarProps) {
   const notes = usePlotStore((s) => s.notes)
   const wikiCollections = usePlotStore((s) => s.wikiCollections)
   const addToCollection = usePlotStore((s) => s.addToCollection)
@@ -129,16 +128,8 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
               {relatedNotes.map((n) => (
                 <div key={n.id} className="flex items-center gap-1.5 group">
                   <button
-                    onClick={(e) => {
-                      if (e.shiftKey && onInsertQuote) {
-                        const noteContent = n.content || ""
-                        const preview = noteContent.slice(0, 300) || n.title || "Untitled"
-                        onInsertQuote(n.id, n.title || "Untitled", preview)
-                      } else {
-                        onInsertLink?.(n.title || "Untitled")
-                      }
-                    }}
-                    title="Click: insert [[link]] · Shift+click: insert as quote"
+                    onClick={() => onInsertLink?.(n.title || "Untitled")}
+                    title="Click: insert [[link]]"
                     className="flex items-center gap-1.5 flex-1 min-w-0 text-note text-muted-foreground hover:text-foreground transition-colors duration-150 rounded-md px-2 py-1 hover:bg-hover-bg text-left"
                   >
                     <FileText className="shrink-0" size={14} weight="regular" />
@@ -173,7 +164,6 @@ export function WikiCollectionSidebar({ noteId, onNavigate, onInsertLink, onInse
                   onNavigate={onNavigate}
                   onRemove={() => removeFromCollection(noteId, item.id)}
                   onInsertLink={onInsertLink}
-                  onInsertQuote={onInsertQuote}
                 />
               ))
             )}
@@ -236,14 +226,12 @@ function CollectionItemRow({
   onNavigate,
   onRemove,
   onInsertLink,
-  onInsertQuote,
 }: {
   item: WikiCollectionItem
   notes: ReturnType<typeof usePlotStore.getState>["notes"]
   onNavigate: (id: string) => void
   onRemove: () => void
   onInsertLink?: (title: string) => void
-  onInsertQuote?: (sourceNoteId: string, sourceTitle: string, quotedText: string) => void
 }) {
   const sourceNote = item.type === "note" ? notes.find((n) => n.id === item.sourceNoteId) : null
 
@@ -257,15 +245,8 @@ function CollectionItemRow({
       <div className="flex-1 min-w-0">
         {item.type === "note" && (
           <button
-            onClick={(e) => {
-              if (e.shiftKey && onInsertQuote && sourceNote) {
-                const preview = sourceNote.content?.slice(0, 300) || sourceNote.title || "Untitled"
-                onInsertQuote(sourceNote.id, sourceNote.title || "Untitled", preview)
-              } else {
-                onInsertLink?.(sourceNote?.title || "Untitled")
-              }
-            }}
-            title="Click: insert [[link]] · Shift+click: insert as quote"
+            onClick={() => onInsertLink?.(sourceNote?.title || "Untitled")}
+            title="Click: insert [[link]]"
             className="text-note text-muted-foreground hover:text-foreground transition-colors duration-150 truncate block w-full text-left"
           >
             {sourceNote?.title || "Untitled"}

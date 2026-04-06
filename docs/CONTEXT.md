@@ -35,8 +35,8 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (20): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
-- Store version: 69
+- Slices (21): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references
+- Store version: 70
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -48,7 +48,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - TipTap 3 editor — Shared config factory (`components/editor/core/shared-editor-config.ts`)
 - 4-tier extension system: `base` | `note` | `wiki` | `template`
 - Title 노드 통합: 제목과 본문이 하나의 TipTap 문서 (`components/editor/core/title-node.ts`)
-- 25+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, WikiQuoteExtension, @mention (노트/위키/태그/날짜 통합), Floating TOC, Anchor/Bookmark, etc.)
+- 25+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, FootnoteRefExtension, @mention (노트/위키/태그/날짜 통합), Floating TOC, Anchor/Bookmark, etc.)
 - Toolbar: h-14 (56px) bar, w-10 (40px) buttons, Phosphor weight="light". 42 configurable items via Arrange Mode (dnd-kit). Persisted in settings store
 - Workspace: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
 - WorkspaceMode 삭제됨 — sidebarCollapsed + detailsOpen 독립 토글
@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-111. WikiEmbed — 노트 안에 위키 문서 라이브 임베드 (전체 + 부분 섹션). TipTap atom node view + WikiArticleEncyclopedia 렌더
-112. Wiki→TipTap 변환 함수 — 위키 내용을 노트로 복사 (독립 사본). Copy to note 프리뷰 메뉴
-113. Wiki Quote 활성화 + 프리뷰 Encyclopedia 렌더링 — 위키 호버 프리뷰에서 Quote/Embed 버튼, 인포박스+Contents 표시
-114. Articles/Stubs 카운트 버그 수정 — wiki-list.tsx 필터 로직 수정
-115. Wikilink atom 노드 전환 — 텍스트 기반 WikilinkDecoration → atom inline 노드 (커서 진입 불가, 찢어짐 방지)
+115. Wikilink atom 노드 전환 — 텍스트 기반 WikilinkDecoration → atom inline 노드
+116. WikiQuote 폐기 — WikiEmbed가 상위 대체. WikiQuoteExtension/WikiQuoteNode/quote-hash 삭제 (~350줄)
+117. Reference store slice — `references: Record<string, Reference>` CRUD, store v70 migration
+118. Footnote 시스템 — FootnoteRef 인라인 atom 노드 + 자동 번호 + 호버 팝오버(300ms) + 하단 Footnotes Footer + `[[`/`@` References 섹션 통합 + SlashCommand
+119. Footnotes Footer 인라인 편집 — 하단 목록에서 싱글클릭 편집 + `[N]` 양방향 네비게이션
 
 ## Two Axes — Core Design Philosophy
 
@@ -154,37 +154,37 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Delete Block 우클릭 메뉴**: 모든 블록에 적용. details/columns 같은 compound 블록은 skipTypes로 올바른 depth 탐색 (2026-04-01)
 - **드래그 핸들 블록 메뉴**: ⠿ 짧게 클릭=메뉴(Turn Into/Insert Below/Duplicate/Move/Delete), 누르고 5px 이동=드래그. pointerUp + pointerEvents 전환 (2026-04-01)
 - **Embed Note = 노트 피커**: Insert→Embed Note 클릭 시 NotePickerDialog 열림. 선택한 noteId로 미리보기 카드 삽입. Synced Block(본문 편집)은 Phase 2+ (2026-04-01)
+- **WikiQuote 폐기**: WikiEmbed가 상위 대체. 호버 프리뷰 Quote 버튼 + insert-wiki-quote 이벤트 + WikiQuoteExtension/Node 전부 삭제 (2026-04-06)
+- **Footnote = "에디터 접점", Reference = "저장소"**: `/footnote` 슬래시 커맨드, `[[`/`@` 드롭다운 모두에서 각주 생성/참조 가능. 유저는 Footnote만 알면 됨, Reference는 뒤에서 자동 생성 (2026-04-06)
+- **Reference = 인포박스식 자유 키-값**: `fields: Array<{key,value}>`. Type 없음 — 앱이 content에서 URL/연도 자동 감지. Quick Note(fields 비면)→Full Reference(fields 있음) heuristic (2026-04-06)
+- **Library = References + Tags(글로벌) + Files**: 6번째 Activity Bar 공간. Labels는 노트 전용 유지, Tags만 글로벌 승격 (2026-04-06)
+- **각주 타임라인**: createdAt 자동 기록 + Reference.history로 수정 이력 (2026-04-06)
 
-## TODO: Future Work (우선순위 순, MEMORY.md 기준 2026-04-06 sync)
+## TODO: Future Work (우선순위 순, 2026-04-06 sync)
 
-### P0 — 즉시 (위키 인프라)
-1. **WikiEmbed** — 노트 안에 위키 문서 라이브 임베드 (TipTap node view)
-2. **위키→TipTap 변환 함수** — 위키 내용을 노트로 복사 (독립 사본)
-3. **Wiki Quote 개선** — 위키 프리뷰에서 드래그 선택 Quote (select-all 스킵)
+### P0 — Footnote/Reference 고도화
+1. **createdAt 필드** — 각주 생성 타임스탬프 + 하단 날짜 표시
+2. **모든 각주 자동 Reference 연결** — 독립 각주 개념 제거. /footnote로 만들어도 자동 Reference 생성
+3. **Reference.history** — 수정 이력 저장 + 스티커 UI (원본/수정 비교)
+4. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
 
-### P1 — 위키 고도화
-4. **각주 (Footnote)** — 나무위키식 `[1]` 인라인 마크 + 호버 말풍선 + 하단 목록. 참조/주석 통합
-5. **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
-6. **나무위키 틀** — 계보/계승 테이블, 네비게이션 박스, 시리즈 박스
+### P1 — Library (6번째 Activity Bar 공간)
+5. **Library 공간** — References + Tags(글로벌 승격) + Files(이미지/파일/URL) 3탭
+6. **References 관리 UI** — 리스트 + 사이드바 디테일 (수동: title/content/fields/tags, 자동: Usage/Connected/Info)
+7. **Tags 글로벌 승격** — WikiArticle에 tags 추가, Library > Tags 탭
+8. **Files 탭** — 이미지/파일/URL 독립 엔티티
 
-### P2 — 새 공간 + 뷰 확장
-7. **Library (6번째 공간)** — 이미지+파일+URL 독립 엔티티. Activity Bar 추가
-8. **Side Panel 풀페이지 확장** — 모든 탭에 "Open full" 버튼. Thread 풀페이지 = 코멘트뷰
-9. **동음이의어 해소 페이지** — 멀티 링크 매칭 시 선택 화면
+### P2 — 위키 고도화
+9. **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
+10. **나무위키 틀** — 계보/계승 테이블, 네비게이션 박스, 시리즈 박스
 
-### P3 — 지능 + 검색
-10. **요약 엔진** — 첫 N문장 + 키워드(TF-IDF) + 헤딩 목차 + 하이라이트 집계 + 링크 밀도
-11. **인사이트 중앙 허브** — 온톨로지 Insights 섹션, 각 공간 파생 인사이트
-12. **풀페이지 검색 분리** — ⌘K=검색, ⌘/=커맨드
+### P3 — 새 공간 + 뷰 확장
+11. **Side Panel 풀페이지 확장** — 모든 탭에 "Open full" 버튼
+12. **동음이의어 해소 페이지** — 멀티 링크 매칭 시 선택 화면
 
-### P4 — 기존 항목
-- 웹 클리퍼, 가져오기/내보내기
-- 커맨드 팔레트 확장 (20+개)
-- View 시스템 v2 ("Save as View")
-- Merge/Split 풀페이지 + 히스토리
-- 리스트 가상화 (1만개 대응)
-
-> 상세: `docs/BRAINSTORM-2026-04-06.md` 참조
+### P4 — 지능 + 검색 + 기존 항목
+- 요약 엔진, 인사이트 중앙 허브, 풀페이지 검색 분리
+- 웹 클리퍼, 가져오기/내보내기, 커맨드 팔레트, View v2, 리스트 가상화
 
 ## Calendar 리디자인 설계 (확정)
 

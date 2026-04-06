@@ -239,6 +239,16 @@ export interface Tag {
   trashedAt?: string | null
 }
 
+export interface Reference {
+  id: string
+  title: string           // 짧은 레이블 (e.g. "사피엔스 p.42")
+  content: string         // 자유 텍스트 설명
+  fields: Array<{ key: string; value: string }>  // 인포박스식 메타데이터
+  tags?: string[]         // 글로벌 태그 공유
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Label {
   id: string
   name: string

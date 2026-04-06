@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 20-slice Zustand store with versioned migration (currently v69)
+- **Store**: `lib/store/index.ts` — 21-slice Zustand store with versioned migration (currently v70)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -80,9 +80,12 @@
 - **Wikilink 4-way 시각 시스템**: `wikilink-exists`(보라밑줄) / `wikilink-wiki`(teal칩) / `wikilink-stub`(amber점선) / `wikilink-dangling`(gray점선). `[[wiki:Title]]` prefix로 타입 구분, `wiki:`는 bracket처럼 숨겨짐
 - **호버 프리뷰 TipTap 통합**: Preview/Edit 동일 렌더링 — 항상 NoteEditorAdapter(editable 토글). generateHTML 폐기. 640px 카드
 - **호버 프리뷰 Pin 시스템**: 모듈 레벨 `_pinned` + `_pinListeners`. 위키링크/멘션 클릭으로 `togglePreviewPin()`. Pin 시 accent 테두리 + PushPin 아이콘. `data-hover-preview` 가드로 프리뷰 안 재귀 방지
+- **Footnote/Reference 시스템**: FootnoteRef 인라인 atom 노드 (`components/editor/nodes/footnote-node.tsx`). attrs: id/referenceId/content/comment. 문서 순서 기반 자동 번호 계산. 호버 팝오버(300ms delay, 200ms hide). 하단 FootnotesFooter 자동 렌더링 (`components/editor/footnotes-footer.tsx`). `[N]` 양방향 네비게이션 (본문↔하단). 하단 싱글클릭 인라인 편집. `[[`/`@` 드롭다운 References 섹션 통합.
+- **Reference store**: `references: Record<string, Reference>` — title/content/fields(인포박스식 키-값)/tags. CRUD 3액션. `/footnote` 또는 `[[`/`@`에서 생성. Library에서 관리 예정.
+- **WikiQuote 폐기**: WikiEmbed가 상위 대체. WikiQuoteExtension.ts, WikiQuoteNode.tsx, lib/quote-hash.ts 삭제. 호버 프리뷰/사이드패널 peek/note-editor 에서 Quote 관련 코드 전부 제거.
 
-## Store Slices (20 total)
-notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories
+## Store Slices (21 total)
+notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references
 
 ## Completed PRs (recent)
 - **PR #80**: Wiki system + Side Peek + soft-delete trash
@@ -264,6 +267,15 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - **before-work/after-work 개선**: MEMORY.md를 Source of Truth로, worktree merge 로직 추가, CONTEXT.md↔MEMORY.md 정합성 검사
   - **브레인스토밍**: docs/BRAINSTORM-2026-04-06.md — 각주, 인포박스 고도화, 나무위키 틀, Library 6번째 공간, Side Panel 풀페이지 확장, 요약 엔진 등 8개 Phase 계획
   - 호버 프리뷰 버그 수정 4건 (mouseup 누수, quote deps, pin bubbling, note assertion)
+
+- **PR #161 (WIP)**: Footnote/Reference 시스템 + WikiQuote 폐기
+  - **WikiQuote 폐기**: WikiQuoteExtension.ts, WikiQuoteNode.tsx, lib/quote-hash.ts 삭제. shared-editor-config (3곳), note-editor.tsx, note-hover-preview.tsx, side-panel-peek.tsx, wiki-article-reader.tsx, wiki-collection-sidebar.tsx에서 관련 코드 제거 (~350줄)
+  - **Reference store slice**: `lib/store/slices/references.ts` 신규. `Reference` 타입 (title/content/fields[]/tags). CRUD 3액션. Store v70 migration
+  - **FootnoteRef 인라인 노드**: `components/editor/nodes/footnote-node.tsx` 신규. atom inline, 자동 번호(doc 순서), 호버 팝오버(300ms delay/200ms hide, z-100), 더블클릭 편집(textarea), 빈 content 자동 편집 모드
+  - **FootnotesFooter**: `components/editor/footnotes-footer.tsx` 신규. editor.on("update") 실시간 동기화, 중복 제거, `[N]` 클릭→본문 스크롤(양방향), 싱글클릭 인라인 편집(setNodeMarkup으로 attrs 직접 수정)
+  - **SlashCommand Footnote 항목**: Asterisk 아이콘, nanoid(8) id, 빈 content로 삽입
+  - **`[[`/`@` References 섹션**: WikilinkSuggestion + MentionSuggestion에 References 섹션 추가. 기존 Reference 검색/선택 → footnoteRef 삽입. Create Reference 항상 표시 (q.length > 0). 새 Reference 자동 생성 + referenceId 연결
+  - **명칭 결정**: 에디터/유저 접점 = "Footnote", 저장소/Library = "References"
 
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
@@ -593,12 +605,14 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Chevron 방향 수정**: Title/Survives 드롭다운 ChevronDown → ChevronUp (위로 열리는 드롭다운)
 - Store v60→v61 (WikiArticle.layout 기본값)
 
-### 다음 작업 후보 (우선순위 순)
-1. **타이포그래피 밸런스 전체 개선** — 컬럼 헤더/그룹 헤더/아이템 간 폰트 사이즈 균형 (Linear 참고)
-2. **에디터 툴바 리디자인 + 제목/본문 통합** — UpNote식, infobox 통합
-3. **커맨드 팔레트 확장** — 6개 → 20+개 컨텍스트 반응형 커맨드
-4. **풀페이지 검색 분리** — ⌘K=검색, ⌘/=커맨드 팔레트
-5. **J/K 리스트 네비게이션** — Linear식
+### 다음 작업 후보 (우선순위 순, 2026-04-06 sync)
+1. **Footnote createdAt** — 각주 생성 타임스탬프 + 하단 날짜 표시
+2. **모든 각주 자동 Reference 연결** — /footnote로 만들어도 자동 Reference 생성, 독립 각주 제거
+3. **Reference.history** — 수정 이력 저장 + 스티커 UI (원본/수정 비교)
+4. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
+5. **Library Activity Bar** — References + Tags(글로벌) + Files 3탭
+6. **Tags 글로벌 승격** — WikiArticle에 tags 추가
+7. **인포박스 고도화** — 대표 이미지, 섹션 구분, 접기/펼치기
 
 ### 완료 확인 (이전 TODO에서 제거)
 - ~~Phosphor Icons 전체 마이그레이션~~ → PR #104 완료 (83파일)
