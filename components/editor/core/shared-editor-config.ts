@@ -49,7 +49,8 @@ import {
 import { CurrentLineHighlightExtension } from "../CurrentLineHighlight"
 import { HashtagSuggestion } from "../HashtagSuggestion"
 import { WikilinkSuggestion } from "../WikilinkSuggestion"
-import { WikilinkDecorationExtension } from "../WikilinkDecoration"
+import { WikilinkNode } from "@/components/editor/nodes/wikilink-node"
+import { WikilinkInteractionExtension } from "@/components/editor/wikilink-interaction"
 import { mentionSuggestionConfig } from "../MentionSuggestion"
 import { SlashCommandExtension } from "../SlashCommand"
 import { WikiQuoteExtension } from "../WikiQuoteExtension"
@@ -66,6 +67,7 @@ import { CalloutBlockNode } from "@/components/editor/nodes/callout-node"
 import { SummaryBlockNode } from "@/components/editor/nodes/summary-node"
 import { ColumnsBlockNode, ColumnCellNode } from "@/components/editor/nodes/columns-node"
 import { NoteEmbedNode } from "@/components/editor/nodes/note-embed-node"
+import { WikiEmbedNode } from "@/components/editor/nodes/wiki-embed-node"
 import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
 import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
 import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
@@ -430,6 +432,7 @@ export function createEditorExtensions(
       wikiExtensions.push(ContentBlockNode as Extension)
       wikiExtensions.push(AnchorMarkNode as Extension)
       wikiExtensions.push(AnchorDividerNode as Extension)
+      wikiExtensions.push(WikiEmbedNode as Extension)
 
       // Custom keyboard shortcuts (Tab indent, column navigation, etc.)
       const WikiKeyboardShortcuts = Extension.create({
@@ -556,7 +559,8 @@ export function createEditorExtensions(
       noteExtensions.push(
         HashtagSuggestion as Extension,
         WikilinkSuggestion as Extension,
-        WikilinkDecorationExtension as Extension,
+        WikilinkNode as Extension,
+        WikilinkInteractionExtension as Extension,
         SlashCommandExtension as Extension,
         WikiQuoteExtension as Extension,
       )
@@ -610,6 +614,7 @@ export function createEditorExtensions(
       noteExtensions.push(ColumnsBlockNode as Extension)
       noteExtensions.push(ColumnCellNode as Extension)
       noteExtensions.push(NoteEmbedNode as Extension)
+      noteExtensions.push(WikiEmbedNode as Extension)
       noteExtensions.push(InfoboxBlockNode as Extension)
       noteExtensions.push(ContentBlockNode as Extension)
       noteExtensions.push(AnchorMarkNode as Extension)

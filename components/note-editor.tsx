@@ -32,6 +32,40 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
+
+/**
+ * Move cursor outside of wikilink/mention text if it's currently inside one.
+ * Prevents inserted content from splitting link text like [[wiki:Flee|ting Note]].
+ * Scans the current text node for [[ ]] boundaries and moves cursor past ]] if needed.
+ */
+function escapeFromInlineLink(editor: Editor): void {
+  const { $from } = editor.state.selection
+  const textNode = $from.parent
+  if (!textNode.isTextblock) return
+
+  const textContent = textNode.textContent
+  const offset = $from.parentOffset
+
+  // Find if cursor is inside [[ ... ]] or @mention
+  // Look backwards for [[ without a closing ]]
+  const textBefore = textContent.slice(0, offset)
+  const lastOpen = textBefore.lastIndexOf("[[")
+  if (lastOpen === -1) return
+
+  // Check if there's a closing ]] between the [[ and cursor
+  const betweenOpenAndCursor = textBefore.slice(lastOpen)
+  if (betweenOpenAndCursor.includes("]]")) return // Already closed — cursor is after the link
+
+  // Cursor is inside an unclosed [[ — find the closing ]]
+  const textAfter = textContent.slice(offset)
+  const closeIdx = textAfter.indexOf("]]")
+  if (closeIdx === -1) return // No closing found
+
+  // Move cursor to after ]]
+  const newOffset = offset + closeIdx + 2
+  const resolvedPos = editor.state.doc.resolve($from.start() + newOffset)
+  editor.commands.setTextSelection(resolvedPos.pos)
+}
 import type { Note, Relation, Tag } from "@/lib/types"
 import { WikiTOC } from "@/components/editor/wiki-toc"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
@@ -42,6 +76,7 @@ import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { shortRelative } from "@/lib/format-utils"
 import { EditorContextMenu } from "@/components/editor/editor-context-menu"
 import { NotePickerDialog } from "@/components/note-picker-dialog"
+import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
 
 interface NoteEditorProps {
   noteId?: string
@@ -72,6 +107,8 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const [isReadMode, setIsReadMode] = useState(false)
   const [embedPickerOpen, setEmbedPickerOpen] = useState(false)
   const embedEditorRef = useRef<Editor | null>(null)
+  const [wikiEmbedPickerOpen, setWikiEmbedPickerOpen] = useState(false)
+  const wikiEmbedEditorRef = useRef<Editor | null>(null)
   const [linkNotePickerOpen, setLinkNotePickerOpen] = useState(false)
   const linkNoteEditorRef = useRef<Editor | null>(null)
   const noteIdRef = useRef(note?.id)
@@ -138,11 +175,54 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const handleEmbedNoteSelect = useCallback((selectedNoteId: string) => {
     const editor = embedEditorRef.current
     if (editor) {
+      escapeFromInlineLink(editor)
       editor.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: selectedNoteId } }).run()
     }
     setEmbedPickerOpen(false)
     embedEditorRef.current = null
   }, [])
+
+  // Listen for embed wiki picker requests from SlashCommand
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ editor: Editor }>) => {
+      wikiEmbedEditorRef.current = e.detail.editor
+      setWikiEmbedPickerOpen(true)
+    }
+    window.addEventListener("plot:embed-wiki-pick", handler as EventListener)
+    return () => window.removeEventListener("plot:embed-wiki-pick", handler as EventListener)
+  }, [])
+
+  const handleWikiEmbedSelect = useCallback((articleId: string) => {
+    const editor = wikiEmbedEditorRef.current
+    if (editor) {
+      editor.chain().focus().insertContent({ type: "wikiEmbed", attrs: { articleId } }).run()
+    }
+    setWikiEmbedPickerOpen(false)
+    wikiEmbedEditorRef.current = null
+  }, [])
+
+  // Listen for wiki embed from hover preview (Embed button with optional sectionIds)
+  // Insert AFTER current block to avoid splitting [[wikilinks]]
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ articleId: string; sectionIds?: string[] | null }>) => {
+      if (editorInstance) {
+        const attrs: Record<string, unknown> = { articleId: e.detail.articleId }
+        if (e.detail.sectionIds && e.detail.sectionIds.length > 0) {
+          attrs.sectionIds = e.detail.sectionIds
+        }
+        // Insert after current block (same pattern as WikiQuote)
+        const { state } = editorInstance
+        const { $from } = state.selection
+        const endOfBlock = $from.end()
+        const insertPos = Math.min(endOfBlock + 1, state.doc.content.size)
+        editorInstance.chain().focus().insertContentAt(insertPos, [
+          { type: "wikiEmbed", attrs },
+        ]).run()
+      }
+    }
+    window.addEventListener("plot:insert-wiki-embed", handler as EventListener)
+    return () => window.removeEventListener("plot:insert-wiki-embed", handler as EventListener)
+  }, [editorInstance])
 
   // Listen for link-to-note picker requests from context menu
   useEffect(() => {
@@ -357,6 +437,12 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         onOpenChange={setLinkNotePickerOpen}
         title="Link to note"
         onSelect={handleLinkNoteSelect}
+      />
+      <WikiPickerDialog
+        open={wikiEmbedPickerOpen}
+        onOpenChange={setWikiEmbedPickerOpen}
+        title="Embed a wiki article"
+        onSelect={handleWikiEmbedSelect}
       />
     </div>
   )

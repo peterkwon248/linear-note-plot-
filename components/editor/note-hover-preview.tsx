@@ -18,10 +18,12 @@ import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
 import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Link } from "@phosphor-icons/react/dist/ssr/Link"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
+import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
 import type { Editor } from "@tiptap/react"
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -187,6 +189,8 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   const [showBacklinks, setShowBacklinks] = useState(false)
   const [showBlocks, setShowBlocks] = useState(false)
   const [showCategories, setShowCategories] = useState(false)
+  const [showSectionPicker, setShowSectionPicker] = useState(false)
+  const [selectedSectionIds, setSelectedSectionIds] = useState<Set<string>>(new Set())
 
   // Pin state: synced from module-level _pinned via listener
   const [pinned, setPinnedLocal] = useState(_pinned)
@@ -529,12 +533,12 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         )}
       </div>
       {/* Body */}
-      {noteType === "wiki" ? (
+      {noteType === "wiki" && wikiArticle ? (
         <div ref={bodyRef} className="overflow-y-auto" style={{ height: 400 }}>
-          <WikiArticleView
-            articleId={noteId}
-            editable={editing}
-            preview={true}
+          <WikiArticleEncyclopedia
+            article={wikiArticle}
+            isEditing={editing}
+            onBack={() => {}}
           />
         </div>
       ) : note ? (
@@ -586,6 +590,73 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             <span>{editing ? "Preview" : "Edit"}</span>
           </button>
         )}
+        {/* Wiki: Embed button + section picker */}
+        {!editing && noteType === "wiki" && wikiArticle && (
+          <div className="relative">
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                if (showSectionPicker) {
+                  // Insert embed with selected sections
+                  const sectionIds = selectedSectionIds.size > 0 ? Array.from(selectedSectionIds) : null
+                  window.dispatchEvent(new CustomEvent("plot:insert-wiki-embed", {
+                    detail: { articleId: noteId, sectionIds }
+                  }))
+                  setShowSectionPicker(false)
+                  setSelectedSectionIds(new Set())
+                  hideNotePreviewImmediate()
+                } else {
+                  setShowSectionPicker(true)
+                }
+              }}
+              className={`flex items-center gap-1 rounded px-2 py-1 text-2xs transition-colors hover:bg-hover-bg ${
+                showSectionPicker ? "bg-teal-500/10 text-teal-500" : "text-muted-foreground hover:text-foreground"
+              }`}
+              title={showSectionPicker ? "Insert embed" : "Embed wiki article"}
+            >
+              <BookOpen size={12} />
+              <span>{showSectionPicker ? (selectedSectionIds.size > 0 ? `Embed ${selectedSectionIds.size} sections` : "Embed all") : "Embed"}</span>
+            </button>
+            {showSectionPicker && (
+              <div className="absolute bottom-full left-0 mb-1.5 w-56 rounded-md border border-border-subtle bg-surface-overlay py-1.5 shadow-lg animate-in fade-in slide-in-from-bottom-1 duration-150">
+                <div className="px-3 pb-1.5 text-[10px] text-muted-foreground/60 uppercase tracking-wider">Select sections (or embed all)</div>
+                {wikiArticle.blocks
+                  .filter((b) => b.type === "section")
+                  .map((block) => (
+                    <button
+                      key={block.id}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setSelectedSectionIds((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(block.id)) {
+                            next.delete(block.id)
+                          } else {
+                            next.add(block.id)
+                          }
+                          return next
+                        })
+                      }}
+                      className={`flex w-full items-center gap-2 px-3 py-1 text-2xs transition-colors hover:bg-hover-bg ${
+                        selectedSectionIds.has(block.id) ? "text-teal-500" : "text-muted-foreground"
+                      }`}
+                      style={{ paddingLeft: `${((block.level || 2) - 2) * 12 + 12}px` }}
+                    >
+                      <span className={`w-3 h-3 rounded-sm border flex items-center justify-center shrink-0 ${
+                        selectedSectionIds.has(block.id) ? "bg-teal-500 border-teal-500" : "border-border"
+                      }`}>
+                        {selectedSectionIds.has(block.id) && <span className="text-[8px] text-white font-bold">✓</span>}
+                      </span>
+                      <span className="truncate">{block.title || "Untitled"}</span>
+                    </button>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+        {/* Note: Quote button (unchanged) */}
         {!editing && noteType !== "wiki" && (
           <div className="relative">
             <button
@@ -593,9 +664,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
               e.preventDefault()
               e.stopPropagation()
               if (quoteActive) {
-                // 2nd click: insert quote with current selection (or all if unchanged)
                 if (!quoteSelection) {
-                  // Re-select all if user cleared selection
                   const bodyEl = bodyRef.current
                   if (bodyEl) {
                     const range = document.createRange()
@@ -608,14 +677,12 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                       setQuoteSelection({ text: sel?.toString().trim() || "", rect })
                     }
                   }
-                  // Insert after state update
                   setTimeout(() => handleInsertQuote(), 10)
                 } else {
                   handleInsertQuote()
                 }
                 setQuoteActive(false)
               } else {
-                // 1st click: select all text in body + activate quote mode
                 const bodyEl = bodyRef.current
                 if (bodyEl) {
                   const range = document.createRange()
@@ -701,6 +768,36 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                 <TextT size={12} />
                 <span>Copy text</span>
               </button>
+              {noteType === "wiki" && (
+                <button
+                  onMouseDown={async (e) => {
+                    e.preventDefault()
+                    setShowMore(false)
+                    const { wikiArticleToTipTap, wikiArticleToPlainText } = await import("@/lib/wiki-to-tiptap")
+                    const article = usePlotStore.getState().wikiArticles.find((a) => a.id === noteId)
+                    if (!article) return
+                    const contentJson = wikiArticleToTipTap(article)
+                    const content = wikiArticleToPlainText(article)
+                    const newNoteId = usePlotStore.getState().createNote({
+                      title: `${article.title} (copy)`,
+                      content,
+                      contentJson: contentJson as Record<string, unknown>,
+                      status: "capture" as const,
+                    })
+                    if (newNoteId) {
+                      const { saveBody } = await import("@/lib/note-body-store")
+                      await saveBody({ id: newNoteId, content, contentJson: contentJson as Record<string, unknown> })
+                      usePlotStore.getState().openNote(newNoteId)
+                      import("sonner").then(({ toast }) => toast.success(`Copied "${article.title}" to new note`))
+                    }
+                    hideNotePreviewImmediate()
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+                >
+                  <Cube size={12} />
+                  <span>Copy to note</span>
+                </button>
+              )}
             </div>
           )}
         </div>

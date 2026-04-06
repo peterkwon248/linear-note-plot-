@@ -252,6 +252,19 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - Plain text copy (⋯ 메뉴 "Copy text")
   - 호버 프리뷰 버그 수정 4건 (mouseup 누수, quote deps, pin bubbling, note assertion)
 
+- **PR #160 (WIP)**: WikiEmbed + 변환 함수 + Wikilink atom 노드 + 브레인스토밍
+  - **WikiEmbed**: 노트 안에 위키 문서 라이브 임베드 (wiki-embed-node.tsx). 전체 Embed + 부분 Embed (sectionIds 속성). WikiArticleEncyclopedia 렌더
+  - **WikiPickerDialog**: 위키 아티클 선택 다이얼로그 (wiki-picker-dialog.tsx). SlashCommand "Embed Wiki" 항목
+  - **위키→TipTap 변환 함수**: wikiArticleToTipTap() + wikiArticleToPlainText() (lib/wiki-to-tiptap.ts). 호버 프리뷰 ⋯ 메뉴 "Copy to note"
+  - **Wiki Quote 활성화**: noteType !== "wiki" 가드 제거. 위키에서는 select-all 스킵, 드래그 선택 필수
+  - **위키 호버 프리뷰 개선**: WikiArticleView → WikiArticleEncyclopedia로 교체 (인포박스+Contents 인라인 표시). 위키용 Embed 버튼 + 섹션 피커 (체크박스 TOC, 전체/부분 선택)
+  - **Articles/Stubs 카운트 버그 수정**: wiki-list.tsx counts.articles에서 stubCount 차감, dashFilter==="articles" 필터 추가
+  - **Wikilink atom 노드 전환**: WikilinkDecoration(텍스트 기반) → WikilinkNode(atom inline 노드). 커서 진입 불가, 찢어짐 방지. WikilinkInteractionExtension 신규 (클릭/호버/우클릭)
+  - **시드 데이터 자동 복원**: onRehydrateStorage에서 notes.length === 0이면 시드 강제 주입
+  - **before-work/after-work 개선**: MEMORY.md를 Source of Truth로, worktree merge 로직 추가, CONTEXT.md↔MEMORY.md 정합성 검사
+  - **브레인스토밍**: docs/BRAINSTORM-2026-04-06.md — 각주, 인포박스 고도화, 나무위키 틀, Library 6번째 공간, Side Panel 풀페이지 확장, 요약 엔진 등 8개 Phase 계획
+  - 호버 프리뷰 버그 수정 4건 (mouseup 누수, quote deps, pin bubbling, note assertion)
+
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
 **사상**: 팔란티어 × 제텔카스텐. Layer 1(Raw Data) → Layer 2(Ontology) → Layer 3(Wiki) → Layer 4(Insights). LLM/API 사용 안 함.
@@ -281,18 +294,24 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-04-01)
+## Current Direction (as of 2026-04-06)
 
-### 방향 결정 (2026-04-01)
-- **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** — Notes/Wiki/Calendar/Ontology 각각 최적화된 UX. IKEA 전략 유지
-- **~~Notes→Pages 네이밍~~ 폐기** — 통합 템플릿 방향에서 나온 것. 독립 공간에서는 "Notes"가 맞음
-- **~~Template Page Architecture~~ 폐기** — 관련 문서 삭제 (01,02,03,04,15,17)
+### 방향 결정
+- **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** (2026-04-01)
+- **위키 인프라 강화 우선** — WikiEmbed, 변환 함수, 각주, 인포박스 고도화 (2026-04-06)
+- **Library 6번째 공간 추가 결정** — 이미지/파일/URL 독립 엔티티 (2026-04-06)
 
-### 다음 우선순위
-1. Home 대시보드 카드 클릭 → 필터 연동
-2. 투두 고도화 (dueDate, Today/Upcoming 분류)
-3. 인라인 쿼리 뷰 확장 (뷰 전환, Tags 프리셋)
-4. 디자인 리부트
+### 다음 우선순위 (2026-04-06 브레인스토밍 반영)
+1. WikiEmbed (노트 안에 위키 라이브 임베드)
+2. 위키→TipTap 변환 함수 (복사)
+3. Wiki Quote 개선 (드래그 선택 필수)
+4. 각주 (Footnote) 노드 — 나무위키식
+5. 인포박스 고도화 (이미지+섹션+접기)
+6. 나무위키 틀 (계보 테이블, 네비게이션 박스)
+7. Library (6번째 공간)
+8. Side Panel 풀페이지 확장 (Thread 코멘트뷰 포함)
+
+> 상세: `docs/BRAINSTORM-2026-04-06.md`
 
 ### 이번 세션 완료 — Phase 2A 위키 에디터 풀 툴바 + Encyclopedia 편집 통일 (2026-04-02)
 - **위키 에디터 리서치**: Wikipedia VisualEditor, 나무위키, Fandom, GitBook, Outline, Confluence 에디터 구조 조사

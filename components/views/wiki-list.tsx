@@ -271,7 +271,7 @@ export function WikiList({
 
   const counts = {
     all: sortedFilteredWikiNotes.length,
-    articles: sortedFilteredWikiNotes.length,
+    articles: sortedFilteredWikiNotes.length - (stubCount ?? 0),
     stubs: stubCount ?? 0,
     redlinks: redLinks.length,
   }
@@ -389,9 +389,15 @@ export function WikiList({
               {/* Article/Stub rows */}
               {sortedFilteredWikiNotes
                 .filter((note) => {
-                  if (dashFilter !== "stubs") return true
-                  const article = wikiArticles?.find((a) => a.id === note.id)
-                  return article ? isWikiStub(article) : false
+                  if (dashFilter === "stubs") {
+                    const article = wikiArticles?.find((a) => a.id === note.id)
+                    return article ? isWikiStub(article) : false
+                  }
+                  if (dashFilter === "articles") {
+                    const article = wikiArticles?.find((a) => a.id === note.id)
+                    return article ? !isWikiStub(article) : true
+                  }
+                  return true // "all"
                 })
                 .map((note, idx) => (
                 <ArticleTableRow

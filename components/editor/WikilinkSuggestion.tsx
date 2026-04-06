@@ -434,13 +434,20 @@ export const WikilinkSuggestion = Extension.create({
             if (!wikiExists) (store as any).createWikiArticle({ title: props.title })
           }
 
-          // Wiki items get a "wiki:" prefix so WikilinkDecoration can distinguish
-          const prefix = (props.itemType === "wiki" || props.isNewWiki || props.isWiki) ? "wiki:" : ""
+          // Insert as atom node instead of raw text
+          const linkType = (props.itemType === "wiki" || props.isNewWiki || props.isWiki) ? "wiki" : "note"
+          const targetId = props.id || null
           editor
             .chain()
             .focus()
             .deleteRange(range)
-            .insertContent("[[" + prefix + props.title + "]] ")
+            .insertContent([
+              {
+                type: "wikilink",
+                attrs: { title: props.title, linkType, targetId },
+              },
+              { type: "text", text: " " },
+            ])
             .run()
         },
       },
