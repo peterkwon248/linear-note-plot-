@@ -374,8 +374,6 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 5. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
 6. **인포박스 고도화** (P2)
 7. **Side Panel 풀페이지 확장** (P3)
-7. 인포박스 고도화 (P2)
-8. Side Panel 풀페이지 확장
 
 > 상세: `docs/BRAINSTORM-2026-04-06.md`
 
