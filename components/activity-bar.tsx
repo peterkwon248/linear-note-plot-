@@ -24,6 +24,7 @@ import {
   IconMoon,
 } from "@/components/plot-icons"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
+import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { useSettingsStore } from "@/lib/settings-store"
 
@@ -40,6 +41,7 @@ const SPACES: {
   { id: "wiki",     label: "Wiki",     icon: IconWiki,     shortcut: "" },
   { id: "calendar", label: "Calendar", icon: IconCalendar, shortcut: "" },
   { id: "ontology", label: "Ontology",  icon: Graph,        shortcut: "" },
+  { id: "library",  label: "Library",  icon: (props) => <Books {...props} weight="light" />, shortcut: "" },
 ]
 
 /* ── Component ──────────────────────────────────────── */

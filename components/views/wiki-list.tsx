@@ -9,6 +9,7 @@ import { isWikiStub } from "@/lib/wiki-utils"
 import type { WikiArticle } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
@@ -53,14 +54,42 @@ interface WikiListProps {
   // Selection
   selectedIds?: Set<string>
   onSelect?: (id: string, opts: { multi?: boolean; shift?: boolean; index?: number }) => void
+  onSelectAll?: (ids: string[]) => void
 }
 
 /* ── Column Header ── */
 
-function ColumnHeaders({ hasSelection }: { hasSelection?: boolean }) {
+function ColumnHeaders({
+  hasSelection,
+  onSelectAll,
+  isAllSelected,
+  isPartiallySelected,
+}: {
+  hasSelection?: boolean
+  onSelectAll?: () => void
+  isAllSelected?: boolean
+  isPartiallySelected?: boolean
+}) {
   return (
     <div className="flex items-center px-5 py-2 text-2xs font-medium text-muted-foreground/50 border-b border-border-subtle">
-      {hasSelection && <span className="w-7 shrink-0" />}
+      {hasSelection && (
+        <div className="w-7 shrink-0 flex items-center justify-center">
+          {onSelectAll ? (
+            <button
+              onClick={onSelectAll}
+              className="w-4 h-4 rounded border border-border flex items-center justify-center hover:border-foreground/30 transition-colors"
+            >
+              {isAllSelected ? (
+                <PhCheck size={10} weight="bold" className="text-accent" />
+              ) : isPartiallySelected ? (
+                <Minus size={10} weight="bold" className="text-muted-foreground" />
+              ) : null}
+            </button>
+          ) : (
+            <span />
+          )}
+        </div>
+      )}
       <span className="min-w-0 flex-1">Title</span>
       <span className="w-[60px] text-right">Links</span>
       <span className="w-[36px]" />
@@ -265,9 +294,36 @@ export function WikiList({
   wikiArticles,
   selectedIds,
   onSelect,
+  onSelectAll,
 }: WikiListProps) {
   const selectionActive = selectedIds ? selectedIds.size > 0 : false
   const groupedArticles = groupByInitial(filteredWikiNotes, (n: WikiArticle) => n.title || "Untitled")
+
+  // Compute visible notes for the current filter (used for select-all)
+  const visibleNotes = sortedFilteredWikiNotes.filter((note) => {
+    if (dashFilter === "stubs") {
+      const article = wikiArticles?.find((a) => a.id === note.id)
+      return article ? isWikiStub(article) : false
+    }
+    if (dashFilter === "articles") {
+      const article = wikiArticles?.find((a) => a.id === note.id)
+      return article ? !isWikiStub(article) : true
+    }
+    return true
+  })
+
+  const isAllSelected = visibleNotes.length > 0 && selectedIds ? selectedIds.size >= visibleNotes.length && visibleNotes.every((n) => selectedIds.has(n.id)) : false
+  const isPartiallySelected = selectedIds ? selectedIds.size > 0 && !isAllSelected : false
+
+  const handleSelectAll = onSelectAll
+    ? () => {
+        if (isAllSelected) {
+          onSelectAll([]) // clear all
+        } else {
+          onSelectAll(visibleNotes.map((n) => n.id)) // select all visible
+        }
+      }
+    : undefined
 
   const counts = {
     all: sortedFilteredWikiNotes.length,
@@ -381,7 +437,12 @@ export function WikiList({
       ) : (
         /* ── Filtered Article Table ── */
         <div className="flex-1 overflow-y-auto">
-          <ColumnHeaders hasSelection={!!onSelect} />
+          <ColumnHeaders
+            hasSelection={!!onSelect}
+            onSelectAll={handleSelectAll}
+            isAllSelected={isAllSelected}
+            isPartiallySelected={isPartiallySelected}
+          />
           {sortedFilteredWikiNotes.length === 0 ? (
             <EmptyState />
           ) : (

@@ -42,6 +42,10 @@ import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
 import { Island } from "@phosphor-icons/react/dist/ssr/Island"
 import { ChartPie } from "@phosphor-icons/react/dist/ssr/ChartPie"
 import { CheckSquare as CheckSquareIcon } from "@phosphor-icons/react/dist/ssr/CheckSquare"
+import { Books } from "@phosphor-icons/react/dist/ssr/Books"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import { setHomeSection, useHomeSection } from "@/lib/home-section"
@@ -372,6 +376,7 @@ export function LinearSidebar() {
   const trashCount = useMemo(() => notes.filter((n) => n.trashed).length, [notes])
   const wikiCount = useMemo(() => notes.filter((n) => n.noteType === "wiki" && !n.trashed).length, [notes])
   const todoTaskCount = usePlotStore((s) => s.todoTasks.filter((t) => !t.checked).length)
+  const references = usePlotStore((s) => s.references)
 
   // Sorted folders: pinned first (by pinnedOrder), then unpinned by lastAccessedAt desc (null last)
   const sortedFolders = useMemo(() => {
@@ -1365,6 +1370,36 @@ export function LinearSidebar() {
                 active={isActive("/graph-insights")}
               />
             </Section>
+          </>
+        )}
+
+        {/* ── Library ────────────────────────────── */}
+        {activeSpace === "library" && (
+          <>
+            <div className="space-y-px">
+              <NavLink
+                href="/library"
+                icon={<SquaresFour size={20} weight="light" />}
+                label="Overview"
+                active={isActive("/library")}
+              />
+              <NavLink
+                href="/library/references"
+                icon={<Books size={20} weight="light" />}
+                label="References"
+                count={Object.keys(references).length > 0 ? Object.keys(references).length : undefined}
+                active={isActive("/library/references")}
+              />
+              {/* Phase 2 — disabled for now */}
+              <span className="nav-item flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui text-sidebar-muted/40 cursor-default select-none" title="Coming soon">
+                <span className="flex shrink-0 items-center justify-center w-5 h-5"><PhTag size={20} weight="light" /></span>
+                <span className="flex-1 truncate">Tags</span>
+              </span>
+              <span className="nav-item flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui text-sidebar-muted/40 cursor-default select-none" title="Coming soon">
+                <span className="flex shrink-0 items-center justify-center w-5 h-5"><Paperclip size={20} weight="light" /></span>
+                <span className="flex-1 truncate">Files</span>
+              </span>
+            </div>
           </>
         )}
 

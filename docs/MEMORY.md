@@ -87,6 +87,12 @@
 - **URL 감지 유틸**: `lib/editor/url-detect.ts` — detectUrlType(youtube/audio/generic), isValidUrl, extractDomain
 - **UrlInputDialog**: `components/editor/url-input-dialog.tsx` — Portal 기반 공용 다이얼로그 (link/embed 2모드). window.prompt 전면 대체
 - **Embed 통합**: YouTube+Audio+LinkCard를 1개 Embed 버튼으로 통합. URL 패턴 자동 감지
+- **Editor Icon Barrel**: `lib/editor/editor-icons.ts` — 101개 아이콘 중앙 매핑 (Phosphor→Remix). 에디터 전용, 나머지 앱은 Phosphor 유지. 32개 에디터 파일이 이 barrel에서 import
+- **Indent Extension**: `components/editor/core/indent-extension.ts` — paragraph/heading에 indent 속성 (0-8단계, 24px/단계). addGlobalAttributes로 등록. Enter 시 indent 자동 상속
+- **Library Space**: 6번째 Activity Bar 공간. 사이드바 NavLink(Overview/References/Tags/Files). 서브라우트: `/library`, `/library/references`, `/library/tags`, `/library/files`. Always-mounted 패턴
+- **ReferenceDetailPanel**: `components/side-panel/reference-detail-panel.tsx` — SmartSidePanel Detail 탭에서 Reference 편집. SidePanelContext `{ type: "reference", id }` 확장
+- **각주→Reference 자동 연결**: footnote-node.tsx + footnotes-footer.tsx의 save()에서 referenceId 없으면 자동 createReference + 연결. content 수정 시 동기화
+- **More Actions Overflow**: Pin 고정, 우클릭 Favorites (settings-store persist), 서브패널 (컬러피커/테이블 호버선택/이미지). `overflowFavorites: string[]` in settings store
 
 ## Store Slices (21 total)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references
@@ -342,16 +348,32 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Library 6번째 공간 추가 결정** — 이미지/파일/URL 독립 엔티티 (2026-04-06)
 - **에디터 아이콘 Remix Icon 전환** — Phosphor light → Remix. 에디터 전용, 나머지 Phosphor 유지 (2026-04-07)
 - **P0+P1 병행 전략** — Library 뼈대 → References UI → 각주 자동 연결 → 고도화 순서 (2026-04-07)
+- **Library 사이드바 NavLink 전환** — 상단 탭 제거 → 사이드바 NavLink (Overview/References/Tags/Files). Wiki 패턴 동일 (2026-04-07)
+- **Reference 디테일 = SmartSidePanel** — 별도 풀페이지 에디터 없음. 사이드 패널에서 편집 충분 (2026-04-07)
 
-### 다음 우선순위 (2026-04-07, P0+P1 병행)
-1. Library 뼈대 (6번째 Activity Bar + 빈 공간 + 3탭 구조)
-2. References 탭 UI (리스트 + 사이드바 디테일)
-3. 각주 자동 Reference 연결 (P0 #2)
-4. createdAt + history (P0 #1, #3) — Library 디테일 패널에서 타임라인 표시
-5. Tags 글로벌 승격 + Files 탭 (P1 나머지)
-6. 각주 리치 텍스트 (P0 #4)
-7. 인포박스 고도화 (P2)
-8. Side Panel 풀페이지 확장
+### 이번 세션 완료 (2026-04-07, PR #163 + #164 + #165)
+- **에디터 툴바 Remix Icon 전환**: 32파일 101아이콘, 중앙 barrel, H/B 아이콘화
+- **More Actions 오버플로우 UX**: Pin 고정 + Favorites(우클릭 persist) + 서브패널(컬러/테이블/이미지)
+- **Indent margin-left**: blockquote 감쌈 → 24px 8단계 (indent-extension.ts)
+- **Library 6번째 Activity Bar 공간**: 사이드바 NavLink(Overview/References/Tags/Files), 서브라우트 4개
+- **Library Overview 대시보드**: References/Tags/Files stat 카드 + Recent 리스트
+- **References 풀페이지 리스트**: 검색, Quick Filter(All/Linked/Unlinked + Field keys), 정렬(Name/Updated), 전체선택, 멀티선택 + 플로팅 액션바(Delete/Export/Add Field)
+- **ReferenceDetailPanel**: SmartSidePanel 확장, SidePanelContext `"reference"` 타입, Title/Content/Fields 인라인 편집
+- **각주→Reference 자동 연결**: save 시 자동 createReference + referenceId 연결, content 동기화
+- **Insert 메뉴 추가**: Embed Wiki + Footnote 항목
+- **WikiPickerDialog 업그레이드**: 960px, Category 필터, 2줄 레이아웃, 중복 제거
+- **Embed Note 기본 Synced**, WikiEmbed 높이 제한 해제
+- **각주 팝오버 좌측 잘림 수정**, Math 기본 hidden, Move Up/Down disabled
+- **Wiki 전체선택 버튼 추가**
+
+### 다음 우선순위 (2026-04-07 기준)
+1. **Library + Wiki Overview 디자인 폴리싱** — stat 카드 디자인 통일, 토스증권/드리블 참고
+2. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터
+3. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력, Library 디테일 패널 표시
+4. **Tags 글로벌 승격 + Files 탭** — WikiArticle에 tags 추가, Library > Tags/Files 탭 구현
+5. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
+6. **인포박스 고도화** (P2)
+7. **Side Panel 풀페이지 확장** (P3)
 
 > 상세: `docs/BRAINSTORM-2026-04-06.md`
 

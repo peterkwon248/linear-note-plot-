@@ -4,6 +4,7 @@ import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
 import { useState, useRef, useEffect, useMemo } from "react"
+import { usePlotStore } from "@/lib/store"
 
 function FootnoteRefView({ node, editor, updateAttributes }: NodeViewProps) {
   const [editing, setEditing] = useState(false)
@@ -69,7 +70,27 @@ function FootnoteRefView({ node, editor, updateAttributes }: NodeViewProps) {
 
   const save = () => {
     const trimmed = draft.trim()
-    updateAttributes({ content: trimmed })
+    const attrs: Record<string, any> = { content: trimmed }
+
+    // Auto-create Reference if none linked yet and content is not empty
+    if (trimmed && !node.attrs.referenceId) {
+      const store = usePlotStore.getState()
+      const refId = store.createReference({
+        title: trimmed.length > 60 ? trimmed.slice(0, 60) + "…" : trimmed,
+        content: trimmed,
+      })
+      attrs.referenceId = refId
+    }
+    // Sync content back to linked Reference
+    if (trimmed && node.attrs.referenceId) {
+      const store = usePlotStore.getState()
+      const ref = store.references[node.attrs.referenceId as string]
+      if (ref) {
+        store.updateReference(node.attrs.referenceId as string, { content: trimmed })
+      }
+    }
+
+    updateAttributes(attrs)
     setEditing(false)
   }
 

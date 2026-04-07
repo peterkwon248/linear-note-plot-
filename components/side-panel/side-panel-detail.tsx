@@ -4,12 +4,13 @@ import { useActiveSpace } from "@/lib/table-route"
 import { useSidePanelEntity } from "./use-side-panel-entity"
 import { SidePanelContext } from "./side-panel-context"
 import { WikiArticleDetailPanel } from "./wiki-article-detail-panel"
+import { ReferenceDetailPanel } from "./reference-detail-panel"
 
 /**
  * Entity-aware detail panel that renders appropriate detail content
  * based on the active space and sidePanelContext. For notes, delegates
  * to SidePanelContext. For wiki articles, shows WikiArticleDetailPanel.
- * Graph shows a placeholder.
+ * For references, shows ReferenceDetailPanel. Graph shows a placeholder.
  */
 export function SidePanelDetail() {
   const activeSpace = useActiveSpace()
@@ -21,6 +22,10 @@ export function SidePanelDetail() {
 
   if (entity.type === "wiki") {
     return <WikiArticleDetailPanel article={entity.wikiArticle} />
+  }
+
+  if (entity.type === "reference" && entity.referenceId) {
+    return <ReferenceDetailPanel referenceId={entity.referenceId} />
   }
 
   // type === "note" or null — existing behavior

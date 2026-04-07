@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import type { Editor } from "@tiptap/react"
+import { usePlotStore } from "@/lib/store"
 
 interface FootnoteItem {
   id: string
@@ -48,10 +49,24 @@ function FootnoteRow({
     if (editor) {
       editor.state.doc.descendants((node, pos) => {
         if (node.type.name === "footnoteRef" && node.attrs.id === fn.id) {
-          const tr = editor.state.tr.setNodeMarkup(pos, undefined, {
-            ...node.attrs,
-            content: trimmed,
-          })
+          const newAttrs: Record<string, any> = { ...node.attrs, content: trimmed }
+
+          // Auto-create Reference if none linked and content exists
+          if (trimmed && !node.attrs.referenceId) {
+            const store = usePlotStore.getState()
+            const refId = store.createReference({
+              title: trimmed.length > 60 ? trimmed.slice(0, 60) + "…" : trimmed,
+              content: trimmed,
+            })
+            newAttrs.referenceId = refId
+          }
+          // Sync content to linked Reference
+          if (trimmed && node.attrs.referenceId) {
+            const store = usePlotStore.getState()
+            store.updateReference(node.attrs.referenceId as string, { content: trimmed })
+          }
+
+          const tr = editor.state.tr.setNodeMarkup(pos, undefined, newAttrs)
           editor.view.dispatch(tr)
           return false
         }

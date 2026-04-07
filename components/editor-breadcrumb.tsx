@@ -17,6 +17,7 @@ const SPACE_LABELS: Record<ActivitySpace, string> = {
   wiki: "Wiki",
   calendar: "Calendar",
   ontology: "Graph",
+  library: "Library",
 }
 
 export function EditorBreadcrumb({ note, onClose }: EditorBreadcrumbProps) {

@@ -326,6 +326,10 @@ export function WikiView() {
     }
   }, [sortedFilteredWikiNotes])
 
+  const handleArticleSelectAll = useCallback((ids: string[]) => {
+    setSelectedArticleIds(new Set(ids))
+  }, [])
+
   // Clear selection when filter changes
   useEffect(() => {
     setSelectedArticleIds(new Set())
@@ -1150,6 +1154,7 @@ export function WikiView() {
             onCreateFromRedLink={handleCreateFromRedLink}
             selectedIds={selectedArticleIds}
             onSelect={(id, opts) => handleArticleSelect(id, opts)}
+            onSelectAll={handleArticleSelectAll}
             stubCount={stubCount}
             wikiArticles={wikiArticles}
           />

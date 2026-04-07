@@ -153,6 +153,12 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
 
     setSidePanelContext: (ctx: SidePanelContext) => set({ sidePanelContext: ctx }),
 
+    openReferencePanel: (refId: string) => set({
+      sidePanelContext: { type: "reference" as const, id: refId },
+      sidePanelMode: 'detail' as const,
+      sidePanelOpen: true,
+    }),
+
     openSidePeek: (noteId: string) => set({ sidePanelPeekNoteId: noteId, sidePanelMode: 'peek' as const, sidePanelOpen: true }),
     closeSidePeek: () => set((s: any) => {
       const hasSelectedNote = !!s.selectedNoteId
