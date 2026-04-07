@@ -291,6 +291,20 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - **Link+Embed 나란히 배치**: toolbar-config에서 embed를 link 바로 뒤로 이동
   - **전체 툴바 버튼 설명 추가**: 30개 버튼 title 속성에 "Name — description (shortcut)" 형식 영어 설명
 
+- **PR #163**: Editor Toolbar Redesign — Remix Icon + Overflow UX + Indent + Embeds
+  - **Remix Icon 전환**: Phosphor light → Remix Icon. 32개 에디터 파일 교체. `lib/editor/editor-icons.ts` 중앙 barrel 파일 (101개 매핑). 앱 나머지는 Phosphor 유지
+  - **H/B 텍스트→아이콘**: `<span>H</span>` → RiHeading, `<span>B</span>` → RiBold
+  - **More Actions ⋯ 오버플로우 UX**: Pin 고정 모드 (외부 클릭에도 안 닫힘), 아이콘+라벨 그리드, 우클릭 Favorites (settings store persist), 서브패널 (컬러피커/테이블 호버선택/이미지), 메뉴 340×520px
+  - **Move Up/Down 버그 수정**: `isInList` 상태 추가, 리스트 바깥에서 disabled
+  - **Math 기본 hidden**: inlineMath/blockMath 툴바 기본 비표시 (SlashCommand로 접근)
+  - **Indent 수정**: blockquote 감쌈 → margin-left 레벨 (Notion 방식). `indent-extension.ts` 신규 (0-8단계, 24px/단계). Enter 시 indent 상속
+  - **Insert 메뉴**: Embed Wiki + Footnote 항목 추가
+  - **WikiPickerDialog 업그레이드**: 960px 다이얼로그, Category 필터 칩, 2줄 레이아웃 (제목+aliases), 카운터, 중복 제거
+  - **Embed Note 기본 Synced**: `synced: true` 기본값. 삽입 시 전체 내용 인라인 표시
+  - **WikiEmbed 높이 제한 해제**: `max-h-[500px]` 제거 → 전체 문서 펼침
+  - **각주 팝오버 잘림 수정**: `left:50%+translateX(-50%)` → `left:0` 좌측 정렬
+  - **Math 직접 노드 삽입**: `$...$` 텍스트 → `insertContent({ type: "inlineMath/blockMath" })` 직접 노드
+
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
 **사상**: 팔란티어 × 제텔카스텐. Layer 1(Raw Data) → Layer 2(Ontology) → Layer 3(Wiki) → Layer 4(Insights). LLM/API 사용 안 함.
@@ -320,22 +334,24 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-04-06)
+## Current Direction (as of 2026-04-07)
 
 ### 방향 결정
 - **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** (2026-04-01)
 - **위키 인프라 강화 우선** — WikiEmbed, 변환 함수, 각주, 인포박스 고도화 (2026-04-06)
 - **Library 6번째 공간 추가 결정** — 이미지/파일/URL 독립 엔티티 (2026-04-06)
+- **에디터 아이콘 Remix Icon 전환** — Phosphor light → Remix. 에디터 전용, 나머지 Phosphor 유지 (2026-04-07)
+- **P0+P1 병행 전략** — Library 뼈대 → References UI → 각주 자동 연결 → 고도화 순서 (2026-04-07)
 
-### 다음 우선순위 (2026-04-06 브레인스토밍 반영)
-1. WikiEmbed (노트 안에 위키 라이브 임베드)
-2. 위키→TipTap 변환 함수 (복사)
-3. Wiki Quote 개선 (드래그 선택 필수)
-4. 각주 (Footnote) 노드 — 나무위키식
-5. 인포박스 고도화 (이미지+섹션+접기)
-6. 나무위키 틀 (계보 테이블, 네비게이션 박스)
-7. Library (6번째 공간)
-8. Side Panel 풀페이지 확장 (Thread 코멘트뷰 포함)
+### 다음 우선순위 (2026-04-07, P0+P1 병행)
+1. Library 뼈대 (6번째 Activity Bar + 빈 공간 + 3탭 구조)
+2. References 탭 UI (리스트 + 사이드바 디테일)
+3. 각주 자동 Reference 연결 (P0 #2)
+4. createdAt + history (P0 #1, #3) — Library 디테일 패널에서 타임라인 표시
+5. Tags 글로벌 승격 + Files 탭 (P1 나머지)
+6. 각주 리치 텍스트 (P0 #4)
+7. 인포박스 고도화 (P2)
+8. Side Panel 풀페이지 확장
 
 > 상세: `docs/BRAINSTORM-2026-04-06.md`
 
