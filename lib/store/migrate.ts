@@ -778,5 +778,23 @@ export function migrate(persistedState: unknown): PlotState {
   // v70: References — bibliography/citation store
   if (!state.references) state.references = {}
 
+  // v71: Soft delete for references and attachments
+  if (state.references) {
+    for (const id of Object.keys(state.references as Record<string, unknown>)) {
+      const ref = (state.references as Record<string, any>)[id]
+      if (ref.trashed === undefined) {
+        ref.trashed = false
+        ref.trashedAt = null
+      }
+    }
+  }
+  if (state.attachments && Array.isArray(state.attachments)) {
+    state.attachments = (state.attachments as any[]).map((a: any) => ({
+      ...a,
+      trashed: a.trashed ?? false,
+      trashedAt: a.trashedAt ?? null,
+    }))
+  }
+
   return state as unknown as PlotState
 }

@@ -979,16 +979,8 @@ export function LinearSidebar() {
             {/* Views section */}
             {renderViewsSection("notes", "/notes")}
 
-            {/* More section: Tags, Labels, Templates, Insights */}
+            {/* More section: Labels, Templates, Insights */}
             <Section title="More">
-              <NavLink
-                href="/tags"
-                icon={<IconTag size={20} />}
-                label="Tags"
-                count={tags.length}
-                active={isActive("/tags")}
-                dragContent={{ type: "tags" }}
-              />
               <NavLink
                 href="/labels"
                 icon={<IconLabel size={20} />}

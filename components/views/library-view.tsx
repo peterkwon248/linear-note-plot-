@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
+import { TagsView } from "@/components/views/tags-view"
 import { formatDistanceToNow } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
@@ -544,7 +545,7 @@ function LibraryOverview() {
   const notes = usePlotStore((s) => s.notes)
 
   // Reference stats
-  const refList = useMemo(() => Object.values(references), [references])
+  const refList = useMemo(() => Object.values(references).filter((r) => !r.trashed), [references])
   const refTotal = refList.length
   const refLinked = refList.filter((r) => r.content.trim()).length
 
@@ -552,10 +553,11 @@ function LibraryOverview() {
   const activeTags = useMemo(() => tags.filter((t) => !t.trashed), [tags])
   const tagTotal = activeTags.length
 
-  // File/attachment stats
-  const fileTotal = attachments.length
-  const imageCount = attachments.filter((a) => a.type === "image").length
-  const docCount = attachments.filter((a) => a.type !== "image").length
+  // File/attachment stats (exclude trashed)
+  const activeAttachments = useMemo(() => attachments.filter((a) => !a.trashed), [attachments])
+  const fileTotal = activeAttachments.length
+  const imageCount = activeAttachments.filter((a) => a.type === "image").length
+  const docCount = activeAttachments.filter((a) => a.type !== "image").length
 
   // Active notes (for tag count calculation)
   const activeNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
@@ -569,15 +571,20 @@ function LibraryOverview() {
     [refList]
   )
 
-  // Top tags by note count
+  // Recent tags — sorted by most recent note usage
   const topTags = useMemo(
     () =>
       activeTags
-        .map((tag) => ({
-          ...tag,
-          count: activeNotes.filter((n) => n.tags?.includes(tag.id)).length,
-        }))
-        .sort((a, b) => b.count - a.count)
+        .map((tag) => {
+          const taggedNotes = activeNotes.filter((n) => n.tags?.includes(tag.id))
+          const latestUsage = taggedNotes.reduce((max, n) => {
+            const t = new Date(n.updatedAt).getTime()
+            return t > max ? t : max
+          }, 0)
+          return { ...tag, count: taggedNotes.length, latestUsage }
+        })
+        .filter((t) => t.count > 0)
+        .sort((a, b) => b.latestUsage - a.latestUsage)
         .slice(0, 5),
     [activeTags, activeNotes]
   )
@@ -585,10 +592,10 @@ function LibraryOverview() {
   // Recent files (sorted by createdAt desc)
   const recentFiles = useMemo(
     () =>
-      [...attachments]
+      [...activeAttachments]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 5),
-    [attachments]
+    [activeAttachments]
   )
 
   // Unlinked references (no content)
@@ -660,9 +667,9 @@ function LibraryOverview() {
                     </ContentCard>
                   )}
 
-                  {/* Top Tags */}
+                  {/* Recent Tags */}
                   {topTags.length > 0 && (
-                    <ContentCard title="Top Tags" icon={Tag}>
+                    <ContentCard title="Recent Tags" icon={Tag}>
                       {topTags.map((tag) => (
                         <ListItem
                           key={tag.id}
@@ -714,76 +721,7 @@ function LibraryOverview() {
   )
 }
 
-/* ── Tags View ───────────────────────────────────── */
-
-function TagsView() {
-  const tags = usePlotStore((s) => s.tags)
-  const notes = usePlotStore((s) => s.notes)
-  const [search, setSearch] = useState("")
-
-  const activeNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
-
-  const tagItems = useMemo(() => {
-    const activeTags = tags.filter((t) => !t.trashed)
-    return activeTags
-      .map((tag) => ({
-        ...tag,
-        count: activeNotes.filter((n) => n.tags?.includes(tag.id)).length,
-      }))
-      .sort((a, b) => b.count - a.count)
-  }, [tags, activeNotes])
-
-  const filtered = useMemo(
-    () =>
-      search
-        ? tagItems.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()))
-        : tagItems,
-    [tagItems, search]
-  )
-
-  return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <ViewHeader
-        icon={<Tag weight="duotone" className="h-4 w-4" />}
-        title="Tags"
-        count={tagItems.length}
-        searchPlaceholder="Search tags..."
-        searchValue={search}
-        onSearchChange={setSearch}
-      />
-      <div className="flex-1 overflow-y-auto">
-        {filtered.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/40">
-            <Tag weight="duotone" className="h-10 w-10" />
-            <span className="text-note font-medium">
-              {search ? "No matching tags" : "No tags yet"}
-            </span>
-            <span className="text-2xs">Tags are created when you add them to notes</span>
-          </div>
-        ) : (
-          <div className="p-4 space-y-0.5">
-            {filtered.map((tag) => (
-              <button
-                key={tag.id}
-                onClick={() => setActiveRoute("/notes")}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
-              >
-                <span
-                  className="h-2.5 w-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: tag.color || "var(--muted-foreground)" }}
-                />
-                <span className="flex-1 text-note text-foreground">{tag.name}</span>
-                <span className="text-2xs tabular-nums text-muted-foreground/40">
-                  {tag.count} note{tag.count !== 1 ? "s" : ""}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+/* ── Tags View: imported from tags-view.tsx ──────── */
 
 /* ── Files View ──────────────────────────────────── */
 
@@ -791,14 +729,16 @@ function FilesView() {
   const attachments = usePlotStore((s) => s.attachments)
   const [filter, setFilter] = useState<"all" | "image" | "document">("all")
 
-  const filtered = useMemo(() => {
-    if (filter === "all") return attachments
-    if (filter === "image") return attachments.filter((a) => a.type === "image")
-    return attachments.filter((a) => a.type !== "image")
-  }, [attachments, filter])
+  const activeAttachments = useMemo(() => attachments.filter((a) => !a.trashed), [attachments])
 
-  const imageCount = useMemo(() => attachments.filter((a) => a.type === "image").length, [attachments])
-  const docCount = useMemo(() => attachments.filter((a) => a.type !== "image").length, [attachments])
+  const filtered = useMemo(() => {
+    if (filter === "all") return activeAttachments
+    if (filter === "image") return activeAttachments.filter((a) => a.type === "image")
+    return activeAttachments.filter((a) => a.type !== "image")
+  }, [activeAttachments, filter])
+
+  const imageCount = useMemo(() => activeAttachments.filter((a) => a.type === "image").length, [activeAttachments])
+  const docCount = useMemo(() => activeAttachments.filter((a) => a.type !== "image").length, [activeAttachments])
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -899,11 +839,13 @@ function ReferencesView() {
 
   /* ── Derived data ── */
 
-  const totalCount = useMemo(() => Object.keys(references).length, [references])
+  const activeRefs = useMemo(() => Object.values(references).filter((r) => !r.trashed), [references])
+
+  const totalCount = useMemo(() => activeRefs.length, [activeRefs])
 
   const linkedCount = useMemo(
-    () => Object.values(references).filter((r) => r.content.trim()).length,
-    [references]
+    () => activeRefs.filter((r) => r.content.trim()).length,
+    [activeRefs]
   )
   const unlinkedCount = useMemo(
     () => totalCount - linkedCount,
@@ -912,16 +854,16 @@ function ReferencesView() {
 
   const fieldKeys = useMemo(() => {
     const keys = new Set<string>()
-    Object.values(references).forEach((r) =>
+    activeRefs.forEach((r) =>
       r.fields.forEach((f) => {
         if (f.key.trim()) keys.add(f.key.trim())
       })
     )
     return [...keys].sort()
-  }, [references])
+  }, [activeRefs])
 
   const referenceList = useMemo(() => {
-    let arr = Object.values(references)
+    let arr = activeRefs
 
     // Quick filter
     if (quickFilter === "linked") arr = arr.filter((r) => r.content.trim())
@@ -959,7 +901,7 @@ function ReferencesView() {
     })
 
     return arr
-  }, [references, quickFilter, activeFieldKeys, search, sortBy, sortDir])
+  }, [activeRefs, quickFilter, activeFieldKeys, search, sortBy, sortDir])
 
   // Clear selection if reference was deleted
   useEffect(() => {
