@@ -4,11 +4,7 @@ import { useCallback } from "react"
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
-import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Trash as PhTrash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { Table as PhTable, Plus as PhPlus, Trash as PhTrash, X as PhX, ArrowsIn } from "@/lib/editor/editor-icons"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
@@ -59,7 +55,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 bg-secondary/30 border-b border-border-subtle">
           <div className="flex items-center gap-1.5">
-            <PhTable size={14} weight="bold" className="text-muted-foreground shrink-0" />
+            <PhTable size={14} className="text-muted-foreground shrink-0" />
             <input
               type="text"
               value={title}
@@ -78,7 +74,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                   className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
                   title="Reset size"
                 >
-                  <ArrowsIn size={12} weight="bold" />
+                  <ArrowsIn size={12} />
                 </button>
               )}
               <button
@@ -87,7 +83,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                 className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
                 title="Remove infobox"
               >
-                <PhX size={12} weight="bold" />
+                <PhX size={12} />
               </button>
             </div>
           )}

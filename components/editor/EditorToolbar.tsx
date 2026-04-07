@@ -6,17 +6,19 @@ import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from "@/lib/editor-colors"
 import { usePlotStore } from "@/lib/store"
 import { toast } from "sonner"
-import { TextB } from "@phosphor-icons/react/dist/ssr/TextB"
-import { TextItalic } from "@phosphor-icons/react/dist/ssr/TextItalic"
-import { TextUnderline as UnderlineIcon } from "@phosphor-icons/react/dist/ssr/TextUnderline"
-import { TextStrikethrough } from "@phosphor-icons/react/dist/ssr/TextStrikethrough"
-import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
-import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
-import { HighlighterCircle } from "@phosphor-icons/react/dist/ssr/HighlighterCircle"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { FileArrowUp } from "@phosphor-icons/react/dist/ssr/FileArrowUp"
+import {
+  TextB,
+  TextItalic,
+  TextUnderline as UnderlineIcon,
+  TextStrikethrough,
+  Code as PhCode,
+  Link as PhLink,
+  LinkBreak,
+  TextT,
+  HighlighterCircle,
+  X as PhX,
+  FileArrowUp,
+} from "@/lib/editor/editor-icons"
 
 interface EditorToolbarProps {
   editor: Editor | null
@@ -76,7 +78,7 @@ function InlineColorPalette({ editor, mode, onClose }: { editor: Editor; mode: "
         onMouseDown={(e) => { e.preventDefault(); onClose() }}
         className="w-5 h-5 rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 shrink-0 hover:text-muted-foreground"
       >
-        <PhX size={12} weight="regular" />
+        <PhX size={12} />
       </button>
     </div>
   )
@@ -186,37 +188,37 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         {activePanel === "none" ? (
           <>
             <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editorState.bold} title="Bold (Ctrl+B)">
-              <TextB size={16} weight="regular" />
+              <TextB size={16} />
             </BubbleButton>
             <BubbleButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editorState.italic} title="Italic (Ctrl+I)">
-              <TextItalic size={16} weight="regular" />
+              <TextItalic size={16} />
             </BubbleButton>
             <BubbleButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editorState.underline} title="Underline (Ctrl+U)">
-              <UnderlineIcon size={16} weight="regular" />
+              <UnderlineIcon size={16} />
             </BubbleButton>
             <BubbleButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editorState.strike} title="TextStrikethrough">
-              <TextStrikethrough size={16} weight="regular" />
+              <TextStrikethrough size={16} />
             </BubbleButton>
             <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editorState.code} title="Inline code">
-              <PhCode size={16} weight="regular" />
+              <PhCode size={16} />
             </BubbleButton>
             <BubbleDivider />
             <BubbleButton onClick={() => setActivePanel("textColor")} isActive={!!activeTextColor} title="Text color">
               <div className="relative">
-                <TextT size={16} weight="regular" />
+                <TextT size={16} />
                 <div className="absolute -bottom-1 left-px right-px h-0.5 rounded-sm" style={{ backgroundColor: activeTextColor || "var(--muted-foreground)" }} />
               </div>
             </BubbleButton>
             <BubbleButton onClick={() => setActivePanel("highlightColor")} isActive={editorState.highlight} title="Highlight">
-              <HighlighterCircle size={16} weight="regular" />
+              <HighlighterCircle size={16} />
             </BubbleButton>
             <BubbleDivider />
             <BubbleButton onClick={handleSetLink} isActive={editorState.link} title={editorState.link ? "Remove link" : "Insert link"}>
-              {editorState.link ? <LinkBreak size={16} weight="regular" /> : <PhLink size={16} weight="regular" />}
+              {editorState.link ? <LinkBreak size={16} /> : <PhLink size={16} />}
             </BubbleButton>
             <BubbleDivider />
             <BubbleButton onClick={handleExtractAsNote} title="Extract as Note">
-              <FileArrowUp size={16} weight="regular" />
+              <FileArrowUp size={16} />
             </BubbleButton>
           </>
         ) : (

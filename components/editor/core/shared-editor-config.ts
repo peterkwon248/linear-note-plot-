@@ -72,6 +72,7 @@ import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
 import { AnchorDividerNode } from "@/components/editor/nodes/anchor-divider-node"
 import { FootnoteRefExtension } from "@/components/editor/nodes/footnote-node"
 import { QueryBlockNode } from "@/components/editor/nodes/query-node"
+import { IndentExtension } from "./indent-extension"
 import { handleMentionClick } from "@/lib/note-reference-actions"
 import { showNotePreview, showNotePreviewById, hideNotePreview, togglePreviewPin, isPreviewShowing, isPreviewPinned } from "@/components/editor/note-hover-preview"
 import { resolveNoteById } from "@/lib/note-reference-actions"
@@ -346,6 +347,7 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     UniqueID.configure({
       types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock', 'anchorMark', 'anchorDivider', 'queryBlock', 'linkCard'],
     }),
+    IndentExtension,
   ] as Extension[]
 }
 

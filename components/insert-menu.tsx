@@ -10,23 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
-import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
-import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
-import { CalendarDots } from "@phosphor-icons/react/dist/ssr/CalendarDots"
-import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
-import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
-import { Info } from "@phosphor-icons/react/dist/ssr/Info"
-import { Article } from "@phosphor-icons/react/dist/ssr/Article"
-import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
-import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
-import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
-import { Database } from "@phosphor-icons/react/dist/ssr/Database"
+import {
+  Image as PhImage, Paperclip, Table as PhTable, CalendarDots, Minus as PhMinus,
+  Code as PhCode, Plus as PhPlus, CaretRight, MathOperations, ListBullets,
+  LinkSimple, Info, Article, Columns as PhColumns, Note as PhNote,
+  IdentificationCard, Database, BookOpen, Asterisk,
+} from "@/lib/editor/editor-icons"
 import { usePlotStore } from "@/lib/store"
 import { detectUrlType } from "@/lib/editor/url-detect"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
@@ -162,14 +151,14 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   const handleInlineMath = () => {
     editor.chain().focus().insertContent({
       type: "inlineMath",
-      attrs: { latex: " " },
+      attrs: { latex: "E = mc^2" },
     }).run()
   }
 
   const handleBlockMath = () => {
     editor.chain().focus().insertContent({
       type: "blockMath",
-      attrs: { latex: " " },
+      attrs: { latex: "\\sum_{i=1}^{n} x_i" },
     }).run()
   }
 
@@ -236,24 +225,24 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
             title="Insert"
             className="h-7 rounded-md flex items-center justify-center gap-1 shrink-0 cursor-pointer text-muted-foreground bg-transparent border-0 outline-none px-2 font-medium text-note hover:text-foreground hover:bg-hover-bg transition-colors duration-100"
           >
-            <PhPlus size={14} weight="regular" />
+            <PhPlus size={14} />
             <span>Insert</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="min-w-[180px] p-1">
           {/* Media */}
           <DropdownMenuItem onSelect={handleImage} className={ITEM_CLASS}>
-            <PhImage size={14} weight="regular" />
+            <PhImage size={14} />
             <span className="flex-1">Image</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleEmbed} className={ITEM_CLASS}>
-            <LinkSimple size={14} weight="regular" />
+            <LinkSimple size={14} />
             <span className="flex-1">Embed URL</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleFile} className={ITEM_CLASS}>
-            <Paperclip size={14} weight="regular" />
+            <Paperclip size={14} />
             <span className="flex-1">File</span>
           </DropdownMenuItem>
 
@@ -261,65 +250,80 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
 
           {/* Structure */}
           <DropdownMenuItem onSelect={handleTable} className={ITEM_CLASS}>
-            <PhTable size={14} weight="regular" />
+            <PhTable size={14} />
             <span className="flex-1">Table</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleQuery} className={ITEM_CLASS}>
-            <Database size={14} weight="regular" />
+            <Database size={14} />
             <span className="flex-1">Query</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleTOC} className={ITEM_CLASS}>
-            <ListBullets size={14} weight="regular" />
+            <ListBullets size={14} />
             <span className="flex-1">Table of Contents</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleCallout} className={ITEM_CLASS}>
-            <Info size={14} weight="regular" />
+            <Info size={14} />
             <span className="flex-1">Callout</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleSummary} className={ITEM_CLASS}>
-            <Article size={14} weight="regular" />
+            <Article size={14} />
             <span className="flex-1">Summary</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleColumns} className={ITEM_CLASS}>
-            <PhColumns size={14} weight="regular" />
+            <PhColumns size={14} />
             <span className="flex-1">Columns</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleNoteEmbed} className={ITEM_CLASS}>
-            <PhNote size={14} weight="regular" />
+            <PhNote size={14} />
             <span className="flex-1">Embed Note</span>
           </DropdownMenuItem>
 
+          <DropdownMenuItem onSelect={() => window.dispatchEvent(new CustomEvent("plot:embed-wiki-pick", { detail: { editor } }))} className={ITEM_CLASS}>
+            <BookOpen size={14} />
+            <span className="flex-1">Embed Wiki</span>
+          </DropdownMenuItem>
+
           <DropdownMenuItem onSelect={handleInfobox} className={ITEM_CLASS}>
-            <IdentificationCard size={14} weight="regular" />
+            <IdentificationCard size={14} />
             <span className="flex-1">Infobox</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleDate} className={ITEM_CLASS}>
-            <CalendarDots size={14} weight="regular" />
+            <CalendarDots size={14} />
             <span className="flex-1">Date</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={() => {
+            editor.chain().focus().insertContent({
+              type: "footnoteRef",
+              attrs: { id: nanoid(8), content: "", referenceId: null, comment: null },
+            }).run()
+          }} className={ITEM_CLASS}>
+            <Asterisk size={14} />
+            <span className="flex-1">Footnote</span>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator className="my-1" />
 
           {/* Blocks */}
           <DropdownMenuItem onSelect={handleDivider} className={ITEM_CLASS}>
-            <PhMinus size={14} weight="regular" />
+            <PhMinus size={14} />
             <span className="flex-1">Divider</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleCodeBlock} className={ITEM_CLASS}>
-            <PhCode size={14} weight="regular" />
+            <PhCode size={14} />
             <span className="flex-1">Code Block</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleToggle} className={ITEM_CLASS}>
-            <CaretRight size={14} weight="regular" />
+            <CaretRight size={14} />
             <span className="flex-1">Toggle</span>
           </DropdownMenuItem>
 
@@ -327,12 +331,12 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
 
           {/* Math */}
           <DropdownMenuItem onSelect={handleInlineMath} className={ITEM_CLASS}>
-            <MathOperations size={14} weight="regular" />
+            <MathOperations size={14} />
             <span className="flex-1">Inline Math</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleBlockMath} className={ITEM_CLASS}>
-            <MathOperations size={14} weight="regular" />
+            <MathOperations size={14} />
             <span className="flex-1">Block Math</span>
           </DropdownMenuItem>
         </DropdownMenuContent>

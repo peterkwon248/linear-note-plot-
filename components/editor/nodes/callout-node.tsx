@@ -3,13 +3,7 @@
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
-import { Info } from "@phosphor-icons/react/dist/ssr/Info"
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle"
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { Info, Warning, XCircle, CheckCircle, Lightbulb, X as PhX, ArrowsIn } from "@/lib/editor/editor-icons"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
@@ -75,7 +69,7 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
             className={`flex items-center gap-1.5 ${config.text} hover:opacity-80 transition-opacity cursor-pointer`}
             title={`${config.label} — click to change type`}
           >
-            <Icon size={16} weight="bold" />
+            <Icon size={16} />
             <span className="text-2xs font-semibold uppercase tracking-wider">{config.label}</span>
           </button>
           <div className="flex items-center gap-0.5">
@@ -86,7 +80,7 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
                 className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
                 title="Reset size"
               >
-                <ArrowsIn size={12} weight="bold" />
+                <ArrowsIn size={12} />
               </button>
             )}
             <button
@@ -95,7 +89,7 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
               className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
               title="Remove callout"
             >
-              <PhX size={12} weight="bold" />
+              <PhX size={12} />
             </button>
           </div>
         </div>

@@ -26,11 +26,7 @@ import {
   type ToolbarItemConfig,
   type ToolbarItemId,
 } from "@/lib/editor/toolbar-config"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
-import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
-import { EyeSlash } from "@phosphor-icons/react/dist/ssr/EyeSlash"
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { DotsSixVertical, Eye, EyeSlash, ArrowCounterClockwise, X as PhX } from "@/lib/editor/editor-icons"
 
 // Sortable item component
 function SortableItem({
@@ -68,7 +64,7 @@ function SortableItem({
         {...listeners}
         className="cursor-grab text-muted-foreground hover:text-foreground touch-none"
       >
-        <DotsSixVertical size={16} weight="regular" />
+        <DotsSixVertical size={16} />
       </button>
       <span className="flex-1 text-note text-foreground select-none">
         {TOOLBAR_ITEM_LABELS[item.id as ToolbarItemId] ?? item.id}
@@ -82,9 +78,9 @@ function SortableItem({
         }`}
       >
         {item.visible ? (
-          <Eye size={16} weight="light" />
+          <Eye size={16} />
         ) : (
-          <EyeSlash size={16} weight="light" />
+          <EyeSlash size={16} />
         )}
       </button>
     </div>
@@ -157,14 +153,14 @@ export function ArrangeMode({ open, onClose }: ArrangeModeProps) {
               onClick={handleReset}
               className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
-              <ArrowCounterClockwise size={14} weight="light" />
+              <ArrowCounterClockwise size={14} />
               Reset
             </button>
             <button
               onClick={handleDone}
               className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             >
-              <PhX size={16} weight="light" />
+              <PhX size={16} />
             </button>
           </div>
         </div>

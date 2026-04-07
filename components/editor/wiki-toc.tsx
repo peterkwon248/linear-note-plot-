@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { Plus as PhPlus } from "@/lib/editor/editor-icons"
 
 interface TOCHeading {
   id: string
@@ -160,7 +160,7 @@ export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTO
             onClick={() => setAddingLevel(2)}
             className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors duration-100"
           >
-            <PhPlus size={12} weight="regular" />
+            <PhPlus size={12} />
             Section
           </button>
           <button
@@ -168,7 +168,7 @@ export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTO
             className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/30 hover:text-muted-foreground hover:bg-hover-bg transition-colors duration-100"
             style={{ paddingLeft: "20px" }}
           >
-            <PhPlus size={10} weight="regular" />
+            <PhPlus size={10} />
             Subsection
           </button>
         </div>

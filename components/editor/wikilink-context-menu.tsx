@@ -5,13 +5,9 @@ import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { resolveNoteByTitle } from "@/lib/note-reference-actions"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
-import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
-import { Copy } from "@phosphor-icons/react/dist/ssr/Copy"
-import { NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
+import {
+  ArrowSquareOut, Eye, Columns, Copy, NotePencil, BookOpen, ArrowsClockwise,
+} from "@/lib/editor/editor-icons"
 import { toast } from "sonner"
 
 interface MenuState {

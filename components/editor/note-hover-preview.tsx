@@ -4,21 +4,10 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
 import { resolveNoteByTitle, resolveNoteById } from "@/lib/note-reference-actions"
-import { FolderSimple } from "@phosphor-icons/react/dist/ssr/FolderSimple"
-import { ArrowBendUpLeft } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { Eye } from "@phosphor-icons/react/dist/ssr/Eye"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { Columns } from "@phosphor-icons/react/dist/ssr/Columns"
-import { Copy } from "@phosphor-icons/react/dist/ssr/Copy"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
-import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Link } from "@phosphor-icons/react/dist/ssr/Link"
+import {
+  FolderSimple, ArrowBendUpLeft, ArrowSquareOut, Eye, DotsThree, Columns, Copy,
+  PencilSimple, X as PhX, TextT, PushPin, ArrowsClockwise, Cube, BookOpen, Link,
+} from "@/lib/editor/editor-icons"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
@@ -315,7 +304,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           className="absolute top-2 right-2 z-10 flex items-center justify-center rounded-full bg-accent/10 p-1 text-accent transition-colors hover:bg-accent/20"
           title="Unpin"
         >
-          <PushPin size={10} weight="fill" />
+          <PushPin size={10} />
         </button>
       )}
       {/* Header */}
@@ -338,7 +327,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
       <div className="relative px-4 py-1.5 flex items-center gap-1.5 text-2xs text-muted-foreground/60">
         {folderName && (
           <>
-            <FolderSimple size={10} weight="regular" />
+            <FolderSimple size={10} />
             <span>{folderName}</span>
             <span>·</span>
           </>
@@ -352,7 +341,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
               className="inline-flex items-center gap-0.5 hover:text-foreground transition-colors cursor-pointer"
               title="Show referencing notes"
             >
-              <Link size={10} weight="regular" />
+              <Link size={10} />
               <span>{backlinkCount}</span>
             </button>
             {showBacklinks && (
@@ -390,7 +379,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                   className="inline-flex items-center gap-0.5 hover:text-foreground transition-colors cursor-pointer"
                   title="Show blocks"
                 >
-                  <Cube size={10} weight="regular" />
+                  <Cube size={10} />
                   <span>{wikiArticle.blocks.length}</span>
                 </button>
                 {showBlocks && (
@@ -416,7 +405,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                   className="inline-flex items-center gap-0.5 hover:text-foreground transition-colors cursor-pointer"
                   title="Show categories"
                 >
-                  <FolderSimple size={10} weight="regular" />
+                  <FolderSimple size={10} />
                   <span>{wikiArticle.categoryIds!.length}</span>
                 </button>
                 {showCategories && (
@@ -569,7 +558,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             className="flex items-center rounded px-1.5 py-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
             title="More actions"
           >
-            <DotsThree size={14} weight="bold" />
+            <DotsThree size={14} />
           </button>
           {showMore && (
             <div className="absolute bottom-full right-0 mb-1 w-40 rounded-md border border-border-subtle bg-surface-overlay py-1 shadow-lg">

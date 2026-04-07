@@ -4,11 +4,7 @@ import { useState } from "react"
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
-import { Article } from "@phosphor-icons/react/dist/ssr/Article"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { Article, CaretDown, CaretRight, X as PhX, ArrowsIn } from "@/lib/editor/editor-icons"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
@@ -51,8 +47,8 @@ function SummaryNodeView({ node, updateAttributes, editor }: NodeViewProps) {
             className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             title={collapsed ? "Expand summary" : "Collapse summary"}
           >
-            {collapsed ? <CaretRight size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
-            <Article size={14} weight="bold" />
+            {collapsed ? <CaretRight size={14} /> : <CaretDown size={14} />}
+            <Article size={14} />
             <span className="text-2xs font-semibold uppercase tracking-wider">Summary</span>
           </button>
           <div className="flex items-center gap-0.5">
@@ -63,7 +59,7 @@ function SummaryNodeView({ node, updateAttributes, editor }: NodeViewProps) {
                 className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
                 title="Reset size"
               >
-                <ArrowsIn size={12} weight="bold" />
+                <ArrowsIn size={12} />
               </button>
             )}
             <button
@@ -72,7 +68,7 @@ function SummaryNodeView({ node, updateAttributes, editor }: NodeViewProps) {
               className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
               title="Remove summary block"
             >
-              <PhX size={12} weight="bold" />
+              <PhX size={12} />
             </button>
           </div>
         </div>

@@ -3,9 +3,7 @@
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { DotsSixVertical, X as PhX, ArrowsIn } from "@/lib/editor/editor-icons"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
@@ -45,7 +43,7 @@ function ContentBlockView({ node, updateAttributes, editor }: NodeViewProps) {
           data-drag-handle
         >
           <div className="flex items-center justify-center w-5 h-5 rounded cursor-grab text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg active:cursor-grabbing">
-            <DotsSixVertical size={14} weight="bold" />
+            <DotsSixVertical size={14} />
           </div>
         </div>
 
@@ -66,7 +64,7 @@ function ContentBlockView({ node, updateAttributes, editor }: NodeViewProps) {
               className="flex items-center justify-center w-5 h-5 rounded text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Reset size"
             >
-              <ArrowsIn size={10} weight="bold" />
+              <ArrowsIn size={10} />
             </button>
           )}
           <button
@@ -75,7 +73,7 @@ function ContentBlockView({ node, updateAttributes, editor }: NodeViewProps) {
             className="flex items-center justify-center w-5 h-5 rounded text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
             title="Unblock"
           >
-            <PhX size={10} weight="bold" />
+            <PhX size={10} />
           </button>
         </div>
       </div>

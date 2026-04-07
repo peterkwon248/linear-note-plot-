@@ -10,11 +10,7 @@ import {
   useState,
   forwardRef,
 } from "react"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Tag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
-import { Asterisk } from "@phosphor-icons/react/dist/ssr/Asterisk"
+import { FileText, BookOpen, Tag, CalendarBlank, Asterisk } from "@/lib/editor/editor-icons"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"
 import type { SuggestionOptions, SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
@@ -162,22 +158,21 @@ MentionList.displayName = "MentionList"
 function ItemIcon({ item }: { item: MentionItem }) {
   switch (item.mentionType) {
     case "date":
-      return <CalendarBlank className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+      return <CalendarBlank className="shrink-0 text-muted-foreground" size={14} />
     case "tag":
       return (
         <Tag
           className="shrink-0"
           size={14}
-          weight="regular"
-          style={item.color ? { color: item.color } : undefined}
+                   style={item.color ? { color: item.color } : undefined}
         />
       )
     case "wiki":
-      return <BookOpen className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+      return <BookOpen className="shrink-0 text-muted-foreground" size={14} />
     case "note":
-      return <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+      return <FileText className="shrink-0 text-muted-foreground" size={14} />
     case "reference":
-      return <Asterisk className="shrink-0 text-amber-500" size={14} weight="regular" />
+      return <Asterisk className="shrink-0 text-amber-500" size={14} />
   }
 }
 

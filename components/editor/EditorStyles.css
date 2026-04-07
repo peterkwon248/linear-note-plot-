@@ -1631,8 +1631,7 @@
 .footnote-popover {
   position: absolute;
   bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
   z-index: 100;
   max-width: 320px;
   min-width: 160px;
@@ -1661,11 +1660,11 @@
 @keyframes footnote-popover-in {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(4px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 }
 
@@ -1862,3 +1861,13 @@
 .link-card:hover .link-card-external {
   opacity: 1;
 }
+
+/* Indent levels for paragraph/heading blocks */
+[data-indent="1"] { margin-left: 24px; }
+[data-indent="2"] { margin-left: 48px; }
+[data-indent="3"] { margin-left: 72px; }
+[data-indent="4"] { margin-left: 96px; }
+[data-indent="5"] { margin-left: 120px; }
+[data-indent="6"] { margin-left: 144px; }
+[data-indent="7"] { margin-left: 168px; }
+[data-indent="8"] { margin-left: 192px; }

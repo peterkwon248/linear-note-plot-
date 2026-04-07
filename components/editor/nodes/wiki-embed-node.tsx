@@ -4,10 +4,7 @@ import { useMemo } from "react"
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { BookOpen, ArrowSquareOut, X as PhX, ArrowsIn } from "@/lib/editor/editor-icons"
 import { usePlotStore } from "@/lib/store"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
@@ -76,7 +73,7 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
           className="not-draggable border-l-4 border-destructive/40 rounded-lg p-3 my-2 select-none bg-secondary/20"
         >
           <div className="flex items-center gap-2 text-muted-foreground/50">
-            <BookOpen size={14} weight="bold" />
+            <BookOpen size={14} />
             <span className="text-2xs italic">Wiki article not found</span>
             <button
               type="button"
@@ -84,7 +81,7 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
               className="ml-auto rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Remove embed"
             >
-              <PhX size={12} weight="bold" />
+              <PhX size={12} />
             </button>
           </div>
         </div>
@@ -106,7 +103,7 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
         {parentEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
         {/* Header */}
         <div className="flex items-center gap-2 px-3 py-2 border-b border-border-subtle bg-secondary/20">
-          <BookOpen size={14} weight="bold" className="text-teal-500 shrink-0" />
+          <BookOpen size={14} className="text-teal-500 shrink-0" />
           <span className="text-note font-medium text-foreground truncate flex-1">
             {article.title}
             {sectionLabel && (
@@ -126,7 +123,7 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
               className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Open wiki article"
             >
-              <ArrowSquareOut size={12} weight="bold" />
+              <ArrowSquareOut size={12} />
             </button>
             {(embedWidth || embedHeight) && (
               <button
@@ -135,7 +132,7 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Reset size"
               >
-                <ArrowsIn size={12} weight="bold" />
+                <ArrowsIn size={12} />
               </button>
             )}
             <button
@@ -144,12 +141,12 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
               className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Remove embed"
             >
-              <PhX size={12} weight="bold" />
+              <PhX size={12} />
             </button>
           </div>
         </div>
         {/* Wiki content — read-only encyclopedia view */}
-        <div className="max-h-[500px] overflow-y-auto">
+        <div className={embedHeight ? "overflow-y-auto h-full" : ""}>
           <WikiArticleEncyclopedia
             article={displayArticle}
             isEditing={false}

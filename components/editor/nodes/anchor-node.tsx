@@ -4,7 +4,7 @@ import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
 import { useState, useRef, useEffect } from "react"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
+import { BookmarkSimple } from "@/lib/editor/editor-icons"
 
 function AnchorMarkView({ node, updateAttributes }: NodeViewProps) {
   const [editing, setEditing] = useState(false)
@@ -31,7 +31,7 @@ function AnchorMarkView({ node, updateAttributes }: NodeViewProps) {
   return (
     <NodeViewWrapper as="span" className="anchor-mark">
       <span contentEditable={false} className="anchor-mark-inner">
-        <BookmarkSimple size={14} weight="fill" className="anchor-icon" />
+        <BookmarkSimple size={14} className="anchor-icon" />
         {editing ? (
           <input
             ref={inputRef}

@@ -4,11 +4,7 @@ import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { Columns as PhColumns, Plus as PhPlus, Minus as PhMinus, X as PhX, ArrowsIn } from "@/lib/editor/editor-icons"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
@@ -372,7 +368,7 @@ function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
           contentEditable={false}
         >
           <div className="flex items-center gap-1.5 text-muted-foreground/60">
-            <PhColumns size={12} weight="bold" />
+            <PhColumns size={12} />
             <span className="text-2xs font-medium uppercase tracking-wider">
               {columnCount} Columns
             </span>
@@ -385,7 +381,7 @@ function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
               className="rounded p-0.5 text-muted-foreground/40 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               title="Remove column"
             >
-              <PhMinus size={12} weight="bold" />
+              <PhMinus size={12} />
             </button>
             <button
               type="button"
@@ -394,7 +390,7 @@ function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
               className="rounded p-0.5 text-muted-foreground/40 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               title="Add column"
             >
-              <PhPlus size={12} weight="bold" />
+              <PhPlus size={12} />
             </button>
             {(width || height) && (
               <button
@@ -403,7 +399,7 @@ function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
                 className="rounded p-0.5 text-muted-foreground/40 hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Reset size"
               >
-                <ArrowsIn size={12} weight="bold" />
+                <ArrowsIn size={12} />
               </button>
             )}
             <button
@@ -412,7 +408,7 @@ function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
               className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Remove columns layout"
             >
-              <PhX size={12} weight="bold" />
+              <PhX size={12} />
             </button>
           </div>
         </div>

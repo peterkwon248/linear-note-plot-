@@ -22,22 +22,7 @@ import type {
 } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
 import { shortRelative } from "@/lib/format-utils"
-import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretUpDown } from "@phosphor-icons/react/dist/ssr/CaretUpDown"
-import { Funnel } from "@phosphor-icons/react/dist/ssr/Funnel"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Table as TableIcon } from "@phosphor-icons/react/dist/ssr/Table"
-import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
-import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
-import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
-import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
-import { Tag } from "@phosphor-icons/react/dist/ssr/Tag"
-import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { CircleDashed, CircleHalf, CheckCircle, CaretDown, CaretUpDown, Funnel, X as PhX, Table as TableIcon, SortAscending, SortDescending, Tray, PushPin, ListBullets, FolderOpen, Tag, ArrowsIn } from "@/lib/editor/editor-icons"
 
 /* ── Constants ────────────────────────────────────────────── */
 
@@ -103,7 +88,7 @@ function StatusBadge({ status }: { status: string }) {
     case "permanent":
       return (
         <span className="inline-flex items-center gap-1 text-2xs text-[var(--accent)]">
-          <CheckCircle size={12} weight="fill" /> Permanent
+          <CheckCircle size={12} /> Permanent
         </span>
       )
     default:

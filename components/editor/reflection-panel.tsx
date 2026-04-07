@@ -5,10 +5,7 @@ import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { format } from "date-fns"
 import type { Reflection } from "@/lib/types"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { CaretDown, CaretRight, BookOpen, Plus as PhPlus } from "@/lib/editor/editor-icons"
 
 interface ReflectionPanelProps {
   noteId: string
@@ -59,11 +56,11 @@ export function ReflectionPanel({ noteId }: ReflectionPanelProps) {
         className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-hover-bg transition-colors"
       >
         {collapsed ? (
-          <CaretRight className="text-muted-foreground shrink-0" size={14} weight="regular" />
+          <CaretRight className="text-muted-foreground shrink-0" size={14} />
         ) : (
-          <CaretDown className="text-muted-foreground shrink-0" size={14} weight="regular" />
+          <CaretDown className="text-muted-foreground shrink-0" size={14} />
         )}
-        <BookOpen className="text-muted-foreground shrink-0" size={14} weight="regular" />
+        <BookOpen className="text-muted-foreground shrink-0" size={14} />
         <span className="text-2xs font-medium text-muted-foreground">Reflections</span>
         {noteReflections.length > 0 && (
           <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500/20 px-1 text-2xs font-medium text-amber-500">
@@ -122,7 +119,7 @@ export function ReflectionPanel({ noteId }: ReflectionPanelProps) {
               onClick={handleStartComposing}
               className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors border border-border-subtle"
             >
-              <PhPlus size={12} weight="regular" />
+              <PhPlus size={12} />
               Add Reflection
             </button>
           )}
