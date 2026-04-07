@@ -176,8 +176,8 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ## TODO: Future Work (우선순위 순, 2026-04-07 sync)
 
 ### P0 — 디자인 폴리싱 + 기능 고도화
-1. **Library + Wiki Overview 디자인 폴리싱** — stat 카드 디자인 통일 (토스증권/드리블 참고)
-2. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터
+1. **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card(트렌드 배지), "Needs Attention" 프레이밍, Featured Article 히어로, Category color coding, Activity Feed, Popular Articles. 벤치마크: Zotero/Paperpile/Capacities/BookStack/PatternFly/shadcn
+2. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터, Reference type 자동 감지, refs count 컬럼, 인라인 클릭→필터
 3. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력, Library 디테일 패널 표시
 
 ### P1 — Library 확장 + 각주 고도화

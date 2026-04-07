@@ -375,6 +375,27 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 6. **인포박스 고도화** (P2)
 7. **Side Panel 풀페이지 확장** (P3)
 
+### 리서치: Library 고도화 벤치마크 (2026-04-07)
+- **Zotero** (github.com/zotero/zotero): 3-pane 레이아웃, Collections vs Tags 구분, item type별 필드 스키마, refs count 컬럼, VirtualizedTable
+- **Paperpile**: 컴팩트 테이블 ↔ 리스트 토글, 인라인 클릭→필터, 벌크 메타데이터 편집
+- **Capacities**: Object type별 사이드바 네비게이션 (Plot 패턴과 동일), per-type 프로퍼티 스키마
+- **Obsidian citation plugin** (github.com/hans/obsidian-citation-plugin): 모달 검색 + 문헌 노트 자동 생성
+- **tiptap-footnotes** (github.com/buttondown/tiptap-footnotes): TipTap 각주 아키텍처 비교
+- **Raindrop.io**: 북마크 관리 UX, 썸네일 그리드, 스마트 태깅
+- **적용 방향**: Reference type 자동 감지 (URL→Website, DOI→Paper), refs count 컬럼, 인라인 클릭→필터, Files 썸네일 그리드
+
+### 리서치: Wiki + Library Overview 디자인 폴리싱 (2026-04-07)
+- **Bento Grid 레이아웃**: 카드 크기로 중요도 인코딩 (2×2 히어로, 1×1 스탯, 2×1 리스트)
+- **Premium Stat Card**: 큰 숫자(32-48px) + 트렌드 배지(+3 this week ↑) + 상세 라벨(11px uppercase)
+- **"Needs Attention" 프레이밍**: Stubs → "12 Needs Attention ⚠" (Tettra/Guru 패턴)
+- **Category Coverage**: 카운트→퍼센트 (89% 카테고리화 ✓) + progress bar
+- **Featured Article 히어로**: 2×2 블록, 발췌 + 카테고리 칩 + 메타
+- **"Did You Know?" 섹션**: 랜덤 stub에서 흥미로운 사실 발굴 (Wikipedia 포탈 패턴)
+- **Activity Feed**: 플레인 리스트→아바타+액션타입+타임스탬프 구조화
+- **Popular Articles**: 링크 수 기반 인기 문서 (Outline 패턴)
+- **Category Color Coding**: 카테고리별 고유 색상 (BookStack 패턴)
+- **벤치마크**: Wikipedia 포탈, Notion Wiki, Confluence, GitBook, Outline(github.com/outline/outline), BookStack, PatternFly, shadcn/ui Dashboard
+
 > 상세: `docs/BRAINSTORM-2026-04-06.md`
 
 ### 이번 세션 완료 — Phase 2A 위키 에디터 풀 툴바 + Encyclopedia 편집 통일 (2026-04-02)
