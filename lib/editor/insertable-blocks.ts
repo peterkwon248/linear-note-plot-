@@ -5,6 +5,7 @@
 import type { Editor } from "@tiptap/core"
 import type { ComponentType } from "react"
 import { detectUrlType } from "@/lib/editor/url-detect"
+import { requestEmbedUrl } from "@/lib/editor/embed-url-request"
 
 export interface InsertableBlock {
   id: string
@@ -151,17 +152,17 @@ export const INSERTABLE_BLOCKS: InsertableBlock[] = [
     iconName: "LinkSimple",
     keywords: ["embed", "url", "link", "youtube", "video", "audio", "sound"],
     command: (editor) => {
-      // TODO: replace with dialog when insertable-blocks supports React
-      const url = window.prompt("Enter URL to embed:")
-      if (!url) return
-      const type = detectUrlType(url)
-      if (type === "youtube") {
-        editor.chain().focus().setYoutubeVideo({ src: url }).run()
-      } else if (type === "audio") {
-        editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
-      } else {
-        editor.chain().focus().insertContent({ type: "linkCard", attrs: { url } }).run()
-      }
+      requestEmbedUrl((url) => {
+        if (!url) return
+        const type = detectUrlType(url)
+        if (type === "youtube") {
+          editor.chain().focus().setYoutubeVideo({ src: url }).run()
+        } else if (type === "audio") {
+          editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
+        } else {
+          editor.chain().focus().insertContent({ type: "linkCard", attrs: { url } }).run()
+        }
+      })
     },
     category: "media",
   },

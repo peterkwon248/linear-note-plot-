@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
 import { formatDistanceToNow } from "date-fns"
+import { shortRelative } from "@/lib/format-utils"
 import { toast } from "sonner"
 import {
   ContextMenu,
@@ -28,6 +30,9 @@ import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
+import { Clock } from "@phosphor-icons/react/dist/ssr/Clock"
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
+import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { cn } from "@/lib/utils"
 import { useActiveRoute, setActiveRoute } from "@/lib/table-route"
 import type { Reference } from "@/lib/types"
@@ -273,19 +278,6 @@ function EmptyReferences({ onCreate }: { onCreate: () => void }) {
   )
 }
 
-/* ── Coming Soon Placeholder ─────────────────────── */
-
-function ComingSoonTab({ label }: { label: string }) {
-  const Icon = label === "Tags" ? Tag : Folder
-  return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-muted-foreground/40">
-      <Icon weight="duotone" className="h-10 w-10" />
-      <span className="text-note font-medium">{label}</span>
-      <span className="text-2xs">Coming Soon</span>
-    </div>
-  )
-}
-
 /* ── Search Empty State ──────────────────────────── */
 
 function SearchEmpty({ query }: { query: string }) {
@@ -318,6 +310,7 @@ function LibraryFloatingActionBar({
 }) {
   const deleteReference = usePlotStore((s) => s.deleteReference)
   const updateReference = usePlotStore((s) => s.updateReference)
+  const [fieldDialog, setFieldDialog] = useState<{ open: boolean; key: string; value: string }>({ open: false, key: "", value: "" })
 
   const count = selectedIds.size
   if (count === 0) return null
@@ -344,9 +337,13 @@ function LibraryFloatingActionBar({
   }
 
   const handleBulkAddField = () => {
-    const key = window.prompt("Field name:")
+    setFieldDialog({ open: true, key: "", value: "" })
+  }
+
+  const submitBulkField = () => {
+    const key = fieldDialog.key.trim()
     if (!key) return
-    const value = window.prompt("Field value:") ?? ""
+    const value = fieldDialog.value.trim()
     selectedIds.forEach((id) => {
       const ref = references[id]
       if (ref) {
@@ -354,6 +351,7 @@ function LibraryFloatingActionBar({
       }
     })
     toast.success(`Added "${key}" to ${count} reference${count > 1 ? "s" : ""}`)
+    setFieldDialog({ open: false, key: "", value: "" })
   }
 
   return (
@@ -403,67 +401,137 @@ function LibraryFloatingActionBar({
           Add Field
         </button>
       </div>
+
+      {/* Add Field Dialog */}
+      {fieldDialog.open && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          onClick={(e) => { if (e.target === e.currentTarget) setFieldDialog({ open: false, key: "", value: "" }) }}
+        >
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="relative w-[400px] rounded-xl border border-border bg-surface-overlay shadow-2xl p-6 flex flex-col gap-4">
+            <div className="text-base font-semibold text-foreground">Add Field</div>
+            <div className="text-sm text-muted-foreground">Add a custom field to {count} selected reference{count > 1 ? "s" : ""}.</div>
+            <input
+              autoFocus
+              type="text"
+              value={fieldDialog.key}
+              onChange={(e) => setFieldDialog((s) => ({ ...s, key: e.target.value }))}
+              onKeyDown={(e) => { if (e.key === "Escape") setFieldDialog({ open: false, key: "", value: "" }) }}
+              placeholder="Field name"
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-[15px] text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-accent transition-shadow"
+            />
+            <input
+              type="text"
+              value={fieldDialog.value}
+              onChange={(e) => setFieldDialog((s) => ({ ...s, value: e.target.value }))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && fieldDialog.key.trim()) submitBulkField()
+                if (e.key === "Escape") setFieldDialog({ open: false, key: "", value: "" })
+              }}
+              placeholder="Field value"
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-[15px] text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-accent transition-shadow"
+            />
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                onClick={() => setFieldDialog({ open: false, key: "", value: "" })}
+                className="rounded-lg px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitBulkField}
+                disabled={!fieldDialog.key.trim()}
+                className="rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white disabled:opacity-40 hover:brightness-110 transition-all"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
 
-/* ── Dashboard Section ───────────────────────────── */
+/* ── Dashboard Sub-Components ────────────────────── */
 
-function DashboardSection({
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="mb-2.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
+      {children}
+    </h3>
+  )
+}
+
+function MiniStat({
+  label,
+  value,
+  sub,
+  color,
+  onClick,
+}: {
+  label: string
+  value: number
+  sub: string
+  color: string
+  onClick?: () => void
+}) {
+  const Wrapper = onClick ? "button" : "div"
+  return (
+    <Wrapper
+      onClick={onClick}
+      className={cn(
+        "rounded-lg border border-border-subtle bg-card/50 px-3 py-2.5 text-left",
+        onClick && "cursor-pointer transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
+      )}
+    >
+      <p className={cn("text-xl font-semibold tabular-nums", color)}>{value}</p>
+      <p className="text-2xs font-medium text-foreground/70">{label}</p>
+      <p className="text-2xs text-muted-foreground/40">{sub}</p>
+    </Wrapper>
+  )
+}
+
+function ContentCard({
   title,
-  href,
-  disabled,
-  stats,
+  icon: Icon,
+  children,
 }: {
   title: string
-  href?: string
-  disabled?: boolean
-  stats: Array<{ label: string; value: number; muted?: boolean }>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: React.ComponentType<any>
+  children: React.ReactNode
 }) {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-2xs font-medium text-muted-foreground/60 uppercase tracking-wider">
-          {title}
-        </h3>
-        {href && !disabled && (
-          <button
-            onClick={() => setActiveRoute(href)}
-            className="text-2xs text-accent hover:underline"
-          >
-            View all →
-          </button>
-        )}
-        {disabled && (
-          <span className="text-2xs text-muted-foreground/30">Coming soon</span>
-        )}
+    <div className="rounded-lg border border-border-subtle bg-card/30">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
+        <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/50">{title}</h3>
       </div>
-      <div className="grid grid-cols-4 gap-3">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className={cn(
-              "flex flex-col items-center gap-1 p-4 rounded-xl border",
-              disabled
-                ? "border-border/20 opacity-30"
-                : stat.muted
-                  ? "border-border/30 opacity-50"
-                  : "border-border/50 hover:border-accent/20 transition-colors"
-            )}
-          >
-            <span
-              className={cn(
-                "text-2xl font-bold tabular-nums",
-                disabled ? "text-muted-foreground/30" : "text-foreground"
-              )}
-            >
-              {stat.value}
-            </span>
-            <span className="text-2xs text-muted-foreground/50">{stat.label}</span>
-          </div>
-        ))}
-      </div>
+      <div className="px-1.5 py-1">{children}</div>
     </div>
+  )
+}
+
+function ListItem({
+  title,
+  meta,
+  onClick,
+}: {
+  title: string
+  meta: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
+    >
+      <span className="min-w-0 flex-1 truncate text-note text-foreground/90">{title}</span>
+      <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/40">{meta}</span>
+    </button>
   )
 }
 
@@ -473,35 +541,63 @@ function LibraryOverview() {
   const references = usePlotStore((s) => s.references)
   const tags = usePlotStore((s) => s.tags)
   const attachments = usePlotStore((s) => s.attachments)
+  const notes = usePlotStore((s) => s.notes)
 
   // Reference stats
-  const refList = Object.values(references)
+  const refList = useMemo(() => Object.values(references), [references])
   const refTotal = refList.length
   const refLinked = refList.filter((r) => r.content.trim()).length
-  const refUnlinked = refTotal - refLinked
-  const refEmpty = refList.filter(
-    (r) => !r.title.trim() || r.title === "Untitled Reference"
-  ).length
 
   // Tag stats
-  const tagTotal = tags.filter((t) => !t.trashed).length
+  const activeTags = useMemo(() => tags.filter((t) => !t.trashed), [tags])
+  const tagTotal = activeTags.length
 
   // File/attachment stats
   const fileTotal = attachments.length
   const imageCount = attachments.filter((a) => a.type === "image").length
   const docCount = attachments.filter((a) => a.type !== "image").length
 
+  // Active notes (for tag count calculation)
+  const activeNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
+
   // Recent references (sorted by updatedAt desc)
   const recentRefs = useMemo(
     () =>
       [...refList]
-        .sort(
-          (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        )
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
         .slice(0, 5),
     [refList]
   )
+
+  // Top tags by note count
+  const topTags = useMemo(
+    () =>
+      activeTags
+        .map((tag) => ({
+          ...tag,
+          count: activeNotes.filter((n) => n.tags?.includes(tag.id)).length,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5),
+    [activeTags, activeNotes]
+  )
+
+  // Recent files (sorted by createdAt desc)
+  const recentFiles = useMemo(
+    () =>
+      [...attachments]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5),
+    [attachments]
+  )
+
+  // Unlinked references (no content)
+  const unlinkedRefs = useMemo(
+    () => refList.filter((r) => !r.content.trim()).slice(0, 5),
+    [refList]
+  )
+
+  const isEmpty = refTotal === 0 && tagTotal === 0 && fileTotal === 0
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -510,68 +606,249 @@ function LibraryOverview() {
         title="Library"
       />
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6 max-w-4xl space-y-8">
-          {/* References Section */}
-          <DashboardSection
-            title="References"
-            href="/library/references"
-            stats={[
-              { label: "Total", value: refTotal },
-              { label: "Linked", value: refLinked },
-              { label: "Unlinked", value: refUnlinked },
-              { label: "Empty", value: refEmpty, muted: refEmpty === 0 },
-            ]}
-          />
-
-          {/* Tags Section */}
-          <DashboardSection
-            title="Tags"
-            disabled
-            stats={[{ label: "Total", value: tagTotal }]}
-          />
-
-          {/* Files Section */}
-          <DashboardSection
-            title="Files"
-            disabled
-            stats={[
-              { label: "Total", value: fileTotal },
-              { label: "Images", value: imageCount },
-              { label: "Documents", value: docCount },
-            ]}
-          />
-
-          {/* Recent Activity */}
-          {recentRefs.length > 0 && (
-            <div>
-              <h3 className="text-2xs font-medium text-muted-foreground/60 uppercase tracking-wider mb-3">
-                Recent
-              </h3>
-              <div className="space-y-1">
-                {recentRefs.map((ref) => (
-                  <button
-                    key={ref.id}
-                    onClick={() => setActiveRoute("/library/references")}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-hover-bg transition-colors text-left"
-                  >
-                    <Books
-                      size={14}
-                      className="text-muted-foreground/50 shrink-0"
-                    />
-                    <span className="flex-1 truncate text-note text-foreground">
-                      {ref.title || "Untitled"}
-                    </span>
-                    <span className="text-2xs text-muted-foreground/40 shrink-0">
-                      {formatDistanceToNow(new Date(ref.updatedAt), {
-                        addSuffix: false,
-                      })}
-                    </span>
-                  </button>
-                ))}
+        <div className="mx-auto max-w-5xl p-6">
+          {isEmpty ? (
+            <div className="flex flex-col items-center gap-3 py-20 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
+                <Books className="text-muted-foreground" size={20} weight="regular" />
               </div>
+              <p className="text-note font-medium text-muted-foreground">Library is empty</p>
+              <p className="text-2xs text-muted-foreground/60">Create references, add tags, or attach files to your notes</p>
             </div>
+          ) : (
+            <>
+              {/* Top Stats Row */}
+              <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-3">
+                <MiniStat
+                  label="References"
+                  value={refTotal}
+                  sub={`${refLinked} linked`}
+                  color="text-accent"
+                  onClick={() => setActiveRoute("/library/references")}
+                />
+                <MiniStat
+                  label="Tags"
+                  value={tagTotal}
+                  sub="used across notes"
+                  color="text-amber-500"
+                  onClick={() => setActiveRoute("/library/tags")}
+                />
+                <MiniStat
+                  label="Files"
+                  value={fileTotal}
+                  sub={`${imageCount} images, ${docCount} docs`}
+                  color="text-orange-400"
+                  onClick={() => setActiveRoute("/library/files")}
+                />
+              </div>
+
+              {/* Two-Column Content */}
+              <div className="grid grid-cols-1 gap-5 min-[700px]:grid-cols-2">
+                {/* Left column */}
+                <div className="space-y-4">
+                  {/* Recent References */}
+                  {recentRefs.length > 0 && (
+                    <ContentCard title="Recent References" icon={Clock}>
+                      {recentRefs.map((ref) => (
+                        <ListItem
+                          key={ref.id}
+                          title={ref.title || "Untitled Reference"}
+                          meta={shortRelative(ref.updatedAt)}
+                          onClick={() => setActiveRoute("/library/references")}
+                        />
+                      ))}
+                    </ContentCard>
+                  )}
+
+                  {/* Top Tags */}
+                  {topTags.length > 0 && (
+                    <ContentCard title="Top Tags" icon={Tag}>
+                      {topTags.map((tag) => (
+                        <ListItem
+                          key={tag.id}
+                          title={tag.name}
+                          meta={`${tag.count} note${tag.count !== 1 ? "s" : ""}`}
+                          onClick={() => setActiveRoute("/library/tags")}
+                        />
+                      ))}
+                    </ContentCard>
+                  )}
+                </div>
+
+                {/* Right column */}
+                <div className="space-y-4">
+                  {/* Recent Files */}
+                  {recentFiles.length > 0 && (
+                    <ContentCard title="Recent Files" icon={Paperclip}>
+                      {recentFiles.map((att) => (
+                        <ListItem
+                          key={att.id}
+                          title={att.name || "Untitled file"}
+                          meta={att.type}
+                          onClick={() => setActiveRoute("/library/files")}
+                        />
+                      ))}
+                    </ContentCard>
+                  )}
+
+                  {/* Unlinked References */}
+                  {unlinkedRefs.length > 0 && (
+                    <ContentCard title="Unlinked References" icon={Warning}>
+                      {unlinkedRefs.map((ref) => (
+                        <ListItem
+                          key={ref.id}
+                          title={ref.title || "Untitled Reference"}
+                          meta="no content"
+                          onClick={() => setActiveRoute("/library/references")}
+                        />
+                      ))}
+                    </ContentCard>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Tags View ───────────────────────────────────── */
+
+function TagsView() {
+  const tags = usePlotStore((s) => s.tags)
+  const notes = usePlotStore((s) => s.notes)
+  const [search, setSearch] = useState("")
+
+  const activeNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
+
+  const tagItems = useMemo(() => {
+    const activeTags = tags.filter((t) => !t.trashed)
+    return activeTags
+      .map((tag) => ({
+        ...tag,
+        count: activeNotes.filter((n) => n.tags?.includes(tag.id)).length,
+      }))
+      .sort((a, b) => b.count - a.count)
+  }, [tags, activeNotes])
+
+  const filtered = useMemo(
+    () =>
+      search
+        ? tagItems.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()))
+        : tagItems,
+    [tagItems, search]
+  )
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <ViewHeader
+        icon={<Tag weight="duotone" className="h-4 w-4" />}
+        title="Tags"
+        count={tagItems.length}
+        searchPlaceholder="Search tags..."
+        searchValue={search}
+        onSearchChange={setSearch}
+      />
+      <div className="flex-1 overflow-y-auto">
+        {filtered.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/40">
+            <Tag weight="duotone" className="h-10 w-10" />
+            <span className="text-note font-medium">
+              {search ? "No matching tags" : "No tags yet"}
+            </span>
+            <span className="text-2xs">Tags are created when you add them to notes</span>
+          </div>
+        ) : (
+          <div className="p-4 space-y-0.5">
+            {filtered.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => setActiveRoute("/notes")}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: tag.color || "var(--muted-foreground)" }}
+                />
+                <span className="flex-1 text-note text-foreground">{tag.name}</span>
+                <span className="text-2xs tabular-nums text-muted-foreground/40">
+                  {tag.count} note{tag.count !== 1 ? "s" : ""}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Files View ──────────────────────────────────── */
+
+function FilesView() {
+  const attachments = usePlotStore((s) => s.attachments)
+  const [filter, setFilter] = useState<"all" | "image" | "document">("all")
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return attachments
+    if (filter === "image") return attachments.filter((a) => a.type === "image")
+    return attachments.filter((a) => a.type !== "image")
+  }, [attachments, filter])
+
+  const imageCount = useMemo(() => attachments.filter((a) => a.type === "image").length, [attachments])
+  const docCount = useMemo(() => attachments.filter((a) => a.type !== "image").length, [attachments])
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <ViewHeader
+        icon={<Folder weight="duotone" className="h-4 w-4" />}
+        title="Files"
+        count={attachments.length}
+      />
+      <div className="flex-1 overflow-y-auto">
+        {/* Filter bar */}
+        <div className="px-4 py-2 flex items-center gap-1 border-b border-border-subtle">
+          {(["all", "image", "document"] as const).map((f) => (
+            <QuickFilterButton
+              key={f}
+              label={f === "all" ? "All" : f === "image" ? "Images" : "Documents"}
+              active={filter === f}
+              onClick={() => setFilter(f)}
+              count={f === "all" ? attachments.length : f === "image" ? imageCount : docCount}
+            />
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/40">
+            <Folder weight="duotone" className="h-10 w-10" />
+            <span className="text-note font-medium">No files yet</span>
+            <span className="text-2xs">Files appear when you add attachments to notes</span>
+          </div>
+        ) : (
+          <div className="p-4 space-y-0.5">
+            {filtered.map((att) => (
+              <div
+                key={att.id}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-hover-bg"
+              >
+                <FileText
+                  size={16}
+                  className={cn(
+                    "shrink-0",
+                    att.type === "image" ? "text-accent/60" : "text-muted-foreground/50"
+                  )}
+                />
+                <span className="flex-1 truncate text-note text-foreground">
+                  {att.name || "Untitled file"}
+                </span>
+                <span className="text-2xs text-muted-foreground/40 shrink-0">{att.type}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -961,24 +1238,8 @@ export function LibraryView() {
     <div className="flex-1 flex flex-col overflow-hidden">
       {isOverview && <LibraryOverview />}
       {isReferences && <ReferencesView />}
-      {isTags && (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <ViewHeader
-            icon={<Tag weight="duotone" className="h-4 w-4" />}
-            title="Tags"
-          />
-          <ComingSoonTab label="Tags" />
-        </div>
-      )}
-      {isFiles && (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <ViewHeader
-            icon={<Folder weight="duotone" className="h-4 w-4" />}
-            title="Files"
-          />
-          <ComingSoonTab label="Files" />
-        </div>
-      )}
+      {isTags && <TagsView />}
+      {isFiles && <FilesView />}
     </div>
   )
 }

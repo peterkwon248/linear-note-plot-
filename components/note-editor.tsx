@@ -77,6 +77,8 @@ import { shortRelative } from "@/lib/format-utils"
 import { EditorContextMenu } from "@/components/editor/editor-context-menu"
 import { NotePickerDialog } from "@/components/note-picker-dialog"
 import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
+import { UrlInputDialog } from "@/components/editor/url-input-dialog"
+import { onEmbedUrlRequest } from "@/lib/editor/embed-url-request"
 
 interface NoteEditorProps {
   noteId?: string
@@ -111,6 +113,8 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const wikiEmbedEditorRef = useRef<Editor | null>(null)
   const [linkNotePickerOpen, setLinkNotePickerOpen] = useState(false)
   const linkNoteEditorRef = useRef<Editor | null>(null)
+  const [embedUrlDialogOpen, setEmbedUrlDialogOpen] = useState(false)
+  const embedUrlCallbackRef = useRef<((url: string | null) => void) | null>(null)
   const noteIdRef = useRef(note?.id)
 
   const handleEditorReady = useCallback((editor: unknown) => {
@@ -232,6 +236,14 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
     }
     window.addEventListener("plot:link-note-pick", handler as EventListener)
     return () => window.removeEventListener("plot:link-note-pick", handler as EventListener)
+  }, [])
+
+  // Listen for embed URL dialog requests from SlashCommand / insertable-blocks
+  useEffect(() => {
+    return onEmbedUrlRequest((callback) => {
+      embedUrlCallbackRef.current = callback
+      setEmbedUrlDialogOpen(true)
+    })
   }, [])
 
   const handleLinkNoteSelect = useCallback((selectedNoteId: string) => {
@@ -425,6 +437,20 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         onOpenChange={setWikiEmbedPickerOpen}
         title="Embed a wiki article"
         onSelect={handleWikiEmbedSelect}
+      />
+      <UrlInputDialog
+        open={embedUrlDialogOpen}
+        mode="embed"
+        onClose={() => {
+          embedUrlCallbackRef.current?.(null)
+          embedUrlCallbackRef.current = null
+          setEmbedUrlDialogOpen(false)
+        }}
+        onSubmit={(url) => {
+          embedUrlCallbackRef.current?.(url)
+          embedUrlCallbackRef.current = null
+          setEmbedUrlDialogOpen(false)
+        }}
       />
     </div>
   )

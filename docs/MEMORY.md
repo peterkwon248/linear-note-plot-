@@ -366,6 +366,14 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **각주 팝오버 좌측 잘림 수정**, Math 기본 hidden, Move Up/Down disabled
 - **Wiki 전체선택 버튼 추가**
 
+### 이번 세션 완료 (2026-04-07 오후, 이번 worktree)
+- **SmartLinkPaste 버그 수정**: view.hasFocus() 가드 → hidden editor에 LinkCard 삽입 방지
+- **window.prompt 전면 폐기**: embed-url-request.ts (CustomEvent+callback 브릿지) 신규. insertable-blocks.ts + SlashCommand.tsx → requestEmbedUrl() 콜백. note-editor.tsx에 onEmbedUrlRequest 리스너 + UrlInputDialog. library-view.tsx Add Field 인라인 다이얼로그 (Portal 기반)
+- **Library Overview 리디자인**: wiki-dashboard.tsx 패턴 참고. MiniStat 3-col (References/Tags/Files) + 2-col ContentCard (Recent Refs, Top Tags, Recent Files, Unlinked Refs). max-w-5xl 센터 정렬
+- **Tags 뷰 구현**: Coming soon → 실제 태그 목록 (색상 dot + 노트 카운트 정렬 + 검색)
+- **Files 뷰 구현**: Coming soon → 첨부파일 목록 (All/Images/Documents 필터)
+- **Sidebar Tags/Files 활성화**: disabled span → NavLink + 카운트 뱃지
+
 ### 다음 우선순위 (2026-04-07 기준)
 1. **Library + Wiki Overview 디자인 폴리싱** — stat 카드 디자인 통일, 토스증권/드리블 참고
 2. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터

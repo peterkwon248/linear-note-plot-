@@ -627,6 +627,7 @@ export function createEditorExtensions(
               key: new PluginKey("smartLinkPaste"),
               props: {
                 handlePaste: (view: EditorView, event: ClipboardEvent) => {
+                  if (!view.hasFocus()) return false
                   const text = event.clipboardData?.getData("text/plain")?.trim()
                   if (!text || !isValidUrl(text)) return false
                   // If text is selected, let Link extension handle it (adds hyperlink)

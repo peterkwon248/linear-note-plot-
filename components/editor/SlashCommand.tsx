@@ -20,6 +20,7 @@ import {
 } from "@/lib/editor/editor-icons"
 import { nanoid } from "nanoid"
 import { detectUrlType } from "@/lib/editor/url-detect"
+import { requestEmbedUrl } from "@/lib/editor/embed-url-request"
 
 interface CommandItem {
   title: string
@@ -331,9 +332,7 @@ const COMMANDS: CommandItem[] = [
     icon: LinkSimple,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).run()
-      setTimeout(() => {
-        // TODO: replace with dialog when slash command supports React
-        const url = window.prompt("Enter URL to embed:")
+      requestEmbedUrl((url) => {
         if (!url) return
         const type = detectUrlType(url)
         if (type === "youtube") {
@@ -343,7 +342,7 @@ const COMMANDS: CommandItem[] = [
         } else {
           editor.chain().focus().insertContent({ type: "linkCard", attrs: { url } }).run()
         }
-      }, 50)
+      })
     },
   },
 ]
