@@ -82,11 +82,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-115. Wikilink atom 노드 전환 — 텍스트 기반 WikilinkDecoration → atom inline 노드
-116. WikiQuote 폐기 — WikiEmbed가 상위 대체. WikiQuoteExtension/WikiQuoteNode/quote-hash 삭제 (~350줄)
-117. Reference store slice — `references: Record<string, Reference>` CRUD, store v70 migration
-118. Footnote 시스템 — FootnoteRef 인라인 atom 노드 + 자동 번호 + 호버 팝오버(300ms) + 하단 Footnotes Footer + `[[`/`@` References 섹션 통합 + SlashCommand
 119. Footnotes Footer 인라인 편집 — 하단 목록에서 싱글클릭 편집 + `[N]` 양방향 네비게이션
+120. Smart Link / LinkCard + URL 다이얼로그 + 툴바 정리
+121. Editor Toolbar Remix Icon 전환 — 32파일 101아이콘 중앙 barrel, H/B 아이콘화
+122. More Actions 오버플로우 UX — Pin 고정, 아이콘 그리드, Favorites (우클릭 persist), 서브패널 (컬러/테이블/이미지)
+123. Indent margin-left 방식 전환 — blockquote→24px 레벨 (0-8단계, Notion 방식) + indent-extension.ts
 
 ## Two Axes — Core Design Philosophy
 
@@ -156,23 +156,25 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Embed Note = 노트 피커**: Insert→Embed Note 클릭 시 NotePickerDialog 열림. 선택한 noteId로 미리보기 카드 삽입. Synced Block(본문 편집)은 Phase 2+ (2026-04-01)
 - **WikiQuote 폐기**: WikiEmbed가 상위 대체. 호버 프리뷰 Quote 버튼 + insert-wiki-quote 이벤트 + WikiQuoteExtension/Node 전부 삭제 (2026-04-06)
 - **Footnote = "에디터 접점", Reference = "저장소"**: `/footnote` 슬래시 커맨드, `[[`/`@` 드롭다운 모두에서 각주 생성/참조 가능. 유저는 Footnote만 알면 됨, Reference는 뒤에서 자동 생성 (2026-04-06)
+- **에디터 아이콘 = Remix Icon**: Phosphor light → Remix. 에디터 전용, 나머지 앱 UI는 Phosphor 유지. `lib/editor/editor-icons.ts` 중앙 barrel 101매핑 (2026-04-07)
+- **Indent = margin-left 레벨**: blockquote 감쌈 폐기 → 24px 단위 8단계 (Notion 방식). `indent-extension.ts` (2026-04-07)
+- **More Actions = 풀 기능 허브**: Pin 고정, 우클릭 Favorites (persist), 서브패널 (컬러피커/테이블/이미지). 에디터 모든 기능 접근 가능 (2026-04-07)
+- **Embed Note 기본 Synced**: 삽입 시 전체 내용 인라인 표시. Preview 카드는 토글로 전환 (2026-04-07)
+- **WikiEmbed 높이 무제한**: max-h 제거, 위키 문서 전체 펼침. 리사이즈 시 스크롤 (2026-04-07)
+- **Math 툴바 기본 hidden**: SlashCommand로 접근. Arrange Mode에서 복원 가능 (2026-04-07)
 - **Reference = 인포박스식 자유 키-값**: `fields: Array<{key,value}>`. Type 없음 — 앱이 content에서 URL/연도 자동 감지. Quick Note(fields 비면)→Full Reference(fields 있음) heuristic (2026-04-06)
 - **Library = References + Tags(글로벌) + Files**: 6번째 Activity Bar 공간. Labels는 노트 전용 유지, Tags만 글로벌 승격 (2026-04-06)
 - **각주 타임라인**: createdAt 자동 기록 + Reference.history로 수정 이력 (2026-04-06)
 
-## TODO: Future Work (우선순위 순, 2026-04-06 sync)
+## TODO: Future Work (우선순위 순, 2026-04-07 sync, P0+P1 병행)
 
-### P0 — Footnote/Reference 고도화
-1. **createdAt 필드** — 각주 생성 타임스탬프 + 하단 날짜 표시
-2. **모든 각주 자동 Reference 연결** — 독립 각주 개념 제거. /footnote로 만들어도 자동 Reference 생성
-3. **Reference.history** — 수정 이력 저장 + 스티커 UI (원본/수정 비교)
-4. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
-
-### P1 — Library (6번째 Activity Bar 공간)
-5. **Library 공간** — References + Tags(글로벌 승격) + Files(이미지/파일/URL) 3탭
-6. **References 관리 UI** — 리스트 + 사이드바 디테일 (수동: title/content/fields/tags, 자동: Usage/Connected/Info)
-7. **Tags 글로벌 승격** — WikiArticle에 tags 추가, Library > Tags 탭
-8. **Files 탭** — 이미지/파일/URL 독립 엔티티
+### 다음 (P0+P1 병행)
+1. **Library 뼈대** — 6번째 Activity Bar 공간 + 빈 공간 + References/Tags/Files 3탭 구조
+2. **References 탭 UI** — 리스트 + 사이드바 디테일 (수동: title/content/fields/tags, 자동: Usage/Connected/Info)
+3. **각주 자동 Reference 연결** — 독립 각주 개념 제거. /footnote로 만들어도 자동 Reference 생성
+4. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력, Library 디테일 패널에서 표시
+5. **Tags 글로벌 승격 + Files 탭**
+6. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
 
 ### P2 — 위키 고도화
 9. **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
