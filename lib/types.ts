@@ -13,7 +13,7 @@ export type NoteType = "note" | "wiki"
 export type WikiLayout = "default" | "encyclopedia"
 
 /** Activity Bar spaces — top-level navigation */
-export type ActivitySpace = "home" | "notes" | "wiki" | "calendar" | "ontology"
+export type ActivitySpace = "home" | "notes" | "wiki" | "calendar" | "ontology" | "library"
 
 export interface WikiInfoboxEntry {
   key: string

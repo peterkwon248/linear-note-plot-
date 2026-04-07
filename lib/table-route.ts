@@ -16,7 +16,7 @@ export const TABLE_VIEW_ROUTES = ["/notes", "/inbox", "/capture", "/permanent", 
 export const WORKFLOW_ROUTES = ["/inbox", "/capture", "/permanent"]
 
 /** Routes handled by individual always-mounted view components */
-export const VIEW_ROUTES = ["/home", "/tags", "/labels", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights", "/todos"]
+export const VIEW_ROUTES = ["/home", "/tags", "/labels", "/templates", "/ontology", "/insights", "/wiki", "/search", "/calendar", "/graph-insights", "/todos", "/library", "/library/references", "/library/tags", "/library/files"]
 
 /** All routes that use instant switching (always-mounted in layout) */
 export const ALL_SIDEBAR_ROUTES = [...TABLE_VIEW_ROUTES, ...VIEW_ROUTES]
@@ -28,6 +28,7 @@ export const DEFAULT_ROUTES: Record<ActivitySpace, string> = {
   wiki: "/wiki",
   calendar: "/calendar",
   ontology: "/ontology",
+  library: "/library",
 }
 
 /* ── Store ───────────────────────────────────────────── */
@@ -95,6 +96,7 @@ export function inferSpace(route: string): ActivitySpace {
   if (route === "/wiki") return "wiki"
   if (route.startsWith("/calendar") || route === "/todos") return "calendar"
   if (route === "/ontology" || route === "/graph-insights") return "ontology"
+  if (route.startsWith("/library")) return "library"
   // /notes, /inbox, /tags, /labels, /templates, /insights, /capture, /permanent, /trash, /pinned, /search
   return "notes"
 }

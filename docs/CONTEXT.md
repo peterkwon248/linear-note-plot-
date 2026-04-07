@@ -43,13 +43,16 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Always-mounted views via `lib/table-route.ts` + `app/(app)/layout.tsx`
 - Mount-once keep-alive pattern (CSS display toggle)
 - Responsive NotesTable: ONE grid for all sizes (ResizeObserver + minWidth thresholds)
+- 6 Activity Spaces: Home / Notes / Wiki / Calendar / Ontology / Library
+  - Library: 서브라우트 4개 (`/library`, `/library/references`, `/library/tags`, `/library/files`), 사이드바 NavLink
 
 ### Editor
 - TipTap 3 editor — Shared config factory (`components/editor/core/shared-editor-config.ts`)
 - 4-tier extension system: `base` | `note` | `wiki` | `template`
 - Title 노드 통합: 제목과 본문이 하나의 TipTap 문서 (`components/editor/core/title-node.ts`)
 - 25+ extensions (StarterKit, TaskList, Highlight, Link, Table, CodeBlockLowlight, Mathematics, SlashCommand, HashtagSuggestion, WikilinkSuggestion, WikilinkDecoration, FootnoteRefExtension, @mention (노트/위키/태그/날짜 통합), Floating TOC, Anchor/Bookmark, etc.)
-- Toolbar: h-14 (56px) bar, w-10 (40px) buttons, Phosphor weight="light". 42 configurable items via Arrange Mode (dnd-kit). Persisted in settings store
+- Toolbar: h-14 (56px) bar, w-10 (40px) buttons, Remix Icon (에디터 전용, `lib/editor/editor-icons.ts` barrel). 34 configurable items via Arrange Mode (dnd-kit). Persisted in settings store. More Actions: Pin+Favorites+서브패널
+  - Indent Extension: `indent-extension.ts` — paragraph/heading indent 0-8단계 (24px/level, Notion 방식)
 - Workspace: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
 - WorkspaceMode 삭제됨 — sidebarCollapsed + detailsOpen 독립 토글
 - Wiki-links: `[[title]]` extracted to `Note.linksOut`
@@ -82,11 +85,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-119. Footnotes Footer 인라인 편집 — 하단 목록에서 싱글클릭 편집 + `[N]` 양방향 네비게이션
-120. Smart Link / LinkCard + URL 다이얼로그 + 툴바 정리
-121. Editor Toolbar Remix Icon 전환 — 32파일 101아이콘 중앙 barrel, H/B 아이콘화
-122. More Actions 오버플로우 UX — Pin 고정, 아이콘 그리드, Favorites (우클릭 persist), 서브패널 (컬러/테이블/이미지)
-123. Indent margin-left 방식 전환 — blockquote→24px 레벨 (0-8단계, Notion 방식) + indent-extension.ts
+123. Indent margin-left 방식 전환 — blockquote→24px 8단계 (Notion 방식) + indent-extension.ts
+124. Library 6번째 Activity Bar 공간 — 사이드바 NavLink(Overview/References/Tags/Files), 서브라우트 4개, Overview 대시보드 (stat 카드 + Recent)
+125. References 풀페이지 리스트 — 검색, Quick Filter, 정렬, 전체선택, 멀티선택 + 플로팅 액션바(Delete/Export/Add Field)
+126. ReferenceDetailPanel — SmartSidePanel 확장 (SidePanelContext "reference"), Title/Content/Fields 인라인 편집
+127. 각주→Reference 자동 연결 — save 시 자동 createReference + referenceId, content 동기화
 
 ## Two Axes — Core Design Philosophy
 
@@ -164,16 +167,22 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Math 툴바 기본 hidden**: SlashCommand로 접근. Arrange Mode에서 복원 가능 (2026-04-07)
 - **Reference = 인포박스식 자유 키-값**: `fields: Array<{key,value}>`. Type 없음 — 앱이 content에서 URL/연도 자동 감지. Quick Note(fields 비면)→Full Reference(fields 있음) heuristic (2026-04-06)
 - **Library = References + Tags(글로벌) + Files**: 6번째 Activity Bar 공간. Labels는 노트 전용 유지, Tags만 글로벌 승격 (2026-04-06)
+- **Library 사이드바 NavLink**: 상단 탭 제거 → 사이드바 NavLink (Overview/References/Tags/Files). Wiki 패턴 동일 (2026-04-07)
+- **Reference 디테일 = SmartSidePanel**: 별도 풀페이지 에디터 없음. Title/Content/Fields 사이드패널 편집 (2026-04-07)
+- **Reference에 Tags 없음**: fields(key-value)가 메타데이터 역할. Tags는 노트/위키 전용 (2026-04-07)
+- **각주→Reference 자동 연결**: footnote save 시 referenceId 없으면 자동 createReference. content 양방향 동기화 (2026-04-07)
 - **각주 타임라인**: createdAt 자동 기록 + Reference.history로 수정 이력 (2026-04-06)
 
-## TODO: Future Work (우선순위 순, 2026-04-07 sync, P0+P1 병행)
+## TODO: Future Work (우선순위 순, 2026-04-07 sync)
 
-### 다음 (P0+P1 병행)
-1. **Library 뼈대** — 6번째 Activity Bar 공간 + 빈 공간 + References/Tags/Files 3탭 구조
-2. **References 탭 UI** — 리스트 + 사이드바 디테일 (수동: title/content/fields/tags, 자동: Usage/Connected/Info)
-3. **각주 자동 Reference 연결** — 독립 각주 개념 제거. /footnote로 만들어도 자동 Reference 생성
-4. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력, Library 디테일 패널에서 표시
-5. **Tags 글로벌 승격 + Files 탭**
+### P0 — 디자인 폴리싱 + 기능 고도화
+1. **Library + Wiki Overview 디자인 폴리싱** — stat 카드 디자인 통일 (토스증권/드리블 참고)
+2. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터
+3. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력, Library 디테일 패널 표시
+
+### P1 — Library 확장 + 각주 고도화
+4. **Tags 글로벌 승격** — WikiArticle에 tags 추가, Library > Tags 탭 구현
+5. **Files 탭** — 이미지/파일/URL 독립 엔티티, Library > Files 탭
 6. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
 
 ### P2 — 위키 고도화

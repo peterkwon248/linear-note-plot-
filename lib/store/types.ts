@@ -29,6 +29,7 @@ export type SidePanelMode = 'detail' | 'connections' | 'activity' | 'peek' | 'bo
 export type SidePanelContext =
   | { type: "note"; id: string }
   | { type: "wiki"; id: string }
+  | { type: "reference"; id: string }
   | null
 
 export interface PlotState {
@@ -214,6 +215,7 @@ export interface PlotState {
   setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => void
   setListPaneWidth: (width: number) => void
   setPreviewNoteId: (id: string | null) => void
+  openReferencePanel: (refId: string) => void
   openSidePeek: (noteId: string) => void
   closeSidePeek: () => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void

@@ -30,6 +30,7 @@ import { SearchView } from "@/components/views/search-view"
 import { GraphInsightsView } from "@/components/views/graph-insights-view"
 import { HomeView } from "@/components/views/home-view"
 import { TodoView } from "@/components/views/todo-view"
+import { LibraryView } from "@/components/views/library-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
@@ -73,10 +74,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (activeRoute && VIEW_ROUTES.includes(activeRoute)) {
       setMountedViews((prev) => {
-        if (prev.has(activeRoute)) return prev
         const next = new Set(prev)
-        next.add(activeRoute)
-        return next
+        let changed = false
+        if (!next.has(activeRoute)) {
+          next.add(activeRoute)
+          changed = true
+        }
+        // For sub-routes like /library/references, also mark the parent /library as mounted
+        if (activeRoute.startsWith("/library") && !next.has("/library")) {
+          next.add("/library")
+          changed = true
+        }
+        return changed ? next : prev
       })
     }
   }, [activeRoute])
@@ -233,6 +242,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {(mountedViews.has("/todos") || activeRoute === "/todos") && (
                   <div className={activeRoute === "/todos" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <TodoView />
+                  </div>
+                )}
+
+                {(mountedViews.has("/library") || activeRoute?.startsWith("/library")) && (
+                  <div className={activeRoute?.startsWith("/library") ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <LibraryView />
                   </div>
                 )}
 
