@@ -4,11 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer, EditorContent, useEditor } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
-import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { Note as PhNote, ArrowSquareOut, ArrowsClockwise, X as PhX, ArrowsIn } from "@/lib/editor/editor-icons"
 import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { getBody, saveBody } from "@/lib/note-body-store"
@@ -101,7 +97,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
           className="not-draggable border-l-4 border-destructive/40 rounded-lg p-3 my-2 select-none bg-secondary/20"
         >
           <div className="flex items-center gap-2 text-muted-foreground/50">
-            <PhNote size={14} weight="bold" />
+            <PhNote size={14} />
             <span className="text-2xs italic">Note not found</span>
             <button
               type="button"
@@ -109,7 +105,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
               className="ml-auto rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Remove embed"
             >
-              <PhX size={12} weight="bold" />
+              <PhX size={12} />
             </button>
           </div>
         </div>
@@ -132,7 +128,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
         >
         {parentEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
           <div className="flex items-center gap-2 px-3 pt-2 pb-1">
-            <PhNote size={14} weight="bold" className="text-accent shrink-0" />
+            <PhNote size={14} className="text-accent shrink-0" />
             <span className="text-2xs font-medium text-muted-foreground truncate flex-1">
               {note.title || "Untitled"}
             </span>
@@ -143,7 +139,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-accent/20 text-accent hover:bg-accent/30 transition-colors"
                 title="Disable sync"
               >
-                <ArrowsClockwise size={11} weight="bold" className="inline mr-0.5" />
+                <ArrowsClockwise size={11} className="inline mr-0.5" />
                 Synced
               </button>
               <button
@@ -156,7 +152,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Open note"
               >
-                <ArrowSquareOut size={12} weight="bold" />
+                <ArrowSquareOut size={12} />
               </button>
               {(embedWidth || embedHeight) && (
                 <button
@@ -165,7 +161,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                   className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
                   title="Reset size"
                 >
-                  <ArrowsIn size={12} weight="bold" />
+                  <ArrowsIn size={12} />
                 </button>
               )}
               <button
@@ -174,7 +170,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Remove embed"
               >
-                <PhX size={12} weight="bold" />
+                <PhX size={12} />
               </button>
             </div>
           </div>
@@ -214,7 +210,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
       >
         {parentEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
         <div className="flex items-center gap-2 mb-1">
-          <PhNote size={14} weight="bold" className="text-accent shrink-0" />
+          <PhNote size={14} className="text-accent shrink-0" />
           <span className="text-note font-medium text-foreground truncate flex-1">
             {note.title || "Untitled"}
           </span>
@@ -225,7 +221,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
               className="rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground/60 hover:text-accent hover:bg-accent/10 transition-colors"
               title="Enable sync editing"
             >
-              <ArrowsClockwise size={11} weight="bold" className="inline mr-0.5" />
+              <ArrowsClockwise size={11} className="inline mr-0.5" />
               Sync
             </button>
             <button
@@ -238,7 +234,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
               className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Open note"
             >
-              <ArrowSquareOut size={12} weight="bold" />
+              <ArrowSquareOut size={12} />
             </button>
             {(embedWidth || embedHeight) && (
               <button
@@ -247,7 +243,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Reset size"
               >
-                <ArrowsIn size={12} weight="bold" />
+                <ArrowsIn size={12} />
               </button>
             )}
             <button
@@ -256,7 +252,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
               className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Remove embed"
             >
-              <PhX size={12} weight="bold" />
+              <PhX size={12} />
             </button>
           </div>
         </div>
@@ -334,7 +330,7 @@ export const NoteEmbedNode = Node.create({
         }),
       },
       synced: {
-        default: false,
+        default: true,
         parseHTML: (element: HTMLElement) => element.getAttribute("data-synced") === "true",
         renderHTML: (attributes: Record<string, any>) => ({
           "data-synced": attributes.synced ? "true" : "false",

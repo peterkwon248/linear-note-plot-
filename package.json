@@ -45,6 +45,7 @@
     "@radix-ui/react-toggle-group": "1.1.11",
     "@radix-ui/react-tooltip": "1.2.8",
     "@react-spring/web": "^10.0.3",
+    "@remixicon/react": "^4.9.0",
     "@tabler/icons-react": "^3.40.0",
     "@tanstack/react-virtual": "^3.13.21",
     "@tiptap/extension-audio": "^3.21.0",

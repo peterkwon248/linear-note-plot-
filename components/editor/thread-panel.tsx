@@ -5,13 +5,7 @@ import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import { format } from "date-fns"
 import type { Thread, ThreadStep } from "@/lib/types"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
-import { Chat } from "@phosphor-icons/react/dist/ssr/Chat"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowBendUpLeft } from "@phosphor-icons/react/dist/ssr/ArrowBendUpLeft"
+import { CaretDown, CaretRight, Plus as PhPlus, Check as PhCheck, Chat, Trash, ArrowBendUpLeft } from "@/lib/editor/editor-icons"
 
 interface ThreadPanelProps {
   noteId: string
@@ -60,7 +54,7 @@ function StepTreeNode({
             onClick={() => onReply(node.step.id)}
             className="opacity-0 group-hover/step:opacity-100 text-2xs text-muted-foreground hover:text-foreground transition-opacity duration-100 flex items-center gap-0.5"
           >
-            <ArrowBendUpLeft size={10} weight="regular" />
+            <ArrowBendUpLeft size={10} />
             ArrowBendUpLeft
           </button>
         </div>
@@ -113,11 +107,11 @@ function DoneThreadItem({ thread, nestedReplies }: { thread: Thread; nestedRepli
           className="flex flex-1 items-center gap-2 px-3 py-2 text-left"
         >
           {expanded ? (
-            <CaretDown className="text-muted-foreground shrink-0" size={12} weight="regular" />
+            <CaretDown className="text-muted-foreground shrink-0" size={12} />
           ) : (
-            <CaretRight className="text-muted-foreground shrink-0" size={12} weight="regular" />
+            <CaretRight className="text-muted-foreground shrink-0" size={12} />
           )}
-          <PhCheck className="text-green-500 shrink-0" size={12} weight="bold" />
+          <PhCheck className="text-green-500 shrink-0" size={12} />
           <span className="text-2xs text-muted-foreground">
             {format(new Date(thread.startedAt), "MMM d, h:mm a")}
           </span>
@@ -129,7 +123,7 @@ function DoneThreadItem({ thread, nestedReplies }: { thread: Thread; nestedRepli
           onClick={(e) => { e.stopPropagation(); deleteThread(thread.id) }}
           className="opacity-0 group-hover/done:opacity-100 flex items-center justify-center px-2 py-2 text-muted-foreground hover:text-destructive transition-colors"
         >
-          <Trash size={12} weight="regular" />
+          <Trash size={12} />
         </button>
       </div>
 
@@ -234,11 +228,11 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
         className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-hover-bg transition-colors"
       >
         {collapsed ? (
-          <CaretRight className="text-muted-foreground shrink-0" size={14} weight="regular" />
+          <CaretRight className="text-muted-foreground shrink-0" size={14} />
         ) : (
-          <CaretDown className="text-muted-foreground shrink-0" size={14} weight="regular" />
+          <CaretDown className="text-muted-foreground shrink-0" size={14} />
         )}
-        <Chat className="text-muted-foreground shrink-0" size={14} weight="regular" />
+        <Chat className="text-muted-foreground shrink-0" size={14} />
         <span className="text-2xs font-medium text-muted-foreground">Thread</span>
         {activeBadgeCount > 0 && (
           <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-500/20 px-1 text-2xs font-medium text-cyan-500">
@@ -282,7 +276,7 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
               {/* Replying-to indicator */}
               {replyingTo && replyingToStep && (
                 <div className="flex items-center gap-1.5 ml-2 px-2 py-1 rounded bg-secondary/50">
-                  <ArrowBendUpLeft className="text-muted-foreground shrink-0" size={12} weight="regular" />
+                  <ArrowBendUpLeft className="text-muted-foreground shrink-0" size={12} />
                   <span className="text-2xs text-muted-foreground truncate flex-1">
                     Replying to: {replyingToStep.text.slice(0, 60)}{replyingToStep.text.length > 60 ? "..." : ""}
                   </span>
@@ -320,14 +314,14 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
                   onClick={() => { deleteThread(activeThread.id) }}
                   className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-2xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                 >
-                  <Trash size={12} weight="regular" />
+                  <Trash size={12} />
                   Delete
                 </button>
                 <button
                   onClick={handleEndThread}
                   className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
                 >
-                  <PhCheck size={12} weight="bold" />
+                  <PhCheck size={12} />
                   End Thread
                 </button>
               </div>
@@ -338,7 +332,7 @@ export function ThreadPanel({ noteId, nestedReplies }: ThreadPanelProps) {
               onClick={handleStartThread}
               className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors border border-border-subtle"
             >
-              <PhPlus size={12} weight="regular" />
+              <PhPlus size={12} />
               Start Thread
             </button>
           )}

@@ -39,6 +39,10 @@ export interface SettingsState {
   setToolbarLayout: (layout: ToolbarLayout) => void
   resetToolbarLayout: () => void
 
+  // Overflow menu favorites
+  overflowFavorites: string[]
+  toggleOverflowFavorite: (id: string) => void
+
   // Actions
   setLineNumbers: (v: boolean) => void
   setWordWrap: (v: boolean) => void
@@ -77,6 +81,13 @@ export const useSettingsStore = create<SettingsState>()(
       toolbarLayout: DEFAULT_TOOLBAR_LAYOUT,
       setToolbarLayout: (layout) => set({ toolbarLayout: layout }),
       resetToolbarLayout: () => set({ toolbarLayout: DEFAULT_TOOLBAR_LAYOUT }),
+
+      // Overflow menu favorites
+      overflowFavorites: [],
+      toggleOverflowFavorite: (id) => set((s) => {
+        const has = s.overflowFavorites.includes(id)
+        return { overflowFavorites: has ? s.overflowFavorites.filter((f) => f !== id) : [...s.overflowFavorites, id] }
+      }),
 
       // Actions
       setLineNumbers: (v) => set({ lineNumbers: v }),

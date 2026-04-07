@@ -4,9 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { Editor } from "@tiptap/react"
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from "@/lib/editor-colors"
-import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
-import { HighlighterCircle } from "@phosphor-icons/react/dist/ssr/HighlighterCircle"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { TextT, HighlighterCircle, X as PhX } from "@/lib/editor/editor-icons"
 
 interface ColorPickerProps {
   editor: Editor
@@ -103,9 +101,9 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
         }`}
       >
         {mode === "text" ? (
-          <TextT size={20} weight="light" />
+          <TextT size={20} />
         ) : (
-          <HighlighterCircle size={20} weight="light" />
+          <HighlighterCircle size={20} />
         )}
         <div
           className="absolute bottom-1 left-2 right-2 h-0.5 rounded-sm transition-colors duration-100"
@@ -131,7 +129,7 @@ export function ColorPicker({ editor, mode }: ColorPickerProps) {
                 }}
                 className="w-5 h-5 rounded flex items-center justify-center cursor-pointer text-muted-foreground bg-transparent border-0 hover:bg-hover-bg hover:text-muted-foreground"
               >
-                <PhX size={12} weight="light" />
+                <PhX size={12} />
               </button>
             </div>
 

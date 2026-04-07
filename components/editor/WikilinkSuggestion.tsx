@@ -13,8 +13,7 @@ import React, {
   useState,
   forwardRef,
 } from "react"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Asterisk } from "@phosphor-icons/react/dist/ssr/Asterisk"
+import { FileText, Asterisk } from "@/lib/editor/editor-icons"
 import { IconWiki } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -126,13 +125,13 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                       {item.isNewReference ? (
                         <>
                           <span className="text-amber-500 text-2xs">+</span>
-                          <Asterisk className="shrink-0 text-amber-500" size={14} weight="regular" />
+                          <Asterisk className="shrink-0 text-amber-500" size={14} />
                           <span className="truncate font-medium text-foreground">{item.title}</span>
                           <span className="ml-auto shrink-0 text-2xs text-amber-500">+ Create Ref</span>
                         </>
                       ) : item.isReference ? (
                         <>
-                          <Asterisk className="shrink-0 text-amber-500" size={14} weight="regular" />
+                          <Asterisk className="shrink-0 text-amber-500" size={14} />
                           <span className="truncate">{item.title}</span>
                           <span className="ml-auto shrink-0 text-2xs text-muted-foreground/60 truncate max-w-[100px]">
                             {item.referenceContent}
@@ -141,7 +140,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                       ) : item.isNewNote ? (
                         <>
                           <span className="text-muted-foreground text-2xs">+</span>
-                          <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+                          <FileText className="shrink-0 text-muted-foreground" size={14} />
                           <span className="truncate font-medium text-foreground">{item.title}</span>
                           <span className="ml-auto shrink-0 text-2xs text-muted-foreground">+ Create Note</span>
                         </>
@@ -157,7 +156,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                           {item.isWiki ? (
                             <IconWiki size={14} className="shrink-0 text-accent" />
                           ) : (
-                            <FileText className="shrink-0 text-muted-foreground" size={14} weight="regular" />
+                            <FileText className="shrink-0 text-muted-foreground" size={14} />
                           )}
                           <span className="truncate">{item.title}</span>
                           {item.isAlias && (

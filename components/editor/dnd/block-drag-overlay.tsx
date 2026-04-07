@@ -22,29 +22,7 @@ import { CSS } from "@dnd-kit/utilities"
 import type { Editor } from "@tiptap/core"
 import { useBlockPositions, getBlockDomRect, type BlockPosition } from "./use-block-positions"
 import { useBlockReorder, useSideDrop } from "./use-block-reorder"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { Copy } from "@phosphor-icons/react/dist/ssr/Copy"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
-import { Paragraph } from "@phosphor-icons/react/dist/ssr/Paragraph"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
-import { ListNumbers } from "@phosphor-icons/react/dist/ssr/ListNumbers"
-import { CheckSquare } from "@phosphor-icons/react/dist/ssr/CheckSquare"
-import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
-import { Code } from "@phosphor-icons/react/dist/ssr/Code"
-import { Info } from "@phosphor-icons/react/dist/ssr/Info"
-import { CaretDown as PhToggle } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
-import { Minus as PhDivider } from "@phosphor-icons/react/dist/ssr/Minus"
-import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
-import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
-import { Database } from "@phosphor-icons/react/dist/ssr/Database"
-import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
+import { DotsSixVertical, Trash, Copy, ArrowUp, ArrowDown, ArrowsClockwise, Plus, CaretRight, TextH, Paragraph, ListBullets, ListNumbers, CheckSquare, Quotes, Code, Info, CaretDown as PhToggle, Table as PhTable, Minus as PhDivider, Image as PhImage, MathOperations, Database, Columns as PhColumns } from "@/lib/editor/editor-icons"
 import { nanoid } from "nanoid"
 
 // ── BlockMenu (dropdown on handle click) ────────────────────
@@ -411,8 +389,7 @@ function SortableBlockSlot({
       >
         <DotsSixVertical
           size={14}
-          weight="bold"
-          style={{
+                   style={{
             color: hovered || menuOpen
               ? "hsl(var(--muted-foreground))"
               : "hsl(var(--muted-foreground) / 0.4)",

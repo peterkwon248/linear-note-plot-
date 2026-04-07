@@ -4,8 +4,7 @@ import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
 import { useState, useRef, useEffect } from "react"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { BookmarkSimple, X as PhX } from "@/lib/editor/editor-icons"
 
 function AnchorDividerView({ node, updateAttributes, deleteNode }: NodeViewProps) {
   const [editing, setEditing] = useState(false)
@@ -34,7 +33,7 @@ function AnchorDividerView({ node, updateAttributes, deleteNode }: NodeViewProps
       <div contentEditable={false} className="anchor-divider">
         <div className="anchor-divider-line" />
         <div className="anchor-divider-center">
-          <BookmarkSimple size={14} weight="fill" className="anchor-divider-icon" />
+          <BookmarkSimple size={14} className="anchor-divider-icon" />
           {editing ? (
             <input
               ref={inputRef}
@@ -70,7 +69,7 @@ function AnchorDividerView({ node, updateAttributes, deleteNode }: NodeViewProps
           onClick={() => deleteNode()}
           title="Remove bookmark divider"
         >
-          <PhX size={12} weight="bold" />
+          <PhX size={12} />
         </button>
       </div>
     </NodeViewWrapper>

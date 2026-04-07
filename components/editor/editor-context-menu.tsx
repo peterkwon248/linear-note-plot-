@@ -12,45 +12,15 @@ import {
   moveListItemDown,
 } from "./commands/custom-commands"
 
-// Phosphor icons
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { Copy } from "@phosphor-icons/react/dist/ssr/Copy"
-import { ClipboardText } from "@phosphor-icons/react/dist/ssr/ClipboardText"
-import { SelectionAll } from "@phosphor-icons/react/dist/ssr/SelectionAll"
-import { TextB } from "@phosphor-icons/react/dist/ssr/TextB"
-import { TextItalic } from "@phosphor-icons/react/dist/ssr/TextItalic"
-import { TextUnderline } from "@phosphor-icons/react/dist/ssr/TextUnderline"
-import { TextStrikethrough } from "@phosphor-icons/react/dist/ssr/TextStrikethrough"
-import { Code } from "@phosphor-icons/react/dist/ssr/Code"
-import { Eraser } from "@phosphor-icons/react/dist/ssr/Eraser"
-import { ArrowLineRight } from "@phosphor-icons/react/dist/ssr/ArrowLineRight"
-import { ArrowLineLeft } from "@phosphor-icons/react/dist/ssr/ArrowLineLeft"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
-import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
-import { ListNumbers } from "@phosphor-icons/react/dist/ssr/ListNumbers"
-import { CheckSquare } from "@phosphor-icons/react/dist/ssr/CheckSquare"
-import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
-import { CodeBlock } from "@phosphor-icons/react/dist/ssr/CodeBlock"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { Table } from "@phosphor-icons/react/dist/ssr/Table"
-import { Image } from "@phosphor-icons/react/dist/ssr/Image"
-import { MathOperations } from "@phosphor-icons/react/dist/ssr/MathOperations"
-import { Link } from "@phosphor-icons/react/dist/ssr/Link"
-import { NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
-import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
-import { Info } from "@phosphor-icons/react/dist/ssr/Info"
-import { Article } from "@phosphor-icons/react/dist/ssr/Article"
-import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
-import { Note as PhNote } from "@phosphor-icons/react/dist/ssr/Note"
-import { Cube } from "@phosphor-icons/react/dist/ssr/Cube"
-import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
-import { IdentificationCard } from "@phosphor-icons/react/dist/ssr/IdentificationCard"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
+// Editor icons (Remix via barrel)
+import {
+  Scissors, Copy, ClipboardText, SelectionAll, TextB, TextItalic, TextUnderline,
+  TextStrikethrough, Code, Eraser, ArrowLineRight, ArrowLineLeft, ArrowUp, ArrowDown,
+  TextH, ListBullets, BookmarkSimple, ListNumbers, CheckSquare, Quotes, CodeBlock,
+  CaretDown, Minus, Table, Image, MathOperations, Link, NotePencil, CaretRight,
+  Info, Article, Columns as PhColumns, Note as PhNote, Cube, GitMerge,
+  IdentificationCard, Trash, ArrowSquareOut,
+} from "@/lib/editor/editor-icons"
 
 interface EditorContextMenuProps {
   editor: Editor | null

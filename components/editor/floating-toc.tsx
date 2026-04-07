@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import type { Editor } from "@tiptap/react"
-import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
+import { MapPin } from "@/lib/editor/editor-icons"
 
 interface TocNavItem {
   id: string
@@ -231,7 +231,7 @@ export function FloatingToc({ editor }: FloatingTocProps) {
             title={h.text || "Untitled"}
           >
             {h.type === "bookmark" ? (
-              <MapPin size={10} weight="fill" className="floating-toc-bookmark-icon" style={{ flexShrink: 0 }} />
+              <MapPin size={10} className="floating-toc-bookmark-icon" style={{ flexShrink: 0 }} />
             ) : (
               <span
                 className="floating-toc-dash"

@@ -4,10 +4,7 @@ import { useState, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
 import type { WikiInfoboxEntry } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Plus as PhPlus, X as PhX, PencilSimple, Check as PhCheck } from "@/lib/editor/editor-icons"
 
 interface WikiInfoboxProps {
   noteId: string
@@ -63,7 +60,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
             onClick={handleStartEdit}
             className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors"
           >
-            <PhPlus size={14} weight="regular" />
+            <PhPlus size={14} />
             Add infobox
           </button>
         </div>
@@ -81,7 +78,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
               onClick={handleStartEdit}
               className="rounded p-0.5 text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
             >
-              <PencilSimple size={12} weight="regular" />
+              <PencilSimple size={12} />
             </button>
           )}
         </div>
@@ -111,13 +108,13 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
             onClick={handleSave}
             className="rounded p-1 text-green-500 hover:bg-green-500/10 transition-colors"
           >
-            <PhCheck size={14} weight="bold" />
+            <PhCheck size={14} />
           </button>
           <button
             onClick={handleCancel}
             className="rounded p-1 text-muted-foreground hover:bg-hover-bg transition-colors"
           >
-            <PhX size={14} weight="regular" />
+            <PhX size={14} />
           </button>
         </div>
       </div>
@@ -140,7 +137,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
               onClick={() => handleRemove(i)}
               className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
             >
-              <PhX size={14} weight="regular" />
+              <PhX size={14} />
             </button>
           </div>
         ))}
@@ -148,7 +145,7 @@ export function WikiInfobox({ noteId, entries, editable = false, className }: Wi
           onClick={handleAdd}
           className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors"
         >
-          <PhPlus size={14} weight="regular" />
+          <PhPlus size={14} />
           Add field
         </button>
       </div>

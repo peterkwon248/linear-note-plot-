@@ -4,19 +4,21 @@ import { useState } from "react"
 import { BubbleMenu } from "@tiptap/react/menus"
 import { useEditorState } from "@tiptap/react"
 import type { Editor } from "@tiptap/core"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
-import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
-import { TextAlignCenter } from "@phosphor-icons/react/dist/ssr/TextAlignCenter"
-import { TextAlignRight } from "@phosphor-icons/react/dist/ssr/TextAlignRight"
-import { TextB } from "@phosphor-icons/react/dist/ssr/TextB"
-import { PaintBucket } from "@phosphor-icons/react/dist/ssr/PaintBucket"
-import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
-import { Rows } from "@phosphor-icons/react/dist/ssr/Rows"
+import {
+  Trash,
+  Plus,
+  Minus,
+  TextAlignLeft,
+  TextAlignCenter,
+  TextAlignRight,
+  TextB,
+  PaintBucket,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Rows,
+} from "@/lib/editor/editor-icons"
 
 const CELL_COLORS = [
   { label: "None", value: "" },
@@ -66,17 +68,17 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         {/* ── Row ── */}
         <button type="button" className={`${btn} ${btnMuted}`} title="Add row above"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addRowBefore().run() }}>
-          <ArrowUp size={12} weight="bold" />
+          <ArrowUp size={12} />
         </button>
         <button type="button" className={`${btn} ${btnMuted}`} title="Add row below"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addRowAfter().run() }}>
-          <ArrowDown size={12} weight="bold" />
+          <ArrowDown size={12} />
         </button>
         <button type="button"
           className={`${btn} ${state.isInHeaderRow ? btnDisabled : btnMuted}`}
           title={state.isInHeaderRow ? "Cannot delete header row" : "Delete row"}
           onMouseDown={(e) => { e.preventDefault(); if (!state.isInHeaderRow) editor.chain().focus().deleteRow().run() }}>
-          <Minus size={12} weight="bold" />
+          <Minus size={12} />
         </button>
 
         <div className={divider} />
@@ -84,17 +86,17 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         {/* ── Col ── */}
         <button type="button" className={`${btn} ${btnMuted}`} title="Add column left"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addColumnBefore().run() }}>
-          <ArrowLeft size={12} weight="bold" />
+          <ArrowLeft size={12} />
         </button>
         <button type="button" className={`${btn} ${btnMuted}`} title="Add column right"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().addColumnAfter().run() }}>
-          <ArrowRight size={12} weight="bold" />
+          <ArrowRight size={12} />
         </button>
         <button type="button"
           className={`${btn} ${!editor.can().deleteColumn() ? btnDisabled : btnMuted}`}
           title="Delete column"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().deleteColumn().run() }}>
-          <Minus size={12} weight="bold" />
+          <Minus size={12} />
         </button>
 
         <div className={divider} />
@@ -117,15 +119,15 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         {/* ── Align ── */}
         <button type="button" className={`${btn} ${state.alignLeft ? btnActive : btnMuted}`} title="Align left"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("left").run() }}>
-          <TextAlignLeft size={12} weight="bold" />
+          <TextAlignLeft size={12} />
         </button>
         <button type="button" className={`${btn} ${state.alignCenter ? btnActive : btnMuted}`} title="Align center"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("center").run() }}>
-          <TextAlignCenter size={12} weight="bold" />
+          <TextAlignCenter size={12} />
         </button>
         <button type="button" className={`${btn} ${state.alignRight ? btnActive : btnMuted}`} title="Align right"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("right").run() }}>
-          <TextAlignRight size={12} weight="bold" />
+          <TextAlignRight size={12} />
         </button>
 
         <div className={divider} />
@@ -133,13 +135,13 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
         {/* ── Bold ── */}
         <button type="button" className={`${btn} ${state.isBold ? btnActive : btnMuted}`} title="Bold"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run() }}>
-          <TextB size={12} weight="bold" />
+          <TextB size={12} />
         </button>
 
         {/* ── Cell color ── */}
         <button type="button" className={`${btn} ${btnMuted}`} title="Cell background color"
           onMouseDown={(e) => { e.preventDefault(); setShowColors(!showColors) }}>
-          <PaintBucket size={12} weight="bold" />
+          <PaintBucket size={12} />
         </button>
 
         {/* ── Header toggle ── */}
@@ -147,7 +149,7 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
           className={`${btn} ${state.isInHeaderRow ? btnActive : btnMuted}`}
           title="Toggle header row"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHeaderRow().run() }}>
-          <Rows size={12} weight="bold" />
+          <Rows size={12} />
         </button>
 
         <div className={divider} />
@@ -168,7 +170,7 @@ export function TableBubbleMenu({ editor }: TableBubbleMenuProps) {
               editor.chain().focus().deleteTable().run()
             }
           }}>
-          <Trash size={12} weight="bold" />
+          <Trash size={12} />
         </button>
 
         {/* ── Color picker popover ── */}

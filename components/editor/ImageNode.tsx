@@ -4,14 +4,16 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
 import { useAttachmentUrl } from "@/lib/use-attachment-url"
-import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
-import { Copy as PhCopy } from "@phosphor-icons/react/dist/ssr/Copy"
-import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
-import { TextAlignCenter } from "@phosphor-icons/react/dist/ssr/TextAlignCenter"
-import { TextAlignRight } from "@phosphor-icons/react/dist/ssr/TextAlignRight"
+import {
+  DotsThree,
+  Copy as PhCopy,
+  Scissors,
+  DownloadSimple,
+  Trash,
+  TextAlignLeft,
+  TextAlignCenter,
+  TextAlignRight,
+} from "@/lib/editor/editor-icons"
 
 export function ImageNode({ node, updateAttributes, deleteNode, selected, editor }: NodeViewProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -225,7 +227,7 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
             }}
             onMouseDown={(e) => e.preventDefault()}
           >
-            <DotsThree size={16} weight="bold" />
+            <DotsThree size={16} />
           </button>
         )}
       </div>
@@ -252,9 +254,9 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
                   onMouseDown={(e) => e.preventDefault()}
                   title={align === "left" ? "Left" : align === "center" ? "Center" : "Right"}
                 >
-                  {align === "left" && <TextAlignLeft size={14} weight="regular" />}
-                  {align === "center" && <TextAlignCenter size={14} weight="regular" />}
-                  {align === "right" && <TextAlignRight size={14} weight="regular" />}
+                  {align === "left" && <TextAlignLeft size={14} />}
+                  {align === "center" && <TextAlignCenter size={14} />}
+                  {align === "right" && <TextAlignRight size={14} />}
                 </button>
               ))}
             </div>
@@ -264,7 +266,7 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
               onClick={handleCopy}
               onMouseDown={(e) => e.preventDefault()}
             >
-              <PhCopy size={14} weight="regular" />
+              <PhCopy size={14} />
               <span>PhCopy Image</span>
             </button>
             <button
@@ -272,7 +274,7 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
               onClick={handleCut}
               onMouseDown={(e) => e.preventDefault()}
             >
-              <Scissors size={14} weight="regular" />
+              <Scissors size={14} />
               <span>Cut Image</span>
             </button>
             <button
@@ -280,7 +282,7 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
               onClick={handleSave}
               onMouseDown={(e) => e.preventDefault()}
             >
-              <DownloadSimple size={14} weight="regular" />
+              <DownloadSimple size={14} />
               <span>Save Image</span>
             </button>
             <div className="image-node-dropdown-separator" />
@@ -289,7 +291,7 @@ export function ImageNode({ node, updateAttributes, deleteNode, selected, editor
               onClick={handleDelete}
               onMouseDown={(e) => e.preventDefault()}
             >
-              <Trash size={14} weight="regular" />
+              <Trash size={14} />
               <span>Delete</span>
             </button>
           </div>,

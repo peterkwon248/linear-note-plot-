@@ -7,10 +7,9 @@ import type { Editor } from "@tiptap/core"
 /* ── Indent / Outdent ────────────────────────────────────── */
 
 /**
- * Indent: Sink list item or wrap in blockquote.
+ * Indent: Sink list item or increase indent level for non-list blocks.
  * - In a list → sinkListItem (increase nesting)
- * - In a blockquote → no-op (already indented)
- * - Elsewhere → wrap in blockquote
+ * - Elsewhere → increaseIndent (margin-left via IndentExtension)
  */
 export function indentCommand(editor: Editor): boolean {
   if (editor.isActive("listItem")) {
@@ -19,17 +18,14 @@ export function indentCommand(editor: Editor): boolean {
   if (editor.isActive("taskItem")) {
     return editor.chain().focus().sinkListItem("taskItem").run()
   }
-  if (!editor.isActive("blockquote")) {
-    return editor.chain().focus().setBlockquote().run()
-  }
-  return false
+  // For non-list blocks, increase indent level
+  return editor.chain().focus().increaseIndent().run()
 }
 
 /**
- * Outdent: Lift list item or unwrap blockquote.
+ * Outdent: Lift list item or decrease indent level for non-list blocks.
  * - In a list → liftListItem (decrease nesting)
- * - In a blockquote → lift/unwrap
- * - Elsewhere → no-op
+ * - Elsewhere → decreaseIndent (margin-left via IndentExtension)
  */
 export function outdentCommand(editor: Editor): boolean {
   if (editor.isActive("listItem")) {
@@ -38,10 +34,8 @@ export function outdentCommand(editor: Editor): boolean {
   if (editor.isActive("taskItem")) {
     return editor.chain().focus().liftListItem("taskItem").run()
   }
-  if (editor.isActive("blockquote")) {
-    return editor.chain().focus().lift("blockquote").run()
-  }
-  return false
+  // For non-list blocks, decrease indent level
+  return editor.chain().focus().decreaseIndent().run()
 }
 
 /* ── Remove Formatting ───────────────────────────────────── */

@@ -4,17 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
-import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
-import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
-import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
-import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
-import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
-import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
-import { Paragraph } from "@phosphor-icons/react/dist/ssr/Paragraph"
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
-import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
-import { ArrowsIn } from "@phosphor-icons/react/dist/ssr/ArrowsIn"
+import { ListBullets, X as PhX, Plus, Trash, DotsSixVertical, MapPin, TextH, Paragraph, PencilSimple, Link as PhLink, ArrowsIn } from "@/lib/editor/editor-icons"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
@@ -206,7 +196,7 @@ function BlockPicker({
                     className="w-full text-left text-note px-3 py-1.5 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors"
                   >
                     {b.type === "bookmark" ? (
-                      <MapPin size={12} weight="fill" className="opacity-40 flex-shrink-0" />
+                      <MapPin size={12} className="opacity-40 flex-shrink-0" />
                     ) : (
                       <Paragraph size={12} className="opacity-40 flex-shrink-0" />
                     )}
@@ -332,7 +322,7 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
         {editor?.isEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
         {/* Header */}
         <div className="relative flex items-center gap-2 mb-3 text-muted-foreground">
-          <ListBullets size={14} weight="bold" />
+          <ListBullets size={14} />
           <span className="text-2xs font-semibold uppercase tracking-wider flex-1">
             Table of Contents
           </span>
@@ -342,7 +332,7 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
             className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
             title="Add item from document"
           >
-            <Plus size={12} weight="bold" />
+            <Plus size={12} />
           </button>
           {(width || height) && (
             <button
@@ -351,7 +341,7 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
               className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Reset size"
             >
-              <ArrowsIn size={12} weight="bold" />
+              <ArrowsIn size={12} />
             </button>
           )}
           <button
@@ -360,7 +350,7 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
             className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
             title="Remove TOC block"
           >
-            <PhX size={12} weight="bold" />
+            <PhX size={12} />
           </button>
 
           {/* Block Picker dropdown */}
@@ -458,7 +448,7 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
                   ].join(" ")}
                   title={entry.targetId ? "Change link" : "Link to block"}
                 >
-                  {entry.targetId ? <MapPin size={10} weight="fill" /> : <PhLink size={10} />}
+                  {entry.targetId ? <MapPin size={10} /> : <PhLink size={10} />}
                 </button>
 
                 {/* Delete */}

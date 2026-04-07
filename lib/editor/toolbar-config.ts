@@ -95,10 +95,13 @@ export const TOOLBAR_ITEM_LABELS: Record<ToolbarItemId, string> = {
   hardBreak: "Line Break",
 }
 
-/** Default toolbar layout -- all items visible in standard order */
+/** Items hidden by default — niche features accessible via slash command */
+const DEFAULT_HIDDEN: Set<string> = new Set(["inlineMath", "blockMath"])
+
+/** Default toolbar layout -- most items visible, niche items hidden */
 export const DEFAULT_TOOLBAR_LAYOUT: ToolbarLayout = {
-  items: TOOLBAR_ITEM_IDS.map((id) => ({ id, visible: true })),
-  version: 1,
+  items: TOOLBAR_ITEM_IDS.map((id) => ({ id, visible: !DEFAULT_HIDDEN.has(id) })),
+  version: 2,
 }
 
 /**

@@ -4,8 +4,7 @@ import { useState, useRef, useCallback } from "react"
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
-import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
+import { ArrowSquareOut, Globe } from "@/lib/editor/editor-icons"
 import { extractDomain } from "@/lib/editor/url-detect"
 
 // ── LinkCard NodeView ────────────────────────────────────────────────
@@ -163,7 +162,7 @@ function LinkCardView({ node, selected, updateAttributes }: NodeViewProps) {
 
             {/* Domain row */}
             <div className="link-card-domain">
-              <Globe size={10} weight="regular" />
+              <Globe size={10} />
               <span>{domain}</span>
             </div>
           </div>
@@ -176,7 +175,7 @@ function LinkCardView({ node, selected, updateAttributes }: NodeViewProps) {
             title="Open in new tab"
             tabIndex={-1}
           >
-            <ArrowSquareOut size={14} weight="regular" />
+            <ArrowSquareOut size={14} />
           </button>
         </div>
       </div>
