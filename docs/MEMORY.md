@@ -340,7 +340,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-04-07)
+## Current Direction (as of 2026-04-08)
 
 ### 방향 결정
 - **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** (2026-04-01)
@@ -350,6 +350,8 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **P0+P1 병행 전략** — Library 뼈대 → References UI → 각주 자동 연결 → 고도화 순서 (2026-04-07)
 - **Library 사이드바 NavLink 전환** — 상단 탭 제거 → 사이드바 NavLink (Overview/References/Tags/Files). Wiki 패턴 동일 (2026-04-07)
 - **Reference 디테일 = SmartSidePanel** — 별도 풀페이지 에디터 없음. 사이드 패널에서 편집 충분 (2026-04-07)
+- **Tags Library 통합** — 13개 앱 리서치. 태그를 2개 사이드바 섹션에 동시에 보여주는 앱 0개. Capacities 패턴 채택. Notes "More"에서 Tags 제거, `/tags` → `/library/tags` 리다이렉트 (2026-04-08)
+- **References/Files soft delete** — Tags처럼 trashed 필드. 복원 가능해야 함. hard delete → 확인 다이얼로그만으론 불충분 (2026-04-08)
 
 ### 이번 세션 완료 (2026-04-07, PR #163 + #164 + #165)
 - **에디터 툴바 Remix Icon 전환**: 32파일 101아이콘, 중앙 barrel, H/B 아이콘화
@@ -366,7 +368,13 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **각주 팝오버 좌측 잘림 수정**, Math 기본 hidden, Move Up/Down disabled
 - **Wiki 전체선택 버튼 추가**
 
-### 이번 세션 완료 (2026-04-07 오후, 이번 worktree)
+### 이번 세션 완료 (2026-04-08, PR #167 + 후속 커밋)
+- **Tags Library 통합**: Notes "More"에서 Tags 제거 → `/library/tags`로 리다이렉트. TagsView 풀 CRUD Library에서 렌더
+- **섹션 네이밍 통일**: "TOP TAGS" → "RECENT TAGS" + 최근 사용 노트 기준 정렬
+- **References/Files soft delete**: trashed/trashedAt 필드 추가. deleteReference → soft delete, restoreReference, permanentlyDeleteReference. Attachments 동일. Store v71 migration
+- **docs/TODO.md 생성**: 크로스 머신 백로그 공유용
+
+### 이번 세션 완료 (2026-04-07 오후, PR #167)
 - **SmartLinkPaste 버그 수정**: view.hasFocus() 가드 → hidden editor에 LinkCard 삽입 방지
 - **window.prompt 전면 폐기**: embed-url-request.ts (CustomEvent+callback 브릿지) 신규. insertable-blocks.ts + SlashCommand.tsx → requestEmbedUrl() 콜백. note-editor.tsx에 onEmbedUrlRequest 리스너 + UrlInputDialog. library-view.tsx Add Field 인라인 다이얼로그 (Portal 기반)
 - **Library Overview 리디자인**: wiki-dashboard.tsx 패턴 참고. MiniStat 3-col (References/Tags/Files) + 2-col ContentCard (Recent Refs, Top Tags, Recent Files, Unlinked Refs). max-w-5xl 센터 정렬

@@ -18,10 +18,29 @@ export function createAttachmentsSlice(set: Set, get: Get, appendEvent: AppendEv
       const attachment = (get().attachments as Attachment[]).find((a) => a.id === attachmentId)
       if (!attachment) return
       set((state: any) => ({
+        attachments: state.attachments.map((a: Attachment) =>
+          a.id === attachmentId ? { ...a, trashed: true, trashedAt: new Date().toISOString() } : a
+        ),
+      }))
+      // Don't delete blob yet — only on permanent delete
+      appendEvent(attachment.noteId, "attachment_removed", { attachmentId, name: attachment.name })
+    },
+
+    restoreAttachment: (attachmentId: string) => {
+      set((state: any) => ({
+        attachments: state.attachments.map((a: Attachment) =>
+          a.id === attachmentId ? { ...a, trashed: false, trashedAt: null } : a
+        ),
+      }))
+    },
+
+    permanentlyDeleteAttachment: (attachmentId: string) => {
+      const attachment = (get().attachments as Attachment[]).find((a) => a.id === attachmentId)
+      if (!attachment) return
+      set((state: any) => ({
         attachments: state.attachments.filter((a: Attachment) => a.id !== attachmentId),
       }))
       removeAttachmentBlob(attachmentId)
-      appendEvent(attachment.noteId, "attachment_removed", { attachmentId, name: attachment.name })
     },
   }
 }

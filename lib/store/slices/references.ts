@@ -37,6 +37,32 @@ export function createReferencesSlice(set: Set) {
 
     deleteReference: (id: string) => {
       set((state: any) => {
+        const existing = state.references[id]
+        if (!existing) return {}
+        return {
+          references: {
+            ...state.references,
+            [id]: { ...existing, trashed: true, trashedAt: new Date().toISOString() },
+          },
+        }
+      })
+    },
+
+    restoreReference: (id: string) => {
+      set((state: any) => {
+        const existing = state.references[id]
+        if (!existing) return {}
+        return {
+          references: {
+            ...state.references,
+            [id]: { ...existing, trashed: false, trashedAt: null },
+          },
+        }
+      })
+    },
+
+    permanentlyDeleteReference: (id: string) => {
+      set((state: any) => {
         const { [id]: _, ...rest } = state.references
         return { references: rest }
       })

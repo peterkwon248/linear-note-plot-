@@ -247,6 +247,8 @@ export interface Reference {
   tags?: string[]         // 글로벌 태그 공유
   createdAt: string
   updatedAt: string
+  trashed?: boolean
+  trashedAt?: string | null
 }
 
 export interface Label {
@@ -429,6 +431,8 @@ export interface Attachment {
   mimeType: string
   size: number
   createdAt: string
+  trashed?: boolean
+  trashedAt?: string | null
 }
 
 /* ── Ontology Data ────────────────────────────────── */

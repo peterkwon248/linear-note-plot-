@@ -242,6 +242,8 @@ export interface PlotState {
   // Attachments
   addAttachment: (partial: Omit<Attachment, "id" | "createdAt">) => string
   removeAttachment: (attachmentId: string) => void
+  restoreAttachment: (attachmentId: string) => void
+  permanentlyDeleteAttachment: (attachmentId: string) => void
 
   // Wiki
   setNoteAliases: (noteId: string, aliases: string[]) => void
@@ -297,6 +299,8 @@ export interface PlotState {
   createReference: (partial: { title: string; content: string; fields?: Array<{ key: string; value: string }>; tags?: string[] }) => string
   updateReference: (id: string, updates: Partial<Omit<Reference, "id" | "createdAt">>) => void
   deleteReference: (id: string) => void
+  restoreReference: (id: string) => void
+  permanentlyDeleteReference: (id: string) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>
