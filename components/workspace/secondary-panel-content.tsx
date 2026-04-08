@@ -71,12 +71,12 @@ function SecondaryViewHeader() {
   const currentSpace = secondarySpace ?? "notes"
 
   return (
-    <header className="flex items-center justify-between border-b border-border py-2 px-4">
+    <header className="flex h-(--header-height) shrink-0 items-center justify-between border-b border-border px-4">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+            className="flex items-center gap-1.5 text-note font-medium text-foreground transition-colors hover:text-foreground/80 cursor-pointer"
           >
             {SPACE_LABELS[currentSpace]}
             <CaretDown size={12} weight="bold" className="text-muted-foreground/60" />
@@ -127,14 +127,14 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between border-b border-border py-2 px-4">
-        <nav className="flex items-center gap-1 min-w-0">
+      <header className="flex h-(--header-height) shrink-0 items-center justify-between border-b border-border px-4">
+        <nav className="flex items-center gap-1.5 min-w-0">
           {/* Space dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="shrink-0 flex items-center gap-1 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                className="shrink-0 flex items-center gap-1.5 text-note font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
               >
                 {SPACE_LABELS[currentSpace]}
                 <CaretDown size={12} weight="bold" className="text-muted-foreground/60" />
@@ -160,7 +160,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
             </DropdownMenuContent>
           </DropdownMenu>
           <span className="text-muted-foreground/40 mx-0.5">&gt;</span>
-          <span className="min-w-0 truncate text-lg font-medium text-foreground">
+          <span className="min-w-0 truncate text-note font-medium text-foreground">
             {article?.title || "Wiki Article"}
           </span>
         </nav>
@@ -321,7 +321,6 @@ export function SecondaryPanelContent() {
     return (
       <PaneProvider pane="secondary">
         <div className="flex flex-col h-full">
-          <SecondaryViewHeader />
           <div className="flex-1 min-h-0 overflow-auto">
             <Suspense fallback={<ViewFallback />}>
               <SecondaryViewRouter route={secondaryRoute} />

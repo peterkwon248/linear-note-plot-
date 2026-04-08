@@ -34,6 +34,7 @@ import { EditorBreadcrumb } from "@/components/editor-breadcrumb"
 import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
+import { getSecondarySpace, setSecondarySpace, getActiveSpace } from "@/lib/table-route"
 import type { Editor } from "@tiptap/react"
 
 /**
@@ -99,8 +100,12 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
-  const detailsOpen = usePlotStore((s) => s.sidePanelOpen)
-  const toggleDetailsOpen = usePlotStore((s) => s.toggleSidePanel)
+  const primaryDetailsOpen = usePlotStore((s) => s.sidePanelOpen)
+  const secondaryDetailsOpen = usePlotStore((s) => s.secondarySidePanelOpen)
+  const togglePrimarySidePanel = usePlotStore((s) => s.toggleSidePanel)
+  const toggleSecondarySidePanel = usePlotStore((s) => s.toggleSecondarySidePanel)
+  const detailsOpen = pane === 'secondary' ? secondaryDetailsOpen : primaryDetailsOpen
+  const toggleDetailsOpen = pane === 'secondary' ? toggleSecondarySidePanel : togglePrimarySidePanel
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
   // Secondary pane navigation
   const closeSecondary = usePlotStore((s) => s.closeSecondary)
@@ -428,6 +433,28 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
             </TooltipTrigger>
             <TooltipContent>{detailsOpen ? "Hide details" : "Show details"}</TooltipContent>
           </Tooltip>
+          {pane === 'primary' && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => {
+                    const state = usePlotStore.getState()
+                    const { getSecondarySpace, setSecondarySpace: setSecSpace } = require("@/lib/table-route")
+                    if (state.secondaryNoteId || getSecondarySpace()) {
+                      state.closeSecondary()
+                    } else {
+                      const { getActiveSpace } = require("@/lib/table-route")
+                      setSecSpace(getActiveSpace())
+                    }
+                  }}
+                  className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-hover-bg"
+                >
+                  <span className="text-[11px] font-medium tracking-tight leading-none">A|B</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Split View</TooltipContent>
+            </Tooltip>
+          )}
           {pane === 'secondary' && (
             <>
               <span className="mx-0.5 h-4 w-px bg-border" />

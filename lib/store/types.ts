@@ -67,6 +67,13 @@ export interface PlotState {
   sidePanelContext: SidePanelContext
   setSidePanelContext: (ctx: SidePanelContext) => void
 
+  // Secondary Side Panel (right pane's own side panel)
+  secondarySidePanelOpen: boolean
+  secondarySidePanelMode: SidePanelMode
+  secondarySidePanelContext: SidePanelContext
+  setSecondarySidePanelOpen: (open: boolean) => void
+  toggleSecondarySidePanel: () => void
+
   // Navigation History
   navigationHistory: string[]  // stack of note IDs
   navigationIndex: number      // current position (-1 = empty)

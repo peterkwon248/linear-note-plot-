@@ -241,7 +241,7 @@ export const usePlotStore = create<PlotState>()(
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, previewNoteId, sidePanelOpen, sidePanelContext, todoTasks, secondaryHistory, secondaryHistoryIndex, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, previewNoteId, sidePanelOpen, sidePanelContext, todoTasks, secondaryHistory, secondaryHistoryIndex, secondarySidePanelOpen, secondarySidePanelMode, secondarySidePanelContext, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),

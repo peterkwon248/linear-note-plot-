@@ -8,6 +8,19 @@ import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizon
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { X as PhXIcon } from "@phosphor-icons/react/dist/ssr/X"
+import { IconSplitView } from "@/components/plot-icons"
+import { setSecondarySpace, getSecondarySpace } from "@/lib/table-route"
+import { useActiveSpace } from "@/lib/table-route"
+import { usePane } from "@/components/workspace/pane-context"
+import { usePlotStore } from "@/lib/store"
 
 /* ── Header Icon Button ── */
 
@@ -97,6 +110,7 @@ export function ViewHeader({
   extraToolbarButtons,
   onCreateNew,
 }: ViewHeaderProps) {
+  const pane = usePane()
   // Internal search state if not controlled
   const [internalSearch, setInternalSearch] = useState("")
   const search = searchValue ?? internalSearch
@@ -120,18 +134,22 @@ export function ViewHeader({
   return (
     <>
       <div className="flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border px-4">
-        {/* Title area */}
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">{icon}</span>
-          <h1 className="text-note font-medium text-foreground">
-            {title}
-            {count !== undefined && (
-              <span className="ml-1.5 text-note font-normal text-muted-foreground">
-                {count}
-              </span>
-            )}
-          </h1>
-        </div>
+        {/* Title area — in secondary pane, show space dropdown instead */}
+        {pane === 'secondary' ? (
+          <SecondaryTitleDropdown currentTitle={title} icon={icon} count={count} />
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">{icon}</span>
+            <h1 className="text-note font-medium text-foreground">
+              {title}
+              {count !== undefined && (
+                <span className="ml-1.5 text-note font-normal text-muted-foreground">
+                  {count}
+                </span>
+              )}
+            </h1>
+          </div>
+        )}
 
         <div className="flex-1" />
 
@@ -208,9 +226,16 @@ export function ViewHeader({
               </HBtn>
             )}
 
+            <SplitViewButton />
+
             {onCreateNew && (
               <HBtn onClick={onCreateNew}>
                 <Plus size={16} weight="regular" />
+              </HBtn>
+            )}
+            {pane === 'secondary' && (
+              <HBtn onClick={() => usePlotStore.getState().closeSecondary()}>
+                <PhXIcon size={16} weight="regular" />
               </HBtn>
             )}
           </div>
@@ -220,5 +245,85 @@ export function ViewHeader({
       {/* Children slot (filter chips, tabs, etc.) */}
       {children}
     </>
+  )
+}
+
+/** Secondary pane title — dropdown to switch spaces + close button */
+
+import { IconHome, IconNotes, IconWiki, IconCalendar } from "@/components/plot-icons"
+import { Graph as GraphIcon } from "@phosphor-icons/react/dist/ssr/Graph"
+import { Books } from "@phosphor-icons/react/dist/ssr/Books"
+
+const SECONDARY_SPACE_CONFIG: Array<{ key: string; label: string; Icon: any }> = [
+  { key: "home", label: "Home", Icon: IconHome },
+  { key: "notes", label: "Notes", Icon: IconNotes },
+  { key: "wiki", label: "Wiki", Icon: IconWiki },
+  { key: "calendar", label: "Calendar", Icon: IconCalendar },
+  { key: "ontology", label: "Graph", Icon: GraphIcon },
+  { key: "library", label: "Library", Icon: Books },
+]
+
+function SecondaryTitleDropdown({ currentTitle, icon, count }: { currentTitle: string; icon: ReactNode; count?: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+            <span className="text-muted-foreground">{icon}</span>
+            <h1 className="text-note font-medium text-foreground flex items-center gap-1">
+              {currentTitle}
+              {count !== undefined && (
+                <span className="text-note font-normal text-muted-foreground">{count}</span>
+              )}
+              <CaretDown size={12} weight="bold" className="text-muted-foreground/60 ml-0.5" />
+            </h1>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-40">
+          {SECONDARY_SPACE_CONFIG.map(({ key, label, Icon }) => (
+            <DropdownMenuItem
+              key={key}
+              onClick={() => {
+                usePlotStore.getState().closeSecondary()
+                setSecondarySpace(key as any)
+              }}
+              className="gap-2.5 py-2 text-sm"
+            >
+              <Icon size={18} weight="light" />
+              {label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
+/** Split View toggle button — opens secondary panel with the current space */
+function SplitViewButton() {
+  const pane = usePane()
+  const activeSpace = useActiveSpace()
+  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
+  const closeSecondary = usePlotStore((s) => s.closeSecondary)
+
+  // Don't show in secondary pane
+  if (pane === 'secondary') return null
+
+  const isSplitOpen = !!secondaryNoteId || !!getSecondarySpace()
+
+  return (
+    <HBtn
+      active={isSplitOpen}
+      onClick={() => {
+        if (isSplitOpen) {
+          closeSecondary()
+        } else {
+          setSecondarySpace(activeSpace)
+        }
+      }}
+    >
+      <span className="text-[11px] font-medium tracking-tight">A|B</span>
+    </HBtn>
   )
 }

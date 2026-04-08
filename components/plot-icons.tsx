@@ -334,6 +334,54 @@ export function IconArrowLeft({ size = 16, ...props }: IconProps) {
   )
 }
 
+export function IconSplitView({ size = 16, className, ...props }: { size?: number; className?: string } & SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      {/* outer rectangle */}
+      <rect x="1" y="2" width="14" height="12" rx="1.5" />
+      {/* vertical divider */}
+      <line x1="8" y1="2" x2="8" y2="14" />
+      {/* "A" left panel */}
+      <text
+        x="4.5"
+        y="9.5"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize="5"
+        fontFamily="sans-serif"
+        stroke="none"
+        fill="currentColor"
+      >
+        A
+      </text>
+      {/* "B" right panel */}
+      <text
+        x="11.5"
+        y="9.5"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize="5"
+        fontFamily="sans-serif"
+        stroke="none"
+        fill="currentColor"
+      >
+        B
+      </text>
+    </svg>
+  )
+}
+
 /* ── Wiki Status Icons (Linear-style progression) ── */
 
 /** Stub: dashed book outline, empty — placeholder article */

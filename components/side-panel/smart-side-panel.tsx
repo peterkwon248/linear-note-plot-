@@ -15,12 +15,31 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import type { SidePanelMode } from "@/lib/store/types"
 
-export function SmartSidePanel() {
-  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
-  const sidePanelMode = usePlotStore((s) => s.sidePanelMode)
-  const sidePanelPeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
-  const setSidePanelOpen = usePlotStore((s) => s.setSidePanelOpen)
+interface SmartSidePanelProps {
+  pane?: 'primary' | 'secondary'
+}
+
+export function SmartSidePanel({ pane = 'primary' }: SmartSidePanelProps) {
+  // Use different state depending on which pane this side panel belongs to
+  const primaryOpen = usePlotStore((s) => s.sidePanelOpen)
+  const primaryMode = usePlotStore((s) => s.sidePanelMode)
+  const primaryPeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
+  const secondaryOpen = usePlotStore((s) => s.secondarySidePanelOpen)
+  const secondaryMode = usePlotStore((s) => s.secondarySidePanelMode)
+
+  const sidePanelOpen = pane === 'secondary' ? secondaryOpen : primaryOpen
+  const sidePanelMode = pane === 'secondary' ? secondaryMode : primaryMode
+  const sidePanelPeekNoteId = pane === 'secondary' ? null : primaryPeekNoteId // Peek only for primary
+
   const closeSidePeek = usePlotStore((s) => s.closeSidePeek)
+
+  const setOpen = (open: boolean) => {
+    if (pane === 'secondary') {
+      usePlotStore.getState().setSecondarySidePanelOpen(open)
+    } else {
+      usePlotStore.getState().setSidePanelOpen(open)
+    }
+  }
 
   if (!sidePanelOpen) return null
 
@@ -33,7 +52,11 @@ export function SmartSidePanel() {
   const hasPeekNote = !!sidePanelPeekNoteId
 
   const setMode = (mode: SidePanelMode) => {
-    usePlotStore.setState({ sidePanelMode: mode })
+    if (pane === 'secondary') {
+      usePlotStore.setState({ secondarySidePanelMode: mode })
+    } else {
+      usePlotStore.setState({ sidePanelMode: mode })
+    }
   }
 
   const tabClass = (active: boolean) =>
@@ -81,7 +104,7 @@ export function SmartSidePanel() {
             <BookmarkSimple className="inline mr-1" size={14} weight="regular" />
             Bookmarks
           </button>
-          {/* Peek tab - only when peek note exists, click again to close */}
+          {/* Peek tab - only when peek note exists (primary only) */}
           {hasPeekNote && (
             <button
               onClick={() => sidePanelMode === 'peek' ? closeSidePeek() : setMode('peek')}
@@ -93,7 +116,7 @@ export function SmartSidePanel() {
           )}
         </div>
         <button
-          onClick={() => setSidePanelOpen(false)}
+          onClick={() => setOpen(false)}
           className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
           aria-label="Close panel"
         >
