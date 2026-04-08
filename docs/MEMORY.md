@@ -354,7 +354,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **References/Files soft delete** — Tags처럼 trashed 필드. 복원 가능해야 함. hard delete → 확인 다이얼로그만으론 불충분 (2026-04-08)
 - **Reference = 통합 참고자료 (하이브리드)** — url 필드 있으면 Link형, 없으면 Citation형. 기본=footnoteRef, Shift=referenceLink. 위키백과 패턴 (2026-04-08)
 - **호버 프리뷰 강화** — 리사이즈(400~960px) + 드래그 이동(Pin 시) + Pin 버튼 액션바 + 본문 flex-1 (2026-04-08)
-- **듀얼 에디터 = 독립 뷰** — 다음 설계 방향: 좌/우 패널이 각각 독립 네비게이션 (Notes/Wiki/Calendar 자유 전환). table-route 이중화 필요 (미구현, P0)
+- **듀얼 에디터 = 독립 뷰 (P0, 미구현)** — VS Code/Obsidian 패턴. 좌/우 패널이 각각 독립 네비게이션. 사이드바/Activity Bar는 1개 유지, 콘텐츠만 분리. 사이드바 클릭→활성 패널에서 열림. 우측 헤더=좌측과 동일 (secondary 헤더 제거). breadcrumb 노트명 클릭→드롭다운 전환. "Notes" 클릭→All Notes 복귀 제거 (사이드바 중복). table-route 이중화 필요
 
 ### 이번 세션 완료 (2026-04-08 오후, PR #169)
 - **Trash 뷰 References/Files 탭**: TRASH_TABS 8개 확장, TrashEntityList references/files 처리

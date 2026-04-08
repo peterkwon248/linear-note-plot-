@@ -178,8 +178,8 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 
 ## TODO: Future Work (우선순위 순, 2026-04-08 sync)
 
-### 🔴 P0 — 최우선 (다음 세션)
-1. **듀얼 에디터 좌우 고정** — Side by side에서 우측 에디터 내 링크 클릭 시 좌측 노트가 교체되는 버그. `openNote` 호출 컨텍스트(사이드바/에디터 내부/호버프리뷰)에 따라 좌/우 라우팅 분기 필요. 사이드패널도 듀얼 모드에서 열려야 함
+### 🔴 P0 — 최우선 (다음 세션): 듀얼 에디터 전체 재설계
+1. **듀얼 에디터 독립 패널** — VS Code/Obsidian 패턴. 좌/우 독립 네비게이션, 사이드바/Activity Bar 1개 유지. 우측 헤더 통일, breadcrumb 노트 전환 드롭다운, table-route 이중화
 2. **FootnotesFooter 접기/펼치기** — 기본 접힌 상태 "▶ FOOTNOTES (2)", `[1]` 클릭 시 자동 펼침
 3. **referenceLink 노드 최종 검증** — Shift+클릭 시 referenceLink 삽입 동작 확인
 
