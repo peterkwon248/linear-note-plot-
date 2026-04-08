@@ -17,6 +17,9 @@ import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine"
 import { Cursor as PhCursor } from "@phosphor-icons/react/dist/ssr/Cursor"
 import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,9 +86,10 @@ import { onEmbedUrlRequest } from "@/lib/editor/embed-url-request"
 interface NoteEditorProps {
   noteId?: string
   onClose?: () => void
+  pane?: 'primary' | 'secondary'
 }
 
-export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}) {
+export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: NoteEditorProps = {}) {
   const storeSelectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const activeNoteId = propNoteId ?? storeSelectedNoteId
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
@@ -98,6 +102,12 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
   const detailsOpen = usePlotStore((s) => s.sidePanelOpen)
   const toggleDetailsOpen = usePlotStore((s) => s.toggleSidePanel)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
+  // Secondary pane navigation
+  const closeSecondary = usePlotStore((s) => s.closeSecondary)
+  const secondaryGoBack = usePlotStore((s) => s.secondaryGoBack)
+  const secondaryGoForward = usePlotStore((s) => s.secondaryGoForward)
+  const secondaryHistoryIndex = usePlotStore((s) => s.secondaryHistoryIndex)
+  const secondaryHistoryLen = usePlotStore((s) => s.secondaryHistory.length)
   const convertToWiki = usePlotStore((s) => s.convertToWiki)
   const revertFromWiki = usePlotStore((s) => s.revertFromWiki)
   const allTags = usePlotStore((s) => s.tags)
@@ -297,7 +307,37 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
         "flex items-center justify-between border-b border-border py-2 px-4"
       )}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <EditorBreadcrumb note={note} onClose={onClose} />
+          {pane === 'secondary' && (
+            <div className="flex items-center gap-0 mr-1">
+              <button
+                onClick={() => secondaryGoBack()}
+                disabled={secondaryHistoryIndex <= 0}
+                className={cn(
+                  "rounded-md p-1 transition-colors",
+                  secondaryHistoryIndex > 0
+                    ? "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
+                    : "text-muted-foreground/25 cursor-default"
+                )}
+                title="Go back"
+              >
+                <CaretLeft size={14} weight="bold" />
+              </button>
+              <button
+                onClick={() => secondaryGoForward()}
+                disabled={secondaryHistoryIndex >= secondaryHistoryLen - 1}
+                className={cn(
+                  "rounded-md p-1 transition-colors",
+                  secondaryHistoryIndex < secondaryHistoryLen - 1
+                    ? "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
+                    : "text-muted-foreground/25 cursor-default"
+                )}
+                title="Go forward"
+              >
+                <CaretRight size={14} weight="bold" />
+              </button>
+            </div>
+          )}
+          <EditorBreadcrumb note={note} onClose={pane === 'secondary' ? () => closeSecondary() : onClose} pane={pane} />
           <ReferencedInBadges noteId={note.id} />
         </div>
         <div className="flex items-center gap-0.5">
@@ -388,6 +428,22 @@ export function NoteEditor({ noteId: propNoteId, onClose }: NoteEditorProps = {}
             </TooltipTrigger>
             <TooltipContent>{detailsOpen ? "Hide details" : "Show details"}</TooltipContent>
           </Tooltip>
+          {pane === 'secondary' && (
+            <>
+              <span className="mx-0.5 h-4 w-px bg-border" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => closeSecondary()}
+                    className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-hover-bg"
+                  >
+                    <PhX size={16} weight="regular" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Close panel</TooltipContent>
+              </Tooltip>
+            </>
+          )}
         </div>
       </header>
 

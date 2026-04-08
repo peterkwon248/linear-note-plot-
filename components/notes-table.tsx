@@ -48,6 +48,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { usePlotStore } from "@/lib/store"
+import { usePaneOpenNote } from "@/components/workspace/pane-context"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { getSnoozeTime, type SnoozePreset } from "@/lib/queries/notes"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
@@ -288,7 +289,10 @@ export function NotesTable({
 }) {
   const notes = usePlotStore((s) => s.notes)
   const updateNote = usePlotStore((s) => s.updateNote)
-  const openNote = usePlotStore((s) => s.openNote)
+  const _storeOpenNote = usePlotStore((s) => s.openNote)
+  const _paneOpenNote = usePaneOpenNote()
+  // Use pane-aware openNote if inside a PaneProvider, otherwise use store directly
+  const openNote = _paneOpenNote
   const createNote = usePlotStore((s) => s.createNote)
   const toggleTrash = usePlotStore((s) => s.toggleTrash)
   const deleteNote = usePlotStore((s) => s.deleteNote)

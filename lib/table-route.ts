@@ -105,7 +105,22 @@ export function getActiveRoute(): string | null {
   return _activeRoute
 }
 
+/**
+ * When true, setActiveRoute calls are redirected to setSecondaryRoute.
+ * This is set by PaneProvider when secondary panel views call setActiveRoute.
+ */
+let _interceptForSecondary = false
+
+export function setRouteInterceptForSecondary(enabled: boolean): void {
+  _interceptForSecondary = enabled
+}
+
 export function setActiveRoute(route: string | null): void {
+  // Intercept: if called from secondary pane context, redirect to secondary route
+  if (_interceptForSecondary && route) {
+    setSecondaryRoute(route)
+    return
+  }
   if (_activeRoute === route) return
   _activeRoute = route
   // Auto-infer space from route (backward compatible)
@@ -252,4 +267,47 @@ export function useActiveViewId(): string | null {
 /** Subscribe to pending filters (one-shot injection from Home). */
 export function usePendingFilters(): import("./view-engine/types").FilterRule[] | null {
   return useSyncExternalStore(subscribeActiveRoute, getPendingFilters, () => null)
+}
+
+/* ── Secondary Panel Route (independent from primary) ── */
+
+let _secondaryListeners: Array<() => void> = []
+let _secondaryRoute: string | null = null
+let _secondarySpace: ActivitySpace | null = null
+
+export function getSecondaryRoute(): string | null { return _secondaryRoute }
+export function getSecondarySpace(): ActivitySpace | null { return _secondarySpace }
+
+export function setSecondaryRoute(route: string | null): void {
+  if (_secondaryRoute === route) return
+  _secondaryRoute = route
+  if (route) {
+    _secondarySpace = inferSpace(route)
+  }
+  _secondaryListeners.forEach((fn) => fn())
+}
+
+export function setSecondarySpace(space: ActivitySpace): void {
+  _secondarySpace = space
+  _secondaryRoute = DEFAULT_ROUTES[space]
+  _secondaryListeners.forEach((fn) => fn())
+}
+
+export function clearSecondaryRoute(): void {
+  _secondaryRoute = null
+  _secondarySpace = null
+  _secondaryListeners.forEach((fn) => fn())
+}
+
+function subscribeSecondaryRoute(fn: () => void): () => void {
+  _secondaryListeners.push(fn)
+  return () => { _secondaryListeners = _secondaryListeners.filter((f) => f !== fn) }
+}
+
+export function useSecondaryRoute(): string | null {
+  return useSyncExternalStore(subscribeSecondaryRoute, getSecondaryRoute, () => null)
+}
+
+export function useSecondarySpace(): ActivitySpace | null {
+  return useSyncExternalStore(subscribeSecondaryRoute, getSecondarySpace, () => null)
 }

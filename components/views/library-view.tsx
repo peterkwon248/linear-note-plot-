@@ -37,6 +37,7 @@ import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
 import { cn } from "@/lib/utils"
 import { useActiveRoute, setActiveRoute } from "@/lib/table-route"
+import { usePaneActiveRoute } from "@/components/workspace/pane-context"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import type { Reference } from "@/lib/types"
 
@@ -1224,7 +1225,7 @@ function ReferencesView() {
 /* ── Main Component ──────────────────────────────── */
 
 export function LibraryView() {
-  const activeRoute = useActiveRoute()
+  const activeRoute = usePaneActiveRoute()
 
   // Determine which sub-view to show
   const isReferences = activeRoute === "/library/references"

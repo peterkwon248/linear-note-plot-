@@ -85,11 +85,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-123. Indent margin-left 방식 전환 — blockquote→24px 8단계 (Notion 방식) + indent-extension.ts
-124. Library 6번째 Activity Bar 공간 — 사이드바 NavLink(Overview/References/Tags/Files), 서브라우트 4개, Overview 대시보드 (stat 카드 + Recent)
-125. References 풀페이지 리스트 — 검색, Quick Filter, 정렬, 전체선택, 멀티선택 + 플로팅 액션바(Delete/Export/Add Field)
+124. Library 6번째 Activity Bar 공간 — 사이드바 NavLink(Overview/References/Tags/Files), 서브라우트 4개, Overview 대시보드
+125. References 풀페이지 리스트 — 검색, Quick Filter, 정렬, 전체선택, 멀티선택 + 플로팅 액션바
 126. ReferenceDetailPanel — SmartSidePanel 확장 (SidePanelContext "reference"), Title/Content/Fields 인라인 편집
 127. 각주→Reference 자동 연결 — save 시 자동 createReference + referenceId, content 동기화
+128. Split View (듀얼 패널) — 하이브리드 모델. 좌=메인, 우=독립 참조. 6 space 전부 접근 가능. breadcrumb 드롭다운 space 전환. secondaryRoute 독립 라우팅. PaneContext + route intercept. Wiki article 전용 헤더 (Aa/접기/레이아웃/Edit)
 
 ## Two Axes — Core Design Philosophy
 
@@ -176,12 +176,14 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **References/Files soft delete**: trashed/trashedAt 필드, 복원 가능. Store v71 (2026-04-08)
 - **Reference = 통합 참고자료 (옵션3 하이브리드)**: url 필드 있으면 Link형, 없으면 Citation형으로 자동 분기. 새 엔티티 없이 Reference 하나로 통합. 위키백과 철학 차용 — `[[]]`=내부링크, 각주=하단URL, referenceLink=외부링크(🔗 시각 구분). `[[`/`@` 드롭다운에서 url 있으면 referenceLink 노드, 없으면 footnoteRef 노드 자동 삽입. Shift+클릭=반대 모드. Quick Filter에 Links 추가 (2026-04-08)
 
-## TODO: Future Work (우선순위 순, 2026-04-08 sync)
+## TODO: Future Work (우선순위 순, 2026-04-09 sync)
 
-### 🔴 P0 — 최우선 (다음 세션): 듀얼 에디터 전체 재설계
-1. **듀얼 에디터 독립 패널** — VS Code/Obsidian 패턴. 좌/우 독립 네비게이션, 사이드바/Activity Bar 1개 유지. 우측 헤더 통일, breadcrumb 노트 전환 드롭다운, table-route 이중화
-2. **FootnotesFooter 접기/펼치기** — 기본 접힌 상태 "▶ FOOTNOTES (2)", `[1]` 클릭 시 자동 펼침
-3. **referenceLink 노드 최종 검증** — Shift+클릭 시 referenceLink 삽입 동작 확인
+### 🔴 P0 — 최우선 (다음 세션): Split View 진입점 + 후속
+1. **Split View 진입점 브레인스토밍** — 에디터 헤더 버튼(SplitSquareHorizontal), Ctrl+\ 단축키, 커맨드 팔레트 "Split View", 노트 리스트 우클릭 "Open in Split". 현재 진입점이 wikilink 우클릭/호버 프리뷰/Peek에만 있어서 디스커버리 부족
+2. **"Side by Side" → "Split View" 네이밍 변경** — 전체 UI 텍스트 + 코드 변수명
+3. **나머지 뷰 컴포넌트 pane 인식** — wiki-view, calendar-view, ontology-view 등에서 openNote 호출 시 pane 전달 (usePaneOpenNote 적용)
+4. **FootnotesFooter 접기/펼치기** — 기본 접힌 상태 "▶ FOOTNOTES (2)", `[1]` 클릭 시 자동 펼침
+5. **referenceLink 노드 최종 검증** — Shift+클릭 시 referenceLink 삽입 동작 확인
 
 ### P1 — 크로스노트 북마크 + Library 고도화
 4. **크로스노트 북마크** — GlobalBookmark store slice, 사이드패널 Bookmarks 탭 리뉴얼, Ctrl+Shift+B 단축키, 자동 라벨 추출

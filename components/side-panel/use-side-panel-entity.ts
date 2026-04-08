@@ -33,8 +33,11 @@ export function useSidePanelEntity(): SidePanelEntityResult {
     return { type: "note" as const, noteId: ctx.id, wikiArticleId: null, referenceId: null, note, wikiArticle: null, reference: null }
   }
 
-  // Fallback: legacy behavior (selectedNoteId || previewNoteId)
-  const fallbackId = selectedNoteId || previewNoteId
+  // Fallback: use focused pane's note (primary or secondary)
+  const activePane = usePlotStore((s) => s.activePane)
+  const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
+  const focusedNoteId = activePane === 'secondary' && secondaryNoteId ? secondaryNoteId : selectedNoteId
+  const fallbackId = focusedNoteId || previewNoteId
   if (fallbackId) {
     const note = notes.find((n) => n.id === fallbackId) ?? null
     return { type: "note" as const, noteId: fallbackId, wikiArticleId: null, referenceId: null, note, wikiArticle: null, reference: null }

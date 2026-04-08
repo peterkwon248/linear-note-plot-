@@ -241,7 +241,7 @@ export const usePlotStore = create<PlotState>()(
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, previewNoteId, sidePanelOpen, sidePanelContext, todoTasks, ...rest } = state
+        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekNoteId, previewNoteId, sidePanelOpen, sidePanelContext, todoTasks, secondaryHistory, secondaryHistoryIndex, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
@@ -258,6 +258,9 @@ export const usePlotStore = create<PlotState>()(
           state._viewStateHydrated = true
           // Side panel should always start closed (not persisted)
           state.sidePanelOpen = false
+          // Secondary panel navigation is session-only
+          state.secondaryHistory = []
+          state.secondaryHistoryIndex = -1
 
           // Force re-seed if notes are empty (user deleted all data)
           if (state.notes.length === 0) {

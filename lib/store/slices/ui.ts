@@ -36,7 +36,43 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
       set({ selectedNoteId: id, sidePanelContext: id ? { type: "note", id } : null })
     },
 
-    openNote: (id: string, opts?: { forceNewTab?: boolean }) => {
+    openNote: (id: string, opts?: { forceNewTab?: boolean; pane?: 'primary' | 'secondary' }) => {
+      const targetPane = opts?.pane ?? 'primary'
+
+      // Secondary pane path — independent from selectedNoteId
+      if (targetPane === 'secondary') {
+        // Auto-delete empty previous secondary note
+        const prevState = get()
+        const prevSecId = prevState.secondaryNoteId as string | null
+        if (prevSecId && prevSecId !== id) {
+          const prevNote = (prevState.notes as Note[]).find((n: Note) => n.id === prevSecId)
+          if (prevNote && !prevNote.title && !prevNote.content) {
+            prevState.deleteNote(prevSecId)
+          }
+        }
+        set((state: any) => {
+          if (!state.notes.some((n: Note) => n.id === id)) return state
+          // Update reads + lastTouchedAt
+          const notes = state.notes.map((n: Note) =>
+            n.id === id ? { ...n, reads: (n.reads ?? 0) + 1, lastTouchedAt: now() } : n
+          )
+          // Push to secondary history
+          const history = state.secondaryHistory as string[]
+          const index = state.secondaryHistoryIndex as number
+          const newHistory = [...history.slice(0, index + 1), id].slice(-MAX_HISTORY)
+          return {
+            notes,
+            secondaryNoteId: id,
+            activePane: 'secondary' as const,
+            secondaryHistory: newHistory,
+            secondaryHistoryIndex: newHistory.length - 1,
+          }
+        })
+        appendEvent(id, "opened")
+        return
+      }
+
+      // Primary pane path — existing behavior
       // Auto-delete empty previous note when switching to another note
       const prevState = get()
       const prevId = prevState.selectedNoteId as string | null

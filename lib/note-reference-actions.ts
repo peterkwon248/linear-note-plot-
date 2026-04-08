@@ -66,13 +66,20 @@ export function handleNoteReferenceClick(
   const store = usePlotStore.getState()
 
   if (event.ctrlKey || event.metaKey) {
-    // Ctrl+Click → navigate to note
+    // Ctrl+Click → navigate to note in the currently focused pane
     if (noteType === "wiki") {
+      // Wiki navigation always goes to Wiki space (left pane)
       setActiveRoute("/wiki")
       navigateToWikiArticle(noteId)
     } else {
-      setActiveRoute("/notes")
-      store.openNote(noteId)
+      const pane = store.activePane
+      if (pane === 'secondary') {
+        // Open in secondary pane (independent navigation)
+        store.openNote(noteId, { pane: 'secondary' })
+      } else {
+        setActiveRoute("/notes")
+        store.openNote(noteId)
+      }
     }
   } else {
     // Regular click → peek in side panel

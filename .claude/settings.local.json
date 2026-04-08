@@ -101,8 +101,7 @@
       "Bash(ipconfig | grep -A 2 \"Wi-Fi\\\\|Ethernet\\\\|이더넷\\\\|무선\" | grep \"IPv4\" | head -3)",
       "Bash(ipconfig | grep \"IPv4\")",
       "Bash(cloudflared --version 2>&1 || echo \"NOT_INSTALLED\")",
-      "Bash(winget install Cloudflare.cloudflared 2>&1)",
-      "Bash(ls -la components/editor/WikilinkDecoration.ts* components/editor/WikilinkDecoration.tsx)"
+      "Bash(winget install Cloudflare.cloudflared 2>&1)"
     ]
   }
 }

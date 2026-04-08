@@ -200,7 +200,7 @@ export interface PlotState {
   // ── UI Actions ──
   setActiveView: (view: ActiveView) => void
   setSelectedNoteId: (id: string | null) => void
-  openNote: (id: string, opts?: { forceNewTab?: boolean }) => void
+  openNote: (id: string, opts?: { forceNewTab?: boolean; pane?: 'primary' | 'secondary' }) => void
   setSearchQuery: (query: string) => void
   setSearchOpen: (open: boolean) => void
   setShortcutOverlayOpen: (open: boolean) => void
@@ -336,11 +336,15 @@ export interface PlotState {
   activePane: 'primary' | 'secondary'
   editorTabs: WorkspaceTab[]
   activeTabId: string | null
+  secondaryHistory: string[]       // right panel navigation stack
+  secondaryHistoryIndex: number    // current position (-1 = empty)
   openInSecondary: (noteId: string) => void
   closeSecondary: () => void
   setActivePane: (pane: 'primary' | 'secondary') => void
   closeEditorTab: (tabId: string) => void
   setActiveEditorTab: (tabId: string) => void
+  secondaryGoBack: () => boolean
+  secondaryGoForward: () => boolean
 
   // ── Todo Index (derived cache, not persisted) ──
   todoTasks: TaskItem[]
