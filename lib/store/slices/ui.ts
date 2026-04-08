@@ -182,6 +182,13 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
     setSidePanelOpen: (open: boolean) => set({ sidePanelOpen: open }),
     toggleSidePanel: () => set((s: any) => ({ sidePanelOpen: !s.sidePanelOpen })),
 
+    // Secondary side panel
+    secondarySidePanelOpen: false,
+    secondarySidePanelMode: 'detail' as const,
+    secondarySidePanelContext: null as any,
+    setSecondarySidePanelOpen: (open: boolean) => set({ secondarySidePanelOpen: open }),
+    toggleSecondarySidePanel: () => set((s: any) => ({ secondarySidePanelOpen: !s.secondarySidePanelOpen })),
+
     setPreviewNoteId: (id: string | null) => set({
       previewNoteId: id,
       sidePanelContext: id ? { type: "note", id } : null,
