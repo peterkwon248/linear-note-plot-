@@ -95,8 +95,8 @@
 - **More Actions Overflow**: Pin 고정, 우클릭 Favorites (settings-store persist), 서브패널 (컬러피커/테이블 호버선택/이미지). `overflowFavorites: string[]` in settings store
 - **Split View (듀얼 패널)**: 하이브리드 모델 — 좌측=메인(selectedNoteId), 우측=독립 참조(secondaryNoteId). `secondaryHistory[]` 독립 네비게이션. `secondaryRoute/secondarySpace` 독립 라우팅 (table-route.ts). `PaneContext` + `usePaneOpenNote` + `usePaneActiveRoute` 훅. `SecondaryPanelContent`가 note/wiki/뷰 렌더링. breadcrumb 드롭다운으로 6 space 전환. `setRouteInterceptForSecondary`로 우측 클릭 시 글로벌 라우트 인터셉트. 사이드바는 좌측 전용
 
-## Store Slices (21 total)
-notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references
+## Store Slices (22 total)
+notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, thinking
 
 ## Completed PRs (recent)
 - **PR #80**: Wiki system + Side Peek + soft-delete trash
@@ -312,6 +312,45 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - **각주 팝오버 잘림 수정**: `left:50%+translateX(-50%)` → `left:0` 좌측 정렬
   - **Math 직접 노드 삽입**: `$...$` 텍스트 → `insertContent({ type: "inlineMath/blockMath" })` 직접 노드
 
+- **PR #165**: Library 6th space + References UI + footnote auto-link
+  - Library 6번째 Activity Bar 공간 (Overview/References/Tags/Files 사이드바 NavLink)
+  - References 풀페이지 리스트 (검색/Quick Filter/정렬/멀티선택)
+  - ReferenceDetailPanel — SmartSidePanel SidePanelContext "reference" 타입 확장
+  - 각주→Reference 자동 연결 (save 시 createReference + referenceId 동기화)
+
+- **PR #167**: Library Overview 리디자인 + Tags/Files 뷰
+  - Library Overview — wiki-dashboard.tsx 패턴, MiniStat 3-col + 2-col ContentCard Bento Grid
+  - Tags 뷰 실제 구현 (색상 dot + 노트 카운트 + 검색)
+  - Files 뷰 실제 구현 (All/Images/Documents 필터)
+  - Sidebar Tags/Files 활성화 (NavLink + 카운트 뱃지)
+  - SmartLinkPaste 버그 수정 (view.hasFocus() 가드)
+
+- **PR #168**: Tags Library 통합 + soft delete + 네이밍 통일
+  - Notes "More"에서 Tags 제거 → `/library/tags` 리다이렉트
+  - References/Files soft delete (trashed/trashedAt 필드, restoreReference, permanentlyDeleteReference)
+  - "TOP TAGS" → "RECENT TAGS" + 최근 사용 노트 기준 정렬
+  - Store v71 migration
+
+- **PR #169**: Reference 하이브리드 + 호버 프리뷰 강화 + Trash/Library UX
+  - referenceLink TipTap 인라인 atom 노드 (에메랄드 칩, URL 클릭, Ctrl+클릭→사이드패널)
+  - `[[`/`@` 자동 분기 — 기본=footnoteRef, Shift+클릭/Enter=referenceLink
+  - 호버 프리뷰 강화 — 리사이즈(우하단 드래그) + 드래그 이동(Pin 시 헤더) + Pin 버튼 + 본문 flex-1
+  - Trash 뷰 References/Files 탭 추가
+  - Library Files 직접 업로드 UI (ViewHeader + file input → addAttachment)
+  - References hover 체크박스, Bookmark 툴바/Insert 메뉴 추가
+
+- **PR #172**: Split View 독립 패널 시스템 — 하이브리드 듀얼 에디터
+  - `PaneContext` 신규 (primary/secondary 컨텍스트 구분)
+  - `secondaryHistory[]` 독립 네비게이션, `secondaryRoute/secondarySpace` 독립 라우팅 (table-route.ts 이중화)
+  - `setRouteInterceptForSecondary` — 우측 클릭 시 글로벌 라우트 인터셉트
+  - `SecondaryPanelContent` — note/wiki/뷰 렌더링, breadcrumb 드롭다운으로 6 space 전환
+  - `usePaneOpenNote` + `usePaneActiveRoute` 훅
+
+- **PR #173**: Split View 사이드패널 분리 — primary/secondary 독립 사이드패널
+  - primary/secondary pane 각각 독립 SmartSidePanel 인스턴스
+  - 사이드바는 primary(좌측) 전용 유지
+  - SidePanelContext per-pane 분리
+
 ## Architecture Redesign v2 — ALL PHASES COMPLETE
 
 **사상**: 팔란티어 × 제텔카스텐. Layer 1(Raw Data) → Layer 2(Ontology) → Layer 3(Wiki) → Layer 4(Insights). LLM/API 사용 안 함.
@@ -326,7 +365,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 7. **Wiki Collection** — Collection slice (v43), WikiQuote TipTap node, Extract as Note, Collection sidebar ✅
 
 ### Key Design Decisions
-- **Activity Bar 5-space**: Inbox / Notes / Wiki / Calendar / Graph
+- **Activity Bar 6-space**: Inbox / Notes / Wiki / Calendar / Graph / Library
 - **Wiki 사이드바 = Overview 단일 진입**: stat 카드 클릭으로 드릴다운
 - **WikiStatus 2단계**: stub(미완성) → article(완성). Red Link = computed. draft/complete 제거 (v60)
 - **위키 강등 = article→stub 1단계**: stub은 바닥(강등 없음, 삭제만)
@@ -341,7 +380,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-04-08)
+## Current Direction (as of 2026-04-09)
 
 ### 방향 결정
 - **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** (2026-04-01)
@@ -403,14 +442,10 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Files 뷰 구현**: Coming soon → 첨부파일 목록 (All/Images/Documents 필터)
 - **Sidebar Tags/Files 활성화**: disabled span → NavLink + 카운트 뱃지
 
-### 다음 우선순위 (2026-04-08 기준)
-1. 🔴 **듀얼 에디터 좌우 고정** — openNote 호출 컨텍스트별 좌/우 라우팅 분기. 사이드패널 듀얼 모드 지원
-2. **FootnotesFooter 접기/펼치기** — 기본 접힌 상태, `[1]` 클릭 시 자동 펼침
-3. **referenceLink 노드 최종 검증** — Shift+클릭 삽입 동작 확인
-4. **크로스노트 북마크** — GlobalBookmark slice, 사이드패널 리뉴얼, Ctrl+Shift+B
-5. **Library + Wiki Overview Bento Grid 리디자인**
-6. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용
-7. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력
+### 다음 우선순위 (2026-04-09 기준)
+- **P0**: Split View 진입점 + 좌우 패널 사이드바 문제 해결
+- **P1**: 크로스노트 북마크, Library Bento Grid
+- **P2**: 인사이트 허브, 각주 리치텍스트
 
 ### 리서치: Library 고도화 벤치마크 (2026-04-07)
 - **Zotero** (github.com/zotero/zotero): 3-pane 레이아웃, Collections vs Tags 구분, item type별 필드 스키마, refs count 컬럼, VirtualizedTable

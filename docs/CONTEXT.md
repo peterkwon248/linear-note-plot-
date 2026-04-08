@@ -29,13 +29,14 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 4. Sidebar Refactor (컨텍스트 반응형) ✅
 5. Breadcrumb ✅
 6. Wiki Evolution (자동 등재, 초성 인덱스, 목업 매칭) ✅
-7. Wiki Collection (Collection slice v43, WikiQuote, Extract as Note, Collection sidebar, Red Links) ✅
+7. Wiki Collection (Collection slice v43, WikiQuote→WikiEmbed 대체, Extract as Note, Collection sidebar, Red Links) ✅
+8. Split View + Library + Reference/Footnote system (v71) ✅
 
 ## Current Architecture (현재 코드 기준)
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (21): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references
+- Slices (21): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, thinking
 - Store version: 71
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
@@ -43,8 +44,8 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Always-mounted views via `lib/table-route.ts` + `app/(app)/layout.tsx`
 - Mount-once keep-alive pattern (CSS display toggle)
 - Responsive NotesTable: ONE grid for all sizes (ResizeObserver + minWidth thresholds)
-- 6 Activity Spaces: Home / Notes / Wiki / Calendar / Ontology / Library
-  - Library: 서브라우트 4개 (`/library`, `/library/references`, `/library/tags`, `/library/files`), 사이드바 NavLink
+- 6 Activity Spaces: Inbox / Notes / Wiki / Calendar / Graph / Library
+  - Library: 서브라우트 4개 (`/library`, `/library/references`, `/library/tags`, `/library/files`), 사이드바 NavLink (Overview/References/Tags/Files)
 
 ### Editor
 - TipTap 3 editor — Shared config factory (`components/editor/core/shared-editor-config.ts`)
@@ -55,6 +56,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
   - Indent Extension: `indent-extension.ts` — paragraph/heading indent 0-8단계 (24px/level, Notion 방식)
 - Workspace: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
 - WorkspaceMode 삭제됨 — sidebarCollapsed + detailsOpen 독립 토글
+- Split View 시스템 (PR #172-173): PaneContext + route intercept 패턴. Primary/Secondary 독립 패널. SmartSidePanel primary/secondary 분리. 4-column flat layout (layout.tsx + WorkspaceEditorArea). secondarySpace URL state, secondary history navigation
 - Wiki-links: `[[title]]` extracted to `Note.linksOut`
 
 ### Knowledge System
@@ -85,11 +87,12 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - Tags → 노트 주제 (무엇에 관한 것인가): #투자 #사주 #독서
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
-124. Library 6번째 Activity Bar 공간 — 사이드바 NavLink(Overview/References/Tags/Files), 서브라우트 4개, Overview 대시보드
-125. References 풀페이지 리스트 — 검색, Quick Filter, 정렬, 전체선택, 멀티선택 + 플로팅 액션바
-126. ReferenceDetailPanel — SmartSidePanel 확장 (SidePanelContext "reference"), Title/Content/Fields 인라인 편집
-127. 각주→Reference 자동 연결 — save 시 자동 createReference + referenceId, content 동기화
-128. Split View (듀얼 패널) — 하이브리드 모델. 좌=메인, 우=독립 참조. 6 space 전부 접근 가능. breadcrumb 드롭다운 space 전환. secondaryRoute 독립 라우팅. PaneContext + route intercept. Wiki article 전용 헤더 (Aa/접기/레이아웃/Edit)
+
+1. **PR #165**: Library 6번째 Activity Space 추가 — References UI + footnote auto-link. 사이드바 NavLink(Overview/References/Tags/Files), 서브라우트 4개
+2. **PR #167-168**: Library Overview 리디자인 + Tags Library — Tags/Files 뷰, window.prompt 제거, soft delete, 네이밍 통일
+3. **PR #169**: Reference 하이브리드 통합 — url 있으면 Link형, 없으면 Citation형 자동 분기. hover 프리뷰 + Trash/Library UX
+4. **PR #172**: Split View 독립 패널 시스템 — PaneContext + route intercept 패턴, 하이브리드 듀얼 에디터, 6 space 전부 접근 가능, secondarySpace URL state
+5. **PR #173**: Split View 사이드패널 분리 — primary/secondary 독립 SmartSidePanel, 4-column flat layout
 
 ## Two Axes — Core Design Philosophy
 
@@ -104,7 +107,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 
 - **LLM/API 사용 안 함** — 전부 규칙 기반 + 통계 기반 + 그래프 알고리즘. 오프라인, 프라이버시, 비용 0
 - **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** — 5개 공간이 각각 최적화된 UX 제공. "유저는 노트만 쓰고 앱이 알아서" = IKEA 전략. 노션식 "빈 캔버스 + 블록 조합" 방향 포기 (2026-04-01)
-- **Activity Bar 5-space**: Home / Notes / Wiki / Calendar / Ontology (2026-03-31)
+- **Activity Bar 6-space**: Inbox / Notes / Wiki / Calendar / Graph / Library — Library 6번째 공간 추가 (PR #165, 2026-04-08)
 - **Wiki 사이드바 4-항목**: Overview / Merge / Split / Categories (+ Views 섹션). Categories = 2-panel 트리 에디터
 - **Wiki Layout 프리셋**: `"default" | "encyclopedia"` — article별 전환. Encyclopedia = 나무위키식 (인라인 인포박스, 목차, 분류 태그)
 - **Wiki URL 블록**: 유튜브 iframe embed + 일반 링크 카드. AddBlockButton에서 추가
@@ -135,6 +138,8 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Relations UI 삭제**: 백링크+위키링크+Discover 추천으로 공간축 충분. store slice 유지, UI만 제거 (2026-03-28)
 - **Connections = Connected+Discover 2섹션**: Connected(← inbound notes/wiki, → outbound notes/wiki, unlinked mentions) + Discover(추천 notes/wiki/tags). 방향 화살표로 직관적 구분 (2026-03-28)
 - **Peek wiki fallback**: wiki article ID → title match → note lookup. 위키 블록 직접 편집은 Phase 2A 스코프 (2026-03-28)
+- **Side Panel = Unified SmartSidePanel**: 4-tab: Detail + Connections(Connected/Discover) + Activity(Thread/Reflection) + Bookmarks. Peek as fallback. Relations UI 삭제. primary/secondary 독립 패널 (PR #173)
+- **Split View = PaneContext + route intercept**: 4-column flat layout (layout.tsx + WorkspaceEditorArea). secondarySpace URL state. secondary history navigation. SmartSidePanel primary/secondary 분리 (PR #172-173)
 - **카테고리 사이드바 → SmartSidePanel 통합**: 내장 280px 사이드바 제거, 글로벌 Details 패널에서 표시. Notes와 동일 패턴 (2026-03-26)
 - **카테고리 더블클릭 에디터**: 싱글클릭=선택(하이라이트만), 더블클릭=폼 에디터 split view. 이름/설명 인라인 편집, Parent 드롭다운, 서브카테고리 +New/Move here (2026-03-26)
 - **노트 ≠ 위키**: Note와 WikiArticle은 완전 별도 엔티티. isWiki→noteType 리팩토링 완료 (2026-03-31)
@@ -178,23 +183,21 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 
 ## TODO: Future Work (우선순위 순, 2026-04-09 sync)
 
-### 🔴 P0 — 최우선 (다음 세션): Split View 진입점 + 후속
+### P0 — 최우선 (다음 세션): Split View 후속
 1. **Split View 진입점 브레인스토밍** — 에디터 헤더 버튼(SplitSquareHorizontal), Ctrl+\ 단축키, 커맨드 팔레트 "Split View", 노트 리스트 우클릭 "Open in Split". 현재 진입점이 wikilink 우클릭/호버 프리뷰/Peek에만 있어서 디스커버리 부족
 2. **"Side by Side" → "Split View" 네이밍 변경** — 전체 UI 텍스트 + 코드 변수명
 3. **나머지 뷰 컴포넌트 pane 인식** — wiki-view, calendar-view, ontology-view 등에서 openNote 호출 시 pane 전달 (usePaneOpenNote 적용)
-4. **FootnotesFooter 접기/펼치기** — 기본 접힌 상태 "▶ FOOTNOTES (2)", `[1]` 클릭 시 자동 펼침
-5. **referenceLink 노드 최종 검증** — Shift+클릭 시 referenceLink 삽입 동작 확인
+4. **좌우 패널 사이드바 문제 해결** — primary/secondary 각각 독립 사이드바 열기/닫기 충돌 이슈 (최우선)
 
 ### P1 — 크로스노트 북마크 + Library 고도화
-4. **크로스노트 북마크** — GlobalBookmark store slice, 사이드패널 Bookmarks 탭 리뉴얼, Ctrl+Shift+B 단축키, 자동 라벨 추출
-5. **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card, Featured Article, Activity Feed
-6. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용
-7. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력
+5. **크로스노트 북마크** — GlobalBookmark store slice, 사이드패널 Bookmarks 탭 리뉴얼, Ctrl+Shift+B 단축키, 자동 라벨 추출
+6. **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card, Featured Article, Activity Feed
+7. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용
 
-### P2 — 위키 고도화 + 각주
-8. **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
-9. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
-10. **나무위키 틀** — 계보/계승 테이블, 네비게이션 박스
+### P2 — 인사이트 허브 + 각주
+8. **인사이트 허브** — 온톨로지 Single Source of Insights. Knowledge WAR/Link Density/Stub Conversion Rate 등 세이브매트릭스급 지표
+9. **각주 리치텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
+10. **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
 
 ### P3 — 사이드패널 + 뷰 확장
 11. **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식), Peek에서 직접 Quote 삽입, 호버 프리뷰/Peek 역할 정리
@@ -202,8 +205,8 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 13. **커맨드 팔레트 확장** — 풀페이지 검색, 북마크 커맨드
 
 ### P4 — 지능 + 검색
-- 요약 엔진, 인사이트 중앙 허브, 풀페이지 검색 분리
-- 웹 클리퍼, 가져오기/내보내기, 커맨드 팔레트, View v2, 리스트 가상화
+- 요약 엔진, 풀페이지 검색 분리
+- 웹 클리퍼, 가져오기/내보내기, View v2, 리스트 가상화
 
 ## Calendar 리디자인 설계 (확정)
 
