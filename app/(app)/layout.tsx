@@ -169,7 +169,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           )}
 
           {/* ── Main content + Side Panel ── */}
-          <ResizablePanelGroup direction="horizontal" className="flex-1">
+          <ResizablePanelGroup id="main-layout" direction="horizontal" className="flex-1">
             <ResizablePanel defaultSize={75} minSize={50}>
               <div className="flex h-full overflow-hidden">
                 {/* Table views (notes/pinned/trash): always mounted */}

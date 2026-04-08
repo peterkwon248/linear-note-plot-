@@ -12,6 +12,8 @@ import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
+import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
 
 function InspectorSection({
   title,
@@ -51,6 +53,38 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       }
     },
     [referenceId, reference?.title, updateReference]
+  )
+
+  // Extract URL from fields
+  const urlFieldIndex = reference ? reference.fields.findIndex(
+    (f) => f.key.toLowerCase() === "url"
+  ) : -1
+  const urlValue = urlFieldIndex >= 0 ? reference!.fields[urlFieldIndex].value : ""
+
+  const handleUrlBlur = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      if (!reference) return
+      const val = e.target.value.trim()
+      const newFields = [...reference.fields]
+      const idx = newFields.findIndex((f) => f.key.toLowerCase() === "url")
+
+      if (val) {
+        if (idx >= 0) {
+          // Update existing url field
+          newFields[idx] = { ...newFields[idx], value: val }
+        } else {
+          // Add new url field
+          newFields.unshift({ key: "url", value: val })
+        }
+      } else {
+        // Remove url field if empty
+        if (idx >= 0) {
+          newFields.splice(idx, 1)
+        }
+      }
+      updateReference(referenceId, { fields: newFields })
+    },
+    [referenceId, reference, updateReference]
   )
 
   const handleContentBlur = useCallback(
@@ -140,6 +174,33 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
 
       <div className="mx-4 border-b border-border" />
 
+      {/* URL (dedicated field) */}
+      <InspectorSection title="URL" icon={<Globe size={16} weight="regular" />}>
+        <div className="flex items-center gap-1.5">
+          <input
+            type="url"
+            defaultValue={urlValue}
+            key={urlValue}
+            onBlur={handleUrlBlur}
+            placeholder="https://..."
+            className="flex-1 rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/40 focus:border-accent/50 focus:outline-none transition-colors"
+          />
+          {urlValue && (
+            <a
+              href={urlValue}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-hover-bg hover:text-accent"
+              title="Open URL"
+            >
+              <ArrowSquareOut size={14} weight="regular" />
+            </a>
+          )}
+        </div>
+      </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
       {/* Content (editable textarea) */}
       <InspectorSection title="Content" icon={<TextAlignLeft size={16} weight="regular" />}>
         <textarea
@@ -155,33 +216,37 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
 
       {/* Fields (key-value pairs) */}
       <InspectorSection title="Fields" icon={<ListBullets size={16} weight="regular" />}>
-        {reference.fields.length > 0 ? (
+        {reference.fields.filter((f) => f.key.toLowerCase() !== "url").length > 0 ? (
           <div className="space-y-1.5">
-            {reference.fields.map((field, i) => (
-              <div key={i} className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  defaultValue={field.key}
-                  onBlur={(e) => handleFieldKeyBlur(i, e.target.value)}
-                  placeholder="Key"
-                  className="w-[35%] shrink-0 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-muted-foreground placeholder:text-muted-foreground/30 focus:border-accent/50 focus:outline-none transition-colors"
-                />
-                <input
-                  type="text"
-                  defaultValue={field.value}
-                  onBlur={(e) => handleFieldValueBlur(i, e.target.value)}
-                  placeholder="Value"
-                  className="flex-1 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-foreground placeholder:text-muted-foreground/30 focus:border-accent/50 focus:outline-none transition-colors"
-                />
-                <button
-                  onClick={() => handleRemoveField(i)}
-                  className="shrink-0 rounded-md p-0.5 text-muted-foreground/40 transition-colors hover:bg-hover-bg hover:text-destructive"
-                  title="Remove field"
-                >
-                  <PhX size={12} weight="bold" />
-                </button>
-              </div>
-            ))}
+            {reference.fields.map((field, i) => {
+              // Skip url field (shown in dedicated section above)
+              if (field.key.toLowerCase() === "url") return null
+              return (
+                <div key={i} className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    defaultValue={field.key}
+                    onBlur={(e) => handleFieldKeyBlur(i, e.target.value)}
+                    placeholder="Key"
+                    className="w-[35%] shrink-0 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-muted-foreground placeholder:text-muted-foreground/30 focus:border-accent/50 focus:outline-none transition-colors"
+                  />
+                  <input
+                    type="text"
+                    defaultValue={field.value}
+                    onBlur={(e) => handleFieldValueBlur(i, e.target.value)}
+                    placeholder="Value"
+                    className="flex-1 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-foreground placeholder:text-muted-foreground/30 focus:border-accent/50 focus:outline-none transition-colors"
+                  />
+                  <button
+                    onClick={() => handleRemoveField(i)}
+                    className="shrink-0 rounded-md p-0.5 text-muted-foreground/40 transition-colors hover:bg-hover-bg hover:text-destructive"
+                    title="Remove field"
+                  >
+                    <PhX size={12} weight="bold" />
+                  </button>
+                </div>
+              )
+            })}
           </div>
         ) : (
           <p className="text-2xs text-muted-foreground/50">No fields added</p>

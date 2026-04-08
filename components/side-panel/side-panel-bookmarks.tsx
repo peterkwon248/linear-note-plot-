@@ -74,6 +74,10 @@ function NoteBookmarks() {
             <li
               key={b.id}
               className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
+              onClick={() => {
+                const el = document.querySelector(`[data-anchor-id="${b.id}"]`)
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+              }}
             >
               <MapPin size={12} weight="fill" className="text-muted-foreground/50 flex-shrink-0" />
               <span className="text-note text-foreground/80 flex-1 truncate">{b.label}</span>

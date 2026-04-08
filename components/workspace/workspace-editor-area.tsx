@@ -20,7 +20,7 @@ export function WorkspaceEditorArea() {
   const isDual = !!secondaryNote
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="flex-1">
+    <ResizablePanelGroup id="workspace-editor" direction="horizontal" className="flex-1">
       <ResizablePanel defaultSize={isDual ? 50 : 100} minSize={30}>
         <div
           className={`flex h-full flex-col overflow-hidden ${activePane === 'primary' ? '' : 'opacity-80'}`}

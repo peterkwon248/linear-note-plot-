@@ -24,6 +24,7 @@ interface MentionItem {
   mentionType: "note" | "wiki" | "tag" | "date" | "reference"
   color?: string // for tags
   referenceContent?: string // Reference.content
+  referenceUrl?: string // URL field value (for auto-branching)
 }
 
 interface MentionListProps {
@@ -59,9 +60,9 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
     }, [items])
 
     const selectItem = useCallback(
-      (index: number) => {
+      (index: number, shiftKey = false) => {
         const item = items[index]
-        if (item) command(item)
+        if (item) command({ ...item, _shiftKey: shiftKey } as any)
       },
       [items, command]
     )
@@ -77,7 +78,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
           return true
         }
         if (event.key === "Enter") {
-          selectItem(selectedIndex)
+          selectItem(selectedIndex, event.shiftKey)
           return true
         }
         return false
@@ -121,7 +122,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
               {group.items.map(({ item, globalIndex }) => (
                 <button
                   key={item.id}
-                  onClick={() => selectItem(globalIndex)}
+                  onClick={(e) => selectItem(globalIndex, e.shiftKey)}
                   className={[
                     "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",
                     globalIndex === selectedIndex
@@ -265,16 +266,18 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
 
     // 5. Reference search
     const references = (store as any).references ?? {}
-    const refEntries = Object.values(references) as Array<{ id: string; title: string; content: string; updatedAt: string }>
+    const refEntries = Object.values(references) as Array<{ id: string; title: string; content: string; fields: Array<{ key: string; value: string }>; updatedAt: string }>
     const matchedRefs = q.length === 0
-      ? refEntries.filter((r) => r.title?.trim()).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 3)
-      : refEntries.filter((r) => r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q)).slice(0, 3)
+      ? refEntries.filter((r) => r.title?.trim() && !(r as any).trashed).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 3)
+      : refEntries.filter((r) => !(r as any).trashed && (r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q))).slice(0, 3)
     for (const r of matchedRefs) {
+      const urlField = (r.fields || []).find((f) => f.key.toLowerCase() === "url")
       results.push({
         id: r.id,
         label: r.title,
         mentionType: "reference",
         referenceContent: r.content,
+        referenceUrl: urlField?.value,
       })
     }
 
@@ -359,11 +362,12 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
   }) => {
     const item = props as unknown as MentionItem
 
-    // Reference → footnoteRef 삽입
+    // Reference → 기본 footnoteRef, Shift 시 referenceLink
     if (item.mentionType === "reference") {
       const store = usePlotStore.getState()
       let refId = item.id
       let refContent = item.referenceContent || item.label
+      let refUrl = item.referenceUrl
 
       // Create new Reference if __new_ref__
       if (item.id.startsWith("__new_ref__")) {
@@ -373,24 +377,45 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
           fields: [],
         })
         refContent = item.label
+        refUrl = undefined
       }
 
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent([
-          {
-            type: "footnoteRef",
-            attrs: {
-              id: crypto.randomUUID().slice(0, 8),
-              referenceId: refId,
-              content: refContent,
+      const useInlineLink = (item as any)._shiftKey && refUrl
+
+      if (useInlineLink) {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertContent([
+            {
+              type: "referenceLink",
+              attrs: {
+                referenceId: refId,
+                title: item.label,
+              },
             },
-          },
-          { type: "text", text: " " },
-        ])
-        .run()
+            { type: "text", text: " " },
+          ])
+          .run()
+      } else {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertContent([
+            {
+              type: "footnoteRef",
+              attrs: {
+                id: crypto.randomUUID().slice(0, 8),
+                referenceId: refId,
+                content: refContent,
+              },
+            },
+            { type: "text", text: " " },
+          ])
+          .run()
+      }
       return
     }
 

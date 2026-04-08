@@ -1657,6 +1657,20 @@
   color: var(--foreground);
   word-break: break-word;
 }
+.footnote-popover-url {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0.7;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  cursor: pointer;
+}
+.footnote-popover-url:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
 @keyframes footnote-popover-in {
   from {
     opacity: 0;
@@ -1695,6 +1709,7 @@
 }
 .footnotes-footer-item {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 6px;
   line-height: 1.5;
@@ -1785,6 +1800,24 @@
   resize: none;
   outline: none;
   font-family: inherit;
+}
+.footnote-footer-url {
+  flex-basis: 100%;
+  width: 100%;
+  padding-left: 30px;
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0.7;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.footnote-footer-url:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 /* Link Card */

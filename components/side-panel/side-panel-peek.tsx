@@ -113,11 +113,6 @@ export function SidePanelPeek() {
         </div>
       </div>
 
-      {/* Editor Toolbar (edit mode only) */}
-      {editing && editorInstance && (
-        <FixedToolbar editor={editorInstance} position="top" noteId={sidePanelPeekNoteId} />
-      )}
-
       {/* Content */}
       <div ref={peekContentRef} className="flex-1 overflow-y-auto px-5 py-4">
         <NoteEditorAdapter
@@ -127,6 +122,11 @@ export function SidePanelPeek() {
           onEditorReady={(ed) => setEditorInstance(ed as Editor)}
         />
       </div>
+
+      {/* Editor Toolbar at bottom (edit mode only) */}
+      {editing && editorInstance && (
+        <FixedToolbar editor={editorInstance} position="bottom" noteId={sidePanelPeekNoteId} />
+      )}
     </div>
   )
 }

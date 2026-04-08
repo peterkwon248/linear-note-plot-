@@ -162,6 +162,10 @@ function relativeTime(dateStr: string): string {
   return `${days}d ago`
 }
 
+// Module-level size memory (persists across show/hide within session)
+let _cardWidth = 640
+let _cardHeight: number | null = null
+
 function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   const ref = useRef<HTMLDivElement>(null)
   const note = usePlotStore((s) => s.notes.find((n) => n.id === noteId))
@@ -170,6 +174,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
   const allNotes = usePlotStore((s) => s.notes)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const [pos, setPos] = useState({ x, y })
+  const [cardSize, setCardSize] = useState({ w: _cardWidth, h: _cardHeight })
   const [showMore, setShowMore] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
@@ -251,6 +256,54 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
     hideNotePreviewImmediate()
   }
 
+  // ── Resize handlers ──
+  const resizing = useRef(false)
+  const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 })
+
+  const onResizePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    resizing.current = true
+    const rect = ref.current!.getBoundingClientRect()
+    resizeStart.current = { x: e.clientX, y: e.clientY, w: rect.width, h: rect.height }
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  }, [])
+
+  const onResizePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!resizing.current) return
+    const dx = e.clientX - resizeStart.current.x
+    const dy = e.clientY - resizeStart.current.y
+    const newW = Math.max(400, Math.min(960, resizeStart.current.w + dx))
+    const newH = Math.max(300, resizeStart.current.h + dy)
+    setCardSize({ w: newW, h: newH })
+    _cardWidth = newW
+    _cardHeight = newH
+  }, [])
+
+  const onResizePointerUp = useCallback(() => { resizing.current = false }, [])
+
+  // ── Drag handlers (pinned only) ──
+  const dragging = useRef(false)
+  const dragStart = useRef({ x: 0, y: 0, posX: 0, posY: 0 })
+
+  const onDragPointerDown = useCallback((e: React.PointerEvent) => {
+    if (!pinned) return
+    if ((e.target as HTMLElement).closest("button")) return // don't drag from buttons
+    e.preventDefault()
+    dragging.current = true
+    dragStart.current = { x: e.clientX, y: e.clientY, posX: pos.x, posY: pos.y }
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  }, [pinned, pos.x, pos.y])
+
+  const onDragPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return
+    const dx = e.clientX - dragStart.current.x
+    const dy = e.clientY - dragStart.current.y
+    setPos({ x: dragStart.current.posX + dx, y: dragStart.current.posY + dy })
+  }, [])
+
+  const onDragPointerUp = useCallback(() => { dragging.current = false }, [])
+
   // Adjust position to stay within viewport
   const adjustPosition = useCallback(() => {
     if (!ref.current) return
@@ -290,10 +343,15 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
       onMouseEnter={cancelHidePreview}
       onMouseLeave={pinned ? undefined : hideNotePreview}
       data-hover-preview
-      className={`fixed z-[9999] w-[640px] max-h-[calc(100vh-32px)] flex flex-col rounded-lg border bg-background shadow-lg overflow-hidden animate-in fade-in duration-150 transition-colors ${
+      className={`fixed z-[9999] flex flex-col rounded-lg border bg-background shadow-lg overflow-hidden animate-in fade-in duration-150 transition-colors ${
         pinned ? "border-accent/40 shadow-xl" : "border-border-subtle"
       }`}
-      style={{ left: pos.x, top: pos.y }}
+      style={{
+        left: pos.x,
+        top: pos.y,
+        width: cardSize.w,
+        ...(cardSize.h ? { height: cardSize.h } : { maxHeight: 'calc(100vh - 32px)' }),
+      }}
     >
       {/* Pin indicator */}
       {pinned && (
@@ -307,8 +365,13 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
           <PushPin size={10} />
         </button>
       )}
-      {/* Header */}
-      <div className="px-4 pt-3 pb-1 flex items-center gap-2">
+      {/* Header (draggable when pinned) */}
+      <div
+        className={`px-4 pt-3 pb-1 flex items-center gap-2 ${pinned ? "cursor-grab active:cursor-grabbing" : ""}`}
+        onPointerDown={onDragPointerDown}
+        onPointerMove={onDragPointerMove}
+        onPointerUp={onDragPointerUp}
+      >
         {noteType === "wiki" && (
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium shrink-0">
             Wiki
@@ -430,7 +493,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
       </div>
       {/* Body */}
       {noteType === "wiki" && wikiArticle ? (
-        <div ref={bodyRef} className="overflow-y-auto" style={{ height: 400 }}>
+        <div ref={bodyRef} className="flex-1 overflow-y-auto min-h-[200px]">
           <WikiArticleEncyclopedia
             article={wikiArticle}
             isEditing={editing}
@@ -440,7 +503,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
       ) : note ? (
         <>
           {editing && editorInstance && <FixedToolbar editor={editorInstance} position="top" noteId={noteId} />}
-          <div ref={bodyRef} className="overflow-y-auto px-4 py-3" style={{ height: 400 }}>
+          <div ref={bodyRef} className="flex-1 overflow-y-auto px-4 py-3 min-h-[200px]">
             <NoteEditorAdapter
               key={noteId}
               note={note}
@@ -457,6 +520,21 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
       {/* Floating Quote button removed — Quote is now in action bar with select-all-first UX */}
       {/* Action bar */}
       <div data-action-bar className="flex items-center gap-0.5 px-3 py-1.5 border-t border-border-subtle">
+        {/* Pin button */}
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            togglePreviewPin()
+          }}
+          className={`flex items-center gap-1 rounded px-2 py-1 text-2xs transition-colors hover:bg-hover-bg ${
+            pinned ? "text-accent" : "text-muted-foreground hover:text-foreground"
+          }`}
+          title={pinned ? "Unpin preview" : "Pin preview"}
+        >
+          <PushPin size={12} />
+          <span>{pinned ? "Unpin" : "Pin"}</span>
+        </button>
         <button
           onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleOpen() }}
           className="flex items-center gap-1 rounded px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
@@ -648,6 +726,18 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             <PhX size={12} />
           </button>
         )}
+      </div>
+
+      {/* Resize handle (bottom-right corner) */}
+      <div
+        className="absolute bottom-0 right-0 w-5 h-5 cursor-nwse-resize z-10 group flex items-end justify-end p-0.5"
+        onPointerDown={onResizePointerDown}
+        onPointerMove={onResizePointerMove}
+        onPointerUp={onResizePointerUp}
+      >
+        <svg width="10" height="10" viewBox="0 0 10 10" className="text-muted-foreground/20 group-hover:text-muted-foreground/50 transition-colors">
+          <path d="M9 1L1 9M9 5L5 9M9 9L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+        </svg>
       </div>
     </div>
   )

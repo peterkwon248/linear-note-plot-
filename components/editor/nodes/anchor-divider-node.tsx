@@ -29,7 +29,7 @@ function AnchorDividerView({ node, updateAttributes, deleteNode }: NodeViewProps
   }
 
   return (
-    <NodeViewWrapper>
+    <NodeViewWrapper data-anchor-id={node.attrs.id}>
       <div contentEditable={false} className="anchor-divider">
         <div className="anchor-divider-line" />
         <div className="anchor-divider-center">
