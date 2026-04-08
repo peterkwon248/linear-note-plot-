@@ -5,6 +5,8 @@ import type { WorkspaceTab } from "@/lib/workspace/types"
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 
 interface EditorPaneHeaderProps {
   tabs?: WorkspaceTab[]
@@ -21,12 +23,47 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
   const closeSecondary = usePlotStore((s) => s.closeSecondary)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const setSidePanelOpen = usePlotStore((s) => s.setSidePanelOpen)
+  const secondaryHistoryIndex = usePlotStore((s) => s.secondaryHistoryIndex)
+  const secondaryHistoryLen = usePlotStore((s) => s.secondaryHistory.length)
+  const secondaryGoBack = usePlotStore((s) => s.secondaryGoBack)
+  const secondaryGoForward = usePlotStore((s) => s.secondaryGoForward)
 
-  // Secondary pane: simple title bar
+  // Secondary pane: title bar with navigation
   if (pane === 'secondary') {
+    const canGoBack = secondaryHistoryIndex > 0
+    const canGoForward = secondaryHistoryIndex < secondaryHistoryLen - 1
+
     return (
-      <div className="flex h-9 items-center justify-between border-b border-border-subtle bg-card/50 px-3">
-        <span className="text-2xs text-muted-foreground truncate">{noteTitle || "Untitled"}</span>
+      <div className="flex h-9 items-center justify-between border-b border-border-subtle bg-card/50 px-2">
+        <div className="flex items-center gap-0.5 min-w-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); secondaryGoBack() }}
+            disabled={!canGoBack}
+            className={cn(
+              "rounded-md p-1 transition-colors",
+              canGoBack
+                ? "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
+                : "text-muted-foreground/25 cursor-default"
+            )}
+            title="Go back"
+          >
+            <CaretLeft size={12} weight="bold" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); secondaryGoForward() }}
+            disabled={!canGoForward}
+            className={cn(
+              "rounded-md p-1 transition-colors",
+              canGoForward
+                ? "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
+                : "text-muted-foreground/25 cursor-default"
+            )}
+            title="Go forward"
+          >
+            <CaretRight size={12} weight="bold" />
+          </button>
+          <span className="text-2xs text-muted-foreground truncate ml-1">{noteTitle || "Untitled"}</span>
+        </div>
         <div className="flex items-center gap-0.5">
           <button
             onClick={(e) => { e.stopPropagation(); setSidePanelOpen(!sidePanelOpen) }}

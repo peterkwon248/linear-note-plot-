@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NotesTable } from "@/components/notes-table"
 import { NotesBoard } from "@/components/notes-board"
 import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane } from "@/components/workspace/pane-context"
 import { useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveViewId } from "@/lib/table-route"
 import type { ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
@@ -42,7 +43,9 @@ export function NotesTableView() {
   const settingsViewMode = useSettingsStore((s) => s.viewMode)
   const setPreviewNoteId = usePlotStore((s) => s.setPreviewNoteId)
   const previewNoteId = usePlotStore((s) => s.previewNoteId)
-  const isEditing = selectedNoteId !== null
+  const pane = usePane()
+  // In secondary pane, never show WorkspaceEditorArea (it's already the parent)
+  const isEditing = pane === 'primary' && selectedNoteId !== null
 
   const baseConfig = TABLE_VIEW_MAP[tableRoute ?? ""] ?? {}
   const activeView = activeViewId ? savedViews.find((v) => v.id === activeViewId) : null

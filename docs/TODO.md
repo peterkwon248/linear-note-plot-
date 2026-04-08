@@ -1,22 +1,16 @@
-# Plot — TODO (2026-04-08)
+# Plot — TODO (2026-04-09)
 
-## 🔴 P0 — 최우선 (다음 세션): 듀얼 에디터 전체 재설계 ⚠️ 브레인스토밍 진행 중
+## 🔴 P0 — 최우선 (다음 세션): Split View 진입점 + 후속
 
-- [ ] **듀얼 에디터 독립 패널** — 좌/우 패널이 각각 독립 네비게이션. VS Code/Obsidian 패턴. ⚠️ 설계 미확정, 다음 세션에서 브레인스토밍 이어서. 구체적으로:
-  - **좌우 고정**: 우측 에디터 내 링크 클릭 시 좌측 불변. `openNote` 호출 컨텍스트별 라우팅 분기
-  - **우측 헤더 통일**: 회색 secondary 헤더 제거, 좌측과 동일한 breadcrumb 스타일
-  - **breadcrumb 노트 전환**: "Compound Interest of Knowledge" 클릭 → 드롭다운에서 다른 노트 선택
-  - **breadcrumb "Notes" 클릭**: All Notes 돌아가기 제거 (사이드바와 중복). 대신 액티비티 전환 검토
-  - **사이드바/Activity Bar는 1개 유지**: 네비게이션 컨트롤은 공유, 콘텐츠만 분리. 사이드바 클릭 → 마지막 활성 패널에서 열림
-  - **사이드패널**: 듀얼 모드에서도 열려야 함
-  - **table-route 이중화**: 좌/우 각각 독립 activeRoute 필요할 수 있음
-  - 참고: VS Code = 에디터 그룹별 독립 탭, 사이드바→활성 그룹에서 열림, 드래그→특정 그룹에 드롭
-- [ ] **FootnotesFooter 접기/펼치기** — 기본 접힌 상태, `[1]` 클릭 시 자동 펼침. "▶ FOOTNOTES (2)" 토글
-- [ ] **referenceLink 노드 최종 검증** — `[[`/`@` 드롭다운에서 Shift+클릭 시 referenceLink 삽입 동작 확인. 일반 클릭은 footnoteRef
+- [ ] **Split View 진입점 브레인스토밍** — 에디터 헤더 버튼(SplitSquareHorizontal), Ctrl+\ 단축키, 커맨드 팔레트 "Split View", 노트 리스트 우클릭 "Open in Split". 현재 wikilink 우클릭/호버 프리뷰/Peek에만 진입점 있어서 디스커버리 부족
+- [ ] **"Side by Side" → "Split View" 네이밍 변경** — 전체 UI 텍스트 + 코드 변수명
+- [ ] **나머지 뷰 컴포넌트 pane 인식** — wiki-view, calendar-view, ontology-view 등에서 openNote 호출 시 usePaneOpenNote 적용
+- [ ] **FootnotesFooter 접기/펼치기** — 기본 접힌 상태 "▶ FOOTNOTES (2)", `[1]` 클릭 시 자동 펼침
+- [ ] **referenceLink 노드 최종 검증** — Shift+클릭 시 referenceLink 삽입 동작 확인
 
 ## P1
 
-- [ ] **크로스노트 북마크** — GlobalBookmark store slice, 사이드패널 Bookmarks 탭 리뉴얼 (전체 노트 북마크), Ctrl+Shift+B 단축키, 자동 라벨 추출
+- [ ] **크로스노트 북마크** — GlobalBookmark store slice, 사이드패널 Bookmarks 탭 리뉴얼, Ctrl+Shift+B 단축키, 자동 라벨 추출
 - [ ] **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card, Featured Article, Activity Feed
 - [ ] **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터
 - [ ] **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력
@@ -29,39 +23,27 @@
 
 ## P3
 
-- [ ] **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식), Peek 사이드바에서 직접 Quote 삽입
-- [ ] **호버 프리뷰 → Peek 통합 검토** — 역할 중복 정리, 사이드패널 Peek 탭 vs 호버 프리뷰 Pin
+- [ ] **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식), Peek에서 직접 Quote 삽입
+- [ ] **호버 프리뷰 → Peek 통합 검토** — 역할 중복 정리
 - [ ] **커맨드 팔레트 확장** — 풀페이지 검색, 북마크 커맨드, J/K 네비게이션
 
-## 완료 (이번 세션, 2026-04-08 오후)
+## 완료 (2026-04-09)
 
-- [x] Trash 뷰에 References/Files 탭 추가
-- [x] Library Files 직접 업로드 UI (+ 버튼)
-- [x] Library Tags CRUD 검증
-- [x] Hydration 에러 수정 (PanelGroup 고정 id)
-- [x] References hover 체크박스 (Notes 패턴)
-- [x] Bookmark 툴바/Insert 메뉴/슬래시 커맨드 전체 접근
-- [x] referenceLink TipTap 노드 (인라인 외부 링크)
-- [x] Reference URL 전용 입력란 (사이드패널)
-- [x] Quick Filter "Links" (References 뷰)
-- [x] `[[`/`@` 자동분기 (기본=footnoteRef, Shift=referenceLink)
-- [x] footnoteRef 팝오버 + 하단에 URL 링크
-- [x] 호버 프리뷰 버그 수정 (wikilink data-hover-preview 제거)
-- [x] 호버 프리뷰 리사이즈 + 드래그 이동
-- [x] 호버 프리뷰 Pin 버튼 액션바 추가
-- [x] 호버 프리뷰 본문 flex-1 (카드 크기에 따라 늘어남)
-- [x] 사이드바 Bookmarks 클릭 → 스크롤 이동
-- [x] anchor 노드에 data-anchor-id 속성 추가
-- [x] Peek 툴바 하단 이동
-- [x] 듀얼 에디터 사이드패널 토글 버튼
+- [x] Split View 독립 패널 시스템 — 하이브리드 모델 설계 + 전체 구현
+  - selectedNoteId/secondaryNoteId 완전 분리 (setActivePane에서 덮어쓰기 제거)
+  - openNote에 pane 파라미터 추가 (하위 호환)
+  - secondaryHistory[] 독립 네비게이션 (goBack/goForward)
+  - secondaryRoute/secondarySpace 독립 라우팅 (table-route.ts)
+  - PaneContext + usePaneOpenNote + usePaneActiveRoute 훅
+  - SecondaryPanelContent — note/wiki/뷰 렌더러
+  - breadcrumb space 드롭다운 (6 spaces)
+  - SecondaryWikiArticle — Aa/접기/레이아웃/Edit 컨트롤
+  - setRouteInterceptForSecondary — 우측 클릭 시 글로벌 라우트 인터셉트
+  - NotesTableView 재귀 렌더링 방지 (usePane() + isEditing 스킵)
+  - LibraryView usePaneActiveRoute 적용
+  - 사이드패널 focusedPane 추적
+  - wikilink Ctrl+클릭 패널 인식
 
-## 완료 (이번 세션, 2026-04-08 오전)
+## 완료 (2026-04-08)
 
-- [x] SmartLinkPaste 버그 수정 (view.hasFocus() 가드)
-- [x] window.prompt 전면 폐기 (embed-url-request.ts CustomEvent 브릿지)
-- [x] Library Overview 리디자인 (MiniStat + ContentCard)
-- [x] Tags/Files 뷰 Coming soon → 실제 구현
-- [x] Tags를 Library로 통합 (Notes "More"에서 제거)
-- [x] 섹션 네이밍 "Recent"로 통일
-- [x] References/Files soft delete (store v71)
-- [x] Sidebar Tags/Files 활성화 + 카운트 뱃지
+- [x] 이전 세션 작업 (PR #169~171)
