@@ -4,6 +4,7 @@ import { usePlotStore } from "@/lib/store"
 import type { WorkspaceTab } from "@/lib/workspace/types"
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 
 interface EditorPaneHeaderProps {
   tabs?: WorkspaceTab[]
@@ -18,20 +19,34 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
   const setActiveEditorTab = usePlotStore((s) => s.setActiveEditorTab)
   const closeEditorTab = usePlotStore((s) => s.closeEditorTab)
   const closeSecondary = usePlotStore((s) => s.closeSecondary)
+  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
+  const setSidePanelOpen = usePlotStore((s) => s.setSidePanelOpen)
 
   // Secondary pane: simple title bar
   if (pane === 'secondary') {
     return (
       <div className="flex h-9 items-center justify-between border-b border-border-subtle bg-card/50 px-3">
         <span className="text-2xs text-muted-foreground truncate">{noteTitle || "Untitled"}</span>
-        {showClose && (
+        <div className="flex items-center gap-0.5">
           <button
-            onClick={(e) => { e.stopPropagation(); closeSecondary() }}
-            className="rounded-md p-1 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
+            onClick={(e) => { e.stopPropagation(); setSidePanelOpen(!sidePanelOpen) }}
+            className={cn(
+              "rounded-md p-1 transition-colors hover:bg-hover-bg",
+              sidePanelOpen ? "text-accent" : "text-muted-foreground/50 hover:text-foreground"
+            )}
+            title={sidePanelOpen ? "Close side panel" : "Open side panel"}
           >
-            <PhX size={12} weight="regular" />
+            <SidebarSimple size={12} weight="regular" />
           </button>
-        )}
+          {showClose && (
+            <button
+              onClick={(e) => { e.stopPropagation(); closeSecondary() }}
+              className="rounded-md p-1 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
+            >
+              <PhX size={12} weight="regular" />
+            </button>
+          )}
+        </div>
       </div>
     )
   }

@@ -56,7 +56,6 @@ export const WikilinkNode = Node.create({
       mergeAttributes(HTMLAttributes, {
         "data-type": "wikilink",
         class: `wikilink-node wikilink-${linkType}`,
-        "data-hover-preview": "true",
       }),
       title,
     ]

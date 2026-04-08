@@ -14,7 +14,7 @@ import {
   Image as PhImage, Paperclip, Table as PhTable, CalendarDots, Minus as PhMinus,
   Code as PhCode, Plus as PhPlus, CaretRight, MathOperations, ListBullets,
   LinkSimple, Info, Article, Columns as PhColumns, Note as PhNote,
-  IdentificationCard, Database, BookOpen, Asterisk,
+  IdentificationCard, Database, BookOpen, Asterisk, BookmarkSimple,
 } from "@/lib/editor/editor-icons"
 import { usePlotStore } from "@/lib/store"
 import { detectUrlType } from "@/lib/editor/url-detect"
@@ -315,6 +315,16 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           <DropdownMenuItem onSelect={handleDivider} className={ITEM_CLASS}>
             <PhMinus size={14} />
             <span className="flex-1">Divider</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={() => {
+            editor.chain().focus().insertContent({
+              type: "anchorMark",
+              attrs: { id: nanoid(8), label: "" },
+            }).run()
+          }} className={ITEM_CLASS}>
+            <BookmarkSimple size={14} />
+            <span className="flex-1">Bookmark</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onSelect={handleCodeBlock} className={ITEM_CLASS}>

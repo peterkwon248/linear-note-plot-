@@ -36,7 +36,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (21): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references
-- Store version: 70
+- Store version: 71
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -172,28 +172,34 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Reference에 Tags 없음**: fields(key-value)가 메타데이터 역할. Tags는 노트/위키 전용 (2026-04-07)
 - **각주→Reference 자동 연결**: footnote save 시 referenceId 없으면 자동 createReference. content 양방향 동기화 (2026-04-07)
 - **각주 타임라인**: createdAt 자동 기록 + Reference.history로 수정 이력 (2026-04-06)
+- **Tags Library 통합**: Notes "More"에서 Tags 제거, `/library/tags`로 통합. Capacities 패턴 (2026-04-08)
+- **References/Files soft delete**: trashed/trashedAt 필드, 복원 가능. Store v71 (2026-04-08)
+- **Reference = 통합 참고자료 (옵션3 하이브리드)**: url 필드 있으면 Link형, 없으면 Citation형으로 자동 분기. 새 엔티티 없이 Reference 하나로 통합. 위키백과 철학 차용 — `[[]]`=내부링크, 각주=하단URL, referenceLink=외부링크(🔗 시각 구분). `[[`/`@` 드롭다운에서 url 있으면 referenceLink 노드, 없으면 footnoteRef 노드 자동 삽입. Shift+클릭=반대 모드. Quick Filter에 Links 추가 (2026-04-08)
 
-## TODO: Future Work (우선순위 순, 2026-04-07 sync)
+## TODO: Future Work (우선순위 순, 2026-04-08 sync)
 
-### P0 — 디자인 폴리싱 + 기능 고도화
-1. **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card(트렌드 배지), "Needs Attention" 프레이밍, Featured Article 히어로, Category color coding, Activity Feed, Popular Articles. 벤치마크: Zotero/Paperpile/Capacities/BookStack/PatternFly/shadcn
-2. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터, Reference type 자동 감지, refs count 컬럼, 인라인 클릭→필터
-3. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력, Library 디테일 패널 표시
+### 🔴 P0 — 최우선 (다음 세션)
+1. **듀얼 에디터 좌우 고정** — Side by side에서 우측 에디터 내 링크 클릭 시 좌측 노트가 교체되는 버그. `openNote` 호출 컨텍스트(사이드바/에디터 내부/호버프리뷰)에 따라 좌/우 라우팅 분기 필요. 사이드패널도 듀얼 모드에서 열려야 함
+2. **FootnotesFooter 접기/펼치기** — 기본 접힌 상태 "▶ FOOTNOTES (2)", `[1]` 클릭 시 자동 펼침
+3. **referenceLink 노드 최종 검증** — Shift+클릭 시 referenceLink 삽입 동작 확인
 
-### P1 — Library 확장 + 각주 고도화
-4. **Tags 글로벌 승격** — WikiArticle에 tags 추가, Library > Tags 탭 구현
-5. **Files 탭** — 이미지/파일/URL 독립 엔티티, Library > Files 탭
-6. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
+### P1 — 크로스노트 북마크 + Library 고도화
+4. **크로스노트 북마크** — GlobalBookmark store slice, 사이드패널 Bookmarks 탭 리뉴얼, Ctrl+Shift+B 단축키, 자동 라벨 추출
+5. **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card, Featured Article, Activity Feed
+6. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용
+7. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력
 
-### P2 — 위키 고도화
-9. **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
-10. **나무위키 틀** — 계보/계승 테이블, 네비게이션 박스, 시리즈 박스
+### P2 — 위키 고도화 + 각주
+8. **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
+9. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
+10. **나무위키 틀** — 계보/계승 테이블, 네비게이션 박스
 
-### P3 — 새 공간 + 뷰 확장
-11. **Side Panel 풀페이지 확장** — 모든 탭에 "Open full" 버튼
+### P3 — 사이드패널 + 뷰 확장
+11. **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식), Peek에서 직접 Quote 삽입, 호버 프리뷰/Peek 역할 정리
 12. **동음이의어 해소 페이지** — 멀티 링크 매칭 시 선택 화면
+13. **커맨드 팔레트 확장** — 풀페이지 검색, 북마크 커맨드
 
-### P4 — 지능 + 검색 + 기존 항목
+### P4 — 지능 + 검색
 - 요약 엔진, 인사이트 중앙 허브, 풀페이지 검색 분리
 - 웹 클리퍼, 가져오기/내보내기, 커맨드 팔레트, View v2, 리스트 가상화
 

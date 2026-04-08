@@ -1,28 +1,53 @@
 # Plot — TODO (2026-04-08)
 
-## 이번 맥락에서 남은 것
+## 🔴 P0 — 최우선 (다음 세션)
 
-- [ ] **Trash 뷰에 References/Files 표시** — 현재 Trash는 노트만 표시. trashed References/Files도 리스트 + 복원/영구삭제 버튼 필요. soft delete 인프라는 완료 (store v71)
-- [ ] **Library Files 직접 업로드 UI** — Files 뷰에서 업로드 버튼 + 파일 선택 (현재 에디터 삽입으로만 가능)
-- [ ] **Library Tags 동작 검증** — TagsView 이식 완료, CRUD 동작 확인 필요
+- [ ] **듀얼 에디터 좌우 고정** — Side by side에서 우측 에디터 내 링크 클릭 시 좌측 노트가 교체되는 버그. `openNote`가 항상 `selectedNoteId`를 변경하기 때문. 호출 컨텍스트(사이드바/에디터/호버프리뷰)에 따라 좌/우 라우팅 분기 필요. 사이드패널도 듀얼 모드에서 열려야 함
+- [ ] **FootnotesFooter 접기/펼치기** — 기본 접힌 상태, `[1]` 클릭 시 자동 펼침. "▶ FOOTNOTES (2)" 토글
+- [ ] **referenceLink 노드 최종 검증** — `[[`/`@` 드롭다운에서 Shift+클릭 시 referenceLink 삽입 동작 확인. 일반 클릭은 footnoteRef
 
 ## P1
 
-- [ ] **editor-icons.ts 누락 export** — CaretRight, ArrowLineRight, ArrowLineLeft, ArrowUp, ArrowDown 등. Next.js dev "5 Issues" 원인. `components/editor/editor-context-menu.tsx`에서 import하는데 barrel에 없음
+- [ ] **크로스노트 북마크** — GlobalBookmark store slice, 사이드패널 Bookmarks 탭 리뉴얼 (전체 노트 북마크), Ctrl+Shift+B 단축키, 자동 라벨 추출
+- [ ] **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card, Featured Article, Activity Feed
+- [ ] **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터
+- [ ] **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력
 
 ## P2
 
 - [ ] **인사이트 중앙 허브** — 온톨로지 사이드바 Insights 섹션
-- [ ] **Library FilterPanel 고도화** — Notes 수준 2단계 nested 필터 (view-engine 인프라 재사용)
 - [ ] **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
+- [ ] **인포박스 고도화** — 대표 이미지, 섹션 구분 행, 접기/펼치기
 
 ## P3
 
-- [ ] **TOC 수동 앵커** — Floating TOC에서 수동 앵커 지원
-- [ ] **Make Block** — 범용 블록 래퍼 + 드래그 핸들
-- [ ] **커맨드 팔레트 확장** — 풀페이지 검색, J/K 네비게이션
+- [ ] **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식), Peek 사이드바에서 직접 Quote 삽입
+- [ ] **호버 프리뷰 → Peek 통합 검토** — 역할 중복 정리, 사이드패널 Peek 탭 vs 호버 프리뷰 Pin
+- [ ] **커맨드 팔레트 확장** — 풀페이지 검색, 북마크 커맨드, J/K 네비게이션
 
-## 완료 (이번 세션, 2026-04-08)
+## 완료 (이번 세션, 2026-04-08 오후)
+
+- [x] Trash 뷰에 References/Files 탭 추가
+- [x] Library Files 직접 업로드 UI (+ 버튼)
+- [x] Library Tags CRUD 검증
+- [x] Hydration 에러 수정 (PanelGroup 고정 id)
+- [x] References hover 체크박스 (Notes 패턴)
+- [x] Bookmark 툴바/Insert 메뉴/슬래시 커맨드 전체 접근
+- [x] referenceLink TipTap 노드 (인라인 외부 링크)
+- [x] Reference URL 전용 입력란 (사이드패널)
+- [x] Quick Filter "Links" (References 뷰)
+- [x] `[[`/`@` 자동분기 (기본=footnoteRef, Shift=referenceLink)
+- [x] footnoteRef 팝오버 + 하단에 URL 링크
+- [x] 호버 프리뷰 버그 수정 (wikilink data-hover-preview 제거)
+- [x] 호버 프리뷰 리사이즈 + 드래그 이동
+- [x] 호버 프리뷰 Pin 버튼 액션바 추가
+- [x] 호버 프리뷰 본문 flex-1 (카드 크기에 따라 늘어남)
+- [x] 사이드바 Bookmarks 클릭 → 스크롤 이동
+- [x] anchor 노드에 data-anchor-id 속성 추가
+- [x] Peek 툴바 하단 이동
+- [x] 듀얼 에디터 사이드패널 토글 버튼
+
+## 완료 (이번 세션, 2026-04-08 오전)
 
 - [x] SmartLinkPaste 버그 수정 (view.hasFocus() 가드)
 - [x] window.prompt 전면 폐기 (embed-url-request.ts CustomEvent 브릿지)

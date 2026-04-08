@@ -35,6 +35,7 @@ export const TOOLBAR_ITEM_IDS = [
   "blockquote",    // Blockquote
   "codeBlock",     // Code Block
   "divider",       // Horizontal rule
+  "bookmark",      // Bookmark anchor
   "link",          // Link
   "embed",         // Embed URL (YouTube, audio, or link card)
   "table",         // Table menu
@@ -80,6 +81,7 @@ export const TOOLBAR_ITEM_LABELS: Record<ToolbarItemId, string> = {
   blockquote: "Blockquote",
   codeBlock: "Code Block",
   divider: "Divider",
+  bookmark: "Bookmark",
   link: "Link",
   table: "Table",
   textAlign: "Text Align",
@@ -96,7 +98,7 @@ export const TOOLBAR_ITEM_LABELS: Record<ToolbarItemId, string> = {
 }
 
 /** Items hidden by default — niche features accessible via slash command */
-const DEFAULT_HIDDEN: Set<string> = new Set(["inlineMath", "blockMath"])
+const DEFAULT_HIDDEN: Set<string> = new Set(["inlineMath", "blockMath", "bookmark"])
 
 /** Default toolbar layout -- most items visible, niche items hidden */
 export const DEFAULT_TOOLBAR_LAYOUT: ToolbarLayout = {

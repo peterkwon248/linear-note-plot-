@@ -51,6 +51,7 @@ import {
   HighlighterCircle,
   Table,
   ArrowLeft,
+  BookmarkSimple,
 } from "@/lib/editor/editor-icons"
 import {
   indentCommand,
@@ -370,6 +371,7 @@ function OverflowGrid({ editor, editorState, isVisible, handleSetLink, handleAli
     { id: "blockquote", label: "Quote", icon: <Quotes size={18} />, action: () => editor.chain().focus().toggleBlockquote().run(), active: editorState.blockquote },
     { id: "codeBlock", label: "Code Block", icon: <CodeBlock size={18} />, action: () => editor.chain().focus().toggleCodeBlock().run(), active: editorState.codeBlock },
     { id: "divider", label: "Divider", icon: <PhMinus size={18} />, action: () => editor.chain().focus().setHorizontalRule().run(), active: false },
+    { id: "bookmark", label: "Bookmark", icon: <BookmarkSimple size={18} />, action: () => { const { nanoid } = require("nanoid"); editor.chain().focus().insertContent({ type: "anchorMark", attrs: { id: nanoid(8), label: "" } }).run() }, active: false },
     { id: "link", label: "Link", icon: <PhLink size={18} />, action: handleSetLink, active: editorState.link },
     { id: "textAlign", label: "Align", icon: <TextAlignLeft size={18} />, action: () => {
       const next = editorState.textAlign === "left" ? "center" : editorState.textAlign === "center" ? "right" : editorState.textAlign === "right" ? "justify" : "left"
@@ -736,6 +738,14 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
         {isVisible("divider") && (
           <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider — Insert a horizontal line">
             <PhMinus size={20} />
+          </ToolbarButton>
+        )}
+        {isVisible("bookmark") && (
+          <ToolbarButton
+            onClick={() => { const { nanoid } = require("nanoid"); editor.chain().focus().insertContent({ type: "anchorMark", attrs: { id: nanoid(8), label: "" } }).run() }}
+            title="Bookmark — Insert navigation anchor"
+          >
+            <BookmarkSimple size={20} />
           </ToolbarButton>
         )}
         {isVisible("link") && (

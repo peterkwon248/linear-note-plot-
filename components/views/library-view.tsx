@@ -34,13 +34,15 @@ import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
 import { Clock } from "@phosphor-icons/react/dist/ssr/Clock"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
 import { cn } from "@/lib/utils"
 import { useActiveRoute, setActiveRoute } from "@/lib/table-route"
+import { persistAttachmentBlob } from "@/lib/store/helpers"
 import type { Reference } from "@/lib/types"
 
 /* ── Types ────────────────────────────────────────── */
 
-type QuickFilterType = "all" | "linked" | "unlinked"
+type QuickFilterType = "all" | "linked" | "unlinked" | "links"
 type SortField = "updatedAt" | "title" | "createdAt"
 type SortDir = "asc" | "desc"
 
@@ -83,6 +85,7 @@ function QuickFilterBar({
   totalCount,
   linkedCount,
   unlinkedCount,
+  linksCount,
   fieldKeys,
   activeFieldKeys,
   toggleFieldKey,
@@ -92,6 +95,7 @@ function QuickFilterBar({
   totalCount: number
   linkedCount: number
   unlinkedCount: number
+  linksCount: number
   fieldKeys: string[]
   activeFieldKeys: Set<string>
   toggleFieldKey: (key: string) => void
@@ -115,6 +119,12 @@ function QuickFilterBar({
         active={quickFilter === "unlinked"}
         onClick={() => setQuickFilter("unlinked")}
         count={unlinkedCount}
+      />
+      <QuickFilterButton
+        label="Links"
+        active={quickFilter === "links"}
+        onClick={() => setQuickFilter("links")}
+        count={linksCount}
       />
 
       {fieldKeys.length > 0 && (
@@ -174,36 +184,42 @@ function ReferenceRow({
         <button
           onClick={handleClick}
           className={cn(
-            "w-full text-left px-5 py-3 border-b border-border/50 transition-colors duration-100",
+            "group/ref w-full text-left px-5 py-3 border-b border-border/50 transition-colors duration-100",
             "hover:bg-hover-bg focus-visible:outline-none",
             isSelected && !isMultiMode && "bg-hover-bg",
             isMultiSelected && "bg-accent/8"
           )}
         >
           <div className="flex items-start gap-2.5">
-            {/* Checkbox in multi-select mode */}
-            {isMultiMode && (
+            {/* Checkbox — separate from icon, Notes pattern */}
+            <div
+              data-checkbox
+              onClick={(e) => { e.stopPropagation(); onMultiSelect(e); }}
+              className={cn(
+                "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center cursor-pointer rounded",
+                isMultiMode || isMultiSelected ? "visible" : "invisible group-hover/ref:visible"
+              )}
+            >
               <div
                 className={cn(
-                  "mt-0.5 h-4 w-4 shrink-0 rounded border transition-colors flex items-center justify-center",
+                  "h-4 w-4 rounded border flex items-center justify-center transition-colors pointer-events-none",
                   isMultiSelected
-                    ? "border-accent bg-accent text-white"
-                    : "border-border/80 bg-transparent"
+                    ? "bg-accent border-accent"
+                    : "border-muted-foreground/30 hover:border-muted-foreground/50"
                 )}
               >
                 {isMultiSelected && (
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4L3.5 6.5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
               </div>
-            )}
-            {!isMultiMode && (
-              <FileText
-                weight="duotone"
-                className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60"
-              />
-            )}
+            </div>
+            {/* Icon */}
+            <FileText
+              weight="duotone"
+              className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-3">
                 <span className="truncate text-note font-medium text-foreground">
@@ -727,9 +743,31 @@ function LibraryOverview() {
 
 function FilesView() {
   const attachments = usePlotStore((s) => s.attachments)
+  const addAttachment = usePlotStore((s) => s.addAttachment)
   const [filter, setFilter] = useState<"all" | "image" | "document">("all")
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const activeAttachments = useMemo(() => attachments.filter((a) => !a.trashed), [attachments])
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    for (const file of Array.from(files)) {
+      const buffer = await file.arrayBuffer()
+      const isImage = file.type.startsWith("image/")
+      const attachmentId = addAttachment({
+        noteId: "__library__",
+        name: file.name,
+        type: isImage ? "image" : "file",
+        url: "",
+        mimeType: file.type || "application/octet-stream",
+        size: file.size,
+      })
+      persistAttachmentBlob({ id: attachmentId, data: buffer })
+    }
+    toast(`Uploaded ${files.length} file${files.length > 1 ? "s" : ""}`)
+    e.target.value = ""
+  }
 
   const filtered = useMemo(() => {
     if (filter === "all") return activeAttachments
@@ -745,7 +783,15 @@ function FilesView() {
       <ViewHeader
         icon={<Folder weight="duotone" className="h-4 w-4" />}
         title="Files"
-        count={attachments.length}
+        count={activeAttachments.length}
+        onCreateNew={() => fileInputRef.current?.click()}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleUpload}
       />
       <div className="flex-1 overflow-y-auto">
         {/* Filter bar */}
@@ -756,7 +802,7 @@ function FilesView() {
               label={f === "all" ? "All" : f === "image" ? "Images" : "Documents"}
               active={filter === f}
               onClick={() => setFilter(f)}
-              count={f === "all" ? attachments.length : f === "image" ? imageCount : docCount}
+              count={f === "all" ? activeAttachments.length : f === "image" ? imageCount : docCount}
             />
           ))}
         </div>
@@ -765,7 +811,11 @@ function FilesView() {
           <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/40">
             <Folder weight="duotone" className="h-10 w-10" />
             <span className="text-note font-medium">No files yet</span>
-            <span className="text-2xs">Files appear when you add attachments to notes</span>
+            <span className="text-2xs">
+              {activeAttachments.length === 0
+                ? "Click + to upload files, or add attachments to notes"
+                : "No files match this filter"}
+            </span>
           </div>
         ) : (
           <div className="p-4 space-y-0.5">
@@ -851,6 +901,10 @@ function ReferencesView() {
     () => totalCount - linkedCount,
     [totalCount, linkedCount]
   )
+  const linksCount = useMemo(
+    () => activeRefs.filter((r) => r.fields.some((f) => f.key.toLowerCase() === "url")).length,
+    [activeRefs]
+  )
 
   const fieldKeys = useMemo(() => {
     const keys = new Set<string>()
@@ -868,6 +922,7 @@ function ReferencesView() {
     // Quick filter
     if (quickFilter === "linked") arr = arr.filter((r) => r.content.trim())
     if (quickFilter === "unlinked") arr = arr.filter((r) => !r.content.trim())
+    if (quickFilter === "links") arr = arr.filter((r) => r.fields.some((f) => f.key.toLowerCase() === "url"))
 
     // Field key filter (AND logic)
     if (activeFieldKeys.size > 0) {
@@ -1083,6 +1138,7 @@ function ReferencesView() {
           totalCount={totalCount}
           linkedCount={linkedCount}
           unlinkedCount={unlinkedCount}
+          linksCount={linksCount}
           fieldKeys={fieldKeys}
           activeFieldKeys={activeFieldKeys}
           toggleFieldKey={toggleFieldKey}

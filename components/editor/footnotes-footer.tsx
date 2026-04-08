@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import type { Editor } from "@tiptap/react"
 import { usePlotStore } from "@/lib/store"
 
@@ -28,6 +28,15 @@ function FootnoteRow({
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(fn.content)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const references = usePlotStore((s) => s.references)
+
+  const referenceUrl = useMemo(() => {
+    if (!fn.referenceId) return null
+    const ref = references[fn.referenceId]
+    if (!ref) return null
+    const urlField = ref.fields.find((f) => f.key.toLowerCase() === "url")
+    return urlField?.value || null
+  }, [fn.referenceId, references])
 
   // Sync draft when content changes externally (e.g. edited via marker popover)
   useEffect(() => {
@@ -128,6 +137,18 @@ function FootnoteRow({
         >
           Click to add content
         </button>
+      )}
+
+      {referenceUrl && (
+        <a
+          href={referenceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footnote-footer-url"
+          onClick={(e) => e.stopPropagation()}
+        >
+          🔗 {referenceUrl.replace(/^https?:\/\//, "").split("/")[0]}
+        </a>
       )}
 
       {fn.count > 1 && (

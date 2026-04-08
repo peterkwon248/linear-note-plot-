@@ -14,6 +14,16 @@ function FootnoteRefView({ node, editor, updateAttributes }: NodeViewProps) {
   const showTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Get URL from linked Reference
+  const referenceUrl = useMemo(() => {
+    const refId = node.attrs.referenceId as string
+    if (!refId) return null
+    const ref = usePlotStore.getState().references[refId]
+    if (!ref) return null
+    const urlField = ref.fields.find((f) => f.key.toLowerCase() === "url")
+    return urlField?.value || null
+  }, [node.attrs.referenceId])
+
   // Auto-calculate footnote number based on document order
   const footnoteNumber = useMemo(() => {
     let count = 0
@@ -140,7 +150,7 @@ function FootnoteRefView({ node, editor, updateAttributes }: NodeViewProps) {
             >
               [{footnoteNumber}]
             </span>
-            {showPopover && !editing && node.attrs.content && (
+            {showPopover && !editing && (node.attrs.content || referenceUrl) && (
               <span
                 className="footnote-popover"
                 onMouseEnter={() => {
@@ -154,7 +164,20 @@ function FootnoteRefView({ node, editor, updateAttributes }: NodeViewProps) {
                 }}
               >
                 <span className="footnote-popover-number">[{footnoteNumber}]</span>
-                <span className="footnote-popover-content">{node.attrs.content as string}</span>
+                {node.attrs.content && (
+                  <span className="footnote-popover-content">{node.attrs.content as string}</span>
+                )}
+                {referenceUrl && (
+                  <a
+                    href={referenceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="footnote-popover-url"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    🔗 {referenceUrl.replace(/^https?:\/\//, "").split("/")[0]}
+                  </a>
+                )}
               </span>
             )}
           </>

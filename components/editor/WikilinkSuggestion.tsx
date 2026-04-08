@@ -13,7 +13,7 @@ import React, {
   useState,
   forwardRef,
 } from "react"
-import { FileText, Asterisk } from "@/lib/editor/editor-icons"
+import { FileText, Asterisk, Link as LinkIcon } from "@/lib/editor/editor-icons"
 import { IconWiki } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -30,6 +30,8 @@ interface WikilinkItem {
   isNewReference?: boolean
   referenceId?: string
   referenceContent?: string
+  referenceUrl?: string
+  _shiftKey?: boolean
   itemType?: "note" | "wiki" | "reference"
 }
 
@@ -54,9 +56,9 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
     }, [items])
 
     const selectItem = useCallback(
-      (index: number) => {
+      (index: number, shiftKey = false) => {
         const item = items[index]
-        if (item) command(item)
+        if (item) command({ ...item, _shiftKey: shiftKey })
       },
       [items, command]
     )
@@ -72,7 +74,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
           return true
         }
         if (event.key === "Enter") {
-          selectItem(selectedIndex)
+          selectItem(selectedIndex, event.shiftKey)
           return true
         }
         return false
@@ -114,7 +116,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                   {group.map(({ item, globalIndex }) => (
                     <button
                       key={item.id}
-                      onClick={() => selectItem(globalIndex)}
+                      onClick={(e) => selectItem(globalIndex, e.shiftKey)}
                       className={[
                         "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",
                         globalIndex === selectedIndex
@@ -131,10 +133,14 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                         </>
                       ) : item.isReference ? (
                         <>
-                          <Asterisk className="shrink-0 text-amber-500" size={14} />
+                          {item.referenceUrl ? (
+                            <LinkIcon className="shrink-0 text-emerald-400" size={14} />
+                          ) : (
+                            <Asterisk className="shrink-0 text-amber-500" size={14} />
+                          )}
                           <span className="truncate">{item.title}</span>
                           <span className="ml-auto shrink-0 text-2xs text-muted-foreground/60 truncate max-w-[100px]">
-                            {item.referenceContent}
+                            {item.referenceUrl ? item.referenceUrl.replace(/^https?:\/\//, "").split("/")[0] : item.referenceContent}
                           </span>
                         </>
                       ) : item.isNewNote ? (
@@ -256,20 +262,24 @@ export const WikilinkSuggestion = Extension.create({
 
             // Recent References
             const references = (store as any).references ?? {}
-            const refEntries = Object.values(references) as Array<{ id: string; title: string; content: string; updatedAt: string }>
+            const refEntries = Object.values(references) as Array<{ id: string; title: string; content: string; fields: Array<{ key: string; value: string }>; updatedAt: string }>
             const recentRefs: WikilinkItem[] = refEntries
-              .filter((r) => r.title?.trim())
+              .filter((r) => r.title?.trim() && !(r as any).trashed)
               .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
               .slice(0, 3)
-              .map((r) => ({
-                id: r.id,
-                title: r.title,
-                status: "",
-                isReference: true,
-                referenceId: r.id,
-                referenceContent: r.content,
-                itemType: "reference" as const,
-              }))
+              .map((r) => {
+                const urlField = (r.fields || []).find((f) => f.key.toLowerCase() === "url")
+                return {
+                  id: r.id,
+                  title: r.title,
+                  status: "",
+                  isReference: true,
+                  referenceId: r.id,
+                  referenceContent: r.content,
+                  referenceUrl: urlField?.value,
+                  itemType: "reference" as const,
+                }
+              })
 
             return [...noteItems, ...wikiMatches, ...recentRefs]
           }
@@ -332,20 +342,24 @@ export const WikilinkSuggestion = Extension.create({
 
           // Search References
           const references = (store as any).references ?? {}
-          const refEntries = Object.values(references) as Array<{ id: string; title: string; content: string; updatedAt: string }>
+          const refEntries = Object.values(references) as Array<{ id: string; title: string; content: string; fields: Array<{ key: string; value: string }>; updatedAt: string }>
           const refMatches: WikilinkItem[] = refEntries
-            .filter((r) => r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q))
+            .filter((r) => !(r as any).trashed && (r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q)))
             .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
             .slice(0, 3)
-            .map((r) => ({
-              id: r.id,
-              title: r.title,
-              status: "",
-              isReference: true,
-              referenceId: r.id,
-              referenceContent: r.content,
-              itemType: "reference" as const,
-            }))
+            .map((r) => {
+              const urlField = (r.fields || []).find((f) => f.key.toLowerCase() === "url")
+              return {
+                id: r.id,
+                title: r.title,
+                status: "",
+                isReference: true,
+                referenceId: r.id,
+                referenceContent: r.content,
+                referenceUrl: urlField?.value,
+                itemType: "reference" as const,
+              }
+            })
 
           // Combine: notes first, then wiki, then references, then create option
           const finalResults: WikilinkItem[] = [...combined, ...wikiMatches, ...refMatches]
@@ -484,7 +498,7 @@ export const WikilinkSuggestion = Extension.create({
         }) => {
           const store = usePlotStore.getState()
 
-          // Reference 항목 선택 → footnoteRef 삽입
+          // Reference 항목 선택 → 기본 footnoteRef, Shift+클릭 시 referenceLink
           if (props.isReference || props.isNewReference) {
             let refId = props.referenceId
 
@@ -496,22 +510,44 @@ export const WikilinkSuggestion = Extension.create({
               })
             }
 
-            editor
-              .chain()
-              .focus()
-              .deleteRange(range)
-              .insertContent([
-                {
-                  type: "footnoteRef",
-                  attrs: {
-                    id: crypto.randomUUID().slice(0, 8),
-                    referenceId: refId,
-                    content: props.referenceContent || props.title,
+            // Shift+Enter/클릭 + URL 있음 → referenceLink (인라인 링크)
+            // 그 외 → footnoteRef (각주)
+            const useInlineLink = props._shiftKey && props.referenceUrl
+
+            if (useInlineLink) {
+              editor
+                .chain()
+                .focus()
+                .deleteRange(range)
+                .insertContent([
+                  {
+                    type: "referenceLink",
+                    attrs: {
+                      referenceId: refId,
+                      title: props.title,
+                    },
                   },
-                },
-                { type: "text", text: " " },
-              ])
-              .run()
+                  { type: "text", text: " " },
+                ])
+                .run()
+            } else {
+              editor
+                .chain()
+                .focus()
+                .deleteRange(range)
+                .insertContent([
+                  {
+                    type: "footnoteRef",
+                    attrs: {
+                      id: crypto.randomUUID().slice(0, 8),
+                      referenceId: refId,
+                      content: props.referenceContent || props.title,
+                    },
+                  },
+                  { type: "text", text: " " },
+                ])
+                .run()
+            }
             return
           }
 

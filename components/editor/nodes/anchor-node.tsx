@@ -29,7 +29,7 @@ function AnchorMarkView({ node, updateAttributes }: NodeViewProps) {
   }
 
   return (
-    <NodeViewWrapper as="span" className="anchor-mark">
+    <NodeViewWrapper as="span" className="anchor-mark" data-anchor-id={node.attrs.id}>
       <span contentEditable={false} className="anchor-mark-inner">
         <BookmarkSimple size={14} className="anchor-icon" />
         {editing ? (

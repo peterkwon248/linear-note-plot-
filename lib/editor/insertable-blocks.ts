@@ -121,6 +121,36 @@ export const INSERTABLE_BLOCKS: InsertableBlock[] = [
     command: (editor) => editor.chain().focus().setHorizontalRule().run(),
     category: "block",
   },
+  {
+    id: "bookmark",
+    title: "Bookmark",
+    description: "Inline anchor marker for navigation",
+    iconName: "BookmarkSimple",
+    keywords: ["bookmark", "anchor", "marker", "pin"],
+    command: (editor) => {
+      const { nanoid } = require("nanoid")
+      editor.chain().focus().insertContent({
+        type: "anchorMark",
+        attrs: { id: nanoid(8), label: "" },
+      }).run()
+    },
+    category: "block",
+  },
+  {
+    id: "bookmarkDivider",
+    title: "Bookmark Divider",
+    description: "Section divider with bookmark label",
+    iconName: "BookmarkSimple",
+    keywords: ["bookmark", "divider", "section", "anchor"],
+    command: (editor) => {
+      const { nanoid } = require("nanoid")
+      editor.chain().focus().insertContent({
+        type: "anchorDivider",
+        attrs: { id: nanoid(8), label: "" },
+      }).run()
+    },
+    category: "block",
+  },
 
   // ── Structure ───────────────────────────────────────────
   {

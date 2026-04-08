@@ -55,7 +55,9 @@ import type { ViewContextKey, ViewMode, SortField, SortDirection, GroupBy, Filte
 import { StatusDropdown, StatusBadge } from "@/components/note-fields"
 import { format } from "date-fns"
 import { shortRelative } from "@/lib/format-utils"
-import type { Note, NoteStatus, Folder, NoteSource, Tag, Label, NoteTemplate } from "@/lib/types"
+import type { Note, NoteStatus, Folder, NoteSource, Tag, Label, NoteTemplate, Attachment, Reference } from "@/lib/types"
+import { File as PhFile } from "@phosphor-icons/react/dist/ssr/File"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterChipBar } from "@/components/filter-bar"
@@ -76,7 +78,7 @@ function absDate(dateStr: string): string {
 
 /* ── Trash sub-filter tabs ────────────────────────────── */
 
-type TrashFilter = "all" | "notes" | "wiki" | "tags" | "labels" | "templates"
+type TrashFilter = "all" | "notes" | "wiki" | "tags" | "labels" | "templates" | "references" | "files"
 
 const TRASH_TABS: { id: TrashFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -85,6 +87,8 @@ const TRASH_TABS: { id: TrashFilter; label: string }[] = [
   { id: "tags", label: "Tags" },
   { id: "labels", label: "Labels" },
   { id: "templates", label: "Templates" },
+  { id: "references", label: "References" },
+  { id: "files", label: "Files" },
 ]
 
 /* ── Column + group config ─────────────────────────────── */
@@ -157,28 +161,36 @@ function TH({
 
 /* ── TrashEntityList ───────────────────────────────────── */
 
-function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
+function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" | "references" | "files" }) {
   const store = usePlotStore()
 
-  const items: (Tag | Label | NoteTemplate)[] = type === "tags"
+  const items: (Tag | Label | NoteTemplate | Reference | Attachment)[] = type === "tags"
     ? (store.tags || []).filter((t: Tag) => t.trashed)
     : type === "labels"
     ? (store.labels || []).filter((l: Label) => l.trashed)
-    : (store.templates || []).filter((t: NoteTemplate) => t.trashed)
+    : type === "templates"
+    ? (store.templates || []).filter((t: NoteTemplate) => t.trashed)
+    : type === "references"
+    ? Object.values(store.references || {}).filter((r: Reference) => r.trashed)
+    : (store.attachments || []).filter((a: Attachment) => a.trashed)
 
   const handleRestore = (id: string) => {
     if (type === "tags") store.restoreTag(id)
     else if (type === "labels") store.restoreLabel(id)
-    else store.restoreTemplate(id)
-    toast(`Restored ${type.slice(0, -1)}`)
+    else if (type === "templates") store.restoreTemplate(id)
+    else if (type === "references") store.restoreReference(id)
+    else store.restoreAttachment(id)
+    toast(`Restored ${type === "files" ? "file" : type.slice(0, -1)}`)
   }
 
   const handleDelete = (id: string, name: string) => {
     if (!window.confirm(`Permanently delete "${name}"? This cannot be undone.`)) return
     if (type === "tags") store.permanentlyDeleteTag(id)
     else if (type === "labels") store.permanentlyDeleteLabel(id)
-    else store.permanentlyDeleteTemplate(id)
-    toast(`Deleted ${type.slice(0, -1)}`)
+    else if (type === "templates") store.permanentlyDeleteTemplate(id)
+    else if (type === "references") store.permanentlyDeleteReference(id)
+    else store.permanentlyDeleteAttachment(id)
+    toast(`Deleted ${type === "files" ? "file" : type.slice(0, -1)}`)
   }
 
   if (items.length === 0) {
@@ -210,7 +222,9 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
             className="flex items-center border-b border-border px-5 py-2.5 hover:bg-hover-bg transition-colors"
           >
             <div className="flex-1 min-w-0">
-              <span className="text-note font-medium text-foreground truncate">{item.name}</span>
+              <span className="text-note font-medium text-foreground truncate">
+                {(item as any).title ?? (item as any).name}
+              </span>
             </div>
             <div className="w-16 shrink-0 flex items-center justify-center">
               {color ? (
@@ -235,7 +249,7 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" }) {
                 Restore
               </button>
               <button
-                onClick={() => handleDelete(item.id, item.name)}
+                onClick={() => handleDelete(item.id, (item as any).title ?? (item as any).name)}
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-note text-destructive transition-colors hover:bg-destructive/10"
                 title="Delete permanently"
               >
@@ -316,21 +330,27 @@ export function NotesTable({
 
   // ── Trash sub-filter ──
   const storeTemplates = usePlotStore((s) => s.templates)
+  const storeReferences = usePlotStore((s) => s.references)
+  const storeAttachments = usePlotStore((s) => s.attachments)
   const trashTabCounts = useMemo((): Record<TrashFilter, number> => {
-    if (!isTrashView) return { all: 0, notes: 0, wiki: 0, tags: 0, labels: 0, templates: 0 }
+    if (!isTrashView) return { all: 0, notes: 0, wiki: 0, tags: 0, labels: 0, templates: 0, references: 0, files: 0 }
     const trashed = notes.filter((n) => n.trashed)
     const trashedTags = tags.filter((t) => t.trashed)
     const trashedLabels = labels.filter((l) => l.trashed)
     const trashedTemplates = storeTemplates.filter((t) => t.trashed)
+    const trashedRefs = Object.values(storeReferences || {}).filter((r) => r.trashed)
+    const trashedFiles = (storeAttachments || []).filter((a) => a.trashed)
     return {
-      all: trashed.length + trashedTags.length + trashedLabels.length + trashedTemplates.length,
+      all: trashed.length + trashedTags.length + trashedLabels.length + trashedTemplates.length + trashedRefs.length + trashedFiles.length,
       notes: trashed.filter((n) => n.noteType !== "wiki").length,
       wiki: trashed.filter((n) => n.noteType === "wiki").length,
       tags: trashedTags.length,
       labels: trashedLabels.length,
       templates: trashedTemplates.length,
+      references: trashedRefs.length,
+      files: trashedFiles.length,
     }
-  }, [notes, isTrashView, tags, labels, storeTemplates])
+  }, [notes, isTrashView, tags, labels, storeTemplates, storeReferences, storeAttachments])
 
   const trashFilterFn = useCallback((note: Note): boolean => {
     if (!isTrashView || trashFilter === "all") return true
@@ -992,7 +1012,7 @@ export function NotesTable({
       )}
 
       {/* ── Entity trash list OR Note table ────────────── */}
-      {isTrashView && (trashFilter === "tags" || trashFilter === "labels" || trashFilter === "templates") ? (
+      {isTrashView && (trashFilter === "tags" || trashFilter === "labels" || trashFilter === "templates" || trashFilter === "references" || trashFilter === "files") ? (
         <TrashEntityList type={trashFilter} />
       ) : (
       <ContextMenu>

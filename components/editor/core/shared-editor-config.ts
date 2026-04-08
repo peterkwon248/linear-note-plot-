@@ -71,6 +71,7 @@ import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
 import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
 import { AnchorDividerNode } from "@/components/editor/nodes/anchor-divider-node"
 import { FootnoteRefExtension } from "@/components/editor/nodes/footnote-node"
+import { ReferenceLinkNode } from "@/components/editor/nodes/reference-link-node"
 import { QueryBlockNode } from "@/components/editor/nodes/query-node"
 import { IndentExtension } from "./indent-extension"
 import { handleMentionClick } from "@/lib/note-reference-actions"
@@ -429,6 +430,7 @@ export function createEditorExtensions(
       wikiExtensions.push(AnchorMarkNode as Extension)
       wikiExtensions.push(AnchorDividerNode as Extension)
       wikiExtensions.push(FootnoteRefExtension as Extension)
+      wikiExtensions.push(ReferenceLinkNode as Extension)
       wikiExtensions.push(WikiEmbedNode as Extension)
 
       // Custom keyboard shortcuts (Tab indent, column navigation, etc.)
@@ -616,6 +618,7 @@ export function createEditorExtensions(
       noteExtensions.push(AnchorMarkNode as Extension)
       noteExtensions.push(AnchorDividerNode as Extension)
       noteExtensions.push(FootnoteRefExtension as Extension)
+      noteExtensions.push(ReferenceLinkNode as Extension)
       noteExtensions.push(QueryBlockNode as Extension)
 
       // Smart Link paste handler: plain URL → linkCard (YouTube/Audio handled by their own extensions)
@@ -899,6 +902,7 @@ export function createRenderExtensions(): Extension[] {
     AnchorMarkNode,
     AnchorDividerNode,
     FootnoteRefExtension,
+    ReferenceLinkNode,
   ] as Extension[]
 }
 

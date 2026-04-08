@@ -352,6 +352,26 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Reference 디테일 = SmartSidePanel** — 별도 풀페이지 에디터 없음. 사이드 패널에서 편집 충분 (2026-04-07)
 - **Tags Library 통합** — 13개 앱 리서치. 태그를 2개 사이드바 섹션에 동시에 보여주는 앱 0개. Capacities 패턴 채택. Notes "More"에서 Tags 제거, `/tags` → `/library/tags` 리다이렉트 (2026-04-08)
 - **References/Files soft delete** — Tags처럼 trashed 필드. 복원 가능해야 함. hard delete → 확인 다이얼로그만으론 불충분 (2026-04-08)
+- **Reference = 통합 참고자료 (하이브리드)** — url 필드 있으면 Link형, 없으면 Citation형. 기본=footnoteRef, Shift=referenceLink. 위키백과 패턴 (2026-04-08)
+- **호버 프리뷰 강화** — 리사이즈(400~960px) + 드래그 이동(Pin 시) + Pin 버튼 액션바 + 본문 flex-1 (2026-04-08)
+- **듀얼 에디터 = 독립 뷰** — 다음 설계 방향: 좌/우 패널이 각각 독립 네비게이션 (Notes/Wiki/Calendar 자유 전환). table-route 이중화 필요 (미구현, P0)
+
+### 이번 세션 완료 (2026-04-08 오후, PR #169)
+- **Trash 뷰 References/Files 탭**: TRASH_TABS 8개 확장, TrashEntityList references/files 처리
+- **Library Files 직접 업로드 UI**: ViewHeader + button → file input → addAttachment + persistAttachmentBlob
+- **References hover 체크박스**: Notes 패턴 (별도 칼럼, invisible group-hover:visible)
+- **Bookmark 툴바/Insert 메뉴 추가**: anchorMark 삽입, 슬래시 커맨드와 통합
+- **referenceLink TipTap 노드**: 인라인 atom, 에메랄드 칩, 클릭→URL, 호버 팝오버, Ctrl+클릭→사이드패널
+- **Reference URL 전용 입력란**: 사이드패널 Title↔Content 사이 Globe 아이콘, Fields에서 url 키 자동 분리
+- **Quick Filter "Links"**: References 뷰 4번째 필터 (url 필드 있는 Reference)
+- **`[[`/`@` 자동분기**: 기본=footnoteRef, Shift+클릭/Enter=referenceLink. WikilinkItem/MentionItem에 referenceUrl + _shiftKey 추가
+- **footnoteRef URL 표시**: 팝오버에 🔗 도메인 링크 + FootnotesFooter에 줄바꿈 URL (flex-wrap)
+- **호버 프리뷰 버그 수정**: wikilink-node.ts의 data-hover-preview 제거 (self-matching guard 문제)
+- **호버 프리뷰 강화**: 리사이즈(우하단 드래그) + 드래그 이동(Pin 시 헤더) + Pin 버튼 + 본문 flex-1
+- **사이드바 Bookmarks 클릭→스크롤**: data-anchor-id 속성 + scrollIntoView 추가
+- **Peek 툴바 하단 이동**: position="bottom"
+- **Hydration 에러 수정**: PanelGroup 고정 id (main-layout, workspace-editor)
+- **Store version**: v71 유지 (migration 변경 없음)
 
 ### 이번 세션 완료 (2026-04-07, PR #163 + #164 + #165)
 - **에디터 툴바 Remix Icon 전환**: 32파일 101아이콘, 중앙 barrel, H/B 아이콘화
@@ -382,14 +402,14 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Files 뷰 구현**: Coming soon → 첨부파일 목록 (All/Images/Documents 필터)
 - **Sidebar Tags/Files 활성화**: disabled span → NavLink + 카운트 뱃지
 
-### 다음 우선순위 (2026-04-07 기준)
-1. **Library + Wiki Overview 디자인 폴리싱** — stat 카드 디자인 통일, 토스증권/드리블 참고
-2. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터
-3. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력, Library 디테일 패널 표시
-4. **Tags 글로벌 승격 + Files 탭** — WikiArticle에 tags 추가, Library > Tags/Files 탭 구현
-5. **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
-6. **인포박스 고도화** (P2)
-7. **Side Panel 풀페이지 확장** (P3)
+### 다음 우선순위 (2026-04-08 기준)
+1. 🔴 **듀얼 에디터 좌우 고정** — openNote 호출 컨텍스트별 좌/우 라우팅 분기. 사이드패널 듀얼 모드 지원
+2. **FootnotesFooter 접기/펼치기** — 기본 접힌 상태, `[1]` 클릭 시 자동 펼침
+3. **referenceLink 노드 최종 검증** — Shift+클릭 삽입 동작 확인
+4. **크로스노트 북마크** — GlobalBookmark slice, 사이드패널 리뉴얼, Ctrl+Shift+B
+5. **Library + Wiki Overview Bento Grid 리디자인**
+6. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용
+7. **createdAt + Reference.history** — 각주 타임스탬프 + 수정 이력
 
 ### 리서치: Library 고도화 벤치마크 (2026-04-07)
 - **Zotero** (github.com/zotero/zotero): 3-pane 레이아웃, Collections vs Tags 구분, item type별 필드 스키마, refs count 컬럼, VirtualizedTable
