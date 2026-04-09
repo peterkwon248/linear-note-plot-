@@ -68,22 +68,12 @@ function InspectorSection({
   )
 }
 
-function extractHeadings(content: string): { level: number; text: string }[] {
-  const lines = content.split("\n")
-  const headings: { level: number; text: string }[] = []
-  for (const line of lines) {
-    const match = line.match(/^(#{1,6})\s+(.+)/)
-    if (match) {
-      headings.push({ level: match[1].length, text: match[2].trim() })
-    }
-  }
-  return headings
-}
+import { extractOutlineFromContentJson, type OutlineResult } from "@/lib/anchor-utils"
 
-export function SidePanelContext() {
+export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | null }) {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const previewNoteId = usePlotStore((s) => s.previewNoteId)
-  const noteId = selectedNoteId || previewNoteId
+  const noteId = propNoteId ?? selectedNoteId ?? previewNoteId
   const notes = usePlotStore((s) => s.notes)
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
@@ -109,9 +99,9 @@ export function SidePanelContext() {
 
   const note = notes.find((n) => n.id === noteId) ?? null
 
-  const headings = useMemo(
-    () => (note ? extractHeadings(note.content) : []),
-    [note?.content] // eslint-disable-line react-hooks/exhaustive-deps
+  const outline: OutlineResult = useMemo(
+    () => (note?.contentJson ? extractOutlineFromContentJson(note.contentJson) : { source: "empty", items: [] }),
+    [note?.contentJson] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const advanceToNextInbox = useCallback(() => {
@@ -469,25 +459,40 @@ export function SidePanelContext() {
 
       <div className="mx-4 border-b border-border" />
 
-      {/* Outline (headings) */}
+      {/* Outline (TOC block > headings fallback) */}
       <InspectorSection title="Outline" icon={<TextAlignLeft size={16} weight="regular" />}>
-        {headings.length > 0 ? (
-          <div className="space-y-1">
-            {headings.map((h, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-1.5 text-note text-muted-foreground transition-colors hover:text-foreground cursor-default"
-                style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
-              >
-                <span className="shrink-0 text-2xs font-mono text-muted-foreground/50">
-                  {"H" + h.level}
-                </span>
-                <span className="truncate">{h.text}</span>
+        {outline.items.length > 0 ? (
+          <div className="space-y-0.5">
+            {outline.source === "toc" && (
+              <div className="mb-1.5 text-2xs uppercase tracking-wider text-muted-foreground/40">
+                From TOC block
               </div>
+            )}
+            {outline.items.map((item, i) => (
+              <button
+                key={i}
+                className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-note text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground text-left"
+                style={{ paddingLeft: `${6 + (item.level - 1) * 12}px` }}
+                onClick={() => {
+                  if (!item.id) return
+                  const el = (document.querySelector(`[data-anchor-id="${item.id}"]`) as HTMLElement | null)
+                    || document.getElementById(item.id)
+                  el?.scrollIntoView({ behavior: "smooth", block: "center" })
+                }}
+              >
+                {item.source === "heading" ? (
+                  <span className="shrink-0 text-2xs font-mono text-muted-foreground/50 w-5">
+                    H{item.level}
+                  </span>
+                ) : (
+                  <span className="shrink-0 text-muted-foreground/50">→</span>
+                )}
+                <span className="truncate">{item.label}</span>
+              </button>
             ))}
           </div>
         ) : (
-          <span className="text-note text-muted-foreground">No headings found</span>
+          <span className="text-note text-muted-foreground">No structure yet</span>
         )}
       </InspectorSection>
 
@@ -506,7 +511,7 @@ export function SidePanelContext() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Headings</span>
-            <span className="text-note tabular-nums text-foreground">{headings.length}</span>
+            <span className="text-note tabular-nums text-foreground">{outline.items.filter(i => i.source === "heading").length}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Source</span>

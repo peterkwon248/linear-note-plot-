@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -131,6 +131,9 @@ export interface PlotState {
 
   // ── References (Bibliography/Citations) ──
   references: Record<string, Reference>
+
+  // ── Global Bookmarks (Cross-note anchors) ──
+  globalBookmarks: Record<string, GlobalBookmark>
 
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
@@ -308,6 +311,11 @@ export interface PlotState {
   deleteReference: (id: string) => void
   restoreReference: (id: string) => void
   permanentlyDeleteReference: (id: string) => void
+
+  // ── Global Bookmarks ──
+  pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType']) => string
+  unpinBookmark: (bookmarkId: string) => void
+  updateBookmarkLabel: (bookmarkId: string, label: string) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

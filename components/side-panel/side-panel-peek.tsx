@@ -66,7 +66,7 @@ export function SidePanelPeek() {
           <span className="text-note text-foreground truncate">{note.title || "Untitled"}</span>
         </div>
         <div className="flex items-center gap-0.5">
-          {/* Open side by side (Phase 2 placeholder) */}
+          {/* Open in split view */}
           <button
             onClick={() => {
               const { openInSecondary, closeSidePeek: close } = usePlotStore.getState()
@@ -76,7 +76,7 @@ export function SidePanelPeek() {
               }
             }}
             className="rounded-md p-1 text-muted-foreground transition-colors duration-100 hover:bg-hover-bg hover:text-foreground"
-            title="Open side by side"
+            title="Open in Split View"
           >
             <Columns size={14} weight="regular" />
           </button>

@@ -35,10 +35,11 @@ export const WikilinkInteractionExtension = Extension.create({
             const title = target.getAttribute("data-title")
             if (!title) return false
             const linkType = target.getAttribute("data-link-type") || "note"
+            const anchorId = target.getAttribute("data-anchor-id") || null
 
             // Ctrl/Cmd + Click → navigate
             if (event.ctrlKey || event.metaKey) {
-              handleWikilinkClick(title, event)
+              handleWikilinkClick(title, event, anchorId)
               return true
             }
 
@@ -79,7 +80,7 @@ export const WikilinkInteractionExtension = Extension.create({
               return true
             }
 
-            handleWikilinkClick(title, event)
+            handleWikilinkClick(title, event, anchorId)
             return true
           },
 

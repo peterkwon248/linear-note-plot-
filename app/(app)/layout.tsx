@@ -37,6 +37,7 @@ import { SmartSidePanel } from "@/components/side-panel/smart-side-panel"
 import { WikilinkContextMenu } from "@/components/editor/wikilink-context-menu"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { SecondaryPanelContent } from "@/components/workspace/secondary-panel-content"
+import { PaneProvider } from "@/components/workspace/pane-context"
 import { useSecondarySpace } from "@/lib/table-route"
 
 const MIN_WIDTH = 200
@@ -72,11 +73,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isViewRoute = activeRoute !== null && VIEW_ROUTES.includes(activeRoute)
   const isFallback = !isTableView && !isViewRoute
 
-  // Split View: is secondary panel active? (either editing or viewing a space)
-  const hasSplit = !selectedNoteId
-    ? (!!secondarySpace || !!secondaryNoteId)
-    : false // When editing, WorkspaceEditorArea handles split internally
+  // Split state — covers both editor split and view-mode split
+  const hasSplit = !!secondaryNoteId || !!secondarySpace
+  // Editor split: WorkspaceEditorArea handles the split internally
+  // View split: layout.tsx renders SecondaryPanelContent as a sibling panel
+  const isEditing = !!selectedNoteId
+  const hasViewSplit = !isEditing && hasSplit
+  const activePane = usePlotStore((s) => s.activePane)
   const primarySidePanelVisible = sidePanelOpen && (sidePanelMode === 'detail' || sidePanelMode === 'connections' || sidePanelMode === 'activity' || sidePanelMode === 'bookmarks' || (sidePanelMode === 'peek' && !!sidePanelPeekNoteId))
+  // Show side panel if EITHER pane wants it open (in split) or just primary in single mode
+  const showSidePanel = hasSplit
+    ? (primarySidePanelVisible || secondarySidePanelOpen)
+    : primarySidePanelVisible
 
   // Mount-once: track which view routes have been visited
   // Once mounted, a view stays mounted (keep-alive) for instant re-visits
@@ -179,10 +187,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
-          {/* ── Main content: flat 4-column layout (content + sidepanel × 2) ── */}
+          {/* ── Main content layout ──
+              [Content] [View-Split Secondary?] [SidePanel?]
+              - Editor split is handled INSIDE WorkspaceEditorArea (rendered via children)
+              - View split (no editor) renders SecondaryPanelContent here
+              - Side panel always rendered here when open  */}
           <ResizablePanelGroup id="main-layout" direction="horizontal" className="flex-1">
             {/* 1. Primary content */}
-            <ResizablePanel defaultSize={hasSplit ? (primarySidePanelVisible ? 35 : 50) : (primarySidePanelVisible ? 70 : 100)} minSize={20}>
+            <ResizablePanel
+              id="main-content"
+              order={1}
+              defaultSize={hasViewSplit ? (showSidePanel ? 35 : 50) : (showSidePanel ? 70 : 100)}
+              minSize={20}
+            >
               <div className="flex h-full overflow-hidden">
                 {/* Table views (notes/pinned/trash): always mounted */}
                 <div className={isTableView ? "flex flex-1 overflow-hidden" : "hidden"}>
@@ -265,21 +282,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
             </ResizablePanel>
 
-            {/* 2. Primary side panel */}
-            {primarySidePanelVisible && (
+            {/* 2. View-mode split secondary content (only when NOT editing a note) */}
+            {hasViewSplit && (
               <>
                 <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
-                <ResizablePanel defaultSize={hasSplit ? 15 : 30} minSize={10} maxSize={40}>
-                  <SmartSidePanel pane="primary" />
-                </ResizablePanel>
-              </>
-            )}
-
-            {/* 3. Secondary content (Split View) */}
-            {hasSplit && (
-              <>
-                <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
-                <ResizablePanel defaultSize={secondarySidePanelOpen ? 35 : 50} minSize={20}>
+                <ResizablePanel id="main-view-secondary" order={2} defaultSize={showSidePanel ? 35 : 50} minSize={20}>
                   <div className="flex h-full flex-col overflow-hidden">
                     <SecondaryPanelContent />
                   </div>
@@ -287,12 +294,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </>
             )}
 
-            {/* 4. Secondary side panel */}
-            {hasSplit && secondarySidePanelOpen && (
+            {/* 3. Side panel — single source of truth for ALL cases */}
+            {showSidePanel && (
               <>
                 <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
-                <ResizablePanel defaultSize={15} minSize={10} maxSize={40}>
-                  <SmartSidePanel pane="secondary" />
+                <ResizablePanel id="main-sidepanel" order={3} defaultSize={hasSplit ? 20 : 30} minSize={10} maxSize={40}>
+                  <PaneProvider pane={activePane}>
+                    <SmartSidePanel pane={hasSplit ? activePane : "primary"} alwaysVisible={hasSplit} />
+                  </PaneProvider>
                 </ResizablePanel>
               </>
             )}

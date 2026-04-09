@@ -8,9 +8,11 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model"
  * As an atom node, the cursor cannot enter inside — it behaves like a single character.
  *
  * Attributes:
- *   title    — Display title (e.g. "Fleeting Note")
- *   linkType — "note" | "wiki" (determines visual style)
- *   targetId — Resolved target note/wiki ID (nullable)
+ *   title       — Display title (e.g. "Fleeting Note")
+ *   linkType    — "note" | "wiki" (determines visual style)
+ *   targetId    — Resolved target note/wiki ID (nullable)
+ *   anchorId    — Target anchor's ID for deep-linking (nullable)
+ *   anchorLabel — Display label for the anchor (e.g. "API Design") (nullable)
  */
 export const WikilinkNode = Node.create({
   name: "wikilink",
@@ -38,6 +40,18 @@ export const WikilinkNode = Node.create({
         renderHTML: (attrs: Record<string, any>) =>
           attrs.targetId ? { "data-target-id": attrs.targetId } : {},
       },
+      anchorId: {
+        default: null,
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-anchor-id") || null,
+        renderHTML: (attrs: Record<string, any>) =>
+          attrs.anchorId ? { "data-anchor-id": attrs.anchorId } : {},
+      },
+      anchorLabel: {
+        default: null,
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-anchor-label") || null,
+        renderHTML: (attrs: Record<string, any>) =>
+          attrs.anchorLabel ? { "data-anchor-label": attrs.anchorLabel } : {},
+      },
     }
   },
 
@@ -50,6 +64,20 @@ export const WikilinkNode = Node.create({
   renderHTML({ HTMLAttributes, node }) {
     const title = node.attrs.title || ""
     const linkType = node.attrs.linkType || "note"
+    const anchorLabel = node.attrs.anchorLabel || null
+
+    if (anchorLabel) {
+      // Render with two child spans: title + muted anchor fragment
+      return [
+        "span",
+        mergeAttributes(HTMLAttributes, {
+          "data-type": "wikilink",
+          class: `wikilink-node wikilink-${linkType}`,
+        }),
+        ["span", { class: "wikilink-title" }, title],
+        ["span", { class: "wikilink-anchor-fragment" }, `#${anchorLabel}`],
+      ]
+    }
 
     return [
       "span",
@@ -61,10 +89,14 @@ export const WikilinkNode = Node.create({
     ]
   },
 
-  // Plain text export: [[title]] or [[wiki:title]]
+  // Plain text export: [[title]] or [[wiki:title]], with optional #anchorLabel
   renderText({ node }: { node: ProseMirrorNode }) {
     const prefix = node.attrs.linkType === "wiki" ? "wiki:" : ""
-    return `[[${prefix}${node.attrs.title}]]`
+    const anchorLabel = node.attrs.anchorLabel
+    const titlePart = anchorLabel
+      ? `${node.attrs.title}#${anchorLabel}`
+      : node.attrs.title
+    return `[[${prefix}${titlePart}]]`
   },
 
   addKeyboardShortcuts() {

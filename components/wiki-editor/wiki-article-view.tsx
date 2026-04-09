@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { Virtuoso } from "react-virtuoso"
 import { toast } from "sonner"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import { setActiveRoute } from "@/lib/table-route"
 import {
   DndContext,
   DragOverlay,
@@ -978,10 +979,15 @@ function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
         {sources.map((src, i) => (
           <button
             key={`${src.type}-${src.id}`}
-            onClick={() => {
+            onClick={(e) => {
               if (src.type === "note") {
-                // Open note in side peek panel
-                usePlotStore.getState().openSidePeek(src.id)
+                // Ctrl/Cmd+click → open in split view; otherwise open the note
+                if (e.ctrlKey || e.metaKey) {
+                  usePlotStore.getState().openInSecondary(src.id)
+                } else {
+                  setActiveRoute("/notes")
+                  usePlotStore.getState().openNote(src.id)
+                }
               } else {
                 // Scroll to block for images
                 document.getElementById(`wiki-block-${src.blockId}`)?.scrollIntoView({

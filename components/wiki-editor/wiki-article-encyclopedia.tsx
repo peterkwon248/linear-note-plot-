@@ -15,6 +15,7 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { toast } from "sonner"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import { setActiveRoute } from "@/lib/table-route"
 import {
   DndContext,
   closestCenter,
@@ -619,9 +620,14 @@ function EncyclopediaFooter({ article }: { article: WikiArticle }) {
                 {src.type === "note" && <FileText className="shrink-0 text-muted-foreground/60" size={13} weight="regular" />}
                 {src.type === "image" && <PhImage className="shrink-0 text-muted-foreground/60" size={13} weight="regular" />}
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
                     if (src.type === "note") {
-                      usePlotStore.getState().openSidePeek(src.id)
+                      if (e.ctrlKey || e.metaKey) {
+                        usePlotStore.getState().openInSecondary(src.id)
+                      } else {
+                        setActiveRoute("/notes")
+                        usePlotStore.getState().openNote(src.id)
+                      }
                     } else {
                       document.getElementById(`wiki-block-${src.blockId}`)?.scrollIntoView({
                         behavior: "smooth",

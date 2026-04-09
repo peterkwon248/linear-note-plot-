@@ -1039,6 +1039,12 @@
   color: #5eead4;
 }
 
+/* Anchor fragment label (muted) inside wikilink with deep-link */
+.ProseMirror .wikilink-node .wikilink-anchor-fragment {
+  opacity: 0.55;
+  font-size: 0.9em;
+}
+
 /* Wikilink dropdown + nav icon removed — unified hover/click interactions */
 
 /* ── Block Resize Handles ────────────────────────────────────────── */
@@ -1396,6 +1402,37 @@
   color: hsl(var(--foreground) / 0.6);
 }
 
+.floating-toc-pin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground) / 0.4);
+  opacity: 0;
+  border-radius: 3px;
+  transition: opacity 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.floating-toc-item-wrap:hover .floating-toc-pin-btn {
+  opacity: 1;
+}
+
+.floating-toc-pin-btn:hover {
+  color: hsl(var(--accent-foreground));
+  background: hsl(var(--accent) / 0.15);
+}
+
+.floating-toc-pin-btn[data-pinned="true"] {
+  opacity: 1;
+  color: hsl(var(--accent-foreground));
+}
+
 /* ── Anchor / Bookmark ─────────────────────────────────────────── */
 
 /* Inline anchor mark */
@@ -1690,19 +1727,51 @@
   font-size: var(--editor-ui-sm, 13px);
   color: var(--muted-foreground);
 }
+.footnotes-footer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+.footnotes-footer-toggle:hover {
+  opacity: 1;
+}
+.footnotes-footer-chevron {
+  font-size: 9px;
+  color: var(--muted-foreground);
+  transition: transform 150ms ease;
+  opacity: 0.6;
+}
+.footnotes-footer-chevron-open {
+  transform: rotate(90deg);
+}
 .footnotes-footer-title {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted-foreground);
-  margin-bottom: 8px;
   opacity: 0.7;
+}
+.footnotes-footer-count-badge {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  background: var(--hover-bg);
+  border-radius: 4px;
+  padding: 0 5px;
+  min-width: 18px;
+  text-align: center;
+  opacity: 0.8;
 }
 .footnotes-footer-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 8px 0 0;
   display: flex;
   flex-direction: column;
   gap: 6px;

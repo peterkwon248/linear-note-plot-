@@ -84,6 +84,7 @@ import {
   RiMarkPenLine,
   RiImageLine,
   RiCornerDownLeftLine,
+  RiHashtag,
   RiLink,
   RiLinkUnlink,
   RiLinksLine,
@@ -225,6 +226,7 @@ export { RiMarkPenLine as HighlighterCircle }
 export { RiProfileLine as IdentificationCard }
 export { RiImageLine as Image }
 export { RiCornerDownLeftLine as KeyReturn }
+export { RiHashtag as Hash }
 export { RiLink as Link }
 export { RiLinkUnlink as LinkBreak }
 export { RiLinksLine as LinkSimple }

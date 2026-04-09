@@ -28,8 +28,8 @@ export function SidePanelDetail() {
     return <ReferenceDetailPanel referenceId={entity.referenceId} />
   }
 
-  // type === "note" or null — existing behavior
-  return <SidePanelContext />
+  // type === "note" or null — pass resolved noteId for pane-aware rendering
+  return <SidePanelContext noteId={entity.noteId} />
 }
 
 function GraphDetailPlaceholder() {

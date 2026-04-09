@@ -51,6 +51,18 @@ export function resolveNoteById(id: string): { id: string; type: "note" | "wiki"
 }
 
 /**
+ * Scroll to an anchor element after a short delay (to allow the editor to render).
+ */
+function scrollToAnchor(anchorId: string) {
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const el = document.querySelector(`[data-anchor-id="${anchorId}"]`)
+      el?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }, 300)
+  })
+}
+
+/**
  * Unified click handler for note references.
  * - Ctrl/Cmd + Click → navigate to the note
  * - Click → open in side peek panel
@@ -58,7 +70,8 @@ export function resolveNoteById(id: string): { id: string; type: "note" | "wiki"
 export function handleNoteReferenceClick(
   noteId: string,
   noteType: "note" | "wiki",
-  event: MouseEvent | React.MouseEvent
+  event: MouseEvent | React.MouseEvent,
+  anchorId?: string | null
 ) {
   event.preventDefault()
   event.stopPropagation()
@@ -81,9 +94,11 @@ export function handleNoteReferenceClick(
         store.openNote(noteId)
       }
     }
+    if (anchorId) scrollToAnchor(anchorId)
   } else {
     // Regular click → peek in side panel
     store.openSidePeek(noteId)
+    if (anchorId) scrollToAnchor(anchorId)
   }
 }
 
@@ -91,10 +106,10 @@ export function handleNoteReferenceClick(
  * Handle click on a wikilink by title.
  * Resolves title → noteId, then delegates to handleNoteReferenceClick.
  */
-export function handleWikilinkClick(title: string, event: MouseEvent) {
+export function handleWikilinkClick(title: string, event: MouseEvent, anchorId?: string | null) {
   const resolved = resolveNoteByTitle(title)
   if (resolved) {
-    handleNoteReferenceClick(resolved.id, resolved.type, event)
+    handleNoteReferenceClick(resolved.id, resolved.type, event, anchorId)
   } else {
     // Dangling link: create wiki article and navigate
     const store = usePlotStore.getState()

@@ -105,8 +105,13 @@ function FootnoteRefView({ node, editor, updateAttributes }: NodeViewProps) {
   }
 
   const scrollToFootnotes = () => {
-    const el = document.querySelector(`[data-footnote-list-id="${node.attrs.id}"]`)
-    el?.scrollIntoView({ behavior: "smooth", block: "center" })
+    // Dispatch event to auto-expand collapsed FootnotesFooter
+    window.dispatchEvent(new CustomEvent("plot:scroll-to-footnote", { detail: { id: node.attrs.id } }))
+    // Fallback: try direct scroll (works when already expanded)
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-footnote-list-id="${node.attrs.id}"]`)
+      el?.scrollIntoView({ behavior: "smooth", block: "center" })
+    })
   }
 
   return (

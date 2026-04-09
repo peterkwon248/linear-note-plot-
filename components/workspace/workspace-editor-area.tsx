@@ -4,9 +4,16 @@ import { usePlotStore } from "@/lib/store"
 import { useSecondarySpace } from "@/lib/table-route"
 import { NoteEditor } from "@/components/note-editor"
 import { SecondaryPanelContent } from "@/components/workspace/secondary-panel-content"
-import { SmartSidePanel } from "@/components/side-panel/smart-side-panel"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 
+/**
+ * WorkspaceEditorArea — Editor area for the main content slot.
+ * Renders [Editor] or [Editor] | [Secondary] for split view.
+ *
+ * IMPORTANT: This component does NOT render side panels.
+ * The side panel is rendered by layout.tsx at the top level so it's a
+ * sibling of the entire content area regardless of split state.
+ */
 export function WorkspaceEditorArea() {
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
@@ -14,61 +21,43 @@ export function WorkspaceEditorArea() {
   const notes = usePlotStore((s) => s.notes)
   const setActivePane = usePlotStore((s) => s.setActivePane)
   const secondarySpace = useSecondarySpace()
-  const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
-  const sidePanelMode = usePlotStore((s) => s.sidePanelMode)
-  const sidePanelPeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
-  const secondarySidePanelOpen = usePlotStore((s) => s.secondarySidePanelOpen)
 
   const primaryNote = notes.find((n) => n.id === selectedNoteId)
 
   if (!primaryNote) return null
 
   const hasSecondary = !!secondaryNoteId || !!secondarySpace
-  const primarySidePanelVisible = sidePanelOpen && (sidePanelMode === 'detail' || sidePanelMode === 'connections' || sidePanelMode === 'activity' || sidePanelMode === 'bookmarks' || (sidePanelMode === 'peek' && !!sidePanelPeekNoteId))
 
   return (
-    <ResizablePanelGroup id="workspace-editor" direction="horizontal" className="flex-1">
-      {/* 1. Primary editor — 70:30 ratio with side panel */}
-      <ResizablePanel defaultSize={hasSecondary ? (primarySidePanelVisible ? 35 : 50) : (primarySidePanelVisible ? 70 : 100)} minSize={20}>
+    <ResizablePanelGroup direction="horizontal" className="flex-1">
+      {/* 1. Primary editor */}
+      <ResizablePanel
+        id="primary-editor"
+        order={1}
+        defaultSize={hasSecondary ? 50 : 100}
+        minSize={20}
+      >
         <div
-          className={`flex h-full flex-col overflow-hidden ${activePane === 'primary' ? '' : 'opacity-80'}`}
-          onClick={() => setActivePane('primary')}
+          className={`flex h-full flex-col overflow-hidden ${hasSecondary && activePane !== 'primary' ? 'opacity-80' : ''}`}
+          onMouseDownCapture={() => { if (activePane !== 'primary') setActivePane('primary') }}
+          onFocusCapture={() => { if (activePane !== 'primary') setActivePane('primary') }}
         >
           <NoteEditor noteId={primaryNote.id} pane="primary" />
         </div>
       </ResizablePanel>
 
-      {/* 2. Primary side panel */}
-      {primarySidePanelVisible && (
-        <>
-          <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
-          <ResizablePanel defaultSize={hasSecondary ? 15 : 30} minSize={10} maxSize={40}>
-            <SmartSidePanel pane="primary" />
-          </ResizablePanel>
-        </>
-      )}
-
-      {/* 3. Secondary content */}
+      {/* 2. Secondary content (split view) */}
       {hasSecondary && (
         <>
           <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
-          <ResizablePanel defaultSize={secondarySidePanelOpen ? 35 : 50} minSize={20}>
+          <ResizablePanel id="secondary-content" order={2} defaultSize={50} minSize={20}>
             <div
-              className={`flex h-full flex-col overflow-hidden ${activePane === 'secondary' ? '' : 'opacity-80'}`}
-              onClick={() => setActivePane('secondary')}
+              className={`flex h-full flex-col overflow-hidden ${activePane !== 'secondary' ? 'opacity-80' : ''}`}
+              onMouseDownCapture={() => { if (activePane !== 'secondary') setActivePane('secondary') }}
+              onFocusCapture={() => { if (activePane !== 'secondary') setActivePane('secondary') }}
             >
               <SecondaryPanelContent />
             </div>
-          </ResizablePanel>
-        </>
-      )}
-
-      {/* 4. Secondary side panel */}
-      {hasSecondary && secondarySidePanelOpen && (
-        <>
-          <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
-          <ResizablePanel defaultSize={15} minSize={10} maxSize={40}>
-            <SmartSidePanel pane="secondary" />
           </ResizablePanel>
         </>
       )}

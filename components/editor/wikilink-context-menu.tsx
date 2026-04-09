@@ -320,7 +320,7 @@ export function WikilinkContextMenu() {
         <>
           <MenuItem icon={<ArrowSquareOut size={14} />} label="Open" onClick={handleOpen} />
           <MenuItem icon={<Eye size={14} />} label="Open in Peek" onClick={handlePeek} />
-          <MenuItem icon={<Columns size={14} />} label="Side by Side" onClick={handleSideBySide} />
+          <MenuItem icon={<Columns size={14} />} label="Split View" onClick={handleSideBySide} />
           <div className="my-1 border-t border-border-subtle" />
           <MenuItem icon={<ArrowsClockwise size={14} />} label="Change link" onClick={handleChangeLink} />
           <MenuItem icon={<Copy size={14} />} label={`Copy [[${titleDisplay}]]`} onClick={handleCopyLink} />
