@@ -184,10 +184,13 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ## TODO: Future Work (우선순위 순, 2026-04-09 저녁 sync)
 
 ### 🔴 P0 — Peek-First 마이그레이션 (다음 세션 시작점은 docs/NEXT-ACTION.md)
-- **Phase 2**: Peek가 Wiki 표시 가능하게 (다음 즉시 시작)
-- **Phase 3**: 사이즈 시스템 (Min/Mid/Max + Drag)
-- **Phase 4**: Peek 독립 네비게이션 (history)
+- ✅ **Phase 2**: Peek가 Wiki 표시 가능 (2026-04-09 완료)
+- 🎯 **Phase 2.5 (신규)**: Peek 자립 — 상시 탭 + Empty State(c, 검색+최근+핀) + Open picker(@멘션 재사용) + 단축키
+- **Phase 3**: 사이즈 시스템 (Min 280 / Mid 480 / Max 50% + Drag)
+- **Phase 3.5**: Single-slot + back/forward history UI + Pin 1~2개 UI (데이터 모델은 2.5 선행)
 - **Phase 5**: Split View 폐기 + "Split View" 용어 → "Peek"
+
+**아키텍처 결정 (2026-04-09)**: Multi-tab 폐기, Single-slot + history + Pin으로 충분. 동시 비교 니즈 공식 포기 (Split View 폐기 결정의 연장선).
 
 ### P1 (보류, Peek 마이그레이션 후)
 - **Reference.history** — 데이터 모델 + UI 작업 중간에 멈춤

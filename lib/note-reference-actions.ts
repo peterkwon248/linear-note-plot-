@@ -96,8 +96,8 @@ export function handleNoteReferenceClick(
     }
     if (anchorId) scrollToAnchor(anchorId)
   } else {
-    // Regular click → peek in side panel
-    store.openSidePeek(noteId)
+    // Regular click → peek in side panel (supports both notes and wiki)
+    store.openSidePeek({ type: noteType, id: noteId })
     if (anchorId) scrollToAnchor(anchorId)
   }
 }

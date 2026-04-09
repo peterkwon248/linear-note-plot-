@@ -75,6 +75,11 @@ interface FixedToolbarProps {
   onTogglePosition?: () => void
   noteId?: string
   tier?: EditorTier
+  /**
+   * Visual variant — "peek" gives the toolbar a subtle wiki-accent tint so it's
+   * visually distinct from the main editor toolbar when both are on screen.
+   */
+  variant?: 'default' | 'peek'
 }
 
 function HeadingDropdown({ editor }: { editor: Editor }) {
@@ -524,7 +529,7 @@ function OverflowGrid({ editor, editorState, isVisible, handleSetLink, handleAli
   )
 }
 
-export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, noteId, tier = 'note' }: FixedToolbarProps) {
+export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, noteId, tier = 'note', variant = 'default' }: FixedToolbarProps) {
   const toolbarLayout = useSettingsStore((s) => s.toolbarLayout)
   const [arrangeOpen, setArrangeOpen] = useState(false)
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
@@ -622,11 +627,12 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
     }
   }
 
+  const isPeek = variant === 'peek'
   return (
     <div
-      className={`shrink-0 sticky bottom-0 z-10 h-14 flex items-center gap-0.5 px-3 bg-background overflow-x-auto overflow-y-hidden min-w-0 ${
+      className={`shrink-0 sticky bottom-0 z-10 h-14 flex items-center gap-0.5 px-3 overflow-x-auto overflow-y-hidden min-w-0 ${
         position === 'top' ? 'border-b border-border' : 'border-t border-border'
-      }`}
+      } ${isPeek ? 'bg-wiki-complete/[0.06]' : 'bg-background'}`}
     >
       {isVisible("insert") && (
         <ToolbarGroup>

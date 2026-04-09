@@ -99,7 +99,14 @@
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, thinking
 
 ## Completed PRs (recent)
-- **PR #174 (예정)**: Cross-Note Bookmarks + Outline 개선 + 사이드바 단일 책임 아키텍처 + 워크플로우 개선
+- **PR #176 (예정, 이번 세션)**: Peek-First 실험 → Smart Sidebar Phase 1
+  - Peek-First 완성 (Phase 2, 2.5, 3, 3.5) — wiki 지원, Empty State, 사이즈 시스템, back/forward, pin
+  - 노트/위키 시각 구분 (StatusShapeIcon + wiki violet)
+  - MentionSuggestion 일관성
+  - 피벗 결정: Split-First 복귀
+  - **Phase 1 완료**: SmartSidePanel 단일 인스턴스 + global state + Peek 탭 제거 (4탭), `useSidePanelEntity` 활용
+  - Phase 2~7 대기 (24 sub-tasks todo list에 정리)
+- **PR #174**: Cross-Note Bookmarks + Outline 개선 + 사이드바 단일 책임 아키텍처 + 워크플로우 개선
   - **GlobalBookmark 시스템 (5 Phase)**: store slice + migration v72, extractAnchorsFromContentJson 유틸, Bookmarks 탭 2섹션(Pinned+ThisNote), WikilinkNode `anchorId` attr + 2단계 앵커 피커, 플로팅 TOC 핀, 앵커 노드 우클릭 Pin to Bookmarks, Ctrl+Shift+B 단축키
   - **Outline 개선**: TipTap JSON 기반 (markdown 파서 폐기), TOC 블록 우선 + 헤딩 fallback, 클릭 스크롤 (`extractOutlineFromContentJson`)
   - **Footnote 접기/펼치기**: 기본 접힌 상태 "▶ FOOTNOTES (N)", `[N]` 클릭 시 자동 펼침
@@ -769,7 +776,30 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Chevron 방향 수정**: Title/Survives 드롭다운 ChevronDown → ChevronUp (위로 열리는 드롭다운)
 - Store v60→v61 (WikiArticle.layout 기본값)
 
-### 다음 작업 후보 (우선순위 순, 2026-04-06 sync)
+### 이번 세션 완료 (2026-04-10) — Peek-First 실험 → Split-First 복귀 결정
+**Peek-First 작업 (Phase 2~3.5):**
+- **Phase 2**: Peek에서 Wiki 지원 — `PeekContext = {type:"note"|"wiki", id}`, 8개 호출부 업데이트
+- **Phase 2.5**: Peek 자립 — 상시 탭 + Empty State(Suggested+Recent+Pinned) + Open picker + `Cmd+Shift+P` 단축키
+- **Phase 3**: 사이즈 시스템 — `peekSize` 32-50%, drag, main-content 동적 계산
+- **Phase 3.5**: Back/Forward history + Pin + 서브헤더 대비 개선
+- Peek picker 시각 개선: 노트 워크플로우 상태 원 아이콘(`StatusShapeIcon` 공유 추출) + 위키 violet 북
+- MentionSuggestion 일관성: note/wiki 색상 시스템 통일 (NOTE_STATUS_HEX + WIKI_STATUS_HEX)
+- Empty State Suggested 섹션 (contextual related + fallback to 최근 수정 노트)
+- 검색 결과 Notes/Wiki 그룹핑 (멘션 피커 패턴)
+- Tooltip overflow fix (native title → Radix `side="bottom"`)
+- FixedToolbar `variant="peek"` (violet tint)
+- Wiki 편집 in Peek + 풀 infobox/TOC 렌더링
+- 공유 파일: `components/status-icon.tsx` (StatusShapeIcon), `lib/peek/peek-search.ts`, `lib/peek/peek-suggestions.ts`
+
+**피벗 결정 — Peek-First 포기, Split-First 복귀:**
+- 근거: Peek UI가 사이드패널 안에 있는 한 main editor와 "같은 단층" 느낌 불가능
+- 대안: Split view 복원 + **단일 SmartSidePanel이 `activePane`을 따라감** (focus-following)
+- 원래 Split view의 문제(per-pane dual SmartSidePanel)는 단일 인스턴스 + `useSidePanelEntity` + `PaneProvider` 체인으로 해결
+- **Phase 1 완료**: SmartSidePanel pane prop 제거 + global state, side-panel-connections `useSidePanelEntity` 적용, layout.tsx SmartSidePanel 호출부 단순화, Peek 탭 제거 (4탭 복원), tsc clean
+- **Phase 2~7 대기**: Store cleanup(peek/secondarySidePanel 상태 제거) → Peek 파일 삭제 → secondary picker 재설계(peek-empty-state → secondary-open-picker) → focus tracking 강화 → 시각 피드백 → Split view 통합 검증 → 문서 업데이트
+- **자산 재활용**: StatusShapeIcon, MentionSuggestion 개선, peek-search, peek-suggestions, Tooltip fix, FixedToolbar variant 시스템 전부 Split view picker로 이관 가능
+
+### 다음 작업 후보 (우선순위 순, 2026-04-10 sync)
 1. **Footnote createdAt** — 각주 생성 타임스탬프 + 하단 날짜 표시
 2. **모든 각주 자동 Reference 연결** — /footnote로 만들어도 자동 Reference 생성, 독립 각주 제거
 3. **Reference.history** — 수정 이력 저장 + 스티커 UI (원본/수정 비교)

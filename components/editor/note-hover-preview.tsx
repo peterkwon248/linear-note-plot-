@@ -243,7 +243,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
 
   function handlePeek() {
     hideNotePreviewImmediate()
-    store.getState().openSidePeek(noteId)
+    store.getState().openSidePeek({ type: noteType, id: noteId })
   }
 
   function handleSideBySide() {

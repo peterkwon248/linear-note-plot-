@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react"
 import { usePlotStore } from "@/lib/store"
+import { useSidePanelEntity } from "./use-side-panel-entity"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import { discoverRelated, type DiscoverResult } from "@/lib/search/discover-engine"
@@ -197,7 +198,7 @@ function WikiArticleConnections() {
                 {referencedBy.map((a) => (
                   <button
                     key={a.id}
-                    onClick={() => openSidePeek(a.id)}
+                    onClick={() => openSidePeek({ type: "wiki", id: a.id })}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="in" />
@@ -228,10 +229,9 @@ export function SidePanelConnections() {
 }
 
 function NoteConnections() {
-  // Store selectors
-  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
-  const previewNoteId = usePlotStore((s) => s.previewNoteId)
-  const noteId = selectedNoteId || previewNoteId
+  // Resolve target note via pane-aware entity hook (follows active pane in split view)
+  const entity = useSidePanelEntity()
+  const noteId = entity.type === "note" ? entity.noteId : null
   const notes = usePlotStore((s) => s.notes)
   const tags = usePlotStore((s) => s.tags)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
@@ -470,7 +470,7 @@ function NoteConnections() {
                 {inboundWiki.map((a) => (
                   <button
                     key={a.id}
-                    onClick={() => openSidePeek(a.id)}
+                    onClick={() => openSidePeek({ type: "wiki", id: a.id })}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="in" />
@@ -512,7 +512,7 @@ function NoteConnections() {
                 {outboundWiki.map((w) => (
                   <button
                     key={w.id}
-                    onClick={() => openSidePeek(w.id)}
+                    onClick={() => openSidePeek({ type: "wiki", id: w.id })}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="out" />

@@ -102,7 +102,13 @@
       "Bash(ipconfig | grep \"IPv4\")",
       "Bash(cloudflared --version 2>&1 || echo \"NOT_INSTALLED\")",
       "Bash(winget install Cloudflare.cloudflared 2>&1)",
-      "Read(//c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/beautiful-lovelace/**)"
+      "Read(//c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/beautiful-lovelace/**)",
+      "Bash(ls components/ui/tooltip*)",
+      "Bash(grep -l \"useSidePanelEntity\\\\|usePane\\(\\)\" components/side-panel/side-panel-*.tsx)",
+      "Bash(mkdir -p ~/.claude/.omc-worklog)",
+      "Read(//c/Users/user/.claude/.omc-worklog/**)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-04-10_0808.md)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)"
     ]
   }
 }
