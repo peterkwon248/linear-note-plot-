@@ -32,6 +32,9 @@ export type SidePanelContext =
   | { type: "reference"; id: string }
   | null
 
+/** Peek target — Peek sidebar can display either a Note or a Wiki article. */
+export type PeekContext = { type: "note" | "wiki"; id: string }
+
 export interface PlotState {
   // ── Data ──
   notes: Note[]
@@ -57,8 +60,20 @@ export interface PlotState {
   linkPickerOpen: boolean
   linkPickerSourceId: string | null
 
-  // Side Panel (peek)
-  sidePanelPeekNoteId: string | null
+  // Side Panel (peek) — supports both notes and wiki articles
+  sidePanelPeekContext: PeekContext | null
+
+  // Peek session data (persisted across sessions)
+  /** Most-recently-opened Peek targets, newest first. Bounded. */
+  peekHistory: PeekContext[]
+  /** User-pinned Peek targets (max 2). Shown in Empty State. */
+  peekPins: PeekContext[]
+  /** Peek panel width as a percentage of the main layout (15–50). Applied only in single-pane peek mode. */
+  peekSize: number
+  /** Linear navigation stack for Peek back/forward (oldest first, with duplicates). Transient — not persisted. */
+  peekNavStack: PeekContext[]
+  /** Current position in peekNavStack. -1 = empty. */
+  peekNavIndex: number
 
   // Preview (list row click — shows details in side panel without opening editor)
   previewNoteId: string | null
@@ -226,8 +241,21 @@ export interface PlotState {
   setListPaneWidth: (width: number) => void
   setPreviewNoteId: (id: string | null) => void
   openReferencePanel: (refId: string) => void
-  openSidePeek: (noteId: string) => void
+  /** Open the peek side panel. Accepts a noteId string (treated as a note) or a PeekContext for notes/wiki. */
+  openSidePeek: (target: string | PeekContext) => void
   closeSidePeek: () => void
+  /** Toggle Pin for a Peek target. Max 2 pins — oldest is evicted when full. */
+  togglePeekPin: (target: PeekContext) => void
+  /** Remove an entry from peekHistory (e.g. when user deletes a noted entity). */
+  removeFromPeekHistory: (target: PeekContext) => void
+  /** Clear all peek history. */
+  clearPeekHistory: () => void
+  /** Set Peek panel width (percentage, clamped 15–50). */
+  setPeekSize: (size: number) => void
+  /** Navigate back in Peek history. No-op if at the oldest entry. */
+  peekGoBack: () => void
+  /** Navigate forward in Peek history. No-op if at the newest entry. */
+  peekGoForward: () => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
   setPendingWikiAssembly: (noteIds: string[] | null) => void

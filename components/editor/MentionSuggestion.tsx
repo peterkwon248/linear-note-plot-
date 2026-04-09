@@ -10,11 +10,13 @@ import {
   useState,
   forwardRef,
 } from "react"
-import { FileText, BookOpen, Tag, CalendarBlank, Asterisk } from "@/lib/editor/editor-icons"
+import { BookOpen, Tag, CalendarBlank, Asterisk, CircleDashed, CircleHalf, CheckCircle } from "@/lib/editor/editor-icons"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"
+import { NOTE_STATUS_HEX, WIKI_STATUS_HEX } from "@/lib/colors"
 import type { SuggestionOptions, SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
 import type { MentionNodeAttrs } from "@tiptap/extension-mention"
+import type { NoteStatus } from "@/lib/types"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -25,6 +27,7 @@ interface MentionItem {
   color?: string // for tags
   referenceContent?: string // Reference.content
   referenceUrl?: string // URL field value (for auto-branching)
+  noteStatus?: NoteStatus // for notes — drives workflow status icon
 }
 
 interface MentionListProps {
@@ -165,13 +168,28 @@ function ItemIcon({ item }: { item: MentionItem }) {
         <Tag
           className="shrink-0"
           size={14}
-                   style={item.color ? { color: item.color } : undefined}
+          style={item.color ? { color: item.color } : undefined}
         />
       )
     case "wiki":
-      return <BookOpen className="shrink-0 text-muted-foreground" size={14} />
-    case "note":
-      return <FileText className="shrink-0 text-muted-foreground" size={14} />
+      return (
+        <BookOpen
+          className="shrink-0"
+          size={14}
+          style={{ color: WIKI_STATUS_HEX.article }}
+        />
+      )
+    case "note": {
+      const status = item.noteStatus ?? "capture"
+      const color = NOTE_STATUS_HEX[status]
+      if (status === "inbox") {
+        return <CircleDashed className="shrink-0" size={14} style={{ color }} />
+      }
+      if (status === "capture") {
+        return <CircleHalf className="shrink-0" size={14} style={{ color }} />
+      }
+      return <CheckCircle className="shrink-0" size={14} style={{ color }} />
+    }
     case "reference":
       return <Asterisk className="shrink-0 text-amber-500" size={14} />
   }
@@ -210,7 +228,7 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
         .slice(0, 5)
       for (const n of recent) {
-        results.push({ id: n.id, label: n.title, mentionType: "note" })
+        results.push({ id: n.id, label: n.title, mentionType: "note", noteStatus: n.status })
       }
     } else {
       const matched = notes
@@ -226,7 +244,7 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
         })
         .slice(0, 5)
       for (const n of matched) {
-        results.push({ id: n.id, label: n.title, mentionType: "note" })
+        results.push({ id: n.id, label: n.title, mentionType: "note", noteStatus: n.status })
       }
     }
 

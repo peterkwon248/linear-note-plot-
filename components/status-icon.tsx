@@ -1,6 +1,10 @@
 import { cn } from "@/lib/utils"
 import { STATUS_CONFIG } from "@/components/note-fields"
 import type { NoteStatus } from "@/lib/types"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
+import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
 
 /**
  * Shared status icon component — colored dot per status.
@@ -17,4 +21,34 @@ export function StatusIcon({ status, className }: { status: NoteStatus; classNam
       title={cfg.label}
     />
   )
+}
+
+/**
+ * Shape-differentiated status icon (Linear-style): workflow stage expressed through
+ * icon shape in addition to color.
+ * - inbox     = dashed circle (cyan)
+ * - capture   = half-filled circle (orange)
+ * - permanent = check circle (green)
+ *
+ * Used in notes-table, peek picker, and anywhere a richer affordance is wanted
+ * over a plain colored dot.
+ */
+export function StatusShapeIcon({
+  status,
+  size = 14,
+  className,
+}: {
+  status: NoteStatus
+  size?: number
+  className?: string
+}) {
+  const color = NOTE_STATUS_HEX[status]
+  const shared = cn("shrink-0", className)
+  if (status === "inbox") {
+    return <CircleDashed size={size} weight="regular" style={{ color }} className={shared} />
+  }
+  if (status === "capture") {
+    return <CircleHalf size={size} weight="fill" style={{ color }} className={shared} />
+  }
+  return <CheckCircle size={size} weight="fill" style={{ color }} className={shared} />
 }

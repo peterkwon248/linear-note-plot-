@@ -143,7 +143,7 @@ export function WikilinkContextMenu() {
 
   function handlePeek() {
     if (resolved) {
-      openSidePeek(resolved.id)
+      openSidePeek({ type: resolved.type, id: resolved.id })
     }
     close()
   }

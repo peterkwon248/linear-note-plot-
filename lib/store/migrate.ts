@@ -455,15 +455,16 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
-  // v51: Unified Side Panel — detailsOpen → sidePanelOpen, sidePeekNoteId → sidePanelPeekNoteId
+  // v51: Unified Side Panel — detailsOpen → sidePanelOpen, sidePeekNoteId → sidePanelPeekContext
   if (state.detailsOpen !== undefined) {
     state.sidePanelOpen = state.detailsOpen
     delete state.detailsOpen
   }
   if (state.sidePanelOpen === undefined) state.sidePanelOpen = true
   if (!state.sidePanelMode) state.sidePanelMode = 'detail'
-  // sidePanelPeekNoteId is transient (not persisted), no migration needed
+  // sidePanelPeekContext is transient (not persisted), no migration needed
   delete state.sidePeekNoteId // clean up old transient field if present
+  delete state.sidePanelPeekNoteId // v72: renamed to sidePanelPeekContext (also transient, just in case)
 
   // v52: Simplify workspace — binary tree → dual pane
   if (state.workspaceRoot) {

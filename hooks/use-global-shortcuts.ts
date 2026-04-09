@@ -74,7 +74,7 @@ export function useGlobalShortcuts() {
         }
         const s = usePlotStore.getState()
         // 0th: close side peek first
-        if (s.sidePanelMode === 'peek' && s.sidePanelPeekNoteId) {
+        if (s.sidePanelMode === 'peek' && s.sidePanelPeekContext) {
           s.closeSidePeek()
           e.preventDefault()
           return
@@ -164,6 +164,13 @@ export function useGlobalShortcuts() {
           // Split is closed → open with current space
           setSecSpace(getActiveSpace())
         }
+        e.preventDefault()
+        return
+      }
+
+      // ── 2d-bis. Ctrl/Cmd+Shift+P — open Peek (empty state) ────────────
+      if (mod && e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+        usePlotStore.setState({ sidePanelOpen: true, sidePanelMode: 'peek' })
         e.preventDefault()
         return
       }

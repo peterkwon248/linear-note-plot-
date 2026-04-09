@@ -36,6 +36,7 @@ import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
 import { SmartSidePanel } from "@/components/side-panel/smart-side-panel"
 import { WikilinkContextMenu } from "@/components/editor/wikilink-context-menu"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import type { ImperativePanelHandle } from "react-resizable-panels"
 import { SecondaryPanelContent } from "@/components/workspace/secondary-panel-content"
 import { PaneProvider } from "@/components/workspace/pane-context"
 import { useSecondarySpace } from "@/lib/table-route"
@@ -52,7 +53,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const sidePanelMode = usePlotStore((s) => s.sidePanelMode)
-  const sidePanelPeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
+  const peekSize = usePlotStore((s) => s.peekSize)
+  const setPeekSize = usePlotStore((s) => s.setPeekSize)
+  const sidePanelRef = useRef<ImperativePanelHandle | null>(null)
+  // Flag to prevent feedback loop: onResize → setPeekSize → useEffect → resize → onResize
+  const applyingPeekSizeRef = useRef(false)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const pendingWikiAssemblyIds = usePlotStore((s) => s.pendingWikiAssemblyIds)
   const secondarySpace = useSecondarySpace()
@@ -80,11 +85,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isEditing = !!selectedNoteId
   const hasViewSplit = !isEditing && hasSplit
   const activePane = usePlotStore((s) => s.activePane)
-  const primarySidePanelVisible = sidePanelOpen && (sidePanelMode === 'detail' || sidePanelMode === 'connections' || sidePanelMode === 'activity' || sidePanelMode === 'bookmarks' || (sidePanelMode === 'peek' && !!sidePanelPeekNoteId))
+  const primarySidePanelVisible = sidePanelOpen && (sidePanelMode === 'detail' || sidePanelMode === 'connections' || sidePanelMode === 'activity' || sidePanelMode === 'bookmarks' || sidePanelMode === 'peek')
   // Show side panel if EITHER pane wants it open (in split) or just primary in single mode
   const showSidePanel = hasSplit
     ? (primarySidePanelVisible || secondarySidePanelOpen)
     : primarySidePanelVisible
+
+  // Sync the resizable panel width with stored peekSize whenever the user enters Peek mode
+  // or presets change it. Skipped in split view (which uses its own default size).
+  useEffect(() => {
+    if (hasSplit) return
+    if (sidePanelMode !== 'peek') return
+    if (!sidePanelRef.current) return
+    applyingPeekSizeRef.current = true
+    sidePanelRef.current.resize(peekSize)
+    // Release guard on next microtask so onResize fired by our resize() is ignored
+    requestAnimationFrame(() => { applyingPeekSizeRef.current = false })
+  }, [sidePanelMode, hasSplit, peekSize])
+
 
   // Mount-once: track which view routes have been visited
   // Once mounted, a view stays mounted (keep-alive) for instant re-visits
@@ -197,7 +215,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <ResizablePanel
               id="main-content"
               order={1}
-              defaultSize={hasViewSplit ? (showSidePanel ? 35 : 50) : (showSidePanel ? 70 : 100)}
+              defaultSize={
+                hasViewSplit
+                  ? (showSidePanel ? 35 : 50)
+                  : (showSidePanel
+                      ? (sidePanelMode === 'peek' && !hasSplit ? 100 - peekSize : 70)
+                      : 100)
+              }
               minSize={20}
             >
               <div className="flex h-full overflow-hidden">
@@ -298,9 +322,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {showSidePanel && (
               <>
                 <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
-                <ResizablePanel id="main-sidepanel" order={3} defaultSize={hasSplit ? 20 : 30} minSize={10} maxSize={40}>
+                <ResizablePanel
+                  ref={sidePanelRef}
+                  id="main-sidepanel"
+                  order={3}
+                  defaultSize={hasSplit ? 20 : (sidePanelMode === 'peek' ? peekSize : 30)}
+                  minSize={hasSplit ? 10 : (sidePanelMode === 'peek' ? 42 : 15)}
+                  maxSize={hasSplit ? 40 : (sidePanelMode === 'peek' ? 55 : 50)}
+                  onResize={(size) => {
+                    // Ignore programmatic resizes triggered by our own useEffect
+                    if (applyingPeekSizeRef.current) return
+                    // Persist peek width when user drags in single-pane peek mode
+                    if (!hasSplit && sidePanelMode === 'peek') {
+                      setPeekSize(size)
+                    }
+                  }}
+                >
+                  {/* Single SmartSidePanel — content follows activePane via PaneProvider
+                      and useSidePanelEntity hook. Works identically in single and split modes. */}
                   <PaneProvider pane={activePane}>
-                    <SmartSidePanel pane={hasSplit ? activePane : "primary"} alwaysVisible={hasSplit} />
+                    <SmartSidePanel />
                   </PaneProvider>
                 </ResizablePanel>
               </>

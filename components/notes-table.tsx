@@ -26,9 +26,7 @@ import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
 import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
 import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
-import { CircleDashed as PhCircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
-import { CircleHalf as PhCircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
-import { CheckCircle as PhCheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
+import { StatusShapeIcon } from "@/components/status-icon"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
@@ -69,7 +67,6 @@ import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import { setActiveFolderId, usePendingFilters, clearPendingFilters } from "@/lib/table-route"
 import { setNoteDragData } from "@/lib/drag-helpers"
-import { NOTE_STATUS_HEX } from "@/lib/colors"
 import { pushUndo } from "@/lib/undo-manager"
 
 /* ── Helpers ───────────────────────────────────────────── */
@@ -658,10 +655,6 @@ export function NotesTable({
       : [...viewState.filters, rule]
     updateViewState({ filters: newFilters })
   }, [viewState.filters, updateViewState])
-
-  // ── Side peek state for detail panel ──
-  const sidePeekNoteId = usePlotStore((s) => s.sidePanelPeekNoteId)
-  const setSidePeekNoteId = usePlotStore((s) => s.openSidePeek)
 
   function toggleColumn(colId: string) {
     const cols = viewState.visibleColumns
@@ -1352,18 +1345,6 @@ function SourceIcon({ source }: { source: NoteSource }) {
   return <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
 }
 
-/** Status icon with shape differentiation (Linear-style) */
-function StatusShapeIcon({ status, size = 14 }: { status: NoteStatus; size?: number }) {
-  const color = NOTE_STATUS_HEX[status]
-  if (status === "inbox") {
-    return <PhCircleDashed size={size} weight="regular" style={{ color }} className="shrink-0" />
-  }
-  if (status === "capture") {
-    return <PhCircleHalf size={size} weight="fill" style={{ color }} className="shrink-0" />
-  }
-  // permanent
-  return <PhCheckCircle size={size} weight="fill" style={{ color }} className="shrink-0" />
-}
 
 /** Resolve display label for group headers (folder/label use IDs as keys) */
 function resolveGroupLabel(groupBy: GroupBy, groupKey: string, fallback: string, folders: Folder[], labels: Label[]): string {
