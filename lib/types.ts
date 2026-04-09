@@ -464,3 +464,14 @@ export interface WikiClusterSuggestion {
   status: "pending" | "accepted" | "dismissed"
   createdAt: string
 }
+
+/* ── Global Bookmarks ─────────────────────────────── */
+
+export interface GlobalBookmark {
+  id: string
+  noteId: string
+  anchorId: string
+  label: string
+  anchorType: "inline" | "divider" | "heading"
+  createdAt: string
+}

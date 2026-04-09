@@ -645,7 +645,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                 className="flex w-full items-center gap-2 px-3 py-1.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
               >
                 <Columns size={12} />
-                <span>Side by side</span>
+                <span>Split View</span>
               </button>
               <button
                 onMouseDown={(e) => {

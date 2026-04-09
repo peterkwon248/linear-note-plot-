@@ -13,9 +13,11 @@ import React, {
   useState,
   forwardRef,
 } from "react"
-import { FileText, Asterisk, Link as LinkIcon } from "@/lib/editor/editor-icons"
+import { FileText, Asterisk, Link as LinkIcon, Hash } from "@/lib/editor/editor-icons"
 import { IconWiki } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
+import { getBody } from "@/lib/note-body-store"
+import { extractAnchorsFromContentJson, AnchorItem } from "@/lib/anchor-utils"
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface WikilinkItem {
@@ -44,15 +46,48 @@ export interface WikilinkListRef {
   onKeyDown: (props: { event: KeyboardEvent }) => boolean
 }
 
+// ── Anchor Picker State (module-level event bus) ──────────────────────────────
+
+interface AnchorPickerPayload {
+  noteId: string
+  noteTitle: string
+  anchors: AnchorItem[]
+  onPick: (anchor: AnchorItem | null) => void
+}
+
+let _anchorPickerListener: ((payload: AnchorPickerPayload) => void) | null = null
+
+function requestAnchorPicker(payload: AnchorPickerPayload) {
+  _anchorPickerListener?.(payload)
+}
+
 // ── Dropdown Component ────────────────────────────────────────────────────────
 
 const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
   ({ items, command }, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0)
+    const [anchorPicker, setAnchorPicker] = useState<AnchorPickerPayload | null>(null)
+    const [anchorSelectedIndex, setAnchorSelectedIndex] = useState(0)
+
+    // Register anchor picker listener
+    useEffect(() => {
+      _anchorPickerListener = (payload) => {
+        setAnchorPicker(payload)
+        setAnchorSelectedIndex(0)
+      }
+      return () => {
+        _anchorPickerListener = null
+      }
+    }, [])
 
     // Reset selection when items change
     useEffect(() => {
       setSelectedIndex(0)
+    }, [items])
+
+    // Reset anchor picker when items change (new query)
+    useEffect(() => {
+      setAnchorPicker(null)
     }, [items])
 
     const selectItem = useCallback(
@@ -63,8 +98,52 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
       [items, command]
     )
 
+    // Build anchor list: "Link to full note" + all anchors
+    const anchorListItems = anchorPicker
+      ? [
+          { id: "__full_note__", label: "Link to full note", type: "full" as const },
+          ...anchorPicker.anchors.map((a) => ({ ...a, type: a.type })),
+        ]
+      : []
+
+    const selectAnchorItem = useCallback(
+      (index: number) => {
+        if (!anchorPicker) return
+        if (index === 0) {
+          // Full note — no anchor
+          anchorPicker.onPick(null)
+        } else {
+          anchorPicker.onPick(anchorPicker.anchors[index - 1])
+        }
+        setAnchorPicker(null)
+      },
+      [anchorPicker]
+    )
+
     useImperativeHandle(ref, () => ({
       onKeyDown: ({ event }: { event: KeyboardEvent }) => {
+        // Anchor picker mode
+        if (anchorPicker) {
+          if (event.key === "ArrowUp") {
+            setAnchorSelectedIndex((i) => (i - 1 + anchorListItems.length) % anchorListItems.length)
+            return true
+          }
+          if (event.key === "ArrowDown") {
+            setAnchorSelectedIndex((i) => (i + 1) % anchorListItems.length)
+            return true
+          }
+          if (event.key === "Enter") {
+            selectAnchorItem(anchorSelectedIndex)
+            return true
+          }
+          if (event.key === "Escape" || event.key === "Backspace") {
+            setAnchorPicker(null)
+            return true
+          }
+          return true // consume all keys while picker is open
+        }
+
+        // Normal mode
         if (event.key === "ArrowUp") {
           setSelectedIndex((i) => (i - 1 + items.length) % items.length)
           return true
@@ -79,7 +158,55 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
         }
         return false
       },
-    }))
+    }), [anchorPicker, anchorListItems.length, anchorSelectedIndex, selectAnchorItem, items.length, selectedIndex, selectItem])
+
+    if (anchorPicker) {
+      // ── Anchor Picker View ──────────────────────────────────────────────────
+      return (
+        <div className="z-50 min-w-[200px] max-w-[300px] overflow-hidden rounded-md border border-border bg-surface-overlay shadow-md">
+          <div className="px-2 py-1 border-b border-border-subtle flex items-center gap-1.5">
+            <button
+              className="text-muted-foreground hover:text-foreground transition-colors text-2xs"
+              onClick={() => setAnchorPicker(null)}
+            >
+              ←
+            </button>
+            <span className="text-2xs font-medium text-muted-foreground truncate">
+              {anchorPicker.noteTitle}
+            </span>
+          </div>
+          <div className="max-h-[320px] overflow-y-auto py-1">
+            {anchorListItems.map((item, index) => (
+              <button
+                key={item.id}
+                onClick={() => selectAnchorItem(index)}
+                className={[
+                  "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",
+                  index === anchorSelectedIndex
+                    ? "bg-active-bg text-foreground"
+                    : "text-foreground hover:bg-hover-bg",
+                ].join(" ")}
+              >
+                {item.type === "full" ? (
+                  <>
+                    <FileText className="shrink-0 text-muted-foreground" size={14} />
+                    <span className="truncate text-muted-foreground italic">{item.label}</span>
+                  </>
+                ) : (
+                  <>
+                    <Hash className="shrink-0 text-muted-foreground/60" size={12} />
+                    <span className="truncate">{item.label}</span>
+                    <span className="ml-auto shrink-0 text-2xs text-muted-foreground/40 capitalize">
+                      {item.type}
+                    </span>
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    }
 
     if (items.length === 0) return null
 
@@ -566,6 +693,88 @@ export const WikilinkSuggestion = Extension.create({
             if (!wikiExists) (store as any).createWikiArticle({ title: props.title })
           }
 
+          // For regular notes (not wiki, not new), check for anchors → two-step picker
+          const isRegularNote =
+            !props.isWiki &&
+            !props.isNewWiki &&
+            props.itemType !== "wiki" &&
+            !props.isNewNote &&
+            !props.isNewReference &&
+            !props.isReference
+
+          if (isRegularNote && props.id) {
+            // Async: load note body and check for anchors
+            getBody(props.id).then((body) => {
+              let anchors: AnchorItem[] = []
+              if (body?.contentJson) {
+                try {
+                  anchors = extractAnchorsFromContentJson(body.contentJson)
+                } catch { /* ignore parse errors */ }
+              }
+
+              if (anchors.length > 0) {
+                // Show anchor picker — don't insert yet
+                requestAnchorPicker({
+                  noteId: props.id,
+                  noteTitle: props.title,
+                  anchors,
+                  onPick: (anchor) => {
+                    // Insert wikilink with or without anchor
+                    const linkType = "note"
+                    editor
+                      .chain()
+                      .focus()
+                      .deleteRange(range)
+                      .insertContent([
+                        {
+                          type: "wikilink",
+                          attrs: {
+                            title: props.title,
+                            linkType,
+                            targetId: props.id,
+                            anchorId: anchor?.id ?? null,
+                            anchorLabel: anchor?.label ?? null,
+                          },
+                        },
+                        { type: "text", text: " " },
+                      ])
+                      .run()
+                  },
+                })
+                return
+              }
+
+              // No anchors — insert immediately
+              editor
+                .chain()
+                .focus()
+                .deleteRange(range)
+                .insertContent([
+                  {
+                    type: "wikilink",
+                    attrs: { title: props.title, linkType: "note", targetId: props.id, anchorId: null, anchorLabel: null },
+                  },
+                  { type: "text", text: " " },
+                ])
+                .run()
+            }).catch(() => {
+              // Fallback on error
+              editor
+                .chain()
+                .focus()
+                .deleteRange(range)
+                .insertContent([
+                  {
+                    type: "wikilink",
+                    attrs: { title: props.title, linkType: "note", targetId: props.id, anchorId: null, anchorLabel: null },
+                  },
+                  { type: "text", text: " " },
+                ])
+                .run()
+            })
+            return
+          }
+
           // Insert as atom node instead of raw text
           const linkType = (props.itemType === "wiki" || props.isNewWiki || props.isWiki) ? "wiki" : "note"
           const targetId = props.id || null
@@ -576,7 +785,7 @@ export const WikilinkSuggestion = Extension.create({
             .insertContent([
               {
                 type: "wikilink",
-                attrs: { title: props.title, linkType, targetId },
+                attrs: { title: props.title, linkType, targetId, anchorId: null, anchorLabel: null },
               },
               { type: "text", text: " " },
             ])

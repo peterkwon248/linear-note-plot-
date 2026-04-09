@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 21-slice Zustand store with versioned migration (currently v71)
+- **Store**: `lib/store/index.ts` — 22-slice Zustand store with versioned migration (currently v72)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -99,6 +99,18 @@
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, thinking
 
 ## Completed PRs (recent)
+- **PR #174 (예정)**: Cross-Note Bookmarks + Outline 개선 + 사이드바 단일 책임 아키텍처 + 워크플로우 개선
+  - **GlobalBookmark 시스템 (5 Phase)**: store slice + migration v72, extractAnchorsFromContentJson 유틸, Bookmarks 탭 2섹션(Pinned+ThisNote), WikilinkNode `anchorId` attr + 2단계 앵커 피커, 플로팅 TOC 핀, 앵커 노드 우클릭 Pin to Bookmarks, Ctrl+Shift+B 단축키
+  - **Outline 개선**: TipTap JSON 기반 (markdown 파서 폐기), TOC 블록 우선 + 헤딩 fallback, 클릭 스크롤 (`extractOutlineFromContentJson`)
+  - **Footnote 접기/펼치기**: 기본 접힌 상태 "▶ FOOTNOTES (N)", `[N]` 클릭 시 자동 펼침
+  - **Wiki Sources 클릭 fix**: `setActiveRoute("/notes")` + `openNote` (default + encyclopedia 둘 다)
+  - **ReferencedInBadges dedupe + secondary 컴팩트 모드**: 위키 article ID 기준 중복 제거, secondary pane은 `in N` 단일 popover
+  - **Peek-First 아키텍처 Phase 0+1**: 사이드바 단일 책임 = layout.tsx
+    - WorkspaceEditorArea에서 사이드바 코드 전부 제거
+    - 4가지 케이스 명확한 분기: 단독뷰/단독에디터/뷰스플릿/에디터스플릿
+    - hasSplit/hasViewSplit/showSidePanel 로직 정리
+    - ResizablePanel id+order 추가 (동적 렌더링 fix)
+  - **워크플로우 개선**: NEXT-ACTION.md + SESSION-LOG.md 도입, before-work/after-work 스킬 확장
 - **PR #80**: Wiki system + Side Peek + soft-delete trash
 - **PR #81**: 위키링크 UX 통합 — `[[` 하나로 통합
 - **PR #84**: Architecture Redesign v2 Phase 1~5 완료
@@ -394,7 +406,10 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **References/Files soft delete** — Tags처럼 trashed 필드. 복원 가능해야 함. hard delete → 확인 다이얼로그만으론 불충분 (2026-04-08)
 - **Reference = 통합 참고자료 (하이브리드)** — url 필드 있으면 Link형, 없으면 Citation형. 기본=footnoteRef, Shift=referenceLink. 위키백과 패턴 (2026-04-08)
 - **호버 프리뷰 강화** — 리사이즈(400~960px) + 드래그 이동(Pin 시) + Pin 버튼 액션바 + 본문 flex-1 (2026-04-08)
-- **듀얼 에디터 = 독립 뷰 (P0, 미구현)** — VS Code/Obsidian 패턴. 좌/우 패널이 각각 독립 네비게이션. 사이드바/Activity Bar는 1개 유지, 콘텐츠만 분리. 사이드바 클릭→활성 패널에서 열림. 우측 헤더=좌측과 동일 (secondary 헤더 제거). breadcrumb 노트명 클릭→드롭다운 전환. "Notes" 클릭→All Notes 복귀 제거 (사이드바 중복). table-route 이중화 필요
+- **듀얼 에디터 = 독립 뷰 (구현 완료)** — VS Code/Obsidian 패턴. 좌/우 패널이 각각 독립 네비게이션. table-route 이중화 완료
+- **🎯 Peek-First 마이그레이션 (2026-04-09)** — Split View 폐기 + Peek 확장으로 단일 보조 콘텐츠 모델 전환. Phase 0+1 (사이드바 단일 책임) 완료. Phase 2~5 남음 (Peek wiki 지원, Min/Mid/Max 사이즈, Peek 독립 navigation, Split 폐기). Peek 지원: Note+Wiki만 (Calendar/Ontology 제외). 호버 프리뷰는 Peek와 별개 유지
+- **사이드바 단일 책임 = layout.tsx (2026-04-09)** — WorkspaceEditorArea에서 사이드바 코드 전부 제거. 4가지 케이스 명확한 분기 (단독뷰/단독에디터/뷰스플릿/에디터스플릿). ResizablePanel id+order 추가로 동적 렌더링 fix
+- **워크플로우 개선 (2026-04-09)** — NEXT-ACTION.md (다음 즉시 액션 1~3개) + SESSION-LOG.md (시간순 세션 기록) 도입. before-work/after-work 스킬 확장으로 크로스 머신 작업 매끄럽게
 
 ### 이번 세션 완료 (2026-04-08 오후, PR #169)
 - **Trash 뷰 References/Files 탭**: TRASH_TABS 8개 확장, TrashEntityList references/files 처리
@@ -442,10 +457,14 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Files 뷰 구현**: Coming soon → 첨부파일 목록 (All/Images/Documents 필터)
 - **Sidebar Tags/Files 활성화**: disabled span → NavLink + 카운트 뱃지
 
-### 다음 우선순위 (2026-04-09 기준)
-- **P0**: Split View 진입점 + 좌우 패널 사이드바 문제 해결
-- **P1**: 크로스노트 북마크, Library Bento Grid
-- **P2**: 인사이트 허브, 각주 리치텍스트
+### 다음 우선순위 (2026-04-09 저녁 기준)
+- **P0 — Peek-First 마이그레이션 Phase 2~5**:
+  - Phase 2: Peek가 Wiki 표시 가능하게 (다음 즉시 시작 — `docs/NEXT-ACTION.md` 참조)
+  - Phase 3: 사이즈 시스템 (Min/Mid/Max + Drag)
+  - Phase 4: Peek 독립 네비게이션 (history)
+  - Phase 5: Split View 폐기
+- **P1 (보류)**: Library Bento Grid, Library FilterPanel, Reference.history
+- **P2**: 인사이트 허브, 각주 리치텍스트, 인포박스 고도화
 
 ### 리서치: Library 고도화 벤치마크 (2026-04-07)
 - **Zotero** (github.com/zotero/zotero): 3-pane 레이아웃, Collections vs Tags 구분, item type별 필드 스키마, refs count 컬럼, VirtualizedTable

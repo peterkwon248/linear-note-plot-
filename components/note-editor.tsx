@@ -20,6 +20,7 @@ import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -343,7 +344,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
             </div>
           )}
           <EditorBreadcrumb note={note} onClose={pane === 'secondary' ? () => closeSecondary() : onClose} pane={pane} />
-          <ReferencedInBadges noteId={note.id} />
+          <ReferencedInBadges noteId={note.id} pane={pane} />
         </div>
         <div className="flex items-center gap-0.5">
           <Tooltip>
@@ -382,6 +383,14 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
                 <PhLink size={16} weight="regular" />
                 Link to...
               </DropdownMenuItem>
+              {pane === 'primary' && (
+                <DropdownMenuItem onClick={() => {
+                  usePlotStore.getState().openInSecondary(note.id)
+                }}>
+                  <SplitHorizontal size={16} weight="regular" />
+                  Open in Split View
+                </DropdownMenuItem>
+              )}
               {/* Convert to Wiki removed — WikiArticle is now separate entity */}
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -449,7 +458,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
                   }}
                   className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-hover-bg"
                 >
-                  <span className="text-[11px] font-medium tracking-tight leading-none">A|B</span>
+                  <SplitHorizontal size={16} weight="regular" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>Split View</TooltipContent>
@@ -634,24 +643,60 @@ function WikiReadLayout({
 
 /* ── Referenced In Badges ── */
 
-function ReferencedInBadges({ noteId }: { noteId: string }) {
+function ReferencedInBadges({ noteId, pane = 'primary' }: { noteId: string; pane?: 'primary' | 'secondary' }) {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
 
+  // Dedupe by wiki article ID — a single wiki may embed the note multiple times
   const refs = useMemo(() => {
-    return wikiArticles.filter((a) =>
-      a.blocks.some((b) => b.type === "note-ref" && b.noteId === noteId)
-    )
+    const seen = new Set<string>()
+    const unique: typeof wikiArticles = []
+    for (const a of wikiArticles) {
+      if (seen.has(a.id)) continue
+      const hasRef = a.blocks.some((b) => b.type === "note-ref" && b.noteId === noteId)
+      if (hasRef) {
+        seen.add(a.id)
+        unique.push(a)
+      }
+    }
+    return unique
   }, [wikiArticles, noteId])
 
   if (refs.length === 0) return null
+
+  // Compact mode: secondary pane shows just a single popover trigger to save space
+  if (pane === 'secondary') {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <button className="shrink-0 rounded-sm bg-accent/15 px-2 py-0.5 text-note font-medium text-accent hover:bg-accent/25 transition-colors duration-100">
+            in {refs.length}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-auto min-w-[160px] p-1">
+          {refs.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => {
+                import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
+                import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
+              }}
+              className="flex w-full items-center rounded-md px-2 py-1.5 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+            >
+              {a.title}
+            </button>
+          ))}
+        </PopoverContent>
+      </Popover>
+    )
+  }
 
   const MAX_BADGES = 3
   const visible = refs.slice(0, MAX_BADGES)
   const overflow = refs.length - MAX_BADGES
 
   return (
-    <div className="flex items-center gap-1 shrink-0">
-      <span className="text-note text-muted-foreground/50">in</span>
+    <div className="flex items-center gap-1 shrink min-w-0 overflow-hidden">
+      <span className="text-note text-muted-foreground/50 shrink-0">in</span>
       {visible.map((a) => (
         <button
           key={a.id}
@@ -659,7 +704,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
             import("@/lib/table-route").then(m => m.setActiveRoute("/wiki"))
             import("@/lib/wiki-article-nav").then(m => m.navigateToWikiArticle(a.id))
           }}
-          className="rounded-sm bg-accent/15 px-2.5 py-0.5 text-note font-medium text-accent hover:text-accent transition-colors duration-100"
+          className="rounded-sm bg-accent/15 px-2.5 py-0.5 text-note font-medium text-accent hover:text-accent transition-colors duration-100 truncate max-w-[120px]"
         >
           {a.title}
         </button>
@@ -667,7 +712,7 @@ function ReferencedInBadges({ noteId }: { noteId: string }) {
       {overflow > 0 && (
         <Popover>
           <PopoverTrigger asChild>
-            <button className="rounded-sm bg-secondary/50 px-1.5 py-px text-2xs font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100">
+            <button className="shrink-0 rounded-sm bg-secondary/50 px-1.5 py-px text-2xs font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100">
               +{overflow} more
             </button>
           </PopoverTrigger>

@@ -153,11 +153,29 @@ export function useGlobalShortcuts() {
         }
       }
 
-      // ── 2d. Cmd+\ — close secondary editor ────────────────────
+      // ── 2d. Cmd+\ — toggle split view ────────────────────
       if (mod && e.key === '\\') {
         const s = usePlotStore.getState()
-        if (s.secondaryNoteId) {
+        const { getSecondarySpace, setSecondarySpace: setSecSpace, getActiveSpace } = require("@/lib/table-route")
+        if (s.secondaryNoteId || getSecondarySpace()) {
+          // Split is open → close it
           s.closeSecondary()
+        } else {
+          // Split is closed → open with current space
+          setSecSpace(getActiveSpace())
+        }
+        e.preventDefault()
+        return
+      }
+
+      // ── 2e. Ctrl/Cmd+Shift+B — toggle bookmarks panel ────────────
+      if (mod && e.shiftKey && (e.key === 'b' || e.key === 'B')) {
+        const s = usePlotStore.getState()
+        if (s.sidePanelOpen && s.sidePanelMode === 'bookmarks') {
+          s.setSidePanelOpen(false)
+        } else {
+          s.setSidePanelOpen(true)
+          usePlotStore.setState({ sidePanelMode: 'bookmarks' })
         }
         e.preventDefault()
         return

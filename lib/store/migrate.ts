@@ -796,5 +796,8 @@ export function migrate(persistedState: unknown): PlotState {
     }))
   }
 
+  // v72: Global Bookmarks — cross-note anchor store
+  if (!state.globalBookmarks) state.globalBookmarks = {}
+
   return state as unknown as PlotState
 }

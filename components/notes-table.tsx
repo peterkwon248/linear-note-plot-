@@ -33,6 +33,7 @@ import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
@@ -1711,6 +1712,12 @@ function NoteRowInner({
         <ContextMenuItem onClick={onLinkWith} className="text-note">
           <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />
           Link to...
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={() => usePlotStore.getState().openInSecondary(note.id)} className="text-note">
+          <SplitHorizontal className="mr-2 text-muted-foreground" size={16} weight="regular" />
+          Open in Split View
+          <span className="ml-auto text-2xs text-muted-foreground">{navigator?.platform?.includes("Mac") ? "⌘\\" : "Ctrl+\\"}</span>
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

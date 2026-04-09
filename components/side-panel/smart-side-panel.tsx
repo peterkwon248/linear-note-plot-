@@ -17,9 +17,11 @@ import type { SidePanelMode } from "@/lib/store/types"
 
 interface SmartSidePanelProps {
   pane?: 'primary' | 'secondary'
+  /** When true, the panel is managed externally (e.g. split view unified panel) — skip open check */
+  alwaysVisible?: boolean
 }
 
-export function SmartSidePanel({ pane = 'primary' }: SmartSidePanelProps) {
+export function SmartSidePanel({ pane = 'primary', alwaysVisible = false }: SmartSidePanelProps) {
   // Use different state depending on which pane this side panel belongs to
   const primaryOpen = usePlotStore((s) => s.sidePanelOpen)
   const primaryMode = usePlotStore((s) => s.sidePanelMode)
@@ -34,14 +36,18 @@ export function SmartSidePanel({ pane = 'primary' }: SmartSidePanelProps) {
   const closeSidePeek = usePlotStore((s) => s.closeSidePeek)
 
   const setOpen = (open: boolean) => {
-    if (pane === 'secondary') {
+    if (alwaysVisible && !open) {
+      // Unified split view panel: close both so the panel disappears
+      usePlotStore.getState().setSidePanelOpen(false)
+      usePlotStore.getState().setSecondarySidePanelOpen(false)
+    } else if (pane === 'secondary') {
       usePlotStore.getState().setSecondarySidePanelOpen(open)
     } else {
       usePlotStore.getState().setSidePanelOpen(open)
     }
   }
 
-  if (!sidePanelOpen) return null
+  if (!alwaysVisible && !sidePanelOpen) return null
 
   const showDetail = sidePanelMode === 'detail'
   const showConnections = sidePanelMode === 'connections'
@@ -124,12 +130,14 @@ export function SmartSidePanel({ pane = 'primary' }: SmartSidePanelProps) {
         </button>
       </header>
 
-      {/* Content */}
-      {showDetail && <SidePanelDetail />}
-      {showConnections && <SidePanelConnections />}
-      {showActivity && <SidePanelActivity />}
-      {showPeek && <SidePanelPeek />}
-      {showBookmarks && <SidePanelBookmarks />}
+      {/* Content — key forces clean re-render when pane switches in split view */}
+      <div key={pane} className="flex flex-1 flex-col overflow-hidden animate-in fade-in duration-150">
+        {showDetail && <SidePanelDetail />}
+        {showConnections && <SidePanelConnections />}
+        {showActivity && <SidePanelActivity />}
+        {showPeek && <SidePanelPeek />}
+        {showBookmarks && <SidePanelBookmarks />}
+      </div>
     </aside>
   )
 }

@@ -160,6 +160,9 @@ function FootnoteRow({
 
 export function FootnotesFooter({ editor }: FootnotesFooterProps) {
   const [footnotes, setFootnotes] = useState<FootnoteItem[]>([])
+  const [collapsed, setCollapsed] = useState(true)
+  // Track which footnote ID was clicked from body text — auto-expand + scroll to it
+  const pendingScrollRef = useRef<string | null>(null)
 
   const collectFootnotes = useCallback(() => {
     if (!editor) return
@@ -187,6 +190,31 @@ export function FootnotesFooter({ editor }: FootnotesFooterProps) {
       editor.off("update", collectFootnotes)
     }
   }, [editor, collectFootnotes])
+
+  // Listen for footnote clicks from body text → auto-expand and scroll
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail?.id) {
+        setCollapsed(false)
+        pendingScrollRef.current = detail.id
+      }
+    }
+    window.addEventListener("plot:scroll-to-footnote", handler)
+    return () => window.removeEventListener("plot:scroll-to-footnote", handler)
+  }, [])
+
+  // After expanding, scroll to the pending footnote
+  useEffect(() => {
+    if (!collapsed && pendingScrollRef.current) {
+      const id = pendingScrollRef.current
+      pendingScrollRef.current = null
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`[data-footnote-list-id="${id}"]`)
+        el?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+      })
+    }
+  }, [collapsed])
 
   if (footnotes.length === 0) return null
 
@@ -219,17 +247,26 @@ export function FootnotesFooter({ editor }: FootnotesFooterProps) {
 
   return (
     <div className="footnotes-footer">
-      <div className="footnotes-footer-title">Footnotes</div>
-      <ol className="footnotes-footer-list">
-        {uniqueFootnotes.map((fn) => (
-          <FootnoteRow
-            key={fn.id}
-            fn={fn}
-            editor={editor!}
-            scrollToRef={scrollToRef}
-          />
-        ))}
-      </ol>
+      <button
+        className="footnotes-footer-toggle"
+        onClick={() => setCollapsed((c) => !c)}
+      >
+        <span className={`footnotes-footer-chevron ${collapsed ? "" : "footnotes-footer-chevron-open"}`}>▶</span>
+        <span className="footnotes-footer-title">FOOTNOTES</span>
+        <span className="footnotes-footer-count-badge">{uniqueFootnotes.length}</span>
+      </button>
+      {!collapsed && (
+        <ol className="footnotes-footer-list animate-in fade-in duration-150">
+          {uniqueFootnotes.map((fn) => (
+            <FootnoteRow
+              key={fn.id}
+              fn={fn}
+              editor={editor!}
+              scrollToRef={scrollToRef}
+            />
+          ))}
+        </ol>
+      )}
     </div>
   )
 }

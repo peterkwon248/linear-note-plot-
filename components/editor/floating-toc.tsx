@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import type { Editor } from "@tiptap/react"
-import { MapPin } from "@/lib/editor/editor-icons"
+import { MapPin, PushPin } from "@/lib/editor/editor-icons"
+import { usePlotStore } from "@/lib/store"
+import type { GlobalBookmark } from "@/lib/types"
 
 interface TocNavItem {
   id: string
@@ -93,6 +95,11 @@ export function FloatingToc({ editor }: FloatingTocProps) {
   const [isFocused, setIsFocused] = useState(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const scrollContainerRef = useRef<HTMLElement | null>(null)
+
+  const globalBookmarks = usePlotStore((s) => s.globalBookmarks)
+  const pinBookmark = usePlotStore((s) => s.pinBookmark)
+  const unpinBookmark = usePlotStore((s) => s.unpinBookmark)
+  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
 
   // Collect headings and bookmarks on editor updates
   const updateHeadings = useCallback(() => {
@@ -221,31 +228,64 @@ export function FloatingToc({ editor }: FloatingTocProps) {
       style={{ opacity: isFocused ? 0.3 : 1 }}
     >
       <div className="floating-toc-inner">
-        {headings.map((h, idx) => (
-          <button
-            key={h.id}
-            type="button"
-            className="floating-toc-item"
-            data-active={idx === activeIdx ? "true" : "false"}
-            onClick={() => handleClick(h)}
-            title={h.text || "Untitled"}
-          >
-            {h.type === "bookmark" ? (
-              <MapPin size={10} className="floating-toc-bookmark-icon" style={{ flexShrink: 0 }} />
-            ) : (
-              <span
-                className="floating-toc-dash"
-                style={{ width: dashWidth(h.level) }}
-              />
-            )}
-            <span
-              className="floating-toc-label"
-              style={{ paddingLeft: h.type === "bookmark" ? 0 : indentPx(h.level) }}
+        {headings.map((h, idx) => {
+          const pinnedEntry = h.type === "bookmark" && selectedNoteId
+            ? Object.values(globalBookmarks as Record<string, GlobalBookmark>).find(
+                (bm) => bm.noteId === selectedNoteId && bm.anchorId === h.id
+              )
+            : null
+          const isPinned = !!pinnedEntry
+
+          return (
+            <div
+              key={h.id}
+              className="floating-toc-item-wrap group"
+              style={{ position: "relative", display: "flex", alignItems: "center" }}
             >
-              {h.text || "Untitled"}
-            </span>
-          </button>
-        ))}
+              <button
+                type="button"
+                className="floating-toc-item"
+                data-active={idx === activeIdx ? "true" : "false"}
+                onClick={() => handleClick(h)}
+                title={h.text || "Untitled"}
+                style={{ flex: 1 }}
+              >
+                {h.type === "bookmark" ? (
+                  <MapPin size={10} className="floating-toc-bookmark-icon" style={{ flexShrink: 0 }} />
+                ) : (
+                  <span
+                    className="floating-toc-dash"
+                    style={{ width: dashWidth(h.level) }}
+                  />
+                )}
+                <span
+                  className="floating-toc-label"
+                  style={{ paddingLeft: h.type === "bookmark" ? 0 : indentPx(h.level) }}
+                >
+                  {h.text || "Untitled"}
+                </span>
+              </button>
+              {h.type === "bookmark" && selectedNoteId && (
+                <button
+                  type="button"
+                  className="floating-toc-pin-btn"
+                  data-pinned={isPinned ? "true" : "false"}
+                  title={isPinned ? "Unpin from bookmarks" : "Pin to bookmarks"}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (isPinned && pinnedEntry) {
+                      unpinBookmark(pinnedEntry.id)
+                    } else {
+                      pinBookmark(selectedNoteId, h.id, h.text || "Bookmark", "inline")
+                    }
+                  }}
+                >
+                  <PushPin size={10} />
+                </button>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
