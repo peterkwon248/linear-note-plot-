@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import type { Editor } from "@tiptap/react"
 import { usePlotStore } from "@/lib/store"
+import { FootnoteMiniEditor, serializeFootnoteContent, parseFootnoteContent } from "./footnote-mini-editor"
 
 interface FootnoteItem {
   id: string
@@ -15,19 +16,53 @@ interface FootnotesFooterProps {
   editor: Editor | null
 }
 
-/** Inline-editable footnote row */
+/**
+ * Extract plain text from footnote content (handles both plain string and JSON).
+ * Used for display when rich editor is not mounted.
+ */
+function getPlainText(content: string): string {
+  if (!content) return ""
+  const trimmed = content.trim()
+  if (trimmed.startsWith("{")) {
+    try {
+      const json = JSON.parse(trimmed)
+      if (json?.type === "doc" && Array.isArray(json.content)) {
+        return json.content
+          .map((block: any) =>
+            (block.content ?? [])
+              .map((n: any) => n.text ?? "")
+              .join("")
+          )
+          .join("\n")
+      }
+    } catch {}
+  }
+  return trimmed
+}
+
+/** Inline-editable footnote row — supports rich text (mini TipTap) editing */
 function FootnoteRow({
   fn,
   editor,
   scrollToRef,
+  autoEdit,
+  onEditStarted,
 }: {
   fn: FootnoteItem & { count: number }
   editor: Editor
   scrollToRef: (id: string) => void
+  autoEdit?: boolean
+  onEditStarted?: () => void
 }) {
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(fn.content)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Auto-enter edit mode when triggered from body text "Edit" button
+  useEffect(() => {
+    if (autoEdit && !editing) {
+      setEditing(true)
+      onEditStarted?.()
+    }
+  }, [autoEdit]) // eslint-disable-line react-hooks/exhaustive-deps
   const references = usePlotStore((s) => s.references)
 
   const referenceUrl = useMemo(() => {
@@ -38,41 +73,53 @@ function FootnoteRow({
     return urlField?.value || null
   }, [fn.referenceId, references])
 
-  // Sync draft when content changes externally (e.g. edited via marker popover)
-  useEffect(() => {
-    if (!editing) setDraft(fn.content)
-  }, [fn.content, editing])
+  const plainText = useMemo(() => getPlainText(fn.content), [fn.content])
+  const [urlDraft, setUrlDraft] = useState(referenceUrl ?? "")
 
+  // Sync urlDraft when referenceUrl changes externally
   useEffect(() => {
-    if (editing && inputRef.current) {
-      inputRef.current.focus()
-      // Place cursor at end
-      const len = inputRef.current.value.length
-      inputRef.current.setSelectionRange(len, len)
-    }
-  }, [editing])
+    if (!editing) setUrlDraft(referenceUrl ?? "")
+  }, [referenceUrl, editing])
 
-  const save = () => {
-    const trimmed = draft.trim()
-    // Update the footnoteRef node's content attr in the editor
+  const handleSave = useCallback((json: Record<string, unknown>, text: string) => {
+    const serialized = serializeFootnoteContent(json)
+    // Update the footnoteRef node's content attr in the parent editor
     if (editor) {
       editor.state.doc.descendants((node, pos) => {
         if (node.type.name === "footnoteRef" && node.attrs.id === fn.id) {
-          const newAttrs: Record<string, any> = { ...node.attrs, content: trimmed }
+          const newAttrs: Record<string, any> = { ...node.attrs, content: serialized }
 
           // Auto-create Reference if none linked and content exists
-          if (trimmed && !node.attrs.referenceId) {
+          if (text.trim() && !node.attrs.referenceId) {
             const store = usePlotStore.getState()
             const refId = store.createReference({
-              title: trimmed.length > 60 ? trimmed.slice(0, 60) + "…" : trimmed,
-              content: trimmed,
+              title: text.length > 60 ? text.slice(0, 60) + "…" : text,
+              content: text,
             })
             newAttrs.referenceId = refId
           }
-          // Sync content to linked Reference
-          if (trimmed && node.attrs.referenceId) {
+          // Sync plain text content + URL to linked Reference
+          if (text.trim() && node.attrs.referenceId) {
             const store = usePlotStore.getState()
-            store.updateReference(node.attrs.referenceId as string, { content: trimmed })
+            store.updateReference(node.attrs.referenceId as string, { content: text })
+
+            // Sync URL field from the dedicated URL input
+            const trimmedUrl = urlDraft.trim()
+            const ref = store.references[node.attrs.referenceId as string]
+            if (ref) {
+              const existingFields = ref.fields.filter((f: { key: string }) => f.key.toLowerCase() !== "url")
+              if (trimmedUrl) {
+                // Add/update url field
+                store.updateReference(node.attrs.referenceId as string, {
+                  fields: [{ key: "url", value: trimmedUrl }, ...existingFields],
+                })
+              } else {
+                // Remove url field if input was cleared
+                if (existingFields.length !== ref.fields.length) {
+                  store.updateReference(node.attrs.referenceId as string, { fields: existingFields })
+                }
+              }
+            }
           }
 
           const tr = editor.state.tr.setNodeMarkup(pos, undefined, newAttrs)
@@ -82,12 +129,7 @@ function FootnoteRow({
       })
     }
     setEditing(false)
-  }
-
-  const startEditing = () => {
-    setDraft(fn.content)
-    setEditing(true)
-  }
+  }, [editor, fn.id, urlDraft])
 
   return (
     <li
@@ -97,43 +139,49 @@ function FootnoteRow({
       <button
         className="footnotes-footer-number"
         onClick={() => scrollToRef(fn.id)}
-        title="Jump to [${fn.number}] in text"
+        title={`Jump to [${fn.number}] in text`}
       >
         [{fn.number}]
       </button>
 
       {editing ? (
-        <textarea
-          ref={inputRef}
-          className="footnotes-footer-edit-input"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={save}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              save()
-            }
-            if (e.key === "Escape") {
-              setDraft(fn.content)
-              setEditing(false)
-            }
-          }}
-          placeholder="Enter footnote content..."
-          rows={1}
-        />
-      ) : fn.content ? (
+        <div className="footnote-edit-group">
+          <FootnoteMiniEditor
+            initialContent={fn.content}
+            onSave={handleSave}
+            onCancel={() => setEditing(false)}
+            autoFocus
+          />
+          <div className="footnote-url-input-row">
+            <span className="footnote-url-icon">🔗</span>
+            <input
+              type="url"
+              value={urlDraft}
+              onChange={(e) => setUrlDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setUrlDraft(referenceUrl ?? "")
+                  setEditing(false)
+                }
+                e.stopPropagation()
+              }}
+              placeholder="https://..."
+              className="footnote-url-input"
+            />
+          </div>
+        </div>
+      ) : plainText ? (
         <span
           className="footnotes-footer-content"
-          onClick={startEditing}
+          onClick={() => setEditing(true)}
           title="Click to edit"
         >
-          {fn.content}
+          {plainText}
         </span>
       ) : (
         <button
           className="footnotes-footer-empty"
-          onClick={startEditing}
+          onClick={() => setEditing(true)}
         >
           Click to add content
         </button>
@@ -163,6 +211,8 @@ export function FootnotesFooter({ editor }: FootnotesFooterProps) {
   const [collapsed, setCollapsed] = useState(true)
   // Track which footnote ID was clicked from body text — auto-expand + scroll to it
   const pendingScrollRef = useRef<string | null>(null)
+  // Which footnote ID should auto-enter edit mode (set by "Edit" button in popover)
+  const [autoEditId, setAutoEditId] = useState<string | null>(null)
 
   const collectFootnotes = useCallback(() => {
     if (!editor) return
@@ -191,13 +241,17 @@ export function FootnotesFooter({ editor }: FootnotesFooterProps) {
     }
   }, [editor, collectFootnotes])
 
-  // Listen for footnote clicks from body text → auto-expand and scroll
+  // Listen for footnote clicks from body text → auto-expand and scroll (+ optional edit)
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail
       if (detail?.id) {
         setCollapsed(false)
         pendingScrollRef.current = detail.id
+        // If edit=true, auto-activate editing for this footnote
+        if (detail.edit) {
+          setAutoEditId(detail.id)
+        }
       }
     }
     window.addEventListener("plot:scroll-to-footnote", handler)
@@ -263,6 +317,8 @@ export function FootnotesFooter({ editor }: FootnotesFooterProps) {
               fn={fn}
               editor={editor!}
               scrollToRef={scrollToRef}
+              autoEdit={autoEditId === fn.id}
+              onEditStarted={() => setAutoEditId(null)}
             />
           ))}
         </ol>

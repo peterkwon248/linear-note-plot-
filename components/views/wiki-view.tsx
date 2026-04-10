@@ -54,10 +54,15 @@ import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
 import { WikiCategoryPage } from "./wiki-category-page"
 import { isWikiStub } from "@/lib/wiki-utils"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane, usePaneOpenNote } from "@/components/workspace/pane-context"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
-  const openNote = usePlotStore((s) => s.openNote)
+  const openNote = usePaneOpenNote()
+  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  const isEditing = pane === 'primary' && selectedNoteId !== null
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
@@ -851,6 +856,15 @@ export function WikiView() {
           onNavigate={handleNavigate}
           isEditing={isEditingArticle}
         />
+      </div>
+    )
+  }
+
+  // ── Workspace editor area: show when editing in primary pane ──
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
       </div>
     )
   }

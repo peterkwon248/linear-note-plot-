@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import {
   startOfMonth,
   endOfMonth,
@@ -36,6 +36,52 @@ import { DisplayPanel } from "@/components/display-panel"
 import { CALENDAR_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
 import type { FilterRule, ViewContextKey } from "@/lib/view-engine/types"
 import type { Note } from "@/lib/types"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane, usePaneOpenNote } from "@/components/workspace/pane-context"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import { setActiveRoute } from "@/lib/table-route"
+import { WIKI_STATUS_HEX } from "@/lib/colors"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import type { WikiArticle, NotePriority, NoteSource, TriageStatus, NoteType } from "@/lib/types"
+
+/**
+ * Adapt a WikiArticle into a Note-shaped object so wiki articles flow through
+ * the same calendar rendering pipeline (day grouping, filtering, list rows).
+ * The `noteType: 'wiki'` marker lets renderers branch on type for visual style.
+ */
+function wikiToNoteShape(w: WikiArticle): Note {
+  return {
+    id: w.id,
+    title: w.title || "Untitled",
+    content: '',
+    contentJson: null,
+    folderId: null,
+    tags: w.tags ?? [],
+    labelId: null,
+    status: 'permanent' as NoteStatus,
+    priority: 'normal' as NotePriority,
+    reads: 0,
+    pinned: false,
+    trashed: false,
+    createdAt: w.createdAt,
+    updatedAt: w.updatedAt,
+    triageStatus: 'kept' as TriageStatus,
+    reviewAt: null,
+    inboxRank: 0,
+    summary: null,
+    source: 'manual' as NoteSource,
+    promotedAt: null,
+    lastTouchedAt: w.updatedAt,
+    snoozeCount: 0,
+    trashedAt: null,
+    parentNoteId: null,
+    noteType: 'wiki' as NoteType,
+    aliases: w.aliases ?? [],
+    wikiInfobox: w.infobox ?? [],
+    preview: '',
+    linksOut: w.linksOut ?? [],
+  }
+}
 
 /* ── Types ───────────────────────────────────────────── */
 
@@ -67,20 +113,14 @@ const MAX_VISIBLE = 3
 
 function LayerIcon({ isWiki }: { isWiki: boolean }) {
   if (isWiki) {
+    // Wiki: BookOpen icon in wiki violet
     return (
-      <svg
-        width={10}
-        height={10}
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="shrink-0 text-muted-foreground/40"
-      >
-        <path d="M2 3h12M2 7h8M2 11h10" />
-      </svg>
+      <BookOpen
+        size={11}
+        weight="regular"
+        className="shrink-0"
+        style={{ color: WIKI_STATUS_HEX.article }}
+      />
     )
   }
   return (
@@ -113,7 +153,10 @@ interface NotePillProps {
 }
 
 function NotePill({ note, labelColor, labelName, isActive, onClick }: NotePillProps) {
-  const dot = NOTE_STATUS_HEX[note.status as keyof typeof NOTE_STATUS_HEX] ?? STATUS_DOT_FALLBACK
+  const isWiki = note.noteType === "wiki"
+  const dot = isWiki
+    ? WIKI_STATUS_HEX.article
+    : (NOTE_STATUS_HEX[note.status as keyof typeof NOTE_STATUS_HEX] ?? STATUS_DOT_FALLBACK)
 
   return (
     <button
@@ -252,7 +295,7 @@ function DayCell({
           const label = getLabelForNote(note)
           return (
             <NotePill
-              key={note.id}
+              key={`${note.noteType}:${note.id}`}
               note={note}
               labelColor={label?.color}
               labelName={label?.name}
@@ -392,7 +435,7 @@ function DayDashboard({
 
               return (
                 <button
-                  key={note.id}
+                  key={`${note.noteType}:${note.id}`}
                   onClick={() => isActive ? onEditNote(note.id) : onNoteClick(note.id)}
                   className={cn(
                     "group w-full rounded-lg border border-border-subtle px-3 py-2.5 text-left transition-all duration-150",
@@ -531,7 +574,7 @@ function WeekView({
                 const label = getLabelForNote(note)
                 return (
                   <NotePill
-                    key={note.id}
+                    key={`${note.noteType}:${note.id}`}
                     note={note}
                     labelColor={label?.color}
                     labelName={label?.name}
@@ -619,7 +662,7 @@ function AgendaView({
                     const label = getLabelForNote(note)
                     return (
                       <NotePill
-                        key={note.id}
+                        key={`${note.noteType}:${note.id}`}
                         note={note}
                         labelColor={label?.color}
                         labelName={label?.name}
@@ -685,13 +728,40 @@ export function CalendarView({
   const folders = usePlotStore((s) => s.folders)
   const tags = usePlotStore((s) => s.tags)
   const createNote = usePlotStore((s) => s.createNote)
-  const openNote = usePlotStore((s) => s.openNote)
+  const openNote = usePaneOpenNote()  // pane-aware: opens in correct pane (primary or secondary)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
+  const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  // In secondary pane, never show WorkspaceEditorArea (parent already handles editor mode)
+  const isEditing = pane === 'primary' && selectedNoteId !== null
+  // Wiki articles — adapted to Note shape so they fit existing day-grouping/rendering pipeline.
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+
+  /* ── Wiki → Note adapter (so wiki articles fit existing rendering pipeline) ── */
+  // Skip wiki articles whose ID already exists as a legacy `noteType: "wiki"` note
+  // (avoids duplicate rendering and React key collisions during the v66 migration tail).
+
+  const wikiAsNotes = useMemo<Note[]>(() => {
+    const noteIds = new Set(flatNotes.map((n) => n.id))
+    return wikiArticles
+      .filter((w) => !noteIds.has(w.id))
+      .map((w) => wikiToNoteShape(w))
+  }, [wikiArticles, flatNotes])
 
   /* ── Filter logic ─────────────────────────────────── */
 
   const filteredNotes = useMemo(() => {
-    let result = flatNotes
+    // Combine notes + wiki articles. Both have noteType marker for layer filtering.
+    // Dedupe by `${noteType}:${id}` to guard against legacy migration tail (e.g. a Note
+    // with noteType="wiki" id="X" + a separate WikiArticle id="X").
+    const seen = new Set<string>()
+    let result: Note[] = []
+    for (const n of [...flatNotes, ...wikiAsNotes]) {
+      const key = `${n.noteType}:${n.id}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      result.push(n)
+    }
 
     // Apply layer filters
     if (!layers.notes && !layers.wiki) return []
@@ -706,7 +776,7 @@ export function CalendarView({
       if (rule.field === "tags") result = result.filter((n) => n.tags.includes(rule.value))
     }
     return result
-  }, [flatNotes, calendarFilters, layers])
+  }, [flatNotes, wikiAsNotes, calendarFilters, layers])
 
   /* ── Notes grouped by day ────────────────────────── */
 
@@ -757,17 +827,48 @@ export function CalendarView({
 
   const goToToday = useCallback(() => setCurrentDate(new Date()), [])
 
-  /* ── Note click ──────────────────────────────────── */
+  // ── Sidebar mini-calendar / heatmap → main calendar sync ─────────
+  // Listen for `plot:calendar-jump` events from sidebar widgets and jump to that date.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ iso: string }>
+      if (!ce.detail?.iso) return
+      try {
+        setCurrentDate(parseISO(ce.detail.iso))
+      } catch {}
+    }
+    window.addEventListener("plot:calendar-jump", handler as EventListener)
+    return () => window.removeEventListener("plot:calendar-jump", handler as EventListener)
+  }, [])
+
+  // Publish currentDate changes so the mini-calendar can stay in sync
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("plot:calendar-month-change", {
+        detail: { iso: format(currentDate, "yyyy-MM-dd") },
+      }),
+    )
+  }, [currentDate])
+
+  /* ── Note/Wiki click — branches on entity type ──── */
 
   const handleNoteClick = useCallback(
     (noteId: string) => {
       if (onRowClick) {
         onRowClick(noteId)
-      } else {
-        openNote(noteId)
+        return
       }
+      // Wiki article? → navigate to /wiki + open the article
+      const isWiki = wikiArticles.some((w) => w.id === noteId)
+      if (isWiki) {
+        setActiveRoute("/wiki")
+        navigateToWikiArticle(noteId)
+        return
+      }
+      // Regular note → pane-aware open
+      openNote(noteId)
     },
-    [onRowClick, openNote],
+    [onRowClick, openNote, wikiArticles],
   )
 
   /* ── Create note on a specific day ──────────────── */
@@ -845,6 +946,16 @@ export function CalendarView({
   }, [currentDate, calendarMode])
 
   /* ── Render ──────────────────────────────────────── */
+
+  // ── Workspace editor area: show when editing in primary pane ──
+  // (matches NotesTableView pattern — keeps secondary split alive when opening a note)
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
+      </div>
+    )
+  }
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">

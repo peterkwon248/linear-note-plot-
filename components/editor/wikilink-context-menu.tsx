@@ -25,8 +25,9 @@ export function WikilinkContextMenu() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const openNote = usePlotStore((s) => s.openNote)
-  const openSidePeek = usePlotStore((s) => s.openSidePeek)
   const openInSecondary = usePlotStore((s) => s.openInSecondary)
+  const setSidePanelContext = usePlotStore((s) => s.setSidePanelContext)
+  const setSidePanelOpen = usePlotStore((s) => s.setSidePanelOpen)
   const createNote = usePlotStore((s) => s.createNote)
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
 
@@ -143,7 +144,8 @@ export function WikilinkContextMenu() {
 
   function handlePeek() {
     if (resolved) {
-      openSidePeek({ type: resolved.type, id: resolved.id })
+      setSidePanelContext({ type: resolved.type, id: resolved.id })
+      setSidePanelOpen(true)
     }
     close()
   }

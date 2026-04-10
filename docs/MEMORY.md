@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 22-slice Zustand store with versioned migration (currently v72)
+- **Store**: `lib/store/index.ts` — 22-slice Zustand store with versioned migration (currently **v76**)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -99,7 +99,26 @@
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, thinking
 
 ## Completed PRs (recent)
-- **PR #176 (예정, 이번 세션)**: Peek-First 실험 → Smart Sidebar Phase 1
+- **PR #177 (2026-04-10 세션, 커밋 2개)**: Split-First 완성 + Calendar 리뉴얼 + 11개 view 통합 픽스 + P2 각주 리치텍스트 + Reference 개선
+  - **Phase 2** — Store cleanup: `SidePanelMode 'peek'`, `PeekContext`, `secondarySidePanel*` 전부 제거, v72→v73 migration
+  - **Phase 3** — Peek 파일/참조 제거: `side-panel-peek.tsx`, `peek-empty-state.tsx`, `lib/peek/*` 5개 파일 삭제, `openSidePeek` 호출 14곳 정리 (대부분 `setSidePanelContext`)
+  - **Phase 4** — Split view picker: `SecondaryOpenPicker` 다이얼로그 (`Cmd+Shift+\`) + `lib/workspace/entity-search.ts` + `secondary-suggestions.ts` + `secondaryPins`/`secondaryPickerOpen` store 확장 + v73→v74 migration
+  - **Phase 5** — Focus tracking + 시각 피드백: active pane `border-t-2 border-t-accent`, view-mode + editor-mode split 통일, `opacity-80` 교체
+  - **Sticky `sidePanelContext` 버그 픽스**: `setActivePane`/`openInSecondary`/`openNote`에서 ctx 자동 클리어 (sticky → transient preview)
+  - **UI 폴리싱**: 4개 헤더 52px 통일, A|B 아이콘 → SplitHorizontal (Phosphor), IconSplitView 텍스트 제거
+  - **Calendar Stage A** — view-swap 버그 픽스 (note 클릭 → secondary 사라지던 문제)
+  - **Calendar Stage B** — Wiki article 캘린더 통합 (`wikiToNoteShape()` 어댑터, violet BookOpen 아이콘, 클릭 분기, dedupe)
+  - **Calendar Stage C** — 사이드바 재설계: `components/sidebar/calendar-mini.tsx` (미니 월간 캘린더), `components/sidebar/activity-heatmap.tsx` (last 30 days contribution heatmap), Today 섹션 Wiki 카운트, `plot:calendar-jump`/`plot:calendar-month-change` 이벤트 sync
+  - **9개 view 통합 픽스**: wiki/ontology/labels/templates/insights/graph-insights/todo/home/search에 Calendar와 같은 `isEditing → WorkspaceEditorArea swap` 패턴 + `usePaneOpenNote` 적용
+  - **2차 커밋**: P1-카드 + P2 각주 리치텍스트 + Reference 개선
+    - P1-카드: InsightsView openNote→usePaneOpenNote, ActivityHeatmap 월별 구분선, Mini calendar updatedAt 레이어
+    - P2 각주 리치텍스트: FootnoteMiniEditor (미니 TipTap, 나무위키 패턴 툴바 없음), Footer URL 전용 input, 본문 팝오버 읽기 전용 + Edit→Footer 연동
+    - Reference.history (v75): ReferenceHistoryEntry + store 4 action + UI (타임라인 + Revert)
+    - Reference.usedInNoteIds (v76): 역참조 + syncNoteReferenceLinks (에디터 save 시 자동) + Rebuild links 버튼 (IDB 전체 스캔)
+    - Library Overview 위키 패턴 적용: Featured + Type 칩 + Card grid + View all
+    - 버그 수정: WikilinkSuggestion/MentionSuggestion key 충돌 (type:id prefix)
+
+- **PR #176**: Peek-First 실험 → Smart Sidebar Phase 1
   - Peek-First 완성 (Phase 2, 2.5, 3, 3.5) — wiki 지원, Empty State, 사이즈 시스템, back/forward, pin
   - 노트/위키 시각 구분 (StatusShapeIcon + wiki violet)
   - MentionSuggestion 일관성

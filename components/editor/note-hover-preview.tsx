@@ -243,7 +243,9 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
 
   function handlePeek() {
     hideNotePreviewImmediate()
-    store.getState().openSidePeek({ type: noteType, id: noteId })
+    const s = store.getState()
+    s.setSidePanelContext({ type: noteType, id: noteId })
+    s.setSidePanelOpen(true)
   }
 
   function handleSideBySide() {

@@ -52,8 +52,8 @@ function resolveCtx(
 
 export function useSidePanelEntity(): SidePanelEntityResult {
   const pane = usePane()
-  const primaryCtx = usePlotStore((s) => s.sidePanelContext)
-  const secondaryCtx = usePlotStore((s) => s.secondarySidePanelContext)
+  // Single global side panel context (Split-First, Phase 1)
+  const ctx = usePlotStore((s) => s.sidePanelContext)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
   const previewNoteId = usePlotStore((s) => s.previewNoteId)
@@ -61,21 +61,12 @@ export function useSidePanelEntity(): SidePanelEntityResult {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const references = usePlotStore((s) => s.references)
 
-  // Try active pane first
+  // Resolve fallback noteId based on the currently active pane
   const primaryNoteId = selectedNoteId || previewNoteId
-  const activeResult = pane === 'secondary'
-    ? resolveCtx(secondaryCtx, secondaryNoteId, notes, wikiArticles, references)
-    : resolveCtx(primaryCtx, primaryNoteId, notes, wikiArticles, references)
+  const paneNoteId = pane === 'secondary' ? secondaryNoteId : primaryNoteId
 
-  if (activeResult) return activeResult
-
-  // Cross-pane fallback: if active pane has nothing, try the OTHER pane
-  // This handles cases like Wiki+Note split where one pane has no panel-compatible entity
-  const otherResult = pane === 'secondary'
-    ? resolveCtx(primaryCtx, primaryNoteId, notes, wikiArticles, references)
-    : resolveCtx(secondaryCtx, secondaryNoteId, notes, wikiArticles, references)
-
-  if (otherResult) return otherResult
+  const result = resolveCtx(ctx, paneNoteId, notes, wikiArticles, references)
+  if (result) return result
 
   return { type: null, noteId: null, wikiArticleId: null, referenceId: null, note: null, wikiArticle: null, reference: null }
 }

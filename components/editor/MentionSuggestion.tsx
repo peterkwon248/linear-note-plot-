@@ -124,7 +124,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
               </div>
               {group.items.map(({ item, globalIndex }) => (
                 <button
-                  key={item.id}
+                  key={`${item.mentionType}:${item.id}`}
                   onClick={(e) => selectItem(globalIndex, e.shiftKey)}
                   className={[
                     "flex w-full items-center gap-2 px-2 py-1.5 text-left text-note transition-colors",

@@ -17,6 +17,8 @@ import { buildViewStateForContext } from "@/lib/view-engine/defaults"
 import { rulesToOntologyFilters } from "@/lib/view-engine/graph-filter-adapter"
 import type { OntologyFilters } from "@/components/ontology/ontology-graph-canvas"
 import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane, usePaneOpenNote } from "@/components/workspace/pane-context"
 
 function applyFilters(notes: Note[], filters: OntologyFilters): Note[] {
   return notes.filter((n) => {
@@ -55,7 +57,10 @@ export function OntologyView() {
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
-  const openNote = usePlotStore((s) => s.openNote)
+  const openNote = usePaneOpenNote()
+  const selectedNoteIdStore = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  const isEditing = pane === 'primary' && selectedNoteIdStore !== null
   const ontologyPositions = usePlotStore((s) => s.ontologyPositions)
   const updateOntologyPositions = usePlotStore((s) => s.updateOntologyPositions)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
@@ -215,6 +220,15 @@ export function OntologyView() {
   useEffect(() => {
     return () => ontologyLayoutClient.destroy()
   }, [])
+
+  // ── Workspace editor area: show when editing in primary pane ──
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
+      </div>
+    )
+  }
 
   return (
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">

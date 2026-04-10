@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { X as PhXIcon } from "@phosphor-icons/react/dist/ssr/X"
-import { IconSplitView } from "@/components/plot-icons"
+import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { setSecondarySpace, getSecondarySpace } from "@/lib/table-route"
 import { useActiveSpace } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
@@ -28,14 +28,17 @@ function HBtn({
   children,
   active,
   onClick,
+  title,
 }: {
   children: ReactNode
   active?: boolean
   onClick?: () => void
+  title?: string
 }) {
   return (
     <button
       onClick={onClick}
+      title={title}
       className={`flex h-7 w-7 items-center justify-center rounded-md border-none transition-all duration-100 ${
         active
           ? "bg-active-bg text-foreground"
@@ -322,8 +325,9 @@ function SplitViewButton() {
           setSecondarySpace(activeSpace)
         }
       }}
+      title="Split view"
     >
-      <span className="text-[11px] font-medium tracking-tight">A|B</span>
+      <SplitHorizontal size={16} weight="regular" />
     </HBtn>
   )
 }

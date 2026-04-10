@@ -73,12 +73,6 @@ export function useGlobalShortcuts() {
           return // let dialog handle it
         }
         const s = usePlotStore.getState()
-        // 0th: close side peek first
-        if (s.sidePanelMode === 'peek' && s.sidePanelPeekContext) {
-          s.closeSidePeek()
-          e.preventDefault()
-          return
-        }
         if (s.selectedNoteId !== null && s.sidePanelOpen) {
           s.setSidePanelOpen(false)
           return
@@ -154,7 +148,7 @@ export function useGlobalShortcuts() {
       }
 
       // ── 2d. Cmd+\ — toggle split view ────────────────────
-      if (mod && e.key === '\\') {
+      if (mod && e.key === '\\' && !e.shiftKey) {
         const s = usePlotStore.getState()
         const { getSecondarySpace, setSecondarySpace: setSecSpace, getActiveSpace } = require("@/lib/table-route")
         if (s.secondaryNoteId || getSecondarySpace()) {
@@ -168,9 +162,16 @@ export function useGlobalShortcuts() {
         return
       }
 
-      // ── 2d-bis. Ctrl/Cmd+Shift+P — open Peek (empty state) ────────────
-      if (mod && e.shiftKey && (e.key === 'p' || e.key === 'P')) {
-        usePlotStore.setState({ sidePanelOpen: true, sidePanelMode: 'peek' })
+      // ── 2d-2. Cmd+Shift+\ — open SecondaryOpenPicker (Phase 4) ────────────
+      if (mod && e.shiftKey && e.key === '|') {
+        // Note: e.key for Shift+\ is "|" on most layouts
+        usePlotStore.getState().setSecondaryPickerOpen(true)
+        e.preventDefault()
+        return
+      }
+      // Fallback: also accept literal '\\' with shift modifier (some layouts)
+      if (mod && e.shiftKey && e.key === '\\') {
+        usePlotStore.getState().setSecondaryPickerOpen(true)
         e.preventDefault()
         return
       }

@@ -14,6 +14,10 @@ import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
 import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
+import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
+import type { ReferenceHistoryEntry } from "@/lib/types"
 
 function InspectorSection({
   title,
@@ -33,6 +37,188 @@ function InspectorSection({
         </span>
       </div>
       {children}
+    </div>
+  )
+}
+
+// ── Used In section (which notes reference this) ────────────────────────────
+
+function ReferenceUsedInSection({ usedInNoteIds }: { usedInNoteIds: string[] }) {
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const openNote = usePlotStore((s) => s.openNote)
+  const [rebuilding, setRebuilding] = useState(false)
+
+  // Resolve IDs to notes OR wiki articles (usedInNoteIds can contain either)
+  const usedEntities = usedInNoteIds
+    .map((id) => {
+      const note = notes.find((n) => n.id === id && !n.trashed)
+      if (note) return { id: note.id, title: note.title, kind: "note" as const }
+      const wiki = wikiArticles.find((w) => w.id === id)
+      if (wiki) return { id: wiki.id, title: wiki.title, kind: "wiki" as const }
+      return null
+    })
+    .filter(Boolean) as Array<{ id: string; title: string; kind: "note" | "wiki" }>
+
+  const handleRebuild = useCallback(async () => {
+    setRebuilding(true)
+    try {
+      const { rebuildAllReferenceLinks } = await import("@/lib/rebuild-reference-links")
+      const count = await rebuildAllReferenceLinks()
+      if (count > 0) {
+        // Toast or just let UI update naturally
+      }
+    } catch (err) {
+      console.error("[RebuildLinks]", err)
+    } finally {
+      setRebuilding(false)
+    }
+  }, [])
+
+  return (
+    <InspectorSection title="Used In" icon={<FileText size={16} weight="regular" />}>
+      {usedEntities.length > 0 ? (
+        <div className="space-y-0.5">
+          {usedEntities.map((entity) => (
+            <button
+              key={entity.id}
+              onClick={() => {
+                if (entity.kind === "wiki") {
+                  import("@/lib/table-route").then(({ setActiveRoute }) => setActiveRoute("/wiki"))
+                  import("@/lib/wiki-article-nav").then(({ navigateToWikiArticle }) => navigateToWikiArticle(entity.id))
+                } else {
+                  import("@/lib/table-route").then(({ setActiveRoute }) => setActiveRoute("/notes"))
+                  openNote(entity.id)
+                }
+              }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-2xs text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
+            >
+              <span className="truncate">{entity.title || "Untitled"}</span>
+              {entity.kind === "wiki" && (
+                <span className="shrink-0 text-[9px] text-muted-foreground/40">wiki</span>
+              )}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="text-2xs text-muted-foreground/50">Not used in any notes</p>
+      )}
+      <button
+        onClick={handleRebuild}
+        disabled={rebuilding}
+        className="mt-2 flex items-center gap-1 text-2xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+      >
+        <ArrowCounterClockwise size={11} weight="regular" className={rebuilding ? "animate-spin" : ""} />
+        {rebuilding ? "Scanning..." : "Rebuild links"}
+      </button>
+    </InspectorSection>
+  )
+}
+
+// ── History section (collapsible timeline + revert) ─────────────────────────
+
+const ACTION_LABELS: Record<ReferenceHistoryEntry["action"], string> = {
+  created: "Created",
+  edited: "Edited",
+  trashed: "Moved to trash",
+  restored: "Restored",
+}
+
+const ACTION_COLORS: Record<ReferenceHistoryEntry["action"], string> = {
+  created: "text-emerald-500/80",
+  edited: "text-accent/80",
+  trashed: "text-destructive/70",
+  restored: "text-blue-500/80",
+}
+
+function ReferenceHistorySection({
+  referenceId,
+  history,
+}: {
+  referenceId: string
+  history: ReferenceHistoryEntry[]
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const updateReference = usePlotStore((s) => s.updateReference)
+
+  // Show newest first
+  const ordered = [...history].reverse()
+  const count = history.length
+
+  const handleRevert = useCallback(
+    (entry: ReferenceHistoryEntry) => {
+      if (!entry.snapshot) return
+      if (!confirm("Revert to this snapshot? Current state will be captured in history.")) return
+      updateReference(referenceId, {
+        title: entry.snapshot.title,
+        content: entry.snapshot.content,
+        fields: entry.snapshot.fields,
+      })
+    },
+    [referenceId, updateReference],
+  )
+
+  if (count === 0) {
+    return (
+      <InspectorSection title="History" icon={<ClockCounterClockwise size={16} weight="regular" />}>
+        <p className="text-2xs text-muted-foreground/50">No history yet</p>
+      </InspectorSection>
+    )
+  }
+
+  return (
+    <div className="px-4 py-3">
+      <button
+        onClick={() => setExpanded((e) => !e)}
+        className="mb-2 flex w-full items-center gap-2 text-left transition-colors hover:text-foreground"
+      >
+        <span className="text-muted-foreground">
+          <ClockCounterClockwise size={16} weight="regular" />
+        </span>
+        <span className="text-2xs font-medium text-muted-foreground">History</span>
+        <span className="text-2xs text-muted-foreground/50 tabular-nums">{count}</span>
+        <span className="ml-auto text-muted-foreground/60">
+          <CaretRight
+            size={12}
+            weight="bold"
+            className={`transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
+          />
+        </span>
+      </button>
+      {expanded && (
+        <ol className="space-y-1.5">
+          {ordered.map((entry, i) => (
+            <li key={`${entry.at}-${i}`} className="flex items-start gap-2 text-2xs">
+              <span className={`mt-[2px] size-1.5 shrink-0 rounded-full bg-current ${ACTION_COLORS[entry.action]}`} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={`font-medium ${ACTION_COLORS[entry.action]}`}>
+                    {ACTION_LABELS[entry.action]}
+                  </span>
+                  <span className="text-muted-foreground/60 tabular-nums">
+                    {formatDistanceToNow(new Date(entry.at), { addSuffix: true })}
+                  </span>
+                </div>
+                {entry.snapshot && (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className="truncate text-muted-foreground/60">
+                      Was: “{entry.snapshot.title || "Untitled"}”
+                    </span>
+                    <button
+                      onClick={() => handleRevert(entry)}
+                      className="shrink-0 rounded-md px-1.5 py-0.5 text-2xs font-medium text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
+                      title="Revert to this version"
+                    >
+                      <ArrowCounterClockwise size={11} weight="regular" className="inline mr-0.5" />
+                      Revert
+                    </button>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   )
 }
@@ -286,6 +472,16 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
           </div>
         </div>
       </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* Used In (reverse lookup: which notes reference this) */}
+      <ReferenceUsedInSection usedInNoteIds={reference.usedInNoteIds ?? []} />
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* History */}
+      <ReferenceHistorySection referenceId={referenceId} history={reference.history ?? []} />
 
       <div className="mx-4 border-b border-border" />
 

@@ -7,6 +7,10 @@ type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
 
 const MAX_SECONDARY_HISTORY = 50
+const MAX_SECONDARY_PINS = 5
+
+type SecondaryRef = { type: "note" | "wiki"; id: string }
+function pinKey(p: SecondaryRef): string { return `${p.type}:${p.id}` }
 
 export function createWorkspaceSlice(set: Set, get: Get) {
   return {
@@ -17,6 +21,8 @@ export function createWorkspaceSlice(set: Set, get: Get) {
     activeTabId: null as string | null,
     secondaryHistory: [] as string[],
     secondaryHistoryIndex: -1,
+    secondaryPins: [] as SecondaryRef[],
+    secondaryPickerOpen: false,
 
     openInSecondary: (noteId: string) => {
       set((state: any) => {
@@ -29,6 +35,8 @@ export function createWorkspaceSlice(set: Set, get: Get) {
           activePane: 'secondary' as const,
           secondaryHistory: newHistory,
           secondaryHistoryIndex: newHistory.length - 1,
+          // Clear sticky side-panel context — side panel should follow active pane
+          sidePanelContext: null,
         }
       })
     },
@@ -49,8 +57,11 @@ export function createWorkspaceSlice(set: Set, get: Get) {
         if (pane === 'secondary' && !state.secondaryNoteId && !getSecondarySpace()) {
           return state
         }
+        // No-op if already on the requested pane
+        if (state.activePane === pane) return state
         // Only change activePane — do NOT touch selectedNoteId
-        return { activePane: pane }
+        // Clear sticky side-panel context so side panel follows active pane
+        return { activePane: pane, sidePanelContext: null }
       })
     },
 
@@ -114,5 +125,30 @@ export function createWorkspaceSlice(set: Set, get: Get) {
         }
       })
     },
+
+    toggleSecondaryPin: (target: SecondaryRef) => {
+      set((state: any) => {
+        const key = pinKey(target)
+        const pins = (state.secondaryPins as SecondaryRef[]) ?? []
+        const existing = pins.findIndex((p) => pinKey(p) === key)
+        if (existing >= 0) {
+          // Unpin
+          return { secondaryPins: pins.filter((_, i) => i !== existing) }
+        }
+        // Pin: evict oldest if at capacity
+        const nextPins = [...pins, target].slice(-MAX_SECONDARY_PINS)
+        return { secondaryPins: nextPins }
+      })
+    },
+
+    removeSecondaryPin: (target: SecondaryRef) => {
+      set((state: any) => {
+        const key = pinKey(target)
+        const pins = (state.secondaryPins as SecondaryRef[]) ?? []
+        return { secondaryPins: pins.filter((p) => pinKey(p) !== key) }
+      })
+    },
+
+    setSecondaryPickerOpen: (open: boolean) => set({ secondaryPickerOpen: open }),
   }
 }

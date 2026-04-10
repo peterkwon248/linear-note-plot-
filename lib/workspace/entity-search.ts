@@ -1,14 +1,16 @@
 /**
- * Peek entity search — pure function to find Peek-able targets (Note + Wiki) by query.
- * Used by PeekEmptyState picker. Mirrors the note/wiki branches of MentionSuggestion.items()
- * but scoped to Peek's allowed entity types.
+ * Secondary entity search — pure function to find openable targets (Note + Wiki) by query.
+ * Used by SecondaryOpenPicker. Mirrors the note/wiki branches of MentionSuggestion.items()
+ * but scoped to entities the secondary pane can render.
  */
 
 import { usePlotStore } from "@/lib/store"
-import type { PeekContext } from "@/lib/store/types"
 import type { NoteStatus } from "@/lib/types"
 
-export type PeekSearchResult = PeekContext & {
+/** Reference to a secondary-pane-openable entity (note or wiki article). */
+export type SecondaryEntityRef = { type: "note" | "wiki"; id: string }
+
+export type SecondaryEntitySearchResult = SecondaryEntityRef & {
   /** Display title. */
   title: string
   /** Optional aliases list for secondary matching. */
@@ -20,10 +22,10 @@ export type PeekSearchResult = PeekContext & {
 }
 
 /**
- * Resolved Peek entity — either a note (with workflow status) or a wiki article.
+ * Resolved secondary entity — either a note (with workflow status) or a wiki article.
  * Used by list rows that need to render a type-aware icon.
  */
-export type PeekEntity =
+export type SecondaryEntity =
   | { kind: "note"; id: string; title: string; status: NoteStatus }
   | { kind: "wiki"; id: string; title: string }
 
@@ -33,10 +35,10 @@ const MAX_RESULTS = 10
  * Search notes + wiki articles matching the given query.
  * Empty query → returns most recently updated items.
  */
-export function searchPeekable(query: string): PeekSearchResult[] {
+export function searchSecondaryEntities(query: string): SecondaryEntitySearchResult[] {
   const store = usePlotStore.getState()
   const q = query.trim().toLowerCase()
-  const results: PeekSearchResult[] = []
+  const results: SecondaryEntitySearchResult[] = []
 
   // Notes
   const notes = store.notes.filter((n) => !n.trashed && n.title.trim())
@@ -129,41 +131,41 @@ export function searchPeekable(query: string): PeekSearchResult[] {
 }
 
 /**
- * Resolve a PeekContext to a display title. Returns "Untitled" fallback.
- * Used by PeekEmptyState to render stored history/pin entries.
+ * Resolve a SecondaryEntityRef to a display title. Returns "Untitled" fallback.
+ * Used by SecondaryOpenPicker to render stored history/pin entries.
  */
-export function resolvePeekTitle(ctx: PeekContext): string {
+export function resolveSecondaryEntityTitle(ref: SecondaryEntityRef): string {
   const store = usePlotStore.getState()
-  if (ctx.type === "note") {
-    const note = store.notes.find((n) => n.id === ctx.id)
+  if (ref.type === "note") {
+    const note = store.notes.find((n) => n.id === ref.id)
     return note?.title || "Untitled"
   }
-  const article = store.wikiArticles.find((a) => a.id === ctx.id)
+  const article = store.wikiArticles.find((a) => a.id === ref.id)
   return article?.title || "Untitled"
 }
 
 /**
- * Resolve a PeekContext to its full entity (title + type-specific fields).
+ * Resolve a SecondaryEntityRef to its full entity (title + type-specific fields).
  * Returns `null` if the entity has been deleted. Used by list rows that need
  * to render type-aware icons (workflow status circle for notes, wiki icon for wiki).
  */
-export function resolvePeekEntity(ctx: PeekContext): PeekEntity | null {
+export function resolveSecondaryEntity(ref: SecondaryEntityRef): SecondaryEntity | null {
   const store = usePlotStore.getState()
-  if (ctx.type === "note") {
-    const note = store.notes.find((n) => n.id === ctx.id && !n.trashed)
+  if (ref.type === "note") {
+    const note = store.notes.find((n) => n.id === ref.id && !n.trashed)
     if (!note) return null
     return { kind: "note", id: note.id, title: note.title || "Untitled", status: note.status }
   }
-  const article = store.wikiArticles.find((a) => a.id === ctx.id)
+  const article = store.wikiArticles.find((a) => a.id === ref.id)
   if (!article) return null
   return { kind: "wiki", id: article.id, title: article.title || "Untitled" }
 }
 
-/** Check whether a PeekContext still resolves to a live entity (not deleted). */
-export function isPeekEntityAlive(ctx: PeekContext): boolean {
+/** Check whether a SecondaryEntityRef still resolves to a live entity (not deleted). */
+export function isSecondaryEntityAlive(ref: SecondaryEntityRef): boolean {
   const store = usePlotStore.getState()
-  if (ctx.type === "note") {
-    return store.notes.some((n) => n.id === ctx.id && !n.trashed)
+  if (ref.type === "note") {
+    return store.notes.some((n) => n.id === ref.id && !n.trashed)
   }
-  return store.wikiArticles.some((a) => a.id === ctx.id)
+  return store.wikiArticles.some((a) => a.id === ref.id)
 }

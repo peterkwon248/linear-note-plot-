@@ -49,6 +49,8 @@ import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import { setHomeSection, useHomeSection } from "@/lib/home-section"
+import { CalendarMini } from "@/components/sidebar/calendar-mini"
+import { ActivityHeatmap } from "@/components/sidebar/activity-heatmap"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 type PanelContent = Record<string, unknown>
@@ -740,7 +742,7 @@ export function LinearSidebar() {
   return (
     <aside className="flex h-full w-full shrink-0 flex-col bg-sidebar-bg border-r border-sidebar-border select-none overflow-hidden">
       {/* Header: RecentlyViewed + Back/Forward + spacer + Search + Close */}
-      <div className="flex items-center gap-0.5 px-2.5 pt-2.5 pb-1.5">
+      <div className="flex h-(--header-height) shrink-0 items-center gap-0.5 px-2.5">
         {/* Recently Viewed */}
         <div className="relative" ref={recentlyViewedRef}>
           <button
@@ -1184,26 +1186,46 @@ export function LinearSidebar() {
               />
             </div>
 
-            {/* Today's Summary */}
+            {/* Mini Calendar — month grid for date jump */}
+            <Section title="">
+              <CalendarMini />
+            </Section>
+
+            {/* Today's Summary — Notes + Wiki */}
             <Section title="Today">
               {(() => {
                 const todayStr = new Date().toISOString().slice(0, 10)
-                const created = notes.filter(n => !n.trashed && n.createdAt.startsWith(todayStr)).length
-                const updated = notes.filter(n => !n.trashed && n.updatedAt.startsWith(todayStr) && !n.createdAt.startsWith(todayStr)).length
+                const noteCreated = notes.filter(n => !n.trashed && n.createdAt.startsWith(todayStr)).length
+                const noteUpdated = notes.filter(n => !n.trashed && n.updatedAt.startsWith(todayStr) && !n.createdAt.startsWith(todayStr)).length
+                const wikiCreated = wikiArticles.filter(w => w.createdAt.startsWith(todayStr)).length
+                const wikiUpdated = wikiArticles.filter(w => w.updatedAt.startsWith(todayStr) && !w.createdAt.startsWith(todayStr)).length
 
                 return (
                   <div className="flex flex-col gap-1.5 px-2.5">
                     <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Created</span>
-                      <span className="text-sidebar-foreground tabular-nums">{created}</span>
+                      <span className="text-sidebar-muted">Notes created</span>
+                      <span className="text-sidebar-foreground tabular-nums">{noteCreated}</span>
                     </div>
                     <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Updated</span>
-                      <span className="text-sidebar-foreground tabular-nums">{updated}</span>
+                      <span className="text-sidebar-muted">Notes updated</span>
+                      <span className="text-sidebar-foreground tabular-nums">{noteUpdated}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-2xs">
+                      <span className="text-sidebar-muted">Wiki created</span>
+                      <span className="text-sidebar-foreground tabular-nums">{wikiCreated}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-2xs">
+                      <span className="text-sidebar-muted">Wiki updated</span>
+                      <span className="text-sidebar-foreground tabular-nums">{wikiUpdated}</span>
                     </div>
                   </div>
                 )
               })()}
+            </Section>
+
+            {/* Activity Heatmap — last 30 days */}
+            <Section title="Activity">
+              <ActivityHeatmap />
             </Section>
 
             {/* Upcoming Reminders */}

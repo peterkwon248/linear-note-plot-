@@ -36,8 +36,10 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (21): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, thinking
-- Store version: 71
+- Slices (22): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
+- **Store version: v76** (v73: Peek 레거시 제거, v74: secondaryPins, v75: Reference.history, v76: Reference.usedInNoteIds)
+- workspace slice: `secondaryNoteId`, `activePane`, `secondaryHistory`, `secondaryPins` (max 5), `secondaryPickerOpen`, `toggleSecondaryPin`
+- references slice: `linkNoteToReference`, `unlinkNoteFromReference`, `syncNoteReferenceLinks` (에디터 save 시 자동 호출)
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -88,11 +90,22 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **PR #169**: Reference 하이브리드 통합 — url 있으면 Link형, 없으면 Citation형 자동 분기. hover 프리뷰 + Trash/Library UX
-2. **PR #172**: Split View 독립 패널 시스템 — PaneContext + route intercept 패턴, 하이브리드 듀얼 에디터, 6 space 전부 접근 가능, secondarySpace URL state
-3. **PR #173**: Split View 사이드패널 분리 — primary/secondary 독립 SmartSidePanel
-4. **PR #174 (예정)**: Cross-Note Bookmarks 5 Phase + Outline 개선 + Footnote 접기/펼치기 + Wiki Sources 클릭 fix + ReferencedInBadges dedupe
-5. **PR #174 (예정)**: 🎯 **Peek-First 아키텍처 Phase 0+1** — 사이드바 단일 책임 (layout.tsx), WorkspaceEditorArea 단순화, ResizablePanel id+order 추가. 워크플로우 개선 (NEXT-ACTION.md + SESSION-LOG.md)
+1. **PR #174**: Cross-Note Bookmarks + Outline + Footnote 접기/펼치기 + Wiki Sources fix + 사이드바 단일 책임 + NEXT-ACTION.md/SESSION-LOG.md 도입
+2. **PR #176**: Peek-First 실험 → Split-First 복귀 Phase 1 (SmartSidePanel 단일 인스턴스 + 4탭)
+3. **PR #177 (예정, 이번 세션)**: Split-First 완성 (Phase 2~5)
+   - **Phase 2**: Store cleanup — `SidePanelMode 'peek'`, `PeekContext`, `secondarySidePanel*` 제거, v73 migration
+   - **Phase 3**: Peek 파일/참조 제거 — `side-panel-peek.tsx`/`peek-empty-state.tsx`/`lib/peek/*` 삭제 + 호출부 14곳 정리
+   - **Phase 4**: Split view picker 재설계 — `SecondaryOpenPicker` 다이얼로그 (`Cmd+Shift+\`) + `entity-search`/`secondary-suggestions` + `secondaryPins` store, v74 migration
+   - **Phase 5**: Focus tracking + 시각 피드백 — active pane `border-t-2 border-t-accent`, view-mode split + editor-mode split 통합
+   - **Sticky sidePanelContext 버그 픽스**: `setActivePane`/`openInSecondary`/`openNote`에서 ctx 자동 클리어
+4. **PR #177 (동반, 이번 세션)**: UI 폴리싱
+   - **헤더 단차 픽스**: 4개 헤더 모두 52px `h-(--header-height)` 통일 (note-editor / linear-sidebar / smart-side-panel / wiki-secondary)
+   - **A|B 아이콘 → Phosphor `SplitHorizontal`** (view-header split 버튼)
+5. **PR #177 (동반, 이번 세션)**: Calendar 리뉴얼 + 9개 view 버그 픽스
+   - **Calendar Stage A**: `CalendarView`에 `isEditing → WorkspaceEditorArea swap` 패턴 + `usePaneOpenNote` (메인 캘린더에서 노트 클릭 시 secondary 사라지던 버그 픽스)
+   - **Calendar Stage B**: Wiki article을 캘린더에 통합 (createdAt 기준, violet BookOpen 아이콘, 클릭 분기, dedupe)
+   - **Calendar Stage C**: 사이드바 재설계 — `components/sidebar/calendar-mini.tsx` (미니 월간 캘린더 + 날짜 점프), `components/sidebar/activity-heatmap.tsx` (last 30 days contribution heatmap), Today 섹션에 Wiki created/updated 카운트 추가
+   - **9개 view에 같은 패턴 적용**: wiki/ontology/labels/templates/insights/graph-insights/todo/home/search (Calendar와 동일 버그)
 
 ## Two Axes — Core Design Philosophy
 
@@ -181,21 +194,21 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **References/Files soft delete**: trashed/trashedAt 필드, 복원 가능. Store v71 (2026-04-08)
 - **Reference = 통합 참고자료 (옵션3 하이브리드)**: url 필드 있으면 Link형, 없으면 Citation형으로 자동 분기. 새 엔티티 없이 Reference 하나로 통합. 위키백과 철학 차용 — `[[]]`=내부링크, 각주=하단URL, referenceLink=외부링크(🔗 시각 구분). `[[`/`@` 드롭다운에서 url 있으면 referenceLink 노드, 없으면 footnoteRef 노드 자동 삽입. Shift+클릭=반대 모드. Quick Filter에 Links 추가 (2026-04-08)
 
-## TODO: Future Work (우선순위 순, 2026-04-09 저녁 sync)
+## TODO: Future Work (우선순위 순, 2026-04-10 저녁 sync)
 
-### 🔴 P0 — Peek-First 마이그레이션 (다음 세션 시작점은 docs/NEXT-ACTION.md)
-- ✅ **Phase 2**: Peek가 Wiki 표시 가능 (2026-04-09 완료)
-- 🎯 **Phase 2.5 (신규)**: Peek 자립 — 상시 탭 + Empty State(c, 검색+최근+핀) + Open picker(@멘션 재사용) + 단축키
-- **Phase 3**: 사이즈 시스템 (Min 280 / Mid 480 / Max 50% + Drag)
-- **Phase 3.5**: Single-slot + back/forward history UI + Pin 1~2개 UI (데이터 모델은 2.5 선행)
-- **Phase 5**: Split View 폐기 + "Split View" 용어 → "Peek"
+### ✅ P0 완료 (2026-04-10 세션)
 
-**아키텍처 결정 (2026-04-09)**: Multi-tab 폐기, Single-slot + history + Pin으로 충분. 동시 비교 니즈 공식 포기 (Split View 폐기 결정의 연장선).
+Split-First Phase 2~5 전체, UI 폴리싱 (단차/A|B 아이콘/sticky ctx), Calendar 리뉴얼 (Stage A/B/C), 9개 view 통합 픽스. 상세는 Completed Features 섹션 참조.
 
-### P1 (보류, Peek 마이그레이션 후)
+### 🟡 P0-카드 (작은 후속)
+- **FootnotesFooter 접기/펼치기 재검증** — PR #174 작업물, 동작 재확인
+- **referenceLink 노드 최종 검증** — Shift+클릭 시 referenceLink 삽입 동작 확인
+- **6곳 `setSidePanelContext` UX 재평가** — sticky ctx 자동 클리어 후 UX 관점에서 재평가 (sidePeek 대체 전략이 맞는지)
+
+### P1 — 기능 확장
 - **Reference.history** — 데이터 모델 + UI 작업 중간에 멈춤
 - **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card, Featured Article, Activity Feed
-7. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용
+- **Library FilterPanel Notes 수준** — view-engine 인프라 재사용
 
 ### P2 — 인사이트 허브 + 각주
 8. **인사이트 허브** — 온톨로지 Single Source of Insights. Knowledge WAR/Link Density/Stub Conversion Rate 등 세이브매트릭스급 지표
