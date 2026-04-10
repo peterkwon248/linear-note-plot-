@@ -45,32 +45,72 @@ function InspectorSection({
 
 function ReferenceUsedInSection({ usedInNoteIds }: { usedInNoteIds: string[] }) {
   const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const openNote = usePlotStore((s) => s.openNote)
+  const [rebuilding, setRebuilding] = useState(false)
 
-  const usedNotes = usedInNoteIds
-    .map((id) => notes.find((n) => n.id === id && !n.trashed))
-    .filter(Boolean) as Array<{ id: string; title: string }>
+  // Resolve IDs to notes OR wiki articles (usedInNoteIds can contain either)
+  const usedEntities = usedInNoteIds
+    .map((id) => {
+      const note = notes.find((n) => n.id === id && !n.trashed)
+      if (note) return { id: note.id, title: note.title, kind: "note" as const }
+      const wiki = wikiArticles.find((w) => w.id === id)
+      if (wiki) return { id: wiki.id, title: wiki.title, kind: "wiki" as const }
+      return null
+    })
+    .filter(Boolean) as Array<{ id: string; title: string; kind: "note" | "wiki" }>
+
+  const handleRebuild = useCallback(async () => {
+    setRebuilding(true)
+    try {
+      const { rebuildAllReferenceLinks } = await import("@/lib/rebuild-reference-links")
+      const count = await rebuildAllReferenceLinks()
+      if (count > 0) {
+        // Toast or just let UI update naturally
+      }
+    } catch (err) {
+      console.error("[RebuildLinks]", err)
+    } finally {
+      setRebuilding(false)
+    }
+  }, [])
 
   return (
     <InspectorSection title="Used In" icon={<FileText size={16} weight="regular" />}>
-      {usedNotes.length > 0 ? (
+      {usedEntities.length > 0 ? (
         <div className="space-y-0.5">
-          {usedNotes.map((note) => (
+          {usedEntities.map((entity) => (
             <button
-              key={note.id}
+              key={entity.id}
               onClick={() => {
-                import("@/lib/table-route").then(({ setActiveRoute }) => setActiveRoute("/notes"))
-                openNote(note.id)
+                if (entity.kind === "wiki") {
+                  import("@/lib/table-route").then(({ setActiveRoute }) => setActiveRoute("/wiki"))
+                  import("@/lib/wiki-article-nav").then(({ navigateToWikiArticle }) => navigateToWikiArticle(entity.id))
+                } else {
+                  import("@/lib/table-route").then(({ setActiveRoute }) => setActiveRoute("/notes"))
+                  openNote(entity.id)
+                }
               }}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-2xs text-foreground/80 transition-colors hover:bg-hover-bg hover:text-foreground"
             >
-              <span className="truncate">{note.title || "Untitled"}</span>
+              <span className="truncate">{entity.title || "Untitled"}</span>
+              {entity.kind === "wiki" && (
+                <span className="shrink-0 text-[9px] text-muted-foreground/40">wiki</span>
+              )}
             </button>
           ))}
         </div>
       ) : (
         <p className="text-2xs text-muted-foreground/50">Not used in any notes</p>
       )}
+      <button
+        onClick={handleRebuild}
+        disabled={rebuilding}
+        className="mt-2 flex items-center gap-1 text-2xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+      >
+        <ArrowCounterClockwise size={11} weight="regular" className={rebuilding ? "animate-spin" : ""} />
+        {rebuilding ? "Scanning..." : "Rebuild links"}
+      </button>
     </InspectorSection>
   )
 }

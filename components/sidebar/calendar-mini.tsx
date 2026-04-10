@@ -48,21 +48,29 @@ export function CalendarMini() {
     return () => window.removeEventListener("plot:calendar-month-change", handler as EventListener)
   }, [])
 
-  // Compute set of dates that have at least one note or wiki (by createdAt)
-  const activeDates = useMemo(() => {
-    const set = new Set<string>()
+  // Compute sets of dates with activity (createdAt = created, updatedAt = edited)
+  const { createdDates, updatedDates } = useMemo(() => {
+    const created = new Set<string>()
+    const updated = new Set<string>()
     for (const n of notes) {
       if (n.trashed) continue
       try {
-        set.add(format(parseISO(n.createdAt), "yyyy-MM-dd"))
+        created.add(format(parseISO(n.createdAt), "yyyy-MM-dd"))
+        // Only count updatedAt if it differs from createdAt (actual edit, not just creation)
+        if (n.updatedAt !== n.createdAt) {
+          updated.add(format(parseISO(n.updatedAt), "yyyy-MM-dd"))
+        }
       } catch {}
     }
     for (const w of wikiArticles) {
       try {
-        set.add(format(parseISO(w.createdAt), "yyyy-MM-dd"))
+        created.add(format(parseISO(w.createdAt), "yyyy-MM-dd"))
+        if (w.updatedAt !== w.createdAt) {
+          updated.add(format(parseISO(w.updatedAt), "yyyy-MM-dd"))
+        }
       } catch {}
     }
-    return set
+    return { createdDates: created, updatedDates: updated }
   }, [notes, wikiArticles])
 
   const calendarDays = useMemo(() => {
@@ -135,7 +143,9 @@ export function CalendarMini() {
           const inMonth = isSameMonth(day, currentDate)
           const today = isToday(day)
           const dateKey = format(day, "yyyy-MM-dd")
-          const hasActivity = activeDates.has(dateKey)
+          const hasCreated = createdDates.has(dateKey)
+          const hasUpdated = updatedDates.has(dateKey)
+          const hasBoth = hasCreated && hasUpdated
           return (
             <button
               key={dateKey}
@@ -148,8 +158,12 @@ export function CalendarMini() {
               )}
             >
               {format(day, "d")}
-              {hasActivity && !today && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-0.5 w-0.5 rounded-full bg-accent/60" />
+              {/* Activity dots: accent=created, amber=updated, both=2 dots side by side */}
+              {!today && (hasCreated || hasUpdated) && (
+                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex items-center gap-px">
+                  {hasCreated && <span className="h-0.5 w-0.5 rounded-full bg-accent/60" />}
+                  {hasUpdated && <span className="h-0.5 w-0.5 rounded-full bg-amber-400/60" />}
+                </span>
               )}
             </button>
           )

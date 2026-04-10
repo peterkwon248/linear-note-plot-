@@ -1708,6 +1708,24 @@
   opacity: 1;
   text-decoration: underline;
 }
+.footnote-popover-edit-btn {
+  display: block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.1s;
+}
+.footnote-popover-edit-btn:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
 @keyframes footnote-popover-in {
   from {
     opacity: 0;
@@ -1973,3 +1991,87 @@
 [data-indent="6"] { margin-left: 144px; }
 [data-indent="7"] { margin-left: 168px; }
 [data-indent="8"] { margin-left: 192px; }
+
+/* ── Footnote Mini Editor ───────────────────────── */
+.footnote-mini-editor {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  transition: border-color 0.15s;
+  min-width: 280px;
+}
+.footnote-mini-editor:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+/* No toolbar — formatting via keyboard shortcuts only (Ctrl+B/I/U).
+   Matches 나무위키/Obsidian pattern: clean text input that secretly supports rich text. */
+
+/* Footnote edit group — text editor + URL input stacked */
+.footnote-edit-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 280px;
+}
+.footnote-edit-group .footnote-mini-editor {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.footnote-url-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  background: var(--background);
+  transition: border-color 0.15s;
+}
+.footnote-url-input-row:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.footnote-url-icon {
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.5;
+}
+.footnote-url-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 11px;
+  line-height: 1.5;
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.footnote-url-input::placeholder {
+  color: color-mix(in srgb, var(--muted-foreground) 30%, transparent);
+  text-decoration: none;
+}
+.footnote-mini-editor-content {
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--foreground);
+  min-height: 28px;
+  outline: none;
+}
+.footnote-mini-editor-content p {
+  margin: 0;
+}
+.footnote-mini-editor-content [data-placeholder]::before {
+  content: attr(data-placeholder);
+  color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+.footnote-mini-editor-content .footnote-mini-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

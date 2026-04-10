@@ -119,7 +119,7 @@ function MiniBarChart({ data }: { data: { date: string; count: number }[] }) {
 /* ── MostOpened ───────────────────────────────────────── */
 
 function MostOpenedList({ items }: { items: { noteId: string; title: string; count: number }[] }) {
-  const openNote = usePlotStore((s) => s.openNote)
+  const openNote = usePaneOpenNote()
 
   if (items.length === 0) return null
 
@@ -186,7 +186,7 @@ const INITIAL_SHOW = 5
 function InsightCard({ result }: { result: AnalysisResult }) {
   const [expanded, setExpanded] = useState(false)
   const notes = usePlotStore((s) => s.notes)
-  const openNote = usePlotStore((s) => s.openNote)
+  const openNote = usePaneOpenNote()
 
   const config = SEVERITY_CONFIG[result.severity]
   const Icon = config.icon

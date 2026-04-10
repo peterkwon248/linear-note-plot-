@@ -108,7 +108,12 @@
       "Bash(mkdir -p ~/.claude/.omc-worklog)",
       "Read(//c/Users/user/.claude/.omc-worklog/**)",
       "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-04-10_0808.md)",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)"
+      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)",
+      "Bash(cmd //c \"mklink /J node_modules ..\\\\..\\\\..\\\\node_modules\")",
+      "Bash(grep -n \"key={note.id}\\\\|key={\\\\`\" components/calendar-view.tsx)",
+      "Bash(grep -rn 'key={.*wiki.*id\\\\|key={`.*wiki' components/views/wiki-view.tsx components/views/wiki-list.tsx components/views/wiki-dashboard.tsx)",
+      "Bash(grep -n \"ref\\\\.title\\\\|ref\\\\.fields\\\\|Link.*Citation\\\\|field count\\\\|fields$\" components/views/library-view.tsx)",
+      "WebFetch(domain:namu.wiki)"
     ]
   }
 }

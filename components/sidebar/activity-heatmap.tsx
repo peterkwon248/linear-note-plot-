@@ -3,11 +3,11 @@
 /**
  * ActivityHeatmap — GitHub-style mini contribution heatmap for the Calendar sidebar.
  * Shows the last 30 days of activity (notes created + wiki articles created/updated).
- * Cell color intensity reflects activity count.
+ * Cell color intensity reflects activity count. Month dividers mark month boundaries.
  */
 
 import { useEffect, useMemo, useState } from "react"
-import { format, parseISO, subDays, startOfDay } from "date-fns"
+import { format, parseISO, subDays, startOfDay, getMonth } from "date-fns"
 import { usePlotStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
@@ -17,6 +17,8 @@ interface DayCell {
   iso: string
   label: string
   count: number
+  dayOfMonth: number
+  month: number // 0-11
 }
 
 function intensityClass(count: number, max: number): string {
@@ -63,8 +65,10 @@ export function ActivityHeatmap() {
       const key = format(day, "yyyy-MM-dd")
       days.push({
         iso: key,
-        label: format(day, "MMM d"),
+        label: format(day, "EEE, MMM d"),
         count: counts[key] ?? 0,
+        dayOfMonth: day.getDate(),
+        month: getMonth(day),
       })
     }
     return days
@@ -93,19 +97,30 @@ export function ActivityHeatmap() {
         </span>
       </div>
 
-      {/* Grid: 6 rows × 5 columns (oldest top-left → newest bottom-right) */}
+      {/* Grid: 5 rows × 6 columns (oldest top-left → newest bottom-right) */}
       <div className="grid grid-cols-6 gap-0.5">
-        {cells.map((cell) => (
-          <button
-            key={cell.iso}
-            onClick={() => handleClick(cell.iso)}
-            className={cn(
-              "h-3 w-full rounded-[2px] transition-all hover:ring-1 hover:ring-accent/60",
-              intensityClass(cell.count, maxCount),
-            )}
-            title={`${cell.label}: ${cell.count} ${cell.count === 1 ? "item" : "items"}`}
-          />
-        ))}
+        {cells.map((cell, i) => {
+          // Month divider: left border when this cell is the 1st of a month (and not the first cell)
+          const isMonthStart = i > 0 && cell.dayOfMonth === 1
+          return (
+            <div
+              key={cell.iso}
+              className={cn("relative", isMonthStart && "pl-px")}
+            >
+              {isMonthStart && (
+                <div className="absolute left-0 top-0 bottom-0 w-px bg-sidebar-muted/20" />
+              )}
+              <button
+                onClick={() => handleClick(cell.iso)}
+                className={cn(
+                  "h-3 w-full rounded-[2px] transition-all hover:ring-1 hover:ring-accent/60",
+                  intensityClass(cell.count, maxCount),
+                )}
+                title={`${cell.label}: ${cell.count} ${cell.count === 1 ? "item" : "items"}`}
+              />
+            </div>
+          )
+        })}
       </div>
     </div>
   )
