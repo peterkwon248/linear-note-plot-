@@ -6,57 +6,44 @@
 
 ---
 
-**Last Updated**: 2026-04-10 저녁 (Split-First 완성 + Calendar 리뉴얼 + 9개 view 버그 픽스 직후)
+**Last Updated**: 2026-04-10 저녁 (P2 각주 리치텍스트 + Reference 개선 직후)
 
 ## 🎯 다음 세션 시작하면 바로 할 것
 
-### 1. **P0-카드: FootnotesFooter 접기/펼치기 재검증**
+### 1. **각주 Edit 버튼 동작 확인**
 
-PR #174에서 작업한 기능 — 기본 접힌 상태 `▶ FOOTNOTES (N)`, 본문 `[N]` 클릭 시 자동 펼침. 동작 재확인 필요.
+본문 `[1]` 호버 → 팝오버의 "Edit ✏️" 클릭 → Footer로 스크롤 + 편집 모드 자동 활성화.
+이번 세션 마지막에 구현했는데 테스트 미완. `setTimeout(150ms)` 기반 — 타이밍 이슈 가능.
 
-- 브라우저에서 Reference가 있는 노트 열기
-- Footer가 기본 접힌 상태인지 확인
-- 본문 각주 `[1]` 클릭 시 자동 펼쳐지는지 확인
-- 파일: `components/editor/footnotes-footer.tsx`
+**파일**: `components/editor/nodes/footnote-node.tsx` (scrollToFooterAndEdit)
+**확인**: 1) Edit 클릭 → Footer 스크롤 됨? 2) 해당 항목 자동 편집 모드?
 
-### 2. **P0-카드: referenceLink 노드 Shift+클릭 검증**
+### 2. **P2-2: 인포박스 고도화**
 
-`[[`/`@` 드롭다운에서 url 필드 있는 Reference 선택 시 referenceLink 노드(🔗) 삽입 확인. Shift+클릭은 반대 모드.
+- 대표 이미지, 섹션 구분 행, 접기/펼치기
+- 위키 인포박스에 이미지 + 구분 행 추가
+- 브레인스토밍 필요 (나무위키/위키피디아 인포박스 레퍼런스)
 
-### 3. **P0-카드: 6곳 `setSidePanelContext` UX 재평가**
+### 3. **P2-3: 인사이트 허브**
 
-Phase 3에서 `openSidePeek`를 `setSidePanelContext`로 교체한 6곳:
-- `side-panel-connections.tsx` (openConnectedNote/Wiki 헬퍼)
-- `wikilink-context-menu.tsx` (handlePeek)
-- `note-hover-preview.tsx` (handlePeek)
-- `nodes/note-embed-node.tsx` (onClick)
-- `wiki-block-renderer.tsx` ("Open in side panel" 메뉴)
-- `lib/note-reference-actions.ts` line 100 (regular click)
-
-각각 실사용 관점에서 재평가:
-- 정말로 "사이드 패널 Detail에 미리보기"가 맞는지
-- 아니면 "secondary pane에 열기" (`openInSecondary`)가 더 자연스러운지
-- 또는 일반 `openNote` 네비게이션이 나은지
-
-sticky ctx는 이제 자동 클리어되므로 이전보다 덜 거슬리지만, 6곳이 과연 같은 전략이 맞는지 UX 관점 재검토.
+- 온톨로지 Single Source of Insights
+- Knowledge WAR, Link Density, Stub Conversion Rate 등
 
 ## 🧠 멘탈 상태 (잊지 말 것)
 
-- **Split-First 복귀 완료**: Phase 2~5 전체, store v74, SecondaryOpenPicker (`Cmd+Shift+\`), Focus tracking (border-t-accent)
-- **Calendar 리뉴얼 완료**: Wiki 통합 (createdAt), 미니 캘린더 + Activity Heatmap, Today Wiki 카운트, view-swap 버그 픽스
-- **9개 view 모두 isEditing → WorkspaceEditorArea swap 패턴 적용됨**: wiki/ontology/labels/templates/insights/graph-insights/todo/home/search (Calendar/NotesTable 제외 — 이미 있었음)
-- **Sticky sidePanelContext 자동 클리어**: `setActivePane`/`openInSecondary`/`openNote`에서 ctx 클리어
-- **헤더 단차 픽스**: 4개 헤더 모두 52px (`h-(--header-height)`) 통일
-- **A|B 아이콘 → SplitHorizontal**: view-header의 split 버튼 + IconSplitView 자체도 A/B 텍스트 제거
+- **Store version: v76** (v72→v73 Peek 제거, v73→v74 secondaryPins, v74→v75 Reference.history, v75→v76 Reference.usedInNoteIds)
+- **각주 편집 경로 통일**: 본문 팝오버 = 읽기 전용 (Edit 버튼 → Footer). Footer = 미니 TipTap + URL 전용 input. textarea 완전 제거.
+- **FootnoteMiniEditor**: StarterKit inline only + Underline + Link. 툴바 없음 (나무위키 패턴 — Ctrl+B/I/U만). `immediatelyRender: false` 필수 (SSR).
+- **URL 저장**: Footer URL input → Reference.fields에 url 키로 자동 sync. 기존 url 없으면 추가, 있으면 업데이트, 비우면 제거.
+- **Rebuild links**: Reference Detail 패널 "Used In" 하단 "Rebuild links" 버튼 → IDB 전체 스캔 (note bodies + wiki block bodies).
+- **Key 충돌 fix**: WikilinkSuggestion `${type}:${id}`, MentionSuggestion `${mentionType}:${id}`, Calendar `${noteType}:${id}`.
 
-## ⚠️ 이번 세션에서 쌓인 기술 debt
+## ⚠️ 알려진 이슈
 
-- **InsightsView subcomponents**: 내부에 `openNote` 호출부 3곳 더 있음 (line 120, 187). 메인 isEditing 스왑은 됐지만 secondary pane에서 InsightsView 렌더되면 그 클릭들은 여전히 primary로 감. `usePaneOpenNote`로 교체 필요 (nice-to-have)
-- **ActivityHeatmap 스타일**: 최소 기능만 — 색 intensity, 클릭 점프. Tooltip/라벨/월별 구분선 등은 미완
-- **Mini calendar 활동 dot**: createdAt만 집계. updatedAt 별도 레이어 표시는 미완
+- **Edit 버튼 → Footer 편집 연동**: setTimeout(150ms) 기반. 느린 머신에서 타이밍 이슈 가능. autoEditId state flow도 있는데 두 메커니즘 중복 — 정리 필요.
+- **각주 content JSON 포맷**: 기존 plain text와 새 TipTap JSON이 혼재. `parseContent()`/`getFootnotePlainText()`가 둘 다 처리하지만 점진적 마이그레이션 중.
 
-## 🚧 보류 (P1, P2, P3 — docs/TODO.md 참조)
+## 🚧 보류 (P2, P3 — docs/TODO.md 참조)
 
-- P1: Reference.history, Library/Wiki Bento Grid, Library FilterPanel
-- P2: 인사이트 허브, 각주 리치 텍스트, 인포박스 고도화
+- P2: 인포박스 고도화, 인사이트 허브
 - P3: 사이드패널 리디자인, 동음이의어 해소, 커맨드 팔레트 확장

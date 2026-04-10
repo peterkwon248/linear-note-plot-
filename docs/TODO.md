@@ -38,25 +38,30 @@
 
 ## P1 — 기능 확장 (이번 세션에서 보류)
 
-- [ ] **Reference.history** — 데이터 모델 + UI (작업 중간에 멈춤)
-- [ ] **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card, Featured Article, Activity Feed
-- [ ] **Library FilterPanel Notes 수준** — view-engine 인프라 재사용, 2단계 nested 필터
+- [x] **Reference.history** ✅ — ReferenceHistoryEntry 타입 + store 4개 액션 history 기록 + v75 migration + ReferenceHistorySection UI (접기/펼치기 + 타임라인 + Revert)
+- [x] **Library Overview 위키 패턴 적용** ✅ — Featured Reference + Type 칩 (Link/Citation) + Reference 카드 그리드 + View all
+- [x] **Library FilterPanel** ✅ — 이미 구현됨 (QuickFilter/FieldKeys/Sort/Search)
 
 ---
 
-## P1-카드 (이번 세션에서 쌓인 debt)
+## P1-카드 ✅ 완료
 
-- [ ] **InsightsView 내부 subcomponents** — `openNote` 3곳 (line 120, 187)을 `usePaneOpenNote`로 교체 (secondary pane에서 렌더 시 바른 동작)
-- [ ] **ActivityHeatmap 고도화** — tooltip 확장, 월별 구분선, updatedAt 별도 레이어
-- [ ] **Mini calendar 확장** — updatedAt 레이어, 이벤트 count 표시
+- [x] **InsightsView openNote → usePaneOpenNote** (2곳)
+- [x] **ActivityHeatmap 월별 구분선** (dayOfMonth=1 시 세로선)
+- [x] **Mini calendar updatedAt 레이어** (accent=created, amber=updated 2-dot)
+
+## P1-카드 (추가 남은 것)
+
+- [ ] **ActivityHeatmap tooltip 확장** — hover 시 날짜 + 상세 카운트
+- [ ] **Mini calendar 이벤트 count 표시** — 숫자 대신 dot 크기 또는 색 intensity
 
 ---
 
 ## P2 — 인사이트 + 각주
 
-- [ ] **인사이트 허브** — 온톨로지 Single Source of Insights. Knowledge WAR / Link Density / Stub Conversion Rate 등
-- [ ] **각주 리치 텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
+- [x] **각주 리치 텍스트** ✅ — FootnoteMiniEditor (미니 TipTap, 나무위키 패턴: 툴바 없음 Ctrl+B/I/U만). Footer URL 전용 input. 본문 팝오버 읽기 전용 + Edit 버튼 → Footer 연동. content JSON 자동 마이그레이션.
 - [ ] **인포박스 고도화** — 대표 이미지, 섹션 구분 행, 접기/펼치기, 셀 위키링크
+- [ ] **인사이트 허브** — 온톨로지 Single Source of Insights. Knowledge WAR / Link Density / Stub Conversion Rate 등
 
 ---
 

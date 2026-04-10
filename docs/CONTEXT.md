@@ -37,8 +37,9 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (22): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
-- **Store version: v74** (v73: Peek 레거시 제거, v74: secondaryPins 추가)
+- **Store version: v76** (v73: Peek 레거시 제거, v74: secondaryPins, v75: Reference.history, v76: Reference.usedInNoteIds)
 - workspace slice: `secondaryNoteId`, `activePane`, `secondaryHistory`, `secondaryPins` (max 5), `secondaryPickerOpen`, `toggleSecondaryPin`
+- references slice: `linkNoteToReference`, `unlinkNoteFromReference`, `syncNoteReferenceLinks` (에디터 save 시 자동 호출)
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System

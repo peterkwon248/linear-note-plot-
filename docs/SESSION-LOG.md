@@ -6,9 +6,16 @@
 
 ---
 
-## 2026-04-10 (집 또는 회사 — 긴 세션)
+## 2026-04-10 (긴 세션, 커밋 2개)
 
-### 완료 — Split-First 복귀 완성 (PR #177 예정)
+### 완료 — 2차 커밋 (P1-카드 + P2 각주 + Reference 개선)
+- **P1-카드 3개**: InsightsView openNote→usePaneOpenNote (2곳), ActivityHeatmap 월별 구분선, Mini calendar updatedAt 레이어 (accent/amber 2-dot)
+- **P2 각주 리치 텍스트**: FootnoteMiniEditor (미니 TipTap, 툴바 없음 나무위키 패턴), Footer URL 전용 input (텍스트/URL 분리), 본문 팝오버 읽기 전용 + Edit 버튼 → Footer 연동, content JSON 자동 마이그레이션
+- **Reference 개선**: "Rebuild links" 버튼 (IDB 전체 스캔), Used In에 wiki article 지원
+- **버그 수정**: WikilinkSuggestion/MentionSuggestion key 충돌 (type:id prefix)
+- **Store v76**: Reference.usedInNoteIds
+
+### 완료 — 1차 커밋 (Split-First + Calendar + 11 view + Reference.history + Library)
 - **Phase 2**: Store cleanup — `SidePanelMode 'peek'`, `PeekContext`, `secondarySidePanel*` 전부 제거, v72 → v73 migration
 - **Phase 3**: Peek 파일/참조 제거 — `side-panel-peek.tsx`, `peek-empty-state.tsx`, `lib/peek/*` 5개 파일 삭제 + `openSidePeek` 호출 14곳 정리 (대부분 `setSidePanelContext`로 교체, 일부는 `openInSecondary`)
 - **Phase 4**: Split view picker 재설계 — 새 파일 3개 (`lib/workspace/entity-search.ts`, `lib/workspace/secondary-suggestions.ts`, `components/workspace/secondary-open-picker.tsx`) + store 확장 (`secondaryPins`, `secondaryPickerOpen`, `toggleSecondaryPin`) + v73 → v74 migration + `Cmd+Shift+\` 단축키
