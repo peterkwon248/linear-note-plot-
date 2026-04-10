@@ -6,93 +6,57 @@
 
 ---
 
-**Last Updated**: 2026-04-10 (Peek-First 실험 → Split-First 복귀, Phase 1 완료 직후)
+**Last Updated**: 2026-04-10 저녁 (Split-First 완성 + Calendar 리뉴얼 + 9개 view 버그 픽스 직후)
 
 ## 🎯 다음 세션 시작하면 바로 할 것
 
-### Phase 2: Store cleanup (Peek/secondarySidePanel 레거시 제거)
+### 1. **P0-카드: FootnotesFooter 접기/펼치기 재검증**
 
-**배경**: Phase 1에서 SmartSidePanel을 단일 인스턴스 + global state로 단순화 했음 (`useSidePanelEntity` + `PaneProvider`로 focus-following). tsc는 pass지만 store에 미사용 peek/secondarySidePanel 상태가 여전히 존재.
+PR #174에서 작업한 기능 — 기본 접힌 상태 `▶ FOOTNOTES (N)`, 본문 `[N]` 클릭 시 자동 펼침. 동작 재확인 필요.
 
-**구체 작업 (tsc 연쇄 에러가 예상되니 하나씩 수정):**
+- 브라우저에서 Reference가 있는 노트 열기
+- Footer가 기본 접힌 상태인지 확인
+- 본문 각주 `[1]` 클릭 시 자동 펼쳐지는지 확인
+- 파일: `components/editor/footnotes-footer.tsx`
 
-1. **`lib/store/types.ts`** — `SidePanelMode`에서 `'peek'` 제거
-2. **`lib/store/types.ts`** — peek 상태 필드 전부 제거:
-   - `sidePanelPeekContext`, `peekHistory`, `peekPins`, `peekSize`, `peekNavStack`, `peekNavIndex`
-   - `PeekContext`, `PeekPreset` 타입 export
-3. **`lib/store/types.ts`** — peek 액션 제거:
-   - `openSidePeek`, `closeSidePeek`, `togglePeekPin`, `removeFromPeekHistory`, `clearPeekHistory`, `setPeekSize`, `peekGoBack`, `peekGoForward`
-4. **`lib/store/types.ts`** — secondarySidePanel 상태/액션 제거:
-   - `secondarySidePanelOpen`, `secondarySidePanelMode`, `secondarySidePanelContext`
-   - `setSecondarySidePanelOpen`, `toggleSecondarySidePanel`
-5. **`lib/store/slices/ui.ts`** — 위 액션들의 구현 제거 + 관련 helper(peekKey, MAX_PEEK_* 상수, PEEK_SIZE_MIN/MAX 등)
-6. **`lib/store/index.ts`** — 초기값에서 peek/secondary sidepanel 필드 제거, `partialize` exclusion 리스트 정리
-7. **`lib/store/migrate.ts`** — 레거시 필드 `delete` 처리 추가 (기존 persist 데이터 호환)
+### 2. **P0-카드: referenceLink 노드 Shift+클릭 검증**
 
-### Phase 3: Peek 파일/참조 제거
+`[[`/`@` 드롭다운에서 url 필드 있는 Reference 선택 시 referenceLink 노드(🔗) 삽입 확인. Shift+클릭은 반대 모드.
 
-**주의**: `components/side-panel/side-panel-peek.tsx`는 아직 삭제하면 안 됨. `smart-side-panel.tsx`의 `showPeek` 렌더 블록(import)이 참조 중 → 먼저 3-2에서 렌더 블록 제거, 그 다음 3-1.
+### 3. **P0-카드: 6곳 `setSidePanelContext` UX 재평가**
 
-1. **`components/side-panel/smart-side-panel.tsx`**: `showPeek` 변수 + 렌더 블록 + import 제거 (SidePanelPeek, PeekEmptyState)
-2. **`components/side-panel/side-panel-peek.tsx`** 삭제
-3. **`components/side-panel/peek-empty-state.tsx`** 삭제 (또는 Phase 4에서 secondary-open-picker로 이관)
-4. **`lib/peek/peek-presets.ts`** 삭제 (사용 없음)
-5. **`hooks/use-global-shortcuts.ts`**: `Cmd+Shift+P` 핸들러 삭제 또는 secondary picker 오픈으로 교체
-6. **`lib/note-reference-actions.ts`** line ~100: `store.openSidePeek({ type, id })` → split view 진입 또는 삭제
-7. **`components/editor/wikilink-context-menu.tsx`** line ~146: `openSidePeek` → `openInSecondary`
-8. **`components/editor/note-hover-preview.tsx`** line ~246: `openSidePeek` → `openInSecondary`
-9. **`components/side-panel/side-panel-connections.tsx`**: 8개 `openSidePeek` 호출 → `openInSecondary` 또는 제거
+Phase 3에서 `openSidePeek`를 `setSidePanelContext`로 교체한 6곳:
+- `side-panel-connections.tsx` (openConnectedNote/Wiki 헬퍼)
+- `wikilink-context-menu.tsx` (handlePeek)
+- `note-hover-preview.tsx` (handlePeek)
+- `nodes/note-embed-node.tsx` (onClick)
+- `wiki-block-renderer.tsx` ("Open in side panel" 메뉴)
+- `lib/note-reference-actions.ts` line 100 (regular click)
 
-### Phase 4: Split view picker 재설계 (자산 재활용)
+각각 실사용 관점에서 재평가:
+- 정말로 "사이드 패널 Detail에 미리보기"가 맞는지
+- 아니면 "secondary pane에 열기" (`openInSecondary`)가 더 자연스러운지
+- 또는 일반 `openNote` 네비게이션이 나은지
 
-1. **`lib/peek/peek-search.ts`** → **`lib/workspace/entity-search.ts`** (이름 변경, 내용 대부분 유지)
-2. **`lib/peek/peek-suggestions.ts`** → **`lib/workspace/secondary-suggestions.ts`**
-3. **`components/side-panel/peek-empty-state.tsx`** → **`components/workspace/secondary-open-picker.tsx`**
-   - 진입: Cmd+Shift+\\ 또는 Cmd+Shift+P로 picker 열림
-   - 피커 동작: 노트/위키 선택 → `openInSecondary({type, id})` 호출 → secondary pane 오픈
-   - Recent / Pinned / Suggested 섹션 그대로 재활용 (데이터는 secondaryHistory + 새 secondaryPins)
-4. `secondaryHistory`에 pin 개념 추가하거나 별도 slice(`secondaryPins`) 신설
-
-### Phase 5: Focus tracking 강화 + 시각 피드백
-
-1. **Editor 컴포넌트**: `components/note-editor.tsx`, `components/workspace/secondary-panel-content.tsx` 등에 `onClick capture` → `usePlotStore.getState().setActivePane('primary'|'secondary')`
-2. **액티브 pane 시각 표시**: subtle top 2px accent border (예: `border-t-2 border-t-accent`). Focus 이동 애니메이션 150ms
-
-### Phase 6: Split view 통합 검증
-
-1. Cmd+\\ 동작 (현재 공간 복제 → secondary)
-2. Cmd+Shift+\\ 동작 (빈 secondary + picker)
-3. Wiki 편집 split view에서 확인 (오늘 Peek에서 enable한 것을 split으로 이관)
-4. 포커스 전환 시 sidebar 자동 갱신 (Detail 탭 내용 바뀜 확인)
-5. 사이드바 애니메이션 부드러운지
-
-### Phase 7: 문서 정리
-
-1. `docs/NEXT-ACTION.md`: 새 방향 반영 완료 후 재작성
-2. `docs/CONTEXT.md`: Peek-First → Split-First 결정 업데이트
-3. `docs/MEMORY.md`: 이미 이번 after-work에서 업데이트됨
-
----
+sticky ctx는 이제 자동 클리어되므로 이전보다 덜 거슬리지만, 6곳이 과연 같은 전략이 맞는지 UX 관점 재검토.
 
 ## 🧠 멘탈 상태 (잊지 말 것)
 
-- **Phase 1 완료**: `SmartSidePanel`이 단일 인스턴스. `pane` prop 없음. global state. `useSidePanelEntity`가 `usePane()` → `activePane`을 따라감
-- **Peek 탭은 이미 UI에서 제거됨** — 4탭 (Detail/Connections/Activity/Bookmarks)
-- **`side-panel-connections.tsx`만 `useSidePanelEntity` 적용됨** — Detail/Activity/Bookmarks는 이전부터 이미 적용
-- **side-panel-peek.tsx는 아직 살아있음** — smart-side-panel.tsx의 `showPeek` 블록 참조. Phase 3-1에서 해당 블록 제거 후 파일 삭제
-- **`openSidePeek` 호출부 6곳 남음**: note-reference-actions, wikilink-context-menu, note-hover-preview, side-panel-connections, wiki-block-renderer, note-embed-node
-- **Peek-First 자산 재활용 목록** (MEMORY.md 참조): StatusShapeIcon, MentionSuggestion 개선, peek-search, peek-suggestions, Tooltip fix, FixedToolbar variant
-- **tsc는 현재 clean** — 이번 after-work 체크포인트는 안전한 복귀 지점
+- **Split-First 복귀 완료**: Phase 2~5 전체, store v74, SecondaryOpenPicker (`Cmd+Shift+\`), Focus tracking (border-t-accent)
+- **Calendar 리뉴얼 완료**: Wiki 통합 (createdAt), 미니 캘린더 + Activity Heatmap, Today Wiki 카운트, view-swap 버그 픽스
+- **9개 view 모두 isEditing → WorkspaceEditorArea swap 패턴 적용됨**: wiki/ontology/labels/templates/insights/graph-insights/todo/home/search (Calendar/NotesTable 제외 — 이미 있었음)
+- **Sticky sidePanelContext 자동 클리어**: `setActivePane`/`openInSecondary`/`openNote`에서 ctx 클리어
+- **헤더 단차 픽스**: 4개 헤더 모두 52px (`h-(--header-height)`) 통일
+- **A|B 아이콘 → SplitHorizontal**: view-header의 split 버튼 + IconSplitView 자체도 A/B 텍스트 제거
 
-## ⚠️ 구현 전 주의사항
+## ⚠️ 이번 세션에서 쌓인 기술 debt
 
-- **Phase 2 순서 중요**: types.ts 먼저 → ui.ts 슬라이스 → index.ts 초기값 → migrate.ts. tsc 연쇄 에러 하나씩 잡으면서 진행
-- **`useSidePanelEntity`는 이미 PR #173에서 구현됨** — 재발명 금지. `components/side-panel/use-side-panel-entity.ts` 참조
-- **Split view는 이미 layout.tsx에 존재** — `hasSplit`, `secondaryNoteId`, `hasViewSplit` 로직. Peek 위에 얹혀 있었을 뿐
-- **오늘 작업 dead code 위험**: store 정리하면서 일부 오늘 추가한 wikilink 편집 관련 코드가 의미 없어질 수 있음. 보수적으로 판단
+- **InsightsView subcomponents**: 내부에 `openNote` 호출부 3곳 더 있음 (line 120, 187). 메인 isEditing 스왑은 됐지만 secondary pane에서 InsightsView 렌더되면 그 클릭들은 여전히 primary로 감. `usePaneOpenNote`로 교체 필요 (nice-to-have)
+- **ActivityHeatmap 스타일**: 최소 기능만 — 색 intensity, 클릭 점프. Tooltip/라벨/월별 구분선 등은 미완
+- **Mini calendar 활동 dot**: createdAt만 집계. updatedAt 별도 레이어 표시는 미완
 
-## 🚧 보류 (나중에)
+## 🚧 보류 (P1, P2, P3 — docs/TODO.md 참조)
 
-- **Reference.history** — 데이터 모델 + UI 중간에 멈춤. Split-First 완료 후
-- Library Bento Grid 리디자인, Library FilterPanel
-- `@` 멘션에 Reference 지원 (지금은 이미 있음 — 확인됨. 이 항목 폐기)
+- P1: Reference.history, Library/Wiki Bento Grid, Library FilterPanel
+- P2: 인사이트 허브, 각주 리치 텍스트, 인포박스 고도화
+- P3: 사이드패널 리디자인, 동음이의어 해소, 커맨드 팔레트 확장

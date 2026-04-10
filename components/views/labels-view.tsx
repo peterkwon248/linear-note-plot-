@@ -38,6 +38,8 @@ import { FilterButton, FilterChipBar } from "@/components/filter-bar"
 import type { SortField, FilterRule, GroupBy } from "@/lib/view-engine/types"
 import type { Label } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane, usePaneOpenNote } from "@/components/workspace/pane-context"
 
 /* ── Sort/Group options for detail view ─────────────────── */
 
@@ -128,7 +130,10 @@ export function LabelsView() {
   const createLabel = usePlotStore((s) => s.createLabel)
   const deleteLabel = usePlotStore((s) => s.deleteLabel)
   const updateLabel = usePlotStore((s) => s.updateLabel)
-  const openNote = usePlotStore((s) => s.openNote)
+  const openNote = usePaneOpenNote()
+  const selectedNoteIdStore = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  const isEditing = pane === 'primary' && selectedNoteIdStore !== null
 
   // Search state
   const [search, setSearch] = useState("")
@@ -408,6 +413,15 @@ export function LabelsView() {
       document.removeEventListener("mouseup", handleMouseUp)
     }
   }, [])
+
+  // ── Workspace editor area: show when editing in primary pane ──
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
+      </div>
+    )
+  }
 
   // ── Label Detail Mode ──
   if (selectedLabelId && selectedLabel) {

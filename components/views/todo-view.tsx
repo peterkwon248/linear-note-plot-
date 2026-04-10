@@ -9,12 +9,17 @@ import { Square } from "@phosphor-icons/react/dist/ssr/Square"
 import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane, usePaneOpenNote } from "@/components/workspace/pane-context"
 
 export function TodoView() {
   const todoTasks = usePlotStore((s) => s.todoTasks)
   const toggleTaskChecked = usePlotStore((s) => s.toggleTaskChecked)
   const addQuickTask = usePlotStore((s) => s.addQuickTask)
-  const openNote = usePlotStore((s) => s.openNote)
+  const openNote = usePaneOpenNote()
+  const selectedNoteIdStore = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  const isEditing = pane === 'primary' && selectedNoteIdStore !== null
   const rebuildTodoIndex = usePlotStore((s) => s.rebuildTodoIndex)
 
   const [showCompleted, setShowCompleted] = useState(false)
@@ -36,6 +41,15 @@ export function TodoView() {
   useEffect(() => {
     rebuildTodoIndex()
   }, [rebuildTodoIndex])
+
+  // ── Workspace editor area: show when editing in primary pane ──
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto">

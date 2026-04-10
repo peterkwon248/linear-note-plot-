@@ -24,16 +24,13 @@ export interface EditorState {
   panelRatios: number[]  // for 3-panel mode, e.g. [0.33, 0.33, 0.34]
 }
 
-export type SidePanelMode = 'detail' | 'connections' | 'activity' | 'peek' | 'bookmarks'
+export type SidePanelMode = 'detail' | 'connections' | 'activity' | 'bookmarks'
 
 export type SidePanelContext =
   | { type: "note"; id: string }
   | { type: "wiki"; id: string }
   | { type: "reference"; id: string }
   | null
-
-/** Peek target — Peek sidebar can display either a Note or a Wiki article. */
-export type PeekContext = { type: "note" | "wiki"; id: string }
 
 export interface PlotState {
   // ── Data ──
@@ -60,34 +57,12 @@ export interface PlotState {
   linkPickerOpen: boolean
   linkPickerSourceId: string | null
 
-  // Side Panel (peek) — supports both notes and wiki articles
-  sidePanelPeekContext: PeekContext | null
-
-  // Peek session data (persisted across sessions)
-  /** Most-recently-opened Peek targets, newest first. Bounded. */
-  peekHistory: PeekContext[]
-  /** User-pinned Peek targets (max 2). Shown in Empty State. */
-  peekPins: PeekContext[]
-  /** Peek panel width as a percentage of the main layout (15–50). Applied only in single-pane peek mode. */
-  peekSize: number
-  /** Linear navigation stack for Peek back/forward (oldest first, with duplicates). Transient — not persisted. */
-  peekNavStack: PeekContext[]
-  /** Current position in peekNavStack. -1 = empty. */
-  peekNavIndex: number
-
   // Preview (list row click — shows details in side panel without opening editor)
   previewNoteId: string | null
 
   // Side Panel Context (entity-aware — works for both notes and wiki articles)
   sidePanelContext: SidePanelContext
   setSidePanelContext: (ctx: SidePanelContext) => void
-
-  // Secondary Side Panel (right pane's own side panel)
-  secondarySidePanelOpen: boolean
-  secondarySidePanelMode: SidePanelMode
-  secondarySidePanelContext: SidePanelContext
-  setSecondarySidePanelOpen: (open: boolean) => void
-  toggleSecondarySidePanel: () => void
 
   // Navigation History
   navigationHistory: string[]  // stack of note IDs
@@ -241,21 +216,6 @@ export interface PlotState {
   setListPaneWidth: (width: number) => void
   setPreviewNoteId: (id: string | null) => void
   openReferencePanel: (refId: string) => void
-  /** Open the peek side panel. Accepts a noteId string (treated as a note) or a PeekContext for notes/wiki. */
-  openSidePeek: (target: string | PeekContext) => void
-  closeSidePeek: () => void
-  /** Toggle Pin for a Peek target. Max 2 pins — oldest is evicted when full. */
-  togglePeekPin: (target: PeekContext) => void
-  /** Remove an entry from peekHistory (e.g. when user deletes a noted entity). */
-  removeFromPeekHistory: (target: PeekContext) => void
-  /** Clear all peek history. */
-  clearPeekHistory: () => void
-  /** Set Peek panel width (percentage, clamped 15–50). */
-  setPeekSize: (size: number) => void
-  /** Navigate back in Peek history. No-op if at the oldest entry. */
-  peekGoBack: () => void
-  /** Navigate forward in Peek history. No-op if at the newest entry. */
-  peekGoForward: () => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
   setPendingWikiAssembly: (noteIds: string[] | null) => void
@@ -339,6 +299,12 @@ export interface PlotState {
   deleteReference: (id: string) => void
   restoreReference: (id: string) => void
   permanentlyDeleteReference: (id: string) => void
+  /** Link a note to a reference (idempotent). */
+  linkNoteToReference: (refId: string, noteId: string) => void
+  /** Unlink a note from a reference. */
+  unlinkNoteFromReference: (refId: string, noteId: string) => void
+  /** Sync all reference links for a note — adds/removes as needed. Call on editor save. */
+  syncNoteReferenceLinks: (noteId: string, referenceIds: string[]) => void
 
   // ── Global Bookmarks ──
   pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType']) => string
@@ -375,12 +341,16 @@ export interface PlotState {
   pendingWikiAssemblyIds: string[] | null
 
   // ── Workspace (Simplified Dual Pane) ──
-  secondaryNoteId: string | null  // right editor note (null = single pane)
+  secondaryNoteId: string | null  // right editor note (null = single pane). Holds note ID OR wiki article ID.
   activePane: 'primary' | 'secondary'
   editorTabs: WorkspaceTab[]
   activeTabId: string | null
-  secondaryHistory: string[]       // right panel navigation stack
+  secondaryHistory: string[]       // right panel navigation stack (note IDs or wiki article IDs)
   secondaryHistoryIndex: number    // current position (-1 = empty)
+  /** User-pinned secondary targets, persisted. Max 5. Each entry is a note or wiki ref. */
+  secondaryPins: Array<{ type: "note" | "wiki"; id: string }>
+  /** Whether the SecondaryOpenPicker dialog is open. Transient (not persisted). */
+  secondaryPickerOpen: boolean
   openInSecondary: (noteId: string) => void
   closeSecondary: () => void
   setActivePane: (pane: 'primary' | 'secondary') => void
@@ -388,6 +358,11 @@ export interface PlotState {
   setActiveEditorTab: (tabId: string) => void
   secondaryGoBack: () => boolean
   secondaryGoForward: () => boolean
+  /** Toggle a Pin for a secondary target. Max 5 — oldest is evicted when full. */
+  toggleSecondaryPin: (target: { type: "note" | "wiki"; id: string }) => void
+  /** Remove a Pin (if present) without toggling logic. */
+  removeSecondaryPin: (target: { type: "note" | "wiki"; id: string }) => void
+  setSecondaryPickerOpen: (open: boolean) => void
 
   // ── Todo Index (derived cache, not persisted) ──
   todoTasks: TaskItem[]

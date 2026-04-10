@@ -25,6 +25,8 @@ import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { getOrphanActions, type OrphanAction } from "@/lib/orphan-actions"
 import { toast } from "sonner"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane } from "@/components/workspace/pane-context"
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -533,6 +535,9 @@ export function HomeView() {
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const selectedNoteIdStore = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  const isEditing = pane === 'primary' && selectedNoteIdStore !== null
 
   const today = todayString()
 
@@ -609,6 +614,15 @@ export function HomeView() {
   function navigateToNote(noteId: string) {
     setSelectedNoteId(noteId)
     setActiveRoute("/notes")
+  }
+
+  // ── Workspace editor area: show when editing in primary pane ──
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
+      </div>
+    )
   }
 
   /* ── Detail view routing ── */

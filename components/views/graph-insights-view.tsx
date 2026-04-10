@@ -16,6 +16,8 @@ import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane, usePaneOpenNote } from "@/components/workspace/pane-context"
 
 /* ── StatCard ─────────────────────────────────────────── */
 
@@ -77,7 +79,10 @@ function DashboardCard({
 export function GraphInsightsView() {
   const notes = usePlotStore((s) => s.notes)
   const relations = usePlotStore((s) => s.relations)
-  const openNote = usePlotStore((s) => s.openNote)
+  const openNote = usePaneOpenNote()
+  const selectedNoteIdStore = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  const isEditing = pane === 'primary' && selectedNoteIdStore !== null
   const backlinkCounts = useBacklinksIndex()
 
   /* ── Core stats ── */
@@ -139,6 +144,15 @@ export function GraphInsightsView() {
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
   }, [nonTrashed])
+
+  // ── Workspace editor area: show when editing in primary pane ──
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">

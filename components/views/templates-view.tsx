@@ -35,6 +35,8 @@ import { TipTapEditor } from "@/components/editor/TipTapEditor"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import type { Editor } from "@tiptap/react"
 import { ViewHeader } from "@/components/view-header"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane, usePaneOpenNote } from "@/components/workspace/pane-context"
 import { PRESET_COLORS } from "@/lib/colors"
 
 /* ── Constants ─────────────────────────────────────────── */
@@ -720,7 +722,10 @@ export function TemplatesView() {
   const deleteTemplate = usePlotStore((s) => s.deleteTemplate) as (id: string) => void
   const toggleTemplatePin = usePlotStore((s) => s.toggleTemplatePin) as (id: string) => void
   const createNoteFromTemplate = usePlotStore((s) => s.createNoteFromTemplate) as (id: string) => string
-  const openNote = usePlotStore((s) => s.openNote)
+  const openNote = usePaneOpenNote()
+  const selectedNoteIdStore = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  const isEditing = pane === 'primary' && selectedNoteIdStore !== null
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
@@ -927,6 +932,15 @@ export function TemplatesView() {
             title="New Template"
           />
         )}
+      </div>
+    )
+  }
+
+  // ── Workspace editor area: show when editing a note in primary pane ──
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
       </div>
     )
   }

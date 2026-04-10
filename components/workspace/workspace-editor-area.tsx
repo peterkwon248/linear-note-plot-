@@ -28,6 +28,13 @@ export function WorkspaceEditorArea() {
 
   const hasSecondary = !!secondaryNoteId || !!secondarySpace
 
+  // Active-pane visual indicator: subtle top 2px accent border (only in split mode).
+  // Always reserve the border space (transparent when inactive) to avoid layout shift.
+  const primaryActiveClass = hasSecondary
+    ? `border-t-2 transition-colors duration-150 ${activePane === 'primary' ? 'border-t-accent' : 'border-t-transparent'}`
+    : ''
+  const secondaryActiveClass = `border-t-2 transition-colors duration-150 ${activePane === 'secondary' ? 'border-t-accent' : 'border-t-transparent'}`
+
   return (
     <ResizablePanelGroup direction="horizontal" className="flex-1">
       {/* 1. Primary editor */}
@@ -38,7 +45,7 @@ export function WorkspaceEditorArea() {
         minSize={20}
       >
         <div
-          className={`flex h-full flex-col overflow-hidden ${hasSecondary && activePane !== 'primary' ? 'opacity-80' : ''}`}
+          className={`flex h-full flex-col overflow-hidden ${primaryActiveClass}`}
           onMouseDownCapture={() => { if (activePane !== 'primary') setActivePane('primary') }}
           onFocusCapture={() => { if (activePane !== 'primary') setActivePane('primary') }}
         >
@@ -52,7 +59,7 @@ export function WorkspaceEditorArea() {
           <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
           <ResizablePanel id="secondary-content" order={2} defaultSize={50} minSize={20}>
             <div
-              className={`flex h-full flex-col overflow-hidden ${activePane !== 'secondary' ? 'opacity-80' : ''}`}
+              className={`flex h-full flex-col overflow-hidden ${secondaryActiveClass}`}
               onMouseDownCapture={() => { if (activePane !== 'secondary') setActivePane('secondary') }}
               onFocusCapture={() => { if (activePane !== 'secondary') setActivePane('secondary') }}
             >

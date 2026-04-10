@@ -18,6 +18,8 @@ import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane } from "@/components/workspace/pane-context"
 // ── Types ───────────────────────────────────────────────────────────────────
 
 type TabKey = "all" | "notes" | "wiki" | "tags" | "labels" | "templates" | "folders"
@@ -61,6 +63,9 @@ export function SearchView() {
   const templates = usePlotStore((s) => s.templates)
   const folders = usePlotStore((s) => s.folders)
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
+  const selectedNoteIdStore = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  const isEditing = pane === 'primary' && selectedNoteIdStore !== null
   const setSearchOpen = usePlotStore((s) => s.setSearchOpen)
   const setCommandPaletteMode = usePlotStore((s) => s.setCommandPaletteMode)
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
@@ -281,6 +286,15 @@ export function SearchView() {
     matchedLabels.length === 0 &&
     matchedTemplates.length === 0 &&
     matchedFolders.length === 0
+
+  // ── Workspace editor area: show when editing in primary pane ──
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
+      </div>
+    )
+  }
 
   // ── Render ─────────────────────────────────────────────────────────────────
 

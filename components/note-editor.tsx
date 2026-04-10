@@ -101,12 +101,10 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
-  const primaryDetailsOpen = usePlotStore((s) => s.sidePanelOpen)
-  const secondaryDetailsOpen = usePlotStore((s) => s.secondarySidePanelOpen)
-  const togglePrimarySidePanel = usePlotStore((s) => s.toggleSidePanel)
-  const toggleSecondarySidePanel = usePlotStore((s) => s.toggleSecondarySidePanel)
-  const detailsOpen = pane === 'secondary' ? secondaryDetailsOpen : primaryDetailsOpen
-  const toggleDetailsOpen = pane === 'secondary' ? toggleSecondarySidePanel : togglePrimarySidePanel
+  // Unified side panel: single global instance, follows activePane via PaneProvider.
+  // Both primary and secondary panes toggle the SAME panel.
+  const detailsOpen = usePlotStore((s) => s.sidePanelOpen)
+  const toggleDetailsOpen = usePlotStore((s) => s.toggleSidePanel)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
   // Secondary pane navigation
   const closeSecondary = usePlotStore((s) => s.closeSecondary)
@@ -310,7 +308,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
       <div className="flex flex-col flex-1 overflow-hidden w-full">
       {/* Editor Header */}
       <header className={cn(
-        "flex items-center justify-between border-b border-border py-2 px-4"
+        "flex h-(--header-height) shrink-0 items-center justify-between border-b border-border px-4"
       )}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {pane === 'secondary' && (

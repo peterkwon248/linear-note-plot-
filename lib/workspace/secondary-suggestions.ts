@@ -1,6 +1,6 @@
 /**
- * Peek suggestions — derive a list of PeekContexts to show in Empty State
- * so the panel never feels empty.
+ * Secondary pane suggestions — derive a list of SecondaryEntityRefs to show in
+ * the SecondaryOpenPicker so the picker never feels empty.
  *
  * Priority:
  *   1. If a note is currently being edited, surface its backlinks + outgoing
@@ -13,12 +13,12 @@
  */
 
 import { usePlotStore } from "@/lib/store"
-import type { PeekContext } from "@/lib/store/types"
+import type { SecondaryEntityRef } from "./entity-search"
 import type { Note } from "@/lib/types"
 
 const DEFAULT_LIMIT = 5
 
-function peekKey(ctx: PeekContext): string { return `${ctx.type}:${ctx.id}` }
+function entityKey(ref: SecondaryEntityRef): string { return `${ref.type}:${ref.id}` }
 
 /** Find notes whose `linksOut` references the target note's title or alias. */
 function getNoteBacklinks(targetId: string, notes: Note[]): string[] {
@@ -67,35 +67,35 @@ function getNoteOutlinks(targetId: string, notes: Note[]): string[] {
 }
 
 /**
- * Compute Peek suggestions.
+ * Compute secondary pane suggestions.
  *
  * @param opts.currentNoteId If set, suggestions prioritize backlinks/outlinks of this note.
- * @param opts.exclude Pre-filter: any contexts already shown elsewhere (pinned/recent) to skip.
+ * @param opts.exclude Pre-filter: any refs already shown elsewhere (pinned/recent) to skip.
  * @param opts.limit Maximum number of suggestions to return.
  */
-export function getPeekSuggestions(opts: {
+export function getSecondarySuggestions(opts: {
   currentNoteId: string | null
-  exclude?: PeekContext[]
+  exclude?: SecondaryEntityRef[]
   limit?: number
-}): PeekContext[] {
+}): SecondaryEntityRef[] {
   const limit = opts.limit ?? DEFAULT_LIMIT
   const store = usePlotStore.getState()
   const notes = store.notes
   const wikiArticles = store.wikiArticles ?? []
-  const excludedKeys = new Set<string>((opts.exclude ?? []).map(peekKey))
+  const excludedKeys = new Set<string>((opts.exclude ?? []).map(entityKey))
   // Also exclude the currently-edited note itself
   if (opts.currentNoteId) {
     excludedKeys.add(`note:${opts.currentNoteId}`)
   }
 
   const seenKeys = new Set<string>()
-  const results: PeekContext[] = []
-  const add = (ctx: PeekContext): boolean => {
+  const results: SecondaryEntityRef[] = []
+  const add = (ref: SecondaryEntityRef): boolean => {
     if (results.length >= limit) return false
-    const key = peekKey(ctx)
+    const key = entityKey(ref)
     if (seenKeys.has(key) || excludedKeys.has(key)) return true
     seenKeys.add(key)
-    results.push(ctx)
+    results.push(ref)
     return true
   }
 
@@ -149,7 +149,7 @@ export function getPeekSuggestions(opts: {
  * "Related" when there's a currently-edited note with at least one backlink/outlink,
  * otherwise "Suggested" (generic fallback).
  */
-export function getPeekSuggestionsLabel(currentNoteId: string | null): "Related" | "Suggested" {
+export function getSecondarySuggestionsLabel(currentNoteId: string | null): "Related" | "Suggested" {
   if (!currentNoteId) return "Suggested"
   const store = usePlotStore.getState()
   const hasBack = getNoteBacklinks(currentNoteId, store.notes).length > 0

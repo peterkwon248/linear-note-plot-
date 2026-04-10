@@ -6,6 +6,50 @@
 
 ---
 
+## 2026-04-10 (집 또는 회사 — 긴 세션)
+
+### 완료 — Split-First 복귀 완성 (PR #177 예정)
+- **Phase 2**: Store cleanup — `SidePanelMode 'peek'`, `PeekContext`, `secondarySidePanel*` 전부 제거, v72 → v73 migration
+- **Phase 3**: Peek 파일/참조 제거 — `side-panel-peek.tsx`, `peek-empty-state.tsx`, `lib/peek/*` 5개 파일 삭제 + `openSidePeek` 호출 14곳 정리 (대부분 `setSidePanelContext`로 교체, 일부는 `openInSecondary`)
+- **Phase 4**: Split view picker 재설계 — 새 파일 3개 (`lib/workspace/entity-search.ts`, `lib/workspace/secondary-suggestions.ts`, `components/workspace/secondary-open-picker.tsx`) + store 확장 (`secondaryPins`, `secondaryPickerOpen`, `toggleSecondaryPin`) + v73 → v74 migration + `Cmd+Shift+\` 단축키
+- **Phase 5**: Focus tracking + 시각 피드백 — `onMouseDownCapture`는 이미 `WorkspaceEditorArea`에 있었음, `opacity-80` → `border-t-2 border-t-accent`로 교체 + layout.tsx의 view-mode split에도 동일 적용
+- **Sticky `sidePanelContext` 버그 픽스** — `setActivePane`/`openInSecondary`/`openNote`에서 ctx 자동 클리어 (sticky → transient preview 동작)
+
+### 완료 — UI 폴리싱
+- **헤더 단차 픽스**: 4개 헤더 모두 52px `h-(--header-height)` 통일 (note-editor / linear-sidebar / smart-side-panel / wiki-secondary)
+- **A|B 아이콘 → SplitHorizontal**: view-header의 split 버튼 + `IconSplitView` 자체에서 A/B 텍스트 제거
+
+### 완료 — Calendar 리뉴얼 (Stage A/B/C)
+- **Stage A**: view-swap 버그 픽스 (`CalendarView`에 `isEditing → WorkspaceEditorArea swap` 패턴 + `usePaneOpenNote`)
+- **Stage B**: Wiki article 캘린더 통합 (`wikiToNoteShape()` 어댑터, dedupe, violet BookOpen 아이콘, 클릭 분기)
+- **Stage C**: 사이드바 재설계 (`components/sidebar/calendar-mini.tsx` 미니 월간 캘린더, `components/sidebar/activity-heatmap.tsx` last 30 days heatmap, Today 섹션 Wiki 카운트 추가, `plot:calendar-jump`/`plot:calendar-month-change` 이벤트 sync, SSR hydration 가드)
+
+### 완료 — 9개 view 통합 픽스 (Calendar와 같은 버그)
+- **wiki-view**, **ontology-view**, **labels-view**, **templates-view**, **insights-view**, **graph-insights-view**, **todo-view**, **home-view**, **search-view**에 동일 패턴 적용
+- `WorkspaceEditorArea` import + `isEditing` 체크 + 조건부 return
+- openNote 호출 view는 `usePaneOpenNote`로 교체 (home/search는 setSelectedNoteId 유지)
+
+### 큰 결정
+- **🎯 Split-First 복귀 확정** — Peek-First 실험 (PR #176 초반) 폐기 최종화
+- **Calendar = 지식 활동 시간 대시보드** — docs/CONTEXT.md의 Calendar 설계 spec 부분 구현 (Wiki layer, activity heatmap, mini calendar)
+- **노트/위키 시각 통일** — violet BookOpen (WIKI_STATUS_HEX.article), 노트 status shape
+- **9개 view 패턴 통일** — 모든 뷰가 NotesTableView와 동일하게 isEditing 감지 → WorkspaceEditorArea 렌더
+
+### 다음
+- P0-카드 (FootnotesFooter 재검증, referenceLink, 6곳 setSidePanelContext UX 재평가)
+- P1 (Reference.history, Library/Wiki Bento Grid, Library FilterPanel)
+
+### Watch Out
+- **git stash 실수**: `git stash 2>&1 | head -3` 명령을 디버깅 중 실행 → 세션 전체 변경사항이 stash로 이동함. `git stash pop stash@{0}`으로 즉시 복원함. 교훈: git stash는 `-u` 없어도 위험, 세션 중에는 사용 금지
+- **.next 캐시 stale**: HMR이 삭제된 peek-empty-state.tsx를 참조하려 해서 에러. `rm -rf .next` + 서버 재시작으로 해결
+- **Hydration mismatch**: `new Date()` in useState initializer → SSR/CSR 시간 차이. mount 가드 패턴으로 해결
+- **InsightsView subcomponents**: openNote 3곳 미처리 (P1-카드로 쌓임)
+
+### 머신
+(현재 세션)
+
+---
+
 ## 2026-04-09 오후~저녁 (회사)
 
 ### 완료

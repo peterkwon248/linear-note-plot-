@@ -239,6 +239,20 @@ export interface Tag {
   trashedAt?: string | null
 }
 
+/** A single entry in a Reference's edit history. */
+export interface ReferenceHistoryEntry {
+  /** ISO timestamp when this action occurred. */
+  at: string
+  /** What happened. */
+  action: "created" | "edited" | "trashed" | "restored"
+  /** Snapshot of PREVIOUS state (only present for `edited` actions). */
+  snapshot?: {
+    title: string
+    content: string
+    fields: Array<{ key: string; value: string }>
+  }
+}
+
 export interface Reference {
   id: string
   title: string           // 짧은 레이블 (e.g. "사피엔스 p.42")
@@ -249,6 +263,10 @@ export interface Reference {
   updatedAt: string
   trashed?: boolean
   trashedAt?: string | null
+  /** Append-only edit history. Max 50 entries (oldest evicted). */
+  history?: ReferenceHistoryEntry[]
+  /** Note IDs that reference this via footnoteRef or referenceLink. Maintained on editor save. */
+  usedInNoteIds?: string[]
 }
 
 export interface Label {

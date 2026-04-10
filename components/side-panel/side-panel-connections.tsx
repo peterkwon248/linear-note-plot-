@@ -119,7 +119,16 @@ function WikiArticleConnections() {
   const ctx = usePlotStore((s) => s.sidePanelContext)
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
-  const openSidePeek = usePlotStore((s) => s.openSidePeek)
+  const setSidePanelContext = usePlotStore((s) => s.setSidePanelContext)
+  const setSidePanelOpen = usePlotStore((s) => s.setSidePanelOpen)
+  const openConnectedNote = (id: string) => {
+    setSidePanelContext({ type: "note", id })
+    setSidePanelOpen(true)
+  }
+  const openConnectedWiki = (id: string) => {
+    setSidePanelContext({ type: "wiki", id })
+    setSidePanelOpen(true)
+  }
 
   const articleId = ctx?.type === "wiki" ? ctx.id : null
   const article = useMemo(
@@ -181,7 +190,7 @@ function WikiArticleConnections() {
                 {referencedNotes.map((n) => (
                   <button
                     key={n.id}
-                    onClick={() => openSidePeek(n.id)}
+                    onClick={() => openConnectedNote(n.id)}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="out" />
@@ -198,7 +207,7 @@ function WikiArticleConnections() {
                 {referencedBy.map((a) => (
                   <button
                     key={a.id}
-                    onClick={() => openSidePeek({ type: "wiki", id: a.id })}
+                    onClick={() => openConnectedWiki(a.id)}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="in" />
@@ -236,7 +245,16 @@ function NoteConnections() {
   const tags = usePlotStore((s) => s.tags)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCollections = usePlotStore((s) => s.wikiCollections)
-  const openSidePeek = usePlotStore((s) => s.openSidePeek)
+  const setSidePanelContext = usePlotStore((s) => s.setSidePanelContext)
+  const setSidePanelOpen = usePlotStore((s) => s.setSidePanelOpen)
+  const openConnectedNote = (id: string) => {
+    setSidePanelContext({ type: "note", id })
+    setSidePanelOpen(true)
+  }
+  const openConnectedWiki = (id: string) => {
+    setSidePanelContext({ type: "wiki", id })
+    setSidePanelOpen(true)
+  }
   const addWikiLink = usePlotStore((s) => s.addWikiLink)
 
   const note = notes.find((n) => n.id === noteId) ?? null
@@ -449,7 +467,7 @@ function NoteConnections() {
                 {backlinkNotes.map((n) => (
                   <button
                     key={n.id}
-                    onClick={() => openSidePeek(n.id)}
+                    onClick={() => openConnectedNote(n.id)}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="in" />
@@ -470,7 +488,7 @@ function NoteConnections() {
                 {inboundWiki.map((a) => (
                   <button
                     key={a.id}
-                    onClick={() => openSidePeek({ type: "wiki", id: a.id })}
+                    onClick={() => openConnectedWiki(a.id)}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="in" />
@@ -491,7 +509,7 @@ function NoteConnections() {
                 {outboundNotes.map((n) => (
                   <button
                     key={n.id}
-                    onClick={() => openSidePeek(n.id)}
+                    onClick={() => openConnectedNote(n.id)}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="out" />
@@ -512,7 +530,7 @@ function NoteConnections() {
                 {outboundWiki.map((w) => (
                   <button
                     key={w.id}
-                    onClick={() => openSidePeek({ type: "wiki", id: w.id })}
+                    onClick={() => openConnectedWiki(w.id)}
                     className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
                   >
                     <DirArrow dir="out" />
@@ -583,7 +601,7 @@ function NoteConnections() {
                     >
                       <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
                       <button
-                        onClick={() => openSidePeek(item.noteId)}
+                        onClick={() => openConnectedNote(item.noteId)}
                         className="truncate flex-1 text-left text-note text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {sNote.title || "Untitled"}
@@ -619,7 +637,7 @@ function NoteConnections() {
                     >
                       <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
                       <button
-                        onClick={() => openSidePeek(item.noteId)}
+                        onClick={() => openConnectedNote(item.noteId)}
                         className="truncate flex-1 text-left text-note text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {title}

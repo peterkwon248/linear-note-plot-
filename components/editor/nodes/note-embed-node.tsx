@@ -205,7 +205,11 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
           ...(embedHeight ? { height: `${embedHeight}px`, overflowY: "auto" as const } : {}),
         }}
         onClick={(e) => {
-          if (noteId) usePlotStore.getState().openSidePeek(noteId)
+          if (noteId) {
+            // Navigate to the embedded note (full open, matches Notion/Obsidian embed click behavior)
+            import("@/lib/table-route").then(({ setActiveRoute }) => setActiveRoute("/notes"))
+            usePlotStore.getState().openNote(noteId)
+          }
         }}
       >
         {parentEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}

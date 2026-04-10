@@ -10,6 +10,23 @@ import { FootnotesFooter } from "./footnotes-footer"
 import { extractHashtags } from "@/lib/body-helpers"
 import { pickColor } from "@/components/note-fields"
 
+/** Extract all unique referenceIds from a TipTap JSON document (footnoteRef + referenceLink nodes). */
+function extractReferenceIds(json: Record<string, unknown> | null): string[] {
+  if (!json) return []
+  const ids = new Set<string>()
+  function walk(node: any) {
+    if (!node) return
+    if ((node.type === "footnoteRef" || node.type === "referenceLink") && node.attrs?.referenceId) {
+      ids.add(node.attrs.referenceId as string)
+    }
+    if (Array.isArray(node.content)) {
+      for (const child of node.content) walk(child)
+    }
+  }
+  walk(json)
+  return [...ids]
+}
+
 interface NoteEditorAdapterProps {
   note: Note
   onEditorReady?: (editor: unknown) => void
@@ -47,6 +64,10 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         content,
         contentJson: pendingRef.current.contentJson,
       })
+      // Sync reference links (usedInNoteIds reverse index)
+      const refIds = extractReferenceIds(pendingRef.current.contentJson)
+      usePlotStore.getState().syncNoteReferenceLinks(noteId, refIds)
+
       pendingRef.current = null
       // Final extraction: include end-of-string tags since user is leaving the note
       syncHashtagsToTags(noteId, content, true)
@@ -160,6 +181,10 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
             content,
             contentJson: pendingRef.current.contentJson,
           })
+          // Sync reference links (usedInNoteIds reverse index)
+          const refIds = extractReferenceIds(pendingRef.current.contentJson)
+          usePlotStore.getState().syncNoteReferenceLinks(noteId, refIds)
+
           pendingRef.current = null
           // UpNote-style: only extract tags confirmed by whitespace (no end-of-string)
           syncHashtagsToTags(noteId, content)

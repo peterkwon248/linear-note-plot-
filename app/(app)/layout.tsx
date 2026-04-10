@@ -32,6 +32,7 @@ import { TodoView } from "@/components/views/todo-view"
 import { LibraryView } from "@/components/views/library-view"
 import { MergeDialogGlobal } from "@/components/merge-dialog-global"
 import { LinkDialogGlobal } from "@/components/link-dialog-global"
+import { SecondaryOpenPicker } from "@/components/workspace/secondary-open-picker"
 import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
 import { SmartSidePanel } from "@/components/side-panel/smart-side-panel"
 import { WikilinkContextMenu } from "@/components/editor/wikilink-context-menu"
@@ -53,16 +54,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const setSidebarCollapsed = usePlotStore((s) => s.setSidebarCollapsed)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const sidePanelMode = usePlotStore((s) => s.sidePanelMode)
-  const peekSize = usePlotStore((s) => s.peekSize)
-  const setPeekSize = usePlotStore((s) => s.setPeekSize)
   const sidePanelRef = useRef<ImperativePanelHandle | null>(null)
-  // Flag to prevent feedback loop: onResize → setPeekSize → useEffect → resize → onResize
-  const applyingPeekSizeRef = useRef(false)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
   const pendingWikiAssemblyIds = usePlotStore((s) => s.pendingWikiAssemblyIds)
   const secondarySpace = useSecondarySpace()
   const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
-  const secondarySidePanelOpen = usePlotStore((s) => s.secondarySidePanelOpen)
   const setPendingWikiAssembly = usePlotStore((s) => s.setPendingWikiAssembly)
   const { resolvedTheme } = useTheme()
   const pathname = usePathname()
@@ -85,23 +81,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isEditing = !!selectedNoteId
   const hasViewSplit = !isEditing && hasSplit
   const activePane = usePlotStore((s) => s.activePane)
-  const primarySidePanelVisible = sidePanelOpen && (sidePanelMode === 'detail' || sidePanelMode === 'connections' || sidePanelMode === 'activity' || sidePanelMode === 'bookmarks' || sidePanelMode === 'peek')
-  // Show side panel if EITHER pane wants it open (in split) or just primary in single mode
-  const showSidePanel = hasSplit
-    ? (primarySidePanelVisible || secondarySidePanelOpen)
-    : primarySidePanelVisible
+  const setActivePaneStore = usePlotStore((s) => s.setActivePane)
+  const showSidePanel = sidePanelOpen && (
+    sidePanelMode === 'detail' ||
+    sidePanelMode === 'connections' ||
+    sidePanelMode === 'activity' ||
+    sidePanelMode === 'bookmarks'
+  )
 
-  // Sync the resizable panel width with stored peekSize whenever the user enters Peek mode
-  // or presets change it. Skipped in split view (which uses its own default size).
-  useEffect(() => {
-    if (hasSplit) return
-    if (sidePanelMode !== 'peek') return
-    if (!sidePanelRef.current) return
-    applyingPeekSizeRef.current = true
-    sidePanelRef.current.resize(peekSize)
-    // Release guard on next microtask so onResize fired by our resize() is ignored
-    requestAnimationFrame(() => { applyingPeekSizeRef.current = false })
-  }, [sidePanelMode, hasSplit, peekSize])
+  // View-mode split active-pane visual indicator (top 2px accent border).
+  // WorkspaceEditorArea handles editor-mode split internally.
+  const viewPrimaryActiveClass = hasViewSplit
+    ? `border-t-2 transition-colors duration-150 ${activePane === 'primary' ? 'border-t-accent' : 'border-t-transparent'}`
+    : ''
+  const viewSecondaryActiveClass = `border-t-2 transition-colors duration-150 ${activePane === 'secondary' ? 'border-t-accent' : 'border-t-transparent'}`
 
 
   // Mount-once: track which view routes have been visited
@@ -218,13 +211,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               defaultSize={
                 hasViewSplit
                   ? (showSidePanel ? 35 : 50)
-                  : (showSidePanel
-                      ? (sidePanelMode === 'peek' && !hasSplit ? 100 - peekSize : 70)
-                      : 100)
+                  : (showSidePanel ? 70 : 100)
               }
               minSize={20}
             >
-              <div className="flex h-full overflow-hidden">
+              <div
+                className={`flex h-full overflow-hidden ${viewPrimaryActiveClass}`}
+                onMouseDownCapture={hasViewSplit ? () => { if (activePane !== 'primary') setActivePaneStore('primary') } : undefined}
+              >
                 {/* Table views (notes/pinned/trash): always mounted */}
                 <div className={isTableView ? "flex flex-1 overflow-hidden" : "hidden"}>
                   <NotesTableView />
@@ -311,7 +305,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <>
                 <ResizableHandle className="w-px bg-border/50 hover:bg-primary/20 active:bg-primary/30 transition-colors" />
                 <ResizablePanel id="main-view-secondary" order={2} defaultSize={showSidePanel ? 35 : 50} minSize={20}>
-                  <div className="flex h-full flex-col overflow-hidden">
+                  <div
+                    className={`flex h-full flex-col overflow-hidden ${viewSecondaryActiveClass}`}
+                    onMouseDownCapture={() => { if (activePane !== 'secondary') setActivePaneStore('secondary') }}
+                  >
                     <SecondaryPanelContent />
                   </div>
                 </ResizablePanel>
@@ -326,17 +323,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   ref={sidePanelRef}
                   id="main-sidepanel"
                   order={3}
-                  defaultSize={hasSplit ? 20 : (sidePanelMode === 'peek' ? peekSize : 30)}
-                  minSize={hasSplit ? 10 : (sidePanelMode === 'peek' ? 42 : 15)}
-                  maxSize={hasSplit ? 40 : (sidePanelMode === 'peek' ? 55 : 50)}
-                  onResize={(size) => {
-                    // Ignore programmatic resizes triggered by our own useEffect
-                    if (applyingPeekSizeRef.current) return
-                    // Persist peek width when user drags in single-pane peek mode
-                    if (!hasSplit && sidePanelMode === 'peek') {
-                      setPeekSize(size)
-                    }
-                  }}
+                  defaultSize={hasSplit ? 20 : 30}
+                  minSize={hasSplit ? 10 : 15}
+                  maxSize={hasSplit ? 40 : 50}
                 >
                   {/* Single SmartSidePanel — content follows activePane via PaneProvider
                       and useSidePanelEntity hook. Works identically in single and split modes. */}
@@ -354,6 +343,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <WikilinkContextMenu />
         <MergeDialogGlobal />
         <LinkDialogGlobal />
+        <SecondaryOpenPicker />
         {/* Global Wiki Assembly Dialog (triggered by cluster nudge) */}
         {pendingWikiAssemblyIds && pendingWikiAssemblyIds.length > 0 && (
           <WikiAssemblyDialog

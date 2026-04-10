@@ -22,6 +22,8 @@ import { Pulse as PhActivity } from "@phosphor-icons/react/dist/ssr/Pulse"
 import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Eye as PhEye } from "@phosphor-icons/react/dist/ssr/Eye"
+import { WorkspaceEditorArea } from "@/components/workspace/workspace-editor-area"
+import { usePane, usePaneOpenNote } from "@/components/workspace/pane-context"
 
 /* ── Severity helpers ─────────────────────────────────── */
 
@@ -269,6 +271,9 @@ export function InsightsView() {
   const srsMap = usePlotStore((s) => s.srsStateByNoteId)
   const backlinks = useBacklinksIndex()
   const [insightsToggles, setInsightsToggles] = useState<Record<string, boolean>>({})
+  const selectedNoteIdStore = usePlotStore((s) => s.selectedNoteId)
+  const pane = usePane()
+  const isEditing = pane === 'primary' && selectedNoteIdStore !== null
 
   // PhActivity stats
   const activityStats = useMemo(
@@ -294,6 +299,15 @@ export function InsightsView() {
   }, [results])
 
   const total = results.length
+
+  // ── Workspace editor area: show when editing in primary pane ──
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 overflow-hidden animate-in fade-in duration-200">
+        <WorkspaceEditorArea />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">

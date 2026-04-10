@@ -462,9 +462,22 @@ export function migrate(persistedState: unknown): PlotState {
   }
   if (state.sidePanelOpen === undefined) state.sidePanelOpen = true
   if (!state.sidePanelMode) state.sidePanelMode = 'detail'
-  // sidePanelPeekContext is transient (not persisted), no migration needed
-  delete state.sidePeekNoteId // clean up old transient field if present
-  delete state.sidePanelPeekNoteId // v72: renamed to sidePanelPeekContext (also transient, just in case)
+  // Legacy peek field cleanup (any version)
+  delete state.sidePeekNoteId
+  delete state.sidePanelPeekNoteId
+
+  // v73: Peek-First → Split-First pivot. Strip all peek + secondarySidePanel state.
+  // 'peek' was a valid SidePanelMode value; coerce stale persisted modes back to 'detail'.
+  if (state.sidePanelMode === 'peek') state.sidePanelMode = 'detail'
+  delete state.sidePanelPeekContext
+  delete state.peekHistory
+  delete state.peekPins
+  delete state.peekSize
+  delete state.peekNavStack
+  delete state.peekNavIndex
+  delete state.secondarySidePanelOpen
+  delete state.secondarySidePanelMode
+  delete state.secondarySidePanelContext
 
   // v52: Simplify workspace — binary tree → dual pane
   if (state.workspaceRoot) {
@@ -799,6 +812,31 @@ export function migrate(persistedState: unknown): PlotState {
 
   // v72: Global Bookmarks — cross-note anchor store
   if (!state.globalBookmarks) state.globalBookmarks = {}
+
+  // v74: Secondary pane pins — Phase 4 (Split-First picker)
+  if (!Array.isArray(state.secondaryPins)) state.secondaryPins = []
+
+  // v75: Reference.history — append-only edit log
+  if (state.references && typeof state.references === "object") {
+    const refs = state.references as Record<string, any>
+    for (const id of Object.keys(refs)) {
+      const ref = refs[id]
+      if (ref && !Array.isArray(ref.history)) {
+        // Backfill with a single "created" entry using createdAt as the timestamp
+        ref.history = [{ at: ref.createdAt, action: "created" }]
+      }
+    }
+  }
+
+  // v76: Reference.usedInNoteIds — reverse index of which notes use each reference
+  if (state.references && typeof state.references === "object") {
+    const refs = state.references as Record<string, any>
+    for (const ref of Object.values(refs)) {
+      if (ref && !Array.isArray(ref.usedInNoteIds)) {
+        ref.usedInNoteIds = []
+      }
+    }
+  }
 
   return state as unknown as PlotState
 }

@@ -77,29 +77,38 @@ export function handleNoteReferenceClick(
   event.stopPropagation()
 
   const store = usePlotStore.getState()
+  const isModifier = event.ctrlKey || event.metaKey
 
-  if (event.ctrlKey || event.metaKey) {
-    // Ctrl+Click → navigate to note in the currently focused pane
+  if (isModifier) {
+    // Ctrl/Cmd+Click → force open in secondary pane (Obsidian-style "new pane")
     if (noteType === "wiki") {
-      // Wiki navigation always goes to Wiki space (left pane)
-      setActiveRoute("/wiki")
-      navigateToWikiArticle(noteId)
+      // Wiki in secondary: set secondarySpace + open via secondaryNoteId (which can hold wiki IDs)
+      store.openInSecondary(noteId)
     } else {
-      const pane = store.activePane
-      if (pane === 'secondary') {
-        // Open in secondary pane (independent navigation)
-        store.openNote(noteId, { pane: 'secondary' })
-      } else {
-        setActiveRoute("/notes")
-        store.openNote(noteId)
-      }
+      store.openNote(noteId, { pane: 'secondary' })
     }
     if (anchorId) scrollToAnchor(anchorId)
-  } else {
-    // Regular click → peek in side panel (supports both notes and wiki)
-    store.openSidePeek({ type: noteType, id: noteId })
-    if (anchorId) scrollToAnchor(anchorId)
+    return
   }
+
+  // Regular click → navigate in the currently active pane (standard link behavior)
+  if (noteType === "wiki") {
+    // Wiki navigation: if active pane is secondary, open wiki in secondary; else primary
+    if (store.activePane === 'secondary') {
+      store.openInSecondary(noteId)
+    } else {
+      setActiveRoute("/wiki")
+      navigateToWikiArticle(noteId)
+    }
+  } else {
+    if (store.activePane === 'secondary') {
+      store.openNote(noteId, { pane: 'secondary' })
+    } else {
+      setActiveRoute("/notes")
+      store.openNote(noteId)
+    }
+  }
+  if (anchorId) scrollToAnchor(anchorId)
 }
 
 /**

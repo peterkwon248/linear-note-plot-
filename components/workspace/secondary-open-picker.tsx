@@ -1,28 +1,37 @@
 "use client"
 
 /**
- * PeekEmptyState — shown when Peek tab is active but nothing is currently peeked.
- * Provides:
- *  - Search input (autofocused) to open any note/wiki
- *  - Pinned section (max 2) — user favorites
- *  - Recent section (max 10) — peekHistory
+ * SecondaryOpenPicker — modal dialog for opening a note or wiki article in the
+ * secondary (right) split pane. Triggered by Cmd+Shift+\ shortcut or programmatic
+ * `setSecondaryPickerOpen(true)`.
  *
- * When the user picks a result, openSidePeek is called with the matching PeekContext.
+ * Sections:
+ *  - Search input (autofocused) — type to search notes/wiki by title
+ *  - Pinned (max 5) — user favorites, persisted across sessions
+ *  - Suggested / Related — context-aware (backlinks/outlinks of current note)
+ *  - Recent — derived from secondaryHistory
+ *
+ * Selecting any row calls `openInSecondary(id)` and closes the dialog.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { usePlotStore } from "@/lib/store"
-import type { PeekContext } from "@/lib/store/types"
 import {
-  searchPeekable,
-  resolvePeekEntity,
-  isPeekEntityAlive,
-  type PeekSearchResult,
-} from "@/lib/peek/peek-search"
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
-  getPeekSuggestions,
-  getPeekSuggestionsLabel,
-} from "@/lib/peek/peek-suggestions"
+  searchSecondaryEntities,
+  resolveSecondaryEntity,
+  isSecondaryEntityAlive,
+  type SecondaryEntityRef,
+  type SecondaryEntitySearchResult,
+} from "@/lib/workspace/entity-search"
+import {
+  getSecondarySuggestions,
+  getSecondarySuggestionsLabel,
+} from "@/lib/workspace/secondary-suggestions"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { PushPinSimple } from "@phosphor-icons/react/dist/ssr/PushPinSimple"
 import { Clock } from "@phosphor-icons/react/dist/ssr/Clock"
@@ -33,21 +42,16 @@ import { StatusShapeIcon } from "@/components/status-icon"
 import { WIKI_STATUS_HEX } from "@/lib/colors"
 import type { NoteStatus } from "@/lib/types"
 
-interface Props {
-  /** Optional — passed when empty state is rendered as a full pane (stretch vertically). */
-  className?: string
-}
-
 /**
  * Type-aware entity icon:
  *  - note → workflow status shape (cyan/orange/green)
- *  - wiki → violet book icon (matches --wiki-complete)
+ *  - wiki → violet book icon
  */
 function EntityIcon({
   type,
   status,
 }: {
-  type: PeekContext["type"]
+  type: SecondaryEntityRef["type"]
   status?: NoteStatus
 }) {
   if (type === "wiki") {
@@ -59,21 +63,36 @@ function EntityIcon({
       />
     )
   }
-  // note
   return <StatusShapeIcon status={status ?? "capture"} size={14} />
 }
 
-export function PeekEmptyState({ className }: Props) {
+export function SecondaryOpenPicker() {
+  const open = usePlotStore((s) => s.secondaryPickerOpen)
+  const setOpen = usePlotStore((s) => s.setSecondaryPickerOpen)
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent
+        className="sm:max-w-lg p-0 gap-0 overflow-hidden"
+        showCloseButton={false}
+      >
+        <DialogTitle className="sr-only">Open in side panel</DialogTitle>
+        {open && <PickerBody onClose={() => setOpen(false)} />}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function PickerBody({ onClose }: { onClose: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState("")
   const [selectedIndex, setSelectedIndex] = useState(0)
 
-  const openSidePeek = usePlotStore((s) => s.openSidePeek)
-  const togglePeekPin = usePlotStore((s) => s.togglePeekPin)
-  const removeFromPeekHistory = usePlotStore((s) => s.removeFromPeekHistory)
-  const peekHistory = usePlotStore((s) => s.peekHistory)
-  const peekPins = usePlotStore((s) => s.peekPins)
-  // Needed so suggestions refresh as note content changes (linksOut re-compute)
+  const openInSecondary = usePlotStore((s) => s.openInSecondary)
+  const toggleSecondaryPin = usePlotStore((s) => s.toggleSecondaryPin)
+  const secondaryHistory = usePlotStore((s) => s.secondaryHistory)
+  const secondaryPins = usePlotStore((s) => s.secondaryPins)
+  // Reactive deps for memos so list refreshes as data changes
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const selectedNoteId = usePlotStore((s) => s.selectedNoteId)
@@ -84,41 +103,54 @@ export function PeekEmptyState({ className }: Props) {
     return () => cancelAnimationFrame(id)
   }, [])
 
-  // Fresh search results whenever query changes. When query is empty, show curated list
-  // with pins + recent inline; when query is non-empty, show search results.
-  const results = useMemo<PeekSearchResult[]>(() => {
+  // Convert secondaryHistory (string[] of IDs) → SecondaryEntityRef[] by lookup
+  const aliveHistory = useMemo<SecondaryEntityRef[]>(() => {
+    const seen = new Set<string>()
+    const refs: SecondaryEntityRef[] = []
+    // newest first
+    for (const id of [...secondaryHistory].reverse()) {
+      if (seen.has(id)) continue
+      seen.add(id)
+      if (notes.some((n) => n.id === id && !n.trashed)) {
+        refs.push({ type: "note", id })
+      } else if (wikiArticles.some((w) => w.id === id)) {
+        refs.push({ type: "wiki", id })
+      }
+      if (refs.length >= 10) break
+    }
+    return refs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondaryHistory, notes, wikiArticles])
+
+  // Filter dead entries from stored pins
+  const alivePins = useMemo<SecondaryEntityRef[]>(
+    () => secondaryPins.filter(isSecondaryEntityAlive),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [secondaryPins, notes, wikiArticles],
+  )
+
+  // Search results when query is non-empty
+  const results = useMemo<SecondaryEntitySearchResult[]>(() => {
     if (query.trim().length === 0) return []
-    return searchPeekable(query)
+    return searchSecondaryEntities(query)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, notes, wikiArticles])
 
-  // Filter out dead entries from stored history/pins
-  const alivePins = useMemo(
-    () => peekPins.filter(isPeekEntityAlive),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [peekPins, notes, wikiArticles],
-  )
-  const aliveHistory = useMemo(
-    () => peekHistory.filter(isPeekEntityAlive).slice(0, 10),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [peekHistory, notes, wikiArticles],
-  )
-
-  // Contextual suggestions — exclude items already shown in Pinned / Recent sections
+  // Contextual suggestions — exclude items already in pinned/recent
   const suggestions = useMemo(() => {
     const pinnedKeys = new Set(alivePins.map((p) => `${p.type}:${p.id}`))
     const historyKeys = new Set(aliveHistory.map((h) => `${h.type}:${h.id}`))
     const exclude = [...alivePins, ...aliveHistory]
-    const raw = getPeekSuggestions({ currentNoteId: selectedNoteId, exclude, limit: 6 })
-    return raw.filter((ctx) => {
-      const key = `${ctx.type}:${ctx.id}`
+    const raw = getSecondarySuggestions({ currentNoteId: selectedNoteId, exclude, limit: 6 })
+    return raw.filter((ref) => {
+      const key = `${ref.type}:${ref.id}`
       return !pinnedKeys.has(key) && !historyKeys.has(key)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNoteId, alivePins, aliveHistory, notes, wikiArticles])
 
   const suggestionsLabel = useMemo(
-    () => getPeekSuggestionsLabel(selectedNoteId),
+    () => getSecondarySuggestionsLabel(selectedNoteId),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [selectedNoteId, notes],
   )
@@ -130,9 +162,9 @@ export function PeekEmptyState({ className }: Props) {
 
   const isSearching = query.trim().length > 0
 
-  function handleSelect(ctx: PeekContext) {
-    openSidePeek(ctx)
-    setQuery("")
+  function handleSelect(ref: SecondaryEntityRef) {
+    openInSecondary(ref.id)
+    onClose()
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -151,9 +183,9 @@ export function PeekEmptyState({ className }: Props) {
   }
 
   return (
-    <div className={`flex h-full flex-col overflow-hidden ${className ?? ""}`}>
+    <div className="flex flex-col max-h-[60vh]">
       {/* Search input */}
-      <div className="relative border-b border-border-subtle px-3 py-2">
+      <div className="relative border-b border-border-subtle px-3 py-2.5">
         <MagnifyingGlass
           size={14}
           className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground/60"
@@ -164,7 +196,7 @@ export function PeekEmptyState({ className }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Search notes and wiki..."
+          placeholder="Search notes and wiki to open in side panel..."
           className="w-full rounded-md border border-transparent bg-hover-bg/40 pl-7 pr-2 py-1.5 text-note text-foreground placeholder:text-muted-foreground/50 focus:border-border focus:bg-background focus:outline-none"
         />
       </div>
@@ -175,7 +207,7 @@ export function PeekEmptyState({ className }: Props) {
           <SearchResults
             results={results}
             selectedIndex={selectedIndex}
-            onSelect={(ctx) => handleSelect(ctx)}
+            onSelect={(ref) => handleSelect(ref)}
             onHover={(i) => setSelectedIndex(i)}
           />
         ) : (
@@ -183,25 +215,28 @@ export function PeekEmptyState({ className }: Props) {
             <PinsSection
               pins={alivePins}
               onSelect={handleSelect}
-              onUnpin={(ctx) => togglePeekPin(ctx)}
+              onUnpin={(ref) => toggleSecondaryPin(ref)}
             />
             <SuggestedSection
               label={suggestionsLabel}
               items={suggestions}
               onSelect={handleSelect}
-              onPin={(ctx) => togglePeekPin(ctx)}
+              onPin={(ref) => toggleSecondaryPin(ref)}
             />
             <RecentSection
               history={aliveHistory}
               pinned={alivePins}
               onSelect={handleSelect}
-              onPin={(ctx) => togglePeekPin(ctx)}
-              onRemove={(ctx) => removeFromPeekHistory(ctx)}
+              onPin={(ref) => toggleSecondaryPin(ref)}
             />
+            {alivePins.length === 0 && suggestions.length === 0 && aliveHistory.length === 0 && (
+              <div className="flex h-32 items-center justify-center px-6 text-note text-muted-foreground/70">
+                Start typing to search notes and wiki
+              </div>
+            )}
           </>
         )}
       </div>
-
     </div>
   )
 }
@@ -223,20 +258,20 @@ function SectionLabel({
   )
 }
 
-function PeekRow({
-  ctx,
+function PickerRow({
+  ref: ref_,
   active,
   onSelect,
   onHover,
   action,
 }: {
-  ctx: PeekContext
+  ref: SecondaryEntityRef
   active?: boolean
   onSelect: () => void
   onHover?: () => void
   action?: React.ReactNode
 }) {
-  const entity = resolvePeekEntity(ctx)
+  const entity = resolveSecondaryEntity(ref_)
   if (!entity) return null
   const status = entity.kind === "note" ? entity.status : undefined
   return (
@@ -248,7 +283,7 @@ function PeekRow({
       onMouseEnter={onHover}
       role="button"
     >
-      <EntityIcon type={ctx.type} status={status} />
+      <EntityIcon type={ref_.type} status={status} />
       <span className="flex-1 truncate text-note text-foreground">{entity.title}</span>
       {action}
     </div>
@@ -260,9 +295,9 @@ function PinsSection({
   onSelect,
   onUnpin,
 }: {
-  pins: PeekContext[]
-  onSelect: (ctx: PeekContext) => void
-  onUnpin: (ctx: PeekContext) => void
+  pins: SecondaryEntityRef[]
+  onSelect: (ref: SecondaryEntityRef) => void
+  onUnpin: (ref: SecondaryEntityRef) => void
 }) {
   if (pins.length === 0) return null
   return (
@@ -270,9 +305,9 @@ function PinsSection({
       <SectionLabel icon={<PushPinSimple size={11} weight="fill" />}>Pinned</SectionLabel>
       <div className="space-y-0.5 pb-2">
         {pins.map((p) => (
-          <PeekRow
+          <PickerRow
             key={`${p.type}:${p.id}`}
-            ctx={p}
+            ref={p}
             onSelect={() => onSelect(p)}
             action={
               <button
@@ -298,15 +333,13 @@ function RecentSection({
   pinned,
   onSelect,
   onPin,
-  onRemove,
 }: {
-  history: PeekContext[]
-  pinned: PeekContext[]
-  onSelect: (ctx: PeekContext) => void
-  onPin: (ctx: PeekContext) => void
-  onRemove: (ctx: PeekContext) => void
+  history: SecondaryEntityRef[]
+  pinned: SecondaryEntityRef[]
+  onSelect: (ref: SecondaryEntityRef) => void
+  onPin: (ref: SecondaryEntityRef) => void
 }) {
-  // Exclude items that are currently pinned — pinned section already shows them
+  // Exclude items currently pinned — pinned section already shows them
   const pinnedKeys = new Set(pinned.map((p) => `${p.type}:${p.id}`))
   const filtered = history.filter((h) => !pinnedKeys.has(`${h.type}:${h.id}`))
   if (filtered.length === 0) return null
@@ -317,33 +350,21 @@ function RecentSection({
         {filtered.map((h) => {
           const key = `${h.type}:${h.id}`
           return (
-            <PeekRow
+            <PickerRow
               key={key}
-              ctx={h}
+              ref={h}
               onSelect={() => onSelect(h)}
               action={
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onPin(h)
-                    }}
-                    className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-background/50"
-                    title="Pin"
-                  >
-                    <PushPinSimple size={12} weight="regular" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onRemove(h)
-                    }}
-                    className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-background/50"
-                    title="Remove from history"
-                  >
-                    <PhX size={12} weight="regular" />
-                  </button>
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onPin(h)
+                  }}
+                  className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-background/50 transition-opacity"
+                  title="Pin"
+                >
+                  <PushPinSimple size={12} weight="regular" />
+                </button>
               }
             />
           )
@@ -360,27 +381,27 @@ function SuggestedSection({
   onPin,
 }: {
   label: "Related" | "Suggested"
-  items: PeekContext[]
-  onSelect: (ctx: PeekContext) => void
-  onPin: (ctx: PeekContext) => void
+  items: SecondaryEntityRef[]
+  onSelect: (ref: SecondaryEntityRef) => void
+  onPin: (ref: SecondaryEntityRef) => void
 }) {
   if (items.length === 0) return null
   return (
     <div>
       <SectionLabel icon={<Sparkle size={11} weight="fill" />}>{label}</SectionLabel>
       <div className="space-y-0.5 pb-3">
-        {items.map((ctx) => {
-          const key = `${ctx.type}:${ctx.id}`
+        {items.map((ref) => {
+          const key = `${ref.type}:${ref.id}`
           return (
-            <PeekRow
+            <PickerRow
               key={key}
-              ctx={ctx}
-              onSelect={() => onSelect(ctx)}
+              ref={ref}
+              onSelect={() => onSelect(ref)}
               action={
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    onPin(ctx)
+                    onPin(ref)
                   }}
                   className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-background/50 transition-opacity"
                   title="Pin"
@@ -402,9 +423,9 @@ function SearchResults({
   onSelect,
   onHover,
 }: {
-  results: PeekSearchResult[]
+  results: SecondaryEntitySearchResult[]
   selectedIndex: number
-  onSelect: (ctx: PeekContext) => void
+  onSelect: (ref: SecondaryEntityRef) => void
   onHover: (i: number) => void
 }) {
   if (results.length === 0) {
@@ -415,11 +436,9 @@ function SearchResults({
     )
   }
 
-  // Group by type. peek-search returns notes first then wikis, so the flat
-  // `results` index matches (notes at the top of the list, wikis after).
-  // This lets us preserve selectedIndex navigation across the whole result set.
-  const notes: Array<{ item: PeekSearchResult; index: number }> = []
-  const wikis: Array<{ item: PeekSearchResult; index: number }> = []
+  // Group by type while preserving global index for keyboard navigation
+  const notes: Array<{ item: SecondaryEntitySearchResult; index: number }> = []
+  const wikis: Array<{ item: SecondaryEntitySearchResult; index: number }> = []
   results.forEach((r, i) => {
     if (r.type === "wiki") wikis.push({ item: r, index: i })
     else notes.push({ item: r, index: i })
@@ -432,9 +451,9 @@ function SearchResults({
           <SectionLabel>Notes</SectionLabel>
           <div className="space-y-0.5">
             {notes.map(({ item: r, index: i }) => (
-              <PeekRow
+              <PickerRow
                 key={`${r.type}:${r.id}`}
-                ctx={{ type: r.type, id: r.id }}
+                ref={{ type: r.type, id: r.id }}
                 active={i === selectedIndex}
                 onSelect={() => onSelect({ type: r.type, id: r.id })}
                 onHover={() => onHover(i)}
@@ -448,9 +467,9 @@ function SearchResults({
           <SectionLabel>Wiki</SectionLabel>
           <div className="space-y-0.5">
             {wikis.map(({ item: r, index: i }) => (
-              <PeekRow
+              <PickerRow
                 key={`${r.type}:${r.id}`}
-                ctx={{ type: r.type, id: r.id }}
+                ref={{ type: r.type, id: r.id }}
                 active={i === selectedIndex}
                 onSelect={() => onSelect({ type: r.type, id: r.id })}
                 onHover={() => onHover(i)}
@@ -462,4 +481,3 @@ function SearchResults({
     </div>
   )
 }
-
