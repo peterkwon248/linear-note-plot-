@@ -37,7 +37,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (21): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, thinking
-- Store version: 71
+- Store version: 73
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -191,15 +191,16 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
   - 위키 헤더에 사이드바 토글 + Split View 버튼
   - 브레드크럼 노트 피커 (검색 + 드롭다운)
   - Secondary 뷰 헤더 (space 드롭다운 + 닫기)
-- 🔴 **Phase 6**: Split view 통합 검증
+- ✅ **Phase 6**: Split view 통합 검증
   - 사이드바 focus-following edge case (일부 시나리오에서 stale context)
   - 위키 인포박스 중복 제거 (사이드바 vs 본문)
 - **Phase 7**: CONTEXT.md/MEMORY.md 최종 업데이트
 
-### P1 (보류, Peek 마이그레이션 후)
-- **Reference.history** — 데이터 모델 + UI 작업 중간에 멈춤
-- **Library + Wiki Overview Bento Grid 리디자인** — Premium stat card, Featured Article, Activity Feed
-7. **Library FilterPanel Notes 수준** — view-engine 인프라 재사용
+### P1 (진행 중)
+- ✅ **Library Overview 리디자인** — 위키 대시보드 스타일 (MiniStat + Attention + Recent + Top Tags)
+- ✅ **References DisplayPanel** — 정렬(Updated/Name/Created) + 그룹핑(None/Type/FieldKey)
+- ✅ **Reference.history** — 수정 이력 타임라인 (store v73, 50개/ref 제한)
+- 🔴 **위키 레이아웃 프리셋 시스템** — 2개 렌더러(wiki-article-view + wiki-article-encyclopedia) → 1개 통합 + 설정 객체
 
 ### P2 — 인사이트 허브 + 각주
 8. **인사이트 허브** — 온톨로지 Single Source of Insights. Knowledge WAR/Link Density/Stub Conversion Rate 등 세이브매트릭스급 지표
