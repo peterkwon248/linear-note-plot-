@@ -249,6 +249,11 @@ export interface Reference {
   updatedAt: string
   trashed?: boolean
   trashedAt?: string | null
+  history: Array<{
+    timestamp: string
+    action: "created" | "edited" | "linked" | "unlinked"
+    detail?: string
+  }>
 }
 
 export interface Label {

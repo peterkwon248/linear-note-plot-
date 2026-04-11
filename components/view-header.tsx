@@ -88,6 +88,8 @@ interface ViewHeaderProps {
   extraToolbarButtons?: ReactNode
   /** Create new item callback — renders + icon next to filter/display icons */
   onCreateNew?: () => void
+  /** Custom create menu content — renders + as a popover trigger with this content */
+  createMenuContent?: ReactNode
 }
 
 export function ViewHeader({
@@ -109,6 +111,7 @@ export function ViewHeader({
   onDetailPanelToggle,
   extraToolbarButtons,
   onCreateNew,
+  createMenuContent,
 }: ViewHeaderProps) {
   const pane = usePane()
   // Internal search state if not controlled
@@ -228,11 +231,20 @@ export function ViewHeader({
 
             <SplitViewButton />
 
-            {onCreateNew && (
+            {createMenuContent ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <div><HBtn><Plus size={16} weight="regular" /></HBtn></div>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={5} className="!w-auto !max-w-none rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg">
+                  {createMenuContent}
+                </PopoverContent>
+              </Popover>
+            ) : onCreateNew ? (
               <HBtn onClick={onCreateNew}>
                 <Plus size={16} weight="regular" />
               </HBtn>
-            )}
+            ) : null}
             {pane === 'secondary' && (
               <HBtn onClick={() => usePlotStore.getState().closeSecondary()}>
                 <PhXIcon size={16} weight="regular" />

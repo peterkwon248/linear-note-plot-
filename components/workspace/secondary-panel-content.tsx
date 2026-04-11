@@ -357,7 +357,8 @@ export function SecondaryPanelContent() {
 }
 
 // Views that don't use ViewHeader need a mini header for secondary pane (space dropdown + close)
-const VIEWS_WITHOUT_HEADER = ["/home", "/calendar", "/ontology", "/graph-insights"]
+// Calendar, Graph, Library all have their own ViewHeader — only Home needs this
+const VIEWS_WITHOUT_HEADER = ["/home"]
 
 function SecondaryViewRouter({ route }: { route: string }) {
   const needsMiniHeader = VIEWS_WITHOUT_HEADER.includes(route)

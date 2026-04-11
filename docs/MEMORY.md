@@ -97,8 +97,11 @@
 - **SmartSidePanel Context Swapping**: `_savedPrimaryContext` 패턴. `setActivePane`/`openInSecondary`/`openNote(secondary)` 호출 시 `sidePanelContext`를 primary↔secondary 간 swap. `useSidePanelEntity`는 `sidePanelContext`만 읽음. Zustand `activePane` 구독 이슈 우회
 - **Wiki Detail SmartSidePanel 통합**: 위키 내장 aside 제거, `WikiArticleDetailPanel`에 Sources/Delete 추가. 위키도 노트와 동일하게 SmartSidePanel 사용
 - **Breadcrumb Note Picker**: `editor-breadcrumb.tsx` NotePickerChevron — ">" 클릭 시 검색+노트 리스트 드롭다운. StatusShapeIcon + 라벨 칩. 20개 제한
+- **Reference.history**: 수정 이력 자동 기록 (created/edited/linked/unlinked). 50개/Reference 제한. Store v73 migration
+- **Library Create Menu**: ViewHeader `createMenuContent` prop — + 버튼 팝오버. Reference/Tag/File 생성
+- **Tags pickColor 통일**: 에디터/Tags뷰 모두 `pickColor(name)` 사용 (이름 해시 기반 자동 색상)
 
-## Store Slices (22 total)
+## Store Slices (22 total, v73)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
 ## Completed PRs (recent)
@@ -463,13 +466,11 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Sidebar Tags/Files 활성화**: disabled span → NavLink + 카운트 뱃지
 
 ### 다음 우선순위 (2026-04-11 기준)
-- **P0 — Split-First 마이그레이션 Phase 2~7** (대부분 완료):
-  - ✅ Phase 2: Store cleanup — peek/secondarySidePanel 제거
-  - ✅ Phase 3: Peek 파일/참조 제거 + openSidePeek→openInSecondary
-  - ✅ Phase 5: Focus tracking + context swapping + 위키 디테일 통합
-  - 🔴 Phase 6: Split view 통합 검증 + edge case (사이드바 focus-following 일부 시나리오)
-  - Phase 7: docs 업데이트
-- **P1 (보류)**: Library Bento Grid, Library FilterPanel, Reference.history
+- **P1 진행 중**:
+  - ✅ Library Overview 리디자인 (위키 대시보드 스타일)
+  - ✅ References DisplayPanel (정렬 + 그룹핑)
+  - ✅ Reference.history (수정 이력 타임라인, store v73)
+  - 🔴 위키 레이아웃 프리셋 시스템 (2개 렌더러 → 1개 통합)
 - **P2**: 인사이트 허브, 각주 리치텍스트, 인포박스 고도화
 
 ### 리서치: Library 고도화 벤치마크 (2026-04-07)
