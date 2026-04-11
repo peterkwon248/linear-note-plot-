@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { X as PhXIcon } from "@phosphor-icons/react/dist/ssr/X"
-import { IconSplitView } from "@/components/plot-icons"
+import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { setSecondarySpace, getSecondarySpace } from "@/lib/table-route"
 import { useActiveSpace } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
@@ -323,7 +323,7 @@ function SplitViewButton() {
         }
       }}
     >
-      <span className="text-[11px] font-medium tracking-tight">A|B</span>
+      <SplitHorizontal size={16} weight="regular" />
     </HBtn>
   )
 }

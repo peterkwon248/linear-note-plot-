@@ -25,7 +25,6 @@ export function WikilinkContextMenu() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const openNote = usePlotStore((s) => s.openNote)
-  const openSidePeek = usePlotStore((s) => s.openSidePeek)
   const openInSecondary = usePlotStore((s) => s.openInSecondary)
   const createNote = usePlotStore((s) => s.createNote)
   const createWikiArticle = usePlotStore((s) => s.createWikiArticle)
@@ -143,7 +142,7 @@ export function WikilinkContextMenu() {
 
   function handlePeek() {
     if (resolved) {
-      openSidePeek({ type: resolved.type, id: resolved.id })
+      openInSecondary(resolved.id)
     }
     close()
   }
@@ -319,7 +318,7 @@ export function WikilinkContextMenu() {
       ) : !isDangling ? (
         <>
           <MenuItem icon={<ArrowSquareOut size={14} />} label="Open" onClick={handleOpen} />
-          <MenuItem icon={<Eye size={14} />} label="Open in Peek" onClick={handlePeek} />
+          <MenuItem icon={<Eye size={14} />} label="Open in Split" onClick={handlePeek} />
           <MenuItem icon={<Columns size={14} />} label="Split View" onClick={handleSideBySide} />
           <div className="my-1 border-t border-border-subtle" />
           <MenuItem icon={<ArrowsClockwise size={14} />} label="Change link" onClick={handleChangeLink} />

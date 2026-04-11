@@ -27,6 +27,8 @@ import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
 import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
+import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
+import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import {
   Dialog,
   DialogContent,
@@ -36,7 +38,8 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { setActiveRoute } from "@/lib/table-route"
+import { setActiveRoute, getSecondarySpace, setSecondarySpace, getActiveSpace } from "@/lib/table-route"
+import { usePane } from "@/components/workspace/pane-context"
 import { useWikiViewMode, setWikiViewMode, setPendingMergeIds, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { ViewHeader } from "@/components/view-header"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
@@ -69,6 +72,7 @@ export function WikiView() {
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const router = useRouter()
   const backlinkCounts = useBacklinksIndex()
+  const pane = usePane()
 
   const wikiViewMode = useWikiViewMode()
   const activeCategoryId = useActiveCategoryId()
@@ -186,17 +190,31 @@ export function WikiView() {
     setIsEditingArticle(false)
   }, [selectedArticleId])
 
-  // Sync sidePanelContext when wiki article selection changes
+  // Sync sidePanelContext when wiki article selection changes + auto-open side panel
+  // Only primary pane sets sidePanelContext — secondary uses secondaryEntityContext instead
   useEffect(() => {
+    if (pane === 'secondary') return
     if (selectedWikiArticleId) {
       usePlotStore.getState().setSidePanelContext({ type: "wiki", id: selectedWikiArticleId })
+      usePlotStore.getState().setSidePanelOpen(true)
     } else if (selectedArticleId) {
-      // Legacy note-based article — treat as note context
       usePlotStore.getState().setSidePanelContext({ type: "note", id: selectedArticleId })
+      usePlotStore.getState().setSidePanelOpen(true)
     } else {
       usePlotStore.getState().setSidePanelContext(null)
     }
-  }, [selectedWikiArticleId, selectedArticleId])
+  }, [pane, selectedWikiArticleId, selectedArticleId])
+
+  // Sync secondary pane entity context so the sidebar can follow wiki article selections
+  useEffect(() => {
+    if (pane === 'secondary') {
+      if (selectedWikiArticleId) {
+        usePlotStore.getState().setSecondaryEntityContext({ type: "wiki", id: selectedWikiArticleId })
+      } else {
+        usePlotStore.getState().setSecondaryEntityContext(null)
+      }
+    }
+  }, [pane, selectedWikiArticleId])
 
   // Navigate to notes view (for non-wiki notes)
   const navigateToNote = useCallback(
@@ -742,6 +760,38 @@ export function WikiView() {
                   Edit
                 </button>
               )}
+
+              <span className="mx-0.5 h-4 w-px bg-border" />
+
+              {/* Split View button */}
+              <button
+                onClick={() => {
+                  const s = usePlotStore.getState()
+                  if (s.secondaryNoteId || getSecondarySpace()) {
+                    s.closeSecondary()
+                  } else {
+                    setSecondarySpace(getActiveSpace())
+                  }
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                title="Split View"
+              >
+                <SplitHorizontal size={16} weight="regular" />
+              </button>
+
+              {/* Sidebar toggle button */}
+              <button
+                onClick={() => usePlotStore.getState().toggleSidePanel()}
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-md transition-all duration-100",
+                  sidePanelOpen
+                    ? "text-accent bg-accent/10 hover:bg-accent/20"
+                    : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
+                )}
+                title="Toggle sidebar"
+              >
+                <SidebarSimple size={16} weight="regular" />
+              </button>
             </div>
           }
         >

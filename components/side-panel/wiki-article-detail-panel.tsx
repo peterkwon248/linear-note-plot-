@@ -9,7 +9,10 @@ import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { IconWiki } from "@/components/plot-icons"
+import { setActiveRoute } from "@/lib/table-route"
 import type { WikiArticle } from "@/lib/types"
 
 function InspectorSection({
@@ -37,6 +40,8 @@ function InspectorSection({
 export function WikiArticleDetailPanel({ article }: { article: WikiArticle | null }) {
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const tags = usePlotStore((s) => s.tags)
+  const notes = usePlotStore((s) => s.notes)
+  const attachments = usePlotStore((s) => s.attachments)
 
   const articleCategories = useMemo(() => {
     if (!article?.categoryIds?.length) return []
@@ -47,6 +52,39 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
     if (!article?.tags?.length) return []
     return tags.filter((t) => article.tags.includes(t.id) && !t.trashed)
   }, [article?.tags, tags])
+
+  const sources = useMemo(() => {
+    if (!article) return []
+    const items: { id: string; blockId: string; type: "note" | "image"; label: string; sub?: string }[] = []
+    const seenNotes = new Set<string>()
+    const seenAttachments = new Set<string>()
+
+    for (const block of article.blocks ?? []) {
+      if (block.type === "note-ref" && block.noteId && !seenNotes.has(block.noteId)) {
+        seenNotes.add(block.noteId)
+        const note = notes.find(n => n.id === block.noteId)
+        items.push({
+          id: block.noteId,
+          blockId: block.id,
+          type: "note",
+          label: note?.title || "Untitled",
+          sub: note?.status,
+        })
+      }
+      if (block.type === "image" && block.attachmentId && !seenAttachments.has(block.attachmentId)) {
+        seenAttachments.add(block.attachmentId)
+        const att = attachments.find(a => a.id === block.attachmentId)
+        items.push({
+          id: block.attachmentId,
+          blockId: block.id,
+          type: "image",
+          label: att?.name || block.caption || "Image",
+          sub: att ? `${(att.size / 1024).toFixed(0)} KB` : undefined,
+        })
+      }
+    }
+    return items
+  }, [article, notes, attachments])
 
   const stats = useMemo(() => {
     if (!article) return { blocks: 0, sections: 0, images: 0, noteRefs: 0, textBlocks: 0 }
@@ -238,6 +276,65 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           </div>
         </div>
       </InspectorSection>
+
+      {/* Sources */}
+      {sources.length > 0 && (
+        <>
+          <div className="mx-4 border-b border-border" />
+          <InspectorSection title="Sources" icon={<FileText size={16} weight="regular" />}>
+            <div className="space-y-px">
+              {sources.map((src, i) => (
+                <button
+                  key={`${src.type}-${src.id}`}
+                  onClick={(e) => {
+                    if (src.type === "note") {
+                      if (e.ctrlKey || e.metaKey) {
+                        usePlotStore.getState().openInSecondary(src.id)
+                      } else {
+                        setActiveRoute("/notes")
+                        usePlotStore.getState().openNote(src.id)
+                      }
+                    } else {
+                      document.getElementById(`wiki-block-${src.blockId}`)?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      })
+                    }
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-100 hover:bg-hover-bg"
+                >
+                  <span className="shrink-0 text-2xs font-semibold text-accent/40 tabular-nums w-4">
+                    {i + 1}
+                  </span>
+                  {src.type === "note" && <FileText className="shrink-0 text-muted-foreground/40" size={12} weight="regular" />}
+                  {src.type === "image" && <PhImage className="shrink-0 text-muted-foreground/40" size={12} weight="regular" />}
+                  <span className="flex-1 min-w-0 truncate text-note text-foreground/70">
+                    {src.label}
+                  </span>
+                  {src.sub && (
+                    <span className="shrink-0 text-2xs text-muted-foreground/30">{src.sub}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </InspectorSection>
+        </>
+      )}
+
+      {/* Actions */}
+      <div className="px-4 py-3 border-t border-border">
+        <button
+          onClick={() => {
+            if (confirm("Delete this wiki article?")) {
+              usePlotStore.getState().deleteWikiArticle(article.id)
+            }
+          }}
+          className="flex items-center gap-2 text-2xs text-red-400 hover:text-red-300 transition-colors"
+        >
+          <Trash size={14} weight="regular" />
+          Delete article
+        </button>
+      </div>
     </div>
   )
 }

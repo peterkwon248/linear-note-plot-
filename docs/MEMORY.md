@@ -25,7 +25,7 @@
 - **Body separation**: Note content in separate IDB (`plot-note-bodies`), meta in Zustand persist
 - **Wiki block body separation**: Text block content in `plot-wiki-block-bodies` IDB, block metadata in `plot-wiki-block-meta` IDB
 - **Workspace**: Simplified dual-pane (v52) — `selectedNoteId` (primary) + `secondaryNoteId` (right editor), react-resizable-panels
-- **Side Panel**: Unified `SmartSidePanel` — 5-tab: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Peek(미리보기) + Bookmarks(앵커/북마크). v64
+- **Side Panel**: Unified `SmartSidePanel` — 4-tab: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Bookmarks(앵커/북마크). Peek 탭 제거 (PR #176). 단일 인스턴스 + global state, useSidePanelEntity focus-following
 - **Wiki sectionIndex**: `WikiSectionIndex[]` in Zustand for lightweight TOC, full blocks in IDB for scalability (v53)
 - **Responsive NotesTable**: ONE grid for all sizes — ResizeObserver + minWidth thresholds
 - **TipTap Editor**: Shared config factory (`components/editor/core/shared-editor-config.ts`) with 4-tier system (base/note/wiki/template). **Title 노드 폐기 (v65)** — 첫 번째 블록(H2)이 자동으로 타이틀 역할 (UpNote 스타일). title-node.ts 삭제됨. 25+ extensions.
@@ -50,7 +50,7 @@
 - **ChipDropdown**: `components/ui/chip-dropdown.tsx` — 제네릭 드롭다운, DisplayPanel에서 추출
 - **Graph Filter Adapter**: `lib/view-engine/graph-filter-adapter.ts` — OntologyFilters ↔ FilterRule[] 변환
 - **Discover Engine**: `lib/search/discover-engine.ts` — keyword+tag+backlink+folder 4신호 로컬 추천
-- **SidePanel 5탭**: Detail(메타데이터) + Connections(Connected/Discover) + Activity(Thread/Reflection) + Peek(미리보기) + Bookmarks(앵커/북마크), SidePanelMode v64
+- **SidePanel 4탭**: Detail + Connections + Activity + Bookmarks. Context swapping 패턴 (`_savedPrimaryContext`). `useSidePanelEntity`는 `sidePanelContext`만 읽음
 - **Toolbar Config**: `lib/editor/toolbar-config.ts` — 42 item IDs, normalizeLayout(), Arrange Mode (dnd-kit drag-and-drop). Settings store에 persist
 - **Toolbar Primitives**: `components/editor/toolbar/toolbar-primitives.tsx` — ToolbarButton(40×40), ToolbarDivider, ToolbarGroup, ToolbarSpacer. Phosphor weight="light"
 - **Editor Colors**: `lib/editor-colors.ts` — 16 TEXT_COLORS + 16 HIGHLIGHT_COLORS, 8-column grid
@@ -94,30 +94,28 @@
 - **각주→Reference 자동 연결**: footnote-node.tsx + footnotes-footer.tsx의 save()에서 referenceId 없으면 자동 createReference + 연결. content 수정 시 동기화
 - **More Actions Overflow**: Pin 고정, 우클릭 Favorites (settings-store persist), 서브패널 (컬러피커/테이블 호버선택/이미지). `overflowFavorites: string[]` in settings store
 - **Split View (듀얼 패널)**: 하이브리드 모델 — 좌측=메인(selectedNoteId), 우측=독립 참조(secondaryNoteId). `secondaryHistory[]` 독립 네비게이션. `secondaryRoute/secondarySpace` 독립 라우팅 (table-route.ts). `PaneContext` + `usePaneOpenNote` + `usePaneActiveRoute` 훅. `SecondaryPanelContent`가 note/wiki/뷰 렌더링. breadcrumb 드롭다운으로 6 space 전환. `setRouteInterceptForSecondary`로 우측 클릭 시 글로벌 라우트 인터셉트. 사이드바는 좌측 전용
+- **SmartSidePanel Context Swapping**: `_savedPrimaryContext` 패턴. `setActivePane`/`openInSecondary`/`openNote(secondary)` 호출 시 `sidePanelContext`를 primary↔secondary 간 swap. `useSidePanelEntity`는 `sidePanelContext`만 읽음. Zustand `activePane` 구독 이슈 우회
+- **Wiki Detail SmartSidePanel 통합**: 위키 내장 aside 제거, `WikiArticleDetailPanel`에 Sources/Delete 추가. 위키도 노트와 동일하게 SmartSidePanel 사용
+- **Breadcrumb Note Picker**: `editor-breadcrumb.tsx` NotePickerChevron — ">" 클릭 시 검색+노트 리스트 드롭다운. StatusShapeIcon + 라벨 칩. 20개 제한
 
 ## Store Slices (22 total)
-notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, thinking
+notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
 ## Completed PRs (recent)
-- **PR #176 (예정, 이번 세션)**: Peek-First 실험 → Smart Sidebar Phase 1
-  - Peek-First 완성 (Phase 2, 2.5, 3, 3.5) — wiki 지원, Empty State, 사이즈 시스템, back/forward, pin
-  - 노트/위키 시각 구분 (StatusShapeIcon + wiki violet)
-  - MentionSuggestion 일관성
-  - 피벗 결정: Split-First 복귀
-  - **Phase 1 완료**: SmartSidePanel 단일 인스턴스 + global state + Peek 탭 제거 (4탭), `useSidePanelEntity` 활용
-  - Phase 2~7 대기 (24 sub-tasks todo list에 정리)
-- **PR #174**: Cross-Note Bookmarks + Outline 개선 + 사이드바 단일 책임 아키텍처 + 워크플로우 개선
-  - **GlobalBookmark 시스템 (5 Phase)**: store slice + migration v72, extractAnchorsFromContentJson 유틸, Bookmarks 탭 2섹션(Pinned+ThisNote), WikilinkNode `anchorId` attr + 2단계 앵커 피커, 플로팅 TOC 핀, 앵커 노드 우클릭 Pin to Bookmarks, Ctrl+Shift+B 단축키
-  - **Outline 개선**: TipTap JSON 기반 (markdown 파서 폐기), TOC 블록 우선 + 헤딩 fallback, 클릭 스크롤 (`extractOutlineFromContentJson`)
-  - **Footnote 접기/펼치기**: 기본 접힌 상태 "▶ FOOTNOTES (N)", `[N]` 클릭 시 자동 펼침
-  - **Wiki Sources 클릭 fix**: `setActiveRoute("/notes")` + `openNote` (default + encyclopedia 둘 다)
-  - **ReferencedInBadges dedupe + secondary 컴팩트 모드**: 위키 article ID 기준 중복 제거, secondary pane은 `in N` 단일 popover
-  - **Peek-First 아키텍처 Phase 0+1**: 사이드바 단일 책임 = layout.tsx
-    - WorkspaceEditorArea에서 사이드바 코드 전부 제거
-    - 4가지 케이스 명확한 분기: 단독뷰/단독에디터/뷰스플릿/에디터스플릿
-    - hasSplit/hasViewSplit/showSidePanel 로직 정리
-    - ResizablePanel id+order 추가 (동적 렌더링 fix)
-  - **워크플로우 개선**: NEXT-ACTION.md + SESSION-LOG.md 도입, before-work/after-work 스킬 확장
+- **PR #176 (merged 2026-04-09)**: Peek-First 실험 완성 + Split-First 복귀 Phase 1
+  - Peek-First 완성 (Phase 2~3.5) — wiki 지원, Empty State, 사이즈 시스템, back/forward, pin
+  - 노트/위키 시각 구분 (StatusShapeIcon + wiki violet), MentionSuggestion 일관성
+  - **피벗**: Peek UI가 chrome 레이어 안이라 동등한 에디터 느낌 불가능 → Split-First 복귀
+  - **Phase 1**: SmartSidePanel 단일 인스턴스 + global state, Peek 탭 제거 (4탭), useSidePanelEntity
+- **PR #175 (merged 2026-04-09)**: Cross-Note Bookmarks + Outline 개선 + Peek-First 아키텍처 + 워크플로우 개선
+  - GlobalBookmark 시스템 (5 Phase): store slice + migration v72, extractAnchorsFromContentJson, Bookmarks 탭 2섹션(Pinned+ThisNote), WikilinkNode anchorId attr + 앵커 피커, 플로팅 TOC 핀
+  - Outline 개선: TipTap JSON 기반 (markdown 파서 폐기), TOC 블록 우선 + 헤딩 fallback
+  - Footnote 접기/펼치기: 기본 접힌 상태 "▶ FOOTNOTES (N)"
+  - Peek-First 아키텍처 Phase 0+1: 사이드바 단일 책임 = layout.tsx, ResizablePanel id+order
+  - 워크플로우: NEXT-ACTION.md + SESSION-LOG.md 도입
+- **PR #174 (merged 2026-04-08)**: docs: CONTEXT.md + MEMORY.md 최신화 (v71, 21 slices, Split View)
+- **PR #173 (merged 2026-04-08)**: Split View 사이드패널 분리 — primary/secondary 독립 SmartSidePanel
+- **PR #172 (merged 2026-04-08)**: Split View 독립 패널 시스템 — 하이브리드 듀얼 에디터, PaneContext, secondaryHistory
 - **PR #80**: Wiki system + Side Peek + soft-delete trash
 - **PR #81**: 위키링크 UX 통합 — `[[` 하나로 통합
 - **PR #84**: Architecture Redesign v2 Phase 1~5 완료
@@ -414,7 +412,7 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Reference = 통합 참고자료 (하이브리드)** — url 필드 있으면 Link형, 없으면 Citation형. 기본=footnoteRef, Shift=referenceLink. 위키백과 패턴 (2026-04-08)
 - **호버 프리뷰 강화** — 리사이즈(400~960px) + 드래그 이동(Pin 시) + Pin 버튼 액션바 + 본문 flex-1 (2026-04-08)
 - **듀얼 에디터 = 독립 뷰 (구현 완료)** — VS Code/Obsidian 패턴. 좌/우 패널이 각각 독립 네비게이션. table-route 이중화 완료
-- **🎯 Peek-First 마이그레이션 (2026-04-09)** — Split View 폐기 + Peek 확장으로 단일 보조 콘텐츠 모델 전환. Phase 0+1 (사이드바 단일 책임) 완료. Phase 2~5 남음 (Peek wiki 지원, Min/Mid/Max 사이즈, Peek 독립 navigation, Split 폐기). Peek 지원: Note+Wiki만 (Calendar/Ontology 제외). 호버 프리뷰는 Peek와 별개 유지
+- **🎯 Split-First 복귀 (2026-04-09~10)** — Peek-First 실험 후 피벗. Peek UI가 chrome 레이어 안이라 동등한 에디터 느낌 불가 → Split view + 단일 SmartSidePanel focus-following 모델로 전환. Phase 1 완료 (PR #176). Phase 2~7 진행 중: store cleanup → peek 파일 제거 → 리네이밍 → focus tracking → 검증 → docs
 - **사이드바 단일 책임 = layout.tsx (2026-04-09)** — WorkspaceEditorArea에서 사이드바 코드 전부 제거. 4가지 케이스 명확한 분기 (단독뷰/단독에디터/뷰스플릿/에디터스플릿). ResizablePanel id+order 추가로 동적 렌더링 fix
 - **워크플로우 개선 (2026-04-09)** — NEXT-ACTION.md (다음 즉시 액션 1~3개) + SESSION-LOG.md (시간순 세션 기록) 도입. before-work/after-work 스킬 확장으로 크로스 머신 작업 매끄럽게
 
@@ -464,12 +462,13 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Files 뷰 구현**: Coming soon → 첨부파일 목록 (All/Images/Documents 필터)
 - **Sidebar Tags/Files 활성화**: disabled span → NavLink + 카운트 뱃지
 
-### 다음 우선순위 (2026-04-09 저녁 기준)
-- **P0 — Peek-First 마이그레이션 Phase 2~5**:
-  - Phase 2: Peek가 Wiki 표시 가능하게 (다음 즉시 시작 — `docs/NEXT-ACTION.md` 참조)
-  - Phase 3: 사이즈 시스템 (Min/Mid/Max + Drag)
-  - Phase 4: Peek 독립 네비게이션 (history)
-  - Phase 5: Split View 폐기
+### 다음 우선순위 (2026-04-11 기준)
+- **P0 — Split-First 마이그레이션 Phase 2~7** (대부분 완료):
+  - ✅ Phase 2: Store cleanup — peek/secondarySidePanel 제거
+  - ✅ Phase 3: Peek 파일/참조 제거 + openSidePeek→openInSecondary
+  - ✅ Phase 5: Focus tracking + context swapping + 위키 디테일 통합
+  - 🔴 Phase 6: Split view 통합 검증 + edge case (사이드바 focus-following 일부 시나리오)
+  - Phase 7: docs 업데이트
 - **P1 (보류)**: Library Bento Grid, Library FilterPanel, Reference.history
 - **P2**: 인사이트 허브, 각주 리치텍스트, 인포박스 고도화
 

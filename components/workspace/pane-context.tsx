@@ -16,7 +16,6 @@ export function PaneProvider({ pane, children }: { pane: PaneId; children: React
           className="contents"
           onClickCapture={() => setRouteInterceptForSecondary(true)}
           onMouseUpCapture={() => {
-            // Reset after the click event chain completes
             setTimeout(() => setRouteInterceptForSecondary(false), 0)
           }}
         >
@@ -45,6 +44,19 @@ export function usePaneOpenNote() {
     },
     [openNote, pane]
   )
+}
+
+/**
+ * Returns true when this pane is the active pane in a split view.
+ * Returns false in single-pane mode (no visual indicator needed).
+ */
+export function useIsActivePane(): boolean {
+  const pane = useContext(PaneContext)
+  const activePane = usePlotStore((s) => s.activePane)
+  const hasSecondaryNote = usePlotStore((s) => !!s.secondaryNoteId)
+  const secondaryRoute = useSecondaryRoute()
+  const hasSplit = hasSecondaryNote || !!secondaryRoute
+  return hasSplit && pane === activePane
 }
 
 /**

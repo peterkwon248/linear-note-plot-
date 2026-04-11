@@ -36,6 +36,7 @@ import { useSettingsStore } from "@/lib/settings-store"
 import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { getSecondarySpace, setSecondarySpace, getActiveSpace } from "@/lib/table-route"
+import { useIsActivePane } from "@/components/workspace/pane-context"
 import type { Editor } from "@tiptap/react"
 
 /**
@@ -101,12 +102,8 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
   const setLinkPickerOpen = usePlotStore((s) => s.setLinkPickerOpen)
-  const primaryDetailsOpen = usePlotStore((s) => s.sidePanelOpen)
-  const secondaryDetailsOpen = usePlotStore((s) => s.secondarySidePanelOpen)
-  const togglePrimarySidePanel = usePlotStore((s) => s.toggleSidePanel)
-  const toggleSecondarySidePanel = usePlotStore((s) => s.toggleSecondarySidePanel)
-  const detailsOpen = pane === 'secondary' ? secondaryDetailsOpen : primaryDetailsOpen
-  const toggleDetailsOpen = pane === 'secondary' ? toggleSecondarySidePanel : togglePrimarySidePanel
+  const detailsOpen = usePlotStore((s) => s.sidePanelOpen)
+  const toggleDetailsOpen = usePlotStore((s) => s.toggleSidePanel)
   const confirmDelete = useSettingsStore((s) => s.confirmDelete)
   // Secondary pane navigation
   const closeSecondary = usePlotStore((s) => s.closeSecondary)
@@ -118,6 +115,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   const revertFromWiki = usePlotStore((s) => s.revertFromWiki)
   const allTags = usePlotStore((s) => s.tags)
   const relations = usePlotStore((s) => s.relations)
+  const isActivePane = useIsActivePane()
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
 
@@ -310,7 +308,8 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
       <div className="flex flex-col flex-1 overflow-hidden w-full">
       {/* Editor Header */}
       <header className={cn(
-        "flex items-center justify-between border-b border-border py-2 px-4"
+        "flex items-center justify-between border-b border-border py-2 px-4 transition-colors duration-150",
+        isActivePane && "bg-hover-bg"
       )}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {pane === 'secondary' && (

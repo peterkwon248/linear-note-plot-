@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import { useActiveSpace, setActiveRoute, setActiveFolderId, getActiveRoute, DEFAULT_ROUTES, setSecondarySpace, setSecondaryRoute, useSecondarySpace, clearSecondaryRoute } from "@/lib/table-route"
@@ -11,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { House } from "@phosphor-icons/react/dist/ssr/House"
 import { NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil"
 import { BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText"
@@ -19,6 +21,7 @@ import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import type { Note, ActivitySpace } from "@/lib/types"
+import { StatusShapeIcon } from "@/components/status-icon"
 
 interface EditorBreadcrumbProps {
   note: Note
@@ -54,7 +57,8 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
   const folders = usePlotStore((s) => s.folders)
 
   const folder = note.folderId ? folders.find((f) => f.id === note.folderId) : null
-  const currentSpace = pane === 'secondary' ? (secondarySpace ?? activeSpace) : activeSpace
+  // Notes always show "Notes" in breadcrumb regardless of which space opened the split
+  const currentSpace = pane === 'secondary' ? 'notes' as ActivitySpace : activeSpace
 
   // Primary pane: navigate to space (close editor, show list)
   const navigateToSpace = () => {
@@ -147,13 +151,88 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
         </>
       )}
 
-      {/* Separator before note title */}
-      <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+      {/* Separator before note title — clickable note picker */}
+      <NotePickerChevron pane={pane} currentNoteId={note.id} />
 
       {/* Note title crumb */}
       <span className="min-w-0 truncate text-lg font-medium text-foreground">
         {note.title || "Untitled"}
       </span>
     </nav>
+  )
+}
+
+function NotePickerChevron({ pane, currentNoteId }: { pane: 'primary' | 'secondary'; currentNoteId: string }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+  const notes = usePlotStore((s) => s.notes)
+  const labels = usePlotStore((s) => s.labels)
+  const openNote = usePlotStore((s) => s.openNote)
+
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase()
+    return notes
+      .filter((n) => !n.trashed && n.id !== currentNoteId && n.title.toLowerCase().includes(q))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 20)
+  }, [notes, query, currentNoteId])
+
+  const getLabel = (labelId: string | null | undefined) =>
+    labelId ? labels.find((l) => l.id === labelId) : null
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 0)
+  }, [open])
+
+  return (
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQuery("") }}>
+      <PopoverTrigger asChild>
+        <button className="shrink-0 rounded p-0.5 text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors">
+          <IconChevronRight size={16} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80 p-0" sideOffset={4}>
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search notes..."
+          className="w-full px-3.5 py-2.5 text-note bg-transparent border-b border-border text-foreground outline-none placeholder:text-muted-foreground/50"
+        />
+        <div className="max-h-[360px] overflow-y-auto py-1">
+          {filtered.map((n) => {
+            const label = getLabel(n.labelId)
+            return (
+              <button
+                key={n.id}
+                onClick={() => {
+                  openNote(n.id, { pane })
+                  setOpen(false)
+                  setQuery("")
+                }}
+                className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-foreground/80 hover:bg-hover-bg transition-colors"
+              >
+                <StatusShapeIcon status={n.status} size={16} />
+                <span className="truncate text-note font-medium flex-1">{n.title || "Untitled"}</span>
+                {label && (
+                  <span
+                    className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium"
+                    style={{ backgroundColor: label.color + '20', color: label.color }}
+                  >
+                    {label.name}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+          {filtered.length === 0 && (
+            <div className="px-3.5 py-6 text-note text-muted-foreground/50 text-center">
+              No notes found
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

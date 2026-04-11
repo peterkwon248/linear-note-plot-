@@ -24,16 +24,13 @@ export interface EditorState {
   panelRatios: number[]  // for 3-panel mode, e.g. [0.33, 0.33, 0.34]
 }
 
-export type SidePanelMode = 'detail' | 'connections' | 'activity' | 'peek' | 'bookmarks'
+export type SidePanelMode = 'detail' | 'connections' | 'activity' | 'bookmarks'
 
 export type SidePanelContext =
   | { type: "note"; id: string }
   | { type: "wiki"; id: string }
   | { type: "reference"; id: string }
   | null
-
-/** Peek target — Peek sidebar can display either a Note or a Wiki article. */
-export type PeekContext = { type: "note" | "wiki"; id: string }
 
 export interface PlotState {
   // ── Data ──
@@ -60,34 +57,14 @@ export interface PlotState {
   linkPickerOpen: boolean
   linkPickerSourceId: string | null
 
-  // Side Panel (peek) — supports both notes and wiki articles
-  sidePanelPeekContext: PeekContext | null
-
-  // Peek session data (persisted across sessions)
-  /** Most-recently-opened Peek targets, newest first. Bounded. */
-  peekHistory: PeekContext[]
-  /** User-pinned Peek targets (max 2). Shown in Empty State. */
-  peekPins: PeekContext[]
-  /** Peek panel width as a percentage of the main layout (15–50). Applied only in single-pane peek mode. */
-  peekSize: number
-  /** Linear navigation stack for Peek back/forward (oldest first, with duplicates). Transient — not persisted. */
-  peekNavStack: PeekContext[]
-  /** Current position in peekNavStack. -1 = empty. */
-  peekNavIndex: number
-
   // Preview (list row click — shows details in side panel without opening editor)
   previewNoteId: string | null
 
   // Side Panel Context (entity-aware — works for both notes and wiki articles)
   sidePanelContext: SidePanelContext
+  /** Saved primary context when secondary pane is active (internal, non-persisted) */
+  _savedPrimaryContext: SidePanelContext
   setSidePanelContext: (ctx: SidePanelContext) => void
-
-  // Secondary Side Panel (right pane's own side panel)
-  secondarySidePanelOpen: boolean
-  secondarySidePanelMode: SidePanelMode
-  secondarySidePanelContext: SidePanelContext
-  setSecondarySidePanelOpen: (open: boolean) => void
-  toggleSecondarySidePanel: () => void
 
   // Navigation History
   navigationHistory: string[]  // stack of note IDs
@@ -97,8 +74,6 @@ export interface PlotState {
   sidebarWidth: number
   sidebarLastWidth: number
   sidebarCollapsed: boolean
-  sidebarPeek: boolean
-
   // View Engine
   viewStateByContext: Record<ViewContextKey, ViewState>
   _viewStateHydrated: boolean
@@ -233,7 +208,6 @@ export interface PlotState {
   toggleSidePanel: () => void
   setSidebarWidth: (width: number) => void
   setSidebarCollapsed: (collapsed: boolean) => void
-  setSidebarPeek: (peek: boolean) => void
   restoreSidebar: () => void
   goBack: () => boolean
   goForward: () => boolean
@@ -241,21 +215,6 @@ export interface PlotState {
   setListPaneWidth: (width: number) => void
   setPreviewNoteId: (id: string | null) => void
   openReferencePanel: (refId: string) => void
-  /** Open the peek side panel. Accepts a noteId string (treated as a note) or a PeekContext for notes/wiki. */
-  openSidePeek: (target: string | PeekContext) => void
-  closeSidePeek: () => void
-  /** Toggle Pin for a Peek target. Max 2 pins — oldest is evicted when full. */
-  togglePeekPin: (target: PeekContext) => void
-  /** Remove an entry from peekHistory (e.g. when user deletes a noted entity). */
-  removeFromPeekHistory: (target: PeekContext) => void
-  /** Clear all peek history. */
-  clearPeekHistory: () => void
-  /** Set Peek panel width (percentage, clamped 15–50). */
-  setPeekSize: (size: number) => void
-  /** Navigate back in Peek history. No-op if at the oldest entry. */
-  peekGoBack: () => void
-  /** Navigate forward in Peek history. No-op if at the newest entry. */
-  peekGoForward: () => void
   setMergePickerOpen: (open: boolean, sourceId?: string | null) => void
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
   setPendingWikiAssembly: (noteIds: string[] | null) => void
@@ -377,6 +336,9 @@ export interface PlotState {
   // ── Workspace (Simplified Dual Pane) ──
   secondaryNoteId: string | null  // right editor note (null = single pane)
   activePane: 'primary' | 'secondary'
+  /** Entity being viewed in secondary pane (for view-mode split — supplements secondaryNoteId) */
+  secondaryEntityContext: SidePanelContext
+  setSecondaryEntityContext: (ctx: SidePanelContext) => void
   editorTabs: WorkspaceTab[]
   activeTabId: string | null
   secondaryHistory: string[]       // right panel navigation stack
