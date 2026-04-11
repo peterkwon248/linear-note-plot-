@@ -95,7 +95,13 @@ export function createWorkspaceSlice(set: Set, get: Get) {
       const newIndex = index - 1
       const noteId = state.secondaryHistory[newIndex]
       if (!(state.notes as Note[]).some((n: Note) => n.id === noteId && !n.trashed)) return false
-      set({ secondaryHistoryIndex: newIndex, secondaryNoteId: noteId })
+      const isNote = (state.notes as Note[]).some((n: Note) => n.id === noteId && !n.trashed)
+      set({
+        secondaryHistoryIndex: newIndex,
+        secondaryNoteId: noteId,
+        // Sync sidebar if secondary is active
+        ...(state.activePane === 'secondary' ? { sidePanelContext: { type: (isNote ? "note" : "wiki") as "note" | "wiki", id: noteId } } : {}),
+      })
       return true
     },
 
@@ -107,7 +113,12 @@ export function createWorkspaceSlice(set: Set, get: Get) {
       const newIndex = index + 1
       const noteId = history[newIndex]
       if (!(state.notes as Note[]).some((n: Note) => n.id === noteId && !n.trashed)) return false
-      set({ secondaryHistoryIndex: newIndex, secondaryNoteId: noteId })
+      const isNote = (state.notes as Note[]).some((n: Note) => n.id === noteId && !n.trashed)
+      set({
+        secondaryHistoryIndex: newIndex,
+        secondaryNoteId: noteId,
+        ...(state.activePane === 'secondary' ? { sidePanelContext: { type: (isNote ? "note" : "wiki") as "note" | "wiki", id: noteId } } : {}),
+      })
       return true
     },
 

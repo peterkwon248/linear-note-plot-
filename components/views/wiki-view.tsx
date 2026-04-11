@@ -192,6 +192,8 @@ export function WikiView() {
 
   // Sync sidePanelContext when wiki article selection changes + auto-open side panel
   // Only primary pane sets sidePanelContext — secondary uses secondaryEntityContext instead
+  // NOTE: Don't clear context when no article selected — let previous context persist
+  // so _savedPrimaryContext always has a valid value for split view swapping
   useEffect(() => {
     if (pane === 'secondary') return
     if (selectedWikiArticleId) {
@@ -200,8 +202,6 @@ export function WikiView() {
     } else if (selectedArticleId) {
       usePlotStore.getState().setSidePanelContext({ type: "note", id: selectedArticleId })
       usePlotStore.getState().setSidePanelOpen(true)
-    } else {
-      usePlotStore.getState().setSidePanelContext(null)
     }
   }, [pane, selectedWikiArticleId, selectedArticleId])
 
