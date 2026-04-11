@@ -10,67 +10,20 @@
 
 ## 🎯 다음 세션 시작하면 바로 할 것
 
-### Phase 2: Store cleanup (Peek/secondarySidePanel 레거시 제거)
+### P1-4: 위키 레이아웃 프리셋 시스템
 
-**배경**: Phase 1에서 SmartSidePanel을 단일 인스턴스 + global state로 단순화 했음 (`useSidePanelEntity` + `PaneProvider`로 focus-following). tsc는 pass지만 store에 미사용 peek/secondarySidePanel 상태가 여전히 존재.
+**배경**: Default와 Encyclopedia 2개의 별도 렌더러(wiki-article-view.tsx ~800줄, wiki-article-encyclopedia.tsx ~700줄)를 1개 설정 기반 렌더러로 통합.
 
-**구체 작업 (tsc 연쇄 에러가 예상되니 하나씩 수정):**
+**구체 작업:**
+1. 프리셋 설정 객체 정의: `{ tocPosition, infobox, footer, sectionNumbers }`
+2. `WikiArticleRenderer` 통합 컴포넌트 생성
+3. 기존 2개 컴포넌트의 렌더링 로직을 설정 기반 조건부 렌더로 변환
+4. `WikiArticle.layout` 타입 확장 가능하게
 
-1. **`lib/store/types.ts`** — `SidePanelMode`에서 `'peek'` 제거
-2. **`lib/store/types.ts`** — peek 상태 필드 전부 제거:
-   - `sidePanelPeekContext`, `peekHistory`, `peekPins`, `peekSize`, `peekNavStack`, `peekNavIndex`
-   - `PeekContext`, `PeekPreset` 타입 export
-3. **`lib/store/types.ts`** — peek 액션 제거:
-   - `openSidePeek`, `closeSidePeek`, `togglePeekPin`, `removeFromPeekHistory`, `clearPeekHistory`, `setPeekSize`, `peekGoBack`, `peekGoForward`
-4. **`lib/store/types.ts`** — secondarySidePanel 상태/액션 제거:
-   - `secondarySidePanelOpen`, `secondarySidePanelMode`, `secondarySidePanelContext`
-   - `setSecondarySidePanelOpen`, `toggleSecondarySidePanel`
-5. **`lib/store/slices/ui.ts`** — 위 액션들의 구현 제거 + 관련 helper(peekKey, MAX_PEEK_* 상수, PEEK_SIZE_MIN/MAX 등)
-6. **`lib/store/index.ts`** — 초기값에서 peek/secondary sidepanel 필드 제거, `partialize` exclusion 리스트 정리
-7. **`lib/store/migrate.ts`** — 레거시 필드 `delete` 처리 추가 (기존 persist 데이터 호환)
-
-### Phase 3: Peek 파일/참조 제거
-
-**주의**: `components/side-panel/side-panel-peek.tsx`는 아직 삭제하면 안 됨. `smart-side-panel.tsx`의 `showPeek` 렌더 블록(import)이 참조 중 → 먼저 3-2에서 렌더 블록 제거, 그 다음 3-1.
-
-1. **`components/side-panel/smart-side-panel.tsx`**: `showPeek` 변수 + 렌더 블록 + import 제거 (SidePanelPeek, PeekEmptyState)
-2. **`components/side-panel/side-panel-peek.tsx`** 삭제
-3. **`components/side-panel/peek-empty-state.tsx`** 삭제 (또는 Phase 4에서 secondary-open-picker로 이관)
-4. **`lib/peek/peek-presets.ts`** 삭제 (사용 없음)
-5. **`hooks/use-global-shortcuts.ts`**: `Cmd+Shift+P` 핸들러 삭제 또는 secondary picker 오픈으로 교체
-6. **`lib/note-reference-actions.ts`** line ~100: `store.openSidePeek({ type, id })` → split view 진입 또는 삭제
-7. **`components/editor/wikilink-context-menu.tsx`** line ~146: `openSidePeek` → `openInSecondary`
-8. **`components/editor/note-hover-preview.tsx`** line ~246: `openSidePeek` → `openInSecondary`
-9. **`components/side-panel/side-panel-connections.tsx`**: 8개 `openSidePeek` 호출 → `openInSecondary` 또는 제거
-
-### Phase 4: Split view picker 재설계 (자산 재활용)
-
-1. **`lib/peek/peek-search.ts`** → **`lib/workspace/entity-search.ts`** (이름 변경, 내용 대부분 유지)
-2. **`lib/peek/peek-suggestions.ts`** → **`lib/workspace/secondary-suggestions.ts`**
-3. **`components/side-panel/peek-empty-state.tsx`** → **`components/workspace/secondary-open-picker.tsx`**
-   - 진입: Cmd+Shift+\\ 또는 Cmd+Shift+P로 picker 열림
-   - 피커 동작: 노트/위키 선택 → `openInSecondary({type, id})` 호출 → secondary pane 오픈
-   - Recent / Pinned / Suggested 섹션 그대로 재활용 (데이터는 secondaryHistory + 새 secondaryPins)
-4. `secondaryHistory`에 pin 개념 추가하거나 별도 slice(`secondaryPins`) 신설
-
-### Phase 5: Focus tracking 강화 + 시각 피드백
-
-1. **Editor 컴포넌트**: `components/note-editor.tsx`, `components/workspace/secondary-panel-content.tsx` 등에 `onClick capture` → `usePlotStore.getState().setActivePane('primary'|'secondary')`
-2. **액티브 pane 시각 표시**: subtle top 2px accent border (예: `border-t-2 border-t-accent`). Focus 이동 애니메이션 150ms
-
-### Phase 6: Split view 통합 검증
-
-1. Cmd+\\ 동작 (현재 공간 복제 → secondary)
-2. Cmd+Shift+\\ 동작 (빈 secondary + picker)
-3. Wiki 편집 split view에서 확인 (오늘 Peek에서 enable한 것을 split으로 이관)
-4. 포커스 전환 시 sidebar 자동 갱신 (Detail 탭 내용 바뀜 확인)
-5. 사이드바 애니메이션 부드러운지
-
-### Phase 7: 문서 정리
-
-1. `docs/NEXT-ACTION.md`: 새 방향 반영 완료 후 재작성
-2. `docs/CONTEXT.md`: Peek-First → Split-First 결정 업데이트
-3. `docs/MEMORY.md`: 이미 이번 after-work에서 업데이트됨
+**참고 파일:**
+- `components/wiki-editor/wiki-article-view.tsx` (~800줄)
+- `components/wiki-editor/wiki-article-encyclopedia.tsx` (~700줄)
+- `lib/types.ts` — WikiArticle.layout
 
 ---
 
@@ -93,6 +46,7 @@
 
 ## 🚧 보류 (나중에)
 
-- **Reference.history** — 데이터 모델 + UI 중간에 멈춤. Split-First 완료 후
-- Library Bento Grid 리디자인, Library FilterPanel
+- ✅ **Reference.history** — 수정 이력 타임라인 (2026-04-11 완료)
+- ✅ **Library Overview 리디자인** — 위키 대시보드 스타일 (2026-04-11 완료)
+- Library FilterPanel (Notes 수준으로 확장) — P2+로 보류
 - `@` 멘션에 Reference 지원 (지금은 이미 있음 — 확인됨. 이 항목 폐기)
