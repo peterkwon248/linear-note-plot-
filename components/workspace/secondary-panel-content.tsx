@@ -337,12 +337,11 @@ export function SecondaryPanelContent() {
     )
   }
 
-  // List/View mode: show header + view for the current secondary route
+  // List/View mode: ViewHeader inside each view handles header (with space dropdown in secondary)
   if (secondaryRoute) {
     return (
       <PaneProvider pane="secondary">
         <div className="flex flex-col h-full">
-          <SecondaryViewHeader />
           <div className="flex-1 min-h-0 overflow-auto">
             <Suspense fallback={<ViewFallback />}>
               <SecondaryViewRouter route={secondaryRoute} />
@@ -357,31 +356,40 @@ export function SecondaryPanelContent() {
   return null
 }
 
-function SecondaryViewRouter({ route }: { route: string }) {
-  if (TABLE_VIEW_ROUTES.includes(route)) {
-    return <NotesTableView />
-  }
+// Views that don't use ViewHeader need a mini header for secondary pane (space dropdown + close)
+const VIEWS_WITHOUT_HEADER = ["/home", "/calendar", "/ontology", "/graph-insights"]
 
-  switch (route) {
-    case "/home":
-      return <HomeView />
-    case "/wiki":
-      return <WikiView />
-    case "/calendar":
-      return <CalendarView title="Calendar" />
-    case "/ontology":
-    case "/graph-insights":
-      return <OntologyView />
-    case "/library":
-    case "/library/references":
-    case "/library/tags":
-    case "/library/files":
-      return <LibraryView />
-    default:
-      return (
+function SecondaryViewRouter({ route }: { route: string }) {
+  const needsMiniHeader = VIEWS_WITHOUT_HEADER.includes(route)
+
+  const content = (() => {
+    if (TABLE_VIEW_ROUTES.includes(route)) return <NotesTableView />
+    switch (route) {
+      case "/home": return <HomeView />
+      case "/wiki": return <WikiView />
+      case "/calendar": return <CalendarView title="Calendar" />
+      case "/ontology":
+      case "/graph-insights": return <OntologyView />
+      case "/library":
+      case "/library/references":
+      case "/library/tags":
+      case "/library/files": return <LibraryView />
+      default: return (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
           Select a space from the breadcrumb
         </div>
       )
+    }
+  })()
+
+  if (needsMiniHeader) {
+    return (
+      <div className="flex flex-col h-full">
+        <SecondaryViewHeader />
+        <div className="flex-1 min-h-0 overflow-auto">{content}</div>
+      </div>
+    )
   }
+
+  return content
 }
