@@ -14,6 +14,12 @@ import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
 import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
+import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
+import { Link } from "@phosphor-icons/react/dist/ssr/Link"
+import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
+import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { shortRelative } from "@/lib/format-utils"
 
 function InspectorSection({
   title,
@@ -286,6 +292,31 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
           </div>
         </div>
       </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* History Timeline */}
+      {reference.history && reference.history.length > 0 && (
+        <InspectorSection title="History" icon={<ClockCounterClockwise size={16} weight="regular" />}>
+          <div className="space-y-1.5">
+            {[...reference.history].reverse().slice(0, 10).map((entry, i) => (
+              <div key={i} className="flex items-center gap-2 text-2xs">
+                <span className="shrink-0 text-muted-foreground/40">
+                  {entry.action === "created" && <Sparkle size={11} weight="fill" />}
+                  {entry.action === "edited" && <PencilSimple size={11} weight="regular" />}
+                  {entry.action === "linked" && <Link size={11} weight="regular" />}
+                  {entry.action === "unlinked" && <LinkBreak size={11} weight="regular" />}
+                </span>
+                <span className="text-muted-foreground/60 capitalize">{entry.action}</span>
+                {entry.detail && <span className="text-muted-foreground/40">— {entry.detail}</span>}
+                <span className="ml-auto shrink-0 text-muted-foreground/30 tabular-nums">
+                  {shortRelative(entry.timestamp)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </InspectorSection>
+      )}
 
       <div className="mx-4 border-b border-border" />
 

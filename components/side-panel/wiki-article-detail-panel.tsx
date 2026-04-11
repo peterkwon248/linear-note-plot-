@@ -184,8 +184,8 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
         </>
       )}
 
-      {/* Infobox */}
-      {article.infobox.length > 0 && (
+      {/* Infobox — hidden in encyclopedia mode (shown inline in article body) */}
+      {article.infobox.length > 0 && article.layout !== "encyclopedia" && (
         <>
           <InspectorSection title="Infobox" icon={<FileText size={16} weight="regular" />}>
             <div className="space-y-2">

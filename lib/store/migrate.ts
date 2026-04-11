@@ -814,5 +814,17 @@ export function migrate(persistedState: unknown): PlotState {
   // Reset sidePanelMode if it was 'peek' (no longer a valid mode)
   if (state.sidePanelMode === 'peek') state.sidePanelMode = 'detail'
 
+  // v73: Add history to references
+  if (state.references) {
+    for (const key of Object.keys(state.references as Record<string, any>)) {
+      const ref = (state.references as Record<string, any>)[key]
+      if (!ref.history) {
+        ref.history = [
+          { timestamp: ref.createdAt, action: "created" }
+        ]
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

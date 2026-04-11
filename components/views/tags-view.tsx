@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
+import { pickColor } from "@/components/note-fields"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -22,6 +23,7 @@ import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizon
 import { Stack } from "@phosphor-icons/react/dist/ssr/Stack"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
+import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { EyeSlash } from "@phosphor-icons/react/dist/ssr/EyeSlash"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -223,7 +225,7 @@ export function TagsView() {
           (t) => t.name.toLowerCase() === name.toLowerCase(),
         )
         if (!exists) {
-          createTag(name, "#6b7280")
+          createTag(name, pickColor(name))
         }
       }
       setTagInput("")
@@ -596,12 +598,17 @@ export function TagsView() {
                 <div className="flex items-center gap-3 border-b border-border-subtle px-6 py-2">
                   <button
                     onClick={toggleAll}
-                    className="flex h-4 w-4 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
+                    className={cn(
+                      "flex h-4 w-4 items-center justify-center rounded border transition-colors",
+                      checkedTags.size > 0 ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                    )}
                   >
-                    {checkedTags.size === sortedTags.length &&
-                      sortedTags.length > 0 && (
-                        <div className="h-2 w-2 rounded-sm bg-accent" />
-                      )}
+                    {checkedTags.size === sortedTags.length && sortedTags.length > 0 && (
+                      <PhCheck size={8} weight="bold" className="text-accent-foreground" />
+                    )}
+                    {checkedTags.size > 0 && checkedTags.size < sortedTags.length && (
+                      <Minus size={8} weight="bold" className="text-accent-foreground" />
+                    )}
                   </button>
                   <button
                     className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
@@ -651,10 +658,13 @@ export function TagsView() {
                   >
                     <button
                       onClick={() => toggleCheck(tag.id)}
-                      className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50"
+                      className={cn(
+                        "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
+                        checkedTags.has(tag.id) ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                      )}
                     >
                       {checkedTags.has(tag.id) && (
-                        <div className="h-2 w-2 rounded-sm bg-accent" />
+                        <PhCheck size={8} weight="bold" className="text-accent-foreground" />
                       )}
                     </button>
                     <button

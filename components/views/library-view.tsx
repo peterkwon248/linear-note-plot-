@@ -15,6 +15,12 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu"
 import { ViewHeader } from "@/components/view-header"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { Plus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
@@ -31,13 +37,15 @@ import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
-import { Clock } from "@phosphor-icons/react/dist/ssr/Clock"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText"
+import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple"
 import { cn } from "@/lib/utils"
 import { useActiveRoute, setActiveRoute } from "@/lib/table-route"
 import { usePaneActiveRoute } from "@/components/workspace/pane-context"
+import { pickColor } from "@/components/note-fields"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import type { Reference } from "@/lib/types"
 
@@ -483,17 +491,23 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-function MiniStat({
+/* ── Library Overview ────────────────────────────── */
+
+/* ── Library Dashboard Sub-Components ─────────────── */
+
+function LibMiniStat({
   label,
   value,
   sub,
   color,
+  icon,
   onClick,
 }: {
   label: string
   value: number
   sub: string
   color: string
+  icon?: React.ReactNode
   onClick?: () => void
 }) {
   const Wrapper = onClick ? "button" : "div"
@@ -501,10 +515,11 @@ function MiniStat({
     <Wrapper
       onClick={onClick}
       className={cn(
-        "rounded-lg border border-border-subtle bg-card/50 px-3 py-2.5 text-left",
+        "rounded-lg border border-border-subtle bg-card/50 px-3 py-2.5 text-left relative",
         onClick && "cursor-pointer transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
       )}
     >
+      {icon && <span className="absolute right-3 top-2.5 text-muted-foreground/25">{icon}</span>}
       <p className={cn("text-xl font-semibold tabular-nums", color)}>{value}</p>
       <p className="text-2xs font-medium text-foreground/70">{label}</p>
       <p className="text-2xs text-muted-foreground/40">{sub}</p>
@@ -512,48 +527,16 @@ function MiniStat({
   )
 }
 
-function ContentCard({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: React.ComponentType<any>
-  children: React.ReactNode
-}) {
+function LibSectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-card/30">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
-        <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/50">{title}</h3>
-      </div>
-      <div className="px-1.5 py-1">{children}</div>
-    </div>
+    <h2 className="mb-2.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
+      {children}
+    </h2>
   )
 }
 
-function ListItem({
-  title,
-  meta,
-  onClick,
-}: {
-  title: string
-  meta: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
-    >
-      <span className="min-w-0 flex-1 truncate text-note text-foreground/90">{title}</span>
-      <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/40">{meta}</span>
-    </button>
-  )
-}
 
-/* ── Library Overview ────────────────────────────── */
+/* ── Library Overview (Wiki Dashboard Style) ──────── */
 
 function LibraryOverview() {
   const references = usePlotStore((s) => s.references)
@@ -561,76 +544,154 @@ function LibraryOverview() {
   const attachments = usePlotStore((s) => s.attachments)
   const notes = usePlotStore((s) => s.notes)
 
-  // Reference stats
+  // Stats
   const refList = useMemo(() => Object.values(references).filter((r) => !r.trashed), [references])
-  const refTotal = refList.length
-  const refLinked = refList.filter((r) => r.content.trim()).length
-
-  // Tag stats
   const activeTags = useMemo(() => tags.filter((t) => !t.trashed), [tags])
-  const tagTotal = activeTags.length
-
-  // File/attachment stats (exclude trashed)
   const activeAttachments = useMemo(() => attachments.filter((a) => !a.trashed), [attachments])
-  const fileTotal = activeAttachments.length
-  const imageCount = activeAttachments.filter((a) => a.type === "image").length
-  const docCount = activeAttachments.filter((a) => a.type !== "image").length
-
-  // Active notes (for tag count calculation)
   const activeNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
 
-  // Recent references (sorted by updatedAt desc)
-  const recentRefs = useMemo(
-    () =>
-      [...refList]
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-        .slice(0, 5),
-    [refList]
-  )
+  const refTotal = refList.length
+  const tagTotal = activeTags.length
+  const fileTotal = activeAttachments.length
 
-  // Recent tags — sorted by most recent note usage
-  const topTags = useMemo(
-    () =>
-      activeTags
-        .map((tag) => {
-          const taggedNotes = activeNotes.filter((n) => n.tags?.includes(tag.id))
-          const latestUsage = taggedNotes.reduce((max, n) => {
-            const t = new Date(n.updatedAt).getTime()
-            return t > max ? t : max
-          }, 0)
-          return { ...tag, count: taggedNotes.length, latestUsage }
-        })
-        .filter((t) => t.count > 0)
-        .sort((a, b) => b.latestUsage - a.latestUsage)
-        .slice(0, 5),
-    [activeTags, activeNotes]
-  )
+  // Sub-stats
+  const linkedRefCount = refList.filter((r) => r.content.trim()).length
+  const imageCount = activeAttachments.filter((a) => a.type === "image").length
+  const docCount = fileTotal - imageCount
+  const tagUsedCount = activeTags.filter((t) => activeNotes.some((n) => n.tags?.includes(t.id))).length
 
-  // Recent files (sorted by createdAt desc)
-  const recentFiles = useMemo(
-    () =>
-      [...activeAttachments]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5),
-    [activeAttachments]
-  )
+  // Unified recent feed — merge all types, sort by time
+  const recentFeed = useMemo(() => {
+    const items: Array<{ id: string; title: string; type: "reference" | "tag" | "file"; time: number }> = []
 
-  // Unlinked references (no content)
-  const unlinkedRefs = useMemo(
-    () => refList.filter((r) => !r.content.trim()).slice(0, 5),
-    [refList]
-  )
+    for (const ref of refList) {
+      items.push({
+        id: ref.id,
+        title: ref.title || "Untitled Reference",
+        type: "reference",
+        time: new Date(ref.updatedAt).getTime(),
+      })
+    }
+
+    for (const tag of activeTags) {
+      const taggedNotes = activeNotes.filter((n) => n.tags?.includes(tag.id))
+      if (taggedNotes.length === 0) continue
+      const latestTime = Math.max(...taggedNotes.map((n) => new Date(n.updatedAt).getTime()))
+      items.push({
+        id: tag.id,
+        title: tag.name,
+        type: "tag",
+        time: latestTime,
+      })
+    }
+
+    for (const att of activeAttachments) {
+      items.push({
+        id: att.id,
+        title: att.name || "Untitled file",
+        type: "file",
+        time: new Date(att.createdAt).getTime(),
+      })
+    }
+
+    return items.sort((a, b) => b.time - a.time).slice(0, 8)
+  }, [refList, activeTags, activeAttachments, activeNotes])
+
+  // Top tags by note count
+  const topTags = useMemo(() => {
+    return activeTags
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        count: activeNotes.filter((n) => n.tags?.includes(t.id)).length,
+      }))
+      .filter((t) => t.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6)
+  }, [activeTags, activeNotes])
+
+  // Attention items
+  const unlinkedRefCount = refList.filter((r) => !r.content.trim()).length
+  const unusedTagCount = activeTags.filter((t) => !activeNotes.some((n) => n.tags?.includes(t.id))).length
+  const hasAttention = unlinkedRefCount > 0 || unusedTagCount > 0
 
   const isEmpty = refTotal === 0 && tagTotal === 0 && fileTotal === 0
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <ViewHeader
         icon={<SquaresFour weight="duotone" className="h-4 w-4" />}
         title="Library"
+        showDetailPanel
+        detailPanelOpen={usePlotStore.getState().sidePanelOpen}
+        onDetailPanelToggle={() => usePlotStore.getState().toggleSidePanel()}
+        createMenuContent={
+          <div className="py-1 w-44">
+            <button
+              onClick={() => {
+                const id = usePlotStore.getState().createReference({ title: "", content: "" })
+                usePlotStore.getState().openReferencePanel(id)
+                setActiveRoute("/library/references")
+              }}
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-note text-foreground/80 hover:bg-hover-bg transition-colors"
+            >
+              <Quotes size={16} weight="regular" className="text-muted-foreground" />
+              New Reference
+            </button>
+            <div className="flex items-center gap-2.5 px-3 py-1.5">
+              <Tag size={16} weight="regular" className="shrink-0 text-muted-foreground" />
+              <input
+                placeholder="New tag name..."
+                className="w-full bg-transparent text-note text-foreground outline-none placeholder:text-muted-foreground/40"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
+                    const name = (e.target as HTMLInputElement).value.trim()
+                    const store = usePlotStore.getState()
+                    if (!store.tags.some((t) => t.name.toLowerCase() === name.toLowerCase())) {
+                      store.createTag(name, pickColor(name))
+                      toast.success(`Tag "${name}" created`)
+                    } else {
+                      toast.error(`Tag "${name}" already exists`)
+                    }
+                    ;(e.target as HTMLInputElement).value = ""
+                    setActiveRoute("/library/tags")
+                  }
+                }}
+              />
+            </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-note text-foreground/80 hover:bg-hover-bg transition-colors"
+            >
+              <Paperclip size={16} weight="regular" className="text-muted-foreground" />
+              Upload File
+            </button>
+          </div>
+        }
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (!file) return
+          usePlotStore.getState().addAttachment({
+            name: file.name,
+            type: file.type.startsWith("image/") ? "image" : "file",
+            mimeType: file.type,
+            size: file.size,
+            url: "",
+            noteId: "",
+          })
+          setActiveRoute("/library/files")
+          toast.success(`Uploaded ${file.name}`)
+          e.target.value = ""
+        }}
       />
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-5xl p-6">
+        <div className="mx-auto max-w-5xl px-6 py-6">
           {isEmpty ? (
             <div className="flex flex-col items-center gap-3 py-20 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
@@ -641,95 +702,104 @@ function LibraryOverview() {
             </div>
           ) : (
             <>
-              {/* Top Stats Row */}
+              {/* ── Stat Cards ── */}
               <div className="mb-6 grid grid-cols-2 gap-3 min-[800px]:grid-cols-3">
-                <MiniStat
+                <LibMiniStat
                   label="References"
                   value={refTotal}
-                  sub={`${refLinked} linked`}
+                  sub={`${linkedRefCount} linked`}
                   color="text-accent"
+                  icon={<Quotes size={24} weight="regular" />}
                   onClick={() => setActiveRoute("/library/references")}
                 />
-                <MiniStat
+                <LibMiniStat
                   label="Tags"
                   value={tagTotal}
-                  sub="used across notes"
+                  sub={`used across ${tagUsedCount} tags`}
                   color="text-amber-500"
+                  icon={<Tag size={24} weight="regular" />}
                   onClick={() => setActiveRoute("/library/tags")}
                 />
-                <MiniStat
+                <LibMiniStat
                   label="Files"
                   value={fileTotal}
-                  sub={`${imageCount} images, ${docCount} docs`}
+                  sub={`${imageCount} image${imageCount !== 1 ? "s" : ""}, ${docCount} doc${docCount !== 1 ? "s" : ""}`}
                   color="text-orange-400"
+                  icon={<Paperclip size={24} weight="regular" />}
                   onClick={() => setActiveRoute("/library/files")}
                 />
               </div>
 
-              {/* Two-Column Content */}
-              <div className="grid grid-cols-1 gap-5 min-[700px]:grid-cols-2">
-                {/* Left column */}
-                <div className="space-y-4">
-                  {/* Recent References */}
-                  {recentRefs.length > 0 && (
-                    <ContentCard title="Recent References" icon={Clock}>
-                      {recentRefs.map((ref) => (
-                        <ListItem
-                          key={ref.id}
-                          title={ref.title || "Untitled Reference"}
-                          meta={shortRelative(ref.updatedAt)}
-                          onClick={() => setActiveRoute("/library/references")}
-                        />
-                      ))}
-                    </ContentCard>
-                  )}
-
-                  {/* Recent Tags */}
-                  {topTags.length > 0 && (
-                    <ContentCard title="Recent Tags" icon={Tag}>
-                      {topTags.map((tag) => (
-                        <ListItem
-                          key={tag.id}
-                          title={tag.name}
-                          meta={`${tag.count} note${tag.count !== 1 ? "s" : ""}`}
-                          onClick={() => setActiveRoute("/library/tags")}
-                        />
-                      ))}
-                    </ContentCard>
-                  )}
+              {/* ── Attention Banner ── */}
+              {hasAttention && (
+                <div className="mb-6 flex items-start gap-4 rounded-lg border border-amber-500/20 bg-amber-500/[0.03] p-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                    <Warning className="text-amber-500" size={16} weight="regular" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">Needs Attention</span>
+                    <div className="mt-1 space-y-0.5">
+                      {unlinkedRefCount > 0 && (
+                        <p className="text-note text-amber-400/80">{unlinkedRefCount} unlinked reference{unlinkedRefCount !== 1 ? "s" : ""}</p>
+                      )}
+                      {unusedTagCount > 0 && (
+                        <p className="text-note text-amber-400/80">{unusedTagCount} unused tag{unusedTagCount !== 1 ? "s" : ""}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                {/* Right column */}
-                <div className="space-y-4">
-                  {/* Recent Files */}
-                  {recentFiles.length > 0 && (
-                    <ContentCard title="Recent Files" icon={Paperclip}>
-                      {recentFiles.map((att) => (
-                        <ListItem
-                          key={att.id}
-                          title={att.name || "Untitled file"}
-                          meta={att.type}
-                          onClick={() => setActiveRoute("/library/files")}
-                        />
+              {/* ── Recent Activity ── */}
+              {recentFeed.length > 0 && (
+                <div className="mb-6">
+                  <LibSectionLabel>Recent</LibSectionLabel>
+                  <div className="rounded-lg border border-border-subtle bg-card/30">
+                    <div className="px-1.5 py-1">
+                      {recentFeed.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            if (item.type === "reference") setActiveRoute("/library/references")
+                            else if (item.type === "tag") setActiveRoute("/library/tags")
+                            else setActiveRoute("/library/files")
+                          }}
+                          className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
+                        >
+                          <span className="shrink-0 text-muted-foreground/50">
+                            {item.type === "reference" && <BookOpenText size={14} weight="regular" />}
+                            {item.type === "tag" && <Tag size={14} weight="regular" />}
+                            {item.type === "file" && <Paperclip size={14} weight="regular" />}
+                          </span>
+                          <span className="flex-1 truncate text-note text-foreground/90">{item.title}</span>
+                          <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/40">
+                            {shortRelative(new Date(item.time).toISOString())}
+                          </span>
+                        </button>
                       ))}
-                    </ContentCard>
-                  )}
-
-                  {/* Unlinked References */}
-                  {unlinkedRefs.length > 0 && (
-                    <ContentCard title="Unlinked References" icon={Warning}>
-                      {unlinkedRefs.map((ref) => (
-                        <ListItem
-                          key={ref.id}
-                          title={ref.title || "Untitled Reference"}
-                          meta="no content"
-                          onClick={() => setActiveRoute("/library/references")}
-                        />
-                      ))}
-                    </ContentCard>
-                  )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* ── Top Tags Grid ── */}
+              {topTags.length > 0 && (
+                <div className="mb-6">
+                  <LibSectionLabel>Top Tags</LibSectionLabel>
+                  <div className="grid grid-cols-2 gap-3">
+                    {topTags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        onClick={() => setActiveRoute("/library/tags")}
+                        className="rounded-lg border border-border-subtle bg-card/30 px-4 py-3 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
+                      >
+                        <p className="text-note font-medium text-foreground">{tag.name}</p>
+                        <p className="text-2xs text-muted-foreground/40">{tag.count} note{tag.count !== 1 ? "s" : ""}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -860,6 +930,8 @@ function ReferencesView() {
   const [activeFieldKeys, setActiveFieldKeys] = useState<Set<string>>(new Set())
   const [sortBy, setSortBy] = useState<SortField>("updatedAt")
   const [sortDir, setSortDir] = useState<SortDir>("desc")
+  const [groupBy, setGroupBy] = useState<"none" | "type" | "fieldKey">("none")
+  const [groupFieldKey, setGroupFieldKey] = useState<string | null>(null)
   const lastClickedIdRef = useRef<string | null>(null)
 
   const isMultiMode = selectedIds.size > 0
@@ -958,6 +1030,26 @@ function ReferencesView() {
 
     return arr
   }, [activeRefs, quickFilter, activeFieldKeys, search, sortBy, sortDir])
+
+  const groupedReferences = useMemo(() => {
+    if (groupBy === "none") return null
+
+    const groups: { label: string; items: typeof referenceList }[] = []
+
+    if (groupBy === "type") {
+      const links = referenceList.filter((r) => r.fields.some((f) => f.key.toLowerCase() === "url"))
+      const citations = referenceList.filter((r) => !r.fields.some((f) => f.key.toLowerCase() === "url"))
+      if (links.length > 0) groups.push({ label: "Links", items: links })
+      if (citations.length > 0) groups.push({ label: "Citations", items: citations })
+    } else if (groupBy === "fieldKey" && groupFieldKey) {
+      const withKey = referenceList.filter((r) => r.fields.some((f) => f.key.trim() === groupFieldKey))
+      const withoutKey = referenceList.filter((r) => !r.fields.some((f) => f.key.trim() === groupFieldKey))
+      if (withKey.length > 0) groups.push({ label: `Has "${groupFieldKey}"`, items: withKey })
+      if (withoutKey.length > 0) groups.push({ label: `No "${groupFieldKey}"`, items: withoutKey })
+    }
+
+    return groups.length > 0 ? groups : null
+  }, [referenceList, groupBy, groupFieldKey])
 
   // Clear selection if reference was deleted
   useEffect(() => {
@@ -1129,6 +1221,79 @@ function ReferencesView() {
             )}
           </div>
         }
+        showDisplay
+        displayContent={
+          <div className="p-3 w-[240px]">
+            {/* Sort */}
+            <div className="text-2xs font-medium text-muted-foreground/60 mb-2">Sort by</div>
+            <div className="flex flex-wrap gap-1 mb-3">
+              {([
+                { field: "updatedAt" as SortField, label: "Updated" },
+                { field: "title" as SortField, label: "Name" },
+                { field: "createdAt" as SortField, label: "Created" },
+              ]).map(({ field, label }) => (
+                <button
+                  key={field}
+                  onClick={() => toggleSort(field)}
+                  className={cn(
+                    "flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
+                    sortBy === field
+                      ? "bg-accent/10 text-accent"
+                      : "text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground"
+                  )}
+                >
+                  {label}
+                  {sortBy === field && (
+                    sortDir === "asc" ? <CaretUp size={10} /> : <CaretDown size={10} />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Group by */}
+            <div className="text-2xs font-medium text-muted-foreground/60 mb-2">Group by</div>
+            <div className="flex flex-wrap gap-1">
+              {([
+                { value: "none" as const, label: "None" },
+                { value: "type" as const, label: "Type" },
+                { value: "fieldKey" as const, label: "Field Key" },
+              ]).map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => { setGroupBy(value); if (value !== "fieldKey") setGroupFieldKey(null) }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-2xs font-medium transition-colors",
+                    groupBy === value
+                      ? "bg-accent/10 text-accent"
+                      : "text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Field key selector when groupBy === "fieldKey" */}
+            {groupBy === "fieldKey" && fieldKeys.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {fieldKeys.map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => setGroupFieldKey(key)}
+                    className={cn(
+                      "px-2 py-0.5 rounded text-2xs transition-colors",
+                      groupFieldKey === key
+                        ? "bg-accent/10 text-accent"
+                        : "text-muted-foreground/40 hover:bg-hover-bg hover:text-foreground"
+                    )}
+                  >
+                    {key}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        }
       />
 
       {/* Quick filter bar */}
@@ -1192,20 +1357,45 @@ function ReferencesView() {
                 )}
               </button>
             </div>
-            {referenceList.map((ref) => (
-              <ReferenceRow
-                key={ref.id}
-                ref_={ref}
-                isSelected={selectedId === ref.id}
-                isMultiSelected={selectedIds.has(ref.id)}
-                isMultiMode={isMultiMode}
-                onClick={() => handleRowClick(ref.id)}
-                onMultiSelect={(e) => handleMultiSelect(ref.id, e)}
-                onDelete={() => handleDelete(ref.id)}
-                onCopyTitle={() => handleCopyTitle(ref.title)}
-                onEdit={() => handleEdit(ref.id)}
-              />
-            ))}
+            {groupedReferences ? (
+              groupedReferences.map((group) => (
+                <div key={group.label}>
+                  <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border/30 bg-background/95 backdrop-blur-sm px-5 py-1.5">
+                    <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/50">{group.label}</span>
+                    <span className="text-2xs text-muted-foreground/30">{group.items.length}</span>
+                  </div>
+                  {group.items.map((ref) => (
+                    <ReferenceRow
+                      key={ref.id}
+                      ref_={ref}
+                      isSelected={selectedId === ref.id}
+                      isMultiSelected={selectedIds.has(ref.id)}
+                      isMultiMode={isMultiMode}
+                      onClick={() => handleRowClick(ref.id)}
+                      onMultiSelect={(e) => handleMultiSelect(ref.id, e)}
+                      onDelete={() => handleDelete(ref.id)}
+                      onCopyTitle={() => handleCopyTitle(ref.title)}
+                      onEdit={() => handleEdit(ref.id)}
+                    />
+                  ))}
+                </div>
+              ))
+            ) : (
+              referenceList.map((ref) => (
+                <ReferenceRow
+                  key={ref.id}
+                  ref_={ref}
+                  isSelected={selectedId === ref.id}
+                  isMultiSelected={selectedIds.has(ref.id)}
+                  isMultiMode={isMultiMode}
+                  onClick={() => handleRowClick(ref.id)}
+                  onMultiSelect={(e) => handleMultiSelect(ref.id, e)}
+                  onDelete={() => handleDelete(ref.id)}
+                  onCopyTitle={() => handleCopyTitle(ref.title)}
+                  onEdit={() => handleEdit(ref.id)}
+                />
+              ))
+            )}
           </>
         )}
       </div>

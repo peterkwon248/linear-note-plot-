@@ -33,7 +33,7 @@ export function createWorkspaceSlice(set: Set, get: Get) {
         return {
           secondaryNoteId: noteId,
           activePane: 'secondary' as const,
-          _savedPrimaryContext: state._savedPrimaryContext || state.sidePanelContext,
+          _savedPrimaryContext: state._savedPrimaryContext || (state.selectedNoteId ? { type: "note" as const, id: state.selectedNoteId } : state.sidePanelContext),
           sidePanelContext: { type: type as "note" | "wiki", id: noteId },
           secondaryHistory: newHistory,
           secondaryHistoryIndex: newHistory.length - 1,
@@ -75,7 +75,7 @@ export function createWorkspaceSlice(set: Set, get: Get) {
         set({
           activePane: pane,
           // Only save primary context if not already saved (prevent overwrite on repeated clicks)
-          ...(state._savedPrimaryContext ? {} : { _savedPrimaryContext: state.sidePanelContext }),
+          ...(state._savedPrimaryContext ? {} : { _savedPrimaryContext: state.selectedNoteId ? { type: "note" as const, id: state.selectedNoteId } : state.sidePanelContext }),
           ...(secCtx ? { sidePanelContext: secCtx } : {}),
         })
       } else {

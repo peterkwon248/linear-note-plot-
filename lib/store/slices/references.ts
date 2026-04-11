@@ -7,14 +7,16 @@ export function createReferencesSlice(set: Set) {
   return {
     createReference: (partial: { title: string; content: string; fields?: Array<{ key: string; value: string }>; tags?: string[] }): string => {
       const id = genId()
+      const createdAt = now()
       const ref: Reference = {
         id,
         title: partial.title,
         content: partial.content,
         fields: partial.fields ?? [],
         tags: partial.tags,
-        createdAt: now(),
-        updatedAt: now(),
+        createdAt,
+        updatedAt: createdAt,
+        history: [{ timestamp: createdAt, action: "created" as const }],
       }
       set((state: any) => ({
         references: { ...state.references, [id]: ref },
@@ -26,10 +28,26 @@ export function createReferencesSlice(set: Set) {
       set((state: any) => {
         const existing = state.references[id]
         if (!existing) return {}
+
+        const details: string[] = []
+        if (updates.title !== undefined && updates.title !== existing.title) details.push("title")
+        if (updates.content !== undefined && updates.content !== existing.content) details.push("content")
+        if (updates.fields !== undefined) details.push("fields")
+        if (updates.tags !== undefined) details.push("tags")
+
+        const newHistory = [
+          ...(existing.history || []),
+          ...(details.length > 0 ? [{
+            timestamp: new Date().toISOString(),
+            action: "edited" as const,
+            detail: details.join(", ") + " changed",
+          }] : []),
+        ].slice(-50)
+
         return {
           references: {
             ...state.references,
-            [id]: { ...existing, ...updates, updatedAt: now() },
+            [id]: { ...existing, ...updates, updatedAt: now(), history: newHistory },
           },
         }
       })

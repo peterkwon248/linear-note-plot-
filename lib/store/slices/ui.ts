@@ -64,7 +64,7 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
             notes,
             secondaryNoteId: id,
             activePane: 'secondary' as const,
-            _savedPrimaryContext: state._savedPrimaryContext || state.sidePanelContext,
+            _savedPrimaryContext: state._savedPrimaryContext || (state.selectedNoteId ? { type: "note" as const, id: state.selectedNoteId } : state.sidePanelContext),
             sidePanelContext: { type: "note" as const, id },
             secondaryHistory: newHistory,
             secondaryHistoryIndex: newHistory.length - 1,

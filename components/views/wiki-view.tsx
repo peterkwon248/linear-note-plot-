@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { IconWiki } from "@/components/plot-icons"
+import { IconWiki, IconChevronRight } from "@/components/plot-icons"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
@@ -803,6 +803,10 @@ export function WikiView() {
               <ArrowLeft size={14} weight="regular" />
               Back
             </button>
+            <WikiPickerChevron
+              currentArticleId={selectedWikiArticleId}
+              onSelect={(id) => { setSelectedWikiArticleId(id); setIsEditingWikiArticle(false) }}
+            />
           </div>
         </ViewHeader>
 
@@ -1241,5 +1245,70 @@ export function WikiView() {
         />
       )}
     </div>
+  )
+}
+
+function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: string; onSelect: (articleId: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase()
+    return wikiArticles
+      .filter((a) => a.id !== currentArticleId && a.title.toLowerCase().includes(q))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 20)
+  }, [wikiArticles, query, currentArticleId])
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 0)
+  }, [open])
+
+  return (
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQuery("") }}>
+      <PopoverTrigger asChild>
+        <button className="shrink-0 rounded p-0.5 text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors">
+          <IconChevronRight size={16} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80 p-0" sideOffset={4}>
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search wiki articles..."
+          className="w-full px-3.5 py-2.5 text-note bg-transparent border-b border-border text-foreground outline-none placeholder:text-muted-foreground/50"
+        />
+        <div className="max-h-[360px] overflow-y-auto py-1">
+          {filtered.map((a) => {
+            const stub = isWikiStub(a)
+            return (
+              <button
+                key={a.id}
+                onClick={() => {
+                  onSelect(a.id)
+                  setOpen(false)
+                  setQuery("")
+                }}
+                className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-foreground/80 hover:bg-hover-bg transition-colors"
+              >
+                <IconWiki size={16} className="shrink-0 text-muted-foreground" />
+                <span className="truncate text-note font-medium flex-1">{a.title || "Untitled"}</span>
+                <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${stub ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                  {stub ? 'stub' : 'article'}
+                </span>
+              </button>
+            )
+          })}
+          {filtered.length === 0 && (
+            <div className="px-3.5 py-6 text-note text-muted-foreground/50 text-center">
+              No articles found
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
