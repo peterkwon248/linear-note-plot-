@@ -1,10 +1,10 @@
 "use client"
 
-import { lazy, Suspense, useState } from "react"
+import { lazy, Suspense, useState, useEffect } from "react"
 import { usePlotStore } from "@/lib/store"
 import { useSecondaryRoute, useSecondarySpace, setSecondarySpace, DEFAULT_ROUTES } from "@/lib/table-route"
 import { NoteEditor } from "@/components/note-editor"
-import { PaneProvider } from "./pane-context"
+import { PaneProvider, useIsActivePane } from "./pane-context"
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -69,9 +69,13 @@ function SecondaryViewHeader() {
   const secondarySpace = useSecondarySpace()
   const closeSecondary = usePlotStore((s) => s.closeSecondary)
   const currentSpace = secondarySpace ?? "notes"
+  const isActivePane = useIsActivePane()
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center justify-between border-b border-border px-4">
+    <header className={cn(
+      "flex h-(--header-height) shrink-0 items-center justify-between border-b border-border px-4 transition-colors duration-150",
+      isActivePane && "bg-hover-bg"
+    )}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -124,10 +128,14 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
   const [collapseAllCmd, setCollapseAllCmd] = useState<"collapse" | "expand" | null>(null)
   const [allSectionsCollapsed, setAllSectionsCollapsed] = useState(false)
   const hasSections = article?.blocks.some((b) => b.type === "section") ?? false
+  const isActivePane = useIsActivePane()
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex h-(--header-height) shrink-0 items-center justify-between border-b border-border px-4">
+      <header className={cn(
+        "flex h-(--header-height) shrink-0 items-center justify-between border-b border-border px-4 transition-colors duration-150",
+        isActivePane && "bg-hover-bg"
+      )}>
         <nav className="flex items-center gap-1.5 min-w-0">
           {/* Space dropdown */}
           <DropdownMenu>
@@ -291,9 +299,22 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
  */
 export function SecondaryPanelContent() {
   const secondaryNoteId = usePlotStore((s) => s.secondaryNoteId)
+  const activePane = usePlotStore((s) => s.activePane)
   const secondaryRoute = useSecondaryRoute()
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
+
+  // Sync sidePanelContext when secondary note changes (keeps sidebar in sync)
+  useEffect(() => {
+    if (!secondaryNoteId || activePane !== 'secondary') return
+    const isNote = notes.some((n) => n.id === secondaryNoteId && !n.trashed)
+    const isWiki = !isNote && wikiArticles.some((a) => a.id === secondaryNoteId)
+    if (isNote) {
+      usePlotStore.getState().setSidePanelContext({ type: "note", id: secondaryNoteId })
+    } else if (isWiki) {
+      usePlotStore.getState().setSidePanelContext({ type: "wiki", id: secondaryNoteId })
+    }
+  }, [secondaryNoteId, activePane, notes, wikiArticles])
 
   // Editor mode: a specific note/wiki is open
   if (secondaryNoteId) {
@@ -321,6 +342,7 @@ export function SecondaryPanelContent() {
     return (
       <PaneProvider pane="secondary">
         <div className="flex flex-col h-full">
+          <SecondaryViewHeader />
           <div className="flex-1 min-h-0 overflow-auto">
             <Suspense fallback={<ViewFallback />}>
               <SecondaryViewRouter route={secondaryRoute} />

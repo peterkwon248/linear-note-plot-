@@ -13,10 +13,13 @@ export function createWorkspaceSlice(set: Set, get: Get) {
     // Simplified dual pane
     secondaryNoteId: null as string | null,
     activePane: 'primary' as 'primary' | 'secondary',
+    secondaryEntityContext: null as import("@/lib/store/types").SidePanelContext,
     editorTabs: [] as WorkspaceTab[],
     activeTabId: null as string | null,
     secondaryHistory: [] as string[],
     secondaryHistoryIndex: -1,
+
+    setSecondaryEntityContext: (ctx: import("@/lib/store/types").SidePanelContext) => set({ secondaryEntityContext: ctx }),
 
     openInSecondary: (noteId: string) => {
       set((state: any) => {
@@ -24,9 +27,14 @@ export function createWorkspaceSlice(set: Set, get: Get) {
         const history = state.secondaryHistory as string[]
         const index = state.secondaryHistoryIndex as number
         const newHistory = [...history.slice(0, index + 1), noteId].slice(-MAX_SECONDARY_HISTORY)
+        // Derive type for sidePanelContext
+        const isNote = state.notes.some((n: any) => n.id === noteId && !n.trashed)
+        const type = isNote ? "note" : "wiki"
         return {
           secondaryNoteId: noteId,
           activePane: 'secondary' as const,
+          _savedPrimaryContext: state._savedPrimaryContext || state.sidePanelContext,
+          sidePanelContext: { type: type as "note" | "wiki", id: noteId },
           secondaryHistory: newHistory,
           secondaryHistoryIndex: newHistory.length - 1,
         }
@@ -34,24 +42,50 @@ export function createWorkspaceSlice(set: Set, get: Get) {
     },
 
     closeSecondary: () => {
+      const state = get()
       set({
         secondaryNoteId: null,
         activePane: 'primary' as const,
         secondaryHistory: [],
         secondaryHistoryIndex: -1,
+        secondaryEntityContext: null,
+        // Restore primary context when closing secondary
+        sidePanelContext: state._savedPrimaryContext || state.sidePanelContext,
+        _savedPrimaryContext: null,
       })
       clearSecondaryRoute()
     },
 
     setActivePane: (pane: 'primary' | 'secondary') => {
-      set((state: any) => {
-        // Allow secondary if there's a note OR a secondary route/space is set
-        if (pane === 'secondary' && !state.secondaryNoteId && !getSecondarySpace()) {
-          return state
+      if (pane === 'secondary') {
+        const state = get()
+        if (!state.secondaryNoteId && !getSecondarySpace()) return
+
+        // Derive secondary entity context
+        let secCtx = state.secondaryEntityContext as import("@/lib/store/types").SidePanelContext
+        if (!secCtx && state.secondaryNoteId) {
+          const isNote = (state.notes as any[]).some((n: any) => n.id === state.secondaryNoteId && !n.trashed)
+          secCtx = isNote
+            ? { type: "note" as const, id: state.secondaryNoteId }
+            : (state.wikiArticles as any[]).some((a: any) => a.id === state.secondaryNoteId)
+              ? { type: "wiki" as const, id: state.secondaryNoteId }
+              : null
         }
-        // Only change activePane — do NOT touch selectedNoteId
-        return { activePane: pane }
-      })
+
+        set({
+          activePane: pane,
+          // Only save primary context if not already saved (prevent overwrite on repeated clicks)
+          ...(state._savedPrimaryContext ? {} : { _savedPrimaryContext: state.sidePanelContext }),
+          ...(secCtx ? { sidePanelContext: secCtx } : {}),
+        })
+      } else {
+        const state = get()
+        set({
+          activePane: pane,
+          sidePanelContext: state._savedPrimaryContext || state.sidePanelContext,
+          _savedPrimaryContext: null,  // clear so it can be saved again next time
+        })
+      }
     },
 
     secondaryGoBack: (): boolean => {

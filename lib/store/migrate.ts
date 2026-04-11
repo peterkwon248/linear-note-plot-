@@ -91,7 +91,7 @@ export function migrate(persistedState: unknown): PlotState {
   if (state.sidebarWidth === undefined) state.sidebarWidth = 220
   if (state.sidebarLastWidth === undefined) state.sidebarLastWidth = 220
   if (state.sidebarCollapsed === undefined) state.sidebarCollapsed = false
-  state.sidebarPeek = false // always reset transient state
+  delete state.sidebarPeek // removed in Split-First migration
   // v16: ViewState per context
   if (state.viewStateByContext) {
     state.viewStateByContext = normalizeViewStatesMap(
@@ -799,6 +799,20 @@ export function migrate(persistedState: unknown): PlotState {
 
   // v72: Global Bookmarks — cross-note anchor store
   if (!state.globalBookmarks) state.globalBookmarks = {}
+
+  // v72: Split-First migration — remove all Peek infrastructure
+  delete (state as any).sidePanelPeekContext
+  delete (state as any).peekHistory
+  delete (state as any).peekPins
+  delete (state as any).peekSize
+  delete (state as any).peekNavStack
+  delete (state as any).peekNavIndex
+  delete (state as any).sidebarPeek
+  delete (state as any).secondarySidePanelOpen
+  delete (state as any).secondarySidePanelMode
+  delete (state as any).secondarySidePanelContext
+  // Reset sidePanelMode if it was 'peek' (no longer a valid mode)
+  if (state.sidePanelMode === 'peek') state.sidePanelMode = 'detail'
 
   return state as unknown as PlotState
 }

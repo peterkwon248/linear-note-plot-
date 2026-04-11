@@ -725,11 +725,11 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
               Change note
             </button>
             <button
-              onClick={() => { setMenuOpen(false); usePlotStore.getState().openSidePeek(block.noteId!) }}
+              onClick={() => { setMenuOpen(false); usePlotStore.getState().openInSecondary(block.noteId!) }}
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
             >
               <ArrowSquareOut size={14} weight="regular" />
-              Open in peek
+              Open in split
             </button>
             {onDelete && (
               <>

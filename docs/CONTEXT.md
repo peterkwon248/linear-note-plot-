@@ -183,14 +183,18 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 
 ## TODO: Future Work (우선순위 순, 2026-04-09 저녁 sync)
 
-### 🔴 P0 — Peek-First 마이그레이션 (다음 세션 시작점은 docs/NEXT-ACTION.md)
-- ✅ **Phase 2**: Peek가 Wiki 표시 가능 (2026-04-09 완료)
-- 🎯 **Phase 2.5 (신규)**: Peek 자립 — 상시 탭 + Empty State(c, 검색+최근+핀) + Open picker(@멘션 재사용) + 단축키
-- **Phase 3**: 사이즈 시스템 (Min 280 / Mid 480 / Max 50% + Drag)
-- **Phase 3.5**: Single-slot + back/forward history UI + Pin 1~2개 UI (데이터 모델은 2.5 선행)
-- **Phase 5**: Split View 폐기 + "Split View" 용어 → "Peek"
-
-**아키텍처 결정 (2026-04-09)**: Multi-tab 폐기, Single-slot + history + Pin으로 충분. 동시 비교 니즈 공식 포기 (Split View 폐기 결정의 연장선).
+### 🔴 P0 — Split-First 마이그레이션 (Phase 2-5 완료, Phase 6-7 남음)
+- ✅ **Phase 2-3**: Peek/secondarySidePanel store 제거 + 파일 삭제 + openSidePeek→openInSecondary
+- ✅ **Phase 5**: Focus tracking + context swapping + 위키 디테일 SmartSidePanel 통합
+  - `_savedPrimaryContext` context swapping 패턴
+  - 위키 내장 aside 제거, WikiArticleDetailPanel에 Sources/Delete 추가
+  - 위키 헤더에 사이드바 토글 + Split View 버튼
+  - 브레드크럼 노트 피커 (검색 + 드롭다운)
+  - Secondary 뷰 헤더 (space 드롭다운 + 닫기)
+- 🔴 **Phase 6**: Split view 통합 검증
+  - 사이드바 focus-following edge case (일부 시나리오에서 stale context)
+  - 위키 인포박스 중복 제거 (사이드바 vs 본문)
+- **Phase 7**: CONTEXT.md/MEMORY.md 최종 업데이트
 
 ### P1 (보류, Peek 마이그레이션 후)
 - **Reference.history** — 데이터 모델 + UI 작업 중간에 멈춤

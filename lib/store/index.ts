@@ -55,19 +55,13 @@ export const usePlotStore = create<PlotState>()(
         shortcutOverlayOpen: false,
         sidePanelOpen: true,
         sidePanelMode: 'detail' as import("./types").SidePanelMode,
-        sidePanelPeekContext: null,
-        peekHistory: [],
-        peekPins: [],
-        peekSize: 42, // default = practical minimum (fits all 5 icon+label tabs)
-        peekNavStack: [],
-        peekNavIndex: -1,
         previewNoteId: null,
         sidePanelContext: null,
+        _savedPrimaryContext: null,
 
         sidebarWidth: 220,
         sidebarLastWidth: 220,
         sidebarCollapsed: false,
-        sidebarPeek: false,
         mergePickerOpen: false,
         mergePickerSourceId: null,
         linkPickerOpen: false,
@@ -249,7 +243,7 @@ export const usePlotStore = create<PlotState>()(
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { sidebarPeek, _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, sidePanelPeekContext, peekNavStack, peekNavIndex, previewNoteId, sidePanelOpen, sidePanelContext, todoTasks, secondaryHistory, secondaryHistoryIndex, secondarySidePanelOpen, secondarySidePanelMode, secondarySidePanelContext, ...rest } = state
+        const { _viewStateHydrated, mergePickerOpen, mergePickerSourceId, linkPickerOpen, linkPickerSourceId, previewNoteId, sidePanelOpen, sidePanelContext, _savedPrimaryContext, todoTasks, secondaryHistory, secondaryHistoryIndex, secondaryEntityContext, ...rest } = state
         return {
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
@@ -269,9 +263,8 @@ export const usePlotStore = create<PlotState>()(
           // Secondary panel navigation is session-only
           state.secondaryHistory = []
           state.secondaryHistoryIndex = -1
-          // Peek nav stack is session-only (transient)
-          state.peekNavStack = []
-          state.peekNavIndex = -1
+          state.secondaryEntityContext = null
+          state._savedPrimaryContext = null
 
           // Force re-seed if notes are empty (user deleted all data)
           if (state.notes.length === 0) {

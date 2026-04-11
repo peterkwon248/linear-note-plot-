@@ -5,14 +5,11 @@ import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
-import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
-import { shortRelative } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import { Virtuoso } from "react-virtuoso"
 import { toast } from "sonner"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
-import { setActiveRoute } from "@/lib/table-route"
 import {
   DndContext,
   DragOverlay,
@@ -27,11 +24,8 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
-import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
@@ -193,7 +187,6 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   const removeWikiBlock = usePlotStore((s) => s.removeWikiBlock)
   const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
   const reorderWikiBlocks = usePlotStore((s) => s.reorderWikiBlocks)
-  const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
   const splitWikiArticle = usePlotStore((s) => s.splitWikiArticle)
 
   const [splitMode, setSplitMode] = useState(false)
@@ -542,10 +535,6 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     return sections
   }, [article.blocks, sectionNumbers])
 
-  // Stats
-  const noteRefCount = article.blocks.filter(b => b.type === "note-ref").length
-  const textBlockCount = article.blocks.filter(b => b.type === "text").length
-
   // Improvement 4: compute child block count for drag overlay
   const getDragChildCount = (blockId: string) => {
     const block = article.blocks.find(b => b.id === blockId)
@@ -635,6 +624,19 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
 
           {/* Category tag row */}
           <InlineCategoryTags articleId={articleId} categoryIds={article.categoryIds ?? []} editable={editable} />
+
+          {/* Split wiki button */}
+          {editable && !splitMode && (
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={() => setSplitMode(true)}
+                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors duration-100"
+              >
+                <Scissors size={12} weight="regular" />
+                Split wiki
+              </button>
+            </div>
+          )}
 
           {/* Blocks */}
           {editable && (
@@ -775,64 +777,6 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
         )}
       </div>
 
-      {/* Right Sidebar: Infobox + Quality + Activity */}
-      {!preview && <aside className="w-[240px] shrink-0 overflow-y-auto border-l border-border-subtle px-4 py-5 space-y-4">
-        {/* Infobox */}
-        <WikiInfobox
-          noteId={articleId}
-          entries={article.infobox}
-          editable={true}
-          className="w-full"
-        />
-
-        {/* Sources -- auto-extracted from blocks */}
-        <SourcesList blocks={article.blocks} />
-
-        {/* Activity */}
-        <div className="space-y-2">
-          <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
-            Activity
-          </h4>
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-2xs text-muted-foreground">Blocks</span>
-              <span className="text-2xs font-medium text-foreground">{article.blocks.length}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-2xs text-muted-foreground">Embedded notes</span>
-              <span className="text-2xs font-medium text-foreground">{noteRefCount}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-2xs text-muted-foreground">Last modified</span>
-              <span className="text-2xs font-medium text-foreground">{shortRelative(article.updatedAt)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Split / Delete article */}
-        {(editable || onDelete) && (
-          <div className="pt-2 border-t border-border-subtle space-y-0.5">
-            {editable && !splitMode && (
-              <button
-                onClick={() => setSplitMode(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-2xs text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors duration-100"
-              >
-                <Scissors size={12} weight="regular" />
-                Split wiki
-              </button>
-            )}
-            {onDelete && (
-              <button
-                onClick={onDelete}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-2xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
-              >
-                <Trash size={12} weight="regular" />
-                Delete article
-              </button>
-            )}
-          </div>
-        )}
-      </aside>}
       <UrlInputDialog
         open={urlBlockDialog.open}
         mode="link"
@@ -929,91 +873,6 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   }
 
   return outerContent
-}
-
-/* -- Sources List -- */
-function SourcesList({ blocks }: { blocks: WikiBlock[] }) {
-  const notes = usePlotStore((s) => s.notes)
-  const attachments = usePlotStore((s) => s.attachments)
-
-  const sources = useMemo(() => {
-    const items: { id: string; blockId: string; type: "note" | "image"; label: string; sub?: string }[] = []
-    const seenNotes = new Set<string>()
-    const seenAttachments = new Set<string>()
-
-    for (const block of blocks) {
-      if (block.type === "note-ref" && block.noteId && !seenNotes.has(block.noteId)) {
-        seenNotes.add(block.noteId)
-        const note = notes.find(n => n.id === block.noteId)
-        items.push({
-          id: block.noteId,
-          blockId: block.id,
-          type: "note",
-          label: note?.title || "Untitled",
-          sub: note?.status,
-        })
-      }
-      if (block.type === "image" && block.attachmentId && !seenAttachments.has(block.attachmentId)) {
-        seenAttachments.add(block.attachmentId)
-        const att = attachments.find(a => a.id === block.attachmentId)
-        items.push({
-          id: block.attachmentId,
-          blockId: block.id,
-          type: "image",
-          label: att?.name || block.caption || "Image",
-          sub: att ? `${(att.size / 1024).toFixed(0)} KB` : undefined,
-        })
-      }
-    }
-    return items
-  }, [blocks, notes, attachments])
-
-  if (sources.length === 0) return null
-
-  return (
-    <div className="space-y-2">
-      <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
-        Sources
-      </h4>
-      <div className="space-y-px">
-        {sources.map((src, i) => (
-          <button
-            key={`${src.type}-${src.id}`}
-            onClick={(e) => {
-              if (src.type === "note") {
-                // Ctrl/Cmd+click → open in split view; otherwise open the note
-                if (e.ctrlKey || e.metaKey) {
-                  usePlotStore.getState().openInSecondary(src.id)
-                } else {
-                  setActiveRoute("/notes")
-                  usePlotStore.getState().openNote(src.id)
-                }
-              } else {
-                // Scroll to block for images
-                document.getElementById(`wiki-block-${src.blockId}`)?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                })
-              }
-            }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-100 hover:bg-hover-bg"
-          >
-            <span className="shrink-0 text-2xs font-semibold text-accent/40 tabular-nums w-4">
-              {i + 1}
-            </span>
-            {src.type === "note" && <FileText className="shrink-0 text-muted-foreground/40" size={12} weight="regular" />}
-            {src.type === "image" && <PhImage className="shrink-0 text-muted-foreground/40" size={12} weight="regular" />}
-            <span className="flex-1 min-w-0 truncate text-2xs text-foreground/70">
-              {src.label}
-            </span>
-            {src.sub && (
-              <span className="shrink-0 text-2xs text-muted-foreground/30">{src.sub}</span>
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
 }
 
 /* ── InlineCategoryTags — shown below title in article body ── */

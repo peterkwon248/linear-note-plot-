@@ -205,7 +205,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
           ...(embedHeight ? { height: `${embedHeight}px`, overflowY: "auto" as const } : {}),
         }}
         onClick={(e) => {
-          if (noteId) usePlotStore.getState().openSidePeek(noteId)
+          if (noteId) usePlotStore.getState().openInSecondary(noteId!)
         }}
       >
         {parentEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}

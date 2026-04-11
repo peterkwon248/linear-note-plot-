@@ -11,28 +11,6 @@ The user works across **different computers**, so ALL project files must be comm
    - **Changed plans**: Update or remove plans that are no longer valid.
    - **Current phase**: Update what the next task is so the other machine knows where to pick up.
    - The goal: CONTEXT.md should always reflect the **current truth**, not accumulate stale history.
-   - **Consistency check**: Remaining work in CONTEXT.md TODO must match what goes into the worklog (Step 1.5). No contradictions allowed.
-
-1.5. **Update worklog** (MANDATORY): Update `.omc/worklog/latest.md` to reflect the current session.
-   This file is read by `before-work` at the start of the next session. If it's stale, the next session starts with wrong context.
-
-   Format:
-   ```yaml
-   ---
-   session_date: "YYYY-MM-DD HH:MM"
-   project: "[project name]"
-   working_directory: "[current worktree path]"
-   duration_estimate: "[rough estimate]"
-   ---
-   ```
-
-   Required sections:
-   - **Completed Work**: What was done this session (bullet list)
-   - **Remaining Tasks**: What's left to do (must match CONTEXT.md TODO section — no contradictions)
-   - **Key Decisions**: Any new decisions made this session (must match CONTEXT.md Key Design Decisions)
-   - **Notes for Next Session**: Anything the next session needs to know
-
-   **CRITICAL**: Remaining Tasks MUST be consistent with `docs/CONTEXT.md`. If a direction was discarded in CONTEXT.md, it must NOT appear as a remaining task in the worklog.
 
 2. **Commit**: Stage **ALL** changed and untracked files. The only exclusions are:
    - `.env`, `.env.*` (secrets)
