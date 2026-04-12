@@ -87,6 +87,7 @@ function FootnoteRefView({ node, editor, updateAttributes }: NodeViewProps) {
   }, [])
 
   const handleClick = () => {
+    if (!editor.isEditable) return
     openFootnoteModal({
       footnoteId: node.attrs.id as string,
       content: node.attrs.content as string || "",

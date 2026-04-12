@@ -116,7 +116,7 @@ export function FootnoteEditModal() {
   if (!state.open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px]" onClick={cancelFootnoteModal}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px]" role="dialog" onClick={cancelFootnoteModal}>
       <div
         className="w-[420px] rounded-xl border border-border bg-surface-overlay shadow-2xl animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}

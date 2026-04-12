@@ -39,6 +39,7 @@ function FootnoteRow({
   }, [fn.referenceId, references])
 
   const openModal = () => {
+    if (!editor.isEditable) return
     openFootnoteModal({
       footnoteId: fn.id,
       content: fn.content,
@@ -79,18 +80,18 @@ function FootnoteRow({
         <span
           className="footnotes-footer-content"
           onClick={openModal}
-          title="Click to edit"
+          title={editor.isEditable ? "Click to edit" : undefined}
         >
           {fn.content || ""}
         </span>
-      ) : (
+      ) : editor.isEditable ? (
         <button
           className="footnotes-footer-empty"
           onClick={openModal}
         >
           Click to add content
         </button>
-      )}
+      ) : null}
 
       {referenceUrl && (
         <a
@@ -199,27 +200,100 @@ export function FootnotesFooter({ editor }: FootnotesFooterProps) {
     }
   }
 
+  // Collect unique referenceIds for NoteReferencesFooter
+  const referenceIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const fn of uniqueFootnotes) {
+      if (fn.referenceId) ids.add(fn.referenceId)
+    }
+    return Array.from(ids)
+  }, [uniqueFootnotes])
+
   return (
-    <div className="footnotes-footer">
+    <>
+      <div className="footnotes-footer">
+        <button
+          className="footnotes-footer-toggle"
+          onClick={() => setCollapsed((c) => !c)}
+        >
+          <span className={`footnotes-footer-chevron ${collapsed ? "" : "footnotes-footer-chevron-open"}`}>▶</span>
+          <span className="footnotes-footer-title">FOOTNOTES</span>
+          <span className="footnotes-footer-count-badge">{uniqueFootnotes.length}</span>
+        </button>
+        {!collapsed && (
+          <ol className="footnotes-footer-list animate-in fade-in duration-150">
+            {uniqueFootnotes.map((fn) => (
+              <FootnoteRow
+                key={fn.id}
+                fn={fn}
+                editor={editor!}
+                scrollToRef={scrollToRef}
+              />
+            ))}
+          </ol>
+        )}
+      </div>
+      {referenceIds.length > 0 && (
+        <NoteReferencesFooter referenceIds={referenceIds} />
+      )}
+    </>
+  )
+}
+
+/* ── Note References Footer (bullet list of all references linked via footnotes) ── */
+
+function NoteReferencesFooter({ referenceIds }: { referenceIds: string[] }) {
+  const references = usePlotStore((s) => s.references)
+  const [collapsed, setCollapsed] = useState(true)
+
+  const linkedRefs = useMemo(() => {
+    return referenceIds.map((id) => references[id]).filter(Boolean)
+  }, [referenceIds, references])
+
+  if (linkedRefs.length === 0) return null
+
+  return (
+    <div className="footnotes-footer" style={{ marginTop: "0.5rem" }}>
       <button
         className="footnotes-footer-toggle"
         onClick={() => setCollapsed((c) => !c)}
       >
         <span className={`footnotes-footer-chevron ${collapsed ? "" : "footnotes-footer-chevron-open"}`}>▶</span>
-        <span className="footnotes-footer-title">FOOTNOTES</span>
-        <span className="footnotes-footer-count-badge">{uniqueFootnotes.length}</span>
+        <span className="footnotes-footer-title">REFERENCES</span>
+        <span className="footnotes-footer-count-badge">{linkedRefs.length}</span>
       </button>
       {!collapsed && (
-        <ol className="footnotes-footer-list animate-in fade-in duration-150">
-          {uniqueFootnotes.map((fn) => (
-            <FootnoteRow
-              key={fn.id}
-              fn={fn}
-              editor={editor!}
-              scrollToRef={scrollToRef}
-            />
-          ))}
-        </ol>
+        <ul className="footnotes-footer-list animate-in fade-in duration-150" style={{ listStyle: "none" }}>
+          {linkedRefs.map((ref) => {
+            const urlField = ref.fields.find((f) => f.key.toLowerCase() === "url")
+            const url = urlField?.value || null
+            return (
+              <li key={ref.id} className="footnotes-footer-item">
+                <span style={{ flexShrink: 0, opacity: 0.4 }}>•</span>
+                <span className="footnotes-footer-content" style={{ cursor: "default" }}>
+                  <span style={{ fontWeight: 500 }}>{ref.title}</span>
+                  {ref.content && ref.content !== ref.title && (
+                    <span style={{ opacity: 0.5 }}> — {ref.content.length > 60 ? ref.content.slice(0, 60) + "…" : ref.content}</span>
+                  )}
+                  {url && (
+                    <>
+                      {" "}
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="footnote-footer-url"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {url.replace(/^https?:\/\//, "").split("/")[0]}
+                      </a>
+                    </>
+                  )}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
       )}
     </div>
   )

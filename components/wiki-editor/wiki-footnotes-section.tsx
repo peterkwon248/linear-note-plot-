@@ -1,13 +1,10 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
-import { useEditor, EditorContent } from "@tiptap/react"
 import type { WikiArticle } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { getBlockBody } from "@/lib/wiki-block-body-store"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { cn } from "@/lib/utils"
-import { createEditorExtensions } from "@/components/editor/core/shared-editor-config"
 
 interface FootnoteEntry {
   id: string
@@ -127,22 +124,18 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
     <div className="mt-10 border-t border-border/40 pt-4">
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center gap-2 mb-3 group"
+        className="flex items-center gap-1.5 py-0.5 mb-0"
       >
-        <h3 className="text-lg font-semibold text-foreground/80">Footnotes</h3>
-        <CaretDown
-          size={14}
-          weight="bold"
-          className={cn(
-            "text-muted-foreground/40 transition-transform duration-200",
-            collapsed && "-rotate-90"
-          )}
-        />
-        <span className="text-2xs text-muted-foreground/40 tabular-nums">{footnotes.length}</span>
+        <span className={cn(
+          "text-[10px] text-muted-foreground/60 transition-transform duration-150",
+          !collapsed && "rotate-90"
+        )}>▶</span>
+        <span className="text-base font-semibold uppercase tracking-[0.05em] text-muted-foreground/70">FOOTNOTES</span>
+        <span className="text-sm font-medium text-muted-foreground/80 bg-hover-bg rounded px-[5px] min-w-[18px] text-center tabular-nums">{footnotes.length}</span>
       </button>
 
       {!collapsed && (
-        <ol className="space-y-1.5 text-note">
+        <ol className="list-none p-0 m-0 mt-2 flex flex-col gap-1 text-[14px] text-muted-foreground">
           {footnotes.map((fn) => {
             const ref = fn.referenceId ? references[fn.referenceId] : null
             const urlField = ref?.fields.find((f) => f.key.toLowerCase() === "url")
@@ -152,24 +145,19 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
               <li
                 key={fn.id}
                 data-wiki-footnote-id={fn.id}
-                className="flex items-start gap-2 rounded-md px-2 py-1 hover:bg-hover-bg transition-colors"
+                className="flex items-baseline gap-1.5 leading-relaxed"
               >
-                <span className="shrink-0 text-accent/70 font-semibold tabular-nums w-5 text-right pt-0.5">
-                  {fn.globalNumber}.
-                </span>
                 <button
                   onClick={() => {
-                    // Scroll back to inline reference
                     const el = document.querySelector(`[data-footnote-id="${fn.id}"]`)
                     el?.scrollIntoView({ behavior: "smooth", block: "center" })
                   }}
-                  className="shrink-0 text-accent/50 hover:text-accent transition-colors pt-0.5"
-                  title="Jump to reference"
+                  className="shrink-0 text-accent font-semibold text-[14px] min-w-[20px] text-right hover:opacity-70 hover:underline transition-opacity bg-transparent border-none p-0 cursor-pointer"
                 >
-                  ^
+                  [{fn.globalNumber}]
                 </button>
-                <span className="text-foreground/70 flex-1">
-                  <FootnoteContent content={fn.content} contentJson={fn.contentJson} />
+                <span className="flex-1 min-w-0 break-words">
+                  {fn.content || <span className="italic opacity-40">Empty footnote</span>}
                   {url && (
                     <>
                       {" "}
@@ -203,6 +191,7 @@ interface WikiReferencesSectionProps {
 
 export function WikiReferencesSection({ article, editable = false }: WikiReferencesSectionProps) {
   const references = usePlotStore((s) => s.references)
+  const [refCollapsed, setRefCollapsed] = useState(false)
   const addArticleReference = usePlotStore((s) => s.addArticleReference)
   const removeArticleReference = usePlotStore((s) => s.removeArticleReference)
   const createReference = usePlotStore((s) => s.createReference)
@@ -314,65 +303,76 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
 
   return (
     <div className="mt-6 border-t border-border/30 pt-4">
-      <div className="flex items-center gap-2 mb-3">
-        <h3 className="text-lg font-semibold text-foreground/80">References</h3>
-        <span className="text-2xs text-muted-foreground/40 tabular-nums">{linkedRefs.length}</span>
-      </div>
+      <button
+        onClick={() => setRefCollapsed(!refCollapsed)}
+        className="flex items-center gap-1.5 py-0.5 mb-0"
+      >
+        <span className={cn(
+          "text-[10px] text-muted-foreground/60 transition-transform duration-150",
+          !refCollapsed && "rotate-90"
+        )}>▶</span>
+        <span className="text-base font-semibold uppercase tracking-[0.05em] text-muted-foreground/70">REFERENCES</span>
+        <span className="text-sm font-medium text-muted-foreground/80 bg-hover-bg rounded px-[5px] min-w-[18px] text-center tabular-nums">{linkedRefs.length}</span>
+      </button>
 
-      {linkedRefs.length > 0 && (
-        <ul className="space-y-1.5 text-note mb-3">
-          {linkedRefs.map((ref) => {
-            const urlField = ref.fields.find((f) => f.key.toLowerCase() === "url")
-            const url = urlField?.value || null
-            return (
-              <li
-                key={ref.id}
-                className="group flex items-start gap-2 rounded-md px-2 py-1 hover:bg-hover-bg transition-colors cursor-pointer"
-                onClick={() => editable && openEditModal(ref.id)}
-              >
-                <span className="shrink-0 text-muted-foreground/40 pt-0.5">•</span>
-                <span className="flex-1 text-foreground/70">
-                  <span className="font-medium">{ref.title}</span>
-                  {ref.content && ref.content !== ref.title && (
-                    <span className="text-muted-foreground/50"> — {ref.content.length > 80 ? ref.content.slice(0, 80) + "…" : ref.content}</span>
-                  )}
-                  {url && (
-                    <>
-                      {" "}
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent/60 hover:text-accent hover:underline transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {url.replace(/^https?:\/\//, "").split("/")[0]}
-                      </a>
-                    </>
-                  )}
-                </span>
-                {editable && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); removeArticleReference(article.id, ref.id) }}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground/40 hover:text-destructive transition-all"
-                    title="Remove from this article"
+      {!refCollapsed && (
+        <>
+          {linkedRefs.length > 0 && (
+            <ul className="space-y-1 mt-2 mb-3 text-[14px]">
+              {linkedRefs.map((ref) => {
+                const urlField = ref.fields.find((f) => f.key.toLowerCase() === "url")
+                const url = urlField?.value || null
+                return (
+                  <li
+                    key={ref.id}
+                    className="group flex items-start gap-2 rounded-md px-2 py-0.5 hover:bg-hover-bg transition-colors cursor-pointer"
+                    onClick={() => editable && openEditModal(ref.id)}
                   >
-                    ×
-                  </button>
-                )}
-              </li>
-            )
-          })}
-        </ul>
-      )}
+                    <span className="shrink-0 text-muted-foreground/40 pt-0.5">•</span>
+                    <span className="flex-1 text-foreground/70">
+                      <span className="font-medium">{ref.title}</span>
+                      {ref.content && ref.content !== ref.title && (
+                        <span className="text-muted-foreground/50"> — {ref.content.length > 80 ? ref.content.slice(0, 80) + "…" : ref.content}</span>
+                      )}
+                      {url && (
+                        <>
+                          {" "}
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-accent/60 hover:text-accent hover:underline transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {url.replace(/^https?:\/\//, "").split("/")[0]}
+                          </a>
+                        </>
+                      )}
+                    </span>
+                    {editable && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeArticleReference(article.id, ref.id) }}
+                        className="shrink-0 opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground/40 hover:text-destructive transition-all"
+                        title="Remove from this article"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
 
-      {editable && (
-        <button
-          onClick={openModal}
-          className="flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/50 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
-        >
-          + Add Reference
-        </button>
+          {editable && (
+            <button
+              onClick={openModal}
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/50 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+            >
+              + Add Reference
+            </button>
+          )}
+        </>
       )}
 
       {/* Modal Dialog */}
@@ -511,31 +511,3 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
   )
 }
 
-/* ── Footnote rich text content renderer ── */
-
-function FootnoteContent({ content, contentJson }: { content: string; contentJson: Record<string, unknown> | null }) {
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: createEditorExtensions("footnote", { placeholder: "" }),
-    content: contentJson || (content ? {
-      type: "doc",
-      content: content.split("\n").map((line) =>
-        line.trim()
-          ? { type: "paragraph", content: [{ type: "text", text: line }] }
-          : { type: "paragraph" }
-      ),
-    } : undefined),
-    editable: false,
-  })
-
-  if (!editor) {
-    return <>{content || <span className="text-muted-foreground/30 italic">Empty footnote</span>}</>
-  }
-
-  return (
-    <EditorContent
-      editor={editor}
-      className="inline prose dark:prose-invert max-w-none [&_.ProseMirror]:p-0 [&_.ProseMirror]:min-h-0 text-foreground/70"
-    />
-  )
-}
