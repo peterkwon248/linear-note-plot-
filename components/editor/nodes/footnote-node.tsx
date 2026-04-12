@@ -24,8 +24,9 @@ function FootnoteRefView({ node, editor, updateAttributes }: NodeViewProps) {
     return urlField?.value || null
   }, [node.attrs.referenceId])
 
-  // Auto-calculate footnote number based on document order
+  // Auto-calculate footnote number based on document order + optional offset
   const footnoteNumber = useMemo(() => {
+    const offset = ((editor.storage as any).footnoteRef?.footnoteStartOffset as number) ?? 0
     let count = 0
     let found = false
     editor.state.doc.descendants((n) => {
@@ -37,7 +38,7 @@ function FootnoteRefView({ node, editor, updateAttributes }: NodeViewProps) {
         }
       }
     })
-    return count
+    return count + offset
   }, [editor.state.doc, node.attrs.id])
 
   useEffect(() => {
@@ -199,6 +200,10 @@ export const FootnoteRefExtension = Node.create({
   atom: true,
   selectable: true,
   draggable: false,
+
+  addStorage() {
+    return { footnoteStartOffset: 0 }
+  },
 
   addAttributes() {
     return {

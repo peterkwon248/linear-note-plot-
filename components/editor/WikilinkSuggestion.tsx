@@ -14,8 +14,12 @@ import React, {
   forwardRef,
 } from "react"
 import { FileText, Asterisk, Link as LinkIcon, Hash } from "@/lib/editor/editor-icons"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
+import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { IconWiki } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
+import { isWikiStub } from "@/lib/wiki-utils"
 import { getBody } from "@/lib/note-body-store"
 import { extractAnchorsFromContentJson, AnchorItem } from "@/lib/anchor-utils"
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -26,6 +30,7 @@ interface WikilinkItem {
   status: string
   isAlias?: boolean
   isWiki?: boolean
+  isStub?: boolean // for wiki items — stub vs article
   isNewNote?: boolean
   isNewWiki?: boolean
   isReference?: boolean
@@ -287,7 +292,13 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                       ) : (
                         <>
                           {item.isWiki ? (
-                            <IconWiki size={14} className="shrink-0 text-accent" />
+                            <IconWiki size={14} className="shrink-0" style={{ color: item.isStub ? "#f59e0b" : "#8b5cf6" }} />
+                          ) : item.status === "inbox" ? (
+                            <CircleDashed className="shrink-0" size={14} style={{ color: "#22d3ee" }} />
+                          ) : item.status === "capture" ? (
+                            <CircleHalf className="shrink-0" size={14} style={{ color: "#f97316" }} />
+                          ) : item.status === "permanent" ? (
+                            <CheckCircle className="shrink-0" size={14} style={{ color: "#22c55e" }} />
                           ) : (
                             <FileText className="shrink-0 text-muted-foreground" size={14} />
                           )}
@@ -385,7 +396,7 @@ export const WikilinkSuggestion = Extension.create({
               .filter((w: any) => w.title?.trim())
               .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
               .slice(0, 3)
-              .map((w: any) => ({ id: w.id, title: w.title, status: "article", isWiki: true, itemType: "wiki" as const }))
+              .map((w: any) => ({ id: w.id, title: w.title, status: isWikiStub(w) ? "stub" : "article", isWiki: true, isStub: isWikiStub(w), itemType: "wiki" as const }))
 
             // Recent References
             const references = (store as any).references ?? {}
@@ -465,7 +476,7 @@ export const WikilinkSuggestion = Extension.create({
               return a.title.length - b.title.length
             })
             .slice(0, 4)
-            .map((w: any) => ({ id: w.id, title: w.title, status: "article", isWiki: true, itemType: "wiki" as const }))
+            .map((w: any) => ({ id: w.id, title: w.title, status: isWikiStub(w) ? "stub" : "article", isWiki: true, isStub: isWikiStub(w), itemType: "wiki" as const }))
 
           // Search References
           const references = (store as any).references ?? {}

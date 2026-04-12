@@ -420,6 +420,42 @@ export function createEditorExtensions(
         SlashCommandExtension as Extension,
       )
 
+      // Hashtag, wikilink & mention suggestions (same as note tier)
+      wikiExtensions.push(
+        HashtagSuggestion as Extension,
+        WikilinkSuggestion as Extension,
+        WikilinkNode as Extension,
+        WikilinkInteractionExtension as Extension,
+      )
+      wikiExtensions.push(
+        Mention.extend({
+          addAttributes() {
+            return {
+              ...this.parent?.(),
+              mentionType: {
+                default: "note",
+                parseHTML: (element: HTMLElement) => element.getAttribute("data-mention-type") || "note",
+                renderHTML: (attributes: Record<string, unknown>) => {
+                  return { "data-mention-type": attributes.mentionType || "note" }
+                },
+              },
+            }
+          },
+        }).configure({
+          HTMLAttributes: { class: 'mention' },
+          suggestion: mentionSuggestionConfig,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          renderLabel({ node }: { options: any; node: any }) {
+            const mentionType = node.attrs.mentionType || "note"
+            const prefixMap: Record<string, string> = { note: "Note : ", wiki: "Wiki : ", tag: "# ", date: "Date : " }
+            const prefix = prefixMap[mentionType] || "@ "
+            return `${prefix}${node.attrs.label ?? node.attrs.id}`
+          },
+        }) as Extension,
+        MentionInteractionExtension as Extension,
+        Emoji as Extension,
+      )
+
       // Custom block nodes (shared with note tier)
       wikiExtensions.push(CalloutBlockNode as Extension)
       wikiExtensions.push(SummaryBlockNode as Extension)

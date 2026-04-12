@@ -27,6 +27,10 @@ interface SortableBlockItemProps {
   onToggleCollapse?: () => void
   /** For encyclopedia variant: whether section is currently collapsed */
   collapsed?: boolean
+  /** Footnote number offset for wiki-level sequential numbering */
+  footnoteStartOffset?: number
+  /** Report how many footnoteRef nodes this block contains (for offset calculation) */
+  onFootnoteCount?: (blockId: string, count: number) => void
 }
 
 export function SortableBlockItem({
@@ -43,6 +47,8 @@ export function SortableBlockItem({
   variant,
   onToggleCollapse,
   collapsed,
+  footnoteStartOffset,
+  onFootnoteCount,
 }: SortableBlockItemProps) {
   const {
     attributes,
@@ -74,6 +80,8 @@ export function SortableBlockItem({
         variant={variant}
         onToggleCollapse={onToggleCollapse}
         collapsed={collapsed}
+        footnoteStartOffset={footnoteStartOffset}
+        onFootnoteCount={onFootnoteCount}
       />
       {editable && onAddBlock && (
         <AddBlockButton onAdd={onAddBlock} nearestSectionLevel={nearestSectionLevel} />

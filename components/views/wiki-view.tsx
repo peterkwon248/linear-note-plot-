@@ -25,7 +25,7 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
+import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
 import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
 import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
@@ -726,22 +726,7 @@ export function WikiView() {
               )}
 
               {/* Layout toggle */}
-              <button
-                onClick={() => {
-                  const next = selectedWikiArticle.layout === "encyclopedia" ? "default" : "encyclopedia"
-                  updateWikiArticle(selectedWikiArticleId, { layout: next })
-                }}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-note font-medium transition-colors duration-150",
-                  selectedWikiArticle.layout === "encyclopedia"
-                    ? "bg-accent/15 text-accent hover:bg-accent/25"
-                    : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
-                )}
-                title={selectedWikiArticle.layout === "encyclopedia" ? "Switch to default layout" : "Switch to encyclopedia layout"}
-              >
-                <Layout size={14} weight="regular" />
-                {selectedWikiArticle.layout === "encyclopedia" ? "Encyclopedia" : "Default"}
-              </button>
+              <WikiLayoutToggle articleId={selectedWikiArticleId} layout={selectedWikiArticle.layout} />
 
               {isEditingWikiArticle ? (
                 <button

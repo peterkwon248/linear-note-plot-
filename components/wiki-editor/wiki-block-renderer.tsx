@@ -64,14 +64,18 @@ interface WikiBlockRendererProps {
   onToggleCollapse?: () => void
   /** Whether this section is collapsed (encyclopedia only) */
   collapsed?: boolean
+  /** Footnote number offset for wiki-level sequential numbering */
+  footnoteStartOffset?: number
+  /** Report how many footnoteRef nodes this block contains (for offset calculation) */
+  onFootnoteCount?: (blockId: string, count: number) => void
 }
 
-export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection, onMoveToArticle, variant = "default", onToggleCollapse, collapsed }: WikiBlockRendererProps) {
+export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, onDelete, dragHandleProps, articleId, onSplitSection, onMoveToArticle, variant = "default", onToggleCollapse, collapsed, footnoteStartOffset, onFootnoteCount }: WikiBlockRendererProps) {
   switch (block.type) {
     case "section":
       return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} onSplitSection={onSplitSection} onMoveToArticle={onMoveToArticle} variant={variant} onToggleCollapse={onToggleCollapse} collapsed={collapsed} />
     case "text":
-      return <TextBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+      return <TextBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} footnoteStartOffset={footnoteStartOffset} onFootnoteCount={onFootnoteCount} />
     case "note-ref":
       return <NoteRefBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "image":
@@ -367,7 +371,22 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
 
 /* ── Text Block ── */
 
-function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+/** Count footnoteRef nodes in a TipTap JSON document */
+function countFootnoteRefsInJson(json: Record<string, unknown> | null | undefined): number {
+  if (!json) return 0
+  let count = 0
+  function walk(node: any) {
+    if (!node) return
+    if (node.type === "footnoteRef") count++
+    if (Array.isArray(node.content)) {
+      for (const child of node.content) walk(child)
+    }
+  }
+  walk(json)
+  return count
+}
+
+function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footnoteStartOffset, onFootnoteCount }: WikiBlockRendererProps) {
   const { content, contentJson, loading } = useWikiBlockContentJson(block.id, block.content, block.contentJson)
   const [editing, setEditing] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -404,6 +423,13 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
     document.addEventListener("mousedown", handleMouseDown)
     return () => document.removeEventListener("mousedown", handleMouseDown)
   }, [editing])
+
+  // Report footnote count to parent for offset calculation
+  useEffect(() => {
+    if (!onFootnoteCount) return
+    const count = countFootnoteRefsInJson(contentJson)
+    onFootnoteCount(block.id, count)
+  }, [contentJson, block.id, onFootnoteCount])
 
   // Build initial content for TipTap
   const initialContent = useMemo(() => {
@@ -495,6 +521,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
           content={initialContent}
           onChange={handleChange}
           style={textSizeStyle}
+          footnoteStartOffset={footnoteStartOffset}
         />
       ) : (
         <div
@@ -506,7 +533,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
           style={textSizeStyle}
         >
           {hasRichContent ? (
-            <ReadOnlyBlock content={initialContent} />
+            <ReadOnlyBlock content={initialContent} footnoteStartOffset={footnoteStartOffset} />
           ) : (
             <div className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground/85 whitespace-pre-wrap">
               {content || <span className="text-muted-foreground/30 italic">Write something...</span>}
@@ -519,13 +546,21 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wik
 }
 
 /** Read-only TipTap renderer — renders all custom nodes (Table, Callout, Toggle, etc.) correctly */
-function ReadOnlyBlock({ content }: { content: Record<string, unknown> }) {
+function ReadOnlyBlock({ content, footnoteStartOffset = 0 }: { content: Record<string, unknown>; footnoteStartOffset?: number }) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: createEditorExtensions("wiki", { placeholder: "" }),
     content: content && Object.keys(content).length > 0 ? content : undefined,
     editable: false,
   })
+
+  useEffect(() => {
+    if (editor && footnoteStartOffset > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const storage = editor.storage as any
+      storage.footnoteRef = { ...storage.footnoteRef, footnoteStartOffset }
+    }
+  }, [editor, footnoteStartOffset])
 
   if (!editor) return null
 
@@ -542,10 +577,12 @@ function WikiTextEditor({
   content,
   onChange,
   style,
+  footnoteStartOffset = 0,
 }: {
   content: Record<string, unknown>
   onChange: (json: Record<string, unknown>, plainText: string) => void
   style?: React.CSSProperties
+  footnoteStartOffset?: number
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -562,6 +599,14 @@ function WikiTextEditor({
       )
     },
   })
+
+  useEffect(() => {
+    if (editor && footnoteStartOffset > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const storage = editor.storage as any
+      storage.footnoteRef = { ...storage.footnoteRef, footnoteStartOffset }
+    }
+  }, [editor, footnoteStartOffset])
 
   // Click on empty area → focus editor (must be before early return to keep hook order stable)
   const handleContainerClick = useCallback((e: React.MouseEvent) => {

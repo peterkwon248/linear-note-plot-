@@ -100,11 +100,23 @@
 - **Reference.history**: 수정 이력 자동 기록 (created/edited/linked/unlinked). 50개/Reference 제한. Store v73 migration
 - **Library Create Menu**: ViewHeader `createMenuContent` prop — + 버튼 팝오버. Reference/Tag/File 생성
 - **Tags pickColor 통일**: 에디터/Tags뷰 모두 `pickColor(name)` 사용 (이름 해시 기반 자동 색상)
+- **Wiki 공유 유틸**: `lib/wiki-block-utils.ts` (computeSectionNumbers/getInitialContentJson/buildVisibleBlocks) + `hooks/use-wiki-block-actions.ts` (useWikiBlockActions) + `components/wiki-editor/wiki-layout-toggle.tsx` (WikiLayoutToggle). 두 렌더러 ~300줄 중복 제거
+- **Wiki 문서 레벨 각주**: `wiki-footnotes-section.tsx` — 위키백과 스타일. FootnoteRefExtension에 `addStorage({ footnoteStartOffset: 0 })`. 블록별 offset으로 문서 전체 연번. IDB에서 contentJson 로드 → footnoteRef 수집 → 통합 목록. 양방향 스크롤 (`data-wiki-footnote-id` / `data-footnote-id`). `onFootnoteCount` 콜백으로 블록별 각주 개수 리포트
+- **Wiki 텍스트 블록 [[/@/# 활성화**: wiki 티어에 HashtagSuggestion, WikilinkSuggestion, WikilinkNode, WikilinkInteractionExtension, Mention, MentionInteractionExtension, Emoji 추가. 노트와 동일한 인라인 제안 기능
+- **드롭다운 아이콘 통일**: MentionSuggestion 위키=IconWiki(보라/주황), WikilinkSuggestion 노트=StatusShapeIcon 색상. Stub=#f59e0b(주황), Article=#8b5cf6(보라)
+- **Default 레이아웃 TOC 반응형**: aside `hidden xl:block` + `shrink` + 콘텐츠 `pb-40` (Add block 드롭다운 잘림 방지)
 
 ## Store Slices (22 total, v73)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
 ## Completed PRs (recent)
+- **PR #182 (pending)**: 위키 각주 시스템 + 공유 유틸 추출 + 드롭다운 아이콘 통일
+  - 위키 문서 레벨 각주 (위키백과 스타일, offset 기반 전체 연번)
+  - 두 렌더러(Default/Encyclopedia) 공유 유틸 추출 (~300줄 중복 제거)
+  - EncyclopediaFooter 중복 제거 (사이드바에서 이미 표시)
+  - 위키 텍스트 블록에 [[위키링크 + @멘션 + #해시태그 활성화
+  - MentionSuggestion/WikilinkSuggestion 아이콘 통일 (IconWiki + stub/article 색상)
+  - Default 레이아웃 TOC 반응형 + 스크롤 수정
 - **PR #176 (merged 2026-04-09)**: Peek-First 실험 완성 + Split-First 복귀 Phase 1
   - Peek-First 완성 (Phase 2~3.5) — wiki 지원, Empty State, 사이즈 시스템, back/forward, pin
   - 노트/위키 시각 구분 (StatusShapeIcon + wiki violet), MentionSuggestion 일관성
