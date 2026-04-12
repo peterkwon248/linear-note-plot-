@@ -10,10 +10,15 @@ import {
   useState,
   forwardRef,
 } from "react"
-import { BookOpen, Tag, CalendarBlank, Asterisk, CircleDashed, CircleHalf, CheckCircle } from "@/lib/editor/editor-icons"
+import { Tag, CalendarBlank, Asterisk } from "@/lib/editor/editor-icons"
+import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
+import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
+import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
+import { IconWiki } from "@/components/plot-icons"
 import { usePlotStore } from "@/lib/store"
 import { parseMentionDate } from "@/lib/mention-date-parser"
-import { NOTE_STATUS_HEX, WIKI_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_HEX } from "@/lib/colors"
+import { isWikiStub } from "@/lib/wiki-utils"
 import type { SuggestionOptions, SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
 import type { MentionNodeAttrs } from "@tiptap/extension-mention"
 import type { NoteStatus } from "@/lib/types"
@@ -28,6 +33,7 @@ interface MentionItem {
   referenceContent?: string // Reference.content
   referenceUrl?: string // URL field value (for auto-branching)
   noteStatus?: NoteStatus // for notes — drives workflow status icon
+  isStub?: boolean // for wiki items — stub vs article
 }
 
 interface MentionListProps {
@@ -173,10 +179,10 @@ function ItemIcon({ item }: { item: MentionItem }) {
       )
     case "wiki":
       return (
-        <BookOpen
-          className="shrink-0"
+        <IconWiki
           size={14}
-          style={{ color: WIKI_STATUS_HEX.article }}
+          className="shrink-0"
+          style={{ color: item.isStub ? "#f59e0b" : "#8b5cf6" }}
         />
       )
     case "note": {
@@ -256,14 +262,14 @@ export const mentionSuggestionConfig: Omit<SuggestionOptions<MentionItem, Mentio
         .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
         .slice(0, 3)
       for (const w of recentWiki) {
-        results.push({ id: w.id, label: w.title, mentionType: "wiki" })
+        results.push({ id: w.id, label: w.title, mentionType: "wiki", isStub: isWikiStub(w) })
       }
     } else {
       const matchedWiki = wikiArticles
         .filter((w: any) => w.title?.trim() && w.title.toLowerCase().includes(q))
         .slice(0, 3)
       for (const w of matchedWiki) {
-        results.push({ id: w.id, label: w.title, mentionType: "wiki" })
+        results.push({ id: w.id, label: w.title, mentionType: "wiki", isStub: isWikiStub(w) })
       }
     }
 

@@ -5,6 +5,7 @@ import { usePlotStore } from "@/lib/store"
 import { useSecondaryRoute, useSecondarySpace, setSecondarySpace, DEFAULT_ROUTES } from "@/lib/table-route"
 import { NoteEditor } from "@/components/note-editor"
 import { PaneProvider, useIsActivePane } from "./pane-context"
+import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -224,21 +225,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
           )}
           {/* Layout toggle */}
           {article && (
-            <button
-              onClick={() => {
-                const next = article.layout === "encyclopedia" ? "default" : "encyclopedia"
-                updateWikiArticle(articleId, { layout: next })
-              }}
-              className={cn(
-                "flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
-                article.layout === "encyclopedia"
-                  ? "bg-accent/15 text-accent hover:bg-accent/25"
-                  : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
-              )}
-              title={article.layout === "encyclopedia" ? "Switch to default" : "Switch to encyclopedia"}
-            >
-              {article.layout === "encyclopedia" ? "Encyclopedia" : "Default"}
-            </button>
+            <WikiLayoutToggle articleId={articleId} layout={article.layout} showIcon={false} />
           )}
           {/* Edit/Done toggle */}
           {isEditing ? (

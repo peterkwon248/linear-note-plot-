@@ -6,10 +6,13 @@ import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
+import { WikiFootnotesSection } from "./wiki-footnotes-section"
 import { cn } from "@/lib/utils"
 import { Virtuoso } from "react-virtuoso"
 import { toast } from "sonner"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import { computeSectionNumbers, buildVisibleBlocks } from "@/lib/wiki-block-utils"
+import { useWikiBlockActions } from "@/hooks/use-wiki-block-actions"
 import {
   DndContext,
   DragOverlay,
@@ -119,85 +122,34 @@ interface WikiArticleViewProps {
   fontSize?: number
 }
 
-/** Compute section numbers (1., 2., 2.1., etc.) for section blocks */
-function computeSectionNumbers(blocks: WikiBlock[]): Map<string, string> {
-  const result = new Map<string, string>()
-  const sectionBlocks = blocks.filter((b) => b.type === "section")
-  if (sectionBlocks.length === 0) return result
-
-  const minLevel = Math.min(...sectionBlocks.map((b) => b.level ?? 2))
-  const counters: number[] = []
-
-  for (const block of blocks) {
-    if (block.type !== "section") continue
-    const depth = (block.level ?? 2) - minLevel
-    while (counters.length <= depth) counters.push(0)
-    counters[depth]++
-    for (let i = depth + 1; i < counters.length; i++) counters[i] = 0
-    result.set(block.id, counters.slice(0, depth + 1).join("."))
-  }
-  return result
-}
-
-/* ── Initial content JSON for compound block types ── */
-
-function getInitialContentJson(subtype: string): Record<string, unknown> {
-  switch (subtype) {
-    case "infobox":
-      return {
-        type: "doc",
-        content: [{ type: "infoboxBlock", attrs: { entries: [{ key: "Key", value: "Value" }] } }]
-      }
-    case "callout":
-      return {
-        type: "doc",
-        content: [{ type: "calloutBlock", content: [{ type: "paragraph", content: [{ type: "text", text: "Callout text here" }] }] }]
-      }
-    case "blockquote":
-      return {
-        type: "doc",
-        content: [{ type: "blockquote", content: [{ type: "paragraph", content: [{ type: "text", text: "Quote text here" }] }] }]
-      }
-    case "toggle":
-      return {
-        type: "doc",
-        content: [{ type: "details", content: [
-          { type: "detailsSummary", content: [{ type: "paragraph", content: [{ type: "text", text: "Toggle title" }] }] },
-          { type: "detailsContent", content: [{ type: "paragraph", content: [{ type: "text", text: "Toggle content" }] }] },
-        ]}]
-      }
-    case "divider":
-      return {
-        type: "doc",
-        content: [{ type: "horizontalRule" }, { type: "paragraph" }]
-      }
-    case "spacer":
-      return {
-        type: "doc",
-        content: [{ type: "paragraph" }, { type: "paragraph" }, { type: "paragraph" }]
-      }
-    default:
-      return { type: "doc", content: [{ type: "paragraph" }] }
-  }
-}
-
 export function WikiArticleView({ articleId, editable = false, preview = false, onDelete, collapseAllCmd, onCollapseAllDone, onAllCollapsedChange, fontSize }: WikiArticleViewProps) {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
-  const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
-  const removeWikiBlock = usePlotStore((s) => s.removeWikiBlock)
   const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
   const reorderWikiBlocks = usePlotStore((s) => s.reorderWikiBlocks)
   const splitWikiArticle = usePlotStore((s) => s.splitWikiArticle)
+
+  const { addWikiBlock, handleAddBlock, handleDeleteBlock, handleSplitSection, handleMoveToArticle, urlBlockDialog, setUrlBlockDialog } = useWikiBlockActions(articleId)
 
   const [splitMode, setSplitMode] = useState(false)
   const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(new Set())
   const [splitTitle, setSplitTitle] = useState("")
   const [dragOverDropzone, setDragOverDropzone] = useState(false)
-  const [urlBlockDialog, setUrlBlockDialog] = useState<{ open: boolean; afterBlockId?: string }>({ open: false })
   // Improvement 1: isDragging state
   const [isDragging, setIsDragging] = useState(false)
   // Improvement 2: drag split title prompt
   const [dragSplitPrompt, setDragSplitPrompt] = useState<{ blockId: string; defaultTitle: string } | null>(null)
+  // Footnote offset tracking: each text block reports how many footnoteRef nodes it has
+  const [footnoteCounts, setFootnoteCounts] = useState<Map<string, number>>(new Map())
+
+  const handleFootnoteCount = useCallback((blockId: string, count: number) => {
+    setFootnoteCounts(prev => {
+      if (prev.get(blockId) === count) return prev
+      const next = new Map(prev)
+      next.set(blockId, count)
+      return next
+    })
+  }, [])
+
   // Improvement 4: DragOverlay active drag ID
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   // Improvement 5: track which existing article drop zone is hovered
@@ -214,6 +166,19 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     () => wikiArticles.find((a) => a.id === articleId),
     [wikiArticles, articleId]
   )
+
+  // Compute cumulative footnote offsets per block
+  const footnoteOffsets = useMemo(() => {
+    const offsets = new Map<string, number>()
+    let cumulative = 0
+    for (const block of article?.blocks ?? []) {
+      offsets.set(block.id, cumulative)
+      if (block.type === "text") {
+        cumulative += (footnoteCounts.get(block.id) ?? 0)
+      }
+    }
+    return offsets
+  }, [article?.blocks, footnoteCounts])
 
   // Improvement 5: other articles for drop targets
   const otherArticles = useMemo(
@@ -243,70 +208,6 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     const allCollapsed = sectionBlocks.length > 0 && sectionBlocks.every((b) => !!b.collapsed)
     onAllCollapsedChange?.(allCollapsed)
   }, [sectionBlocks, onAllCollapsedChange])
-
-  /** Split a section and its child blocks into a new article */
-  const handleSplitSection = useCallback((sectionBlockId: string) => {
-    if (!article) return
-    const blocks = article.blocks
-    const sectionIdx = blocks.findIndex(b => b.id === sectionBlockId)
-    if (sectionIdx === -1) return
-
-    const sectionBlock = blocks[sectionIdx]
-    const sectionLevel = sectionBlock.level ?? 2
-
-    // Collect this section + all blocks until next same-or-higher level section
-    const blockIds: string[] = [sectionBlockId]
-    for (let i = sectionIdx + 1; i < blocks.length; i++) {
-      const b = blocks[i]
-      if (b.type === "section" && (b.level ?? 2) <= sectionLevel) break
-      blockIds.push(b.id)
-    }
-
-    const title = sectionBlock.title || "Untitled Section"
-    const newId = splitWikiArticle(articleId, blockIds, title)
-    if (newId) {
-      toast.success(`Moved "${title}" to new article`)
-      navigateToWikiArticle(newId)
-    }
-  }, [article, articleId, splitWikiArticle])
-
-  /** Move a section (and its child blocks) to an existing article */
-  const handleMoveToArticle = useCallback((sectionBlockId: string, targetArticleId: string) => {
-    if (!article) return
-    const blocks = article.blocks
-    const sectionIdx = blocks.findIndex(b => b.id === sectionBlockId)
-    if (sectionIdx === -1) return
-
-    const sectionBlock = blocks[sectionIdx]
-    const sectionLevel = sectionBlock.level ?? 2
-
-    // Collect this section + all blocks until next same-or-higher level section
-    const blockIds: string[] = [sectionBlockId]
-    if (sectionBlock.type === "section") {
-      for (let i = sectionIdx + 1; i < blocks.length; i++) {
-        const b = blocks[i]
-        if (b.type === "section" && (b.level ?? 2) <= sectionLevel) break
-        blockIds.push(b.id)
-      }
-    }
-
-    const store = usePlotStore.getState()
-    const targetArticle = store.wikiArticles.find((a) => a.id === targetArticleId)
-    if (!targetArticle) return
-
-    const blocksToMove = blocks.filter((b) => blockIds.includes(b.id))
-    const remainingBlocks = blocks.filter((b) => !blockIds.includes(b.id))
-
-    store.updateWikiArticle(targetArticleId, {
-      blocks: [...targetArticle.blocks, ...blocksToMove],
-    })
-    store.updateWikiArticle(articleId, {
-      blocks: remainingBlocks,
-    })
-
-    toast.success(`Moved ${blockIds.length} block(s) to "${targetArticle.title}"`)
-  }, [article, articleId])
-
 
   // Improvement 2: confirm drag split with custom title
   const handleConfirmDragSplit = useCallback(() => {
@@ -338,43 +239,6 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     }
     setDragSplitPrompt(null)
   }, [dragSplitPrompt, article, articleId, splitWikiArticle])
-
-  const handleAddBlock = useCallback((type: string, afterBlockId?: string, level?: number) => {
-    if (type === "table") {
-      const block: Omit<WikiBlock, "id"> = {
-        type: "table",
-        tableCaption: "",
-        tableHeaders: ["Header 1", "Header 2", "Header 3"],
-        tableRows: [["", "", ""]],
-        tableColumnAligns: ["center", "center", "center"],
-      }
-      addWikiBlock(articleId, block, afterBlockId)
-      return
-    }
-
-    if (type === "url") {
-      setUrlBlockDialog({ open: true, afterBlockId })
-      return
-    }
-
-    // Content blocks: create Text block with pre-filled TipTap content
-    if (type.startsWith("text:")) {
-      const subtype = type.split(":")[1]
-      const contentJson = getInitialContentJson(subtype)
-      const block: Omit<WikiBlock, "id"> = { type: "text", content: "", contentJson }
-      addWikiBlock(articleId, block, afterBlockId)
-      return
-    }
-
-    const block: Omit<WikiBlock, "id"> = { type: type as WikiBlock["type"] }
-    if (type === "section") { block.title = ""; block.level = level ?? 2 }
-    if (type === "text") { block.content = "" }
-    addWikiBlock(articleId, block, afterBlockId)
-  }, [articleId, addWikiBlock])
-
-  const handleDeleteBlock = useCallback((blockId: string) => {
-    removeWikiBlock(articleId, blockId)
-  }, [articleId, removeWikiBlock])
 
   // Improvement 1: onDragStart handler
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -480,28 +344,13 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   const sectionNumbers = useMemo(() => computeSectionNumbers(article.blocks), [article.blocks])
 
   // Flatten visible blocks (skip collapsed section children)
-  const visibleBlocks = useMemo(() => {
-    const result: WikiBlock[] = []
-    let collapsingLevel: number | null = null
-
-    for (const block of article.blocks) {
-      if (block.type === "section") {
-        const level = block.level ?? 2
-        // If we're collapsing and hit a same/higher level section, stop collapsing
-        if (collapsingLevel !== null && level <= collapsingLevel) {
-          collapsingLevel = null
-        }
-        result.push(block) // always show section headers
-        // If this section is collapsed, start hiding everything after it
-        if (block.collapsed) {
-          collapsingLevel = level
-        }
-      } else if (collapsingLevel === null) {
-        result.push(block)
-      }
-    }
-    return result
-  }, [article.blocks])
+  const visibleBlocks = useMemo(
+    () => buildVisibleBlocks(article.blocks, (id) => {
+      const block = article.blocks.find((b) => b.id === id)
+      return !!block?.collapsed
+    }),
+    [article.blocks]
+  )
 
   // Map blockId -> nearest section level at-or-above that block
   const nearestSectionLevelByBlockId = useMemo(() => {
@@ -553,7 +402,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   const outerContent = (
     <div className="flex flex-1 min-h-0 overflow-hidden" style={fontSize ? { fontSize: `${fontSize}em` } : undefined}>
       {/* TOC Sidebar */}
-      {!preview && <aside className="min-w-[200px] max-w-[280px] w-auto shrink-0 overflow-y-auto border-r border-border-subtle px-3 py-4">
+      {!preview && <aside className="min-w-[160px] max-w-[280px] w-auto shrink overflow-y-auto border-r border-border-subtle px-3 py-4 hidden xl:block">
         <div className="sticky top-0">
           <h4 className="text-2xs text-muted-foreground uppercase tracking-wider mb-2">
             Contents
@@ -585,7 +434,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
 
       {/* Blocks Content */}
       <div className="flex-1 overflow-y-auto flex flex-col" id="wiki-article-scroll-container">
-        <div className={cn("px-8 py-6 space-y-1 flex-1", !preview && (article.contentAlign === "center" ? "max-w-4xl mx-auto" : "max-w-[780px]"))}>
+        <div className={cn("px-8 py-6 pb-40 space-y-1 flex-1", !preview && (article.contentAlign === "center" ? "max-w-4xl mx-auto" : "max-w-[780px]"))}>
           {/* Title (editable) */}
           {editable ? (
             <input
@@ -686,6 +535,8 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                       articleId={articleId}
                       onSplitSection={handleSplitSection}
                       onMoveToArticle={handleMoveToArticle}
+                      footnoteStartOffset={footnoteOffsets.get(block.id) ?? 0}
+                      onFootnoteCount={handleFootnoteCount}
                     />
                   </div>
                 ))}
@@ -702,6 +553,8 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                     sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
                     onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
                     onDelete={() => handleDeleteBlock(block.id)}
+                    footnoteStartOffset={footnoteOffsets.get(block.id) ?? 0}
+                    onFootnoteCount={handleFootnoteCount}
                   />
                 </div>
               )}
@@ -716,6 +569,8 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                   sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
                   onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
                   onDelete={() => handleDeleteBlock(block.id)}
+                  footnoteStartOffset={footnoteOffsets.get(block.id) ?? 0}
+                  onFootnoteCount={handleFootnoteCount}
                 />
               </div>
             ))
@@ -732,6 +587,9 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
             </p>
           )}
         </div>
+
+        {/* Wiki-level footnotes (Wikipedia style) */}
+        {article && <WikiFootnotesSection article={article} />}
 
         {splitMode && (
           <div className="sticky bottom-0 z-20 border-t border-border bg-popover px-4 py-3">
