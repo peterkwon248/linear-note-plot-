@@ -418,6 +418,9 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footn
     if (!editing) return
     const handleMouseDown = (e: MouseEvent) => {
       if (blockRef.current?.contains(e.target as Node)) return
+      // Don't close if clicking inside a tippy dropdown (suggestion menus, slash commands)
+      const target = e.target as HTMLElement
+      if (target.closest?.('.tippy-content, .tippy-box, [data-tippy-root]')) return
       setEditing(false)
     }
     document.addEventListener("mousedown", handleMouseDown)
