@@ -92,11 +92,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **PR #181**: Library 리디자인 + Reference.history + Split View edge case 수정
-2. **PR #182**: 위키 각주 시스템 (위키백과 스타일) + 공유 유틸 추출 + 드롭다운 아이콘 통일 + 위키 텍스트 블록 [[/@/# 활성화
+1. **PR #187 (WIP)**: 각주/Reference UX 개선 — read-only 가드, 위키 footnote 삽입 버그 수정, Footnotes/References 컴팩트 디자인, 노트 References 하단 섹션
+2. **PR #185**: 각주 모달 + References 하단 섹션 + footnote 티어
 3. **PR #183**: 위키 텍스트 블록 [[/@ 삽입 버그 수정 + 호버 프리뷰 글로벌 이동
-4. **PR #178**: Split-First Phase 2-5 — Peek 제거 + 위키 사이드바 통합 + Context Swapping
-5. **PR #176**: Peek-First 실험 완성 + Split-First 복귀 Phase 1
+4. **PR #182**: 위키 각주 시스템 (위키백과 스타일) + 공유 유틸 추출 + 드롭다운 아이콘 통일
+5. **PR #181**: Library 리디자인 + Reference.history + Split View edge case 수정
 
 ## Two Axes — Core Design Philosophy
 
@@ -194,15 +194,23 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **위키 하단 References 섹션**: Footnotes(번호) + References(불릿) 위키백과 2단 구조. WikiArticle.referenceIds로 문서↔Reference 직접 연결 (2026-04-12)
 - **Reference 사이드패널 = Library 전용**: 위키에서는 모달로 편집 (사이드패널 context 고착 방지) (2026-04-12)
 - **footnote 에디터 티어**: StarterKit 최소 + Link + Underline. 테이블/이미지/슬래시/멘션 제외 (2026-04-12)
+- **각주 read-only 가드**: footnote-node.tsx + footnotes-footer.tsx — `editor.isEditable` 체크. 리드 모드에서 모달 안 열림 (2026-04-13)
+- **위키 footnote 삽입 버그 수정**: footnote-edit-modal.tsx에 `role="dialog"` 추가. 위키 TextBlock click-outside 가드가 모달을 "외부"로 인식해 에디터 언마운트 → debounce 저장 실패하던 문제 해결 (2026-04-13)
+- **위키 Footnotes/References 컴팩트 디자인**: TipTap EditorContent 제거 → 단순 텍스트. `▶ FOOTNOTES N` / `▶ REFERENCES N` 토글. text-base 헤더 + text-[14px] 내용 (2026-04-13)
+- **노트 References 하단 섹션**: `footnotes-footer.tsx` NoteReferencesFooter 컴포넌트. 각주 referenceId 수집 → `▶ REFERENCES N` 불릿 목록. 기본 collapsed (2026-04-13)
+- **Footnotes+References 통합 논의 (미구현)**: "REFERENCES" 하나로 합치고 [N] 번호 + • 불릿 공존 방식. 위키/노트 모두 동일 패턴. 다음 P0 작업 (2026-04-13)
 
-## TODO: Future Work (우선순위 순, 2026-04-12 저녁 sync)
+## TODO: Future Work (우선순위 순, 2026-04-13 sync)
 
 ### ✅ P0 — Split-First 마이그레이션 — ALL COMPLETE
 ### ✅ P1 — Library + 위키 레이아웃 프리셋 — ALL COMPLETE
 
+### P0 — Footnotes+References 통합 (최우선)
+- **FOOTNOTES+REFERENCES → REFERENCES 하나로 통합** — [N] 번호(각주) + • 불릿(수동 추가) 공존. 노트/위키 동일 패턴. "Footnotes" 명칭 앱에서 제거
+- **article fontSize cascade** — 위키 Aa 드롭다운(S/M/L/XL)이 wrapper에 적용돼 모든 하위 요소에 cascade. 현재는 섹션 타이틀에 미적용
+
 ### P2 — 인사이트 허브 + Reference UX
-- **Reference Usage 섹션** — 사이드패널에 "이 Reference를 참조하는 노트/위키" 목록. Connections/Activity/Bookmarks 탭 구조 브레인스토밍 필요
-- **노트 에디터 각주 모달 동작 확인** — [N] 클릭 시 모달 열림 테스트 (ProseMirror atom node onClick 충돌 가능)
+- **Reference Usage 섹션** — 사이드패널에 "이 Reference를 참조하는 노트/위키" 목록
 - **인사이트 허브** — 온톨로지 Single Source of Insights
 - **인포박스 고도화** — 대표 이미지, 섹션 구분 행, 접기/펼치기
 

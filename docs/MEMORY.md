@@ -109,11 +109,21 @@
 - **WikiReferencesSection**: `wiki-footnotes-section.tsx` 내. WikiArticle.referenceIds 기반 불릿 목록. 모달 3모드 (search/create/edit). Library Reference와 동일 엔티티
 - **footnote 에디터 티어**: `shared-editor-config.ts` `"footnote"` case. StarterKit(heading/codeBlock/horizontalRule/blockquote/list 전부 false) + Link + Underline + Placeholder
 - **click-outside 가드 패턴**: `wiki-block-renderer.tsx` TextBlock — `.tippy-content, .tippy-box, [data-tippy-root], [data-radix-popper-content-wrapper], [role="menu"], [role="dialog"]` 전부 "내부"로 인식
+- **각주 read-only 가드**: `footnote-node.tsx` handleClick + `footnotes-footer.tsx` openModal — `editor.isEditable` 체크. "Click to add content" 버튼도 read-only 시 숨김
+- **FootnoteEditModal role="dialog"**: click-outside 가드가 모달을 인식하도록. 위키 TextBlock에서 각주 편집 시 에디터 언마운트 방지
+- **위키 Footnotes/References 컴팩트 디자인**: TipTap EditorContent 폐기 → 단순 텍스트. `▶` chevron 토글 + `text-base` 헤더 + `text-[14px]` 내용. `[N]` 번호 크기 `text-[14px]` 통일
+- **노트 NoteReferencesFooter**: `footnotes-footer.tsx` 내. 각주의 referenceId 수집 → `▶ REFERENCES N` 불릿 목록. FootnotesFooter 안에서 자동 렌더. 기본 collapsed
 
 ## Store Slices (22 total, v73)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
 ## Completed PRs (recent)
+- **PR #187 (WIP 2026-04-13)**: 각주/Reference UX 개선
+  - 각주 read-only 가드 (editor.isEditable 체크)
+  - 위키 footnote 삽입 버그 수정 (FootnoteEditModal role="dialog")
+  - 위키 Footnotes/References 컴팩트 디자인 (TipTap→텍스트, 토글, 사이즈 통일)
+  - 노트 References 하단 섹션 (NoteReferencesFooter, 기본 collapsed)
+  - Footnotes+References 통합 논의 (→ 다음 세션 P0)
 - **PR #185 (merged 2026-04-12)**: 각주 모달 + References 하단 섹션 + footnote 티어 + 사이드패널 버그 수정
   - FootnoteEditModal (Title+Content+URL 통합 모달, 각주/레퍼런스 동일 UX)
   - WikiReferencesSection (위키백과 참고문헌 불릿 목록, 검색+생성+편집 모달)
