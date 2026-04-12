@@ -110,7 +110,11 @@
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
 ## Completed PRs (recent)
-- **PR #182 (pending)**: 위키 각주 시스템 + 공유 유틸 추출 + 드롭다운 아이콘 통일
+- **PR #183 (merged 2026-04-12)**: 위키 텍스트 블록 [[/@ 삽입 버그 수정 + 호버 프리뷰 글로벌 이동
+  - tippy click-outside 가드 (드롭다운 클릭 시 에디터 닫힘 방지)
+  - async deleteRange stale range 수정
+  - NoteHoverPreview를 layout.tsx 글로벌로 이동
+- **PR #182 (merged 2026-04-12)**: 위키 각주 시스템 + 공유 유틸 추출 + 드롭다운 아이콘 통일
   - 위키 문서 레벨 각주 (위키백과 스타일, offset 기반 전체 연번)
   - 두 렌더러(Default/Encyclopedia) 공유 유틸 추출 (~300줄 중복 제거)
   - EncyclopediaFooter 중복 제거 (사이드바에서 이미 표시)

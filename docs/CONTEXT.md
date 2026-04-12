@@ -58,6 +58,10 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 - WorkspaceMode 삭제됨 — sidebarCollapsed + detailsOpen 독립 토글
 - Split View 시스템 (PR #172-173): PaneContext + route intercept 패턴. Primary/Secondary 독립 패널. SmartSidePanel primary/secondary 분리. 4-column flat layout (layout.tsx + WorkspaceEditorArea). secondarySpace URL state, secondary history navigation
 - Wiki-links: `[[title]]` extracted to `Note.linksOut`
+- Wiki tier = note tier와 동일한 인라인 제안: `[[` 위키링크, `@` 멘션(노트/위키/태그/날짜/레퍼런스), `#` 해시태그 (PR #182)
+- Wiki 문서 레벨 각주: `WikiFootnotesSection` — 위키백과 스타일 하단 통합 목록. FootnoteRefExtension `addStorage({ footnoteStartOffset })` + 블록별 offset 전달로 문서 전체 연번 (PR #182)
+- NoteHoverPreview: `layout.tsx` 글로벌 마운트 (노트+위키 모두 호버 프리뷰 동작) (PR #183)
+- 공유 유틸: `lib/wiki-block-utils.ts` + `hooks/use-wiki-block-actions.ts` + `wiki-layout-toggle.tsx` (PR #182)
 
 ### Knowledge System
 - Backlinks: `lib/backlinks.ts` (incremental index, keyword/tag scoring, alias support)
@@ -88,11 +92,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **PR #169**: Reference 하이브리드 통합 — url 있으면 Link형, 없으면 Citation형 자동 분기. hover 프리뷰 + Trash/Library UX
-2. **PR #172**: Split View 독립 패널 시스템 — PaneContext + route intercept 패턴, 하이브리드 듀얼 에디터, 6 space 전부 접근 가능, secondarySpace URL state
-3. **PR #173**: Split View 사이드패널 분리 — primary/secondary 독립 SmartSidePanel
-4. **PR #174 (예정)**: Cross-Note Bookmarks 5 Phase + Outline 개선 + Footnote 접기/펼치기 + Wiki Sources 클릭 fix + ReferencedInBadges dedupe
-5. **PR #174 (예정)**: 🎯 **Peek-First 아키텍처 Phase 0+1** — 사이드바 단일 책임 (layout.tsx), WorkspaceEditorArea 단순화, ResizablePanel id+order 추가. 워크플로우 개선 (NEXT-ACTION.md + SESSION-LOG.md)
+1. **PR #181**: Library 리디자인 + Reference.history + Split View edge case 수정
+2. **PR #182**: 위키 각주 시스템 (위키백과 스타일) + 공유 유틸 추출 + 드롭다운 아이콘 통일 + 위키 텍스트 블록 [[/@/# 활성화
+3. **PR #183**: 위키 텍스트 블록 [[/@ 삽입 버그 수정 + 호버 프리뷰 글로벌 이동
+4. **PR #178**: Split-First Phase 2-5 — Peek 제거 + 위키 사이드바 통합 + Context Swapping
+5. **PR #176**: Peek-First 실험 완성 + Split-First 복귀 Phase 1
 
 ## Two Axes — Core Design Philosophy
 
@@ -180,32 +184,22 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Tags Library 통합**: Notes "More"에서 Tags 제거, `/library/tags`로 통합. Capacities 패턴 (2026-04-08)
 - **References/Files soft delete**: trashed/trashedAt 필드, 복원 가능. Store v71 (2026-04-08)
 - **Reference = 통합 참고자료 (옵션3 하이브리드)**: url 필드 있으면 Link형, 없으면 Citation형으로 자동 분기. 새 엔티티 없이 Reference 하나로 통합. 위키백과 철학 차용 — `[[]]`=내부링크, 각주=하단URL, referenceLink=외부링크(🔗 시각 구분). `[[`/`@` 드롭다운에서 url 있으면 referenceLink 노드, 없으면 footnoteRef 노드 자동 삽입. Shift+클릭=반대 모드. Quick Filter에 Links 추가 (2026-04-08)
+- **위키 레이아웃 프리셋 = 공유 유틸 추출**: 1파일 통합 대신 순수 함수/훅/컴포넌트 추출 방식. 두 렌더러(Default/Encyclopedia)의 구조적 차이가 커서 통합 시 분기 20개+ 발생 (2026-04-12)
+- **위키 문서 레벨 각주 = offset 방식**: 블록별 `footnoteStartOffset`으로 문서 전체 연번. `onFootnoteCount` 콜백으로 블록별 각주 개수 수집 → 누적 offset 계산 (2026-04-12)
+- **EncyclopediaFooter 삭제**: 사이드바에서 이미 Sources/Properties 표시. 본문 중복 제거 (2026-04-12)
+- **드롭다운 아이콘 색상 체계**: Wiki stub=#f59e0b(주황), article=#8b5cf6(보라). CircleDashed/CircleHalf/CheckCircle는 Phosphor 직접 import (Remix 매핑 부정확) (2026-04-12)
+- **NoteHoverPreview 글로벌**: TipTapEditor에서 layout.tsx로 이동. 위키 텍스트 블록에서도 호버 프리뷰 동작 (2026-04-12)
+- **위키 텍스트 블록 click-outside 가드**: `.tippy-content` 클릭은 "내부"로 인식. 드롭다운 클릭 시 에디터 닫힘 방지 (2026-04-12)
 
-## TODO: Future Work (우선순위 순, 2026-04-09 저녁 sync)
+## TODO: Future Work (우선순위 순, 2026-04-12 sync)
 
-### 🔴 P0 — Split-First 마이그레이션 (Phase 2-5 완료, Phase 6-7 남음)
-- ✅ **Phase 2-3**: Peek/secondarySidePanel store 제거 + 파일 삭제 + openSidePeek→openInSecondary
-- ✅ **Phase 5**: Focus tracking + context swapping + 위키 디테일 SmartSidePanel 통합
-  - `_savedPrimaryContext` context swapping 패턴
-  - 위키 내장 aside 제거, WikiArticleDetailPanel에 Sources/Delete 추가
-  - 위키 헤더에 사이드바 토글 + Split View 버튼
-  - 브레드크럼 노트 피커 (검색 + 드롭다운)
-  - Secondary 뷰 헤더 (space 드롭다운 + 닫기)
-- ✅ **Phase 6**: Split view 통합 검증
-  - 사이드바 focus-following edge case (일부 시나리오에서 stale context)
-  - 위키 인포박스 중복 제거 (사이드바 vs 본문)
-- **Phase 7**: CONTEXT.md/MEMORY.md 최종 업데이트
+### ✅ P0 — Split-First 마이그레이션 — ALL COMPLETE
+### ✅ P1 — Library + 위키 레이아웃 프리셋 — ALL COMPLETE
 
-### P1 (진행 중)
-- ✅ **Library Overview 리디자인** — 위키 대시보드 스타일 (MiniStat + Attention + Recent + Top Tags)
-- ✅ **References DisplayPanel** — 정렬(Updated/Name/Created) + 그룹핑(None/Type/FieldKey)
-- ✅ **Reference.history** — 수정 이력 타임라인 (store v73, 50개/ref 제한)
-- 🔴 **위키 레이아웃 프리셋 시스템** — 2개 렌더러(wiki-article-view + wiki-article-encyclopedia) → 1개 통합 + 설정 객체
-
-### P2 — 인사이트 허브 + 각주
-8. **인사이트 허브** — 온톨로지 Single Source of Insights. Knowledge WAR/Link Density/Stub Conversion Rate 등 세이브매트릭스급 지표
-9. **각주 리치텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
-10. **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
+### P2 — 인사이트 허브 + 각주 고도화
+- **인사이트 허브** — 온톨로지 Single Source of Insights. Knowledge WAR/Link Density/Stub Conversion Rate 등 세이브매트릭스급 지표
+- **각주 리치텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
+- **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
 
 ### P3 — 사이드패널 + 뷰 확장
 11. **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식), Peek에서 직접 Quote 삽입, 호버 프리뷰/Peek 역할 정리
