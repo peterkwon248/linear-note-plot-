@@ -1,30 +1,34 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
+import { useEditor, EditorContent } from "@tiptap/react"
 import type { WikiArticle } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { getBlockBody } from "@/lib/wiki-block-body-store"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { cn } from "@/lib/utils"
+import { createEditorExtensions } from "@/components/editor/core/shared-editor-config"
 
 interface FootnoteEntry {
   id: string
   content: string
+  contentJson: Record<string, unknown> | null
   referenceId: string | null
   blockId: string
   globalNumber: number
 }
 
 /** Extract footnoteRef nodes from a TipTap JSON document */
-function extractFootnoteRefs(json: Record<string, unknown> | null | undefined): Array<{ id: string; content: string; referenceId: string | null }> {
+function extractFootnoteRefs(json: Record<string, unknown> | null | undefined): Array<{ id: string; content: string; contentJson: Record<string, unknown> | null; referenceId: string | null }> {
   if (!json) return []
-  const results: Array<{ id: string; content: string; referenceId: string | null }> = []
+  const results: Array<{ id: string; content: string; contentJson: Record<string, unknown> | null; referenceId: string | null }> = []
   function walk(node: any) {
     if (!node) return
     if (node.type === "footnoteRef" && node.attrs?.id) {
       results.push({
         id: node.attrs.id as string,
         content: (node.attrs.content as string) ?? "",
+        contentJson: (node.attrs.contentJson as Record<string, unknown>) ?? null,
         referenceId: (node.attrs.referenceId as string) ?? null,
       })
     }
@@ -91,6 +95,7 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
         results.push({
           id: ref.id,
           content: ref.content,
+          contentJson: ref.contentJson,
           referenceId: ref.referenceId,
           blockId: block.id,
           globalNumber: globalNum,
@@ -164,7 +169,7 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
                   ^
                 </button>
                 <span className="text-foreground/70 flex-1">
-                  {fn.content || <span className="text-muted-foreground/30 italic">Empty footnote</span>}
+                  <FootnoteContent content={fn.content} contentJson={fn.contentJson} />
                   {url && (
                     <>
                       {" "}
@@ -186,5 +191,351 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
         </ol>
       )}
     </div>
+  )
+}
+
+/* ── Wiki References Section (bibliography, no inline [N] markers) ── */
+
+interface WikiReferencesSectionProps {
+  article: WikiArticle
+  editable?: boolean
+}
+
+export function WikiReferencesSection({ article, editable = false }: WikiReferencesSectionProps) {
+  const references = usePlotStore((s) => s.references)
+  const addArticleReference = usePlotStore((s) => s.addArticleReference)
+  const removeArticleReference = usePlotStore((s) => s.removeArticleReference)
+  const createReference = usePlotStore((s) => s.createReference)
+  const updateReference = usePlotStore((s) => s.updateReference)
+  const [showModal, setShowModal] = useState(false)
+  const [modalMode, setModalMode] = useState<"search" | "create" | "edit">("search")
+  const [editingRefId, setEditingRefId] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
+  const [newTitle, setNewTitle] = useState("")
+  const [newUrl, setNewUrl] = useState("")
+  const [newContent, setNewContent] = useState("")
+  const searchRef = useRef<HTMLInputElement>(null)
+  const titleRef = useRef<HTMLInputElement>(null)
+
+  const linkedRefs = useMemo(() => {
+    const ids = article.referenceIds ?? []
+    return ids.map((id) => references[id]).filter(Boolean)
+  }, [article.referenceIds, references])
+
+  // All references not already linked
+  const availableRefs = useMemo(() => {
+    const linkedSet = new Set(article.referenceIds ?? [])
+    return Object.values(references)
+      .filter((r) => !linkedSet.has(r.id) && !r.trashed && r.title?.trim())
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  }, [references, article.referenceIds])
+
+  const filteredRefs = useMemo(() => {
+    if (!search.trim()) return availableRefs.slice(0, 10)
+    const q = search.toLowerCase()
+    return availableRefs.filter((r) => r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q)).slice(0, 10)
+  }, [availableRefs, search])
+
+  const openModal = () => {
+    setShowModal(true)
+    setModalMode("search")
+    setSearch("")
+    setNewTitle("")
+    setNewUrl("")
+    setNewContent("")
+    setTimeout(() => searchRef.current?.focus(), 50)
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setSearch("")
+    setNewTitle("")
+    setNewUrl("")
+    setNewContent("")
+  }
+
+  const openEditModal = (refId: string) => {
+    const ref = references[refId]
+    if (!ref) return
+    setEditingRefId(refId)
+    setModalMode("edit")
+    setNewTitle(ref.title)
+    setNewUrl(ref.fields.find((f) => f.key.toLowerCase() === "url")?.value ?? "")
+    setNewContent(ref.content)
+    setShowModal(true)
+    setTimeout(() => titleRef.current?.focus(), 50)
+  }
+
+  const handleSaveEdit = () => {
+    if (!editingRefId || !newTitle.trim()) return
+    const trimmedUrl = newUrl.trim()
+    const ref = references[editingRefId]
+    if (!ref) return
+    const updatedFields = trimmedUrl
+      ? ref.fields.some((f) => f.key.toLowerCase() === "url")
+        ? ref.fields.map((f) => f.key.toLowerCase() === "url" ? { ...f, value: trimmedUrl } : f)
+        : [...ref.fields, { key: "URL", value: trimmedUrl }]
+      : ref.fields.filter((f) => f.key.toLowerCase() !== "url")
+    updateReference(editingRefId, {
+      title: newTitle.trim(),
+      content: newContent.trim(),
+      fields: updatedFields,
+    })
+    closeModal()
+    setEditingRefId(null)
+  }
+
+  const handleLinkExisting = (refId: string) => {
+    addArticleReference(article.id, refId)
+    closeModal()
+  }
+
+  const switchToCreate = (prefillTitle?: string) => {
+    setModalMode("create")
+    setNewTitle(prefillTitle ?? search)
+    setNewUrl("")
+    setNewContent("")
+    setTimeout(() => titleRef.current?.focus(), 50)
+  }
+
+  const handleCreateAndLink = () => {
+    if (!newTitle.trim()) return
+    const fields = newUrl.trim() ? [{ key: "URL", value: newUrl.trim() }] : []
+    const refId = createReference({
+      title: newTitle.trim(),
+      content: newContent.trim() || newTitle.trim(),
+      fields,
+    } as any)
+    addArticleReference(article.id, refId)
+    closeModal()
+  }
+
+  if (linkedRefs.length === 0 && !editable) return null
+
+  return (
+    <div className="mt-6 border-t border-border/30 pt-4">
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="text-lg font-semibold text-foreground/80">References</h3>
+        <span className="text-2xs text-muted-foreground/40 tabular-nums">{linkedRefs.length}</span>
+      </div>
+
+      {linkedRefs.length > 0 && (
+        <ul className="space-y-1.5 text-note mb-3">
+          {linkedRefs.map((ref) => {
+            const urlField = ref.fields.find((f) => f.key.toLowerCase() === "url")
+            const url = urlField?.value || null
+            return (
+              <li
+                key={ref.id}
+                className="group flex items-start gap-2 rounded-md px-2 py-1 hover:bg-hover-bg transition-colors cursor-pointer"
+                onClick={() => editable && openEditModal(ref.id)}
+              >
+                <span className="shrink-0 text-muted-foreground/40 pt-0.5">•</span>
+                <span className="flex-1 text-foreground/70">
+                  <span className="font-medium">{ref.title}</span>
+                  {ref.content && ref.content !== ref.title && (
+                    <span className="text-muted-foreground/50"> — {ref.content.length > 80 ? ref.content.slice(0, 80) + "…" : ref.content}</span>
+                  )}
+                  {url && (
+                    <>
+                      {" "}
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-accent/60 hover:text-accent hover:underline transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {url.replace(/^https?:\/\//, "").split("/")[0]}
+                      </a>
+                    </>
+                  )}
+                </span>
+                {editable && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeArticleReference(article.id, ref.id) }}
+                    className="shrink-0 opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground/40 hover:text-destructive transition-all"
+                    title="Remove from this article"
+                  >
+                    ×
+                  </button>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
+      {editable && (
+        <button
+          onClick={openModal}
+          className="flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/50 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+        >
+          + Add Reference
+        </button>
+      )}
+
+      {/* Modal Dialog */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px]" onClick={closeModal}>
+          <div
+            className="w-[420px] rounded-xl border border-border bg-surface-overlay shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {modalMode === "search" ? (
+              <>
+                <div className="px-5 pt-4 pb-2">
+                  <h3 className="text-note font-semibold text-foreground mb-3">Add Reference</h3>
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") closeModal()
+                    }}
+                    placeholder="Search existing references..."
+                    className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                  />
+                </div>
+                <div className="max-h-52 overflow-y-auto px-2 pb-2">
+                  {filteredRefs.map((ref) => {
+                    const urlField = ref.fields.find((f) => f.key.toLowerCase() === "url")
+                    return (
+                      <button
+                        key={ref.id}
+                        onClick={() => handleLinkExisting(ref.id)}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-note text-foreground/80 hover:bg-hover-bg transition-colors"
+                      >
+                        <span className="truncate flex-1">{ref.title}</span>
+                        {urlField?.value && (
+                          <span className="shrink-0 text-2xs text-accent/40">🔗</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                  {filteredRefs.length === 0 && (
+                    <p className="px-3 py-3 text-2xs text-muted-foreground/40 text-center">
+                      {search.trim() ? "No matching references" : "No references in Library"}
+                    </p>
+                  )}
+                </div>
+                <div className="border-t border-border/30 px-5 py-3 flex justify-between items-center">
+                  <button
+                    onClick={() => switchToCreate()}
+                    className="text-2xs text-accent hover:text-accent/80 font-medium transition-colors"
+                  >
+                    + Create new reference
+                  </button>
+                  <button
+                    onClick={closeModal}
+                    className="rounded-md px-3 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="px-5 pt-4 pb-1">
+                  <h3 className="text-note font-semibold text-foreground mb-3">{modalMode === "edit" ? "Edit Reference" : "New Reference"}</h3>
+                </div>
+                <div className="px-5 space-y-3 pb-4">
+                  <div>
+                    <label className="text-2xs text-muted-foreground/60 mb-1 block">Title</label>
+                    <input
+                      ref={titleRef}
+                      type="text"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleCreateAndLink()
+                        if (e.key === "Escape") closeModal()
+                      }}
+                      placeholder="Reference title..."
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-2xs text-muted-foreground/60 mb-1 block">URL (optional)</label>
+                    <input
+                      type="text"
+                      value={newUrl}
+                      onChange={(e) => setNewUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-2xs text-muted-foreground/60 mb-1 block">Description (optional)</label>
+                    <textarea
+                      value={newContent}
+                      onChange={(e) => setNewContent(e.target.value)}
+                      placeholder="Brief description..."
+                      rows={2}
+                      className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent resize-none"
+                    />
+                  </div>
+                </div>
+                <div className="border-t border-border/30 px-5 py-3 flex justify-between items-center">
+                  {modalMode === "create" ? (
+                    <button
+                      onClick={() => setModalMode("search")}
+                      className="text-2xs text-muted-foreground hover:text-foreground font-medium transition-colors"
+                    >
+                      ← Back to search
+                    </button>
+                  ) : <span />}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={closeModal}
+                      className="rounded-md px-3 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-hover-bg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={modalMode === "edit" ? handleSaveEdit : handleCreateAndLink}
+                      disabled={!newTitle.trim()}
+                      className="rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-white hover:bg-accent/90 transition-colors disabled:opacity-40"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Footnote rich text content renderer ── */
+
+function FootnoteContent({ content, contentJson }: { content: string; contentJson: Record<string, unknown> | null }) {
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: createEditorExtensions("footnote", { placeholder: "" }),
+    content: contentJson || (content ? {
+      type: "doc",
+      content: content.split("\n").map((line) =>
+        line.trim()
+          ? { type: "paragraph", content: [{ type: "text", text: line }] }
+          : { type: "paragraph" }
+      ),
+    } : undefined),
+    editable: false,
+  })
+
+  if (!editor) {
+    return <>{content || <span className="text-muted-foreground/30 italic">Empty footnote</span>}</>
+  }
+
+  return (
+    <EditorContent
+      editor={editor}
+      className="inline prose dark:prose-invert max-w-none [&_.ProseMirror]:p-0 [&_.ProseMirror]:min-h-0 text-foreground/70"
+    />
   )
 }

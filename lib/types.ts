@@ -145,6 +145,7 @@ export interface WikiArticle {
   fontSize?: number                // global font size multiplier (0.85=S, 1=M default, 1.15=L, 1.3=XL)
   contentAlign?: "left" | "center" // content alignment (undefined = "left")
   linksOut?: string[]              // extracted [[wiki-links]] from text blocks
+  referenceIds?: string[]              // linked Reference IDs (bibliography, not inline footnotes)
   mergeHistory?: WikiMergeSnapshot[]  // snapshots from N→1 merge for unmerge
   createdAt: string
   updatedAt: string
@@ -242,7 +243,8 @@ export interface Tag {
 export interface Reference {
   id: string
   title: string           // 짧은 레이블 (e.g. "사피엔스 p.42")
-  content: string         // 자유 텍스트 설명
+  content: string         // 자유 텍스트 설명 (plain text, 검색용)
+  contentJson?: Record<string, unknown> | null  // 리치텍스트 (TipTap JSON)
   fields: Array<{ key: string; value: string }>  // 인포박스식 메타데이터
   tags?: string[]         // 글로벌 태그 공유
   createdAt: string

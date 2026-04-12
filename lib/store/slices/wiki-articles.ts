@@ -66,6 +66,30 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }))
     },
 
+    addArticleReference: (articleId: string, referenceId: string) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id !== articleId ? a : {
+            ...a,
+            referenceIds: [...new Set([...(a.referenceIds ?? []), referenceId])],
+            updatedAt: now(),
+          }
+        ),
+      }))
+    },
+
+    removeArticleReference: (articleId: string, referenceId: string) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id !== articleId ? a : {
+            ...a,
+            referenceIds: (a.referenceIds ?? []).filter((id: string) => id !== referenceId),
+            updatedAt: now(),
+          }
+        ),
+      }))
+    },
+
     deleteWikiArticle: (articleId: string) => {
       // Clean up block bodies from IDB before removing
       const article = get().wikiArticles.find((a: WikiArticle) => a.id === articleId)

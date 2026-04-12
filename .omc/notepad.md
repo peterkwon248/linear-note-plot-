@@ -1,14 +1,12 @@
-# Session Notepad (Updated: 2026-04-11 17:00)
+# Session Notepad (Updated: 2026-04-12 13:00)
 
 ## Critical Context
-- PR #178 merged: Split-First Phase 2-5 완료 (Peek 제거 + 위키 사이드바 통합 + Context Swapping)
-- 사이드바 focus-following: 기본 동작 OK, edge case 잔존 (_savedPrimaryContext 타이밍)
-- Zustand activePane 구독이 SmartSidePanel에서 안 먹힘 → sidePanelContext 직접 swap으로 우회
+- PR #182 merged: 위키 각주 + 유틸 추출 + 드롭다운 아이콘 통일 + [[/@/# 활성화
+- **버그**: 위키 텍스트 블록에서 [[ / @ 드롭다운 선택 시 삽입 안 됨 — 드롭다운은 나오지만 클릭해도 반응 없음
 
 ## Active Tasks
-- [ ] 사이드바 focus-following edge case 정리
-- [ ] 위키 인포박스 중복 제거 (사이드바 vs 본문)
-- [ ] Phase 6: Split view 통합 검증
+- [ ] 위키 텍스트 블록 [[@/멘션 삽입 버그 수정 (최우선)
+- [ ] P0 Phase 7: CONTEXT.md 최종 업데이트
 
 ## Blockers
-- Zustand subscription 이슈 (activePane) — 원인 불명, context swapping으로 우회 중
+- 위키 텍스트 블록 suggestion command 삽입 실패 — 원인 불명, 콘솔 에러 확인 필요
