@@ -37,6 +37,7 @@ import { WikiAssemblyDialog } from "@/components/wiki-assembly-dialog"
 import { SmartSidePanel } from "@/components/side-panel/smart-side-panel"
 import { WikilinkContextMenu } from "@/components/editor/wikilink-context-menu"
 import { NoteHoverPreview } from "@/components/editor/note-hover-preview"
+import { FootnoteEditModal } from "@/components/editor/footnote-edit-modal"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { SecondaryPanelContent } from "@/components/workspace/secondary-panel-content"
 import { PaneProvider } from "@/components/workspace/pane-context"
@@ -334,6 +335,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <ShortcutOverlay />
         <WikilinkContextMenu />
         <NoteHoverPreview />
+        <FootnoteEditModal />
         <MergeDialogGlobal />
         <LinkDialogGlobal />
         {/* Global Wiki Assembly Dialog (triggered by cluster nudge) */}

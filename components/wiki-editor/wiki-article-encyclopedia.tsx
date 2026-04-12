@@ -8,7 +8,7 @@ import { SortableBlockItem } from "./sortable-block-item"
 import { InlineCategoryTags } from "./wiki-article-view"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
-import { WikiFootnotesSection } from "./wiki-footnotes-section"
+import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
 import { cn } from "@/lib/utils"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { computeSectionNumbers, getInitialContentJson, buildVisibleBlocks } from "@/lib/wiki-block-utils"
@@ -358,6 +358,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
 
         {/* Wiki-level footnotes (Wikipedia style) */}
         <WikiFootnotesSection article={article} />
+        <WikiReferencesSection article={article} editable={isEditing} />
       </div>
       <UrlInputDialog
         open={urlBlockDialog.open}

@@ -269,6 +269,8 @@ export interface PlotState {
   // ── Wiki Articles (Assembly Model) ──
   createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[] }) => string
   updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
+  addArticleReference: (articleId: string, referenceId: string) => void
+  removeArticleReference: (articleId: string, referenceId: string) => void
   deleteWikiArticle: (articleId: string) => void
   setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => void
   addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => string
@@ -293,7 +295,7 @@ export interface PlotState {
   unmergeFromHistory: (articleId: string, snapshotIndex: number) => string[]
 
   // ── References ──
-  createReference: (partial: { title: string; content: string; fields?: Array<{ key: string; value: string }>; tags?: string[] }) => string
+  createReference: (partial: { title: string; content: string; contentJson?: Record<string, unknown> | null; fields?: Array<{ key: string; value: string }>; tags?: string[] }) => string
   updateReference: (id: string, updates: Partial<Omit<Reference, "id" | "createdAt">>) => void
   deleteReference: (id: string) => void
   restoreReference: (id: string) => void

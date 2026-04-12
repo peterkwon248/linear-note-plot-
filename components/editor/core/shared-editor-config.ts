@@ -238,7 +238,7 @@ const TypewriterExtension = Extension.create<{
 
 // ── Types ────────────────────────────────────────────────────────────
 
-export type EditorTier = "base" | "note" | "wiki" | "template"
+export type EditorTier = "base" | "note" | "wiki" | "template" | "footnote"
 
 export interface EditorConfigOptions {
   placeholder?: string
@@ -856,6 +856,25 @@ export function createEditorExtensions(
       return [
         ...base,
         SlashCommandExtension as Extension,
+      ]
+    }
+
+    case "footnote": {
+      const placeholderText = options?.placeholder ?? "Add footnote content..."
+      return [
+        StarterKit.configure({
+          heading: false,
+          codeBlock: false,
+          horizontalRule: false,
+          blockquote: false,
+          bulletList: false,
+          orderedList: false,
+          dropcursor: false,
+          gapcursor: false,
+        }) as Extension,
+        Link.configure({ openOnClick: false, HTMLAttributes: { class: "footnote-link" } }) as Extension,
+        Underline as Extension,
+        Placeholder.configure({ placeholder: placeholderText }) as Extension,
       ]
     }
   }

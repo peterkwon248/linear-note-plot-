@@ -110,6 +110,14 @@
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
 ## Completed PRs (recent)
+- **PR #185 (merged 2026-04-12)**: 각주 모달 + References 하단 섹션 + footnote 티어 + 사이드패널 버그 수정
+  - FootnoteEditModal (Title+Content+URL 통합 모달, 각주/레퍼런스 동일 UX)
+  - WikiReferencesSection (위키백과 참고문헌 불릿 목록, 검색+생성+편집 모달)
+  - WikiArticle.referenceIds (문서↔Reference 직접 연결)
+  - footnote 티어 (StarterKit 최소 + Link + Underline)
+  - Reference.contentJson 추가
+  - click-outside 가드 확장 (Radix Portal + role=menu/dialog)
+  - Reference 사이드패널 고착 버그 수정 (모달로 대체)
 - **PR #183 (merged 2026-04-12)**: 위키 텍스트 블록 [[/@ 삽입 버그 수정 + 호버 프리뷰 글로벌 이동
   - tippy click-outside 가드 (드롭다운 클릭 시 에디터 닫힘 방지)
   - async deleteRange stale range 수정

@@ -6,7 +6,7 @@ import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
-import { WikiFootnotesSection } from "./wiki-footnotes-section"
+import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
 import { cn } from "@/lib/utils"
 import { Virtuoso } from "react-virtuoso"
 import { toast } from "sonner"
@@ -590,6 +590,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
 
         {/* Wiki-level footnotes (Wikipedia style) */}
         {article && <WikiFootnotesSection article={article} />}
+        {article && <WikiReferencesSection article={article} editable={editable} />}
 
         {splitMode && (
           <div className="sticky bottom-0 z-20 border-t border-border bg-popover px-4 py-3">

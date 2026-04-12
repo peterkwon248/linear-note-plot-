@@ -1,21 +1,24 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef, useMemo } from "react"
+import { useEffect, useCallback, useRef, useMemo, useState } from "react"
 import type { Editor } from "@tiptap/react"
 import { usePlotStore } from "@/lib/store"
+import { openFootnoteModal } from "./footnote-edit-modal"
 
 interface FootnoteItem {
   id: string
   content: string
+  contentJson: Record<string, unknown> | null
   referenceId: string | null
   number: number
 }
+
 
 interface FootnotesFooterProps {
   editor: Editor | null
 }
 
-/** Inline-editable footnote row */
+/** Read-only footnote row — click to open modal editor */
 function FootnoteRow({
   fn,
   editor,
@@ -25,9 +28,6 @@ function FootnoteRow({
   editor: Editor
   scrollToRef: (id: string) => void
 }) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(fn.content)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
   const references = usePlotStore((s) => s.references)
 
   const referenceUrl = useMemo(() => {
@@ -38,55 +38,28 @@ function FootnoteRow({
     return urlField?.value || null
   }, [fn.referenceId, references])
 
-  // Sync draft when content changes externally (e.g. edited via marker popover)
-  useEffect(() => {
-    if (!editing) setDraft(fn.content)
-  }, [fn.content, editing])
-
-  useEffect(() => {
-    if (editing && inputRef.current) {
-      inputRef.current.focus()
-      // Place cursor at end
-      const len = inputRef.current.value.length
-      inputRef.current.setSelectionRange(len, len)
-    }
-  }, [editing])
-
-  const save = () => {
-    const trimmed = draft.trim()
-    // Update the footnoteRef node's content attr in the editor
-    if (editor) {
-      editor.state.doc.descendants((node, pos) => {
-        if (node.type.name === "footnoteRef" && node.attrs.id === fn.id) {
-          const newAttrs: Record<string, any> = { ...node.attrs, content: trimmed }
-
-          // Auto-create Reference if none linked and content exists
-          if (trimmed && !node.attrs.referenceId) {
-            const store = usePlotStore.getState()
-            const refId = store.createReference({
-              title: trimmed.length > 60 ? trimmed.slice(0, 60) + "…" : trimmed,
-              content: trimmed,
-            })
-            newAttrs.referenceId = refId
+  const openModal = () => {
+    openFootnoteModal({
+      footnoteId: fn.id,
+      content: fn.content,
+      contentJson: fn.contentJson,
+      referenceId: fn.referenceId,
+      onSave: ({ content: plainText, contentJson, referenceId }) => {
+        editor.state.doc.descendants((node, pos) => {
+          if (node.type.name === "footnoteRef" && node.attrs.id === fn.id) {
+            const newAttrs: Record<string, unknown> = {
+              ...node.attrs,
+              content: plainText,
+              contentJson,
+              referenceId: referenceId ?? node.attrs.referenceId,
+            }
+            const tr = editor.state.tr.setNodeMarkup(pos, undefined, newAttrs)
+            editor.view.dispatch(tr)
+            return false
           }
-          // Sync content to linked Reference
-          if (trimmed && node.attrs.referenceId) {
-            const store = usePlotStore.getState()
-            store.updateReference(node.attrs.referenceId as string, { content: trimmed })
-          }
-
-          const tr = editor.state.tr.setNodeMarkup(pos, undefined, newAttrs)
-          editor.view.dispatch(tr)
-          return false
-        }
-      })
-    }
-    setEditing(false)
-  }
-
-  const startEditing = () => {
-    setDraft(fn.content)
-    setEditing(true)
+        })
+      },
+    })
   }
 
   return (
@@ -97,43 +70,23 @@ function FootnoteRow({
       <button
         className="footnotes-footer-number"
         onClick={() => scrollToRef(fn.id)}
-        title="Jump to [${fn.number}] in text"
+        title={`Jump to [${fn.number}] in text`}
       >
         [{fn.number}]
       </button>
 
-      {editing ? (
-        <textarea
-          ref={inputRef}
-          className="footnotes-footer-edit-input"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={save}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              save()
-            }
-            if (e.key === "Escape") {
-              setDraft(fn.content)
-              setEditing(false)
-            }
-          }}
-          placeholder="Enter footnote content..."
-          rows={1}
-        />
-      ) : fn.content ? (
+      {fn.content || fn.contentJson ? (
         <span
           className="footnotes-footer-content"
-          onClick={startEditing}
+          onClick={openModal}
           title="Click to edit"
         >
-          {fn.content}
+          {fn.content || ""}
         </span>
       ) : (
         <button
           className="footnotes-footer-empty"
-          onClick={startEditing}
+          onClick={openModal}
         >
           Click to add content
         </button>
@@ -147,7 +100,7 @@ function FootnoteRow({
           className="footnote-footer-url"
           onClick={(e) => e.stopPropagation()}
         >
-          🔗 {referenceUrl.replace(/^https?:\/\//, "").split("/")[0]}
+          {referenceUrl.replace(/^https?:\/\//, "").split("/")[0]}
         </a>
       )}
 
@@ -174,6 +127,7 @@ export function FootnotesFooter({ editor }: FootnotesFooterProps) {
         items.push({
           id: node.attrs.id as string,
           content: node.attrs.content as string,
+          contentJson: (node.attrs.contentJson as Record<string, unknown>) ?? null,
           referenceId: node.attrs.referenceId as string | null,
           number: count,
         })
