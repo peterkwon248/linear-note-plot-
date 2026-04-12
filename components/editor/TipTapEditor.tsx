@@ -7,7 +7,6 @@ import { EditorToolbar } from "./EditorToolbar"
 import { TableBubbleMenu } from "./TableBubbleMenu"
 import { BlockDragOverlay } from "./dnd/block-drag-overlay"
 import { FloatingToc } from "./floating-toc"
-import { NoteHoverPreview } from "./note-hover-preview"
 import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
 import { createEditorExtensions } from "./core/shared-editor-config"
@@ -192,7 +191,6 @@ export function TipTapEditor({
         </BlockDragOverlay>
         {editor && <TableBubbleMenu editor={editor} />}
         {editor && <FloatingToc editor={editor} />}
-        <NoteHoverPreview />
       </div>
       {editor && (
         <div

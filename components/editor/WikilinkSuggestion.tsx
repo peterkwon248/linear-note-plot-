@@ -714,7 +714,9 @@ export const WikilinkSuggestion = Extension.create({
             !props.isReference
 
           if (isRegularNote && props.id) {
-            // Async: load note body and check for anchors
+            // Delete the suggestion range FIRST (before async), then insert after anchor check
+            editor.chain().focus().deleteRange(range).run()
+
             getBody(props.id).then((body) => {
               let anchors: AnchorItem[] = []
               if (body?.contentJson) {
@@ -724,24 +726,21 @@ export const WikilinkSuggestion = Extension.create({
               }
 
               if (anchors.length > 0) {
-                // Show anchor picker — don't insert yet
+                // Show anchor picker — insert on pick
                 requestAnchorPicker({
                   noteId: props.id,
                   noteTitle: props.title,
                   anchors,
                   onPick: (anchor) => {
-                    // Insert wikilink with or without anchor
-                    const linkType = "note"
                     editor
                       .chain()
                       .focus()
-                      .deleteRange(range)
                       .insertContent([
                         {
                           type: "wikilink",
                           attrs: {
                             title: props.title,
-                            linkType,
+                            linkType: "note",
                             targetId: props.id,
                             anchorId: anchor?.id ?? null,
                             anchorLabel: anchor?.label ?? null,
@@ -759,7 +758,6 @@ export const WikilinkSuggestion = Extension.create({
               editor
                 .chain()
                 .focus()
-                .deleteRange(range)
                 .insertContent([
                   {
                     type: "wikilink",
@@ -773,7 +771,6 @@ export const WikilinkSuggestion = Extension.create({
               editor
                 .chain()
                 .focus()
-                .deleteRange(range)
                 .insertContent([
                   {
                     type: "wikilink",
