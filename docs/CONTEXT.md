@@ -189,22 +189,27 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **EncyclopediaFooter 삭제**: 사이드바에서 이미 Sources/Properties 표시. 본문 중복 제거 (2026-04-12)
 - **드롭다운 아이콘 색상 체계**: Wiki stub=#f59e0b(주황), article=#8b5cf6(보라). CircleDashed/CircleHalf/CheckCircle는 Phosphor 직접 import (Remix 매핑 부정확) (2026-04-12)
 - **NoteHoverPreview 글로벌**: TipTapEditor에서 layout.tsx로 이동. 위키 텍스트 블록에서도 호버 프리뷰 동작 (2026-04-12)
-- **위키 텍스트 블록 click-outside 가드**: `.tippy-content` 클릭은 "내부"로 인식. 드롭다운 클릭 시 에디터 닫힘 방지 (2026-04-12)
+- **위키 텍스트 블록 click-outside 가드**: `.tippy-content` + Radix Portal + `role=menu/dialog` 클릭은 "내부"로 인식 (2026-04-12)
+- **FootnoteEditModal = Reference 모달 통합**: Title+Content+URL 3필드. 각주/레퍼런스 동일 UX. 인라인 미니 에디터 폐기 (atom node 포커스 충돌) (2026-04-12)
+- **위키 하단 References 섹션**: Footnotes(번호) + References(불릿) 위키백과 2단 구조. WikiArticle.referenceIds로 문서↔Reference 직접 연결 (2026-04-12)
+- **Reference 사이드패널 = Library 전용**: 위키에서는 모달로 편집 (사이드패널 context 고착 방지) (2026-04-12)
+- **footnote 에디터 티어**: StarterKit 최소 + Link + Underline. 테이블/이미지/슬래시/멘션 제외 (2026-04-12)
 
-## TODO: Future Work (우선순위 순, 2026-04-12 sync)
+## TODO: Future Work (우선순위 순, 2026-04-12 저녁 sync)
 
 ### ✅ P0 — Split-First 마이그레이션 — ALL COMPLETE
 ### ✅ P1 — Library + 위키 레이아웃 프리셋 — ALL COMPLETE
 
-### P2 — 인사이트 허브 + 각주 고도화
-- **인사이트 허브** — 온톨로지 Single Source of Insights. Knowledge WAR/Link Density/Stub Conversion Rate 등 세이브매트릭스급 지표
-- **각주 리치텍스트** — plain text → 인라인 서식 + 위키링크 (미니 TipTap)
-- **인포박스 고도화** — 대표 이미지, 섹션 구분 행(배경색), 접기/펼치기, 셀 위키링크
+### P2 — 인사이트 허브 + Reference UX
+- **Reference Usage 섹션** — 사이드패널에 "이 Reference를 참조하는 노트/위키" 목록. Connections/Activity/Bookmarks 탭 구조 브레인스토밍 필요
+- **노트 에디터 각주 모달 동작 확인** — [N] 클릭 시 모달 열림 테스트 (ProseMirror atom node onClick 충돌 가능)
+- **인사이트 허브** — 온톨로지 Single Source of Insights
+- **인포박스 고도화** — 대표 이미지, 섹션 구분 행, 접기/펼치기
 
 ### P3 — 사이드패널 + 뷰 확장
-11. **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식), Peek에서 직접 Quote 삽입, 호버 프리뷰/Peek 역할 정리
-12. **동음이의어 해소 페이지** — 멀티 링크 매칭 시 선택 화면
-13. **커맨드 팔레트 확장** — 풀페이지 검색, 북마크 커맨드
+- **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식)
+- **동음이의어 해소 페이지** — 멀티 링크 매칭 시 선택 화면
+- **커맨드 팔레트 확장** — 풀페이지 검색, 북마크 커맨드
 
 ### P4 — 지능 + 검색
 - 요약 엔진, 풀페이지 검색 분리
