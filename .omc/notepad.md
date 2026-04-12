@@ -1,12 +1,14 @@
-# Session Notepad (Updated: 2026-04-12 13:00)
+# Session Notepad (Updated: 2026-04-12 16:00)
 
 ## Critical Context
-- PR #182 merged: 위키 각주 + 유틸 추출 + 드롭다운 아이콘 통일 + [[/@/# 활성화
-- **버그**: 위키 텍스트 블록에서 [[ / @ 드롭다운 선택 시 삽입 안 됨 — 드롭다운은 나오지만 클릭해도 반응 없음
+- PR #182-185 merged: 위키 각주 + 유틸 추출 + 드롭다운 아이콘 + [[/@ 활성화 + 모달 + References 섹션
+- FootnoteEditModal: 각주/레퍼런스 통합 모달 (Title+Content+URL)
+- WikiReferencesSection: 하단 불릿 목록 + 모달 검색/생성/편집
 
 ## Active Tasks
-- [ ] 위키 텍스트 블록 [[@/멘션 삽입 버그 수정 (최우선)
-- [ ] P0 Phase 7: CONTEXT.md 최종 업데이트
+- [ ] 노트 에디터 [N] 클릭 → 모달 동작 확인 (우선)
+- [ ] 하단 FootnotesFooter 클릭 → 모달 동작 확인
+- [ ] 노트에도 전체 References 섹션? (유저 요청)
 
 ## Blockers
-- 위키 텍스트 블록 suggestion command 삽입 실패 — 원인 불명, 콘솔 에러 확인 필요
+- 없음 (tsc clean, 빌드 정상)
