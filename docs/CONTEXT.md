@@ -36,8 +36,8 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
-- Slices (21): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, thinking
-- Store version: 73
+- Slices (22): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
+- Store version: 74
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -92,11 +92,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **PR #187 (WIP)**: 각주/Reference UX 개선 — read-only 가드, 위키 footnote 삽입 버그 수정, Footnotes/References 컴팩트 디자인, 노트 References 하단 섹션
-2. **PR #185**: 각주 모달 + References 하단 섹션 + footnote 티어
-3. **PR #183**: 위키 텍스트 블록 [[/@ 삽입 버그 수정 + 호버 프리뷰 글로벌 이동
-4. **PR #182**: 위키 각주 시스템 (위키백과 스타일) + 공유 유틸 추출 + 드롭다운 아이콘 통일
-5. **PR #181**: Library 리디자인 + Reference.history + Split View edge case 수정
+1. **PR #188**: 노트 References 시스템 + fontSize cascade + 위키 텍스트 컴팩트 — Note.referenceIds v74, NoteReferencesFooter 모달, /reference 커맨드, Book 아이콘, em 기반 cascade, ProseMirror display 컴팩트
+2. **PR #187**: 각주/Reference UX 개선 — read-only 가드, 위키 footnote 삽입 버그, 컴팩트 디자인, 노트 References 하단 섹션
+3. **PR #185**: 각주 모달 + WikiReferencesSection + footnote 티어
+4. **PR #182-183**: 위키 각주 시스템 (위키백과 스타일) + 공유 유틸 + 호버 프리뷰 글로벌
+5. **PR #181**: Library 리디자인 + Reference.history + Store v73
 
 ## Two Axes — Core Design Philosophy
 
@@ -198,16 +198,16 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **위키 footnote 삽입 버그 수정**: footnote-edit-modal.tsx에 `role="dialog"` 추가. 위키 TextBlock click-outside 가드가 모달을 "외부"로 인식해 에디터 언마운트 → debounce 저장 실패하던 문제 해결 (2026-04-13)
 - **위키 Footnotes/References 컴팩트 디자인**: TipTap EditorContent 제거 → 단순 텍스트. `▶ FOOTNOTES N` / `▶ REFERENCES N` 토글. text-base 헤더 + text-[14px] 내용 (2026-04-13)
 - **노트 References 하단 섹션**: `footnotes-footer.tsx` NoteReferencesFooter 컴포넌트. 각주 referenceId 수집 → `▶ REFERENCES N` 불릿 목록. 기본 collapsed (2026-04-13)
-- **Footnotes+References 통합 논의 (미구현)**: "REFERENCES" 하나로 합치고 [N] 번호 + • 불릿 공존 방식. 위키/노트 모두 동일 패턴. 다음 P0 작업 (2026-04-13)
+- **Footnotes+References 분리 유지 (확정, 2026-04-13)**: 합치기 논의 후 번복. FOOTNOTES(번호 각주)와 REFERENCES(불릿 참고자료) 2개 섹션 분리. 라이브러리 References와 이름 같아도 OK (같은 엔티티, 다른 스코프)
+- **노트 References 시스템 (2026-04-13)**: `Note.referenceIds: string[]` + Store v74. NoteReferencesFooter 모달(검색/생성/편집 3모드). Insert/`/reference`/하단 `+` 진입점. `[[`/`@`는 항상 FootnoteRef [N]만 (불릿은 인라인 삽입 도구에서 넣지 않음)
+- **Reference 아이콘 = Book (RiBookLine)**: Bookmark(BookmarkSimple)/BookOpen/Article과 구분 (2026-04-13)
+- **em 기반 fontSize cascade (2026-04-13)**: 위키 타이틀/섹션/각주의 rem/px Tailwind 클래스를 em으로 전환. 글로벌 Aa 스케일 + 섹션별 개별 fontScale 동시 동작. fontScale은 섹션 wrapper에 적용 (개별 heading X)
+- **위키 텍스트 display 컴팩트 (2026-04-13)**: `.wiki-text-display` 클래스. ProseMirror min-height:unset + p margin:0. 편집→읽기 전환 시 간격 차이 해소
 
 ## TODO: Future Work (우선순위 순, 2026-04-13 sync)
 
 ### ✅ P0 — Split-First 마이그레이션 — ALL COMPLETE
-### ✅ P1 — Library + 위키 레이아웃 프리셋 — ALL COMPLETE
-
-### P0 — Footnotes+References 통합 (최우선)
-- **FOOTNOTES+REFERENCES → REFERENCES 하나로 통합** — [N] 번호(각주) + • 불릿(수동 추가) 공존. 노트/위키 동일 패턴. "Footnotes" 명칭 앱에서 제거
-- **article fontSize cascade** — 위키 Aa 드롭다운(S/M/L/XL)이 wrapper에 적용돼 모든 하위 요소에 cascade. 현재는 섹션 타이틀에 미적용
+### ✅ P0 — 노트 References + fontSize cascade — ALL COMPLETE
 
 ### P2 — 인사이트 허브 + Reference UX
 - **Reference Usage 섹션** — 사이드패널에 "이 Reference를 참조하는 노트/위키" 목록

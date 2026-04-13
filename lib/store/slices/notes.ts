@@ -48,6 +48,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         noteType: partial?.noteType ?? "note" as const,
         aliases: partial?.aliases ?? [],
         wikiInfobox: partial?.wikiInfobox ?? [],
+        referenceIds: partial?.referenceIds ?? [],
         ...workflowDefaults(partial?.status ?? "inbox"),
         ...(partial?.source != null ? { source: partial.source } : {}),
       }
@@ -76,6 +77,30 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         }
       }
       appendEvent(id, "updated")
+    },
+
+    addNoteReference: (noteId: string, referenceId: string) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id !== noteId ? n : {
+            ...n,
+            referenceIds: [...new Set([...(n.referenceIds ?? []), referenceId])],
+            updatedAt: now(),
+          }
+        ),
+      }))
+    },
+
+    removeNoteReference: (noteId: string, referenceId: string) => {
+      set((state: any) => ({
+        notes: state.notes.map((n: Note) =>
+          n.id !== noteId ? n : {
+            ...n,
+            referenceIds: (n.referenceIds ?? []).filter((id: string) => id !== referenceId),
+            updatedAt: now(),
+          }
+        ),
+      }))
     },
 
     batchUpdateNotes: (ids: string[], updates: Partial<Note>) => {
@@ -317,6 +342,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         noteType: "note" as const,
         aliases: [],
         wikiInfobox: [],
+        referenceIds: [],
       }
       set((state: any) => ({
         notes: [newNote, ...state.notes],
@@ -373,6 +399,7 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
         noteType: "wiki" as const,
         aliases: aliases ?? [],
         wikiInfobox: [],
+        referenceIds: [],
         ...workflowDefaults("inbox"),
       }
       set((state: any) => ({

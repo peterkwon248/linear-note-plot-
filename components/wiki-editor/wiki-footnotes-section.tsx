@@ -130,12 +130,12 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
           "text-[10px] text-muted-foreground/60 transition-transform duration-150",
           !collapsed && "rotate-90"
         )}>▶</span>
-        <span className="text-base font-semibold uppercase tracking-[0.05em] text-muted-foreground/70">FOOTNOTES</span>
-        <span className="text-sm font-medium text-muted-foreground/80 bg-hover-bg rounded px-[5px] min-w-[18px] text-center tabular-nums">{footnotes.length}</span>
+        <span className="text-[1em] font-semibold uppercase tracking-[0.05em] text-muted-foreground/70">FOOTNOTES</span>
+        <span className="text-[0.875em] font-medium text-muted-foreground/80 bg-hover-bg rounded px-[5px] min-w-[18px] text-center tabular-nums">{footnotes.length}</span>
       </button>
 
       {!collapsed && (
-        <ol className="list-none p-0 m-0 mt-2 flex flex-col gap-1 text-[14px] text-muted-foreground">
+        <ol className="list-none p-0 m-0 mt-2 flex flex-col gap-1 text-[0.875em] text-muted-foreground">
           {footnotes.map((fn) => {
             const ref = fn.referenceId ? references[fn.referenceId] : null
             const urlField = ref?.fields.find((f) => f.key.toLowerCase() === "url")
@@ -152,7 +152,7 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
                     const el = document.querySelector(`[data-footnote-id="${fn.id}"]`)
                     el?.scrollIntoView({ behavior: "smooth", block: "center" })
                   }}
-                  className="shrink-0 text-accent font-semibold text-[14px] min-w-[20px] text-right hover:opacity-70 hover:underline transition-opacity bg-transparent border-none p-0 cursor-pointer"
+                  className="shrink-0 text-accent font-semibold text-[0.875em] min-w-[20px] text-right hover:opacity-70 hover:underline transition-opacity bg-transparent border-none p-0 cursor-pointer"
                 >
                   [{fn.globalNumber}]
                 </button>
@@ -311,14 +311,14 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
           "text-[10px] text-muted-foreground/60 transition-transform duration-150",
           !refCollapsed && "rotate-90"
         )}>▶</span>
-        <span className="text-base font-semibold uppercase tracking-[0.05em] text-muted-foreground/70">REFERENCES</span>
-        <span className="text-sm font-medium text-muted-foreground/80 bg-hover-bg rounded px-[5px] min-w-[18px] text-center tabular-nums">{linkedRefs.length}</span>
+        <span className="text-[1em] font-semibold uppercase tracking-[0.05em] text-muted-foreground/70">REFERENCES</span>
+        <span className="text-[0.875em] font-medium text-muted-foreground/80 bg-hover-bg rounded px-[5px] min-w-[18px] text-center tabular-nums">{linkedRefs.length}</span>
       </button>
 
       {!refCollapsed && (
         <>
           {linkedRefs.length > 0 && (
-            <ul className="space-y-1 mt-2 mb-3 text-[14px]">
+            <ul className="space-y-1 mt-2 mb-3 text-[0.875em]">
               {linkedRefs.map((ref) => {
                 const urlField = ref.fields.find((f) => f.key.toLowerCase() === "url")
                 const url = urlField?.value || null

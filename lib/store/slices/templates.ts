@@ -102,6 +102,7 @@ export function createTemplatesSlice(set: Set, get: Get, appendEvent: AppendEven
         source: "manual",
         aliases: [],
         wikiInfobox: [],
+        referenceIds: [],
       }
 
       set((s: any) => ({

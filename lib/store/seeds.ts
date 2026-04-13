@@ -236,6 +236,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: ["zettelkasten", "my reading notes"],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
   },
   {
     id: "note-2",
@@ -259,6 +260,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: ["fleeting note", "zettelkasten"],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
   },
   {
     id: "note-3",
@@ -282,6 +284,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: ["zettelkasten"],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
   },
   {
     id: "note-4",
@@ -305,6 +308,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: ["zettelkasten"],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
   },
   {
     id: "note-5",
@@ -328,6 +332,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: ["my reading notes"],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
   },
   {
     id: "note-6",
@@ -351,6 +356,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
   },
   {
     id: "note-7",
@@ -374,6 +380,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: ["zettelkasten", "permanent note"],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
   },
   {
     id: "note-8",
@@ -397,6 +404,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: ["permanent note", "fleeting note"],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
   },
   {
     id: "note-9",
@@ -420,6 +428,7 @@ export const SEED_NOTES: Note[] = [
     linksOut: ["fleeting note", "zettelkasten"],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
   },
 ]
 

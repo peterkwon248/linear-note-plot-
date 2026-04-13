@@ -233,7 +233,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         placeholder="Type / for commands, or start writing..."
         onEditorReady={handleEditorReady}
       />
-      <FootnotesFooter editor={editorInstance} />
+      <FootnotesFooter editor={editorInstance} noteId={note.id} editable={editable} />
       <LinkSuggestion
         suggestions={suggestions}
         onSelect={handleSuggestionSelect}

@@ -14,7 +14,7 @@ import {
   Image as PhImage, Paperclip, Table as PhTable, CalendarDots, Minus as PhMinus,
   Code as PhCode, Plus as PhPlus, CaretRight, MathOperations, ListBullets,
   LinkSimple, Info, Article, Columns as PhColumns, Note as PhNote,
-  IdentificationCard, Database, BookOpen, Asterisk, BookmarkSimple,
+  IdentificationCard, Database, BookOpen, Asterisk, BookmarkSimple, Book,
 } from "@/lib/editor/editor-icons"
 import { usePlotStore } from "@/lib/store"
 import { detectUrlType } from "@/lib/editor/url-detect"
@@ -307,6 +307,13 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           }} className={ITEM_CLASS}>
             <Asterisk size={14} />
             <span className="flex-1">Footnote</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={() => {
+            window.dispatchEvent(new CustomEvent("plot:open-reference-picker"))
+          }} className={ITEM_CLASS}>
+            <Book size={14} />
+            <span className="flex-1">Reference</span>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator className="my-1" />

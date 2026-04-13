@@ -39,6 +39,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     linksOut: [],
     aliases: [],
     wikiInfobox: [],
+    referenceIds: [],
     ...overrides,
   }
 }

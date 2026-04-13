@@ -213,10 +213,10 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
               }
             }}
             onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
-            className="text-3xl font-bold text-white/90 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
+            className="text-[1.875em] font-bold text-white/90 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
           />
         ) : (
-          <h1 className="text-3xl font-bold text-white/90">{article.title}</h1>
+          <h1 className="text-[1.875em] font-bold text-white/90">{article.title}</h1>
         )}
         {isEditing ? (
           <input
