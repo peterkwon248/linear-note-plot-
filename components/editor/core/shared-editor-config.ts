@@ -468,6 +468,8 @@ export function createEditorExtensions(
       wikiExtensions.push(FootnoteRefExtension as Extension)
       wikiExtensions.push(ReferenceLinkNode as Extension)
       wikiExtensions.push(WikiEmbedNode as Extension)
+      wikiExtensions.push(TableOfContents as Extension)
+      wikiExtensions.push(TocBlockNode as Extension)
 
       // Custom keyboard shortcuts (Tab indent, column navigation, etc.)
       const WikiKeyboardShortcuts = Extension.create({

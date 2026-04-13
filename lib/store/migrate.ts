@@ -814,6 +814,8 @@ export function migrate(persistedState: unknown): PlotState {
   // Reset sidePanelMode if it was 'peek' (no longer a valid mode)
   if (state.sidePanelMode === 'peek') state.sidePanelMode = 'detail'
 
+  // v75: WikiBlock.editorWidth/editorHeight — optional, no backfill needed
+
   // v74: Add referenceIds to notes
   if (Array.isArray(state.notes)) {
     for (const note of state.notes as any[]) {

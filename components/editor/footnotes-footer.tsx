@@ -161,6 +161,16 @@ export function FootnotesFooter({ editor, noteId, editable = true }: FootnotesFo
     return () => window.removeEventListener("plot:scroll-to-footnote", handler)
   }, [])
 
+  // Listen for collapse-all / expand-all broadcast
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { collapsed: c } = (e as CustomEvent).detail
+      setCollapsed(c)
+    }
+    window.addEventListener("plot:set-all-collapsed", handler)
+    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+  }, [])
+
   // After expanding, scroll to the pending footnote
   useEffect(() => {
     if (!collapsed && pendingScrollRef.current) {
@@ -322,6 +332,16 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
     window.addEventListener("plot:open-reference-picker", handler)
     return () => window.removeEventListener("plot:open-reference-picker", handler)
   }, [noteId, editable])
+
+  // Listen for collapse-all / expand-all broadcast
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { collapsed: c } = (e as CustomEvent).detail
+      setCollapsed(c)
+    }
+    window.addEventListener("plot:set-all-collapsed", handler)
+    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+  }, [])
 
   const closeModal = () => {
     setShowModal(false)

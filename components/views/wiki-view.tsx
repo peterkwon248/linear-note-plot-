@@ -711,6 +711,10 @@ export function WikiView() {
                 <button
                   onClick={() => {
                     setCollapseAllCmd(allSectionsCollapsed ? "expand" : "collapse")
+                    // Also toggle internal TipTap collapsibles + footer sections
+                    window.dispatchEvent(new CustomEvent("plot:set-all-collapsed", {
+                      detail: { collapsed: !allSectionsCollapsed }
+                    }))
                   }}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
                   title={allSectionsCollapsed ? "Expand all sections" : "Collapse all sections"}

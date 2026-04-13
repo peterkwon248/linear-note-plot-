@@ -37,7 +37,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (22): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
-- Store version: 74
+- Store version: 75
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -92,11 +92,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **PR #188**: 노트 References 시스템 + fontSize cascade + 위키 텍스트 컴팩트 — Note.referenceIds v74, NoteReferencesFooter 모달, /reference 커맨드, Book 아이콘, em 기반 cascade, ProseMirror display 컴팩트
-2. **PR #187**: 각주/Reference UX 개선 — read-only 가드, 위키 footnote 삽입 버그, 컴팩트 디자인, 노트 References 하단 섹션
-3. **PR #185**: 각주 모달 + WikiReferencesSection + footnote 티어
-4. **PR #182-183**: 위키 각주 시스템 (위키백과 스타일) + 공유 유틸 + 호버 프리뷰 글로벌
-5. **PR #181**: Library 리디자인 + Reference.history + Store v73
+1. **PR #189 (WIP)**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 리사이즈 — 나무위키식 전체 접기/펼치기, TocBlockNode wiki 티어 등록, BlockDragOverlay 위키 통합, 4코너 리사이즈 + Store v75
+2. **PR #188**: 노트 References 시스템 + fontSize cascade + 위키 텍스트 컴팩트
+3. **PR #187**: 각주/Reference UX 개선 — read-only 가드, 위키 footnote 삽입 버그, 컴팩트 디자인
+4. **PR #185**: 각주 모달 + WikiReferencesSection + footnote 티어
+5. **PR #182-183**: 위키 각주 시스템 (위키백과 스타일) + 공유 유틸 + 호버 프리뷰 글로벌
 
 ## Two Axes — Core Design Philosophy
 
@@ -203,6 +203,10 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Reference 아이콘 = Book (RiBookLine)**: Bookmark(BookmarkSimple)/BookOpen/Article과 구분 (2026-04-13)
 - **em 기반 fontSize cascade (2026-04-13)**: 위키 타이틀/섹션/각주의 rem/px Tailwind 클래스를 em으로 전환. 글로벌 Aa 스케일 + 섹션별 개별 fontScale 동시 동작. fontScale은 섹션 wrapper에 적용 (개별 heading X)
 - **위키 텍스트 display 컴팩트 (2026-04-13)**: `.wiki-text-display` 클래스. ProseMirror min-height:unset + p margin:0. 편집→읽기 전환 시 간격 차이 해소
+- **Expand/Collapse All = 나무위키 패턴 (2026-04-13)**: 노트 chevron 버튼(PushPin 왼쪽) + 위키 기존 버튼 확장. `plot:set-all-collapsed` CustomEvent 브로드캐스트. Details/Toggle + Summary + Footnotes + References 전부 대상. 노트: hasCollapsibles 조건부 표시, Details `open` attr 일괄 토글. 위키: 기존 섹션 접기 + 내부 collapsible + footer까지
+- **위키 TOC 버그 수정 (2026-04-13)**: TocBlockNode + TableOfContents가 note 티어에만 등록되어있던 버그. wiki 티어에 추가 (`shared-editor-config.ts`)
+- **위키 TextBlock 드래그 핸들 (2026-04-13)**: `WikiTextEditor`에 `BlockDragOverlay` 래핑. `pl-8` 좌측 패딩으로 핸들 거터 확보. 기존 note 에디터 패턴과 동일
+- **위키 TextBlock 4코너 리사이즈 (2026-04-13)**: `WikiBlock.editorWidth/editorHeight` persist (Store v75). 편집 모드에서만 적용, 읽기 모드는 full width 유지. `block-resize-corner` CSS 재활용. 4코너(tl/tr/bl/br) 핸들. `⋯` 메뉴에 "Reset editor size" 버튼 (ArrowsIn)
 
 ## TODO: Future Work (우선순위 순, 2026-04-13 sync)
 

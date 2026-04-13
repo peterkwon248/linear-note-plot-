@@ -1,14 +1,14 @@
-# Session Notepad (Updated: 2026-04-12 16:00)
+# Session Notepad (Updated: 2026-04-13 18:00)
 
 ## Critical Context
-- PR #182-185 merged: 위키 각주 + 유틸 추출 + 드롭다운 아이콘 + [[/@ 활성화 + 모달 + References 섹션
-- FootnoteEditModal: 각주/레퍼런스 통합 모달 (Title+Content+URL)
-- WikiReferencesSection: 하단 불릿 목록 + 모달 검색/생성/편집
+- PR #189 WIP: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 4코너 리사이즈
+- Store v75 (WikiBlock.editorWidth/editorHeight 추가)
+- 다음 작업: P2 — Reference Usage 섹션, 인사이트 허브, 인포박스 고도화
 
 ## Active Tasks
-- [ ] 노트 에디터 [N] 클릭 → 모달 동작 확인 (우선)
-- [ ] 하단 FootnotesFooter 클릭 → 모달 동작 확인
-- [ ] 노트에도 전체 References 섹션? (유저 요청)
+- [ ] P2: Reference Usage 섹션 (사이드패널에 Reference 사용처 목록)
+- [ ] P2: 인사이트 허브 (온톨로지 Single Source of Insights)
+- [ ] P2: 인포박스 고도화 (대표 이미지, 섹션 구분 행, 접기/펼치기)
 
 ## Blockers
 - 없음 (tsc clean, 빌드 정상)

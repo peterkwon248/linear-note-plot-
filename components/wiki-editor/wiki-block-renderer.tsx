@@ -11,6 +11,7 @@ import { useEditor, EditorContent } from "@tiptap/react"
 import { createEditorExtensions, createRenderExtensions } from "@/components/editor/core/shared-editor-config"
 import { generateHTML } from "@tiptap/html"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
+import { BlockDragOverlay } from "@/components/editor/dnd/block-drag-overlay"
 import { saveBlockBody } from "@/lib/wiki-block-body-store"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -27,6 +28,7 @@ import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { ArrowSquareUpRight } from "@phosphor-icons/react/dist/ssr/ArrowSquareUpRight"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { CopySimple } from "@phosphor-icons/react/dist/ssr/CopySimple"
+import { ArrowsIn } from "@/lib/editor/editor-icons"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -387,6 +389,8 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footn
   const { content, contentJson, loading } = useWikiBlockContentJson(block.id, block.content, block.contentJson)
   const [editing, setEditing] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const editorWidth = block.editorWidth ?? null
+  const editorHeight = block.editorHeight ?? null
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const blockRef = useRef<HTMLDivElement>(null)
   const textFontScale = block.fontSize ?? 1
@@ -499,6 +503,15 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footn
                 ))}
               </div>
             </div>
+            {(block.editorWidth || block.editorHeight) && (
+              <button
+                onClick={() => { onUpdate?.({ editorWidth: undefined, editorHeight: undefined }); setMenuOpen(false) }}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-muted-foreground hover:bg-active-bg transition-colors"
+              >
+                <ArrowsIn size={14} />
+                Reset editor size
+              </button>
+            )}
             {onDelete && (
               <>
                 <div className="my-1 h-px bg-border/40" />
@@ -522,6 +535,9 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footn
           onChange={handleChange}
           style={textSizeStyle}
           footnoteStartOffset={footnoteStartOffset}
+          editorWidth={editorWidth}
+          editorHeight={editorHeight}
+          onEditorResize={(w, h) => onUpdate?.({ editorWidth: w, editorHeight: h })}
         />
       ) : (
         <div
@@ -578,12 +594,21 @@ function WikiTextEditor({
   onChange,
   style,
   footnoteStartOffset = 0,
+  editorWidth,
+  editorHeight,
+  onEditorResize,
 }: {
   content: Record<string, unknown>
   onChange: (json: Record<string, unknown>, plainText: string) => void
   style?: React.CSSProperties
   footnoteStartOffset?: number
+  editorWidth?: number | null
+  editorHeight?: number | null
+  onEditorResize?: (width: number | null, height: number | null) => void
 }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [isResizing, setIsResizing] = useState(false)
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: createEditorExtensions("wiki", {
@@ -619,16 +644,64 @@ function WikiTextEditor({
 
   return (
     <div
+      ref={containerRef}
       onClick={handleContainerClick}
-      className="border border-accent/20 rounded-md focus-within:border-accent/40 transition-colors cursor-text"
-      style={style}
+      className={`relative border border-accent/20 rounded-md focus-within:border-accent/40 transition-colors cursor-text overflow-visible block-resize-wrapper ${isResizing ? 'is-resizing' : ''}`}
+      style={{
+        ...style,
+        ...(editorWidth ? { width: `${editorWidth}px` } : {}),
+        ...(editorHeight ? { height: `${editorHeight}px`, overflow: 'hidden' } : {}),
+      }}
     >
-      <EditorContent
-        editor={editor}
-        className="w-full prose dark:prose-invert max-w-none focus:outline-none text-base leading-relaxed text-foreground/85 px-3 py-2 min-h-[120px]"
-      />
+      {/* Content area */}
+      <div className="pl-8 pr-3 py-2" style={{ height: editorHeight ? `calc(100% - 48px)` : undefined, overflowY: editorHeight ? 'auto' : undefined }}>
+        <BlockDragOverlay editor={editor}>
+          <EditorContent
+            editor={editor}
+            className="w-full prose dark:prose-invert max-w-none focus:outline-none text-base leading-relaxed text-foreground/85 min-h-[100px]"
+          />
+        </BlockDragOverlay>
+      </div>
       {/* Full toolbar shared with note editor */}
       <FixedToolbar editor={editor} tier="wiki" position="bottom" />
+      {/* 4-corner resize handles */}
+      {onEditorResize && (
+        <>
+          {(["top-left", "top-right", "bottom-left", "bottom-right"] as const).map((corner) => {
+            const signX = corner.includes("left") ? -1 : 1
+            const signY = corner.includes("top") ? -1 : 1
+            const cls = `block-resize-corner block-resize-corner--${corner === "top-left" ? "tl" : corner === "top-right" ? "tr" : corner === "bottom-left" ? "bl" : "br"}`
+            return (
+              <div
+                key={corner}
+                className={cls}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  const startX = e.clientX
+                  const startY = e.clientY
+                  const startW = containerRef.current?.offsetWidth ?? editorWidth ?? 400
+                  const startH = containerRef.current?.offsetHeight ?? editorHeight ?? 200
+                  setIsResizing(true)
+
+                  const onMove = (ev: MouseEvent) => {
+                    const newW = Math.max(200, startW + (ev.clientX - startX) * signX)
+                    const newH = Math.max(120, startH + (ev.clientY - startY) * signY)
+                    onEditorResize(newW, newH)
+                  }
+                  const onUp = () => {
+                    setIsResizing(false)
+                    document.removeEventListener("mousemove", onMove)
+                    document.removeEventListener("mouseup", onUp)
+                  }
+                  document.addEventListener("mousemove", onMove)
+                  document.addEventListener("mouseup", onUp)
+                }}
+              />
+            )
+          })}
+        </>
+      )}
     </div>
   )
 }

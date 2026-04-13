@@ -46,6 +46,16 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
   const [blockContents, setBlockContents] = useState<Map<string, Record<string, unknown> | null>>(new Map())
   const [collapsed, setCollapsed] = useState(false)
 
+  // Listen for collapse-all / expand-all broadcast
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { collapsed: c } = (e as CustomEvent).detail
+      setCollapsed(c)
+    }
+    window.addEventListener("plot:set-all-collapsed", handler)
+    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+  }, [])
+
   // Load all text blocks' contentJson from IDB
   const textBlockIds = useMemo(
     () => article.blocks.filter((b) => b.type === "text").map((b) => b.id),
@@ -192,6 +202,17 @@ interface WikiReferencesSectionProps {
 export function WikiReferencesSection({ article, editable = false }: WikiReferencesSectionProps) {
   const references = usePlotStore((s) => s.references)
   const [refCollapsed, setRefCollapsed] = useState(false)
+
+  // Listen for collapse-all / expand-all broadcast
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { collapsed: c } = (e as CustomEvent).detail
+      setRefCollapsed(c)
+    }
+    window.addEventListener("plot:set-all-collapsed", handler)
+    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+  }, [])
+
   const addArticleReference = usePlotStore((s) => s.addArticleReference)
   const removeArticleReference = usePlotStore((s) => s.removeArticleReference)
   const createReference = usePlotStore((s) => s.createReference)
