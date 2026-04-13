@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
@@ -13,6 +13,16 @@ function SummaryNodeView({ node, updateAttributes, editor }: NodeViewProps) {
   const width = node.attrs.width as number | null
   const height = node.attrs.height as number | null
   const { containerRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
+
+  // Listen for collapse-all / expand-all broadcast
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { collapsed: c } = (e as CustomEvent).detail
+      setCollapsed(c)
+    }
+    window.addEventListener("plot:set-all-collapsed", handler)
+    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+  }, [])
 
   // Remove summary wrapper, keeping inner content (same pattern as Callout)
   const removeSummary = () => {

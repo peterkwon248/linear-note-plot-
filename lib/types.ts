@@ -99,6 +99,10 @@ export interface WikiBlock {
   tableAlign?: "left" | "center" | "right"
   /** Section: custom font size multiplier (1 = default, 0.8 = small, 1.2 = large, 1.5 = x-large) */
   fontSize?: number
+  /** Text: editor width in edit mode (px). Null = full width */
+  editorWidth?: number | null
+  /** Text: editor height in edit mode (px). Null = auto height */
+  editorHeight?: number | null
   /** Merge history: snapshot of the merged article for unmerge */
   mergedFrom?: WikiMergeSnapshot
 }

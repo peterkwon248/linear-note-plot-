@@ -21,6 +21,13 @@
 - **Section 번호 = JS 계산**: CSS counter 대신 useMemo + O(n) 순회. TOC와 100% 동기화 보장. 성능 문제 없음 (200블록 = 마이크로초).
 - **convertToWiki 삭제 예정**: 노트→위키 전환 개념 없어짐. auto-enroll은 빈 WikiArticle 생성 + 관련 노트 추천으로 전환.
 
+## 2026-04-13 (Expand/Collapse All + 위키 TextBlock 개선)
+- **나무위키 패턴 채택**: Expand/Collapse All은 섹션 + 내부 collapsible + footer 전부 대상. 토글 1개 버튼 (하나라도 접히면 Expand, 전부 펼치면 Collapse)
+- **CustomEvent 브로드캐스트 선택**: `plot:set-all-collapsed` 단일 이벤트. prop drilling보다 깔끔 (collapsible 요소가 TipTap NodeView/Footer/Wiki 섹션 등 다른 컴포넌트 트리에 분산)
+- **위키 TextBlock 리사이즈 = persist + 편집 전용**: WikiBlock.editorWidth/Height store에 저장하되 편집 모드에서만 적용. 읽기 모드는 항상 full width → 모든 섹션 균일한 폭 보장
+- **4코너 핸들**: 우하단만이 아니라 4코너 전부 → 어느 방향으로든 자유롭게 조절 가능
+- **위키 TOC = wiki 티어에 등록 필요**: TocBlockNode + TableOfContents가 note 티어에만 있던 기존 버그. Insert 메뉴는 schema 체크 없이 무조건 표시 → silent fail 패턴
+
 ## 2026-04-05 (Unresolved Links + 호버 프리뷰 + Note/Wiki 링크 구분)
 - **Red Link → Unresolved Links**: 위키피디아 용어 탈피, gray 점선으로 시각적 톤 다운. Wiki UI에서 Red Links 완전 제거 → Home 통합
 - **호버 프리뷰 항상 TipTap**: generateHTML 폐기 → NoteEditorAdapter(editable 토글). Preview/Edit 동일 렌더링, 크기 변화 0

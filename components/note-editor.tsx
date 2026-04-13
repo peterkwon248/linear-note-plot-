@@ -131,6 +131,60 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   const embedUrlCallbackRef = useRef<((url: string | null) => void) | null>(null)
   const noteIdRef = useRef(note?.id)
 
+  // Track doc changes to recompute allCollapsed
+  const [docVersion, setDocVersion] = useState(0)
+  useEffect(() => {
+    if (!editorInstance) return
+    const handler = () => setDocVersion((v) => v + 1)
+    editorInstance.on("update", handler)
+    return () => { editorInstance.off("update", handler) }
+  }, [editorInstance])
+
+  const { hasCollapsibles, allCollapsed } = useMemo(() => {
+    if (!editorInstance) return { hasCollapsibles: false, allCollapsed: false }
+    let hasDetails = false
+    let hasSummary = false
+    let allDetailsClosed = true
+    editorInstance.state.doc.descendants((node) => {
+      if (node.type.name === "details") {
+        hasDetails = true
+        if (node.attrs.open !== false) allDetailsClosed = false
+      }
+      if (node.type.name === "summaryBlock") {
+        hasSummary = true
+      }
+    })
+    return {
+      hasCollapsibles: hasDetails || hasSummary,
+      allCollapsed: hasDetails && allDetailsClosed,
+    }
+  }, [editorInstance, docVersion])
+
+  const handleToggleAllCollapsibles = useCallback(() => {
+    if (!editorInstance) return
+    const targetCollapsed = !allCollapsed
+
+    // 1. Toggle all Details nodes via ProseMirror transaction
+    const { tr } = editorInstance.state
+    let modified = false
+    editorInstance.state.doc.descendants((node, pos) => {
+      if (node.type.name === "details") {
+        const currentOpen = node.attrs.open !== false
+        if (currentOpen === !targetCollapsed) return
+        tr.setNodeMarkup(pos, undefined, { ...node.attrs, open: !targetCollapsed })
+        modified = true
+      }
+    })
+    if (modified) {
+      editorInstance.view.dispatch(tr)
+    }
+
+    // 2. Broadcast event for Summary, FootnotesFooter, NoteReferencesFooter
+    window.dispatchEvent(new CustomEvent("plot:set-all-collapsed", {
+      detail: { collapsed: targetCollapsed }
+    }))
+  }, [editorInstance, allCollapsed])
+
   const handleEditorReady = useCallback((editor: unknown) => {
     setEditorInstance(editor as Editor | null)
   }, [])
@@ -346,6 +400,25 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
           <ReferencedInBadges noteId={note.id} pane={pane} />
         </div>
         <div className="flex items-center gap-0.5">
+          {hasCollapsibles && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleToggleAllCollapsibles}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                >
+                  <svg width={17} height={17} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    {allCollapsed ? (
+                      <path d="M4 6l4 4 4-4" />
+                    ) : (
+                      <path d="M12 10l-4-4-4 4" />
+                    )}
+                  </svg>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{allCollapsed ? "Expand all" : "Collapse all"}</TooltipContent>
+            </Tooltip>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <button

@@ -116,10 +116,22 @@
 - **em 기반 fontSize cascade (PR #188)**: 위키 타이틀/섹션/각주의 Tailwind rem/px 클래스를 em으로 전환. fontScale inline을 개별 heading에서 제거 → 섹션 wrapper `div.group/section`에 적용. 글로벌 Aa 스케일(WikiArticle.fontSize) + 개별 섹션 fontScale(WikiBlock.fontSize) CSS em cascade로 동시 동작
 - **위키 텍스트 display 컴팩트 (PR #188)**: `.wiki-text-display` 클래스. `ProseMirror min-height:unset !important` + `p margin:0 !important`. 편집→읽기 전환 시 간격 점프 해소. 편집 중은 TipTap 기본 간격 유지
 
-## Store Slices (22 total, v74)
+- **Expand/Collapse All (나무위키 패턴)**: `plot:set-all-collapsed` CustomEvent. 노트: `note-editor.tsx` chevron 버튼(PushPin 왼쪽), Details `open` attr 일괄 토글 + 이벤트 dispatch. 위키: `wiki-view.tsx` 기존 버튼에 이벤트 dispatch 추가. 리스너: `summary-node.tsx`, `footnotes-footer.tsx`(FootnotesFooter+NoteReferencesFooter), `wiki-footnotes-section.tsx`(WikiFootnotesSection+WikiReferencesSection)
+- **위키 TextBlock BlockDragOverlay**: `wiki-block-renderer.tsx` WikiTextEditor에 BlockDragOverlay 래핑. `pl-8` 좌측 패딩 = 드래그 핸들 거터. 노트 에디터 TipTapEditor.tsx와 동일 패턴
+- **위키 TextBlock 4코너 리사이즈**: `WikiBlock.editorWidth/editorHeight` persist (Store v75). 편집 모드에서만 적용 (읽기=full width). `block-resize-corner--tl/tr/bl/br` CSS 재활용. `⋯` 메뉴 "Reset editor size" (ArrowsIn). `useBlockResize` 훅 로직 인라인 (NodeView가 아니라 일반 React 컴포넌트라서)
+
+## Store Slices (22 total, v75)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
 ## Completed PRs (recent)
+- **PR #189 (WIP 2026-04-13)**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 4코너 리사이즈
+  - 나무위키식 Expand/Collapse All (노트 chevron 버튼 + 위키 기존 버튼 확장)
+  - plot:set-all-collapsed CustomEvent (Details/Summary/Footnotes/References 전부 대상)
+  - TocBlockNode + TableOfContents wiki 티어 등록 (기존 버그 수정)
+  - WikiTextEditor BlockDragOverlay 래핑 (에디터 내 블록 드래그 핸들)
+  - WikiBlock.editorWidth/editorHeight persist + 4코너 리사이즈 핸들
+  - Store v75 migration
+  - Reset editor size 메뉴 (ArrowsIn)
 - **PR #188 (merged 2026-04-13)**: 노트 References 시스템 + fontSize cascade + 위키 텍스트 컴팩트
   - Note.referenceIds: string[] + Store migration v74
   - NoteReferencesFooter 전면 확장 (store 연동, 피커 모달 3모드, +/× 버튼, 중복 제거)
