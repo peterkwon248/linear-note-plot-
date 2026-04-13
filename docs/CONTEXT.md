@@ -219,17 +219,30 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ### ✅ P0 — 노트 References + fontSize cascade — ALL COMPLETE
 ### ✅ P2 — Reference Usage — COMPLETE
 
-### P2 — 인포박스 고도화 (나무위키 수준)
+### P2 — 인포박스 고도화 + 나무위키 리서치 기능 (나무위키 수준, base 티어 = 노트+위키 공용)
+**Tier 1 — 인포박스:**
 - **대표 이미지 + 캡션** — 인포박스 최상단
 - **헤더 색상 테마** — 문서별 테마 컬러 배너
 - **인포박스 접기/펼치기** — 긴 인포박스 축소
 - **섹션 구분 행** — 정보 그루핑
-- **배너 블록** — 새 블록 타입 (노트 Insert + 위키 WikiBlockType). 배경색 + 제목 + 부제목
 - **필드 값 리치텍스트** — 링크, 이미지(국기 등) 지원
+**Tier 2 — 새 블록 타입 (base 티어):**
+- **배너 블록** — 배경색 + 제목 + 부제 (노트 Insert + 위키 TextBlock 공용)
+- **둘러보기 틀 (Navigation Box)** — 관련 문서 그룹 박스 (접기 가능)
+**Tier 3 — 유틸리티 매크로 (인라인):**
+- **나이 계산** `[age(YYYY-MM-DD)]` — 만 나이 자동
+- **D-Day** `[dday(날짜)]` — 남은 날 자동
+- **Include** — 다른 문서 내용 현재 위치에 삽입
+**Tier 4 — 고급:**
+- **상위/하위 문서 관계** — 부모-자식 문서 계층
+- **각주 이미지** — FootnoteEditModal 이미지 첨부
+- **루비 텍스트** — 한자/일본어 읽기 표시
+**아키텍처:**
+- 모든 새 기능 = base 티어 (노트+위키 공용, shared-editor-config.ts)
+- Insert 레지스트리 단일화 — insert-menu.tsx + SlashCommand.tsx + FixedToolbar.tsx 3곳 중복 → 단일 레지스트리
 
 ### P2 — 인사이트 허브
 - **인사이트 허브** — 온톨로지 Single Source of Insights
-- **인포박스 고도화** — 대표 이미지, 섹션 구분 행, 접기/펼치기
 
 ### P3 — 사이드패널 + 뷰 확장
 - **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식)

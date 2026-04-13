@@ -21,7 +21,7 @@
 - **Section 번호 = JS 계산**: CSS counter 대신 useMemo + O(n) 순회. TOC와 100% 동기화 보장. 성능 문제 없음 (200블록 = 마이크로초).
 - **convertToWiki 삭제 예정**: 노트→위키 전환 개념 없어짐. auto-enroll은 빈 WikiArticle 생성 + 관련 노트 추천으로 전환.
 
-## 2026-04-14 (Reference Usage + Activity 정리 + 인포박스 방향)
+## 2026-04-14 (Reference Usage + Activity 정리 + 나무위키 리서치)
 - **Reference Usage = 사이드패널 Detail 탭에 구현**: Connections 탭이 아닌 Detail 탭의 InspectorSection. notes.filter + wikiArticles.filter로 referenceIds 스캔
 - **Wiki Activity = Stats 중복 제거**: Detail Properties와 동일한 정보 삭제. Activity = "시간축 (뭐가 변했나)", Detail = "현재 상태 (지금 뭐가 있나)" 역할 분리
 - **Note History = ActivityTimeline 재활용**: 이미 존재하는 컴포넌트 연결만으로 해결. 새 코드 불필요
