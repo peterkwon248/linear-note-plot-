@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 22-slice Zustand store with versioned migration (currently v72)
+- **Store**: `lib/store/index.ts` — 22-slice Zustand store with versioned migration (currently v74)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -112,13 +112,24 @@
 - **각주 read-only 가드**: `footnote-node.tsx` handleClick + `footnotes-footer.tsx` openModal — `editor.isEditable` 체크. "Click to add content" 버튼도 read-only 시 숨김
 - **FootnoteEditModal role="dialog"**: click-outside 가드가 모달을 인식하도록. 위키 TextBlock에서 각주 편집 시 에디터 언마운트 방지
 - **위키 Footnotes/References 컴팩트 디자인**: TipTap EditorContent 폐기 → 단순 텍스트. `▶` chevron 토글 + `text-base` 헤더 + `text-[14px]` 내용. `[N]` 번호 크기 `text-[14px]` 통일
-- **노트 NoteReferencesFooter**: `footnotes-footer.tsx` 내. 각주의 referenceId 수집 → `▶ REFERENCES N` 불릿 목록. FootnotesFooter 안에서 자동 렌더. 기본 collapsed
+- **노트 NoteReferencesFooter (확장, PR #188)**: `footnotes-footer.tsx` 내. `note.referenceIds` store 직접 읽기 + 각주 referenceIds 중복 제거. 피커 모달 (검색/생성/편집 3모드, WikiReferencesSection 패턴 복제). `+` 버튼 + hover `×` 삭제. `plot:open-reference-picker` 이벤트로 외부 트리거 (슬래시 커맨드, Insert 메뉴). 빈 상태 숨기기 (referenceIds 있을 때만 표시). Reference 아이콘 = Book (RiBookLine)
+- **em 기반 fontSize cascade (PR #188)**: 위키 타이틀/섹션/각주의 Tailwind rem/px 클래스를 em으로 전환. fontScale inline을 개별 heading에서 제거 → 섹션 wrapper `div.group/section`에 적용. 글로벌 Aa 스케일(WikiArticle.fontSize) + 개별 섹션 fontScale(WikiBlock.fontSize) CSS em cascade로 동시 동작
+- **위키 텍스트 display 컴팩트 (PR #188)**: `.wiki-text-display` 클래스. `ProseMirror min-height:unset !important` + `p margin:0 !important`. 편집→읽기 전환 시 간격 점프 해소. 편집 중은 TipTap 기본 간격 유지
 
-## Store Slices (22 total, v73)
+## Store Slices (22 total, v74)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
 ## Completed PRs (recent)
-- **PR #187 (WIP 2026-04-13)**: 각주/Reference UX 개선
+- **PR #188 (merged 2026-04-13)**: 노트 References 시스템 + fontSize cascade + 위키 텍스트 컴팩트
+  - Note.referenceIds: string[] + Store migration v74
+  - NoteReferencesFooter 전면 확장 (store 연동, 피커 모달 3모드, +/× 버튼, 중복 제거)
+  - /reference 슬래시 커맨드 + Insert 메뉴 Reference 항목
+  - plot:open-reference-picker 이벤트 기반 API
+  - 빈 상태 숨기기 (referenceIds 있을 때만 표시)
+  - Reference 아이콘 = Book (RiBookLine)
+  - 위키 fontSize em 전환 (rem→em, fontScale wrapper 이동)
+  - 위키 텍스트 display 컴팩트 (ProseMirror min-height:unset, p margin:0)
+- **PR #187 (merged 2026-04-13)**: 각주/Reference UX 개선
   - 각주 read-only 가드 (editor.isEditable 체크)
   - 위키 footnote 삽입 버그 수정 (FootnoteEditModal role="dialog")
   - 위키 Footnotes/References 컴팩트 디자인 (TipTap→텍스트, 토글, 사이즈 통일)
@@ -143,6 +154,28 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
   - 위키 텍스트 블록에 [[위키링크 + @멘션 + #해시태그 활성화
   - MentionSuggestion/WikilinkSuggestion 아이콘 통일 (IconWiki + stub/article 색상)
   - Default 레이아웃 TOC 반응형 + 스크롤 수정
+- **PR #186 (merged 2026-04-13)**: docs: CONTEXT.md + MEMORY.md 최신화 (PR #185, 각주 모달/References/Usage TODO)
+- **PR #185 (merged 2026-04-12)**: 각주 모달 + References 하단 섹션 + footnote 티어
+  - FootnoteEditModal (Title+Content+URL 통합 모달, 이벤트 기반 API, layout.tsx 글로벌 마운트)
+  - WikiReferencesSection (위키백과 참고문헌 불릿 목록, 검색+생성+편집 모달)
+  - WikiArticle.referenceIds (문서↔Reference 직접 연결)
+  - footnote 에디터 티어 (StarterKit 최소 + Link + Underline)
+  - Reference.contentJson 추가
+  - click-outside 가드 확장 (Radix Portal + role=menu/dialog)
+- **PR #184 (merged 2026-04-12)**: docs: CONTEXT.md + MEMORY.md 최신화 (PR #182-183, 위키 각주/유틸/아이콘/호버)
+- **PR #183 (merged 2026-04-12)**: 위키 텍스트 블록 [[/@ 삽입 버그 수정 + 호버 프리뷰 글로벌 이동
+  - tippy click-outside 가드 (드롭다운 클릭 시 에디터 닫힘 방지)
+  - async deleteRange stale range 수정
+  - NoteHoverPreview를 layout.tsx 글로벌로 이동
+- **PR #182 (merged 2026-04-12)**: 위키 각주 시스템 + 공유 유틸 추출 + 드롭다운 아이콘 통일
+  - 위키 문서 레벨 각주 (위키백과 스타일, offset 기반 전체 연번)
+  - 두 렌더러(Default/Encyclopedia) 공유 유틸 추출 (~300줄 중복 제거)
+  - 위키 텍스트 블록에 [[위키링크 + @멘션 + #해시태그 활성화
+  - MentionSuggestion/WikilinkSuggestion 아이콘 통일
+- **PR #181 (merged 2026-04-11)**: Library 리디자인 + Reference.history + Split View edge case 수정
+  - Library Overview Bento Grid 리디자인 (Premium stat cards)
+  - Reference.history 수정 이력 자동 기록 (created/edited/linked/unlinked, 50개 제한)
+  - Store v73 migration (Reference.history backfill)
 - **PR #176 (merged 2026-04-09)**: Peek-First 실험 완성 + Split-First 복귀 Phase 1
   - Peek-First 완성 (Phase 2~3.5) — wiki 지원, Empty State, 사이즈 시스템, back/forward, pin
   - 노트/위키 시각 구분 (StatusShapeIcon + wiki violet), MentionSuggestion 일관성

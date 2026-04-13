@@ -32,6 +32,7 @@ import {
   // Content & Documents
   RiArticleLine,
   RiAsterisk,
+  RiBookLine,
   RiBookOpenLine,
   RiBookmarkLine,
   RiCalendarLine,
@@ -159,6 +160,7 @@ export { RiExpandUpDownLine as CaretUpDown }
 // Content & Documents
 export { RiArticleLine as Article }
 export { RiAsterisk as Asterisk }
+export { RiBookLine as Book }
 export { RiBookOpenLine as BookOpen }
 export { RiBookmarkLine as BookmarkSimple }
 export { RiCalendarLine as CalendarBlank }

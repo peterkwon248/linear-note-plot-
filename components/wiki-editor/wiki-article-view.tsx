@@ -446,10 +446,10 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                 }
               }}
               onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
-              className="text-[26px] font-bold text-foreground mb-1 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
+              className="text-[1.75em] font-bold text-foreground mb-1 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
             />
           ) : (
-            <h1 className="text-[26px] font-bold text-foreground mb-1">
+            <h1 className="text-[1.75em] font-bold text-foreground mb-1">
               {article.title}
             </h1>
           )}

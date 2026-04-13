@@ -209,6 +209,9 @@ export interface Note {
   aliases: string[]
   wikiInfobox: WikiInfoboxEntry[]
 
+  /* ── References ─────────────────────────────── */
+  referenceIds: string[]    // linked Reference IDs (bibliography)
+
   /* ── Precomputed (from content, for performance) ── */
   preview: string          // first ~120 chars of plaintext (for list display)
   linksOut: string[]       // extracted [[wiki-link]] targets, lowercased

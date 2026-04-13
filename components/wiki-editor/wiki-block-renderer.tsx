@@ -143,7 +143,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
   const isEnc = variant === "encyclopedia"
 
   return (
-    <div className="group/section">
+    <div className="group/section" style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}>
       <div className={cn(
         "flex items-center gap-1",
         isEnc ? "mt-10 mb-4 border-b border-white/[0.08] pb-1.5 gap-2" : "mt-8 mb-2",
@@ -170,11 +170,10 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
           <span
             className={cn(
               "shrink-0 font-semibold text-accent/80 tabular-nums",
-              level === 2 && "text-2xl",
-              level === 3 && "text-xl",
-              level >= 4 && "text-lg",
+              level === 2 && "text-[1.5em]",
+              level === 3 && "text-[1.25em]",
+              level >= 4 && "text-[1.125em]",
             )}
-            style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}
           >
             {sectionNumber}.
           </span>
@@ -189,23 +188,21 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
             onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
             className={cn(
               "flex-1 min-w-[120px] bg-transparent outline-none border-b border-accent/40 font-semibold text-foreground",
-              level === 2 && "text-2xl",
-              level === 3 && "text-xl",
-              level >= 4 && "text-lg",
+              level === 2 && "text-[1.5em]",
+              level === 3 && "text-[1.25em]",
+              level >= 4 && "text-[1.125em]",
             )}
-            style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}
           />
         ) : (
           <div
             onClick={handleStartEdit}
             className={cn(
               "font-semibold text-foreground",
-              level === 2 && "text-2xl",
-              level === 3 && "text-xl",
-              level >= 4 && "text-lg",
+              level === 2 && "text-[1.5em]",
+              level === 3 && "text-[1.25em]",
+              level >= 4 && "text-[1.125em]",
               editable && "cursor-text hover:text-accent/80 transition-colors duration-100",
             )}
-            style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}
           >
             {block.title || "Untitled Section"}
           </div>
@@ -530,7 +527,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footn
         <div
           onClick={handleStartEdit}
           className={cn(
-            "rounded-md px-3 py-2",
+            "rounded-md px-3 py-2 wiki-text-display",
             editable && "cursor-text hover:bg-hover-bg transition-colors duration-100",
           )}
           style={textSizeStyle}

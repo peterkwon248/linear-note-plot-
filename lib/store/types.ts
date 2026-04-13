@@ -136,6 +136,8 @@ export interface PlotState {
   toggleTrash: (id: string) => void
   touchNote: (id: string) => void
   createChainNote: (parentId: string) => string
+  addNoteReference: (noteId: string, referenceId: string) => void
+  removeNoteReference: (noteId: string, referenceId: string) => void
 
   // ── Workflow / Triage ──
   triageKeep: (id: string) => void

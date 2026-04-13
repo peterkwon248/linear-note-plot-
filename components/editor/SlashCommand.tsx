@@ -16,7 +16,7 @@ import {
   TextHOne, TextHTwo, TextHThree, ListBullets, ListNumbers, CheckSquare,
   Quotes, Code as PhCode, Minus as PhMinus, Table as PhTable, CaretRight,
   MathOperations, Layout, Info, Article, Columns as PhColumns, Note as PhNote,
-  BookOpen, IdentificationCard, Cube, BookmarkSimple, Asterisk, Database, LinkSimple,
+  BookOpen, IdentificationCard, Cube, BookmarkSimple, Asterisk, Database, LinkSimple, Book,
 } from "@/lib/editor/editor-icons"
 import { nanoid } from "nanoid"
 import { detectUrlType } from "@/lib/editor/url-detect"
@@ -279,6 +279,15 @@ const COMMANDS: CommandItem[] = [
         type: "footnoteRef",
         attrs: { id: nanoid(8), content: "" },
       }).run()
+    },
+  },
+  {
+    title: "Reference",
+    description: "Add a reference to this note",
+    icon: Book,
+    command: ({ editor, range }: { editor: Editor; range: Range }) => {
+      editor.chain().focus().deleteRange(range).run()
+      window.dispatchEvent(new CustomEvent("plot:open-reference-picker"))
     },
   },
   {
