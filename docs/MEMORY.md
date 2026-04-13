@@ -123,8 +123,18 @@
 ## Store Slices (22 total, v75)
 notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
+- **Reference Usage 섹션**: `reference-detail-panel.tsx` — notes.filter + wikiArticles.filter로 사용처 목록. openNote/navigateToWikiArticle 클릭 네비게이션
+- **Note History = ActivityTimeline 연결**: `side-panel-activity.tsx` — noteEvents 기반 타임라인 (기존 `activity-timeline.tsx` 재활용)
+- **Wiki Activity 중복 정리**: Article Stats 삭제 (Detail Properties와 중복), Thread 메시지 삭제
+- **Expand/Collapse All 항상 표시**: 접을 게 없으면 disabled + 흐릿. Details 토글 = DOM 클릭 (setNodeMarkup 대신). hasCollapsibles: details/summary/footnoteRef/referenceIds
+
 ## Completed PRs (recent)
-- **PR #189 (WIP 2026-04-13)**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 4코너 리사이즈
+- **PR #190 (WIP 2026-04-14)**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성
+  - Reference Usage 섹션 구현 (사용처 노트/위키 목록)
+  - Note History ActivityTimeline 연결
+  - Wiki Activity Stats 중복 제거
+  - Expand/Collapse All 항상 표시 + 비활성 상태
+- **PR #189 (merged 2026-04-13)**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 4코너 리사이즈
   - 나무위키식 Expand/Collapse All (노트 chevron 버튼 + 위키 기존 버튼 확장)
   - plot:set-all-collapsed CustomEvent (Details/Summary/Footnotes/References 전부 대상)
   - TocBlockNode + TableOfContents wiki 티어 등록 (기존 버그 수정)

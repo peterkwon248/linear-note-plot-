@@ -92,7 +92,8 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **PR #189 (WIP)**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 리사이즈 — 나무위키식 전체 접기/펼치기, TocBlockNode wiki 티어 등록, BlockDragOverlay 위키 통합, 4코너 리사이즈 + Store v75
+1. **PR #190 (WIP)**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성 — 사이드패널 Usage 섹션, ActivityTimeline 연결, Wiki Stats 중복 제거, 접을 게 없을 때 비활성
+1. **PR #189**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 리사이즈 — 나무위키식 전체 접기/펼치기, TocBlockNode wiki 티어 등록, BlockDragOverlay 위키 통합, 4코너 리사이즈 + Store v75
 2. **PR #188**: 노트 References 시스템 + fontSize cascade + 위키 텍스트 컴팩트
 3. **PR #187**: 각주/Reference UX 개선 — read-only 가드, 위키 footnote 삽입 버그, 컴팩트 디자인
 4. **PR #185**: 각주 모달 + WikiReferencesSection + footnote 티어
@@ -207,14 +208,26 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **위키 TOC 버그 수정 (2026-04-13)**: TocBlockNode + TableOfContents가 note 티어에만 등록되어있던 버그. wiki 티어에 추가 (`shared-editor-config.ts`)
 - **위키 TextBlock 드래그 핸들 (2026-04-13)**: `WikiTextEditor`에 `BlockDragOverlay` 래핑. `pl-8` 좌측 패딩으로 핸들 거터 확보. 기존 note 에디터 패턴과 동일
 - **위키 TextBlock 4코너 리사이즈 (2026-04-13)**: `WikiBlock.editorWidth/editorHeight` persist (Store v75). 편집 모드에서만 적용, 읽기 모드는 full width 유지. `block-resize-corner` CSS 재활용. 4코너(tl/tr/bl/br) 핸들. `⋯` 메뉴에 "Reset editor size" 버튼 (ArrowsIn)
+- **Reference Usage 섹션 구현 (2026-04-14)**: `reference-detail-panel.tsx` Usage "Coming soon" → 실제 노트/위키 사용처 목록. `notes.filter(referenceIds.includes)` + `wikiArticles.filter`. 클릭 → openNote / navigateToWikiArticle
+- **Note History 연결 (2026-04-14)**: `side-panel-activity.tsx` History placeholder → `ActivityTimeline` 컴포넌트 연결. noteEvents 기반 이벤트 타임라인 (25 이벤트 타입, 색상 도트 + verb + 상대시간)
+- **Wiki Activity 정리 (2026-04-14)**: Article Stats 제거 (Detail Properties와 중복). "Thread & Reflections not available" 제거. "Wiki article history is not yet available" 간결 안내로 교체
+- **Expand/Collapse All 항상 표시 (2026-04-14)**: `hasCollapsibles` 조건 제거 → 버튼 항상 렌더. 접을 게 없으면 disabled + 흐릿 (`text-muted-foreground/20`). Details 토글 = DOM 클릭 방식 (setNodeMarkup 대신). hasCollapsibles 체크: details/summary/footnoteRef/referenceIds
 
-## TODO: Future Work (우선순위 순, 2026-04-13 sync)
+## TODO: Future Work (우선순위 순, 2026-04-14 sync)
 
 ### ✅ P0 — Split-First 마이그레이션 — ALL COMPLETE
 ### ✅ P0 — 노트 References + fontSize cascade — ALL COMPLETE
+### ✅ P2 — Reference Usage — COMPLETE
 
-### P2 — 인사이트 허브 + Reference UX
-- **Reference Usage 섹션** — 사이드패널에 "이 Reference를 참조하는 노트/위키" 목록
+### P2 — 인포박스 고도화 (나무위키 수준)
+- **대표 이미지 + 캡션** — 인포박스 최상단
+- **헤더 색상 테마** — 문서별 테마 컬러 배너
+- **인포박스 접기/펼치기** — 긴 인포박스 축소
+- **섹션 구분 행** — 정보 그루핑
+- **배너 블록** — 새 블록 타입 (노트 Insert + 위키 WikiBlockType). 배경색 + 제목 + 부제목
+- **필드 값 리치텍스트** — 링크, 이미지(국기 등) 지원
+
+### P2 — 인사이트 허브
 - **인사이트 허브** — 온톨로지 Single Source of Insights
 - **인포박스 고도화** — 대표 이미지, 섹션 구분 행, 접기/펼치기
 
