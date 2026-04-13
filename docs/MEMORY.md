@@ -128,8 +128,15 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Wiki Activity 중복 정리**: Article Stats 삭제 (Detail Properties와 중복), Thread 메시지 삭제
 - **Expand/Collapse All 항상 표시**: 접을 게 없으면 disabled + 흐릿. Details 토글 = DOM 클릭 (setNodeMarkup 대신). hasCollapsibles: details/summary/footnoteRef/referenceIds
 
+## 나무위키 리서치 결과 (2026-04-14) — 도입 대상
+- **Tier 1 인포박스**: 대표 이미지+캡션, 헤더 색상 테마, 접기/펼치기, 섹션 구분 행
+- **Tier 2 새 블록**: 배너 블록 (배경색+제목+부제), 둘러보기 틀 (Navigation Box)
+- **Tier 3 매크로**: 나이 계산 [age], D-Day [dday], Include (틀 삽입)
+- **Tier 4 고급**: 상위/하위 문서 관계, 각주 이미지, 루비 텍스트
+- **아키텍처 결정**: 모든 새 기능 = base 티어 (노트+위키 공용). Insert 레지스트리 단일화 (3곳 중복 제거)
+
 ## Completed PRs (recent)
-- **PR #190 (WIP 2026-04-14)**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성
+- **PR #190 (merged 2026-04-14)**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성
   - Reference Usage 섹션 구현 (사용처 노트/위키 목록)
   - Note History ActivityTimeline 연결
   - Wiki Activity Stats 중복 제거
