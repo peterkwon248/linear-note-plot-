@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
 import { format, formatDistanceToNow } from "date-fns"
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
@@ -20,6 +20,9 @@ import { Link } from "@phosphor-icons/react/dist/ssr/Link"
 import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 import { shortRelative } from "@/lib/format-utils"
+import { IconWiki } from "@/components/plot-icons"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import { setActiveRoute } from "@/lib/table-route"
 
 function InspectorSection({
   title,
@@ -48,8 +51,20 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
   const updateReference = usePlotStore((s) => s.updateReference)
   const deleteReference = usePlotStore((s) => s.deleteReference)
   const setSidePanelOpen = usePlotStore((s) => s.setSidePanelOpen)
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const openNote = usePlotStore((s) => s.openNote)
 
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const referencingNotes = useMemo(() =>
+    notes.filter(n => !n.trashed && (n.referenceIds ?? []).includes(referenceId)),
+    [notes, referenceId]
+  )
+  const referencingArticles = useMemo(() =>
+    wikiArticles.filter(a => (a.referenceIds ?? []).includes(referenceId)),
+    [wikiArticles, referenceId]
+  )
 
   const handleTitleBlur = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
@@ -268,9 +283,47 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
 
       <div className="mx-4 border-b border-border" />
 
-      {/* Usage (placeholder) */}
+      {/* Usage — notes & wiki that reference this */}
       <InspectorSection title="Usage" icon={<Books size={16} weight="regular" />}>
-        <p className="text-2xs text-muted-foreground/50">Coming soon</p>
+        {referencingNotes.length === 0 && referencingArticles.length === 0 ? (
+          <p className="text-2xs text-muted-foreground/50">No notes or wiki articles reference this yet</p>
+        ) : (
+          <div className="space-y-1">
+            {referencingNotes.length > 0 && (
+              <>
+                <p className="text-2xs text-muted-foreground/40 font-medium uppercase tracking-wider">Notes</p>
+                {referencingNotes.map(n => (
+                  <button
+                    key={n.id}
+                    onClick={() => openNote(n.id)}
+                    className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+                  >
+                    <FileText size={14} weight="regular" className="shrink-0 opacity-50" />
+                    <span className="truncate">{n.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </>
+            )}
+            {referencingArticles.length > 0 && (
+              <>
+                <p className="text-2xs text-muted-foreground/40 font-medium uppercase tracking-wider mt-2">Wiki</p>
+                {referencingArticles.map(a => (
+                  <button
+                    key={a.id}
+                    onClick={() => {
+                      setActiveRoute("/wiki")
+                      navigateToWikiArticle(a.id)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-2xs text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+                  >
+                    <IconWiki size={14} className="shrink-0 opacity-50" />
+                    <span className="truncate">{a.title || "Untitled"}</span>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+        )}
       </InspectorSection>
 
       <div className="mx-4 border-b border-border" />

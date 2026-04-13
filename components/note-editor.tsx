@@ -144,46 +144,41 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
     if (!editorInstance) return { hasCollapsibles: false, allCollapsed: false }
     let hasDetails = false
     let hasSummary = false
+    let hasFootnote = false
     let allDetailsClosed = true
     editorInstance.state.doc.descendants((node) => {
       if (node.type.name === "details") {
         hasDetails = true
         if (node.attrs.open !== false) allDetailsClosed = false
       }
-      if (node.type.name === "summaryBlock") {
-        hasSummary = true
-      }
+      if (node.type.name === "summaryBlock") hasSummary = true
+      if (node.type.name === "footnoteRef") hasFootnote = true
     })
+    const hasRefs = !!(note?.referenceIds?.length)
     return {
-      hasCollapsibles: hasDetails || hasSummary,
-      allCollapsed: hasDetails && allDetailsClosed,
+      hasCollapsibles: hasDetails || hasSummary || hasFootnote || hasRefs,
+      allCollapsed: hasDetails ? allDetailsClosed : false,
     }
-  }, [editorInstance, docVersion])
+  }, [editorInstance, docVersion, note?.referenceIds?.length])
 
   const handleToggleAllCollapsibles = useCallback(() => {
-    if (!editorInstance) return
+    if (!editorInstance || !hasCollapsibles) return
     const targetCollapsed = !allCollapsed
 
-    // 1. Toggle all Details nodes via ProseMirror transaction
-    const { tr } = editorInstance.state
-    let modified = false
-    editorInstance.state.doc.descendants((node, pos) => {
-      if (node.type.name === "details") {
-        const currentOpen = node.attrs.open !== false
-        if (currentOpen === !targetCollapsed) return
-        tr.setNodeMarkup(pos, undefined, { ...node.attrs, open: !targetCollapsed })
-        modified = true
-      }
+    // 1. Toggle all Details blocks via DOM click (syncs both visual + persisted state)
+    const detailsBlocks = editorInstance.view.dom.querySelectorAll('.details-block')
+    detailsBlocks.forEach((block) => {
+      const isOpen = block.classList.contains('is-open')
+      if (isOpen === !targetCollapsed) return // already in target state
+      const btn = block.querySelector(':scope > button') as HTMLElement
+      btn?.click()
     })
-    if (modified) {
-      editorInstance.view.dispatch(tr)
-    }
 
     // 2. Broadcast event for Summary, FootnotesFooter, NoteReferencesFooter
     window.dispatchEvent(new CustomEvent("plot:set-all-collapsed", {
       detail: { collapsed: targetCollapsed }
     }))
-  }, [editorInstance, allCollapsed])
+  }, [editorInstance, allCollapsed, hasCollapsibles])
 
   const handleEditorReady = useCallback((editor: unknown) => {
     setEditorInstance(editor as Editor | null)
@@ -400,12 +395,17 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
           <ReferencedInBadges noteId={note.id} pane={pane} />
         </div>
         <div className="flex items-center gap-0.5">
-          {hasCollapsibles && (
-            <Tooltip>
+          <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={handleToggleAllCollapsibles}
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                  disabled={!hasCollapsibles}
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-md transition-all duration-100",
+                    hasCollapsibles
+                      ? "text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground cursor-pointer"
+                      : "text-muted-foreground/20 cursor-default"
+                  )}
                 >
                   <svg width={17} height={17} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     {allCollapsed ? (
@@ -416,9 +416,8 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
                   </svg>
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{allCollapsed ? "Expand all" : "Collapse all"}</TooltipContent>
-            </Tooltip>
-          )}
+              <TooltipContent>{!hasCollapsibles ? "No collapsible content" : allCollapsed ? "Expand all" : "Collapse all"}</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <button

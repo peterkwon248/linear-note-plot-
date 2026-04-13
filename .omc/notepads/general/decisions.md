@@ -21,6 +21,14 @@
 - **Section 번호 = JS 계산**: CSS counter 대신 useMemo + O(n) 순회. TOC와 100% 동기화 보장. 성능 문제 없음 (200블록 = 마이크로초).
 - **convertToWiki 삭제 예정**: 노트→위키 전환 개념 없어짐. auto-enroll은 빈 WikiArticle 생성 + 관련 노트 추천으로 전환.
 
+## 2026-04-14 (Reference Usage + Activity 정리 + 인포박스 방향)
+- **Reference Usage = 사이드패널 Detail 탭에 구현**: Connections 탭이 아닌 Detail 탭의 InspectorSection. notes.filter + wikiArticles.filter로 referenceIds 스캔
+- **Wiki Activity = Stats 중복 제거**: Detail Properties와 동일한 정보 삭제. Activity = "시간축 (뭐가 변했나)", Detail = "현재 상태 (지금 뭐가 있나)" 역할 분리
+- **Note History = ActivityTimeline 재활용**: 이미 존재하는 컴포넌트 연결만으로 해결. 새 코드 불필요
+- **Expand/Collapse All 항상 표시 + 비활성**: 접을 게 없어도 버튼 보임 (PushPin도 핀 안 해도 항상 보이는 것과 같은 논리). 비활성 시 흐릿 + disabled
+- **Details 토글 = DOM 클릭 방식**: setNodeMarkup이 Details NodeView와 동기화 안 될 수 있어서 extension 자체 토글 버튼 프로그래밍 클릭으로 변경
+- **인포박스 고도화 = 나무위키 수준 목표 (다음 세션)**: 대표 이미지+캡션, 헤더 색상 테마, 접기/펼치기, 섹션 구분 행. 배너 블록 = 새 블록 타입 (노트 Insert + 위키)
+
 ## 2026-04-13 (Expand/Collapse All + 위키 TextBlock 개선)
 - **나무위키 패턴 채택**: Expand/Collapse All은 섹션 + 내부 collapsible + footer 전부 대상. 토글 1개 버튼 (하나라도 접히면 Expand, 전부 펼치면 Collapse)
 - **CustomEvent 브로드캐스트 선택**: `plot:set-all-collapsed` 단일 이벤트. prop drilling보다 깔끔 (collapsible 요소가 TipTap NodeView/Footer/Wiki 섹션 등 다른 컴포넌트 트리에 분산)

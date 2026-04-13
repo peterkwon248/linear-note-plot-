@@ -1,14 +1,15 @@
-# Session Notepad (Updated: 2026-04-13 18:00)
+# Session Notepad (Updated: 2026-04-14 07:00)
 
 ## Critical Context
-- PR #189 WIP: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 4코너 리사이즈
-- Store v75 (WikiBlock.editorWidth/editorHeight 추가)
-- 다음 작업: P2 — Reference Usage 섹션, 인사이트 허브, 인포박스 고도화
+- PR #189 merged + PR #190 WIP (Reference Usage + Note History + Wiki Activity + chevron 비활성)
+- Store v75
+- 다음 세션: 인포박스 고도화 (나무위키 수준) + 배너 블록
 
 ## Active Tasks
-- [ ] P2: Reference Usage 섹션 (사이드패널에 Reference 사용처 목록)
-- [ ] P2: 인사이트 허브 (온톨로지 Single Source of Insights)
-- [ ] P2: 인포박스 고도화 (대표 이미지, 섹션 구분 행, 접기/펼치기)
+- [ ] 인포박스 고도화: 대표 이미지+캡션, 헤더 색상 테마, 접기/펼치기, 섹션 구분 행
+- [ ] 배너 블록: 새 블록 타입 (노트 Insert + 위키 WikiBlockType), 배경색+제목+부제목
+- [ ] 나무위키 리서치: 우리 앱에 없는 기능 파악
+- [ ] 인사이트 허브: 온톨로지 Single Source of Insights
 
 ## Blockers
-- 없음 (tsc clean, 빌드 정상)
+- 없음 (tsc clean)
