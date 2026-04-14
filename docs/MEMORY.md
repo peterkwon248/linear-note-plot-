@@ -128,18 +128,35 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Wiki Activity 중복 정리**: Article Stats 삭제 (Detail Properties와 중복), Thread 메시지 삭제
 - **Expand/Collapse All 항상 표시**: 접을 게 없으면 disabled + 흐릿. Details 토글 = DOM 클릭 (setNodeMarkup 대신). hasCollapsibles: details/summary/footnoteRef/referenceIds
 
-## 나무위키 리서치 결과 (2026-04-14) — 도입 대상
-- **Tier 1 인포박스 완료** 🎉: ✅ 대표 이미지+캡션 (PR #192), ✅ 헤더 색상 테마 (2026-04-14 밤), ✅ 접기/펼치기 (PR #192), ✅ 섹션 구분 행 (2026-04-14 밤), ✅ 필드 값 리치텍스트 (2026-04-14 밤)
-- **Tier 2 새 블록**: 배너 블록 (배경색+제목+부제), 둘러보기 틀 (Navigation Box)
-- **Tier 3 매크로**: 나이 계산 [age], D-Day [dday], Include (틀 삽입)
-- **Tier 4 고급**: 상위/하위 문서 관계, 각주 이미지, 루비 텍스트
-- **아키텍처 결정**: 모든 새 기능 = base 티어 (노트+위키 공용). ✅ Insert 레지스트리 단일화 완료 (PR #192, 3곳 중복 제거)
+## 나무위키 리서치 결과 (2026-04-14 오전) — Tier 프레임은 **재설계됨** (저녁)
+
+> **프레임 변경**: 기존 "Tier 1-4" 구조는 Phase 계획으로 재편됐음. 자세히: `docs/BRAINSTORM-2026-04-14-column-template-system.md`
+
+- ✅ **Tier 1 인포박스 완료** 🎉 (PR #192, #194): 대표 이미지+캡션, 헤더 색상 테마, 접기/펼치기, 섹션 구분 행, 필드 값 리치텍스트
+- **Tier 2 새 블록** → Phase 5 (Navigation Box 등)로 이관
+- **Tier 3 매크로** → Phase 5 또는 별도 Phase로 보류 (나이/D-Day/Include)
+- **Tier 4 고급** → 장기 TODO (상위/하위 문서, 각주 이미지, 루비 텍스트)
+- **아키텍처 결정**: 모든 새 기능 = base 티어 (노트+위키 공용). ✅ Insert 레지스트리 단일화 완료 (PR #192)
+- **컬럼 시스템 + WikiTemplate** (2026-04-14 저녁 신규): 모든 위키 문서가 `layout: ColumnStructure + sections + infobox + titleStyle + themeColor`로 통합. 8종 built-in 템플릿 (Blank/Encyclopedia/Person/Place/Concept/Work/Organization/Event)
 
 ## 2026-04-14 세션 의사결정 (브레인스토밍)
+
+### 오전 결정
 - **Note/Wiki 2-entity 철학 확정** — 엔티티 통합 논의(Alpha/Beta/Gamma) 전부 폐기. 2026-04-01 결정 재확인. 차별점의 원천 = 데이터 구조 (TipTap JSON vs WikiBlock[]). 렌더러는 위키 전용. 자세히: `docs/BRAINSTORM-2026-04-14-entity-philosophy.md`
-- **템플릿 3층 모델** — Layer 1 Layout Preset (렌더러, 위키 전용) + Layer 2 Content Template (섹션 뼈대, Person/Place 등) + Layer 3 Typed Infobox. 노트 템플릿은 NoteTemplate slice 유지 (UpNote식 단순 복사).
-- **노트 split = must-todo** — UniqueID extension으로 이미 가능 (top-level 노드 23종 영속 ID). 위키 splitMode UI 재활용. Medium × 2-3일 × PR 하나. 우선순위는 위키 디자인 강화 이후.
+- **노트 split = must-todo** — UniqueID extension으로 이미 가능. 위키 WikiSplitPage 패턴 재활용 (사용자 명시). Medium × 2-3일 × PR 하나.
 - **표류 종결** — 2026-03-30 PIVOT #1 (IKEA 전략) → 2026-04-01 ROLLBACK #2 (노션식 폐기) → 2026-04-14 FINAL (분리 유지 + 위키 디자인 강화). 향후 엔티티 통합 제안 금지.
+
+### 저녁 재설계 (3-layer 모델 폐기, 컬럼 시스템으로 재구성)
+- **3층 모델 폐기**: "Layer 1 Layout Preset + Layer 2 Content Template + Layer 3 Typed Infobox" 분리 모델 폐기. 오버엔지니어링으로 판정. 자세히: `docs/BRAINSTORM-2026-04-14-column-template-system.md`
+- **통합 모델**: `WikiTemplate = { layout: ColumnStructure + titleStyle + themeColor + sections + infobox + hatnotes + navbox }` — 컬럼 구조 + 섹션 배치가 템플릿 자체.
+- **컬럼 시스템**: 1/2/3/N 컬럼 자유, 중첩 최대 3 depth, 경계 드래그로 비율 조절. 기존 `layout: "default" | "encyclopedia" | "wiki-color"` 문자열 상수 → `ColumnStructure` 데이터 구조.
+- **Title 처리**: 나무위키/위키피디아 관습대로 **최상단 고정**. `article.title + titleStyle` (alignment/size/showAliases/themeColorBg). Title 블록화 폐기.
+- **Column Heading 블록 폐기**: Section(H2)로 충분.
+- **기본 템플릿 8종 built-in**: Blank / Encyclopedia / Person / Place / Concept / Work / Organization / Event
+- **사용자 커스텀 템플릿**: "파라미터 조합" 방식 (JSX 코드 주입 X). `wikiTemplates` slice에 built-in + user-defined 공존.
+- **섹션 정체성 강화 (옵션)**: section 블록에 icon/themeColor/description 속성 추가 고려. Phase 5에 포함.
+- **문서 정비**: `BRAINSTORM-2026-04-14-wiki-ultra.md`, `entity-philosophy.md`, `PHASE-PLAN-wiki-enrichment.md` 상단에 DEPRECATED 배너 + 새 문서 링크.
+- **새 Phase 계획** (Phase 0~7): 0 문서 정비 → 1 데이터 모델 → 2 렌더러 → 3 편집 UX → 4 커스텀 템플릿 → 5 나무위키 잔여 → 6 편집 히스토리 → 7 노트 split
 
 ## Completed PRs (recent)
 - **WIP (2026-04-14 밤, next PR)**: 인포박스 Tier 1 전체 (Tier 1-2 헤더 색상 + Default 인포박스 통합 + Tier 1-4 섹션 구분 행 + Tier 1-5 필드 리치텍스트)

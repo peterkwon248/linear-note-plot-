@@ -6,6 +6,44 @@
 
 ---
 
+## 2026-04-14 전일 (집, 대규모 세션)
+
+### 완료 (코드)
+- **Tier 1 인포박스 전체 완료** 🎉 (PR #194)
+  - Tier 1-2 헤더 색상 테마 (노트+위키 양쪽, 8 프리셋 + 커스텀)
+  - Default 레이아웃 인포박스 통합 (`wiki-article-view.tsx`에 WikiInfobox 렌더)
+  - 사이드바 Infobox 섹션 제거 (중복 해소)
+  - Tier 1-4 섹션 구분 행 (`WikiInfoboxEntry.type?: "field" | "section"`)
+  - Tier 1-5 필드 값 리치텍스트 (`InfoboxValueRenderer` 4 패턴)
+  - 위키 사이드바 Merge/Split/Categories 클릭 버그 수정 (`isDedicatedModePage`)
+  - registry.ts 빌드 에러 20건 해결 (build-fixer 에이전트)
+
+### 결정 (브레인스토밍 마라톤)
+**오전**:
+- Note/Wiki 2-entity 철학 영구 확정 (엔티티 통합 논의 Alpha/Beta/Gamma 전부 폐기)
+- 렌더러는 위키 전용
+- 노트 split = must-todo (UniqueID로 이미 가능)
+- 위키 템플릿 3층 모델 (Layer 1/2/3 분리) — **이후 저녁에 폐기됨**
+
+**저녁 (대규모 재설계)**:
+- **3층 모델 폐기, 통합 모델로 재설계**: `WikiTemplate = { layout: ColumnStructure + titleStyle + themeColor + sections + infobox + hatnotes + navbox }`
+- 컬럼 레이아웃 시스템: 1/2/3/N 컬럼, 중첩 최대 3 depth, 경계 드래그 비율 조절
+- Layout 프리셋 독립 선택지 (`default/encyclopedia/wiki-color` 문자열) 폐기 → `ColumnStructure` 데이터 구조로 교체
+- Title 블록화 안 함. `article.title + titleStyle`로 최상단 고정 (나무위키 관습)
+- Column Heading 블록 안 만듦. Section(H2)로 충분
+- 기본 템플릿 8종 built-in (Blank / Encyclopedia / Person / Place / Concept / Work / Organization / Event)
+- 사용자 커스텀 템플릿 지원 (파라미터 조합 방식, JSX 코드 주입 X)
+- 기존 3-layer 문서들 DEPRECATED 배너 + 새 진실의 원천 문서 (`BRAINSTORM-2026-04-14-column-template-system.md`) 작성
+
+### 다음 세션 (Phase 1)
+- WikiTemplate 데이터 모델 구축
+- wikiTemplates slice + built-in 8종
+- Store migration (기존 default/encyclopedia → 템플릿 자동 변환)
+- 새 위키 생성 시 템플릿 선택 다이얼로그
+- 상세: `NEXT-ACTION.md`
+
+---
+
 ## 2026-04-13 오후~저녁 (집)
 
 ### 완료

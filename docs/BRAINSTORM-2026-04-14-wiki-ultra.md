@@ -1,9 +1,23 @@
-# Plot Wiki Ultra Brainstorming — 2026-04-14
+# Plot Wiki Ultra Brainstorming — 2026-04-14 (아침)
 
-> 이전 브레인스토밍 `docs/BRAINSTORM-2026-04-06.md`의 연장선.
-> 4-06 문서에서 Section 8/9로 제안된 "인포박스 고도화 + 나무위키 틀 시스템"을
-> 8일 뒤 **나무위키 + 위키피디아 + 개인위키(Obsidian/Notion/Scrapbox/Logseq) 심화 리서치**로 업데이트.
-> 구현 단계 진입 전 최종 합의안 기록. 사용자 질의에 따라 **배너 / 위키 디자인 / 위키 편집** 3축 집중.
+> ## ⚠️ 부분적 DEPRECATED — 2026-04-14 저녁 재설계
+>
+> **이 문서의 프레임(3-layer 모델 + 레이아웃 프리셋 독립 선택지)은 폐기됨.**
+>
+> **새 진실의 원천**: [BRAINSTORM-2026-04-14-column-template-system.md](./BRAINSTORM-2026-04-14-column-template-system.md)
+>
+> **폐기 요약**:
+> - "3-layer 모델 (Layout / Content Template / Typed Infobox 분리)" → 통합 모델로 교체 (컬럼+섹션배치=템플릿)
+> - "D-3 wiki-color를 독립 레이아웃 프리셋으로 추가?" 질문 → 컬럼 시스템에 흡수되어 폐기
+> - Phase 계획 재구성 → 이 문서 하단 Phase 계획은 무효 (새 문서 참조)
+>
+> **여전히 유효한 내용** (참조용 보존):
+> - 축 A (배너/Hatnote/Ambox/Navbox) 설계 — 새 Phase 계획에 흡수
+> - 축 B (대표 이미지, themeColor cascade, 섹션 구분 행) 설계 — 이미 완료됐거나 새 Phase에 포함
+> - 실측 CSS 수치 덤프 (위키피디아/나무위키 DNA) — 스타일 레퍼런스로 유효
+> - 선행 조건 0.1 (WikiInfobox 저장 버그) — 아직 유효, 새 Phase 1에 포함
+>
+> 아래 원본 내용은 **히스토리 보존** 목적으로 남겨둠.
 
 ---
 

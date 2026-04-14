@@ -148,8 +148,9 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **카테고리 더블클릭 에디터**: 싱글클릭=선택(하이라이트만), 더블클릭=폼 에디터 split view. 이름/설명 인라인 편집, Parent 드롭다운, 서브카테고리 +New/Move here (2026-03-26)
 - **노트 ≠ 위키**: Note와 WikiArticle은 완전 별도 엔티티. isWiki→noteType 리팩토링 완료 (2026-03-31)
 - **Stub 부활 (heuristic 방식)**: 상태 필드 없이 블록 수 + 내용 비어있음으로 판정. 기본 템플릿(Overview/Details/See Also) 에서 변경 없으면 stub. 블록/내용 추가 → article 자동 승격 (2026-04-05)
-- **Note/Wiki 2-entity 철학 확정 (2026-04-14)**: 엔티티 통합 논의(Alpha/Beta/Gamma) 전부 폐기. Note / WikiArticle 별도 엔티티 유지. **차별점의 원천 = 데이터 구조** (TipTap JSON vs WikiBlock[]). 렌더러(Layout Preset)는 위키 전용 — 노트엔 만들지 말 것. 자세한 배경은 `BRAINSTORM-2026-04-14-entity-philosophy.md`
-- **위키 템플릿 3층 모델 (2026-04-14)**: Layer 1 Layout Preset (렌더러, default/encyclopedia/wiki-color) + Layer 2 Content Template (섹션+인포박스 뼈대, Person/Place/Concept 등 타입별) + Layer 3 Typed Infobox (C-3). 노트 템플릿은 별개 시스템 (NoteTemplate slice, UpNote식 단순 복사 시드)
+- **Note/Wiki 2-entity 철학 확정 (2026-04-14)**: 엔티티 통합 논의(Alpha/Beta/Gamma) 전부 폐기. Note / WikiArticle 별도 엔티티 유지. **차별점의 원천 = 데이터 구조** (TipTap JSON vs WikiBlock[]). 렌더러는 위키 전용 — 노트엔 만들지 말 것. 자세한 배경은 `BRAINSTORM-2026-04-14-entity-philosophy.md`
+- **위키 템플릿 통합 모델 (2026-04-14 저녁, 3층 모델 폐기)**: `WikiTemplate = { layout: ColumnStructure + titleStyle + themeColor + sections + infobox + hatnotes + navbox }` — 컬럼 구조 + 섹션 배치가 템플릿 자체. 기존 "3-layer 모델 (Layout Preset / Content Template / Typed Infobox 분리)"은 폐기. Layout 프리셋 독립 선택지(`default/encyclopedia/wiki-color` 문자열 상수) 폐기 → `ColumnStructure` 데이터 구조로 교체. Title은 **article.title + titleStyle로 최상단 고정** (블록화 안 함). 노트 템플릿은 별개 시스템 (NoteTemplate slice, UpNote식 단순 복사). 상세: `BRAINSTORM-2026-04-14-column-template-system.md`
+- **컬럼 레이아웃 시스템 (2026-04-14 저녁)**: 1/2/3/N 컬럼 자유 배치, 중첩 최대 3 depth, 컬럼 비율 드래그 조절. 블록은 `columnAssignments`로 어느 컬럼에 속하는지 표시. 기존 `blocks[]` 유지 (최소 침습). 기본 템플릿 8종 built-in (Blank/Encyclopedia/Person/Place/Concept/Work/Organization/Event)
 - **[[드롭다운 Create Note + Create Wiki**: 노트는 inbox에 생성, 위키는 빈 WikiArticle(stub) 생성. 위키 아이콘 = IconWiki (액티비티바 통일) (2026-04-05)
 - **Auto Create 방향 결정 (미구현)**: Red Link → "Unresolved Links"로 개념 전환. 빨간색→회색 점선, 클릭 시 노트/위키 선택 팝업. Wiki에서 Red Links 제거 → Home "Unresolved Links"로 통합 (2026-04-05)
 - **인사이트 중앙 허브 방향 결정 (미구현)**: 온톨로지 = 모든 인사이트의 원천 (Single Source of Insights). Notes/Wiki 각 공간 인사이트는 온톨로지에서 파생. 세이브매트릭스급 지표 (Knowledge WAR, Link Density, Stub Conversion Rate 등) (2026-04-05)
@@ -229,40 +230,60 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **플래그 제거 or 기본 ON** — 안정화 후 `?yjs=1` 없이도 동작하게
 - **사이드 이슈**: `plot-note-bodies` IDB object store 누락 (NotFoundError 반복), TipTap duplicate extension names 경고 (link/underline/gapCursor)
 
-### P2 — 인포박스 고도화 + 나무위키 리서치 기능 (나무위키 수준, base 티어 = 노트+위키 공용)
-**Tier 1 — 인포박스:**
-- ✅ **대표 이미지 + 캡션 (PR #192, 2026-04-14)** — heroImage/heroCaption attrs, URL prompt, hover Add/Remove
-- ✅ **헤더 색상 테마 (2026-04-14 밤)** — 노트(TipTap `InfoboxBlockNode`) + 위키(`WikiInfobox` 컴포넌트) 양쪽 지원. 프리셋 7색 + 커스텀 color input, rgba 0.35, PaintBucket 팝오버. `WikiArticle.infoboxHeaderColor` 필드 (optional, migration 없음). 중장기 TODO: `WikiInfobox` → `InfoboxBlockNode` 통합 (base 티어 단일화)
-- ✅ **인포박스 접기/펼치기 (PR #192, 2026-04-14)** — chevron 토글 + `plot:set-all-collapsed` 이벤트 리슨
-- ✅ **섹션 구분 행 (2026-04-14 밤)** — 나무위키 스타일 그룹 헤더 (bold + uppercase + tinted bg, value 숨김). `WikiInfoboxEntry.type?: "field" \| "section"` optional 필드 (backward compat). TipTap `InfoboxRow` 도 동일. Edit UI에 "Add section" 버튼 (field와 나란히). 세 경로 모두 지원 (Default/Encyclopedia/TipTap 노드)
-- ✅ **필드 값 리치텍스트 (2026-04-14 밤)** — 공용 `InfoboxValueRenderer` (`components/editor/infobox-value-renderer.tsx`). 지원: `[[title]]` 위키링크 (article/note resolve + dangling dashed), `[text](url)` 외부링크, `![alt](url)` 인라인 이미지 (h-[1.25em]), bare `https?://` auto-link. 보안: `isSafeUrl` (http/https/data:image/ 경로만). 편집 모드는 raw text input 유지, **읽기 모드에서만 리치 렌더**. WikiInfobox + InfoboxBlockNode 모두 적용. **Tier 1 완료** 🎉
-**Tier 2 — 새 블록 타입 (base 티어):**
-- **배너 블록** — 배경색 + 제목 + 부제 (노트 Insert + 위키 TextBlock 공용)
-- **둘러보기 틀 (Navigation Box)** — 관련 문서 그룹 박스 (접기 가능)
-**Tier 3 — 유틸리티 매크로 (인라인):**
-- **나이 계산** `[age(YYYY-MM-DD)]` — 만 나이 자동
-- **D-Day** `[dday(날짜)]` — 남은 날 자동
-- **Include** — 다른 문서 내용 현재 위치에 삽입
-**Tier 4 — 고급:**
-- **상위/하위 문서 관계** — 부모-자식 문서 계층
-- **각주 이미지** — FootnoteEditModal 이미지 첨부
-- **루비 텍스트** — 한자/일본어 읽기 표시
-**아키텍처:**
-- 모든 새 기능 = base 티어 (노트+위키 공용, shared-editor-config.ts)
-- ✅ **Insert 레지스트리 단일화 완료 (2026-04-14 밤)** — `components/editor/block-registry/` 25+ entry 단일 source. 새 블록 추가 시 registry.ts 한 파일만 수정하면 slash + insertMenu 자동 노출. FixedToolbar 퀵액세스는 `getBlock(id).execute({editor})` 호출
+### P2 — 인포박스 Tier 1 완료 🎉 (2026-04-14 밤)
+- ✅ **대표 이미지 + 캡션 (PR #192)** — heroImage/heroCaption attrs
+- ✅ **헤더 색상 테마 (PR #194)** — 8 프리셋 + 커스텀 color input, PaintBucket 팝오버. 노트+위키 양쪽. `WikiArticle.infoboxHeaderColor?` optional
+- ✅ **접기/펼치기 (PR #192)** — chevron 토글 + `plot:set-all-collapsed`
+- ✅ **섹션 구분 행 (PR #194)** — `WikiInfoboxEntry.type?: "field" | "section"`
+- ✅ **필드 값 리치텍스트 (PR #194)** — `InfoboxValueRenderer` (wikilink/md-link/md-image/auto-URL + isSafeUrl)
+
+### P2 — 컬럼 레이아웃 + WikiTemplate 시스템 (2026-04-14 저녁 재설계)
+**핵심**: `WikiTemplate = { layout: ColumnStructure + titleStyle + themeColor + sections + infobox + hatnotes + navbox }`. 상세: `BRAINSTORM-2026-04-14-column-template-system.md`
+
+**Phase 0 — 문서 정비** (지금 진행 중)
+
+**Phase 1 — 데이터 모델 + 기본 템플릿 8종**
+- `ColumnStructure` 타입 (컬럼 개수 + 중첩 3 depth + 비율 + minWidth + priority)
+- `WikiTemplate` 인터페이스 + `wikiTemplates` slice
+- `WikiArticle.layout: ColumnStructure` (문자열 상수에서 교체), `titleStyle?`, `columnAssignments`, `templateId?`
+- Built-in 템플릿 8종: Blank / Encyclopedia / Person / Place / Concept / Work / Organization / Event
+- Store migration: 기존 `layout: "default"/"encyclopedia"` → 해당 템플릿 자동 변환
+- 새 위키 생성 UX: 템플릿 선택 다이얼로그
+
+**Phase 2 — 컬럼 렌더러 + titleStyle**
+- `components/wiki-editor/column-renderer.tsx` 신규 (재귀 ColumnStructure 렌더)
+- Title 영역 (article.title + titleStyle) — 컬럼 위 고정 (나무위키/위키피디아 관습)
+- themeColor CSS variable cascade
+- 기존 `wiki-article-view.tsx` + `wiki-article-encyclopedia.tsx` → 컬럼 렌더러 호출로 교체
+
+**Phase 3 — 편집 UX (컬럼 조작)**
+- 컬럼 경계 드래그로 비율 조절 (react-resizable-panels)
+- 컬럼 추가/삭제 버튼, 중첩 3 depth 지원 + enforcement
+- 블록을 컬럼 간 드래그 이동
+
+**Phase 4 — 사용자 커스텀 템플릿 편집기**
+- 설정 → 위키 → 내 템플릿 → [+ 새 템플릿]
+- 현재 문서를 "템플릿으로 저장"
+- 템플릿 편집 UI (드래그 정렬 + 필드 편집 + 미리보기)
+
+**Phase 5 — 나무위키 잔여 기능** (BRAINSTORM-wiki-ultra.md에 있던 기존 Phase 1~4의 재편)
+- Hatnote (A-1), Ambox 자동 배너 (A-3), Navbox 자동 (A-4)
+- 섹션 정체성 강화 (icon/themeColor/description)
+- Callout 12타입 확장
+
+**Phase 6 — 편집 히스토리 + 요약** (v1 스냅샷 → v2 diff → v3 롤백)
+
+**Phase 7 — 노트 split 기능** (must-todo, WikiSplitPage 패턴 복사)
+
+**아키텍처 원칙:**
+- Title 블록화 ❌ 폐기. `article.title + titleStyle`로 최상단 고정 (나무위키 관습)
+- Column Heading 블록 ❌ 폐기. Section(H2)로 대체
+- 기존 `default/encyclopedia/wiki-color` 레이아웃 프리셋 독립 선택지 ❌ 폐기. ColumnStructure 데이터 구조로 교체
+- ✅ **Insert 레지스트리 단일화 완료 (PR #192)** — `components/editor/block-registry/`
+- ✅ **모든 새 기능 = base 티어** (노트+위키 공용, shared-editor-config.ts)
 
 ### P2 — 인사이트 허브
 - **인사이트 허브** — 온톨로지 Single Source of Insights
-
-### P2 — 노트 Split (must-todo, 2026-04-14 확정)
-- **노트 split 기능** — 위키처럼 안정적 split UX. Medium 난이도, PR 하나 분량
-- **UX = WikiSplitPage 패턴 그대로** (`components/views/wiki-split-page.tsx`). 사용자 명시: "노트 스플리트도 이런 식으로 되면 이상적"
-  - 2-column UI: Original Note (체크박스 + 블록 타입 배지) / New Note (이동된 블록 preview)
-  - Shift+Click 범위 선택, Back/Cancel, 하단 Title 입력 + "Split N Blocks"
-- 기술 가능성 확인됨: UniqueID extension으로 top-level 노드 23종이 영속 ID 보유 (`shared-editor-config.ts:361`). 위키 splitMode UI 재사용
-- 새 파일: `components/views/note-split-page.tsx` (wiki 템플릿 복사 + TipTap 조작으로 교체) + `lib/store/slices/notes.ts`에 `splitNote` 액션
-- 우선순위: 위키 디자인 강화 (wiki-color, themeColor, Hatnote 등) 이후
-- 배경: `BRAINSTORM-2026-04-14-entity-philosophy.md`, `project_note_split_todo.md`
 
 ### P3 — 사이드패널 + 뷰 확장
 - **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식)

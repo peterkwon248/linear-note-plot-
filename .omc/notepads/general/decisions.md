@@ -66,3 +66,46 @@
 - WikiSplitPage 패턴 그대로 (`components/views/wiki-split-page.tsx` 502줄 복사)
 - 2-column Original/New + 체크박스 + Shift+Click 범위 선택 + Title 입력
 - 사용자 명시 요청
+
+## 2026-04-14 저녁 — 위키 템플릿 시스템 재설계 (3-layer 폐기 → 통합 모델)
+
+**"컬럼 렌더러 + 섹션 배치 = 템플릿"**
+
+3-layer 모델 (Layer 1 Layout Preset + Layer 2 Content Template + Layer 3 Typed Infobox 분리) 폐기. Layer 1이 독립 선택지일 필요 없음을 인지.
+
+새 통합 모델:
+```
+WikiTemplate = {
+  layout: ColumnStructure         // 컬럼 구조 (개수 + 중첩 + 비율)
+  titleStyle?: TitleStyleDef      // article.title 렌더 커스텀
+  themeColor?: { light, dark }
+  sections: SectionPlacement[]    // 섹션 + 각 섹션이 어느 컬럼에
+  infobox: InfoboxDef
+  hatnotes?, navbox?
+}
+```
+
+### 핵심 결정
+- **컬럼 시스템**: 1/2/3/N 자유, 중첩 최대 3 depth, 드래그로 비율 조절
+- **Title 최상단 고정**: 나무위키/위키피디아 관습. article.title + titleStyle (alignment/size/showAliases/themeColorBg)
+- **Title 블록화 X, Column Heading 블록 X**: Section(H2)로 충분
+- **기본 템플릿 8종 built-in**: Blank/Encyclopedia/Person/Place/Concept/Work/Organization/Event
+- **사용자 커스텀 템플릿**: 파라미터 조합 방식 (JSX 코드 주입 X)
+- **기존 blocks[] 유지**: 최소 침습. columnAssignments로 배치만 표시
+
+### Phase 계획 (8개)
+Phase 0: 문서 정비 → 1: 데이터 모델 + 템플릿 8종 → 2: 컬럼 렌더러 + titleStyle → 3: 편집 UX → 4: 커스텀 템플릿 편집기 → 5: 나무위키 잔여 → 6: 편집 히스토리 → 7: 노트 split
+
+**진실의 원천**: `docs/BRAINSTORM-2026-04-14-column-template-system.md`
+
+### 문서 정비 완료 (2026-04-14 저녁)
+- 신규: `docs/BRAINSTORM-2026-04-14-column-template-system.md` (진실의 원천)
+- 신규: `memory/project_column_template_system.md` (auto memory)
+- DEPRECATED 배너 추가: `BRAINSTORM-2026-04-14-wiki-ultra.md`, `PHASE-PLAN-wiki-enrichment.md`
+- 부분 업데이트: `BRAINSTORM-2026-04-14-entity-philosophy.md` (3-layer 섹션 교체)
+- 업데이트: `CONTEXT.md`, `MEMORY.md`, `TODO.md`, `NEXT-ACTION.md`, `SESSION-LOG.md`
+
+### 사용자 피드백 (유지)
+- 2026-04-14: "지금 방식(노트/위키 분리)도 마음에 든다, 단지 위키 디자인이 약할 뿐"
+- 2026-04-14 저녁: "컬럼 렌더러 + 섹션 배치 = 템플릿" 통찰 제시
+- 2026-04-14 저녁: Title 최상단 고정 제안 (나무위키/위키피디아 스크린샷 근거)
