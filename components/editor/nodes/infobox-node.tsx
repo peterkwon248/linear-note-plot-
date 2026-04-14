@@ -13,13 +13,47 @@ import {
   Image as PhImage,
   CaretDown,
   CaretRight,
+  PaintBucket,
 } from "@/lib/editor/editor-icons"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
+import { InfoboxValueRenderer } from "@/components/editor/infobox-value-renderer"
 
 interface InfoboxRow {
   label: string
   value: string
+  /** Tier 1-4: "section" = group header row (bold + tinted bg, value hidden). undefined/field = normal label/value row */
+  type?: "field" | "section"
+}
+
+// Tier 1-2: Header color presets (나무위키식 인포박스 색상 테마)
+// 알파 0.35 — text가 충분히 읽히면서 색상 구분 가능. Tables의 CELL_COLORS 패턴 차용.
+interface HeaderColorPreset {
+  label: string
+  value: string | null
+  swatch: string // 스와치 표시용 (null일 때는 bg-secondary/30 mimic)
+}
+
+const HEADER_COLOR_PRESETS: HeaderColorPreset[] = [
+  { label: "Default", value: null, swatch: "rgba(148,163,184,0.25)" },
+  { label: "Blue", value: "rgba(59,130,246,0.35)", swatch: "rgba(59,130,246,0.35)" },
+  { label: "Red", value: "rgba(239,68,68,0.35)", swatch: "rgba(239,68,68,0.35)" },
+  { label: "Green", value: "rgba(34,197,94,0.35)", swatch: "rgba(34,197,94,0.35)" },
+  { label: "Yellow", value: "rgba(234,179,8,0.35)", swatch: "rgba(234,179,8,0.35)" },
+  { label: "Orange", value: "rgba(249,115,22,0.35)", swatch: "rgba(249,115,22,0.35)" },
+  { label: "Purple", value: "rgba(168,85,247,0.35)", swatch: "rgba(168,85,247,0.35)" },
+  { label: "Pink", value: "rgba(236,72,153,0.35)", swatch: "rgba(236,72,153,0.35)" },
+]
+
+// hex (#rrggbb) → rgba(r,g,b,0.35). input[type=color]는 항상 #rrggbb.
+function hexToRgba(hex: string, alpha = 0.35): string {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim())
+  if (!m) return hex
+  const n = parseInt(m[1], 16)
+  const r = (n >> 16) & 0xff
+  const g = (n >> 8) & 0xff
+  const b = n & 0xff
+  return `rgba(${r},${g},${b},${alpha})`
 }
 
 function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeViewProps) {
@@ -30,10 +64,13 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
   const height = node.attrs.height as number | null
   const heroImage = (node.attrs.heroImage as string | null) ?? null
   const heroCaption = (node.attrs.heroCaption as string) || ""
+  const headerColor = (node.attrs.headerColor as string | null) ?? null
   const { containerRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
 
   // Tier 1-3: 접기/펼치기 state (local, not persisted — consistent with Summary node)
   const [collapsed, setCollapsed] = useState(false)
+  // Tier 1-2: 헤더 색상 피커 토글 (local UI state)
+  const [showColorPicker, setShowColorPicker] = useState(false)
 
   // Listen for scoped plot:set-all-collapsed broadcasts (PR #189 pattern).
   // Atom NodeViews attach to DOM AFTER React commits useEffect, so
@@ -79,7 +116,11 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
   }, [rows, updateAttributes])
 
   const addRow = useCallback(() => {
-    updateAttributes({ rows: [...rows, { label: "", value: "" }] })
+    updateAttributes({ rows: [...rows, { label: "", value: "", type: "field" }] })
+  }, [rows, updateAttributes])
+
+  const addSectionRow = useCallback(() => {
+    updateAttributes({ rows: [...rows, { label: "", value: "", type: "section" }] })
   }, [rows, updateAttributes])
 
   const removeRow = useCallback((index: number) => {
@@ -175,11 +216,12 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
           </button>
         )}
 
-        {/* Header — always visible, with chevron toggle (Tier 1-3) */}
+        {/* Header — always visible, with chevron toggle (Tier 1-3) + color theme (Tier 1-2) */}
         <div
-          className={`flex items-center justify-between px-3 py-2 bg-secondary/30 ${
-            collapsed ? "" : "border-b border-border-subtle"
-          }`}
+          className={`relative flex items-center justify-between px-3 py-2 ${
+            headerColor ? "" : "bg-secondary/30"
+          } ${collapsed ? "" : "border-b border-border-subtle"}`}
+          style={headerColor ? { backgroundColor: headerColor } : undefined}
         >
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <button
@@ -202,6 +244,18 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
           </div>
           {editable && (
             <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => setShowColorPicker((v) => !v)}
+                className={`rounded p-0.5 transition-colors shrink-0 ${
+                  showColorPicker || headerColor
+                    ? "text-foreground"
+                    : "text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/infobox:opacity-100"
+                }`}
+                title="Header color"
+              >
+                <PaintBucket size={12} />
+              </button>
               {(width || height) && (
                 <button
                   type="button"
@@ -222,54 +276,138 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
               </button>
             </div>
           )}
+
+          {/* Tier 1-2: Color picker popover */}
+          {editable && showColorPicker && (
+            <div
+              className="absolute right-2 top-[calc(100%+4px)] z-10 flex items-center gap-1 rounded-md border border-border-subtle bg-popover p-1.5 shadow-md"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {HEADER_COLOR_PRESETS.map((preset) => {
+                const isActive = (headerColor ?? null) === preset.value
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => {
+                      updateAttributes({ headerColor: preset.value })
+                      setShowColorPicker(false)
+                    }}
+                    title={preset.label}
+                    className={`h-5 w-5 rounded-sm border transition-transform hover:scale-110 ${
+                      isActive ? "border-foreground ring-1 ring-foreground" : "border-border-subtle"
+                    }`}
+                    style={{ backgroundColor: preset.swatch }}
+                  />
+                )
+              })}
+              <div className="mx-1 h-4 w-px bg-border-subtle" />
+              <label
+                className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm border border-border-subtle bg-gradient-to-br from-red-400 via-yellow-300 to-blue-400 hover:scale-110 transition-transform"
+                title="Custom color"
+              >
+                <input
+                  type="color"
+                  value={(headerColor && /^#/.test(headerColor)) ? headerColor : "#3b82f6"}
+                  onChange={(e) => {
+                    updateAttributes({ headerColor: hexToRgba(e.target.value) })
+                  }}
+                  className="pointer-events-none h-0 w-0 opacity-0"
+                />
+              </label>
+            </div>
+          )}
         </div>
 
         {/* Rows — hidden when collapsed (Tier 1-3) */}
         {!collapsed && (
         <div className="divide-y divide-border-subtle">
-          {rows.map((row, index) => (
-            <div key={index} className="flex items-center group/row">
-              <input
-                type="text"
-                value={row.label}
-                onChange={(e) => updateRow(index, "label", e.target.value)}
-                readOnly={!editable}
-                className="w-[120px] shrink-0 px-3 py-1.5 text-2xs font-medium text-muted-foreground bg-secondary/20 border-r border-border-subtle outline-none placeholder:text-muted-foreground/30"
-                placeholder="Label"
-              />
-              <input
-                type="text"
-                value={row.value}
-                onChange={(e) => updateRow(index, "value", e.target.value)}
-                readOnly={!editable}
-                className="flex-1 px-3 py-1.5 text-2xs text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
-                placeholder="Value"
-              />
-              {editable && (
-                <button
-                  type="button"
-                  onClick={() => removeRow(index)}
-                  className="px-2 text-muted-foreground/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
-                  title="Remove row"
-                >
-                  <PhTrash size={11} />
-                </button>
-              )}
-            </div>
-          ))}
+          {rows.map((row, index) =>
+            row.type === "section" ? (
+              // Tier 1-4: Section divider row — full-width, bold, tinted bg, value hidden
+              <div key={index} className="flex items-center group/row bg-secondary/40">
+                <input
+                  type="text"
+                  value={row.label}
+                  onChange={(e) => updateRow(index, "label", e.target.value)}
+                  readOnly={!editable}
+                  className="flex-1 px-3 py-1.5 text-2xs font-semibold uppercase tracking-wider text-foreground/80 bg-transparent outline-none placeholder:text-muted-foreground/40"
+                  placeholder="Section name"
+                />
+                {editable && (
+                  <button
+                    type="button"
+                    onClick={() => removeRow(index)}
+                    className="px-2 text-muted-foreground/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
+                    title="Remove section"
+                  >
+                    <PhTrash size={11} />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div key={index} className="flex items-center group/row">
+                <input
+                  type="text"
+                  value={row.label}
+                  onChange={(e) => updateRow(index, "label", e.target.value)}
+                  readOnly={!editable}
+                  className="w-[120px] shrink-0 px-3 py-1.5 text-2xs font-medium text-muted-foreground bg-secondary/20 border-r border-border-subtle outline-none placeholder:text-muted-foreground/30"
+                  placeholder="Label"
+                />
+                {editable ? (
+                  <input
+                    type="text"
+                    value={row.value}
+                    onChange={(e) => updateRow(index, "value", e.target.value)}
+                    className="flex-1 px-3 py-1.5 text-2xs text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
+                    placeholder="Value"
+                  />
+                ) : (
+                  // Tier 1-5: read-only 리치텍스트 렌더링 (wikilink/md-link/md-image/auto-url)
+                  <InfoboxValueRenderer
+                    text={row.value}
+                    className="flex-1 px-3 py-1.5 text-2xs text-foreground"
+                  />
+                )}
+                {editable && (
+                  <button
+                    type="button"
+                    onClick={() => removeRow(index)}
+                    className="px-2 text-muted-foreground/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
+                    title="Remove row"
+                  >
+                    <PhTrash size={11} />
+                  </button>
+                )}
+              </div>
+            ),
+          )}
         </div>
         )}
 
-        {/* Add row button — hover-only in edit mode, hidden when collapsed */}
+        {/* Add row / Add section buttons — hover-only in edit mode, hidden when collapsed */}
         {!collapsed && editable && (
-          <button
-            type="button"
-            onClick={addRow}
-            className="w-full flex items-center justify-center gap-1 px-3 py-1.5 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors border-t border-border-subtle opacity-0 group-hover/infobox:opacity-100"
-          >
-            <PhPlus size={11} />
-            <span>Add row</span>
-          </button>
+          <div className="flex border-t border-border-subtle opacity-0 group-hover/infobox:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={addRow}
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+            >
+              <PhPlus size={11} />
+              <span>Add row</span>
+            </button>
+            <div className="w-px bg-border-subtle" />
+            <button
+              type="button"
+              onClick={addSectionRow}
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+              title="Add section divider row"
+            >
+              <PhPlus size={11} />
+              <span>Add section</span>
+            </button>
+          </div>
         )}
       </div>
     </NodeViewWrapper>
@@ -326,6 +464,14 @@ export const InfoboxBlockNode = Node.create({
         parseHTML: (el: HTMLElement) => el.getAttribute("data-hero-caption") || "",
         renderHTML: (attrs: Record<string, any>) =>
           attrs.heroCaption ? { "data-hero-caption": attrs.heroCaption } : {},
+      },
+      // Tier 1-2: Header color theme (나무위키 인포박스 색상 테마)
+      // null = default (bg-secondary/30). Otherwise a raw CSS color string (rgba/hex).
+      headerColor: {
+        default: null,
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-header-color") || null,
+        renderHTML: (attrs: Record<string, any>) =>
+          attrs.headerColor ? { "data-header-color": attrs.headerColor } : {},
       },
     }
   },

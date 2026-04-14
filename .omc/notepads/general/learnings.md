@@ -39,3 +39,26 @@
 - note.contentJson이 IDB에 null로 저장될 수 있음 (partialize + BodyProvider hydrate 순서). BodyProvider hydrate 후 Zustand에서 읽는 게 IDB 직접 읽기보다 안정적
 - data-hover-preview 속성을 가드로 사용해서 프리뷰 안 ProseMirror 이벤트 (hover/click) 재귀 방지 패턴
 - mouseup 리스너 등록(el)과 해제(document) 불일치 → 메모리 누수. cleanup에서 동일 대상 사용 필수
+
+## 2026-04-14 — 기술 발견
+
+**UniqueID extension 이미 준비됨**
+- `shared-editor-config.ts:361` — top-level 23종 노드(heading/paragraph/table/image/list/etc.)에 영속 data-id 자동 부여
+- 노트 split 구현의 인프라 완비 (WikiBlock[]과 동등한 ID 추적 가능)
+- 노트 split 액션 = 약 50줄, UX는 WikiSplitPage 복사 + TipTap 조작으로 교체
+
+**Next.js webpack dev vs Turbopack build 타입 검증 차이**
+- dev server (webpack) pass → production build (turbopack) fail 가능
+- 증거: `registry.ts:63` RemixiconComponentType 에러 — dev는 실행되는데 build는 실패
+- 정기적으로 `npm run build` 돌려야 함
+
+**WikiInfobox vs InfoboxBlockNode 2중 구현체**
+- `components/editor/wiki-infobox.tsx` (WikiArticle.infobox용, float-right 사이드바)
+- `components/editor/nodes/infobox-node.tsx` (TipTap 노드, 노트+위키 본문)
+- 같은 UX지만 데이터 쉐입 다름. 중장기 통합 TODO (base 티어 단일화)
+- 양쪽 동일 기능 추가할 때 코드 2번 복제 필요 (현재 현실)
+
+**Skill 시스템 본질**
+- `/after-work` 슬래시 커맨드 = expand된 프롬프트 전달
+- Skill tool 재호출해도 같은 프롬프트 반복
+- 실행 주체는 Claude. Skill = 프롬프트 템플릿 + command mapping 인프라

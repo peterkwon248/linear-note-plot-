@@ -27,7 +27,8 @@ import type { ComponentType } from "react"
 /** Icon component shape — matches @/lib/editor/editor-icons (Remix icons).
  *  Remix icons accept `size` (number) and `className`; they do NOT have
  *  a `weight` prop like Phosphor. */
-export type BlockIcon = ComponentType<{ size?: number; className?: string }>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type BlockIcon = ComponentType<any>
 
 /** Surface on which this block is exposed. */
 export type BlockSurface = "slash" | "insertMenu" | "toolbar"
@@ -91,7 +92,7 @@ export interface BlockRegistryEntry {
    *
    *  This is why we can't just store a static JSON doc — the placeholder
    *  strategy differs by trigger path. */
-  execute: (ctx: BlockExecuteContext) => void | Promise<void>
+  execute: (ctx: BlockExecuteContext) => void | boolean | Promise<void>
 }
 
 /** Helper: run the chain.deleteRange if range exists. */

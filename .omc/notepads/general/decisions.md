@@ -43,3 +43,26 @@
 - **4-way wikilink 시각 시스템**: exists(보라밑줄), wiki(teal칩), stub(amber점선), dangling(gray점선). Wiki 우선 (wiki-only일 때 teal)
 - **호버 프리뷰 Pin = 모듈 레벨**: _pinned + _pinListeners. PreviewCard와 WikilinkDecoration/MentionInteraction 양쪽에서 접근 가능
 - **위키 호버 프리뷰 방향**: wiki-article-view를 640px 카드에 임베드. 블록 5개 이하=바로 전체, 6개+=목차형 먼저
+
+## 2026-04-14 — Entity Philosophy 확정
+
+**Note/Wiki 2-entity 유지, 엔티티 통합 영구 폐기**
+
+- 2026-03-30 PIVOT #1 (IKEA 전략) → 2026-04-01 ROLLBACK #2 (노션식 폐기) → 2026-04-14 FINAL: 분리 유지 + 위키 디자인 강화
+- Alpha (완전 통합) / Beta (절충) / Gamma (역할 태그) 모두 폐기
+- 차별점의 원천 = 데이터 구조 (TipTap JSON vs WikiBlock[])
+- **렌더러(Layout Preset)는 위키 전용** — 노트에 주면 차별점 희석됨
+- 사용자 명시: "지금 방식도 마음에 든다, 단지 위키 디자인이 약할 뿐"
+
+**위키 템플릿 3층 모델**
+
+- Layer 1: Layout Preset (default/encyclopedia/wiki-color, 렌더러)
+- Layer 2: Content Template (섹션 뼈대, Person/Place/Concept 등 타입별)
+- Layer 3: Typed Infobox (Layer 2의 인포박스 부분 독립화)
+- 노트 템플릿 = NoteTemplate slice 유지 (UpNote식, title+content 복사, 자유 구조)
+
+**노트 split UX 결정**
+
+- WikiSplitPage 패턴 그대로 (`components/views/wiki-split-page.tsx` 502줄 복사)
+- 2-column Original/New + 체크박스 + Shift+Click 범위 선택 + Title 입력
+- 사용자 명시 요청

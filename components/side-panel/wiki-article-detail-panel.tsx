@@ -184,22 +184,9 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
         </>
       )}
 
-      {/* Infobox — hidden in encyclopedia mode (shown inline in article body) */}
-      {article.infobox.length > 0 && article.layout !== "encyclopedia" && (
-        <>
-          <InspectorSection title="Infobox" icon={<FileText size={16} weight="regular" />}>
-            <div className="space-y-2">
-              {article.infobox.map((entry, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <span className="text-note text-muted-foreground">{entry.key}</span>
-                  <span className="text-note text-foreground max-w-[60%] truncate text-right">{entry.value}</span>
-                </div>
-              ))}
-            </div>
-          </InspectorSection>
-          <div className="mx-4 border-b border-border" />
-        </>
-      )}
+      {/* Infobox 사이드바 섹션 제거됨 (2026-04-14 밤)
+          - Default/Encyclopedia 둘 다 이제 본문에 inline WikiInfobox 렌더링됨
+          - 사이드바 중복 표시 방지. Infobox 편집/색상 변경 = 본문 인포박스에서 */}
 
       {/* Sections (Outline) */}
       <InspectorSection title="Outline" icon={<TextAlignLeft size={16} weight="regular" />}>

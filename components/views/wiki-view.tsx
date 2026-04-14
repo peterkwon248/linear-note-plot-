@@ -637,7 +637,14 @@ export function WikiView() {
     ? wikiArticles.find((a) => a.id === selectedWikiArticleId)
     : null
 
-  if (selectedWikiArticleId && selectedWikiArticle) {
+  // Bug fix (2026-04-14): 사이드바에서 Merge/Split/Categories 클릭 시 wikiViewMode 변경되어도
+  // selectedWikiArticleId가 남아있으면 article view가 계속 렌더됨. wikiViewMode가
+  // "merge"/"split"/"category"일 때는 해당 전용 페이지(WikiMergePage/WikiSplitPage/category view)가
+  // 렌더되도록 article view 조건에서 제외.
+  const isDedicatedModePage =
+    wikiViewMode === "merge" || wikiViewMode === "split" || wikiViewMode === "category"
+
+  if (selectedWikiArticleId && selectedWikiArticle && !isDedicatedModePage) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader

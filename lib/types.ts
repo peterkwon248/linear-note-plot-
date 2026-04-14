@@ -18,6 +18,8 @@ export type ActivitySpace = "home" | "notes" | "wiki" | "calendar" | "ontology" 
 export interface WikiInfoboxEntry {
   key: string
   value: string
+  /** Tier 1-4: "section" = group header row (bold + tinted bg, value hidden). "field" or undefined = normal key/value row */
+  type?: "field" | "section"
 }
 
 /** Item in a wiki article's collection (staging area for related material) */
@@ -141,6 +143,8 @@ export interface WikiArticle {
   title: string
   aliases: string[]
   infobox: WikiInfoboxEntry[]
+  /** Tier 1-2: Infobox header background color (null/undefined = default bg-secondary/30). Raw CSS color (rgba/hex). */
+  infoboxHeaderColor?: string | null
   blocks: WikiBlock[]
   sectionIndex: WikiSectionIndex[]
   tags: string[]
