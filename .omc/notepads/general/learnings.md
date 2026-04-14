@@ -62,3 +62,26 @@
 - `/after-work` 슬래시 커맨드 = expand된 프롬프트 전달
 - Skill tool 재호출해도 같은 프롬프트 반복
 - 실행 주체는 Claude. Skill = 프롬프트 템플릿 + command mapping 인프라
+
+## 2026-04-14 저녁 — 컬럼 시스템 재설계 관련
+
+**나무위키/위키피디아 실제 레이아웃 모델**
+- Title은 컬럼 위 최상단 고정 (풀 너비)
+- 그 아래부터 컬럼 레이아웃 (인포박스 + 본문)
+- 사용자 스크린샷 확인: 나무위키 "천간", 위키피디아 "도널드 트럼프"
+- Title 블록화 불필요. article.title + titleStyle로 충분
+
+**react-resizable-panels 재사용 가능**
+- Plot workspace (메인/사이드 패널)에서 이미 사용 중
+- 컬럼 비율 드래그 조절에 그대로 재활용 가능
+- 독립 import 불필요
+
+**TipTap columnsBlock vs 문서 레벨 컬럼**
+- columnsBlock/columnCell = 블록 레벨 (섹션 에디터 내부)
+- 문서 레벨 컬럼 = WikiArticle.layout
+- 둘은 다른 레이어. 공존 가능. 혼동 금지
+
+**Phase 순서 선택 원칙**
+- 철저함 중시 = 데이터 모델 완전 정의 후 렌더러 (사용자 선택)
+- 빠른 피드백 = 최소 렌더러 포함해서 시각적 확인
+- 둘 다 장단 있음. 사용자 성향 존중
