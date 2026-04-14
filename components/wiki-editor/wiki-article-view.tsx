@@ -473,23 +473,35 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
           ) : null}
 
           {/* Infobox — Default layout 도 지원 (Tier 1-2 헤더 색상 포함).
-              Encyclopedia와 동일 — center=stack vertically, left=float right */}
+              2026-04-14 UX 수정: 편집 모드에서는 float-right 해제하고 상단 전폭 배치.
+              이유: 편집 중 Add field/Section 버튼이 본문 heading 클릭 영역과 겹쳐서
+              사용자가 오인 클릭하는 문제 (float 상태에선 본문이 인포박스 옆으로 흐르고,
+              긴 편집 UI가 아래 섹션과 수직으로 가까워짐).
+              · 읽기 모드 + left align: float-right 280px (원래 동작)
+              · 읽기 모드 + center align: max-w-sm 중앙 정렬
+              · 편집 모드: 항상 stack vertically 전폭 (간섭 없음) */}
           {(article.infobox.length > 0 || editable) && (
-            article.contentAlign === "center" ? (
-              <div className="mb-6 max-w-sm">
+            editable ? (
+              <div className="mb-8 max-w-md not-draggable">
                 <WikiInfobox
                   noteId={article.id}
                   entries={article.infobox}
                   editable={editable}
                   headerColor={article.infoboxHeaderColor ?? null}
-                  onHeaderColorChange={
-                    editable
-                      ? (color) =>
-                          usePlotStore
-                            .getState()
-                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
-                      : undefined
+                  onHeaderColorChange={(color) =>
+                    usePlotStore
+                      .getState()
+                      .updateWikiArticle(article.id, { infoboxHeaderColor: color })
                   }
+                />
+              </div>
+            ) : article.contentAlign === "center" ? (
+              <div className="mb-6 max-w-sm">
+                <WikiInfobox
+                  noteId={article.id}
+                  entries={article.infobox}
+                  editable={false}
+                  headerColor={article.infoboxHeaderColor ?? null}
                 />
               </div>
             ) : (
@@ -497,16 +509,8 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                 <WikiInfobox
                   noteId={article.id}
                   entries={article.infobox}
-                  editable={editable}
+                  editable={false}
                   headerColor={article.infoboxHeaderColor ?? null}
-                  onHeaderColorChange={
-                    editable
-                      ? (color) =>
-                          usePlotStore
-                            .getState()
-                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
-                      : undefined
-                  }
                 />
               </div>
             )

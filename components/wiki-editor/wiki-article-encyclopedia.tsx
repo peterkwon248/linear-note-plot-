@@ -247,24 +247,42 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
 
       {/* Main content area */}
       <div className={cn("px-10 pb-8", article.contentAlign === "center" && "max-w-4xl mx-auto")}>
-        {article.contentAlign === "center" ? (
+        {/* 2026-04-14 UX: 편집 모드일 때는 float 해제하고 상단 전폭 배치.
+            이유: 편집 중 Add field/Section 버튼과 본문 heading 클릭 영역 간섭 방지.
+            읽기 모드는 원래 center/left 레이아웃 유지 */}
+        {isEditing ? (
           <>
-            {/* Center mode: stack vertically — Infobox → TOC → blocks */}
             {(article.infobox.length > 0 || isEditing) && (
+              <div className="mb-8 max-w-md">
+                <WikiInfobox
+                  noteId={article.id}
+                  entries={article.infobox}
+                  editable={true}
+                  headerColor={article.infoboxHeaderColor ?? null}
+                  onHeaderColorChange={(color) =>
+                    usePlotStore
+                      .getState()
+                      .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                  }
+                />
+              </div>
+            )}
+            <CollapsibleTOC
+              sections={article.sectionIndex}
+              sectionNumbers={sectionNumbers}
+            />
+            <div className="mt-8" />
+          </>
+        ) : article.contentAlign === "center" ? (
+          <>
+            {/* Center mode (read-only): stack vertically — Infobox → TOC → blocks */}
+            {article.infobox.length > 0 && (
               <div className="mb-6 max-w-sm">
                 <WikiInfobox
                   noteId={article.id}
                   entries={article.infobox}
-                  editable={isEditing}
+                  editable={false}
                   headerColor={article.infoboxHeaderColor ?? null}
-                  onHeaderColorChange={
-                    isEditing
-                      ? (color) =>
-                          usePlotStore
-                            .getState()
-                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
-                      : undefined
-                  }
                 />
               </div>
             )}
@@ -276,22 +294,14 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
           </>
         ) : (
           <>
-            {/* Left mode: float infobox right, TOC inline */}
-            {(article.infobox.length > 0 || isEditing) && (
+            {/* Left mode (read-only): float infobox right, TOC inline */}
+            {article.infobox.length > 0 && (
               <div className="float-right ml-6 mb-4 w-[320px]">
                 <WikiInfobox
                   noteId={article.id}
                   entries={article.infobox}
-                  editable={isEditing}
+                  editable={false}
                   headerColor={article.infoboxHeaderColor ?? null}
-                  onHeaderColorChange={
-                    isEditing
-                      ? (color) =>
-                          usePlotStore
-                            .getState()
-                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
-                      : undefined
-                  }
                 />
               </div>
             )}
