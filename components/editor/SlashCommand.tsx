@@ -12,356 +12,22 @@ import "@tiptap/extension-details"
 import { usePlotStore } from "@/lib/store"
 import { expandPlaceholders } from "@/lib/store/slices/templates"
 import type { NoteTemplate } from "@/lib/types"
+import { Layout } from "@/lib/editor/editor-icons"
 import {
-  TextHOne, TextHTwo, TextHThree, ListBullets, ListNumbers, CheckSquare,
-  Quotes, Code as PhCode, Minus as PhMinus, Table as PhTable, CaretRight,
-  MathOperations, Layout, Info, Article, Columns as PhColumns, Note as PhNote,
-  BookOpen, IdentificationCard, Cube, BookmarkSimple, Asterisk, Database, LinkSimple, Book,
-} from "@/lib/editor/editor-icons"
-import { nanoid } from "nanoid"
-import { detectUrlType } from "@/lib/editor/url-detect"
-import { requestEmbedUrl } from "@/lib/editor/embed-url-request"
+  getBlocksForSurface,
+  type BlockRegistryEntry,
+} from "./block-registry"
 
-interface CommandItem {
-  title: string
-  description: string
-  icon: React.ElementType
-  command: (props: { editor: Editor; range: Range }) => void
-}
-
-const COMMANDS: CommandItem[] = [
-  {
-    title: "Heading 1",
-    description: "Large heading",
-    icon: TextHOne,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run()
-    },
-  },
-  {
-    title: "Heading 2",
-    description: "Medium heading",
-    icon: TextHTwo,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run()
-    },
-  },
-  {
-    title: "Heading 3",
-    description: "Small heading",
-    icon: TextHThree,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run()
-    },
-  },
-  {
-    title: "Bullet List",
-    description: "Unordered list",
-    icon: ListBullets,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).toggleBulletList().run()
-    },
-  },
-  {
-    title: "Numbered List",
-    description: "Ordered list",
-    icon: ListNumbers,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).toggleOrderedList().run()
-    },
-  },
-  {
-    title: "Checklist",
-    description: "Task list with checkboxes",
-    icon: CheckSquare,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).toggleTaskList().run()
-    },
-  },
-  {
-    title: "Blockquote",
-    description: "Blockquote",
-    icon: Quotes,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).toggleBlockquote().run()
-    },
-  },
-  {
-    title: "Code Block",
-    description: "Code with syntax highlighting",
-    icon: PhCode,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).toggleCodeBlock().run()
-    },
-  },
-  {
-    title: "Toggle",
-    description: "Collapsible content",
-    icon: CaretRight,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).setDetails().run()
-    },
-  },
-  {
-    title: "Divider",
-    description: "Horizontal rule",
-    icon: PhMinus,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).setHorizontalRule().run()
-    },
-  },
-  {
-    title: "Table",
-    description: "3×3 table with header",
-    icon: PhTable,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-    },
-  },
-  {
-    title: "Math (Inline)",
-    description: "Inline LaTeX equation",
-    icon: MathOperations,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertContent({
-        type: "inlineMath",
-        attrs: { latex: " " },
-      }).run()
-    },
-  },
-  {
-    title: "Math (Block)",
-    description: "Block LaTeX equation",
-    icon: MathOperations,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertContent({
-        type: "blockMath",
-        attrs: { latex: " " },
-      }).run()
-    },
-  },
-  {
-    title: "Table of Contents (TOC)",
-    description: "Auto-generated heading outline",
-    icon: Layout,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertContent({ type: "tocBlock" }).run()
-    },
-  },
-  {
-    title: "Callout",
-    description: "Colored info/warning/tip box",
-    icon: Info,
-    command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent({ type: "calloutBlock", attrs: { calloutType: "info" }, content: [{ type: "paragraph" }] })
-        .run()
-    },
-  },
-  {
-    title: "Summary",
-    description: "Collapsible summary / TL;DR section",
-    icon: Article,
-    command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent({ type: "summaryBlock", content: [{ type: "paragraph" }] })
-        .run()
-    },
-  },
-  {
-    title: "2 Columns",
-    description: "2-column side-by-side layout",
-    icon: PhColumns,
-    command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent({
-          type: "columnsBlock",
-          content: [
-            { type: "columnCell", content: [{ type: "paragraph" }] },
-            { type: "columnCell", content: [{ type: "paragraph" }] },
-          ],
-        })
-        .run()
-    },
-  },
-  {
-    title: "3 Columns",
-    description: "3-column layout",
-    icon: PhColumns,
-    command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent({
-          type: "columnsBlock",
-          content: [
-            { type: "columnCell", content: [{ type: "paragraph" }] },
-            { type: "columnCell", content: [{ type: "paragraph" }] },
-            { type: "columnCell", content: [{ type: "paragraph" }] },
-          ],
-        })
-        .run()
-    },
-  },
-  {
-    title: "4 Columns",
-    description: "4-column layout",
-    icon: PhColumns,
-    command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent({
-          type: "columnsBlock",
-          content: [
-            { type: "columnCell", content: [{ type: "paragraph" }] },
-            { type: "columnCell", content: [{ type: "paragraph" }] },
-            { type: "columnCell", content: [{ type: "paragraph" }] },
-            { type: "columnCell", content: [{ type: "paragraph" }] },
-          ],
-        })
-        .run()
-    },
-  },
-  {
-    title: "Embed Note",
-    description: "Embed a note preview",
-    icon: PhNote,
-    command: ({ editor, range }) => {
-      // Delete the slash command range first
-      editor.chain().focus().deleteRange(range).run()
-      // Open note picker via custom event — NoteEditor listens for this
-      window.dispatchEvent(new CustomEvent("plot:embed-note-pick", { detail: { editor } }))
-    },
-  },
-  {
-    title: "Embed Wiki",
-    description: "Embed a wiki article",
-    icon: BookOpen,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).run()
-      window.dispatchEvent(new CustomEvent("plot:embed-wiki-pick", { detail: { editor } }))
-    },
-  },
-  {
-    title: "Bookmark",
-    description: "Inline anchor point for quick navigation",
-    icon: BookmarkSimple,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertContent({ type: "anchorMark", attrs: { label: "Bookmark" } }).run()
-    },
-  },
-  {
-    title: "Bookmark Divider",
-    description: "Section divider with bookmark label",
-    icon: BookmarkSimple,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertContent({ type: "anchorDivider", attrs: { label: "Section" } }).run()
-    },
-  },
-  {
-    title: "Footnote",
-    description: "Add a footnote reference",
-    icon: Asterisk,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertContent({
-        type: "footnoteRef",
-        attrs: { id: nanoid(8), content: "" },
-      }).run()
-    },
-  },
-  {
-    title: "Reference",
-    description: "Add a reference to this note",
-    icon: Book,
-    command: ({ editor, range }: { editor: Editor; range: Range }) => {
-      editor.chain().focus().deleteRange(range).run()
-      window.dispatchEvent(new CustomEvent("plot:open-reference-picker"))
-    },
-  },
-  {
-    title: "Infobox",
-    description: "Key-value info card",
-    icon: IdentificationCard,
-    command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent({
-          type: "infoboxBlock",
-          attrs: {
-            title: "Info",
-            rows: [{ label: "", value: "" }],
-          },
-        })
-        .run()
-    },
-  },
-  {
-    title: "Block",
-    description: "Wrap content in a draggable block",
-    icon: Cube,
-    command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent({ type: "contentBlock", content: [{ type: "paragraph" }] })
-        .run()
-    },
-  },
-  {
-    title: "Query",
-    description: "Inline filtered notes table",
-    icon: Database,
-    command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent({ type: "queryBlock", attrs: { queryId: nanoid(8) } })
-        .run()
-    },
-  },
-  {
-    title: "Embed",
-    description: "Embed URL (YouTube, audio, or link)",
-    icon: LinkSimple,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).run()
-      requestEmbedUrl((url) => {
-        if (!url) return
-        const type = detectUrlType(url)
-        if (type === "youtube") {
-          editor.chain().focus().setYoutubeVideo({ src: url }).run()
-        } else if (type === "audio") {
-          editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
-        } else {
-          editor.chain().focus().insertContent({ type: "linkCard", attrs: { url } }).run()
-        }
-      })
-    },
-  },
-]
+/** Slash-menu item: a registry entry, or a dynamically-generated template item
+ *  that wears the same shape. */
+type SlashItem = BlockRegistryEntry
 
 interface CommandListRef {
   onKeyDown: (props: SuggestionKeyDownProps) => boolean
 }
 
 interface CommandListProps extends SuggestionProps {
-  items: CommandItem[]
+  items: SlashItem[]
 }
 
 const CommandList = forwardRef<CommandListRef, CommandListProps>(
@@ -420,7 +86,7 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
           const Icon = item.icon
           return (
             <button
-              key={item.title}
+              key={item.id}
               onClick={() => selectItem(index)}
               onMouseEnter={() => setSelectedIndex(index)}
               className={[
@@ -435,11 +101,13 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-note font-medium leading-[1.3]">
-                  {item.title}
+                  {item.label}
                 </div>
-                <div className="text-2xs opacity-60 leading-[1.3] mt-px">
-                  {item.description}
-                </div>
+                {item.description && (
+                  <div className="text-2xs opacity-60 leading-[1.3] mt-px">
+                    {item.description}
+                  </div>
+                )}
               </div>
             </button>
           )
@@ -453,6 +121,14 @@ CommandList.displayName = "CommandList"
 
 const slashCommandPluginKey = new PluginKey("slashCommand")
 
+/** Match an item against a lowercase query (label + aliases). */
+function matchesQuery(item: SlashItem, q: string): boolean {
+  if (!q) return true
+  if (item.label.toLowerCase().includes(q)) return true
+  if (item.aliases?.some((a) => a.toLowerCase().includes(q))) return true
+  return false
+}
+
 export const SlashCommandExtension = Extension.create({
   name: "slashCommand",
 
@@ -461,26 +137,34 @@ export const SlashCommandExtension = Extension.create({
       suggestion: {
         char: "/",
         pluginKey: slashCommandPluginKey,
-        command: ({ editor, range, props }: { editor: Editor; range: Range; props: CommandItem }) => {
-          props.command({ editor, range })
+        command: ({ editor, range, props }: { editor: Editor; range: Range; props: SlashItem }) => {
+          props.execute({ editor, range })
         },
         items: ({ query }: { query: string }) => {
           const q = query.toLowerCase()
-          const baseItems = COMMANDS.filter((item) =>
-            item.title.toLowerCase().includes(q)
+          const baseItems = getBlocksForSurface("slash").filter((item) =>
+            matchesQuery(item, q),
           )
 
-          // Dynamically add template items from the store
+          // Dynamically add template items from the store.
+          // Templates don't live in the static registry because they're
+          // user-created; we adapt them to BlockRegistryEntry shape.
           const templates = (usePlotStore.getState().templates ?? []) as NoteTemplate[]
-          const templateItems: CommandItem[] = templates
+          const templateItems: SlashItem[] = templates
             .filter((t) => t.name.toLowerCase().includes(q) || "template".includes(q))
-            .map((t) => ({
-              title: `Template: ${t.name}`,
+            .map<SlashItem>((t) => ({
+              id: `template-${t.id}`,
+              label: `Template: ${t.name}`,
               description: t.description || "Insert template content",
               icon: Layout,
-              command: ({ editor, range }: { editor: Editor; range: Range }) => {
+              surfaces: ["slash"],
+              group: "structure",
+              tier: "base",
+              execute: ({ editor, range }) => {
                 const expanded = expandPlaceholders(t.content)
-                editor.chain().focus().deleteRange(range).insertContent(expanded).run()
+                const chain = editor.chain().focus()
+                if (range) chain.deleteRange(range)
+                chain.insertContent(expanded).run()
               },
             }))
 

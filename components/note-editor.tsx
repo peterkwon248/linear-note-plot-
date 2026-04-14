@@ -140,6 +140,18 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
     return () => { editorInstance.off("update", handler) }
   }, [editorInstance])
 
+  // Local state for non-Details collapsibles (Footnote/Summary/References)
+  // — their collapsed state lives inside child components, so we track the last
+  // user-initiated toggle here for the Expand/Collapse All button.
+  // Details blocks track state via DOM (details-block is-open class).
+  // Initial: true matches child components' default `useState(true)`.
+  const [localCollapsedState, setLocalCollapsedState] = useState(true)
+
+  // Reset local state when switching notes (children remount, default to collapsed)
+  useEffect(() => {
+    setLocalCollapsedState(true)
+  }, [note?.id])
+
   const { hasCollapsibles, allCollapsed } = useMemo(() => {
     if (!editorInstance) return { hasCollapsibles: false, allCollapsed: false }
     let hasDetails = false
@@ -155,15 +167,19 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
       if (node.type.name === "footnoteRef") hasFootnote = true
     })
     const hasRefs = !!(note?.referenceIds?.length)
+    // Details takes priority (DOM-driven); otherwise fall back to local state
+    // so Footnote/Summary/References can be toggled in docs without Details blocks.
+    const resolvedCollapsed = hasDetails ? allDetailsClosed : localCollapsedState
     return {
       hasCollapsibles: hasDetails || hasSummary || hasFootnote || hasRefs,
-      allCollapsed: hasDetails ? allDetailsClosed : false,
+      allCollapsed: resolvedCollapsed,
     }
-  }, [editorInstance, docVersion, note?.referenceIds?.length])
+  }, [editorInstance, docVersion, note?.referenceIds?.length, localCollapsedState])
 
   const handleToggleAllCollapsibles = useCallback(() => {
     if (!editorInstance || !hasCollapsibles) return
     const targetCollapsed = !allCollapsed
+    setLocalCollapsedState(targetCollapsed)
 
     // 1. Toggle all Details blocks via DOM click (syncs both visual + persisted state)
     const detailsBlocks = editorInstance.view.dom.querySelectorAll('.details-block')
@@ -175,8 +191,12 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
     })
 
     // 2. Broadcast event for Summary, FootnotesFooter, NoteReferencesFooter
-    window.dispatchEvent(new CustomEvent("plot:set-all-collapsed", {
-      detail: { collapsed: targetCollapsed }
+    //    Scope dispatch to the current editor container so Split View panes stay independent.
+    const scope = editorInstance.view.dom.closest('[data-editor-scope]')
+    const target: EventTarget = scope ?? window
+    target.dispatchEvent(new CustomEvent("plot:set-all-collapsed", {
+      detail: { collapsed: targetCollapsed },
+      bubbles: true,
     }))
   }, [editorInstance, allCollapsed, hasCollapsibles])
 
@@ -352,7 +372,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   )
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-background">
+    <div data-editor-scope="note" className="flex flex-1 flex-col overflow-hidden bg-background">
       {/* SURFACE: full-width column */}
       <div className="flex flex-col flex-1 overflow-hidden w-full">
       {/* Editor Header */}

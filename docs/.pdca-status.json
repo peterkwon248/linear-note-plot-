@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-09T08:32:44.887Z",
+  "lastUpdated": "2026-04-14T08:50:00.907Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -26,7 +26,9 @@
     "workspace",
     "focused-kirch",
     "nodes",
-    "vigorous-spence"
+    "vigorous-spence",
+    "adoring-benz",
+    "block-registry"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -39,9 +41,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-05T00:23:24.929Z",
-        "lastUpdated": "2026-04-09T06:27:17.564Z"
+        "lastUpdated": "2026-04-14T08:18:10.402Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\vigorous-spence\\components\\editor\\floating-toc.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\FixedToolbar.tsx"
     },
     "wizardly-kare": {
       "phase": "do",
@@ -104,9 +106,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-05T02:57:27.771Z",
-        "lastUpdated": "2026-03-05T02:57:27.771Z"
+        "lastUpdated": "2026-04-14T04:58:43.002Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-kare\\app\\settings\\backup\\page.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\app\\settings\\backup\\page.tsx"
     },
     "shortcuts": {
       "phase": "do",
@@ -208,9 +210,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-04-09T06:08:20.821Z"
+        "lastUpdated": "2026-04-14T05:54:46.498Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\vigorous-spence\\lib\\store\\index.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\lib\\store\\index.ts"
     },
     "__tests__": {
       "phase": "do",
@@ -260,9 +262,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-09T07:49:30.516Z"
+        "lastUpdated": "2026-04-14T03:06:42.360Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\vigorous-spence\\components\\wiki-editor\\wiki-article-view.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\wiki-editor\\wiki-footnotes-section.tsx"
     },
     "core": {
       "phase": "do",
@@ -273,9 +275,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-03T00:38:18.960Z",
-        "lastUpdated": "2026-04-08T07:37:24.868Z"
+        "lastUpdated": "2026-04-14T05:39:22.859Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\focused-kirch\\components\\editor\\core\\shared-editor-config.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\core\\shared-editor-config.ts"
     },
     "zealous-haslett": {
       "phase": "do",
@@ -312,9 +314,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-08T01:23:26.886Z",
-        "lastUpdated": "2026-04-09T08:31:08.034Z"
+        "lastUpdated": "2026-04-14T03:04:29.330Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\vigorous-spence\\components\\workspace\\workspace-editor-area.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\workspace\\secondary-panel-content.tsx"
     },
     "focused-kirch": {
       "phase": "do",
@@ -338,9 +340,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-08T03:18:21.569Z",
-        "lastUpdated": "2026-04-09T06:28:25.958Z"
+        "lastUpdated": "2026-04-14T08:50:00.907Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\vigorous-spence\\components\\editor\\nodes\\anchor-divider-node.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\nodes\\infobox-node.tsx"
     },
     "vigorous-spence": {
       "phase": "do",
@@ -354,6 +356,32 @@
         "lastUpdated": "2026-04-09T07:34:25.371Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\vigorous-spence\\lib\\anchor-utils.ts"
+    },
+    "adoring-benz": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-14T02:37:22.884Z",
+        "lastUpdated": "2026-04-14T08:16:01.747Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\insert-menu.tsx"
+    },
+    "block-registry": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-14T08:11:26.906Z",
+        "lastUpdated": "2026-04-14T08:14:01.099Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\block-registry\\types.ts"
     }
   },
   "pipeline": {
@@ -364,7 +392,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-09T08:32:44.887Z"
+    "lastActivity": "2026-04-14T08:50:00.907Z"
   },
   "history": [
     {
@@ -4852,6 +4880,510 @@
     {
       "timestamp": "2026-04-09T08:32:44.887Z",
       "feature": "(app)",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T02:37:22.884Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:04:14.778Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:04:17.476Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:04:19.900Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:04:25.600Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:04:29.330Z",
+      "feature": "workspace",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:04:32.862Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:05:41.849Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:05:48.863Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:05:52.653Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:05:56.688Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:06:18.823Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:06:25.402Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:06:32.791Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:06:37.403Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T03:06:42.360Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T04:57:53.876Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T04:58:05.910Z",
+      "feature": "backup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T04:58:43.002Z",
+      "feature": "backup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:08:14.736Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:08:24.452Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:08:50.715Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:09:07.451Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:09:51.657Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:09:56.614Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:09:59.146Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:22:18.122Z",
+      "feature": "core",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:22:26.494Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:22:45.285Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:22:50.378Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:22:57.997Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:23:07.959Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:32:41.721Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:32:47.267Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:32:59.286Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:35:04.835Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:35:19.596Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:39:22.859Z",
+      "feature": "core",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:42:35.475Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:43:38.691Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:43:45.209Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:44:37.664Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:44:45.454Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:52:12.048Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:52:17.410Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T05:54:46.498Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T07:18:33.541Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T07:36:49.666Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:11:26.906Z",
+      "feature": "block-registry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:13:31.336Z",
+      "feature": "block-registry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:13:36.522Z",
+      "feature": "block-registry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:14:01.099Z",
+      "feature": "block-registry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:14:45.396Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:15:51.400Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:16:01.747Z",
+      "feature": "adoring-benz",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:17:16.731Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:17:25.851Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:17:34.096Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:17:43.934Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:17:50.697Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:17:59.200Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:18:10.402Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:31:55.605Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:32:11.553Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:32:27.635Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:35:32.508Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:35:44.576Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:35:51.201Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:35:59.480Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:36:18.931Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:36:25.330Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:36:35.124Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:37:25.734Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:37:32.910Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:37:59.879Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:38:05.948Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:39:06.372Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:39:18.212Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:43:56.998Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:45:05.610Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:45:37.739Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:47:10.155Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:48:44.540Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T08:50:00.907Z",
+      "feature": "nodes",
       "phase": "do",
       "action": "updated"
     }

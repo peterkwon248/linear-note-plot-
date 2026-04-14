@@ -46,14 +46,19 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
   const [blockContents, setBlockContents] = useState<Map<string, Record<string, unknown> | null>>(new Map())
   const [collapsed, setCollapsed] = useState(false)
 
-  // Listen for collapse-all / expand-all broadcast
+  // Ref for scoped event listener (Split View pane independence)
+  const rootRef = useRef<HTMLDivElement | null>(null)
+
+  // Listen for collapse-all / expand-all broadcast (scoped to this wiki container)
   useEffect(() => {
+    const scope = rootRef.current?.closest('[data-editor-scope]')
+    if (!scope) return
     const handler = (e: Event) => {
       const { collapsed: c } = (e as CustomEvent).detail
       setCollapsed(c)
     }
-    window.addEventListener("plot:set-all-collapsed", handler)
-    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+    scope.addEventListener("plot:set-all-collapsed", handler as EventListener)
+    return () => scope.removeEventListener("plot:set-all-collapsed", handler as EventListener)
   }, [])
 
   // Load all text blocks' contentJson from IDB
@@ -128,10 +133,11 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
     return () => window.removeEventListener("plot:scroll-to-footnote", handler)
   }, [])
 
-  if (footnotes.length === 0) return null
+  // Early return: still render ref wrapper so listener can register when footnotes appear later
+  if (footnotes.length === 0) return <div ref={rootRef} style={{ display: "none" }} />
 
   return (
-    <div className="mt-10 border-t border-border/40 pt-4">
+    <div ref={rootRef} className="mt-10 border-t border-border/40 pt-4">
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="flex items-center gap-1.5 py-0.5 mb-0"
@@ -203,14 +209,19 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
   const references = usePlotStore((s) => s.references)
   const [refCollapsed, setRefCollapsed] = useState(false)
 
-  // Listen for collapse-all / expand-all broadcast
+  // Ref for scoped event listener (Split View pane independence)
+  const rootRef = useRef<HTMLDivElement | null>(null)
+
+  // Listen for collapse-all / expand-all broadcast (scoped to this wiki container)
   useEffect(() => {
+    const scope = rootRef.current?.closest('[data-editor-scope]')
+    if (!scope) return
     const handler = (e: Event) => {
       const { collapsed: c } = (e as CustomEvent).detail
       setRefCollapsed(c)
     }
-    window.addEventListener("plot:set-all-collapsed", handler)
-    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+    scope.addEventListener("plot:set-all-collapsed", handler as EventListener)
+    return () => scope.removeEventListener("plot:set-all-collapsed", handler as EventListener)
   }, [])
 
   const addArticleReference = usePlotStore((s) => s.addArticleReference)
@@ -320,10 +331,11 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
     closeModal()
   }
 
-  if (linkedRefs.length === 0 && !editable) return null
+  // Early return: still render ref wrapper so listener stays registered
+  if (linkedRefs.length === 0 && !editable) return <div ref={rootRef} style={{ display: "none" }} />
 
   return (
-    <div className="mt-6 border-t border-border/30 pt-4">
+    <div ref={rootRef} className="mt-6 border-t border-border/30 pt-4">
       <button
         onClick={() => setRefCollapsed(!refCollapsed)}
         className="flex items-center gap-1.5 py-0.5 mb-0"

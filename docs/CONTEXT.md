@@ -92,12 +92,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **PR #190 (WIP)**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성 — 사이드패널 Usage 섹션, ActivityTimeline 연결, Wiki Stats 중복 제거, 접을 게 없을 때 비활성
-1. **PR #189**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 리사이즈 — 나무위키식 전체 접기/펼치기, TocBlockNode wiki 티어 등록, BlockDragOverlay 위키 통합, 4코너 리사이즈 + Store v75
-2. **PR #188**: 노트 References 시스템 + fontSize cascade + 위키 텍스트 컴팩트
-3. **PR #187**: 각주/Reference UX 개선 — read-only 가드, 위키 footnote 삽입 버그, 컴팩트 디자인
-4. **PR #185**: 각주 모달 + WikiReferencesSection + footnote 티어
-5. **PR #182-183**: 위키 각주 시스템 (위키백과 스타일) + 공유 유틸 + 호버 프리뷰 글로벌
+1. **Insert Block Registry 단일화 (2026-04-14 밤)**: `components/editor/block-registry/` 신설. 25+ insertable block operations 단일 source. 기존 3곳 중복 제거: SlashCommand.tsx (COMMANDS 배열 → `getBlocksForSurface("slash")`), insert-menu.tsx (JSX 하드코드 → `BLOCK_REGISTRY.filter` + group 정렬), FixedToolbar.tsx (인라인 체인 13개 → `getBlock(id).execute({ editor })`). Shape: `{id, label, description, aliases, icon, surfaces, group, tier, execute({editor, range?, noteId?})}`. range 유무로 slash path(blank attrs) vs click path(example attrs) 분기. 첨부(Image/File)는 ref 의존성으로 registry 제외. 검증: InsertMenu 20 항목 렌더 + Callout(HTML 344→2590) + Divider(hr 0→1) + Toggle(details 0→1) + Slash popup 25+ 항목. 이제 새 블록(배너, 둘러보기 틀)은 registry.ts 한 파일에 entry 추가만으로 3곳 자동 노출.
+2. **Y.Doc Split-View Sync PoC (2026-04-14)**: 같은 note를 두 pane에서 열면 Y.Doc 싱글톤이 공유되어 실시간 bidirectional CRDT sync 작동. `lib/y-doc-manager.ts` (refcount registry + isFresh flag), `@tiptap/extension-collaboration` 바인딩, `?yjs=1` / `window.plotYjs(true)` / localStorage 3-way feature flag. Dev-only `window.__plotStore` 노출. 핵심 버그 4개 해결: (1) StarterKit 3.x는 `undoRedo` (`history` 아님) — Collaboration과 충돌 해소, (2) `fragment.length === 0` seed guard 제거 (Collab pre-populate 때문에 영원히 truthy) — `isFresh` 플래그로 권위 있는 signal 사용, (3) **Stale Y.Doc binding** — `useState + useEffect` 패턴이 note 전환 시 한 렌더 사이클 동안 이전 Y.Doc 노출 → 새 editor가 이전 Y.Doc에 seed → 다른 pane으로 CRDT 전파 → 데이터 영구 손실. `useRef` + 렌더 중 동기 전환으로 교체, (4) **Empty-content guard의 임계값 실패** — `JSON.stringify(json).length < 80` 조건이 Collab pre-populate의 UUID-stamped 빈 paragraph (~125자)에 무효화됨. `looksEmpty = !plainText.trim()` 로 단순화 + `ui.ts` auto-delete 연쇄로 노트 소멸까지 이어짐.
+3. **PR #190**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성 — 사이드패널 Usage 섹션, ActivityTimeline 연결, Wiki Stats 중복 제거, 접을 게 없을 때 비활성
+4. **PR #189**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 리사이즈 — 나무위키식 전체 접기/펼치기, TocBlockNode wiki 티어 등록, BlockDragOverlay 위키 통합, 4코너 리사이즈 + Store v75
+5. **PR #188**: 노트 References 시스템 + fontSize cascade + 위키 텍스트 컴팩트
 
 ## Two Axes — Core Design Philosophy
 
@@ -218,6 +217,15 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ### ✅ P0 — Split-First 마이그레이션 — ALL COMPLETE
 ### ✅ P0 — 노트 References + fontSize cascade — ALL COMPLETE
 ### ✅ P2 — Reference Usage — COMPLETE
+### ✅ P0 — Y.Doc Split-View Sync PoC — COMPLETE (2026-04-14)
+
+### P0 — Y.Doc 본 구현 (PoC → 프로덕션)
+- **PHASE-PLAN 리뷰 + PoC 결과 반영** — 현재 in-memory Y.Doc, 리로드 시 CRDT history 유실
+- **y-indexeddb 영속화** — 오프라인 undo history + 장래 collab 대비
+- **Wiki 동일 패턴 적용** — `WikiEditorAdapter`에 `acquireYDoc("wiki", id)` 바인딩. NoteEditorAdapter가 해결한 4개 버그 동일 적용 필수 (특히 sync-during-render 패턴 + plainText-only empty guard)
+- **방어 가드 유지** — `NoteEditorAdapter.handleChange` 의 empty-refuse 가드 + `note.title` 포함된 `storeHasContent` 판정은 본 구현에도 유지 (다른 race 방어)
+- **플래그 제거 or 기본 ON** — 안정화 후 `?yjs=1` 없이도 동작하게
+- **사이드 이슈**: `plot-note-bodies` IDB object store 누락 (NotFoundError 반복), TipTap duplicate extension names 경고 (link/underline/gapCursor)
 
 ### P2 — 인포박스 고도화 + 나무위키 리서치 기능 (나무위키 수준, base 티어 = 노트+위키 공용)
 **Tier 1 — 인포박스:**
@@ -239,7 +247,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **루비 텍스트** — 한자/일본어 읽기 표시
 **아키텍처:**
 - 모든 새 기능 = base 티어 (노트+위키 공용, shared-editor-config.ts)
-- Insert 레지스트리 단일화 — insert-menu.tsx + SlashCommand.tsx + FixedToolbar.tsx 3곳 중복 → 단일 레지스트리
+- ✅ **Insert 레지스트리 단일화 완료 (2026-04-14 밤)** — `components/editor/block-registry/` 25+ entry 단일 source. 새 블록 추가 시 registry.ts 한 파일만 수정하면 slash + insertMenu 자동 노출. FixedToolbar 퀵액세스는 `getBlock(id).execute({editor})` 호출
 
 ### P2 — 인사이트 허브
 - **인사이트 허브** — 온톨로지 Single Source of Insights

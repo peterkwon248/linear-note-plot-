@@ -1,10 +1,19 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react"
 import type { NodeViewProps } from "@tiptap/react"
-import { Table as PhTable, Plus as PhPlus, Trash as PhTrash, X as PhX, ArrowsIn } from "@/lib/editor/editor-icons"
+import {
+  Table as PhTable,
+  Plus as PhPlus,
+  Trash as PhTrash,
+  X as PhX,
+  ArrowsIn,
+  Image as PhImage,
+  CaretDown,
+  CaretRight,
+} from "@/lib/editor/editor-icons"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 
@@ -19,7 +28,45 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
   const rows = (node.attrs.rows as InfoboxRow[]) || []
   const width = node.attrs.width as number | null
   const height = node.attrs.height as number | null
+  const heroImage = (node.attrs.heroImage as string | null) ?? null
+  const heroCaption = (node.attrs.heroCaption as string) || ""
   const { containerRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
+
+  // Tier 1-3: 접기/펼치기 state (local, not persisted — consistent with Summary node)
+  const [collapsed, setCollapsed] = useState(false)
+
+  // Listen for scoped plot:set-all-collapsed broadcasts (PR #189 pattern).
+  // Atom NodeViews attach to DOM AFTER React commits useEffect, so
+  // `containerRef.current?.closest('[data-editor-scope]')` can be null on first
+  // run. We retry with requestAnimationFrame until the scope is reachable,
+  // then register the listener.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    let cleanup: (() => void) | null = null
+    let rafId: number | null = null
+
+    const attach = () => {
+      const scope = containerRef.current?.closest("[data-editor-scope]")
+      if (!scope) {
+        // Ref not yet connected to editor scope — retry next frame.
+        rafId = requestAnimationFrame(attach)
+        return
+      }
+      const handler = (e: Event) => {
+        const { collapsed: c } = (e as CustomEvent).detail
+        setCollapsed(c)
+      }
+      scope.addEventListener("plot:set-all-collapsed", handler as EventListener)
+      cleanup = () =>
+        scope.removeEventListener("plot:set-all-collapsed", handler as EventListener)
+    }
+    attach()
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      cleanup?.()
+    }
+  }, [])
 
   const updateTitle = useCallback((newTitle: string) => {
     updateAttributes({ title: newTitle })
@@ -40,6 +87,27 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
     updateAttributes({ rows: newRows })
   }, [rows, updateAttributes])
 
+  const pickHeroImage = useCallback(() => {
+    // Phase 1: URL input via prompt.
+    // Phase 2 (future): file upload via attachment API.
+    const current = heroImage ?? ""
+    const input = window.prompt("Image URL", current)
+    if (input === null) return
+    const trimmed = input.trim()
+    updateAttributes({ heroImage: trimmed.length > 0 ? trimmed : null })
+  }, [heroImage, updateAttributes])
+
+  const removeHeroImage = useCallback(() => {
+    updateAttributes({ heroImage: null, heroCaption: "" })
+  }, [updateAttributes])
+
+  const updateHeroCaption = useCallback(
+    (text: string) => {
+      updateAttributes({ heroCaption: text })
+    },
+    [updateAttributes],
+  )
+
   return (
     <NodeViewWrapper>
       <div
@@ -52,16 +120,83 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
         }}
       >
         {editor?.isEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
-        {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2 bg-secondary/30 border-b border-border-subtle">
-          <div className="flex items-center gap-1.5">
+
+        {/* Hero image + caption (Tier 1-1). Hidden when collapsed. */}
+        {!collapsed && heroImage && (
+          <div className="group/hero relative border-b border-border-subtle">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={heroImage}
+              alt={heroCaption || title}
+              className={`w-full ${editable ? "cursor-pointer" : ""} bg-secondary/20 object-cover max-h-[280px]`}
+              onClick={editable ? pickHeroImage : undefined}
+              title={editable ? "Click to change image" : undefined}
+            />
+            {editable && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  removeHeroImage()
+                }}
+                className="absolute top-1.5 right-1.5 rounded-full bg-black/50 p-1 text-white/80 hover:bg-black/70 hover:text-white transition-colors opacity-0 group-hover/hero:opacity-100"
+                title="Remove hero image"
+              >
+                <PhX size={12} />
+              </button>
+            )}
+            {/* Caption: shown always if present in read mode; editable input in edit mode */}
+            {editable ? (
+              <input
+                type="text"
+                value={heroCaption}
+                onChange={(e) => updateHeroCaption(e.target.value)}
+                placeholder="Caption (optional)"
+                className="w-full px-3 py-1.5 text-2xs italic text-center text-muted-foreground bg-secondary/10 outline-none placeholder:text-muted-foreground/30 border-t border-border-subtle"
+              />
+            ) : (
+              heroCaption && (
+                <div className="px-3 py-1.5 text-2xs italic text-center text-muted-foreground bg-secondary/10 border-t border-border-subtle">
+                  {heroCaption}
+                </div>
+              )
+            )}
+          </div>
+        )}
+        {!collapsed && !heroImage && editable && (
+          <button
+            type="button"
+            onClick={pickHeroImage}
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors border-b border-border-subtle opacity-0 group-hover/infobox:opacity-100"
+            title="Add hero image"
+          >
+            <PhImage size={12} />
+            <span>Add hero image</span>
+          </button>
+        )}
+
+        {/* Header — always visible, with chevron toggle (Tier 1-3) */}
+        <div
+          className={`flex items-center justify-between px-3 py-2 bg-secondary/30 ${
+            collapsed ? "" : "border-b border-border-subtle"
+          }`}
+        >
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <button
+              type="button"
+              onClick={() => setCollapsed((c) => !c)}
+              className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors shrink-0"
+              title={collapsed ? "Expand infobox" : "Collapse infobox"}
+            >
+              {collapsed ? <CaretRight size={12} /> : <CaretDown size={12} />}
+            </button>
             <PhTable size={14} className="text-muted-foreground shrink-0" />
             <input
               type="text"
               value={title}
               onChange={(e) => updateTitle(e.target.value)}
               readOnly={!editable}
-              className="text-2xs font-semibold uppercase tracking-wider bg-transparent border-none outline-none text-muted-foreground w-full"
+              className="text-2xs font-semibold uppercase tracking-wider bg-transparent border-none outline-none text-muted-foreground w-full min-w-0"
               placeholder="Infobox Title"
             />
           </div>
@@ -89,7 +224,8 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
           )}
         </div>
 
-        {/* Rows */}
+        {/* Rows — hidden when collapsed (Tier 1-3) */}
+        {!collapsed && (
         <div className="divide-y divide-border-subtle">
           {rows.map((row, index) => (
             <div key={index} className="flex items-center group/row">
@@ -122,9 +258,10 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
             </div>
           ))}
         </div>
+        )}
 
-        {/* Add row button — hidden in read mode, hover-only in edit mode */}
-        {editable && (
+        {/* Add row button — hover-only in edit mode, hidden when collapsed */}
+        {!collapsed && editable && (
           <button
             type="button"
             onClick={addRow}
@@ -176,6 +313,19 @@ export const InfoboxBlockNode = Node.create({
           return h ? parseInt(h, 10) : null
         },
         renderHTML: (attrs: Record<string, any>) => attrs.height ? { "data-height": attrs.height } : {},
+      },
+      // Tier 1-1: Hero image + caption (나무위키 인포박스 상단 이미지)
+      heroImage: {
+        default: null,
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-hero-image") || null,
+        renderHTML: (attrs: Record<string, any>) =>
+          attrs.heroImage ? { "data-hero-image": attrs.heroImage } : {},
+      },
+      heroCaption: {
+        default: "",
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-hero-caption") || "",
+        renderHTML: (attrs: Record<string, any>) =>
+          attrs.heroCaption ? { "data-hero-caption": attrs.heroCaption } : {},
       },
     }
   },

@@ -64,10 +64,10 @@ import type { EditorTier } from "./core/shared-editor-config"
 import { useSettingsStore } from "@/lib/settings-store"
 import { normalizeLayout, TOOLBAR_ITEM_LABELS, type ToolbarItemId } from "@/lib/editor/toolbar-config"
 import { ArrangeMode } from "./toolbar/arrange-mode"
-import { format } from "date-fns"
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from "@/lib/editor-colors"
 import { usePlotStore } from "@/lib/store"
 import { detectUrlType } from "@/lib/editor/url-detect"
+import { getBlock } from "@/components/editor/block-registry"
 
 interface FixedToolbarProps {
   editor: Editor | null
@@ -374,9 +374,9 @@ function OverflowGrid({ editor, editorState, isVisible, handleSetLink, handleAli
     { id: "orderedList", label: "Numbers", icon: <ListNumbers size={18} />, action: () => editor.chain().focus().toggleOrderedList().run(), active: editorState.orderedList },
     { id: "taskList", label: "Tasks", icon: <CheckSquare size={18} />, action: () => editor.chain().focus().toggleTaskList().run(), active: editorState.taskList },
     { id: "blockquote", label: "Quote", icon: <Quotes size={18} />, action: () => editor.chain().focus().toggleBlockquote().run(), active: editorState.blockquote },
-    { id: "codeBlock", label: "Code Block", icon: <CodeBlock size={18} />, action: () => editor.chain().focus().toggleCodeBlock().run(), active: editorState.codeBlock },
-    { id: "divider", label: "Divider", icon: <PhMinus size={18} />, action: () => editor.chain().focus().setHorizontalRule().run(), active: false },
-    { id: "bookmark", label: "Bookmark", icon: <BookmarkSimple size={18} />, action: () => { const { nanoid } = require("nanoid"); editor.chain().focus().insertContent({ type: "anchorMark", attrs: { id: nanoid(8), label: "" } }).run() }, active: false },
+    { id: "codeBlock", label: "Code Block", icon: <CodeBlock size={18} />, action: () => getBlock("code-block").execute({ editor }), active: editorState.codeBlock },
+    { id: "divider", label: "Divider", icon: <PhMinus size={18} />, action: () => getBlock("divider").execute({ editor }), active: false },
+    { id: "bookmark", label: "Bookmark", icon: <BookmarkSimple size={18} />, action: () => getBlock("bookmark").execute({ editor }), active: false },
     { id: "link", label: "Link", icon: <PhLink size={18} />, action: handleSetLink, active: editorState.link },
     { id: "textAlign", label: "Align", icon: <TextAlignLeft size={18} />, action: () => {
       const next = editorState.textAlign === "left" ? "center" : editorState.textAlign === "center" ? "right" : editorState.textAlign === "right" ? "justify" : "left"
@@ -387,10 +387,10 @@ function OverflowGrid({ editor, editorState, isVisible, handleSetLink, handleAli
     { id: "undo", label: "Undo", icon: <ArrowCounterClockwise size={18} />, action: () => editor.chain().focus().undo().run(), active: false },
     { id: "redo", label: "Redo", icon: <ArrowClockwise size={18} />, action: () => editor.chain().focus().redo().run(), active: false },
     { id: "hardBreak", label: "Break", icon: <KeyReturn size={18} />, action: () => editor.chain().focus().setHardBreak().run(), active: false },
-    { id: "date", label: "Date", icon: <CalendarDots size={18} />, action: () => editor.chain().focus().insertContent(format(new Date(), "yyyy-MM-dd")).run(), active: false },
-    { id: "toggle", label: "Toggle", icon: <CaretRight size={18} />, action: () => editor.chain().focus().setDetails().run(), active: false },
-    { id: "inlineMath", label: "Math", icon: <MathOperations size={18} />, action: () => editor.chain().focus().insertContent({ type: "inlineMath", attrs: { latex: "E = mc^2" } }).run(), active: false },
-    { id: "blockMath", label: "Equation", icon: <MathOperations size={18} />, action: () => editor.chain().focus().insertContent({ type: "blockMath", attrs: { latex: "\\sum_{i=1}^{n} x_i" } }).run(), active: false },
+    { id: "date", label: "Date", icon: <CalendarDots size={18} />, action: () => getBlock("date").execute({ editor }), active: false },
+    { id: "toggle", label: "Toggle", icon: <CaretRight size={18} />, action: () => getBlock("toggle").execute({ editor }), active: false },
+    { id: "inlineMath", label: "Math", icon: <MathOperations size={18} />, action: () => getBlock("math-inline").execute({ editor }), active: false },
+    { id: "blockMath", label: "Equation", icon: <MathOperations size={18} />, action: () => getBlock("math-block").execute({ editor }), active: false },
     { id: "textColor", label: "Text Color", icon: <TextT size={18} />, action: () => setSubPanel("textColor"), active: false },
     { id: "highlight", label: "Highlight", icon: <HighlighterCircle size={18} />, action: () => setSubPanel("highlight"), active: false },
     { id: "table", label: "Table", icon: <Table size={18} />, action: () => setSubPanel("table"), active: false },
@@ -737,18 +737,18 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
           </ToolbarButton>
         )}
         {isVisible("codeBlock") && (
-          <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editorState.codeBlock} title="Code Block — Insert a code snippet block">
+          <ToolbarButton onClick={() => getBlock("code-block").execute({ editor })} isActive={editorState.codeBlock} title="Code Block — Insert a code snippet block">
             <CodeBlock size={20} />
           </ToolbarButton>
         )}
         {isVisible("divider") && (
-          <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider — Insert a horizontal line">
+          <ToolbarButton onClick={() => getBlock("divider").execute({ editor })} title="Divider — Insert a horizontal line">
             <PhMinus size={20} />
           </ToolbarButton>
         )}
         {isVisible("bookmark") && (
           <ToolbarButton
-            onClick={() => { const { nanoid } = require("nanoid"); editor.chain().focus().insertContent({ type: "anchorMark", attrs: { id: nanoid(8), label: "" } }).run() }}
+            onClick={() => getBlock("bookmark").execute({ editor })}
             title="Bookmark — Insert navigation anchor"
           >
             <BookmarkSimple size={20} />
@@ -806,7 +806,7 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       {(isVisible("toggle") || isVisible("image")) && <ToolbarDivider />}
       <ToolbarGroup>
         {isVisible("toggle") && (
-          <ToolbarButton onClick={() => editor.chain().focus().setDetails().run()} title="Toggle — Insert a collapsible section">
+          <ToolbarButton onClick={() => getBlock("toggle").execute({ editor })} title="Toggle — Insert a collapsible section">
             <CaretRight size={20} />
           </ToolbarButton>
         )}
@@ -834,19 +834,17 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
       {(isVisible("inlineMath") || isVisible("blockMath") || isVisible("date") || isVisible("hardBreak")) && <ToolbarDivider />}
       <ToolbarGroup>
         {isVisible("inlineMath") && (
-          <ToolbarButton onClick={() => editor.chain().focus().insertContent({ type: "inlineMath", attrs: { latex: "E = mc^2" } }).run()} title="Inline Math — Insert an inline LaTeX formula">
+          <ToolbarButton onClick={() => getBlock("math-inline").execute({ editor })} title="Inline Math — Insert an inline LaTeX formula">
             <MathOperations size={20} />
           </ToolbarButton>
         )}
         {isVisible("blockMath") && (
-          <ToolbarButton onClick={() => editor.chain().focus().insertContent({ type: "blockMath", attrs: { latex: "\\sum_{i=1}^{n} x_i" } }).run()} title="Block Math — Insert a block-level math equation">
+          <ToolbarButton onClick={() => getBlock("math-block").execute({ editor })} title="Block Math — Insert a block-level math equation">
             <MathOperations size={20} />
           </ToolbarButton>
         )}
         {isVisible("date") && (
-          <ToolbarButton onClick={() => {
-            editor.chain().focus().insertContent(format(new Date(), "yyyy-MM-dd")).run()
-          }} title="Insert Date — Insert today's date">
+          <ToolbarButton onClick={() => getBlock("date").execute({ editor })} title="Insert Date — Insert today's date">
             <CalendarDots size={20} />
           </ToolbarButton>
         )}
