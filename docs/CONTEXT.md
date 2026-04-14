@@ -285,6 +285,16 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 ### P2 — 인사이트 허브
 - **인사이트 허브** — 온톨로지 Single Source of Insights
 
+### P2 — 노트 Split (must-todo, 2026-04-14 확정)
+- **노트 split 기능** — 위키처럼 안정적 split UX. Medium 난이도, PR 하나 분량
+- **UX = WikiSplitPage 패턴 그대로** (`components/views/wiki-split-page.tsx`). 사용자 명시: "노트 스플리트도 이런 식으로 되면 이상적"
+  - 2-column UI: Original Note (체크박스 + 블록 타입 배지) / New Note (이동된 블록 preview)
+  - Shift+Click 범위 선택, Back/Cancel, 하단 Title 입력 + "Split N Blocks"
+- 기술 가능성 확인됨: UniqueID extension으로 top-level 노드 23종이 영속 ID 보유 (`shared-editor-config.ts:361`). 위키 splitMode UI 재사용
+- 새 파일: `components/views/note-split-page.tsx` (wiki 템플릿 복사 + TipTap 조작으로 교체) + `lib/store/slices/notes.ts`에 `splitNote` 액션
+- 우선순위: 위키 디자인 강화 (wiki-color, themeColor, Hatnote 등) 이후
+- 배경: `BRAINSTORM-2026-04-14-entity-philosophy.md`, `project_note_split_todo.md`
+
 ### P3 — 사이드패널 + 뷰 확장
 - **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식)
 - **동음이의어 해소 페이지** — 멀티 링크 매칭 시 선택 화면
