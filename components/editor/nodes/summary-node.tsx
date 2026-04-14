@@ -14,14 +14,16 @@ function SummaryNodeView({ node, updateAttributes, editor }: NodeViewProps) {
   const height = node.attrs.height as number | null
   const { containerRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
 
-  // Listen for collapse-all / expand-all broadcast
+  // Listen for collapse-all / expand-all broadcast (scoped to this editor container)
   useEffect(() => {
+    const scope = containerRef.current?.closest('[data-editor-scope]')
+    if (!scope) return
     const handler = (e: Event) => {
       const { collapsed: c } = (e as CustomEvent).detail
       setCollapsed(c)
     }
-    window.addEventListener("plot:set-all-collapsed", handler)
-    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+    scope.addEventListener("plot:set-all-collapsed", handler as EventListener)
+    return () => scope.removeEventListener("plot:set-all-collapsed", handler as EventListener)
   }, [])
 
   // Remove summary wrapper, keeping inner content (same pattern as Callout)

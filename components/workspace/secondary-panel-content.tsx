@@ -132,7 +132,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
   const isActivePane = useIsActivePane()
 
   return (
-    <div className="flex flex-col h-full">
+    <div data-editor-scope="wiki" className="flex flex-col h-full">
       <header className={cn(
         "flex h-(--header-height) shrink-0 items-center justify-between border-b border-border px-4 transition-colors duration-150",
         isActivePane && "bg-hover-bg"

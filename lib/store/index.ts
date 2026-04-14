@@ -409,3 +409,9 @@ export const usePlotStore = create<PlotState>()(
 // Re-export types and selectors
 export type { PlotState } from "./types"
 export { getFilteredNotes, filterNotesByRoute, getFilterTitle, getViewTitle } from "./selectors"
+
+// Dev-only: expose the store to window for PoC testing (Y.Doc split-view sync etc.)
+// Does not ship to production; only enabled when NODE_ENV !== "production".
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+  ;(window as unknown as { __plotStore?: typeof usePlotStore }).__plotStore = usePlotStore
+}

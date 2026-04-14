@@ -244,18 +244,31 @@ export interface EditorConfigOptions {
   placeholder?: string
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>
   focusModeRef?: React.MutableRefObject<boolean>
+  /**
+   * When true, StarterKit's built-in `history` extension is disabled so Y.js
+   * Collaboration can manage undo/redo via its own Y-history. MUST be true
+   * whenever you pass a Y.Doc to TipTap — otherwise the two history stacks
+   * conflict and the Y.Doc updates silently fail to propagate.
+   */
+  collaborative?: boolean
 }
 
 // ── Factory ──────────────────────────────────────────────────────────
 
 function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
   const placeholderText = options?.placeholder ?? "Start writing..."
+  const collaborative = options?.collaborative === true
 
   return [
     StarterKit.configure({
       heading: { levels: [1, 2, 3, 4, 5, 6] },
       dropcursor: false,
       codeBlock: false,
+      // Disable StarterKit's built-in undo/redo when Y.js Collaboration is
+      // active — Y.js ships its own history (via y-prosemirror) and mixing
+      // the two silently breaks update propagation. TipTap 3.x renamed
+      // this extension from `history` to `undoRedo`.
+      ...(collaborative ? { undoRedo: false as const } : {}),
     }),
     Placeholder.configure({
       placeholder: ({ node }: { node: { type: { name: string } } }) => {

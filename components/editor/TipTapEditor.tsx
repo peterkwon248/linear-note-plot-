@@ -1,7 +1,9 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useEditor, EditorContent, useEditorState } from "@tiptap/react"
+import Collaboration from "@tiptap/extension-collaboration"
+import type * as Y from "yjs"
 import "katex/dist/katex.min.css"
 import { EditorToolbar } from "./EditorToolbar"
 import { TableBubbleMenu } from "./TableBubbleMenu"
@@ -18,6 +20,12 @@ interface TipTapEditorProps {
   editable?: boolean
   placeholder?: string
   onEditorReady?: (editor: ReturnType<typeof useEditor>) => void
+  /**
+   * Experimental: bind ProseMirror state to a shared Y.Doc so multiple
+   * editors opened for the same note stay in sync in real time.
+   * PoC only — gated by `?yjs=1` query param in NoteEditorAdapter.
+   */
+  ydoc?: Y.Doc
 }
 
 export function TipTapEditor({
@@ -26,6 +34,7 @@ export function TipTapEditor({
   editable = true,
   placeholder = "Start writing...",
   onEditorReady,
+  ydoc,
 }: TipTapEditorProps) {
   const wordWrap = useSettingsStore((s) => s.wordWrap)
   const tabSize = useSettingsStore((s) => s.tabSize)
@@ -57,12 +66,23 @@ export function TipTapEditor({
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: createEditorExtensions("note", {
-      placeholder,
-      scrollContainerRef,
-      focusModeRef,
-    }),
-    content: content && Object.keys(content).length > 0 ? content : undefined,
+    extensions: [
+      ...createEditorExtensions("note", {
+        placeholder,
+        scrollContainerRef,
+        focusModeRef,
+        // When a Y.Doc is supplied we MUST disable StarterKit's built-in
+        // history — Y.js ships its own history and the two conflict.
+        collaborative: !!ydoc,
+      }),
+      // Experimental: Y.Doc collaboration for split-view sync.
+      // When ydoc is provided, ProseMirror state is bound to the Y.Doc
+      // so multiple editors sharing the same Y.Doc stay in sync.
+      ...(ydoc ? [Collaboration.configure({ document: ydoc, field: "default" })] : []),
+    ],
+    // When Y.Doc is active, it manages content. Passing `content` would be ignored
+    // (or could cause double-init). Only use `content` in legacy mode.
+    content: ydoc ? undefined : (content && Object.keys(content).length > 0 ? content : undefined),
     editable,
     onUpdate: ({ editor }) => {
       onChange?.(

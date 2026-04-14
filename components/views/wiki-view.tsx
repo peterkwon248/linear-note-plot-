@@ -709,11 +709,15 @@ export function WikiView() {
               {/* Collapse/Expand all sections */}
               {selectedWikiArticle.blocks.some((b) => b.type === "section") && (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
                     setCollapseAllCmd(allSectionsCollapsed ? "expand" : "collapse")
-                    // Also toggle internal TipTap collapsibles + footer sections
-                    window.dispatchEvent(new CustomEvent("plot:set-all-collapsed", {
-                      detail: { collapsed: !allSectionsCollapsed }
+                    // Also toggle internal TipTap collapsibles + footer sections.
+                    // Scope to current wiki editor container (primary/secondary split independence).
+                    const scope = (e.currentTarget as HTMLElement).closest('[data-editor-scope]')
+                    const target: EventTarget = scope ?? window
+                    target.dispatchEvent(new CustomEvent("plot:set-all-collapsed", {
+                      detail: { collapsed: !allSectionsCollapsed },
+                      bubbles: true,
                     }))
                   }}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
@@ -900,7 +904,7 @@ export function WikiView() {
 
   // ── Wiki View (Dashboard or List mode) ──
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
+    <div data-editor-scope="wiki" className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<IconWiki size={20} />}
         title="Wiki"

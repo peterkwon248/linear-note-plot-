@@ -1,7 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { format } from "date-fns"
+import { useRef, Fragment } from "react"
 import { Editor } from "@tiptap/react"
 import {
   DropdownMenu,
@@ -11,17 +10,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  Image as PhImage, Paperclip, Table as PhTable, CalendarDots, Minus as PhMinus,
-  Code as PhCode, Plus as PhPlus, CaretRight, MathOperations, ListBullets,
-  LinkSimple, Info, Article, Columns as PhColumns, Note as PhNote,
-  IdentificationCard, Database, BookOpen, Asterisk, BookmarkSimple, Book,
+  Image as PhImage,
+  Paperclip,
+  Plus as PhPlus,
 } from "@/lib/editor/editor-icons"
 import { usePlotStore } from "@/lib/store"
-import { detectUrlType } from "@/lib/editor/url-detect"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
-import { nanoid } from "nanoid"
-import { NotePickerDialog } from "@/components/note-picker-dialog"
-import { UrlInputDialog } from "@/components/editor/url-input-dialog"
+import {
+  BLOCK_REGISTRY,
+  type BlockGroup,
+} from "@/components/editor/block-registry"
 
 interface InsertMenuProps {
   editor: Editor
@@ -32,59 +30,66 @@ interface InsertMenuProps {
 const ITEM_CLASS =
   "flex items-center gap-2 py-1.5 px-2.5 rounded-md cursor-pointer text-muted-foreground hover:text-foreground hover:bg-hover-bg focus:text-foreground focus:bg-hover-bg text-note"
 
+/** Display order for groups in the Insert dropdown. */
+const GROUP_ORDER: BlockGroup[] = [
+  "embed",
+  "structure",
+  "layout",
+  "text",
+  "field",
+  "math",
+]
+
+/** Format bytes to human-readable size. */
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export function InsertMenu({ editor, noteId }: InsertMenuProps) {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [notePickerOpen, setNotePickerOpen] = useState(false)
-  const [embedDialogOpen, setEmbedDialogOpen] = useState(false)
   const addAttachment = usePlotStore((s) => s.addAttachment)
 
-  const handleImage = () => {
-    imageInputRef.current?.click()
-  }
+  // ── Attachments (kept local — need file-input refs and noteId) ────────
+  const handleImage = () => imageInputRef.current?.click()
 
   const onImageSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Read as ArrayBuffer for IDB storage
     const buffer = await file.arrayBuffer()
-
-    // Save metadata to Zustand store
     const attachmentId = addAttachment({
       noteId: noteId ?? "",
       name: file.name,
       type: "image",
-      url: "", // will be resolved via attachment:// protocol
+      url: "",
       mimeType: file.type,
       size: file.size,
     })
-
-    // Save binary blob to IDB
     persistAttachmentBlob({ id: attachmentId, data: buffer })
 
-    // Insert image with attachment:// URL
     const pos = editor.state.selection.anchor
-    editor.chain().focus().insertContentAt(pos, {
-      type: "image",
-      attrs: { src: `attachment://${attachmentId}`, alt: file.name },
-    }).run()
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(pos, {
+        type: "image",
+        attrs: { src: `attachment://${attachmentId}`, alt: file.name },
+      })
+      .run()
 
     e.target.value = ""
   }
 
-  const handleFile = () => {
-    fileInputRef.current?.click()
-  }
+  const handleFile = () => fileInputRef.current?.click()
 
   const onFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Read as ArrayBuffer for IDB storage
     const buffer = await file.arrayBuffer()
-
-    // Save metadata to Zustand store
     const attachmentId = addAttachment({
       noteId: noteId ?? "",
       name: file.name,
@@ -93,115 +98,33 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
       mimeType: file.type || "application/octet-stream",
       size: file.size,
     })
-
-    // Save binary blob to IDB
     persistAttachmentBlob({ id: attachmentId, data: buffer })
 
-    // Insert as a downloadable link with attachment:// URL
-    editor.chain().focus().insertContent(
-      `<a href="attachment://${attachmentId}" download="${file.name}">${file.name} (${formatFileSize(file.size)})</a>`
-    ).run()
+    editor
+      .chain()
+      .focus()
+      .insertContent(
+        `<a href="attachment://${attachmentId}" download="${file.name}">${file.name} (${formatFileSize(file.size)})</a>`,
+      )
+      .run()
 
     e.target.value = ""
   }
 
-  /** Format bytes to human-readable size */
-  function formatFileSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  // ── Registry-driven items ────────────────────────────────────────────
+  const menuItems = BLOCK_REGISTRY.filter((e) => e.surfaces.includes("insertMenu"))
+
+  // Group by BlockGroup, maintain GROUP_ORDER.
+  const byGroup = new Map<BlockGroup, typeof menuItems>()
+  for (const item of menuItems) {
+    const bucket = byGroup.get(item.group) ?? []
+    bucket.push(item)
+    byGroup.set(item.group, bucket)
   }
 
-  const handleTable = () => {
-    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-  }
-
-  const handleDate = () => {
-    editor.chain().focus().insertContent(format(new Date(), "yyyy-MM-dd")).run()
-  }
-
-  const handleDivider = () => {
-    editor.chain().focus().setHorizontalRule().run()
-  }
-
-  const handleCodeBlock = () => {
-    editor.chain().focus().toggleCodeBlock().run()
-  }
-
-  const handleEmbed = () => {
-    setEmbedDialogOpen(true)
-  }
-
-  const handleEmbedSubmit = (url: string) => {
-    const type = detectUrlType(url)
-    if (type === "youtube") {
-      editor.chain().focus().setYoutubeVideo({ src: url }).run()
-    } else if (type === "audio") {
-      editor.chain().focus().insertContent({ type: "audio", attrs: { src: url } }).run()
-    } else {
-      editor.chain().focus().insertContent({ type: "linkCard", attrs: { url } }).run()
-    }
-    setEmbedDialogOpen(false)
-  }
-
-  const handleToggle = () => {
-    editor.chain().focus().setDetails().run()
-  }
-
-  const handleInlineMath = () => {
-    editor.chain().focus().insertContent({
-      type: "inlineMath",
-      attrs: { latex: "E = mc^2" },
-    }).run()
-  }
-
-  const handleBlockMath = () => {
-    editor.chain().focus().insertContent({
-      type: "blockMath",
-      attrs: { latex: "\\sum_{i=1}^{n} x_i" },
-    }).run()
-  }
-
-  const handleTOC = () => {
-    editor.chain().focus().insertContent({ type: "tocBlock" }).run()
-  }
-
-  const handleCallout = () => {
-    editor.chain().focus().insertContent({ type: "calloutBlock", attrs: { calloutType: "info" }, content: [{ type: "paragraph" }] }).run()
-  }
-
-  const handleSummary = () => {
-    editor.chain().focus().insertContent({ type: "summaryBlock", content: [{ type: "paragraph" }] }).run()
-  }
-
-  const handleColumns = () => {
-    editor.chain().focus().insertContent({
-      type: "columnsBlock",
-      content: [
-        { type: "columnCell", content: [{ type: "paragraph" }] },
-        { type: "columnCell", content: [{ type: "paragraph" }] },
-      ],
-    }).run()
-  }
-
-  const handleInfobox = () => {
-    editor.chain().focus().insertContent({
-      type: "infoboxBlock",
-      attrs: { title: "Info", rows: [{ label: "", value: "" }] },
-    }).run()
-  }
-
-  const handleNoteEmbed = () => {
-    setNotePickerOpen(true)
-  }
-
-  const onNoteSelected = (selectedNoteId: string) => {
-    editor.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: selectedNoteId } }).run()
-  }
-
-  const handleQuery = () => {
-    editor.chain().focus().insertContent({ type: "queryBlock", attrs: { queryId: nanoid(8) } }).run()
-  }
+  const groupSections = GROUP_ORDER.map((group) => byGroup.get(group) ?? []).filter(
+    (arr) => arr.length > 0,
+  )
 
   return (
     <>
@@ -230,147 +153,38 @@ export function InsertMenu({ editor, noteId }: InsertMenuProps) {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="min-w-[180px] p-1">
-          {/* Media */}
+          {/* Attachments (Image + File) — kept as hardcoded entries since they
+              need file-input refs and noteId that don't fit the registry shape. */}
           <DropdownMenuItem onSelect={handleImage} className={ITEM_CLASS}>
             <PhImage size={14} />
             <span className="flex-1">Image</span>
           </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleEmbed} className={ITEM_CLASS}>
-            <LinkSimple size={14} />
-            <span className="flex-1">Embed URL</span>
-          </DropdownMenuItem>
-
           <DropdownMenuItem onSelect={handleFile} className={ITEM_CLASS}>
             <Paperclip size={14} />
             <span className="flex-1">File</span>
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator className="my-1" />
-
-          {/* Structure */}
-          <DropdownMenuItem onSelect={handleTable} className={ITEM_CLASS}>
-            <PhTable size={14} />
-            <span className="flex-1">Table</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleQuery} className={ITEM_CLASS}>
-            <Database size={14} />
-            <span className="flex-1">Query</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleTOC} className={ITEM_CLASS}>
-            <ListBullets size={14} />
-            <span className="flex-1">Table of Contents</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleCallout} className={ITEM_CLASS}>
-            <Info size={14} />
-            <span className="flex-1">Callout</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleSummary} className={ITEM_CLASS}>
-            <Article size={14} />
-            <span className="flex-1">Summary</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleColumns} className={ITEM_CLASS}>
-            <PhColumns size={14} />
-            <span className="flex-1">Columns</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleNoteEmbed} className={ITEM_CLASS}>
-            <PhNote size={14} />
-            <span className="flex-1">Embed Note</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={() => window.dispatchEvent(new CustomEvent("plot:embed-wiki-pick", { detail: { editor } }))} className={ITEM_CLASS}>
-            <BookOpen size={14} />
-            <span className="flex-1">Embed Wiki</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleInfobox} className={ITEM_CLASS}>
-            <IdentificationCard size={14} />
-            <span className="flex-1">Infobox</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleDate} className={ITEM_CLASS}>
-            <CalendarDots size={14} />
-            <span className="flex-1">Date</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={() => {
-            editor.chain().focus().insertContent({
-              type: "footnoteRef",
-              attrs: { id: nanoid(8), content: "", referenceId: null, comment: null },
-            }).run()
-          }} className={ITEM_CLASS}>
-            <Asterisk size={14} />
-            <span className="flex-1">Footnote</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={() => {
-            window.dispatchEvent(new CustomEvent("plot:open-reference-picker"))
-          }} className={ITEM_CLASS}>
-            <Book size={14} />
-            <span className="flex-1">Reference</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator className="my-1" />
-
-          {/* Blocks */}
-          <DropdownMenuItem onSelect={handleDivider} className={ITEM_CLASS}>
-            <PhMinus size={14} />
-            <span className="flex-1">Divider</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={() => {
-            editor.chain().focus().insertContent({
-              type: "anchorMark",
-              attrs: { id: nanoid(8), label: "" },
-            }).run()
-          }} className={ITEM_CLASS}>
-            <BookmarkSimple size={14} />
-            <span className="flex-1">Bookmark</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleCodeBlock} className={ITEM_CLASS}>
-            <PhCode size={14} />
-            <span className="flex-1">Code Block</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleToggle} className={ITEM_CLASS}>
-            <CaretRight size={14} />
-            <span className="flex-1">Toggle</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator className="my-1" />
-
-          {/* Math */}
-          <DropdownMenuItem onSelect={handleInlineMath} className={ITEM_CLASS}>
-            <MathOperations size={14} />
-            <span className="flex-1">Inline Math</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={handleBlockMath} className={ITEM_CLASS}>
-            <MathOperations size={14} />
-            <span className="flex-1">Block Math</span>
-          </DropdownMenuItem>
+          {/* Registry-driven sections, grouped with separators between groups. */}
+          {groupSections.map((section) => (
+            <Fragment key={section[0]!.group}>
+              <DropdownMenuSeparator className="my-1" />
+              {section.map((entry) => {
+                const Icon = entry.icon
+                return (
+                  <DropdownMenuItem
+                    key={entry.id}
+                    onSelect={() => entry.execute({ editor, noteId })}
+                    className={ITEM_CLASS}
+                  >
+                    <Icon size={14} />
+                    <span className="flex-1">{entry.label}</span>
+                  </DropdownMenuItem>
+                )
+              })}
+            </Fragment>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      <NotePickerDialog
-        open={notePickerOpen}
-        onOpenChange={setNotePickerOpen}
-        title="Embed a note"
-        excludeIds={noteId ? [noteId] : []}
-        onSelect={onNoteSelected}
-      />
-      <UrlInputDialog
-        open={embedDialogOpen}
-        mode="embed"
-        onClose={() => setEmbedDialogOpen(false)}
-        onSubmit={handleEmbedSubmit}
-      />
     </>
   )
 }

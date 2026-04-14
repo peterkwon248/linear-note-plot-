@@ -161,14 +161,19 @@ export function FootnotesFooter({ editor, noteId, editable = true }: FootnotesFo
     return () => window.removeEventListener("plot:scroll-to-footnote", handler)
   }, [])
 
-  // Listen for collapse-all / expand-all broadcast
+  // Ref for scoped event listener (Split View pane independence)
+  const rootRef = useRef<HTMLDivElement | null>(null)
+
+  // Listen for collapse-all / expand-all broadcast (scoped to this editor container)
   useEffect(() => {
+    const scope = rootRef.current?.closest('[data-editor-scope]')
+    if (!scope) return
     const handler = (e: Event) => {
       const { collapsed: c } = (e as CustomEvent).detail
       setCollapsed(c)
     }
-    window.addEventListener("plot:set-all-collapsed", handler)
-    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+    scope.addEventListener("plot:set-all-collapsed", handler as EventListener)
+    return () => scope.removeEventListener("plot:set-all-collapsed", handler as EventListener)
   }, [])
 
   // After expanding, scroll to the pending footnote
@@ -224,7 +229,7 @@ export function FootnotesFooter({ editor, noteId, editable = true }: FootnotesFo
   const hasFootnotes = footnotes.length > 0
 
   return (
-    <>
+    <div ref={rootRef}>
       {hasFootnotes && (
         <div className="footnotes-footer">
           <button
@@ -254,7 +259,7 @@ export function FootnotesFooter({ editor, noteId, editable = true }: FootnotesFo
         noteId={noteId}
         editable={editable}
       />
-    </>
+    </div>
   )
 }
 
@@ -333,14 +338,19 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
     return () => window.removeEventListener("plot:open-reference-picker", handler)
   }, [noteId, editable])
 
-  // Listen for collapse-all / expand-all broadcast
+  // Ref for scoped event listener (Split View pane independence)
+  const rootRef = useRef<HTMLDivElement | null>(null)
+
+  // Listen for collapse-all / expand-all broadcast (scoped to this editor container)
   useEffect(() => {
+    const scope = rootRef.current?.closest('[data-editor-scope]')
+    if (!scope) return
     const handler = (e: Event) => {
       const { collapsed: c } = (e as CustomEvent).detail
       setCollapsed(c)
     }
-    window.addEventListener("plot:set-all-collapsed", handler)
-    return () => window.removeEventListener("plot:set-all-collapsed", handler)
+    scope.addEventListener("plot:set-all-collapsed", handler as EventListener)
+    return () => scope.removeEventListener("plot:set-all-collapsed", handler as EventListener)
   }, [])
 
   const closeModal = () => {
@@ -408,14 +418,14 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
     closeModal()
   }
 
-  // No noteId = can't manage references
-  if (!noteId) return null
+  // No noteId = can't manage references (still render wrapper for scoped listener consistency)
+  if (!noteId) return <div ref={rootRef} style={{ display: "none" }} />
 
   // Only show visual section when there are actual references
   const hasReferences = bulletRefs.length > 0
 
   return (
-    <>
+    <div ref={rootRef}>
       {hasReferences && (
       <div className="footnotes-footer" style={{ marginTop: "0.5rem" }}>
         <button
@@ -622,6 +632,6 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }
