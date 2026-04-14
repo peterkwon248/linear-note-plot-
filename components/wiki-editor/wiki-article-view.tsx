@@ -7,6 +7,7 @@ import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
+import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { cn } from "@/lib/utils"
 import { Virtuoso } from "react-virtuoso"
 import { toast } from "sonner"
@@ -470,6 +471,46 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
               {article.aliases.join(" · ")}
             </p>
           ) : null}
+
+          {/* Infobox — Default layout 도 지원 (Tier 1-2 헤더 색상 포함).
+              Encyclopedia와 동일 — center=stack vertically, left=float right */}
+          {(article.infobox.length > 0 || editable) && (
+            article.contentAlign === "center" ? (
+              <div className="mb-6 max-w-sm">
+                <WikiInfobox
+                  noteId={article.id}
+                  entries={article.infobox}
+                  editable={editable}
+                  headerColor={article.infoboxHeaderColor ?? null}
+                  onHeaderColorChange={
+                    editable
+                      ? (color) =>
+                          usePlotStore
+                            .getState()
+                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                      : undefined
+                  }
+                />
+              </div>
+            ) : (
+              <div className="float-right ml-6 mb-4 w-[280px]">
+                <WikiInfobox
+                  noteId={article.id}
+                  entries={article.infobox}
+                  editable={editable}
+                  headerColor={article.infoboxHeaderColor ?? null}
+                  onHeaderColorChange={
+                    editable
+                      ? (color) =>
+                          usePlotStore
+                            .getState()
+                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                      : undefined
+                  }
+                />
+              </div>
+            )
+          )}
 
           {/* Category tag row */}
           <InlineCategoryTags articleId={articleId} categoryIds={article.categoryIds ?? []} editable={editable} />

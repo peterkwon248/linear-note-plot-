@@ -256,6 +256,15 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
                   noteId={article.id}
                   entries={article.infobox}
                   editable={isEditing}
+                  headerColor={article.infoboxHeaderColor ?? null}
+                  onHeaderColorChange={
+                    isEditing
+                      ? (color) =>
+                          usePlotStore
+                            .getState()
+                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                      : undefined
+                  }
                 />
               </div>
             )}
@@ -274,6 +283,15 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
                   noteId={article.id}
                   entries={article.infobox}
                   editable={isEditing}
+                  headerColor={article.infoboxHeaderColor ?? null}
+                  onHeaderColorChange={
+                    isEditing
+                      ? (color) =>
+                          usePlotStore
+                            .getState()
+                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                      : undefined
+                  }
                 />
               </div>
             )}

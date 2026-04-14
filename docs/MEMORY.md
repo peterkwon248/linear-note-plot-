@@ -129,13 +129,36 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Expand/Collapse All 항상 표시**: 접을 게 없으면 disabled + 흐릿. Details 토글 = DOM 클릭 (setNodeMarkup 대신). hasCollapsibles: details/summary/footnoteRef/referenceIds
 
 ## 나무위키 리서치 결과 (2026-04-14) — 도입 대상
-- **Tier 1 인포박스**: 대표 이미지+캡션, 헤더 색상 테마, 접기/펼치기, 섹션 구분 행
+- **Tier 1 인포박스 완료** 🎉: ✅ 대표 이미지+캡션 (PR #192), ✅ 헤더 색상 테마 (2026-04-14 밤), ✅ 접기/펼치기 (PR #192), ✅ 섹션 구분 행 (2026-04-14 밤), ✅ 필드 값 리치텍스트 (2026-04-14 밤)
 - **Tier 2 새 블록**: 배너 블록 (배경색+제목+부제), 둘러보기 틀 (Navigation Box)
 - **Tier 3 매크로**: 나이 계산 [age], D-Day [dday], Include (틀 삽입)
 - **Tier 4 고급**: 상위/하위 문서 관계, 각주 이미지, 루비 텍스트
-- **아키텍처 결정**: 모든 새 기능 = base 티어 (노트+위키 공용). Insert 레지스트리 단일화 (3곳 중복 제거)
+- **아키텍처 결정**: 모든 새 기능 = base 티어 (노트+위키 공용). ✅ Insert 레지스트리 단일화 완료 (PR #192, 3곳 중복 제거)
+
+## 2026-04-14 세션 의사결정 (브레인스토밍)
+- **Note/Wiki 2-entity 철학 확정** — 엔티티 통합 논의(Alpha/Beta/Gamma) 전부 폐기. 2026-04-01 결정 재확인. 차별점의 원천 = 데이터 구조 (TipTap JSON vs WikiBlock[]). 렌더러는 위키 전용. 자세히: `docs/BRAINSTORM-2026-04-14-entity-philosophy.md`
+- **템플릿 3층 모델** — Layer 1 Layout Preset (렌더러, 위키 전용) + Layer 2 Content Template (섹션 뼈대, Person/Place 등) + Layer 3 Typed Infobox. 노트 템플릿은 NoteTemplate slice 유지 (UpNote식 단순 복사).
+- **노트 split = must-todo** — UniqueID extension으로 이미 가능 (top-level 노드 23종 영속 ID). 위키 splitMode UI 재활용. Medium × 2-3일 × PR 하나. 우선순위는 위키 디자인 강화 이후.
+- **표류 종결** — 2026-03-30 PIVOT #1 (IKEA 전략) → 2026-04-01 ROLLBACK #2 (노션식 폐기) → 2026-04-14 FINAL (분리 유지 + 위키 디자인 강화). 향후 엔티티 통합 제안 금지.
 
 ## Completed PRs (recent)
+- **WIP (2026-04-14 밤, next PR)**: 인포박스 Tier 1 전체 (Tier 1-2 헤더 색상 + Default 인포박스 통합 + Tier 1-4 섹션 구분 행 + Tier 1-5 필드 리치텍스트)
+  - **경로 A: TipTap `InfoboxBlockNode`** (노트 에디터 + 위키 TextBlock 내부 슬래시 `/infobox`)
+    - `headerColor` attr 추가 (`string | null`, null=default `bg-secondary/30` class)
+    - 헤더 div: `headerColor ? style={{ backgroundColor }} : bg-secondary/30 class`
+  - **경로 B: `WikiInfobox` 컴포넌트** (위키 encyclopedia 레이아웃 상단 플로팅 인포박스)
+    - `WikiArticle.infoboxHeaderColor?: string | null` 필드 추가 (optional, Migration 불필요)
+    - `WikiInfobox` props에 `headerColor` + `onHeaderColorChange` 추가 — `onHeaderColorChange` 없으면 피커 자동 숨김 (read-only consumer 자동 대응)
+    - `wiki-article-encyclopedia.tsx` editable 경로에서 `article.infoboxHeaderColor` + `usePlotStore.getState().updateWikiArticle({ infoboxHeaderColor })` 연결. 2개 호출 사이트 (center + left layout mode)
+    - `wiki-article-reader.tsx` + `note-editor.tsx`는 변경 없음 — Note.wikiInfobox엔 color 필드 없고 onHeaderColorChange 미전달로 자동 숨김
+  - **공통 (두 경로 동일)**: `HEADER_COLOR_PRESETS` 8종 (Default/Blue/Red/Green/Yellow/Orange/Purple/Pink, rgba 0.35 alpha), `hexToRgba(hex, 0.35)` 유틸, PaintBucket 버튼 (showColorPicker || headerColor → 상시, 아니면 hover-gated), 팝오버 `absolute right-2 top-[calc(100%+4px)]` 스와치 8개 + 구분선 + 커스텀 color input
+  - **검증**: preview에서 (A) 노트 infobox Purple/Blue/Default, (B) 위키 Zettelkasten article encyclopedia layout에서 Edit → PaintBucket 노출 → Green 선택 → store.infoboxHeaderColor persist. `data-header-color` HTML serialize 확인
+  - **경로 C: 위키 Default 레이아웃에도 인포박스 인라인 렌더** — `wiki-article-view.tsx` Aliases 뒤 + Category 앞 위치. encyclopedia와 동일 center/float-right 분기 (중앙 정렬일 때만 center, 아니면 float-right w-[280px]). editable일 때만 `onHeaderColorChange` 전달
+  - **사이드바 Infobox 섹션 제거** — `wiki-article-detail-panel.tsx`의 `article.layout !== "encyclopedia"` 조건 섹션 삭제. 이전에는 Default layout 전용 사이드바 백업이었으나, 이제 Default도 본문에 인포박스 있으니 중복 제거. 검증: Default layout에서 visible infobox=1 (float-right 본문만), 사이드바 Infobox heading=false
+  - **Tier 1-4 섹션 구분 행 (2026-04-14 밤)**: 나무위키식 그룹 헤더. `WikiInfoboxEntry.type?: "field" | "section"` optional + TipTap `InfoboxRow` 동일. 렌더: `type === "section"` → full-width `bg-secondary/40` + bold uppercase + value 숨김. Edit UI: 섹션 row용 넓은 input (placeholder "Section name", uppercase styling). "Add section" 버튼을 "Add field" 옆에 배치 (`flex items-center gap-4`). `handleAddSection`/`addSectionRow` 새 액션. backward compat — 기존 데이터 `type` 없으면 field 취급
+  - **Tier 1-5 필드 값 리치텍스트 (2026-04-14 밤)**: 공용 `InfoboxValueRenderer` (`components/editor/infobox-value-renderer.tsx`). Tokenize 알고리즘: left-to-right 스캔, 각 위치에서 4개 matcher 중 가장 빠른 match 선택 (우선순위 image > wikilink > md-link > auto-url). 패턴: `![alt](url)` → `<img inline-block h-[1.25em]>`, `[[title]]` → wikilink (wikiArticles title/aliases → note title → dangling dashed), `[text](url)` → `<a target="_blank">`, `https?://...` → auto-link. 보안: `isSafeUrl` (http/https/data:image/ 경로만). 편집 모드는 raw text input 유지 (syntax 그대로), **읽기 모드에서만 리치 렌더** (WikiInfobox는 `!isEditing`, InfoboxBlockNode는 `!editable`). 검증: BIOGRAPHY section + Permanent Note wikilink + de.svg 국기 이미지 + Wikipedia md-link + luhmann.surge.sh auto-URL + NonExistent Article dangling 모두 정상 렌더. **Tier 1 인포박스 전체 완료** 🎉
+  - **중장기 TODO (새 세션)**: `WikiInfobox` 컴포넌트 → `InfoboxBlockNode` 통합. 지금은 두 구현이 공존 (같은 프리셋/유틸 복제). 통합 시 `article.infobox` 스키마를 TipTap JSON 또는 infoboxNode 인스턴스로 전환 필요 (wiki-to-tiptap.ts, seeds, migrations 영향)
+
 - **PR #192 (merged 2026-04-14)**: Y.Doc split-view sync PoC + Block Registry 단일화 + 인포박스 Tier 1-1/1-3
   - Y.Doc Split-View Sync PoC (`lib/y-doc-manager.ts` 싱글톤 registry + isFresh 플래그). `@tiptap/extension-collaboration` 바인딩. `?yjs=1` / `window.plotYjs(true)` / localStorage 3-way 플래그
   - Data-loss regression 2건: (1) stale Y.Doc binding — useState+useEffect → useRef + 렌더 중 동기 전환. (2) empty-content guard JSON threshold 실패 → plainText only 로 단순화
@@ -507,9 +530,17 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-04-09)
+## Current Direction (as of 2026-04-14)
 
-### 방향 결정
+### 최신 방향 (2026-04-14 확정)
+- **Note/Wiki 2-entity 철학 확정** — 엔티티 통합 논의(Alpha/Beta/Gamma) 전부 폐기. 차별점의 원천 = 데이터 구조 (TipTap JSON vs WikiBlock[]). 렌더러는 위키 전용. 자세히: `docs/BRAINSTORM-2026-04-14-entity-philosophy.md`
+- **위키 디자인 강화 우선** — 엔티티 통합보단 디자인 약점 해결 (`wiki-color` 프리셋 + themeColor + Hatnote/Ambox/Navbox)
+- **위키 템플릿 3층 모델** — Layer 1 Layout Preset + Layer 2 Content Template + Layer 3 Typed Infobox. 노트 템플릿은 NoteTemplate slice 유지 (UpNote식)
+- **노트 split = must-todo** — UniqueID extension으로 이미 가능. Medium × 2-3일. 위키 디자인 강화 이후 Phase.
+- **Tier 1 인포박스 완료** 🎉 — 대표 이미지+캡션 (PR #192), 헤더 색상 테마, 접기/펼치기 (PR #192), 섹션 구분 행, 필드 값 리치텍스트
+- **긴급 버그 수정 (2026-04-14)** — `wiki-view.tsx` article view 우선순위 로직. wikiViewMode가 merge/split/category면 article view 숨김 (기존 버그였음)
+
+### 과거 방향 결정 (히스토리)
 - **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** (2026-04-01)
 - **위키 인프라 강화 우선** — WikiEmbed, 변환 함수, 각주, 인포박스 고도화 (2026-04-06)
 - **Library 6번째 공간 추가 결정** — 이미지/파일/URL 독립 엔티티 (2026-04-06)

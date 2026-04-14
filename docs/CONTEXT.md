@@ -92,11 +92,11 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **Insert Block Registry 단일화 (2026-04-14 밤)**: `components/editor/block-registry/` 신설. 25+ insertable block operations 단일 source. 기존 3곳 중복 제거: SlashCommand.tsx (COMMANDS 배열 → `getBlocksForSurface("slash")`), insert-menu.tsx (JSX 하드코드 → `BLOCK_REGISTRY.filter` + group 정렬), FixedToolbar.tsx (인라인 체인 13개 → `getBlock(id).execute({ editor })`). Shape: `{id, label, description, aliases, icon, surfaces, group, tier, execute({editor, range?, noteId?})}`. range 유무로 slash path(blank attrs) vs click path(example attrs) 분기. 첨부(Image/File)는 ref 의존성으로 registry 제외. 검증: InsertMenu 20 항목 렌더 + Callout(HTML 344→2590) + Divider(hr 0→1) + Toggle(details 0→1) + Slash popup 25+ 항목. 이제 새 블록(배너, 둘러보기 틀)은 registry.ts 한 파일에 entry 추가만으로 3곳 자동 노출.
-2. **Y.Doc Split-View Sync PoC (2026-04-14)**: 같은 note를 두 pane에서 열면 Y.Doc 싱글톤이 공유되어 실시간 bidirectional CRDT sync 작동. `lib/y-doc-manager.ts` (refcount registry + isFresh flag), `@tiptap/extension-collaboration` 바인딩, `?yjs=1` / `window.plotYjs(true)` / localStorage 3-way feature flag. Dev-only `window.__plotStore` 노출. 핵심 버그 4개 해결: (1) StarterKit 3.x는 `undoRedo` (`history` 아님) — Collaboration과 충돌 해소, (2) `fragment.length === 0` seed guard 제거 (Collab pre-populate 때문에 영원히 truthy) — `isFresh` 플래그로 권위 있는 signal 사용, (3) **Stale Y.Doc binding** — `useState + useEffect` 패턴이 note 전환 시 한 렌더 사이클 동안 이전 Y.Doc 노출 → 새 editor가 이전 Y.Doc에 seed → 다른 pane으로 CRDT 전파 → 데이터 영구 손실. `useRef` + 렌더 중 동기 전환으로 교체, (4) **Empty-content guard의 임계값 실패** — `JSON.stringify(json).length < 80` 조건이 Collab pre-populate의 UUID-stamped 빈 paragraph (~125자)에 무효화됨. `looksEmpty = !plainText.trim()` 로 단순화 + `ui.ts` auto-delete 연쇄로 노트 소멸까지 이어짐.
-3. **PR #190**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성 — 사이드패널 Usage 섹션, ActivityTimeline 연결, Wiki Stats 중복 제거, 접을 게 없을 때 비활성
-4. **PR #189**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 리사이즈 — 나무위키식 전체 접기/펼치기, TocBlockNode wiki 티어 등록, BlockDragOverlay 위키 통합, 4코너 리사이즈 + Store v75
-5. **PR #188**: 노트 References 시스템 + fontSize cascade + 위키 텍스트 컴팩트
+1. **인포박스 Tier 1-2/1-4 + Default 통합 + 섹션 구분 행 (2026-04-14 밤)**: 나무위키식 인포박스 전면 고도화. **3개 경로 모두 지원** — (A) TipTap `InfoboxBlockNode` (노트 에디터 + 위키 TextBlock 내부 `/infobox`), (B) `WikiInfobox` 컴포넌트 (위키 encyclopedia), (C) **위키 Default 레이아웃에도 동일 인포박스 렌더** (`wiki-article-view.tsx` Aliases 뒤 + Category 앞, encyclopedia와 동일 center/float-right 분기). **사이드바 Infobox 섹션 제거** (`wiki-article-detail-panel.tsx`) — 중복 해소. **Tier 1-2 헤더 색상**: 프리셋 8종 (Default/Blue/Red/Green/Yellow/Orange/Purple/Pink, rgba 0.35) + 커스텀 `<input type="color">` (hex→rgba). `WikiArticle.infoboxHeaderColor?: string | null` + `headerColor`/`onHeaderColorChange` props. PaintBucket 버튼 `showColorPicker || headerColor` 상시, 아니면 hover. 팝오버 `absolute right-2 top-[calc(100%+4px)]`. `onHeaderColorChange` 없으면 피커 자동 숨김 (read-only 자동 대응). **Tier 1-4 섹션 구분 행**: `WikiInfoboxEntry.type?: "field" | "section"` optional 필드 + TipTap `InfoboxRow` 동일. Section row = full-width bold uppercase + tinted bg (`bg-secondary/40`) + value 숨김. Edit UI에 "Add section" 버튼 (Add field와 나란히). **Migration 없음** — 전부 optional 필드. verify: 3경로 모두 렌더 + layout 전환 시 색/섹션 유지 확인. **중장기 TODO**: `WikiInfobox` → `InfoboxBlockNode` 통합 (base 티어 단일화).
+2. **Insert Block Registry 단일화 (2026-04-14 밤)**: `components/editor/block-registry/` 신설. 25+ insertable block operations 단일 source. 기존 3곳 중복 제거: SlashCommand.tsx (COMMANDS 배열 → `getBlocksForSurface("slash")`), insert-menu.tsx (JSX 하드코드 → `BLOCK_REGISTRY.filter` + group 정렬), FixedToolbar.tsx (인라인 체인 13개 → `getBlock(id).execute({ editor })`). Shape: `{id, label, description, aliases, icon, surfaces, group, tier, execute({editor, range?, noteId?})}`. range 유무로 slash path(blank attrs) vs click path(example attrs) 분기. 첨부(Image/File)는 ref 의존성으로 registry 제외. 검증: InsertMenu 20 항목 렌더 + Callout(HTML 344→2590) + Divider(hr 0→1) + Toggle(details 0→1) + Slash popup 25+ 항목. 이제 새 블록(배너, 둘러보기 틀)은 registry.ts 한 파일에 entry 추가만으로 3곳 자동 노출.
+3. **Y.Doc Split-View Sync PoC (2026-04-14)**: 같은 note를 두 pane에서 열면 Y.Doc 싱글톤이 공유되어 실시간 bidirectional CRDT sync 작동. `lib/y-doc-manager.ts` (refcount registry + isFresh flag), `@tiptap/extension-collaboration` 바인딩, `?yjs=1` / `window.plotYjs(true)` / localStorage 3-way feature flag. Dev-only `window.__plotStore` 노출. 핵심 버그 4개 해결: (1) StarterKit 3.x는 `undoRedo` (`history` 아님) — Collaboration과 충돌 해소, (2) `fragment.length === 0` seed guard 제거 (Collab pre-populate 때문에 영원히 truthy) — `isFresh` 플래그로 권위 있는 signal 사용, (3) **Stale Y.Doc binding** — `useState + useEffect` 패턴이 note 전환 시 한 렌더 사이클 동안 이전 Y.Doc 노출 → 새 editor가 이전 Y.Doc에 seed → 다른 pane으로 CRDT 전파 → 데이터 영구 손실. `useRef` + 렌더 중 동기 전환으로 교체, (4) **Empty-content guard의 임계값 실패** — `JSON.stringify(json).length < 80` 조건이 Collab pre-populate의 UUID-stamped 빈 paragraph (~125자)에 무효화됨. `looksEmpty = !plainText.trim()` 로 단순화 + `ui.ts` auto-delete 연쇄로 노트 소멸까지 이어짐.
+4. **PR #190**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성 — 사이드패널 Usage 섹션, ActivityTimeline 연결, Wiki Stats 중복 제거, 접을 게 없을 때 비활성
+5. **PR #189**: Expand/Collapse All + 위키 TOC 버그 + TextBlock 드래그 핸들 + 리사이즈 — 나무위키식 전체 접기/펼치기, TocBlockNode wiki 티어 등록, BlockDragOverlay 위키 통합, 4코너 리사이즈 + Store v75
 
 ## Two Axes — Core Design Philosophy
 
@@ -148,6 +148,8 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **카테고리 더블클릭 에디터**: 싱글클릭=선택(하이라이트만), 더블클릭=폼 에디터 split view. 이름/설명 인라인 편집, Parent 드롭다운, 서브카테고리 +New/Move here (2026-03-26)
 - **노트 ≠ 위키**: Note와 WikiArticle은 완전 별도 엔티티. isWiki→noteType 리팩토링 완료 (2026-03-31)
 - **Stub 부활 (heuristic 방식)**: 상태 필드 없이 블록 수 + 내용 비어있음으로 판정. 기본 템플릿(Overview/Details/See Also) 에서 변경 없으면 stub. 블록/내용 추가 → article 자동 승격 (2026-04-05)
+- **Note/Wiki 2-entity 철학 확정 (2026-04-14)**: 엔티티 통합 논의(Alpha/Beta/Gamma) 전부 폐기. Note / WikiArticle 별도 엔티티 유지. **차별점의 원천 = 데이터 구조** (TipTap JSON vs WikiBlock[]). 렌더러(Layout Preset)는 위키 전용 — 노트엔 만들지 말 것. 자세한 배경은 `BRAINSTORM-2026-04-14-entity-philosophy.md`
+- **위키 템플릿 3층 모델 (2026-04-14)**: Layer 1 Layout Preset (렌더러, default/encyclopedia/wiki-color) + Layer 2 Content Template (섹션+인포박스 뼈대, Person/Place/Concept 등 타입별) + Layer 3 Typed Infobox (C-3). 노트 템플릿은 별개 시스템 (NoteTemplate slice, UpNote식 단순 복사 시드)
 - **[[드롭다운 Create Note + Create Wiki**: 노트는 inbox에 생성, 위키는 빈 WikiArticle(stub) 생성. 위키 아이콘 = IconWiki (액티비티바 통일) (2026-04-05)
 - **Auto Create 방향 결정 (미구현)**: Red Link → "Unresolved Links"로 개념 전환. 빨간색→회색 점선, 클릭 시 노트/위키 선택 팝업. Wiki에서 Red Links 제거 → Home "Unresolved Links"로 통합 (2026-04-05)
 - **인사이트 중앙 허브 방향 결정 (미구현)**: 온톨로지 = 모든 인사이트의 원천 (Single Source of Insights). Notes/Wiki 각 공간 인사이트는 온톨로지에서 파생. 세이브매트릭스급 지표 (Knowledge WAR, Link Density, Stub Conversion Rate 등) (2026-04-05)
@@ -229,11 +231,11 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 
 ### P2 — 인포박스 고도화 + 나무위키 리서치 기능 (나무위키 수준, base 티어 = 노트+위키 공용)
 **Tier 1 — 인포박스:**
-- **대표 이미지 + 캡션** — 인포박스 최상단
-- **헤더 색상 테마** — 문서별 테마 컬러 배너
-- **인포박스 접기/펼치기** — 긴 인포박스 축소
-- **섹션 구분 행** — 정보 그루핑
-- **필드 값 리치텍스트** — 링크, 이미지(국기 등) 지원
+- ✅ **대표 이미지 + 캡션 (PR #192, 2026-04-14)** — heroImage/heroCaption attrs, URL prompt, hover Add/Remove
+- ✅ **헤더 색상 테마 (2026-04-14 밤)** — 노트(TipTap `InfoboxBlockNode`) + 위키(`WikiInfobox` 컴포넌트) 양쪽 지원. 프리셋 7색 + 커스텀 color input, rgba 0.35, PaintBucket 팝오버. `WikiArticle.infoboxHeaderColor` 필드 (optional, migration 없음). 중장기 TODO: `WikiInfobox` → `InfoboxBlockNode` 통합 (base 티어 단일화)
+- ✅ **인포박스 접기/펼치기 (PR #192, 2026-04-14)** — chevron 토글 + `plot:set-all-collapsed` 이벤트 리슨
+- ✅ **섹션 구분 행 (2026-04-14 밤)** — 나무위키 스타일 그룹 헤더 (bold + uppercase + tinted bg, value 숨김). `WikiInfoboxEntry.type?: "field" \| "section"` optional 필드 (backward compat). TipTap `InfoboxRow` 도 동일. Edit UI에 "Add section" 버튼 (field와 나란히). 세 경로 모두 지원 (Default/Encyclopedia/TipTap 노드)
+- ✅ **필드 값 리치텍스트 (2026-04-14 밤)** — 공용 `InfoboxValueRenderer` (`components/editor/infobox-value-renderer.tsx`). 지원: `[[title]]` 위키링크 (article/note resolve + dangling dashed), `[text](url)` 외부링크, `![alt](url)` 인라인 이미지 (h-[1.25em]), bare `https?://` auto-link. 보안: `isSafeUrl` (http/https/data:image/ 경로만). 편집 모드는 raw text input 유지, **읽기 모드에서만 리치 렌더**. WikiInfobox + InfoboxBlockNode 모두 적용. **Tier 1 완료** 🎉
 **Tier 2 — 새 블록 타입 (base 티어):**
 - **배너 블록** — 배경색 + 제목 + 부제 (노트 Insert + 위키 TextBlock 공용)
 - **둘러보기 틀 (Navigation Box)** — 관련 문서 그룹 박스 (접기 가능)
@@ -251,6 +253,16 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 
 ### P2 — 인사이트 허브
 - **인사이트 허브** — 온톨로지 Single Source of Insights
+
+### P2 — 노트 Split (must-todo, 2026-04-14 확정)
+- **노트 split 기능** — 위키처럼 안정적 split UX. Medium 난이도, PR 하나 분량
+- **UX = WikiSplitPage 패턴 그대로** (`components/views/wiki-split-page.tsx`). 사용자 명시: "노트 스플리트도 이런 식으로 되면 이상적"
+  - 2-column UI: Original Note (체크박스 + 블록 타입 배지) / New Note (이동된 블록 preview)
+  - Shift+Click 범위 선택, Back/Cancel, 하단 Title 입력 + "Split N Blocks"
+- 기술 가능성 확인됨: UniqueID extension으로 top-level 노드 23종이 영속 ID 보유 (`shared-editor-config.ts:361`). 위키 splitMode UI 재사용
+- 새 파일: `components/views/note-split-page.tsx` (wiki 템플릿 복사 + TipTap 조작으로 교체) + `lib/store/slices/notes.ts`에 `splitNote` 액션
+- 우선순위: 위키 디자인 강화 (wiki-color, themeColor, Hatnote 등) 이후
+- 배경: `BRAINSTORM-2026-04-14-entity-philosophy.md`, `project_note_split_todo.md`
 
 ### P3 — 사이드패널 + 뷰 확장
 - **사이드패널 리디자인** — Connections 인라인 프리뷰 (Obsidian식)
