@@ -136,6 +136,13 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **아키텍처 결정**: 모든 새 기능 = base 티어 (노트+위키 공용). Insert 레지스트리 단일화 (3곳 중복 제거)
 
 ## Completed PRs (recent)
+- **PR #192 (merged 2026-04-14)**: Y.Doc split-view sync PoC + Block Registry 단일화 + 인포박스 Tier 1-1/1-3
+  - Y.Doc Split-View Sync PoC (`lib/y-doc-manager.ts` 싱글톤 registry + isFresh 플래그). `@tiptap/extension-collaboration` 바인딩. `?yjs=1` / `window.plotYjs(true)` / localStorage 3-way 플래그
+  - Data-loss regression 2건: (1) stale Y.Doc binding — useState+useEffect → useRef + 렌더 중 동기 전환. (2) empty-content guard JSON threshold 실패 → plainText only 로 단순화
+  - Block Registry 단일화 `components/editor/block-registry/` — 25+ entry 단일 source. SlashCommand.tsx (COMMANDS 배열), insert-menu.tsx (JSX 하드코드), FixedToolbar.tsx (인라인 체인 13개) 모두 registry 읽기로 마이그레이션. 새 블록 추가 = registry.ts 한 파일
+  - 인포박스 Tier 1-1: 대표 이미지 + 캡션 (heroImage / heroCaption attrs, URL prompt, hover Add/Remove)
+  - 인포박스 Tier 1-3: 접기/펼치기 (chevron 토글 + plot:set-all-collapsed 전역 이벤트 리슨). Atom node DOM attach 타이밍 → requestAnimationFrame 재시도 패턴
+- **PR #191 (merged 2026-04-14)**: docs: 나무위키 리서치 결과 + TODO 최신화 + 아키텍처 결정
 - **PR #190 (merged 2026-04-14)**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성
   - Reference Usage 섹션 구현 (사용처 노트/위키 목록)
   - Note History ActivityTimeline 연결
