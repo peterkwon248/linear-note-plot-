@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 22-slice Zustand store with versioned migration (currently v74)
+- **Store**: `lib/store/index.ts` — 23-slice Zustand store with versioned migration (currently v77)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -43,7 +43,11 @@
 - **Sub-grouping**: `group.ts` 재귀 호출로 2단계 그룹핑. NoteGroup.subGroups에 저장. VirtualItem "subheader" 타입으로 렌더
 - **Thread Nested Replies**: ThreadStep.parentId 기반 트리 구조. Thread 패널에서 들여쓰기 렌더 + Reply 버튼
 - **Wiki Categories**: wiki-categories slice, DAG 트리 (parentIds[]), 2-panel 트리 에디터 (드래그 계층 편집)
-- **Wiki Layout Preset**: `WikiLayout = "default" | "encyclopedia"` — article별 레이아웃 전환
+- **Wiki Layout = ColumnStructure (Phase 2-1B-3)**: `WikiLayout` string 타입 폐기. `WikiArticle.layout: ColumnStructure` (재귀 컬럼). 1·2·3 프리셋 + 자유 비율 드래그 + 블록 컬럼 간 드래그 + 컬럼 추가/삭제 (Phase 2-2-A/B)
+- **메타 → 블록 통합 결정 (2026-04-15 밤, Phase 2-2-C 예정)**: Infobox/TOC/Hatnote/Navbox/Callout 등 모든 메타를 WikiBlockType으로 통합. `article.infobox` / `tocStyle` scalar 필드 삭제 예정. Title만 예외 (최상단 고정). 진실의 원천: `BRAINSTORM-2026-04-14-column-template-system.md` "2026-04-15 밤 대결정" 절
+- **ColumnStructure + ColumnPath**: 재귀 컬럼 구조, `columns: ColumnDefinition[]`. ColumnPath = number[] (예: [0], [1, 2] 중첩). `columnAssignments: Record<blockId, ColumnPath>` (canonical), leaf blockIds는 derived view
+- **react-resizable-panels 통합 (Phase 2-2-B-1)**: ColumnRenderer 최상위 horizontal + editable일 때 PanelGroup + PanelResizeHandle. onLayout percentage → updateColumnRatios 액션. 중첩 컬럼은 CSS Grid (Phase 2-2-B-3-b에서 nested drag)
+- **wikiTemplates slice + 8 built-in (Phase 1)**: WikiTemplate 타입 (layout/titleStyle/themeColor/sections/infobox/hatnotes/navbox). Built-in = 코드 정의 (`lib/wiki-templates/built-in.ts`), user-defined = slice persist. WikiTemplatePickerDialog로 새 위키 생성 시 템플릿 선택
 - **Wiki URL Block**: `WikiBlockType` 'url' 추가, 유튜브 iframe embed + 일반 링크 카드
 - **Unified Pipeline**: Filter/Display/SidePanel 통합 — 5개 space가 공유 컴포넌트 사용
 - **ToggleSwitch**: `components/ui/toggle-switch.tsx` — 라이트/다크 모드 공통, off=회색 on=accent+white knob
@@ -120,8 +124,8 @@
 - **위키 TextBlock BlockDragOverlay**: `wiki-block-renderer.tsx` WikiTextEditor에 BlockDragOverlay 래핑. `pl-8` 좌측 패딩 = 드래그 핸들 거터. 노트 에디터 TipTapEditor.tsx와 동일 패턴
 - **위키 TextBlock 4코너 리사이즈**: `WikiBlock.editorWidth/editorHeight` persist (Store v75). 편집 모드에서만 적용 (읽기=full width). `block-resize-corner--tl/tr/bl/br` CSS 재활용. `⋯` 메뉴 "Reset editor size" (ArrowsIn). `useBlockResize` 훅 로직 인라인 (NodeView가 아니라 일반 React 컴포넌트라서)
 
-## Store Slices (22 total, v75)
-notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
+## Store Slices (23 total, v77)
+notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks, wiki-templates
 
 - **Reference Usage 섹션**: `reference-detail-panel.tsx` — notes.filter + wikiArticles.filter로 사용처 목록. openNote/navigateToWikiArticle 클릭 네비게이션
 - **Note History = ActivityTimeline 연결**: `side-panel-activity.tsx` — noteEvents 기반 타임라인 (기존 `activity-timeline.tsx` 재활용)
@@ -158,7 +162,38 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **문서 정비**: `BRAINSTORM-2026-04-14-wiki-ultra.md`, `entity-philosophy.md`, `PHASE-PLAN-wiki-enrichment.md` 상단에 DEPRECATED 배너 + 새 문서 링크.
 - **새 Phase 계획** (Phase 0~7): 0 문서 정비 → 1 데이터 모델 → 2 렌더러 → 3 편집 UX → 4 커스텀 템플릿 → 5 나무위키 잔여 → 6 편집 히스토리 → 7 노트 split
 
+## 2026-04-15 밤 대결정 — 메타 → 블록 통합 (🅑)
+
+Phase 2-2-B-3-a 머지 후 사용자와 아키텍처 재논의. 모든 메타 (Infobox/TOC/Hatnote/Navbox/Callout 등)를 **WikiBlockType으로 통합** 하기로 확정.
+
+**변경 핵심**:
+- WikiBlockType에 `"infobox"`, `"toc"` (+ Phase 5에서 hatnote/navbox/callout) 추가
+- `WikiArticle` scalar 메타 필드 (infobox, infoboxHeaderColor, infoboxColumnPath, tocStyle) **Phase 2-2-C에서 삭제**
+- `ColumnMetaPositionMenu` **Phase 2-2-C에서 삭제** (블록 시스템으로 자연 흡수)
+- Title만 예외 (항상 최상단 고정, article.title + titleStyle)
+- Migration v78: 기존 article.infobox[] → infobox block, tocStyle → toc block
+
+**이유**: UX 일관성 최대 (메타/블록 같은 편집 패턴), 여러 메타 자연 표현 (Personal + Career 등), 데이터 모델 단순화, Phase 5 준비
+
+**로드맵**: 2-2-B-3-b → **2-2-C 신규** → 3 (노션식 분기) → 4 (커스텀 편집기) → 5 (나무위키 잔여, 모두 블록) → 마지막 템플릿 풍성화
+
+**진실의 원천**: `BRAINSTORM-2026-04-14-column-template-system.md` "2026-04-15 밤 대결정" 절
+
 ## Completed PRs (recent)
+
+### 2026-04-15 (집, 10 PR day)
+- **PR #206 (merged)**: docs — 2026-04-15 밤 대결정 (메타 → 블록 통합) + 로드맵 재편
+- **PR #205 (merged)**: Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼 (addColumnAfter/removeColumn + 재귀 헬퍼 3 + UI 사이/끝 +, 각 컬럼 X)
+- **PR #204 (merged)**: Phase 2-2-B-2 — 블록 컬럼 간 드래그 (moveBlockToColumn + syncLayoutFromAssignments + LeafDroppableCell)
+- **PR #203 (merged)**: Phase 2-2-B-1 — 컬럼 비율 드래그 (react-resizable-panels) + ColumnMetaPositionMenu (Phase 2-2-C에서 삭제 예정)
+- **PR #202 (merged)**: Phase 2-2-A — ColumnPresetToggle (1·2·3 컬럼 빠른 전환) + applyColumnPreset/buildColumnPreset
+- **PR #201 (merged)**: Phase 2-1B-3 — Cleanup 1662줄 삭제 (wiki-article-view 1220 + wiki-article-encyclopedia 406 + wiki-layout-toggle 36) + WikiLayout 타입/필드 제거 + columnLayout → layout rename + migration v77 + InlineCategoryTags 별도 파일
+- **PR #200 (merged)**: Phase 2-1B-2 — WikiArticleRenderer 편집 모드 전면 흡수 (SortableContext + DnD + splitMode + FloatingDragDropBar + DragOverlay + UrlInputDialog + 편집 Title/Aliases/Categories/Infobox) + 4 호출 지점 마이그레이션
+- **PR #199 (merged)**: Phase 2-1B-1 — WikiArticleRenderer (read-only 통합) + 2 호출 지점 마이그레이션 (wiki-embed-node, note-hover-preview)
+- **PR #198 (merged)**: Phase 2-1A — ColumnRenderer + WikiTitle + WikiThemeProvider 인프라 + tocStyle/infoboxColumnPath 메타 필드 (Phase 2-2-C에서 삭제 예정)
+- **PR #197 (merged)**: Phase 1 — WikiTemplate 시스템 + 8 built-in 템플릿 + picker UI + Store v76 migration + setWikiInfobox 버그 수정
+
+### 2026-04-14 (집)
 - **WIP (2026-04-14 밤, next PR)**: 인포박스 Tier 1 전체 (Tier 1-2 헤더 색상 + Default 인포박스 통합 + Tier 1-4 섹션 구분 행 + Tier 1-5 필드 리치텍스트)
   - **경로 A: TipTap `InfoboxBlockNode`** (노트 에디터 + 위키 TextBlock 내부 슬래시 `/infobox`)
     - `headerColor` attr 추가 (`string | null`, null=default `bg-secondary/30` class)
