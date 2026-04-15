@@ -587,6 +587,12 @@ function WikiArticleRendererInner({
               onRatiosChange={(path, newRatios) =>
                 usePlotStore.getState().updateColumnRatios(articleId, path, newRatios)
               }
+              onAddColumnAfter={(parentPath, afterIndex) =>
+                usePlotStore.getState().addColumnAfter(articleId, parentPath, afterIndex)
+              }
+              onRemoveColumn={(path) =>
+                usePlotStore.getState().removeColumn(articleId, path)
+              }
             />
           </SortableContext>
         ) : (

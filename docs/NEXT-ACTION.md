@@ -6,9 +6,42 @@
 
 ---
 
-**Last Updated**: 2026-04-15 저녁 (Phase 2-2-B-2 완료 — 블록 컬럼 간 드래그 이동. 컬럼 추가/삭제는 2-2-B-3로)
+**Last Updated**: 2026-04-15 밤 (Phase 2-2-B-3-a 완료 — 컬럼 추가/삭제 버튼. 중첩 컬럼 생성 UI는 2-2-B-3-b로)
 
 ## 🎯 다음 세션 시작하면 바로 할 것
+
+### Phase 2-2-B-3-b 시작 — 중첩 컬럼 생성 UI
+
+**배경**: Phase 2-2-B-3-a 완료. 컬럼 추가/삭제/드래그/블록 이동 모두 가능. 이제 **컬럼 안에 컬럼 넣기** (중첩 3 depth).
+
+**Phase 2-2-B-3-b 작업 내용**:
+
+1. **Split column UI**
+   - 편집 모드 + 컬럼 헤더 ⋯ 메뉴 → "Split into columns" 옵션
+   - 또는 빈 컬럼 placeholder 안 "Split this into 2/3 cols" 버튼
+   - 해당 leaf를 ColumnStructure로 전환 (기존 blockIds는 nested 첫 leaf로)
+
+2. **중첩 depth 제한 (3 depth)**
+   - 현재 depth 계산 (basePath.length로 derive)
+   - depth 3 이상에서 Split 버튼 disable + 툴팁 "Max nesting reached"
+
+3. **중첩 컬럼 UI 노출 결정**
+   - 현재 최상위 PanelGroup만 드래그 핸들 + 추가/삭제 버튼
+   - 중첩도 확장 검토 (복잡도 vs 가치)
+   - 또는 단순 CSS Grid + 버튼만으로
+
+4. **액션 필요**:
+   - `splitLeafIntoColumns(articleId, path, count)` — leaf를 N-col ColumnStructure로 변환
+   - 또는 `addColumnAfter`를 nested에도 적용 (이미 재귀 지원, UI만 추가)
+
+**참고 파일**:
+- `BRAINSTORM-2026-04-14-column-template-system.md`
+- `components/wiki-editor/column-renderer.tsx` — 재귀 구조 이미 있음
+- `lib/store/slices/wiki-articles.ts` — insertColumnAtPath/removeColumnAtPath 이미 재귀 지원
+
+---
+
+## (legacy plan, kept for reference)
 
 ### Phase 2-2-B-3 시작 — 컬럼 추가/삭제 + 중첩 컬럼
 

@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-15T07:04:13.821Z",
+  "lastUpdated": "2026-04-15T07:17:00.071Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -199,7 +199,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:25.454Z",
-        "lastUpdated": "2026-04-15T07:02:37.041Z"
+        "lastUpdated": "2026-04-15T07:13:56.469Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\slices\\wiki-articles.ts"
     },
@@ -212,7 +212,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-04-15T07:02:43.993Z"
+        "lastUpdated": "2026-04-15T07:14:03.568Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\types.ts"
     },
@@ -264,7 +264,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-15T07:04:13.821Z"
+        "lastUpdated": "2026-04-15T07:17:00.071Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\wiki-article-renderer.tsx"
     },
@@ -420,7 +420,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-15T07:04:13.821Z"
+    "lastActivity": "2026-04-15T07:17:00.071Z"
   },
   "history": [
     {
@@ -5945,6 +5945,84 @@
     },
     {
       "timestamp": "2026-04-15T07:04:13.821Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:13:27.789Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:13:43.251Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:13:56.469Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:14:03.568Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:14:19.831Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:14:44.178Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:14:54.479Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:15:02.843Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:15:43.788Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:15:54.247Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:16:11.838Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:16:40.493Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:17:00.071Z",
       "feature": "wiki-editor",
       "phase": "do",
       "action": "updated"
