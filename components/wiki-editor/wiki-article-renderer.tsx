@@ -23,7 +23,7 @@ import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock, ColumnPath, ColumnStructure } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton, type WikiBlockVariant } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
-import { InlineCategoryTags } from "./wiki-article-view"
+import { InlineCategoryTags } from "./inline-category-tags"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
@@ -60,7 +60,7 @@ export interface WikiArticleRendererProps {
   editable?: boolean
   /**
    * Variant influences block-level heading styles (encyclopedia = namu-wiki style numbered headings).
-   * Layout structure itself comes from `article.columnLayout`.
+   * Layout structure itself comes from `article.layout`.
    */
   variant?: WikiBlockVariant
   /** Optional global font scale (em multiplier applied via inline style). */
@@ -337,7 +337,7 @@ function WikiArticleRendererInner({
   )
 
   /* ── Layout + meta slots ── */
-  const layout: ColumnStructure = article.columnLayout ?? {
+  const layout: ColumnStructure = article.layout ?? {
     type: "columns",
     columns: [{ ratio: 1, content: { type: "blocks", blockIds: article.blocks.map((b) => b.id) } }],
   }

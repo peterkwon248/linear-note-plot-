@@ -9,17 +9,6 @@ export type NoteSource = "manual" | "webclip" | "import" | "share" | "api" | nul
 /** Note type discriminator — replaces legacy isWiki boolean */
 export type NoteType = "note" | "wiki"
 
-/**
- * Wiki article layout mode (legacy string presets).
- *
- * Phase 1: kept for backwards compat. Existing renderers
- * (wiki-article-view.tsx / wiki-article-encyclopedia.tsx) still read this.
- *
- * Phase 2: will be removed after renderers switch to `WikiArticle.columnLayout`
- * (ColumnStructure). Migration already populates `columnLayout` for every article.
- */
-export type WikiLayout = "default" | "encyclopedia"
-
 /* ── Phase 1: Column Layout + Template System ────────────────────────
  *  진실의 원천: docs/BRAINSTORM-2026-04-14-column-template-system.md
  *
@@ -268,27 +257,25 @@ export interface WikiArticle {
   sectionIndex: WikiSectionIndex[]
   tags: string[]
   categoryIds?: string[]           // references to WikiCategory.id (DAG)
-  layout?: WikiLayout              // Phase 1: legacy preset string. Phase 2 will remove after renderer switch.
   fontSize?: number                // global font size multiplier (0.85=S, 1=M default, 1.15=L, 1.3=XL)
   contentAlign?: "left" | "center" // content alignment (undefined = "left")
   linksOut?: string[]              // extracted [[wiki-links]] from text blocks
   referenceIds?: string[]              // linked Reference IDs (bibliography, not inline footnotes)
   mergeHistory?: WikiMergeSnapshot[]  // snapshots from N→1 merge for unmerge
 
-  /* ── Phase 1: Column Layout + Template System (all optional, safe to omit) ──
-   *  Migration v76 populates `columnLayout` + `columnAssignments` from legacy `layout`.
+  /* ── Column Layout + Template System (Phase 2-1B-3 rename: columnLayout → layout) ──
+   *  Migration v77 ensures every article has `layout` populated (1-col Blank fallback).
    *  `titleStyle`/`themeColor`/`templateId` stay undefined unless a template is applied. */
-  columnLayout?: ColumnStructure                   // Phase 2-1B will rename → `layout` after renderer switch
-  columnAssignments?: Record<string, ColumnPath>   // blockId → column path into columnLayout
+  layout?: ColumnStructure                         // recursive column structure (Phase 2-1B-3 rename from columnLayout)
+  columnAssignments?: Record<string, ColumnPath>   // blockId → column path into layout
   titleStyle?: WikiTitleStyle                      // title rendering customization
   themeColor?: WikiThemeColor                      // article-level theme color
   templateId?: string                              // source template (traceability only, not enforced)
 
-  /* ── Phase 2-1A: TOC + Infobox position meta fields (all optional) ──
-   *  Phase 2-1A: types only — ColumnRenderer reads them but legacy renderers ignore.
-   *  Phase 2-1B: migration v77 backfills defaults (encyclopedia → tocStyle.position=[1], else inline). */
+  /* ── TOC + Infobox position meta fields (Phase 2-1A) ──
+   *  Migration v77 backfills defaults (multi-column → last column, single → [0]). */
   tocStyle?: WikiTocStyle                          // table-of-contents visibility + column position
-  infoboxColumnPath?: ColumnPath                   // where the infobox renders (default [1] for 2-col, [0] for 1-col)
+  infoboxColumnPath?: ColumnPath                   // where the infobox renders (default last col for multi, [0] for single)
 
   createdAt: string
   updatedAt: string

@@ -598,29 +598,20 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
   },
 ]
 
-// Compute sectionIndex from blocks for each seed article.
-// Phase 1: also derive `columnLayout` + `columnAssignments` from legacy `layout` string,
-// matching the migration v76 logic so fresh re-seeds produce valid articles.
+// Compute sectionIndex + 1-column Blank `layout` + `columnAssignments` for each seed article.
+// (Phase 2-1B-3: rename columnLayout → layout. Seed raw entries have no layout preset —
+//  always 1-column Blank. Migration v77 handles existing persisted articles.)
 export const SEED_WIKI_ARTICLES: WikiArticle[] = _SEED_WIKI_ARTICLES_RAW.map((a) => {
   const blockIds = a.blocks.map((b) => b.id)
-  const isEncyclopedia = a.layout === "encyclopedia"
-  const columnLayout = isEncyclopedia
-    ? {
-        type: "columns" as const,
-        columns: [
-          { ratio: 3, content: { type: "blocks" as const, blockIds } },
-          { ratio: 1, minWidth: 240, priority: 1, content: { type: "blocks" as const, blockIds: [] } },
-        ],
-      }
-    : {
-        type: "columns" as const,
-        columns: [{ ratio: 1, content: { type: "blocks" as const, blockIds } }],
-      }
+  const layout = {
+    type: "columns" as const,
+    columns: [{ ratio: 1, content: { type: "blocks" as const, blockIds } }],
+  }
   const columnAssignments = Object.fromEntries(blockIds.map((id) => [id, [0]]))
   return {
     ...a,
     sectionIndex: buildSectionIndex(a.blocks),
-    columnLayout,
+    layout,
     columnAssignments,
   }
 })
