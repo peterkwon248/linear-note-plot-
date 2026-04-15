@@ -6,9 +6,50 @@
 
 ---
 
-**Last Updated**: 2026-04-15 오후 (Phase 2-1B-2 완료 — WikiArticleRenderer 편집 모드 흡수 + 4 호출 지점 전체 마이그레이션. 기존 렌더러 2개는 dead code — Phase 2-1B-3에서 삭제)
+**Last Updated**: 2026-04-15 저녁 (Phase 2-1B-3 완료 — 기존 렌더러 2개 + WikiLayoutToggle 삭제, layout string 제거, columnLayout → layout rename, migration v77, InlineCategoryTags 별도 파일)
 
 ## 🎯 다음 세션 시작하면 바로 할 것
+
+### Phase 2-2 시작 — 컬럼 편집 UX (드래그/추가/삭제) + 1·2·N 컬럼 프리셋 토글
+
+**배경**: Phase 2-1B (전체) 완료. 위키 렌더러 시스템 통합 끝났고 layout 타입 시스템 정리 끝. 이제 **사용자가 컬럼 구조를 직접 편집할 수 있는 UX**를 추가할 차례.
+
+**진실의 원천**: `docs/BRAINSTORM-2026-04-14-column-template-system.md` (Phase 2-2 절)
+
+**Phase 2-2 작업 내용** (~1주, 1 PR):
+
+1. **컬럼 비율 드래그 조절** — `react-resizable-panels` 활용. 컬럼 경계를 드래그해서 ratio 변경
+2. **컬럼 추가/삭제 버튼** — 컬럼 사이/끝에 + 버튼, 컬럼 헤더에 ⋯ 메뉴 (Delete/Split)
+3. **중첩 컬럼 (3 depth 제한)** + enforcement (4 depth 시 disable + 경고)
+4. **블록을 컬럼 간 드래그 이동** — DnD에 컬럼 cell 자체를 droppable로
+5. **1·2·N 컬럼 프리셋 빠른 전환 토글** — 헤더에 칩 메뉴 (1col / 2col / 3col 등). WikiLayoutToggle 자리 차지
+6. **TocStyle/InfoboxColumnPath UI** — 사용자가 위치 변경 가능 (메뉴 또는 사이드바 setting)
+
+**Phase 2-2 완료 시 동작**:
+- 사용자가 컬럼 구조 자유 편집 (Phase 2-1B는 렌더만, 편집 못 함)
+- 노션식 자유 분기는 Phase 3으로
+
+### 또는 ⚠️ 사용자 검토 필요 — built-in 템플릿 풍성화
+
+사용자 피드백 (2026-04-15 저녁): "위키 템플릿 < 기대보다 허접". 정상 — 지금 8 built-in 템플릿은 매우 단순 (sections + infobox key-value 슬롯만, themeColor는 단순 RGBA, heroImage/Hatnote/Banner 없음). **Phase 2-2 진입 전 사용자가 "템플릿 풍부하게 먼저"를 원한다면**:
+
+- Person 템플릿: 헤더 배너 (인물 사진 + 부제목), 인포박스 항목 늘리기 (생일/사망/직업/국적/소속/배우자/자녀)
+- Encyclopedia 템플릿: heroImage + 캡션 자동 영역, Hatnote 자동 추가
+- 모든 템플릿: 섹션별 icon (📖 📜 🎨), themeColor 강화 (gradient 옵션, alpha 등)
+- 더 다양한 themeColor 프리셋
+
+**`lib/wiki-templates/built-in.ts` 한 파일만 손보면 됨.** 사용자 피드백 받고 결정.
+
+**참고 파일** (Phase 2-2):
+- `BRAINSTORM-2026-04-14-column-template-system.md`
+- `components/wiki-editor/column-renderer.tsx` (재귀 렌더러 — 드래그 핸들 추가)
+- `components/wiki-editor/wiki-article-renderer.tsx` (통합 렌더러)
+- `lib/types.ts` (`ColumnStructure` / `ColumnDefinition`)
+- `lib/store/slices/wiki-articles.ts` (updateWikiArticle 활용)
+
+---
+
+## (legacy plan, kept for reference)
 
 ### Phase 2-1B-3 시작 — Cleanup (기존 렌더러 삭제 + layout string 제거 + migration v77)
 
@@ -184,17 +225,17 @@
 
 ## 🧠 멘탈 상태 (잊지 말 것)
 
-- **Store v76** — Phase 2-1B-3에서 v77로 bump 예정 (columnLayout → layout rename + tocStyle/infoboxColumnPath 기본값 backfill)
+- **Store v77** — `WikiArticle.layout`은 이제 ColumnStructure (이전 columnLayout). legacy WikiLayout string 폐기
 - **엔티티 통합 영구 폐기** — Note/Wiki 2-entity 유지
-- **렌더러는 위키 전용** — 노트엔 layout 개념 없음
-- **Title 블록화 X** — `article.title + titleStyle`로 최상단 고정 (WikiTitle 컴포넌트 있음)
+- **렌더러는 위키 전용** — 노트엔 layout 개념 없음 (단일 TipTap JSON)
+- **Title 블록화 X** — `article.title + titleStyle`로 최상단 고정
 - **Column Heading 블록 X** — Section(H2)로 충분
-- **`layout` string 필드 dead** — 렌더러는 더 이상 안 읽음. Phase 2-1B-3에서 필드 + 타입 제거
 - **노트 split must-todo** — Phase 7
-- **Phase 2-1B-2까지 완료**: WikiArticleRenderer가 4 호출 지점 모두 커버. 편집 모드 + splitMode + FloatingDragDropBar + DnD cross-article drag 전부 흡수
-- **Virtuoso 가상화 제거** — >50 blocks read mode에서 성능 저하 가능. 필요 시 Phase 2-2+에서 ColumnRenderer 레벨에서 재도입
+- **Phase 2-1B 전체 완료**: 위키 렌더러 통합 끝. 4 호출 지점 (wiki-view / secondary-panel-content / wiki-embed-node / note-hover-preview) 모두 WikiArticleRenderer 사용. 기존 wiki-article-view (1220줄) + wiki-article-encyclopedia (406줄) + wiki-layout-toggle 삭제됨
+- **InlineCategoryTags** — 이제 `components/wiki-editor/inline-category-tags.tsx` 별도 파일
+- **Virtuoso 가상화 제거** — >50 blocks read mode 성능 저하 가능. 필요 시 Phase 2-2+에서 재도입
+- **사용자 피드백 (2026-04-15 저녁)**: built-in 템플릿이 허접하다는 평가. Phase 2-2 진입 전 풍성화 옵션 (`lib/wiki-templates/built-in.ts` 손보기) 검토
 - **2026-04-15 사용자 결정**: A 모델 + 메타 필드 별도 + Phase 단계 분리 (BRAINSTORM 문서 "2026-04-15 결정 추가" 절)
-- **현재 사용 중**: WikiArticleRenderer는 4 호출 지점 (wiki-view / secondary-panel-content / wiki-embed-node / note-hover-preview) 모두 사용. 기존 렌더러 2개는 dead code
 
 ## ⚠️ Phase 2-1B 구현 전 주의사항
 

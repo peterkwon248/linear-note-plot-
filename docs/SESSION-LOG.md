@@ -6,6 +6,69 @@
 
 ---
 
+## 2026-04-15 저녁 (집, Phase 2-1B-3 cleanup PR)
+
+### 완료 (코드)
+- **InlineCategoryTags 별도 파일 분리** ✅
+  - `components/wiki-editor/inline-category-tags.tsx` 신규 (~280줄, wiki-article-view에서 분리)
+  - `wiki-article-renderer` import path 갱신 (`./inline-category-tags`)
+- **기존 렌더러 + WikiLayoutToggle 삭제** ✅
+  - `components/wiki-editor/wiki-article-view.tsx` 삭제 (1220줄)
+  - `components/wiki-editor/wiki-article-encyclopedia.tsx` 삭제 (406줄)
+  - `components/wiki-editor/wiki-layout-toggle.tsx` 삭제 (36줄)
+  - 합계 1662줄 dead code 제거
+- **`.layout` (string) 사용처 정리** ✅
+  - `wiki-view.tsx`: `selectedWikiArticle.layout === "encyclopedia"` → `selectedWikiArticle.layout?.columns.length >= 2`
+  - `secondary-panel-content.tsx`: 동일 패턴
+  - `wiki-article-detail-panel.tsx`: layout 칩 → "{N} columns" 표시, Layout: capitalize → Columns: count
+- **타입 정리** ✅
+  - `WikiLayout` 타입 (`"default" | "encyclopedia"`) 삭제
+  - `WikiArticle.layout: WikiLayout` 필드 삭제 (legacy string)
+  - `WikiArticle.columnLayout: ColumnStructure` → `WikiArticle.layout: ColumnStructure` rename
+  - 이제 `article.layout`은 컬럼 구조 (이전 columnLayout 의미)
+- **모든 코드 사용처 columnLayout → layout rename** ✅
+  - `lib/store/migrate.ts`, `lib/store/seeds.ts`, `lib/store/slices/wiki-articles.ts`
+  - `components/wiki-editor/wiki-article-renderer.tsx`
+  - `components/views/wiki-view.tsx`, `secondary-panel-content.tsx`, `wiki-article-detail-panel.tsx`
+- **Migration v77** ✅
+  - Step 1: legacy `layout` string 제거 (typeof === "string")
+  - Step 2: `columnLayout` → `layout` rename
+  - Step 3: `tocStyle` 기본값 backfill (multi-col → last col + 펼침 / single → [0] + 접기)
+  - Step 4: `infoboxColumnPath` 기본값 backfill (multi → last col / single → [0])
+  - Store version 76 → 77
+- **SEED_WIKI_ARTICLES factory 단순화** ✅
+  - 이제 항상 1컬럼 Blank로 derive (raw에 layout 필드 없음)
+  - rename 적용 (`columnLayout` → `layout`)
+
+### 검증
+- `next build --webpack` ✅ (32 routes, TypeScript 에러 0)
+- `vitest run` ✅ 5 파일 / 159 테스트 통과
+- dev server compiles clean
+
+### 결정
+- **WikiArticle.layout 필드 의미 전환** — 이제 ColumnStructure. 기존 string 의미는 영구 폐기
+- **Migration v77은 v76 위에서 동작** — v76이 columnLayout 채우고 v77이 그걸 layout으로 rename. 그래서 v75→v77 새 사용자도 안전 (v75 legacy → v76 columnLayout → v77 layout)
+- **InlineCategoryTags 분리** — wiki-article-view 삭제 가능하게 만든 핵심 의존성 끊기 작업
+- **TagBadges, ArticleCategories 같은 wiki-article-view 내부 컴포넌트** — 외부 사용처 없어서 삭제와 함께 사라짐 (검증됨)
+
+### 사용자 피드백 (저녁)
+- "위키 템플릿이 기대보다 허접" — 정상. 8 built-in 템플릿은 sections + infobox key-value 슬롯뿐이고 themeColor도 단순. **Phase 2-2 진입 전 `lib/wiki-templates/built-in.ts` 풍성화 옵션 검토** (heroImage, 헤더 배너, 섹션 icon, 더 다양한 themeColor 등)
+
+### 다음 세션 (Phase 2-2 또는 템플릿 풍성화)
+- Phase 2-2: 컬럼 비율 드래그 + 추가/삭제 + 1·2·N 컬럼 프리셋 토글 + TocStyle/InfoboxColumnPath UI
+- 또는 built-in 템플릿 풍성화 (사용자 피드백 기반)
+- 노션식 자유 분기는 Phase 3
+- 상세: `NEXT-ACTION.md`
+
+### Watch Out
+- v77 migration이 v76 결과 위에서 동작 — v75 legacy 사용자가 한 번에 v77로 점프해도 v76 코드가 먼저 실행되니 안전
+- 수동 테스트 권장: 새 위키 생성 → 편집 모드 → splitMode / DnD / Infobox 편집 / Title 편집
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 오후 (집, Phase 2-1B-2 편집 모드 흡수 + 4 호출 지점 전체 마이그레이션)
 
 ### 완료 (코드)

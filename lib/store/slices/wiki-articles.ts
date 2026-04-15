@@ -15,7 +15,7 @@ type Get = () => any
 interface TemplateInstantiation {
   blocks: WikiBlock[]
   columnAssignments: Record<string, ColumnPath>
-  columnLayout: ColumnStructure
+  layout: ColumnStructure
   infobox: WikiArticle["infobox"]
   infoboxHeaderColor?: string | null
   titleStyle?: WikiArticle["titleStyle"]
@@ -60,7 +60,7 @@ function instantiateTemplate(template: WikiTemplate): TemplateInstantiation {
   return {
     blocks,
     columnAssignments,
-    columnLayout: populated,
+    layout: populated,
     infobox: template.infobox.fields.map((f) => ({ ...f })),
     infoboxHeaderColor: template.infobox.headerColor ?? null,
     titleStyle: template.titleStyle,
@@ -117,7 +117,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
 
       // Block source priority: explicit `partial.blocks` > template instantiation > legacy default.
       let blocks: WikiBlock[]
-      let columnLayout: ColumnStructure
+      let layout: ColumnStructure
       let columnAssignments: Record<string, ColumnPath>
       let infobox: WikiArticle["infobox"]
       let infoboxHeaderColor: string | null | undefined
@@ -128,14 +128,14 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         // Explicit blocks override — assume 1-column Blank, no template metadata
         blocks = partial.blocks
         const ids = blocks.map((b) => b.id)
-        columnLayout = blankColumnLayout(ids)
+        layout = blankColumnLayout(ids)
         columnAssignments = Object.fromEntries(ids.map((bid) => [bid, [0]]))
         infobox = []
         infoboxHeaderColor = null
       } else if (template) {
         const inst = instantiateTemplate(template)
         blocks = inst.blocks
-        columnLayout = inst.columnLayout
+        layout = inst.layout
         columnAssignments = inst.columnAssignments
         infobox = inst.infobox
         infoboxHeaderColor = inst.infoboxHeaderColor
@@ -150,7 +150,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           { id: genId(), type: "section" as const, title: "See Also", level: 2 },
         ]
         const ids = blocks.map((b) => b.id)
-        columnLayout = blankColumnLayout(ids)
+        layout = blankColumnLayout(ids)
         columnAssignments = Object.fromEntries(ids.map((bid) => [bid, [0]]))
         infobox = []
         infoboxHeaderColor = null
@@ -167,7 +167,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         tags: partial.tags ?? [],
         linksOut: extractLinksFromWikiBlocks(blocks),
         // Phase 1 fields
-        columnLayout,
+        layout,
         columnAssignments,
         titleStyle,
         themeColor,

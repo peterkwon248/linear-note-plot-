@@ -5,7 +5,7 @@ import { usePlotStore } from "@/lib/store"
 import { useSecondaryRoute, useSecondarySpace, setSecondarySpace, DEFAULT_ROUTES } from "@/lib/table-route"
 import { NoteEditor } from "@/components/note-editor"
 import { PaneProvider, useIsActivePane } from "./pane-context"
-// WikiLayoutToggle removed Phase 2-1B-2 — Phase 2-2에서 새 토글로 교체 예정
+// (WikiLayoutToggle removed Phase 2-1B-3 — Phase 2-2에서 새 토글로 교체 예정)
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -254,7 +254,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
             <WikiArticleRenderer
               articleId={articleId}
               editable={isEditing}
-              variant={article.layout === "encyclopedia" ? "encyclopedia" : "default"}
+              variant={(article.layout?.columns.length ?? 1) >= 2 ? "encyclopedia" : "default"}
               collapseAllCmd={collapseAllCmd}
               onCollapseAllDone={() => setCollapseAllCmd(null)}
               onAllCollapsedChange={setAllSectionsCollapsed}

@@ -837,14 +837,13 @@ export function migrate(persistedState: unknown): PlotState {
 
   // v76: Column Layout + Template System (Phase 1, 2026-04-15)
   // Derive `columnLayout` + `columnAssignments` from legacy `layout` string for each article.
-  // Legacy `layout: "default" | "encyclopedia" | undefined` is left untouched for backwards compat —
-  // existing renderers keep reading it. Phase 2 will remove `layout` after renderer switch.
+  // (Phase 2-1B-3 v77 will rename `columnLayout` → `layout` and drop the legacy string.)
   // New `wikiTemplates: {}` initialized for user-defined templates (built-ins ship in code).
   if (!state.wikiTemplates) state.wikiTemplates = {}
 
   if (Array.isArray(state.wikiArticles)) {
     for (const article of state.wikiArticles as Record<string, unknown>[]) {
-      if (article.columnLayout) continue // already migrated (idempotent guard)
+      if (article.columnLayout || article.layout && typeof article.layout === "object") continue // already migrated
 
       const legacyLayout = article.layout as "default" | "encyclopedia" | undefined
       const blocks = Array.isArray(article.blocks) ? (article.blocks as Array<{ id: string }>) : []
@@ -870,6 +869,38 @@ export function migrate(persistedState: unknown): PlotState {
       }
       // Reverse index: every existing block lives in column [0]. Infobox is NOT a block.
       article.columnAssignments = Object.fromEntries(blockIds.map((id) => [id, [0]]))
+    }
+  }
+
+  // v77: Phase 2-1B-3 — Cleanup
+  //   1. Rename `columnLayout` → `layout` (legacy string field is dropped — renderer no longer reads it)
+  //   2. Backfill `tocStyle` defaults (multi-column → last column / single → top of [0], collapsed)
+  //   3. Backfill `infoboxColumnPath` defaults (multi → last column / single → [0])
+  if (Array.isArray(state.wikiArticles)) {
+    for (const article of state.wikiArticles as Record<string, unknown>[]) {
+      // Step 1: drop legacy `layout` string if present (`typeof === "string"`), then rename
+      if (typeof article.layout === "string") delete article.layout
+      if (article.columnLayout && !article.layout) {
+        article.layout = article.columnLayout
+        delete article.columnLayout
+      }
+
+      // Step 2 + 3: derive defaults from current column count
+      const layoutObj = article.layout as { columns?: unknown[] } | undefined
+      const colCount = layoutObj?.columns?.length ?? 1
+      const isMulti = colCount >= 2
+      const lastIdx = Math.max(0, colCount - 1)
+
+      if (!article.tocStyle) {
+        article.tocStyle = {
+          show: true,
+          position: isMulti ? [lastIdx] : [0],
+          collapsed: !isMulti, // 1-col: collapsed by default (less obtrusive)
+        }
+      }
+      if (!article.infoboxColumnPath) {
+        article.infoboxColumnPath = isMulti ? [lastIdx] : [0]
+      }
     }
   }
 
