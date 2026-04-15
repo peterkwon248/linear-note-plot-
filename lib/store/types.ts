@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, WikiTemplate } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -124,6 +124,9 @@ export interface PlotState {
 
   // ── Global Bookmarks (Cross-note anchors) ──
   globalBookmarks: Record<string, GlobalBookmark>
+
+  // ── Wiki Templates (user-defined; built-ins ship in lib/wiki-templates/built-in.ts) ──
+  wikiTemplates: Record<string, WikiTemplate>
 
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
@@ -269,7 +272,7 @@ export interface PlotState {
   setArticleCategories: (articleId: string, categoryIds: string[]) => void
 
   // ── Wiki Articles (Assembly Model) ──
-  createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[] }) => string
+  createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[]; templateId?: string }) => string
   updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
   addArticleReference: (articleId: string, referenceId: string) => void
   removeArticleReference: (articleId: string, referenceId: string) => void
@@ -307,6 +310,12 @@ export interface PlotState {
   pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType']) => string
   unpinBookmark: (bookmarkId: string) => void
   updateBookmarkLabel: (bookmarkId: string, label: string) => void
+
+  // ── Wiki Templates (CRUD; built-ins are read-only) ──
+  createWikiTemplate: (partial: Omit<WikiTemplate, "id" | "createdAt" | "updatedAt" | "isBuiltIn">) => string
+  updateWikiTemplate: (id: string, updates: Partial<Omit<WikiTemplate, "id" | "createdAt" | "isBuiltIn">>) => void
+  deleteWikiTemplate: (id: string) => void
+  duplicateWikiTemplate: (sourceId: string, newName?: string) => string | null
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

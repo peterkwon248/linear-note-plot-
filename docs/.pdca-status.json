@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-14T08:50:00.907Z",
+  "lastUpdated": "2026-04-15T00:37:15.733Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -28,7 +28,9 @@
     "nodes",
     "vigorous-spence",
     "adoring-benz",
-    "block-registry"
+    "block-registry",
+    "eager-goodall",
+    "wiki-templates"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -41,9 +43,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-05T00:23:24.929Z",
-        "lastUpdated": "2026-04-14T08:18:10.402Z"
+        "lastUpdated": "2026-04-15T00:33:36.757Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\FixedToolbar.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\editor\\wiki-infobox.tsx"
     },
     "wizardly-kare": {
       "phase": "do",
@@ -197,9 +199,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:25.454Z",
-        "lastUpdated": "2026-04-09T06:07:14.689Z"
+        "lastUpdated": "2026-04-15T00:29:44.797Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\vigorous-spence\\lib\\store\\slices\\global-bookmarks.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\slices\\wiki-articles.ts"
     },
     "store": {
       "phase": "do",
@@ -210,9 +212,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-04-14T05:54:46.498Z"
+        "lastUpdated": "2026-04-15T00:37:15.733Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\lib\\store\\index.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\seeds.ts"
     },
     "__tests__": {
       "phase": "do",
@@ -262,9 +264,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-14T03:06:42.360Z"
+        "lastUpdated": "2026-04-15T00:33:53.794Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\wiki-editor\\wiki-footnotes-section.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\wiki-article-view.tsx"
     },
     "core": {
       "phase": "do",
@@ -382,6 +384,32 @@
         "lastUpdated": "2026-04-14T08:14:01.099Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\block-registry\\types.ts"
+    },
+    "eager-goodall": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-15T00:18:45.790Z",
+        "lastUpdated": "2026-04-15T00:32:04.751Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\views\\wiki-view.tsx"
+    },
+    "wiki-templates": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-15T00:20:33.340Z",
+        "lastUpdated": "2026-04-15T00:20:33.340Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\wiki-templates\\built-in.ts"
     }
   },
   "pipeline": {
@@ -392,7 +420,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-14T08:50:00.907Z"
+    "lastActivity": "2026-04-15T00:37:15.733Z"
   },
   "history": [
     {
@@ -5384,6 +5412,138 @@
     {
       "timestamp": "2026-04-14T08:50:00.907Z",
       "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:18:45.790Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:19:09.888Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:20:33.340Z",
+      "feature": "wiki-templates",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:22:42.345Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:23:02.648Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:23:10.029Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:23:16.984Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:23:25.704Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:23:32.857Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:23:37.775Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:23:42.697Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:23:47.051Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:24:48.574Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:29:44.797Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:31:07.207Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:31:29.730Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:31:37.656Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:32:04.751Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:33:36.757Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:33:49.881Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:33:53.794Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T00:37:15.733Z",
+      "feature": "store",
       "phase": "do",
       "action": "updated"
     }
