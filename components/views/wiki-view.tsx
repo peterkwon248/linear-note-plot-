@@ -26,7 +26,6 @@ import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { ColumnPresetToggle } from "@/components/wiki-editor/column-preset-toggle"
-import { ColumnMetaPositionMenu } from "@/components/wiki-editor/column-meta-position-menu"
 import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
 import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
@@ -751,8 +750,7 @@ export function WikiView() {
 
               {/* Phase 2-2-A: 1·2·3 컬럼 프리셋 빠른 전환 */}
               <ColumnPresetToggle articleId={selectedWikiArticleId} />
-              {/* Phase 2-2-B-1: TOC / Infobox 위치 설정 팝오버 */}
-              <ColumnMetaPositionMenu articleId={selectedWikiArticleId} />
+              {/* Phase 2-2-C: ColumnMetaPositionMenu removed — infobox/toc are blocks now */}
 
               {isEditingWikiArticle ? (
                 <button

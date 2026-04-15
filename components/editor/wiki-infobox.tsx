@@ -48,6 +48,10 @@ interface WikiInfoboxProps {
    * Which slice owns this infobox. Phase 1 fix: previously hardcoded to Note slice
    * which silently failed when a WikiArticle id was passed. Default "note" for
    * backwards compat (note-editor.tsx still works without changes).
+   *
+   * Phase 2-2-C: wiki articles now pipe entries/headerColor via `onEntriesChange`/
+   * `onHeaderColorChange` (block-scoped). When `onEntriesChange` is provided the
+   * component skips the legacy store-dispatch path entirely.
    */
   entityType?: "note" | "wiki"
   entries: WikiInfoboxEntry[]
@@ -57,6 +61,11 @@ interface WikiInfoboxProps {
   headerColor?: string | null
   /** Tier 1-2: Callback when header color changes. If omitted, the color picker is hidden. */
   onHeaderColorChange?: (color: string | null) => void
+  /**
+   * Phase 2-2-C: When provided, entry mutations call this instead of the store
+   * action. Used by block-wrapped infoboxes where state lives on `WikiBlock.fields`.
+   */
+  onEntriesChange?: (entries: WikiInfoboxEntry[]) => void
 }
 
 export function WikiInfobox({
@@ -67,9 +76,9 @@ export function WikiInfobox({
   className,
   headerColor = null,
   onHeaderColorChange,
+  onEntriesChange,
 }: WikiInfoboxProps) {
   const setWikiInfobox = usePlotStore((s) => s.setWikiInfobox)
-  const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
   const [isEditing, setIsEditing] = useState(false)
   const [localEntries, setLocalEntries] = useState<WikiInfoboxEntry[]>(entries)
   const [showColorPicker, setShowColorPicker] = useState(false)
@@ -83,13 +92,18 @@ export function WikiInfobox({
 
   const handleSave = useCallback(() => {
     const cleaned = localEntries.filter((e) => e.key.trim() !== "")
-    if (entityType === "wiki") {
-      setWikiArticleInfobox(noteId, cleaned)
-    } else {
+    // Phase 2-2-C: block-wrapped wiki callers route via `onEntriesChange`.
+    // Note-entity callers still persist via `setWikiInfobox` (unchanged).
+    if (onEntriesChange) {
+      onEntriesChange(cleaned)
+    } else if (entityType === "note") {
       setWikiInfobox(noteId, cleaned)
     }
+    // entityType === "wiki" without onEntriesChange is a bug post-Phase 2-2-C —
+    // wiki entries must go through the block wrapper. Silently no-op to avoid
+    // corrupting state.
     setIsEditing(false)
-  }, [noteId, entityType, localEntries, setWikiInfobox, setWikiArticleInfobox])
+  }, [noteId, entityType, localEntries, setWikiInfobox, onEntriesChange])
 
   const handleCancel = useCallback(() => {
     setLocalEntries([...entries])

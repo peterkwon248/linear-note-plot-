@@ -125,7 +125,6 @@ export function WikiMergePreview({
           blocks: primarySnapshot.blocks,
           aliases: primarySnapshot.aliases,
           tags: primarySnapshot.tags,
-          infobox: primarySnapshot.infobox,
         })
       },
       () => {
@@ -150,7 +149,6 @@ export function WikiMergePreview({
             blocks: primarySnapshot.blocks,
             aliases: primarySnapshot.aliases,
             tags: primarySnapshot.tags,
-            infobox: primarySnapshot.infobox,
           })
         },
       },
@@ -164,11 +162,18 @@ export function WikiMergePreview({
     return [...new Set([...primary.tags, ...secondary.tags])]
   }, [primary, secondary])
 
+  // Phase 2-2-C: infobox is now a block — preview count derived from blocks.
   const mergedInfoboxCount = useMemo(() => {
     if (!primary || !secondary) return 0
-    const keys = new Set(primary.infobox.map((e) => e.key))
-    const extra = secondary.infobox.filter((e) => !keys.has(e.key))
-    return primary.infobox.length + extra.length
+    const collect = (a: typeof primary) =>
+      (a?.blocks ?? [])
+        .filter((b) => b.type === "infobox")
+        .flatMap((b) => b.fields ?? [])
+    const primaryFields = collect(primary)
+    const secondaryFields = collect(secondary)
+    const keys = new Set(primaryFields.map((e) => e.key))
+    const extra = secondaryFields.filter((e) => !keys.has(e.key))
+    return primaryFields.length + extra.length
   }, [primary, secondary])
 
   /* ── Render ── */

@@ -11,8 +11,15 @@ export function useWikiBlockActions(articleId: string) {
   const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
   const removeWikiBlock = usePlotStore((s) => s.removeWikiBlock)
   const splitWikiArticle = usePlotStore((s) => s.splitWikiArticle)
+  const moveBlockToColumn = usePlotStore((s) => s.moveBlockToColumn)
 
-  const [urlBlockDialog, setUrlBlockDialog] = useState<{ open: boolean; afterBlockId?: string }>({ open: false })
+  // Phase 2-2-B-3-b: urlBlockDialog carries either `afterBlockId` (existing insertion
+  // point semantics) or `columnPath` (brand-new block scoped to an empty column).
+  const [urlBlockDialog, setUrlBlockDialog] = useState<{
+    open: boolean
+    afterBlockId?: string
+    columnPath?: number[]
+  }>({ open: false })
 
   const handleAddBlock = useCallback((type: string, afterBlockId?: string, level?: number) => {
     if (type === "table") {
@@ -44,8 +51,64 @@ export function useWikiBlockActions(articleId: string) {
     const block: Omit<WikiBlock, "id"> = { type: type as WikiBlock["type"] }
     if (type === "section") { block.title = ""; block.level = level ?? 2 }
     if (type === "text") { block.content = "" }
+    if (type === "infobox") { block.fields = []; block.headerColor = null }
+    if (type === "toc") { block.tocCollapsed = false }
     addWikiBlock(articleId, block, afterBlockId)
   }, [articleId, addWikiBlock])
+
+  /**
+   * Phase 2-2-B-3-b: Create a new block inside an (empty) column.
+   *
+   * Mirrors `handleAddBlock`'s type-dispatch logic, but additionally calls
+   * `moveBlockToColumn` to route the new block to `path`. URL blocks defer to
+   * the shared urlBlockDialog — the submit handler consumes `columnPath` to
+   * finish the column-scoped placement.
+   */
+  const handleAddBlockToColumn = useCallback(
+    (path: number[], type: string, level?: number) => {
+      if (type === "url") {
+        setUrlBlockDialog({ open: true, columnPath: path })
+        return
+      }
+
+      let newBlockId: string | undefined
+
+      if (type === "table") {
+        const block: Omit<WikiBlock, "id"> = {
+          type: "table",
+          tableCaption: "",
+          tableHeaders: ["Header 1", "Header 2", "Header 3"],
+          tableRows: [["", "", ""]],
+          tableColumnAligns: ["center", "center", "center"],
+        }
+        newBlockId = addWikiBlock(articleId, block)
+      } else if (type.startsWith("text:")) {
+        const subtype = type.split(":")[1]
+        const contentJson = getInitialContentJson(subtype)
+        newBlockId = addWikiBlock(articleId, { type: "text", content: "", contentJson })
+      } else {
+        const block: Omit<WikiBlock, "id"> = { type: type as WikiBlock["type"] }
+        if (type === "section") {
+          block.title = ""
+          block.level = level ?? 2
+        }
+        if (type === "text") {
+          block.content = ""
+        }
+        if (type === "infobox") {
+          block.fields = []
+          block.headerColor = null
+        }
+        if (type === "toc") {
+          block.tocCollapsed = false
+        }
+        newBlockId = addWikiBlock(articleId, block)
+      }
+
+      if (newBlockId) moveBlockToColumn(articleId, newBlockId, path)
+    },
+    [articleId, addWikiBlock, moveBlockToColumn],
+  )
 
   const handleDeleteBlock = useCallback((blockId: string) => {
     removeWikiBlock(articleId, blockId)
@@ -117,7 +180,9 @@ export function useWikiBlockActions(articleId: string) {
 
   return {
     addWikiBlock,
+    moveBlockToColumn,
     handleAddBlock,
+    handleAddBlockToColumn,
     handleDeleteBlock,
     handleSplitSection,
     handleMoveToArticle,

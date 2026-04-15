@@ -18,16 +18,15 @@
  * 진실의 원천: docs/BRAINSTORM-2026-04-14-column-template-system.md
  */
 
-import { useMemo, useState, useCallback, useEffect, type ReactNode, Fragment } from "react"
+import { useMemo, useState, useCallback, useEffect, Fragment } from "react"
 import { usePlotStore } from "@/lib/store"
-import type { WikiArticle, WikiBlock, ColumnPath, ColumnStructure } from "@/lib/types"
+import type { WikiArticle, WikiBlock, ColumnStructure } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton, type WikiBlockVariant } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { InlineCategoryTags } from "./inline-category-tags"
-import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
-import { ColumnRenderer, pathKey } from "./column-renderer"
+import { ColumnRenderer } from "./column-renderer"
 import { WikiTitle } from "./wiki-title"
 import { WikiThemeProvider } from "./wiki-theme-provider"
 import { computeSectionNumbers, buildVisibleBlocks } from "@/lib/wiki-block-utils"
@@ -51,7 +50,6 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-ki
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
-import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { cn } from "@/lib/utils"
 
 export interface WikiArticleRendererProps {
@@ -125,7 +123,9 @@ function WikiArticleRendererInner({
 
   const {
     addWikiBlock,
+    moveBlockToColumn,
     handleAddBlock,
+    handleAddBlockToColumn,
     handleDeleteBlock,
     handleSplitSection,
     handleMoveToArticle,
@@ -345,74 +345,11 @@ function WikiArticleRendererInner({
     [article.blocks],
   )
 
-  /* ── Layout + meta slots ── */
+  /* ── Layout ── (Phase 2-2-C: meta is blocks now — no metaSlots) */
   const layout: ColumnStructure = article.layout ?? {
     type: "columns",
     columns: [{ ratio: 1, content: { type: "blocks", blockIds: article.blocks.map((b) => b.id) } }],
   }
-  const isMultiColumn = layout.columns.length > 1
-
-  const tocStyle = article.tocStyle ?? {
-    show: true,
-    position: isMultiColumn ? ([layout.columns.length - 1] as ColumnPath) : ([0] as ColumnPath),
-    collapsed: false,
-  }
-  const infoboxColumnPath: ColumnPath =
-    article.infoboxColumnPath ?? (isMultiColumn ? [layout.columns.length - 1] : [0])
-
-  const tocSections = useMemo(() => {
-    const out: { id: string; title: string; level: number; number: string }[] = []
-    for (const block of article.blocks) {
-      if (block.type === "section") {
-        out.push({
-          id: block.id,
-          title: block.title || "Untitled",
-          level: block.level ?? 2,
-          number: sectionNumbers.get(block.id) ?? "",
-        })
-      }
-    }
-    return out
-  }, [article.blocks, sectionNumbers])
-
-  const metaSlots = useMemo(() => {
-    const slots: Record<string, ReactNode> = {}
-    if (tocStyle.show && tocSections.length > 0) {
-      slots[pathKey(tocStyle.position)] = (
-        <CollapsibleTOC sections={tocSections} initialCollapsed={tocStyle.collapsed ?? false} />
-      )
-    }
-    if (article.infobox.length > 0 || editable) {
-      const key = pathKey(infoboxColumnPath)
-      slots[key] = (
-        <div className={isMultiColumn ? "" : "max-w-sm"}>
-          <WikiInfobox
-            noteId={article.id}
-            entityType="wiki"
-            entries={article.infobox}
-            editable={editable}
-            headerColor={article.infoboxHeaderColor ?? null}
-            onHeaderColorChange={
-              editable
-                ? (color) =>
-                    usePlotStore.getState().updateWikiArticle(article.id, { infoboxHeaderColor: color })
-                : undefined
-            }
-          />
-        </div>
-      )
-    }
-    return slots
-  }, [
-    tocStyle,
-    tocSections,
-    article.infobox,
-    article.id,
-    article.infoboxHeaderColor,
-    infoboxColumnPath,
-    isMultiColumn,
-    editable,
-  ])
 
   /* ── renderBlock callback ── */
   const renderBlock = useCallback(
@@ -582,8 +519,7 @@ function WikiArticleRendererInner({
             <ColumnRenderer
               layout={layout}
               renderBlock={renderBlock}
-              metaSlots={metaSlots}
-              editable
+editable
               onRatiosChange={(path, newRatios) =>
                 usePlotStore.getState().updateColumnRatios(articleId, path, newRatios)
               }
@@ -593,10 +529,14 @@ function WikiArticleRendererInner({
               onRemoveColumn={(path) =>
                 usePlotStore.getState().removeColumn(articleId, path)
               }
+              onAddBlockToColumn={handleAddBlockToColumn}
+              onSplitLeaf={(path, count) =>
+                usePlotStore.getState().splitLeafIntoColumns(articleId, path, count)
+              }
             />
           </SortableContext>
         ) : (
-          <ColumnRenderer layout={layout} renderBlock={renderBlock} metaSlots={metaSlots} />
+          <ColumnRenderer layout={layout} renderBlock={renderBlock} />
         )}
 
         {/* Bottom AddBlock */}
@@ -747,7 +687,14 @@ function WikiArticleRendererInner({
         onClose={() => setUrlBlockDialog({ open: false })}
         onSubmit={(url) => {
           const block: Omit<WikiBlock, "id"> = { type: "url", url, urlTitle: "" }
-          addWikiBlock(articleId, block, urlBlockDialog.afterBlockId)
+          // Phase 2-2-B-3-b: column-scoped path takes priority over afterBlockId
+          // (they're mutually exclusive entry points).
+          if (urlBlockDialog.columnPath) {
+            const newId = addWikiBlock(articleId, block)
+            if (newId) moveBlockToColumn(articleId, newId, urlBlockDialog.columnPath)
+          } else {
+            addWikiBlock(articleId, block, urlBlockDialog.afterBlockId)
+          }
           setUrlBlockDialog({ open: false })
         }}
       />
@@ -828,47 +775,4 @@ function ExistingArticleDropTarget({
   )
 }
 
-/* ── Inline Collapsible TOC ────────────────────────────────────── */
-
-function CollapsibleTOC({
-  sections,
-  initialCollapsed,
-}: {
-  sections: { id: string; title: string; level: number; number: string }[]
-  initialCollapsed: boolean
-}) {
-  const [open, setOpen] = useState(!initialCollapsed)
-  if (sections.length === 0) return null
-
-  return (
-    <div className="max-w-sm rounded-lg border border-border bg-secondary/30">
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-2 px-4 py-3 text-left">
-        <span className="font-bold text-foreground/80">Contents</span>
-        <CaretDown
-          size={14}
-          weight="bold"
-          className={cn("text-muted-foreground transition-transform duration-200", !open && "-rotate-90")}
-        />
-      </button>
-      {open && (
-        <div className="space-y-1 px-4 pb-3.5">
-          {sections.map((s) => (
-            <div key={s.id} style={{ paddingLeft: (s.level - 2) * 16 }}>
-              <button
-                onClick={() => {
-                  document.getElementById(`wiki-block-${s.id}`)?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  })
-                }}
-                className="text-note text-accent/80 transition-colors hover:text-accent"
-              >
-                {s.number}. {s.title}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
+/* CollapsibleTOC was moved to [wiki-toc-block.tsx](./wiki-toc-block.tsx) in Phase 2-2-C. */

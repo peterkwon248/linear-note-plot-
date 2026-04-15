@@ -437,9 +437,12 @@ export function migrate(persistedState: unknown): PlotState {
     state.wikiArticles = [] as any
   }
   // v48: Inject seed WikiArticles if none of the seed IDs exist
+  // (Seed IDs are `wiki-1`..`wiki-3`; earlier check for `wiki-article-1`
+  // never matched, which caused duplicate injection on every migration pass.)
   {
     const articles = state.wikiArticles as any[]
-    if (!articles.some((a: any) => a.id === "wiki-article-1")) {
+    const existingIds = new Set(articles.map((a: any) => a.id))
+    if (!existingIds.has("wiki-1") && !existingIds.has("wiki-2") && !existingIds.has("wiki-3")) {
       const { SEED_WIKI_ARTICLES } = require("./seeds")
       state.wikiArticles = [...articles, ...SEED_WIKI_ARTICLES] as any
     }
@@ -900,6 +903,82 @@ export function migrate(persistedState: unknown): PlotState {
       }
       if (!article.infoboxColumnPath) {
         article.infoboxColumnPath = isMulti ? [lastIdx] : [0]
+      }
+    }
+  }
+
+  // v78: dedupe wikiArticles by id (earlier migration bug injected seeds repeatedly
+  // when the presence check referenced an id — `wiki-article-1` — that never matched
+  // the actual seed ids `wiki-1`..`wiki-3`). Keep the first occurrence only.
+  if (Array.isArray(state.wikiArticles)) {
+    const seen = new Set<string>()
+    state.wikiArticles = (state.wikiArticles as Record<string, unknown>[]).filter((a) => {
+      const id = a.id as string | undefined
+      if (!id || seen.has(id)) return false
+      seen.add(id)
+      return true
+    })
+  }
+
+  // v78: Phase 2-2-C — 메타 → 블록 통합
+  //   1. Convert `article.infobox` (scalar, always if defined including empty) → infobox block
+  //   2. Convert `article.tocStyle.show === true` (default true) → toc block
+  //   3. Blocks prepended to `article.blocks`: infobox first, then toc (preserves visual order)
+  //   4. Scalar fields removed: `infobox`, `infoboxHeaderColor`, `infoboxColumnPath`, `tocStyle`
+  //   5. Per-article try/catch — a bad record shouldn't poison others
+  if (Array.isArray(state.wikiArticles)) {
+    for (const article of state.wikiArticles as Record<string, unknown>[]) {
+      try {
+        const a = article as Record<string, unknown>
+        const existingBlocks = (Array.isArray(a.blocks) ? a.blocks : []) as Record<string, unknown>[]
+        const existingAssignments = (a.columnAssignments as Record<string, number[]>) ?? {}
+        const newBlocks: Record<string, unknown>[] = []
+        const newAssignments: Record<string, number[]> = { ...existingAssignments }
+
+        // Infobox block — create whenever the article ever had an `infobox` field
+        // (even empty). This preserves the pre-v78 UX where editable articles always
+        // showed an "+ Add infobox" affordance.
+        if (a.infobox !== undefined) {
+          const infoboxBlockId = `infobox-${nanoid(8)}`
+          const headerColor = a.infoboxHeaderColor === undefined ? null : a.infoboxHeaderColor
+          newBlocks.push({
+            id: infoboxBlockId,
+            type: "infobox",
+            fields: Array.isArray(a.infobox) ? a.infobox : [],
+            headerColor,
+          })
+          const infoboxPath = (Array.isArray(a.infoboxColumnPath) ? a.infoboxColumnPath : [0]) as number[]
+          newAssignments[infoboxBlockId] = infoboxPath
+        }
+
+        // TOC block — only if `tocStyle.show === true` (default is true when tocStyle exists)
+        const tocStyle = a.tocStyle as
+          | { show?: boolean; position?: number[]; collapsed?: boolean }
+          | undefined
+        if (tocStyle && tocStyle.show === true) {
+          const tocBlockId = `toc-${nanoid(8)}`
+          newBlocks.push({
+            id: tocBlockId,
+            type: "toc",
+            tocCollapsed: tocStyle.collapsed ?? false,
+          })
+          const tocPath = (Array.isArray(tocStyle.position) ? tocStyle.position : [0]) as number[]
+          newAssignments[tocBlockId] = tocPath
+        }
+
+        if (newBlocks.length > 0) {
+          a.blocks = [...newBlocks, ...existingBlocks]
+          a.columnAssignments = newAssignments
+        }
+
+        // Drop scalar meta fields
+        delete a.infobox
+        delete a.infoboxHeaderColor
+        delete a.infoboxColumnPath
+        delete a.tocStyle
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[migrate v78] article conversion failed; leaving legacy fields intact", article, err)
       }
     }
   }

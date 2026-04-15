@@ -32,6 +32,8 @@ import { ArrowsIn } from "@/lib/editor/editor-icons"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { WikiInfoboxBlock } from "./wiki-infobox-block"
+import { WikiTocBlock } from "./wiki-toc-block"
 
 /* ── Cached render-only extensions for generateHTML ── */
 
@@ -86,6 +88,10 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
       return <UrlBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "table":
       return <TableBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+    case "infobox":
+      return articleId ? <WikiInfoboxBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} /> : null
+    case "toc":
+      return articleId ? <WikiTocBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} /> : null
     default:
       return null
   }
@@ -1600,6 +1606,8 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
     { type: "image", label: "Image", desc: "Upload image" },
     { type: "url", label: "URL", desc: "Embed a link" },
     { type: "table", label: "Table", desc: "Data table" },
+    { type: "infobox", label: "Infobox", desc: "Key-value metadata" },
+    { type: "toc", label: "TOC", desc: "Auto contents" },
   ]
 
   const contentItems: { type: string; label: string; desc: string }[] = [
