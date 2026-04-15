@@ -20,6 +20,7 @@ import { type CSSProperties, type ReactNode, Fragment } from "react"
 import type { ColumnStructure, ColumnDefinition, ColumnPath } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { useDroppable } from "@dnd-kit/core"
 
 export interface ColumnRendererProps {
   /** The column tree to render. */
@@ -209,12 +210,63 @@ function ColumnCell({ column, path, renderBlock, metaSlots, editable, onRatiosCh
     )
   }
 
-  return (
+  // Leaf cell — in edit mode, act as a droppable zone so blocks can be dragged
+  // between columns. Read mode stays a plain div.
+  return editable ? (
+    <LeafDroppableCell path={path} blockIds={column.content.blockIds} meta={meta} renderBlock={renderBlock} />
+  ) : (
     <div className="wiki-column-cell flex flex-col gap-3">
       {meta}
       {column.content.blockIds.map((blockId) => (
         <Fragment key={blockId}>{renderBlock(blockId)}</Fragment>
       ))}
+    </div>
+  )
+}
+
+/**
+ * Phase 2-2-B-2: Edit-mode leaf cell with `useDroppable`.
+ * Drop id `column-<pathKey>` is consumed by WikiArticleRenderer.handleDragEnd
+ * to route `moveBlockToColumn(articleId, blockId, path)`.
+ */
+function LeafDroppableCell({
+  path,
+  blockIds,
+  meta,
+  renderBlock,
+}: {
+  path: number[]
+  blockIds: string[]
+  meta: ReactNode
+  renderBlock: (blockId: string) => ReactNode
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `column-${pathKey(path)}` })
+  const isEmpty = blockIds.length === 0
+  return (
+    <div
+      ref={setNodeRef}
+      data-column-path={pathKey(path)}
+      className={cn(
+        "wiki-column-cell flex flex-col gap-3 rounded-md transition-colors",
+        isOver && "bg-accent/5 ring-1 ring-accent/40",
+      )}
+    >
+      {meta}
+      {blockIds.map((blockId) => (
+        <Fragment key={blockId}>{renderBlock(blockId)}</Fragment>
+      ))}
+      {isEmpty && (
+        <div
+          className={cn(
+            "flex min-h-[96px] items-center justify-center rounded-md border border-dashed text-2xs transition-colors",
+            isOver
+              ? "border-accent text-accent"
+              : "border-border-subtle text-muted-foreground/40",
+          )}
+        >
+          {isOver ? "Drop block here" : "Empty column — drop a block here"}
+        </div>
+      )}
     </div>
   )
 }

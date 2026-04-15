@@ -6,6 +6,55 @@
 
 ---
 
+## 2026-04-15 밤 (집, Phase 2-2-B-2 블록 컬럼 간 드래그 PR)
+
+### 완료 (코드)
+- **moveBlockToColumn 액션 + syncLayoutFromAssignments 헬퍼** ✅
+  - `lib/store/slices/wiki-articles.ts`: 블록을 target ColumnPath로 이동
+  - columnAssignments[blockId] = targetPath + 모든 leaf blockIds 재계산
+  - blocks[] 순서 유지 (stable ordering)
+  - orphan block (어떤 leaf에도 안 속함) → 첫 leaf (main)로 fallback
+  - `lib/store/types.ts`: moveBlockToColumn 시그니처 추가
+- **ColumnCell 편집 모드 droppable** ✅
+  - `components/wiki-editor/column-renderer.tsx`: LeafDroppableCell 내부 컴포넌트
+  - useDroppable id = `column-<pathKey>` (예: `column-0`, `column-1`)
+  - 빈 컬럼 placeholder: "Empty column — drop a block here" (dashed border)
+  - isOver 시각: accent bg/ring + "Drop block here" 텍스트
+- **WikiArticleRenderer handleDragEnd** ✅
+  - `overId.startsWith("column-")` → parsePath → moveBlockToColumn 호출
+  - 기존 split-dropzone / drop-article-* / reorder와 공존
+
+### 검증
+- `next build --webpack` ✅ (32 routes, TypeScript 에러 0)
+- `vitest run` ✅ 5 파일 / 159 테스트 통과
+- 콘솔 검증: 2col 상태에서 moveBlockToColumn(articleId, blockId, [1]) → col0 7→6, col1 0→1, columnAssignments[blockId]=[1] 모두 정확
+
+### 결정
+- **columnAssignments가 canonical** — leaf blockIds는 derived view. 모든 변경은 assignments 업데이트 + syncLayoutFromAssignments 호출
+- **orphan fallback to first leaf** — 컬럼 구조 변경 시 assignment가 유효하지 않은 블록들 (deep nested 참조 등)은 main에 보관되어 유실 방지
+- **drop id = `column-<pathKey>`** — 기존 split-dropzone, drop-article-* prefix 패턴과 일관
+- **빈 컬럼 placeholder "Empty column — drop a block here"** — 2col/3col의 sidebar가 비어있을 때 "이게 컬럼이구나" 즉시 인식 (이전 피드백 응답)
+
+### 사용자 가치
+- 편집 모드에서 블록을 **다른 컬럼으로 드래그** 가능 (SortableBlockItem ↔ LeafDroppableCell)
+- 2col/3col 차이 **완전히 의미 생김**: 사용자가 직접 인포박스/TOC 아닌 콘텐츠 블록도 사이드 컬럼에 배치 가능
+- 빈 컬럼 placeholder로 "여기 드래그할 수 있다"는 시각 단서
+
+### 다음 세션 (Phase 2-2-B-3)
+- 컬럼 추가/삭제 버튼 (addColumn / removeColumn 액션)
+- 중첩 컬럼 생성 UI (Split column 메뉴, 3 depth 제한)
+- 중첩 컬럼의 비율 드래그 (현재 최상위 PanelGroup만)
+
+### Watch Out
+- 드래그는 편집 모드에서만 droppable 활성 (읽기 모드는 기존 CSS Grid cell)
+- 기존 split-dropzone과 drop-article-*는 FloatingDragDropBar (바깥)에 있어서 column droppable과 z-index/위치 충돌 없음
+- 수동 테스트 권장: 블록을 클릭 드래그 → 다른 컬럼 cell로 drop → 이동 시각 확인
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 저녁 (집, Phase 2-2-B-1 비율 드래그 + 메타 위치 UI PR)
 
 ### 완료 (코드)

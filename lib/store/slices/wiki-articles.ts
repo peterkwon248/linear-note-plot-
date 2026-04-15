@@ -98,6 +98,56 @@ function blankColumnLayout(blockIds: string[]): ColumnStructure {
 }
 
 /**
+ * Phase 2-2-B-2: Sync every ColumnBlocksLeaf's `blockIds` from the canonical
+ * `columnAssignments` record. Keeps the source of truth on `columnAssignments`
+ * (blockId → ColumnPath) and makes leaf blockIds a derived view, ordered by
+ * the article's `blocks[]` array so ordering stays stable.
+ *
+ * Blocks whose columnAssignments entry doesn't resolve to any leaf fall back
+ * to the first leaf (main column, depth-first) so they remain visible.
+ */
+function syncLayoutFromAssignments(
+  layout: ColumnStructure,
+  blocks: WikiBlock[],
+  assignments: Record<string, ColumnPath>,
+): ColumnStructure {
+  const leafPaths: number[][] = []
+  const collectLeafPaths = (node: ColumnStructure, basePath: number[]) => {
+    node.columns.forEach((col, i) => {
+      const p = [...basePath, i]
+      if (col.content.type === "columns") collectLeafPaths(col.content, p)
+      else leafPaths.push(p)
+    })
+  }
+  collectLeafPaths(layout, [])
+  const firstLeafKey = leafPaths[0] ? leafPaths[0].join(".") : ""
+
+  const buckets = new Map<string, string[]>()
+  leafPaths.forEach((p) => buckets.set(p.join("."), []))
+  for (const b of blocks) {
+    const assignPath = assignments[b.id]
+    const key = assignPath && assignPath.length > 0 ? assignPath.join(".") : firstLeafKey
+    const bucket = buckets.get(key) ?? buckets.get(firstLeafKey)
+    bucket?.push(b.id)
+  }
+
+  const rewrite = (node: ColumnStructure, basePath: number[]): ColumnStructure => ({
+    ...node,
+    columns: node.columns.map((col, i) => {
+      const p = [...basePath, i]
+      if (col.content.type === "columns") {
+        return { ...col, content: rewrite(col.content, p) }
+      }
+      return {
+        ...col,
+        content: { type: "blocks", blockIds: buckets.get(p.join(".")) ?? [] },
+      }
+    }),
+  })
+  return rewrite(layout, [])
+}
+
+/**
  * Phase 2-2-B-1: Immutably update column ratios at a ColumnPath.
  * `path: []` → update top-level ratios. `path: [i]` → update nested columns[i].content (must be ColumnStructure).
  * Returns new ColumnStructure, or `null` if the path doesn't resolve to a columns node.
@@ -275,6 +325,24 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
             persistArticleBlocks(articleId, patch.blocks)
           }
           return updated
+        }),
+      }))
+    },
+
+    /**
+     * Phase 2-2-B-2: Move a block to a target column by ColumnPath.
+     * Updates `columnAssignments[blockId]` and re-syncs every leaf's blockIds
+     * from the canonical assignments map (stable ordering from `blocks[]`).
+     * No-op if targetPath doesn't resolve to a leaf within the current layout.
+     */
+    moveBlockToColumn: (articleId: string, blockId: string, targetPath: ColumnPath) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          if (!a.blocks.some((b) => b.id === blockId)) return a
+          const nextAssignments = { ...(a.columnAssignments ?? {}), [blockId]: targetPath }
+          const layout = syncLayoutFromAssignments(a.layout, a.blocks, nextAssignments)
+          return { ...a, layout, columnAssignments: nextAssignments, updatedAt: now() }
         }),
       }))
     },
