@@ -6,9 +6,130 @@
 
 ---
 
-**Last Updated**: 2026-04-15 밤 (Phase 2-2-B-3-a 완료 — 컬럼 추가/삭제 버튼. 중첩 컬럼 생성 UI는 2-2-B-3-b로)
+**Last Updated**: 2026-04-15 밤 (Phase 2-2-B-3-a 완료 + 사용자와 메타 필드 아키텍처 재논의 → **🅑 메타 → 블록 통합 확정**. Phase 2-2-C 신규 추가)
 
 ## 🎯 다음 세션 시작하면 바로 할 것
+
+### 선택 1 (권장): Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼
+
+**배경**: Phase 2-2-B-3-a까지 최상위 컬럼 추가/삭제 가능. 중첩 컬럼 생성 UI + 빈 컬럼 직접 블록 추가 UX 추가. **Infobox Hide/Show UI는 Phase 2-2-C에서 블록 통합으로 해결되므로 여기선 안 함**.
+
+**작업 내용**:
+
+1. **빈 컬럼 AddBlockButton** (2026-04-15 사용자 피드백)
+   - `LeafDroppableCell`의 "Empty column — drop a block here" placeholder를 **AddBlockButton으로 교체** (편집 모드)
+   - 또는 placeholder 옆에 `+` 버튼 추가
+   - 클릭 시: 해당 컬럼에 새 블록 생성 + `columnAssignments = targetPath` 자동 설정
+   - 새 액션 또는 기존 `addWikiBlock` + `moveBlockToColumn` 연속 호출
+
+2. **중첩 컬럼 생성 UI (Split column)**
+   - 편집 모드 + 컬럼 헤더 ⋯ 메뉴 or 빈 컬럼에 "Split into 2/3 cols" 버튼
+   - `splitLeafIntoColumns(articleId, path, count)` 액션 — leaf를 N-col ColumnStructure로 변환
+   - 3 depth 제한 (basePath.length >= 3 시 disable + 툴팁 "Max nesting reached")
+
+3. **중첩 컬럼 UI 확장**
+   - 현재 최상위 PanelGroup path만 + 버튼 / X 버튼
+   - 중첩 ColumnNode (CSS Grid path)에도 같은 UI 노출
+   - props (`onAddColumnAfter`, `onRemoveColumn`)는 이미 재귀 전달 중
+
+**참고 파일**:
+- `components/wiki-editor/column-renderer.tsx` — LeafDroppableCell, ColumnNode 재귀 구조 이미 있음
+- `lib/store/slices/wiki-articles.ts` — `insertColumnAtPath`, `removeColumnAtPath`는 이미 재귀 지원
+- Phase 2-2-B-2의 `moveBlockToColumn` + `syncLayoutFromAssignments` 패턴 활용
+
+---
+
+### 선택 2 (큰 작업): Phase 2-2-C 신규 — 메타 → 블록 통합
+
+**배경**: 2026-04-15 사용자 결정 — "컬럼 + 메타 필드 + 블록 = 커스텀 위키 템플릿" 자유도를 최대로. 메타 필드를 블록 시스템에 통합해 Infobox/TOC/Hatnote/Navbox/Callout 등이 **블록처럼 드래그/추가/삭제** 가능하게.
+
+**핵심 결정**:
+- `🅐 Primary 1개 / Secondary 복수` 폐기
+- **🅑 모든 메타 = 블록** 으로 확정 (데이터 모델 단순화 + UX 일관성)
+- `WikiBlockType`에 `"infobox"`, `"toc"` 추가 (Phase 5에서 `"hatnote"`, `"navbox"`, `"callout"` 추가 예정)
+
+**작업 내용** (~1-2주, 큰 PR):
+
+1. **WikiBlockType 확장**
+   - `"infobox"` block type: attrs `{ fields: WikiInfoboxEntry[], headerColor?, hidden? }`
+   - `"toc"` block type: attrs `{ collapsed?, hiddenLevels? }` (내용은 article 섹션에서 자동 derive)
+
+2. **Migration v78**
+   - 기존 `article.infobox[]` → 새 infobox 블록으로 변환 (기존 `infoboxColumnPath` 기반 배치)
+   - `article.tocStyle.show === true` → 새 toc 블록 생성 (`tocStyle.position` 기반 배치)
+   - `article.infoboxHeaderColor`, `article.infoboxColumnPath`, `article.tocStyle` 필드 **삭제**
+   - Store version 77 → 78
+
+3. **WikiBlockRenderer 확장**
+   - `case "infobox"`: 기존 WikiInfobox 컴포넌트 재사용 (블록 wrapper 안에)
+   - `case "toc"`: 기존 CollapsibleTOC 컴포넌트 재사용
+   - Drag/resize/delete 기존 블록 시스템 자동 적용
+
+4. **AddBlockButton 메뉴 확장**
+   - Section / Text / Image / URL / Table + **Infobox** + **TOC**
+   - 메뉴에 icon + 설명 추가 ("Key-value metadata" / "Auto-generated contents")
+
+5. **ColumnMetaPositionMenu 폐기**
+   - TOC show/hide → 블록 삭제/추가로
+   - TOC position → 블록 드래그로
+   - Infobox column → 블록 드래그로
+   - `ColumnMetaPositionMenu` 컴포넌트 삭제, 헤더에서 제거
+   - `setTocStyle`, `setInfoboxColumnPath` 액션 deprecated → 삭제
+
+6. **types.ts 정리**
+   - `WikiArticle.infobox`, `infoboxHeaderColor`, `infoboxColumnPath`, `tocStyle` 삭제
+   - `WikiTocStyle` 타입 삭제
+   - `WikiTemplate.infobox` 재설계 (templateSections에 infobox/toc 블록 entry로)
+
+**Phase 2-2-C 완료 시**:
+- 모든 메타가 블록 → 드래그/컬럼 이동/추가/삭제 UX 완전 일관
+- 여러 infobox 배치 가능 (Personal + Career 같은 분리)
+- 복수 TOC 가능 (상위/하위)
+- 데이터 모델 단순화
+- Phase 5 준비 완료 (Hatnote/Navbox/Callout 블록 추가만 하면 됨)
+
+---
+
+## 🧠 멘탈 상태 (잊지 말 것)
+
+- **Store v77** — `WikiArticle.layout`은 ColumnStructure
+- **Phase 2-2-A 완료**: ColumnPresetToggle (1·2·3 컬럼 빠른 전환)
+- **Phase 2-2-B-1 완료**: 컬럼 비율 드래그 (react-resizable-panels, 최상위 horizontal만) + ColumnMetaPositionMenu (**Phase 2-2-C에서 삭제 예정**)
+- **Phase 2-2-B-2 완료**: 블록 컬럼 간 드래그 (moveBlockToColumn + syncLayoutFromAssignments + LeafDroppableCell)
+- **Phase 2-2-B-3-a 완료**: 컬럼 추가/삭제 버튼 (최상위만, 중첩은 2-2-B-3-b)
+- **2026-04-15 밤 대결정**: 메타 필드 → 블록 통합 (🅑). Phase 2-2-C 신규
+- **자유도 최대 방향** — Plot은 "위키 + 노션 하이브리드" 지향. 블록 시스템으로 모든 것 통합
+- **Phase 순서 조정**:
+  - 2-2-B-3-b (다음) = 빈 컬럼 AddBlock + 중첩 (Infobox Hide/Show는 여기서 안 함 — 2-2-C에서 자연 해결)
+  - 2-2-C = 메타 → 블록 통합 (큰 리팩토링)
+  - 3 = 노션식 블록 분기
+  - 4 = 커스텀 템플릿 편집기
+  - 5 = 나무위키 잔여 (Hatnote/Navbox/Callout 전부 블록으로)
+  - 마지막 = built-in 템플릿 풍성화
+
+## ⚠️ Phase 2-2-C 구현 주의사항
+
+- Migration v78은 큰 작업 (기존 메타 필드 → 블록 변환). 철저한 테스트 필요
+- 기존 `WikiInfobox` / `CollapsibleTOC` 컴포넌트는 **재사용** (블록 wrapper 안에서 렌더)
+- `ColumnMetaPositionMenu` 삭제 = 헤더 List 아이콘 제거. 사용자가 블록 시스템으로 자연스레 이동
+- `setTocStyle` / `setInfoboxColumnPath` 액션 deprecated — 호출처 없음 확인 (현재 ColumnMetaPositionMenu만 사용)
+- 기존 article 데이터 손실 위험 — migration 테스트 + seed factory도 블록 기반으로 전환
+
+## 🚧 보류 (나중에)
+
+- Library FilterPanel — P1
+- 노트 전체 접기/펼치기 버튼 — P3
+- 인사이트 중앙 허브 — P2
+- Phase 2-2-B-3-b (빈 컬럼 AddBlock + 중첩 컬럼) — 사용자 선택
+- Phase 2-2-C (메타 → 블록 통합) — 큰 리팩토링, 신선한 컨텍스트에서
+- Phase 3 (노션식 블록 분기) — 2-2-C 후
+- Phase 4 (커스텀 템플릿 편집기)
+- Phase 5 (나무위키 잔여 — 모든 블록으로)
+- 마지막: built-in 템플릿 풍성화
+
+---
+
+## (legacy plan, kept for reference)
 
 ### Phase 2-2-B-3-b 시작 — 중첩 컬럼 생성 UI
 

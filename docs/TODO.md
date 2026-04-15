@@ -1,17 +1,16 @@
-# Plot — TODO (2026-04-15)
+# Plot — TODO (2026-04-15 밤)
 
-## ✅ 최근 완료 (2026-04-15)
+## ✅ 최근 완료 (2026-04-15, 하루에 9개 PR)
 
-- [x] **Phase 1 — WikiTemplate 데이터 모델 + 8 built-in 템플릿 + picker UI** 🎉
-  - ColumnStructure / WikiTemplate / TitleStyle / ThemeColor 타입
-  - wikiTemplates slice (CRUD + built-in 가드)
-  - 8 built-in 템플릿 (Blank/Encyclopedia/Person/Place/Concept/Work/Organization/Event)
-  - WikiArticle optional 확장 (`columnLayout`/`columnAssignments`/`titleStyle`/`themeColor`/`templateId`)
-  - Store migration v76 + seed factory 동기화
-  - `createWikiArticle({ templateId? })` — 템플릿 → blocks/columnLayout/infobox 자동 채움
-  - `WikiTemplatePickerDialog` (2칼럼 카드 그리드)
-  - **setWikiInfobox 버그 수정** (entityType prop, 6 호출 지점 명시)
-  - 검증: build 통과, 159 tests 통과, 브라우저 end-to-end 확인
+- [x] **Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼** (PR #205, 2026-04-15 밤)
+- [x] **Phase 2-2-B-2 — 블록 컬럼 간 드래그** (PR #204)
+- [x] **Phase 2-2-B-1 — 컬럼 비율 드래그 + 메타 위치 UI** (PR #203)
+- [x] **Phase 2-2-A — ColumnPresetToggle** (PR #202)
+- [x] **Phase 2-1B-3 — Cleanup 1662줄 삭제** (PR #201)
+- [x] **Phase 2-1B-2 — 편집 모드 흡수** (PR #200)
+- [x] **Phase 2-1B-1 — WikiArticleRenderer (read-only)** (PR #199)
+- [x] **Phase 2-1A — 컬럼 시스템 인프라** (PR #198)
+- [x] **Phase 1 — WikiTemplate 데이터 모델 + 8 built-in 템플릿 + picker UI** (PR #197) 🎉
 
 ## ✅ 이전 완료 (2026-04-14)
 - [x] Tier 1 인포박스 전체 (PR #192, #194)
@@ -20,15 +19,27 @@
 
 ## P2 — 컬럼 레이아웃 + WikiTemplate 시스템 (계속)
 
-**상세**: `docs/BRAINSTORM-2026-04-14-column-template-system.md`
+**상세**: `docs/BRAINSTORM-2026-04-14-column-template-system.md` (2026-04-15 밤 대결정 포함)
 
-- [x] **Phase 1 — 데이터 모델 + 기본 템플릿 8종** ✅ (2026-04-15)
-- [ ] **Phase 2 — 컬럼 렌더러 + titleStyle**
-- [ ] **Phase 3 — 편집 UX** (컬럼 드래그, 추가/삭제, 중첩 3 depth, 블록 이동)
+- [x] **Phase 1 — 데이터 모델 + 기본 템플릿 8종** ✅
+- [x] **Phase 2-1A — 인프라 (ColumnRenderer + WikiTitle + ThemeProvider)** ✅
+- [x] **Phase 2-1B — 렌더러 통합 + 편집 모드 흡수 + cleanup** ✅ (1~3 시리즈)
+- [x] **Phase 2-2-A — ColumnPresetToggle** ✅
+- [x] **Phase 2-2-B-1 — 컬럼 비율 드래그 + 메타 위치 UI** ✅ (2-2-C에서 메타 위치 UI 폐기 예정)
+- [x] **Phase 2-2-B-2 — 블록 컬럼 간 드래그** ✅
+- [x] **Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼** ✅
+- [ ] **Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼 생성 UI** (다음)
+- [ ] **Phase 2-2-C 신규 — 메타 → 블록 통합** (2026-04-15 밤 대결정, 큰 리팩토링)
+  - WikiBlockType에 "infobox" / "toc" 추가
+  - Migration v78: article.infobox/tocStyle → 블록으로 변환
+  - ColumnMetaPositionMenu 폐기
+  - WikiArticle scalar 메타 필드 삭제 (infobox, infoboxHeaderColor, infoboxColumnPath, tocStyle)
+- [ ] **Phase 3 — 노션식 블록 분기 (편집 UX 고급)**
 - [ ] **Phase 4 — 사용자 커스텀 템플릿 편집기**
-- [ ] **Phase 5 — 나무위키 잔여 기능** (Hatnote, Ambox, Navbox, Callout 12타입, 섹션 icon/themeColor)
-- [ ] **Phase 6 — 편집 히스토리 + 요약** (스냅샷 → diff → 롤백)
-- [ ] **Phase 7 — 노트 split 기능** (WikiSplitPage 패턴 복사)
+- [ ] **Phase 5 — 나무위키 잔여 기능 (Hatnote/Navbox/Callout 전부 블록으로)**
+- [ ] **Phase 6 — 편집 히스토리 + 요약**
+- [ ] **Phase 7 — 노트 split 기능**
+- [ ] **마지막: built-in 템플릿 풍성화** (Phase 5 완료 후, heroImage / 헤더 배너 / 섹션 icon / themeColor 다양화 등)
 
 ## P2 — 기타
 
@@ -46,8 +57,12 @@
 
 ## 최근 PR
 
-- PR #194: Tier 1 인포박스 전체 완료 + 위키 디자인 버그 수정
-- PR #193: docs MEMORY.md에 PR #192/#191 추가
-- PR #192: Y.Doc split-view sync PoC + Block Registry 단일화 + 인포박스 Tier 1-1/1-3
-- PR #191: 나무위키 리서치 결과 + TODO 최신화 + 아키텍처 결정
-- PR #190: Reference Usage + Note History + Wiki Activity 정리
+- PR #205: Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼
+- PR #204: Phase 2-2-B-2 — 블록 컬럼 간 드래그
+- PR #203: Phase 2-2-B-1 — 컬럼 비율 드래그 + 메타 위치 UI
+- PR #202: Phase 2-2-A — ColumnPresetToggle
+- PR #201: Phase 2-1B-3 — Cleanup 1662줄 삭제 + layout rename + migration v77
+- PR #200: Phase 2-1B-2 — 편집 모드 흡수 + 4곳 마이그레이션
+- PR #199: Phase 2-1B-1 — WikiArticleRenderer (read-only)
+- PR #198: Phase 2-1A — 컬럼 시스템 인프라
+- PR #197: Phase 1 — WikiTemplate 시스템 + 8 built-in + picker UI

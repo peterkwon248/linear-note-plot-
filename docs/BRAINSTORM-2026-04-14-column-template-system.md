@@ -321,6 +321,92 @@ interface WikiTemplate {
 
 ---
 
+## 2026-04-15 밤 대결정 — 메타 필드 → 블록 통합 (🅑)
+
+Phase 2-2-B-3-a 완료 후 사용자 인터뷰 중 **아키텍처 대결정**. 기존 "Primary 1개 / Secondary 복수" (🅐) 폐기하고 **모든 메타 필드를 블록 시스템에 통합**으로 전환.
+
+### 사용자 멘탈 모델 (2026-04-15 밤 확정)
+
+```
+[Title + Subtitle]                    ← 항상 최상단 (컬럼과 무관)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Col 1]    [Col 2]    [Col 3]         ← 컬럼 자유 분할
+[TOC]      [Infobox]  [Hatnote]       ← 메타 = 블록 (자유 배치)
+[Blocks]   [Blocks]   [Blocks]        ← 콘텐츠 블록
+```
+
+모든 메타 = 블록. 드래그/추가/삭제/컬럼 이동 UX 완전 일관.
+
+### 폐기된 🅐 아키텍처
+
+```typescript
+// 이전 설계 (Phase 2-1A ~ 2-2-B-3-a까지):
+WikiArticle {
+  infobox: WikiInfoboxEntry[]        // scalar primary
+  infoboxHeaderColor, infoboxColumnPath
+  tocStyle: { show, position, collapsed }
+}
+```
+
+문제:
+- 메타 = scalar, 블록 = array → 다른 편집 UX
+- 여러 infobox 필요 시 표현 불가
+- ColumnMetaPositionMenu 같은 별도 UI 관리 필요
+
+### 확정된 🅑 아키텍처
+
+```typescript
+// 새 설계 (Phase 2-2-C부터):
+WikiBlockType = "section" | "text" | "note-ref" | "image" | "table" | "url"
+              | "infobox" | "toc"         // Phase 2-2-C 추가
+              | "hatnote" | "navbox" | "callout" | ...  // Phase 5 추가
+
+WikiArticle {
+  blocks: WikiBlock[]                  // 메타도 여기 포함
+  layout: ColumnStructure
+  columnAssignments: Record<blockId, ColumnPath>
+  // 메타 필드 전부 삭제
+  titleStyle?: WikiTitleStyle          // title만 예외 (항상 최상단 고정)
+  themeColor?: WikiThemeColor
+}
+```
+
+### 블록 예시
+
+```typescript
+// Infobox block
+{ id, type: "infobox", infoboxFields: [...], infoboxHeaderColor, infoboxHidden? }
+
+// TOC block
+{ id, type: "toc", tocCollapsed?, tocHiddenLevels? }  // 내용은 article sections에서 자동 derive
+```
+
+### 이 결정의 장점
+
+1. **UX 일관성 최대** — 메타/블록 같은 편집 패턴 (드래그/추가/삭제/컬럼 이동)
+2. **여러 메타 자연 표현** — 같은 article에 Personal + Career infobox 배치 가능
+3. **데이터 모델 단순화** — WikiArticle scalar 필드 대거 삭제
+4. **ColumnMetaPositionMenu 폐기** — 블록 시스템으로 자연 흡수
+5. **Phase 5 준비** — Hatnote/Navbox/Callout 추가 = 블록 타입 추가만
+
+### 단점 및 대응
+
+- 기존 article 데이터 migration 필요 → v78 마이그레이션 (철저한 테스트)
+- 위키 관습 일부 이탈 (1 infobox) → Plot이 "위키+노션 하이브리드" 지향이므로 OK
+- 사용자가 실수로 메타 블록 삭제 가능 → 블록 삭제 undo 기능 활용 (기존 존재)
+
+### Phase 2-2-C 작업 상세
+
+- WikiBlockType 확장 (infobox, toc)
+- Migration v78: article.infobox → infobox block, tocStyle → toc block
+- WikiBlockRenderer에 infobox/toc case 추가 (기존 WikiInfobox + CollapsibleTOC 재사용)
+- AddBlockButton 메뉴에 Infobox/TOC 추가
+- ColumnMetaPositionMenu 삭제, setTocStyle/setInfoboxColumnPath 액션 삭제
+- WikiArticle 필드 정리 (infobox, infoboxHeaderColor, infoboxColumnPath, tocStyle 삭제)
+- WikiTemplate.infobox 재설계 (templateSections에 infobox/toc block entry)
+
+---
+
 ## 2026-04-15 결정 추가 (Phase 1 완료 후 사용자 인터뷰)
 
 ### 디자인 방향 확정

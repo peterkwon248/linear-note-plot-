@@ -6,6 +6,55 @@
 
 ---
 
+## 2026-04-15 늦은 밤 (집, 메타 → 블록 통합 대결정 + 로드맵 재편)
+
+### 완료
+- **Phase 2-2-B-3-a** 머지 직후 사용자와 아키텍처 대화 — 메타 필드 재설계 필요 제기
+- 사용자 피드백 반영 3차례:
+  - 빈 컬럼에 드롭만 되는지, 자체 블록 생성 가능한지 (→ AddBlockButton 필요)
+  - 메타 필드 전용 생성/삭제 버튼 필요 (→ Infobox Hide/Show/Clear UI 누락)
+  - 메타 필드 한 개 vs 여러 개, 자유도 중요시
+- 대결정 3가지 옵션 중 선택:
+  - 🅐 Primary 1 / Secondary 복수 (위키 관습)
+  - 🅑 **모든 메타 = 블록** (선택됨)
+  - 🅒 하이브리드 (Primary + 추가 블록)
+
+### 브레인스토밍 & 큰 결정
+- **🅑 메타 → 블록 통합 확정** (2026-04-15 밤, 사용자 확정)
+  - 모든 메타 (Infobox / TOC / Hatnote / Navbox / Callout 등)를 WikiBlockType으로 통합
+  - WikiArticle scalar 필드 (infobox, infoboxHeaderColor, infoboxColumnPath, tocStyle) 폐기 예정
+  - 이유: UX 일관성 최대화, 여러 메타 자연 표현, 데이터 모델 단순화, Phase 5 준비
+  - 단점: migration 필요 + 위키 관습 일부 이탈 (사용자 방향성과 부합: 위키+노션 하이브리드)
+- **로드맵 재편**:
+  - 2-2-B-3-b (다음) = 빈 컬럼 AddBlock + 중첩 컬럼 (Infobox Hide/Show는 안 함 — 2-2-C에서 자연 해결)
+  - 2-2-C 신규 = 메타 → 블록 통합 (큰 리팩토링)
+  - 3, 4, 5, 마지막 풍성화 순서 그대로
+- **Title은 항상 최상단 고정 유지** — 컬럼과 무관. 블록화 안 함 (기존 결정 재확인)
+- **사용자 멘탈 모델 확정**:
+  ```
+  [Title + Subtitle]
+  ━━━━━━━━━━━━━━━━━
+  [Col 1] [Col 2] [Col 3]
+  [TOC] [Infobox] [Hatnote]  ← 메타 = 블록
+  [Blocks] [Blocks] [Blocks]
+  ```
+
+### 다음
+- Phase 2-2-B-3-b (빈 컬럼 AddBlock + 중첩 컬럼) 또는 Phase 2-2-C (메타 → 블록) 사용자 선택
+- 사용자 추천 = A (2-2-B-3-b 먼저 — 작은 작업, Infobox UI는 2-2-C에서 자연 해결)
+- 2-2-C는 큰 리팩토링이라 신선한 컨텍스트에서 시작 권장
+- 상세: `NEXT-ACTION.md`
+
+### Watch Out
+- Phase 2-2-C 진입 전 현재 ColumnMetaPositionMenu (Phase 2-2-B-1에서 추가) 기능 **삭제 예정**임을 기억. 지금 작업하는 사용자는 잠시 동안만 쓰고 사라질 UI 주의
+- Migration v78은 기존 article.infobox[] + tocStyle을 블록으로 변환. 철저한 테스트 필요
+- 템플릿 시스템 (WikiTemplate.infobox) 재설계 필요 — templateSections에 infobox/toc block entry로 통합
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 밤 (집, Phase 2-2-B-3-a 컬럼 추가/삭제 PR)
 
 ### 완료 (코드)
