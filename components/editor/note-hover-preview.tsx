@@ -12,6 +12,7 @@ import { NoteEditorAdapter } from "@/components/editor/NoteEditorAdapter"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
+import { WikiArticleRenderer } from "@/components/wiki-editor/wiki-article-renderer"
 import type { Editor } from "@tiptap/react"
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -494,11 +495,20 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
       {/* Body */}
       {noteType === "wiki" && wikiArticle ? (
         <div ref={bodyRef} className="flex-1 overflow-y-auto min-h-[200px]">
-          <WikiArticleEncyclopedia
-            article={wikiArticle}
-            isEditing={editing}
-            onBack={() => {}}
-          />
+          {/* Phase 2-1B-1: read-only는 신규 ColumnRenderer 기반 통합 렌더러,
+              편집 모드는 기존 WikiArticleEncyclopedia 유지 (Phase 2-1B-2에서 흡수 예정) */}
+          {editing ? (
+            <WikiArticleEncyclopedia
+              article={wikiArticle}
+              isEditing={true}
+              onBack={() => {}}
+            />
+          ) : (
+            <WikiArticleRenderer
+              articleId={wikiArticle.id}
+              variant="encyclopedia"
+            />
+          )}
         </div>
       ) : note ? (
         <>
