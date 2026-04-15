@@ -222,8 +222,8 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
               </svg>
             </button>
           )}
-          {/* Phase 2-2-A: 1·2·3 컬럼 프리셋 빠른 전환 (compact) */}
-          {article && <ColumnPresetToggle articleId={articleId} compact />}
+          {/* Phase 3: column preset dropdown (edit mode only, compact) */}
+          {article && <ColumnPresetToggle articleId={articleId} editable={isEditing} compact />}
           {/* Phase 2-2-C: ColumnMetaPositionMenu removed — infobox/toc are blocks now */}
           {/* Edit/Done toggle */}
           {isEditing ? (

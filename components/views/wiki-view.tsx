@@ -748,8 +748,8 @@ export function WikiView() {
                 </button>
               )}
 
-              {/* Phase 2-2-A: 1·2·3 컬럼 프리셋 빠른 전환 */}
-              <ColumnPresetToggle articleId={selectedWikiArticleId} />
+              {/* Phase 3: column preset dropdown (edit mode only) */}
+              <ColumnPresetToggle articleId={selectedWikiArticleId} editable={isEditingWikiArticle} />
               {/* Phase 2-2-C: ColumnMetaPositionMenu removed — infobox/toc are blocks now */}
 
               {isEditingWikiArticle ? (

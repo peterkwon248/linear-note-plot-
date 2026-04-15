@@ -89,9 +89,9 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
     case "table":
       return <TableBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "infobox":
-      return articleId ? <WikiInfoboxBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} /> : null
+      return articleId ? <WikiInfoboxBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
     case "toc":
-      return articleId ? <WikiTocBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} /> : null
+      return articleId ? <WikiTocBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
     default:
       return null
   }

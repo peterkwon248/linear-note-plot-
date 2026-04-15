@@ -172,6 +172,86 @@ export function countAllBlocks(layout: ColumnStructure): number {
   return n
 }
 
+/* ── Persist helpers ─────────────────────────────────────────────── */
+
+/**
+ * Strip `leaf.blocks` from every leaf, keeping only `blockIds`. Used by
+ * `partialize` so Zustand persist doesn't store full block data
+ * (blocks are loaded from IDB `plot-wiki-block-meta` at rehydrate time
+ * and re-populated via `populateLeafBlocksFromPool`).
+ */
+export function stripLeafBlocksForPersist(layout: ColumnStructure): ColumnStructure {
+  return {
+    ...layout,
+    columns: layout.columns.map((col) => {
+      if (col.content.type === "columns") {
+        return { ...col, content: stripLeafBlocksForPersist(col.content) }
+      }
+      // Keep blockIds (lightweight), clear blocks (heavy)
+      const { blocks: _stripped, ...rest } = col.content
+      return { ...col, content: { ...rest, type: "blocks" as const } }
+    }),
+  }
+}
+
+/* ── Bulk sync (rehydrate / migration) ──────────────────────────── */
+
+/**
+ * Populate every leaf's `blocks` (and keep `blockIds` in sync) from a flat
+ * blocks pool + columnAssignments map. This is the runtime equivalent of
+ * migration v80 — called at rehydrate time when IDB blocks are loaded into
+ * `article.blocks` but `layout.leaf.blocks` is still empty.
+ *
+ * Blocks whose assignment path doesn't resolve to a known leaf fall back
+ * to the first leaf (depth-first). Order within each leaf matches the
+ * source `blocks` array order.
+ */
+export function populateLeafBlocksFromPool(
+  layout: ColumnStructure,
+  blocks: WikiBlock[],
+  assignments: Record<string, ColumnPath>,
+): ColumnStructure {
+  // 1. Collect leaf paths
+  const leafPaths: ColumnPath[] = []
+  forEachLeaf(layout, (_leaf, path) => leafPaths.push(path))
+  if (leafPaths.length === 0) return layout
+  const firstKey = leafPaths[0].join(".")
+
+  // 2. Bucket blocks by assignment (preserves source order)
+  const buckets = new Map<string, WikiBlock[]>()
+  leafPaths.forEach((p) => buckets.set(p.join("."), []))
+  for (const block of blocks) {
+    const assigned = assignments[block.id]
+    const key =
+      Array.isArray(assigned) && assigned.length > 0
+        ? assigned.join(".")
+        : firstKey
+    const bucket = buckets.get(key) ?? buckets.get(firstKey)
+    if (bucket) bucket.push(block)
+  }
+
+  // 3. Walk layout and write blocks into each leaf
+  const rebuild = (node: ColumnStructure, basePath: ColumnPath): ColumnStructure => ({
+    ...node,
+    columns: node.columns.map((col, i) => {
+      const p = [...basePath, i]
+      if (col.content.type === "columns") {
+        return { ...col, content: rebuild(col.content, p) }
+      }
+      const resolved = buckets.get(p.join(".")) ?? []
+      return {
+        ...col,
+        content: {
+          ...col.content,
+          blocks: resolved,
+          blockIds: resolved.map((b) => b.id),
+        },
+      }
+    }),
+  })
+  return rebuild(layout, [])
+}
+
 /* ── Immutable updates ──────────────────────────────────────────── */
 
 /**

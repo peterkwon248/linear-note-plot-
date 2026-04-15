@@ -16,7 +16,7 @@
  * 진실의 원천: docs/BRAINSTORM-2026-04-14-column-template-system.md
  */
 
-import { type CSSProperties, type ReactNode, Fragment } from "react"
+import { type CSSProperties, type ReactNode, Fragment, useState } from "react"
 import type { ColumnStructure, ColumnDefinition, ColumnPath } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
@@ -127,6 +127,8 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
   const direction = node.direction ?? "horizontal"
   const isHorizontal = direction === "horizontal"
   const colCount = node.columns.length
+  // Phase 3: track which column's X is hovered for visual feedback
+  const [hoveringRemoveIdx, setHoveringRemoveIdx] = useState<number | null>(null)
 
   // Drag mode condition: editable + horizontal + 2+ columns + top-level OR nested (top-level easier)
   const useDragMode = editable && isHorizontal && colCount >= 2 && basePath.length === 0
@@ -135,7 +137,10 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
     // react-resizable-panels uses percentage (0-100 sum). Convert from ratio.
     const total = node.columns.reduce((s, c) => s + (c.ratio || 1), 0) || 1
     const sizes = node.columns.map((c) => ((c.ratio || 1) / total) * 100)
-    const groupId = `wiki-col-group-${basePath.join(".") || "root"}-${colCount}`
+    // Include ratio fingerprint so PanelGroup remounts when ratios change
+    // (react-resizable-panels caches sizes in localStorage by id).
+    const ratioFingerprint = node.columns.map((c) => (c.ratio || 1).toFixed(1)).join("-")
+    const groupId = `wiki-col-group-${basePath.join(".") || "root"}-${colCount}-${ratioFingerprint}`
     const canAdd = colCount < 6 // matches addColumnAfter cap
     const canRemove = colCount > 1
 
@@ -148,6 +153,9 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
           data-direction={direction}
           onLayout={(newSizes) => {
             if (!onRatiosChange) return
+            // Guard: ignore stale callbacks from PanelGroup during column removal
+            // (PanelGroup fires onLayout before unmounting with old column count)
+            if (newSizes.length !== node.columns.length) return
             onRatiosChange(basePath, newSizes)
           }}
         >
@@ -156,15 +164,33 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
             const minSizePct = col.minWidth ? Math.min(40, Math.max(8, (col.minWidth / 1200) * 100)) : 8
             return (
               <Fragment key={i}>
-                <Panel defaultSize={sizes[i]} minSize={minSizePct} className="wiki-column-panel group/panel relative">
-                  {/* Phase 2-2-B-3: per-column X (remove) button — hover to reveal */}
+                <Panel
+                  defaultSize={sizes[i]}
+                  minSize={minSizePct}
+                  className={cn(
+                    "wiki-column-panel group/panel relative rounded-lg border bg-card/30 p-5 transition-colors",
+                    hoveringRemoveIdx === i
+                      ? "border-destructive/50 bg-destructive/5"
+                      : "border-border-subtle/40",
+                  )}
+                >
+                  {/* Per-column X (remove) — highlights entire card on hover */}
                   {onRemoveColumn && canRemove && (
                     <button
                       type="button"
-                      onClick={() => onRemoveColumn(childPath)}
+                      onMouseEnter={() => setHoveringRemoveIdx(i)}
+                      onMouseLeave={() => setHoveringRemoveIdx(null)}
+                      onClick={() => {
+                        const leaf = col.content
+                        const hasBlocks = leaf.type === "blocks" &&
+                          ((leaf.blocks && leaf.blocks.length > 0) || (leaf.blockIds && leaf.blockIds.length > 0))
+                        if (hasBlocks && !window.confirm("이 컬럼의 블록들이 다른 컬럼으로 이동됩니다. 삭제하시겠습니까?")) return
+                        setHoveringRemoveIdx(null)
+                        onRemoveColumn(childPath)
+                      }}
                       title="Remove this column"
                       aria-label="Remove column"
-                      className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/panel:opacity-100"
+                      className="absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
                     >
                       <PhX size={10} weight="bold" />
                     </button>
@@ -242,14 +268,28 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
         const childPath = [...basePath, i]
         const isLastNested = showNestedEditUI && i === colCount - 1
         return (
-          <div key={i} className={cn(showNestedEditUI && "relative group/nested-panel", isLastNested && "pr-3")}>
+          <div key={i} className={cn(
+            colCount >= 2 && "rounded-lg border bg-card/30 p-5 transition-colors",
+            colCount >= 2 && (hoveringRemoveIdx === i ? "border-destructive/50 bg-destructive/5" : "border-border-subtle/40"),
+            showNestedEditUI && "relative group/nested-panel",
+            isLastNested && "pr-3",
+          )}>
             {canRemove && (
               <button
                 type="button"
-                onClick={() => onRemoveColumn!(childPath)}
+                onMouseEnter={() => setHoveringRemoveIdx(i)}
+                onMouseLeave={() => setHoveringRemoveIdx(null)}
+                onClick={() => {
+                  const leaf = col.content
+                  const hasBlocks = leaf.type === "blocks" &&
+                    ((leaf.blocks && leaf.blocks.length > 0) || (leaf.blockIds && leaf.blockIds.length > 0))
+                  if (hasBlocks && !window.confirm("이 컬럼의 블록들이 다른 컬럼으로 이동됩니다. 삭제하시겠습니까?")) return
+                  setHoveringRemoveIdx(null)
+                  onRemoveColumn!(childPath)
+                }}
                 title="Remove this column"
                 aria-label="Remove column"
-                className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/nested-panel:opacity-100"
+                className="absolute right-3 top-3 z-10 flex h-5 w-5 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
                 <PhX size={10} weight="bold" />
               </button>
@@ -363,9 +403,6 @@ function LeafDroppableCell({
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `column-${pathKey(path)}` })
   const isEmpty = blockIds.length === 0
-  // Depth cap: top-level is path.length=1 (depth 1), [0,1] is depth 2, [0,1,2] is depth 3.
-  // Splitting a depth-3 leaf would create depth-4 columns — forbidden.
-  const canSplit = path.length < 3 && !!onSplitLeaf
   return (
     <div
       ref={setNodeRef}
@@ -389,30 +426,9 @@ function LeafDroppableCell({
         >
           {isOver ? (
             <span className="text-2xs text-accent">Drop block here</span>
-          ) : (
-            <>
-              {onAddBlockToColumn && (
-                <AddBlockButton onAdd={(type, level) => onAddBlockToColumn(path, type, level)} />
-              )}
-              {canSplit && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-2xs text-muted-foreground/40">or split:</span>
-                  {[2, 3].map((count) => (
-                    <button
-                      key={count}
-                      type="button"
-                      onClick={() => onSplitLeaf!(path, count)}
-                      title={`Split this column into ${count} columns`}
-                      className="inline-flex h-5 items-center gap-1 rounded-md border border-border-subtle bg-surface-overlay px-1.5 text-2xs text-muted-foreground transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
-                    >
-                      <PhColumns size={10} weight="bold" />
-                      {count}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+          ) : onAddBlockToColumn ? (
+            <AddBlockButton onAdd={(type, level) => onAddBlockToColumn(path, type, level)} />
+          ) : null}
         </div>
       )}
     </div>

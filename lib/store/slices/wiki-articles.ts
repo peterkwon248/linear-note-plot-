@@ -156,13 +156,22 @@ function syncLayoutFromAssignments(
   collectLeafPaths(layout, [])
   const firstLeafKey = leafPaths[0] ? leafPaths[0].join(".") : ""
 
-  const buckets = new Map<string, string[]>()
-  leafPaths.forEach((p) => buckets.set(p.join("."), []))
+  // Phase 3: bucket by block objects (not just ids) so leaf.blocks also gets populated
+  const blockMap = new Map(blocks.map((b) => [b.id, b]))
+  const idBuckets = new Map<string, string[]>()
+  const blockBuckets = new Map<string, WikiBlock[]>()
+  leafPaths.forEach((p) => {
+    const key = p.join(".")
+    idBuckets.set(key, [])
+    blockBuckets.set(key, [])
+  })
   for (const b of blocks) {
     const assignPath = assignments[b.id]
     const key = assignPath && assignPath.length > 0 ? assignPath.join(".") : firstLeafKey
-    const bucket = buckets.get(key) ?? buckets.get(firstLeafKey)
-    bucket?.push(b.id)
+    const idBucket = idBuckets.get(key) ?? idBuckets.get(firstLeafKey)
+    const blkBucket = blockBuckets.get(key) ?? blockBuckets.get(firstLeafKey)
+    idBucket?.push(b.id)
+    blkBucket?.push(b)
   }
 
   const rewrite = (node: ColumnStructure, basePath: number[]): ColumnStructure => ({
@@ -172,9 +181,14 @@ function syncLayoutFromAssignments(
       if (col.content.type === "columns") {
         return { ...col, content: rewrite(col.content, p) }
       }
+      const key = p.join(".")
       return {
         ...col,
-        content: { type: "blocks", blockIds: buckets.get(p.join(".")) ?? [] },
+        content: {
+          type: "blocks",
+          blockIds: idBuckets.get(key) ?? [],
+          blocks: blockBuckets.get(key) ?? [],
+        },
       }
     }),
   })

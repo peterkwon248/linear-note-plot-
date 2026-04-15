@@ -18,15 +18,19 @@ import type { WikiBlock } from "@/lib/types"
 import { computeSectionNumbers } from "@/lib/wiki-block-utils"
 import { cn } from "@/lib/utils"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
+import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
+import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 
 export interface WikiTocBlockProps {
   block: WikiBlock
   articleId: string
   editable?: boolean
   onUpdate?: (patch: Partial<Omit<WikiBlock, "id">>) => void
+  onDelete?: () => void
+  dragHandleProps?: DraggableSyntheticListeners
 }
 
-export function WikiTocBlock({ block, articleId, editable = false, onUpdate }: WikiTocBlockProps) {
+export function WikiTocBlock({ block, articleId, editable = false, onUpdate, onDelete, dragHandleProps }: WikiTocBlockProps) {
   const blocks = usePlotStore((s) => s.wikiArticles.find((a) => a.id === articleId)?.blocks ?? [])
 
   const sectionNumbers = useMemo(() => computeSectionNumbers(blocks), [blocks])
@@ -70,17 +74,28 @@ export function WikiTocBlock({ block, articleId, editable = false, onUpdate }: W
     if (editable) onUpdate?.({ tocCollapsed: !next })
   }
 
+  const dragHandle = editable && dragHandleProps ? (
+    <div
+      className="absolute -left-7 top-2 z-10 flex h-6 w-6 cursor-grab items-center justify-center rounded-md text-muted-foreground/0 transition-colors group-hover/toc-block:text-muted-foreground/40 hover:!text-muted-foreground active:cursor-grabbing"
+      {...dragHandleProps}
+    >
+      <DotsSixVertical size={14} weight="bold" />
+    </div>
+  ) : null
+
   if (sections.length === 0) {
     if (!editable) return null
     return (
-      <div className="max-w-sm rounded-lg border border-dashed border-border-subtle px-4 py-3 text-2xs text-muted-foreground/50">
+      <div className="group/toc-block relative max-w-sm rounded-lg border border-dashed border-border-subtle px-4 py-3 text-2xs text-muted-foreground/50">
+        {dragHandle}
         Contents — add sections to populate
       </div>
     )
   }
 
   return (
-    <div className="max-w-sm rounded-lg border border-border bg-secondary/30">
+    <div className="group/toc-block relative max-w-sm rounded-lg border border-border bg-secondary/30">
+      {dragHandle}
       <button onClick={handleToggle} className="flex w-full items-center gap-2 px-4 py-3 text-left">
         <span className="font-bold text-foreground/80">Contents</span>
         <CaretDown

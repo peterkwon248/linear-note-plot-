@@ -439,6 +439,7 @@ function WikiArticleRendererInner({
             block={block}
             editable={false}
             sectionNumber={num}
+            articleId={articleId}
             variant={variant}
             onToggleCollapse={() => toggleSection(block.id)}
             collapsed={collapsedSections.has(block.id)}
