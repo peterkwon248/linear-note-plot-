@@ -1,54 +1,59 @@
 "use client"
 
 /**
- * ColumnRenderer — Phase 2-1A.
+ * ColumnRenderer — Phase 2-1A + Phase 2-2-B-1 (편집 모드 드래그 핸들).
  *
- * Recursive renderer for `ColumnStructure`. The renderer itself is block-agnostic:
- * the caller provides a `renderBlock(id)` callback and the renderer just decides
- * WHERE blocks go (which column, which order). Meta content (TOC, infobox, hatnote)
- * is injected via `metaSlots` keyed by column-path string ("0", "1", "0.1" etc.).
+ * Recursive renderer for `ColumnStructure`. Block-agnostic — caller provides
+ * `renderBlock(id)`. Meta content (TOC, infobox, hatnote) injected via
+ * `metaSlots` keyed by column-path string ("0", "1", "0.1" etc.).
  *
- * Phase 2-1A: stand-alone component, NOT yet wired into existing wiki article views.
- * Phase 2-1B will replace `wiki-article-view` + `wiki-article-encyclopedia` with this.
+ * Phase 2-2-B-1 additions:
+ * - `editable` + `onRatiosChange(path, newRatios)` props
+ * - When editable + horizontal: top-level uses `react-resizable-panels` for drag handles
+ * - Read mode (or vertical): plain CSS Grid as before
+ * - Nested columns always use CSS Grid (PanelGroup nesting adds UX complexity; Phase 2-2-B-3)
  *
- * Layout: CSS Grid. `ratio` → `fr` units. `minWidth` → `minmax(min, fr)`.
- * Direction "horizontal" = columns side-by-side. "vertical" = stacked rows.
- *
- * 진실의 원천: docs/BRAINSTORM-2026-04-14-column-template-system.md (Phase 2 절)
+ * 진실의 원천: docs/BRAINSTORM-2026-04-14-column-template-system.md
  */
 
 import { type CSSProperties, type ReactNode, Fragment } from "react"
 import type { ColumnStructure, ColumnDefinition, ColumnPath } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 export interface ColumnRendererProps {
   /** The column tree to render. */
   layout: ColumnStructure
   /**
    * Render a single block by id. Returning `null` is fine — the renderer skips it.
-   * The caller controls block component selection (text/section/image/...).
    */
   renderBlock: (blockId: string) => ReactNode
   /**
-   * Optional meta content keyed by column-path string (e.g. "1" or "0.2").
-   * ColumnRenderer injects each entry's nodes BEFORE the leaf's blocks in that column.
-   * Used for TOC, infobox, hatnotes, etc.
-   *
-   * Note: paths are encoded as `path.join(".")` for stable lookup.
+   * Meta content keyed by column-path string (e.g. "1" or "0.2").
+   * Injected BEFORE the leaf's blocks in that column. Used for TOC, infobox, etc.
    */
   metaSlots?: Record<string, ReactNode>
+  /**
+   * When true, top-level horizontal columns render with react-resizable-panels
+   * so users can drag column boundaries. Nested columns keep CSS Grid.
+   */
+  editable?: boolean
+  /**
+   * Called when user drags a column boundary (`editable` must be true).
+   * Receives the ColumnPath of the parent whose columns' ratios changed,
+   * plus the new ratios array (same length as columns at that path).
+   */
+  onRatiosChange?: (path: ColumnPath, newRatios: number[]) => void
   /** Optional className applied to the outermost wrapper. */
   className?: string
 }
 
-/* ── Path helpers ──────────────────────────────────────────────── */
+/* ── Path helpers (public) ─────────────────────────────────────── */
 
-/** Encode a ColumnPath as a string key for metaSlots lookup. */
 export function pathKey(path: ColumnPath): string {
   return path.join(".")
 }
 
-/** Decode a path key back to ColumnPath. Returns [] for empty key. */
 export function parsePathKey(key: string): ColumnPath {
   if (!key) return []
   return key.split(".").map((s) => parseInt(s, 10))
@@ -60,6 +65,8 @@ export function ColumnRenderer({
   layout,
   renderBlock,
   metaSlots,
+  editable = false,
+  onRatiosChange,
   className,
 }: ColumnRendererProps) {
   return (
@@ -68,6 +75,8 @@ export function ColumnRenderer({
       basePath={[]}
       renderBlock={renderBlock}
       metaSlots={metaSlots ?? {}}
+      editable={editable}
+      onRatiosChange={onRatiosChange}
       className={className}
     />
   )
@@ -80,15 +89,73 @@ interface ColumnNodeProps {
   basePath: number[]
   renderBlock: (blockId: string) => ReactNode
   metaSlots: Record<string, ReactNode>
+  editable: boolean
+  onRatiosChange?: (path: ColumnPath, newRatios: number[]) => void
   className?: string
 }
 
-function ColumnNode({ node, basePath, renderBlock, metaSlots, className }: ColumnNodeProps) {
+function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatiosChange, className }: ColumnNodeProps) {
   const direction = node.direction ?? "horizontal"
   const isHorizontal = direction === "horizontal"
+  const colCount = node.columns.length
 
-  // Build CSS Grid template from each column's ratio + minWidth.
-  // ratio → fr unit. minWidth → minmax(min, fr).
+  // Drag mode condition: editable + horizontal + 2+ columns + top-level OR nested (top-level easier)
+  const useDragMode = editable && isHorizontal && colCount >= 2 && basePath.length === 0
+
+  if (useDragMode) {
+    // react-resizable-panels uses percentage (0-100 sum). Convert from ratio.
+    const total = node.columns.reduce((s, c) => s + (c.ratio || 1), 0) || 1
+    const sizes = node.columns.map((c) => ((c.ratio || 1) / total) * 100)
+
+    // Unique groupId so the panel library remembers per-article sizes within a session.
+    // (Changes to layout structure invalidate the cached sizes automatically.)
+    const groupId = `wiki-col-group-${basePath.join(".") || "root"}-${colCount}`
+
+    return (
+      <PanelGroup
+        id={groupId}
+        direction="horizontal"
+        className={cn("wiki-column-grid wiki-column-grid--resizable", className)}
+        data-direction={direction}
+        onLayout={(newSizes) => {
+          if (!onRatiosChange) return
+          // Use the raw percentage values as new ratios (sum-normalized — still valid as relative weights)
+          onRatiosChange(basePath, newSizes)
+        }}
+      >
+        {node.columns.map((col, i) => {
+          const childPath = [...basePath, i]
+          // minSize is a percentage of parent width. We approximate from minWidth+typical parent (1200px base).
+          // The library will enforce constraints; if too aggressive, user sees a hard stop at drag.
+          const minSizePct = col.minWidth ? Math.min(40, Math.max(8, (col.minWidth / 1200) * 100)) : 8
+          return (
+            <Fragment key={i}>
+              <Panel defaultSize={sizes[i]} minSize={minSizePct} className="wiki-column-panel">
+                <ColumnCell
+                  column={col}
+                  path={childPath}
+                  renderBlock={renderBlock}
+                  metaSlots={metaSlots}
+                  editable={editable}
+                  onRatiosChange={onRatiosChange}
+                />
+              </Panel>
+              {i < colCount - 1 && (
+                <PanelResizeHandle
+                  className="wiki-column-resize-handle group/handle flex w-1 items-center justify-center transition-colors hover:bg-accent/40 data-[resize-handle-state=drag]:bg-accent"
+                  aria-label="Resize column"
+                >
+                  <span className="h-8 w-0.5 rounded-sm bg-border-subtle transition-colors group-hover/handle:bg-accent/60" />
+                </PanelResizeHandle>
+              )}
+            </Fragment>
+          )
+        })}
+      </PanelGroup>
+    )
+  }
+
+  // Default: CSS Grid (read mode, nested columns, or vertical)
   const tracks = node.columns.map((col) => buildTrack(col)).join(" ")
   const gridStyle: CSSProperties = isHorizontal
     ? { display: "grid", gridTemplateColumns: tracks, gap: "1.5rem" }
@@ -105,6 +172,8 @@ function ColumnNode({ node, basePath, renderBlock, metaSlots, className }: Colum
             path={childPath}
             renderBlock={renderBlock}
             metaSlots={metaSlots}
+            editable={editable}
+            onRatiosChange={onRatiosChange}
           />
         )
       })}
@@ -117,27 +186,29 @@ interface ColumnCellProps {
   path: number[]
   renderBlock: (blockId: string) => ReactNode
   metaSlots: Record<string, ReactNode>
+  editable: boolean
+  onRatiosChange?: (path: ColumnPath, newRatios: number[]) => void
 }
 
-function ColumnCell({ column, path, renderBlock, metaSlots }: ColumnCellProps) {
+function ColumnCell({ column, path, renderBlock, metaSlots, editable, onRatiosChange }: ColumnCellProps) {
   const meta = metaSlots[pathKey(path)]
 
-  // Recurse if nested columns
   if (column.content.type === "columns") {
     return (
       <div className="wiki-column-cell">
-        {meta /* meta injected before nested grid */}
+        {meta}
         <ColumnNode
           node={column.content}
           basePath={path}
           renderBlock={renderBlock}
           metaSlots={metaSlots}
+          editable={editable}
+          onRatiosChange={onRatiosChange}
         />
       </div>
     )
   }
 
-  // Leaf: render blocks in order
   return (
     <div className="wiki-column-cell flex flex-col gap-3">
       {meta}

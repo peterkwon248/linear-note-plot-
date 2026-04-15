@@ -6,6 +6,60 @@
 
 ---
 
+## 2026-04-15 저녁 (집, Phase 2-2-B-1 비율 드래그 + 메타 위치 UI PR)
+
+### 완료 (코드)
+- **3 신규 store 액션** ✅
+  - `updateColumnRatios(articleId, path, newRatios)` — ColumnPath 위치의 컬럼 비율 일괄 갱신 (재귀 헬퍼 `updateRatiosAtPath`)
+  - `setTocStyle(articleId, tocStyle)` — TOC show/position/collapsed 설정
+  - `setInfoboxColumnPath(articleId, path)` — 인포박스 컬럼 위치 설정
+- **ColumnRenderer 편집 모드 드래그 핸들** ✅
+  - `editable` + `onRatiosChange` props 추가
+  - 최상위 horizontal 2+ 컬럼 → react-resizable-panels (PanelGroup + Panel + PanelResizeHandle)
+  - 중첩 / 읽기 모드 / vertical → CSS Grid 유지
+  - `onLayout` (percentage 반환) → updateColumnRatios로 전달
+  - 드래그 핸들 UX: w-1 hover accent, 가운데 작은 바 (h-8 w-0.5) 강조
+- **ColumnMetaPositionMenu 컴포넌트 신규** ✅
+  - List 아이콘 헤더 버튼 → 팝오버
+  - TOC 섹션: Show/Hide 토글, 컬럼 칩 (1·2·····N), Collapsed 기본값 체크박스
+  - Infobox 섹션: 컬럼 칩 (1·2·····N)
+  - Current layout 힌트
+- **헤더 배치** ✅
+  - wiki-view.tsx: full size ColumnPresetToggle + ColumnMetaPositionMenu
+  - secondary-panel-content.tsx: compact 모드 둘 다
+
+### 검증
+- `next build --webpack` ✅ (32 routes, TypeScript 에러 0)
+- `vitest run` ✅ 5 파일 / 159 테스트 통과
+- 콘솔 검증: applyColumnPreset(2) → updateColumnRatios([], [6,2]) → setInfoboxColumnPath([0]) → setTocStyle({show,position,collapsed}) — 모두 store 정확 반영
+
+### 결정
+- **Nested column drag 생략 (Phase 2-2-B-3에서 해결)** — PanelGroup 중첩이 UX 복잡도 높임. 최상위만 드래그 + 중첩은 CSS Grid. 사용자가 중첩 거의 안 쓸 것으로 예상 (위키 패턴 기본 flat)
+- **onLayout percentage를 그대로 ratios로 사용** — sum-normalized (100) → 상대 비율 의미 유지, 변환 불필요
+- **minSize heuristic** — col.minWidth 기반 minSize 추정 (typical 1200px base). 완벽하진 않지만 라이브러리가 constraint 시행
+- **메타 위치 UI는 편집 모드 무관** — 팝오버 항상 접근 가능. store 액션 자체가 변경 경계 (view-only 모드에서는 호출 안 됨)
+- **tocStyle.show=false일 때 "Hidden" 배지 + 다시 visible로 돌리면 last col로 이동** — direct 토글 UX
+
+### 사용자 가치
+- 컬럼 경계 드래그로 사용자가 원하는 비율 직접 설정
+- TOC/Infobox 위치 자유 설정 (Hide도 가능)
+- **2col/3col 구분 해결 start**: 사용자가 메타 위치 명시적으로 변경하면 컬럼 간 차이 명확히 드러남 (예: 2col → infobox 오른쪽 / 3col → TOC 중간 + infobox 오른쪽)
+
+### 다음 세션 (Phase 2-2-B-2)
+- 블록 컬럼 간 드래그 이동 (DnD 확장 + `moveBlockToColumn` 액션)
+- 컬럼 추가/삭제 버튼 (편집 모드, + 사이/끝 버튼, ⋯ 헤더 메뉴)
+- 상세: `NEXT-ACTION.md`
+
+### Watch Out
+- PanelGroup minSize가 percentage라 container width에 따라 체감 다를 수 있음
+- 중첩 컬럼은 드래그 안 됨 (Phase 2-2-B-3 대기)
+- 사용자 수동 테스트 권장: 비율 드래그로 ratio 변경 → 다른 뷰/pane에 정상 반영 확인, 메타 팝오버 TOC/Infobox 컬럼 변경 테스트
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 저녁 (집, Phase 2-2-A 컬럼 프리셋 토글 PR)
 
 ### 완료 (코드)

@@ -98,6 +98,34 @@ function blankColumnLayout(blockIds: string[]): ColumnStructure {
 }
 
 /**
+ * Phase 2-2-B-1: Immutably update column ratios at a ColumnPath.
+ * `path: []` → update top-level ratios. `path: [i]` → update nested columns[i].content (must be ColumnStructure).
+ * Returns new ColumnStructure, or `null` if the path doesn't resolve to a columns node.
+ */
+function updateRatiosAtPath(
+  layout: ColumnStructure,
+  path: number[],
+  newRatios: number[],
+): ColumnStructure | null {
+  if (path.length === 0) {
+    if (newRatios.length !== layout.columns.length) return null
+    return {
+      ...layout,
+      columns: layout.columns.map((col, i) => ({ ...col, ratio: newRatios[i] })),
+    }
+  }
+  const [head, ...rest] = path
+  const col = layout.columns[head]
+  if (!col || col.content.type !== "columns") return null
+  const updatedInner = updateRatiosAtPath(col.content, rest, newRatios)
+  if (!updatedInner) return null
+  const columns = layout.columns.map((c, i) =>
+    i === head ? { ...c, content: updatedInner } : c,
+  )
+  return { ...layout, columns }
+}
+
+/**
  * Build a flat N-column ColumnStructure preset.
  * - 1 col: full-width single column (Blank)
  * - 2 col: main 3fr + sidebar 1fr (min 240px, priority 1 = first to collapse on narrow)
@@ -248,6 +276,44 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           }
           return updated
         }),
+      }))
+    },
+
+    /**
+     * Phase 2-2-B-1: Update column ratios at a given path (top-level or nested).
+     * `path` identifies which ColumnStructure to mutate ([] = top-level, [i] = nested at columns[i], etc.).
+     * `newRatios` must match the length of columns at that path. Keeps all other properties intact.
+     */
+    updateColumnRatios: (articleId: string, path: number[], newRatios: number[]) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          const layout = updateRatiosAtPath(a.layout, path, newRatios)
+          if (!layout) return a
+          return { ...a, layout, updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 2-2-B-1: Update article TOC visibility/position/collapsed-initial.
+     */
+    setTocStyle: (articleId: string, tocStyle: WikiArticle["tocStyle"]) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id !== articleId ? a : { ...a, tocStyle, updatedAt: now() },
+        ),
+      }))
+    },
+
+    /**
+     * Phase 2-2-B-1: Update infobox column position (which column hosts the infobox).
+     */
+    setInfoboxColumnPath: (articleId: string, path: ColumnPath | undefined) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id !== articleId ? a : { ...a, infoboxColumnPath: path, updatedAt: now() },
+        ),
       }))
     },
 
