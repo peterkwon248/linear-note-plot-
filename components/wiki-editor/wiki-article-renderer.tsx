@@ -297,6 +297,15 @@ function WikiArticleRendererInner({
         return
       }
 
+      // Phase 2-2-B-2: Move block to another column within this article
+      if (overId.startsWith("column-")) {
+        const pathStr = overId.slice("column-".length)
+        const targetPath = pathStr === "" ? [] : pathStr.split(".").map((s) => parseInt(s, 10))
+        if (targetPath.some((n) => Number.isNaN(n))) return
+        usePlotStore.getState().moveBlockToColumn(articleId, activeId, targetPath)
+        return
+      }
+
       // Reorder within same article
       if (activeId === overId) return
       const oldIndex = article.blocks.findIndex((b) => b.id === activeId)

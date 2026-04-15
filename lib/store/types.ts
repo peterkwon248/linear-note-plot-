@@ -282,6 +282,7 @@ export interface PlotState {
   updateColumnRatios: (articleId: string, path: number[], newRatios: number[]) => void
   setTocStyle: (articleId: string, tocStyle: WikiArticle["tocStyle"]) => void
   setInfoboxColumnPath: (articleId: string, path: ColumnPath | undefined) => void
+  moveBlockToColumn: (articleId: string, blockId: string, targetPath: ColumnPath) => void
   addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => string
   removeWikiBlock: (articleId: string, blockId: string) => void
   updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => void

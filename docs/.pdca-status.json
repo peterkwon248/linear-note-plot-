@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-15T06:19:06.237Z",
+  "lastUpdated": "2026-04-15T07:04:13.821Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -199,7 +199,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:25.454Z",
-        "lastUpdated": "2026-04-15T06:15:15.786Z"
+        "lastUpdated": "2026-04-15T07:02:37.041Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\slices\\wiki-articles.ts"
     },
@@ -212,7 +212,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-04-15T06:15:35.033Z"
+        "lastUpdated": "2026-04-15T07:02:43.993Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\types.ts"
     },
@@ -264,9 +264,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-15T06:18:10.436Z"
+        "lastUpdated": "2026-04-15T07:04:13.821Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\column-meta-position-menu.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\wiki-article-renderer.tsx"
     },
     "core": {
       "phase": "do",
@@ -420,7 +420,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-15T06:19:06.237Z"
+    "lastActivity": "2026-04-15T07:04:13.821Z"
   },
   "history": [
     {
@@ -5910,6 +5910,42 @@
     {
       "timestamp": "2026-04-15T06:19:06.237Z",
       "feature": "workspace",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:02:22.810Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:02:37.041Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:02:43.993Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:02:57.117Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:03:30.936Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T07:04:13.821Z",
+      "feature": "wiki-editor",
       "phase": "do",
       "action": "updated"
     }

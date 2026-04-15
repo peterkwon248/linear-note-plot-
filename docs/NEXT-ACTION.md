@@ -6,9 +6,44 @@
 
 ---
 
-**Last Updated**: 2026-04-15 저녁 (Phase 2-2-B-1 완료 — 컬럼 비율 드래그 (react-resizable-panels) + ColumnMetaPositionMenu (TOC/Infobox 위치 UI))
+**Last Updated**: 2026-04-15 저녁 (Phase 2-2-B-2 완료 — 블록 컬럼 간 드래그 이동. 컬럼 추가/삭제는 2-2-B-3로)
 
 ## 🎯 다음 세션 시작하면 바로 할 것
+
+### Phase 2-2-B-3 시작 — 컬럼 추가/삭제 + 중첩 컬럼
+
+**배경**: Phase 2-2-B-2 완료. 블록을 컬럼 간 자유 드래그 가능. 이제 **컬럼 구조 자체를 편집** (추가/삭제/중첩).
+
+**Phase 2-2-B-3 작업 내용**:
+
+1. **컬럼 추가** (`addColumn` 액션)
+   - 편집 모드: 컬럼 사이/끝에 얇은 `+` 버튼 (ColumnRenderer 레벨)
+   - 새 컬럼은 empty blockIds로 시작 (사용자 드래그로 채움)
+   - 최대 6개 (buildColumnPreset의 safeCount clamp 따름)
+
+2. **컬럼 삭제** (`removeColumn` 액션)
+   - 컬럼 헤더 ⋯ 메뉴 or hover 시 X 버튼
+   - 삭제된 컬럼의 blocks는 main([0])으로 자동 이동
+   - 최소 1개 컬럼 유지 (마지막 컬럼 삭제 disable)
+
+3. **중첩 컬럼 생성/관리**
+   - 컬럼 cell 안에 "Split column" 메뉴 → leaf가 ColumnStructure로 전환
+   - 3 depth 제한 (depth 3 이상 추가 버튼 disable + 툴팁)
+   - 기존 ColumnRenderer는 이미 재귀 지원 (PanelGroup은 최상위만, 중첩은 CSS Grid)
+
+4. **중첩 컬럼 드래그 (optional)**
+   - 현재 최상위만 PanelGroup. 중첩도 드래그 가능하게 확장 검토
+   - 또는 Phase 2-2-B-4로 분리
+
+**참고 파일**:
+- `BRAINSTORM-2026-04-14-column-template-system.md`
+- `components/wiki-editor/column-renderer.tsx` (추가/삭제 UI는 여기에)
+- `lib/store/slices/wiki-articles.ts` (buildColumnPreset, syncLayoutFromAssignments 기존)
+- Phase 2-2-B-2에서 이미 검증된 `moveBlockToColumn` 패턴 참고
+
+---
+
+## (legacy plan, kept for reference)
 
 ### Phase 2-2-B-2 시작 — 블록 컬럼 간 드래그 + 컬럼 추가/삭제
 
@@ -310,9 +345,10 @@
 
 - **Store v77** — `WikiArticle.layout`은 ColumnStructure
 - **Phase 2-2-A 완료**: ColumnPresetToggle (1·2·3 컬럼 빠른 전환)
-- **Phase 2-2-B-1 완료**: 컬럼 비율 드래그 (react-resizable-panels, 최상위 horizontal만) + ColumnMetaPositionMenu (List 아이콘 헤더 버튼 → TOC/Infobox 위치 팝오버). 3 신규 액션: `updateColumnRatios`, `setTocStyle`, `setInfoboxColumnPath`
-- **중첩 컬럼은 여전히 CSS Grid** — PanelGroup 중첩은 Phase 2-2-B-3에서
-- **PanelGroup onLayout은 percentage(0-100 sum) 반환** — 그대로 newRatios로 사용 (sum-normalized라 상대 비율 의미 유지)
+- **Phase 2-2-B-1 완료**: 컬럼 비율 드래그 (react-resizable-panels, 최상위 horizontal만) + ColumnMetaPositionMenu (List 아이콘 헤더 버튼 → TOC/Infobox 위치 팝오버). 3 액션: `updateColumnRatios`, `setTocStyle`, `setInfoboxColumnPath`
+- **Phase 2-2-B-2 완료**: 블록 컬럼 간 드래그. `moveBlockToColumn` 액션 + `syncLayoutFromAssignments` 헬퍼 (columnAssignments → ColumnBlocksLeaf.blockIds 동기화, blocks[] 순서 유지). ColumnCell 편집 모드 = `LeafDroppableCell` (drop id `column-<pathKey>`, 빈 컬럼 placeholder "Empty column — drop a block here", isOver 시각)
+- **중첩 컬럼은 여전히 CSS Grid** — Phase 2-2-B-3에서 UI로 생성 가능
+- **PanelGroup onLayout은 percentage(0-100 sum) 반환** — 그대로 newRatios로 사용
 - **엔티티 통합 영구 폐기** — Note/Wiki 2-entity 유지
 - **렌더러는 위키 전용** — 노트엔 layout 개념 없음 (단일 TipTap JSON)
 - **Title 블록화 X** — `article.title + titleStyle`로 최상단 고정
