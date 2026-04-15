@@ -141,7 +141,8 @@
       "Bash(ls components/ui/dialog* components/ui/sheet*)",
       "Bash(grep -n \"</WikiFloatingActionBar>\\\\|^[[:space:]]*</div>$\\\\|^}$\" components/views/wiki-view.tsx)",
       "Bash(npm test:*)",
-      "Bash(awk '/^export function InlineCategoryTags/,/^}$/' components/wiki-editor/wiki-article-view.tsx)"
+      "Bash(awk '/^export function InlineCategoryTags/,/^}$/' components/wiki-editor/wiki-article-view.tsx)",
+      "Bash(ls components/ui/popover*)"
     ]
   }
 }

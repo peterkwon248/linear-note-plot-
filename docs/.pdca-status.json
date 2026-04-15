@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-15T04:46:56.912Z",
+  "lastUpdated": "2026-04-15T06:19:06.237Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -199,7 +199,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:25.454Z",
-        "lastUpdated": "2026-04-15T04:45:52.119Z"
+        "lastUpdated": "2026-04-15T06:15:15.786Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\slices\\wiki-articles.ts"
     },
@@ -212,7 +212,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-04-15T04:45:58.198Z"
+        "lastUpdated": "2026-04-15T06:15:35.033Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\types.ts"
     },
@@ -264,9 +264,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-15T04:46:13.525Z"
+        "lastUpdated": "2026-04-15T06:18:10.436Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\column-preset-toggle.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\column-meta-position-menu.tsx"
     },
     "core": {
       "phase": "do",
@@ -316,7 +316,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-08T01:23:26.886Z",
-        "lastUpdated": "2026-04-15T04:46:56.912Z"
+        "lastUpdated": "2026-04-15T06:19:06.237Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\workspace\\secondary-panel-content.tsx"
     },
@@ -394,7 +394,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-15T00:18:45.790Z",
-        "lastUpdated": "2026-04-15T04:46:40.497Z"
+        "lastUpdated": "2026-04-15T06:18:43.070Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\views\\wiki-view.tsx"
     },
@@ -420,7 +420,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-15T04:46:56.912Z"
+    "lastActivity": "2026-04-15T06:19:06.237Z"
   },
   "history": [
     {
@@ -5843,6 +5843,72 @@
     },
     {
       "timestamp": "2026-04-15T04:46:56.912Z",
+      "feature": "workspace",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:15:01.226Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:15:15.786Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:15:25.467Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:15:35.033Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:17:00.113Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:17:19.291Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:18:10.437Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:18:17.858Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:18:43.070Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:18:51.469Z",
+      "feature": "workspace",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T06:19:06.237Z",
       "feature": "workspace",
       "phase": "do",
       "action": "updated"

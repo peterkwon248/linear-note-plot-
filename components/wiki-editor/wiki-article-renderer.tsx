@@ -570,7 +570,15 @@ function WikiArticleRendererInner({
         {/* Column-based body */}
         {editable ? (
           <SortableContext items={visibleBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-            <ColumnRenderer layout={layout} renderBlock={renderBlock} metaSlots={metaSlots} />
+            <ColumnRenderer
+              layout={layout}
+              renderBlock={renderBlock}
+              metaSlots={metaSlots}
+              editable
+              onRatiosChange={(path, newRatios) =>
+                usePlotStore.getState().updateColumnRatios(articleId, path, newRatios)
+              }
+            />
           </SortableContext>
         ) : (
           <ColumnRenderer layout={layout} renderBlock={renderBlock} metaSlots={metaSlots} />

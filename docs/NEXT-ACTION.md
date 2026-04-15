@@ -6,9 +6,42 @@
 
 ---
 
-**Last Updated**: 2026-04-15 저녁 (Phase 2-2-A 완료 — ColumnPresetToggle (1·2·3 컬럼 빠른 전환) + applyColumnPreset 액션. 헤더 토글로 즉시 시각 변화)
+**Last Updated**: 2026-04-15 저녁 (Phase 2-2-B-1 완료 — 컬럼 비율 드래그 (react-resizable-panels) + ColumnMetaPositionMenu (TOC/Infobox 위치 UI))
 
 ## 🎯 다음 세션 시작하면 바로 할 것
+
+### Phase 2-2-B-2 시작 — 블록 컬럼 간 드래그 + 컬럼 추가/삭제
+
+**배경**: Phase 2-2-B-1 완료. 컬럼 비율 드래그 + TOC/Infobox 위치 자유 조정 동작. 이제 **블록을 컬럼 간 드래그로 이동 가능**하게 만들면 2col/3col의 실질 차이(빈 컬럼 활용)가 의미 생김.
+
+**Phase 2-2-B-2 작업 내용** (~1주, 1 PR):
+
+1. **블록을 컬럼 간 드래그 이동**
+   - 기존 DnD를 컬럼 cell에 droppable로 확장
+   - SortableBlockItem을 다른 컬럼 cell로 드래그 가능
+   - 드래그 종료 시 `columnAssignments` 업데이트 + ColumnBlocksLeaf.blockIds 동기화
+   - 크로스-article drag와 column-move 구분 (droppable id prefix 활용)
+
+2. **컬럼 추가/삭제 버튼**
+   - 편집 모드 + 컬럼 사이/끝에 `+` 버튼
+   - 컬럼 헤더 ⋯ 메뉴 (Delete column / Merge with neighbor)
+   - 삭제 시 그 컬럼의 blocks는 main([0])으로 이동
+   - 최소 1개 컬럼 유지 (삭제 시 disable)
+
+### Phase 2-2-B-3 (마지막)
+- 중첩 컬럼 (3 depth 제한 + enforcement, 재귀 UX)
+- 중첩 컬럼의 비율 드래그 (현재 상위 컬럼만 PanelGroup, 중첩은 CSS Grid)
+
+**참고 파일**:
+- `BRAINSTORM-2026-04-14-column-template-system.md`
+- `components/wiki-editor/column-renderer.tsx` (PanelGroup 통합 완료)
+- `components/wiki-editor/wiki-article-renderer.tsx` (DnD 컨텍스트 이미 있음)
+- `components/wiki-editor/sortable-block-item.tsx` (SortableBlockItem)
+- `lib/store/slices/wiki-articles.ts` (`moveBlockToColumn` 액션 신규 필요)
+
+---
+
+## (legacy plan, kept for reference)
 
 ### Phase 2-2-B 시작 — 컬럼 비율 드래그 + 추가/삭제 + 중첩
 
@@ -275,9 +308,11 @@
 
 ## 🧠 멘탈 상태 (잊지 말 것)
 
-- **Store v77** — `WikiArticle.layout`은 ColumnStructure (이전 columnLayout). legacy WikiLayout string 폐기됨
-- **Phase 2-2-A 완료**: ColumnPresetToggle (1·2·3 컬럼 빠른 전환). `applyColumnPreset(articleId, count)` 액션. headers에 토글 배치 (wiki-view + secondary-panel-content compact)
-- **buildColumnPreset 헬퍼** (slice 내부) — 1col Blank / 2col main+sidebar / 3col main+side+side / 4+col equal split. 모든 블록은 main 컬럼 [0]에 배치, sidebar 빈 상태로 시작
+- **Store v77** — `WikiArticle.layout`은 ColumnStructure
+- **Phase 2-2-A 완료**: ColumnPresetToggle (1·2·3 컬럼 빠른 전환)
+- **Phase 2-2-B-1 완료**: 컬럼 비율 드래그 (react-resizable-panels, 최상위 horizontal만) + ColumnMetaPositionMenu (List 아이콘 헤더 버튼 → TOC/Infobox 위치 팝오버). 3 신규 액션: `updateColumnRatios`, `setTocStyle`, `setInfoboxColumnPath`
+- **중첩 컬럼은 여전히 CSS Grid** — PanelGroup 중첩은 Phase 2-2-B-3에서
+- **PanelGroup onLayout은 percentage(0-100 sum) 반환** — 그대로 newRatios로 사용 (sum-normalized라 상대 비율 의미 유지)
 - **엔티티 통합 영구 폐기** — Note/Wiki 2-entity 유지
 - **렌더러는 위키 전용** — 노트엔 layout 개념 없음 (단일 TipTap JSON)
 - **Title 블록화 X** — `article.title + titleStyle`로 최상단 고정
