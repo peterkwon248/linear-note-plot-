@@ -60,6 +60,18 @@ export interface WikiTitleStyle {
   themeColorBg?: boolean                // apply themeColor background behind title
 }
 
+/**
+ * TOC (Table of Contents) styling for an article.
+ * Phase 2-1: TOC is meta content (auto-generated/updated from sections), not a block.
+ * Position uses ColumnPath so users can place TOC in any column. Defaults: show=true,
+ * position depends on layout (1-column → inline above first section, 2-column → sidebar [1]).
+ */
+export interface WikiTocStyle {
+  show: boolean                       // false = hidden entirely
+  position: ColumnPath                // which column hosts the TOC (e.g. [1] = sidebar)
+  collapsed?: boolean                 // initial collapsed state
+}
+
 /** Theme color for an article/template (light + dark mode variants). */
 export interface WikiThemeColor {
   light: string   // CSS color (hex / rgba / named)
@@ -266,11 +278,17 @@ export interface WikiArticle {
   /* ── Phase 1: Column Layout + Template System (all optional, safe to omit) ──
    *  Migration v76 populates `columnLayout` + `columnAssignments` from legacy `layout`.
    *  `titleStyle`/`themeColor`/`templateId` stay undefined unless a template is applied. */
-  columnLayout?: ColumnStructure                   // Phase 2 will rename → `layout` after renderer switch
+  columnLayout?: ColumnStructure                   // Phase 2-1B will rename → `layout` after renderer switch
   columnAssignments?: Record<string, ColumnPath>   // blockId → column path into columnLayout
   titleStyle?: WikiTitleStyle                      // title rendering customization
   themeColor?: WikiThemeColor                      // article-level theme color
   templateId?: string                              // source template (traceability only, not enforced)
+
+  /* ── Phase 2-1A: TOC + Infobox position meta fields (all optional) ──
+   *  Phase 2-1A: types only — ColumnRenderer reads them but legacy renderers ignore.
+   *  Phase 2-1B: migration v77 backfills defaults (encyclopedia → tocStyle.position=[1], else inline). */
+  tocStyle?: WikiTocStyle                          // table-of-contents visibility + column position
+  infoboxColumnPath?: ColumnPath                   // where the infobox renders (default [1] for 2-col, [0] for 1-col)
 
   createdAt: string
   updatedAt: string
