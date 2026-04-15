@@ -30,6 +30,7 @@ import { ColumnRenderer } from "./column-renderer"
 import { WikiTitle } from "./wiki-title"
 import { WikiThemeProvider } from "./wiki-theme-provider"
 import { computeSectionNumbers, buildVisibleBlocks } from "@/lib/wiki-block-utils"
+import { forEachLeaf } from "@/lib/wiki-column-tree"
 import { useWikiBlockActions } from "@/hooks/use-wiki-block-actions"
 import { toast } from "sonner"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
@@ -134,7 +135,24 @@ function WikiArticleRendererInner({
   } = useWikiBlockActions(articleId)
 
   /* ── Section numbers + visible blocks ── */
-  const sectionNumbers = useMemo(() => computeSectionNumbers(article.blocks), [article.blocks])
+  // Phase 3: compute per-leaf section numbers so each pane has independent
+  // numbering ("1. Definition" in one pane, "1. Overview" in another pane).
+  // blockId is unique across panes so merged Map has no conflicts.
+  const sectionNumbers = useMemo(() => {
+    if (article.layout) {
+      const combined = new Map<string, string>()
+      forEachLeaf(article.layout, (leaf) => {
+        const leafBlocks = leaf.blocks ?? []
+        if (leafBlocks.length > 0) {
+          const leafNumbers = computeSectionNumbers(leafBlocks)
+          for (const [id, num] of leafNumbers) combined.set(id, num)
+        }
+      })
+      if (combined.size > 0) return combined
+    }
+    // Fallback: global numbering (1-pane or legacy)
+    return computeSectionNumbers(article.blocks)
+  }, [article.layout, article.blocks])
 
   // Collapsed state: read-mode uses local Set, edit-mode derives from block.collapsed
   const initialCollapsed = useMemo(() => {

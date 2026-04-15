@@ -314,19 +314,23 @@ function ColumnCell({ column, path, renderBlock, editable, onRatiosChange, onAdd
     )
   }
 
-  // Leaf cell — in edit mode, act as a droppable zone so blocks can be dragged
-  // between columns. Read mode stays a plain div.
+  // Leaf cell — Phase 3: prefer canonical `blocks` (per-pane), fall back to `blockIds` for legacy.
+  // In edit mode, act as a droppable zone so blocks can be dragged between columns.
+  const leafBlockIds = column.content.blocks
+    ? column.content.blocks.map((b) => b.id)
+    : (column.content.blockIds ?? [])
+
   return editable ? (
     <LeafDroppableCell
       path={path}
-      blockIds={column.content.blockIds}
+      blockIds={leafBlockIds}
       renderBlock={renderBlock}
       onAddBlockToColumn={onAddBlockToColumn}
       onSplitLeaf={onSplitLeaf}
     />
   ) : (
     <div className="wiki-column-cell flex flex-col gap-3">
-      {column.content.blockIds.map((blockId) => (
+      {leafBlockIds.map((blockId) => (
         <Fragment key={blockId}>{renderBlock(blockId)}</Fragment>
       ))}
     </div>

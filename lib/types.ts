@@ -24,18 +24,39 @@ export interface ColumnStructure {
   columns: ColumnDefinition[]
 }
 
-/** One column within a ColumnStructure. */
+/**
+ * One column within a ColumnStructure.
+ *
+ * Phase 3 (Multi-pane Document Model) additions:
+ * - `name`: per-column label (e.g. "목차", "본문", "관련 자료")
+ * - `themeColor`: per-column background/accent for magazine-style visuals
+ * - `minHeight`: used by vertical-direction columns
+ * - `ratio` now also covers height-ratio in vertical direction
+ */
 export interface ColumnDefinition {
-  ratio: number           // flex-grow weight (1, 2, 3...)
-  minWidth?: number       // responsive collapse threshold (px)
-  priority?: number       // hide order when narrow (lower priority hides first)
+  ratio: number                // flex weight (width for horizontal, height for vertical)
+  minWidth?: number            // responsive collapse threshold (px)
+  minHeight?: number           // min height (px) — vertical-direction pane
+  priority?: number            // hide order when narrow (lower priority hides first)
+  name?: string                // Phase 3 — optional column label
+  themeColor?: WikiThemeColor  // Phase 3 — per-column background/accent
   content: ColumnStructure | ColumnBlocksLeaf
 }
 
-/** Leaf node of a column: list of block IDs assigned to this column. */
+/**
+ * Leaf node of a column. Phase 3 (Multi-pane Document Model):
+ * During the transition both fields coexist.
+ * - Pre-v80 (legacy): `blockIds` resolved against `WikiArticle.blocks` pool
+ * - Post-v80 (Phase 3): `blocks` is canonical per-column storage
+ *
+ * `blockIds` is kept required during Step 1 so existing renderer code still
+ * compiles. Step 7 (renderer refactor) switches readers to prefer `blocks`
+ * and fall back to `blockIds` only for not-yet-migrated articles.
+ */
 export interface ColumnBlocksLeaf {
   type: "blocks"
-  blockIds: string[]
+  blockIds: string[]             // Legacy — stays required during transition
+  blocks?: WikiBlock[]           // Phase 3 canonical (populated by migration v80)
 }
 
 /** Path into nested columns. e.g. [0, 1, 2] = columns[0].columns[1].columns[2]. */

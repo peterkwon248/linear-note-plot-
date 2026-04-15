@@ -983,5 +983,88 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v80: Phase 3 — Multi-pane Document Model
+  //   Populate each ColumnBlocksLeaf.blocks from the article's flat blocks[] pool
+  //   + columnAssignments map. Each pane becomes an independent container.
+  //   - Uses article.blocks as id→block pool (legacy readers still work)
+  //   - Traverses article.layout depth-first; for each leaf, resolves blockIds → blocks
+  //   - Orphan blocks (assigned to a path that doesn't resolve) fall back to the first leaf
+  //   - Blocks whose assignment is missing from columnAssignments fall back to the first leaf
+  //   - Deterministic: iteration order follows the original blocks[] array so layout leaf
+  //     order matches the pre-v80 visual order
+  //   - columnAssignments is preserved for one more version (legacy helpers may still read it),
+  //     scheduled for removal once slice actions are rewritten in-session
+  if (Array.isArray(state.wikiArticles)) {
+    for (const article of state.wikiArticles as Record<string, unknown>[]) {
+      try {
+        const a = article as Record<string, unknown>
+        const layout = a.layout as
+          | { type?: string; columns?: unknown[]; [key: string]: unknown }
+          | undefined
+        const blocks = Array.isArray(a.blocks) ? (a.blocks as Array<Record<string, unknown>>) : []
+        const assignments = (a.columnAssignments as Record<string, number[]> | undefined) ?? {}
+
+        if (!layout || layout.type !== "columns" || !Array.isArray(layout.columns)) continue
+
+        // Build id → block pool for quick lookup
+        const blockPool = new Map<string, Record<string, unknown>>()
+        for (const b of blocks) {
+          const id = b.id as string | undefined
+          if (id) blockPool.set(id, b)
+        }
+
+        // Depth-first traversal — collect all leaf paths in order
+        type LeafRef = { node: Record<string, unknown>; path: number[] }
+        const leaves: LeafRef[] = []
+        const walk = (node: Record<string, unknown>, base: number[]) => {
+          const cols = node.columns as Array<Record<string, unknown>> | undefined
+          if (!Array.isArray(cols)) return
+          cols.forEach((col, i) => {
+            const p = [...base, i]
+            const content = col.content as Record<string, unknown> | undefined
+            if (!content) return
+            if (content.type === "columns") walk(content, p)
+            else if (content.type === "blocks") leaves.push({ node: content, path: p })
+          })
+        }
+        walk(layout as Record<string, unknown>, [])
+
+        if (leaves.length === 0) continue
+        const firstLeafKey = leaves[0].path.join(".")
+
+        // Bucket: leaf path → ordered block list (preserves source blocks[] order)
+        const buckets = new Map<string, Array<Record<string, unknown>>>()
+        for (const leaf of leaves) buckets.set(leaf.path.join("."), [])
+
+        // Assign blocks: use columnAssignments, fallback to first leaf for unknown assignments
+        for (const block of blocks) {
+          const id = block.id as string | undefined
+          if (!id) continue
+          const assigned = assignments[id]
+          const key =
+            Array.isArray(assigned) && assigned.length > 0
+              ? assigned.join(".")
+              : firstLeafKey
+          const bucket = buckets.get(key) ?? buckets.get(firstLeafKey)
+          if (bucket) bucket.push(block)
+        }
+
+        // Write blocks into each leaf's `blocks` field. Keep `blockIds` populated
+        // as legacy view so pre-Phase-3 readers still function until Step 7 renderer refactor.
+        for (const leaf of leaves) {
+          const key = leaf.path.join(".")
+          const resolved = buckets.get(key) ?? []
+          leaf.node.blocks = resolved
+          leaf.node.blockIds = resolved
+            .map((b) => b.id as string | undefined)
+            .filter((id): id is string => typeof id === "string")
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[migrate v80] article layout conversion failed; leaving flat blocks intact", article, err)
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

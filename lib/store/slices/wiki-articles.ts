@@ -3,6 +3,15 @@ import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, re
 import { buildSectionIndex } from "../../wiki-section-index"
 import { extractLinksFromWikiBlocks } from "../../body-helpers"
 import { resolveWikiTemplate } from "./wiki-templates"
+import {
+  findBlockLocation,
+  insertBlockAtPath,
+  removeBlockFromPath,
+  patchBlockAtPath,
+  updateLeafAtPath,
+  firstLeafPath,
+  collectBlocksFromLayout,
+} from "../../wiki-column-tree"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
@@ -661,6 +670,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       set((state: any) => ({
         wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
           if (a.id !== articleId) return a
+          // ── Legacy flat blocks update ──
           const blocks = [...a.blocks]
           if (afterBlockId === "__prepend__") {
             blocks.unshift(newBlock)
@@ -670,10 +680,23 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           } else {
             blocks.push(newBlock)
           }
+          // ── Phase 3: layout leaf sync ──
+          let layout = a.layout
+          if (layout) {
+            // Determine target leaf: same leaf as afterBlockId, or first leaf
+            let targetPath: ColumnPath | null = null
+            if (afterBlockId && afterBlockId !== "__prepend__") {
+              const loc = findBlockLocation(layout, afterBlockId)
+              targetPath = loc?.path ?? null
+            }
+            if (!targetPath) targetPath = firstLeafPath(layout)
+            const pos = afterBlockId === "__prepend__" ? "prepend" as const : "append" as const
+            layout = insertBlockAtPath(layout, targetPath, newBlock, pos) ?? layout
+          }
           const sectionIndex = buildSectionIndex(blocks)
           const linksOut = extractLinksFromWikiBlocks(blocks)
           persistArticleBlocks(articleId, blocks)
-          return { ...a, blocks, sectionIndex, linksOut, updatedAt: now() }
+          return { ...a, blocks, layout, sectionIndex, linksOut, updatedAt: now() }
         }),
       }))
       // Persist text block body to IDB
@@ -688,20 +711,23 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
           if (a.id !== articleId) return a
           const blocks = a.blocks.filter((b) => b.id !== blockId)
+          // Phase 3: remove from layout leaf too
+          let layout = a.layout
+          if (layout) {
+            const loc = findBlockLocation(layout, blockId)
+            if (loc) layout = removeBlockFromPath(layout, loc.path, blockId) ?? layout
+          }
           const sectionIndex = buildSectionIndex(blocks)
           const linksOut = extractLinksFromWikiBlocks(blocks)
           persistArticleBlocks(articleId, blocks)
-          return { ...a, blocks, sectionIndex, linksOut, updatedAt: now() }
+          return { ...a, blocks, layout, sectionIndex, linksOut, updatedAt: now() }
         }),
       }))
-      // Remove block body from IDB
       removeBlockBody(blockId)
     },
 
     updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => {
-      // Check if patch affects section index (section title, level, collapsed, or type change)
       const affectsIndex = patch.title !== undefined || patch.level !== undefined || patch.collapsed !== undefined || patch.type !== undefined
-      // Check if patch affects links (content or title changes in text/section blocks)
       const affectsLinks = patch.content !== undefined || patch.title !== undefined
       set((state: any) => ({
         wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
@@ -709,13 +735,18 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           const blocks = a.blocks.map((b) =>
             b.id === blockId ? { ...b, ...patch } : b
           )
+          // Phase 3: patch in layout leaf too
+          let layout = a.layout
+          if (layout) {
+            const loc = findBlockLocation(layout, blockId)
+            if (loc) layout = patchBlockAtPath(layout, loc.path, blockId, patch) ?? layout
+          }
           persistArticleBlocks(articleId, blocks)
           const sectionIndex = affectsIndex ? buildSectionIndex(blocks) : a.sectionIndex
           const linksOut = affectsLinks ? extractLinksFromWikiBlocks(blocks) : a.linksOut
-          return { ...a, blocks, sectionIndex, linksOut, updatedAt: now() }
+          return { ...a, blocks, layout, sectionIndex, linksOut, updatedAt: now() }
         }),
       }))
-      // Persist updated content to IDB
       if (patch.content !== undefined) {
         persistBlockBody({ id: blockId, content: patch.content })
       }
@@ -746,9 +777,32 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           const ordered = blockIds
             .map((id) => blockMap.get(id))
             .filter(Boolean) as WikiBlock[]
+          // Phase 3: rebuild each leaf's blocks from the new order.
+          // Blocks stay in whatever leaf they were in; only the within-leaf
+          // ordering changes to match the new global ordering.
+          let layout = a.layout
+          if (layout) {
+            const newOrderIndex = new Map(blockIds.map((id, idx) => [id, idx]))
+            const rebuildLeaf = (leaf: import("../../types").ColumnBlocksLeaf): import("../../types").ColumnBlocksLeaf => {
+              if (!leaf.blocks) return leaf
+              const sorted = [...leaf.blocks].sort((x, y) =>
+                (newOrderIndex.get(x.id) ?? Infinity) - (newOrderIndex.get(y.id) ?? Infinity),
+              )
+              return { ...leaf, blocks: sorted, blockIds: sorted.map((b) => b.id) }
+            }
+            const walkReorder = (node: ColumnStructure): ColumnStructure => ({
+              ...node,
+              columns: node.columns.map((col) =>
+                col.content.type === "columns"
+                  ? { ...col, content: walkReorder(col.content) }
+                  : { ...col, content: rebuildLeaf(col.content) },
+              ),
+            })
+            layout = walkReorder(layout)
+          }
           const sectionIndex = buildSectionIndex(ordered)
           persistArticleBlocks(articleId, ordered)
-          return { ...a, blocks: ordered, sectionIndex, linksOut: extractLinksFromWikiBlocks(ordered), updatedAt: now() }
+          return { ...a, blocks: ordered, layout, sectionIndex, linksOut: extractLinksFromWikiBlocks(ordered), updatedAt: now() }
         }),
       }))
     },
