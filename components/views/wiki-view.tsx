@@ -25,7 +25,7 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-// (WikiLayoutToggle removed Phase 2-1B-3 — Phase 2-2에서 1컬럼/2컬럼 프리셋 토글로 교체 예정)
+import { ColumnPresetToggle } from "@/components/wiki-editor/column-preset-toggle"
 import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
 import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
@@ -748,7 +748,8 @@ export function WikiView() {
                 </button>
               )}
 
-              {/* Layout toggle: Phase 2-2에서 1컬럼/2컬럼 프리셋 토글로 교체 예정 */}
+              {/* Phase 2-2-A: 1·2·3 컬럼 프리셋 빠른 전환 */}
+              <ColumnPresetToggle articleId={selectedWikiArticleId} />
 
               {isEditingWikiArticle ? (
                 <button

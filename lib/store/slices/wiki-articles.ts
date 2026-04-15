@@ -97,6 +97,52 @@ function blankColumnLayout(blockIds: string[]): ColumnStructure {
   }
 }
 
+/**
+ * Build a flat N-column ColumnStructure preset.
+ * - 1 col: full-width single column (Blank)
+ * - 2 col: main 3fr + sidebar 1fr (min 240px, priority 1 = first to collapse on narrow)
+ * - 3 col: main 2fr + 2× sidebar 1fr (each min 200px, priority 1)
+ * - N col (4+): equal columns, each ratio 1, min 180px
+ *
+ * All existing blocks land in column [0] (main). Sidebar columns start empty —
+ * Phase 2-2-B will add UI to drag blocks between columns.
+ */
+function buildColumnPreset(presetCount: number, blockIds: string[]): ColumnStructure {
+  const main = { ratio: presetCount === 1 ? 1 : presetCount === 2 ? 3 : 2, content: { type: "blocks" as const, blockIds } }
+  if (presetCount === 1) {
+    return { type: "columns", columns: [main] }
+  }
+  if (presetCount === 2) {
+    return {
+      type: "columns",
+      columns: [
+        main,
+        { ratio: 1, minWidth: 240, priority: 1, content: { type: "blocks", blockIds: [] } },
+      ],
+    }
+  }
+  if (presetCount === 3) {
+    return {
+      type: "columns",
+      columns: [
+        main,
+        { ratio: 1, minWidth: 200, priority: 1, content: { type: "blocks", blockIds: [] } },
+        { ratio: 1, minWidth: 200, priority: 2, content: { type: "blocks", blockIds: [] } },
+      ],
+    }
+  }
+  // 4+ columns — equal split
+  return {
+    type: "columns",
+    columns: Array.from({ length: presetCount }, (_, i) => ({
+      ratio: 1,
+      minWidth: 180,
+      priority: i + 1,
+      content: { type: "blocks" as const, blockIds: i === 0 ? blockIds : [] },
+    })),
+  }
+}
+
 export function createWikiArticlesSlice(set: Set, get: Get) {
   return {
     /* ── CRUD ── */
@@ -201,6 +247,28 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
             persistArticleBlocks(articleId, patch.blocks)
           }
           return updated
+        }),
+      }))
+    },
+
+    /**
+     * Phase 2-2-A: Apply a column count preset (1, 2, 3, ...) to an article.
+     * Resets `layout` to a flat preset and `columnAssignments` so all blocks live in column [0].
+     * Sidebar columns start empty — Phase 2-2-B will let users drag blocks across columns.
+     *
+     * If presetCount matches current column count, this is a no-op (preserves user's drag-adjusted ratios).
+     */
+    applyColumnPreset: (articleId: string, presetCount: number) => {
+      const safeCount = Math.max(1, Math.min(6, Math.floor(presetCount)))
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId) return a
+          const currentCount = a.layout?.columns.length ?? 1
+          if (currentCount === safeCount) return a // no-op preserves user's ratio adjustments
+          const blockIds = a.blocks.map((b) => b.id)
+          const layout = buildColumnPreset(safeCount, blockIds)
+          const columnAssignments = Object.fromEntries(blockIds.map((id) => [id, [0]]))
+          return { ...a, layout, columnAssignments, updatedAt: now() }
         }),
       }))
     },
