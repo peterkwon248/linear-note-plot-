@@ -135,7 +135,12 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); zs=[x for x in d['dbs'] if x['dbName']=='plot-zustand'][0]; s=zs['entries'][0]['value']; s=json.loads\\(s\\) if isinstance\\(s,str\\) else s; state=s.get\\('state',s\\); notes=state.get\\('notes',[]\\); print\\('Total notes:', len\\(notes\\)\\); [print\\(n.get\\('id'\\), '|', \\(n.get\\('title'\\) or '\\(none\\)'\\)[:40], '|', len\\(n.get\\('content'\\) or ''\\), 'chars'\\) for n in notes]\")",
       "Bash(python -c ':*)",
       "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-04-14_2213.md)",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)"
+      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)",
+      "Bash(cmd //c \"mklink /J node_modules ..\\\\\\\\..\\\\\\\\..\\\\\\\\node_modules\")",
+      "Bash(ls node_modules/@phosphor-icons/react/dist/ssr/Warning.*)",
+      "Bash(ls components/ui/dialog* components/ui/sheet*)",
+      "Bash(grep -n \"</WikiFloatingActionBar>\\\\|^[[:space:]]*</div>$\\\\|^}$\" components/views/wiki-view.tsx)",
+      "Bash(npm test:*)"
     ]
   }
 }

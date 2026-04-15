@@ -1,10 +1,101 @@
-import type { WikiArticle, WikiBlock, WikiMergeSnapshot } from "../../types"
+import type { WikiArticle, WikiBlock, WikiMergeSnapshot, ColumnPath, ColumnStructure, WikiTemplate } from "../../types"
 import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, removeArticleBlocks, type AppendEventFn } from "../helpers"
 import { buildSectionIndex } from "../../wiki-section-index"
 import { extractLinksFromWikiBlocks } from "../../body-helpers"
+import { resolveWikiTemplate } from "./wiki-templates"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
+
+/* ── Phase 1 helpers ───────────────────────────────────────────────
+ *  Instantiate blocks + columnAssignments from a WikiTemplate.
+ *  Each section becomes a Section block (and any initialBlocks attached).
+ *  columnAssignments maps every generated block id → its section's columnPath. */
+
+interface TemplateInstantiation {
+  blocks: WikiBlock[]
+  columnAssignments: Record<string, ColumnPath>
+  columnLayout: ColumnStructure
+  infobox: WikiArticle["infobox"]
+  infoboxHeaderColor?: string | null
+  titleStyle?: WikiArticle["titleStyle"]
+  themeColor?: WikiArticle["themeColor"]
+}
+
+function instantiateTemplate(template: WikiTemplate): TemplateInstantiation {
+  const blocks: WikiBlock[] = []
+  const columnAssignments: Record<string, ColumnPath> = {}
+  // Group blocks by columnPath so we can populate ColumnBlocksLeaf.blockIds correctly.
+  const blocksByPath = new Map<string, string[]>()
+  const pathKey = (p: ColumnPath) => p.join(".")
+
+  for (const section of template.sections) {
+    // Section heading block
+    const sectionBlock: WikiBlock = {
+      id: genId(),
+      type: "section",
+      title: section.title,
+      level: section.level,
+    }
+    blocks.push(sectionBlock)
+    columnAssignments[sectionBlock.id] = section.columnPath
+    const key = pathKey(section.columnPath)
+    if (!blocksByPath.has(key)) blocksByPath.set(key, [])
+    blocksByPath.get(key)!.push(sectionBlock.id)
+
+    // Optional initial blocks under the section
+    if (section.initialBlocks) {
+      for (const seed of section.initialBlocks) {
+        const b: WikiBlock = { ...seed, id: genId() }
+        blocks.push(b)
+        columnAssignments[b.id] = section.columnPath
+        blocksByPath.get(key)!.push(b.id)
+      }
+    }
+  }
+
+  // Walk template.layout and populate the leaf blockIds based on each leaf's path.
+  const populated = populateColumnLayoutBlockIds(template.layout, [], blocksByPath)
+
+  return {
+    blocks,
+    columnAssignments,
+    columnLayout: populated,
+    infobox: template.infobox.fields.map((f) => ({ ...f })),
+    infoboxHeaderColor: template.infobox.headerColor ?? null,
+    titleStyle: template.titleStyle,
+    themeColor: template.themeColor,
+  }
+}
+
+/** Recursively populate ColumnBlocksLeaf.blockIds based on the path map. */
+function populateColumnLayoutBlockIds(
+  node: ColumnStructure,
+  basePath: number[],
+  blocksByPath: Map<string, string[]>,
+): ColumnStructure {
+  return {
+    ...node,
+    columns: node.columns.map((col, i) => {
+      const path = [...basePath, i]
+      if (col.content.type === "columns") {
+        return { ...col, content: populateColumnLayoutBlockIds(col.content, path, blocksByPath) }
+      }
+      return {
+        ...col,
+        content: { type: "blocks", blockIds: blocksByPath.get(path.join(".")) ?? [] },
+      }
+    }),
+  }
+}
+
+/** 1-column Blank fallback for articles without a template. */
+function blankColumnLayout(blockIds: string[]): ColumnStructure {
+  return {
+    type: "columns",
+    columns: [{ ratio: 1, content: { type: "blocks", blockIds } }],
+  }
+}
 
 export function createWikiArticlesSlice(set: Set, get: Get) {
   return {
@@ -15,24 +106,72 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       aliases?: string[]
       tags?: string[]
       blocks?: WikiBlock[]
+      templateId?: string
     }) => {
       const id = genId()
-      const blocks = partial.blocks ?? [
-        // Default template: Overview + Details + See Also sections
-        { id: genId(), type: "section" as const, title: "Overview", level: 2 },
-        { id: genId(), type: "text" as const, content: "" },
-        { id: genId(), type: "section" as const, title: "Details", level: 2 },
-        { id: genId(), type: "section" as const, title: "See Also", level: 2 },
-      ]
+
+      // Phase 1: resolve template if templateId provided. Falls back to default if not found.
+      const template = partial.templateId
+        ? resolveWikiTemplate(get(), partial.templateId)
+        : undefined
+
+      // Block source priority: explicit `partial.blocks` > template instantiation > legacy default.
+      let blocks: WikiBlock[]
+      let columnLayout: ColumnStructure
+      let columnAssignments: Record<string, ColumnPath>
+      let infobox: WikiArticle["infobox"]
+      let infoboxHeaderColor: string | null | undefined
+      let titleStyle: WikiArticle["titleStyle"]
+      let themeColor: WikiArticle["themeColor"]
+
+      if (partial.blocks) {
+        // Explicit blocks override — assume 1-column Blank, no template metadata
+        blocks = partial.blocks
+        const ids = blocks.map((b) => b.id)
+        columnLayout = blankColumnLayout(ids)
+        columnAssignments = Object.fromEntries(ids.map((bid) => [bid, [0]]))
+        infobox = []
+        infoboxHeaderColor = null
+      } else if (template) {
+        const inst = instantiateTemplate(template)
+        blocks = inst.blocks
+        columnLayout = inst.columnLayout
+        columnAssignments = inst.columnAssignments
+        infobox = inst.infobox
+        infoboxHeaderColor = inst.infoboxHeaderColor
+        titleStyle = inst.titleStyle
+        themeColor = inst.themeColor
+      } else {
+        // Legacy default: Overview + Details + See Also (preserves existing behavior)
+        blocks = [
+          { id: genId(), type: "section" as const, title: "Overview", level: 2 },
+          { id: genId(), type: "text" as const, content: "" },
+          { id: genId(), type: "section" as const, title: "Details", level: 2 },
+          { id: genId(), type: "section" as const, title: "See Also", level: 2 },
+        ]
+        const ids = blocks.map((b) => b.id)
+        columnLayout = blankColumnLayout(ids)
+        columnAssignments = Object.fromEntries(ids.map((bid) => [bid, [0]]))
+        infobox = []
+        infoboxHeaderColor = null
+      }
+
       const article: WikiArticle = {
         id,
         title: partial.title,
         aliases: partial.aliases ?? [],
-        infobox: [],
+        infobox,
+        infoboxHeaderColor,
         blocks,
         sectionIndex: buildSectionIndex(blocks),
         tags: partial.tags ?? [],
         linksOut: extractLinksFromWikiBlocks(blocks),
+        // Phase 1 fields
+        columnLayout,
+        columnAssignments,
+        titleStyle,
+        themeColor,
+        templateId: template?.id,
         createdAt: now(),
         updatedAt: now(),
       }

@@ -313,13 +313,90 @@ interface WikiTemplate {
 
 ## 열린 질문 (미결)
 
-- **ColumnPath 표현 방식** — "0.1.2" string vs Array<number>. 성능 vs 직관
-- **기존 blocks[] 자동 마이그레이션 기준** — default layout 문서들을 어느 템플릿에 매칭?
-  - heuristic: blocks.length < 5 → Blank, 인포박스 있음 → Encyclopedia, aliases 많음 → Person?
-  - 또는 사용자에게 선택시키기 (최초 1회 다이얼로그)
-- **반응형 collapse 전략** — priority 기반 자동 + 사용자 override
+- **ColumnPath 표현 방식** — "0.1.2" string vs Array<number>. 성능 vs 직관 → ✅ **`number[]` 결정 (2026-04-15)**
+- **기존 blocks[] 자동 마이그레이션 기준** — → ✅ **결정적 매핑 결정 (2026-04-15)**: encyclopedia → 2컬럼 main+infobox / 그 외 → 1컬럼 Blank. heuristic 안 씀
+- **반응형 collapse 전략** — priority 기반 자동 + 사용자 override (Phase 3+)
 - **섹션 icon/themeColor 강화 Phase** — Phase 4에 포함 vs 별도 Phase
-- **Phase 2의 컬럼 렌더러와 기존 2개 view 파일 관계** — 완전 교체 vs variant 추가?
+- **Phase 2의 컬럼 렌더러와 기존 2개 view 파일 관계** — → ✅ **완전 교체 결정 (2026-04-15)**: 두 파일 통합 + ColumnRenderer 호출
+
+---
+
+## 2026-04-15 결정 추가 (Phase 1 완료 후 사용자 인터뷰)
+
+### 디자인 방향 확정
+
+- **Plot 위키 = 노션 하이브리드 지향** (위키백과 정형 + 노션 자유 분기)
+  - 위키백과식 패턴이 default (한 컬럼 본문 + 사이드 인포박스)
+  - 노션식 자유 분기 옵션 제공 (한 섹션 안에서 블록을 다른 컬럼으로 빼내기)
+  - 사용자 선택으로 두 패턴 다 가능
+
+### 콘텐츠 ↔ 컬럼 매핑 모델 = **A 모델 (블록 단위 매핑)**
+
+이전 논의의 A vs B 중 **A 채택**:
+
+```typescript
+WikiArticle.columnAssignments: Record<blockId, ColumnPath>
+```
+
+- 모든 블록이 직접 columnAssignments에 등록
+- 한 섹션 안에서도 블록을 다른 컬럼으로 분기 가능 (= 노션식)
+- 기본 동작은 위키백과식 (모든 블록이 같은 컬럼) → 자유도 추가는 사용자 의도적 액션
+- 데이터 모델은 이미 A 모델로 구현되어 있음 (Phase 1 완료분)
+
+### 메타 콘텐츠 = **별도 필드 + ColumnPath 위치** 패턴
+
+TOC, 인포박스, Hatnote, Navbox는 일반 블록과 다르게 자동 생성/갱신되는 메타 콘텐츠. 컬럼 시스템에 박지 않고 article 메타 필드로 보관 + 위치만 ColumnPath로 자유롭게.
+
+```typescript
+WikiArticle.tocStyle?: {
+  show: boolean
+  position: ColumnPath        // 어디 컬럼에. null = off
+  collapsed?: boolean
+}
+WikiArticle.infoboxColumnPath?: ColumnPath  // 기본 [1] (사이드)
+WikiArticle.hatnotes?: Array<{ ... }>       // Phase 5
+WikiArticle.navbox?: { ... }                // Phase 5
+```
+
+이유:
+- 자동 갱신 (TOC는 섹션 변경 시 자동 따라감)
+- 인포박스/Hatnote와 일관된 처리 패턴
+- 추후 블록화 옵션 추가 가능 (TocBlock은 이미 노트엔 있음 — 위키엔 메타 필드로 시작 → 필요해지면 블록 추가)
+
+### Phase 2 단계 분리 (한 PR에 다 박지 않음)
+
+복잡도 risk 분산을 위해 Phase 2를 2개 단계로 쪼갬:
+
+#### Phase 2-1 (다음 PR, ~1주)
+- **컬럼 렌더러 신규** (`column-renderer.tsx`) — 1컬럼/2컬럼 정확 동작
+- **TOC/인포박스 메타 필드** 도입 (`tocStyle`, `infoboxColumnPath`)
+- **Title 영역** (article.title + titleStyle) 컬럼 위 고정
+- **themeColor CSS variable cascade**
+- 기존 wiki-article-view.tsx + wiki-article-encyclopedia.tsx → ColumnRenderer 호출로 통합
+- 동작 결과: **위키백과 클론 패턴 정확 표현 가능**
+
+#### Phase 2-2 (다음 PR, ~1주)
+- 컬럼 비율 드래그 (react-resizable-panels)
+- 컬럼 추가/삭제 버튼
+- 중첩 컬럼 (3 depth 제한 + enforcement)
+- 동작 결과: **사용자가 컬럼 구조 직접 편집 가능**
+
+#### Phase 3 (다음 PR, ~1~2주)
+- 블록 단위 컬럼 분기 (노션식)
+- "이 블록을 다른 컬럼으로" ⋯ 메뉴
+- 드래그로 블록을 다른 컬럼에 옮기기
+- 동작 결과: **노션 하이브리드 완성**
+
+### `layout` string 제거 시점
+
+- Phase 2-1 PR에서 함께 제거 (렌더러가 컬럼 모델로 갈아탄 후 더 이상 안 읽음)
+- `columnLayout` → `layout`으로 rename
+- migration v77
+
+### 폐기된 아이디어 (이번 인터뷰)
+
+- **B 모델 (섹션 기반 매핑)** — 노션 하이브리드 못 함. 위키백과 클론만 가능 → 폐기. A 모델이 둘 다 표현 가능
+- **TOC 블록화 (TocBlock)** — Phase 2-1에선 메타 필드로. 추후 필요 시 블록 옵션 추가
 
 ---
 

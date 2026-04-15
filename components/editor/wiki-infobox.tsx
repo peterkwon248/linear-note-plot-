@@ -42,7 +42,14 @@ function hexToRgba(hex: string, alpha = 0.35): string {
 }
 
 interface WikiInfoboxProps {
+  /** Entity ID — Note id when entityType="note", WikiArticle id when entityType="wiki". */
   noteId: string
+  /**
+   * Which slice owns this infobox. Phase 1 fix: previously hardcoded to Note slice
+   * which silently failed when a WikiArticle id was passed. Default "note" for
+   * backwards compat (note-editor.tsx still works without changes).
+   */
+  entityType?: "note" | "wiki"
   entries: WikiInfoboxEntry[]
   editable?: boolean
   className?: string
@@ -54,6 +61,7 @@ interface WikiInfoboxProps {
 
 export function WikiInfobox({
   noteId,
+  entityType = "note",
   entries,
   editable = false,
   className,
@@ -61,6 +69,7 @@ export function WikiInfobox({
   onHeaderColorChange,
 }: WikiInfoboxProps) {
   const setWikiInfobox = usePlotStore((s) => s.setWikiInfobox)
+  const setWikiArticleInfobox = usePlotStore((s) => s.setWikiArticleInfobox)
   const [isEditing, setIsEditing] = useState(false)
   const [localEntries, setLocalEntries] = useState<WikiInfoboxEntry[]>(entries)
   const [showColorPicker, setShowColorPicker] = useState(false)
@@ -74,9 +83,13 @@ export function WikiInfobox({
 
   const handleSave = useCallback(() => {
     const cleaned = localEntries.filter((e) => e.key.trim() !== "")
-    setWikiInfobox(noteId, cleaned)
+    if (entityType === "wiki") {
+      setWikiArticleInfobox(noteId, cleaned)
+    } else {
+      setWikiInfobox(noteId, cleaned)
+    }
     setIsEditing(false)
-  }, [noteId, localEntries, setWikiInfobox])
+  }, [noteId, entityType, localEntries, setWikiInfobox, setWikiArticleInfobox])
 
   const handleCancel = useCallback(() => {
     setLocalEntries([...entries])

@@ -485,6 +485,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
               <div className="mb-8 max-w-md not-draggable">
                 <WikiInfobox
                   noteId={article.id}
+                  entityType="wiki"
                   entries={article.infobox}
                   editable={editable}
                   headerColor={article.infoboxHeaderColor ?? null}
@@ -499,6 +500,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
               <div className="mb-6 max-w-sm">
                 <WikiInfobox
                   noteId={article.id}
+                  entityType="wiki"
                   entries={article.infobox}
                   editable={false}
                   headerColor={article.infoboxHeaderColor ?? null}
@@ -508,6 +510,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
               <div className="float-right ml-6 mb-4 w-[280px]">
                 <WikiInfobox
                   noteId={article.id}
+                  entityType="wiki"
                   entries={article.infobox}
                   editable={false}
                   headerColor={article.infoboxHeaderColor ?? null}

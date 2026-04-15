@@ -835,5 +835,43 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v76: Column Layout + Template System (Phase 1, 2026-04-15)
+  // Derive `columnLayout` + `columnAssignments` from legacy `layout` string for each article.
+  // Legacy `layout: "default" | "encyclopedia" | undefined` is left untouched for backwards compat —
+  // existing renderers keep reading it. Phase 2 will remove `layout` after renderer switch.
+  // New `wikiTemplates: {}` initialized for user-defined templates (built-ins ship in code).
+  if (!state.wikiTemplates) state.wikiTemplates = {}
+
+  if (Array.isArray(state.wikiArticles)) {
+    for (const article of state.wikiArticles as Record<string, unknown>[]) {
+      if (article.columnLayout) continue // already migrated (idempotent guard)
+
+      const legacyLayout = article.layout as "default" | "encyclopedia" | undefined
+      const blocks = Array.isArray(article.blocks) ? (article.blocks as Array<{ id: string }>) : []
+      const blockIds = blocks.map((b) => b.id)
+
+      if (legacyLayout === "encyclopedia") {
+        // 2-column (main 3fr / infobox 1fr min 240px)
+        article.columnLayout = {
+          type: "columns",
+          columns: [
+            { ratio: 3, content: { type: "blocks", blockIds } },
+            { ratio: 1, minWidth: 240, priority: 1, content: { type: "blocks", blockIds: [] } },
+          ],
+        }
+      } else {
+        // "default" or undefined → 1-column Blank
+        article.columnLayout = {
+          type: "columns",
+          columns: [
+            { ratio: 1, content: { type: "blocks", blockIds } },
+          ],
+        }
+      }
+      // Reverse index: every existing block lives in column [0]. Infobox is NOT a block.
+      article.columnAssignments = Object.fromEntries(blockIds.map((id) => [id, [0]]))
+    }
+  }
+
   return state as unknown as PlotState
 }

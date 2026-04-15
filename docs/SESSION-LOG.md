@@ -6,6 +6,56 @@
 
 ---
 
+## 2026-04-15 오전 (집, Phase 1 단일 PR)
+
+### 완료 (코드)
+- **Phase 1 — WikiTemplate 데이터 모델 + 템플릿 시스템 전체** ✅
+  - `lib/types.ts`: `ColumnStructure` / `ColumnDefinition` / `ColumnBlocksLeaf` / `ColumnPath` / `WikiTitleStyle` / `WikiThemeColor` / `WikiTemplateSection` / `WikiTemplateInfobox` / `WikiTemplateHatnote` / `WikiTemplateNavbox` / `WikiTemplate` 추가
+  - `WikiArticle` optional 확장: `columnLayout?` / `columnAssignments?` / `titleStyle?` / `themeColor?` / `templateId?` (legacy `layout` string 유지 — Phase 2에서 제거)
+  - `lib/wiki-templates/built-in.ts` 신규 — 8 built-in 템플릿 (Blank/Encyclopedia/Person/Place/Concept/Work/Organization/Event) + 안정 ID + theme color 헬퍼 (`hexToRgba` light 0.12 / dark 0.22)
+  - `lib/store/slices/wiki-templates.ts` 신규 — `createWikiTemplate`/`updateWikiTemplate`/`deleteWikiTemplate`/`duplicateWikiTemplate` (built-in 가드) + cross-slice 헬퍼 `resolveWikiTemplate` / `getAllWikiTemplates`
+  - `lib/store/types.ts` — `wikiTemplates: Record<string, WikiTemplate>` + 4 액션 시그니처 추가, `createWikiArticle`에 `templateId?` 옵션 추가
+  - `lib/store/index.ts` — slice 연결 + 초기 상태 + version 75→76
+  - `lib/store/migrate.ts` — v76 마이그레이션 (legacy `layout: "encyclopedia"` → 2컬럼 main+infobox, 그 외 → 1컬럼 Blank, columnAssignments 채움)
+  - `lib/store/seeds.ts` — `SEED_WIKI_ARTICLES` factory에 columnLayout/columnAssignments 동일 derive (re-seed가 마이그레이션 우회하는 케이스 대응)
+  - `lib/store/slices/wiki-articles.ts` `createWikiArticle({ templateId? })` — `instantiateTemplate` + `populateColumnLayoutBlockIds` 헬퍼로 templateId → blocks/columnLayout/columnAssignments/infobox/themeColor/titleStyle 자동 채움
+  - `components/wiki-template-picker-dialog.tsx` 신규 — 2칼럼 카드 그리드, themeColor accent bar, "BUILT-IN" + "My templates" 섹션 분리
+  - `components/views/wiki-view.tsx` `handleCreateWiki` 분리: 클릭 → picker open → 선택 시 `createWikiArticle({ title, templateId })` + select + edit
+- **setWikiInfobox 버그 수정** (BRAINSTORM 선행 0.1)
+  - `WikiInfobox` 컴포넌트에 `entityType?: "note" | "wiki"` prop 추가, default "note"
+  - `wiki-article-view.tsx` (3곳) + `wiki-article-encyclopedia.tsx` (3곳) 모두 `entityType="wiki"` 명시 → `setWikiArticleInfobox` 경로 사용
+
+### 검증
+- `npm run build --webpack` ✅ (42s, 32 routes 생성, TypeScript 에러 0)
+- `npm test` (vitest) ✅ 5 파일 / 159 테스트 통과
+- 브라우저: `+ New Wiki` 클릭 → picker open (8 카드) → Person 선택 → store 검증 (templateId="builtin-person", 3 section blocks, 4 infobox 필드, 2-column layout, themeColor amber/orange, columnAssignments 3개)
+- IDB 클리어 + 리로드 후 seed 3개 article 모두 columnLayout 1-column Blank로 정상 채워짐
+- 스크린샷: picker 다이얼로그 8 카드 + 컬럼 정보(2 col / 3 sections / N infobox) + accent color bar 모두 정상
+
+### 결정
+- **layout 전환 = Option A (Safe)** — 기존 `layout: "default"|"encyclopedia"` string 유지 + 신규 `columnLayout: ColumnStructure` 병존. Phase 2 렌더러 교체 시 string 제거 + rename
+- **ColumnPath = `number[]` (Array)** — string `"0.1.2"` 대신 타입 안전성
+- **Migration heuristic = 결정적 매핑** — 추측 없음 (encyclopedia → 2컬럼, 그 외 → 1컬럼). infobox/aliases 같은 신호 사용 안 함
+- **Built-in 템플릿 = 코드 (storage X)** — `wikiTemplates` slice는 user-defined만 보관. `getBuiltInTemplate(id)` / `resolveWikiTemplate(state, id)` 헬퍼로 통합 lookup
+- **반응형 collapse는 Phase 1 데이터만** — `minWidth/priority` 필드만 추가, 실제 collapse 로직은 Phase 2~3
+- **WikiInfobox 버그 수정 = 최소 diff** — `entityType` prop 추가가 callback rename보다 변경 영향 작음 (4 호출 지점 + default가 기존 "note" 동작 유지)
+
+### 다음 세션 (Phase 2)
+- 컬럼 렌더러 신규 + Title 영역 (article.title + titleStyle) + themeColor cascade
+- 기존 wiki-article-view.tsx + wiki-article-encyclopedia.tsx → 컬럼 렌더러 호출로 교체 (통합 검토)
+- `layout: WikiLayout` 필드 제거, `columnLayout` → `layout` rename + migration v77
+- 상세: `NEXT-ACTION.md`
+
+### 환경 이슈 (해결)
+- 워크트리 `node_modules` 누락 → cmd `mklink /J node_modules ..\..\..\node_modules` Junction
+- 부모 레포 `node_modules`에서 `@phosphor-icons/react` + `@remixicon/react` 누락 → `npm install` (parent repo)
+- Turbopack production build = symlink 거부 → `next build --webpack` 사용 (dev도 webpack 모드)
+
+### 머신
+집
+
+---
+
 ## 2026-04-14 전일 (집, 대규모 세션)
 
 ### 완료 (코드)

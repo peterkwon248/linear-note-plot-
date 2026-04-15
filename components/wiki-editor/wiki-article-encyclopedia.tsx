@@ -256,6 +256,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
               <div className="mb-8 max-w-md">
                 <WikiInfobox
                   noteId={article.id}
+                  entityType="wiki"
                   entries={article.infobox}
                   editable={true}
                   headerColor={article.infoboxHeaderColor ?? null}
@@ -280,6 +281,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
               <div className="mb-6 max-w-sm">
                 <WikiInfobox
                   noteId={article.id}
+                  entityType="wiki"
                   entries={article.infobox}
                   editable={false}
                   headerColor={article.infoboxHeaderColor ?? null}
@@ -299,6 +301,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
               <div className="float-right ml-6 mb-4 w-[320px]">
                 <WikiInfobox
                   noteId={article.id}
+                  entityType="wiki"
                   entries={article.infobox}
                   editable={false}
                   headerColor={article.infoboxHeaderColor ?? null}

@@ -56,6 +56,7 @@ import { WikiMergePreview } from "@/components/wiki-merge-preview"
 import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
 import { WikiCategoryPage } from "./wiki-category-page"
+import { WikiTemplatePickerDialog } from "@/components/wiki-template-picker-dialog"
 import { isWikiStub } from "@/lib/wiki-utils"
 
 export function WikiView() {
@@ -267,11 +268,19 @@ export function WikiView() {
     [notes, wikiArticles, navigateToNote]
   )
 
+  // Phase 1: opens template picker first instead of immediately creating a Blank article
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
   const handleCreateWiki = useCallback(() => {
-    const id = createWikiArticle({ title: "Untitled Wiki" })
-    setSelectedWikiArticleId(id)
-    setIsEditingWikiArticle(true)
-  }, [createWikiArticle])
+    setTemplatePickerOpen(true)
+  }, [])
+  const handleTemplatePicked = useCallback(
+    (templateId: string) => {
+      const id = createWikiArticle({ title: "Untitled Wiki", templateId })
+      setSelectedWikiArticleId(id)
+      setIsEditingWikiArticle(true)
+    },
+    [createWikiArticle],
+  )
 
   const handleCreateFromRedLink = useCallback(
     (title: string) => {
@@ -1244,6 +1253,13 @@ export function WikiView() {
           }}
         />
       )}
+
+      {/* Phase 1: Template picker for new wiki articles */}
+      <WikiTemplatePickerDialog
+        open={templatePickerOpen}
+        onOpenChange={setTemplatePickerOpen}
+        onSelect={handleTemplatePicked}
+      />
     </div>
   )
 }
