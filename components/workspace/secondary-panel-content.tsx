@@ -5,7 +5,7 @@ import { usePlotStore } from "@/lib/store"
 import { useSecondaryRoute, useSecondarySpace, setSecondarySpace, DEFAULT_ROUTES } from "@/lib/table-route"
 import { NoteEditor } from "@/components/note-editor"
 import { PaneProvider, useIsActivePane } from "./pane-context"
-// (WikiLayoutToggle removed Phase 2-1B-3 — Phase 2-2에서 새 토글로 교체 예정)
+import { ColumnPresetToggle } from "@/components/wiki-editor/column-preset-toggle"
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -222,7 +222,8 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
               </svg>
             </button>
           )}
-          {/* Layout toggle — Phase 2-1B-2에서 hide. Phase 2-2에서 새 토글로 교체 예정 */}
+          {/* Phase 2-2-A: 1·2·3 컬럼 프리셋 빠른 전환 (compact) */}
+          {article && <ColumnPresetToggle articleId={articleId} compact />}
           {/* Edit/Done toggle */}
           {isEditing ? (
             <button

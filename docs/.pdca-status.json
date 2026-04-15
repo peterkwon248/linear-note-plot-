@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-15T03:29:10.378Z",
+  "lastUpdated": "2026-04-15T04:46:56.912Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -199,7 +199,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:25.454Z",
-        "lastUpdated": "2026-04-15T03:27:44.813Z"
+        "lastUpdated": "2026-04-15T04:45:52.119Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\slices\\wiki-articles.ts"
     },
@@ -212,9 +212,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-04-15T03:29:10.378Z"
+        "lastUpdated": "2026-04-15T04:45:58.198Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\index.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\types.ts"
     },
     "__tests__": {
       "phase": "do",
@@ -264,9 +264,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-15T03:26:42.031Z"
+        "lastUpdated": "2026-04-15T04:46:13.525Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\wiki-article-renderer.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\column-preset-toggle.tsx"
     },
     "core": {
       "phase": "do",
@@ -316,7 +316,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-08T01:23:26.886Z",
-        "lastUpdated": "2026-04-15T03:26:58.775Z"
+        "lastUpdated": "2026-04-15T04:46:56.912Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\workspace\\secondary-panel-content.tsx"
     },
@@ -394,7 +394,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-15T00:18:45.790Z",
-        "lastUpdated": "2026-04-15T03:26:54.047Z"
+        "lastUpdated": "2026-04-15T04:46:40.497Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\views\\wiki-view.tsx"
     },
@@ -420,7 +420,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-15T03:29:10.378Z"
+    "lastActivity": "2026-04-15T04:46:56.912Z"
   },
   "history": [
     {
@@ -5796,6 +5796,54 @@
     {
       "timestamp": "2026-04-15T03:29:10.378Z",
       "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T04:45:33.058Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T04:45:52.119Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T04:45:58.198Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T04:46:13.525Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T04:46:34.428Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T04:46:40.497Z",
+      "feature": "eager-goodall",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T04:46:45.867Z",
+      "feature": "workspace",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T04:46:56.912Z",
+      "feature": "workspace",
       "phase": "do",
       "action": "updated"
     }

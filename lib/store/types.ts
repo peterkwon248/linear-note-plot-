@@ -278,6 +278,7 @@ export interface PlotState {
   removeArticleReference: (articleId: string, referenceId: string) => void
   deleteWikiArticle: (articleId: string) => void
   setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => void
+  applyColumnPreset: (articleId: string, presetCount: number) => void
   addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => string
   removeWikiBlock: (articleId: string, blockId: string) => void
   updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => void

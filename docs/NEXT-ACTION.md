@@ -6,9 +6,59 @@
 
 ---
 
-**Last Updated**: 2026-04-15 저녁 (Phase 2-1B-3 완료 — 기존 렌더러 2개 + WikiLayoutToggle 삭제, layout string 제거, columnLayout → layout rename, migration v77, InlineCategoryTags 별도 파일)
+**Last Updated**: 2026-04-15 저녁 (Phase 2-2-A 완료 — ColumnPresetToggle (1·2·3 컬럼 빠른 전환) + applyColumnPreset 액션. 헤더 토글로 즉시 시각 변화)
 
 ## 🎯 다음 세션 시작하면 바로 할 것
+
+### Phase 2-2-B 시작 — 컬럼 비율 드래그 + 추가/삭제 + 중첩
+
+**배경**: Phase 2-2-A 완료. 사용자가 1·2·3 컬럼 빠른 전환 가능. 이제 더 자유로운 편집 UX (커스텀 비율, 임의 컬럼 추가/삭제, 중첩) 추가.
+
+**Phase 2-2-B 작업 내용** (~1주, 1 PR):
+
+1. **컬럼 비율 드래그 조절**
+   - ColumnRenderer에 컬럼 경계 핸들 추가 (편집 모드만)
+   - 드래그로 ratio 변경 → article.layout 업데이트
+   - react-resizable-panels 활용 또는 직접 구현 (단순 가능)
+
+2. **컬럼 추가/삭제 버튼**
+   - 컬럼 사이/끝에 + 버튼 (편집 모드)
+   - 컬럼 헤더 ⋯ 메뉴 (Delete column / Split column / Merge with neighbor)
+   - 빈 컬럼 삭제 시 confirm
+
+3. **중첩 컬럼 (3 depth 제한)**
+   - 컬럼 안에 다시 컬럼 만들기 (행 → 열)
+   - 4 depth 시 추가 버튼 disable + 툴팁 안내
+   - ColumnRenderer는 이미 재귀 지원
+
+4. **블록을 컬럼 간 드래그 이동**
+   - 기존 DnD를 컬럼 cell 자체에 droppable로 확장
+   - 드래그 종료 시 columnAssignments 업데이트 + ColumnBlocksLeaf.blockIds 동기화
+
+5. **TocStyle / InfoboxColumnPath UI**
+   - SidePanel 또는 article 헤더에 메타 위치 변경 메뉴
+   - "TOC: [컬럼 1 ▼]" 식 드롭다운
+
+**Phase 2-2-B 완료 시 동작**:
+- 사용자가 컬럼 구조 완전 자유 편집 (비율/추가/삭제/중첩)
+- 메타 콘텐츠 (TOC/인포박스) 위치도 자유 지정
+- 노션식 자유 분기는 Phase 3로
+
+### Phase 2-2-A 완료 시 사용자가 할 수 있는 것 (지금)
+- 헤더의 1col / 2col / 3col 칩 클릭 → 즉시 컬럼 구조 변경
+- 1col → 2col 전환 시 모든 블록은 main 컬럼, sidebar는 비어있음 (Phase 2-2-B에서 블록 드래그로 이동 가능)
+- 같은 프리셋 클릭 = no-op (드래그 조정한 비율 보존, Phase 2-2-B 대비)
+
+**참고 파일**:
+- `BRAINSTORM-2026-04-14-column-template-system.md`
+- `components/wiki-editor/column-renderer.tsx` (재귀 ColumnStructure 렌더러)
+- `components/wiki-editor/column-preset-toggle.tsx` (Phase 2-2-A — 토글)
+- `lib/store/slices/wiki-articles.ts` (`buildColumnPreset`, `applyColumnPreset` 헬퍼)
+- `lib/types.ts` (`ColumnStructure`, `ColumnDefinition`, `ColumnPath`)
+
+---
+
+## (legacy plan, kept for reference)
 
 ### Phase 2-2 시작 — 컬럼 편집 UX (드래그/추가/삭제) + 1·2·N 컬럼 프리셋 토글
 
@@ -225,7 +275,9 @@
 
 ## 🧠 멘탈 상태 (잊지 말 것)
 
-- **Store v77** — `WikiArticle.layout`은 이제 ColumnStructure (이전 columnLayout). legacy WikiLayout string 폐기
+- **Store v77** — `WikiArticle.layout`은 ColumnStructure (이전 columnLayout). legacy WikiLayout string 폐기됨
+- **Phase 2-2-A 완료**: ColumnPresetToggle (1·2·3 컬럼 빠른 전환). `applyColumnPreset(articleId, count)` 액션. headers에 토글 배치 (wiki-view + secondary-panel-content compact)
+- **buildColumnPreset 헬퍼** (slice 내부) — 1col Blank / 2col main+sidebar / 3col main+side+side / 4+col equal split. 모든 블록은 main 컬럼 [0]에 배치, sidebar 빈 상태로 시작
 - **엔티티 통합 영구 폐기** — Note/Wiki 2-entity 유지
 - **렌더러는 위키 전용** — 노트엔 layout 개념 없음 (단일 TipTap JSON)
 - **Title 블록화 X** — `article.title + titleStyle`로 최상단 고정

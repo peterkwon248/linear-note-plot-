@@ -6,6 +6,57 @@
 
 ---
 
+## 2026-04-15 저녁 (집, Phase 2-2-A 컬럼 프리셋 토글 PR)
+
+### 완료 (코드)
+- **applyColumnPreset 액션 + buildColumnPreset 헬퍼** ✅
+  - `lib/store/slices/wiki-articles.ts`: presetCount(1~6) 받아 ColumnStructure 빌드
+  - 1col Blank / 2col (main 3fr + sidebar 1fr min 240px) / 3col (main 2fr + 2× side 1fr min 200px) / 4+col equal split
+  - 모든 블록 main 컬럼 [0]으로, sidebar 빈 상태 (Phase 2-2-B에서 드래그로 이동 가능)
+  - 같은 프리셋 클릭 = no-op (드래그 조정 비율 보존, Phase 2-2-B 대비)
+  - safeCount = clamp(1, 6) — 6 이상 막기
+- **ColumnPresetToggle 컴포넌트 신규** ✅
+  - `components/wiki-editor/column-preset-toggle.tsx` (~75줄)
+  - 1col / 2col / 3col 칩 메뉴 (group toggle)
+  - compact prop으로 secondary panel용 작은 변형
+  - aria-pressed로 접근성
+- **wiki-view + secondary-panel-content 헤더에 토글 배치** ✅
+  - wiki-view: full size
+  - secondary-panel-content: compact
+
+### 검증
+- `next build --webpack` ✅ (32 routes, TypeScript 에러 0)
+- `vitest run` ✅ 5 파일 / 159 테스트 통과
+- 콘솔 검증: applyColumnPreset(articleId, 2) → 1col→2col 정확 (main 7 blocks / sidebar 0). 1↔2↔3 전환 모두 정상
+- dev server compiles clean
+
+### 결정
+- **buildColumnPreset 1·2·3 비율** — 위키백과(2col) 디자인 영감. main이 본문이라 큰 ratio (3 또는 2), sidebar는 minWidth로 좁지만 일관된 폭
+- **같은 프리셋 클릭 no-op** — 사용자가 비율 드래그 조정한 후 같은 버튼 또 누르면 비율 reset 안 됨. UX 보호
+- **safeCount clamp** — UI는 1·2·3만 노출이지만 액션 자체는 1~6 받음 (Phase 2-2-B에서 4+ 컬럼 추가 시 활용)
+- **Phase 2-2 분할** — A (토글), B (비율 드래그 + 추가/삭제 + 중첩 + 블록 드래그 + TocStyle UI). A만 먼저 머지하고 사용자 검증 후 B 진행
+
+### 사용자 가치
+- 위키 article 헤더에서 1col/2col/3col 칩 클릭 → 즉시 컬럼 구조 변경
+- 컬럼 시스템의 가치를 사용자가 처음으로 시각적으로 체감
+- 인포박스/TOC가 자동으로 사이드 컬럼에 위치 (메타 필드 fallback 로직)
+
+### 다음 세션 (Phase 2-2-B)
+- ColumnRenderer에 비율 드래그 핸들 (편집 모드)
+- 컬럼 추가/삭제 + 중첩 (3 depth)
+- 블록을 컬럼 간 드래그 이동 (DnD 확장)
+- TocStyle / InfoboxColumnPath UI (메타 위치 변경)
+- 상세: `NEXT-ACTION.md`
+
+### Watch Out
+- 같은 프리셋 클릭 no-op 동작 → 사용자가 reset 원하면 다른 프리셋 갔다 와야 함 (의도적)
+- sidebar가 빈 상태 시작 → 사용자가 인포박스/TOC가 어디 있는지 처음엔 헷갈릴 수 있음 (메타 필드는 article.tocStyle.position / infoboxColumnPath로 자동 last col에 배치되므로 시각적 OK, 단 텍스트 블록은 main에만)
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 저녁 (집, Phase 2-1B-3 cleanup PR)
 
 ### 완료 (코드)
