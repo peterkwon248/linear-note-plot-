@@ -8,7 +8,7 @@ import { BookOpen, ArrowSquareOut, X as PhX, ArrowsIn } from "@/lib/editor/edito
 import { usePlotStore } from "@/lib/store"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
-import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
+import { WikiArticleRenderer } from "@/components/wiki-editor/wiki-article-renderer"
 import type { WikiArticle } from "@/lib/types"
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -145,12 +145,11 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
             </button>
           </div>
         </div>
-        {/* Wiki content — read-only encyclopedia view */}
+        {/* Wiki content — read-only encyclopedia view (Phase 2-1B-1: ColumnRenderer 기반) */}
         <div className={embedHeight ? "overflow-y-auto h-full" : ""}>
-          <WikiArticleEncyclopedia
-            article={displayArticle}
-            isEditing={false}
-            onBack={() => {}}
+          <WikiArticleRenderer
+            articleId={displayArticle.id}
+            variant="encyclopedia"
           />
         </div>
       </div>

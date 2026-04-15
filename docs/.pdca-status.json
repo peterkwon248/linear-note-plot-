@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-15T02:19:32.037Z",
+  "lastUpdated": "2026-04-15T02:35:23.158Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -43,9 +43,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-05T00:23:24.929Z",
-        "lastUpdated": "2026-04-15T00:33:36.757Z"
+        "lastUpdated": "2026-04-15T02:35:23.158Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\editor\\wiki-infobox.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\editor\\note-hover-preview.tsx"
     },
     "wizardly-kare": {
       "phase": "do",
@@ -264,9 +264,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-15T02:19:32.036Z"
+        "lastUpdated": "2026-04-15T02:34:07.736Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\wiki-title.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\wiki-article-renderer.tsx"
     },
     "core": {
       "phase": "do",
@@ -342,9 +342,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-08T03:18:21.569Z",
-        "lastUpdated": "2026-04-14T08:50:00.907Z"
+        "lastUpdated": "2026-04-15T02:34:52.326Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\nodes\\infobox-node.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\editor\\nodes\\wiki-embed-node.tsx"
     },
     "vigorous-spence": {
       "phase": "do",
@@ -420,7 +420,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-15T02:19:32.037Z"
+    "lastActivity": "2026-04-15T02:35:23.158Z"
   },
   "history": [
     {
@@ -5580,6 +5580,36 @@
     {
       "timestamp": "2026-04-15T02:19:32.036Z",
       "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T02:34:07.736Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T02:34:44.342Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T02:34:52.326Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T02:35:14.416Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-15T02:35:23.158Z",
+      "feature": "editor",
       "phase": "do",
       "action": "updated"
     }

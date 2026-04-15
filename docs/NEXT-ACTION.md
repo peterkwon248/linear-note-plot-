@@ -6,9 +6,63 @@
 
 ---
 
-**Last Updated**: 2026-04-15 오후 (Phase 2-1A 완료 — ColumnRenderer + WikiTitle + WikiThemeProvider + tocStyle/infoboxColumnPath 메타 필드. 기존 렌더러는 안 건드림 — Phase 2-1B에서 교체)
+**Last Updated**: 2026-04-15 오후 (Phase 2-1B-1 완료 — wiki-article-renderer read-only 신규 + 2 호출 지점 마이그레이션. 편집 모드는 Phase 2-1B-2에서 흡수)
 
 ## 🎯 다음 세션 시작하면 바로 할 것
+
+### Phase 2-1B-2 시작 — 편집 모드 흡수 + wiki-view + secondary-panel-content 마이그레이션
+
+**배경**: Phase 2-1B-1 완료. read-only WikiArticleRenderer 동작 확인 (note-hover-preview + wiki-embed-node에서 사용 중). 이제 **편집 모드의 모든 기능을 wiki-article-renderer에 흡수**해야 wiki-view + secondary-panel-content를 마이그레이션 가능.
+
+**진실의 원천**: `docs/BRAINSTORM-2026-04-14-column-template-system.md` (특히 "2026-04-15 결정 추가" 섹션)
+
+**Phase 2-1B-2 작업 내용** (~1주, 1 PR):
+
+1. **WikiArticleRenderer 편집 모드 흡수**
+   - editable 모드 props 추가 (onEditCallback, splitMode 등)
+   - SortableContext + DnD 핸들러 (블록 reorder)
+   - AddBlockButton (top + bottom)
+   - 편집 가능한 Title / Aliases / Categories
+   - 편집 가능한 Infobox (entityType="wiki" + onHeaderColorChange)
+   - SectionBlock collapse persist (block.collapsed)
+   - 편집 모드용 nearestSectionLevel 계산
+   - splitMode UI (체크박스 + 하단 바 + handleConfirmDragSplit)
+   - FloatingDragDropBar + DragOverlay (cross-article drag)
+   - Virtuoso 가상화 (read모드, blocks > 50)
+
+2. **wiki-view.tsx + secondary-panel-content.tsx 마이그레이션**
+   - 두 곳 모두 WikiArticleEncyclopedia/WikiArticleView 호출 → WikiArticleRenderer로 교체
+   - editable / preview / fontSize / collapseAllCmd 등 기존 props 모두 호환
+
+3. **note-hover-preview의 editing 분기 제거**
+   - Phase 2-1B-1에서 임시로 분기 처리한 부분 → editing도 WikiArticleRenderer 사용
+
+**Phase 2-1B-2 완료 시 동작**:
+- 4 호출 지점 모두 WikiArticleRenderer 사용
+- 기존 두 렌더러는 사용처 0 (dead code) → Phase 2-1B-3에서 삭제
+
+### Phase 2-1B-3 (Phase 2-1B-2 후) — Cleanup
+
+- 기존 wiki-article-view.tsx + wiki-article-encyclopedia.tsx 삭제
+- `WikiLayoutToggle` + 그 5 사용처 정리
+- `WikiArticle.layout: WikiLayout` 필드 삭제
+- `columnLayout` → `layout` rename (BRAINSTORM 원안)
+- `WikiLayout` 타입 삭제
+- `tocStyle` / `infoboxColumnPath` 기본값 backfill
+- Migration v77
+
+**참고 파일**:
+- `BRAINSTORM-2026-04-14-column-template-system.md`
+- `components/wiki-editor/wiki-article-renderer.tsx` (Phase 2-1B-1 신규 — read-only 모드)
+- `components/wiki-editor/column-renderer.tsx` (Phase 2-1A — pathKey 헬퍼)
+- `components/wiki-editor/wiki-title.tsx` (Phase 2-1A — editable prop 이미 있음)
+- `components/wiki-editor/wiki-theme-provider.tsx` (Phase 2-1A)
+- `components/wiki-editor/wiki-article-view.tsx` (편집 모드 reference, 1220줄)
+- `components/wiki-editor/wiki-article-encyclopedia.tsx` (편집 모드 reference, 406줄)
+
+---
+
+## (legacy plan, kept for reference)
 
 ### Phase 2-1B 시작 — 기존 렌더러 통합 + layout string 제거
 
@@ -69,15 +123,16 @@
 
 ## 🧠 멘탈 상태 (잊지 말 것)
 
-- **Store v76** — Phase 2-1B에서 v77로 bump 예정 (layout rename + tocStyle/infoboxColumnPath 기본값 backfill)
+- **Store v76** — Phase 2-1B-3에서 v77로 bump 예정 (layout rename + tocStyle/infoboxColumnPath 기본값 backfill)
 - **엔티티 통합 영구 폐기** — Note/Wiki 2-entity 유지
 - **렌더러는 위키 전용** — 노트엔 layout 개념 없음
-- **Title 블록화 X** — `article.title + titleStyle`로 최상단 고정 (이미 WikiTitle 컴포넌트 있음)
+- **Title 블록화 X** — `article.title + titleStyle`로 최상단 고정 (WikiTitle 컴포넌트 있음)
 - **Column Heading 블록 X** — Section(H2)로 충분
-- **`layout` string 필드 유지 중** — Phase 2-1B에서 렌더러 교체 시 제거
+- **`layout` string 필드 유지 중** — Phase 2-1B-3에서 렌더러 교체 완료 후 제거
 - **노트 split must-todo** — Phase 7
-- **Phase 2-1A까지 완료**: ColumnRenderer + WikiTitle + WikiThemeProvider + tocStyle/infoboxColumnPath 메타 필드 (인프라 준비 끝)
+- **Phase 2-1B-1까지 완료**: WikiArticleRenderer (read-only) + note-hover-preview/wiki-embed-node 마이그레이션
 - **2026-04-15 사용자 결정**: A 모델 + 메타 필드 별도 + Phase 단계 분리 (BRAINSTORM 문서 "2026-04-15 결정 추가" 절)
+- **현재 사용 중**: WikiArticleRenderer는 read-only로 호버 프리뷰 + wiki embed에서 사용. 편집 모드는 여전히 WikiArticleView/Encyclopedia 사용 중
 
 ## ⚠️ Phase 2-1B 구현 전 주의사항
 

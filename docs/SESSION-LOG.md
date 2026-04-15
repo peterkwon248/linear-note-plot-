@@ -6,6 +6,53 @@
 
 ---
 
+## 2026-04-15 오후 (집, Phase 2-1B-1 read-only 통합 렌더러 PR)
+
+### 완료 (코드)
+- **Phase 2-1B-1 — WikiArticleRenderer 신규 (read-only) + 2 호출 지점 마이그레이션** ✅
+  - `components/wiki-editor/wiki-article-renderer.tsx` 신규 (~280줄)
+    · WikiThemeProvider + WikiTitle + ColumnRenderer 조합
+    · ColumnRenderer의 metaSlots로 TOC + Infobox 위치 자동 배치 (article.tocStyle.position / article.infoboxColumnPath 기반, 기본값은 fallback으로 multi-column→last column / single→[0])
+    · WikiBlockRenderer로 블록 렌더 위임 (block-agnostic)
+    · CollapsibleTOC 인라인 컴포넌트 (위키백과/나무위키 스타일)
+    · footnote offset tracking (각 text block이 자기 footnoteRef 개수 보고 → cumulative offset)
+    · collapsed sections local state + collapseAllCmd 호환
+    · variant prop ("default" | "encyclopedia") — 블록 헤딩 스타일만 차이
+    · hideTitle / hideCategories / hideFootnotes prop으로 호버/임베드 최적화
+    · padding prop (default per-variant)
+  - `components/editor/nodes/wiki-embed-node.tsx` 마이그레이션
+    · WikiArticleEncyclopedia → WikiArticleRenderer (always read-only, variant="encyclopedia")
+  - `components/editor/note-hover-preview.tsx` 마이그레이션 (editing 분기)
+    · 편집 모드 시 기존 WikiArticleEncyclopedia 유지 (Phase 2-1B-2에서 흡수 예정)
+    · 읽기 모드 시 WikiArticleRenderer 사용
+
+### 검증
+- `next build --webpack` ✅ (32 routes, TypeScript 에러 0)
+- `vitest run` ✅ 5 파일 / 159 테스트 통과
+- dev server compiles clean (HMR 정상)
+- 호버 프리뷰 / wiki embed 두 호출 지점 모두 신규 렌더러 사용 중
+
+### 결정
+- **편집 모드는 Phase 2-1B-1 스코프 외** — split mode UI / DnD-cross-article / Virtuoso / FloatingDragDropBar / SortableContext 등 흡수가 큰 작업 (~600-800줄). Phase 2-1B-2로 분리
+- **note-hover-preview는 editing 분기로 임시 처리** — editing이면 기존 Encyclopedia, 아니면 새 Renderer. Phase 2-1B-2에서 분기 제거
+- **InlineCategoryTags는 wiki-article-view에서 import** — Phase 2-1B-3에서 별도 파일로 분리 (기존 렌더러 삭제 시점)
+- **layout 필드는 그대로** — Phase 2-1B-3까지 유지
+
+### 다음 세션 (Phase 2-1B-2)
+- WikiArticleRenderer 편집 모드 흡수 (split mode / DnD / AddBlock / SortableContext / Virtuoso 등 모두)
+- wiki-view + secondary-panel-content 마이그레이션
+- note-hover-preview의 editing 분기 제거
+- 상세: `NEXT-ACTION.md`
+
+### Watch Out
+- SSR hydration mismatch warning — 기존 코드의 알려진 이슈 (내 변경 무관)
+- dev server가 메모리 임계 도달 시 자동 재시작됨 (정상 동작)
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 오후 (집, Phase 2-1A 인프라 PR)
 
 ### 완료 (코드)
