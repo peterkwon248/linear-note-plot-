@@ -5,7 +5,7 @@ import { usePlotStore } from "@/lib/store"
 import { useSecondaryRoute, useSecondarySpace, setSecondarySpace, DEFAULT_ROUTES } from "@/lib/table-route"
 import { NoteEditor } from "@/components/note-editor"
 import { PaneProvider, useIsActivePane } from "./pane-context"
-import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
+// WikiLayoutToggle removed Phase 2-1B-2 — Phase 2-2에서 새 토글로 교체 예정
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -26,8 +26,7 @@ import {
 import type { ActivitySpace } from "@/lib/types"
 
 // Lazy-load view components to avoid bloating the secondary panel bundle
-const WikiArticleView = lazy(() => import("@/components/wiki-editor/wiki-article-view").then(m => ({ default: m.WikiArticleView })))
-const WikiArticleEncyclopedia = lazy(() => import("@/components/wiki-editor/wiki-article-encyclopedia").then(m => ({ default: m.WikiArticleEncyclopedia })))
+const WikiArticleRenderer = lazy(() => import("@/components/wiki-editor/wiki-article-renderer").then(m => ({ default: m.WikiArticleRenderer })))
 const NotesTableView = lazy(() => import("@/components/notes-table-view").then(m => ({ default: m.NotesTableView })))
 const HomeView = lazy(() => import("@/components/views/home-view").then(m => ({ default: m.HomeView })))
 const WikiView = lazy(() => import("@/components/views/wiki-view").then(m => ({ default: m.WikiView })))
@@ -223,10 +222,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
               </svg>
             </button>
           )}
-          {/* Layout toggle */}
-          {article && (
-            <WikiLayoutToggle articleId={articleId} layout={article.layout} showIcon={false} />
-          )}
+          {/* Layout toggle — Phase 2-1B-2에서 hide. Phase 2-2에서 새 토글로 교체 예정 */}
           {/* Edit/Done toggle */}
           {isEditing ? (
             <button
@@ -254,22 +250,15 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
       </header>
       <div className="flex-1 min-h-0 overflow-auto">
         <Suspense fallback={<ViewFallback />}>
-          {article?.layout === "encyclopedia" ? (
-            <WikiArticleEncyclopedia
-              article={article}
-              isEditing={isEditing}
-              onBack={() => closeSecondary()}
+          {article && (
+            <WikiArticleRenderer
+              articleId={articleId}
+              editable={isEditing}
+              variant={article.layout === "encyclopedia" ? "encyclopedia" : "default"}
               collapseAllCmd={collapseAllCmd}
               onCollapseAllDone={() => setCollapseAllCmd(null)}
               onAllCollapsedChange={setAllSectionsCollapsed}
               fontSize={article.fontSize}
-            />
-          ) : (
-            <WikiArticleView
-              articleId={articleId}
-              editable={isEditing}
-              collapseAllCmd={collapseAllCmd}
-              onCollapseAllDone={() => setCollapseAllCmd(null)}
             />
           )}
         </Suspense>
