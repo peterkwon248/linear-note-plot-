@@ -6,6 +6,40 @@
 
 ---
 
+## 2026-04-15 오후 (집, Phase 2-1A 인프라 PR)
+
+### 완료 (코드)
+- **Phase 2-1A — 컬럼 시스템 인프라 컴포넌트 준비 완료** ✅
+  - `lib/types.ts`: `WikiTocStyle` 인터페이스 추가, `WikiArticle.tocStyle?` + `WikiArticle.infoboxColumnPath?` optional 필드 (additive — migration 안 필요)
+  - `components/wiki-editor/column-renderer.tsx` 신규 — 재귀 ColumnStructure 렌더러. CSS Grid 기반 (ratio→fr, minWidth→minmax). renderBlock 콜백으로 블록 위임. metaSlots Record로 TOC/인포박스 columnPath 위치 주입. `pathKey`/`parsePathKey` 헬퍼 export
+  - `components/wiki-editor/wiki-title.tsx` 신규 — article.title + titleStyle (alignment / size / showAliases / themeColorBg). 편집 모드 시 input 토글 (onTitleChange / onAliasesChange 콜백)
+  - `components/wiki-editor/wiki-theme-provider.tsx` 신규 — WikiThemeProvider 래퍼. inline style로 `--wiki-theme-light` + `--wiki-theme-dark` 노출 + `.wiki-theme-scope` 클래스 적용. 자식이 `var(--wiki-theme-active)` 직접 사용 가능
+  - `app/globals.css` — `.wiki-theme-scope` cascade rule 2줄 추가 (`.wiki-theme-scope`/`.dark .wiki-theme-scope`)
+
+### 검증
+- `next build --webpack` ✅ (32 routes, TypeScript 에러 0)
+- `vitest run` ✅ 5 파일 / 159 테스트 통과
+- 신규 컴포넌트는 아직 import되는 곳 없음 (Phase 2-1B에서 통합 예정) — 컴파일 정확성만 보장
+
+### 결정
+- **Phase 2-1을 2-1A (인프라) + 2-1B (통합)로 분할** — wiki-article-view.tsx (1220줄) + wiki-article-encyclopedia.tsx (406줄) 통합은 한 PR에 박기에 risk 큼. 인프라 먼저 + 통합 분리로 검증 단위 작게
+- **WikiTocStyle = `{ show, position: ColumnPath, collapsed? }`** — 자동 생성/갱신 메타. 별도 필드 + ColumnPath 위치 패턴 (인포박스/Hatnote와 동일)
+- **CSS variable cascade pattern** — globals.css에 `.wiki-theme-scope`+`.dark .wiki-theme-scope` 정의, WikiThemeProvider에서 light/dark 두 var 노출, 자식은 `var(--wiki-theme-active)` 사용. 다크모드 자동 전환. 섹션 themeColor는 nested provider로 override
+- **ColumnRenderer는 block-agnostic** — `renderBlock(blockId)` 콜백 위임으로 어떤 블록 종류든 렌더 가능. metaSlots도 Record<pathKey, ReactNode>로 자유롭게 주입
+
+### 다음 세션 (Phase 2-1B)
+- `wiki-article-renderer.tsx` 통합 컴포넌트 신규 (WikiThemeProvider + WikiTitle + ColumnRenderer 조합)
+- 4 호출 지점 마이그레이션 (wiki-view, secondary-panel-content, wiki-embed-node, note-hover-preview)
+- 기존 wiki-article-view + wiki-article-encyclopedia 삭제 (1626줄 정리)
+- Migration v77: layout string 제거, columnLayout → layout rename, tocStyle/infoboxColumnPath 기본값 backfill
+- WikiLayoutToggle 임시 hide (Phase 2-2에서 새 토글로 교체)
+- 상세: `NEXT-ACTION.md`
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 오전 (집, Phase 1 단일 PR)
 
 ### 완료 (코드)

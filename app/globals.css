@@ -157,6 +157,17 @@
   --editor-inline-code-color: #E0A8F0;
 }
 
+/* ── Phase 2-1A: Wiki theme color cascade ──────────────────────────
+ *  WikiThemeProvider sets `--wiki-theme-light` + `--wiki-theme-dark` inline.
+ *  These rules pick the active variant based on the current dark mode class.
+ *  Components inside .wiki-theme-scope use `var(--wiki-theme-active)` directly. */
+.wiki-theme-scope {
+  --wiki-theme-active: var(--wiki-theme-light, transparent);
+}
+.dark .wiki-theme-scope {
+  --wiki-theme-active: var(--wiki-theme-dark, transparent);
+}
+
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
