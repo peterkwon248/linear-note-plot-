@@ -6,9 +6,70 @@
 
 ---
 
-**Last Updated**: 2026-04-15 오후 (Phase 2-1B-1 완료 — wiki-article-renderer read-only 신규 + 2 호출 지점 마이그레이션. 편집 모드는 Phase 2-1B-2에서 흡수)
+**Last Updated**: 2026-04-15 오후 (Phase 2-1B-2 완료 — WikiArticleRenderer 편집 모드 흡수 + 4 호출 지점 전체 마이그레이션. 기존 렌더러 2개는 dead code — Phase 2-1B-3에서 삭제)
 
 ## 🎯 다음 세션 시작하면 바로 할 것
+
+### Phase 2-1B-3 시작 — Cleanup (기존 렌더러 삭제 + layout string 제거 + migration v77)
+
+**배경**: Phase 2-1B-2 완료. 4 호출 지점 모두 WikiArticleRenderer 사용 중 (wiki-view, secondary-panel-content, wiki-embed-node, note-hover-preview). 기존 wiki-article-view.tsx + wiki-article-encyclopedia.tsx는 dead code. 이제 제거 + layout 타입 시스템 최종 정리.
+
+**진실의 원천**: `docs/BRAINSTORM-2026-04-14-column-template-system.md`
+
+**Phase 2-1B-3 작업 내용** (~3-4일, 1 PR):
+
+1. **기존 렌더러 삭제**
+   - `components/wiki-editor/wiki-article-view.tsx` 삭제 (1220줄)
+   - `components/wiki-editor/wiki-article-encyclopedia.tsx` 삭제 (406줄)
+   - `InlineCategoryTags` 별도 파일로 분리 (`components/wiki-editor/inline-category-tags.tsx`)
+   - WikiArticleRenderer import 업데이트 (`./inline-category-tags` 로)
+
+2. **WikiLayoutToggle 삭제**
+   - `components/wiki-editor/wiki-layout-toggle.tsx` 삭제 (36줄)
+   - 이미 2 사용처에서 hide/remove 됨
+
+3. **layout string 제거 + columnLayout → layout rename**
+   - `WikiArticle.layout: WikiLayout` 필드 삭제 (lib/types.ts)
+   - `WikiLayout` 타입 삭제
+   - `WikiArticle.columnLayout` → `WikiArticle.layout`으로 rename
+   - `columnAssignments` 그대로 유지
+
+4. **Migration v77**
+   - 기존 `columnLayout` → `layout` rename
+   - 기존 `layout: "encyclopedia"` → 삭제 (columnLayout이 이미 2컬럼 구조)
+   - `tocStyle` 기본값 backfill (2컬럼 → `{ show: true, position: [1] }`, 1컬럼 → `{ show: true, position: [0], collapsed: true }`)
+   - `infoboxColumnPath` 기본값 backfill (2컬럼 → `[1]`, 1컬럼 → `[0]`)
+   - Store version 76 → 77
+   - SEED_WIKI_ARTICLES factory도 동일 derive
+
+5. **기타 `.layout` 사용처 정리**
+   - `components/views/ontology-view.tsx` (그래프 노드에 layout 표시한다면 layout.columns.length 사용)
+   - `components/side-panel/wiki-article-detail-panel.tsx` (Detail 패널의 layout 표시)
+   - 기타 기존 layout string 참조 찾아서 갱신
+
+**Phase 2-1B-3 완료 시**:
+- 위키 렌더러 통합 완전 (기존 1626줄 → WikiArticleRenderer ~700줄로 3-4x 압축)
+- 컬럼 기반 단일 layout 시스템 (WikiLayout string 폐기)
+- 데이터 모델 최종 정리 (Phase 2-2 준비 완료)
+
+### Phase 2-2 (Phase 2-1B-3 후) — 컬럼 편집 UX
+
+- 컬럼 경계 드래그로 비율 조절 (react-resizable-panels)
+- 컬럼 추가/삭제 버튼
+- 중첩 컬럼 (3 depth 제한 + enforcement)
+- 블록을 컬럼 간 드래그 이동
+- 1컬럼/2컬럼/N컬럼 프리셋 빠른 전환 토글 (WikiLayoutToggle 대체)
+
+**참고 파일**:
+- `BRAINSTORM-2026-04-14-column-template-system.md`
+- `components/wiki-editor/wiki-article-renderer.tsx` (통합 렌더러, Phase 2-1B-2 완료)
+- `components/wiki-editor/column-renderer.tsx` (재귀 컬럼 렌더러, Phase 2-1A)
+- `lib/store/migrate.ts` (v77 migration 추가 위치)
+- `lib/store/seeds.ts` (SEED_WIKI_ARTICLES factory)
+
+---
+
+## (legacy plan, kept for reference)
 
 ### Phase 2-1B-2 시작 — 편집 모드 흡수 + wiki-view + secondary-panel-content 마이그레이션
 
@@ -123,16 +184,17 @@
 
 ## 🧠 멘탈 상태 (잊지 말 것)
 
-- **Store v76** — Phase 2-1B-3에서 v77로 bump 예정 (layout rename + tocStyle/infoboxColumnPath 기본값 backfill)
+- **Store v76** — Phase 2-1B-3에서 v77로 bump 예정 (columnLayout → layout rename + tocStyle/infoboxColumnPath 기본값 backfill)
 - **엔티티 통합 영구 폐기** — Note/Wiki 2-entity 유지
 - **렌더러는 위키 전용** — 노트엔 layout 개념 없음
 - **Title 블록화 X** — `article.title + titleStyle`로 최상단 고정 (WikiTitle 컴포넌트 있음)
 - **Column Heading 블록 X** — Section(H2)로 충분
-- **`layout` string 필드 유지 중** — Phase 2-1B-3에서 렌더러 교체 완료 후 제거
+- **`layout` string 필드 dead** — 렌더러는 더 이상 안 읽음. Phase 2-1B-3에서 필드 + 타입 제거
 - **노트 split must-todo** — Phase 7
-- **Phase 2-1B-1까지 완료**: WikiArticleRenderer (read-only) + note-hover-preview/wiki-embed-node 마이그레이션
+- **Phase 2-1B-2까지 완료**: WikiArticleRenderer가 4 호출 지점 모두 커버. 편집 모드 + splitMode + FloatingDragDropBar + DnD cross-article drag 전부 흡수
+- **Virtuoso 가상화 제거** — >50 blocks read mode에서 성능 저하 가능. 필요 시 Phase 2-2+에서 ColumnRenderer 레벨에서 재도입
 - **2026-04-15 사용자 결정**: A 모델 + 메타 필드 별도 + Phase 단계 분리 (BRAINSTORM 문서 "2026-04-15 결정 추가" 절)
-- **현재 사용 중**: WikiArticleRenderer는 read-only로 호버 프리뷰 + wiki embed에서 사용. 편집 모드는 여전히 WikiArticleView/Encyclopedia 사용 중
+- **현재 사용 중**: WikiArticleRenderer는 4 호출 지점 (wiki-view / secondary-panel-content / wiki-embed-node / note-hover-preview) 모두 사용. 기존 렌더러 2개는 dead code
 
 ## ⚠️ Phase 2-1B 구현 전 주의사항
 

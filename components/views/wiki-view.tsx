@@ -25,7 +25,7 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
+// WikiLayoutToggle removed Phase 2-1B-2 — Phase 2-2에서 새 토글로 교체 예정
 import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
 import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
@@ -48,8 +48,7 @@ import { WikiArticleReader } from "./wiki-article-reader"
 import { WikiDashboard } from "./wiki-dashboard"
 import { WikiList } from "./wiki-list"
 import { WikiFloatingActionBar } from "@/components/wiki-floating-action-bar"
-import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
-import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
+import { WikiArticleRenderer } from "@/components/wiki-editor/wiki-article-renderer"
 import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { usePendingWikiArticle, consumePendingWikiArticle } from "@/lib/wiki-article-nav"
 import { WikiMergePreview } from "@/components/wiki-merge-preview"
@@ -749,8 +748,8 @@ export function WikiView() {
                 </button>
               )}
 
-              {/* Layout toggle */}
-              <WikiLayoutToggle articleId={selectedWikiArticleId} layout={selectedWikiArticle.layout} />
+              {/* Layout toggle — Phase 2-1B-2에서 hide. Phase 2-2에서 1컬럼/2컬럼 프리셋 토글로 교체 예정 */}
+              {/* <WikiLayoutToggle articleId={selectedWikiArticleId} layout={selectedWikiArticle.layout} /> */}
 
               {isEditingWikiArticle ? (
                 <button
@@ -819,32 +818,21 @@ export function WikiView() {
           </div>
         </ViewHeader>
 
-        {selectedWikiArticle.layout === "encyclopedia" ? (
-          <WikiArticleEncyclopedia
-            article={selectedWikiArticle}
-            isEditing={isEditingWikiArticle}
-            onBack={() => { setSelectedWikiArticleId(null); setIsEditingWikiArticle(false) }}
-            collapseAllCmd={collapseAllCmd}
-            onCollapseAllDone={() => setCollapseAllCmd(null)}
-            onAllCollapsedChange={setAllSectionsCollapsed}
-            fontSize={selectedWikiArticle.fontSize}
-          />
-        ) : (
-          <WikiArticleView
-            articleId={selectedWikiArticleId}
-            editable={isEditingWikiArticle}
-            collapseAllCmd={collapseAllCmd}
-            onCollapseAllDone={() => setCollapseAllCmd(null)}
-            onAllCollapsedChange={setAllSectionsCollapsed}
-            fontSize={selectedWikiArticle.fontSize}
-            onDelete={() => {
-              deleteWikiArticle(selectedWikiArticleId)
-              setSelectedWikiArticleId(null)
-              setIsEditingWikiArticle(false)
-              toast.success("Article deleted")
-            }}
-          />
-        )}
+        <WikiArticleRenderer
+          articleId={selectedWikiArticleId}
+          editable={isEditingWikiArticle}
+          variant={selectedWikiArticle.layout === "encyclopedia" ? "encyclopedia" : "default"}
+          collapseAllCmd={collapseAllCmd}
+          onCollapseAllDone={() => setCollapseAllCmd(null)}
+          onAllCollapsedChange={setAllSectionsCollapsed}
+          fontSize={selectedWikiArticle.fontSize}
+          onDelete={() => {
+            deleteWikiArticle(selectedWikiArticleId)
+            setSelectedWikiArticleId(null)
+            setIsEditingWikiArticle(false)
+            toast.success("Article deleted")
+          }}
+        />
       </div>
     )
   }

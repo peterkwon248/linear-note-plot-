@@ -6,6 +6,65 @@
 
 ---
 
+## 2026-04-15 오후 (집, Phase 2-1B-2 편집 모드 흡수 + 4 호출 지점 전체 마이그레이션)
+
+### 완료 (코드)
+- **WikiArticleRenderer 편집 모드 전면 흡수** ✅
+  - editable prop 추가 + 편집 관련 state/handlers 통합 (~720줄)
+  - SortableContext + DnD sensors + handleDragStart/DragOver/DragEnd
+  - AddBlockButton (top + bottom, editable only)
+  - SortableBlockItem 연결 (nearestSectionLevel + onSplitSection + onMoveToArticle + onAddBlock)
+  - splitMode UI (체크박스 + 하단 바 + Extract 버튼 + Cancel)
+  - FloatingDragDropBar (cross-article drag, "New Article" + 기존 article drop zones)
+  - DragOverlay (드래그 프리뷰, section은 childCount 표시)
+  - DragSplitPrompt 모달 (드래그로 split 시 제목 입력)
+  - UrlInputDialog (URL 블록 삽입 다이얼로그)
+  - 편집 가능한 Title/Aliases (WikiTitle의 editable+onTitleChange/onAliasesChange 활용)
+  - 편집 가능한 Categories (InlineCategoryTags editable=true)
+  - 편집 가능한 Infobox (WikiInfobox editable+onHeaderColorChange)
+  - SectionBlock collapse persist (editable이면 block.collapsed 업데이트)
+  - onDelete prop (헤더 옵션 바와 연결)
+  - Split toggle 버튼 (editable && !splitMode)
+
+- **4 호출 지점 전체 마이그레이션** ✅
+  - `components/views/wiki-view.tsx`: WikiArticleView/Encyclopedia → WikiArticleRenderer (variant 분기). WikiLayoutToggle import/사용 제거
+  - `components/workspace/secondary-panel-content.tsx`: lazy WikiArticleView/Encyclopedia → lazy WikiArticleRenderer (variant 분기). WikiLayoutToggle import/사용 제거
+  - `components/editor/note-hover-preview.tsx`: editing 분기 제거 → 단일 WikiArticleRenderer 사용 (editable 프로퍼티로 일원화)
+  - `components/editor/nodes/wiki-embed-node.tsx`: Phase 2-1B-1에서 이미 마이그레이션됨
+
+- **WikiLayoutToggle hide** — 두 사용처 주석 처리 + import 제거. Phase 2-2에서 1컬럼/2컬럼 프리셋 토글로 교체 예정
+
+### 검증
+- `next build --webpack` ✅ (32 routes, TypeScript 에러 0)
+- `vitest run` ✅ 5 파일 / 159 테스트 통과
+- dev server compiles clean (HMR 정상, hydration mismatch는 기존 Radix UI 이슈)
+- Wiki dashboard UI 정상 렌더 (통계 카드, Featured Article, Categories, Recent Changes, Articles 목록)
+
+### 결정
+- **Virtuoso 가상화 제거** — ColumnRenderer와 호환 어려움. >50 blocks read mode 성능 저하 가능성 있음. 필요 시 Phase 2-2+에서 ColumnRenderer 레벨에서 재도입
+- **기존 두 렌더러 삭제 안 함** — Phase 2-1B-2는 마이그레이션만, Phase 2-1B-3에서 실제 파일 삭제 + cleanup. InlineCategoryTags도 별도 파일 분리는 Phase 2-1B-3에서
+- **WikiLayoutToggle은 즉시 hide** — dead code가 아니라 의도적 임시 숨김 (Phase 2-2에서 새 토글로 교체). 파일은 Phase 2-1B-3에서 삭제
+
+### 다음 세션 (Phase 2-1B-3 cleanup)
+- 기존 wiki-article-view.tsx (1220줄) + wiki-article-encyclopedia.tsx (406줄) 삭제
+- InlineCategoryTags를 components/wiki-editor/inline-category-tags.tsx로 분리
+- WikiLayoutToggle 파일 삭제
+- `layout` string 필드 제거 + `WikiLayout` 타입 삭제
+- `columnLayout` → `layout`으로 rename
+- Migration v77 + tocStyle/infoboxColumnPath 기본값 backfill
+- 기타 `.layout` 참조 정리 (ontology-view, wiki-article-detail-panel 등)
+- 상세: `NEXT-ACTION.md`
+
+### Watch Out
+- 수동 테스트 권장: article 열기 → 편집 모드 → splitMode / DnD / AddBlock / Infobox 편집 / Title 편집 등
+- Virtuoso 제거로 매우 큰 article (>50 blocks)에서 성능 이슈 가능성
+- Hydration mismatch 경고는 기존 Radix UI 이슈 (내 변경 무관)
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 오후 (집, Phase 2-1B-1 read-only 통합 렌더러 PR)
 
 ### 완료 (코드)
