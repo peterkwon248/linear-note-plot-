@@ -6,6 +6,53 @@
 
 ---
 
+## 2026-04-15 밤 (집, Phase 2-2-B-3-a 컬럼 추가/삭제 PR)
+
+### 완료 (코드)
+- **addColumnAfter + removeColumn 액션** ✅ (lib/store/slices/wiki-articles.ts)
+  - addColumnAfter(articleId, parentPath, afterIndex): 재귀 insertColumnAtPath 헬퍼. 최대 6 컬럼 cap (최상위만). 새 컬럼 = empty blockIds, ratio 1, minWidth 180
+  - removeColumn(articleId, path): 재귀 removeColumnAtPath 헬퍼. 최소 1 컬럼 유지 (마지막 삭제 no-op). 제거된 컬럼의 blocks → first leaf로 자동 이동 (remapAssignmentsAfterRemoval + syncLayoutFromAssignments)
+- **ColumnRenderer UI 삽입** ✅ (최상위 PanelGroup path)
+  - 컬럼 사이 `+` 버튼 (PanelResizeHandle hover 시 opacity-100)
+  - 끝에 `+` 버튼 (항상 opacity-40, hover opacity-100)
+  - 각 컬럼 우상단 `X` 버튼 (hover 시 opacity-100, 1 col만 남으면 disabled)
+  - onAddColumnAfter / onRemoveColumn props 재귀 전달 (nested UI는 Phase 2-2-B-3-b)
+- **WikiArticleRenderer 콜백 연결** ✅
+
+### 검증
+- `next build --webpack` ✅ (32 routes, TypeScript 에러 0)
+- `vitest run` ✅ 5 파일 / 159 테스트 통과
+- 콘솔 검증 시퀀스: apply(2) → move(block, [1]) → add([], 1) → 3col → remove([2]) → 2col → remove([1]) → 1col + block 자동 복귀
+  - orphan fallback 완벽 동작 (제거된 컬럼의 블록이 main으로 자동 복귀)
+
+### 결정
+- **Add at end은 트레일링 + 버튼 (opacity-40)** — discoverability 위해 항상 약하게 보임
+- **사이 +는 hover-only** — 컬럼 경계 UX에 방해 없게
+- **6 컬럼 cap (최상위만)** — applyColumnPreset의 safeCount와 일관
+- **중첩 Add/Remove 버튼은 Phase 2-2-B-3-b에서** — 최상위 PanelGroup path에만 UI 노출. CSS Grid path (nested)는 콜백만 전달해 둠 (UI 추가 쉽게)
+- **삭제 시 orphan block은 first leaf로** — Phase 2-2-B-2 패턴 일관. 블록 유실 방지
+
+### 사용자 가치
+- 편집 모드 + 최상위 컬럼:
+  · 컬럼 사이 hover → `+` 버튼 클릭 → 새 빈 컬럼 삽입
+  · 트레일링 `+` → 맨 끝에 컬럼 추가
+  · 각 컬럼 우상단 `X` hover → 컬럼 삭제 (블록은 자동으로 main 복귀)
+- 이제 사용자가 자유롭게 컬럼 구조 조정 가능 (1·2·3 프리셋뿐 아니라 4·5·6 custom도)
+
+### 다음 세션 (Phase 2-2-B-3-b)
+- 중첩 컬럼 생성 UI (Split column 메뉴, 3 depth 제한)
+- 중첩 컬럼에도 추가/삭제 버튼 노출 (현재 props는 전달되어 있음, UI만 추가)
+- splitLeafIntoColumns 액션 (leaf → N-col ColumnStructure 변환)
+
+### Watch Out
+- 중첩 컬럼은 현재 CSS Grid (최상위만 PanelGroup) → Add/Remove UI도 Phase 2-2-B-3-b에서
+- 수동 테스트 권장: 편집 모드 헤더 컬럼 수 조절 → 사이 +, 끝 +, X 삭제 시나리오
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 밤 (집, Phase 2-2-B-2 블록 컬럼 간 드래그 PR)
 
 ### 완료 (코드)

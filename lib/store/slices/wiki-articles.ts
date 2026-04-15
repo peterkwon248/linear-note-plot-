@@ -1,4 +1,4 @@
-import type { WikiArticle, WikiBlock, WikiMergeSnapshot, ColumnPath, ColumnStructure, WikiTemplate } from "../../types"
+import type { WikiArticle, WikiBlock, WikiMergeSnapshot, ColumnPath, ColumnStructure, ColumnDefinition, WikiTemplate } from "../../types"
 import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, removeArticleBlocks, type AppendEventFn } from "../helpers"
 import { buildSectionIndex } from "../../wiki-section-index"
 import { extractLinksFromWikiBlocks } from "../../body-helpers"
@@ -145,6 +145,92 @@ function syncLayoutFromAssignments(
     }),
   })
   return rewrite(layout, [])
+}
+
+/**
+ * Phase 2-2-B-3: Immutably insert a new empty column at a parent path, after `afterIndex`.
+ * `parentPath: []` means top-level. `afterIndex: -1` inserts at the front.
+ * Returns null if parentPath doesn't resolve to a columns node.
+ */
+function insertColumnAtPath(
+  layout: ColumnStructure,
+  parentPath: number[],
+  afterIndex: number,
+  newCol: ColumnDefinition,
+): ColumnStructure | null {
+  if (parentPath.length === 0) {
+    const insertAt = Math.max(-1, Math.min(layout.columns.length - 1, afterIndex)) + 1
+    const columns = [...layout.columns.slice(0, insertAt), newCol, ...layout.columns.slice(insertAt)]
+    return { ...layout, columns }
+  }
+  const [head, ...rest] = parentPath
+  const col = layout.columns[head]
+  if (!col || col.content.type !== "columns") return null
+  const updatedInner = insertColumnAtPath(col.content, rest, afterIndex, newCol)
+  if (!updatedInner) return null
+  const columns = layout.columns.map((c, i) => (i === head ? { ...c, content: updatedInner } : c))
+  return { ...layout, columns }
+}
+
+/**
+ * Phase 2-2-B-3: Immutably remove a column at a ColumnPath. Returns null if the
+ * path doesn't resolve to a column, or if removing would leave zero columns.
+ */
+function removeColumnAtPath(layout: ColumnStructure, path: number[]): ColumnStructure | null {
+  if (path.length === 0) return null // can't remove the root structure itself
+  if (path.length === 1) {
+    const idx = path[0]
+    if (idx < 0 || idx >= layout.columns.length) return null
+    if (layout.columns.length <= 1) return null // keep at least one column
+    return { ...layout, columns: layout.columns.filter((_, i) => i !== idx) }
+  }
+  const [head, ...rest] = path
+  const col = layout.columns[head]
+  if (!col || col.content.type !== "columns") return null
+  const updatedInner = removeColumnAtPath(col.content, rest)
+  if (!updatedInner) return null
+  const columns = layout.columns.map((c, i) => (i === head ? { ...c, content: updatedInner } : c))
+  return { ...layout, columns }
+}
+
+/**
+ * Phase 2-2-B-3: Remap columnAssignments after a removal — any block whose
+ * assignment path was rooted at `removedPath` (or started with it) falls back
+ * to the article's first-leaf path.
+ */
+function remapAssignmentsAfterRemoval(
+  assignments: Record<string, ColumnPath>,
+  removedPath: number[],
+  newLayout: ColumnStructure,
+): Record<string, ColumnPath> {
+  // Find first leaf path in the new layout (depth-first).
+  let firstLeaf: number[] = []
+  const find = (node: ColumnStructure, base: number[]): boolean => {
+    for (let i = 0; i < node.columns.length; i++) {
+      const p = [...base, i]
+      const col = node.columns[i]
+      if (col.content.type === "columns") {
+        if (find(col.content, p)) return true
+      } else {
+        firstLeaf = p
+        return true
+      }
+    }
+    return false
+  }
+  find(newLayout, [])
+
+  const out: Record<string, ColumnPath> = {}
+  const matchesRemoved = (p: number[]) => {
+    if (p.length < removedPath.length) return false
+    for (let i = 0; i < removedPath.length; i++) if (p[i] !== removedPath[i]) return false
+    return true
+  }
+  for (const [blockId, assignPath] of Object.entries(assignments)) {
+    if (matchesRemoved(assignPath)) out[blockId] = firstLeaf
+    else out[blockId] = assignPath
+  }
+  return out
 }
 
 /**
@@ -325,6 +411,51 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
             persistArticleBlocks(articleId, patch.blocks)
           }
           return updated
+        }),
+      }))
+    },
+
+    /**
+     * Phase 2-2-B-3: Insert a new empty column at `parentPath`, after `afterIndex`.
+     * `parentPath: []` = top-level. `afterIndex: -1` inserts at the front.
+     * Caps total top-level columns at 6 (matches `applyColumnPreset` clamp).
+     */
+    addColumnAfter: (articleId: string, parentPath: number[], afterIndex: number) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          // Hard cap to prevent runaway column counts (applies to top-level only — nested is user's responsibility).
+          if (parentPath.length === 0 && a.layout.columns.length >= 6) return a
+          const newCol: ColumnDefinition = {
+            ratio: 1,
+            minWidth: 180,
+            content: { type: "blocks", blockIds: [] },
+          }
+          const layout = insertColumnAtPath(a.layout, parentPath, afterIndex, newCol)
+          if (!layout) return a
+          return { ...a, layout, updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 2-2-B-3: Remove the column at `path`. Blocks that were assigned to
+     * the removed column (or any descendant) fall back to the first remaining leaf.
+     * No-op if removal would leave zero columns at that level.
+     */
+    removeColumn: (articleId: string, path: number[]) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          const newLayout = removeColumnAtPath(a.layout, path)
+          if (!newLayout) return a
+          const remappedAssignments = remapAssignmentsAfterRemoval(
+            a.columnAssignments ?? {},
+            path,
+            newLayout,
+          )
+          const synced = syncLayoutFromAssignments(newLayout, a.blocks, remappedAssignments)
+          return { ...a, layout: synced, columnAssignments: remappedAssignments, updatedAt: now() }
         }),
       }))
     },

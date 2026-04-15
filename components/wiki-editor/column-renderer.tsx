@@ -21,6 +21,8 @@ import type { ColumnStructure, ColumnDefinition, ColumnPath } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import { useDroppable } from "@dnd-kit/core"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 
 export interface ColumnRendererProps {
   /** The column tree to render. */
@@ -45,6 +47,16 @@ export interface ColumnRendererProps {
    * plus the new ratios array (same length as columns at that path).
    */
   onRatiosChange?: (path: ColumnPath, newRatios: number[]) => void
+  /**
+   * Phase 2-2-B-3: Called when user clicks a `+` button to insert a column.
+   * `parentPath` = which ColumnStructure to mutate. `afterIndex = -1` inserts at the front.
+   */
+  onAddColumnAfter?: (parentPath: number[], afterIndex: number) => void
+  /**
+   * Phase 2-2-B-3: Called when user clicks a column's delete X button.
+   * `path` = full path to the column being removed.
+   */
+  onRemoveColumn?: (path: number[]) => void
   /** Optional className applied to the outermost wrapper. */
   className?: string
 }
@@ -68,6 +80,8 @@ export function ColumnRenderer({
   metaSlots,
   editable = false,
   onRatiosChange,
+  onAddColumnAfter,
+  onRemoveColumn,
   className,
 }: ColumnRendererProps) {
   return (
@@ -78,6 +92,8 @@ export function ColumnRenderer({
       metaSlots={metaSlots ?? {}}
       editable={editable}
       onRatiosChange={onRatiosChange}
+      onAddColumnAfter={onAddColumnAfter}
+      onRemoveColumn={onRemoveColumn}
       className={className}
     />
   )
@@ -92,10 +108,12 @@ interface ColumnNodeProps {
   metaSlots: Record<string, ReactNode>
   editable: boolean
   onRatiosChange?: (path: ColumnPath, newRatios: number[]) => void
+  onAddColumnAfter?: (parentPath: number[], afterIndex: number) => void
+  onRemoveColumn?: (path: number[]) => void
   className?: string
 }
 
-function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatiosChange, className }: ColumnNodeProps) {
+function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn, className }: ColumnNodeProps) {
   const direction = node.direction ?? "horizontal"
   const isHorizontal = direction === "horizontal"
   const colCount = node.columns.length
@@ -107,52 +125,91 @@ function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatios
     // react-resizable-panels uses percentage (0-100 sum). Convert from ratio.
     const total = node.columns.reduce((s, c) => s + (c.ratio || 1), 0) || 1
     const sizes = node.columns.map((c) => ((c.ratio || 1) / total) * 100)
-
-    // Unique groupId so the panel library remembers per-article sizes within a session.
-    // (Changes to layout structure invalidate the cached sizes automatically.)
     const groupId = `wiki-col-group-${basePath.join(".") || "root"}-${colCount}`
+    const canAdd = colCount < 6 // matches addColumnAfter cap
+    const canRemove = colCount > 1
 
     return (
-      <PanelGroup
-        id={groupId}
-        direction="horizontal"
-        className={cn("wiki-column-grid wiki-column-grid--resizable", className)}
-        data-direction={direction}
-        onLayout={(newSizes) => {
-          if (!onRatiosChange) return
-          // Use the raw percentage values as new ratios (sum-normalized — still valid as relative weights)
-          onRatiosChange(basePath, newSizes)
-        }}
-      >
-        {node.columns.map((col, i) => {
-          const childPath = [...basePath, i]
-          // minSize is a percentage of parent width. We approximate from minWidth+typical parent (1200px base).
-          // The library will enforce constraints; if too aggressive, user sees a hard stop at drag.
-          const minSizePct = col.minWidth ? Math.min(40, Math.max(8, (col.minWidth / 1200) * 100)) : 8
-          return (
-            <Fragment key={i}>
-              <Panel defaultSize={sizes[i]} minSize={minSizePct} className="wiki-column-panel">
-                <ColumnCell
-                  column={col}
-                  path={childPath}
-                  renderBlock={renderBlock}
-                  metaSlots={metaSlots}
-                  editable={editable}
-                  onRatiosChange={onRatiosChange}
-                />
-              </Panel>
-              {i < colCount - 1 && (
-                <PanelResizeHandle
-                  className="wiki-column-resize-handle group/handle flex w-1 items-center justify-center transition-colors hover:bg-accent/40 data-[resize-handle-state=drag]:bg-accent"
-                  aria-label="Resize column"
-                >
-                  <span className="h-8 w-0.5 rounded-sm bg-border-subtle transition-colors group-hover/handle:bg-accent/60" />
-                </PanelResizeHandle>
-              )}
-            </Fragment>
-          )
-        })}
-      </PanelGroup>
+      <div className="relative">
+        <PanelGroup
+          id={groupId}
+          direction="horizontal"
+          className={cn("wiki-column-grid wiki-column-grid--resizable", className)}
+          data-direction={direction}
+          onLayout={(newSizes) => {
+            if (!onRatiosChange) return
+            onRatiosChange(basePath, newSizes)
+          }}
+        >
+          {node.columns.map((col, i) => {
+            const childPath = [...basePath, i]
+            const minSizePct = col.minWidth ? Math.min(40, Math.max(8, (col.minWidth / 1200) * 100)) : 8
+            return (
+              <Fragment key={i}>
+                <Panel defaultSize={sizes[i]} minSize={minSizePct} className="wiki-column-panel group/panel relative">
+                  {/* Phase 2-2-B-3: per-column X (remove) button — hover to reveal */}
+                  {onRemoveColumn && canRemove && (
+                    <button
+                      type="button"
+                      onClick={() => onRemoveColumn(childPath)}
+                      title="Remove this column"
+                      aria-label="Remove column"
+                      className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/panel:opacity-100"
+                    >
+                      <PhX size={10} weight="bold" />
+                    </button>
+                  )}
+                  <ColumnCell
+                    column={col}
+                    path={childPath}
+                    renderBlock={renderBlock}
+                    metaSlots={metaSlots}
+                    editable={editable}
+                    onRatiosChange={onRatiosChange}
+                    onAddColumnAfter={onAddColumnAfter}
+                    onRemoveColumn={onRemoveColumn}
+                  />
+                </Panel>
+                {i < colCount - 1 && (
+                  <PanelResizeHandle
+                    className="wiki-column-resize-handle group/handle relative flex w-1 items-center justify-center transition-colors hover:bg-accent/40 data-[resize-handle-state=drag]:bg-accent"
+                    aria-label="Resize column"
+                  >
+                    <span className="h-8 w-0.5 rounded-sm bg-border-subtle transition-colors group-hover/handle:bg-accent/60" />
+                    {/* Phase 2-2-B-3: `+` button between columns (hover to reveal) */}
+                    {onAddColumnAfter && canAdd && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onAddColumnAfter(basePath, i)
+                        }}
+                        title="Insert column here"
+                        aria-label="Insert column"
+                        className="absolute left-1/2 top-2 z-10 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full border border-border-subtle bg-surface-overlay text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-accent/10 hover:text-accent group-hover/handle:opacity-100"
+                      >
+                        <PhPlus size={10} weight="bold" />
+                      </button>
+                    )}
+                  </PanelResizeHandle>
+                )}
+              </Fragment>
+            )
+          })}
+        </PanelGroup>
+        {/* Phase 2-2-B-3: trailing `+` button (append column at end) */}
+        {onAddColumnAfter && canAdd && (
+          <button
+            type="button"
+            onClick={() => onAddColumnAfter(basePath, colCount - 1)}
+            title="Add column at end"
+            aria-label="Add column"
+            className="absolute -right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-dashed border-border-subtle bg-surface-overlay/70 text-muted-foreground opacity-40 shadow-sm transition-opacity hover:bg-accent/10 hover:text-accent hover:border-accent/40 hover:opacity-100 pointer-events-auto"
+          >
+            <PhPlus size={12} weight="bold" />
+          </button>
+        )}
+      </div>
     )
   }
 
@@ -175,6 +232,8 @@ function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatios
             metaSlots={metaSlots}
             editable={editable}
             onRatiosChange={onRatiosChange}
+            onAddColumnAfter={onAddColumnAfter}
+            onRemoveColumn={onRemoveColumn}
           />
         )
       })}
@@ -189,9 +248,11 @@ interface ColumnCellProps {
   metaSlots: Record<string, ReactNode>
   editable: boolean
   onRatiosChange?: (path: ColumnPath, newRatios: number[]) => void
+  onAddColumnAfter?: (parentPath: number[], afterIndex: number) => void
+  onRemoveColumn?: (path: number[]) => void
 }
 
-function ColumnCell({ column, path, renderBlock, metaSlots, editable, onRatiosChange }: ColumnCellProps) {
+function ColumnCell({ column, path, renderBlock, metaSlots, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn }: ColumnCellProps) {
   const meta = metaSlots[pathKey(path)]
 
   if (column.content.type === "columns") {
@@ -205,6 +266,8 @@ function ColumnCell({ column, path, renderBlock, metaSlots, editable, onRatiosCh
           metaSlots={metaSlots}
           editable={editable}
           onRatiosChange={onRatiosChange}
+          onAddColumnAfter={onAddColumnAfter}
+          onRemoveColumn={onRemoveColumn}
         />
       </div>
     )
