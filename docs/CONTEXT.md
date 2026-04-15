@@ -37,7 +37,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (23): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks, wiki-templates
-- Store version: 76
+- Store version: 77 (v77: columnLayout → layout rename + tocStyle/infoboxColumnPath backfill)
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System
@@ -92,11 +92,15 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **Phase 1 — WikiTemplate 데이터 모델 + 8 built-in 템플릿 + picker UI (2026-04-15)**: 컬럼 시스템 데이터 모델 첫 PR. `ColumnStructure` (재귀 컬럼 + ratio/minWidth/priority) / `WikiTemplate` (layout + titleStyle + themeColor + sections + infobox + hatnotes + navbox) / `WikiArticle` optional 확장 (`columnLayout` / `columnAssignments` / `titleStyle` / `themeColor` / `templateId`). Built-in 8종 (Blank/Encyclopedia/Person/Place/Concept/Work/Organization/Event) — 코드에서만 정의(`lib/wiki-templates/built-in.ts`), `wikiTemplates` slice는 user-defined만 보관. `createWikiArticle({ templateId? })` → `instantiateTemplate` 헬퍼가 sections → section blocks + columnAssignments + populateColumnLayoutBlockIds로 컬럼 leaf의 blockIds 채움. `WikiTemplatePickerDialog` (2칼럼 카드 그리드, themeColor accent bar, BUILT-IN/My templates 섹션). `wiki-view.tsx handleCreateWiki`가 picker open → `handleTemplatePicked(templateId)`로 article 생성. Migration v76: 기존 `layout: "encyclopedia"` → 2컬럼 main+infobox, 그 외 → 1컬럼 Blank, columnAssignments 모두 [0]. seed factory도 동일 derive (re-seed 시 마이그레이션 우회 케이스 대응). **레거시 `layout` string 유지** — Phase 2 렌더러 교체 시 제거 + `columnLayout` → `layout` rename 예정. **setWikiInfobox 버그 수정** (BRAINSTORM 선행 0.1): WikiInfobox에 `entityType?: "note" | "wiki"` (default "note") 추가, wiki 호출 6곳 명시 → `setWikiArticleInfobox` 라우팅. 검증: build 통과, 159 vitest 통과, 브라우저 end-to-end (Person 템플릿 클릭 → article에 templateId/3 sections/4 infobox 필드/themeColor amber/2-column layout/columnAssignments 3개 모두 정상).
-2. **인포박스 Tier 1-2/1-4 + Default 통합 + 섹션 구분 행 (2026-04-14 밤)**: 나무위키식 인포박스 전면 고도화. **3개 경로 모두 지원** — (A) TipTap `InfoboxBlockNode` (노트 에디터 + 위키 TextBlock 내부 `/infobox`), (B) `WikiInfobox` 컴포넌트 (위키 encyclopedia), (C) **위키 Default 레이아웃에도 동일 인포박스 렌더** (`wiki-article-view.tsx` Aliases 뒤 + Category 앞, encyclopedia와 동일 center/float-right 분기). **사이드바 Infobox 섹션 제거** (`wiki-article-detail-panel.tsx`) — 중복 해소. **Tier 1-2 헤더 색상**: 프리셋 8종 (Default/Blue/Red/Green/Yellow/Orange/Purple/Pink, rgba 0.35) + 커스텀 `<input type="color">` (hex→rgba). `WikiArticle.infoboxHeaderColor?: string | null` + `headerColor`/`onHeaderColorChange` props. PaintBucket 버튼 `showColorPicker || headerColor` 상시, 아니면 hover. 팝오버 `absolute right-2 top-[calc(100%+4px)]`. `onHeaderColorChange` 없으면 피커 자동 숨김 (read-only 자동 대응). **Tier 1-4 섹션 구분 행**: `WikiInfoboxEntry.type?: "field" | "section"` optional 필드 + TipTap `InfoboxRow` 동일. Section row = full-width bold uppercase + tinted bg (`bg-secondary/40`) + value 숨김. Edit UI에 "Add section" 버튼 (Add field와 나란히). **Migration 없음** — 전부 optional 필드. verify: 3경로 모두 렌더 + layout 전환 시 색/섹션 유지 확인. **중장기 TODO**: `WikiInfobox` → `InfoboxBlockNode` 통합 (base 티어 단일화).
-3. **Insert Block Registry 단일화 (2026-04-14 밤)**: `components/editor/block-registry/` 신설. 25+ insertable block operations 단일 source. 기존 3곳 중복 제거: SlashCommand.tsx (COMMANDS 배열 → `getBlocksForSurface("slash")`), insert-menu.tsx (JSX 하드코드 → `BLOCK_REGISTRY.filter` + group 정렬), FixedToolbar.tsx (인라인 체인 13개 → `getBlock(id).execute({ editor })`). Shape: `{id, label, description, aliases, icon, surfaces, group, tier, execute({editor, range?, noteId?})}`. range 유무로 slash path(blank attrs) vs click path(example attrs) 분기. 첨부(Image/File)는 ref 의존성으로 registry 제외. 검증: InsertMenu 20 항목 렌더 + Callout(HTML 344→2590) + Divider(hr 0→1) + Toggle(details 0→1) + Slash popup 25+ 항목. 이제 새 블록(배너, 둘러보기 틀)은 registry.ts 한 파일에 entry 추가만으로 3곳 자동 노출.
-4. **Y.Doc Split-View Sync PoC (2026-04-14)**: 같은 note를 두 pane에서 열면 Y.Doc 싱글톤이 공유되어 실시간 bidirectional CRDT sync 작동. `lib/y-doc-manager.ts` (refcount registry + isFresh flag), `@tiptap/extension-collaboration` 바인딩, `?yjs=1` / `window.plotYjs(true)` / localStorage 3-way feature flag. Dev-only `window.__plotStore` 노출. 핵심 버그 4개 해결: (1) StarterKit 3.x는 `undoRedo` (`history` 아님) — Collaboration과 충돌 해소, (2) `fragment.length === 0` seed guard 제거 (Collab pre-populate 때문에 영원히 truthy) — `isFresh` 플래그로 권위 있는 signal 사용, (3) **Stale Y.Doc binding** — `useState + useEffect` 패턴이 note 전환 시 한 렌더 사이클 동안 이전 Y.Doc 노출 → 새 editor가 이전 Y.Doc에 seed → 다른 pane으로 CRDT 전파 → 데이터 영구 손실. `useRef` + 렌더 중 동기 전환으로 교체, (4) **Empty-content guard의 임계값 실패** — `JSON.stringify(json).length < 80` 조건이 Collab pre-populate의 UUID-stamped 빈 paragraph (~125자)에 무효화됨. `looksEmpty = !plainText.trim()` 로 단순화 + `ui.ts` auto-delete 연쇄로 노트 소멸까지 이어짐.
-5. **PR #190**: Reference Usage + Note History + Wiki Activity 정리 + chevron 비활성 — 사이드패널 Usage 섹션, ActivityTimeline 연결, Wiki Stats 중복 제거, 접을 게 없을 때 비활성
+1. **Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼 (PR #205, 2026-04-15 밤)**: 최상위 컬럼에 사이/끝 `+` + 각 컬럼 `X` 버튼. `addColumnAfter` / `removeColumn` 액션 (6 컬럼 cap, 최소 1 유지, orphan 블록 main 복귀). 재귀 헬퍼 3개 (insertColumnAtPath / removeColumnAtPath / remapAssignmentsAfterRemoval). Phase 2-2-B-2의 syncLayoutFromAssignments 재사용.
+
+2. **Phase 2-2-B-2 — 블록 컬럼 간 드래그 (PR #204)**: moveBlockToColumn 액션 + syncLayoutFromAssignments 헬퍼 (columnAssignments canonical, leaf blockIds derived). LeafDroppableCell (편집 모드, useDroppable id `column-<pathKey>`, 빈 컬럼 placeholder "Empty column — drop a block here"). WikiArticleRenderer handleDragEnd에 column-* 케이스 추가. 블록 드래그 시 orphan fallback to first leaf.
+
+3. **Phase 2-2-B-1 — 컬럼 비율 드래그 + 메타 위치 UI (PR #203)**: react-resizable-panels 통합 (편집 모드 + 최상위 horizontal만). 3 신규 액션 (`updateColumnRatios` / `setTocStyle` / `setInfoboxColumnPath`). `ColumnMetaPositionMenu` 팝오버 (TOC Show/Hide + 컬럼 위치 + Collapsed / Infobox 컬럼 위치). ⚠️ **Phase 2-2-C에서 삭제 예정** — 메타 → 블록 통합으로 자연 흡수.
+
+4. **Phase 2-2-A — ColumnPresetToggle (PR #202)**: 헤더 1·2·3 칩 토글. `applyColumnPreset(articleId, presetCount)` 액션 + `buildColumnPreset` 헬퍼 (1col Blank / 2col main+sidebar / 3col main+side+side / 4+col equal). 모든 블록 main [0]으로, sidebar 빈 상태. 같은 프리셋 클릭 no-op (드래그 조정 비율 보존).
+
+5. **Phase 2-1B-3 — Cleanup 1662줄 삭제 (PR #201)**: 기존 wiki-article-view.tsx (1220줄) + wiki-article-encyclopedia.tsx (406줄) + wiki-layout-toggle.tsx (36줄) 삭제. InlineCategoryTags 별도 파일 분리 (`inline-category-tags.tsx`). **WikiLayout 타입 + WikiArticle.layout (string) 필드 삭제**, `columnLayout` → `layout` rename. Migration v77 (legacy layout 제거 + rename + tocStyle/infoboxColumnPath 기본값 backfill).
 
 ## Two Axes — Core Design Philosophy
 
@@ -113,7 +117,8 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **독립 공간 구조 유지, 노션식 통합 템플릿 폐기** — 5개 공간이 각각 최적화된 UX 제공. "유저는 노트만 쓰고 앱이 알아서" = IKEA 전략. 노션식 "빈 캔버스 + 블록 조합" 방향 포기 (2026-04-01)
 - **Activity Bar 6-space**: Inbox / Notes / Wiki / Calendar / Graph / Library — Library 6번째 공간 추가 (PR #165, 2026-04-08)
 - **Wiki 사이드바 4-항목**: Overview / Merge / Split / Categories (+ Views 섹션). Categories = 2-panel 트리 에디터
-- **Wiki Layout 프리셋**: `"default" | "encyclopedia"` — article별 전환. Encyclopedia = 나무위키식 (인라인 인포박스, 목차, 분류 태그)
+- **Wiki Layout = ColumnStructure (Phase 2-1B-3)**: 기존 `"default" | "encyclopedia"` string 폐기. 이제 `WikiArticle.layout: ColumnStructure` (재귀 컬럼). 1·2·3 컬럼 preset + 자유 비율 드래그 + 블록 컬럼 간 드래그
+- **메타 → 블록 통합 결정 (2026-04-15 밤, Phase 2-2-C 예정)**: Infobox/TOC/Hatnote/Navbox/Callout 등 모든 메타 = WikiBlockType. `article.infobox` / `tocStyle` 같은 scalar 필드 삭제 예정. Title만 예외 (항상 최상단 고정). 진실의 원천: `BRAINSTORM-2026-04-14-column-template-system.md` "2026-04-15 밤 대결정" 절
 - **Wiki URL 블록**: 유튜브 iframe embed + 일반 링크 카드. AddBlockButton에서 추가
 - **WikiStatus 삭제**: stub/article 구분 폐지 (v67). 위키 문서는 존재하거나 Red Link(computed)만 (2026-03-31)
 - **isWiki→noteType**: `Note.isWiki: boolean` 삭제 → `noteType: "note" | "wiki"` 디스크리미네이터 (v66, 2026-03-31)
@@ -237,50 +242,41 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - ✅ **섹션 구분 행 (PR #194)** — `WikiInfoboxEntry.type?: "field" | "section"`
 - ✅ **필드 값 리치텍스트 (PR #194)** — `InfoboxValueRenderer` (wikilink/md-link/md-image/auto-URL + isSafeUrl)
 
-### P2 — 컬럼 레이아웃 + WikiTemplate 시스템 (2026-04-14 저녁 재설계)
-**핵심**: `WikiTemplate = { layout: ColumnStructure + titleStyle + themeColor + sections + infobox + hatnotes + navbox }`. 상세: `BRAINSTORM-2026-04-14-column-template-system.md`
+### P2 — 컬럼 레이아웃 + WikiTemplate 시스템 (2026-04-14 설계, 2026-04-15 대결정 반영)
+**핵심**: `WikiArticle.layout: ColumnStructure` + 모든 메타가 블록으로 (Phase 2-2-C 이후). 상세: `BRAINSTORM-2026-04-14-column-template-system.md` ("2026-04-15 밤 대결정" 포함)
 
-**Phase 0 — 문서 정비** (지금 진행 중)
-
-**Phase 1 — 데이터 모델 + 기본 템플릿 8종**
-- `ColumnStructure` 타입 (컬럼 개수 + 중첩 3 depth + 비율 + minWidth + priority)
-- `WikiTemplate` 인터페이스 + `wikiTemplates` slice
-- `WikiArticle.layout: ColumnStructure` (문자열 상수에서 교체), `titleStyle?`, `columnAssignments`, `templateId?`
-- Built-in 템플릿 8종: Blank / Encyclopedia / Person / Place / Concept / Work / Organization / Event
-- Store migration: 기존 `layout: "default"/"encyclopedia"` → 해당 템플릿 자동 변환
-- 새 위키 생성 UX: 템플릿 선택 다이얼로그
-
-**Phase 2 — 컬럼 렌더러 + titleStyle**
-- `components/wiki-editor/column-renderer.tsx` 신규 (재귀 ColumnStructure 렌더)
-- Title 영역 (article.title + titleStyle) — 컬럼 위 고정 (나무위키/위키피디아 관습)
-- themeColor CSS variable cascade
-- 기존 `wiki-article-view.tsx` + `wiki-article-encyclopedia.tsx` → 컬럼 렌더러 호출로 교체
-
-**Phase 3 — 편집 UX (컬럼 조작)**
-- 컬럼 경계 드래그로 비율 조절 (react-resizable-panels)
-- 컬럼 추가/삭제 버튼, 중첩 3 depth 지원 + enforcement
-- 블록을 컬럼 간 드래그 이동
-
-**Phase 4 — 사용자 커스텀 템플릿 편집기**
-- 설정 → 위키 → 내 템플릿 → [+ 새 템플릿]
-- 현재 문서를 "템플릿으로 저장"
-- 템플릿 편집 UI (드래그 정렬 + 필드 편집 + 미리보기)
-
-**Phase 5 — 나무위키 잔여 기능** (BRAINSTORM-wiki-ultra.md에 있던 기존 Phase 1~4의 재편)
-- Hatnote (A-1), Ambox 자동 배너 (A-3), Navbox 자동 (A-4)
-- 섹션 정체성 강화 (icon/themeColor/description)
-- Callout 12타입 확장
-
-**Phase 6 — 편집 히스토리 + 요약** (v1 스냅샷 → v2 diff → v3 롤백)
-
-**Phase 7 — 노트 split 기능** (must-todo, WikiSplitPage 패턴 복사)
+- [x] ✅ **Phase 1 — 데이터 모델 + 기본 템플릿 8종** (PR #197)
+- [x] ✅ **Phase 2-1A — 컬럼 시스템 인프라** (PR #198): ColumnRenderer + WikiTitle + WikiThemeProvider
+- [x] ✅ **Phase 2-1B-1/2/3 — 렌더러 통합 + 편집 흡수 + cleanup** (PR #199-#201): WikiArticleRenderer 통합, 1662줄 dead code 삭제, WikiLayout 타입/필드 제거
+- [x] ✅ **Phase 2-2-A — ColumnPresetToggle** (PR #202): 1·2·3 컬럼 빠른 전환
+- [x] ✅ **Phase 2-2-B-1 — 비율 드래그 + 메타 위치 UI** (PR #203): react-resizable-panels + ColumnMetaPositionMenu (Phase 2-2-C에서 삭제 예정)
+- [x] ✅ **Phase 2-2-B-2 — 블록 컬럼 간 드래그** (PR #204): moveBlockToColumn + syncLayoutFromAssignments + LeafDroppableCell
+- [x] ✅ **Phase 2-2-B-3-a — 컬럼 추가/삭제** (PR #205): addColumnAfter/removeColumn + 재귀 헬퍼 + UI (사이/끝 +, 각 컬럼 X)
+- [ ] **Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼 생성 UI** (다음)
+  - LeafDroppableCell placeholder에 AddBlockButton (자체 블록 생성)
+  - Split column UI (leaf → ColumnStructure 변환, 3 depth 제한)
+  - 중첩 컬럼에도 + / X 버튼 노출 (props는 재귀 전달 완료)
+- [ ] **Phase 2-2-C 신규 — 메타 → 블록 통합** (2026-04-15 밤 대결정, 큰 리팩토링)
+  - WikiBlockType에 "infobox" + "toc" 추가
+  - Migration v78: article.infobox[] → infobox block, tocStyle → toc block
+  - WikiBlockRenderer에 infobox/toc case 추가 (기존 WikiInfobox + CollapsibleTOC 재사용)
+  - ColumnMetaPositionMenu 삭제 + setTocStyle/setInfoboxColumnPath 액션 삭제
+  - WikiArticle scalar 메타 필드 (infobox, infoboxHeaderColor, infoboxColumnPath, tocStyle) 삭제
+  - WikiTemplate.infobox 재설계 (templateSections에 infobox/toc block entry)
+- [ ] **Phase 3 — 노션식 블록 분기 (편집 UX 고급)**
+- [ ] **Phase 4 — 사용자 커스텀 템플릿 편집기**
+- [ ] **Phase 5 — 나무위키 잔여 (Hatnote/Navbox/Callout 전부 블록으로)**
+- [ ] **Phase 6 — 편집 히스토리 + 요약**
+- [ ] **Phase 7 — 노트 split 기능**
+- [ ] **마지막 — built-in 템플릿 풍성화** (heroImage / 헤더 배너 / 섹션 icon / themeColor 다양화)
 
 **아키텍처 원칙:**
-- Title 블록화 ❌ 폐기. `article.title + titleStyle`로 최상단 고정 (나무위키 관습)
-- Column Heading 블록 ❌ 폐기. Section(H2)로 대체
-- 기존 `default/encyclopedia/wiki-color` 레이아웃 프리셋 독립 선택지 ❌ 폐기. ColumnStructure 데이터 구조로 교체
+- Title 블록화 ❌ 폐기 — `article.title + titleStyle`로 최상단 고정
+- Column Heading 블록 ❌ 폐기 — Section(H2)로 대체
+- 기존 `default/encyclopedia/wiki-color` 레이아웃 프리셋 ❌ 폐기 — ColumnStructure 데이터 구조 (PR #201)
+- 2026-04-15 밤 대결정 — **메타도 블록으로 통합** (Phase 2-2-C)
 - ✅ **Insert 레지스트리 단일화 완료 (PR #192)** — `components/editor/block-registry/`
-- ✅ **모든 새 기능 = base 티어** (노트+위키 공용, shared-editor-config.ts)
+- ✅ **모든 새 기능 = base 티어** (노트+위키 공용)
 
 ### P2 — 인사이트 허브
 - **인사이트 허브** — 온톨로지 Single Source of Insights
