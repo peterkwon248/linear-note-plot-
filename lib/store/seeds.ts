@@ -527,13 +527,18 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     id: "wiki-1",
     title: "Zettelkasten",
     aliases: ["Slip box", "Zettelkasten Method"],
-    infobox: [
-      { key: "Creator", value: "Niklas Luhmann" },
-      { key: "Origin", value: "Zettelkasten (German)" },
-      { key: "Meaning", value: "Slip box" },
-      { key: "Core Principle", value: "Linking and indexing" },
-    ],
     blocks: [
+      {
+        id: bid(),
+        type: "infobox",
+        fields: [
+          { key: "Creator", value: "Niklas Luhmann" },
+          { key: "Origin", value: "Zettelkasten (German)" },
+          { key: "Meaning", value: "Slip box" },
+          { key: "Core Principle", value: "Linking and indexing" },
+        ],
+        headerColor: null,
+      },
       { id: bid(), type: "section", title: "Overview", level: 2 },
       { id: bid(), type: "text", content: "Zettelkasten is a knowledge management methodology devised by the German sociologist Niklas Luhmann. \"Zettelkasten\" is German for \"slip box.\" Luhmann used this system to produce 70 books and over 400 academic papers across 40 years." },
       { id: bid(), type: "section", title: "Core Principles", level: 2 },
@@ -557,11 +562,16 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     id: "wiki-2",
     title: "Permanent Note",
     aliases: ["Evergreen Note"],
-    infobox: [
-      { key: "Origin", value: "Zettelkasten method" },
-      { key: "Also known as", value: "Evergreen Note" },
-    ],
     blocks: [
+      {
+        id: bid(),
+        type: "infobox",
+        fields: [
+          { key: "Origin", value: "Zettelkasten method" },
+          { key: "Also known as", value: "Evergreen Note" },
+        ],
+        headerColor: null,
+      },
       { id: bid(), type: "section", title: "Definition", level: 2 },
       { id: bid(), type: "text", content: "A Permanent Note is the final, refined output in the Zettelkasten system. Unlike fleeting notes (quick jottings) or literature notes (reading highlights), a permanent note is:\n\n1. Written in your own words\n2. Atomic — one idea per note\n3. Context-independent — understandable on its own\n4. Connected — linked to at least one other note" },
       { id: bid(), type: "section", title: "Characteristics", level: 2 },
@@ -581,8 +591,8 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     id: "wiki-3",
     title: "Fleeting Note",
     aliases: ["Quick Note", "Scratch Note"],
-    infobox: [],
     blocks: [
+      { id: bid(), type: "infobox", fields: [], headerColor: null },
       { id: bid(), type: "section", title: "Definition", level: 2 },
       { id: bid(), type: "text", content: "A Fleeting Note is a quick, temporary note captured in the moment. It's not meant to be permanent — it's raw material to be processed later into a Permanent Note." },
       { id: bid(), type: "section", title: "In Practice", level: 2 },

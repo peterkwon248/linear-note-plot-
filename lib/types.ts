@@ -24,18 +24,39 @@ export interface ColumnStructure {
   columns: ColumnDefinition[]
 }
 
-/** One column within a ColumnStructure. */
+/**
+ * One column within a ColumnStructure.
+ *
+ * Phase 3 (Multi-pane Document Model) additions:
+ * - `name`: per-column label (e.g. "목차", "본문", "관련 자료")
+ * - `themeColor`: per-column background/accent for magazine-style visuals
+ * - `minHeight`: used by vertical-direction columns
+ * - `ratio` now also covers height-ratio in vertical direction
+ */
 export interface ColumnDefinition {
-  ratio: number           // flex-grow weight (1, 2, 3...)
-  minWidth?: number       // responsive collapse threshold (px)
-  priority?: number       // hide order when narrow (lower priority hides first)
+  ratio: number                // flex weight (width for horizontal, height for vertical)
+  minWidth?: number            // responsive collapse threshold (px)
+  minHeight?: number           // min height (px) — vertical-direction pane
+  priority?: number            // hide order when narrow (lower priority hides first)
+  name?: string                // Phase 3 — optional column label
+  themeColor?: WikiThemeColor  // Phase 3 — per-column background/accent
   content: ColumnStructure | ColumnBlocksLeaf
 }
 
-/** Leaf node of a column: list of block IDs assigned to this column. */
+/**
+ * Leaf node of a column. Phase 3 (Multi-pane Document Model):
+ * During the transition both fields coexist.
+ * - Pre-v80 (legacy): `blockIds` resolved against `WikiArticle.blocks` pool
+ * - Post-v80 (Phase 3): `blocks` is canonical per-column storage
+ *
+ * `blockIds` is kept required during Step 1 so existing renderer code still
+ * compiles. Step 7 (renderer refactor) switches readers to prefer `blocks`
+ * and fall back to `blockIds` only for not-yet-migrated articles.
+ */
 export interface ColumnBlocksLeaf {
   type: "blocks"
-  blockIds: string[]
+  blockIds: string[]             // Legacy — stays required during transition
+  blocks?: WikiBlock[]           // Phase 3 canonical (populated by migration v80)
 }
 
 /** Path into nested columns. e.g. [0, 1, 2] = columns[0].columns[1].columns[2]. */
@@ -52,14 +73,10 @@ export interface WikiTitleStyle {
 /**
  * TOC (Table of Contents) styling for an article.
  * Phase 2-1: TOC is meta content (auto-generated/updated from sections), not a block.
- * Position uses ColumnPath so users can place TOC in any column. Defaults: show=true,
- * position depends on layout (1-column → inline above first section, 2-column → sidebar [1]).
+ * Phase 2-2-C: `WikiTocStyle` removed — TOC is now a first-class `WikiBlock`
+ * (`type: "toc"`). Its position is expressed via `columnAssignments`, and the
+ * show/collapsed state lives on the block itself.
  */
-export interface WikiTocStyle {
-  show: boolean                       // false = hidden entirely
-  position: ColumnPath                // which column hosts the TOC (e.g. [1] = sidebar)
-  collapsed?: boolean                 // initial collapsed state
-}
 
 /** Theme color for an article/template (light + dark mode variants). */
 export interface WikiThemeColor {
@@ -169,7 +186,10 @@ export interface WikiCategory {
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
 /** Wiki block types — building blocks of a wiki article */
-export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url'
+export type WikiBlockType =
+  | 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url'
+  // Phase 2-2-C: meta blocks (previously scalar fields on WikiArticle)
+  | 'infobox' | 'toc'
 
 /** A single block in a wiki article */
 export interface WikiBlock {
@@ -215,6 +235,16 @@ export interface WikiBlock {
   editorHeight?: number | null
   /** Merge history: snapshot of the merged article for unmerge */
   mergedFrom?: WikiMergeSnapshot
+  // Phase 2-2-C — infobox block
+  /** Infobox: key/value entries (section rows allowed via entry.type = 'section') */
+  fields?: WikiInfoboxEntry[]
+  /** Infobox: optional header color override (CSS color string) — null = default theme */
+  headerColor?: string | null
+  // Phase 2-2-C — toc block
+  /** TOC: whether the TOC is collapsed by default (persisted) */
+  tocCollapsed?: boolean
+  /** TOC: optional heading levels to hide (e.g. [4,5] to hide deep headings) */
+  hiddenLevels?: number[]
 }
 
 /** Snapshot of a merged article — stored on the divider section block for unmerge */
@@ -223,7 +253,11 @@ export interface WikiMergeSnapshot {
   title: string
   aliases: string[]
   tags: string[]
-  infobox: WikiInfoboxEntry[]
+  /**
+   * Phase 2-2-C: infobox is now a block in `blocks`. Legacy snapshots (pre-v78)
+   * retain a scalar `infobox` field — kept optional for backward compatibility.
+   */
+  infobox?: WikiInfoboxEntry[]
   blockIds: string[]       // IDs of blocks that came from this merged article
   blocks: WikiBlock[]      // full block data for restoration (deep clone)
   mergedAt: string
@@ -250,9 +284,6 @@ export interface WikiArticle {
   id: string
   title: string
   aliases: string[]
-  infobox: WikiInfoboxEntry[]
-  /** Tier 1-2: Infobox header background color (null/undefined = default bg-secondary/30). Raw CSS color (rgba/hex). */
-  infoboxHeaderColor?: string | null
   blocks: WikiBlock[]
   sectionIndex: WikiSectionIndex[]
   tags: string[]
@@ -272,10 +303,8 @@ export interface WikiArticle {
   themeColor?: WikiThemeColor                      // article-level theme color
   templateId?: string                              // source template (traceability only, not enforced)
 
-  /* ── TOC + Infobox position meta fields (Phase 2-1A) ──
-   *  Migration v77 backfills defaults (multi-column → last column, single → [0]). */
-  tocStyle?: WikiTocStyle                          // table-of-contents visibility + column position
-  infoboxColumnPath?: ColumnPath                   // where the infobox renders (default last col for multi, [0] for single)
+  /* Phase 2-2-C: `infobox`, `infoboxHeaderColor`, `infoboxColumnPath`, `tocStyle`
+   * all moved to `WikiBlock`s (types "infobox" / "toc"). See migration v78. */
 
   createdAt: string
   updatedAt: string

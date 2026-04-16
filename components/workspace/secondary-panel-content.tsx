@@ -6,7 +6,6 @@ import { useSecondaryRoute, useSecondarySpace, setSecondarySpace, DEFAULT_ROUTES
 import { NoteEditor } from "@/components/note-editor"
 import { PaneProvider, useIsActivePane } from "./pane-context"
 import { ColumnPresetToggle } from "@/components/wiki-editor/column-preset-toggle"
-import { ColumnMetaPositionMenu } from "@/components/wiki-editor/column-meta-position-menu"
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -223,10 +222,9 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
               </svg>
             </button>
           )}
-          {/* Phase 2-2-A: 1·2·3 컬럼 프리셋 빠른 전환 (compact) */}
-          {article && <ColumnPresetToggle articleId={articleId} compact />}
-          {/* Phase 2-2-B-1: TOC / Infobox 위치 설정 (compact) */}
-          {article && <ColumnMetaPositionMenu articleId={articleId} compact />}
+          {/* Phase 3: column preset dropdown (edit mode only, compact) */}
+          {article && <ColumnPresetToggle articleId={articleId} editable={isEditing} compact />}
+          {/* Phase 2-2-C: ColumnMetaPositionMenu removed — infobox/toc are blocks now */}
           {/* Edit/Done toggle */}
           {isEditing ? (
             <button

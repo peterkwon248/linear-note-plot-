@@ -16,13 +16,15 @@
  * 진실의 원천: docs/BRAINSTORM-2026-04-14-column-template-system.md
  */
 
-import { type CSSProperties, type ReactNode, Fragment } from "react"
+import { type CSSProperties, type ReactNode, Fragment, useState } from "react"
 import type { ColumnStructure, ColumnDefinition, ColumnPath } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import { useDroppable } from "@dnd-kit/core"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
+import { AddBlockButton } from "./wiki-block-renderer"
 
 export interface ColumnRendererProps {
   /** The column tree to render. */
@@ -31,11 +33,6 @@ export interface ColumnRendererProps {
    * Render a single block by id. Returning `null` is fine — the renderer skips it.
    */
   renderBlock: (blockId: string) => ReactNode
-  /**
-   * Meta content keyed by column-path string (e.g. "1" or "0.2").
-   * Injected BEFORE the leaf's blocks in that column. Used for TOC, infobox, etc.
-   */
-  metaSlots?: Record<string, ReactNode>
   /**
    * When true, top-level horizontal columns render with react-resizable-panels
    * so users can drag column boundaries. Nested columns keep CSS Grid.
@@ -57,6 +54,16 @@ export interface ColumnRendererProps {
    * `path` = full path to the column being removed.
    */
   onRemoveColumn?: (path: number[]) => void
+  /**
+   * Phase 2-2-B-3-b: Called when user clicks AddBlock inside an empty column.
+   * Creates a new block of the given type and assigns it to that column.
+   */
+  onAddBlockToColumn?: (path: number[], type: string, level?: number) => void
+  /**
+   * Phase 2-2-B-3-b: Called when user clicks "Split into N cols" on a leaf.
+   * Converts the leaf into a nested ColumnStructure with `count` inner columns.
+   */
+  onSplitLeaf?: (path: number[], count: number) => void
   /** Optional className applied to the outermost wrapper. */
   className?: string
 }
@@ -77,11 +84,12 @@ export function parsePathKey(key: string): ColumnPath {
 export function ColumnRenderer({
   layout,
   renderBlock,
-  metaSlots,
   editable = false,
   onRatiosChange,
   onAddColumnAfter,
   onRemoveColumn,
+  onAddBlockToColumn,
+  onSplitLeaf,
   className,
 }: ColumnRendererProps) {
   return (
@@ -89,11 +97,12 @@ export function ColumnRenderer({
       node={layout}
       basePath={[]}
       renderBlock={renderBlock}
-      metaSlots={metaSlots ?? {}}
       editable={editable}
       onRatiosChange={onRatiosChange}
       onAddColumnAfter={onAddColumnAfter}
       onRemoveColumn={onRemoveColumn}
+      onAddBlockToColumn={onAddBlockToColumn}
+      onSplitLeaf={onSplitLeaf}
       className={className}
     />
   )
@@ -105,18 +114,21 @@ interface ColumnNodeProps {
   node: ColumnStructure
   basePath: number[]
   renderBlock: (blockId: string) => ReactNode
-  metaSlots: Record<string, ReactNode>
   editable: boolean
   onRatiosChange?: (path: ColumnPath, newRatios: number[]) => void
   onAddColumnAfter?: (parentPath: number[], afterIndex: number) => void
   onRemoveColumn?: (path: number[]) => void
+  onAddBlockToColumn?: (path: number[], type: string, level?: number) => void
+  onSplitLeaf?: (path: number[], count: number) => void
   className?: string
 }
 
-function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn, className }: ColumnNodeProps) {
+function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn, onAddBlockToColumn, onSplitLeaf, className }: ColumnNodeProps) {
   const direction = node.direction ?? "horizontal"
   const isHorizontal = direction === "horizontal"
   const colCount = node.columns.length
+  // Phase 3: track which column's X is hovered for visual feedback
+  const [hoveringRemoveIdx, setHoveringRemoveIdx] = useState<number | null>(null)
 
   // Drag mode condition: editable + horizontal + 2+ columns + top-level OR nested (top-level easier)
   const useDragMode = editable && isHorizontal && colCount >= 2 && basePath.length === 0
@@ -125,7 +137,10 @@ function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatios
     // react-resizable-panels uses percentage (0-100 sum). Convert from ratio.
     const total = node.columns.reduce((s, c) => s + (c.ratio || 1), 0) || 1
     const sizes = node.columns.map((c) => ((c.ratio || 1) / total) * 100)
-    const groupId = `wiki-col-group-${basePath.join(".") || "root"}-${colCount}`
+    // Include ratio fingerprint so PanelGroup remounts when ratios change
+    // (react-resizable-panels caches sizes in localStorage by id).
+    const ratioFingerprint = node.columns.map((c) => (c.ratio || 1).toFixed(1)).join("-")
+    const groupId = `wiki-col-group-${basePath.join(".") || "root"}-${colCount}-${ratioFingerprint}`
     const canAdd = colCount < 6 // matches addColumnAfter cap
     const canRemove = colCount > 1
 
@@ -138,6 +153,9 @@ function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatios
           data-direction={direction}
           onLayout={(newSizes) => {
             if (!onRatiosChange) return
+            // Guard: ignore stale callbacks from PanelGroup during column removal
+            // (PanelGroup fires onLayout before unmounting with old column count)
+            if (newSizes.length !== node.columns.length) return
             onRatiosChange(basePath, newSizes)
           }}
         >
@@ -146,15 +164,33 @@ function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatios
             const minSizePct = col.minWidth ? Math.min(40, Math.max(8, (col.minWidth / 1200) * 100)) : 8
             return (
               <Fragment key={i}>
-                <Panel defaultSize={sizes[i]} minSize={minSizePct} className="wiki-column-panel group/panel relative">
-                  {/* Phase 2-2-B-3: per-column X (remove) button — hover to reveal */}
+                <Panel
+                  defaultSize={sizes[i]}
+                  minSize={minSizePct}
+                  className={cn(
+                    "wiki-column-panel group/panel relative rounded-lg border bg-card/30 p-5 transition-colors",
+                    hoveringRemoveIdx === i
+                      ? "border-destructive/50 bg-destructive/5"
+                      : "border-border-subtle/40",
+                  )}
+                >
+                  {/* Per-column X (remove) — highlights entire card on hover */}
                   {onRemoveColumn && canRemove && (
                     <button
                       type="button"
-                      onClick={() => onRemoveColumn(childPath)}
+                      onMouseEnter={() => setHoveringRemoveIdx(i)}
+                      onMouseLeave={() => setHoveringRemoveIdx(null)}
+                      onClick={() => {
+                        const leaf = col.content
+                        const hasBlocks = leaf.type === "blocks" &&
+                          ((leaf.blocks && leaf.blocks.length > 0) || (leaf.blockIds && leaf.blockIds.length > 0))
+                        if (hasBlocks && !window.confirm("이 컬럼의 블록들이 다른 컬럼으로 이동됩니다. 삭제하시겠습니까?")) return
+                        setHoveringRemoveIdx(null)
+                        onRemoveColumn(childPath)
+                      }}
                       title="Remove this column"
                       aria-label="Remove column"
-                      className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/panel:opacity-100"
+                      className="absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
                     >
                       <PhX size={10} weight="bold" />
                     </button>
@@ -163,11 +199,12 @@ function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatios
                     column={col}
                     path={childPath}
                     renderBlock={renderBlock}
-                    metaSlots={metaSlots}
                     editable={editable}
                     onRatiosChange={onRatiosChange}
                     onAddColumnAfter={onAddColumnAfter}
                     onRemoveColumn={onRemoveColumn}
+                    onAddBlockToColumn={onAddBlockToColumn}
+                    onSplitLeaf={onSplitLeaf}
                   />
                 </Panel>
                 {i < colCount - 1 && (
@@ -219,22 +256,67 @@ function ColumnNode({ node, basePath, renderBlock, metaSlots, editable, onRatios
     ? { display: "grid", gridTemplateColumns: tracks, gap: "1.5rem" }
     : { display: "grid", gridTemplateRows: tracks, gap: "1rem" }
 
+  // Phase 2-2-B-3-b: Nested horizontal columns in edit mode expose per-column
+  // +/X buttons. Ratios stay locked (no drag handles in nested CSS Grid).
+  const showNestedEditUI = editable && isHorizontal && basePath.length > 0
+  const canAdd = showNestedEditUI && !!onAddColumnAfter
+  const canRemove = showNestedEditUI && !!onRemoveColumn && colCount > 1
+
   return (
     <div className={cn("wiki-column-grid", className)} style={gridStyle} data-direction={direction}>
       {node.columns.map((col, i) => {
         const childPath = [...basePath, i]
+        const isLastNested = showNestedEditUI && i === colCount - 1
         return (
-          <ColumnCell
-            key={i}
-            column={col}
-            path={childPath}
-            renderBlock={renderBlock}
-            metaSlots={metaSlots}
-            editable={editable}
-            onRatiosChange={onRatiosChange}
-            onAddColumnAfter={onAddColumnAfter}
-            onRemoveColumn={onRemoveColumn}
-          />
+          <div key={i} className={cn(
+            colCount >= 2 && "rounded-lg border bg-card/30 p-5 transition-colors",
+            colCount >= 2 && (hoveringRemoveIdx === i ? "border-destructive/50 bg-destructive/5" : "border-border-subtle/40"),
+            showNestedEditUI && "relative group/nested-panel",
+            isLastNested && "pr-3",
+          )}>
+            {canRemove && (
+              <button
+                type="button"
+                onMouseEnter={() => setHoveringRemoveIdx(i)}
+                onMouseLeave={() => setHoveringRemoveIdx(null)}
+                onClick={() => {
+                  const leaf = col.content
+                  const hasBlocks = leaf.type === "blocks" &&
+                    ((leaf.blocks && leaf.blocks.length > 0) || (leaf.blockIds && leaf.blockIds.length > 0))
+                  if (hasBlocks && !window.confirm("이 컬럼의 블록들이 다른 컬럼으로 이동됩니다. 삭제하시겠습니까?")) return
+                  setHoveringRemoveIdx(null)
+                  onRemoveColumn!(childPath)
+                }}
+                title="Remove this column"
+                aria-label="Remove column"
+                className="absolute right-3 top-3 z-10 flex h-5 w-5 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
+              >
+                <PhX size={10} weight="bold" />
+              </button>
+            )}
+            <ColumnCell
+              column={col}
+              path={childPath}
+              renderBlock={renderBlock}
+              editable={editable}
+              onRatiosChange={onRatiosChange}
+              onAddColumnAfter={onAddColumnAfter}
+              onRemoveColumn={onRemoveColumn}
+              onAddBlockToColumn={onAddBlockToColumn}
+              onSplitLeaf={onSplitLeaf}
+            />
+            {canAdd && (
+              <button
+                type="button"
+                onClick={() => onAddColumnAfter!(basePath, i)}
+                title="Insert column after this one"
+                aria-label="Insert column"
+                className="absolute -right-3 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-dashed border-border-subtle bg-surface-overlay text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-accent/10 hover:text-accent hover:border-accent/40 group-hover/nested-panel:opacity-100"
+              >
+                <PhPlus size={11} weight="bold" />
+              </button>
+            )}
+          </div>
         )
       })}
     </div>
@@ -245,42 +327,50 @@ interface ColumnCellProps {
   column: ColumnDefinition
   path: number[]
   renderBlock: (blockId: string) => ReactNode
-  metaSlots: Record<string, ReactNode>
   editable: boolean
   onRatiosChange?: (path: ColumnPath, newRatios: number[]) => void
   onAddColumnAfter?: (parentPath: number[], afterIndex: number) => void
   onRemoveColumn?: (path: number[]) => void
+  onAddBlockToColumn?: (path: number[], type: string, level?: number) => void
+  onSplitLeaf?: (path: number[], count: number) => void
 }
 
-function ColumnCell({ column, path, renderBlock, metaSlots, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn }: ColumnCellProps) {
-  const meta = metaSlots[pathKey(path)]
-
+function ColumnCell({ column, path, renderBlock, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn, onAddBlockToColumn, onSplitLeaf }: ColumnCellProps) {
   if (column.content.type === "columns") {
     return (
       <div className="wiki-column-cell">
-        {meta}
         <ColumnNode
           node={column.content}
           basePath={path}
           renderBlock={renderBlock}
-          metaSlots={metaSlots}
           editable={editable}
           onRatiosChange={onRatiosChange}
           onAddColumnAfter={onAddColumnAfter}
           onRemoveColumn={onRemoveColumn}
+          onAddBlockToColumn={onAddBlockToColumn}
+          onSplitLeaf={onSplitLeaf}
         />
       </div>
     )
   }
 
-  // Leaf cell — in edit mode, act as a droppable zone so blocks can be dragged
-  // between columns. Read mode stays a plain div.
+  // Leaf cell — Phase 3: prefer canonical `blocks` (per-pane), fall back to `blockIds` for legacy.
+  // In edit mode, act as a droppable zone so blocks can be dragged between columns.
+  const leafBlockIds = column.content.blocks
+    ? column.content.blocks.map((b) => b.id)
+    : (column.content.blockIds ?? [])
+
   return editable ? (
-    <LeafDroppableCell path={path} blockIds={column.content.blockIds} meta={meta} renderBlock={renderBlock} />
+    <LeafDroppableCell
+      path={path}
+      blockIds={leafBlockIds}
+      renderBlock={renderBlock}
+      onAddBlockToColumn={onAddBlockToColumn}
+      onSplitLeaf={onSplitLeaf}
+    />
   ) : (
     <div className="wiki-column-cell flex flex-col gap-3">
-      {meta}
-      {column.content.blockIds.map((blockId) => (
+      {leafBlockIds.map((blockId) => (
         <Fragment key={blockId}>{renderBlock(blockId)}</Fragment>
       ))}
     </div>
@@ -288,20 +378,28 @@ function ColumnCell({ column, path, renderBlock, metaSlots, editable, onRatiosCh
 }
 
 /**
- * Phase 2-2-B-2: Edit-mode leaf cell with `useDroppable`.
+ * Phase 2-2-B-2/3-b: Edit-mode leaf cell with `useDroppable`.
+ *
  * Drop id `column-<pathKey>` is consumed by WikiArticleRenderer.handleDragEnd
  * to route `moveBlockToColumn(articleId, blockId, path)`.
+ *
+ * Phase 2-2-B-3-b additions:
+ * - Empty column shows AddBlockButton (replaces the "drop-only" placeholder)
+ * - "Split into N" buttons when path depth allows nesting (`path.length < 3`)
+ * - Drag hover state still shows "Drop block here" for clarity
  */
 function LeafDroppableCell({
   path,
   blockIds,
-  meta,
   renderBlock,
+  onAddBlockToColumn,
+  onSplitLeaf,
 }: {
   path: number[]
   blockIds: string[]
-  meta: ReactNode
   renderBlock: (blockId: string) => ReactNode
+  onAddBlockToColumn?: (path: number[], type: string, level?: number) => void
+  onSplitLeaf?: (path: number[], count: number) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `column-${pathKey(path)}` })
   const isEmpty = blockIds.length === 0
@@ -314,20 +412,23 @@ function LeafDroppableCell({
         isOver && "bg-accent/5 ring-1 ring-accent/40",
       )}
     >
-      {meta}
       {blockIds.map((blockId) => (
         <Fragment key={blockId}>{renderBlock(blockId)}</Fragment>
       ))}
       {isEmpty && (
         <div
           className={cn(
-            "flex min-h-[96px] items-center justify-center rounded-md border border-dashed text-2xs transition-colors",
+            "flex min-h-[96px] flex-col items-center justify-center gap-2 rounded-md border border-dashed p-3 transition-colors",
             isOver
-              ? "border-accent text-accent"
-              : "border-border-subtle text-muted-foreground/40",
+              ? "border-accent bg-accent/5"
+              : "border-border-subtle hover:border-border",
           )}
         >
-          {isOver ? "Drop block here" : "Empty column — drop a block here"}
+          {isOver ? (
+            <span className="text-2xs text-accent">Drop block here</span>
+          ) : onAddBlockToColumn ? (
+            <AddBlockButton onAdd={(type, level) => onAddBlockToColumn(path, type, level)} />
+          ) : null}
         </div>
       )}
     </div>

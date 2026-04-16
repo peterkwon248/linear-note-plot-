@@ -3,7 +3,7 @@
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 23-slice Zustand store with versioned migration (currently v77)
+- **Store**: `lib/store/index.ts` — 23-slice Zustand store with versioned migration (currently v79)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -162,6 +162,56 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **문서 정비**: `BRAINSTORM-2026-04-14-wiki-ultra.md`, `entity-philosophy.md`, `PHASE-PLAN-wiki-enrichment.md` 상단에 DEPRECATED 배너 + 새 문서 링크.
 - **새 Phase 계획** (Phase 0~7): 0 문서 정비 → 1 데이터 모델 → 2 렌더러 → 3 편집 UX → 4 커스텀 템플릿 → 5 나무위키 잔여 → 6 편집 히스토리 → 7 노트 split
 
+## 2026-04-15 저녁 — Phase 2-2-B-3-b + 2-2-C 구현 완료
+
+### Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼 생성
+- `splitLeafIntoColumns(articleId, path, count)` 액션 — leaf를 N-col ColumnStructure로 변환. depth <3 가드, count 2-4
+- `LeafDroppableCell` 빈 컬럼에 AddBlockButton + Split 2/3 버튼 (drag-over 시 "Drop block here"만 표시)
+- `column-renderer.tsx` CSS Grid 브랜치 (nested horizontal)에도 `+` / `X` 버튼 노출 (hover group/nested-panel)
+- `handleAddBlockToColumn` 훅 추가 — addWikiBlock + moveBlockToColumn 연속 호출. URL dialog는 `urlBlockDialog.columnPath` 확장으로 대응
+
+### Phase 2-2-C — 메타 → 블록 통합 (큰 리팩토링)
+- **WikiBlockType 확장**: `"infobox"`, `"toc"` 추가. `WikiBlock`에 `fields`, `headerColor`, `tocCollapsed`, `hiddenLevels` 필드 (infobox/toc 전용)
+- **Wrapper 컴포넌트**: `components/wiki-editor/wiki-infobox-block.tsx` (기존 WikiInfobox 래핑) + `wiki-toc-block.tsx` (CollapsibleTOC 로직 이식, store에서 sections live derive)
+- **WikiInfobox**: `onEntriesChange` prop 추가 — 블록 래퍼에서 `onUpdate({ fields })`로 릴레이. 기존 store action 의존 없어짐
+- **AddBlockButton**: structureItems에 Infobox ("Key-value metadata") + TOC ("Auto contents") 2개 추가
+- **WikiArticleRenderer**: `metaSlots` / `tocStyle` / `infoboxColumnPath` 로직 전부 삭제 + 인라인 `CollapsibleTOC` 삭제 (wiki-toc-block.tsx로 이동)
+- **ColumnRenderer**: `metaSlots` prop 제거 (ColumnCell/LeafDroppableCell까지 재귀 제거)
+- **Migration v78**: 기존 `article.infobox` (빈 배열 포함) → infobox block 생성 + `tocStyle.show === true` → toc block 생성 + scalar 필드 4개 삭제 (per-article try/catch)
+- **Migration v79**: 기존 v48 seed injection bug로 인한 wikiArticles 중복 dedupe (id 기준 첫 번째만 유지)
+- **ColumnMetaPositionMenu 삭제**: 파일 삭제 + wiki-view.tsx / secondary-panel-content.tsx 호출처 제거
+- **scalar 액션 삭제**: `setTocStyle`, `setInfoboxColumnPath`, `setWikiArticleInfobox` — types + slice
+- **WikiArticle scalar 필드 삭제**: `infobox`, `infoboxHeaderColor`, `infoboxColumnPath`, `tocStyle`. `WikiTocStyle` 타입 삭제. `WikiMergeSnapshot.infobox`는 legacy 호환용 optional 유지
+- **instantiateTemplate**: infobox/toc 블록 자동 생성 + columnAssignments에 할당. 반환 타입에서 `infobox`/`infoboxHeaderColor` 제거
+- **merge/split/unmerge/copy 경로**: scalar infobox 참조 전부 제거. infobox 블록이 blocks에 포함되므로 자동 처리
+- **isWikiStub**: infobox/toc 블록을 카운트에서 제외 (`contentBlocks = blocks.filter(b => b.type !== "infobox" && b.type !== "toc")`)
+- **wiki-to-tiptap**: `article.infobox` → `article.blocks.filter(b => b.type === "infobox").flatMap(b => b.fields)` 로 derive
+- **seed wiki-1~3**: scalar infobox 필드 → blocks 배열 맨 앞에 infobox 블록 inline
+- **Store version**: 77 → 79
+
+## Phase 3 설계 완료 (구현 대기) — Multi-pane Document Model
+
+**배경**: Phase 2-2-C로 모든 메타가 블록이 됐지만, UX 테스트에서 3컬럼 모드 혼란 확인:
+- 섹션 번호가 전체 blocks[] 기준이라 컬럼 간 뒤섞임 ("1. Definition" 다음 "5. Untitled Section")
+- 빈 컬럼 "or split: 2/3" 버튼이 AddBlock + Drop zone과 경쟁
+- 하단 글로벌 AddBlock이 암묵적으로 main[0]으로 감
+- **컬럼이 "독립 공간" 아니라 view-level projection**
+
+**결정**: `WikiArticle.blocks` flat pool + `columnAssignments` 폐기 → **per-column blocks** 모델로 전환. 각 컬럼이 자체 blocks[] + 자체 섹션 넘버링 + 자체 name/themeColor 보유. 잡지식 독립 공간.
+
+**추가 결정사항**:
+- 가로(horizontal) + 세로(vertical) 둘 다 지원. 중첩 3 depth 내 혼합 가능
+- 컬럼 메뉴 ⋯ 신규: Split H / Split V / Set name / Set color / Delete (Split 버튼 빈 컬럼에서 제거)
+- 컬럼 시각 구분: 세로선 + 고유 배경색 (투명도 낮게, 잡지 스타일)
+- 메타(infobox/toc) 컬럼 간 자유 드래그 배치 유지
+- 타이틀/서브타이틀/별칭 = 최상단 공유 레이어 고정, 1개만
+- 1컬럼 모드 = 기존 나무위키 스타일 유지
+- 섹션 넘버링 = pane별 독립 (컬럼 A의 "1", 컬럼 B의 "1" 동시 가능)
+- 높이 제어: 기본 auto-fit, 경계 드래그 시 ratio 고정 모드. **Match heights / Fill container = Phase 3.1로 분리**
+- i18n: 한국어 "컬럼/행", 영어 "Column/Row"
+
+**진실의 원천**: `docs/BRAINSTORM-2026-04-15-multi-pane-document-model.md`
+
 ## 2026-04-15 밤 대결정 — 메타 → 블록 통합 (🅑)
 
 Phase 2-2-B-3-a 머지 후 사용자와 아키텍처 재논의. 모든 메타 (Infobox/TOC/Hatnote/Navbox/Callout 등)를 **WikiBlockType으로 통합** 하기로 확정.
@@ -182,6 +232,8 @@ Phase 2-2-B-3-a 머지 후 사용자와 아키텍처 재논의. 모든 메타 (I
 ## Completed PRs (recent)
 
 ### 2026-04-15 (집, 10 PR day)
+- **PR pending**: Phase 2-2-B-3-b + Phase 2-2-C + Phase 3 브레인스토밍 — 빈 컬럼 AddBlock/중첩 컬럼 + 메타→블록 통합 (migration v78+v79) + 다중 pane 문서 모델 설계 (docs/BRAINSTORM-2026-04-15-multi-pane-document-model.md)
+- **PR #207 (merged)**: docs — CONTEXT.md + MEMORY.md catchup (Phase 2-1A ~ 2-2-B-3-a + 메타→블록 대결정)
 - **PR #206 (merged)**: docs — 2026-04-15 밤 대결정 (메타 → 블록 통합) + 로드맵 재편
 - **PR #205 (merged)**: Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼 (addColumnAfter/removeColumn + 재귀 헬퍼 3 + UI 사이/끝 +, 각 컬럼 X)
 - **PR #204 (merged)**: Phase 2-2-B-2 — 블록 컬럼 간 드래그 (moveBlockToColumn + syncLayoutFromAssignments + LeafDroppableCell)

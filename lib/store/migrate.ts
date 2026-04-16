@@ -437,9 +437,12 @@ export function migrate(persistedState: unknown): PlotState {
     state.wikiArticles = [] as any
   }
   // v48: Inject seed WikiArticles if none of the seed IDs exist
+  // (Seed IDs are `wiki-1`..`wiki-3`; earlier check for `wiki-article-1`
+  // never matched, which caused duplicate injection on every migration pass.)
   {
     const articles = state.wikiArticles as any[]
-    if (!articles.some((a: any) => a.id === "wiki-article-1")) {
+    const existingIds = new Set(articles.map((a: any) => a.id))
+    if (!existingIds.has("wiki-1") && !existingIds.has("wiki-2") && !existingIds.has("wiki-3")) {
       const { SEED_WIKI_ARTICLES } = require("./seeds")
       state.wikiArticles = [...articles, ...SEED_WIKI_ARTICLES] as any
     }
@@ -900,6 +903,165 @@ export function migrate(persistedState: unknown): PlotState {
       }
       if (!article.infoboxColumnPath) {
         article.infoboxColumnPath = isMulti ? [lastIdx] : [0]
+      }
+    }
+  }
+
+  // v78: dedupe wikiArticles by id (earlier migration bug injected seeds repeatedly
+  // when the presence check referenced an id — `wiki-article-1` — that never matched
+  // the actual seed ids `wiki-1`..`wiki-3`). Keep the first occurrence only.
+  if (Array.isArray(state.wikiArticles)) {
+    const seen = new Set<string>()
+    state.wikiArticles = (state.wikiArticles as Record<string, unknown>[]).filter((a) => {
+      const id = a.id as string | undefined
+      if (!id || seen.has(id)) return false
+      seen.add(id)
+      return true
+    })
+  }
+
+  // v78: Phase 2-2-C — 메타 → 블록 통합
+  //   1. Convert `article.infobox` (scalar, always if defined including empty) → infobox block
+  //   2. Convert `article.tocStyle.show === true` (default true) → toc block
+  //   3. Blocks prepended to `article.blocks`: infobox first, then toc (preserves visual order)
+  //   4. Scalar fields removed: `infobox`, `infoboxHeaderColor`, `infoboxColumnPath`, `tocStyle`
+  //   5. Per-article try/catch — a bad record shouldn't poison others
+  if (Array.isArray(state.wikiArticles)) {
+    for (const article of state.wikiArticles as Record<string, unknown>[]) {
+      try {
+        const a = article as Record<string, unknown>
+        const existingBlocks = (Array.isArray(a.blocks) ? a.blocks : []) as Record<string, unknown>[]
+        const existingAssignments = (a.columnAssignments as Record<string, number[]>) ?? {}
+        const newBlocks: Record<string, unknown>[] = []
+        const newAssignments: Record<string, number[]> = { ...existingAssignments }
+
+        // Infobox block — create whenever the article ever had an `infobox` field
+        // (even empty). This preserves the pre-v78 UX where editable articles always
+        // showed an "+ Add infobox" affordance.
+        if (a.infobox !== undefined) {
+          const infoboxBlockId = `infobox-${nanoid(8)}`
+          const headerColor = a.infoboxHeaderColor === undefined ? null : a.infoboxHeaderColor
+          newBlocks.push({
+            id: infoboxBlockId,
+            type: "infobox",
+            fields: Array.isArray(a.infobox) ? a.infobox : [],
+            headerColor,
+          })
+          const infoboxPath = (Array.isArray(a.infoboxColumnPath) ? a.infoboxColumnPath : [0]) as number[]
+          newAssignments[infoboxBlockId] = infoboxPath
+        }
+
+        // TOC block — only if `tocStyle.show === true` (default is true when tocStyle exists)
+        const tocStyle = a.tocStyle as
+          | { show?: boolean; position?: number[]; collapsed?: boolean }
+          | undefined
+        if (tocStyle && tocStyle.show === true) {
+          const tocBlockId = `toc-${nanoid(8)}`
+          newBlocks.push({
+            id: tocBlockId,
+            type: "toc",
+            tocCollapsed: tocStyle.collapsed ?? false,
+          })
+          const tocPath = (Array.isArray(tocStyle.position) ? tocStyle.position : [0]) as number[]
+          newAssignments[tocBlockId] = tocPath
+        }
+
+        if (newBlocks.length > 0) {
+          a.blocks = [...newBlocks, ...existingBlocks]
+          a.columnAssignments = newAssignments
+        }
+
+        // Drop scalar meta fields
+        delete a.infobox
+        delete a.infoboxHeaderColor
+        delete a.infoboxColumnPath
+        delete a.tocStyle
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[migrate v78] article conversion failed; leaving legacy fields intact", article, err)
+      }
+    }
+  }
+
+  // v80: Phase 3 — Multi-pane Document Model
+  //   Populate each ColumnBlocksLeaf.blocks from the article's flat blocks[] pool
+  //   + columnAssignments map. Each pane becomes an independent container.
+  //   - Uses article.blocks as id→block pool (legacy readers still work)
+  //   - Traverses article.layout depth-first; for each leaf, resolves blockIds → blocks
+  //   - Orphan blocks (assigned to a path that doesn't resolve) fall back to the first leaf
+  //   - Blocks whose assignment is missing from columnAssignments fall back to the first leaf
+  //   - Deterministic: iteration order follows the original blocks[] array so layout leaf
+  //     order matches the pre-v80 visual order
+  //   - columnAssignments is preserved for one more version (legacy helpers may still read it),
+  //     scheduled for removal once slice actions are rewritten in-session
+  if (Array.isArray(state.wikiArticles)) {
+    for (const article of state.wikiArticles as Record<string, unknown>[]) {
+      try {
+        const a = article as Record<string, unknown>
+        const layout = a.layout as
+          | { type?: string; columns?: unknown[]; [key: string]: unknown }
+          | undefined
+        const blocks = Array.isArray(a.blocks) ? (a.blocks as Array<Record<string, unknown>>) : []
+        const assignments = (a.columnAssignments as Record<string, number[]> | undefined) ?? {}
+
+        if (!layout || layout.type !== "columns" || !Array.isArray(layout.columns)) continue
+
+        // Build id → block pool for quick lookup
+        const blockPool = new Map<string, Record<string, unknown>>()
+        for (const b of blocks) {
+          const id = b.id as string | undefined
+          if (id) blockPool.set(id, b)
+        }
+
+        // Depth-first traversal — collect all leaf paths in order
+        type LeafRef = { node: Record<string, unknown>; path: number[] }
+        const leaves: LeafRef[] = []
+        const walk = (node: Record<string, unknown>, base: number[]) => {
+          const cols = node.columns as Array<Record<string, unknown>> | undefined
+          if (!Array.isArray(cols)) return
+          cols.forEach((col, i) => {
+            const p = [...base, i]
+            const content = col.content as Record<string, unknown> | undefined
+            if (!content) return
+            if (content.type === "columns") walk(content, p)
+            else if (content.type === "blocks") leaves.push({ node: content, path: p })
+          })
+        }
+        walk(layout as Record<string, unknown>, [])
+
+        if (leaves.length === 0) continue
+        const firstLeafKey = leaves[0].path.join(".")
+
+        // Bucket: leaf path → ordered block list (preserves source blocks[] order)
+        const buckets = new Map<string, Array<Record<string, unknown>>>()
+        for (const leaf of leaves) buckets.set(leaf.path.join("."), [])
+
+        // Assign blocks: use columnAssignments, fallback to first leaf for unknown assignments
+        for (const block of blocks) {
+          const id = block.id as string | undefined
+          if (!id) continue
+          const assigned = assignments[id]
+          const key =
+            Array.isArray(assigned) && assigned.length > 0
+              ? assigned.join(".")
+              : firstLeafKey
+          const bucket = buckets.get(key) ?? buckets.get(firstLeafKey)
+          if (bucket) bucket.push(block)
+        }
+
+        // Write blocks into each leaf's `blocks` field. Keep `blockIds` populated
+        // as legacy view so pre-Phase-3 readers still function until Step 7 renderer refactor.
+        for (const leaf of leaves) {
+          const key = leaf.path.join(".")
+          const resolved = buckets.get(key) ?? []
+          leaf.node.blocks = resolved
+          leaf.node.blockIds = resolved
+            .map((b) => b.id as string | undefined)
+            .filter((id): id is string => typeof id === "string")
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[migrate v80] article layout conversion failed; leaving flat blocks intact", article, err)
       }
     }
   }
