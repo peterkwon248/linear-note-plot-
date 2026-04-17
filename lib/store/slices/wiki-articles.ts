@@ -353,6 +353,38 @@ function updateRatiosAtPath(
 }
 
 /**
+ * Phase 3.1-A — apply an arbitrary patch to the ColumnDefinition at `path`.
+ * Used for setColumnName / setColumnPaletteId / other per-column field updates.
+ *
+ * Path must point to a specific column (not root). Returns null if path invalid.
+ */
+function patchColumnDefAtPath(
+  layout: ColumnStructure,
+  path: number[],
+  patch: (col: ColumnDefinition) => ColumnDefinition,
+): ColumnStructure | null {
+  if (path.length === 0) return null // must target a column, not root
+  const [head, ...rest] = path
+  const target = layout.columns[head]
+  if (!target) return null
+
+  if (rest.length === 0) {
+    // Direct patch at this level
+    const next = patch(target)
+    const columns = layout.columns.map((c, i) => (i === head ? next : c))
+    return { ...layout, columns }
+  }
+
+  if (target.content.type !== "columns") return null
+  const updatedInner = patchColumnDefAtPath(target.content, rest, patch)
+  if (!updatedInner) return null
+  const columns = layout.columns.map((c, i) =>
+    i === head ? { ...c, content: updatedInner } : c,
+  )
+  return { ...layout, columns }
+}
+
+/**
  * Build a flat N-column ColumnStructure preset.
  * - 1 col: full-width single column (Blank)
  * - 2 col: main 3fr + sidebar 1fr (min 240px, priority 1 = first to collapse on narrow)
@@ -638,6 +670,367 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }))
     },
 
+    /**
+     * Phase 3.1-A — apply an asymmetric ratio preset (e.g. 5:3, golden ratio).
+     * Rebuilds columns with given `ratios`/`minWidths` from `lib/column-palette.ts`.
+     * Existing blocks land in column [0] (main). Sidebars start empty.
+     */
+    applyAsymmetricPreset: (articleId: string, ratios: number[], minWidths?: number[]) => {
+      if (!ratios.length) return
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId) return a
+          const blockIds = a.blocks.map((b) => b.id)
+          const columns: ColumnDefinition[] = ratios.map((ratio, i) => ({
+            ratio,
+            minWidth: minWidths?.[i],
+            priority: i,
+            content: { type: "blocks" as const, blockIds: i === 0 ? blockIds : [] },
+          }))
+          const layout: ColumnStructure = {
+            type: "columns",
+            columns,
+            // Preserve existing rule/gap if the user had them configured.
+            ...(a.layout?.rule !== undefined ? { rule: a.layout.rule } : {}),
+            ...(a.layout?.gap !== undefined ? { gap: a.layout.gap } : {}),
+          }
+          const columnAssignments = Object.fromEntries(blockIds.map((id) => [id, [0]]))
+          return { ...a, layout, columnAssignments, updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-A — toggle hairline vertical rule between columns.
+     */
+    setColumnRule: (articleId: string, rule: boolean) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          return { ...a, layout: { ...a.layout, rule }, updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-A — set column gap token ("sm" | "md" | "lg").
+     */
+    setColumnGap: (articleId: string, gap: "sm" | "md" | "lg") => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          return { ...a, layout: { ...a.layout, gap }, updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-A — set a column's display name (used for header label).
+     * Pass null/empty to clear.
+     */
+    setColumnName: (articleId: string, path: number[], name: string | null) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          const trimmed = name?.trim() || null
+          const next = patchColumnDefAtPath(a.layout, path, (col) => {
+            if (trimmed) return { ...col, name: trimmed }
+            const { name: _dropped, ...rest } = col
+            return rest as ColumnDefinition
+          })
+          if (!next) return a
+          return { ...a, layout: next, updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-A — set a column's palette id (e.g. "slate", "sage").
+     * Pass null to clear (revert to plain surface bg).
+     */
+    setColumnPaletteId: (articleId: string, path: number[], paletteId: string | null) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          const next = patchColumnDefAtPath(a.layout, path, (col) => {
+            if (paletteId) return { ...col, paletteId }
+            const { paletteId: _dropped, ...rest } = col
+            return rest as ColumnDefinition
+          })
+          if (!next) return a
+          return { ...a, layout: next, updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-A — assign random palette colors to every column in the article.
+     * Deterministic per column path (so re-shuffling is stable unless user calls again).
+     */
+    applyAutoColumnColors: (articleId: string) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          const PALETTE_IDS = ["slate", "sage", "blush", "sand", "sky", "lavender", "peach", "ash"]
+          // Shuffle seed based on current timestamp so each call gives new assignment
+          const seed = Date.now()
+          const assignPalette = (structure: ColumnStructure, basePath: number[]): ColumnStructure => {
+            return {
+              ...structure,
+              columns: structure.columns.map((col, i) => {
+                const myPath = [...basePath, i]
+                // Hash path + seed for stable-per-call random selection
+                let hash = seed
+                for (const n of myPath) {
+                  hash = ((hash << 5) - hash) + n
+                  hash |= 0
+                }
+                const paletteId = PALETTE_IDS[Math.abs(hash) % PALETTE_IDS.length]
+                const withPalette: ColumnDefinition = { ...col, paletteId }
+                // Recurse into nested columns
+                if (withPalette.content.type === "columns") {
+                  withPalette.content = assignPalette(withPalette.content, myPath)
+                }
+                return withPalette
+              }),
+            }
+          }
+          return { ...a, layout: assignPalette(a.layout, []), updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-A — clear all palette colors from an article's columns.
+     */
+    clearAllColumnColors: (articleId: string) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          const clearPalettes = (structure: ColumnStructure): ColumnStructure => ({
+            ...structure,
+            columns: structure.columns.map((col) => {
+              const { paletteId: _dropped, ...rest } = col
+              const cleaned = rest as ColumnDefinition
+              if (cleaned.content.type === "columns") {
+                cleaned.content = clearPalettes(cleaned.content)
+              }
+              return cleaned
+            }),
+          })
+          return { ...a, layout: clearPalettes(a.layout), updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-B — add a full-width pane above or below the column layout.
+     * If the current layout is horizontal, wraps it in a vertical container first.
+     * Returns the path of the new full-width pane for callers to insert blocks into.
+     */
+    /**
+     * Phase 3.1-B — Wrap two blocks into a column-group (Notion-style side-by-side).
+     * `targetBlockId` is the stationary block, `draggedBlockId` is dropped beside it.
+     * `side` determines left/right placement inside the new column-group.
+     */
+    wrapInColumnGroup: (articleId: string, targetBlockId: string, draggedBlockId: string, side: "left" | "right") => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+
+          // Find both blocks in any leaf
+          let targetBlock: WikiBlock | undefined
+          let draggedBlock: WikiBlock | undefined
+          const findInLeaf = (blocks: WikiBlock[]) => {
+            for (const b of blocks) {
+              if (b.id === targetBlockId) targetBlock = b
+              if (b.id === draggedBlockId) draggedBlock = b
+            }
+          }
+          // Search all leaf panes
+          const searchLayout = (node: ColumnStructure) => {
+            node.columns.forEach((col) => {
+              if (col.content.type === "columns") searchLayout(col.content)
+              else findInLeaf(col.content.blocks ?? [])
+            })
+          }
+          searchLayout(a.layout)
+          // Also check flat blocks array
+          findInLeaf(a.blocks)
+
+          if (!targetBlock || !draggedBlock) return a
+
+          // Create column-group block
+          const groupBlock: WikiBlock = {
+            id: genId(),
+            type: "column-group",
+            columnChildren: side === "left"
+              ? [[draggedBlock], [targetBlock]]
+              : [[targetBlock], [draggedBlock]],
+          }
+
+          // Replace target block with group, remove dragged block from its position
+          const replaceInBlocks = (blocks: WikiBlock[]): WikiBlock[] => {
+            return blocks
+              .filter((b) => b.id !== draggedBlockId) // remove dragged
+              .map((b) => b.id === targetBlockId ? groupBlock : b) // replace target with group
+          }
+
+          // Apply to all leaf panes
+          const updateLayout = (node: ColumnStructure): ColumnStructure => ({
+            ...node,
+            columns: node.columns.map((col) => {
+              if (col.content.type === "columns") {
+                return { ...col, content: updateLayout(col.content) }
+              }
+              return {
+                ...col,
+                content: {
+                  ...col.content,
+                  blocks: replaceInBlocks(col.content.blocks ?? []),
+                  blockIds: replaceInBlocks(col.content.blocks ?? []).map((b) => b.id),
+                },
+              }
+            }),
+          })
+
+          return {
+            ...a,
+            layout: updateLayout(a.layout),
+            blocks: replaceInBlocks(a.blocks),
+            updatedAt: now(),
+          }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-B — Unwrap a column-group: dissolve it and put its children
+     * back as sequential blocks in the parent list.
+     */
+    unwrapColumnGroup: (articleId: string, groupBlockId: string) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId) return a
+
+          const expandGroup = (blocks: WikiBlock[]): WikiBlock[] => {
+            const result: WikiBlock[] = []
+            for (const b of blocks) {
+              if (b.id === groupBlockId && b.type === "column-group" && b.columnChildren) {
+                // Flatten all sub-columns' blocks into sequential list
+                for (const subCol of b.columnChildren) {
+                  for (const innerBlock of subCol) result.push(innerBlock)
+                }
+              } else {
+                result.push(b)
+              }
+            }
+            return result
+          }
+
+          // Apply to all leaf panes
+          const updateLayout = (node: ColumnStructure): ColumnStructure => ({
+            ...node,
+            columns: node.columns.map((col) => {
+              if (col.content.type === "columns") {
+                return { ...col, content: updateLayout(col.content) }
+              }
+              const expanded = expandGroup(col.content.blocks ?? [])
+              return {
+                ...col,
+                content: {
+                  ...col.content,
+                  blocks: expanded,
+                  blockIds: expanded.map((b) => b.id),
+                },
+              }
+            }),
+          })
+
+          return {
+            ...a,
+            layout: a.layout ? updateLayout(a.layout) : a.layout,
+            blocks: expandGroup(a.blocks),
+            updatedAt: now(),
+          }
+        }),
+      }))
+    },
+
+    addFullWidthPane: (articleId: string, position: "above" | "below") => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          const currentDir = a.layout.direction ?? "horizontal"
+          let verticalLayout: ColumnStructure
+
+          if (currentDir === "vertical") {
+            // Already vertical — just add a new leaf pane at top or bottom
+            verticalLayout = a.layout
+          } else {
+            // Horizontal — wrap in a vertical container
+            verticalLayout = {
+              type: "columns",
+              direction: "vertical",
+              columns: [{
+                ratio: 1,
+                content: a.layout, // existing horizontal layout becomes a nested child
+              }],
+              // Preserve existing rule/gap on the inner horizontal layout
+            }
+          }
+
+          const newPane: ColumnDefinition = {
+            ratio: 1,
+            content: { type: "blocks", blockIds: [], blocks: [] },
+          }
+
+          const columns = position === "above"
+            ? [newPane, ...verticalLayout.columns]
+            : [...verticalLayout.columns, newPane]
+
+          return {
+            ...a,
+            layout: { ...verticalLayout, columns },
+            updatedAt: now(),
+          }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-A — set column background opacity (0.1 ~ 1).
+     */
+    setColumnPaletteAlpha: (articleId: string, path: number[], alpha: number) => {
+      const clamped = Math.max(0.1, Math.min(1, alpha))
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          const next = patchColumnDefAtPath(a.layout, path, (col) => ({ ...col, paletteAlpha: clamped }))
+          if (!next) return a
+          return { ...a, layout: next, updatedAt: now() }
+        }),
+      }))
+    },
+
+    /**
+     * Phase 3.1-A — set gradient second color (paletteId). Pass null to clear.
+     */
+    setColumnGradientTo: (articleId: string, path: number[], gradientTo: string | null) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
+          if (a.id !== articleId || !a.layout) return a
+          const next = patchColumnDefAtPath(a.layout, path, (col) => {
+            if (gradientTo) return { ...col, gradientTo }
+            const { gradientTo: _dropped, ...rest } = col
+            return rest as ColumnDefinition
+          })
+          if (!next) return a
+          return { ...a, layout: next, updatedAt: now() }
+        }),
+      }))
+    },
+
     addArticleReference: (articleId: string, referenceId: string) => {
       set((state: any) => ({
         wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
@@ -697,15 +1090,28 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           // ── Phase 3: layout leaf sync ──
           let layout = a.layout
           if (layout) {
-            // Determine target leaf: same leaf as afterBlockId, or first leaf
+            // Bug fix: when afterBlockId is given, insert immediately after it
+            // within its leaf (not at the end of the leaf). Previously this
+            // was always "append", which sent new TOC/Infobox/etc. to the
+            // bottom even when the user clicked "+ Add block" right under
+            // an existing block.
             let targetPath: ColumnPath | null = null
-            if (afterBlockId && afterBlockId !== "__prepend__") {
+            let insertPos: "prepend" | "append" | number = "append"
+            if (afterBlockId === "__prepend__") {
+              targetPath = firstLeafPath(layout)
+              insertPos = "prepend"
+            } else if (afterBlockId) {
               const loc = findBlockLocation(layout, afterBlockId)
-              targetPath = loc?.path ?? null
+              if (loc) {
+                targetPath = loc.path
+                insertPos = loc.index + 1
+              }
             }
-            if (!targetPath) targetPath = firstLeafPath(layout)
-            const pos = afterBlockId === "__prepend__" ? "prepend" as const : "append" as const
-            layout = insertBlockAtPath(layout, targetPath, newBlock, pos) ?? layout
+            if (!targetPath) {
+              targetPath = firstLeafPath(layout)
+              insertPos = "append"
+            }
+            layout = insertBlockAtPath(layout, targetPath, newBlock, insertPos) ?? layout
           }
           const sectionIndex = buildSectionIndex(blocks)
           const linksOut = extractLinksFromWikiBlocks(blocks)

@@ -25,6 +25,14 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { Columns as PhColumns } from "@phosphor-icons/react/dist/ssr/Columns"
 import { AddBlockButton } from "./wiki-block-renderer"
+import { paletteStyleVars } from "@/lib/column-palette"
+
+/** Phase 3.1-A — map ColumnStructure.gap token to CSS value. */
+const GAP_VALUES: Record<"sm" | "md" | "lg", string> = {
+  sm: "1rem",
+  md: "1.5rem",
+  lg: "2.5rem",
+}
 
 export interface ColumnRendererProps {
   /** The column tree to render. */
@@ -64,6 +72,12 @@ export interface ColumnRendererProps {
    * Converts the leaf into a nested ColumnStructure with `count` inner columns.
    */
   onSplitLeaf?: (path: number[], count: number) => void
+  /**
+   * Phase 3.1-A: Render a per-column overflow menu (⋯). Typically renders
+   * `<WikiColumnMenu>` — name editor, palette picker, article-level rule/gap toggles.
+   * Called for each column header. Only shown in edit mode.
+   */
+  renderColumnMenu?: (path: number[], column: ColumnDefinition) => ReactNode
   /** Optional className applied to the outermost wrapper. */
   className?: string
 }
@@ -90,6 +104,7 @@ export function ColumnRenderer({
   onRemoveColumn,
   onAddBlockToColumn,
   onSplitLeaf,
+  renderColumnMenu,
   className,
 }: ColumnRendererProps) {
   return (
@@ -103,6 +118,7 @@ export function ColumnRenderer({
       onRemoveColumn={onRemoveColumn}
       onAddBlockToColumn={onAddBlockToColumn}
       onSplitLeaf={onSplitLeaf}
+      renderColumnMenu={renderColumnMenu}
       className={className}
     />
   )
@@ -120,10 +136,11 @@ interface ColumnNodeProps {
   onRemoveColumn?: (path: number[]) => void
   onAddBlockToColumn?: (path: number[], type: string, level?: number) => void
   onSplitLeaf?: (path: number[], count: number) => void
+  renderColumnMenu?: (path: number[], column: ColumnDefinition) => ReactNode
   className?: string
 }
 
-function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn, onAddBlockToColumn, onSplitLeaf, className }: ColumnNodeProps) {
+function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn, onAddBlockToColumn, onSplitLeaf, renderColumnMenu, className }: ColumnNodeProps) {
   const direction = node.direction ?? "horizontal"
   const isHorizontal = direction === "horizontal"
   const colCount = node.columns.length
@@ -147,9 +164,14 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
     return (
       <div className="relative">
         <PanelGroup
+          key={groupId}
           id={groupId}
           direction="horizontal"
-          className={cn("wiki-column-grid wiki-column-grid--resizable", className)}
+          className={cn(
+            "wiki-column-grid wiki-column-grid--resizable wiki-column-grid--responsive",
+            node.rule && "wiki-column-grid--ruled",
+            className,
+          )}
           data-direction={direction}
           onLayout={(newSizes) => {
             if (!onRatiosChange) return
@@ -162,38 +184,55 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
           {node.columns.map((col, i) => {
             const childPath = [...basePath, i]
             const minSizePct = col.minWidth ? Math.min(40, Math.max(8, (col.minWidth / 1200) * 100)) : 8
+            const paletteStyle = paletteStyleVars(col.paletteId, col.paletteAlpha, col.gradientTo)
             return (
               <Fragment key={i}>
                 <Panel
                   defaultSize={sizes[i]}
                   minSize={minSizePct}
                   className={cn(
-                    "wiki-column-panel group/panel relative rounded-lg border bg-card/30 p-5 transition-colors",
+                    "wiki-column-panel group/panel relative rounded-lg p-5 transition-colors",
+                    // Phase 3.1-B: only show box when palette is set — bare columns flow naturally
                     hoveringRemoveIdx === i
-                      ? "border-destructive/50 bg-destructive/5"
-                      : "border-border-subtle/40",
+                      ? "border border-destructive/50 bg-destructive/5"
+                      : col.paletteId
+                        ? cn("wiki-column-cell--themed border border-transparent", col.gradientTo && "wiki-column-cell--gradient")
+                        : "border border-transparent",
+                    "self-start",
+                    // Phase 3.1-B fix: override grid/flex min-content so column can be
+                    // freely resized below image's natural width.
+                    // NOTE: no overflow-hidden — buttons live above the column (-top-8).
+                    "min-w-0",
                   )}
+                  style={paletteStyle}
                 >
-                  {/* Per-column X (remove) — highlights entire card on hover */}
-                  {onRemoveColumn && canRemove && (
-                    <button
-                      type="button"
-                      onMouseEnter={() => setHoveringRemoveIdx(i)}
-                      onMouseLeave={() => setHoveringRemoveIdx(null)}
-                      onClick={() => {
-                        const leaf = col.content
-                        const hasBlocks = leaf.type === "blocks" &&
-                          ((leaf.blocks && leaf.blocks.length > 0) || (leaf.blockIds && leaf.blockIds.length > 0))
-                        if (hasBlocks && !window.confirm("이 컬럼의 블록들이 다른 컬럼으로 이동됩니다. 삭제하시겠습니까?")) return
-                        setHoveringRemoveIdx(null)
-                        onRemoveColumn(childPath)
-                      }}
-                      title="Remove this column"
-                      aria-label="Remove column"
-                      className="absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <PhX size={10} weight="bold" />
-                    </button>
+                  {/* Phase 3.1-B: per-column ⋯ menu + X delete — inside top-right of the column.
+                      Pushed up near the column's top edge so they sit above image/infobox menus
+                      (which start at image top-1, i.e. Panel's padding top + 4px). */}
+                  {(onRemoveColumn || renderColumnMenu) && (
+                    <div className="absolute right-1 top-0.5 z-10 flex items-center gap-1">
+                      {renderColumnMenu && renderColumnMenu(childPath, col)}
+                      {onRemoveColumn && canRemove && (
+                        <button
+                          type="button"
+                          onMouseEnter={() => setHoveringRemoveIdx(i)}
+                          onMouseLeave={() => setHoveringRemoveIdx(null)}
+                          onClick={() => {
+                            const leaf = col.content
+                            const hasBlocks = leaf.type === "blocks" &&
+                              ((leaf.blocks && leaf.blocks.length > 0) || (leaf.blockIds && leaf.blockIds.length > 0))
+                            if (hasBlocks && !window.confirm("이 컬럼의 블록들이 다른 컬럼으로 이동됩니다. 삭제하시겠습니까?")) return
+                            setHoveringRemoveIdx(null)
+                            onRemoveColumn(childPath)
+                          }}
+                          title="Remove this card"
+                          aria-label="Remove card"
+                          className="flex h-6 w-6 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <PhX size={10} weight="bold" />
+                        </button>
+                      )}
+                    </div>
                   )}
                   <ColumnCell
                     column={col}
@@ -205,12 +244,13 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
                     onRemoveColumn={onRemoveColumn}
                     onAddBlockToColumn={onAddBlockToColumn}
                     onSplitLeaf={onSplitLeaf}
+                    renderColumnMenu={renderColumnMenu}
                   />
                 </Panel>
                 {i < colCount - 1 && (
                   <PanelResizeHandle
                     className="wiki-column-resize-handle group/handle relative flex w-1 items-center justify-center transition-colors hover:bg-accent/40 data-[resize-handle-state=drag]:bg-accent"
-                    aria-label="Resize column"
+                    aria-label="Resize card"
                   >
                     <span className="h-8 w-0.5 rounded-sm bg-border-subtle transition-colors group-hover/handle:bg-accent/60" />
                     {/* Phase 2-2-B-3: `+` button between columns (hover to reveal) */}
@@ -221,8 +261,8 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
                           e.stopPropagation()
                           onAddColumnAfter(basePath, i)
                         }}
-                        title="Insert column here"
-                        aria-label="Insert column"
+                        title="Insert card here"
+                        aria-label="Insert card"
                         className="absolute left-1/2 top-2 z-10 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full border border-border-subtle bg-surface-overlay text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-accent/10 hover:text-accent group-hover/handle:opacity-100"
                       >
                         <PhPlus size={10} weight="bold" />
@@ -239,8 +279,8 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
           <button
             type="button"
             onClick={() => onAddColumnAfter(basePath, colCount - 1)}
-            title="Add column at end"
-            aria-label="Add column"
+            title="Add card at end"
+            aria-label="Add card"
             className="absolute -right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-dashed border-border-subtle bg-surface-overlay/70 text-muted-foreground opacity-40 shadow-sm transition-opacity hover:bg-accent/10 hover:text-accent hover:border-accent/40 hover:opacity-100 pointer-events-auto"
           >
             <PhPlus size={12} weight="bold" />
@@ -251,48 +291,92 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
   }
 
   // Default: CSS Grid (read mode, nested columns, or vertical)
-  const tracks = node.columns.map((col) => buildTrack(col)).join(" ")
+  // Vertical direction uses content-fit tracks so empty full-width panes stay thin.
+  const tracks = node.columns.map((col) => buildTrack(col, direction)).join(" ")
+  const gap = isHorizontal ? GAP_VALUES[node.gap ?? "md"] : "1rem"
   const gridStyle: CSSProperties = isHorizontal
-    ? { display: "grid", gridTemplateColumns: tracks, gap: "1.5rem" }
-    : { display: "grid", gridTemplateRows: tracks, gap: "1rem" }
+    ? { display: "grid", gridTemplateColumns: tracks, gap }
+    : { display: "grid", gridTemplateRows: tracks, gap }
 
   // Phase 2-2-B-3-b: Nested horizontal columns in edit mode expose per-column
   // +/X buttons. Ratios stay locked (no drag handles in nested CSS Grid).
-  const showNestedEditUI = editable && isHorizontal && basePath.length > 0
-  const canAdd = showNestedEditUI && !!onAddColumnAfter
+  // Show per-column edit UI (X / ⋯) for:
+  //  1) Nested horizontal columns (was the original case)
+  //  2) Top-level vertical columns (full-width panes) — needed so users can delete them
+  //  3) Phase 3.1-A: Top-level horizontal with exactly 1 card — so the ⋯ menu
+  //     (palette / name / rule / gap) is reachable even without resize handles.
+  //     (2+ card case handled above in useDragMode branch.)
+  const showNestedEditUI =
+    editable && (
+      (isHorizontal && basePath.length > 0) ||
+      (!isHorizontal && basePath.length === 0) ||
+      (isHorizontal && basePath.length === 0 && colCount === 1)
+    )
+  const canAdd = showNestedEditUI && isHorizontal && !!onAddColumnAfter
   const canRemove = showNestedEditUI && !!onRemoveColumn && colCount > 1
 
   return (
-    <div className={cn("wiki-column-grid", className)} style={gridStyle} data-direction={direction}>
+    <div
+      className={cn(
+        "wiki-column-grid",
+        isHorizontal && "wiki-column-grid--responsive",
+        node.rule && "wiki-column-grid--ruled",
+        className,
+      )}
+      style={gridStyle}
+      data-direction={direction}
+    >
       {node.columns.map((col, i) => {
         const childPath = [...basePath, i]
         const isLastNested = showNestedEditUI && i === colCount - 1
+        const paletteStyle = paletteStyleVars(col.paletteId, col.paletteAlpha, col.gradientTo)
+        // Phase 3.1-A fix: 1-card case must still render palette visuals when the user
+        // picks a color — `colCount >= 2` gated both the padding and themed class,
+        // so `setColumnPaletteId` had no visible effect.
+        const showCardBox = colCount >= 2 || !!col.paletteId
         return (
-          <div key={i} className={cn(
-            colCount >= 2 && "rounded-lg border bg-card/30 p-5 transition-colors",
-            colCount >= 2 && (hoveringRemoveIdx === i ? "border-destructive/50 bg-destructive/5" : "border-border-subtle/40"),
-            showNestedEditUI && "relative group/nested-panel",
-            isLastNested && "pr-3",
-          )}>
-            {canRemove && (
-              <button
-                type="button"
-                onMouseEnter={() => setHoveringRemoveIdx(i)}
-                onMouseLeave={() => setHoveringRemoveIdx(null)}
-                onClick={() => {
-                  const leaf = col.content
-                  const hasBlocks = leaf.type === "blocks" &&
-                    ((leaf.blocks && leaf.blocks.length > 0) || (leaf.blockIds && leaf.blockIds.length > 0))
-                  if (hasBlocks && !window.confirm("이 컬럼의 블록들이 다른 컬럼으로 이동됩니다. 삭제하시겠습니까?")) return
-                  setHoveringRemoveIdx(null)
-                  onRemoveColumn!(childPath)
-                }}
-                title="Remove this column"
-                aria-label="Remove column"
-                className="absolute right-3 top-3 z-10 flex h-5 w-5 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
-              >
-                <PhX size={10} weight="bold" />
-              </button>
+          <div
+            key={i}
+            className={cn(
+              showCardBox && "rounded-lg p-5 transition-colors self-start",
+              showCardBox && (
+                hoveringRemoveIdx === i
+                  ? "border border-destructive/50 bg-destructive/5"
+                  : col.paletteId
+                    ? cn("wiki-column-cell--themed border border-transparent", col.gradientTo && "wiki-column-cell--gradient")
+                    : "border border-transparent"
+              ),
+              showNestedEditUI && "relative group/nested-panel",
+              isLastNested && "pr-3",
+              // Phase 3.1-B fix: prevent images from locking column min-width to image natural size
+              "min-w-0",
+            )}
+            style={paletteStyle}
+          >
+            {(canRemove || (showNestedEditUI && renderColumnMenu)) && (
+              <div className="absolute right-1 top-0.5 z-10 flex items-center gap-1">
+                {showNestedEditUI && renderColumnMenu && renderColumnMenu(childPath, col)}
+                {canRemove && (
+                  <button
+                    type="button"
+                    onMouseEnter={() => setHoveringRemoveIdx(i)}
+                    onMouseLeave={() => setHoveringRemoveIdx(null)}
+                    onClick={() => {
+                      const leaf = col.content
+                      const hasBlocks = leaf.type === "blocks" &&
+                        ((leaf.blocks && leaf.blocks.length > 0) || (leaf.blockIds && leaf.blockIds.length > 0))
+                      if (hasBlocks && !window.confirm("이 컬럼의 블록들이 다른 컬럼으로 이동됩니다. 삭제하시겠습니까?")) return
+                      setHoveringRemoveIdx(null)
+                      onRemoveColumn!(childPath)
+                    }}
+                    title="Remove this card"
+                    aria-label="Remove card"
+                    className="flex h-5 w-5 items-center justify-center rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <PhX size={10} weight="bold" />
+                  </button>
+                )}
+              </div>
             )}
             <ColumnCell
               column={col}
@@ -304,13 +388,14 @@ function ColumnNode({ node, basePath, renderBlock, editable, onRatiosChange, onA
               onRemoveColumn={onRemoveColumn}
               onAddBlockToColumn={onAddBlockToColumn}
               onSplitLeaf={onSplitLeaf}
+              renderColumnMenu={renderColumnMenu}
             />
             {canAdd && (
               <button
                 type="button"
                 onClick={() => onAddColumnAfter!(basePath, i)}
-                title="Insert column after this one"
-                aria-label="Insert column"
+                title="Insert card after this one"
+                aria-label="Insert card"
                 className="absolute -right-3 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-dashed border-border-subtle bg-surface-overlay text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-accent/10 hover:text-accent hover:border-accent/40 group-hover/nested-panel:opacity-100"
               >
                 <PhPlus size={11} weight="bold" />
@@ -333,12 +418,13 @@ interface ColumnCellProps {
   onRemoveColumn?: (path: number[]) => void
   onAddBlockToColumn?: (path: number[], type: string, level?: number) => void
   onSplitLeaf?: (path: number[], count: number) => void
+  renderColumnMenu?: (path: number[], column: ColumnDefinition) => ReactNode
 }
 
-function ColumnCell({ column, path, renderBlock, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn, onAddBlockToColumn, onSplitLeaf }: ColumnCellProps) {
+function ColumnCell({ column, path, renderBlock, editable, onRatiosChange, onAddColumnAfter, onRemoveColumn, onAddBlockToColumn, onSplitLeaf, renderColumnMenu }: ColumnCellProps) {
   if (column.content.type === "columns") {
     return (
-      <div className="wiki-column-cell">
+      <div className="wiki-column-cell min-w-0">
         <ColumnNode
           node={column.content}
           basePath={path}
@@ -349,6 +435,7 @@ function ColumnCell({ column, path, renderBlock, editable, onRatiosChange, onAdd
           onRemoveColumn={onRemoveColumn}
           onAddBlockToColumn={onAddBlockToColumn}
           onSplitLeaf={onSplitLeaf}
+          renderColumnMenu={renderColumnMenu}
         />
       </div>
     )
@@ -361,17 +448,19 @@ function ColumnCell({ column, path, renderBlock, editable, onRatiosChange, onAdd
     : (column.content.blockIds ?? [])
 
   return editable ? (
-    <LeafDroppableCell
-      path={path}
-      blockIds={leafBlockIds}
-      renderBlock={renderBlock}
-      onAddBlockToColumn={onAddBlockToColumn}
-      onSplitLeaf={onSplitLeaf}
-    />
+    <>
+      <LeafDroppableCell
+        path={path}
+        blockIds={leafBlockIds}
+        renderBlock={renderBlock}
+        onAddBlockToColumn={onAddBlockToColumn}
+        onSplitLeaf={onSplitLeaf}
+      />
+    </>
   ) : (
-    <div className="wiki-column-cell flex flex-col gap-3">
+    <div className="wiki-column-cell min-w-0 flex flex-col gap-3">
       {leafBlockIds.map((blockId) => (
-        <Fragment key={blockId}>{renderBlock(blockId)}</Fragment>
+        <div key={blockId}>{renderBlock(blockId)}</div>
       ))}
     </div>
   )
@@ -408,7 +497,7 @@ function LeafDroppableCell({
       ref={setNodeRef}
       data-column-path={pathKey(path)}
       className={cn(
-        "wiki-column-cell flex flex-col gap-3 rounded-md transition-colors",
+        "wiki-column-cell rounded-md transition-colors min-w-0 flex flex-col gap-3",
         isOver && "bg-accent/5 ring-1 ring-accent/40",
       )}
     >
@@ -418,16 +507,18 @@ function LeafDroppableCell({
       {isEmpty && (
         <div
           className={cn(
-            "flex min-h-[96px] flex-col items-center justify-center gap-2 rounded-md border border-dashed p-3 transition-colors",
+            "flex min-h-[96px] flex-col rounded-md border border-dashed p-3 transition-colors",
             isOver
-              ? "border-accent bg-accent/5"
-              : "border-border-subtle hover:border-border",
+              ? "items-center justify-center border-accent bg-accent/5"
+              : "items-center justify-end border-border-subtle hover:border-border",
           )}
         >
           {isOver ? (
             <span className="text-2xs text-accent">Drop block here</span>
           ) : onAddBlockToColumn ? (
-            <AddBlockButton onAdd={(type, level) => onAddBlockToColumn(path, type, level)} />
+            <div className="relative z-10">
+              <AddBlockButton onAdd={(type, level) => onAddBlockToColumn(path, type, level)} />
+            </div>
           ) : null}
         </div>
       )}
@@ -437,7 +528,12 @@ function LeafDroppableCell({
 
 /* ── Grid track builder ────────────────────────────────────────── */
 
-function buildTrack(col: ColumnDefinition): string {
+function buildTrack(col: ColumnDefinition, direction: "horizontal" | "vertical" = "horizontal"): string {
+  // Phase 3.1-B: Vertical tracks should fit content (empty full-width panes shouldn't grow).
+  if (direction === "vertical") {
+    if (col.minHeight && col.minHeight > 0) return `minmax(${col.minHeight}px, auto)`
+    return "auto"
+  }
   const fr = `${col.ratio}fr`
   if (col.minWidth && col.minWidth > 0) {
     return `minmax(${col.minWidth}px, ${fr})`

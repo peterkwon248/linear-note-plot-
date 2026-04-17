@@ -1,15 +1,13 @@
 "use client"
 
 /**
- * WikiTocBlock — Phase 2-2-C.
+ * WikiTocBlock — Phase 2-2-C + Phase 3.1-B presentation controls.
  *
- * Block-wrapped Table of Contents. Pre-Phase 2-2-C this was an inline
- * `CollapsibleTOC` component inside WikiArticleRenderer, wired via a scalar
- * `WikiArticle.tocStyle`. Now each TOC is a first-class `WikiBlock` (type="toc")
- * whose position is controlled by `columnAssignments` like any other block.
+ * Sections are derived live from `article.blocks`; this block only stores
+ * display state (`tocCollapsed`, `hiddenLevels`, `width`, `fontSize`, `density`).
  *
- * Sections are derived live from `article.blocks` — the block itself stores
- * only display state (`tocCollapsed`, `hiddenLevels`).
+ * ⋯ menu uses shared `block-menu` primitives for visual consistency with
+ * every other wiki block.
  */
 
 import { useMemo, useState, useEffect } from "react"
@@ -17,8 +15,24 @@ import { usePlotStore } from "@/lib/store"
 import type { WikiBlock } from "@/lib/types"
 import { computeSectionNumbers } from "@/lib/wiki-block-utils"
 import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  MenuSurface,
+  MenuSection,
+  MenuAction,
+  MenuDivider,
+  PresetGrid,
+  WIDTH_OPTIONS,
+  FONT_SIZE_OPTIONS,
+  DENSITY_OPTIONS,
+} from "./block-menu"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
+import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { ArrowsHorizontal } from "@phosphor-icons/react/dist/ssr/ArrowsHorizontal"
+import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
+import { Rows } from "@phosphor-icons/react/dist/ssr/Rows"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 
 export interface WikiTocBlockProps {
@@ -28,6 +42,22 @@ export interface WikiTocBlockProps {
   onUpdate?: (patch: Partial<Omit<WikiBlock, "id">>) => void
   onDelete?: () => void
   dragHandleProps?: DraggableSyntheticListeners
+}
+
+/** TOC-specific width targets (narrower than Infobox since TOC is a sidebar-style card). */
+const TOC_WIDTH_PX: Record<string, number | null> = {
+  narrow: 280,
+  default: 400,
+  wide: 560,
+  full: null,
+}
+
+function widthToStyle(w: WikiBlock["width"]): React.CSSProperties {
+  if (typeof w === "number") return { width: w, maxWidth: "100%" }
+  if (w === "full") return {}
+  const px = TOC_WIDTH_PX[w ?? "default"]
+  if (px == null) return {}
+  return { width: "100%", maxWidth: px }
 }
 
 export function WikiTocBlock({ block, articleId, editable = false, onUpdate, onDelete, dragHandleProps }: WikiTocBlockProps) {
@@ -51,13 +81,11 @@ export function WikiTocBlock({ block, articleId, editable = false, onUpdate, onD
     return out
   }, [blocks, sectionNumbers, hidden])
 
-  // Local open state mirrors block.tocCollapsed — controlled once persisted.
   const [open, setOpen] = useState(!(block.tocCollapsed ?? false))
   useEffect(() => {
     setOpen(!(block.tocCollapsed ?? false))
   }, [block.tocCollapsed])
 
-  // Listen for plot:set-all-collapsed so the TOC follows the global toggle.
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ collapsed: boolean }>).detail
@@ -70,9 +98,18 @@ export function WikiTocBlock({ block, articleId, editable = false, onUpdate, onD
   const handleToggle = () => {
     const next = !open
     setOpen(next)
-    // Only persist in editable mode — view mode treats this as ephemeral.
     if (editable) onUpdate?.({ tocCollapsed: !next })
   }
+
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const widthStyle = widthToStyle(block.width)
+  const fontScale = block.fontSize && block.fontSize > 0 ? block.fontSize : 1
+  const rootStyle: React.CSSProperties = { ...widthStyle, fontSize: `${fontScale}em` }
+
+  const currentWidthKey: "narrow" | "default" | "wide" | "full" =
+    typeof block.width === "number" ? "default" : (block.width ?? "default")
+  const currentDensity = (block.density ?? "normal") as "compact" | "normal" | "loose"
 
   const dragHandle = editable && dragHandleProps ? (
     <div
@@ -83,19 +120,100 @@ export function WikiTocBlock({ block, articleId, editable = false, onUpdate, onD
     </div>
   ) : null
 
+  const actionsMenu = editable ? (
+    <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+      <PopoverTrigger asChild>
+        <button
+          onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+          className="absolute right-1 top-1 z-20 p-1 text-muted-foreground opacity-0 transition-opacity duration-100 hover:!opacity-100 hover:text-foreground group-hover/toc-block:opacity-30"
+          title="Block actions"
+          style={{ fontSize: "1rem" }}
+        >
+          <DotsThree size={14} weight="bold" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-56 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <MenuSurface>
+          <MenuSection icon={<ArrowsHorizontal size={12} weight="regular" />} label="Width">
+            <PresetGrid
+              options={WIDTH_OPTIONS}
+              active={currentWidthKey}
+              onSelect={(v) => {
+                onUpdate?.({ width: v === "default" ? undefined : v })
+                setMenuOpen(false)
+              }}
+            />
+          </MenuSection>
+          <MenuSection icon={<TextAa size={12} weight="regular" />} label="Font size">
+            <PresetGrid
+              options={FONT_SIZE_OPTIONS}
+              active={fontScale as 0.85 | 1 | 1.15 | 1.3}
+              onSelect={(v) => {
+                onUpdate?.({ fontSize: v === 1 ? undefined : v })
+                setMenuOpen(false)
+              }}
+            />
+          </MenuSection>
+          <MenuSection icon={<Rows size={12} weight="regular" />} label="Spacing">
+            <PresetGrid
+              options={DENSITY_OPTIONS}
+              active={currentDensity}
+              onSelect={(v) => {
+                onUpdate?.({ density: v === "normal" ? undefined : v })
+                setMenuOpen(false)
+              }}
+            />
+          </MenuSection>
+          {typeof block.width === "number" && (
+            <>
+              <MenuDivider />
+              <div className="px-1">
+                <MenuAction
+                  label={`Reset width (${block.width}px)`}
+                  onClick={() => { onUpdate?.({ width: undefined }); setMenuOpen(false) }}
+                />
+              </div>
+            </>
+          )}
+          {onDelete && (
+            <>
+              <MenuDivider />
+              <div className="px-1 pb-1">
+                <MenuAction
+                  icon={<Trash size={14} weight="regular" />}
+                  label="Delete block"
+                  destructive
+                  onClick={() => { setMenuOpen(false); onDelete() }}
+                />
+              </div>
+            </>
+          )}
+        </MenuSurface>
+      </PopoverContent>
+    </Popover>
+  ) : null
+
   if (sections.length === 0) {
     if (!editable) return null
     return (
-      <div className="group/toc-block relative max-w-sm rounded-lg border border-dashed border-border-subtle px-4 py-3 text-2xs text-muted-foreground/50">
+      <div
+        className="group/toc-block relative rounded-lg border border-dashed border-border-subtle px-4 py-3 text-2xs text-muted-foreground/50"
+        style={rootStyle}
+      >
         {dragHandle}
+        {actionsMenu}
         Contents — add sections to populate
       </div>
     )
   }
 
   return (
-    <div className="group/toc-block relative max-w-sm rounded-lg border border-border bg-secondary/30">
+    <div
+      className="group/toc-block relative rounded-lg border border-border bg-secondary/30"
+      style={rootStyle}
+    >
       {dragHandle}
+      {actionsMenu}
       <button onClick={handleToggle} className="flex w-full items-center gap-2 px-4 py-3 text-left">
         <span className="font-bold text-foreground/80">Contents</span>
         <CaretDown
@@ -105,9 +223,19 @@ export function WikiTocBlock({ block, articleId, editable = false, onUpdate, onD
         />
       </button>
       {open && (
-        <div className="space-y-1 px-4 pb-3.5">
+        <div
+          className="flex flex-col px-4 pb-3.5"
+          style={{
+            gap:
+              block.density === "compact"
+                ? "0"
+                : block.density === "loose"
+                  ? "0.9rem"
+                  : "0.25rem",
+          }}
+        >
           {sections.map((s) => (
-            <div key={s.id} style={{ paddingLeft: (s.level - 2) * 16 }}>
+            <div key={s.id} style={{ paddingLeft: `${(s.level - 2) * 1}em` }}>
               <button
                 onClick={() => {
                   document.getElementById(`wiki-block-${s.id}`)?.scrollIntoView({

@@ -1,7 +1,13 @@
-# Plot — TODO (2026-04-15 밤)
+# Plot — TODO (2026-04-17 저녁)
 
-## ✅ 최근 완료 (2026-04-15, 하루에 9개 PR)
+## ✅ 최근 완료 (2026-04-17)
 
+- [x] **Phase 3.1-A/B + Page Identity (PR pending)**: Article themeColor tint(5%) + WikiTitle paint-bucket picker / 공통 block-menu primitives + 5개 블록 ⋯ 메뉴 마이그레이션 / `WikiBlock.width`+`density`+`fontSize` (Infobox/TOC) / Card 용어 통일 / Asymmetric mini bar + cardCount 그룹핑 / 1-card palette 시각 fix + ⋯ 메뉴 누락 fix / SectionNumbers Context / addWikiBlock 위치 fix / Column-group unwrap 버그 2곳 / Seed 3-stage 리셋. `BRAINSTORM-2026-04-17-page-identity.md` Tier 시스템 확정.
+
+## ✅ 이전 완료 (2026-04-15, 하루에 10개 PR)
+
+- [x] **Phase 2-2-C — 메타 → 블록 통합** (PR #208, migration v78+v79)
+- [x] **Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼** (PR #208)
 - [x] **Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼** (PR #205, 2026-04-15 밤)
 - [x] **Phase 2-2-B-2 — 블록 컬럼 간 드래그** (PR #204)
 - [x] **Phase 2-2-B-1 — 컬럼 비율 드래그 + 메타 위치 UI** (PR #203)
@@ -28,18 +34,20 @@
 - [x] **Phase 2-2-B-1 — 컬럼 비율 드래그 + 메타 위치 UI** ✅ (2-2-C에서 메타 위치 UI 폐기 예정)
 - [x] **Phase 2-2-B-2 — 블록 컬럼 간 드래그** ✅
 - [x] **Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼** ✅
-- [ ] **Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼 생성 UI** (다음)
-- [ ] **Phase 2-2-C 신규 — 메타 → 블록 통합** (2026-04-15 밤 대결정, 큰 리팩토링)
-  - WikiBlockType에 "infobox" / "toc" 추가
-  - Migration v78: article.infobox/tocStyle → 블록으로 변환
-  - ColumnMetaPositionMenu 폐기
-  - WikiArticle scalar 메타 필드 삭제 (infobox, infoboxHeaderColor, infoboxColumnPath, tocStyle)
-- [ ] **Phase 3 — 노션식 블록 분기 (편집 UX 고급)**
+- [x] **Phase 2-2-B-3-b / Phase 2-2-C** ✅ (PR #208)
+- [x] **Phase 3 — Multi-pane document model** ✅ (2026-04-15, per-column blocks + v80)
+- [~] **Phase 3.1-A — 컬럼 꾸미기 기본** 대부분 완료 (Article themeColor picker / Asymmetric UI / Card rename / 1-card fix / WikiColumnMenu 확장)
+  - [ ] **남음**: Column rule 토글 UI / Gap 토글 UI / Per-column name 헤더 UI (타입+CSS 이미 있음)
+- [~] **Phase 3.1-B — 블록 속성 확장** 일부 완료 (width / density / fontSize / 공통 block-menu primitives)
+  - [ ] **남음**: Pull Quote 블록 / spanColumns / fullBleed / dropCap
+- [ ] **Phase 3.1-C — Hero / Opening 영역** (다음 유력, `BRAINSTORM-2026-04-17-page-identity.md` Tier 3)
+- [ ] **Phase 3.1-D — Typography + matchHeights**
+- [ ] **Phase 3.1-E — 노트 columnsBlock 확장**
+- [ ] **Phase 3.1-F — Built-in 템플릿 재구성** (마지막)
 - [ ] **Phase 4 — 사용자 커스텀 템플릿 편집기**
 - [ ] **Phase 5 — 나무위키 잔여 기능 (Hatnote/Navbox/Callout 전부 블록으로)**
 - [ ] **Phase 6 — 편집 히스토리 + 요약**
 - [ ] **Phase 7 — 노트 split 기능**
-- [ ] **마지막: built-in 템플릿 풍성화** (Phase 5 완료 후, heroImage / 헤더 배너 / 섹션 icon / themeColor 다양화 등)
 
 ## P2 — 기타
 

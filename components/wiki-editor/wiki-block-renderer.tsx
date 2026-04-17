@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect, useContext } from "react"
+import { SectionNumbersContext } from "./section-numbers-context"
+import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
 import type { WikiBlock } from "@/lib/types"
@@ -18,6 +20,7 @@ import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
@@ -34,6 +37,15 @@ import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { WikiInfoboxBlock } from "./wiki-infobox-block"
 import { WikiTocBlock } from "./wiki-toc-block"
+import {
+  MenuSurface,
+  MenuSection,
+  MenuAction,
+  MenuDivider,
+  PresetGrid,
+  FONT_SIZE_OPTIONS,
+} from "./block-menu"
+import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
 
 /* ── Cached render-only extensions for generateHTML ── */
 
@@ -92,9 +104,215 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
       return articleId ? <WikiInfoboxBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
     case "toc":
       return articleId ? <WikiTocBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
+    case "pull-quote":
+      return <PullQuoteBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+    case "column-group":
+      return <ColumnGroupBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     default:
       return null
   }
+}
+
+/* ── Column Group Block (Phase 3.1-B — Notion-style implicit side-by-side) ── */
+
+function ColumnGroupBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articleId }: WikiBlockRendererProps) {
+  const columns = block.columnChildren ?? [[], []]
+  const count = columns.length
+  // Phase 3.1-B Step 2: consume sectionNumbers so nested sections keep continuous numbering.
+  const sectionNumbers = useContext(SectionNumbersContext)
+  const unwrapColumnGroup = usePlotStore((s) => s.unwrapColumnGroup)
+
+  // Phase 3.1-B: dropdown menu for adding sub-column (same pattern as SortableBlockItem side menu)
+  const [subColMenuPos, setSubColMenuPos] = useState<{ x: number; y: number } | null>(null)
+  const subColMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!subColMenuPos) return
+    const close = (e: globalThis.MouseEvent) => {
+      if (subColMenuRef.current?.contains(e.target as Node)) return
+      setSubColMenuPos(null)
+    }
+    document.addEventListener("mousedown", close)
+    return () => document.removeEventListener("mousedown", close)
+  }, [subColMenuPos])
+
+  const handleAddSubColumnWithType = (type: string) => {
+    if (count >= 4) return
+    const newBlock: WikiBlock = {
+      id: `blk-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: type as WikiBlock["type"],
+    }
+    if (type === "text") newBlock.content = ""
+    if (type === "section") { newBlock.title = ""; newBlock.level = 2 }
+    if (type === "infobox") { newBlock.fields = []; newBlock.headerColor = null }
+    if (type === "toc") newBlock.tocCollapsed = false
+    if (type === "pull-quote") newBlock.quoteText = ""
+    onUpdate?.({ columnChildren: [...columns, [newBlock]] })
+    setSubColMenuPos(null)
+  }
+
+  return (
+    <div {...dragHandleProps} className="group/colgroup relative w-full">
+      {/* Unwrap (×) — edit mode, hover to reveal.
+          Bug fix: was calling onDelete() which dropped all nested blocks.
+          Now truly unwraps — children are promoted to flat blocks. */}
+      {editable && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            if (articleId) unwrapColumnGroup(articleId, block.id)
+            else onDelete?.()
+          }}
+          className="absolute -right-3 top-0 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-surface-overlay text-muted-foreground/40 opacity-0 shadow-sm transition-opacity hover:text-foreground group-hover/colgroup:opacity-100"
+          title="Unwrap side-by-side (keeps blocks)"
+        >
+          <PhX size={8} weight="bold" />
+        </button>
+      )}
+      {/* Add sub-column (+) — right edge, opens type picker, max 4 columns */}
+      {editable && count < 4 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            const x = Math.min(e.clientX, window.innerWidth - 200)
+            const y = Math.min(e.clientY, window.innerHeight - 350)
+            setSubColMenuPos({ x, y })
+          }}
+          className="absolute -right-3 top-1/2 z-10 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full border border-border-subtle bg-surface-overlay text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-accent/10 hover:text-accent group-hover/colgroup:opacity-60"
+          title="Add card"
+        >
+          <PhPlus size={10} weight="bold" />
+        </button>
+      )}
+      {/* Sub-column type picker portal */}
+      {subColMenuPos && typeof document !== "undefined" && createPortal(
+        <div
+          ref={subColMenuRef}
+          className="fixed z-[70] min-w-[180px] rounded-lg border border-border-subtle bg-surface-overlay py-1 shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+          style={{ top: subColMenuPos.y, left: subColMenuPos.x }}
+        >
+          {[
+            { type: "text", label: "Text" },
+            { type: "image", label: "Image" },
+            { type: "section", label: "Section" },
+            { type: "infobox", label: "Infobox" },
+            { type: "toc", label: "TOC" },
+            { type: "pull-quote", label: "Pull Quote" },
+            { type: "note-ref", label: "Note" },
+            { type: "url", label: "URL" },
+            { type: "table", label: "Table" },
+          ].map((item) => (
+            <button
+              key={item.type}
+              type="button"
+              onClick={() => handleAddSubColumnWithType(item.type)}
+              className="flex w-full items-center px-3 py-1.5 text-left text-note transition-colors hover:bg-hover-bg"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
+      {/* Pure grid — NO borders, NO placeholders. Just blocks side-by-side. */}
+      <div
+        className="grid gap-4 min-w-0"
+        style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }}
+      >
+        {columns.map((subCol, i) => (
+          <div key={i} className="flex flex-col gap-3 min-w-0">
+            {subCol.map((innerBlock) => (
+              <WikiBlockRenderer
+                key={innerBlock.id}
+                block={innerBlock}
+                editable={editable}
+                articleId={articleId}
+                sectionNumber={innerBlock.type === "section" ? sectionNumbers.get(innerBlock.id) : undefined}
+                onUpdate={editable ? (patch) => {
+                  const newColumns = columns.map((col, ci) =>
+                    ci === i ? col.map((b) => b.id === innerBlock.id ? { ...b, ...patch } : b) : col
+                  )
+                  onUpdate?.({ columnChildren: newColumns })
+                } : undefined}
+                onDelete={editable ? () => {
+                  const newCol = subCol.filter((b) => b.id !== innerBlock.id)
+                  let newColumns = columns.map((col, ci) => ci === i ? newCol : col)
+                  newColumns = newColumns.filter((col) => col.length > 0)
+                  if (newColumns.length < 2) {
+                    // Bug fix: when only 1 sub-column would remain, unwrap the
+                    // column-group so the surviving blocks stay — don't drop them.
+                    // Fallback to onDelete only if we can't unwrap (no articleId).
+                    if (articleId) {
+                      onUpdate?.({ columnChildren: newColumns })
+                      unwrapColumnGroup(articleId, block.id)
+                    } else {
+                      onDelete?.()
+                    }
+                    return
+                  }
+                  onUpdate?.({ columnChildren: newColumns })
+                } : undefined}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Pull Quote Block (Phase 3.1-B) ── */
+
+function PullQuoteBlock({ block, editable, onUpdate, dragHandleProps }: WikiBlockRendererProps) {
+  const [editing, setEditing] = useState(false)
+  const variant = block.quoteVariant ?? "minimal"
+
+  const variantClasses: Record<string, string> = {
+    minimal: "text-center italic font-serif text-[1.4em] leading-snug text-foreground/90 py-6 px-8",
+    editorial: "font-serif italic text-[1.7em] leading-tight text-foreground py-8 pl-8 pr-4 border-l-0",
+    bordered: "text-[1.15em] leading-normal text-foreground/90 py-4 pl-5 pr-4 border-l-4 border-accent/60",
+  }
+
+  if (editing && editable) {
+    return (
+      <div {...dragHandleProps} className={cn("group relative rounded-md transition-colors", variantClasses[variant])}>
+        <textarea
+          autoFocus
+          defaultValue={block.quoteText ?? ""}
+          placeholder="Quote text…"
+          onBlur={(e) => { onUpdate?.({ quoteText: e.currentTarget.value.trim() || undefined }); setEditing(false) }}
+          className="w-full resize-none bg-transparent outline-none"
+          rows={2}
+        />
+        <input
+          type="text"
+          defaultValue={block.quoteAttribution ?? ""}
+          placeholder="— Attribution (optional)"
+          onBlur={(e) => onUpdate?.({ quoteAttribution: e.currentTarget.value.trim() || undefined })}
+          className="mt-2 w-full bg-transparent text-[0.7em] not-italic text-muted-foreground outline-none"
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div
+      {...dragHandleProps}
+      onClick={editable ? () => setEditing(true) : undefined}
+      className={cn("group relative rounded-md transition-colors", variantClasses[variant], editable && "cursor-text hover:bg-hover-bg/40")}
+    >
+      {block.quoteText ? (
+        <>
+          <p>&ldquo;{block.quoteText}&rdquo;</p>
+          {block.quoteAttribution && (
+            <p className="mt-3 text-[0.7em] not-italic text-muted-foreground">— {block.quoteAttribution}</p>
+          )}
+        </>
+      ) : editable ? (
+        <p className="text-muted-foreground/60">Click to add quote…</p>
+      ) : null}
+    </div>
+  )
 }
 
 /* ── Section Block ── */
@@ -240,128 +458,108 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                 <DotsThree size={14} weight="bold" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-52 p-1" onOpenAutoFocus={(e) => e.preventDefault()}>
-              {onSplitSection && (
-                <>
-                  <button
-                    onClick={() => { setMenuOpen(false); onSplitSection(block.id) }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-                  >
-                    <ArrowSquareUpRight size={14} weight="regular" />
-                    Move to new article
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false)
-                      // Collect this section + its child blocks until next same-or-higher level section
-                      if (!articleId) return
-                      const store = usePlotStore.getState()
-                      const article = store.wikiArticles.find((a) => a.id === articleId)
-                      if (!article) return
-                      const idx = article.blocks.findIndex((b) => b.id === block.id)
-                      if (idx === -1) return
-                      const ids = [block.id]
-                      for (let i = idx + 1; i < article.blocks.length; i++) {
-                        const b = article.blocks[i]
-                        if (b.type === "section" && (b.level ?? 2) <= level) break
-                        ids.push(b.id)
-                      }
-                      const newId = store.copyToNewArticle(articleId, ids, block.title || "Untitled")
-                      if (newId) toast.success(`Copied "${block.title}" to new article`)
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-                  >
-                    <CopySimple size={14} weight="regular" />
-                    Copy to new article
-                  </button>
-                </>
-              )}
+            <PopoverContent align="end" className="w-56 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+              <MenuSurface>
+                {onSplitSection && (
+                  <div className="px-1 pt-1">
+                    <MenuAction
+                      icon={<ArrowSquareUpRight size={14} weight="regular" />}
+                      label="Move to new article"
+                      onClick={() => { setMenuOpen(false); onSplitSection(block.id) }}
+                    />
+                    <MenuAction
+                      icon={<CopySimple size={14} weight="regular" />}
+                      label="Copy to new article"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        if (!articleId) return
+                        const store = usePlotStore.getState()
+                        const article = store.wikiArticles.find((a) => a.id === articleId)
+                        if (!article) return
+                        const idx = article.blocks.findIndex((b) => b.id === block.id)
+                        if (idx === -1) return
+                        const ids = [block.id]
+                        for (let i = idx + 1; i < article.blocks.length; i++) {
+                          const b = article.blocks[i]
+                          if (b.type === "section" && (b.level ?? 2) <= level) break
+                          ids.push(b.id)
+                        }
+                        const newId = store.copyToNewArticle(articleId, ids, block.title || "Untitled")
+                        if (newId) toast.success(`Copied "${block.title}" to new article`)
+                      }}
+                    />
+                  </div>
+                )}
 
-              {/* Move to existing article submenu */}
-              {onMoveToArticle && otherArticles.length > 0 && (
-                <div className="relative">
-                  <button
-                    onClick={() => setMoveSubmenuOpen(!moveSubmenuOpen)}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-                  >
-                    <ArrowSquareOut size={14} weight="regular" />
-                    <span className="flex-1 text-left">Move to article</span>
-                    <CaretRight size={10} weight="regular" className="text-muted-foreground/40" />
-                  </button>
-                  {moveSubmenuOpen && (
-                    <div className="absolute left-full top-0 ml-1 w-48 rounded-lg border border-border-subtle bg-surface-overlay shadow-lg py-1 z-10">
-                      {otherArticles.map((a) => (
-                        <button
-                          key={a.id}
-                          onClick={() => {
-                            setMenuOpen(false)
-                            setMoveSubmenuOpen(false)
-                            onMoveToArticle(block.id, a.id)
-                          }}
-                          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-                        >
-                          <BookOpen size={12} weight="regular" className="shrink-0 text-muted-foreground/50" />
-                          <span className="truncate">{a.title}</span>
-                        </button>
-                      ))}
+                {/* Move to existing article submenu */}
+                {onMoveToArticle && otherArticles.length > 0 && (
+                  <div className="relative px-1">
+                    <MenuAction
+                      icon={<ArrowSquareOut size={14} weight="regular" />}
+                      label="Move to article"
+                      trailing={<CaretRight size={10} weight="regular" />}
+                      onClick={() => setMoveSubmenuOpen(!moveSubmenuOpen)}
+                    />
+                    {moveSubmenuOpen && (
+                      <div className="absolute left-full top-0 ml-1 w-48 rounded-lg border border-border-subtle bg-surface-overlay shadow-lg py-1 z-10">
+                        {otherArticles.map((a) => (
+                          <MenuAction
+                            key={a.id}
+                            icon={<BookOpen size={12} weight="regular" className="text-muted-foreground/50" />}
+                            label={a.title}
+                            onClick={() => {
+                              setMenuOpen(false)
+                              setMoveSubmenuOpen(false)
+                              onMoveToArticle(block.id, a.id)
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Unmerge option (only if block was merged) */}
+                {block.mergedFrom && articleId && (
+                  <>
+                    {(onSplitSection || (onMoveToArticle && otherArticles.length > 0)) && <MenuDivider />}
+                    <div className="px-1">
+                      <MenuAction
+                        icon={<ArrowSquareUpRight size={14} weight="regular" />}
+                        label="Unmerge section"
+                        accent
+                        onClick={() => { setMenuOpen(false); handleUnmerge() }}
+                      />
                     </div>
-                  )}
-                </div>
-              )}
+                  </>
+                )}
 
-              {/* Unmerge option (only if block was merged) */}
-              {block.mergedFrom && articleId && (
-                <>
-                  {(onSplitSection || (onMoveToArticle && otherArticles.length > 0)) && <div className="my-1 h-px bg-border/40" />}
-                  <button
-                    onClick={() => { setMenuOpen(false); handleUnmerge() }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-chart-3 hover:bg-active-bg transition-colors"
-                  >
-                    <ArrowSquareUpRight size={14} weight="regular" />
-                    Unmerge section
-                  </button>
-                </>
-              )}
+                <MenuDivider />
+                <MenuSection icon={<TextAa size={12} weight="regular" />} label="Font size">
+                  <PresetGrid
+                    options={FONT_SIZE_OPTIONS}
+                    active={fontScale as 0.85 | 1 | 1.15 | 1.3}
+                    onSelect={(v) => {
+                      onUpdate?.({ fontSize: v === 1 ? undefined : v })
+                      setMenuOpen(false)
+                    }}
+                  />
+                </MenuSection>
 
-              {/* Font size options */}
-              <div className="my-1 h-px bg-border/40" />
-              <div className="px-2.5 py-1.5">
-                <span className="text-2xs text-muted-foreground/50">Size</span>
-                <div className="flex items-center gap-1 mt-1">
-                  {[
-                    { label: "S", value: 0.85 },
-                    { label: "M", value: 1 },
-                    { label: "L", value: 1.15 },
-                    { label: "XL", value: 1.3 },
-                  ].map((opt) => (
-                    <button
-                      key={opt.label}
-                      onClick={() => { onUpdate?.({ fontSize: opt.value === 1 ? undefined : opt.value }); setMenuOpen(false) }}
-                      className={cn(
-                        "flex-1 rounded px-1.5 py-1 text-2xs font-medium transition-colors",
-                        (fontScale === opt.value || (opt.value === 1 && !block.fontSize))
-                          ? "bg-accent/20 text-accent"
-                          : "text-foreground/60 hover:bg-active-bg"
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {onDelete && (
-                <>
-                  <div className="my-1 h-px bg-border/40" />
-                  <button
-                    onClick={() => { setMenuOpen(false); onDelete() }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
-                  >
-                    <Trash size={14} weight="regular" />
-                    Delete section
-                  </button>
-                </>
-              )}
+                {onDelete && (
+                  <>
+                    <MenuDivider />
+                    <div className="px-1 pb-1">
+                      <MenuAction
+                        icon={<Trash size={14} weight="regular" />}
+                        label="Delete section"
+                        destructive
+                        onClick={() => { setMenuOpen(false); onDelete() }}
+                      />
+                    </div>
+                  </>
+                )}
+              </MenuSurface>
             </PopoverContent>
           </Popover>
         )}
@@ -484,52 +682,44 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footn
               <DotsThree size={14} weight="bold" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
-            <div className="px-2.5 py-1.5">
-              <span className="text-2xs text-muted-foreground/50">Size</span>
-              <div className="flex items-center gap-1 mt-1">
-                {[
-                  { label: "S", value: 0.85 },
-                  { label: "M", value: 1 },
-                  { label: "L", value: 1.15 },
-                  { label: "XL", value: 1.3 },
-                ].map((opt) => (
-                  <button
-                    key={opt.label}
-                    onClick={() => { onUpdate?.({ fontSize: opt.value === 1 ? undefined : opt.value }); setMenuOpen(false) }}
-                    className={cn(
-                      "flex-1 rounded px-1.5 py-1 text-2xs font-medium transition-colors",
-                      (textFontScale === opt.value || (opt.value === 1 && !block.fontSize))
-                        ? "bg-accent/20 text-accent"
-                        : "text-foreground/60 hover:bg-active-bg"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {(block.editorWidth || block.editorHeight) && (
-              <button
-                onClick={() => { onUpdate?.({ editorWidth: undefined, editorHeight: undefined }); setMenuOpen(false) }}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-muted-foreground hover:bg-active-bg transition-colors"
-              >
-                <ArrowsIn size={14} />
-                Reset editor size
-              </button>
-            )}
-            {onDelete && (
-              <>
-                <div className="my-1 h-px bg-border/40" />
-                <button
-                  onClick={() => { setMenuOpen(false); onDelete() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
-                >
-                  <Trash size={14} weight="regular" />
-                  Delete block
-                </button>
-              </>
-            )}
+          <PopoverContent align="end" className="w-56 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+            <MenuSurface>
+              <MenuSection icon={<TextAa size={12} weight="regular" />} label="Font size">
+                <PresetGrid
+                  options={FONT_SIZE_OPTIONS}
+                  active={textFontScale as 0.85 | 1 | 1.15 | 1.3}
+                  onSelect={(v) => {
+                    onUpdate?.({ fontSize: v === 1 ? undefined : v })
+                    setMenuOpen(false)
+                  }}
+                />
+              </MenuSection>
+              {(block.editorWidth || block.editorHeight) && (
+                <>
+                  <MenuDivider />
+                  <div className="px-1">
+                    <MenuAction
+                      icon={<ArrowsIn size={14} />}
+                      label="Reset editor size"
+                      onClick={() => { onUpdate?.({ editorWidth: undefined, editorHeight: undefined }); setMenuOpen(false) }}
+                    />
+                  </div>
+                </>
+              )}
+              {onDelete && (
+                <>
+                  <MenuDivider />
+                  <div className="px-1 pb-1">
+                    <MenuAction
+                      icon={<Trash size={14} weight="regular" />}
+                      label="Delete block"
+                      destructive
+                      onClick={() => { setMenuOpen(false); onDelete() }}
+                    />
+                  </div>
+                </>
+              )}
+            </MenuSurface>
           </PopoverContent>
         </Popover>
       )}
@@ -840,33 +1030,34 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
               <DotsThree size={14} weight="bold" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
-            <button
-              onClick={() => { setMenuOpen(false); setPicking(true) }}
-              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-            >
-              <FileText size={14} weight="regular" />
-              Change note
-            </button>
-            <button
-              onClick={() => { setMenuOpen(false); usePlotStore.getState().openInSecondary(block.noteId!) }}
-              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
-            >
-              <ArrowSquareOut size={14} weight="regular" />
-              Open in split
-            </button>
-            {onDelete && (
-              <>
-                <div className="my-1 h-px bg-border/40" />
-                <button
-                  onClick={() => { setMenuOpen(false); onDelete() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
-                >
-                  <Trash size={14} weight="regular" />
-                  Delete block
-                </button>
-              </>
-            )}
+          <PopoverContent align="end" className="w-56 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+            <MenuSurface>
+              <div className="px-1 pt-1">
+                <MenuAction
+                  icon={<FileText size={14} weight="regular" />}
+                  label="Change note"
+                  onClick={() => { setMenuOpen(false); setPicking(true) }}
+                />
+                <MenuAction
+                  icon={<ArrowSquareOut size={14} weight="regular" />}
+                  label="Open in split"
+                  onClick={() => { setMenuOpen(false); usePlotStore.getState().openInSecondary(block.noteId!) }}
+                />
+              </div>
+              {onDelete && (
+                <>
+                  <MenuDivider />
+                  <div className="px-1 pb-1">
+                    <MenuAction
+                      icon={<Trash size={14} weight="regular" />}
+                      label="Delete block"
+                      destructive
+                      onClick={() => { setMenuOpen(false); onDelete() }}
+                    />
+                  </div>
+                </>
+              )}
+            </MenuSurface>
           </PopoverContent>
         </Popover>
       )}
@@ -909,6 +1100,21 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
     { label: "L", value: 100 },
   ]
 
+  // Phase 3.1-B: custom right-click menu (Fit/Size/Caption/Delete)
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null)
+  const [editingCaption, setEditingCaption] = useState(false)
+
+  useEffect(() => {
+    if (!ctxMenu) return
+    const close = () => setCtxMenu(null)
+    document.addEventListener("mousedown", close)
+    document.addEventListener("scroll", close, true)
+    return () => {
+      document.removeEventListener("mousedown", close)
+      document.removeEventListener("scroll", close, true)
+    }
+  }, [ctxMenu])
+
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -929,7 +1135,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
   // No image yet — show upload
   if (!block.attachmentId) {
     return (
-      <div className="group/image relative">
+      <div className="group/image relative min-w-0 max-w-full">
         {editable && onDelete && (
           <Popover open={menuOpen} onOpenChange={setMenuOpen}>
             <PopoverTrigger asChild>
@@ -971,7 +1177,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
   }
 
   return (
-    <div className="group/image relative">
+    <div className="group/image relative min-w-0 max-w-full">
       {editable && (
         <div className="absolute -left-6 top-2 opacity-0 group-hover/image:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
@@ -995,7 +1201,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
           Loading image...
         </div>
       ) : url ? (
-        <figure className="relative inline-block" style={{ width: `${currentWidth}%` }}>
+        <figure className="relative block max-w-full min-w-0" style={{ width: `${currentWidth}%` }}>
           {/* ⋯ menu inside figure — follows image size */}
           {editable && (
             <Popover open={menuOpen} onOpenChange={setMenuOpen}>
@@ -1052,7 +1258,11 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
               ref={imgRef}
               src={url}
               alt={block.caption || ""}
-              className="w-full rounded-lg"
+              className="w-full max-w-full h-auto rounded-lg"
+              onContextMenu={editable ? (e) => {
+                e.preventDefault()
+                setCtxMenu({ x: e.clientX, y: e.clientY })
+              } : undefined}
             />
             {editable && (
               <div
@@ -1087,10 +1297,27 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
               />
             )}
           </div>
-          {block.caption && (
-            <figcaption className="mt-1.5 text-center text-2xs text-muted-foreground/50">
+          {(block.caption || editingCaption) && !editingCaption && (
+            <figcaption
+              className={cn("mt-1.5 text-center text-2xs text-muted-foreground/50", editable && "cursor-text hover:text-muted-foreground")}
+              onClick={editable ? () => setEditingCaption(true) : undefined}
+            >
               {block.caption}
             </figcaption>
+          )}
+          {editingCaption && editable && (
+            <input
+              autoFocus
+              type="text"
+              defaultValue={block.caption ?? ""}
+              placeholder="Caption…"
+              onBlur={(e) => { onUpdate?.({ caption: e.currentTarget.value.trim() || undefined }); setEditingCaption(false) }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { onUpdate?.({ caption: e.currentTarget.value.trim() || undefined }); setEditingCaption(false) }
+                if (e.key === "Escape") setEditingCaption(false)
+              }}
+              className="mt-1.5 w-full bg-transparent text-center text-2xs text-muted-foreground outline-none border-b border-border-subtle focus:border-accent"
+            />
           )}
         </figure>
       ) : (
@@ -1098,6 +1325,49 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
           <PhImage className="mr-2" size={20} weight="regular" />
           Image not found
         </div>
+      )}
+
+      {/* Phase 3.1-B: custom right-click menu, portal'd to body to escape clipping */}
+      {ctxMenu && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed z-[80] min-w-[180px] rounded-lg border border-border-subtle bg-surface-overlay py-1 shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+          style={{ top: ctxMenu.y, left: ctxMenu.x }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/40">Fit to column</div>
+          {SIZE_PRESETS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => { onUpdate?.({ imageWidth: p.value }); setCtxMenu(null) }}
+              className={cn(
+                "flex w-full items-center justify-between px-3 py-1.5 text-left text-note transition-colors hover:bg-hover-bg",
+                currentWidth === p.value && "text-accent",
+              )}
+            >
+              <span>{p.label === "S" ? "Small" : p.label === "M" ? "Medium" : "Large (100%)"}</span>
+              <span className="text-2xs text-muted-foreground">{p.value}%</span>
+            </button>
+          ))}
+          <div className="my-1 h-px bg-border-subtle" />
+          <button
+            type="button"
+            onClick={() => { setEditingCaption(true); setCtxMenu(null) }}
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-note transition-colors hover:bg-hover-bg"
+          >
+            Edit caption
+          </button>
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => { onDelete(); setCtxMenu(null) }}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-note text-destructive transition-colors hover:bg-destructive/10"
+            >
+              Delete image
+            </button>
+          )}
+        </div>,
+        document.body,
       )}
     </div>
   )
@@ -1401,7 +1671,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
                         })
                       }}
                       className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-destructive/80 text-white text-[9px] leading-none items-center justify-center hidden group-hover/th:flex transition-all z-10"
-                      title="Delete column"
+                      title="Delete card"
                     >
                       ×
                     </button>
@@ -1587,6 +1857,24 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
   nearestSectionLevel?: number
 }) {
   const [open, setOpen] = useState(false)
+  // Phase 3.1-B fix: portal popup so it doesn't get clipped by column overflow.
+  // Click-outside via document mousedown — no fullscreen backdrop blocking page scroll.
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
+  const [popupPos, setPopupPos] = useState<{ top: number; left: number } | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const rect = triggerRef.current?.getBoundingClientRect()
+    if (rect) setPopupPos({ top: rect.bottom + 4, left: rect.left - 60 })
+    const handler = (e: globalThis.MouseEvent) => {
+      const target = e.target as Node
+      if (popupRef.current?.contains(target) || triggerRef.current?.contains(target)) return
+      setOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [open])
 
   // Subsection level = nearest section level + 1, capped at 4, minimum 3
   const subsectionLevel = nearestSectionLevel != null
@@ -1608,6 +1896,7 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
     { type: "table", label: "Table", desc: "Data table" },
     { type: "infobox", label: "Infobox", desc: "Key-value metadata" },
     { type: "toc", label: "TOC", desc: "Auto contents" },
+    { type: "pull-quote", label: "Pull Quote", desc: "Highlighted quote" },
   ]
 
   const contentItems: { type: string; label: string; desc: string }[] = [
@@ -1621,6 +1910,7 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
     <div className="relative flex items-center justify-center py-1 group/add">
       <div className="absolute inset-x-0 top-1/2 h-px bg-border/0 group-hover/add:bg-border/30 transition-colors duration-150" />
       <button
+        ref={triggerRef}
         onClick={() => setOpen(!open)}
         className="relative z-10 flex items-center gap-1 rounded-md bg-background px-2 py-0.5 text-2xs text-muted-foreground/0 group-hover/add:text-muted-foreground/40 hover:!text-muted-foreground transition-all duration-150"
       >
@@ -1628,36 +1918,38 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
         Add block
       </button>
 
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full z-20 mt-1 rounded-lg border border-border-subtle bg-surface-overlay shadow-[0_4px_12px_rgba(0,0,0,0.2)] py-1 min-w-[180px]">
-            {structureItems.map(({ type, level, label, desc }, idx) => (
-              <button
-                key={`${type}-${level ?? "default"}-${idx}`}
-                onClick={() => { onAdd(type, level); setOpen(false) }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
-              >
-                <span className="text-note font-medium text-foreground/80">{label}</span>
-                <span className="text-2xs text-muted-foreground/30">{desc}</span>
-              </button>
-            ))}
-            <div className="my-1 border-t border-white/[0.06]" />
-            <div className="px-3 py-1 text-2xs text-muted-foreground/30">Content</div>
-            {contentItems.map(({ type, label, desc }) => (
-              <button
-                key={type}
-                onClick={() => { onAdd(type); setOpen(false) }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
-              >
-                <span className="text-note font-medium text-foreground/80">{label}</span>
-                <span className="text-2xs text-muted-foreground/30">{desc}</span>
-              </button>
-            ))}
-            <div className="my-1 border-t border-white/[0.06]" />
-            <div className="px-3 py-1 text-2xs text-muted-foreground/20 italic">Use / in text for more</div>
-          </div>
-        </>
+      {open && popupPos && typeof document !== "undefined" && createPortal(
+        <div
+          ref={popupRef}
+          className="fixed z-[60] rounded-lg border border-border-subtle bg-surface-overlay shadow-[0_8px_24px_rgba(0,0,0,0.22)] py-1 min-w-[220px] overflow-y-auto"
+          style={{ top: popupPos.top, left: popupPos.left, maxHeight: `calc(100vh - ${popupPos.top + 16}px)` }}
+        >
+          {structureItems.map(({ type, level, label, desc }, idx) => (
+            <button
+              key={`${type}-${level ?? "default"}-${idx}`}
+              onClick={() => { onAdd(type, level); setOpen(false) }}
+              className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
+            >
+              <span className="text-note font-medium text-foreground/80">{label}</span>
+              <span className="text-2xs text-muted-foreground/30">{desc}</span>
+            </button>
+          ))}
+          <div className="my-1 border-t border-white/[0.06]" />
+          <div className="px-3 py-1 text-2xs text-muted-foreground/30">Content</div>
+          {contentItems.map(({ type, label, desc }) => (
+            <button
+              key={type}
+              onClick={() => { onAdd(type); setOpen(false) }}
+              className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
+            >
+              <span className="text-note font-medium text-foreground/80">{label}</span>
+              <span className="text-2xs text-muted-foreground/30">{desc}</span>
+            </button>
+          ))}
+          <div className="my-1 border-t border-white/[0.06]" />
+          <div className="px-3 py-1 text-2xs text-muted-foreground/20 italic">Use / in text for more</div>
+        </div>,
+        document.body,
       )}
     </div>
   )

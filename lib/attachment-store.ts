@@ -9,7 +9,10 @@ export interface AttachmentBlob {
 }
 
 const DB_NAME = "plot-attachments"
-const DB_VERSION = 1
+// v2 (2026-04-16): some users' DBs ended up at v1 without the `blobs` store being created
+// (race condition during initial onupgradeneeded). Bumping the version forces all clients
+// to run the upgrade path and create the missing store.
+const DB_VERSION = 2
 const STORE_NAME = "blobs"
 
 function openDB(): Promise<IDBDatabase> {
@@ -21,7 +24,26 @@ function openDB(): Promise<IDBDatabase> {
         db.createObjectStore(STORE_NAME, { keyPath: "id" })
       }
     }
-    req.onsuccess = () => resolve(req.result)
+    req.onsuccess = () => {
+      const db = req.result
+      // Defensive: if the store is somehow still missing (very broken DB state),
+      // close and reopen with a higher version to force an upgrade path.
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.close()
+        const nextVersion = db.version + 1
+        const retry = indexedDB.open(DB_NAME, nextVersion)
+        retry.onupgradeneeded = () => {
+          const retryDb = retry.result
+          if (!retryDb.objectStoreNames.contains(STORE_NAME)) {
+            retryDb.createObjectStore(STORE_NAME, { keyPath: "id" })
+          }
+        }
+        retry.onsuccess = () => resolve(retry.result)
+        retry.onerror = () => reject(retry.error)
+        return
+      }
+      resolve(db)
+    }
     req.onerror = () => reject(req.error)
   })
 }

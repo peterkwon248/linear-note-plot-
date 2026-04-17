@@ -142,7 +142,11 @@
       "Bash(grep -n \"</WikiFloatingActionBar>\\\\|^[[:space:]]*</div>$\\\\|^}$\" components/views/wiki-view.tsx)",
       "Bash(npm test:*)",
       "Bash(awk '/^export function InlineCategoryTags/,/^}$/' components/wiki-editor/wiki-article-view.tsx)",
-      "Bash(ls components/ui/popover*)"
+      "Bash(ls components/ui/popover*)",
+      "Bash(cp 'C:/Users/kwonkyunghun/Desktop/리니어 노트앱/.claude/worktrees/angry-swirles/components/wiki-editor/wiki-column-menu.tsx' components/wiki-editor/)",
+      "Bash(cp 'C:/Users/kwonkyunghun/Desktop/리니어 노트앱/.claude/worktrees/angry-swirles/docs/BRAINSTORM-2026-04-16-magazine-layout.md' docs/)",
+      "Bash(cp 'C:/Users/kwonkyunghun/Desktop/리니어 노트앱/.claude/worktrees/angry-swirles/lib/column-palette.ts' lib/)",
+      "Bash(cmd //c \"mklink /J node_modules ..\\\\..\\\\..\\\\node_modules\")"
     ]
   }
 }
