@@ -66,6 +66,12 @@ interface WikiInfoboxProps {
    * action. Used by block-wrapped infoboxes where state lives on `WikiBlock.fields`.
    */
   onEntriesChange?: (entries: WikiInfoboxEntry[]) => void
+  /**
+   * Phase 3.1-B: Extra action slot rendered at the right end of the header,
+   * after the color/edit buttons. Used by wiki-infobox-block wrapper to inject
+   * the ⋯ block-actions menu without overlapping the existing buttons.
+   */
+  headerExtraActions?: React.ReactNode
 }
 
 export function WikiInfobox({
@@ -77,6 +83,7 @@ export function WikiInfobox({
   headerColor = null,
   onHeaderColorChange,
   onEntriesChange,
+  headerExtraActions,
 }: WikiInfoboxProps) {
   const setWikiInfobox = usePlotStore((s) => s.setWikiInfobox)
   const [isEditing, setIsEditing] = useState(false)
@@ -182,7 +189,11 @@ export function WikiInfobox({
               >
                 <PencilSimple size={12} />
               </button>
+              {headerExtraActions}
             </div>
+          )}
+          {!editable && headerExtraActions && (
+            <div className="flex items-center gap-0.5">{headerExtraActions}</div>
           )}
 
           {canChangeColor && showColorPicker && (

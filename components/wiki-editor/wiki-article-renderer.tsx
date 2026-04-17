@@ -19,6 +19,7 @@
  */
 
 import { useMemo, useState, useCallback, useEffect, Fragment } from "react"
+import { SectionNumbersContext } from "./section-numbers-context"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock, ColumnStructure } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton, type WikiBlockVariant } from "./wiki-block-renderer"
@@ -27,6 +28,7 @@ import { InlineCategoryTags } from "./inline-category-tags"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
 import { ColumnRenderer } from "./column-renderer"
+import { WikiColumnMenu } from "./wiki-column-menu"
 import { WikiTitle } from "./wiki-title"
 import { WikiThemeProvider } from "./wiki-theme-provider"
 import { computeSectionNumbers, buildVisibleBlocks } from "@/lib/wiki-block-utils"
@@ -138,11 +140,29 @@ function WikiArticleRendererInner({
   // Phase 3: compute per-leaf section numbers so each pane has independent
   // numbering ("1. Definition" in one pane, "1. Overview" in another pane).
   // blockId is unique across panes so merged Map has no conflicts.
+  // Phase 3.1-B: expand column-group children so sections inside column-groups get numbered
+  const expandColumnGroups = useCallback((blocks: WikiBlock[]): WikiBlock[] => {
+    return blocks.flatMap((b) =>
+      b.type === "column-group" && b.columnChildren
+        ? b.columnChildren.flat()
+        : [b]
+    )
+  }, [])
+
   const sectionNumbers = useMemo(() => {
     if (article.layout) {
+      // Phase 3.1-B: "continuous" = depth-first global numbering across all panes
+      if (article.numberingMode === "continuous") {
+        const allBlocks: WikiBlock[] = []
+        forEachLeaf(article.layout, (leaf) => {
+          for (const b of expandColumnGroups(leaf.blocks ?? [])) allBlocks.push(b)
+        })
+        if (allBlocks.length > 0) return computeSectionNumbers(allBlocks)
+      }
+      // Default "independent" = each pane numbered 1..N separately
       const combined = new Map<string, string>()
       forEachLeaf(article.layout, (leaf) => {
-        const leafBlocks = leaf.blocks ?? []
+        const leafBlocks = expandColumnGroups(leaf.blocks ?? [])
         if (leafBlocks.length > 0) {
           const leafNumbers = computeSectionNumbers(leafBlocks)
           for (const [id, num] of leafNumbers) combined.set(id, num)
@@ -151,8 +171,8 @@ function WikiArticleRendererInner({
       if (combined.size > 0) return combined
     }
     // Fallback: global numbering (1-pane or legacy)
-    return computeSectionNumbers(article.blocks)
-  }, [article.layout, article.blocks])
+    return computeSectionNumbers(expandColumnGroups(article.blocks))
+  }, [article.layout, article.blocks, article.numberingMode, expandColumnGroups])
 
   // Collapsed state: read-mode uses local Set, edit-mode derives from block.collapsed
   const initialCollapsed = useMemo(() => {
@@ -312,6 +332,15 @@ function WikiArticleRendererInner({
       if (overId.startsWith("drop-article-")) {
         const targetId = overId.slice("drop-article-".length)
         handleMoveToArticle(activeId, targetId)
+        return
+      }
+
+      // Phase 3.1-B: Side-drop → wrap two blocks into a column-group (Notion-style)
+      if (overId.startsWith("side-left-") || overId.startsWith("side-right-")) {
+        const side = overId.startsWith("side-left-") ? "left" : "right"
+        const targetBlockId = overId.replace(/^side-(left|right)-/, "")
+        if (activeId === targetBlockId) return // can't merge with self
+        usePlotStore.getState().wrapInColumnGroup(articleId, targetBlockId, activeId, side)
         return
       }
 
@@ -476,9 +505,14 @@ function WikiArticleRendererInner({
   const padClass = padding ?? (variant === "encyclopedia" ? "px-10 py-6" : "px-8 py-6")
 
   const body = (
+    <SectionNumbersContext.Provider value={sectionNumbers}>
     <WikiThemeProvider
       themeColor={article.themeColor}
-      className={cn("wiki-article-renderer flex-1 overflow-y-auto", className)}
+      className={cn(
+        "wiki-article-renderer flex-1 overflow-y-auto",
+        article.typography && `wiki-typography-${article.typography}`,
+        className,
+      )}
       as="article"
     >
       <div className={padClass} style={fontStyle}>
@@ -497,6 +531,11 @@ function WikiArticleRendererInner({
             onAliasesChange={
               editable
                 ? (aliases) => usePlotStore.getState().updateWikiArticle(articleId, { aliases })
+                : undefined
+            }
+            onThemeColorChange={
+              editable
+                ? (themeColor) => usePlotStore.getState().updateWikiArticle(articleId, { themeColor: themeColor ?? undefined })
                 : undefined
             }
           />
@@ -529,8 +568,13 @@ function WikiArticleRendererInner({
           </div>
         )}
 
-        {/* Top AddBlock */}
-        {editable && <AddBlockButton onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)} />}
+        {/* Top AddBlock — single-col uses regular AddBlock; multi-col shows hover zone for full-width pane */}
+        {editable && layout.columns.length < 2 && (
+          <AddBlockButton onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)} />
+        )}
+        {editable && layout.columns.length >= 2 && (
+          <FullWidthInsertHoverZone articleId={articleId} position="above" />
+        )}
 
         {/* Column-based body */}
         {editable ? (
@@ -538,7 +582,7 @@ function WikiArticleRendererInner({
             <ColumnRenderer
               layout={layout}
               renderBlock={renderBlock}
-editable
+              editable
               onRatiosChange={(path, newRatios) =>
                 usePlotStore.getState().updateColumnRatios(articleId, path, newRatios)
               }
@@ -552,14 +596,32 @@ editable
               onSplitLeaf={(path, count) =>
                 usePlotStore.getState().splitLeafIntoColumns(articleId, path, count)
               }
+              renderColumnMenu={(path, col) => (
+                <WikiColumnMenu
+                  articleId={articleId}
+                  path={path}
+                  currentPaletteId={col.paletteId}
+                  currentPaletteAlpha={col.paletteAlpha}
+                  currentGradientTo={col.gradientTo}
+                  articleHasRule={article.layout?.rule}
+                  articleGap={article.layout?.gap}
+                  articleNumberingMode={article.numberingMode}
+                  articleTypography={article.typography}
+                />
+              )}
             />
           </SortableContext>
         ) : (
           <ColumnRenderer layout={layout} renderBlock={renderBlock} />
         )}
 
-        {/* Bottom AddBlock */}
-        {editable && <AddBlockButton onAdd={(type, level) => handleAddBlock(type, undefined, level)} />}
+        {/* Bottom AddBlock — single-col uses regular AddBlock; multi-col shows hover zone */}
+        {editable && layout.columns.length < 2 && (
+          <AddBlockButton onAdd={(type, level) => handleAddBlock(type, undefined, level)} />
+        )}
+        {editable && layout.columns.length >= 2 && (
+          <FullWidthInsertHoverZone articleId={articleId} position="below" />
+        )}
 
         {/* Empty state */}
         {article.blocks.length === 0 && !editable && (
@@ -610,6 +672,7 @@ editable
         )}
       </div>
     </WikiThemeProvider>
+    </SectionNumbersContext.Provider>
   )
 
   /* ── Read mode: just return body ── */
@@ -795,3 +858,27 @@ function ExistingArticleDropTarget({
 }
 
 /* CollapsibleTOC was moved to [wiki-toc-block.tsx](./wiki-toc-block.tsx) in Phase 2-2-C. */
+
+/**
+ * Phase 3.1-B — FullWidthInsertHoverZone
+ *
+ * Thin hover band above/below the column group. When user hovers, a "+ Add full-width"
+ * button appears. Click → calls `addFullWidthPane(articleId, position)` which wraps
+ * the layout in a vertical container and inserts an empty pane at the requested side.
+ */
+function FullWidthInsertHoverZone({ articleId, position }: { articleId: string; position: "above" | "below" }) {
+  const addFullWidthPane = usePlotStore((s) => s.addFullWidthPane)
+  return (
+    <div className="group/insert relative flex h-3 items-center justify-center my-1 cursor-pointer transition-all hover:h-7">
+      <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border/0 group-hover/insert:bg-accent/40 transition-colors" />
+      <button
+        type="button"
+        onClick={() => addFullWidthPane(articleId, position)}
+        className="relative flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-overlay px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover/insert:opacity-100 hover:bg-accent/10 hover:text-accent hover:border-accent/40"
+        title={`Add full-width block ${position}`}
+      >
+        <span>+ Add full-width</span>
+      </button>
+    </div>
+  )
+}

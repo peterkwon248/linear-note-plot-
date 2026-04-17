@@ -47,6 +47,11 @@
 - **메타 → 블록 통합 결정 (2026-04-15 밤, Phase 2-2-C 예정)**: Infobox/TOC/Hatnote/Navbox/Callout 등 모든 메타를 WikiBlockType으로 통합. `article.infobox` / `tocStyle` scalar 필드 삭제 예정. Title만 예외 (최상단 고정). 진실의 원천: `BRAINSTORM-2026-04-14-column-template-system.md` "2026-04-15 밤 대결정" 절
 - **ColumnStructure + ColumnPath**: 재귀 컬럼 구조, `columns: ColumnDefinition[]`. ColumnPath = number[] (예: [0], [1, 2] 중첩). `columnAssignments: Record<blockId, ColumnPath>` (canonical), leaf blockIds는 derived view
 - **react-resizable-panels 통합 (Phase 2-2-B-1)**: ColumnRenderer 최상위 horizontal + editable일 때 PanelGroup + PanelResizeHandle. onLayout percentage → updateColumnRatios 액션. 중첩 컬럼은 CSS Grid (Phase 2-2-B-3-b에서 nested drag)
+- **Page Identity Tier (Phase 3.1-A, 2026-04-17)**: Article themeColor → `.wiki-theme-scope.wiki-article-renderer`에 `color-mix(... 5%, transparent)` 배경 tint → Title+Body 일체감. Card palette는 `::before` 오버레이로 article tint 위에 cascade. picker는 WikiTitle의 paint-bucket 버튼
+- **공통 block-menu primitives (Phase 3.1-B, 2026-04-17)**: `components/wiki-editor/block-menu.tsx` — MenuSurface/MenuSection/PresetGrid/MenuAction/MenuDivider + 공용 상수. 모든 위키 블록 ⋯ 메뉴가 사용 (Infobox/TOC/TextBlock/SectionBlock/NoteRefBlock). 새 블록 추가 시 이걸 씀
+- **WikiBlock presentation properties (Phase 3.1-B, 2026-04-17)**: `width` (narrow/default/wide/full/px) + `density` (compact/normal/loose) + 기존 `fontSize` 공통 속성. Infobox: width + density, TOC: width + fontSize + density (inline gap으로 Tailwind v4 space-y 우회)
+- **SectionNumbers Context (Phase 3.1-B, 2026-04-17)**: `section-numbers-context.ts`를 producer/consumer 분리 파일로 둬서 순환 import 회피. ColumnGroupBlock이 consume해 중첩 섹션 번호 연결
+- **Card 용어 (UI only, 2026-04-17)**: 위키 layout-level column은 UI에서 "card"로 표기. 내부 타입 `ColumnStructure` 등은 유지 — 리팩토링 비용 회피. 새 UI text 작성 시 "card"
 - **wikiTemplates slice + 8 built-in (Phase 1)**: WikiTemplate 타입 (layout/titleStyle/themeColor/sections/infobox/hatnotes/navbox). Built-in = 코드 정의 (`lib/wiki-templates/built-in.ts`), user-defined = slice persist. WikiTemplatePickerDialog로 새 위키 생성 시 템플릿 선택
 - **Wiki URL Block**: `WikiBlockType` 'url' 추가, 유튜브 iframe embed + 일반 링크 카드
 - **Unified Pipeline**: Filter/Display/SidePanel 통합 — 5개 space가 공유 컴포넌트 사용
@@ -231,8 +236,27 @@ Phase 2-2-B-3-a 머지 후 사용자와 아키텍처 재논의. 모든 메타 (I
 
 ## Completed PRs (recent)
 
+### 2026-04-17 (집, Phase 3.1-A/B + Page Identity)
+- **PR pending**: Phase 3.1-A/B 대폭 진행 + Page Identity Tier 시스템
+  - SectionNumbers Context (column-group 내부 섹션 번호)
+  - Column-group unwrap 버그 fix 2곳 (1열 축소 + X 버튼 → unwrapColumnGroup 사용, 남은 블록 보존)
+  - Seed 리셋 (9노트→3, 위키 3→2 mini, 카테고리 [])
+  - `addWikiBlock` afterBlockId 위치 버그 fix (layout leaf에서 `"append"` 항상 → `loc.index + 1`)
+  - 공통 `block-menu.tsx` primitives (MenuSurface/MenuSection/PresetGrid/MenuAction/MenuDivider) + 5개 블록 마이그레이션
+  - `WikiBlock.width` 프리셋+드래그 (Infobox/TOC)
+  - `WikiBlock.density` Spacing 3단계 (Infobox padding / TOC inline gap)
+  - `WikiBlock.fontSize` TOC 적용 (em indent)
+  - Card 용어 통일 (UI only)
+  - Asymmetric 프리셋 UI 폴리싱 (mini bar + cardCount 그룹핑)
+  - 1-card palette 시각 적용 버그 fix (`showCardBox = colCount >= 2 || !!paletteId`)
+  - 1-card ⋯ 메뉴 누락 fix (showNestedEditUI 확장)
+  - Page Identity Step 1: `.wiki-theme-scope.wiki-article-renderer` 5% tint
+  - Page Identity Step 2: Card `::before` cascade (자연 형성)
+  - WikiTitle article-level themeColor picker (paint-bucket + 10 preset + custom)
+  - `BRAINSTORM-2026-04-17-page-identity.md` 저장
+
 ### 2026-04-15 (집, 10 PR day)
-- **PR pending**: Phase 2-2-B-3-b + Phase 2-2-C + Phase 3 브레인스토밍 — 빈 컬럼 AddBlock/중첩 컬럼 + 메타→블록 통합 (migration v78+v79) + 다중 pane 문서 모델 설계 (docs/BRAINSTORM-2026-04-15-multi-pane-document-model.md)
+- **PR #208 (merged)**: Phase 2-2-B-3-b + Phase 2-2-C + Phase 3 브레인스토밍 — 빈 컬럼 AddBlock/중첩 컬럼 + 메타→블록 통합 (migration v78+v79) + 다중 pane 문서 모델 설계 (docs/BRAINSTORM-2026-04-15-multi-pane-document-model.md)
 - **PR #207 (merged)**: docs — CONTEXT.md + MEMORY.md catchup (Phase 2-1A ~ 2-2-B-3-a + 메타→블록 대결정)
 - **PR #206 (merged)**: docs — 2026-04-15 밤 대결정 (메타 → 블록 통합) + 로드맵 재편
 - **PR #205 (merged)**: Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼 (addColumnAfter/removeColumn + 재귀 헬퍼 3 + UI 사이/끝 +, 각 컬럼 X)
@@ -634,9 +658,30 @@ Phase 2-2-B-3-a 머지 후 사용자와 아키텍처 재논의. 모든 메타 (I
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-04-14)
+## Current Direction (as of 2026-04-17)
 
-### 최신 방향 (2026-04-14 확정)
+### 최신 방향 (2026-04-17 확정)
+
+- **🎨 Identity Tier 시스템** (`BRAINSTORM-2026-04-17-page-identity.md`):
+  ```
+  Tier 0 default            - 깔끔, 색 없음
+  Tier 1 Article theme      - ✅ 전체 5% tint
+  Tier 2 Card palette       - ✅ 카드 강한 색 (cascade on Tier 1)
+  Tier 3 Hero / Opening     - ⏳ 다음
+  Tier 4 Full-bleed image   - 미래
+  Tier 5 Custom template    - Phase 4
+  ```
+  사용자 비전 "위키+잡지 둘 다 표현" 수용 — 기본은 깔끔, 꾸미고 싶으면 Tier 올라감.
+
+- **공통 ⋯ block-menu primitives**: 모든 위키 블록 ⋯ 메뉴가 `block-menu.tsx`의 primitives 사용 — 시각 일관 / 기능 블록별. 새 블록 추가 시 이걸 씀.
+
+- **Card 용어 (UI only)**: 위키 layout-level column은 UI에서 "card" (노트 columnsBlock과 구분). 내부 타입 `ColumnStructure` 등은 그대로 유지 — 리팩토링 비용 회피.
+
+- **메뉴 디자인 원칙 확정**: ⋯ 메뉴 = **setting panel** (현재값 + 원클릭 토글), 노트 우클릭 = **action list** (명령 목록). 목적 다르니 구조 달라도 OK. 디자인 토큰/간격/아이콘만 동일 수준.
+
+- **제외 재확인**: Title 블록화는 Phase 4까지 보류 (2026-04-15 대결정 유지). Article background 단독 필드는 skip — Hero가 상위 호환.
+
+### 과거 방향 (2026-04-14 확정)
 - **Note/Wiki 2-entity 철학 확정** — 엔티티 통합 논의(Alpha/Beta/Gamma) 전부 폐기. 차별점의 원천 = 데이터 구조 (TipTap JSON vs WikiBlock[]). 렌더러는 위키 전용. 자세히: `docs/BRAINSTORM-2026-04-14-entity-philosophy.md`
 - **위키 디자인 강화 우선** — 엔티티 통합보단 디자인 약점 해결 (`wiki-color` 프리셋 + themeColor + Hatnote/Ambox/Navbox)
 - **위키 템플릿 3층 모델** — Layer 1 Layout Preset + Layer 2 Content Template + Layer 3 Typed Infobox. 노트 템플릿은 NoteTemplate slice 유지 (UpNote식)

@@ -6,6 +6,57 @@
 
 ---
 
+## 2026-04-17 오후~저녁 (집, Phase 3.1-A/B 대폭 진행 + Page Identity Tier 시스템 확립)
+
+### 완료
+- **세션 시작**: angry-swirles worktree에서 작업 중이던 변경 현재 worktree로 이전 (patch + untracked copy)
+- **SectionNumbers Context**: column-group 내부 섹션이 article 전체 번호 체계 따름 (producer/consumer 분리 파일)
+- **Bug fix**: Column-group unwrap 2곳 — (1) 1열 축소 시 `onDelete()` → `unwrapColumnGroup()` (남은 블록 보존), (2) X 버튼도 unwrap로 교체
+- **Seed 리셋**: 9노트 → 3노트 (Inbox/Capture/Permanent 각 1), 위키 3→2 (Plot + Zettelkasten mini), 카테고리 []
+- **Bug fix**: `addWikiBlock` afterBlockId 있을 때 layout leaf에서 항상 `"append"` 였던 것 → `loc.index + 1`로 "바로 뒤" insert
+- **공통 ⋯ block-menu primitives**: `block-menu.tsx` 신규 (MenuSurface/MenuSection/PresetGrid/MenuAction/MenuDivider). 5개 블록 (Infobox/TOC/TextBlock/SectionBlock/NoteRefBlock) 마이그레이션 — 시각 일관화, 기능 블록별 유지
+- **`WikiBlock.width`** + Infobox/TOC에 프리셋(S/M/L/XL) + 우측 엣지 드래그 resize
+- **`WikiBlock.density`** + Infobox(row padding) / TOC(item gap) 3단계 Spacing
+- **`WikiBlock.fontSize`** TOC 적용 (em 기반, indent도 em으로 전환)
+- **"Card" 용어 통일**: UI text column → card (노트 `columnsBlock`과 구분). ColumnPresetToggle 드롭다운 + column-renderer 전 title/aria-label
+- **Asymmetric 프리셋 UI 폴리싱**: mini visual bar (첫 카드 accent, 나머지 muted) + cardCount 그룹핑 (2 cards / 3 cards 서브헤더)
+- **1-card palette 시각 적용 fix**: `showCardBox = colCount >= 2 || !!col.paletteId`
+- **1-card ⋯ 메뉴 누락 fix**: `showNestedEditUI` 조건에 1-card 케이스 추가
+- **Page Identity Step 1**: `.wiki-theme-scope.wiki-article-renderer`에 `color-mix(... 5%, transparent)` 배경 tint → Title+Body 일체감 해소
+- **Page Identity Step 2**: 기존 `wiki-column-cell--themed::before` 오버레이로 cascade 자연 형성 (추가 CSS 불필요)
+- **Article themeColor picker**: WikiTitle에 paint-bucket + 10 preset + Custom hex popover
+
+### 브레인스토밍 & 큰 결정
+
+- **🎨 Identity Tier 시스템 확정** (`docs/BRAINSTORM-2026-04-17-page-identity.md`):
+  ```
+  Tier 0 default            - 깔끔, 색 없음
+  Tier 1 Article theme      - 전체 5% tint (✅ 구현)
+  Tier 2 Card palette       - 카드 강한 색 (✅ 구현, cascade on Tier 1)
+  Tier 3 Hero / Opening     - 잡지 opening spread (⏳ 다음)
+  Tier 4 Full-bleed image   - 배경 이미지 (미래)
+  Tier 5 Custom template    - Phase 4
+  ```
+- **메뉴 디자인 원칙**: ⋯ 메뉴는 **setting panel**, 노트 우클릭은 **action list** — 목적 다르니 구조 달라도 OK. 단 디자인 토큰/간격/아이콘은 동일 수준으로 끌어올림. 기능 항목은 블록별 유지, 시각만 통일
+- **Card 용어**: UI에만 적용, 내부 타입 `ColumnStructure` 등 그대로 유지 (리팩토링 비용 회피)
+- **제외 재확인**: Title 블록화는 Phase 4까지 보류 (2026-04-15 대결정 유지). Article background 단독 필드도 skip (Hero가 상위 호환)
+
+### 다음
+- **선택 1 (권장)**: Phase 3.1-C Hero/Opening 영역 — Title + Aliases + Categories를 Hero로 승격
+- **선택 2**: Phase 3.1-A 잔여 — Column rule / Gap / per-column name 헤더 UI (타입/CSS 이미 있음, UI만)
+
+상세: `docs/NEXT-ACTION.md`
+
+### Watch Out
+- 오늘 변경 커밋 대규모 (2600+ lines). 모두 Phase 3.1-A/B 범위라 단일 PR이 무난.
+- Fast Refresh 경고 여러 번 — store slice 변경 시 HMR이 full reload 강제. 개발 중엔 정상.
+- Tailwind v4의 `space-y-*` 유틸이 probe 테스트에서 0px로 나옴 → TOC density는 inline `gap` style로 우회. 비슷한 간격 작업 시 주의.
+
+### 머신
+집
+
+---
+
 ## 2026-04-15 늦은 밤 (집, 메타 → 블록 통합 대결정 + 로드맵 재편)
 
 ### 완료

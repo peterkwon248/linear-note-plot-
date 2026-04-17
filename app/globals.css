@@ -168,6 +168,16 @@
   --wiki-theme-active: var(--wiki-theme-dark, transparent);
 }
 
+/* Phase 3.1-A Step 1 (2026-04-17) — Article-level background tint.
+ * When an article has themeColor, the whole scope gets a ~5% tint so the
+ * title area and body share one page identity instead of top-heavy/card-only.
+ * Individual cards keep their own palette on top via `.wiki-column-cell--themed::before`.
+ * themeColor absent → `--wiki-theme-active` is transparent → no-op. */
+.wiki-theme-scope.wiki-article-renderer {
+  background: color-mix(in srgb, var(--wiki-theme-active) 5%, transparent);
+  transition: background-color 200ms ease;
+}
+
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
@@ -323,3 +333,262 @@
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * Phase 3.1-A — Magazine Layout Tokens
+ *
+ * Column palette (8 pastel tones) + gap tokens + rule color.
+ * Light mode = soft pastel bg + mid-saturation accent.
+ * Dark mode  = low-opacity tint preserving surface + lighter accent.
+ *
+ * Consumed by:
+ *   - ColumnRenderer (themeColor backgrounds, rule between columns)
+ *   - WikiColumnMenu (color picker)
+ *   - lib/column-palette.ts (JS reference for palette ids)
+ * ───────────────────────────────────────────────────────────────────── */
+:root {
+  /* Column palette — 16 pastel tones (4x4 grid) */
+  --mag-col-slate-bg: #f1f5f9;
+  --mag-col-slate-accent: #475569;
+  --mag-col-sage-bg: #ecfccb;
+  --mag-col-sage-accent: #4d7c0f;
+  --mag-col-blush-bg: #fce7f3;
+  --mag-col-blush-accent: #be185d;
+  --mag-col-sand-bg: #fef3c7;
+  --mag-col-sand-accent: #b45309;
+  --mag-col-sky-bg: #e0f2fe;
+  --mag-col-sky-accent: #0369a1;
+  --mag-col-lavender-bg: #ede9fe;
+  --mag-col-lavender-accent: #6d28d9;
+  --mag-col-peach-bg: #ffedd5;
+  --mag-col-peach-accent: #c2410c;
+  --mag-col-ash-bg: #f4f4f5;
+  --mag-col-ash-accent: #52525b;
+  /* Row 3 — new 8 colors */
+  --mag-col-mint-bg: #d1fae5;
+  --mag-col-mint-accent: #047857;
+  --mag-col-coral-bg: #ffe4e6;
+  --mag-col-coral-accent: #be123c;
+  --mag-col-ocean-bg: #dbeafe;
+  --mag-col-ocean-accent: #1d4ed8;
+  --mag-col-wine-bg: #f3e8ff;
+  --mag-col-wine-accent: #7e22ce;
+  --mag-col-lime-bg: #ecfccb;
+  --mag-col-lime-accent: #65a30d;
+  --mag-col-iris-bg: #e0e7ff;
+  --mag-col-iris-accent: #4338ca;
+  --mag-col-cream-bg: #fefce8;
+  --mag-col-cream-accent: #a16207;
+  --mag-col-charcoal-bg: #e5e7eb;
+  --mag-col-charcoal-accent: #374151;
+
+  /* Gap tokens (applied to grid-gap / PanelGroup children spacing) */
+  --mag-gap-sm: 1rem;       /* 16px */
+  --mag-gap-md: 1.5rem;     /* 24px (default — current behavior) */
+  --mag-gap-lg: 2.5rem;     /* 40px */
+
+  /* Column rule (hairline vertical line between columns) */
+  --mag-rule-color: hsl(0 0% 0% / 0.08);
+  --mag-rule-width: 1px;
+}
+
+.dark {
+  /* Column palette — low-opacity fills on dark surface */
+  --mag-col-slate-bg: rgba(100, 116, 139, 0.14);
+  --mag-col-slate-accent: #94a3b8;
+  --mag-col-sage-bg: rgba(101, 163, 13, 0.14);
+  --mag-col-sage-accent: #a3e635;
+  --mag-col-blush-bg: rgba(219, 39, 119, 0.14);
+  --mag-col-blush-accent: #f472b6;
+  --mag-col-sand-bg: rgba(217, 119, 6, 0.14);
+  --mag-col-sand-accent: #fbbf24;
+  --mag-col-sky-bg: rgba(2, 132, 199, 0.14);
+  --mag-col-sky-accent: #7dd3fc;
+  --mag-col-lavender-bg: rgba(124, 58, 237, 0.14);
+  --mag-col-lavender-accent: #c4b5fd;
+  --mag-col-peach-bg: rgba(234, 88, 12, 0.14);
+  --mag-col-peach-accent: #fdba74;
+  --mag-col-ash-bg: rgba(82, 82, 91, 0.18);
+  --mag-col-ash-accent: #a1a1aa;
+  /* Row 3 dark */
+  --mag-col-mint-bg: rgba(4, 120, 87, 0.14);
+  --mag-col-mint-accent: #6ee7b7;
+  --mag-col-coral-bg: rgba(190, 18, 60, 0.14);
+  --mag-col-coral-accent: #fda4af;
+  --mag-col-ocean-bg: rgba(29, 78, 216, 0.14);
+  --mag-col-ocean-accent: #93c5fd;
+  --mag-col-wine-bg: rgba(126, 34, 206, 0.14);
+  --mag-col-wine-accent: #d8b4fe;
+  --mag-col-lime-bg: rgba(101, 163, 13, 0.14);
+  --mag-col-lime-accent: #bef264;
+  --mag-col-iris-bg: rgba(67, 56, 202, 0.14);
+  --mag-col-iris-accent: #a5b4fc;
+  --mag-col-cream-bg: rgba(161, 98, 7, 0.14);
+  --mag-col-cream-accent: #fde68a;
+  --mag-col-charcoal-bg: rgba(55, 65, 81, 0.2);
+  --mag-col-charcoal-accent: #9ca3af;
+
+  --mag-rule-color: hsl(0 0% 100% / 0.1);
+}
+
+/* Column container with rule — applied when ColumnStructure.rule is true */
+.wiki-column-grid--ruled > .wiki-column-panel:not(:last-child),
+.wiki-column-grid--ruled > .wiki-column-cell:not(:last-child) {
+  border-right: var(--mag-rule-width) solid var(--mag-rule-color);
+}
+
+/* Gap variant classes — overridden per ColumnStructure.gap */
+.wiki-column-grid--gap-sm { gap: var(--mag-gap-sm); }
+.wiki-column-grid--gap-md { gap: var(--mag-gap-md); }
+.wiki-column-grid--gap-lg { gap: var(--mag-gap-lg); }
+
+/* Column with themeColor background — uses ::before for independent alpha control */
+.wiki-column-cell--themed {
+  position: relative;
+  border-radius: 0.5rem;
+}
+.wiki-column-cell--themed::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  /* Flat color (no gradient) */
+  background-color: var(--mag-col-active-bg, transparent);
+  opacity: var(--mag-col-active-alpha, 1);
+}
+/* Gradient mode — overrides flat bg */
+.wiki-column-cell--gradient::before {
+  background: linear-gradient(135deg, var(--mag-col-active-bg), var(--mag-col-gradient-to, transparent));
+  background-color: transparent;
+}
+/* Ensure content stays above the pseudo bg — skip absolutely positioned elements (⋯/X buttons) */
+.wiki-column-cell--themed > :not(.absolute) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Column name header — only visible when ColumnDefinition.name is set */
+.wiki-column-name {
+  display: block;
+  font-size: 0.6875rem;           /* 11px */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mag-col-active-accent, var(--muted-foreground));
+  margin-bottom: 0.5rem;
+  user-select: none;
+}
+
+/* Responsive collapse — stack columns on narrow screens */
+@media (max-width: 640px) {
+  .wiki-column-grid--responsive {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .wiki-column-grid--responsive > * {
+    width: 100% !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * Phase 3.1-C — Magazine Typography Modes
+ *
+ * Applied at WikiArticleRenderer root via `.wiki-typography-<mode>`.
+ * Cascade-only — no JS styling. Mix-and-match safe with column palette.
+ * ───────────────────────────────────────────────────────────────────── */
+
+/* Phase 3.1-C: Serif modes use different font stacks for visual differentiation.
+   - serif-body: Merriweather (warm, readable, traditional newspaper feel)
+   - editorial:  Playfair Display (high-contrast display serif — elegant magazine cover) */
+.wiki-typography-serif-body {
+  --wiki-serif: var(--font-merriweather), var(--font-noto-serif-kr), Georgia, "Times New Roman", serif;
+  --wiki-display: var(--wiki-serif);
+}
+
+.wiki-typography-editorial {
+  --wiki-serif: var(--font-playfair), var(--font-noto-serif-kr), "Cormorant Garamond", Georgia, serif;
+  --wiki-display: var(--font-playfair), "Cormorant Garamond", Georgia, serif;
+}
+
+/* Serif-body mode — apply serif to the whole article so every text block inherits */
+.wiki-typography-serif-body,
+.wiki-typography-serif-body .wiki-text-display,
+.wiki-typography-serif-body .wiki-text-display p,
+.wiki-typography-serif-body .prose,
+.wiki-typography-serif-body .prose p {
+  font-family: var(--wiki-serif) !important;
+}
+
+.wiki-typography-serif-body .wiki-text-display,
+.wiki-typography-serif-body .wiki-text-display p,
+.wiki-typography-serif-body .prose p {
+  line-height: 1.75;
+  letter-spacing: 0.005em;
+}
+
+/* Editorial mode — full magazine feel: serif + display H2 + drop cap */
+.wiki-typography-editorial,
+.wiki-typography-editorial .wiki-text-display,
+.wiki-typography-editorial .wiki-text-display p,
+.wiki-typography-editorial .prose,
+.wiki-typography-editorial .prose p,
+.wiki-typography-editorial h1,
+.wiki-typography-editorial h2,
+.wiki-typography-editorial h3 {
+  font-family: var(--wiki-serif) !important;
+}
+
+.wiki-typography-editorial .wiki-text-display,
+.wiki-typography-editorial .wiki-text-display p,
+.wiki-typography-editorial .prose p {
+  line-height: 1.8;
+  letter-spacing: 0.005em;
+}
+
+.wiki-typography-editorial h2 {
+  font-family: var(--wiki-display) !important;
+  font-size: 2.1em !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.1 !important;
+  margin-top: 1.4em !important;
+}
+
+.wiki-typography-editorial h3 {
+  font-size: 1.35em !important;
+  letter-spacing: -0.01em;
+  font-weight: 700 !important;
+}
+
+/* Drop cap — apply to the first <div> or <p> inside ANY wiki-text-display in editorial mode.
+   Real DOM is <div.wiki-text-display><div.prose>text</div></div> for plain text blocks,
+   or nested ProseMirror for rich text. `::first-letter` works on block-level elements. */
+.wiki-typography-editorial .wiki-text-display > div::first-letter,
+.wiki-typography-editorial .wiki-text-display > p::first-letter,
+.wiki-typography-editorial .wiki-text-display .prose::first-letter,
+.wiki-typography-editorial .wiki-text-display .prose > p:first-child::first-letter {
+  font-family: var(--wiki-serif) !important;
+  font-weight: 700 !important;
+  font-size: 3.4em !important;
+  float: left !important;
+  line-height: 0.85 !important;
+  margin-right: 0.08em !important;
+  margin-top: 0.08em !important;
+  color: var(--mag-col-active-accent, var(--foreground)) !important;
+}
+
+/* Phase 3.1-B — Block density classes.
+ * Applied to the block wrapper (WikiInfoboxBlock / WikiTocBlock) so child
+ * rows/items tighten or loosen without touching the shared renderer. */
+.infobox-density-compact [class*="divide-y"] > * {
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+.infobox-density-loose [class*="divide-y"] > * {
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+/* TOC density is handled via inline `gap` style in WikiTocBlock.
+   (Tailwind v4 `space-y-*` + class-based overrides were unreliable.) */

@@ -22,6 +22,10 @@ export interface ColumnStructure {
   type: "columns"
   direction?: "horizontal" | "vertical"  // default "horizontal"
   columns: ColumnDefinition[]
+  /** Phase 3.1-A: hairline vertical rule between columns (opt-in). */
+  rule?: boolean
+  /** Phase 3.1-A: gap token — sm=16px / md=24px (default) / lg=40px. */
+  gap?: "sm" | "md" | "lg"
 }
 
 /**
@@ -39,7 +43,10 @@ export interface ColumnDefinition {
   minHeight?: number           // min height (px) — vertical-direction pane
   priority?: number            // hide order when narrow (lower priority hides first)
   name?: string                // Phase 3 — optional column label
-  themeColor?: WikiThemeColor  // Phase 3 — per-column background/accent
+  themeColor?: WikiThemeColor  // Phase 3 — per-column explicit {light, dark} hex override (rarely used)
+  paletteId?: string           // Phase 3.1-A — column palette entry id (e.g. "slate", "sage"). See lib/column-palette.ts
+  paletteAlpha?: number        // Phase 3.1-A — bg opacity 0.1~1 (default 1). Controls pastel intensity
+  gradientTo?: string          // Phase 3.1-A — second palette id for gradient bg (CSS linear-gradient)
   content: ColumnStructure | ColumnBlocksLeaf
 }
 
@@ -190,6 +197,10 @@ export type WikiBlockType =
   | 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url'
   // Phase 2-2-C: meta blocks (previously scalar fields on WikiArticle)
   | 'infobox' | 'toc'
+  // Phase 3.1-B: magazine blocks
+  | 'pull-quote'
+  // Phase 3.1-B: Notion-style implicit column group (created by side-dragging blocks)
+  | 'column-group'
 
 /** A single block in a wiki article */
 export interface WikiBlock {
@@ -245,6 +256,27 @@ export interface WikiBlock {
   tocCollapsed?: boolean
   /** TOC: optional heading levels to hide (e.g. [4,5] to hide deep headings) */
   hiddenLevels?: number[]
+  // Phase 3.1-B — pull-quote block
+  /** Pull Quote: main text */
+  quoteText?: string
+  /** Pull Quote: optional attribution / citation */
+  quoteAttribution?: string
+  /** Pull Quote: visual variant — "minimal" (default) | "editorial" (NYT serif) | "bordered" (Medium) */
+  quoteVariant?: "minimal" | "editorial" | "bordered"
+  // Phase 3.1-B: Notion-style inline column group (NOT in Insert menu — created by side-dragging).
+  // Each inner array = one sub-column's blocks (rendered side-by-side horizontally).
+  /** `column-group` block only — 2~4 side-by-side sub-columns, each owning WikiBlock[]. */
+  columnChildren?: WikiBlock[][]
+  // Phase 3.1-B: Per-block width control (opt-in — default undefined = natural width).
+  // Strings = preset sizes, number = custom pixel width from drag. Block renderers
+  // decide what to do with it (currently used by Infobox; others TBD).
+  /** Block width: "narrow" | "default" | "wide" | "full" | number(px) */
+  width?: "narrow" | "default" | "wide" | "full" | number
+  /** Block spacing/density — interpretation is block-specific.
+   *  TOC: vertical gap between items. Infobox: row padding.
+   *  Text: line-height. Section: margin above.
+   *  Default undefined = "normal". */
+  density?: "compact" | "normal" | "loose"
 }
 
 /** Snapshot of a merged article — stored on the divider section block for unmerge */
@@ -302,6 +334,15 @@ export interface WikiArticle {
   titleStyle?: WikiTitleStyle                      // title rendering customization
   themeColor?: WikiThemeColor                      // article-level theme color
   templateId?: string                              // source template (traceability only, not enforced)
+  /** Phase 3.1-B: section numbering mode across columns.
+   * "independent" (default) = each pane 1..N separately.
+   * "continuous" = left→right depth-first global 1..N. */
+  numberingMode?: "independent" | "continuous"
+  /** Phase 3.1-C: typography mode.
+   * "sans" (default) = current Inter/Geist body.
+   * "serif-body" = Merriweather + Noto Serif KR body, keep sans headings.
+   * "editorial" = serif body + display H2 + drop cap on first paragraph of each section. */
+  typography?: "sans" | "serif-body" | "editorial"
 
   /* Phase 2-2-C: `infobox`, `infoboxHeaderColor`, `infoboxColumnPath`, `tocStyle`
    * all moved to `WikiBlock`s (types "infobox" / "toc"). See migration v78. */

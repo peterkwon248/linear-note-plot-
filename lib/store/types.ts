@@ -278,6 +278,30 @@ export interface PlotState {
   removeArticleReference: (articleId: string, referenceId: string) => void
   deleteWikiArticle: (articleId: string) => void
   applyColumnPreset: (articleId: string, presetCount: number) => void
+  /** Phase 3.1-A — apply an asymmetric ratio preset (e.g. 5:3, golden ratio). */
+  applyAsymmetricPreset: (articleId: string, ratios: number[], minWidths?: number[]) => void
+  /** Phase 3.1-A — toggle hairline vertical rule between columns. */
+  setColumnRule: (articleId: string, rule: boolean) => void
+  /** Phase 3.1-A — set column gap token. */
+  setColumnGap: (articleId: string, gap: "sm" | "md" | "lg") => void
+  /** Phase 3.1-A — set a column's display name. Pass null to clear. */
+  setColumnName: (articleId: string, path: number[], name: string | null) => void
+  /** Phase 3.1-A — set a column's palette id (e.g. "slate"). Pass null to clear. */
+  setColumnPaletteId: (articleId: string, path: number[], paletteId: string | null) => void
+  /** Phase 3.1-A — assign random palette colors to every column. */
+  applyAutoColumnColors: (articleId: string) => void
+  /** Phase 3.1-B — wrap two blocks into a column-group (Notion-style side-by-side). */
+  wrapInColumnGroup: (articleId: string, targetBlockId: string, draggedBlockId: string, side: "left" | "right") => void
+  /** Phase 3.1-B — dissolve a column-group, putting children back as flat blocks. */
+  unwrapColumnGroup: (articleId: string, groupBlockId: string) => void
+  /** Phase 3.1-B — add a full-width pane above/below columns (vertical wrap). */
+  addFullWidthPane: (articleId: string, position: "above" | "below") => void
+  /** Phase 3.1-A — set column bg opacity (0.1~1). */
+  setColumnPaletteAlpha: (articleId: string, path: number[], alpha: number) => void
+  /** Phase 3.1-A — set gradient second color. Pass null to clear. */
+  setColumnGradientTo: (articleId: string, path: number[], gradientTo: string | null) => void
+  /** Phase 3.1-A — clear all palette colors from all columns. */
+  clearAllColumnColors: (articleId: string) => void
   updateColumnRatios: (articleId: string, path: number[], newRatios: number[]) => void
   moveBlockToColumn: (articleId: string, blockId: string, targetPath: ColumnPath) => void
   addColumnAfter: (articleId: string, parentPath: number[], afterIndex: number) => void

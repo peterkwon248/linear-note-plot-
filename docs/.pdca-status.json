@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-15T07:17:00.071Z",
+  "lastUpdated": "2026-04-17T08:43:47.214Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -30,7 +30,8 @@
     "adoring-benz",
     "block-registry",
     "eager-goodall",
-    "wiki-templates"
+    "wiki-templates",
+    "nostalgic-edison-61f096"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -43,9 +44,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-05T00:23:24.929Z",
-        "lastUpdated": "2026-04-15T02:52:15.166Z"
+        "lastUpdated": "2026-04-17T06:27:10.531Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\editor\\note-hover-preview.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\nostalgic-edison-61f096\\components\\editor\\wiki-infobox.tsx"
     },
     "wizardly-kare": {
       "phase": "do",
@@ -199,9 +200,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:25.454Z",
-        "lastUpdated": "2026-04-15T07:13:56.469Z"
+        "lastUpdated": "2026-04-17T05:55:42.870Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\slices\\wiki-articles.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\nostalgic-edison-61f096\\lib\\store\\slices\\wiki-articles.ts"
     },
     "store": {
       "phase": "do",
@@ -212,9 +213,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-04-15T07:14:03.568Z"
+        "lastUpdated": "2026-04-17T05:35:10.119Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\store\\types.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\nostalgic-edison-61f096\\lib\\store\\seeds.ts"
     },
     "__tests__": {
       "phase": "do",
@@ -264,9 +265,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-15T07:17:00.071Z"
+        "lastUpdated": "2026-04-17T08:43:47.214Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\components\\wiki-editor\\wiki-article-renderer.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\nostalgic-edison-61f096\\components\\wiki-editor\\wiki-article-renderer.tsx"
     },
     "core": {
       "phase": "do",
@@ -410,6 +411,19 @@
         "lastUpdated": "2026-04-15T00:20:33.340Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\eager-goodall\\lib\\wiki-templates\\built-in.ts"
+    },
+    "nostalgic-edison-61f096": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-17T06:26:52.166Z",
+        "lastUpdated": "2026-04-17T08:13:54.444Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\nostalgic-edison-61f096\\lib\\column-palette.ts"
     }
   },
   "pipeline": {
@@ -420,7 +434,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-15T07:17:00.071Z"
+    "lastActivity": "2026-04-17T08:43:47.214Z"
   },
   "history": [
     {
@@ -6023,6 +6037,318 @@
     },
     {
       "timestamp": "2026-04-15T07:17:00.071Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:08:50.737Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:08:56.180Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:08:58.386Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:08:59.978Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:09:01.548Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:09:06.328Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:09:10.682Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:09:12.439Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:14:20.425Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:14:25.087Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:26:02.384Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:35:10.119Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:42:43.910Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:50:31.648Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:50:40.439Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:50:49.486Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:50:55.947Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:50:58.595Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:51:01.043Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T05:55:42.870Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T06:26:52.166Z",
+      "feature": "nostalgic-edison-61f096",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T06:27:05.382Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T06:27:07.224Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T06:27:10.531Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T06:27:46.772Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T06:57:03.509Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:14:58.561Z",
+      "feature": "nostalgic-edison-61f096",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:15:33.804Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:16:14.943Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:17:30.985Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:17:56.870Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:18:19.613Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:20:36.759Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:20:49.261Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:27:34.216Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:28:24.126Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:28:26.842Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T07:28:28.730Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:13:54.444Z",
+      "feature": "nostalgic-edison-61f096",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:14:28.250Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:14:34.835Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:14:35.914Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:14:37.050Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:14:38.972Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:14:40.267Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:14:41.572Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:15:40.643Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:15:56.284Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:15:57.072Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:20:52.935Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:43:39.230Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-17T08:43:47.214Z",
       "feature": "wiki-editor",
       "phase": "do",
       "action": "updated"

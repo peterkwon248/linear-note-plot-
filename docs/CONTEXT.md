@@ -92,15 +92,15 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **Phase 2-2-C — 메타 → 블록 통합 (PR pending, 2026-04-15 저녁)**: `WikiBlockType`에 `"infobox"`, `"toc"` 추가. WikiInfoboxBlock/WikiTocBlock wrapper 컴포넌트 신설 (기존 WikiInfobox/CollapsibleTOC 재사용). `WikiArticle.infobox`/`infoboxHeaderColor`/`infoboxColumnPath`/`tocStyle` scalar 필드 전부 삭제 (→ WikiBlock으로). `WikiTocStyle` 타입 삭제. `setTocStyle`/`setInfoboxColumnPath`/`setWikiArticleInfobox` 액션 삭제. `ColumnMetaPositionMenu` 컴포넌트 삭제 (wiki-view.tsx/secondary-panel-content.tsx 호출처 정리). `WikiArticleRenderer` metaSlots 로직 + 인라인 CollapsibleTOC 삭제. `ColumnRenderer.metaSlots` prop 제거. `instantiateTemplate` 블록 기반 출력으로 재작성. AddBlockButton 메뉴에 Infobox + TOC 추가. `isWikiStub`이 infobox/toc 블록 skip. Migration v78 (scalar → 블록) + v79 (seed dedup). Store version 77 → 79.
+1. **Phase 3.1-A/B + Page Identity (PR pending, 2026-04-17)**: Article themeColor 배경 tint (5%) + WikiTitle paint-bucket picker → Title/Body 일체감. 공통 `block-menu.tsx` primitives + 5개 블록 ⋯ 메뉴 마이그레이션. `WikiBlock.width`(narrow/default/wide/full/px) / `density`(compact/normal/loose) / `fontSize` 공통 속성 + Infobox/TOC에 적용. Card 용어 통일(UI only). Asymmetric 프리셋 mini bar + cardCount 그룹핑. 1-card palette/⋯ 노출 fix. SectionNumbers Context (column-group 중첩 번호). addWikiBlock afterBlockId 위치 fix (leaf `loc.index+1`). Column-group unwrap 2곳 fix. Seed 리셋 (Inbox/Capture/Permanent 3노트 + mini 위키 2). Migration 없음 (전부 optional). `BRAINSTORM-2026-04-17-page-identity.md` Tier 시스템.
 
-2. **Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼 (PR pending)**: `splitLeafIntoColumns(articleId, path, count)` 액션 (depth<3 + count 2-4). `LeafDroppableCell` 빈 상태에 `AddBlockButton` + Split 2/3 버튼 (drag-over 시 "Drop block here"만). CSS Grid nested 브랜치(중첩 컬럼)에도 hover `+` / `X` 버튼 노출 (group/nested-panel). `handleAddBlockToColumn` 훅 (addWikiBlock + moveBlockToColumn 연속). URL dialog `columnPath` 확장.
+2. **Phase 2-2-C — 메타 → 블록 통합 (PR #208, 2026-04-15)**: `WikiBlockType`에 `"infobox"`, `"toc"` 추가. WikiInfoboxBlock/WikiTocBlock wrapper 컴포넌트 신설. `WikiArticle.infobox`/`infoboxHeaderColor`/`infoboxColumnPath`/`tocStyle` scalar 필드 전부 삭제. `ColumnMetaPositionMenu` 삭제. Migration v78+v79. Store version 77 → 79.
 
-3. **Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼 (PR #205)**: 최상위 컬럼에 사이/끝 `+` + 각 컬럼 `X` 버튼. `addColumnAfter` / `removeColumn` 액션 (6 컬럼 cap, 최소 1 유지, orphan 블록 main 복귀). 재귀 헬퍼 3개 (insertColumnAtPath / removeColumnAtPath / remapAssignmentsAfterRemoval).
+3. **Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼 (PR #208)**: `splitLeafIntoColumns` 액션. `LeafDroppableCell` 빈 상태에 AddBlockButton + Split 2/3 버튼. CSS Grid nested 브랜치에도 hover `+`/`X` 버튼. `handleAddBlockToColumn` 훅.
 
-4. **Phase 2-2-B-2 — 블록 컬럼 간 드래그 (PR #204)**: moveBlockToColumn 액션 + syncLayoutFromAssignments 헬퍼 (columnAssignments canonical, leaf blockIds derived). LeafDroppableCell (편집 모드, useDroppable id `column-<pathKey>`). WikiArticleRenderer handleDragEnd에 column-* 케이스 추가.
+4. **Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼 (PR #205)**: 최상위 컬럼에 사이/끝 `+` + 각 컬럼 `X` 버튼. `addColumnAfter` / `removeColumn` 액션 (6 컬럼 cap).
 
-5. **Phase 2-2-B-1 — 컬럼 비율 드래그 (PR #203)**: react-resizable-panels 통합 (편집 모드 + 최상위 horizontal만). `updateColumnRatios` 액션. `ColumnMetaPositionMenu` 팝오버 (Phase 2-2-C에서 삭제됨).
+5. **Phase 2-2-B-2 — 블록 컬럼 간 드래그 (PR #204)**: moveBlockToColumn 액션 + syncLayoutFromAssignments 헬퍼. LeafDroppableCell (편집 모드, useDroppable id `column-<pathKey>`).
 
 ## Two Axes — Core Design Philosophy
 
