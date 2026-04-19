@@ -168,15 +168,7 @@
   --wiki-theme-active: var(--wiki-theme-dark, transparent);
 }
 
-/* Phase 3.1-A Step 1 (2026-04-17) — Article-level background tint.
- * When an article has themeColor, the whole scope gets a ~5% tint so the
- * title area and body share one page identity instead of top-heavy/card-only.
- * Individual cards keep their own palette on top via `.wiki-column-cell--themed::before`.
- * themeColor absent → `--wiki-theme-active` is transparent → no-op. */
-.wiki-theme-scope.wiki-article-renderer {
-  background: color-mix(in srgb, var(--wiki-theme-active) 5%, transparent);
-  transition: background-color 200ms ease;
-}
+/* 2026-04-19 Pivot — article-level background tint 제거 (Linear 다크모드 중심). */
 
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
@@ -442,32 +434,8 @@
 .wiki-column-grid--gap-md { gap: var(--mag-gap-md); }
 .wiki-column-grid--gap-lg { gap: var(--mag-gap-lg); }
 
-/* Column with themeColor background — uses ::before for independent alpha control */
-.wiki-column-cell--themed {
-  position: relative;
-  border-radius: 0.5rem;
-}
-.wiki-column-cell--themed::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 0;
-  /* Flat color (no gradient) */
-  background-color: var(--mag-col-active-bg, transparent);
-  opacity: var(--mag-col-active-alpha, 1);
-}
-/* Gradient mode — overrides flat bg */
-.wiki-column-cell--gradient::before {
-  background: linear-gradient(135deg, var(--mag-col-active-bg), var(--mag-col-gradient-to, transparent));
-  background-color: transparent;
-}
-/* Ensure content stays above the pseudo bg — skip absolutely positioned elements (⋯/X buttons) */
-.wiki-column-cell--themed > :not(.absolute) {
-  position: relative;
-  z-index: 1;
-}
+/* 2026-04-19 Pivot — column palette (themed/gradient) 렌더 규칙 제거.
+ * .wiki-column-cell--themed / --gradient 클래스가 붙어도 배경색 안 나옴. */
 
 /* Column name header — only visible when ColumnDefinition.name is set */
 .wiki-column-name {

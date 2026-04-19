@@ -236,6 +236,29 @@ Phase 2-2-B-3-a 머지 후 사용자와 아키텍처 재논의. 모든 메타 (I
 
 ## Completed PRs (recent)
 
+### 2026-04-19 (🔄 Pivot — Book 비전 폐기, 위키 2-mode 집중)
+- **PR #210 (누적)**: 재편-0 ~ 재편-D 한 PR 내 일괄 진행
+  - **재편-0**: 노트/위키 공용 `ReferencesBox` — Footnote + Reference 하단 박스 통합 (commit a704fe0, b07940b)
+  - **테마 제거**: Article theme color picker + Column palette 메뉴/CSS 제거 (Linear 다크모드 회귀, commit 221442d)
+  - **Blank 블록**: 독립 `"blank"` 타입 + sm/md/lg hover 토글 (commit 53c8bee)
+  - **재편-A**: TOC/Infobox → article meta slot 환원 (PR #208 🅑 롤백). `WikiArticle.infobox` + `slots.{toc,infobox,references}` + `layoutPreset` 스키마. `WikiInfoboxSlot`/`WikiTocSlot` 신규 — virtual block 로 기존 렌더 재활용. Migration v81: blocks/columnAssignments/ColumnBlocksLeaf 3곳에서 infobox/toc 블록 일괄 추출. WikiBlockType internal-only 마킹
+  - **재편-B**: `slots.references.position` — "bottom" (기본) / "panel-only" / "right-sidebar" (bottom fallback)
+  - **재편-C**: Default / Namu 프리셋 + Custom 모드. `lib/wiki-layout-presets.ts` + WikiColumnMenu "Preset" 섹션. Default = 위키피디아 (TOC top + Infobox right-float), Namu = 나무위키 (TOC top + Infobox top-full)
+  - **재편-D**: Pull Quote 블록/렌더/메뉴 제거 (Magazine 잔재). 데이터 필드 (quoteText, paletteId, themeColor 등) 는 dead field 로 남음 → 후속 PR migration v82 에서 정리
+  - 파일: 3 신규 + 9 수정 + 2 삭제 (footnotes-footer, wiki-footnotes-section) + store v80→v81
+  - 근거: `docs/BRAINSTORM-2026-04-19-wiki-2mode-pivot.md`
+
+- **PR #210 (초기)**: References 박스 통합 (재편-0) — 노트/위키 공용 `ReferencesBox`
+  - 전략 대전환: 책/잡지 자유 레이아웃 비전 폐기 → 위키+디폴트 2-mode (Default/Namu) 프리셋 집중 + 축2(지식망) 우선
+  - **모드 = 선택지가 아니라 메타 슬롯 배치의 결과적 이름** — TOC/Infobox/References 배치 조합에 이름을 붙인 것이 프리셋
+  - 신규: `components/editor/references-box.tsx` (공용 presentational), `note-references-container.tsx` (노트 어댑터), `wiki-references-container.tsx` (위키 어댑터)
+  - 삭제: `components/editor/footnotes-footer.tsx` (637줄), `components/wiki-editor/wiki-footnotes-section.tsx` (546줄) — 총 1183줄 제거, 순 +32줄
+  - 박스 무제목 (좌상단 chevron + total count만). numbered footnotes → 1px 구분선 (양쪽 다 있을 때만) → bullet references → Add 버튼 구조
+  - 중복 방지: Footnote 연결된 Reference는 bibliography에서 제외 (노트에 있던 로직을 **위키에도 신규 적용**)
+  - Migration 0. Insert/슬래시/멘션/Library/Trash/엔티티 이름 "Reference" 전부 불변 — 렌더 레이어만 변경
+  - 근거: `docs/BRAINSTORM-2026-04-19-wiki-2mode-pivot.md`
+  - **다음 PR (재편-A~D)**: layout.slots 스키마 / PR #208 🅑 롤백 (TOC/Infobox 블록 → 메타 슬롯 환원) / Reference position 옵션 / Default·Namu 프리셋 + Custom UI / Magazine Tier 잔재 청소
+
 ### 2026-04-17 (집, Phase 3.1-A/B + Page Identity)
 - **PR pending**: Phase 3.1-A/B 대폭 진행 + Page Identity Tier 시스템
   - SectionNumbers Context (column-group 내부 섹션 번호)

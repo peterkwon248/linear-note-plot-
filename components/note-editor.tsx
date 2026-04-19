@@ -190,7 +190,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
       btn?.click()
     })
 
-    // 2. Broadcast event for Summary, FootnotesFooter, NoteReferencesFooter
+    // 2. Broadcast event for Summary, ReferencesBox
     //    Scope dispatch to the current editor container so Split View panes stay independent.
     const scope = editorInstance.view.dom.closest('[data-editor-scope]')
     const target: EventTarget = scope ?? window

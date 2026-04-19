@@ -101,16 +101,83 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
     case "table":
       return <TableBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "infobox":
-      return articleId ? <WikiInfoboxBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
+      // 재편-A (2026-04-19): infobox 는 article meta slot 전용.
+      // blocks[] 에 남은 legacy infobox (v80 이전 데이터) 는 렌더 안 함.
+      // virtual block (id "__infobox__..." by WikiInfoboxSlot) 만 허용.
+      if (!articleId) return null
+      if (!block.id.startsWith("__infobox__")) return null
+      return <WikiInfoboxBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "toc":
-      return articleId ? <WikiTocBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
-    case "pull-quote":
-      return <PullQuoteBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+      // 재편-A: 동상. legacy toc 블록 무시, slot 만 렌더.
+      if (!articleId) return null
+      if (!block.id.startsWith("__toc__")) return null
+      return <WikiTocBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "column-group":
       return <ColumnGroupBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
+    case "blank":
+      return <BlankBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     default:
       return null
   }
+}
+
+/* ── Blank Block (2026-04-19 — intentional empty vertical space) ── */
+
+const SPACER_HEIGHT: Record<"sm" | "md" | "lg", string> = {
+  sm: "1rem",    // 16px
+  md: "2rem",    // 32px
+  lg: "4rem",    // 64px
+}
+
+function BlankBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+  const size = (block.spacerSize ?? "sm") as "sm" | "md" | "lg"
+  const height = SPACER_HEIGHT[size]
+
+  return (
+    <div
+      {...dragHandleProps}
+      className={cn(
+        "group/blank relative w-full select-none",
+        editable && "hover:bg-hover-bg/30 rounded-md transition-colors",
+      )}
+      style={{ height }}
+      aria-label="Blank spacer"
+    >
+      {editable && (
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover/blank:opacity-100">
+          <div
+            className="flex items-center gap-1 rounded-md border border-border-subtle bg-surface-overlay px-1.5 py-0.5 shadow-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(["sm", "md", "lg"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => onUpdate?.({ spacerSize: s })}
+                className={cn(
+                  "rounded px-1.5 py-0.5 text-[10px] font-medium uppercase transition-colors",
+                  size === s
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
+                )}
+              >
+                {s}
+              </button>
+            ))}
+            <span className="mx-0.5 h-3 w-px bg-border-subtle" />
+            <button
+              type="button"
+              onClick={() => onDelete?.()}
+              className="rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              title="Delete spacer"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 /* ── Column Group Block (Phase 3.1-B — Notion-style implicit side-by-side) ── */
@@ -146,7 +213,7 @@ function ColumnGroupBlock({ block, editable, onUpdate, onDelete, dragHandleProps
     if (type === "section") { newBlock.title = ""; newBlock.level = 2 }
     if (type === "infobox") { newBlock.fields = []; newBlock.headerColor = null }
     if (type === "toc") newBlock.tocCollapsed = false
-    if (type === "pull-quote") newBlock.quoteText = ""
+    if (type === "blank") newBlock.spacerSize = "sm"
     onUpdate?.({ columnChildren: [...columns, [newBlock]] })
     setSubColMenuPos(null)
   }
@@ -195,12 +262,12 @@ function ColumnGroupBlock({ block, editable, onUpdate, onDelete, dragHandleProps
             { type: "text", label: "Text" },
             { type: "image", label: "Image" },
             { type: "section", label: "Section" },
-            { type: "infobox", label: "Infobox" },
-            { type: "toc", label: "TOC" },
-            { type: "pull-quote", label: "Pull Quote" },
+            // 재편-A: infobox/toc 제거 (article meta slot 으로 이관)
+            // 재편-D: pull-quote 제거 (Magazine 잔재)
             { type: "note-ref", label: "Note" },
             { type: "url", label: "URL" },
             { type: "table", label: "Table" },
+            { type: "blank", label: "Blank" },
           ].map((item) => (
             <button
               key={item.type}
@@ -257,60 +324,6 @@ function ColumnGroupBlock({ block, editable, onUpdate, onDelete, dragHandleProps
           </div>
         ))}
       </div>
-    </div>
-  )
-}
-
-/* ── Pull Quote Block (Phase 3.1-B) ── */
-
-function PullQuoteBlock({ block, editable, onUpdate, dragHandleProps }: WikiBlockRendererProps) {
-  const [editing, setEditing] = useState(false)
-  const variant = block.quoteVariant ?? "minimal"
-
-  const variantClasses: Record<string, string> = {
-    minimal: "text-center italic font-serif text-[1.4em] leading-snug text-foreground/90 py-6 px-8",
-    editorial: "font-serif italic text-[1.7em] leading-tight text-foreground py-8 pl-8 pr-4 border-l-0",
-    bordered: "text-[1.15em] leading-normal text-foreground/90 py-4 pl-5 pr-4 border-l-4 border-accent/60",
-  }
-
-  if (editing && editable) {
-    return (
-      <div {...dragHandleProps} className={cn("group relative rounded-md transition-colors", variantClasses[variant])}>
-        <textarea
-          autoFocus
-          defaultValue={block.quoteText ?? ""}
-          placeholder="Quote text…"
-          onBlur={(e) => { onUpdate?.({ quoteText: e.currentTarget.value.trim() || undefined }); setEditing(false) }}
-          className="w-full resize-none bg-transparent outline-none"
-          rows={2}
-        />
-        <input
-          type="text"
-          defaultValue={block.quoteAttribution ?? ""}
-          placeholder="— Attribution (optional)"
-          onBlur={(e) => onUpdate?.({ quoteAttribution: e.currentTarget.value.trim() || undefined })}
-          className="mt-2 w-full bg-transparent text-[0.7em] not-italic text-muted-foreground outline-none"
-        />
-      </div>
-    )
-  }
-
-  return (
-    <div
-      {...dragHandleProps}
-      onClick={editable ? () => setEditing(true) : undefined}
-      className={cn("group relative rounded-md transition-colors", variantClasses[variant], editable && "cursor-text hover:bg-hover-bg/40")}
-    >
-      {block.quoteText ? (
-        <>
-          <p>&ldquo;{block.quoteText}&rdquo;</p>
-          {block.quoteAttribution && (
-            <p className="mt-3 text-[0.7em] not-italic text-muted-foreground">— {block.quoteAttribution}</p>
-          )}
-        </>
-      ) : editable ? (
-        <p className="text-muted-foreground/60">Click to add quote…</p>
-      ) : null}
     </div>
   )
 }
@@ -1894,16 +1907,15 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
     { type: "image", label: "Image", desc: "Upload image" },
     { type: "url", label: "URL", desc: "Embed a link" },
     { type: "table", label: "Table", desc: "Data table" },
-    { type: "infobox", label: "Infobox", desc: "Key-value metadata" },
-    { type: "toc", label: "TOC", desc: "Auto contents" },
-    { type: "pull-quote", label: "Pull Quote", desc: "Highlighted quote" },
+    // 재편-A (2026-04-19): Infobox/TOC 는 이제 block 이 아니라 article meta slot.
+    // 재편-D (2026-04-19): Pull Quote 제거 (Magazine 잔재).
   ]
 
   const contentItems: { type: string; label: string; desc: string }[] = [
     { type: "text:callout", label: "Callout", desc: "Highlighted note" },
     { type: "text:blockquote", label: "Blockquote", desc: "Quote block" },
     { type: "text:toggle", label: "Toggle", desc: "Collapsible section" },
-    { type: "text:spacer", label: "Spacer", desc: "Empty space" },
+    { type: "blank", label: "Blank", desc: "Empty vertical space" },
   ]
 
   return (

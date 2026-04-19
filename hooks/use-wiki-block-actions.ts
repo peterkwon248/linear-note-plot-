@@ -53,6 +53,7 @@ export function useWikiBlockActions(articleId: string) {
     if (type === "text") { block.content = "" }
     if (type === "infobox") { block.fields = []; block.headerColor = null }
     if (type === "toc") { block.tocCollapsed = false }
+    if (type === "blank") { block.spacerSize = "sm" }
     addWikiBlock(articleId, block, afterBlockId)
   }, [articleId, addWikiBlock])
 
@@ -101,6 +102,9 @@ export function useWikiBlockActions(articleId: string) {
         }
         if (type === "toc") {
           block.tocCollapsed = false
+        }
+        if (type === "blank") {
+          block.spacerSize = "sm"
         }
         newBlockId = addWikiBlock(articleId, block)
       }

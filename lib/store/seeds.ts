@@ -213,26 +213,31 @@ export const SEED_WIKI_CATEGORIES: WikiCategory[] = []
 
 const bid = () => crypto.randomUUID()
 
+// 재편-A (2026-04-19): seed 도 새 스키마 — infobox 는 article 메타, TOC 는 slots.toc.position.
 const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
   {
     id: "wiki-plot",
     title: "Plot",
     aliases: ["Plot App"],
     blocks: [
-      {
-        id: bid(),
-        type: "infobox",
-        fields: [
-          { key: "Type", value: "Notes + Wiki + Graph" },
-          { key: "Status", value: "In development" },
-        ],
-        headerColor: null,
-      },
       { id: bid(), type: "section", title: "Overview", level: 2 },
       { id: bid(), type: "text", content: "Plot is a knowledge app that unifies three layers: notes for quick capture, a wiki for durable concepts, and a graph that surfaces connections between them." },
       { id: bid(), type: "section", title: "Core ideas", level: 2 },
       { id: bid(), type: "text", content: "Notes flow through Inbox → Capture → Permanent. Once a concept is referenced repeatedly, promote it to a wiki article using [[wiki:Zettelkasten]]-style linking." },
     ],
+    infobox: {
+      fields: [
+        { key: "Type", value: "Notes + Wiki + Graph" },
+        { key: "Status", value: "In development" },
+      ],
+      headerColor: null,
+    },
+    layoutPreset: "default",
+    slots: {
+      toc: { position: "top" },
+      infobox: { position: "right-float" },
+      references: { position: "bottom" },
+    },
     tags: [],
     categoryIds: [],
     createdAt: new Date().toISOString(),
@@ -243,20 +248,24 @@ const _SEED_WIKI_ARTICLES_RAW: Omit<WikiArticle, "sectionIndex">[] = [
     title: "Zettelkasten",
     aliases: ["Slip box"],
     blocks: [
-      {
-        id: bid(),
-        type: "infobox",
-        fields: [
-          { key: "Creator", value: "Niklas Luhmann" },
-          { key: "Meaning", value: "Slip box (German)" },
-        ],
-        headerColor: null,
-      },
       { id: bid(), type: "section", title: "Definition", level: 2 },
       { id: bid(), type: "text", content: "Zettelkasten is a note-taking method built around atomic notes, dense linking, and steady accumulation. Luhmann used it to produce 70 books and 400+ papers." },
       { id: bid(), type: "section", title: "In Plot", level: 2 },
       { id: bid(), type: "text", content: "Each wiki article is a Zettel. [[wiki:Plot]] wikilinks form the slip-box connections." },
     ],
+    infobox: {
+      fields: [
+        { key: "Creator", value: "Niklas Luhmann" },
+        { key: "Meaning", value: "Slip box (German)" },
+      ],
+      headerColor: null,
+    },
+    layoutPreset: "namu",
+    slots: {
+      toc: { position: "right-sticky" },
+      infobox: { position: "top-full" },
+      references: { position: "bottom" },
+    },
     tags: [],
     categoryIds: [],
     createdAt: new Date().toISOString(),

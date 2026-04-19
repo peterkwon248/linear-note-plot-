@@ -1066,5 +1066,114 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // ── v80 → v81: 재편-A (2026-04-19) ─────────────────────────────────────
+  //   "메타 = 배치 슬롯" 철학. TOC/Infobox 블록을 WikiArticle 의 메타 데이터로
+  //   환원한다 (PR #208 🅑 대결정 롤백). 이후 슬롯 position 필드로 배치를 제어.
+  //
+  //   변환 규칙:
+  //   - blocks[] 에서 type "infobox" 블록 찾음 → article.infobox = { fields, headerColor, density, width, fontSize }
+  //   - blocks[] 에서 type "toc" 블록 찾음 → article.slots.toc = { position: "top", collapsed, hiddenLevels, density, fontSize }
+  //   - 해당 블록들을 blocks[], columnAssignments, ColumnBlocksLeaf.blocks/blockIds 에서 제거
+  //   - article.slots.infobox.position = "right-float" (기본), article.slots.references.position = "bottom"
+  //   - layoutPreset 은 손대지 않음 (재편-C 에서 선택 UI 추가)
+  //   - 둘 이상 있으면 첫 번째만 채택, 나머지는 버림
+  if (Array.isArray(state.wikiArticles)) {
+    for (const article of state.wikiArticles as Record<string, unknown>[]) {
+      try {
+        const a = article as Record<string, unknown>
+        const blocks = Array.isArray(a.blocks) ? (a.blocks as Array<Record<string, unknown>>) : []
+
+        let infoboxPayload: Record<string, unknown> | null = null
+        let tocPayload: Record<string, unknown> | null = null
+        const removedIds = new Set<string>()
+
+        for (const b of blocks) {
+          const t = b.type as string | undefined
+          const id = b.id as string | undefined
+          if (!id) continue
+          if (t === "infobox" && !infoboxPayload) {
+            infoboxPayload = {
+              fields: Array.isArray(b.fields) ? b.fields : [],
+              headerColor: b.headerColor ?? null,
+              density: b.density,
+              width: b.width,
+              fontSize: b.fontSize,
+            }
+            removedIds.add(id)
+          } else if (t === "toc" && !tocPayload) {
+            tocPayload = {
+              position: "top",
+              collapsed: b.tocCollapsed ?? false,
+              hiddenLevels: Array.isArray(b.hiddenLevels) ? b.hiddenLevels : undefined,
+              density: b.density,
+              fontSize: b.fontSize,
+            }
+            removedIds.add(id)
+          } else if (t === "infobox" || t === "toc") {
+            // duplicate — drop silently
+            removedIds.add(id)
+          }
+        }
+
+        // Apply meta payload to article
+        if (infoboxPayload) a.infobox = infoboxPayload
+        const existingSlots = (a.slots as Record<string, unknown> | undefined) ?? {}
+        a.slots = {
+          ...existingSlots,
+          toc: tocPayload ?? existingSlots.toc ?? { position: "top" },
+          infobox: existingSlots.infobox ?? { position: infoboxPayload ? "right-float" : "none" },
+          references: existingSlots.references ?? { position: "bottom" },
+        }
+
+        // Remove the extracted blocks from flat pool + per-column pool
+        if (removedIds.size > 0) {
+          a.blocks = blocks.filter((b) => {
+            const id = b.id as string | undefined
+            return !id || !removedIds.has(id)
+          })
+
+          const assignments = a.columnAssignments as Record<string, number[]> | undefined
+          if (assignments) {
+            const next: Record<string, number[]> = {}
+            for (const [id, path] of Object.entries(assignments)) {
+              if (!removedIds.has(id)) next[id] = path
+            }
+            a.columnAssignments = next
+          }
+
+          // Walk layout tree and scrub removed ids from each ColumnBlocksLeaf
+          const scrubLeaves = (node: Record<string, unknown> | undefined) => {
+            if (!node) return
+            const cols = node.columns as Array<Record<string, unknown>> | undefined
+            if (!Array.isArray(cols)) return
+            for (const col of cols) {
+              const content = col.content as Record<string, unknown> | undefined
+              if (!content) continue
+              if (content.type === "columns") {
+                scrubLeaves(content)
+              } else if (content.type === "blocks") {
+                const leafBlocks = content.blocks as Array<Record<string, unknown>> | undefined
+                if (Array.isArray(leafBlocks)) {
+                  content.blocks = leafBlocks.filter((b) => {
+                    const id = b.id as string | undefined
+                    return !id || !removedIds.has(id)
+                  })
+                }
+                const leafBlockIds = content.blockIds as string[] | undefined
+                if (Array.isArray(leafBlockIds)) {
+                  content.blockIds = leafBlockIds.filter((id) => !removedIds.has(id))
+                }
+              }
+            }
+          }
+          scrubLeaves(a.layout as Record<string, unknown> | undefined)
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[migrate v81] article meta extraction failed; leaving intact", article, err)
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }
