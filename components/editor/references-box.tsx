@@ -242,7 +242,7 @@ export function ReferencesBox({
             >
               ▶
             </span>
-            <span className="text-[0.875em] font-medium text-muted-foreground/80 bg-hover-bg rounded px-[5px] min-w-[18px] text-center tabular-nums">
+            <span className="text-[0.875em] font-medium text-muted-foreground/60 min-w-[18px] text-center tabular-nums">
               {totalCount}
             </span>
           </button>
