@@ -52,9 +52,10 @@ export function getInitialContentJson(subtype: string): Record<string, unknown> 
         content: [{ type: "horizontalRule" }, { type: "paragraph" }]
       }
     case "spacer":
+      // 1 empty paragraph ≈ 24px gap. 더 필요하면 엔터로 늘릴 수 있음.
       return {
         type: "doc",
-        content: [{ type: "paragraph" }, { type: "paragraph" }, { type: "paragraph" }]
+        content: [{ type: "paragraph" }]
       }
     default:
       return { type: "doc", content: [{ type: "paragraph" }] }

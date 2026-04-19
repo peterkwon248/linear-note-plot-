@@ -201,6 +201,8 @@ export type WikiBlockType =
   | 'pull-quote'
   // Phase 3.1-B: Notion-style implicit column group (created by side-dragging blocks)
   | 'column-group'
+  // 2026-04-19: intentional empty vertical space (non-editable)
+  | 'blank'
 
 /** A single block in a wiki article */
 export interface WikiBlock {
@@ -277,6 +279,9 @@ export interface WikiBlock {
    *  Text: line-height. Section: margin above.
    *  Default undefined = "normal". */
   density?: "compact" | "normal" | "loose"
+  // 2026-04-19 — blank block
+  /** Blank: vertical gap preset. sm=16px, md=32px, lg=64px. Default "sm". */
+  spacerSize?: "sm" | "md" | "lg"
 }
 
 /** Snapshot of a merged article — stored on the divider section block for unmerge */
