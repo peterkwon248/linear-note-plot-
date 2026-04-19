@@ -564,12 +564,13 @@ function WikiArticleRendererInner({
 
         {/* 재편-A: meta slots — TOC / Infobox 위치별 렌더.
             "top-full" infobox 는 본문 위 블록 레벨. "right-float" 은 본문 시작부 float. */}
-        {article.slots?.infobox?.position === "top-full" && (
+        {article.slots?.infobox?.position === "top-full" && article.infobox && (
           <div className="mb-4">
             <WikiInfoboxSlot article={article} editable={editable} />
           </div>
         )}
 
+        {/* TOC top — 우측 sticky 모드가 아닐 때만 본문 앞 inline 렌더 */}
         {(article.slots?.toc?.position === "top" ||
           (!article.slots?.toc?.position && article.infobox != null)) && (
           <div className="mb-4">
@@ -588,73 +589,96 @@ function WikiArticleRendererInner({
           </div>
         )}
 
-        {/* Empty-state placeholder: editable + no infobox yet + slot position resolvable */}
-        {editable && !article.infobox && article.slots?.infobox?.position !== "none" && article.slots?.infobox?.position !== "right-float" && article.slots?.infobox?.position !== "left-float" && (
+        {/* Empty-state placeholder: editable + no infobox yet + slot position !== top-full / right-float / left-float / none
+            (top-full 은 위 L567 에서 이미 렌더. float 은 float 렌더가 처리.) */}
+        {editable && !article.infobox && !article.slots?.infobox?.position && (
           <div className="mb-4">
             <WikiInfoboxSlot article={article} editable={editable} />
           </div>
         )}
 
-        {/* Top AddBlock — single-col uses regular AddBlock; multi-col shows hover zone for full-width pane */}
-        {editable && layout.columns.length < 2 && (
-          <AddBlockButton onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)} />
-        )}
-        {editable && layout.columns.length >= 2 && (
-          <FullWidthInsertHoverZone articleId={articleId} position="above" />
-        )}
-
-        {/* Column-based body */}
-        {editable ? (
-          <SortableContext items={visibleBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-            <ColumnRenderer
-              layout={layout}
-              renderBlock={renderBlock}
-              editable
-              onRatiosChange={(path, newRatios) =>
-                usePlotStore.getState().updateColumnRatios(articleId, path, newRatios)
-              }
-              onAddColumnAfter={(parentPath, afterIndex) =>
-                usePlotStore.getState().addColumnAfter(articleId, parentPath, afterIndex)
-              }
-              onRemoveColumn={(path) =>
-                usePlotStore.getState().removeColumn(articleId, path)
-              }
-              onAddBlockToColumn={handleAddBlockToColumn}
-              onSplitLeaf={(path, count) =>
-                usePlotStore.getState().splitLeafIntoColumns(articleId, path, count)
-              }
-              renderColumnMenu={(path) => (
-                <WikiColumnMenu
-                  articleId={articleId}
-                  path={path}
-                  articleHasRule={article.layout?.rule}
-                  articleGap={article.layout?.gap}
-                  articleNumberingMode={article.numberingMode}
-                  articleTypography={article.typography}
-                  articleLayoutPreset={article.layoutPreset}
-                  articleSlots={article.slots}
-                />
+        {/* 재편-A + A (2026-04-19): TOC right-sticky 모드면 body 를 flex row 로 감싸고 오른쪽에 sticky aside.
+            나무위키 감성 — 본문 옆에 항상 목차. 데스크탑(≥lg) 한정, 모바일은 이 슬롯 무시. */}
+        {(() => {
+          const tocRightSticky =
+            article.slots?.toc?.position === "right-sticky" ||
+            article.slots?.toc?.position === "right-dot"
+          const bodyContent = (
+            <>
+              {/* Top AddBlock */}
+              {editable && layout.columns.length < 2 && (
+                <AddBlockButton onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)} />
               )}
-            />
-          </SortableContext>
-        ) : (
-          <ColumnRenderer layout={layout} renderBlock={renderBlock} />
-        )}
+              {editable && layout.columns.length >= 2 && (
+                <FullWidthInsertHoverZone articleId={articleId} position="above" />
+              )}
 
-        {/* Bottom AddBlock — single-col uses regular AddBlock; multi-col shows hover zone */}
-        {editable && layout.columns.length < 2 && (
-          <AddBlockButton onAdd={(type, level) => handleAddBlock(type, undefined, level)} />
-        )}
-        {editable && layout.columns.length >= 2 && (
-          <FullWidthInsertHoverZone articleId={articleId} position="below" />
-        )}
+              {/* Column-based body */}
+              {editable ? (
+                <SortableContext items={visibleBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+                  <ColumnRenderer
+                    layout={layout}
+                    renderBlock={renderBlock}
+                    editable
+                    onRatiosChange={(path, newRatios) =>
+                      usePlotStore.getState().updateColumnRatios(articleId, path, newRatios)
+                    }
+                    onAddColumnAfter={(parentPath, afterIndex) =>
+                      usePlotStore.getState().addColumnAfter(articleId, parentPath, afterIndex)
+                    }
+                    onRemoveColumn={(path) =>
+                      usePlotStore.getState().removeColumn(articleId, path)
+                    }
+                    onAddBlockToColumn={handleAddBlockToColumn}
+                    onSplitLeaf={(path, count) =>
+                      usePlotStore.getState().splitLeafIntoColumns(articleId, path, count)
+                    }
+                    renderColumnMenu={(path) => (
+                      <WikiColumnMenu
+                        articleId={articleId}
+                        path={path}
+                        articleHasRule={article.layout?.rule}
+                        articleGap={article.layout?.gap}
+                        articleNumberingMode={article.numberingMode}
+                        articleTypography={article.typography}
+                        articleLayoutPreset={article.layoutPreset}
+                        articleSlots={article.slots}
+                      />
+                    )}
+                  />
+                </SortableContext>
+              ) : (
+                <ColumnRenderer layout={layout} renderBlock={renderBlock} />
+              )}
 
-        {/* Empty state */}
-        {article.blocks.length === 0 && !editable && (
-          <p className="py-8 text-center text-note text-muted-foreground/40">
-            This article has no content yet.
-          </p>
-        )}
+              {/* Bottom AddBlock */}
+              {editable && layout.columns.length < 2 && (
+                <AddBlockButton onAdd={(type, level) => handleAddBlock(type, undefined, level)} />
+              )}
+              {editable && layout.columns.length >= 2 && (
+                <FullWidthInsertHoverZone articleId={articleId} position="below" />
+              )}
+
+              {/* Empty state */}
+              {article.blocks.length === 0 && !editable && (
+                <p className="py-8 text-center text-note text-muted-foreground/40">
+                  This article has no content yet.
+                </p>
+              )}
+            </>
+          )
+
+          if (!tocRightSticky) return bodyContent
+
+          return (
+            <div className="flex gap-6 items-start">
+              <div className="min-w-0 flex-1">{bodyContent}</div>
+              <aside className="hidden lg:block w-56 shrink-0 sticky top-4 self-start max-h-[calc(100vh-8rem)] overflow-y-auto">
+                <WikiTocSlot article={article} editable={editable} />
+              </aside>
+            </div>
+          )
+        })()}
 
         {/* 재편-B (2026-04-19): References 위치 슬롯.
             bottom (기본) = 하단 섹션

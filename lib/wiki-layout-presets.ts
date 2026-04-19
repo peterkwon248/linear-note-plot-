@@ -31,9 +31,9 @@ export const WIKI_LAYOUT_PRESETS: WikiLayoutPreset[] = [
   {
     id: "namu",
     label: "Namu",
-    description: "나무위키 스타일 — 상단 full-width Infobox + 본문 상단 TOC",
+    description: "나무위키 스타일 — 상단 full-width Infobox + 우측 sticky TOC",
     slots: {
-      toc: { position: "top" },
+      toc: { position: "right-sticky" },
       infobox: { position: "top-full" },
       references: { position: "bottom" },
     },

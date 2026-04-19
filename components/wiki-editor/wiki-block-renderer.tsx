@@ -101,9 +101,17 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
     case "table":
       return <TableBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "infobox":
-      return articleId ? <WikiInfoboxBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
+      // 재편-A (2026-04-19): infobox 는 article meta slot 전용.
+      // blocks[] 에 남은 legacy infobox (v80 이전 데이터) 는 렌더 안 함.
+      // virtual block (id "__infobox__..." by WikiInfoboxSlot) 만 허용.
+      if (!articleId) return null
+      if (!block.id.startsWith("__infobox__")) return null
+      return <WikiInfoboxBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "toc":
-      return articleId ? <WikiTocBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
+      // 재편-A: 동상. legacy toc 블록 무시, slot 만 렌더.
+      if (!articleId) return null
+      if (!block.id.startsWith("__toc__")) return null
+      return <WikiTocBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "column-group":
       return <ColumnGroupBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "blank":
