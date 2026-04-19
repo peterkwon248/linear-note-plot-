@@ -236,6 +236,18 @@ Phase 2-2-B-3-a 머지 후 사용자와 아키텍처 재논의. 모든 메타 (I
 
 ## Completed PRs (recent)
 
+### 2026-04-19 (🔄 Pivot — Book 비전 폐기, 위키 2-mode 집중)
+- **PR #210**: References 박스 통합 — 노트/위키 공용 `ReferencesBox` (재편-0)
+  - 전략 대전환: 책/잡지 자유 레이아웃 비전 폐기 → 위키+디폴트 2-mode (Default/Namu) 프리셋 집중 + 축2(지식망) 우선
+  - **모드 = 선택지가 아니라 메타 슬롯 배치의 결과적 이름** — TOC/Infobox/References 배치 조합에 이름을 붙인 것이 프리셋
+  - 신규: `components/editor/references-box.tsx` (공용 presentational), `note-references-container.tsx` (노트 어댑터), `wiki-references-container.tsx` (위키 어댑터)
+  - 삭제: `components/editor/footnotes-footer.tsx` (637줄), `components/wiki-editor/wiki-footnotes-section.tsx` (546줄) — 총 1183줄 제거, 순 +32줄
+  - 박스 무제목 (좌상단 chevron + total count만). numbered footnotes → 1px 구분선 (양쪽 다 있을 때만) → bullet references → Add 버튼 구조
+  - 중복 방지: Footnote 연결된 Reference는 bibliography에서 제외 (노트에 있던 로직을 **위키에도 신규 적용**)
+  - Migration 0. Insert/슬래시/멘션/Library/Trash/엔티티 이름 "Reference" 전부 불변 — 렌더 레이어만 변경
+  - 근거: `docs/BRAINSTORM-2026-04-19-wiki-2mode-pivot.md`
+  - **다음 PR (재편-A~D)**: layout.slots 스키마 / PR #208 🅑 롤백 (TOC/Infobox 블록 → 메타 슬롯 환원) / Reference position 옵션 / Default·Namu 프리셋 + Custom UI / Magazine Tier 잔재 청소
+
 ### 2026-04-17 (집, Phase 3.1-A/B + Page Identity)
 - **PR pending**: Phase 3.1-A/B 대폭 진행 + Page Identity Tier 시스템
   - SectionNumbers Context (column-group 내부 섹션 번호)
