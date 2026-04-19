@@ -142,12 +142,12 @@ export function SortableBlockItem({
             { type: "text", label: "Text" },
             { type: "image", label: "Image" },
             { type: "section", label: "Section" },
-            { type: "infobox", label: "Infobox" },
-            { type: "toc", label: "TOC" },
-            { type: "pull-quote", label: "Pull Quote" },
+            // 재편-A: infobox/toc meta slot 으로 이관
+            // 재편-D: pull-quote 제거
             { type: "note-ref", label: "Note" },
             { type: "url", label: "URL" },
             { type: "table", label: "Table" },
+            { type: "blank", label: "Blank" },
           ].map((item) => (
             <button
               key={item.type}

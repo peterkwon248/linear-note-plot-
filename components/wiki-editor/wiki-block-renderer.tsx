@@ -104,8 +104,6 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
       return articleId ? <WikiInfoboxBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
     case "toc":
       return articleId ? <WikiTocBlock block={block} articleId={articleId} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} /> : null
-    case "pull-quote":
-      return <PullQuoteBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "column-group":
       return <ColumnGroupBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "blank":
@@ -207,7 +205,7 @@ function ColumnGroupBlock({ block, editable, onUpdate, onDelete, dragHandleProps
     if (type === "section") { newBlock.title = ""; newBlock.level = 2 }
     if (type === "infobox") { newBlock.fields = []; newBlock.headerColor = null }
     if (type === "toc") newBlock.tocCollapsed = false
-    if (type === "pull-quote") newBlock.quoteText = ""
+    if (type === "blank") newBlock.spacerSize = "sm"
     onUpdate?.({ columnChildren: [...columns, [newBlock]] })
     setSubColMenuPos(null)
   }
@@ -256,12 +254,12 @@ function ColumnGroupBlock({ block, editable, onUpdate, onDelete, dragHandleProps
             { type: "text", label: "Text" },
             { type: "image", label: "Image" },
             { type: "section", label: "Section" },
-            { type: "infobox", label: "Infobox" },
-            { type: "toc", label: "TOC" },
-            { type: "pull-quote", label: "Pull Quote" },
+            // 재편-A: infobox/toc 제거 (article meta slot 으로 이관)
+            // 재편-D: pull-quote 제거 (Magazine 잔재)
             { type: "note-ref", label: "Note" },
             { type: "url", label: "URL" },
             { type: "table", label: "Table" },
+            { type: "blank", label: "Blank" },
           ].map((item) => (
             <button
               key={item.type}
@@ -318,60 +316,6 @@ function ColumnGroupBlock({ block, editable, onUpdate, onDelete, dragHandleProps
           </div>
         ))}
       </div>
-    </div>
-  )
-}
-
-/* ── Pull Quote Block (Phase 3.1-B) ── */
-
-function PullQuoteBlock({ block, editable, onUpdate, dragHandleProps }: WikiBlockRendererProps) {
-  const [editing, setEditing] = useState(false)
-  const variant = block.quoteVariant ?? "minimal"
-
-  const variantClasses: Record<string, string> = {
-    minimal: "text-center italic font-serif text-[1.4em] leading-snug text-foreground/90 py-6 px-8",
-    editorial: "font-serif italic text-[1.7em] leading-tight text-foreground py-8 pl-8 pr-4 border-l-0",
-    bordered: "text-[1.15em] leading-normal text-foreground/90 py-4 pl-5 pr-4 border-l-4 border-accent/60",
-  }
-
-  if (editing && editable) {
-    return (
-      <div {...dragHandleProps} className={cn("group relative rounded-md transition-colors", variantClasses[variant])}>
-        <textarea
-          autoFocus
-          defaultValue={block.quoteText ?? ""}
-          placeholder="Quote text…"
-          onBlur={(e) => { onUpdate?.({ quoteText: e.currentTarget.value.trim() || undefined }); setEditing(false) }}
-          className="w-full resize-none bg-transparent outline-none"
-          rows={2}
-        />
-        <input
-          type="text"
-          defaultValue={block.quoteAttribution ?? ""}
-          placeholder="— Attribution (optional)"
-          onBlur={(e) => onUpdate?.({ quoteAttribution: e.currentTarget.value.trim() || undefined })}
-          className="mt-2 w-full bg-transparent text-[0.7em] not-italic text-muted-foreground outline-none"
-        />
-      </div>
-    )
-  }
-
-  return (
-    <div
-      {...dragHandleProps}
-      onClick={editable ? () => setEditing(true) : undefined}
-      className={cn("group relative rounded-md transition-colors", variantClasses[variant], editable && "cursor-text hover:bg-hover-bg/40")}
-    >
-      {block.quoteText ? (
-        <>
-          <p>&ldquo;{block.quoteText}&rdquo;</p>
-          {block.quoteAttribution && (
-            <p className="mt-3 text-[0.7em] not-italic text-muted-foreground">— {block.quoteAttribution}</p>
-          )}
-        </>
-      ) : editable ? (
-        <p className="text-muted-foreground/60">Click to add quote…</p>
-      ) : null}
     </div>
   )
 }
@@ -1955,9 +1899,8 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
     { type: "image", label: "Image", desc: "Upload image" },
     { type: "url", label: "URL", desc: "Embed a link" },
     { type: "table", label: "Table", desc: "Data table" },
-    { type: "infobox", label: "Infobox", desc: "Key-value metadata" },
-    { type: "toc", label: "TOC", desc: "Auto contents" },
-    { type: "pull-quote", label: "Pull Quote", desc: "Highlighted quote" },
+    // 재편-A (2026-04-19): Infobox/TOC 는 이제 block 이 아니라 article meta slot.
+    // 재편-D (2026-04-19): Pull Quote 제거 (Magazine 잔재).
   ]
 
   const contentItems: { type: string; label: string; desc: string }[] = [

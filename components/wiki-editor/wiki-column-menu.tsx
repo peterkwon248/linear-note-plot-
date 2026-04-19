@@ -19,6 +19,13 @@ import { createPortal } from "react-dom"
 import { usePlotStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
+import {
+  WIKI_LAYOUT_PRESETS,
+  applyPresetSlots,
+  matchPreset,
+  type WikiLayoutPresetId,
+} from "@/lib/wiki-layout-presets"
+import type { WikiArticle } from "@/lib/types"
 
 export interface WikiColumnMenuProps {
   articleId: string
@@ -28,6 +35,9 @@ export interface WikiColumnMenuProps {
   articleGap?: "sm" | "md" | "lg"
   articleNumberingMode?: "independent" | "continuous"
   articleTypography?: "sans" | "serif-body" | "editorial"
+  /** 재편-C: article-level layout preset + slots (for preset picker inside menu). */
+  articleLayoutPreset?: WikiArticle["layoutPreset"]
+  articleSlots?: WikiArticle["slots"]
 }
 
 export function WikiColumnMenu({
@@ -36,12 +46,25 @@ export function WikiColumnMenu({
   articleGap,
   articleNumberingMode,
   articleTypography,
+  articleLayoutPreset,
+  articleSlots,
 }: WikiColumnMenuProps) {
   const [open, setOpen] = useState(false)
 
   const setColumnRule = usePlotStore((s) => s.setColumnRule)
   const setColumnGap = usePlotStore((s) => s.setColumnGap)
   const addFullWidthPane = usePlotStore((s) => s.addFullWidthPane)
+  const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
+
+  const activePreset: WikiLayoutPresetId =
+    articleLayoutPreset ?? matchPreset(articleSlots) ?? "custom"
+
+  const handlePresetSelect = (presetId: Exclude<WikiLayoutPresetId, "custom">) => {
+    updateWikiArticle(articleId, {
+      layoutPreset: presetId,
+      slots: applyPresetSlots(articleSlots, presetId),
+    })
+  }
 
   const handleAddPane = (position: "above" | "below") => {
     addFullWidthPane(articleId, position)
@@ -97,6 +120,46 @@ export function WikiColumnMenu({
           style={{ top: popupPos.top, left: popupPos.left }}
           onClick={stopProp}
         >
+          {/* 재편-C (2026-04-19): Layout preset selector */}
+          <div className="px-3 py-2">
+            <label className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Preset
+            </label>
+            <div className="flex gap-0.5">
+              {WIKI_LAYOUT_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => handlePresetSelect(p.id)}
+                  title={p.description}
+                  className={cn(
+                    "flex-1 rounded px-1.5 py-1 text-[10px] font-medium transition-colors",
+                    activePreset === p.id
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-secondary/40 text-muted-foreground hover:bg-hover-bg hover:text-foreground",
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                disabled
+                title="Set when slots diverge from Default / Namu"
+                className={cn(
+                  "flex-1 rounded px-1.5 py-1 text-[10px] font-medium",
+                  activePreset === "custom"
+                    ? "bg-accent/60 text-accent-foreground"
+                    : "bg-secondary/20 text-muted-foreground/40",
+                )}
+              >
+                Custom
+              </button>
+            </div>
+          </div>
+
+          <div className="my-1 h-px bg-border-subtle" />
+
           {/* Article-level layout toggles */}
           <div className="px-3 py-2">
             <label className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">

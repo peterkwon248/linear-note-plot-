@@ -192,10 +192,16 @@ export interface WikiCategory {
 
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
-/** Wiki block types — building blocks of a wiki article */
+/** Wiki block types — building blocks of a wiki article.
+ *
+ * 재편-A (2026-04-19): 'infobox' | 'toc' 는 더 이상 `WikiArticle.blocks[]` 에
+ * 저장되지 않는다 (migration v81 로 extraction). 대신 `WikiArticle.infobox` +
+ * `WikiArticle.slots.{toc, infobox}` 메타 필드로 관리. 내부 타입 enum 에는
+ * 계속 남아 있어서 `WikiInfoboxBlock` / `WikiTocBlock` 컴포넌트가 virtual
+ * block 으로 호출될 때 재활용된다. AddBlockButton / slash menu 에서는 제외. */
 export type WikiBlockType =
   | 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url'
-  // Phase 2-2-C: meta blocks (previously scalar fields on WikiArticle)
+  // internal only (meta slot renderers) — never added to blocks[] post-v81
   | 'infobox' | 'toc'
   // Phase 3.1-B: magazine blocks
   | 'pull-quote'
@@ -337,8 +343,39 @@ export interface WikiArticle {
   layout?: ColumnStructure                         // recursive column structure (Phase 2-1B-3 rename from columnLayout)
   columnAssignments?: Record<string, ColumnPath>   // blockId → column path into layout
   titleStyle?: WikiTitleStyle                      // title rendering customization
-  themeColor?: WikiThemeColor                      // article-level theme color
+  themeColor?: WikiThemeColor                      // article-level theme color (deprecated 2026-04-19)
   templateId?: string                              // source template (traceability only, not enforced)
+
+  /* ── 재편-A (2026-04-19): meta slots 시스템 ────────────────────────
+   * "모드 = 메타 슬롯 배치의 결과적 이름" 원칙.
+   * TOC/Infobox/References 의 위치를 article-level 로 관리. TOC/Infobox 는
+   * 더 이상 WikiBlock 이 아니라 WikiArticle 의 메타 데이터. */
+  /** Infobox meta data (previously `WikiBlock.type === "infobox"`). */
+  infobox?: {
+    fields: WikiInfoboxEntry[]
+    headerColor?: string | null
+    density?: "compact" | "normal" | "loose"
+    width?: "narrow" | "default" | "wide" | "full" | number
+    fontSize?: number
+  }
+  /** Layout preset (재편-C). `default` = Wikipedia 스타일, `namu` = 나무위키 스타일. */
+  layoutPreset?: "default" | "namu" | "custom"
+  /** Meta slot positions — preset 적용 시 자동 채워짐, custom 시 사용자 지정. */
+  slots?: {
+    toc?: {
+      position?: "none" | "top" | "left-sticky" | "right-sticky" | "right-dot"
+      collapsed?: boolean
+      hiddenLevels?: number[]
+      density?: "compact" | "normal" | "loose"
+      fontSize?: number
+    }
+    infobox?: {
+      position?: "none" | "right-float" | "top-full" | "left-float"
+    }
+    references?: {
+      position?: "bottom" | "right-sidebar" | "panel-only"
+    }
+  }
   /** Phase 3.1-B: section numbering mode across columns.
    * "independent" (default) = each pane 1..N separately.
    * "continuous" = left→right depth-first global 1..N. */

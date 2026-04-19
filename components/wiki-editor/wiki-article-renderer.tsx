@@ -27,6 +27,7 @@ import { SortableBlockItem } from "./sortable-block-item"
 import { InlineCategoryTags } from "./inline-category-tags"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiReferencesContainer } from "./wiki-references-container"
+import { WikiInfoboxSlot, WikiTocSlot } from "./wiki-meta-slots"
 import { ColumnRenderer } from "./column-renderer"
 import { WikiColumnMenu } from "./wiki-column-menu"
 import { WikiTitle } from "./wiki-title"
@@ -561,6 +562,39 @@ function WikiArticleRendererInner({
           </div>
         )}
 
+        {/* 재편-A: meta slots — TOC / Infobox 위치별 렌더.
+            "top-full" infobox 는 본문 위 블록 레벨. "right-float" 은 본문 시작부 float. */}
+        {article.slots?.infobox?.position === "top-full" && (
+          <div className="mb-4">
+            <WikiInfoboxSlot article={article} editable={editable} />
+          </div>
+        )}
+
+        {(article.slots?.toc?.position === "top" ||
+          (!article.slots?.toc?.position && article.infobox != null)) && (
+          <div className="mb-4">
+            <WikiTocSlot article={article} editable={editable} />
+          </div>
+        )}
+
+        {article.slots?.infobox?.position === "right-float" && article.infobox && (
+          <div className="float-right ml-4 mb-3 w-full max-w-[22em] clear-right">
+            <WikiInfoboxSlot article={article} editable={editable} />
+          </div>
+        )}
+        {article.slots?.infobox?.position === "left-float" && article.infobox && (
+          <div className="float-left mr-4 mb-3 w-full max-w-[22em] clear-left">
+            <WikiInfoboxSlot article={article} editable={editable} />
+          </div>
+        )}
+
+        {/* Empty-state placeholder: editable + no infobox yet + slot position resolvable */}
+        {editable && !article.infobox && article.slots?.infobox?.position !== "none" && article.slots?.infobox?.position !== "right-float" && article.slots?.infobox?.position !== "left-float" && (
+          <div className="mb-4">
+            <WikiInfoboxSlot article={article} editable={editable} />
+          </div>
+        )}
+
         {/* Top AddBlock — single-col uses regular AddBlock; multi-col shows hover zone for full-width pane */}
         {editable && layout.columns.length < 2 && (
           <AddBlockButton onAdd={(type, level) => handleAddBlock(type, "__prepend__", level)} />
@@ -597,6 +631,8 @@ function WikiArticleRendererInner({
                   articleGap={article.layout?.gap}
                   articleNumberingMode={article.numberingMode}
                   articleTypography={article.typography}
+                  articleLayoutPreset={article.layoutPreset}
+                  articleSlots={article.slots}
                 />
               )}
             />
@@ -620,7 +656,11 @@ function WikiArticleRendererInner({
           </p>
         )}
 
-        {!hideFootnotes && (
+        {/* 재편-B (2026-04-19): References 위치 슬롯.
+            bottom (기본) = 하단 섹션
+            panel-only    = 본문 렌더 안 함 (SmartSidePanel 에만 노출)
+            right-sidebar = flex row 오른쪽 — 현재는 bottom 으로 fallback, 재편-C 에서 구체화 */}
+        {!hideFootnotes && article.slots?.references?.position !== "panel-only" && (
           <WikiReferencesContainer article={article} editable={editable} />
         )}
 
