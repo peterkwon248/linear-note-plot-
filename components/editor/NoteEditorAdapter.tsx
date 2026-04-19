@@ -7,7 +7,7 @@ import { usePlotStore } from "@/lib/store"
 import type { Note } from "@/lib/types"
 import { suggestLinks } from "@/lib/queries/notes"
 import { LinkSuggestion } from "@/components/link-suggestion"
-import { FootnotesFooter } from "./footnotes-footer"
+import { NoteReferencesContainer } from "./note-references-container"
 import { extractHashtags } from "@/lib/body-helpers"
 import { pickColor } from "@/components/note-fields"
 import {
@@ -377,7 +377,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         onEditorReady={handleEditorReady}
         ydoc={ydoc ?? undefined}
       />
-      <FootnotesFooter editor={editorInstance} noteId={note.id} editable={editable} />
+      <NoteReferencesContainer editor={editorInstance} noteId={note.id} editable={editable} />
       <LinkSuggestion
         suggestions={suggestions}
         onSelect={handleSuggestionSelect}

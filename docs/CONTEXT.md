@@ -10,6 +10,46 @@ Plot = 노트 + 개인 위키 + 지식 관계망
 - 유저는 노트만 쓰고 앱이 알아서 제텔카스텐
 - 사상: 팔란티어 × 제텔카스텐 — 개인 지식을 디지털 모델로 만들고 분석/사고/글쓰기를 돕는다
 
+## 🔄 2026-04-19 Pivot — Book 비전 폐기, 위키 2-mode 집중
+
+> **상세 근거**: [BRAINSTORM-2026-04-19-wiki-2mode-pivot.md](./BRAINSTORM-2026-04-19-wiki-2mode-pivot.md)
+
+**전환 요약**:
+- **Book/자유 레이아웃 비전 폐기** — Notion/Framer가 수년간 판 영역. 1인 개발로 상용 퀄리티까지 3-5년, 그 사이 "이도저도 아닌" 구간 길어짐. 조합 QA 부담 polynomial 증가.
+- **집중 영역**: 위키+디폴트 2-mode 정교화 + 축2(자동 지식망 / 제텔카스텐 / Reference)
+- **모드 = 선택지가 아니라 배치 결과** — TOC/Infobox/References 메타 슬롯 조합에 이름을 붙인 것이 프리셋 (Default 위키피디아 / Namu 엔하위키). 커스텀도 가능.
+
+**슬롯 시스템 (재편-A에서 도입 예정)**:
+```ts
+WikiArticle.layout = {
+  preset: "default" | "namu" | "custom"
+  slots: {
+    toc?:        { position: "none" | "top" | "left-sticky" | "right-sticky" | "right-dot" }
+    infobox?:    { position: "none" | "right-float" | "top-full" | "left-float" }
+    references?: { position: "bottom" | "right-sidebar" | "panel-only" }
+  }
+}
+```
+
+**이번 PR (재편-0)**:
+- Footnote + Reference 하단 박스 통합 — 노트/위키 공용 `ReferencesBox` + Note/Wiki `Container` 어댑터
+- 박스 무제목, 넘버링 섹션 + 구분선 + 점 리스트 섹션. 양쪽 다 있을 때만 구분선.
+- 중복 방지: Footnote 연결된 Reference는 bibliography에서 제외 (노트에 이미 있었고 위키에도 신규 적용)
+- `footnotes-footer.tsx` / `wiki-footnotes-section.tsx` 삭제
+- 기존 Insert/슬래시/멘션/Library/Trash/엔티티 이름 "Reference" 전부 불변 (렌더 레이어만 변경)
+
+**롤백 대상 (다음 PR들)**:
+- PR #208 🅑 대결정 (메타→블록 통합) — TOC/Infobox 블록 폐기, 메타 슬롯으로 환원 (재편-A)
+- Phase 3.1-B~F (Pull Quote/Hero/Drop cap/Serif mix/5:3·황금비 프리셋) 전체 폐기 (재편-D)
+- Page Identity Tier 2~5 폐기 (재편-D)
+
+**유지**:
+- PR #197: WikiTemplate 데이터 모델 (프리셋 저장소로 재활용)
+- PR #198~201: ColumnRenderer, WikiArticleRenderer 인프라
+- PR #202: ColumnPresetToggle (1/2/3 컬럼)
+- PR #203: 컬럼 비율 드래그 + TOC/Infobox 위치 UI (슬롯 UI로 재활용)
+- PR #204~205: 블록 드래그, 컬럼 추가/삭제
+
 ## Architecture Redesign v2 — ALL PHASES COMPLETE ✅
 
 ### 4-Layer Architecture

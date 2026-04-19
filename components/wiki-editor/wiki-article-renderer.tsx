@@ -18,7 +18,7 @@
  * 진실의 원천: docs/BRAINSTORM-2026-04-14-column-template-system.md
  */
 
-import { useMemo, useState, useCallback, useEffect, Fragment } from "react"
+import { useMemo, useState, useCallback, useEffect } from "react"
 import { SectionNumbersContext } from "./section-numbers-context"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock, ColumnStructure } from "@/lib/types"
@@ -26,7 +26,7 @@ import { WikiBlockRenderer, AddBlockButton, type WikiBlockVariant } from "./wiki
 import { SortableBlockItem } from "./sortable-block-item"
 import { InlineCategoryTags } from "./inline-category-tags"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
-import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
+import { WikiReferencesContainer } from "./wiki-references-container"
 import { ColumnRenderer } from "./column-renderer"
 import { WikiColumnMenu } from "./wiki-column-menu"
 import { WikiTitle } from "./wiki-title"
@@ -631,10 +631,7 @@ function WikiArticleRendererInner({
         )}
 
         {!hideFootnotes && (
-          <Fragment>
-            <WikiFootnotesSection article={article} />
-            <WikiReferencesSection article={article} editable={editable} />
-          </Fragment>
+          <WikiReferencesContainer article={article} editable={editable} />
         )}
 
         {/* SplitMode bottom bar */}
