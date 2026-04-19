@@ -507,7 +507,6 @@ function WikiArticleRendererInner({
   const body = (
     <SectionNumbersContext.Provider value={sectionNumbers}>
     <WikiThemeProvider
-      themeColor={article.themeColor}
       className={cn(
         "wiki-article-renderer flex-1 overflow-y-auto",
         article.typography && `wiki-typography-${article.typography}`,
@@ -521,7 +520,6 @@ function WikiArticleRendererInner({
             title={article.title}
             aliases={article.aliases}
             titleStyle={article.titleStyle}
-            themeColor={article.themeColor}
             editable={editable}
             onTitleChange={
               editable
@@ -531,11 +529,6 @@ function WikiArticleRendererInner({
             onAliasesChange={
               editable
                 ? (aliases) => usePlotStore.getState().updateWikiArticle(articleId, { aliases })
-                : undefined
-            }
-            onThemeColorChange={
-              editable
-                ? (themeColor) => usePlotStore.getState().updateWikiArticle(articleId, { themeColor: themeColor ?? undefined })
                 : undefined
             }
           />
@@ -596,13 +589,10 @@ function WikiArticleRendererInner({
               onSplitLeaf={(path, count) =>
                 usePlotStore.getState().splitLeafIntoColumns(articleId, path, count)
               }
-              renderColumnMenu={(path, col) => (
+              renderColumnMenu={(path) => (
                 <WikiColumnMenu
                   articleId={articleId}
                   path={path}
-                  currentPaletteId={col.paletteId}
-                  currentPaletteAlpha={col.paletteAlpha}
-                  currentGradientTo={col.gradientTo}
                   articleHasRule={article.layout?.rule}
                   articleGap={article.layout?.gap}
                   articleNumberingMode={article.numberingMode}
