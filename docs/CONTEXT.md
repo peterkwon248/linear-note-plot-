@@ -3,10 +3,17 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
-## 🔴 2026-04-21 Book Pivot (대결정)
+## 🔴 2026-04-21 Book Pivot — **구현 진행 중** (Phase 1A~2B-3b 완료)
 
 **Wiki 시스템 전면 개편**. 4-layer 아키텍처 + 5 Shell + Flipbook render mode.
-진실의 원천: [`BRAINSTORM-2026-04-21-book-pivot.md`](./BRAINSTORM-2026-04-21-book-pivot.md)
+진실의 원천: [`BRAINSTORM-2026-04-21-book-pivot.md`](./BRAINSTORM-2026-04-21-book-pivot.md) + [`BRAINSTORM-2026-04-21-book-ux-refinement.md`](./BRAINSTORM-2026-04-21-book-ux-refinement.md)
+
+### `/wiki` 현재 동작 (세션 마감 기준)
+- Activity Bar "Book" 클릭 → BookWorkspace 렌더
+- 좌: 본인 실제 위키 리스트 / 우: BookEditor (5 Shell 전환 + Edit/Done 토글)
+- Read 모드 기본 (chrome 없음 깨끗) / Edit 모드 클릭 시 블록 편집
+- Edit 모드: hover ⠿ 메뉴 (Turn Into/Duplicate/Delete) + `+ Add block` (8 타입) + TipTap 인라인 타이핑 + 섹션 자동 넘버링 + TOC 자동 갱신 + 빈 Book "Add first block" CTA
+- 실 Book 선택 시 SAMPLE hatnote/infobox/footnote 숨김 (Phase 6에서 실데이터 이관)
 
 **핵심**:
 - **"Wiki" → "Book" 전면 rename** (Activity Bar, 코드 타입, 데이터 모델, 사용자 UI)
@@ -25,7 +32,7 @@
 
 **디자인 레퍼런스**: `docs/design-system/` (사용자 제공 Plot Design System zip 내용물 — README / ARCHITECTURE / RESEARCH + React 프로토타입)
 
-**Phase 로드맵**: Phase 0 (문서 정비, 현재) → Phase 1 (rename + migration v80, 3 PR) → Phase 2 (Wiki Shell + 12-col grid) → Phase 3 (Magazine Shell MVP) → Phase 4 (Newspaper + Book + Flipbook) → Phase 5 (Decoration + Blank + My Shell) → Phase 6 (Chrome 블록 + 기존 기능 이관) → Phase 7 (노트 Split + Y.Doc + 인사이트 허브)
+**Phase 로드맵**: Phase 0 (문서 정비, 현재) → Phase 1 (rename + migration v81, 3 PR) → Phase 2 (Wiki Shell + 12-col grid) → Phase 3 (Magazine Shell MVP) → Phase 4 (Newspaper + Book + Flipbook) → Phase 5 (Decoration + Blank + My Shell) → Phase 6 (Chrome 블록 + 기존 기능 이관) → Phase 7 (노트 Split + Y.Doc + 인사이트 허브)
 
 ---
 
@@ -252,7 +259,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 > **Book Pivot으로 기존 Phase 3/3.1 로드맵 폐기.** 새 로드맵은 `docs/TODO.md` 참조.
 > 진실의 원천: `docs/BRAINSTORM-2026-04-21-book-pivot.md`
 
-**현재 Phase**: Phase 0 (문서 정비, 거의 완료) → Phase 1 (Wiki → Book rename + migration v80) 진입 대기
+**현재 Phase**: Phase 0 (문서 정비, 거의 완료) → Phase 1 (Wiki → Book rename + migration v81) 진입 대기
 
 **Phase 1 착수 전 체크**:
 - PR #209 (Phase 3.1-A/B pending) 머지 결정
@@ -298,7 +305,7 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - [x] ✅ **Phase 2-2-C — 메타 → 블록 통합** (PR pending): WikiBlockType "infobox"/"toc" + Wrapper 컴포넌트 + Migration v78/v79 + scalar 필드/액션 삭제 + ColumnMetaPositionMenu 삭제
 - [ ] **Phase 3 — Multi-pane Document Model** (다음, 큰 리팩토링)
   - 데이터 모델 전환: `WikiArticle.blocks` flat pool → per-column `ColumnBlocksLeaf.blocks[]` (columnAssignments 폐기)
-  - Migration v80
+  - Migration v81
   - 섹션 넘버링 pane별 독립
   - 컬럼 identity: `name?`, `themeColor?` (세로선 + 고유 배경색)
   - 컬럼 메뉴 ⋯: Split H / Split V / Set name / Set color / Delete

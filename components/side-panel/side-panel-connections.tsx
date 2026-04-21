@@ -606,7 +606,7 @@ function NoteConnections() {
             {/* Wiki */}
             {suggestedWiki.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Wiki</SubLabel>
+                <SubLabel>Book</SubLabel>
                 {suggestedWiki.map((item) => {
                   const article = wikiArticles.find((a) => a.id === item.noteId)
                   const wNote = notes.find((n) => n.id === item.noteId)

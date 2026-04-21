@@ -1,8 +1,59 @@
 # Plot Project Memory
 
+## 🔴 2026-04-21 Book Pivot 진행 상황 (세션 마감 기준)
+
+### 완성된 것 (하루 2 세션 결과)
+
+**코드 추가** (~3000 lines):
+- `lib/book/` — types / shells / adapter / selectors (+ 14 tests)
+- `components/book/` — BookWorkspace / BookEditor / BookInlineEditor / BookBlockSlot / 5 shells / flipbook viewer / tweak panel
+- `app/(app)/layout.tsx`에서 WikiView → BookWorkspace 교체
+- `app/(app)/book/page.tsx` redirect, `app/(app)/book-preview/page.tsx` (탐색용)
+
+**`/wiki` 접속 시 동작** (Activity Bar "Book"):
+- 좌측: 본인 실제 위키 리스트
+- 우상단 Edit/Done 토글 (기본 Read)
+- **Read**: 깔끔한 읽기 화면 (chrome 없음)
+- **Edit**: 각 블록 hover → `⠿` 메뉴 + `+ Add block` 하단
+- 텍스트 블록 → TipTap 인라인 편집 (wiki tier, 슬래시 커맨드 포함)
+- 블록 메뉴: Turn Into ▸ / Duplicate / Delete
+- 블록 추가: 8 타입 피커 (Text/Section/Pull Quote/Image/URL/Table/Infobox/TOC)
+- 섹션 자동 넘버링 "1 / 2 / 2.1" + TOC 자동 갱신
+- 빈 Book: "+ Add first block" CTA
+- 5 Shell 전환: title + body 실데이터 (chrome은 샘플, Phase 6 예정)
+
+**완료한 Phase**:
+- [x] Phase 0 (문서 정비 + design-system zip v2)
+- [x] Phase 1A (lib/book types/shells/adapter/selectors)
+- [x] Phase 1B (Activity Bar + visible strings + /book redirect)
+- [x] Phase 2A (5 shell 복사 + /book-preview 라우트)
+- [x] Phase 2B-1 (BookWorkspace + 실데이터 연결)
+- [x] Phase 2B-2 (BookInlineEditor + EditableParagraph TipTap)
+- [x] Phase 2B-3a (+ Add block 피커 + 섹션 넘버링 + TOC 자동)
+- [x] Phase 2B-3b (⠿ 메뉴 + Turn Into/Duplicate/Delete)
+- [x] Edit/Done 토글 + 빈 CTA + SAMPLE 노이즈 숨김
+
+### 다음 즉시 작업 (Step 1)
+
+**Phase 2B-3c — Section heading 인라인 편집**
+- 현재 h2 정적, 클릭해도 수정 불가
+- `editing===true`일 때 input/contentEditable swap
+- Plot 기존 `wiki-block-renderer.tsx` L320-435 Section 편집 패턴 참고
+
+### 기술 디테일 (다음 세션 참고)
+
+- `wikiArticles`는 `WikiArticle[]` 배열 (`.find(a=>a.id===id)`, NOT `[id]`)
+- Plot 기존 actions 그대로 사용 (slice 재작성 안 함)
+- BookInlineEditor는 **toolbar 없음** (Book의 깔끔한 UX)
+- Edit/Done state는 session-only (BookWorkspace useState)
+
+---
+
 ## 🔴 2026-04-21 Book Pivot (대결정) — 최우선 읽기
 
 **Wiki 시스템 전면 개편 확정**. 진실의 원천: `docs/BRAINSTORM-2026-04-21-book-pivot.md`
+
+**UX 재정렬 추가**: `docs/BRAINSTORM-2026-04-21-book-ux-refinement.md` (Grid Editor 폐기, Display 팝오버로 이관, Inline editor 성숙)
 
 **핵심 결정**:
 - **"Wiki" → "Book" 전면 rename** (노트 유지, 위키만 개편)
@@ -24,7 +75,7 @@
 
 **Book Phase 로드맵**:
 1. Phase 0 (현재) — 문서 정비 + `/pdca plan`
-2. Phase 1 — 타입 rename + migration v80 (3 PR)
+2. Phase 1 — 타입 rename + migration v81 (3 PR)
 3. Phase 2 — Wiki Shell + 12-col grid 인프라
 4. Phase 3 — Magazine Shell (MVP 증명)
 5. Phase 4 — Newspaper + Book Shell + **Flipbook 구현**

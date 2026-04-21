@@ -74,7 +74,7 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
         >
           <div className="flex items-center gap-2 text-muted-foreground/50">
             <BookOpen size={14} />
-            <span className="text-2xs italic">Wiki article not found</span>
+            <span className="text-2xs italic">Book article not found</span>
             <button
               type="button"
               onClick={() => deleteNode()}
@@ -121,7 +121,7 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 import("@/lib/wiki-article-nav").then(({ navigateToWikiArticle }) => navigateToWikiArticle(articleId))
               }}
               className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
-              title="Open wiki article"
+              title="Open book"
             >
               <ArrowSquareOut size={12} />
             </button>

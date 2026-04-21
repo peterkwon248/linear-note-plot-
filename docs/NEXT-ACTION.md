@@ -6,135 +6,130 @@
 
 ---
 
-**Last Updated**: 2026-04-21 (🔴 **Book Pivot 대결정** — Wiki 시스템 전면 개편. 4-layer 아키텍처 + 5 Shell + Flipbook. 진실의 원천: `BRAINSTORM-2026-04-21-book-pivot.md`)
-
----
-
-## 🔴 이번 세션의 대결정 (2026-04-21)
-
-**"Wiki" → "Book" 전면 개편**. 자세한 내용: `docs/BRAINSTORM-2026-04-21-book-pivot.md`
-
-- 4-layer 아키텍처: Shell / Grid / Blocks / Decoration
-- 5 Shells (wiki / magazine / newspaper / book / blank) + Flipbook (render mode)
-- 12-col snap grid
-- 기존 Phase 3.1 로드맵 폐기, 새 Phase 1~7 로드맵 수립
-- Flipbook은 Phase 1에 데이터 필드만 예약, 구현은 Phase 4
+**Last Updated**: 2026-04-21 후반 (Book Pivot Phase 1A~2B-3b + Edit/Done 토글 완성. `/wiki`에서 실제 Book 편집 가능 — 블록 추가/삭제/복제/타입 변경 + TipTap 인라인 타이핑 + 섹션 자동 넘버링 + TOC 자동 갱신)
 
 ---
 
 ## 🎯 다음 세션 시작하면 바로 할 것
 
-### Step 1 — 현재 pending 변경 정리 (PR #209)
+### Step 1 (권장) — Phase 2B-3c: Section heading 인라인 편집
 
-로컬에 uncommitted 있음 (Phase 3.1-A/B + Page Identity 작업분 ~2600 lines).
+현재 섹션 제목 (h2 "Definition", "In Plot" 등)은 **정적 렌더**. 클릭해서 수정 불가.
 
-**결정 필요**: 그대로 PR #209로 머지 vs 버림 vs 일부만 cherry-pick
-- **권장**: 그대로 머지 → Phase 1 시작 시 Book 구조 리팩토링 중 자연 삭제. git history 깔끔
-- 이유: revert보다 rewrite가 명확. block-menu primitives처럼 살려야 할 부분도 있음
+**구체**:
+- `components/book/shells/wiki-shell.tsx`의 h2 렌더 부분
+- `editing===true`일 때 `<h2>` → `<input contentEditable>` 또는 simple `<input>` 으로 swap
+- onBlur → `usePlotStore.getState().updateWikiBlock(book.id, b.block.id, { title: newValue })`
+- Plot 기존 `wiki-block-renderer.tsx` L320-435의 Section 편집 패턴 참고 가능
 
-Step 1 완료 = PR #209 merge to main.
+### Step 2 — 2B-3 확산 (다른 shell도)
 
-### Step 2 — `/pdca plan book-pivot` 실행
+BookBlockSlot/Edit 토글은 지금 **WikiShell에만** 연결됨. Magazine/Newspaper/Book/Blank도 같은 패턴 적용 필요.
 
-`BRAINSTORM-2026-04-21-book-pivot.md`의 "❓ 남은 결정 사항" 5개를 AskUserQuestion으로 확정:
+가장 큰 구조적 변경은 5 shell 모두 `book.blocks.map` 렌더를 BookBlockSlot으로 래핑하는 것. Wiki 패턴 복사.
 
-1. 한국어 UI에서 "Book" 표기 (영어 유지 / "책" / "북")
-2. 사용자 공지 방식 (배너 / 릴리즈 노트 / 조용히)
-3. wiki-categories, wiki-templates 네이밍 (book prefix / 중립 단어)
-4. Shell 타입 `"wiki"` 이름 유지 여부 (중립 "article" 등 대안)
-5. Magazine 폰트 Playfair + Merriweather CDN load OK?
+### Step 3 — Phase 2C (Display 팝오버 이관)
 
-확정 후 PDCA plan 작성.
-
-### Step 3 — Phase 1 착수 (3 PR 분할)
-
-**Phase 1A**: 타입 rename + slice rename + Store migration v80
-- `WikiArticle` → `Book`
-- `wiki-articles` slice → `books` slice
-- `noteType: "wiki"` → `"book"`
-- Migration: 기존 WikiArticle → Book 변환 (shell: "wiki", renderMode: "scroll", cell 변환)
-
-**Phase 1B**: Activity Bar + URL + 사이드바
-- Activity Bar 라벨 "Wiki" → "Book"
-- URL `/wiki/:id` → `/book/:id`
-- 사이드바 컴포넌트
-
-**Phase 1C**: 에디터/렌더러 파일명 + 컴포넌트
-- `components/wiki-editor/*` → `components/book-editor/*`
-- 에디터 티어 `wiki` → `book`
-- `[[wikilinks]]`, `@mentions` resolver 업데이트 (UI 텍스트)
+BRAINSTORM-2026-04-21-book-ux-refinement.md 결정 2.
+- 상단 5개 shell 버튼 제거
+- View Header 우측에 "Display ▾" 버튼 신설
+- 팝오버 안에: Shell / Render mode / Theme / Decoration / My Shell 저장
+- Plot Notes Display 팝오버 패턴 재사용
 
 ---
 
 ## 🔴 잊지 말 것 (이번 세션 핵심 결정)
 
-### Non-negotiables (SKILL.md 재확인)
+### 디자인 원칙
 
-1. **Opacity hierarchy, not color**, for text/icon importance
-2. **Spacing, not borders**, for separation
-3. **No gradients, no emoji in chrome, no scale-on-hover**
-4. Frozen type scale: **11·12·13·14·14.5·15·16·19·23·28**
-5. Transitions **120/160/200ms `ease`** — bg/opacity only, elements never move
+1. **Read 기본 / Edit 토글**: "Edit" 누르기 전까진 깨끗한 읽기 화면. chrome 전부 숨김. Plot 원칙 "Don't compete for attention you haven't earned" 준수
+2. **샘플 vs 실데이터 격리**: book prop 있으면 Hatnote/Infobox/Footnotes 숨김 (이것들은 Phase 6까지 샘플). Title/본문/TOC만 실데이터
+3. **BookBlockSlot chrome 5가지**: `⠿` 메뉴 (좌측) / `+ Add block` (하단) / Turn Into 서브메뉴 / Duplicate / Delete (빨강). 호버 때만 fade-in (160ms)
+4. **카디널 죄 회피**: dashed border, 영구 `+/×` 금지. 선택된 블록 또는 호버된 블록에만 chrome
 
-### Book Pivot 핵심 원칙
+### 아키텍처
 
-- **Shell = 데이터 선택** (`shell: "magazine"`), 컴포넌트가 아님. 렌더러가 값으로 분기
-- **Editor UX 3 명확한 무브**: Pick shell / Edit blocks / Decorate
-- **선택된 cell에만 chrome**: dashed border, hover-reveal 버튼, +/× 곳곳 금지 (카디널 죄)
-- **Decoration = non-flowing, 순수 시각**: `pointer-events: none`, absolute overlay
-- **renderMode는 day 1 데이터 필드로 예약** (Phase 4 구현): bolt-on 방지
+- `lib/book/` = types / shells / adapter / selectors (기존 wikiArticles state 유지, on-the-fly 변환)
+- `components/book/` = shells/editor/flipbook/book-editor/book-workspace/book-inline-editor/book-block-slot
+- `app/(app)/wiki/page.tsx` → layout.tsx에서 `<BookWorkspace />` 렌더
+- `app/(app)/book/page.tsx` → `redirect("/wiki")` alias
+- Phase 1C (state rename wikiArticles → books) **보류** — 새 Book 컴포넌트가 primary consumer 된 후 자연 cleanup
 
-### 살려야 할 현재 작업분 (PR #209 머지 후)
+### 살아있는 코드 vs 죽은 코드
 
-- `components/wiki-editor/block-menu.tsx` primitives → Book에서 재활용
-- Article themeColor tint 아이디어 → `Book.theme.bgColor` + `accentColor`로 이관
-- Card palette 16색 → Magazine Shell 내 cell 배경색으로 살림
+**살림**:
+- Plot 기존 `useWikiBlockContentJson()` (IDB 로드)
+- `saveBlockBody()` (IDB persist)
+- `updateWikiBlock/addWikiBlock/removeWikiBlock` actions (Plot 기존)
+- `computeSectionNumbers()` (섹션 넘버링)
+- `createEditorExtensions("wiki")` (TipTap wiki tier — 슬래시 커맨드, 위키링크, 멘션, 각주 전부)
 
-### 폐기되는 것
+**폐기 예정** (Phase 3+ 자연 삭제):
+- Grid Editor mode (별도 모드 폐기, 인라인 드래그로 대체)
+- `components/wiki-editor/wiki-article-renderer.tsx` 등 기존 위키 렌더러 (BookWorkspace가 대체)
 
-- `WikiLayout` / `ColumnStructure` (12-col grid가 대체)
-- `ColumnPresetToggle` (Shell picker가 대체)
-- `WikiTemplate` scalar (Book.theme + chrome 블록으로 재구성)
-- Phase 3 per-column blocks 모델 (v80 migration 안 함)
-- Phase 3.1-C Hero (Shell이 담당)
+### 기술 디테일
+
+- `wikiArticles`는 **배열** (`WikiArticle[]`), not Record. `.find(a => a.id === id)`로 조회
+- 4 shells 중 Magazine/Newspaper/Book 현재 title+body만 실데이터, chrome (masthead/flag/cover)은 샘플
+- BookInlineEditor는 **toolbar 없음** (FixedToolbar 제외, 깔끔한 Book UX)
+- Edit/Done 상태는 **session-only** (persist 안 함, BookWorkspace의 useState)
 
 ---
 
 ## 🎨 현재 Phase 진행 상황
 
-### Book Pivot (신규, 2026-04-21 ~)
+### Book Pivot Phase 1~2B (2026-04-21 세션에서 거의 완료)
 
-- [ ] **Phase 0** (이번 세션) — 문서 정비 ✅ 거의 완료, pending 변경 정리 + PDCA plan 남음
-- [ ] **Phase 1** — 데이터 모델 + "Wiki" → "Book" rename (3 PR 분할)
-- [ ] **Phase 2** — Wiki Shell 정착 + 12-col grid 인프라
-- [ ] **Phase 3** — Magazine Shell (MVP 증명)
-- [ ] **Phase 4** — Newspaper + Book Shell + Flipbook render mode
-- [ ] **Phase 5** — Decoration Layer + Blank Shell + "My Shell" savable
-- [ ] **Phase 6** — Chrome 블록 성숙 + 기존 기능 이관 (footnote, categories, templates)
-- [ ] **Phase 7** — 완성도 + 노트 Split + Y.Doc 본 구현
+- [x] **Phase 0**: 문서 정비 + PDCA plan + design-system zip
+- [x] **Phase 1A**: lib/book types/shells/adapter/selectors (173/173 tests)
+- [x] **Phase 1B**: Activity Bar "Wiki"→"Book" + 사용자 visible strings + /book redirect
+- [x] **Phase 2A**: 5 shell 렌더러 + flipbook viewer 복사 + /book-preview 라우트
+- [x] **Phase 2B-1**: BookWorkspace (좌 리스트 / 우 BookEditor) + 5 shell 실데이터 연결
+- [x] **Phase 2B-2**: BookInlineEditor (TipTap wiki tier) + EditableParagraph + 타이핑 검증
+- [x] **Phase 2B-3a**: BookBlockSlot + hover `+` + 타입 피커 8개 + 섹션 자동 넘버링 + TOC 자동 갱신
+- [x] **Phase 2B-3b**: ⠿ 메뉴 + Turn Into/Duplicate/Delete + 동작 검증
+- [x] **Edit/Done 토글** (BookWorkspace 우상단)
+- [x] **빈 Book CTA** + SAMPLE hatnote/infobox/footnote 숨김
+- [ ] **Phase 2B-3c**: Section heading 인라인 편집 (클릭→타이핑)
+- [ ] **Phase 2B-3 확산**: Magazine/Newspaper/Book/Blank shell에 BookBlockSlot 적용
+- [ ] **Phase 2C**: Display 팝오버 이관 (상단 shell 버튼 제거)
 
-### 폐기된 Phase (2026-04-15 ~ 2026-04-17 진행분)
+### 다음 대형 단계
 
-- ~~Phase 3 Multi-pane Document Model (per-column blocks)~~
-- ~~Phase 3.1-A/B/C/D/E/F (Magazine Layout 카탈로그)~~
-- ~~Phase 4 사용자 커스텀 템플릿 편집기~~
-- ~~Phase 5 나무위키 잔여 (Hatnote/Navbox/Callout)~~ — Book Phase 6 chrome 블록으로 흡수
+- **Phase 3A**: 인라인 드래그 reorder + 12-col grid snap (BRAINSTORM-2026-04-21-book-ux-refinement.md Phase 3A 참조)
+- **Phase 4**: Flipbook 실데이터 + Newspaper/Book shell 성숙
+- **Phase 5**: Decoration Layer + "My Shell" savable
+- **Phase 6**: Chrome 블록 성숙 + Infobox/TOC/hatnote 실데이터 이관
+- **Phase 7**: 노트 Split + Y.Doc 본 구현 + 인사이트 허브
+
+### 폐기/보류
+
+- ~~Phase 1C (state rename)~~ → Phase 3+ 자연 cleanup
+- ~~Grid Editor mode~~ → Phase 3A 인라인 드래그로 대체
+- Y.Doc 본 구현 → Phase 7
+- 인사이트 허브 → Book 이후
 
 ---
 
-## 🟡 보류 중
+## 🟡 이번 세션 알려진 이슈
 
-- **Y.Doc 본 구현** (PoC→프로덕션) — Book Phase 7로 이동
-- **인사이트 허브** (온톨로지 Single Source of Insights) — Book 이후
-- **노트 Split 기능** — Book Phase 7
-- **Library FilterPanel Notes 수준** — Book 이후
+- `addWikiBlock`의 `afterBlockId` 매칭이 컬럼 레이아웃 기반 구조에서 때때로 순서 이상함 (section 삽입 시 top에 나타남) — 기존 Plot 버그, Phase 3A-1 드래그 reorder 이후 검토
+- Fast Refresh가 자주 full reload함 (store slice 변경 시 정상, 무시)
+- Yjs 중복 import 경고 (기존 Plot 이슈, 무관)
 
 ---
 
-## 📚 필수 참고 파일
+## 📚 필수 참고
 
-- `docs/BRAINSTORM-2026-04-21-book-pivot.md` — **진실의 원천**
-- `docs/design-system/README.md` — 디자인 토큰 단일 진실
-- `docs/design-system/ui_kits/plot-book/ARCHITECTURE.md` — 4-layer 청사진
-- `docs/design-system/ui_kits/plot-book/RESEARCH.md` — 6 medium reader expectations
-- `docs/design-system/ui_kits/plot-book/*.jsx` — React 프로토타입
+- **진실의 원천**:
+  - `docs/BRAINSTORM-2026-04-21-book-pivot.md` (Book Pivot 설계 루트)
+  - `docs/BRAINSTORM-2026-04-21-book-ux-refinement.md` (UX 재정렬 결정)
+- **디자인 레퍼런스**:
+  - `docs/design-system/README.md` (tokens + Non-negotiables 5)
+  - `docs/design-system/ui_kits/plot-book/ARCHITECTURE.md` (4-layer)
+  - `docs/design-system/components/` (TSX 프로덕션 레퍼런스 원본)
+- **Plot 재사용**:
+  - `components/wiki-editor/wiki-block-renderer.tsx` (Section edit 패턴 Phase 2B-3c용)
+  - `lib/wiki-block-utils.ts` (computeSectionNumbers)
+  - `hooks/use-wiki-block-content.ts` (useWikiBlockContentJson)

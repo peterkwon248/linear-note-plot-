@@ -7,6 +7,13 @@
       "runtimeArgs": ["--max-old-space-size=4096", "node_modules/next/dist/bin/next", "dev", "--webpack"],
       "port": 3002,
       "autoPort": true
+    },
+    {
+      "name": "design-demo",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["-m", "http.server", "8080"],
+      "port": 8080,
+      "autoPort": true
     }
   ]
 }
