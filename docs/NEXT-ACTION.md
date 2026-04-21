@@ -6,122 +6,135 @@
 
 ---
 
-**Last Updated**: 2026-04-17 저녁 (Phase 3.1-A 대폭 진행 — Card rename / Asymmetric UI / block-menu primitives / width+density / page identity tint + picker. PR 제출 후 Step 3 Hero 또는 Phase 3.1-A 잔여에서 시작)
+**Last Updated**: 2026-04-21 (🔴 **Book Pivot 대결정** — Wiki 시스템 전면 개편. 4-layer 아키텍처 + 5 Shell + Flipbook. 진실의 원천: `BRAINSTORM-2026-04-21-book-pivot.md`)
+
+---
+
+## 🔴 이번 세션의 대결정 (2026-04-21)
+
+**"Wiki" → "Book" 전면 개편**. 자세한 내용: `docs/BRAINSTORM-2026-04-21-book-pivot.md`
+
+- 4-layer 아키텍처: Shell / Grid / Blocks / Decoration
+- 5 Shells (wiki / magazine / newspaper / book / blank) + Flipbook (render mode)
+- 12-col snap grid
+- 기존 Phase 3.1 로드맵 폐기, 새 Phase 1~7 로드맵 수립
+- Flipbook은 Phase 1에 데이터 필드만 예약, 구현은 Phase 4
 
 ---
 
 ## 🎯 다음 세션 시작하면 바로 할 것
 
-### 선택 1 (권장) — Phase 3.1-C 진입: Hero / Opening 영역
+### Step 1 — 현재 pending 변경 정리 (PR #209)
 
-**배경 필수 읽기**: `docs/BRAINSTORM-2026-04-17-page-identity.md` (Tier 시스템)
+로컬에 uncommitted 있음 (Phase 3.1-A/B + Page Identity 작업분 ~2600 lines).
 
-**한 줄 요약**: Article themeColor tint로 "상체-몸통 일체감"은 해결됐지만 **잡지 opening spread 느낌**은 아직. Title + Aliases + Categories를 **Hero 블록**으로 승격해서 배경 color/image/height 조절 가능하게.
+**결정 필요**: 그대로 PR #209로 머지 vs 버림 vs 일부만 cherry-pick
+- **권장**: 그대로 머지 → Phase 1 시작 시 Book 구조 리팩토링 중 자연 삭제. git history 깔끔
+- 이유: revert보다 rewrite가 명확. block-menu primitives처럼 살려야 할 부분도 있음
 
-**스펙 초안** (다음 세션에서 구체화):
-```ts
-WikiArticle.hero?: {
-  backgroundColor?: string            // solid color (또는 themeColor와 연동)
-  image?: { src: string; fit: "cover" | "contain"; opacity?: number }
-  height?: "sm" | "md" | "lg" | number // px or preset
-  titleSize?: "default" | "display" | "mega"
-  overlay?: boolean                    // title을 이미지 위에 얹기
-  align?: "left" | "center"
-}
-```
+Step 1 완료 = PR #209 merge to main.
 
-**구현 순서**:
-1. 타입 추가 + 기본 렌더 (배경색/height만)
-2. Image 지원 (attachment ID 재사용)
-3. 우상단 ⋯ 메뉴에 Hero 설정 popover
-4. Overlay 모드 (title 이미지 위)
+### Step 2 — `/pdca plan book-pivot` 실행
 
----
+`BRAINSTORM-2026-04-21-book-pivot.md`의 "❓ 남은 결정 사항" 5개를 AskUserQuestion으로 확정:
 
-### 선택 2 — Phase 3.1-A 잔여 마무리 (작은 단위)
+1. 한국어 UI에서 "Book" 표기 (영어 유지 / "책" / "북")
+2. 사용자 공지 방식 (배너 / 릴리즈 노트 / 조용히)
+3. wiki-categories, wiki-templates 네이밍 (book prefix / 중립 단어)
+4. Shell 타입 `"wiki"` 이름 유지 여부 (중립 "article" 등 대안)
+5. Magazine 폰트 Playfair + Merriweather CDN load OK?
 
-**남은 항목**:
-- **Column rule 토글** — 카드 사이 hairline 세로선 (이미 `node.rule` 타입 + `.wiki-column-grid--ruled` CSS 있음 — UI 토글만 추가)
-- **Gap 토글** — sm/md/lg 간격 (`node.gap` 타입 + `.wiki-column-grid--gap-*` CSS 있음 — UI만)
-- **Per-column name 헤더** — `ColumnDefinition.name` 설정 시 컬럼 상단 uppercase 10-11px 라벨. `.wiki-column-name` CSS 이미 존재
-- **WikiColumnMenu에 위 항목 노출** — 이미 파일 존재, 확장만
+확정 후 PDCA plan 작성.
 
-이건 작은 단위라 1-2 PR로 처리 가능. Hero(선택 1) 전이나 후나 OK.
+### Step 3 — Phase 1 착수 (3 PR 분할)
+
+**Phase 1A**: 타입 rename + slice rename + Store migration v80
+- `WikiArticle` → `Book`
+- `wiki-articles` slice → `books` slice
+- `noteType: "wiki"` → `"book"`
+- Migration: 기존 WikiArticle → Book 변환 (shell: "wiki", renderMode: "scroll", cell 변환)
+
+**Phase 1B**: Activity Bar + URL + 사이드바
+- Activity Bar 라벨 "Wiki" → "Book"
+- URL `/wiki/:id` → `/book/:id`
+- 사이드바 컴포넌트
+
+**Phase 1C**: 에디터/렌더러 파일명 + 컴포넌트
+- `components/wiki-editor/*` → `components/book-editor/*`
+- 에디터 티어 `wiki` → `book`
+- `[[wikilinks]]`, `@mentions` resolver 업데이트 (UI 텍스트)
 
 ---
 
 ## 🔴 잊지 말 것 (이번 세션 핵심 결정)
 
-### Identity Tier 시스템 (BRAINSTORM-2026-04-17)
+### Non-negotiables (SKILL.md 재확인)
 
-```
-Tier 0 (default)         - 깔끔한 위키, 색 없음
-Tier 1 (Article theme)   - ✅ 전체 은은 tint (5%), 타이틀 🎨 picker (구현 완료)
-Tier 2 (Card palette)    - ✅ 카드 ⋯ 메뉴 palette (cascade on Tier 1)
-Tier 3 (Hero)            - ⏳ 다음 — Opening spread
-Tier 4 (Full-bleed img)  - 미래 — Hero 확장
-Tier 5 (Custom template) - Phase 4
-```
+1. **Opacity hierarchy, not color**, for text/icon importance
+2. **Spacing, not borders**, for separation
+3. **No gradients, no emoji in chrome, no scale-on-hover**
+4. Frozen type scale: **11·12·13·14·14.5·15·16·19·23·28**
+5. Transitions **120/160/200ms `ease`** — bg/opacity only, elements never move
 
-### 공통 ⋯ block-menu primitives (신규)
+### Book Pivot 핵심 원칙
 
-`components/wiki-editor/block-menu.tsx` — `MenuSurface / MenuSection / PresetGrid / MenuAction / MenuDivider` + 공용 상수 `WIDTH_OPTIONS / FONT_SIZE_OPTIONS / DENSITY_OPTIONS`. 새 블록 추가 시 이걸 사용해 시각 일관성 유지.
+- **Shell = 데이터 선택** (`shell: "magazine"`), 컴포넌트가 아님. 렌더러가 값으로 분기
+- **Editor UX 3 명확한 무브**: Pick shell / Edit blocks / Decorate
+- **선택된 cell에만 chrome**: dashed border, hover-reveal 버튼, +/× 곳곳 금지 (카디널 죄)
+- **Decoration = non-flowing, 순수 시각**: `pointer-events: none`, absolute overlay
+- **renderMode는 day 1 데이터 필드로 예약** (Phase 4 구현): bolt-on 방지
 
-### "Card" 용어 (UI only)
+### 살려야 할 현재 작업분 (PR #209 머지 후)
 
-UI에서 위키 layout-level column은 **"card"** (노트 columnsBlock과 구분). 내부 타입 `ColumnStructure` 등은 그대로. 새 UI text 쓸 때 "card"로 통일.
+- `components/wiki-editor/block-menu.tsx` primitives → Book에서 재활용
+- Article themeColor tint 아이디어 → `Book.theme.bgColor` + `accentColor`로 이관
+- Card palette 16색 → Magazine Shell 내 cell 배경색으로 살림
 
-### SectionNumbers Context
+### 폐기되는 것
 
-`components/wiki-editor/section-numbers-context.ts` — column-group 내부 섹션이 article 전체 번호 체계 따르도록 Context 소비. 새 nested 블록 타입 추가 시 고려.
-
-### addWikiBlock 위치 보존
-
-`afterBlockId` 있으면 leaf 내 `loc.index + 1`에 insert. "맨 아래" append 동작은 `afterBlockId` 없을 때만. 새 insert 경로 추가 시 afterBlockId 전달 주의.
+- `WikiLayout` / `ColumnStructure` (12-col grid가 대체)
+- `ColumnPresetToggle` (Shell picker가 대체)
+- `WikiTemplate` scalar (Book.theme + chrome 블록으로 재구성)
+- Phase 3 per-column blocks 모델 (v80 migration 안 함)
+- Phase 3.1-C Hero (Shell이 담당)
 
 ---
 
 ## 🎨 현재 Phase 진행 상황
 
-### Phase 3.1 Magazine Layout (진행 중)
+### Book Pivot (신규, 2026-04-21 ~)
 
-- [x] **Phase 3.1-A** (컬럼 꾸미기 기본) — **대부분 완료**
-  - [x] Card rename (UI)
-  - [x] Asymmetric 프리셋 UI 폴리싱 (mini bar + grouping)
-  - [x] Per-column themeColor UI (WikiColumnMenu)
-  - [x] Per-column name 필드 (타입만)
-  - [x] Article-level themeColor picker + background tint
-  - [ ] Column rule 토글 (UI)
-  - [ ] Gap 토글 (UI)
-  - [ ] Per-column name 헤더 UI
-- [x] **Phase 3.1-B 부분** (블록 속성 확장) — 일부
-  - [x] `WikiBlock.width` + Infobox/TOC 프리셋/드래그
-  - [x] `WikiBlock.density` + Infobox/TOC spacing 3단계
-  - [x] `WikiBlock.fontSize` TOC 적용
-  - [x] 공통 ⋯ block-menu primitives
-  - [ ] Pull Quote 블록
-  - [ ] spanColumns / fullBleed / dropCap
-- [ ] **Phase 3.1-C** (Hero + Divider + Caption) — **다음 유력**
-- [ ] **Phase 3.1-D** (Typography + matchHeights)
-- [ ] **Phase 3.1-E** (노트 columnsBlock 확장)
-- [ ] **Phase 3.1-F** (Built-in 템플릿 재구성)
+- [ ] **Phase 0** (이번 세션) — 문서 정비 ✅ 거의 완료, pending 변경 정리 + PDCA plan 남음
+- [ ] **Phase 1** — 데이터 모델 + "Wiki" → "Book" rename (3 PR 분할)
+- [ ] **Phase 2** — Wiki Shell 정착 + 12-col grid 인프라
+- [ ] **Phase 3** — Magazine Shell (MVP 증명)
+- [ ] **Phase 4** — Newspaper + Book Shell + Flipbook render mode
+- [ ] **Phase 5** — Decoration Layer + Blank Shell + "My Shell" savable
+- [ ] **Phase 6** — Chrome 블록 성숙 + 기존 기능 이관 (footnote, categories, templates)
+- [ ] **Phase 7** — 완성도 + 노트 Split + Y.Doc 본 구현
+
+### 폐기된 Phase (2026-04-15 ~ 2026-04-17 진행분)
+
+- ~~Phase 3 Multi-pane Document Model (per-column blocks)~~
+- ~~Phase 3.1-A/B/C/D/E/F (Magazine Layout 카탈로그)~~
+- ~~Phase 4 사용자 커스텀 템플릿 편집기~~
+- ~~Phase 5 나무위키 잔여 (Hatnote/Navbox/Callout)~~ — Book Phase 6 chrome 블록으로 흡수
 
 ---
 
 ## 🟡 보류 중
 
-- **Y.Doc 본 구현** (P0, PoC→프로덕션) — Phase 3.1 풍성해진 후 진입
-- **인사이트 허브** (P2) — 온톨로지 Single Source of Insights
-- **노트 Split 기능** (Phase 7) — WikiSplitPage 패턴 복사
-- **Title 블록화** (Phase 4) — 대결정 재검토 여지, 지금은 최상단 고정 유지
+- **Y.Doc 본 구현** (PoC→프로덕션) — Book Phase 7로 이동
+- **인사이트 허브** (온톨로지 Single Source of Insights) — Book 이후
+- **노트 Split 기능** — Book Phase 7
+- **Library FilterPanel Notes 수준** — Book 이후
 
 ---
 
-## 참고 파일 (Hero 구현 시)
+## 📚 필수 참고 파일
 
-- `lib/types.ts` — `WikiArticle` 타입에 `hero?` 추가
-- `components/wiki-editor/wiki-title.tsx` — Hero 모드 rendering 분기
-- `components/wiki-editor/wiki-article-renderer.tsx` — Hero가 있으면 padding/layout 조정
-- `app/globals.css` — `.wiki-hero` 클래스 (배경/overlay/height)
-- `lib/store/slices/wiki-articles.ts` — `setHero(articleId, patch)` action
-- `lib/attachment-store.ts` — 이미 이미지 첨부 지원, 재사용
+- `docs/BRAINSTORM-2026-04-21-book-pivot.md` — **진실의 원천**
+- `docs/design-system/README.md` — 디자인 토큰 단일 진실
+- `docs/design-system/ui_kits/plot-book/ARCHITECTURE.md` — 4-layer 청사진
+- `docs/design-system/ui_kits/plot-book/RESEARCH.md` — 6 medium reader expectations
+- `docs/design-system/ui_kits/plot-book/*.jsx` — React 프로토타입

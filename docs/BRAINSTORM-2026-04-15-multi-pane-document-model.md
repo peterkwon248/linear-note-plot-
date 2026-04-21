@@ -1,7 +1,14 @@
 # Multi-pane Document Model (Phase 3 재정의)
 
+> ## ⚠️ DEPRECATED — 2026-04-21 Book Pivot으로 대체됨
+>
+> 이 문서의 per-column blocks 모델(v80 migration)은 **폐기됨**. Book Pivot의 **12-col snap grid** + `Block.cell`로 대체.
+> 진실의 원천: [`BRAINSTORM-2026-04-21-book-pivot.md`](./BRAINSTORM-2026-04-21-book-pivot.md)
+>
+> 아래 내용은 히스토리 보존용.
+
 **날짜**: 2026-04-15 밤
-**상태**: 브레인스토밍 완료 → Phase 3 진입 대기
+**상태**: ~~브레인스토밍 완료 → Phase 3 진입 대기~~ **폐기 (2026-04-21 Book Pivot)**
 **이전 문서**: `BRAINSTORM-2026-04-14-column-template-system.md` ("2026-04-15 밤 대결정" 절)
 
 ---

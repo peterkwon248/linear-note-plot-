@@ -1,6 +1,18 @@
 # Plot 위키 통합 설계 — 컬럼 레이아웃 + 템플릿 시스템 (2026-04-14 저녁)
 
-> 이 문서가 **현재 진실의 원천 (single source of truth)** for 위키 레이아웃/템플릿 시스템.
+> ## ⚠️ DEPRECATED — 2026-04-21 Book Pivot으로 대체됨
+>
+> `ColumnStructure` + `WikiTemplate` 시스템은 **폐기됨**. Book Pivot의 **12-col snap grid** + **Shell 기반 템플릿**으로 대체.
+> 진실의 원천: [`BRAINSTORM-2026-04-21-book-pivot.md`](./BRAINSTORM-2026-04-21-book-pivot.md)
+>
+> 이 문서에서 살아남은 개념:
+> - **메타 → 블록 통합 (2026-04-15 밤 대결정)** → Book의 Chrome 블록으로 계승 (infobox/toc/masthead 등이 전부 블록)
+> - **Title 블록화 안 함** → Book에서도 동일 (title은 chrome 레이어)
+> - **컬럼 비율 자유** → 12-col span으로 달성
+>
+> 아래 내용은 히스토리 보존용.
+
+> ~~이 문서가 **현재 진실의 원천 (single source of truth)** for 위키 레이아웃/템플릿 시스템.~~
 >
 > 이전 브레인스토밍들은 **부분적 폐기**됨:
 > - [BRAINSTORM-2026-04-14-wiki-ultra.md](./BRAINSTORM-2026-04-14-wiki-ultra.md) — 3-layer 모델 프레임 폐기. 세부 설계 (CSS 수치, A-1 Hatnote, A-3 Ambox, B-2 themeColor 등)는 유효하니 참조용으로 보존

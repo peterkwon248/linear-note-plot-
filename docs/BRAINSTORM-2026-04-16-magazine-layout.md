@@ -1,7 +1,19 @@
 # Magazine Layout — 잡지식 꾸밈 시스템 (Phase 3.1 확장)
 
+> ## ⚠️ DEPRECATED — 2026-04-21 Book Pivot으로 대체됨
+>
+> 이 문서의 "Tier 기반 꾸밈 레이어 + ColumnStructure 확장" 방향은 **폐기됨**. Book Pivot의 **Shell 기반 전체 문서 transform**으로 대체 (shell이 wiki → magazine 전환 자체를 담당).
+> 진실의 원천: [`BRAINSTORM-2026-04-21-book-pivot.md`](./BRAINSTORM-2026-04-21-book-pivot.md)
+>
+> 아래 5.2 카탈로그 중 다음은 Book Magazine Shell에 흡수:
+> - Drop cap, pull quote, masthead, nameplate, headline-deck-byline → Magazine chrome 블록 (Phase 3)
+> - Asymmetric 프리셋 (3-9, 4-8, 5-7 등) → 12-col grid cell 배치
+> - Typography pairs → `Book.theme.fontPair`
+>
+> 아래 내용은 히스토리 보존용.
+
 **날짜**: 2026-04-16
-**상태**: 브레인스토밍 확정 (Q1~Q8 모두 결정) → Phase 3.1-A 착수 대기
+**상태**: ~~브레인스토밍 확정 (Q1~Q8) → Phase 3.1-A 착수 대기~~ **폐기 (2026-04-21 Book Pivot)**
 **이전 문서**: `BRAINSTORM-2026-04-15-multi-pane-document-model.md` (Phase 3 완료 근거)
 
 ---

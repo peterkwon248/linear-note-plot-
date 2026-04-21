@@ -6,6 +6,69 @@
 
 ---
 
+## 2026-04-21 (집, 🔴 **Book Pivot 대결정** — Wiki 시스템 전면 개편)
+
+### 완료
+- **before-work**: 메인 레포 70 커밋 뒤쳐진 것 발견 → stash + pull --ff-only + conflict resolve. 메인+worktree 동일 HEAD 확인
+- **docs 전수 읽기**: CONTEXT / TODO / NEXT-ACTION / SESSION-LOG / PHASE-PLAN(이미 DEPRECATED) 직접 + MEMORY 및 BRAINSTORM 7종 + plot-discussion 10종 Explore agent로 요약
+- **사용자 제공 "Plot Design System.zip" 분석**: `/c/Users/kwonkyunghun/AppData/Local/Temp/plot-ds`에 압축 해제, README / ARCHITECTURE / RESEARCH / SKILL / ui_kits 전부 읽음
+- **대결정 scope 질문 3개 확정**:
+  - Q1: "Wiki" → "Book" **전면 교체** (점진 마이그레이션 없음)
+  - Q2: 기존 Phase 3.1 pending 변경 **일부만 살림** (block-menu primitives, themeColor 아이디어, Card palette 16색)
+  - Q3: **Flipbook은 Phase 4 구현, Phase 1에 renderMode 필드만 예약** (bolt-on 방지)
+- **문서 작업 8개 todo 전부 완료**:
+  - `docs/design-system/` 에 zip 내용 복사 (README/SKILL/colors_and_type/assets/preview/ui_kits)
+  - `docs/BRAINSTORM-2026-04-21-book-pivot.md` 신규 작성 (**진실의 원천** — 4-layer + 5 shells + 데이터 모델 + Phase 0~7 로드맵 + R1~R7 Risk)
+  - 기존 BRAINSTORM 4개 DEPRECATED 마크: column-template-system / multi-pane / magazine-layout / page-identity
+  - NEXT-ACTION.md 전면 재작성 (Step 1 PR #209 결정 → Step 2 `/pdca plan` → Step 3 Phase 1 착수)
+  - TODO.md 전면 재작성 (Book Phase 0~7 로드맵 + 기존 Phase 3.1 완료분 이관)
+  - CONTEXT.md 최상단 Book Pivot 섹션 prepend + TODO section 기존 것 DEPRECATED 마크
+  - MEMORY.md 최상단 Book Pivot 섹션 prepend
+
+### 브레인스토밍 & 큰 결정
+
+- **4-layer 아키텍처 확정**: Shell (데이터 선택) / Grid (12-col snap) / Blocks (flat + cell 참조) / Decoration (non-flowing absolute)
+- **5 Shells**: wiki / magazine / newspaper / book / blank. `flipbook`은 shell이 아니라 renderMode (orthogonal)
+- **Editor UX 3-무브**: Pick shell (modal) / Edit blocks (inline, 선택된 cell만 chrome) / Decorate (우측 패널)
+- **카디널 죄 회피**: dashed border, hover-reveal 버튼, +/× 곳곳 = 현재 wiki editor의 문제. Book에서는 선택된 cell에만 one level at a time
+- **사용자 차별점 원천 = 데이터 구조**: 2026-04-14 "Note/Wiki 2-entity" 철학 유지 (Note 그대로, Wiki → Book)
+- **Non-negotiables 5개** (SKILL.md): Opacity hierarchy / Spacing not borders / No gradients+emoji+scale-on-hover / Frozen type scale 11·12·13·14·14.5·15·16·19·23·28 / Transitions 120·160·200ms ease bg-opacity만
+
+### 다음
+
+**Step 1** (다음 세션 즉시): PR #209 (Phase 3.1-A/B pending ~2600 lines) 머지 결정 — **그대로 머지 권장** (revert보다 rewrite 명확)
+
+**Step 2**: `/pdca plan book-pivot` 실행 → BRAINSTORM 문서의 "❓ 남은 결정 사항" 5개를 AskUserQuestion으로 확정
+1. 한국어 UI "Book" 표기 ("Book" / "책" / "북")
+2. 사용자 공지 방식 (배너 / 릴리즈 노트 / 조용히)
+3. wiki-categories, wiki-templates 네이밍 (book prefix / 중립)
+4. Shell 타입 `"wiki"` 값 유지 여부
+5. Magazine 폰트 Playfair + Merriweather CDN load OK?
+
+**Step 3**: Phase 1 착수 (3 PR 분할 — 1A 타입/slice/migration v80, 1B Activity Bar/URL, 1C 에디터/렌더러)
+
+상세: `docs/NEXT-ACTION.md` + `docs/BRAINSTORM-2026-04-21-book-pivot.md`
+
+### Watch Out
+
+- **Phase 1 범위 거대**: "Wiki" 문자열이 ~100파일+에 박혀 있음. 자동 grep rename 먼저, 수동 검토 나중
+- **Store migration v80 위험**: WikiArticle → Book 변환 중 데이터 손실 위험. IDB 백업 필수 (before-work 직전)
+- **ColumnStructure → cell 변환 로직 정밀도**: 1 card → {col:1, span:12} / 2 cards → {col:1,span:6} + {col:7,span:6}. 3+ cards는 span 계산 필요
+- **PR #209 cherry-pick 유혹 억제**: 일부만 골라내는 것보다 통째 머지 후 Book 리팩토링 중 자연 삭제가 깔끔
+- **Flipbook 함정**: day 1에 `renderMode` 필드만 있고 구현은 Phase 4. 실수로 Phase 1에 구현 시작 = MVP 2배 지연
+
+### 머신
+집
+
+### 참고 문서
+
+- `docs/BRAINSTORM-2026-04-21-book-pivot.md` — **진실의 원천**
+- `docs/design-system/README.md` — 디자인 토큰
+- `docs/design-system/ui_kits/plot-book/ARCHITECTURE.md` — 4-layer 청사진
+- `docs/design-system/ui_kits/plot-book/RESEARCH.md` — 6 medium reader expectations
+
+---
+
 ## 2026-04-17 오후~저녁 (집, Phase 3.1-A/B 대폭 진행 + Page Identity Tier 시스템 확립)
 
 ### 완료

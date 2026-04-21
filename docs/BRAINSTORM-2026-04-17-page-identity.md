@@ -1,8 +1,24 @@
 # Page Identity — 타이틀+본문 일체감 + 위키/잡지 레이어 시스템
 
+> ## ⚠️ DEPRECATED — 2026-04-21 Book Pivot으로 대체됨
+>
+> 이 문서의 **Identity Tier 시스템 (Tier 0~5)**은 Book Pivot의 **Shell 레이어**로 흡수됨.
+> - Tier 0 (default) → Wiki Shell 기본값
+> - Tier 1 (Article theme) → `Book.theme.bgColor` / `accentColor`
+> - Tier 2 (Card palette) → 12-col grid cell 내부 style
+> - Tier 3 (Hero) → Magazine Shell의 headline-deck-byline chrome
+> - Tier 4 (Full-bleed image) → Book.decoration + Magazine shell full-bleed photo block
+> - Tier 5 (Custom template) → `Book.theme` + "My Shell" savable preset
+>
+> Step 1 + Step 2 (Article tint + Card palette cascade)은 이미 구현됨 (PR #209 pending). Book Pivot Phase 1에서 `theme.accentColor`로 이관.
+>
+> 진실의 원천: [`BRAINSTORM-2026-04-21-book-pivot.md`](./BRAINSTORM-2026-04-21-book-pivot.md)
+>
+> 아래 내용은 히스토리 보존용.
+
 **날짜**: 2026-04-17
 **이전 문서**: `BRAINSTORM-2026-04-16-magazine-layout.md` (Phase 3.1 Magazine Layout)
-**상태**: Step 1 + Step 2 착수 확정
+**상태**: ~~Step 1 + Step 2 착수 확정~~ **폐기 (2026-04-21 Book Pivot) — Step 1/2 구현분은 theme.accentColor로 이관 예정**
 
 ---
 

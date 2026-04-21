@@ -3,6 +3,32 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
+## 🔴 2026-04-21 Book Pivot (대결정)
+
+**Wiki 시스템 전면 개편**. 4-layer 아키텍처 + 5 Shell + Flipbook render mode.
+진실의 원천: [`BRAINSTORM-2026-04-21-book-pivot.md`](./BRAINSTORM-2026-04-21-book-pivot.md)
+
+**핵심**:
+- **"Wiki" → "Book" 전면 rename** (Activity Bar, 코드 타입, 데이터 모델, 사용자 UI)
+- **4-layer**: Shell / Grid / Blocks / Decoration
+- **5 Shells**: wiki / magazine / newspaper / book / blank
+- **Flipbook** = renderMode (orthogonal to shell) — Phase 4 구현
+- **12-col snap grid** (newspaper=6, book=1) — 기존 ColumnStructure 폐기
+- **Editor UX 3-무브**: Pick shell / Edit blocks / Decorate
+
+**폐기된 설계**:
+- ColumnStructure (12-col grid가 대체)
+- Phase 3 per-column blocks 모델 (v80 migration 안 함)
+- Phase 3.1 Magazine Layout 카탈로그 (Shell이 담당)
+- Page Identity Tier 시스템 (Shell+theme이 대체)
+- 부분 폐기 BRAINSTORM: `2026-04-14-column-template-system.md`, `2026-04-15-multi-pane-document-model.md`, `2026-04-16-magazine-layout.md`, `2026-04-17-page-identity.md`
+
+**디자인 레퍼런스**: `docs/design-system/` (사용자 제공 Plot Design System zip 내용물 — README / ARCHITECTURE / RESEARCH + React 프로토타입)
+
+**Phase 로드맵**: Phase 0 (문서 정비, 현재) → Phase 1 (rename + migration v80, 3 PR) → Phase 2 (Wiki Shell + 12-col grid) → Phase 3 (Magazine Shell MVP) → Phase 4 (Newspaper + Book + Flipbook) → Phase 5 (Decoration + Blank + My Shell) → Phase 6 (Chrome 블록 + 기존 기능 이관) → Phase 7 (노트 Split + Y.Doc + 인사이트 허브)
+
+---
+
 ## Identity
 
 Plot = 노트 + 개인 위키 + 지식 관계망
@@ -221,7 +247,22 @@ Reflections   → 시간축  (시간이 지난 후 과거 노트를 회고)
 - **Wiki Activity 정리 (2026-04-14)**: Article Stats 제거 (Detail Properties와 중복). "Thread & Reflections not available" 제거. "Wiki article history is not yet available" 간결 안내로 교체
 - **Expand/Collapse All 항상 표시 (2026-04-14)**: `hasCollapsibles` 조건 제거 → 버튼 항상 렌더. 접을 게 없으면 disabled + 흐릿 (`text-muted-foreground/20`). Details 토글 = DOM 클릭 방식 (setNodeMarkup 대신). hasCollapsibles 체크: details/summary/footnoteRef/referenceIds
 
-## TODO: Future Work (우선순위 순, 2026-04-14 sync)
+## TODO: Future Work (2026-04-21 Book Pivot 기준)
+
+> **Book Pivot으로 기존 Phase 3/3.1 로드맵 폐기.** 새 로드맵은 `docs/TODO.md` 참조.
+> 진실의 원천: `docs/BRAINSTORM-2026-04-21-book-pivot.md`
+
+**현재 Phase**: Phase 0 (문서 정비, 거의 완료) → Phase 1 (Wiki → Book rename + migration v80) 진입 대기
+
+**Phase 1 착수 전 체크**:
+- PR #209 (Phase 3.1-A/B pending) 머지 결정
+- `/pdca plan book-pivot` 실행 (남은 결정 5개)
+
+**폐기된 Phase 3/3.1 로드맵** (히스토리 보존용, 아래 섹션):
+
+---
+
+## TODO: Future Work (기존, 2026-04-14 sync — ⚠️ 2026-04-21 Book Pivot으로 대부분 폐기)
 
 ### ✅ P0 — Split-First 마이그레이션 — ALL COMPLETE
 ### ✅ P0 — 노트 References + fontSize cascade — ALL COMPLETE

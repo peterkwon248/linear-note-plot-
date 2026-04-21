@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Radii & Shadows</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:18px;background:var(--background);font-family:var(--font-sans)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.sw{display:flex;flex-direction:column;gap:6px;align-items:center}
+.box{width:70px;height:50px;background:var(--card);border:1px solid var(--border-subtle)}
+.spec{font-family:var(--font-mono);font-size:10.5px;color:var(--muted-foreground)}
+.n{font-size:11px;color:var(--foreground);font-weight:600}
+h3{margin:0 0 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted-foreground)}
+</style></head>
+<body>
+<h3>Corner radii</h3>
+<div class="grid">
+  <div class="sw"><div class="box" style="border-radius:4px"></div><div class="n">sm</div><div class="spec">4px</div></div>
+  <div class="sw"><div class="box" style="border-radius:6px"></div><div class="n">md</div><div class="spec">6px</div></div>
+  <div class="sw"><div class="box" style="border-radius:8px"></div><div class="n">lg</div><div class="spec">8px</div></div>
+  <div class="sw"><div class="box" style="border-radius:12px"></div><div class="n">xl</div><div class="spec">12px</div></div>
+</div>
+<h3 style="margin-top:18px">Shadows</h3>
+<div class="grid">
+  <div class="sw"><div class="box" style="border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.06);border:0"></div><div class="n">sm</div><div class="spec">resting</div></div>
+  <div class="sw"><div class="box" style="border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);border:0"></div><div class="n">md</div><div class="spec">hover card</div></div>
+  <div class="sw"><div class="box" style="border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.05);border:0"></div><div class="n">lg</div><div class="spec">panel</div></div>
+  <div class="sw"><div class="box" style="border-radius:12px;box-shadow:0 16px 40px -8px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06);border:0"></div><div class="n">popover</div><div class="spec">⌘K modal</div></div>
+</div>
+</body></html>

@@ -1,5 +1,52 @@
 # Plot Project Memory
 
+## 🔴 2026-04-21 Book Pivot (대결정) — 최우선 읽기
+
+**Wiki 시스템 전면 개편 확정**. 진실의 원천: `docs/BRAINSTORM-2026-04-21-book-pivot.md`
+
+**핵심 결정**:
+- **"Wiki" → "Book" 전면 rename** (노트 유지, 위키만 개편)
+- **4-layer 아키텍처**: Shell / Grid / Blocks / Decoration
+- **5 Shells** (wiki / magazine / newspaper / book / blank) + **Flipbook** (renderMode, orthogonal)
+- **12-col snap grid** — 기존 ColumnStructure 완전 폐기
+- **Editor UX 3-무브**: Pick shell / Edit blocks / Decorate (선택된 cell에만 chrome)
+
+**살려야 할 현재 작업분** (PR #209 pending):
+- `block-menu.tsx` primitives → Book에서 재활용
+- Article themeColor tint 아이디어 → `Book.theme.bgColor`/`accentColor`로 이관
+- Card palette 16색 → Magazine Shell 내 cell 배경색
+
+**폐기된 Phase**:
+- Phase 3 per-column blocks (v80 migration 안 함)
+- Phase 3.1 A/B/C/D/E/F (Magazine Layout 카탈로그 — Shell이 담당)
+- Phase 4 사용자 커스텀 템플릿 편집기 → "My Shell" savable preset (Phase 5)
+- Phase 5 나무위키 잔여 (Hatnote/Navbox/Callout) → Book Phase 6 chrome 블록
+
+**Book Phase 로드맵**:
+1. Phase 0 (현재) — 문서 정비 + `/pdca plan`
+2. Phase 1 — 타입 rename + migration v80 (3 PR)
+3. Phase 2 — Wiki Shell + 12-col grid 인프라
+4. Phase 3 — Magazine Shell (MVP 증명)
+5. Phase 4 — Newspaper + Book Shell + **Flipbook 구현**
+6. Phase 5 — Decoration Layer + Blank Shell + My Shell savable
+7. Phase 6 — Chrome 블록 + 기존 기능 이관 (footnote/categories/templates)
+8. Phase 7 — 노트 Split + Y.Doc 본 구현 + 인사이트 허브
+
+**디자인 레퍼런스**: `docs/design-system/` (사용자 제공 Plot Design System zip)
+- `README.md` — 디자인 토큰 + Non-negotiables 5
+- `ui_kits/plot-book/ARCHITECTURE.md` — 4-layer 청사진
+- `ui_kits/plot-book/RESEARCH.md` — 6 medium reader expectations
+- `ui_kits/plot-book/*.jsx` — React 프로토타입 (Shells, Editor, Flipbook)
+
+**Non-negotiables** (SKILL.md):
+1. Opacity hierarchy, not color
+2. Spacing, not borders
+3. No gradients, no emoji in chrome, no scale-on-hover
+4. Frozen type scale: 11·12·13·14·14.5·15·16·19·23·28
+5. Transitions 120/160/200ms ease — bg/opacity only
+
+---
+
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
