@@ -74,7 +74,7 @@ version_app: 0.1.0
 
 | ID | Requirement | Priority | Status |
 |----|-------------|----------|--------|
-| FR-01 | WikiArticle → Book 타입 rename (migration v80 데이터 손실 없이) | High | Pending |
+| FR-01 | WikiArticle → Book 타입 rename (migration v81 데이터 손실 없이) | High | Pending |
 | FR-02 | Activity Bar "Wiki" → "Book" (영어 유지) | High | Pending |
 | FR-03 | URL `/wiki/:id` → `/book/:id` | High | Pending |
 | FR-04 | wiki-articles slice → books slice | High | Pending |
@@ -98,7 +98,7 @@ version_app: 0.1.0
 | Performance | Flipbook 페이지 넘김 350-500ms (CSS easing) | 측정 |
 | Performance | 첫 Magazine shell 진입 시 폰트 로드 < 500ms (CDN 캐시 후) | DevTools Network |
 | Accessibility | 키보드 네비게이션 (Tab/Enter/슬래시) 전부 지원 | 수동 테스트 |
-| Data Safety | Migration v80 **엔티티 수량 보존** (Wiki → Book 손실 0) | Migration sanity check |
+| Data Safety | Migration v81 **엔티티 수량 보존** (Wiki → Book 손실 0) | Migration sanity check |
 | Compatibility | Next.js 16 + React 19 + Tailwind v4 | 빌드 성공 |
 | Design | Non-negotiables 5개 전부 준수 | 코드 리뷰 |
 
@@ -108,7 +108,7 @@ version_app: 0.1.0
 
 ### 4.1 Definition of Done
 
-- [ ] Phase 1A: WikiArticle → Book rename + migration v80 머지, 기존 위키 문서 렌더 정상
+- [ ] Phase 1A: WikiArticle → Book rename + migration v81 머지, 기존 위키 문서 렌더 정상
 - [ ] Phase 1B: Activity Bar + URL 변경, 기존 북마크 호환 (`/wiki/:id` → `/book/:id` redirect)
 - [ ] Phase 1C: 파일명/import 전부 리네임, TypeScript 컴파일 clean
 - [ ] Phase 2: Wiki Shell로 렌더된 Book과 기존 Wiki 렌더 **시각적으로 동일**
@@ -131,7 +131,7 @@ version_app: 0.1.0
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
 | **R1. 대규모 리네임 범위** (~100+ 파일) | High | High | 3 PR 분할 (1A/1B/1C). 자동 grep rename + 수동 검토 |
-| **R2. Migration v80 데이터 손실** | Critical | Med | IDB 백업 before-work 필수 / sanity check 로그 / 엔티티 수량 보존 원칙 |
+| **R2. Migration v81 데이터 손실** | Critical | Med | IDB 백업 before-work 필수 / sanity check 로그 / 엔티티 수량 보존 원칙 |
 | **R3. Shell 전환 transform 규칙** (chrome 교체 시 사용자 블록 보존) | High | Med | "사용자 블록 삭제 금지" 원칙 / chrome type 감별 로직 / 확인 다이얼로그 |
 | **R4. PR #209 pending 처리** | Med | High | 그대로 머지 후 Book 리팩토링 중 자연 삭제 (revert보다 rewrite 명확). block-menu primitives는 살림 |
 | **R5. 사용자 혼란** ("내 위키 어디 갔지?") | Low | Low | **조용히 전환** (Plot 원칙: Settings are not a design failure). 필요 시 릴리즈 노트만 |
@@ -236,7 +236,7 @@ components/
 | Book 타입 네이밍 | `Book`, `Shell`, `Block`, `Theme`, `Decoration` (Plural/Single 일관성) | High |
 | Shell 파일 구조 | `components/shells/{shell-id}-shell.tsx` | High |
 | Chrome 블록 vs 사용자 블록 구분 | type name prefix 또는 shell 소유권 표시 | High |
-| Migration v80 sanity check | `beforeCount === afterCount` 로그 | High |
+| Migration v81 sanity check | `beforeCount === afterCount` 로그 | High |
 | Shell 전환 transform 규칙 | "사용자 블록 삭제 금지" + chrome 교체 로직 | High |
 
 ### 7.3 Font loading (Phase 3 Magazine shell 착수 시)
@@ -254,7 +254,7 @@ const merriweather = Merriweather({ subsets: ["latin"], variable: "--font-merriw
 ## 8. Next Steps
 
 1. [x] Phase 0 — 문서 정비 + PDCA Plan 작성 (**현재**)
-2. [ ] Phase 1A — 타입 rename + slice rename + migration v80 (다음 PR)
+2. [ ] Phase 1A — 타입 rename + slice rename + migration v81 (다음 PR)
 3. [ ] Phase 1B — Activity Bar + URL + 사이드바
 4. [ ] Phase 1C — 에디터/렌더러 파일명 + 컴포넌트
 5. [ ] Phase 2~ — 순차 진행
@@ -270,7 +270,7 @@ const merriweather = Merriweather({ subsets: ["latin"], variable: "--font-merriw
 - [ ] `lib/store/slices/books.ts` 신규 (기존 `wiki-articles.ts` 복사 + 타입 변경 + actions 교체)
 - [ ] `lib/store/slices/book-categories.ts` 신규 (기존 `wiki-categories.ts` 복사)
 - [ ] `lib/store/slices/book-templates.ts` 신규 (기존 `wiki-templates.ts` 복사)
-- [ ] `lib/store/index.ts` migration v80 (WikiArticle → Book 변환)
+- [ ] `lib/store/index.ts` migration v81 (WikiArticle → Book 변환)
   - `shell: "wiki"` / `renderMode: "scroll"` 기본값
   - `theme`: 빈 객체 (또는 themeColor → `accentColor` 이관)
   - `decoration`: 빈 객체

@@ -148,7 +148,27 @@
       "Bash(cp 'C:/Users/kwonkyunghun/Desktop/리니어 노트앱/.claude/worktrees/angry-swirles/lib/column-palette.ts' lib/)",
       "Bash(cmd //c \"mklink /J node_modules ..\\\\..\\\\..\\\\node_modules\")",
       "Skill(bkit:pdca)",
-      "Skill(bkit:pdca:*)"
+      "Skill(bkit:pdca:*)",
+      "Bash(grep -n \"version.*80\\\\|version: 8[01]\\\\|case 79:\\\\|case 80:\\\\|migrations\\\\\\\\[.*80\\\\|>= 80\" lib/store/migrate.ts lib/store/index.ts)",
+      "Bash(mkdir -p lib/book/__tests__)",
+      "Bash(mv lib/book/adapter.test.ts lib/book/__tests__/adapter.test.ts)",
+      "Bash(sed -i 's|from \"./adapter\"|from \"../adapter\"|; s|from \"../types\"|from \"../../types\"|' lib/book/__tests__/adapter.test.ts)",
+      "Bash(sed -i 's|sans-serif\">Wiki</text>|sans-serif\">Book</text>|; ' components/ontology/ontology-graph-canvas.tsx)",
+      "Bash(sed -i 's|mt-2\">Wiki</p>|mt-2\">Books</p>|' components/side-panel/reference-detail-panel.tsx)",
+      "Bash(sed -i 's|<SubLabel>Wiki</SubLabel>|<SubLabel>Book</SubLabel>|' components/side-panel/side-panel-connections.tsx)",
+      "Bash(sed -i 's|\"Open wiki article\"|\"Open book\"|; ' components/editor/nodes/wiki-embed-node.tsx)",
+      "Bash(sed -i 's|label=\"Create Wiki\"|label=\"Create Book\"|' components/editor/wikilink-context-menu.tsx)",
+      "Bash(sed -i 's|+ Create Wiki|+ Create Book|' components/editor/WikilinkSuggestion.tsx)",
+      "Bash(sed -i 's|\"Embed a wiki article\"|\"Embed a book\"|' components/note-editor.tsx)",
+      "Bash(sed -i 's|title=\"Related Wiki\"|title=\"Related Book\"|' components/side-panel/side-panel-discover.tsx)",
+      "Bash(xargs sed *)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(grep -E \"\\\\.ts$|\\\\.tsx$\")",
+      "Bash(python -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\) + ']' if not sys.stdin.read\\(\\).endswith\\(']'\\) else sys.stdin.read\\(\\)\\); \")",
+      "Bash(grep -oE '\"text\":\\\\s*\"[^\"]{0,300}\"' \"C:\\\\Users\\\\kwonkyunghun\\\\.claude\\\\projects\\\\C--Users-kwonkyunghun-Desktop----------claude-worktrees-peaceful-maxwell-5abf98\\\\ffc12e48-5d60-4cde-b19e-9ea328866ec4\\\\tool-results\\\\mcp-Claude_Preview-preview_console_logs-1776741303245.txt\")",
+      "Bash(grep -oE '\"text\":\"[^\"]{0,400}\"' \"C:\\\\Users\\\\kwonkyunghun\\\\.claude\\\\projects\\\\C--Users-kwonkyunghun-Desktop----------claude-worktrees-peaceful-maxwell-5abf98\\\\ffc12e48-5d60-4cde-b19e-9ea328866ec4\\\\tool-results\\\\mcp-Claude_Preview-preview_console_logs-1776741303245.txt\")",
+      "Bash(grep -oE '\"text\":\"[^\"]{0,200}' \"C:\\\\Users\\\\kwonkyunghun\\\\.claude\\\\projects\\\\C--Users-kwonkyunghun-Desktop----------claude-worktrees-peaceful-maxwell-5abf98\\\\ffc12e48-5d60-4cde-b19e-9ea328866ec4\\\\tool-results\\\\mcp-Claude_Preview-preview_console_logs-1776741303245.txt\")",
+      "Bash(grep -oE '\"\\\\[error\\\\][^\"]{0,200}')"
     ]
   }
 }

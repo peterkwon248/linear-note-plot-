@@ -179,12 +179,12 @@ export function WikiPickerDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      description="Search and select a wiki article"
+      description="Search and select a book"
       showCloseButton={false}
       filter={cmdkFilter}
       className="sm:max-w-[960px]"
     >
-      <CommandInput placeholder="Search wiki articles..." />
+      <CommandInput placeholder="Search books..." />
 
       {/* ── Chip-based filter bar ── */}
       <div

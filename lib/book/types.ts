@@ -108,3 +108,20 @@ export interface Page {
   text?: string
   pageNo?: number
 }
+
+// ─── Top-level Book container (Plot addition; not in zip) ─────────
+
+export type RenderMode = "scroll" | "flipbook"
+
+export interface Book {
+  id: string
+  title: string
+  shell: ShellId
+  renderMode: RenderMode
+  theme: ThemeConfig
+  decoration: DecorationConfig
+  pages: Page[]
+  blocks: Block[]
+  createdAt: string
+  updatedAt: string
+}

@@ -1958,7 +1958,7 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
           const pts = hexagonPoints(6, 6, 4)
           return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={WIKI_STATUS_HEX.article + "30"} stroke={WIKI_STATUS_HEX.article} strokeWidth={1.3} strokeLinejoin="round" />
         })()}
-        <text x={26} y={10} fill={WIKI_STATUS_HEX.article} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Wiki</text>
+        <text x={26} y={10} fill={WIKI_STATUS_HEX.article} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Book</text>
       </g>
 
       {/* Separator line before edges */}

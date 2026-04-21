@@ -14,38 +14,45 @@
 - [ ] PR #209 (pending 변경) 머지 결정
 - [ ] `/pdca plan book-pivot` 실행 (남은 결정 5개 AskUserQuestion)
 
-### Phase 1 — 데이터 모델 + "Wiki" → "Book" rename (3 PR 분할, 큰 리팩토링)
+### Phase 1 — 데이터 모델 + "Wiki" → "Book" (2026-04-21 완료, 1C 보류)
 
-- [ ] **Phase 1A**: 타입 rename + slice rename + Store migration v80
-  - `WikiArticle` → `Book`
-  - `wiki-articles` → `books`
-  - `noteType: "wiki"` → `"book"`
-  - Migration: WikiArticle → Book 변환 (shell "wiki", renderMode "scroll", ColumnStructure → cell 변환)
-- [ ] **Phase 1B**: Activity Bar + URL + 사이드바
-  - Activity Bar 라벨 "Wiki" → "Book"
-  - URL `/wiki/:id` → `/book/:id`
-- [ ] **Phase 1C**: 에디터/렌더러 파일명 + 컴포넌트
-  - `components/wiki-editor/*` → `components/book-editor/*`
-  - `[[wikilinks]]`, `@mentions` resolver 업데이트
+- [x] **Phase 1A**: lib/book types/shells/adapter/selectors (storage 변경 없음, on-the-fly 변환)
+- [x] **Phase 1B**: Activity Bar "Book" + visible strings + /book redirect
+- [ ] **Phase 1C (보류)**: state rename (wikiArticles → books, migration v81) — Phase 3+ 자연 cleanup로 이동
 
-### Phase 2 — Wiki Shell 정착 + 12-col grid 인프라
+### Phase 2A — Shell 렌더러 + preview route (2026-04-21 완료)
 
-- [ ] `Book.shell = "wiki"` 기본 (기존 렌더링과 동일 결과)
-- [ ] `BookRoot → BookChrome → BookGrid → Cell → BlockRenderer` 트리
-- [ ] 12-col snap grid 인프라 (Layer 2): CSS Grid + drag snap + span resize
-- [ ] 기존 Infobox/TOC 블록 → cell 위치 지정
-- [ ] Shell Picker 모달 (좌상단 `Wiki ▾`) — wiki/blank만 먼저
-- [ ] 편집 UX 3-무브 원칙 적용 (chrome은 선택된 cell에만)
-- [ ] Theme 레이어 minimal (`bgColor`, `accentColor`)
+- [x] `docs/design-system/` zip v2 설치 (TSX 프로덕션 레퍼런스)
+- [x] `components/book/` shells/editor/flipbook/book-editor/tweak-panel 복사
+- [x] `/book-preview` 라우트
 
-### Phase 3 — Magazine Shell (MVP 증명)
+### Phase 2B — Inline Editor 성숙 (2026-04-21 대부분 완료)
 
-- [ ] Magazine chrome 블록: masthead, nameplate, headline-deck-byline, drop-cap, pull-quote, full-bleed photo
-- [ ] 12-col **asymmetric 프리셋**: 3-9 / 4-8 / 5-7 / 2-5-5 / 3-6-3 / 4-4-4
-- [ ] Playfair + Merriweather 폰트 로드
-- [ ] Magazine 기본 theme (cream bg `#faf7f0`, no card border)
-- [ ] Shell picker에 Magazine 추가
-- [ ] Shell 전환 transform 로직 (chrome 교체, 사용자 블록 보존)
+- [x] **2B-1**: BookWorkspace (좌 리스트 / 우 BookEditor) + 5 shell 실데이터
+- [x] **2B-2**: BookInlineEditor (TipTap wiki tier) + EditableParagraph + 타이핑 저장
+- [x] **2B-3a**: BookBlockSlot + hover `+` + 타입 피커 8개 + 섹션 자동 넘버링 + TOC 자동
+- [x] **2B-3b**: ⠿ 메뉴 + Turn Into/Duplicate/Delete
+- [x] **Edit/Done 토글** + 빈 Book CTA + SAMPLE hatnote/infobox/footnote 숨김
+- [ ] **2B-3c**: Section heading 인라인 편집 (다음 Step 1)
+- [ ] **2B-3 확산**: Magazine/Newspaper/Book/Blank shell에 BookBlockSlot 적용
+
+### Phase 2C — Display 팝오버 이관 (BRAINSTORM-2026-04-21-book-ux-refinement.md)
+
+- [ ] View Header 우측 Display 버튼 (Notes 패턴)
+- [ ] 상단 5 Shell 버튼 제거 → Display 팝오버 안에
+- [ ] Tweak Panel 내용 이관 (Shell / Render / Theme / Decoration)
+- [ ] My Shell savable preset
+
+### Phase 3A — 인라인 드래그 (Grid Editor 폐기)
+
+> BRAINSTORM-2026-04-21-book-ux-refinement.md 결정 3 — 안 A
+
+- [ ] **3A-1**: 세로 reorder (Plot BlockDragOverlay 재사용)
+- [ ] **3A-2**: WikiBlock col/span/row optional 필드 추가 (migration v81)
+- [ ] **3A-3**: Blank shell 12-col snap + grid overlay
+- [ ] **3A-4**: Newspaper shell 6-col drag
+- [ ] **3A-5**: Magazine shell spanColumns/dropcap
+- [ ] **3A-6**: Grid Editor mode 삭제 (코드 정리)
 
 ### Phase 4 — Newspaper + Book Shell + Flipbook render mode
 

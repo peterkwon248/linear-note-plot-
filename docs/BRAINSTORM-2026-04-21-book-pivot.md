@@ -168,7 +168,7 @@ type Block = {
 - `WikiArticle` → `Book` 타입 rename
 - `wiki-articles` slice → `books` slice
 - `noteType: "note" | "wiki"` → `"note" | "book"` (enum 값 변경)
-- Store migration v79 → v80: WikiArticle → Book 변환
+- Store migration v80 → v81: WikiArticle → Book 변환
   - `shell`: 기본값 `"wiki"` (기존 유지)
   - `renderMode`: `"scroll"` 고정
   - `theme`: `themeColor` → `theme.accentColor`로 이관, 나머지 defaults
@@ -188,7 +188,7 @@ type Block = {
 - 영어 UI면 "Book", 한국어면 "책" or "북"? → 사용자 결정 필요
 
 **PR 분할 제안**:
-- 1A: 타입 rename + slice rename + migration v80 (데이터)
+- 1A: 타입 rename + slice rename + migration v81 (데이터)
 - 1B: Activity Bar + URL + 사이드바 (UI chrome)
 - 1C: 에디터/렌더러 파일명 + 컴포넌트 참조 (콘텐츠 영역)
 
@@ -275,7 +275,7 @@ type Block = {
 - 대응: Phase 1을 **3 PR로 쪼개기** (타입 → chrome → 콘텐츠). 각 PR은 머지 가능한 단위
 - 자동화 가능한 grep rename 먼저, 수동 검토 나중
 
-### R2. Store migration v80
+### R2. Store migration v81
 - WikiArticle → Book 변환 시 **데이터 손실 0** 원칙
 - 기존 `WikiBlock[]` + `ColumnStructure layout` → 새 `Block[]` with cell
 - ColumnStructure의 컬럼 위치를 cell.col로 **정확하게** 변환해야 함 (1 cardless → col:1, span:12 / 2 cards → col:1, span:6 + col:7, span:6 etc)

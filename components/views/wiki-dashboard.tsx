@@ -110,7 +110,7 @@ export function WikiDashboard({
                   searchInputRef.current?.blur()
                 }
               }}
-              placeholder="Search wiki articles..."
+              placeholder="Search books..."
               className="h-9 w-full rounded-lg border border-border-subtle bg-secondary/30 pl-9 pr-3 text-note text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-colors"
             />
           </div>
@@ -260,7 +260,7 @@ export function WikiDashboard({
         {/* ── Wiki Articles (Assembly Model) ── */}
         {wikiArticles.length > 0 && (
           <div className="mt-6">
-            <SectionLabel>Wiki Articles</SectionLabel>
+            <SectionLabel>Books</SectionLabel>
             <div className="grid grid-cols-1 gap-2 min-[700px]:grid-cols-2">
               {wikiArticles.slice(0, 6).map((article) => (
                 <button

@@ -1346,7 +1346,7 @@ export function LinearSidebar() {
                       <span className="text-sidebar-foreground tabular-nums">{density}%</span>
                     </div>
                     <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Wiki Coverage</span>
+                      <span className="text-sidebar-muted">Book Coverage</span>
                       <span className="text-sidebar-foreground tabular-nums">{wikiPercent}%</span>
                     </div>
                   </div>

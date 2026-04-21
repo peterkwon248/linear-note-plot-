@@ -109,7 +109,7 @@ export function WikiAssemblyDialog({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter wiki article title..."
+            placeholder="Enter book title..."
             className="w-full rounded-md border border-border bg-secondary/30 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent"
           />
         </div>

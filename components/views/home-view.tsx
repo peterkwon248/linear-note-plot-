@@ -718,7 +718,7 @@ export function HomeView() {
               <p className="text-2xl font-semibold text-foreground">
                 {wikiArticles.length}
               </p>
-              <p className="text-2xs text-muted-foreground">Wiki Articles</p>
+              <p className="text-2xs text-muted-foreground">Books</p>
             </button>
 
             <button

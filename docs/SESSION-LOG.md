@@ -6,6 +6,98 @@
 
 ---
 
+## 2026-04-21 후반 (집, Book Pivot Phase 1A~2B-3b + UX refinement + Edit 토글)
+
+### 완료 (이번 세션만 — 하루 전체 2번째 블록)
+
+**Phase 1A — 타입/어댑터/셀렉터 인프라**
+- `lib/book/types.ts` + `lib/book/shells.ts` + `lib/book/adapter.ts` + `lib/book/selectors.ts`
+- WikiArticle ↔ Book on-the-fly 변환 (storage 변경 없음)
+- 14개 어댑터 테스트 + 전체 173/173 통과
+
+**Phase 1B — UI rename**
+- Activity Bar "Wiki" → "Book" (내부 id는 wiki 유지)
+- 사용자 visible "Wiki" strings 일괄 "Book" 교체 (views/sidebar/placeholders ~15 파일)
+- `/book` → `/wiki` redirect 라우트 추가
+- Phase 1C (state rename) **보류** — Phase 3+ 자연 cleanup
+
+**Phase 2A — Shell 렌더러 + /book-preview**
+- `docs/design-system/` zip v2 설치 (Next.js TSX 프로덕션 레퍼런스)
+- `components/book/` 생성 (shells 5 + editor + flipbook + book-editor + tweak-panel)
+- `/book-preview` 라우트 (탐색용)
+- 모든 5 shell + Flipbook viewer 동작
+
+**Phase 2B-1 — 실데이터 연결**
+- `BookWorkspace` (좌 리스트 / 우 BookEditor)
+- `app/(app)/layout.tsx`에서 WikiView → BookWorkspace로 교체
+- 5 shell 전부 `book` prop 받아 title+body 실데이터 렌더 (chrome은 샘플 유지)
+
+**Phase 2B-2 — 인라인 TipTap 에디터**
+- `components/book/book-inline-editor.tsx` (TipTap wiki tier 재사용, toolbar 없음)
+- `EditableParagraph` 컴포넌트 (IDB contentJson 로드 + debounced save)
+- 타이핑 → saveBlockBody + updateWikiBlock 자동 저장
+
+**Phase 2B-3a — 블록 추가**
+- `BookBlockSlot` 컴포넌트 (hover chrome wrapper)
+- 하단 `+ Add block` 버튼 + 8개 타입 피커 팝오버 (Text/Section/Pull Quote/Image/URL/Table/Infobox/TOC)
+- 섹션 자동 넘버링 복원 (`computeSectionNumbers` 재사용) — "1 / 2 / 2.1 / 3"
+- TOC 자동 갱신 (Section 블록 변화 감지)
+- 빈 TOC 안내 "No sections yet. Add a Section block to populate the TOC."
+
+**Phase 2B-3b — 블록 메뉴**
+- 좌측 ⠿ 드래그 핸들 + 블록 메뉴 (호버 fade-in)
+- Turn Into ▸ (서브메뉴 8 타입) / Duplicate / Delete (빨강)
+- `updateWikiBlock` / `addWikiBlock` / `removeWikiBlock` 연결
+
+**Edit/Done 토글 + 폴리싱**
+- BookWorkspace 우상단 Edit/Done 버튼 (기본 Read 모드)
+- Read 모드에선 chrome 전부 숨김, EditableParagraph → 정적 `<p>`
+- 빈 Book (0 blocks) → "Add first block" CTA (editing일 때만)
+- SAMPLE hatnote/infobox/footnote을 `!book` 조건으로 숨김 (실 Book 선택 시 샘플 노이즈 제거)
+
+### 브레인스토밍 & 큰 결정
+
+- **BRAINSTORM-2026-04-21-book-ux-refinement.md 작성** (세션 중반에 UX 재검토):
+  - 결정 1: Inline editor에 Plot 기존 위키 편집 UX (블록 사이 `+`, 드래그 핸들) 이식
+  - 결정 2: Shell 선택을 "Display 팝오버"로 이관 예정 (Notes Display 패턴)
+  - 결정 3: Grid Editor 모드 폐기, 인라인 드래그로 대체 (안 A)
+- **Phase 1C 보류 확정**: state rename은 Phase 3+ 자연 cleanup
+- **Read 기본 / Edit 토글**: Plot 원칙 "Don't compete for attention" 준수
+- **Shell별 데이터 연결 현황**: 5 shell 전부 title+body 실데이터, chrome (masthead/flag/cover/infobox)은 샘플 유지 (Phase 6까지)
+- **5 Non-negotiables** 준수 확인:
+  - Opacity hierarchy (0.55 드래그 핸들 etc)
+  - Spacing-based separation (borders 최소)
+  - No gradients / no emoji / no scale-on-hover
+  - Frozen type scale
+  - Transitions 160ms ease (BookBlockSlot fade-in)
+
+### 다음
+
+**Step 1 (권장)**: Phase 2B-3c — Section heading 인라인 편집 (현재 h2 제목 정적)
+**Step 2**: Phase 2B-3 확산 — Magazine/Newspaper/Book/Blank shell에 BookBlockSlot 적용
+**Step 3**: Phase 2C — Display 팝오버 이관
+
+상세: `docs/NEXT-ACTION.md`
+
+### Watch Out
+
+- `addWikiBlock`의 `afterBlockId` 매칭이 컬럼 레이아웃에서 때때로 순서 이상 (section 삽입이 top에 나타남) — 기존 Plot 버그, Phase 3A 이후 검토
+- `wikiArticles`는 배열 — `.find(a=>a.id===id)` 써야 함 (Record 아님)
+- Fast Refresh 자주 full reload — store slice 변경 시 정상, 무시
+- Preview screenshot 자주 timeout — DOM eval로 검증 진행 (30초 비디오 대신)
+- BookInlineEditor는 **toolbar 없음** 유지 (Book의 깔끔한 UX)
+
+### 머신
+집
+
+### 참고 문서
+
+- `docs/BRAINSTORM-2026-04-21-book-pivot.md` (Book Pivot 루트)
+- `docs/BRAINSTORM-2026-04-21-book-ux-refinement.md` (이번 세션 UX 재정렬)
+- `docs/design-system/ui_kits/plot-book/ARCHITECTURE.md` (4-layer)
+
+---
+
 ## 2026-04-21 (집, 🔴 **Book Pivot 대결정** — Wiki 시스템 전면 개편)
 
 ### 완료

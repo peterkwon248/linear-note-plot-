@@ -25,6 +25,8 @@ import { OntologyView } from "@/components/views/ontology-view"
 import { TemplatesView } from "@/components/views/templates-view"
 import { InsightsView } from "@/components/insights-view"
 import { WikiView } from "@/components/views/wiki-view"
+import dynamic from "next/dynamic"
+const BookWorkspace = dynamic(() => import("@/components/book/book-workspace").then((m) => m.BookWorkspace), { ssr: false })
 import { CalendarView } from "@/components/calendar-view"
 import { SearchView } from "@/components/views/search-view"
 import { GraphInsightsView } from "@/components/views/graph-insights-view"
@@ -248,7 +250,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
                 {(mountedViews.has("/wiki") || activeRoute === "/wiki") && (
                   <div className={activeRoute === "/wiki" ? "flex flex-1 overflow-hidden" : "hidden"}>
-                    <WikiView />
+                    <BookWorkspace />
                   </div>
                 )}
 

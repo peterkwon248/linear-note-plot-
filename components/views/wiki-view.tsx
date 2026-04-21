@@ -912,7 +912,7 @@ export function WikiView() {
     <div data-editor-scope="wiki" className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<IconWiki size={20} />}
-        title="Wiki"
+        title="Book"
         count={stats.total}
         showFilter={wikiViewMode !== "dashboard"}
         hasActiveFilters={wikiViewMode === "category" ? categoryFilters.length > 0 : wikiFilters.length > 0}
@@ -1077,7 +1077,7 @@ export function WikiView() {
                         {/* Articles */}
                         {importTargets.articles.length > 0 && (
                           <>
-                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Wiki Articles</p>
+                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Books</p>
                             {importTargets.articles.map((a) => (
                               <button
                                 key={a.id}
@@ -1283,7 +1283,7 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search wiki articles..."
+          placeholder="Search books..."
           className="w-full px-3.5 py-2.5 text-note bg-transparent border-b border-border text-foreground outline-none placeholder:text-muted-foreground/50"
         />
         <div className="max-h-[360px] overflow-y-auto py-1">

@@ -284,7 +284,7 @@ export function SidePanelDiscover() {
       {/* Related Wiki */}
       {result.relatedWiki.length > 0 && (
         <DiscoverSection
-          title="Related Wiki"
+          title="Related Book"
           icon={<BookOpen size={14} weight="regular" />}
           count={result.relatedWiki.length}
         >
