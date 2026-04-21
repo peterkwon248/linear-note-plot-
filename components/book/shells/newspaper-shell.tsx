@@ -1,21 +1,39 @@
 "use client"
 
-import type { Shell, ThemeConfig, Book } from "@/lib/book/types"
+import type { Shell, ThemeConfig, Book, Block } from "@/lib/book/types"
 import { SAMPLE_CONTENT } from "@/lib/book/shells"
+import { BookBlockSlot } from "../book-block-slot"
+import { usePlotStore } from "@/lib/store"
+import {
+  EditableParagraph,
+  EditableSectionHeading,
+  EmptyBookCTA,
+  useBlockEditHelpers,
+} from "../shared-editable"
 
 interface NewspaperShellProps {
   shell: Shell
   theme: ThemeConfig
   /** Lead headline/body swap to real book; side columns stay as sample. */
   book?: Book
+  /** Edit mode — inline editors + block chrome. Default false = read-only render. */
+  editing?: boolean
 }
 
-export function NewspaperShell({ shell, theme, book }: NewspaperShellProps) {
+export function NewspaperShell({ shell, theme, book, editing = false }: NewspaperShellProps) {
   const c = SAMPLE_CONTENT.newspaper
+  const wikiBlocks = usePlotStore((s) =>
+    book ? s.wikiArticles.find((a) => a.id === book.id)?.blocks : undefined,
+  )
   const realLeadHeadline = book?.title ?? c.lead.headline
-  const realLeadBody = book
-    ? book.blocks.filter((b) => b.type === "paragraph").map((b) => b.text ?? "")
-    : c.lead.body
+  const realLeadBlocks: Array<{ type: "h2" | "p"; text: string; block: Block | undefined }> = book
+    ? book.blocks.map((b) => ({
+        type: b.type === "heading" ? ("h2" as const) : ("p" as const),
+        text: b.text ?? "",
+        block: b as Block | undefined,
+      }))
+    : c.lead.body.map((p: string) => ({ type: "p" as const, text: p, block: undefined }))
+  const { buildInsertBelow, buildBlockActions } = useBlockEditHelpers(book, editing)
   const marginScale = theme.margins === "narrow" ? 0.65 : theme.margins === "wide" ? 1.5 : 1
   const pad = `${32 * marginScale}px ${40 * marginScale}px`
   const totalCols = shell.cols >= 3 ? shell.cols : 6
@@ -139,15 +157,69 @@ export function NewspaperShell({ shell, theme, book }: NewspaperShellProps) {
               hyphens: "auto",
             }}
           >
-            <p style={{ margin: "0 0 10px" }}>
-              <span style={{ fontWeight: 700, letterSpacing: "0.06em" }}>{c.lead.city}</span> {realLeadBody[0] ?? ""}
-            </p>
-            {realLeadBody.slice(1).map((p, i) => (
-              <p key={i} style={{ margin: "0 0 10px" }}>
-                {p}
-              </p>
-            ))}
-            <p style={{ fontStyle: "italic", color: "#555", margin: "6px 0 0" }}>Continued on Page A12 &rarr;</p>
+            {editing && book && book.blocks.length === 0 && <EmptyBookCTA bookId={book.id} />}
+            {realLeadBlocks.map((b, i) => {
+              const insertBelow = buildInsertBelow(b.block?.id)
+              const blockActions = buildBlockActions(b.block, wikiBlocks)
+              if (b.type === "h2") {
+                const h2Style: React.CSSProperties = {
+                  fontFamily: shell.displayFont,
+                  fontSize: 20,
+                  fontWeight: 800,
+                  margin: "10px 0 6px",
+                }
+                const sectionBody =
+                  editing && book && b.block ? (
+                    <EditableSectionHeading block={b.block} articleId={book.id} fallbackText={b.text} style={h2Style} />
+                  ) : (
+                    <h2 style={h2Style}>{b.text}</h2>
+                  )
+                return (
+                  <BookBlockSlot
+                    key={b.block?.id ?? i}
+                    onInsertBelow={insertBelow}
+                    onDelete={blockActions?.onDelete}
+                    onDuplicate={blockActions?.onDuplicate}
+                    onTurnInto={blockActions?.onTurnInto}
+                  >
+                    {sectionBody}
+                  </BookBlockSlot>
+                )
+              }
+              const isFirst = i === 0
+              if (editing && book && b.block) {
+                return (
+                  <BookBlockSlot
+                    key={b.block.id}
+                    onInsertBelow={insertBelow}
+                    onDelete={blockActions?.onDelete}
+                    onDuplicate={blockActions?.onDuplicate}
+                    onTurnInto={blockActions?.onTurnInto}
+                  >
+                    <EditableParagraph block={b.block} articleId={book.id} />
+                  </BookBlockSlot>
+                )
+              }
+              return (
+                <BookBlockSlot
+                  key={b.block?.id ?? i}
+                  onInsertBelow={insertBelow}
+                  onDelete={blockActions?.onDelete}
+                  onDuplicate={blockActions?.onDuplicate}
+                  onTurnInto={blockActions?.onTurnInto}
+                >
+                  <p style={{ margin: "0 0 10px" }}>
+                    {isFirst && !book && (
+                      <span style={{ fontWeight: 700, letterSpacing: "0.06em" }}>{c.lead.city} </span>
+                    )}
+                    {b.text}
+                  </p>
+                </BookBlockSlot>
+              )
+            })}
+            {!book && (
+              <p style={{ fontStyle: "italic", color: "#555", margin: "6px 0 0" }}>Continued on Page A12 &rarr;</p>
+            )}
           </div>
         </div>
 

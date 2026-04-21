@@ -2,34 +2,42 @@
 
 // Phase 2B-3 — BookBlockSlot: wraps each Book block with per-block chrome.
 //
-// - Left handle (⠿) on hover → opens block menu (Turn Into / Duplicate / Delete)
-// - Bottom hairline (hover) → "+ Add block" picker (8 types)
+// - Left handle (⠿) on hover → drag to reorder + click to open block menu (Turn Into / Duplicate / Delete)
+// - Bottom hairline (hover) → reuses wiki-editor's AddBlockButton so Book and Wiki share
+//   the same picker UX (Section / Subsection / Text / Note / Image / URL / Table / Infobox / TOC /
+//   Pull Quote / Callout / Blockquote / Toggle / Spacer).
 //
-// Chrome is invisible at rest, fades in on hover. No dashed borders,
-// no permanent `+/×` noise — follows Plot's "selected cell chrome" principle.
+// Chrome is invisible at rest, fades in on hover. No dashed borders.
 
 import { useState, useRef, useEffect } from "react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { AddBlockButton } from "@/components/wiki-editor/wiki-block-renderer"
 import type { WikiBlockType } from "@/lib/types"
 
-/** Block types shown in the insert picker. */
-const INSERT_OPTIONS: Array<{ type: WikiBlockType; label: string; hint?: string }> = [
-  { type: "text", label: "Text", hint: "Body paragraph" },
-  { type: "section", label: "Section", hint: "H2 heading" },
-  { type: "pull-quote", label: "Pull Quote", hint: "Oversized quote" },
-  { type: "image", label: "Image", hint: "Photo + caption" },
-  { type: "url", label: "URL", hint: "Link card" },
-  { type: "table", label: "Table", hint: "Grid data" },
-  { type: "infobox", label: "Infobox", hint: "Fact table" },
-  { type: "toc", label: "TOC", hint: "Table of contents" },
+/** Types supported by the in-place "Turn Into" submenu. */
+const TURN_INTO_OPTIONS: Array<{ type: WikiBlockType; label: string }> = [
+  { type: "text", label: "Text" },
+  { type: "section", label: "Section" },
+  { type: "pull-quote", label: "Pull Quote" },
+  { type: "image", label: "Image" },
+  { type: "url", label: "URL" },
+  { type: "table", label: "Table" },
+  { type: "infobox", label: "Infobox" },
+  { type: "toc", label: "TOC" },
 ]
 
 interface BookBlockSlotProps {
   children: React.ReactNode
-  onInsertBelow?: (type: WikiBlockType) => void
+  /** Inserts a new block after this slot. Signature matches AddBlockButton's onAdd. */
+  onInsertBelow?: (type: string, level?: number) => void
   onDelete?: () => void
   onDuplicate?: () => void
   /** Reserved for Phase 2B-3c — change block type in place. */
   onTurnInto?: (type: WikiBlockType) => void
+  /** When provided, the slot registers with a DndContext SortableContext so the ⠿ handle
+   * drags the block to a new position. Without an id, the slot renders statically. */
+  blockId?: string
 }
 
 export function BookBlockSlot({
@@ -38,43 +46,55 @@ export function BookBlockSlot({
   onDelete,
   onDuplicate,
   onTurnInto,
+  blockId,
 }: BookBlockSlotProps) {
   const [hovering, setHovering] = useState(false)
-  const [insertOpen, setInsertOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [turnIntoOpen, setTurnIntoOpen] = useState(false)
-  const insertRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Click-outside to close
+  // Sortable (no-op when blockId is absent — useSortable still works with undefined id fallback)
+  const sortable = useSortable({ id: blockId ?? "__no-drag__", disabled: !blockId })
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = sortable
+  const dragStyle: React.CSSProperties = {
+    position: "relative",
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : undefined,
+    zIndex: isDragging ? 5 : undefined,
+  }
+
+  // Click-outside to close the block menu (AddBlockButton handles its own popup)
   useEffect(() => {
-    if (!insertOpen && !menuOpen) return
+    if (!menuOpen) return
     const handler = (e: MouseEvent) => {
       const target = e.target as Node
-      if (insertOpen && !insertRef.current?.contains(target)) setInsertOpen(false)
-      if (menuOpen && !menuRef.current?.contains(target)) {
+      if (!menuRef.current?.contains(target)) {
         setMenuOpen(false)
         setTurnIntoOpen(false)
       }
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
-  }, [insertOpen, menuOpen])
+  }, [menuOpen])
 
-  const chromeVisible = hovering || insertOpen || menuOpen
+  const chromeVisible = hovering || menuOpen
 
   return (
     <div
+      ref={setNodeRef}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      style={{ position: "relative" }}
+      style={dragStyle}
+      {...attributes}
     >
       {/* Left drag handle + menu trigger */}
-      {(onDelete || onDuplicate || onTurnInto) && (
+      {(onDelete || onDuplicate || onTurnInto || blockId) && (
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          aria-label="Block menu"
+          aria-label="Block menu / drag handle"
           aria-expanded={menuOpen}
+          {...(blockId ? listeners : {})}
           style={{
             position: "absolute",
             left: -28,
@@ -88,11 +108,12 @@ export function BookBlockSlot({
             transition: "opacity 160ms ease",
             background: "transparent",
             border: "none",
-            cursor: "grab",
+            cursor: blockId ? "grab" : "pointer",
             fontFamily: "inherit",
             fontSize: 14,
             color: "var(--muted-foreground)",
             padding: 0,
+            touchAction: "none",
           }}
         >
           ⠿
@@ -146,7 +167,7 @@ export function BookBlockSlot({
                     minWidth: 200,
                   }}
                 >
-                  {INSERT_OPTIONS.map((opt) => (
+                  {TURN_INTO_OPTIONS.map((opt) => (
                     <button
                       key={opt.type}
                       role="menuitem"
@@ -204,85 +225,9 @@ export function BookBlockSlot({
 
       {children}
 
-      {/* Bottom hairline — Add Block */}
+      {/* Bottom hairline — reuses wiki-editor's AddBlockButton (same picker as Wiki) */}
       {onInsertBelow && (
-        <div ref={insertRef}>
-          <button
-            onClick={() => setInsertOpen((v) => !v)}
-            aria-label="Insert block below"
-            aria-expanded={insertOpen}
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: -8,
-              height: 16,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              opacity: chromeVisible ? 1 : 0,
-              transition: "opacity 160ms ease",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              padding: 0,
-            }}
-          >
-            <span style={{ flex: 1, height: 1, background: "var(--border-subtle)" }} />
-            <span
-              style={{
-                fontSize: 11,
-                color: "var(--muted-foreground)",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                padding: "0 4px",
-              }}
-            >
-              + Add block
-            </span>
-            <span style={{ flex: 1, height: 1, background: "var(--border-subtle)" }} />
-          </button>
-          {insertOpen && (
-            <div
-              role="menu"
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: "calc(100% + 8px)",
-                transform: "translateX(-50%)",
-                zIndex: 20,
-                background: "var(--popover)",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                boxShadow: "var(--shadow-lg)",
-                padding: 4,
-                minWidth: 220,
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {INSERT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.type}
-                  role="menuitem"
-                  onClick={() => {
-                    onInsertBelow(opt.type)
-                    setInsertOpen(false)
-                  }}
-                  style={menuItemStyle}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover-bg, rgba(0,0,0,0.04))")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  <span style={{ flex: 1, fontWeight: 500 }}>{opt.label}</span>
-                  {opt.hint && (
-                    <span style={{ fontSize: 11, color: "var(--muted-foreground)" }}>{opt.hint}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <AddBlockButton onAdd={(type, level) => onInsertBelow(type, level)} />
       )}
     </div>
   )

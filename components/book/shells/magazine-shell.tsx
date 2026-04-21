@@ -1,26 +1,41 @@
 "use client"
 
-import type { Shell, ThemeConfig, Book } from "@/lib/book/types"
+import type { Shell, ThemeConfig, Book, Block } from "@/lib/book/types"
 import { SAMPLE_CONTENT } from "@/lib/book/shells"
 import { ChapterDivider } from "./chapter-divider"
+import { BookBlockSlot } from "../book-block-slot"
+import { usePlotStore } from "@/lib/store"
+import {
+  EditableParagraph,
+  EditableSectionHeading,
+  EmptyBookCTA,
+  useBlockEditHelpers,
+} from "../shared-editable"
 
 interface MagazineShellProps {
   shell: Shell
   theme: ThemeConfig
   /** When provided, headline + body render from the real book. Masthead/nameplate/byline/hero stay as chrome. */
   book?: Book
+  /** Edit mode — inline editors + block chrome. Default false = read-only render. */
+  editing?: boolean
 }
 
-export function MagazineShell({ shell, theme, book }: MagazineShellProps) {
+export function MagazineShell({ shell, theme, book, editing = false }: MagazineShellProps) {
   const c = SAMPLE_CONTENT.magazine
+  const wikiBlocks = usePlotStore((s) =>
+    book ? s.wikiArticles.find((a) => a.id === book.id)?.blocks : undefined,
+  )
   const realHeadline = book?.title ?? c.headline
   const realBody = book
     ? book.blocks.map((b, idx) => ({
         // Give the first paragraph a drop cap, subsequent paragraphs plain.
         type: b.type === "heading" ? "h2" : idx === 0 && b.type === "paragraph" ? "dropcap-p" : "p",
         text: b.text ?? "",
+        block: b as Block | undefined,
       }))
-    : c.body
+    : c.body.map((b) => ({ ...b, block: undefined as Block | undefined }))
+  const { buildInsertBelow, buildBlockActions } = useBlockEditHelpers(book, editing)
   const marginScale = theme.margins === "narrow" ? 0.65 : theme.margins === "wide" ? 1.5 : 1
   const pad = `${48 * marginScale}px ${56 * marginScale}px`
   const bodyCols = shell.cols > 0 ? shell.cols : 2
@@ -179,12 +194,30 @@ export function MagazineShell({ shell, theme, book }: MagazineShellProps) {
           hyphens: "auto",
         }}
       >
+        {editing && book && book.blocks.length === 0 && <EmptyBookCTA bookId={book.id} />}
         {realBody.map((b, i) => {
+          const insertBelow = buildInsertBelow(b.block?.id)
+          const blockActions = buildBlockActions(b.block, wikiBlocks)
+
           if (b.type === "dropcap-p") {
+            // Edit mode: hand off to WikiTextEditor (drop cap only applies to read mode)
+            if (editing && book && b.block) {
+              return (
+                <BookBlockSlot
+                  key={b.block.id}
+                  onInsertBelow={insertBelow}
+                  onDelete={blockActions?.onDelete}
+                  onDuplicate={blockActions?.onDuplicate}
+                  onTurnInto={blockActions?.onTurnInto}
+                >
+                  <EditableParagraph block={b.block} articleId={book.id} />
+                </BookBlockSlot>
+              )
+            }
             const first = b.text[0]
             const rest = b.text.slice(1)
-            return (
-              <p key={i} style={{ margin: "0 0 14px", breakInside: "avoid-column" }}>
+            const content = (
+              <p style={{ margin: "0 0 14px", breakInside: "avoid-column" }}>
                 <span
                   style={{
                     fontFamily: shell.displayFont,
@@ -202,11 +235,24 @@ export function MagazineShell({ shell, theme, book }: MagazineShellProps) {
                 {rest}
               </p>
             )
+            return book && b.block ? (
+              <BookBlockSlot
+                key={b.block.id}
+                onInsertBelow={insertBelow}
+                onDelete={blockActions?.onDelete}
+                onDuplicate={blockActions?.onDuplicate}
+                onTurnInto={blockActions?.onTurnInto}
+              >
+                {content}
+              </BookBlockSlot>
+            ) : (
+              <div key={i}>{content}</div>
+            )
           }
           if (b.type === "pullquote")
             return (
               <div
-                key={i}
+                key={b.block?.id ?? i}
                 style={{
                   columnSpan: "all",
                   borderTop: `2px solid ${quoteColor}`,
@@ -225,9 +271,32 @@ export function MagazineShell({ shell, theme, book }: MagazineShellProps) {
                 &ldquo;{b.text}&rdquo;
               </div>
             )
-          if (b.type === "h2")
+          if (b.type === "h2") {
+            const h2Style: React.CSSProperties = {
+              fontFamily: shell.displayFont,
+              fontSize: 24,
+              fontWeight: 700,
+              margin: "14px 0 10px",
+            }
+            const sectionBody =
+              editing && book && b.block ? (
+                <EditableSectionHeading
+                  block={b.block}
+                  articleId={book.id}
+                  fallbackText={b.text}
+                  style={h2Style}
+                />
+              ) : (
+                <h2 style={h2Style}>{b.text}</h2>
+              )
             return (
-              <div key={i}>
+              <BookBlockSlot
+                key={b.block?.id ?? i}
+                onInsertBelow={insertBelow}
+                onDelete={blockActions?.onDelete}
+                onDuplicate={blockActions?.onDuplicate}
+                onTurnInto={blockActions?.onTurnInto}
+              >
                 {theme.chapterStyle !== "default" && (
                   <div style={{ columnSpan: "all", color: shell.fg }}>
                     <ChapterDivider
@@ -238,24 +307,36 @@ export function MagazineShell({ shell, theme, book }: MagazineShellProps) {
                     />
                   </div>
                 )}
-                <h2
-                  style={{
-                    fontFamily: shell.displayFont,
-                    fontSize: 24,
-                    fontWeight: 700,
-                    margin: "14px 0 10px",
-                  }}
+                {sectionBody}
+              </BookBlockSlot>
+            )
+          }
+          if (b.type === "p") {
+            if (editing && book && b.block) {
+              return (
+                <BookBlockSlot
+                  key={b.block.id}
+                  onInsertBelow={insertBelow}
+                  onDelete={blockActions?.onDelete}
+                  onDuplicate={blockActions?.onDuplicate}
+                  onTurnInto={blockActions?.onTurnInto}
                 >
-                  {b.text}
-                </h2>
-              </div>
-            )
-          if (b.type === "p")
+                  <EditableParagraph block={b.block} articleId={book.id} />
+                </BookBlockSlot>
+              )
+            }
             return (
-              <p key={i} style={{ margin: "0 0 14px" }}>
-                {b.text}
-              </p>
+              <BookBlockSlot
+                key={b.block?.id ?? i}
+                onInsertBelow={insertBelow}
+                onDelete={blockActions?.onDelete}
+                onDuplicate={blockActions?.onDuplicate}
+                onTurnInto={blockActions?.onTurnInto}
+              >
+                <p style={{ margin: "0 0 14px" }}>{b.text}</p>
+              </BookBlockSlot>
             )
+          }
           return null
         })}
       </div>

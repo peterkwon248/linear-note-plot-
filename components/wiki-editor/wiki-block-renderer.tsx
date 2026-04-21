@@ -785,7 +785,7 @@ function ReadOnlyBlock({ content, footnoteStartOffset = 0 }: { content: Record<s
 }
 
 /** Lazy-mounted TipTap editor for wiki TextBlock (wiki tier = base extensions only) */
-function WikiTextEditor({
+export function WikiTextEditor({
   content,
   onChange,
   style,

@@ -3,17 +3,20 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
-## 🔴 2026-04-21 Book Pivot — **구현 진행 중** (Phase 1A~2B-3b 완료)
+## 🔴 2026-04-21 Book Pivot — **구현 진행 중** (Phase 2B-3 확산 + 2C + 3A-1 Wiki dnd 완료)
 
 **Wiki 시스템 전면 개편**. 4-layer 아키텍처 + 5 Shell + Flipbook render mode.
 진실의 원천: [`BRAINSTORM-2026-04-21-book-pivot.md`](./BRAINSTORM-2026-04-21-book-pivot.md) + [`BRAINSTORM-2026-04-21-book-ux-refinement.md`](./BRAINSTORM-2026-04-21-book-ux-refinement.md)
 
 ### `/wiki` 현재 동작 (세션 마감 기준)
-- Activity Bar "Book" 클릭 → BookWorkspace 렌더
-- 좌: 본인 실제 위키 리스트 / 우: BookEditor (5 Shell 전환 + Edit/Done 토글)
-- Read 모드 기본 (chrome 없음 깨끗) / Edit 모드 클릭 시 블록 편집
-- Edit 모드: hover ⠿ 메뉴 (Turn Into/Duplicate/Delete) + `+ Add block` (8 타입) + TipTap 인라인 타이핑 + 섹션 자동 넘버링 + TOC 자동 갱신 + 빈 Book "Add first block" CTA
-- 실 Book 선택 시 SAMPLE hatnote/infobox/footnote 숨김 (Phase 6에서 실데이터 이관)
+- **ViewHeader** 상단: `📚 <title> <count>` 좌측, 우측 `Edit/Done` + Display + SidePanel + SplitView 아이콘 (Notes 패턴 동일)
+- **Display 팝오버**: Shell / Render mode / Typography / Margins / Columns / Chapter breaks / Background / Card border / Ink colors / Decoration 10 섹션
+- **Split View**: 2번째 BookWorkspace 독립 렌더 + secondary space dropdown
+- **SmartSidePanel**: sidePanelContext로 Book 메타 (Wiki Article 탭 Outline/Dates/Properties)
+- **Edit 모드**: 섹션 헤딩 클릭→인라인 편집 / 텍스트 블록은 **WikiTextEditor** (FixedToolbar 31 버튼 + 슬래시 커맨드 + 위키링크 + 멘션 + 각주)
+- **Wiki shell 전용**: Infobox/TOC/Pull Quote 등 `WikiBlockRenderer` fallback으로 실제 chrome 렌더 + 블록 `⠿` 드래그 reorder
+- **AddBlockButton** (위키 패턴): 13 옵션 — Structure(Section/Text/Note/Image/URL/Table/Infobox/TOC/Pull Quote) + Content(Callout/Blockquote/Toggle/Spacer)
+- 실 Book 선택 시 SAMPLE hatnote/footnote 숨김 (Phase 6에서 실데이터 이관)
 
 **핵심**:
 - **"Wiki" → "Book" 전면 rename** (Activity Bar, 코드 타입, 데이터 모델, 사용자 UI)
@@ -125,15 +128,15 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 
 ## Completed Features (최근 5개, 전체는 docs/MEMORY.md 참조)
 
-1. **Phase 3.1-A/B + Page Identity (PR pending, 2026-04-17)**: Article themeColor 배경 tint (5%) + WikiTitle paint-bucket picker → Title/Body 일체감. 공통 `block-menu.tsx` primitives + 5개 블록 ⋯ 메뉴 마이그레이션. `WikiBlock.width`(narrow/default/wide/full/px) / `density`(compact/normal/loose) / `fontSize` 공통 속성 + Infobox/TOC에 적용. Card 용어 통일(UI only). Asymmetric 프리셋 mini bar + cardCount 그룹핑. 1-card palette/⋯ 노출 fix. SectionNumbers Context (column-group 중첩 번호). addWikiBlock afterBlockId 위치 fix (leaf `loc.index+1`). Column-group unwrap 2곳 fix. Seed 리셋 (Inbox/Capture/Permanent 3노트 + mini 위키 2). Migration 없음 (전부 optional). `BRAINSTORM-2026-04-17-page-identity.md` Tier 시스템.
+1. **Book Pivot Phase 2B-3 확산 + 2C + 3A-1 (2026-04-21 후반)**: 기존 Wiki PR의 컴포넌트 재사용 전면 — `WikiTextEditor` export + BookInlineEditor 폐기 (FixedToolbar 31버튼 + 슬래시/위키링크/멘션/각주 그대로) / `WikiBlockRenderer` fallback으로 Infobox/TOC/Pull Quote 등 실제 chrome 렌더 / `AddBlockButton` 재사용 (Structure 9 + Content 4 = 13 옵션). 공통 `shared-editable.tsx` 추출(EditableParagraph/SectionHeading/EmptyCTA + `useBlockEditHelpers` — `handleAddBlock` 타입 dispatch 내재화). Phase 2C: 상단 bar 대청소 + `ViewHeader`(Notes 패턴) + `BookDisplayPanel` 300px 팝오버 10 섹션 + Split View(secondary-panel /wiki → BookWorkspace) + `SmartSidePanel` 통합. Phase 3A-1: `BookDndProvider`(DndContext + SortableContext) + Wiki shell 블록 드래그 reorder(`moveWikiBlock`). P0 버그 수정: EditableParagraph가 IDB `content` 활용 (partialize가 block.text 스트립). Store migration 없음 (전부 런타임 코드).
 
-2. **Phase 2-2-C — 메타 → 블록 통합 (PR #208, 2026-04-15)**: `WikiBlockType`에 `"infobox"`, `"toc"` 추가. WikiInfoboxBlock/WikiTocBlock wrapper 컴포넌트 신설. `WikiArticle.infobox`/`infoboxHeaderColor`/`infoboxColumnPath`/`tocStyle` scalar 필드 전부 삭제. `ColumnMetaPositionMenu` 삭제. Migration v78+v79. Store version 77 → 79.
+2. **Phase 3.1-A/B + Page Identity (PR pending, 2026-04-17)**: Article themeColor 배경 tint (5%) + WikiTitle paint-bucket picker → Title/Body 일체감. 공통 `block-menu.tsx` primitives + 5개 블록 ⋯ 메뉴 마이그레이션. `WikiBlock.width`(narrow/default/wide/full/px) / `density`(compact/normal/loose) / `fontSize` 공통 속성 + Infobox/TOC에 적용. Migration 없음.
 
-3. **Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼 (PR #208)**: `splitLeafIntoColumns` 액션. `LeafDroppableCell` 빈 상태에 AddBlockButton + Split 2/3 버튼. CSS Grid nested 브랜치에도 hover `+`/`X` 버튼. `handleAddBlockToColumn` 훅.
+3. **Phase 2-2-C — 메타 → 블록 통합 (PR #208, 2026-04-15)**: `WikiBlockType`에 `"infobox"`, `"toc"` 추가. WikiInfoboxBlock/WikiTocBlock wrapper 컴포넌트 신설. scalar 필드 전부 삭제. Migration v78+v79.
 
-4. **Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼 (PR #205)**: 최상위 컬럼에 사이/끝 `+` + 각 컬럼 `X` 버튼. `addColumnAfter` / `removeColumn` 액션 (6 컬럼 cap).
+4. **Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼 (PR #208)**: `splitLeafIntoColumns` 액션. `LeafDroppableCell` 빈 상태에 AddBlockButton + Split 2/3 버튼. CSS Grid nested 브랜치에도 hover `+`/`X` 버튼.
 
-5. **Phase 2-2-B-2 — 블록 컬럼 간 드래그 (PR #204)**: moveBlockToColumn 액션 + syncLayoutFromAssignments 헬퍼. LeafDroppableCell (편집 모드, useDroppable id `column-<pathKey>`).
+5. **Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼 (PR #205)**: 최상위 컬럼에 사이/끝 `+` + 각 컬럼 `X` 버튼. `addColumnAfter` / `removeColumn` 액션 (6 컬럼 cap).
 
 ## Two Axes — Core Design Philosophy
 

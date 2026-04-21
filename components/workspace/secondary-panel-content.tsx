@@ -29,7 +29,7 @@ import type { ActivitySpace } from "@/lib/types"
 const WikiArticleRenderer = lazy(() => import("@/components/wiki-editor/wiki-article-renderer").then(m => ({ default: m.WikiArticleRenderer })))
 const NotesTableView = lazy(() => import("@/components/notes-table-view").then(m => ({ default: m.NotesTableView })))
 const HomeView = lazy(() => import("@/components/views/home-view").then(m => ({ default: m.HomeView })))
-const WikiView = lazy(() => import("@/components/views/wiki-view").then(m => ({ default: m.WikiView })))
+const BookWorkspace = lazy(() => import("@/components/book/book-workspace").then(m => ({ default: m.BookWorkspace })))
 const CalendarView = lazy(() => import("@/components/calendar-view").then(m => ({ default: m.CalendarView })))
 const OntologyView = lazy(() => import("@/components/views/ontology-view").then(m => ({ default: m.OntologyView })))
 const LibraryView = lazy(() => import("@/components/views/library-view").then(m => ({ default: m.LibraryView })))
@@ -345,7 +345,7 @@ function SecondaryViewRouter({ route }: { route: string }) {
     if (TABLE_VIEW_ROUTES.includes(route)) return <NotesTableView />
     switch (route) {
       case "/home": return <HomeView />
-      case "/wiki": return <WikiView />
+      case "/wiki": return <BookWorkspace />
       case "/calendar": return <CalendarView title="Calendar" />
       case "/ontology":
       case "/graph-insights": return <OntologyView />
