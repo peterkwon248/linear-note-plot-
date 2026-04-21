@@ -1,15 +1,19 @@
 "use client"
 
-import { useState } from "react"
 import type { Shell, ThemeConfig, Book, Block } from "@/lib/book/types"
 import { SAMPLE_CONTENT } from "@/lib/book/shells"
 import { ChapterDivider } from "./chapter-divider"
-import { BookInlineEditor } from "../book-inline-editor"
 import { BookBlockSlot } from "../book-block-slot"
-import { useWikiBlockContentJson } from "@/hooks/use-wiki-block-content"
-import { saveBlockBody } from "@/lib/wiki-block-body-store"
+import { BookDndProvider } from "../book-dnd-provider"
 import { usePlotStore } from "@/lib/store"
 import { computeSectionNumbers } from "@/lib/wiki-block-utils"
+import {
+  EditableParagraph,
+  EditableSectionHeading,
+  EmptyBookCTA,
+  useBlockEditHelpers,
+} from "../shared-editable"
+import { WikiBlockRenderer } from "@/components/wiki-editor/wiki-block-renderer"
 import type { WikiBlock } from "@/lib/types"
 
 interface WikiShellProps {
@@ -19,137 +23,6 @@ interface WikiShellProps {
   book?: Book
   /** Edit mode — show inline editors + block chrome (add/delete/menu). Default false = read-only render. */
   editing?: boolean
-}
-
-/**
- * EditableParagraph — loads contentJson from IDB (lazy), renders BookInlineEditor.
- * Saves on debounced change back to wikiArticles slice + IDB.
- */
-function EditableParagraph({ block, articleId }: { block: Block; articleId: string }) {
-  const inMemoryJson = block.props?.contentJson as Record<string, unknown> | undefined
-  const { contentJson, loading } = useWikiBlockContentJson(block.id, block.text, inMemoryJson)
-  const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
-
-  if (loading) {
-    return (
-      <p style={{ marginBottom: 14, opacity: 0.4 }}>Loading…</p>
-    )
-  }
-
-  return (
-    <BookInlineEditor
-      initialContent={contentJson ?? undefined}
-      initialText={block.text}
-      placeholder="Write something…"
-      style={{ marginBottom: 14 }}
-      onChange={(json, plainText) => {
-        // Persist to IDB (body store)
-        saveBlockBody({ id: block.id, content: plainText, contentJson: json })
-        // Persist in-memory wiki block metadata
-        updateWikiBlock(articleId, block.id, { content: plainText, contentJson: json })
-      }}
-    />
-  )
-}
-
-/**
- * EmptyBookCTA — shown when a real Book has 0 blocks. Provides a picker
- * to insert the first block (Text / Section / etc).
- */
-function EmptyBookCTA({ bookId }: { bookId: string }) {
-  const [pickerOpen, setPickerOpen] = useState(false)
-  const OPTIONS: Array<{ type: WikiBlock["type"]; label: string }> = [
-    { type: "text", label: "Text" },
-    { type: "section", label: "Section" },
-    { type: "pull-quote", label: "Pull Quote" },
-    { type: "image", label: "Image" },
-    { type: "url", label: "URL" },
-    { type: "table", label: "Table" },
-    { type: "infobox", label: "Infobox" },
-    { type: "toc", label: "TOC" },
-  ]
-  const insert = (type: WikiBlock["type"]) => {
-    const defaults: Partial<WikiBlock> =
-      type === "section"
-        ? { title: "New section", level: 2 }
-        : type === "pull-quote"
-          ? { quoteText: "" }
-          : type === "image"
-            ? { caption: "" }
-            : type === "url"
-              ? { url: "", urlTitle: "" }
-              : type === "table"
-                ? { tableHeaders: ["Col 1", "Col 2"], tableRows: [["", ""]] }
-                : type === "infobox"
-                  ? { fields: [] }
-                  : type === "toc"
-                    ? { tocCollapsed: false }
-                    : { content: "", contentJson: undefined }
-    usePlotStore.getState().addWikiBlock(bookId, { type, ...defaults })
-    setPickerOpen(false)
-  }
-  return (
-    <div style={{ position: "relative", padding: "32px 0", textAlign: "center" }}>
-      <button
-        onClick={() => setPickerOpen((v) => !v)}
-        style={{
-          padding: "10px 20px",
-          border: "1px dashed var(--border)",
-          borderRadius: 8,
-          background: "transparent",
-          color: "var(--muted-foreground)",
-          fontSize: 13,
-          fontFamily: "inherit",
-          cursor: "pointer",
-        }}
-      >
-        + Add first block
-      </button>
-      {pickerOpen && (
-        <div
-          role="menu"
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "calc(100% + 4px)",
-            transform: "translateX(-50%)",
-            zIndex: 20,
-            background: "var(--popover)",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            boxShadow: "var(--shadow-lg)",
-            padding: 4,
-            minWidth: 200,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {OPTIONS.map((opt) => (
-            <button
-              key={opt.type}
-              role="menuitem"
-              onClick={() => insert(opt.type)}
-              style={{
-                textAlign: "left",
-                padding: "8px 12px",
-                border: "none",
-                background: "transparent",
-                borderRadius: 6,
-                cursor: "pointer",
-                fontSize: 13,
-                fontFamily: "inherit",
-                color: "var(--foreground)",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover-bg, rgba(0,0,0,0.04))")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
 }
 
 export function WikiShell({ shell, theme, book, editing = false }: WikiShellProps) {
@@ -162,10 +35,14 @@ export function WikiShell({ shell, theme, book, editing = false }: WikiShellProp
   const realTitle = book?.title ?? c.title
   const realBody =
     book?.blocks.map((b) => ({
-      type: b.type === "heading" ? "h2" : b.type === "paragraph" ? "p" : "p",
+      // Preserve original Book Block type; only collapse heading→h2 and paragraph→p for
+      // the inline editable paths. All other types (infobox/toc/image/url/table/pullquote)
+      // keep their original type and fall through to WikiBlockRenderer in the render loop.
+      type: b.type === "heading" ? "h2" : b.type === "paragraph" ? "p" : b.type,
       text: b.text ?? "",
       block: b,
     })) ?? c.body.map((b) => ({ ...b, block: undefined as Block | undefined }))
+  const { buildInsertBelow, buildBlockActions } = useBlockEditHelpers(book, editing)
 
   // Auto-derived TOC from section blocks (replaces hardcoded c.toc when a book is loaded).
   const realToc: Array<{ n: string; t: string }> = wikiBlocks
@@ -329,146 +206,129 @@ export function WikiShell({ shell, theme, book, editing = false }: WikiShellProp
       </div>
 
       {/* Body (cols override) */}
-      <div
-        style={{
-          fontSize: 15.5,
-          lineHeight: 1.7,
-          columnCount: shell.cols > 1 ? shell.cols : 1,
-          columnGap: 28,
-        }}
+      <BookDndProvider
+        articleId={book?.id}
+        items={book ? book.blocks.map((b) => b.id) : []}
+        enabled={!!(editing && book)}
       >
-        {editing && book && book.blocks.length === 0 && <EmptyBookCTA bookId={book.id} />}
-        {(() => {
-          let hc = 0
-          return realBody.map((b, i) => {
-            const afterId = b.block?.id
-            const insertBelow =
-              editing && book && afterId
-                ? (type: import("@/lib/types").WikiBlockType) => {
-                    // Insert block of the user-chosen type after this one.
-                    const defaults: Partial<import("@/lib/types").WikiBlock> =
-                      type === "section"
-                        ? { title: "New section", level: 2 }
-                        : type === "pull-quote"
-                          ? { quoteText: "" }
-                          : type === "image"
-                            ? { caption: "" }
-                            : type === "url"
-                              ? { url: "", urlTitle: "" }
-                              : type === "table"
-                                ? { tableHeaders: ["Col 1", "Col 2"], tableRows: [["", ""]] }
-                                : type === "infobox"
-                                  ? { fields: [] }
-                                  : type === "toc"
-                                    ? { tocCollapsed: false }
-                                    : { content: "", contentJson: undefined }
-                    usePlotStore.getState().addWikiBlock(
-                      book.id,
-                      { type, ...defaults },
-                      afterId,
-                    )
-                  }
-                : undefined
+        <div
+          style={{
+            fontSize: 15.5,
+            lineHeight: 1.7,
+            columnCount: shell.cols > 1 ? shell.cols : 1,
+            columnGap: 28,
+          }}
+        >
+          {editing && book && book.blocks.length === 0 && <EmptyBookCTA bookId={book.id} />}
+          {(() => {
+            let hc = 0
+            return realBody.map((b, i) => {
+              const insertBelow = buildInsertBelow(b.block?.id)
+              const blockActions = buildBlockActions(b.block, wikiBlocks)
+              const slotProps = {
+                blockId: editing && book && b.block ? b.block.id : undefined,
+                onInsertBelow: insertBelow,
+                onDelete: blockActions?.onDelete,
+                onDuplicate: blockActions?.onDuplicate,
+                onTurnInto: blockActions?.onTurnInto,
+              }
 
-            // Block-menu actions (Delete / Duplicate / Turn Into) — only when editing.
-            const blockActions =
-              editing && book && b.block
-                ? {
-                    onDelete: () => usePlotStore.getState().removeWikiBlock(book.id, b.block!.id),
-                    onDuplicate: () => {
-                      const wb = wikiBlocks?.find((w) => w.id === b.block!.id)
-                      if (!wb) return
-                      const { id: _id, ...rest } = wb
-                      usePlotStore.getState().addWikiBlock(book.id, rest, b.block!.id)
-                    },
-                    onTurnInto: (type: import("@/lib/types").WikiBlockType) => {
-                      usePlotStore.getState().updateWikiBlock(book.id, b.block!.id, { type })
-                    },
-                  }
-                : undefined
-
-            if (b.type === "lead")
-              return (
-                <BookBlockSlot
-                  key={b.block?.id ?? i}
-                  onInsertBelow={insertBelow}
-                  onDelete={blockActions?.onDelete}
-                  onDuplicate={blockActions?.onDuplicate}
-                  onTurnInto={blockActions?.onTurnInto}
-                >
-                  <p style={{ marginBottom: 16 }}>{b.text}</p>
-                </BookBlockSlot>
-              )
-            if (b.type === "h2") {
-              hc += 1
-              return (
-                <BookBlockSlot
-                  key={b.block?.id ?? i}
-                  onInsertBelow={insertBelow}
-                  onDelete={blockActions?.onDelete}
-                  onDuplicate={blockActions?.onDuplicate}
-                  onTurnInto={blockActions?.onTurnInto}
-                >
-                  {theme.chapterStyle !== "default" && hc > 1 && (
-                    <div style={{ color: shell.fg }}>
-                      <ChapterDivider
-                        style={theme.chapterStyle}
-                        displayFont={shell.displayFont}
-                        idx={hc}
-                        label={b.text}
-                      />
-                    </div>
-                  )}
-                  <h2
-                    style={{
-                      fontSize: 22,
-                      fontWeight: 600,
-                      letterSpacing: "-0.01em",
-                      borderBottom: "1px solid var(--border-subtle)",
-                      paddingBottom: 6,
-                      marginTop: 28,
-                      marginBottom: 12,
-                      breakInside: "avoid",
-                    }}
-                  >
-                    {b.block && sectionNumbers?.get(b.block.id) && (
-                      <span style={{ color: "var(--muted-foreground)", marginRight: 8, fontWeight: 400 }}>
-                        {sectionNumbers.get(b.block.id)}
-                      </span>
-                    )}
-                    {b.text}
-                  </h2>
-                </BookBlockSlot>
-              )
-            }
-            if (b.type === "p") {
-              if (book && b.block) {
+              if (b.type === "lead")
                 return (
-                  <BookBlockSlot
-                    key={b.block.id}
-                    onInsertBelow={insertBelow}
-                    onDelete={blockActions?.onDelete}
-                    onDuplicate={blockActions?.onDuplicate}
-                    onTurnInto={blockActions?.onTurnInto}
-                  >
-                    {editing ? (
-                      <EditableParagraph block={b.block} articleId={book.id} />
+                  <BookBlockSlot key={b.block?.id ?? i} {...slotProps}>
+                    <p style={{ marginBottom: 16 }}>{b.text}</p>
+                  </BookBlockSlot>
+                )
+              if (b.type === "h2") {
+                hc += 1
+                const h2Style: React.CSSProperties = {
+                  fontSize: 22,
+                  fontWeight: 600,
+                  letterSpacing: "-0.01em",
+                  borderBottom: "1px solid var(--border-subtle)",
+                  paddingBottom: 6,
+                  marginTop: 28,
+                  marginBottom: 12,
+                  breakInside: "avoid",
+                }
+                return (
+                  <BookBlockSlot key={b.block?.id ?? i} {...slotProps}>
+                    {theme.chapterStyle !== "default" && hc > 1 && (
+                      <div style={{ color: shell.fg }}>
+                        <ChapterDivider
+                          style={theme.chapterStyle}
+                          displayFont={shell.displayFont}
+                          idx={hc}
+                          label={b.text}
+                        />
+                      </div>
+                    )}
+                    {editing && book && b.block ? (
+                      <EditableSectionHeading
+                        block={b.block}
+                        articleId={book.id}
+                        sectionNumber={sectionNumbers?.get(b.block.id)}
+                        fallbackText={b.text}
+                        style={h2Style}
+                      />
                     ) : (
-                      <p style={{ marginBottom: 14 }}>{b.text}</p>
+                      <h2 style={h2Style}>
+                        {b.block && sectionNumbers?.get(b.block.id) && (
+                          <span style={{ color: "var(--muted-foreground)", marginRight: 8, fontWeight: 400 }}>
+                            {sectionNumbers.get(b.block.id)}
+                          </span>
+                        )}
+                        {b.text}
+                      </h2>
                     )}
                   </BookBlockSlot>
                 )
               }
-              return (
-                <BookBlockSlot key={b.block?.id ?? i} onInsertBelow={insertBelow} onDelete={blockActions?.onDelete} onDuplicate={blockActions?.onDuplicate} onTurnInto={blockActions?.onTurnInto}>
-                  <p style={{ marginBottom: 14 }}>{b.text}</p>
-                </BookBlockSlot>
-              )
-            }
-            return null
-          })
-        })()}
-      </div>
+              if (b.type === "p") {
+                if (book && b.block) {
+                  return (
+                    <BookBlockSlot key={b.block.id} {...slotProps}>
+                      {editing ? (
+                        <EditableParagraph block={b.block} articleId={book.id} />
+                      ) : (
+                        <p style={{ marginBottom: 14 }}>{b.text}</p>
+                      )}
+                    </BookBlockSlot>
+                  )
+                }
+                return (
+                  <BookBlockSlot key={b.block?.id ?? i} {...slotProps}>
+                    <p style={{ marginBottom: 14 }}>{b.text}</p>
+                  </BookBlockSlot>
+                )
+              }
+              // Fallback for all remaining types (infobox / toc / pull-quote / image / url / table / note-ref / column-group)
+              // — delegate to the full WikiBlockRenderer so each type renders with its real chrome.
+              if (book && b.block) {
+                const wb = wikiBlocks?.find((w) => w.id === b.block!.id)
+                if (wb) {
+                  return (
+                    <BookBlockSlot key={wb.id} {...slotProps}>
+                      <WikiBlockRenderer
+                        block={wb}
+                        articleId={book.id}
+                        editable={editing}
+                        onUpdate={
+                          editing
+                            ? (patch) => usePlotStore.getState().updateWikiBlock(book.id, wb.id, patch)
+                            : undefined
+                        }
+                        onDelete={blockActions?.onDelete}
+                      />
+                    </BookBlockSlot>
+                  )
+                }
+              }
+              return null
+            })
+          })()}
+        </div>
+      </BookDndProvider>
 
       {/* Footnotes — sample only (Phase 6 for real) */}
       {!book && (

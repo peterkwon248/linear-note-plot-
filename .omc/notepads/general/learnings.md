@@ -85,3 +85,32 @@
 - 철저함 중시 = 데이터 모델 완전 정의 후 렌더러 (사용자 선택)
 - 빠른 피드백 = 최소 렌더러 포함해서 시각적 확인
 - 둘 다 장단 있음. 사용자 성향 존중
+
+## 2026-04-21 후반 — Book Pivot 대형 리팩토링
+
+**persist partialize의 content stripping 함정**
+- Zustand `persist` `partialize`가 `wikiArticles.blocks[i].content`를 `""` 로 스트립
+- hydrate 후 runtime memory의 `article.blocks[i].content = ""`
+- 실 content는 `plot-wiki-block-bodies` IDB에서 **`getBlockBody` 로 lazy load**
+- **교훈**: 훅(`useWikiBlockContentJson`)이 반환하는 `content` 필드를 반드시 destructure해서 사용해야 함. `block.text`만 보면 빈 값
+- 비슷한 버그를 다른 곳에서도 찾아봐야 할 수 있음 (`wb.content` fallback을 `block.text`에서만 쓰면 같은 증상)
+
+**기존 컴포넌트 export 패턴**
+- `WikiBlockRenderer` (wiki-block-renderer.tsx:89) — 모든 wiki block type 지원 switch문 내장
+- `WikiTextEditor` (wiki-block-renderer.tsx:788, 내가 export 추가) — FixedToolbar 31버튼 포함 TipTap wiki tier 에디터
+- `AddBlockButton` (wiki-block-renderer.tsx:1854) — `onAdd(type, level?)` / portal popup / 13 옵션 (Structure 9 + Content 4)
+- **교훈**: 위키 쪽 기존 컴포넌트가 대부분 export되어 있음. Book에서 재사용이 정답. `Grep "^export function"` 로 먼저 확인
+
+**dnd-kit activationConstraint.distance**
+- `PointerSensor({ activationConstraint: { distance: 5 } })` → 5px 이하 pointer 이동은 click, 이상은 drag
+- Book 드래그 핸들(⠿ 버튼)이 클릭 메뉴 + 드래그 reorder 둘 다 처리할 때 필수
+- `touchAction: 'none'` 도 drag handle에 필요 (터치 디바이스 스크롤 방지)
+
+**usePane 컨텍스트 기본값**
+- `PaneContext = createContext<PaneId>('primary')` → wrapping 없어도 안전하게 `'primary'` 반환
+- BookWorkspace가 secondary pane에 들어갈 때도 `SecondaryPanelContent`의 PaneProvider가 자동 처리
+
+**Next.js 16 webpack dev vs Turbopack build**
+- webpack dev는 `registry.ts:63` RemixiconComponentType 통과
+- Turbopack build는 실패
+- 이번 세션은 webpack build 사용 (`npx next dev --webpack`) → clean

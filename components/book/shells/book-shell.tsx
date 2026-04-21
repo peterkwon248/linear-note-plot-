@@ -1,7 +1,15 @@
 "use client"
 
-import type { Shell, ThemeConfig, Book } from "@/lib/book/types"
+import type { Shell, ThemeConfig, Book, Block } from "@/lib/book/types"
 import { SAMPLE_CONTENT } from "@/lib/book/shells"
+import { BookBlockSlot } from "../book-block-slot"
+import { usePlotStore } from "@/lib/store"
+import {
+  EditableParagraph,
+  EditableSectionHeading,
+  EmptyBookCTA,
+  useBlockEditHelpers,
+} from "../shared-editable"
 
 interface BookShellProps {
   shell: Shell
@@ -10,18 +18,34 @@ interface BookShellProps {
   setShowCover: (show: boolean) => void
   /** Cover title + chapter body swap to real book; rest (publisher/subtitle/author) stays sample. */
   book?: Book
+  /** Edit mode — inline editors + block chrome. Default false = read-only render. */
+  editing?: boolean
 }
 
-export function BookShell({ shell, theme, showCover, setShowCover, book }: BookShellProps) {
+export function BookShell({ shell, theme, showCover, setShowCover, book, editing = false }: BookShellProps) {
   const c = SAMPLE_CONTENT.book
+  const wikiBlocks = usePlotStore((s) =>
+    book ? s.wikiArticles.find((a) => a.id === book.id)?.blocks : undefined,
+  )
   const realCoverTitle = book?.title ?? c.cover.title
   const realChapterTitle = book?.title ?? c.chapterTitle
-  const realBody = book
+  const realBody: Array<{ type: "dropcap-p" | "p" | "h2"; text: string; block: Block | undefined }> = book
     ? book.blocks.map((b, idx) => ({
-        type: idx === 0 && b.type === "paragraph" ? "dropcap-p" : "p",
+        type:
+          b.type === "heading"
+            ? ("h2" as const)
+            : idx === 0 && b.type === "paragraph"
+              ? ("dropcap-p" as const)
+              : ("p" as const),
         text: b.text ?? "",
+        block: b as Block | undefined,
       }))
-    : c.body
+    : c.body.map((b) => ({
+        type: b.type as "dropcap-p" | "p" | "h2",
+        text: b.text,
+        block: undefined as Block | undefined,
+      }))
+  const { buildInsertBelow, buildBlockActions } = useBlockEditHelpers(book, editing)
   const marginScale = theme.margins === "narrow" ? 0.65 : theme.margins === "wide" ? 1.5 : 1
   const accentColor = theme.accentColor || "#5e6ad2"
 
@@ -302,35 +326,80 @@ export function BookShell({ shell, theme, showCover, setShowCover, book }: BookS
           hyphens: "auto",
         }}
       >
+        {editing && book && book.blocks.length === 0 && <EmptyBookCTA bookId={book.id} />}
         {realBody.map((b, i) => {
+          const insertBelow = buildInsertBelow(b.block?.id)
+          const blockActions = buildBlockActions(b.block, wikiBlocks)
+          const slotProps = {
+            onInsertBelow: insertBelow,
+            onDelete: blockActions?.onDelete,
+            onDuplicate: blockActions?.onDuplicate,
+            onTurnInto: blockActions?.onTurnInto,
+          }
+
+          if (b.type === "h2") {
+            const h2Style: React.CSSProperties = {
+              fontFamily: shell.displayFont,
+              fontSize: 22,
+              fontWeight: 700,
+              margin: "18px 0 10px",
+            }
+            const sectionBody =
+              editing && book && b.block ? (
+                <EditableSectionHeading block={b.block} articleId={book.id} fallbackText={b.text} style={h2Style} />
+              ) : (
+                <h2 style={h2Style}>{b.text}</h2>
+              )
+            return (
+              <BookBlockSlot key={b.block?.id ?? i} {...slotProps}>
+                {sectionBody}
+              </BookBlockSlot>
+            )
+          }
           if (b.type === "dropcap-p") {
+            if (editing && book && b.block) {
+              return (
+                <BookBlockSlot key={b.block.id} {...slotProps}>
+                  <EditableParagraph block={b.block} articleId={book.id} />
+                </BookBlockSlot>
+              )
+            }
             const first = b.text[0]
             const rest = b.text.slice(1)
             return (
-              <p key={i} style={{ margin: "0 0 14px", textIndent: 0 }}>
-                <span
-                  style={{
-                    fontFamily: shell.displayFont,
-                    fontSize: 64,
-                    fontWeight: 700,
-                    float: "left",
-                    lineHeight: 0.82,
-                    marginRight: 10,
-                    marginTop: 5,
-                    color: shell.fg,
-                  }}
-                >
-                  {first}
-                </span>
-                {rest}
-              </p>
+              <BookBlockSlot key={b.block?.id ?? i} {...slotProps}>
+                <p style={{ margin: "0 0 14px", textIndent: 0 }}>
+                  <span
+                    style={{
+                      fontFamily: shell.displayFont,
+                      fontSize: 64,
+                      fontWeight: 700,
+                      float: "left",
+                      lineHeight: 0.82,
+                      marginRight: 10,
+                      marginTop: 5,
+                      color: shell.fg,
+                    }}
+                  >
+                    {first}
+                  </span>
+                  {rest}
+                </p>
+              </BookBlockSlot>
             )
           }
           if (b.type === "p") {
+            if (editing && book && b.block) {
+              return (
+                <BookBlockSlot key={b.block.id} {...slotProps}>
+                  <EditableParagraph block={b.block} articleId={book.id} />
+                </BookBlockSlot>
+              )
+            }
             return (
-              <p key={i} style={{ margin: "0 0 14px", textIndent: "1.5em" }}>
-                {b.text}
-              </p>
+              <BookBlockSlot key={b.block?.id ?? i} {...slotProps}>
+                <p style={{ margin: "0 0 14px", textIndent: "1.5em" }}>{b.text}</p>
+              </BookBlockSlot>
             )
           }
           return null

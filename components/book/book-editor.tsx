@@ -9,11 +9,9 @@ import { NewspaperShell } from "./shells/newspaper-shell"
 import { BookShell } from "./shells/book-shell"
 import { BlankShell } from "./shells/blank-shell"
 import { Ribbon, CornerOrnament, Bookmark } from "./shells/decorations"
-import { GridEditor } from "./editor/grid-editor"
 import { FlipbookViewer, SAMPLE_PAGES } from "./flipbook/flipbook-viewer"
-import { TweakPanel } from "./tweak-panel"
 
-type EditorMode = "shells" | "editor" | "flipbook"
+type RenderMode = "scroll" | "flipbook"
 
 const defaultTheme: ThemeConfig = {
   bgColor: "",
@@ -36,50 +34,81 @@ const defaultDecor: DecorationConfig = {
   flipbook: false,
 }
 
+export interface BookDisplayState {
+  shell: ShellId
+  renderMode: RenderMode
+  theme: ThemeConfig
+  decor: DecorationConfig
+}
+
 interface BookEditorProps {
   /** Optional real Book loaded from wikiArticles. When omitted, shells render SAMPLE_CONTENT. */
   book?: Book
   /** Edit mode — when true, inline editors + block chrome show. Default read-only. */
   editing?: boolean
+  /** Controlled display state (shell/renderMode/theme/decor). When omitted, internal state is used. */
+  displayState?: BookDisplayState
+  onDisplayStateChange?: (patch: Partial<BookDisplayState>) => void
 }
 
-export function BookEditor({ book, editing = false }: BookEditorProps = {}) {
-  const [mode, setMode] = useState<EditorMode>("shells")
-  const [shell, setShell] = useState<ShellId>("magazine")
+export function BookEditor({ book, editing = false, displayState, onDisplayStateChange }: BookEditorProps = {}) {
+  const [internalShell, setInternalShell] = useState<ShellId>("magazine")
+  const [internalRenderMode, setInternalRenderMode] = useState<RenderMode>("scroll")
   const [showCover, setShowCover] = useState(true)
-  const [panelOpen, setPanelOpen] = useState(true)
-  const [theme, setTheme] = useState<ThemeConfig>(defaultTheme)
-  const [decor, setDecor] = useState<DecorationConfig>(defaultDecor)
+  const [internalTheme, setInternalTheme] = useState<ThemeConfig>(defaultTheme)
+  const [internalDecor, setInternalDecor] = useState<DecorationConfig>(defaultDecor)
 
-  // Persist to localStorage
+  const shell = displayState?.shell ?? internalShell
+  const renderMode = displayState?.renderMode ?? internalRenderMode
+  const theme = displayState?.theme ?? internalTheme
+  const decor = displayState?.decor ?? internalDecor
+
+  const setShell = (v: ShellId) => {
+    if (onDisplayStateChange) onDisplayStateChange({ shell: v })
+    else setInternalShell(v)
+    setShowCover(true)
+  }
+  const setRenderMode = (v: RenderMode) => {
+    if (onDisplayStateChange) onDisplayStateChange({ renderMode: v })
+    else setInternalRenderMode(v)
+  }
+  // When controlled, theme/decor setters are proxies; otherwise internal.
+  // (BookEditor internals may still call these via TweakPanel during Step 1 transition;
+  //  Step 3 removes TweakPanel entirely.)
+
+  // Persist to localStorage (only when uncontrolled — parent owns persistence otherwise)
   useEffect(() => {
+    if (displayState) return
     const saved = localStorage.getItem("plot.book.theme")
-    if (saved) setTheme(JSON.parse(saved))
+    if (saved) setInternalTheme(JSON.parse(saved))
     const savedShell = localStorage.getItem("plot.book.shell")
-    if (savedShell) setShell(savedShell as ShellId)
-    const savedMode = localStorage.getItem("plot.book.mode")
-    if (savedMode) setMode(savedMode as EditorMode)
-  }, [])
+    if (savedShell) setInternalShell(savedShell as ShellId)
+    const savedRenderMode = localStorage.getItem("plot.book.renderMode")
+    if (savedRenderMode) setInternalRenderMode(savedRenderMode as RenderMode)
+  }, [displayState])
 
   useEffect(() => {
-    localStorage.setItem("plot.book.theme", JSON.stringify(theme))
-  }, [theme])
+    if (displayState) return
+    localStorage.setItem("plot.book.theme", JSON.stringify(internalTheme))
+  }, [internalTheme, displayState])
 
   useEffect(() => {
-    localStorage.setItem("plot.book.shell", shell)
-  }, [shell])
+    if (displayState) return
+    localStorage.setItem("plot.book.shell", internalShell)
+  }, [internalShell, displayState])
 
   useEffect(() => {
-    localStorage.setItem("plot.book.mode", mode)
-  }, [mode])
+    if (displayState) return
+    localStorage.setItem("plot.book.renderMode", internalRenderMode)
+  }, [internalRenderMode, displayState])
 
-  // Flipbook mode
-  if (mode === "flipbook") {
+  // Flipbook render mode — replaces the scroll layout with a page-turning viewer.
+  if (renderMode === "flipbook") {
     return (
       <div style={{ minHeight: "100vh", background: "#1a1612" }}>
         <div style={{ position: "fixed", top: 14, left: 14, zIndex: 50 }}>
           <button
-            onClick={() => setMode("shells")}
+            onClick={() => setRenderMode("scroll")}
             style={{
               padding: "6px 12px",
               border: "1px solid rgba(255,255,255,0.2)",
@@ -99,51 +128,7 @@ export function BookEditor({ book, editing = false }: BookEditorProps = {}) {
     )
   }
 
-  // Editor mode
-  if (mode === "editor") {
-    return (
-      <div style={{ minHeight: "100vh", background: "var(--background)" }}>
-        <div
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 40,
-            background: "var(--background)",
-            borderBottom: "1px solid var(--border-subtle)",
-            padding: "10px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <button
-            onClick={() => setMode("shells")}
-            style={{
-              padding: "6px 12px",
-              border: "1px solid var(--border)",
-              borderRadius: 6,
-              background: "var(--background)",
-              color: "var(--foreground)",
-              cursor: "pointer",
-              fontSize: 12,
-              fontFamily: "inherit",
-            }}
-          >
-            &larr; Back
-          </button>
-          <div style={{ fontWeight: 600, fontSize: 14 }}>Grid Editor &mdash; 12-col snap</div>
-          <div style={{ flex: 1 }} />
-          <div style={{ fontSize: 12, color: "var(--muted-foreground)" }}>
-            Active shell:{" "}
-            <b style={{ color: "var(--foreground)" }}>{SHELLS[shell].label}</b>
-          </div>
-        </div>
-        <GridEditor shell={shell} cols={SHELLS[shell].cols === 1 ? 12 : SHELLS[shell].cols} />
-      </div>
-    )
-  }
-
-  // Shells preview mode
+  // Scroll render mode
   const S = SHELLS[shell]
   const resolvedShell = resolveShell(S, theme)
   const bg = theme.bgColor || S.bg
@@ -154,9 +139,9 @@ export function BookEditor({ book, editing = false }: BookEditorProps = {}) {
       case "wiki":
         return <WikiShell shell={resolvedShell} theme={theme} book={book} editing={editing} />
       case "magazine":
-        return <MagazineShell shell={resolvedShell} theme={theme} book={book} />
+        return <MagazineShell shell={resolvedShell} theme={theme} book={book} editing={editing} />
       case "newspaper":
-        return <NewspaperShell shell={resolvedShell} theme={theme} book={book} />
+        return <NewspaperShell shell={resolvedShell} theme={theme} book={book} editing={editing} />
       case "book":
         return (
           <BookShell
@@ -165,10 +150,11 @@ export function BookEditor({ book, editing = false }: BookEditorProps = {}) {
             showCover={showCover}
             setShowCover={setShowCover}
             book={book}
+            editing={editing}
           />
         )
       case "blank":
-        return <BlankShell shell={resolvedShell} theme={theme} book={book} />
+        return <BlankShell shell={resolvedShell} theme={theme} book={book} editing={editing} />
       default:
         return null
     }
@@ -176,127 +162,6 @@ export function BookEditor({ book, editing = false }: BookEditorProps = {}) {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--background)", fontFamily: "var(--font-sans)" }}>
-      {/* Top bar */}
-      <div
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 40,
-          background: "var(--background)",
-          borderBottom: "1px solid var(--border-subtle)",
-          padding: "10px 16px",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ fontWeight: 600, fontSize: 14, marginRight: 8 }}>
-          {book?.title ? book.title : "Plot Book"}
-        </div>
-        {book && (
-          <span
-            style={{
-              fontSize: 11,
-              color: "var(--muted-foreground)",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-            }}
-          >
-            {book.blocks.length} block{book.blocks.length === 1 ? "" : "s"}
-          </span>
-        )}
-        <div style={{ display: "flex", gap: 4 }}>
-          {(Object.values(SHELLS) as typeof SHELLS[ShellId][]).map((s) => (
-            <button
-              key={s.id}
-              onClick={() => {
-                setShell(s.id)
-                setShowCover(true)
-              }}
-              style={{
-                padding: "6px 12px",
-                height: 30,
-                border: "1px solid var(--border)",
-                borderRadius: 6,
-                background: shell === s.id ? "var(--foreground)" : "var(--background)",
-                color: shell === s.id ? "var(--background)" : "var(--foreground)",
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-        <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
-        <div style={{ display: "flex", gap: 4 }}>
-          <button
-            onClick={() => setMode("editor")}
-            style={{
-              height: 30,
-              padding: "0 12px",
-              border: "1px solid var(--border)",
-              borderRadius: 6,
-              background: "var(--background)",
-              color: "var(--foreground)",
-              fontSize: 12,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            Grid Editor &rarr;
-          </button>
-          <button
-            onClick={() => setMode("flipbook")}
-            style={{
-              height: 30,
-              padding: "0 12px",
-              border: "1px solid var(--border)",
-              borderRadius: 6,
-              background: "var(--background)",
-              color: "var(--foreground)",
-              fontSize: 12,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            Flipbook &rarr;
-          </button>
-        </div>
-        <div style={{ flex: 1 }} />
-        <button
-          onClick={() => setPanelOpen(!panelOpen)}
-          style={{
-            height: 30,
-            padding: "0 12px",
-            border: "1px solid var(--border)",
-            borderRadius: 6,
-            background: "var(--background)",
-            color: "var(--foreground)",
-            fontSize: 13,
-            cursor: "pointer",
-            fontFamily: "inherit",
-          }}
-        >
-          {panelOpen ? "Hide" : "Show"} Tweaks
-        </button>
-      </div>
-
-      {/* Subtitle */}
-      <div
-        style={{
-          padding: "10px 16px",
-          color: "var(--muted-foreground)",
-          fontSize: 12,
-          borderBottom: "1px solid var(--border-subtle)",
-        }}
-      >
-        {S.subtitle}
-      </div>
-
       {/* Stage */}
       <div
         style={{
@@ -351,7 +216,7 @@ export function BookEditor({ book, editing = false }: BookEditorProps = {}) {
           >
             <span>Flipbook preview mode</span>
             <button
-              onClick={() => setMode("flipbook")}
+              onClick={() => setRenderMode("flipbook")}
               style={{
                 padding: "4px 10px",
                 border: "1px solid var(--border)",
@@ -368,18 +233,6 @@ export function BookEditor({ book, editing = false }: BookEditorProps = {}) {
           </div>
         )}
       </div>
-
-      {/* Tweak Panel */}
-      {panelOpen && (
-        <TweakPanel
-          theme={theme}
-          setTheme={setTheme}
-          decor={decor}
-          setDecor={setDecor}
-          shell={shell}
-          setShell={setShell}
-        />
-      )}
     </div>
   )
 }

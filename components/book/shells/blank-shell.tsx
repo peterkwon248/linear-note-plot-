@@ -1,17 +1,31 @@
 "use client"
 
-import type { Shell, ThemeConfig, Book } from "@/lib/book/types"
+import type { Shell, ThemeConfig, Book, Block } from "@/lib/book/types"
+import { BookBlockSlot } from "../book-block-slot"
+import { usePlotStore } from "@/lib/store"
+import {
+  EditableParagraph,
+  EditableSectionHeading,
+  EmptyBookCTA,
+  useBlockEditHelpers,
+} from "../shared-editable"
 
 interface BlankShellProps {
   shell: Shell
   theme: ThemeConfig
   /** When a book is loaded, render its blocks as a simple 12-col flow. */
   book?: Book
+  /** Edit mode — inline editors + block chrome. Default false = read-only render. */
+  editing?: boolean
 }
 
-export function BlankShell({ shell, theme, book }: BlankShellProps) {
+export function BlankShell({ shell, theme, book, editing = false }: BlankShellProps) {
   const marginScale = theme.margins === "narrow" ? 0.65 : theme.margins === "wide" ? 1.5 : 1
   const pad = `${48 * marginScale}px`
+  const wikiBlocks = usePlotStore((s) =>
+    book ? s.wikiArticles.find((a) => a.id === book.id)?.blocks : undefined,
+  )
+  const { buildInsertBelow, buildBlockActions } = useBlockEditHelpers(book, editing)
 
   return (
     <div
@@ -36,6 +50,7 @@ export function BlankShell({ shell, theme, book }: BlankShellProps) {
           >
             {book.title}
           </h1>
+          {editing && book.blocks.length === 0 && <EmptyBookCTA bookId={book.id} />}
           <div
             style={{
               display: "grid",
@@ -43,20 +58,66 @@ export function BlankShell({ shell, theme, book }: BlankShellProps) {
               gap: 16,
             }}
           >
-            {book.blocks.map((b) => (
-              <div
-                key={b.id}
-                style={{
-                  gridColumn: `${b.col} / span ${b.span}`,
-                  fontSize: b.type === "heading" ? 20 : 15,
-                  fontWeight: b.type === "heading" ? 600 : 400,
-                  lineHeight: b.type === "heading" ? 1.3 : 1.65,
-                  padding: "6px 0",
-                }}
-              >
-                {b.text}
-              </div>
-            ))}
+            {book.blocks.map((b) => {
+              const blk = b as Block
+              const insertBelow = buildInsertBelow(b.id)
+              const blockActions = buildBlockActions(blk, wikiBlocks)
+              const slotProps = {
+                onInsertBelow: insertBelow,
+                onDelete: blockActions?.onDelete,
+                onDuplicate: blockActions?.onDuplicate,
+                onTurnInto: blockActions?.onTurnInto,
+              }
+              const gridStyle: React.CSSProperties = {
+                gridColumn: `${b.col} / span ${b.span}`,
+                padding: "6px 0",
+              }
+              if (b.type === "heading") {
+                const h2Style: React.CSSProperties = {
+                  fontSize: 20,
+                  fontWeight: 600,
+                  lineHeight: 1.3,
+                  margin: 0,
+                }
+                return (
+                  <div key={b.id} style={gridStyle}>
+                    <BookBlockSlot {...slotProps}>
+                      {editing ? (
+                        <EditableSectionHeading block={blk} articleId={book.id} fallbackText={b.text} style={h2Style} />
+                      ) : (
+                        <h2 style={h2Style}>{b.text}</h2>
+                      )}
+                    </BookBlockSlot>
+                  </div>
+                )
+              }
+              if (b.type === "paragraph") {
+                return (
+                  <div key={b.id} style={gridStyle}>
+                    <BookBlockSlot {...slotProps}>
+                      {editing ? (
+                        <EditableParagraph block={blk} articleId={book.id} />
+                      ) : (
+                        <p style={{ fontSize: 15, lineHeight: 1.65, margin: 0 }}>{b.text}</p>
+                      )}
+                    </BookBlockSlot>
+                  </div>
+                )
+              }
+              // Fallback for other types — render plain text
+              return (
+                <div
+                  key={b.id}
+                  style={{
+                    ...gridStyle,
+                    fontSize: 15,
+                    lineHeight: 1.65,
+                  }}
+                >
+                  <BookBlockSlot {...slotProps}>{b.text}</BookBlockSlot>
+                </div>
+              )
+            })}
           </div>
         </>
       ) : (

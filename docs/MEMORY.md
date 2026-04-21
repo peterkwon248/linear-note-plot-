@@ -1,51 +1,68 @@
 # Plot Project Memory
 
-## 🔴 2026-04-21 Book Pivot 진행 상황 (세션 마감 기준)
+## 🔴 2026-04-21 후반 Book Pivot — Phase 2B-3 확산 + 2C + 3A-1 완료 (세션 마감 기준)
 
-### 완성된 것 (하루 2 세션 결과)
+### 이번 세션(후반) 완성 (+803 / -1229 lines, 16 files)
 
-**코드 추가** (~3000 lines):
-- `lib/book/` — types / shells / adapter / selectors (+ 14 tests)
-- `components/book/` — BookWorkspace / BookEditor / BookInlineEditor / BookBlockSlot / 5 shells / flipbook viewer / tweak panel
-- `app/(app)/layout.tsx`에서 WikiView → BookWorkspace 교체
-- `app/(app)/book/page.tsx` redirect, `app/(app)/book-preview/page.tsx` (탐색용)
+**핵심 방향 전환** — 사용자 규칙 "과거 PR의 기존 컴포넌트 재사용 우선" → Wiki PR 산출물 전면 재활용:
+- `WikiTextEditor` export → BookInlineEditor 폐기 (FixedToolbar 31버튼 + 슬래시/위키링크/멘션/각주 그대로)
+- `WikiBlockRenderer` fallback → Infobox/TOC/Pull Quote/Image/URL/Table 전부 실제 chrome 렌더
+- `AddBlockButton` 재사용 → 13 옵션 (Structure 9 + Content 4) 위키 스타일 picker
 
-**`/wiki` 접속 시 동작** (Activity Bar "Book"):
-- 좌측: 본인 실제 위키 리스트
-- 우상단 Edit/Done 토글 (기본 Read)
-- **Read**: 깔끔한 읽기 화면 (chrome 없음)
-- **Edit**: 각 블록 hover → `⠿` 메뉴 + `+ Add block` 하단
-- 텍스트 블록 → TipTap 인라인 편집 (wiki tier, 슬래시 커맨드 포함)
-- 블록 메뉴: Turn Into ▸ / Duplicate / Delete
-- 블록 추가: 8 타입 피커 (Text/Section/Pull Quote/Image/URL/Table/Infobox/TOC)
-- 섹션 자동 넘버링 "1 / 2 / 2.1" + TOC 자동 갱신
-- 빈 Book: "+ Add first block" CTA
-- 5 Shell 전환: title + body 실데이터 (chrome은 샘플, Phase 6 예정)
+**Phase 2B-3c — Section heading 인라인 편집**:
+- `components/book/shells/wiki-shell.tsx` 에 EditableSectionHeading
+- 클릭 → input swap / Enter save / Escape cancel / onBlur save
+- section 번호 prefix 유지
 
-**완료한 Phase**:
-- [x] Phase 0 (문서 정비 + design-system zip v2)
-- [x] Phase 1A (lib/book types/shells/adapter/selectors)
-- [x] Phase 1B (Activity Bar + visible strings + /book redirect)
-- [x] Phase 2A (5 shell 복사 + /book-preview 라우트)
-- [x] Phase 2B-1 (BookWorkspace + 실데이터 연결)
-- [x] Phase 2B-2 (BookInlineEditor + EditableParagraph TipTap)
-- [x] Phase 2B-3a (+ Add block 피커 + 섹션 넘버링 + TOC 자동)
-- [x] Phase 2B-3b (⠿ 메뉴 + Turn Into/Duplicate/Delete)
-- [x] Edit/Done 토글 + 빈 CTA + SAMPLE 노이즈 숨김
+**Phase 2B-3 확산 (4 shell)**:
+- `components/book/shared-editable.tsx` (신규) — EditableParagraph / EditableSectionHeading / EmptyBookCTA + `useBlockEditHelpers` hook
+- `useBlockEditHelpers.buildInsertBelow` — `handleAddBlock` 타입 dispatch 로직 내재화 (`text:callout` / `table` / `url` / section level 등)
+- Magazine / Newspaper / Book / Blank shell 전부 editing prop + BookBlockSlot 래핑 + 각 shell 레이아웃 맞춤 편집 UI
+- book-editor.tsx에서 editing prop 전파
 
-### 다음 즉시 작업 (Step 1)
+**Phase 2C Step 1-4 (UX 정렬)**:
+- Step 1: book-editor.tsx 상단 bar 대청소 — 5 shell 버튼 / Grid Editor / Flipbook / Show Tweaks 전부 삭제 / Grid Editor mode 브랜치 삭제 / `mode` → `renderMode` controlled prop
+- Step 2: BookWorkspace에 `ViewHeader`(Notes 패턴) 도입 + Edit/Done 토글 우상단 재배치 + usePane 대응
+- Step 3: `components/book/book-display-panel.tsx` 신규 — 300px 팝오버 10 섹션 (Shell/Render mode/Typography/Margins/Columns/Chapter breaks/Background/Card border/Ink colors/Decoration) + Chip/ColorRow/CheckRow 헬퍼
+- Step 4: `secondary-panel-content.tsx`의 `/wiki` → WikiView → BookWorkspace 교체 / SplitViewButton 활용 / SmartSidePanel `sidePanelContext` 동기화
+- `tweak-panel.tsx` 삭제, `book-inline-editor.tsx` 삭제
 
-**Phase 2B-3c — Section heading 인라인 편집**
-- 현재 h2 정적, 클릭해도 수정 불가
-- `editing===true`일 때 input/contentEditable swap
-- Plot 기존 `wiki-block-renderer.tsx` L320-435 Section 편집 패턴 참고
+**Phase 3A-1 (Wiki shell 드래그 reorder)**:
+- `components/book/book-dnd-provider.tsx` 신규 — DndContext + SortableContext + PointerSensor `activationConstraint.distance=5` (클릭 메뉴와 드래그 공존) + `onDragEnd` → `moveWikiBlock`
+- BookBlockSlot에 `useSortable({id: blockId})` + transform/transition/listeners, `⠿` 버튼 drag handle
+- Wiki shell body를 BookDndProvider 래핑, 5px 이하 클릭은 메뉴 / 드래그는 순서 변경
 
-### 기술 디테일 (다음 세션 참고)
+**P0 렌더 버그 수정**:
+- 증상: `/wiki` 텍스트 블록이 "Write something..." 빈 에디터로 렌더
+- 근본: `persist` `partialize`가 `article.blocks[i].content` 스트립 → rehydrate 후 `block.text = ""`. EditableParagraph가 `useWikiBlockContentJson` 훅의 `content`(IDB-loaded plaintext)를 destructure 안 해서 버림
+- fix: `initialText={content || block.text}` 1줄
 
-- `wikiArticles`는 `WikiArticle[]` 배열 (`.find(a=>a.id===id)`, NOT `[id]`)
-- Plot 기존 actions 그대로 사용 (slice 재작성 안 함)
-- BookInlineEditor는 **toolbar 없음** (Book의 깔끔한 UX)
-- Edit/Done state는 session-only (BookWorkspace useState)
+**Build & tsc**: 둘 다 clean (exit 0, 전 routes prerender)
+
+### 파일 변경 요약
+
+**신규 (3)**:
+- `components/book/book-display-panel.tsx` (300px 팝오버)
+- `components/book/book-dnd-provider.tsx` (dnd 래퍼)
+- `components/book/shared-editable.tsx` (4 shell 공유)
+
+**수정 (11)**: book-block-slot / book-editor / book-workspace / 5 shell / wiki-block-renderer(export만) / secondary-panel-content / settings.local
+
+**삭제 (2)**: book-inline-editor / tweak-panel
+
+### 다음 즉시 작업
+
+1. **WikiBlockRenderer fallback을 Magazine/Newspaper/Book/Blank에 확산** — wiki-shell만 적용됨
+2. **Phase 3A-2: 4 shell 드래그 reorder** — Magazine(CSS columns) + Book(dropcap float)의 dnd transform 충돌 검증 필요
+3. **AddBlockButton `nearestSectionLevel` 전달** — Subsection(H3/H4) 옵션 활성화
+
+### 기술 디테일 (재확인)
+
+- `wikiArticles`는 `WikiArticle[]` 배열 (`.find(a=>a.id===id)`)
+- 실 블록 데이터는 `plot-wiki-block-meta` IDB + `plot-wiki-block-bodies` IDB에서 lazy hydrate
+- `EditableParagraph`는 `useWikiBlockContentJson`의 **`content` 필드** 반드시 활용
+- `BookDisplayState` controlled prop으로 BookWorkspace → BookEditor → shell 전파
+- `BookDndProvider` enabled prop으로 read 모드에선 DndContext 안 마운트
 
 ---
 

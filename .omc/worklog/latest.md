@@ -1,137 +1,131 @@
 ---
-session_date: "2026-04-14 22:40 (후속 세션)"
-project: "Plot (linear-note-plot-)"
-working_directory: "C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/eloquent-hypatia"
-duration_estimate: "~30분 (after-work 이후 ~이번 after-work까지)"
+session_date: "2026-04-21 20:00"
+project: "linear-note-plot-"
+working_directory: "C:\\Users\\user\\Desktop\\linear-note-plot-\\.claude\\worktrees\\awesome-lamport-50c704"
+duration_estimate: "~5-6시간 (Phase 2B-3c + 2C Step 1-4 + 2B-3 확산 + 3A-1 + 기존 Wiki PR 컴포넌트 전면 재사용 리팩토링)"
 ---
 
 ## Completed Work
 
-### 코드 — 인포박스 편집 엉킴 UX 수정
-- `components/wiki-editor/wiki-article-view.tsx` — 편집 모드일 때 float-right 해제 + 상단 전폭 배치 (`mb-8 max-w-md`)
-- `components/wiki-editor/wiki-article-encyclopedia.tsx` — 동일 패턴 통일 (편집 시 전폭, 읽기 시 float 원래대로)
-- 해결: 편집 중 Add field/Section 버튼이 본문 heading 클릭 영역과 간섭하는 UX 버그
+- **Phase 2B-3c — Section heading 인라인 편집** (`components/book/shells/wiki-shell.tsx`)
+  - EditableSectionHeading: 클릭 → input swap / Enter save / Escape cancel / onBlur save
+  - 섹션 번호 prefix 유지
 
-### 브레인스토밍 — 위키 템플릿 시스템 전면 재설계
-**3-layer 모델 폐기 → 통합 WikiTemplate 모델**
+- **Phase 2C Step 1-4 (UX 정렬)**
+  - Step 1: `book-editor.tsx` 상단 bar 대청소 — 5 shell 버튼 / Grid Editor / Flipbook / Show Tweaks 전부 삭제, Grid Editor mode 브랜치 삭제, `mode` → `renderMode` controlled prop
+  - Step 2: `BookWorkspace`에 `ViewHeader`(Notes 패턴) 도입 + Edit/Done 토글 재배치 + `usePane` 대응
+  - Step 3: `components/book/book-display-panel.tsx` 신규 — 300px 팝오버 10 섹션 (Shell/Render mode/Typography/Margins/Columns/Chapter breaks/Background/Card border/Ink colors/Decoration) + Chip/ColorRow/CheckRow 헬퍼
+  - Step 4: `secondary-panel-content.tsx`의 `/wiki` → `BookWorkspace` 교체 + `SmartSidePanel` sidePanelContext 동기화 + SplitViewButton 활용
 
-사용자 통찰: "컬럼 렌더러 + 섹션 배치 = 템플릿"
+- **P0 렌더 버그 수정** — EditableParagraph가 `useWikiBlockContentJson`의 `content` 필드 활용 (partialize가 block.text 스트립하는 문제). `initialText={content || block.text}` 1줄
 
-핵심 결정:
-- `WikiTemplate = { layout: ColumnStructure + titleStyle + themeColor + sections + infobox + hatnotes + navbox }`
-- 컬럼: 1/2/3/N 자유, 중첩 최대 3 depth, 드래그 비율 조절
-- Title 최상단 고정 (나무위키/위키피디아 관습), `article.title + titleStyle`
-- Column Heading 블록 폐기, Section(H2)로 충분
-- 기본 템플릿 8종 built-in: Blank / Encyclopedia / Person / Place / Concept / Work / Organization / Event
-- 사용자 커스텀 템플릿 (파라미터 조합, JSX 코드 주입 X)
-- Phase 1 순서: 타입+템플릿 데이터 먼저, 렌더러는 Phase 2 (철저함 중시, 사용자 선택)
+- **WikiTextEditor 재사용 (허접 에디터 해결)**
+  - `wiki-block-renderer.tsx:788` `function WikiTextEditor` → `export function`
+  - BookInlineEditor 폐기/삭제
+  - EditableParagraph가 WikiTextEditor 사용 → FixedToolbar 31버튼 + 슬래시/위키링크/멘션/각주 전부 활성
 
-### 문서 정비 (Phase 0 완료)
+- **Phase 2B-3 확산 (4 shell)**
+  - `components/book/shared-editable.tsx` 신규 — EditableParagraph / EditableSectionHeading / EmptyBookCTA + `useBlockEditHelpers` hook (handleAddBlock 타입 dispatch 내재화)
+  - Magazine / Newspaper / Book / Blank shell 전부 editing prop + BookBlockSlot 래핑 + 각 레이아웃 맞춤 edit UI
+  - book-editor.tsx에서 editing prop 전파
 
-**신규** (진실의 원천):
-- `docs/BRAINSTORM-2026-04-14-column-template-system.md` (450+ 줄)
-- `memory/project_column_template_system.md` (auto memory)
+- **Phase 3A-1 (Wiki shell 블록 드래그 reorder)**
+  - `components/book/book-dnd-provider.tsx` 신규 — DndContext + SortableContext + PointerSensor `activationConstraint.distance=5` (클릭과 드래그 공존) + onDragEnd → `moveWikiBlock`
+  - BookBlockSlot에 `useSortable({id: blockId, disabled: !blockId})` + transform/transition/listeners, `⠿` 버튼 drag handle + `touchAction: none`
+  - Wiki shell body를 BookDndProvider 래핑
 
-**DEPRECATED 배너 + 새 문서 링크**:
-- `docs/BRAINSTORM-2026-04-14-wiki-ultra.md` (3-layer 프레임 폐기, 세부 설계 보존)
-- `docs/PHASE-PLAN-wiki-enrichment.md` (Phase 계획 전체 폐기)
+- **WikiBlockRenderer fallback (Wiki shell)**
+  - wiki-shell.tsx `realBody` 매핑에서 heading/paragraph 외엔 원본 Book Block type 보존
+  - 렌더 루프 끝에 `<WikiBlockRenderer block={wb} articleId={book.id} editable={editing} />` fallback → Infobox/TOC/Pull Quote/Image/URL/Table 실제 chrome 렌더
 
-**부분/전체 업데이트**:
-- `docs/BRAINSTORM-2026-04-14-entity-philosophy.md` (3-layer 섹션 교체)
-- `docs/CONTEXT.md` (Key Design Decisions + P2 TODO 재작성)
-- `docs/MEMORY.md` (세션 의사결정 오전/저녁 확장 + Tier 1-4 섹션 정비)
-- `docs/TODO.md` (Phase 1-7 로드맵)
-- `docs/NEXT-ACTION.md` (Phase 1 시작점 상세화)
-- `docs/SESSION-LOG.md` (오늘 entry)
+- **AddBlockButton 재사용 (위키 스타일 picker)**
+  - BookBlockSlot의 자체 hairline+picker 8-option 삭제 → `AddBlockButton` (wiki-block-renderer) 호출
+  - 13 옵션: Structure(Section/Text/Note/Image/URL/Table/Infobox/TOC/Pull Quote) + Content(Callout/Blockquote/Toggle/Spacer)
+  - `useBlockEditHelpers.buildInsertBelow` 시그니처를 `(type: string, level?: number) => void`로 확장
 
-**Memory 동기화**:
-- `memory/project_entity_philosophy.md` (통합 모델 반영)
-- `memory/MEMORY.md` (Project Decisions 인덱스)
-- `.omc/notepad.md` (완전 재작성, 빌드 이슈 해결 반영)
-- `.omc/notepads/general/decisions.md` (저녁 결정 append)
-
-## PR
-- **PR #195 main에 squash merge 완료** (merge commit: `9eecca15`, 2026-04-14 22:40 UTC)
-- 14 파일, +781 / -178
-- 신규: `docs/BRAINSTORM-2026-04-14-column-template-system.md`
+- **docs 업데이트**: CONTEXT.md / MEMORY.md / NEXT-ACTION.md 세션 내용 반영
 
 ## In Progress
-- 없음. 모든 작업 완료.
 
-## Remaining Tasks (다음 세션)
+없음 — 모든 시작한 작업 완료.
 
-### Phase 1 — WikiTemplate 데이터 모델 + 기본 템플릿 8종 (3-4일, 1 PR)
+## Remaining Tasks
 
-**Cold Resume용 상세 내용**:
-
-1. **데이터 모델** (`lib/types.ts`):
-   - `ColumnStructure` 재귀 타입 (columns 배열, ratio/minWidth/priority, 중첩 3 depth 제한)
-   - `WikiTemplate` 인터페이스 (layout + titleStyle + themeColor + sections + infobox + hatnotes + navbox)
-   - `WikiArticle` 확장:
-     - `layout: ColumnStructure` (기존 string "default"/"encyclopedia"/"wiki-color" 교체)
-     - `titleStyle?: { alignment, size, showAliases, themeColorBg }`
-     - `themeColor?: { light, dark }`
-     - `columnAssignments: Record<string, string>` (blockId → columnPath)
-     - `templateId?: string`
-
-2. **wikiTemplates slice** (`lib/store/slices/wiki-templates.ts`):
-   - Built-in 8종 정의 (Blank / Encyclopedia / Person / Place / Concept / Work / Organization / Event)
-   - `getBuiltInTemplates()`, `createTemplate()`, `updateTemplate()`, `deleteTemplate()`, `duplicateTemplate()`
-
-3. **Store migration vNN**:
-   - `layout: "default"` → Blank 템플릿 자동 변환
-   - `layout: "encyclopedia"` → Encyclopedia 템플릿 자동 변환
-   - heuristic: 인포박스 있으면 Encyclopedia, 없으면 Blank
-   - 또는 사용자에게 선택시키기 (최초 1회 다이얼로그)
-
-4. **새 위키 생성 UX**:
-   - `CreateWikiDialog` 또는 기존 `createWikiArticle` 액션에 `templateId?` 인자 추가
-   - 템플릿 선택 갤러리 (카드 그리드)
-   - 선택 시 template.sections / template.infobox 기본값으로 prepopulate
-
-### Phase 2-7 (순서대로)
-- Phase 2: 컬럼 렌더러 + titleStyle
-- Phase 3: 편집 UX (컬럼 드래그, 추가/삭제, 중첩)
-- Phase 4: 사용자 커스텀 템플릿 편집기
-- Phase 5: 나무위키 잔여 (Hatnote, Ambox, Navbox, 섹션 icon, Callout 12타입)
-- Phase 6: 편집 히스토리 + 요약 (v1→v2→v3)
-- Phase 7: 노트 split 기능 (WikiSplitPage 패턴 복사)
+- [ ] **Magazine/Newspaper/Book/Blank shell에도 WikiBlockRenderer fallback 확산** — wiki-shell만 Infobox/TOC 등 실제 렌더. 나머지 4 shell은 "p"로 fallthrough. 수정: 각 shell `realBody`에서 원본 type 보존 + wiki-shell.tsx 렌더 루프 끝의 fallback 패턴 복사
+- [ ] **Phase 3A-2: 4 shell 드래그 reorder** — Magazine(CSS `columnCount`) + Book(dropcap float)의 dnd transform 충돌 검증. Blank shell부터 시작 권장
+- [ ] **AddBlockButton `nearestSectionLevel` 전달** — Subsection(H3/H4) 옵션 활성화. `wiki-article-renderer.tsx`의 `nearestSectionLevelByBlockId` 계산 로직 포팅
+- [ ] **상단 auto CONTENTS와 TOC block 중복 정리** — wiki-shell hardcoded `realToc` + 실제 TOC block 동시 표시. TOC block 있을 때 auto 숨기기
+- [ ] **Seed contentJson 파싱** — `[[wiki:Plot]]` `@mention` `#tag` 마크업이 Book + Notes 전역 plain text로 렌더됨. seed plaintext → TipTap nodes 변환 helper 필요
+- [ ] **Phase 3A 본 목표: 12-col grid snap** (Magazine/Newspaper multi-col)
 
 ## Key Decisions
-- **컬럼 시스템 = 상위, 프리셋은 특정 조합** (default/encyclopedia는 "1컬럼 Blank" / "2컬럼 Encyclopedia" 템플릿으로 재해석)
-- **Title 블록화 폐기** — article.title + titleStyle로 최상단 고정 (나무위키 관습)
-- **3-layer 모델 폐기** — 오버엔지니어링으로 판정. 통합 모델로 단순화
-- **기존 blocks[] 평면 구조 유지** — 최소 침습. columnAssignments로 배치만 표시
-- **Phase 1 철저함 중시** — 타입 먼저 확정, 렌더러는 Phase 2로 분리 (사용자 선택)
+
+- **사용자 규칙 강조됨 (2회)**: "과거 PR의 기존 컴포넌트 재사용 우선" — 새로 구현 시 "허접" 평가. Plot wiki PR 산출물(WikiTextEditor/WikiBlockRenderer/AddBlockButton/handleAddBlock/getInitialContentJson) export 또는 재호출해서 Book에서 재사용하는 게 정답. **앞으로 비슷한 구현 요구 시 먼저 기존 코드 `Grep export function` 검색**
+- **BookDndProvider 범위 제한**: Wiki shell 먼저 적용. Magazine(CSS columns) + Book(dropcap float)는 Phase 3A-2로 분리
+- **Display 팝오버는 Book 전용 섹션 구조** — Notes DisplayPanel 구조 억지로 맞추지 않음
+- **WikiTextEditor의 per-block FixedToolbar 유지** (글로벌 통합 고려 안 함, wiki/notes와 동일)
 
 ## Technical Learnings
-- `react-resizable-panels` 이미 workspace에서 사용 중 — 컬럼 비율 드래그에 재활용 가능
-- 나무위키/위키피디아 모두 Title 최상단 고정 + 컬럼은 아래 (스크린샷 확인)
-- Plot `columnsBlock` (TipTap 블록 레벨)과 문서 레벨 컬럼 시스템은 **다른 레이어** — 공존 가능
-- 사용자 커스텀 = "파라미터 조합" 방식이 적절 (JSX 코드 주입은 로컬퍼스트 + 보안 측면에서 불가)
+
+- **persist `partialize`가 `article.blocks[i].content` 스트립** — hydrate 후 memory `block.text = ""`. 실 content는 `plot-wiki-block-bodies` IDB + `plot-wiki-block-meta` IDB에서 lazy load. EditableParagraph가 `useWikiBlockContentJson` 훅의 `content` 필드 반드시 destructure해야 함
+- **`WikiBlockRenderer` export 이미 존재** (wiki-block-renderer.tsx:89) — 모든 wiki block type 지원
+- **`AddBlockButton` export 이미 존재** (wiki-block-renderer.tsx:1854) — 13 옵션, portal popup + hairline hover, `nearestSectionLevel` prop
+- **`handleAddBlock` 타입 dispatch** (hooks/use-wiki-block-actions.ts:24) — `text:callout` / `table` / `url` / 일반 type 분기
+- **dnd-kit `activationConstraint.distance=5`** — 클릭 메뉴와 드래그 reorder 공존
+- **`usePane` 훅 기본값 `'primary'`** — BookWorkspace가 secondary에 들어가도 context 안전
+- **Next.js 16 webpack build + tsc 둘 다 clean** (exit 0)
 
 ## Blockers / Issues
-- 없음. 모든 블록 해소.
-- 이전 after-work에서 해결 못 했던 빌드 에러는 PR #194에서 build-fixer로 해결됨
+
+- **상단 auto CONTENTS와 TOC block 중복 표시** — 기능 영향 없지만 시각적 중복. wiki-shell.tsx `realToc` 조건부 처리 필요
+- **Hydration mismatch** (AppLayout, pre-existing) — 기능 영향 없음
+- **Yjs 중복 import warning** (pre-existing)
+- **`registry.ts:63` RemixiconComponentType** — Turbopack 에러, webpack 통과 (pre-existing)
 
 ## Environment & Config
-- Worktree: `C:/Users/user/Desktop/linear-note-plot-/.claude/worktrees/eloquent-hypatia`
-- 브랜치: `claude/eloquent-hypatia`
-- Dev server: port 3002
-- Store version: v75 (Phase 1에서 v76으로 bump 예정 — WikiArticle 확장)
-- Build: GREEN
+
+- **Worktree**: `.claude/worktrees/awesome-lamport-50c704` / branch `claude/awesome-lamport-50c704`
+- **Dev**: Next.js 16 webpack, port 3002 (preview_start 사용 중)
+- **Stack**: React 19 / TypeScript / Zustand 5 / TipTap 3 / dnd-kit / Tailwind v4
+- **Store v80**, wikiArticles 배열, block bodies IDB + block meta IDB
+- **Commands**: `npm run build` (exit 0), `npm run test -- --run`, `npx tsc --noEmit` (exit 0)
+- **`window.__plotStore`** dev-only binding 사용 가능
 
 ## Notes for Next Session
-1. `/before-work`로 시작하면 auto memory가 로드되어 이 세션 결정 자동 인지
-2. **첫 작업 = Phase 1 시작**. `docs/NEXT-ACTION.md` 참조
-3. `docs/BRAINSTORM-2026-04-14-column-template-system.md`가 **진실의 원천**. 다른 브레인스토밍 문서는 참조용 (DEPRECATED 배너 있음)
-4. 엔티티 통합 제안 금지 (auto memory `project_entity_philosophy.md`)
-5. 커밋 타이밍 사용자 통제 (auto memory `feedback_commit_timing.md`)
-6. Phase 1은 데이터 모델만. 렌더링은 Phase 2로 분리 — 기존 렌더러 잠깐 유지 OK
 
-## Files Modified (14)
-- 2 코드: wiki-article-view.tsx, wiki-article-encyclopedia.tsx
-- 신규 진실의 원천: BRAINSTORM-2026-04-14-column-template-system.md
-- 6 docs 업데이트: BRAINSTORM*, CONTEXT, MEMORY, TODO, NEXT-ACTION, SESSION-LOG, PHASE-PLAN
-- 4 memory: project_entity_philosophy, project_column_template_system (신규), MEMORY.md 인덱스, .omc/notepad.md
-- .omc/notepads/general/decisions.md (append)
+- `before-work` 실행 → `docs/NEXT-ACTION.md` Step 1 (WikiBlockRenderer fallback 4 shell 확산)부터
+- 사용자 규칙 "과거 PR 재사용" 매 기능마다 적용 — 먼저 `Grep export function` 검색
+- Magazine shell dnd는 CSS `columnCount` 안의 transform 동작 테스트 필요
+- `docs/NEXT-ACTION.md`의 Last Updated 항상 갱신
+- 커밋 타이밍은 사용자 제어 — `/after-work` 할 때만
+
+## Files Modified
+
+### 신규 (3)
+- `components/book/book-display-panel.tsx`
+- `components/book/book-dnd-provider.tsx`
+- `components/book/shared-editable.tsx`
+
+### 수정 (11)
+- `components/book/book-block-slot.tsx`
+- `components/book/book-editor.tsx`
+- `components/book/book-workspace.tsx`
+- `components/book/shells/wiki-shell.tsx`
+- `components/book/shells/magazine-shell.tsx`
+- `components/book/shells/newspaper-shell.tsx`
+- `components/book/shells/book-shell.tsx`
+- `components/book/shells/blank-shell.tsx`
+- `components/wiki-editor/wiki-block-renderer.tsx` (1문자: export 추가)
+- `components/workspace/secondary-panel-content.tsx`
+- `.claude/settings.local.json`
+
+### 삭제 (2)
+- `components/book/book-inline-editor.tsx`
+- `components/book/tweak-panel.tsx`
+
+### docs (3)
+- `docs/NEXT-ACTION.md`
+- `docs/CONTEXT.md`
+- `docs/MEMORY.md`
+
+**통계**: +803 / -1229 lines across 16 files. Build: PASS.
