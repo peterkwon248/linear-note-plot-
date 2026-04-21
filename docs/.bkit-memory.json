@@ -4,5 +4,8 @@
     "startedAt": "2026-04-21T00:12:54.034Z",
     "platform": "claude",
     "level": "Dynamic"
-  }
+  },
+  "currentFeature": "book-pivot",
+  "currentPhase": "plan",
+  "phaseStartedAt": "2026-04-21T11:00:00.000Z"
 }
