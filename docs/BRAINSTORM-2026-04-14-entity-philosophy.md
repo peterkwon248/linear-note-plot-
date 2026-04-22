@@ -1,20 +1,4 @@
-# Plot 엔티티 철학 확정 — Note/Wiki 분리 유지 (2026-04-14 오전)
-
-> ## 🔄 부분 업데이트 — 2026-04-14 저녁 재설계
->
-> **이 문서의 "위키 템플릿 3층 모델" 섹션은 폐기됨.** 아래 "핵심 결정 #3~4" 부분 참조.
->
-> **새 진실의 원천 (위키 레이아웃/템플릿)**: [BRAINSTORM-2026-04-14-column-template-system.md](./BRAINSTORM-2026-04-14-column-template-system.md)
->
-> **이 문서에서 여전히 유효한 내용**:
-> - Note/Wiki 2-entity 분리 결정 (핵심 결정 #1, #2) — 유효
-> - 데이터 구조 차이 (TipTap JSON vs WikiBlock[]) — 유효
-> - 노트 split must-todo — 유효
-> - 표류 히스토리 — 유효 (참조용)
->
-> **이 문서에서 폐기된 내용**:
-> - "위키 템플릿 3층 모델 (Layer 1 Layout Preset + Layer 2 Content Template + Layer 3 Typed Infobox)" — 통합 모델로 재설계됨
-> - `layout: "default" | "encyclopedia" | "wiki-color"` 문자열 상수 방식 — `layout: ColumnStructure` 데이터 구조로 교체
+# Plot 엔티티 철학 확정 — Note/Wiki 분리 유지 (2026-04-14)
 
 > 이전 브레인스토밍 [BRAINSTORM-2026-04-14-wiki-ultra.md](./BRAINSTORM-2026-04-14-wiki-ultra.md) 보완.
 > 엔티티 통합 vs 분리 논쟁을 종결하고 **분리 유지 + 디자인 강화** 방향으로 확정.
@@ -65,38 +49,18 @@ WikiArticle.sectionIndex: SectionIndex[] // 경량 목차
 | 단위 | ProseMirror 노드 (paragraph/heading 등) | WikiBlock (섹션 단위) |
 | merge | text concat, lossy, 되돌리기 X | block-level, mergeHistory, unmerge ✅ |
 | split | ❌ (만들 수 있음 — must-todo) | blockIds 기반 ✅ |
-| 렌더러 (레이아웃) | 없음, 만들지 말 것 | ColumnStructure 데이터 구조 (통합 WikiTemplate의 layout 속성) |
+| 렌더러 (레이아웃 프리셋) | 없음, 만들지 말 것 | default / encyclopedia / wiki-color (TODO) |
 | 섹션 단위 조작 | ❌ (단일 JSON 한계) | ✅ 블록 배열 |
 
-### 3. 렌더러(Layout)는 위키 전용
+### 3. 렌더러(Layout Preset)는 위키 전용
 
 - 사용자 직관: "노트에 렌더러까지 주면 위키와 구별 없어진다" → **정확함**
 - 기술 이유: 단일 TipTap JSON에는 "레이아웃" 개념 성립 안 함. 블록 배열이라야 가능.
-- 결정: 레이아웃 개념은 `WikiArticle`에만
-- ~~`layout: "default" | "encyclopedia" | "wiki-color"` 문자열 상수~~ → **폐기 (2026-04-14 저녁)**. `layout: ColumnStructure` 데이터 구조로 재설계됨. [column-template-system.md](./BRAINSTORM-2026-04-14-column-template-system.md) 참조
+- 결정: `layout: "default" | "encyclopedia" | "wiki-color"` 는 `WikiArticle`에만
 
-### 4. ~~템플릿 3층 모델~~ → **통합 모델** (2026-04-14 저녁 재설계)
-
-> **⚠️ 이 아래 3층 모델은 폐기됨.** 실제 설계는 [column-template-system.md](./BRAINSTORM-2026-04-14-column-template-system.md)로 이관.
->
-> **폐기 이유**: Layer 1(Layout)을 독립 선택지로 분리한 것이 오버엔지니어링이었음. 나무위키/위키피디아는 실제로 "틀:인물" 선택 = 레이아웃 + 섹션 + 인포박스 + 색상 **한 번에 세팅**. Plot도 동일하게 `WikiTemplate`에 통합.
->
-> **새 통합 모델**:
-> ```
-> WikiTemplate = {
->   layout: ColumnStructure          // 컬럼 구조 (컬럼 개수 + 중첩 + 비율)
->   titleStyle?: TitleStyleDef       // article.title 렌더 커스텀
->   themeColor?: { light, dark }
->   sections: SectionPlacement[]     // 각 섹션이 어느 컬럼에
->   infobox: InfoboxDef
->   hatnotes?, navbox?
-> }
-> ```
->
-> 아래 원본 3층 모델 설명은 **히스토리 보존용**으로 남김:
+### 4. 템플릿 3층 모델 (위키 전용)
 
 ```
-[DEPRECATED]
 Layer 1 — Layout Preset (렌더러)
   default / encyclopedia / wiki-color
   · 문서별 선택, 내용과 독립
@@ -179,29 +143,16 @@ Layer 3 — Typed Infobox (C-3)
 
 ---
 
-## 다음 우선순위 (2026-04-14 저녁 재조정, 통합 모델 기준)
+## 다음 우선순위 (확정)
 
-> **아래 우선순위 리스트는 2026-04-14 저녁 재설계로 교체됨**. 진짜 Phase 계획은 [column-template-system.md](./BRAINSTORM-2026-04-14-column-template-system.md) 하단 Phase 계획 참조.
->
-> 재조정된 순서:
-> 1. **Phase 1**: WikiTemplate 데이터 모델 + 기본 템플릿 8종 (Person/Place/Concept/Work/Organization/Event 등)
-> 2. **Phase 2**: 컬럼 렌더러 + titleStyle + themeColor cascade
-> 3. **Phase 3**: 편집 UX (컬럼 드래그, 추가/삭제, 중첩 3 depth)
-> 4. **Phase 4**: 사용자 커스텀 템플릿 편집기
-> 5. **Phase 5**: 나무위키 잔여 (Hatnote, Ambox, Navbox, 섹션 icon)
-> 6. **Phase 6**: 편집 히스토리
-> 7. **Phase 7**: 노트 split
->
-> 아래 원본 리스트는 **히스토리 보존용**:
-
-1. ~~**인포박스 편집 엉킴 수정** (Easy, 즉시)~~ — PR #194에서 완료됨
-2. ~~**`wiki-color` 프리셋 추가** (Medium)~~ — 폐기 (컬럼 시스템에 흡수)
-3. **themeColor cascade (B-2)** → Phase 2에 포함
-4. **Hatnote (A-1)** → Phase 5에 포함
-5. **Ambox 자동 배너 (A-3)** → Phase 5에 포함
-6. **Navbox 자동 (A-4)** → Phase 5에 포함
-7. ~~**타입 인포박스 스키마 (C-3)** (Layer 2 Content Template 구현)~~ → Phase 1의 WikiTemplate 시스템에 통합
-8. **노트 split** (Medium, must-todo) → Phase 7
+1. **인포박스 편집 엉킴 수정** (Easy, 즉시) — float-right 인포박스 + 본문 heading 클릭 간섭
+2. **`wiki-color` 프리셋 추가** (Medium) — 나무위키식 상단 전폭 배치, 3번째 layout 옵션
+3. **themeColor cascade (B-2)** (Medium × High) — `WikiArticle.themeColor?: {light, dark}` 인포박스 + 섹션 + Navbox cascade
+4. **Hatnote (A-1)** (Easy × High) — 상단 안내 italic
+5. **Ambox 자동 배너 (A-3)** (Easy × Medium) — stub/orphan 자동 감지, 좌측 10px 색상 스트립
+6. **Navbox 자동 (A-4)** (Medium × High) — 카테고리 기반 하단 박스
+7. **타입 인포박스 스키마 (C-3)** (Medium × High) — Layer 2 Content Template 구현
+8. **노트 split** (Medium, must-todo) — UniqueID 활용
 
 ---
 

@@ -1,124 +1,55 @@
 # Plot Project Memory
 
-## 🔴 2026-04-21 후반 Book Pivot — Phase 2B-3 확산 + 2C + 3A-1 완료 (세션 마감 기준)
+## 🟢 2026-04-22 Hard Reset to PR #194 (최우선 읽기)
 
-### 이번 세션(후반) 완성 (+803 / -1229 lines, 16 files)
+**현재 branch HEAD**: `3f2e54c` (PR #194). PR #195 ~ #213 전부 폐기.
 
-**핵심 방향 전환** — 사용자 규칙 "과거 PR의 기존 컴포넌트 재사용 우선" → Wiki PR 산출물 전면 재활용:
-- `WikiTextEditor` export → BookInlineEditor 폐기 (FixedToolbar 31버튼 + 슬래시/위키링크/멘션/각주 그대로)
-- `WikiBlockRenderer` fallback → Infobox/TOC/Pull Quote/Image/URL/Table 전부 실제 chrome 렌더
-- `AddBlockButton` 재사용 → 13 옵션 (Structure 9 + Content 4) 위키 스타일 picker
+**대결정**: 2주간(04-14 ~ 04-21) "대결정" 3회 반복 패턴 종결:
+- 04-14 컬럼 템플릿 시스템
+- 04-17 Page Identity Tier
+- 04-21 Book Pivot
 
-**Phase 2B-3c — Section heading 인라인 편집**:
-- `components/book/shells/wiki-shell.tsx` 에 EditableSectionHeading
-- 클릭 → input swap / Enter save / Escape cancel / onBlur save
-- section 번호 prefix 유지
+**자각**: 사용자 언어 — "매거진/뉴스페이퍼/북 등등은 개발자 자기만족". Plot 코어(지식 관계망, 팔란티어×제텔카스텐)와 직교. "위키는 그냥 냅두자" → "PR #194가 위키 정점" → hard reset.
 
-**Phase 2B-3 확산 (4 shell)**:
-- `components/book/shared-editable.tsx` (신규) — EditableParagraph / EditableSectionHeading / EmptyBookCTA + `useBlockEditHelpers` hook
-- `useBlockEditHelpers.buildInsertBelow` — `handleAddBlock` 타입 dispatch 로직 내재화 (`text:callout` / `table` / `url` / section level 등)
-- Magazine / Newspaper / Book / Blank shell 전부 editing prop + BookBlockSlot 래핑 + 각 shell 레이아웃 맞춤 편집 UI
-- book-editor.tsx에서 editing prop 전파
+**폐기된 PR들**:
+- #211-213 Book Pivot (5 shell: magazine/newspaper/book/blank)
+- #209 Page Identity Tier (Article tint, Card palette)
+- #208 메타→블록 통합 (infobox/toc 블록화)
+- #207 docs catchup
+- #206 메타→블록 대결정 docs
+- #205 컬럼 추가/삭제 버튼
+- #204 컬럼 간 블록 드래그
+- #203 컬럼 비율 드래그
+- #202 ColumnPresetToggle
+- #201 Phase 2-1B-3 cleanup (기존 렌더러 삭제)
+- #200 Phase 2-1B-2
+- #199 Phase 2-1B-1
+- #198 Phase 2-1A (ColumnRenderer 등)
+- #197 WikiTemplate + 8 built-in
+- #196, #195 session docs
 
-**Phase 2C Step 1-4 (UX 정렬)**:
-- Step 1: book-editor.tsx 상단 bar 대청소 — 5 shell 버튼 / Grid Editor / Flipbook / Show Tweaks 전부 삭제 / Grid Editor mode 브랜치 삭제 / `mode` → `renderMode` controlled prop
-- Step 2: BookWorkspace에 `ViewHeader`(Notes 패턴) 도입 + Edit/Done 토글 우상단 재배치 + usePane 대응
-- Step 3: `components/book/book-display-panel.tsx` 신규 — 300px 팝오버 10 섹션 (Shell/Render mode/Typography/Margins/Columns/Chapter breaks/Background/Card border/Ink colors/Decoration) + Chip/ColorRow/CheckRow 헬퍼
-- Step 4: `secondary-panel-content.tsx`의 `/wiki` → WikiView → BookWorkspace 교체 / SplitViewButton 활용 / SmartSidePanel `sidePanelContext` 동기화
-- `tweak-panel.tsx` 삭제, `book-inline-editor.tsx` 삭제
+**유지된 PR들** (PR #194까지):
+- #194 Tier 1 인포박스 전체 완료 + 위키 디자인 버그 수정
+- #193, #192 Y.Doc PoC + Block Registry 단일화 + 인포박스 Tier 1-1/1-3
+- #191 나무위키 리서치 + TODO 최신화
+- #190 Reference Usage + Note History + Wiki Activity 정리
+- #189 Expand/Collapse All + TextBlock 드래그/리사이즈
+- #188 노트 References + fontSize cascade
+- #187 각주/Reference UX 개선
+- (전체: 하단 Completed PRs 섹션)
 
-**Phase 3A-1 (Wiki shell 드래그 reorder)**:
-- `components/book/book-dnd-provider.tsx` 신규 — DndContext + SortableContext + PointerSensor `activationConstraint.distance=5` (클릭 메뉴와 드래그 공존) + `onDragEnd` → `moveWikiBlock`
-- BookBlockSlot에 `useSortable({id: blockId})` + transform/transition/listeners, `⠿` 버튼 drag handle
-- Wiki shell body를 BookDndProvider 래핑, 5px 이하 클릭은 메뉴 / 드래그는 순서 변경
+**⚠️ Git 주의**: 이 branch가 hard reset 상태. main은 PR #213까지 있음. `git merge origin/main -X theirs` 실행 시 롤백 자동 취소. 곧 commit + PR 해서 main에 반영 필요.
 
-**P0 렌더 버그 수정**:
-- 증상: `/wiki` 텍스트 블록이 "Write something..." 빈 에디터로 렌더
-- 근본: `persist` `partialize`가 `article.blocks[i].content` 스트립 → rehydrate 후 `block.text = ""`. EditableParagraph가 `useWikiBlockContentJson` 훅의 `content`(IDB-loaded plaintext)를 destructure 안 해서 버림
-- fix: `initialText={content || block.text}` 1줄
+**다음 방향**: UI 일관성 감사 + 개선. 사용자 pain point "ui가 너무 이상함, 일관성 없고" 해결. 기능 추가는 당분간 보류.
 
-**Build & tsc**: 둘 다 clean (exit 0, 전 routes prerender)
-
-### 파일 변경 요약
-
-**신규 (3)**:
-- `components/book/book-display-panel.tsx` (300px 팝오버)
-- `components/book/book-dnd-provider.tsx` (dnd 래퍼)
-- `components/book/shared-editable.tsx` (4 shell 공유)
-
-**수정 (11)**: book-block-slot / book-editor / book-workspace / 5 shell / wiki-block-renderer(export만) / secondary-panel-content / settings.local
-
-**삭제 (2)**: book-inline-editor / tweak-panel
-
-### 다음 즉시 작업
-
-1. **WikiBlockRenderer fallback을 Magazine/Newspaper/Book/Blank에 확산** — wiki-shell만 적용됨
-2. **Phase 3A-2: 4 shell 드래그 reorder** — Magazine(CSS columns) + Book(dropcap float)의 dnd transform 충돌 검증 필요
-3. **AddBlockButton `nearestSectionLevel` 전달** — Subsection(H3/H4) 옵션 활성화
-
-### 기술 디테일 (재확인)
-
-- `wikiArticles`는 `WikiArticle[]` 배열 (`.find(a=>a.id===id)`)
-- 실 블록 데이터는 `plot-wiki-block-meta` IDB + `plot-wiki-block-bodies` IDB에서 lazy hydrate
-- `EditableParagraph`는 `useWikiBlockContentJson`의 **`content` 필드** 반드시 활용
-- `BookDisplayState` controlled prop으로 BookWorkspace → BookEditor → shell 전파
-- `BookDndProvider` enabled prop으로 read 모드에선 DndContext 안 마운트
-
----
-
-## 🔴 2026-04-21 Book Pivot (대결정) — 최우선 읽기
-
-**Wiki 시스템 전면 개편 확정**. 진실의 원천: `docs/BRAINSTORM-2026-04-21-book-pivot.md`
-
-**UX 재정렬 추가**: `docs/BRAINSTORM-2026-04-21-book-ux-refinement.md` (Grid Editor 폐기, Display 팝오버로 이관, Inline editor 성숙)
-
-**핵심 결정**:
-- **"Wiki" → "Book" 전면 rename** (노트 유지, 위키만 개편)
-- **4-layer 아키텍처**: Shell / Grid / Blocks / Decoration
-- **5 Shells** (wiki / magazine / newspaper / book / blank) + **Flipbook** (renderMode, orthogonal)
-- **12-col snap grid** — 기존 ColumnStructure 완전 폐기
-- **Editor UX 3-무브**: Pick shell / Edit blocks / Decorate (선택된 cell에만 chrome)
-
-**살려야 할 현재 작업분** (PR #209 pending):
-- `block-menu.tsx` primitives → Book에서 재활용
-- Article themeColor tint 아이디어 → `Book.theme.bgColor`/`accentColor`로 이관
-- Card palette 16색 → Magazine Shell 내 cell 배경색
-
-**폐기된 Phase**:
-- Phase 3 per-column blocks (v80 migration 안 함)
-- Phase 3.1 A/B/C/D/E/F (Magazine Layout 카탈로그 — Shell이 담당)
-- Phase 4 사용자 커스텀 템플릿 편집기 → "My Shell" savable preset (Phase 5)
-- Phase 5 나무위키 잔여 (Hatnote/Navbox/Callout) → Book Phase 6 chrome 블록
-
-**Book Phase 로드맵**:
-1. Phase 0 (현재) — 문서 정비 + `/pdca plan`
-2. Phase 1 — 타입 rename + migration v81 (3 PR)
-3. Phase 2 — Wiki Shell + 12-col grid 인프라
-4. Phase 3 — Magazine Shell (MVP 증명)
-5. Phase 4 — Newspaper + Book Shell + **Flipbook 구현**
-6. Phase 5 — Decoration Layer + Blank Shell + My Shell savable
-7. Phase 6 — Chrome 블록 + 기존 기능 이관 (footnote/categories/templates)
-8. Phase 7 — 노트 Split + Y.Doc 본 구현 + 인사이트 허브
-
-**디자인 레퍼런스**: `docs/design-system/` (사용자 제공 Plot Design System zip)
-- `README.md` — 디자인 토큰 + Non-negotiables 5
-- `ui_kits/plot-book/ARCHITECTURE.md` — 4-layer 청사진
-- `ui_kits/plot-book/RESEARCH.md` — 6 medium reader expectations
-- `ui_kits/plot-book/*.jsx` — React 프로토타입 (Shells, Editor, Flipbook)
-
-**Non-negotiables** (SKILL.md):
-1. Opacity hierarchy, not color
-2. Spacing, not borders
-3. No gradients, no emoji in chrome, no scale-on-hover
-4. Frozen type scale: 11·12·13·14·14.5·15·16·19·23·28
-5. Transitions 120/160/200ms ease — bg/opacity only
+**Claude memory**: `feedback_core_alignment.md`, `project_book_pivot_rollback.md`, `feedback_design_before_implementation.md`
 
 ---
 
 ## Project Overview
 - **Type**: Next.js knowledge management app (Linear UI + Obsidian linking + Anki-lite review)
 - **Stack**: Next.js 16, React 19, TypeScript, Zustand 5 (persist w/ IDB), TipTap 3, Tailwind v4
-- **Store**: `lib/store/index.ts` — 23-slice Zustand store with versioned migration (currently v79)
+- **Store**: `lib/store/index.ts` — 22-slice Zustand store with versioned migration (currently v74)
 - **Workflow**: Inbox -> Capture -> Permanent (3 statuses only)
 
 ## User Preferences
@@ -158,16 +89,7 @@
 - **Sub-grouping**: `group.ts` 재귀 호출로 2단계 그룹핑. NoteGroup.subGroups에 저장. VirtualItem "subheader" 타입으로 렌더
 - **Thread Nested Replies**: ThreadStep.parentId 기반 트리 구조. Thread 패널에서 들여쓰기 렌더 + Reply 버튼
 - **Wiki Categories**: wiki-categories slice, DAG 트리 (parentIds[]), 2-panel 트리 에디터 (드래그 계층 편집)
-- **Wiki Layout = ColumnStructure (Phase 2-1B-3)**: `WikiLayout` string 타입 폐기. `WikiArticle.layout: ColumnStructure` (재귀 컬럼). 1·2·3 프리셋 + 자유 비율 드래그 + 블록 컬럼 간 드래그 + 컬럼 추가/삭제 (Phase 2-2-A/B)
-- **메타 → 블록 통합 결정 (2026-04-15 밤, Phase 2-2-C 예정)**: Infobox/TOC/Hatnote/Navbox/Callout 등 모든 메타를 WikiBlockType으로 통합. `article.infobox` / `tocStyle` scalar 필드 삭제 예정. Title만 예외 (최상단 고정). 진실의 원천: `BRAINSTORM-2026-04-14-column-template-system.md` "2026-04-15 밤 대결정" 절
-- **ColumnStructure + ColumnPath**: 재귀 컬럼 구조, `columns: ColumnDefinition[]`. ColumnPath = number[] (예: [0], [1, 2] 중첩). `columnAssignments: Record<blockId, ColumnPath>` (canonical), leaf blockIds는 derived view
-- **react-resizable-panels 통합 (Phase 2-2-B-1)**: ColumnRenderer 최상위 horizontal + editable일 때 PanelGroup + PanelResizeHandle. onLayout percentage → updateColumnRatios 액션. 중첩 컬럼은 CSS Grid (Phase 2-2-B-3-b에서 nested drag)
-- **Page Identity Tier (Phase 3.1-A, 2026-04-17)**: Article themeColor → `.wiki-theme-scope.wiki-article-renderer`에 `color-mix(... 5%, transparent)` 배경 tint → Title+Body 일체감. Card palette는 `::before` 오버레이로 article tint 위에 cascade. picker는 WikiTitle의 paint-bucket 버튼
-- **공통 block-menu primitives (Phase 3.1-B, 2026-04-17)**: `components/wiki-editor/block-menu.tsx` — MenuSurface/MenuSection/PresetGrid/MenuAction/MenuDivider + 공용 상수. 모든 위키 블록 ⋯ 메뉴가 사용 (Infobox/TOC/TextBlock/SectionBlock/NoteRefBlock). 새 블록 추가 시 이걸 씀
-- **WikiBlock presentation properties (Phase 3.1-B, 2026-04-17)**: `width` (narrow/default/wide/full/px) + `density` (compact/normal/loose) + 기존 `fontSize` 공통 속성. Infobox: width + density, TOC: width + fontSize + density (inline gap으로 Tailwind v4 space-y 우회)
-- **SectionNumbers Context (Phase 3.1-B, 2026-04-17)**: `section-numbers-context.ts`를 producer/consumer 분리 파일로 둬서 순환 import 회피. ColumnGroupBlock이 consume해 중첩 섹션 번호 연결
-- **Card 용어 (UI only, 2026-04-17)**: 위키 layout-level column은 UI에서 "card"로 표기. 내부 타입 `ColumnStructure` 등은 유지 — 리팩토링 비용 회피. 새 UI text 작성 시 "card"
-- **wikiTemplates slice + 8 built-in (Phase 1)**: WikiTemplate 타입 (layout/titleStyle/themeColor/sections/infobox/hatnotes/navbox). Built-in = 코드 정의 (`lib/wiki-templates/built-in.ts`), user-defined = slice persist. WikiTemplatePickerDialog로 새 위키 생성 시 템플릿 선택
+- **Wiki Layout Preset**: `WikiLayout = "default" | "encyclopedia"` — article별 레이아웃 전환
 - **Wiki URL Block**: `WikiBlockType` 'url' 추가, 유튜브 iframe embed + 일반 링크 카드
 - **Unified Pipeline**: Filter/Display/SidePanel 통합 — 5개 space가 공유 컴포넌트 사용
 - **ToggleSwitch**: `components/ui/toggle-switch.tsx` — 라이트/다크 모드 공통, off=회색 on=accent+white knob
@@ -244,147 +166,28 @@
 - **위키 TextBlock BlockDragOverlay**: `wiki-block-renderer.tsx` WikiTextEditor에 BlockDragOverlay 래핑. `pl-8` 좌측 패딩 = 드래그 핸들 거터. 노트 에디터 TipTapEditor.tsx와 동일 패턴
 - **위키 TextBlock 4코너 리사이즈**: `WikiBlock.editorWidth/editorHeight` persist (Store v75). 편집 모드에서만 적용 (읽기=full width). `block-resize-corner--tl/tr/bl/br` CSS 재활용. `⋯` 메뉴 "Reset editor size" (ArrowsIn). `useBlockResize` 훅 로직 인라인 (NodeView가 아니라 일반 React 컴포넌트라서)
 
-## Store Slices (23 total, v77)
-notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks, wiki-templates
+## Store Slices (22 total, v75)
+notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
 
 - **Reference Usage 섹션**: `reference-detail-panel.tsx` — notes.filter + wikiArticles.filter로 사용처 목록. openNote/navigateToWikiArticle 클릭 네비게이션
 - **Note History = ActivityTimeline 연결**: `side-panel-activity.tsx` — noteEvents 기반 타임라인 (기존 `activity-timeline.tsx` 재활용)
 - **Wiki Activity 중복 정리**: Article Stats 삭제 (Detail Properties와 중복), Thread 메시지 삭제
 - **Expand/Collapse All 항상 표시**: 접을 게 없으면 disabled + 흐릿. Details 토글 = DOM 클릭 (setNodeMarkup 대신). hasCollapsibles: details/summary/footnoteRef/referenceIds
 
-## 나무위키 리서치 결과 (2026-04-14 오전) — Tier 프레임은 **재설계됨** (저녁)
-
-> **프레임 변경**: 기존 "Tier 1-4" 구조는 Phase 계획으로 재편됐음. 자세히: `docs/BRAINSTORM-2026-04-14-column-template-system.md`
-
-- ✅ **Tier 1 인포박스 완료** 🎉 (PR #192, #194): 대표 이미지+캡션, 헤더 색상 테마, 접기/펼치기, 섹션 구분 행, 필드 값 리치텍스트
-- **Tier 2 새 블록** → Phase 5 (Navigation Box 등)로 이관
-- **Tier 3 매크로** → Phase 5 또는 별도 Phase로 보류 (나이/D-Day/Include)
-- **Tier 4 고급** → 장기 TODO (상위/하위 문서, 각주 이미지, 루비 텍스트)
-- **아키텍처 결정**: 모든 새 기능 = base 티어 (노트+위키 공용). ✅ Insert 레지스트리 단일화 완료 (PR #192)
-- **컬럼 시스템 + WikiTemplate** (2026-04-14 저녁 신규): 모든 위키 문서가 `layout: ColumnStructure + sections + infobox + titleStyle + themeColor`로 통합. 8종 built-in 템플릿 (Blank/Encyclopedia/Person/Place/Concept/Work/Organization/Event)
+## 나무위키 리서치 결과 (2026-04-14) — 도입 대상
+- **Tier 1 인포박스 완료** 🎉: ✅ 대표 이미지+캡션 (PR #192), ✅ 헤더 색상 테마 (2026-04-14 밤), ✅ 접기/펼치기 (PR #192), ✅ 섹션 구분 행 (2026-04-14 밤), ✅ 필드 값 리치텍스트 (2026-04-14 밤)
+- **Tier 2 새 블록**: 배너 블록 (배경색+제목+부제), 둘러보기 틀 (Navigation Box)
+- **Tier 3 매크로**: 나이 계산 [age], D-Day [dday], Include (틀 삽입)
+- **Tier 4 고급**: 상위/하위 문서 관계, 각주 이미지, 루비 텍스트
+- **아키텍처 결정**: 모든 새 기능 = base 티어 (노트+위키 공용). ✅ Insert 레지스트리 단일화 완료 (PR #192, 3곳 중복 제거)
 
 ## 2026-04-14 세션 의사결정 (브레인스토밍)
-
-### 오전 결정
 - **Note/Wiki 2-entity 철학 확정** — 엔티티 통합 논의(Alpha/Beta/Gamma) 전부 폐기. 2026-04-01 결정 재확인. 차별점의 원천 = 데이터 구조 (TipTap JSON vs WikiBlock[]). 렌더러는 위키 전용. 자세히: `docs/BRAINSTORM-2026-04-14-entity-philosophy.md`
-- **노트 split = must-todo** — UniqueID extension으로 이미 가능. 위키 WikiSplitPage 패턴 재활용 (사용자 명시). Medium × 2-3일 × PR 하나.
+- **템플릿 3층 모델** — Layer 1 Layout Preset (렌더러, 위키 전용) + Layer 2 Content Template (섹션 뼈대, Person/Place 등) + Layer 3 Typed Infobox. 노트 템플릿은 NoteTemplate slice 유지 (UpNote식 단순 복사).
+- **노트 split = must-todo** — UniqueID extension으로 이미 가능 (top-level 노드 23종 영속 ID). 위키 splitMode UI 재활용. Medium × 2-3일 × PR 하나. 우선순위는 위키 디자인 강화 이후.
 - **표류 종결** — 2026-03-30 PIVOT #1 (IKEA 전략) → 2026-04-01 ROLLBACK #2 (노션식 폐기) → 2026-04-14 FINAL (분리 유지 + 위키 디자인 강화). 향후 엔티티 통합 제안 금지.
 
-### 저녁 재설계 (3-layer 모델 폐기, 컬럼 시스템으로 재구성)
-- **3층 모델 폐기**: "Layer 1 Layout Preset + Layer 2 Content Template + Layer 3 Typed Infobox" 분리 모델 폐기. 오버엔지니어링으로 판정. 자세히: `docs/BRAINSTORM-2026-04-14-column-template-system.md`
-- **통합 모델**: `WikiTemplate = { layout: ColumnStructure + titleStyle + themeColor + sections + infobox + hatnotes + navbox }` — 컬럼 구조 + 섹션 배치가 템플릿 자체.
-- **컬럼 시스템**: 1/2/3/N 컬럼 자유, 중첩 최대 3 depth, 경계 드래그로 비율 조절. 기존 `layout: "default" | "encyclopedia" | "wiki-color"` 문자열 상수 → `ColumnStructure` 데이터 구조.
-- **Title 처리**: 나무위키/위키피디아 관습대로 **최상단 고정**. `article.title + titleStyle` (alignment/size/showAliases/themeColorBg). Title 블록화 폐기.
-- **Column Heading 블록 폐기**: Section(H2)로 충분.
-- **기본 템플릿 8종 built-in**: Blank / Encyclopedia / Person / Place / Concept / Work / Organization / Event
-- **사용자 커스텀 템플릿**: "파라미터 조합" 방식 (JSX 코드 주입 X). `wikiTemplates` slice에 built-in + user-defined 공존.
-- **섹션 정체성 강화 (옵션)**: section 블록에 icon/themeColor/description 속성 추가 고려. Phase 5에 포함.
-- **문서 정비**: `BRAINSTORM-2026-04-14-wiki-ultra.md`, `entity-philosophy.md`, `PHASE-PLAN-wiki-enrichment.md` 상단에 DEPRECATED 배너 + 새 문서 링크.
-- **새 Phase 계획** (Phase 0~7): 0 문서 정비 → 1 데이터 모델 → 2 렌더러 → 3 편집 UX → 4 커스텀 템플릿 → 5 나무위키 잔여 → 6 편집 히스토리 → 7 노트 split
-
-## 2026-04-15 저녁 — Phase 2-2-B-3-b + 2-2-C 구현 완료
-
-### Phase 2-2-B-3-b — 빈 컬럼 AddBlock + 중첩 컬럼 생성
-- `splitLeafIntoColumns(articleId, path, count)` 액션 — leaf를 N-col ColumnStructure로 변환. depth <3 가드, count 2-4
-- `LeafDroppableCell` 빈 컬럼에 AddBlockButton + Split 2/3 버튼 (drag-over 시 "Drop block here"만 표시)
-- `column-renderer.tsx` CSS Grid 브랜치 (nested horizontal)에도 `+` / `X` 버튼 노출 (hover group/nested-panel)
-- `handleAddBlockToColumn` 훅 추가 — addWikiBlock + moveBlockToColumn 연속 호출. URL dialog는 `urlBlockDialog.columnPath` 확장으로 대응
-
-### Phase 2-2-C — 메타 → 블록 통합 (큰 리팩토링)
-- **WikiBlockType 확장**: `"infobox"`, `"toc"` 추가. `WikiBlock`에 `fields`, `headerColor`, `tocCollapsed`, `hiddenLevels` 필드 (infobox/toc 전용)
-- **Wrapper 컴포넌트**: `components/wiki-editor/wiki-infobox-block.tsx` (기존 WikiInfobox 래핑) + `wiki-toc-block.tsx` (CollapsibleTOC 로직 이식, store에서 sections live derive)
-- **WikiInfobox**: `onEntriesChange` prop 추가 — 블록 래퍼에서 `onUpdate({ fields })`로 릴레이. 기존 store action 의존 없어짐
-- **AddBlockButton**: structureItems에 Infobox ("Key-value metadata") + TOC ("Auto contents") 2개 추가
-- **WikiArticleRenderer**: `metaSlots` / `tocStyle` / `infoboxColumnPath` 로직 전부 삭제 + 인라인 `CollapsibleTOC` 삭제 (wiki-toc-block.tsx로 이동)
-- **ColumnRenderer**: `metaSlots` prop 제거 (ColumnCell/LeafDroppableCell까지 재귀 제거)
-- **Migration v78**: 기존 `article.infobox` (빈 배열 포함) → infobox block 생성 + `tocStyle.show === true` → toc block 생성 + scalar 필드 4개 삭제 (per-article try/catch)
-- **Migration v79**: 기존 v48 seed injection bug로 인한 wikiArticles 중복 dedupe (id 기준 첫 번째만 유지)
-- **ColumnMetaPositionMenu 삭제**: 파일 삭제 + wiki-view.tsx / secondary-panel-content.tsx 호출처 제거
-- **scalar 액션 삭제**: `setTocStyle`, `setInfoboxColumnPath`, `setWikiArticleInfobox` — types + slice
-- **WikiArticle scalar 필드 삭제**: `infobox`, `infoboxHeaderColor`, `infoboxColumnPath`, `tocStyle`. `WikiTocStyle` 타입 삭제. `WikiMergeSnapshot.infobox`는 legacy 호환용 optional 유지
-- **instantiateTemplate**: infobox/toc 블록 자동 생성 + columnAssignments에 할당. 반환 타입에서 `infobox`/`infoboxHeaderColor` 제거
-- **merge/split/unmerge/copy 경로**: scalar infobox 참조 전부 제거. infobox 블록이 blocks에 포함되므로 자동 처리
-- **isWikiStub**: infobox/toc 블록을 카운트에서 제외 (`contentBlocks = blocks.filter(b => b.type !== "infobox" && b.type !== "toc")`)
-- **wiki-to-tiptap**: `article.infobox` → `article.blocks.filter(b => b.type === "infobox").flatMap(b => b.fields)` 로 derive
-- **seed wiki-1~3**: scalar infobox 필드 → blocks 배열 맨 앞에 infobox 블록 inline
-- **Store version**: 77 → 79
-
-## Phase 3 설계 완료 (구현 대기) — Multi-pane Document Model
-
-**배경**: Phase 2-2-C로 모든 메타가 블록이 됐지만, UX 테스트에서 3컬럼 모드 혼란 확인:
-- 섹션 번호가 전체 blocks[] 기준이라 컬럼 간 뒤섞임 ("1. Definition" 다음 "5. Untitled Section")
-- 빈 컬럼 "or split: 2/3" 버튼이 AddBlock + Drop zone과 경쟁
-- 하단 글로벌 AddBlock이 암묵적으로 main[0]으로 감
-- **컬럼이 "독립 공간" 아니라 view-level projection**
-
-**결정**: `WikiArticle.blocks` flat pool + `columnAssignments` 폐기 → **per-column blocks** 모델로 전환. 각 컬럼이 자체 blocks[] + 자체 섹션 넘버링 + 자체 name/themeColor 보유. 잡지식 독립 공간.
-
-**추가 결정사항**:
-- 가로(horizontal) + 세로(vertical) 둘 다 지원. 중첩 3 depth 내 혼합 가능
-- 컬럼 메뉴 ⋯ 신규: Split H / Split V / Set name / Set color / Delete (Split 버튼 빈 컬럼에서 제거)
-- 컬럼 시각 구분: 세로선 + 고유 배경색 (투명도 낮게, 잡지 스타일)
-- 메타(infobox/toc) 컬럼 간 자유 드래그 배치 유지
-- 타이틀/서브타이틀/별칭 = 최상단 공유 레이어 고정, 1개만
-- 1컬럼 모드 = 기존 나무위키 스타일 유지
-- 섹션 넘버링 = pane별 독립 (컬럼 A의 "1", 컬럼 B의 "1" 동시 가능)
-- 높이 제어: 기본 auto-fit, 경계 드래그 시 ratio 고정 모드. **Match heights / Fill container = Phase 3.1로 분리**
-- i18n: 한국어 "컬럼/행", 영어 "Column/Row"
-
-**진실의 원천**: `docs/BRAINSTORM-2026-04-15-multi-pane-document-model.md`
-
-## 2026-04-15 밤 대결정 — 메타 → 블록 통합 (🅑)
-
-Phase 2-2-B-3-a 머지 후 사용자와 아키텍처 재논의. 모든 메타 (Infobox/TOC/Hatnote/Navbox/Callout 등)를 **WikiBlockType으로 통합** 하기로 확정.
-
-**변경 핵심**:
-- WikiBlockType에 `"infobox"`, `"toc"` (+ Phase 5에서 hatnote/navbox/callout) 추가
-- `WikiArticle` scalar 메타 필드 (infobox, infoboxHeaderColor, infoboxColumnPath, tocStyle) **Phase 2-2-C에서 삭제**
-- `ColumnMetaPositionMenu` **Phase 2-2-C에서 삭제** (블록 시스템으로 자연 흡수)
-- Title만 예외 (항상 최상단 고정, article.title + titleStyle)
-- Migration v78: 기존 article.infobox[] → infobox block, tocStyle → toc block
-
-**이유**: UX 일관성 최대 (메타/블록 같은 편집 패턴), 여러 메타 자연 표현 (Personal + Career 등), 데이터 모델 단순화, Phase 5 준비
-
-**로드맵**: 2-2-B-3-b → **2-2-C 신규** → 3 (노션식 분기) → 4 (커스텀 편집기) → 5 (나무위키 잔여, 모두 블록) → 마지막 템플릿 풍성화
-
-**진실의 원천**: `BRAINSTORM-2026-04-14-column-template-system.md` "2026-04-15 밤 대결정" 절
-
 ## Completed PRs (recent)
-
-### 2026-04-17 (집, Phase 3.1-A/B + Page Identity)
-- **PR pending**: Phase 3.1-A/B 대폭 진행 + Page Identity Tier 시스템
-  - SectionNumbers Context (column-group 내부 섹션 번호)
-  - Column-group unwrap 버그 fix 2곳 (1열 축소 + X 버튼 → unwrapColumnGroup 사용, 남은 블록 보존)
-  - Seed 리셋 (9노트→3, 위키 3→2 mini, 카테고리 [])
-  - `addWikiBlock` afterBlockId 위치 버그 fix (layout leaf에서 `"append"` 항상 → `loc.index + 1`)
-  - 공통 `block-menu.tsx` primitives (MenuSurface/MenuSection/PresetGrid/MenuAction/MenuDivider) + 5개 블록 마이그레이션
-  - `WikiBlock.width` 프리셋+드래그 (Infobox/TOC)
-  - `WikiBlock.density` Spacing 3단계 (Infobox padding / TOC inline gap)
-  - `WikiBlock.fontSize` TOC 적용 (em indent)
-  - Card 용어 통일 (UI only)
-  - Asymmetric 프리셋 UI 폴리싱 (mini bar + cardCount 그룹핑)
-  - 1-card palette 시각 적용 버그 fix (`showCardBox = colCount >= 2 || !!paletteId`)
-  - 1-card ⋯ 메뉴 누락 fix (showNestedEditUI 확장)
-  - Page Identity Step 1: `.wiki-theme-scope.wiki-article-renderer` 5% tint
-  - Page Identity Step 2: Card `::before` cascade (자연 형성)
-  - WikiTitle article-level themeColor picker (paint-bucket + 10 preset + custom)
-  - `BRAINSTORM-2026-04-17-page-identity.md` 저장
-
-### 2026-04-15 (집, 10 PR day)
-- **PR #208 (merged)**: Phase 2-2-B-3-b + Phase 2-2-C + Phase 3 브레인스토밍 — 빈 컬럼 AddBlock/중첩 컬럼 + 메타→블록 통합 (migration v78+v79) + 다중 pane 문서 모델 설계 (docs/BRAINSTORM-2026-04-15-multi-pane-document-model.md)
-- **PR #207 (merged)**: docs — CONTEXT.md + MEMORY.md catchup (Phase 2-1A ~ 2-2-B-3-a + 메타→블록 대결정)
-- **PR #206 (merged)**: docs — 2026-04-15 밤 대결정 (메타 → 블록 통합) + 로드맵 재편
-- **PR #205 (merged)**: Phase 2-2-B-3-a — 컬럼 추가/삭제 버튼 (addColumnAfter/removeColumn + 재귀 헬퍼 3 + UI 사이/끝 +, 각 컬럼 X)
-- **PR #204 (merged)**: Phase 2-2-B-2 — 블록 컬럼 간 드래그 (moveBlockToColumn + syncLayoutFromAssignments + LeafDroppableCell)
-- **PR #203 (merged)**: Phase 2-2-B-1 — 컬럼 비율 드래그 (react-resizable-panels) + ColumnMetaPositionMenu (Phase 2-2-C에서 삭제 예정)
-- **PR #202 (merged)**: Phase 2-2-A — ColumnPresetToggle (1·2·3 컬럼 빠른 전환) + applyColumnPreset/buildColumnPreset
-- **PR #201 (merged)**: Phase 2-1B-3 — Cleanup 1662줄 삭제 (wiki-article-view 1220 + wiki-article-encyclopedia 406 + wiki-layout-toggle 36) + WikiLayout 타입/필드 제거 + columnLayout → layout rename + migration v77 + InlineCategoryTags 별도 파일
-- **PR #200 (merged)**: Phase 2-1B-2 — WikiArticleRenderer 편집 모드 전면 흡수 (SortableContext + DnD + splitMode + FloatingDragDropBar + DragOverlay + UrlInputDialog + 편집 Title/Aliases/Categories/Infobox) + 4 호출 지점 마이그레이션
-- **PR #199 (merged)**: Phase 2-1B-1 — WikiArticleRenderer (read-only 통합) + 2 호출 지점 마이그레이션 (wiki-embed-node, note-hover-preview)
-- **PR #198 (merged)**: Phase 2-1A — ColumnRenderer + WikiTitle + WikiThemeProvider 인프라 + tocStyle/infoboxColumnPath 메타 필드 (Phase 2-2-C에서 삭제 예정)
-- **PR #197 (merged)**: Phase 1 — WikiTemplate 시스템 + 8 built-in 템플릿 + picker UI + Store v76 migration + setWikiInfobox 버그 수정
-
-### 2026-04-14 (집)
 - **WIP (2026-04-14 밤, next PR)**: 인포박스 Tier 1 전체 (Tier 1-2 헤더 색상 + Default 인포박스 통합 + Tier 1-4 섹션 구분 행 + Tier 1-5 필드 리치텍스트)
   - **경로 A: TipTap `InfoboxBlockNode`** (노트 에디터 + 위키 TextBlock 내부 슬래시 `/infobox`)
     - `headerColor` attr 추가 (`string | null`, null=default `bg-secondary/30` class)
@@ -773,30 +576,9 @@ Phase 2-2-B-3-a 머지 후 사용자와 아키텍처 재논의. 모든 메타 (I
 - **Grouping collapse/expand**: 그룹 헤더 클릭으로 접기/펴기, chevron 회전 인디케이터
 - **Filter 2단계 nested**: Linear식 side-by-side 패널(hover 기반)
 
-## Current Direction (as of 2026-04-17)
+## Current Direction (as of 2026-04-14)
 
-### 최신 방향 (2026-04-17 확정)
-
-- **🎨 Identity Tier 시스템** (`BRAINSTORM-2026-04-17-page-identity.md`):
-  ```
-  Tier 0 default            - 깔끔, 색 없음
-  Tier 1 Article theme      - ✅ 전체 5% tint
-  Tier 2 Card palette       - ✅ 카드 강한 색 (cascade on Tier 1)
-  Tier 3 Hero / Opening     - ⏳ 다음
-  Tier 4 Full-bleed image   - 미래
-  Tier 5 Custom template    - Phase 4
-  ```
-  사용자 비전 "위키+잡지 둘 다 표현" 수용 — 기본은 깔끔, 꾸미고 싶으면 Tier 올라감.
-
-- **공통 ⋯ block-menu primitives**: 모든 위키 블록 ⋯ 메뉴가 `block-menu.tsx`의 primitives 사용 — 시각 일관 / 기능 블록별. 새 블록 추가 시 이걸 씀.
-
-- **Card 용어 (UI only)**: 위키 layout-level column은 UI에서 "card" (노트 columnsBlock과 구분). 내부 타입 `ColumnStructure` 등은 그대로 유지 — 리팩토링 비용 회피.
-
-- **메뉴 디자인 원칙 확정**: ⋯ 메뉴 = **setting panel** (현재값 + 원클릭 토글), 노트 우클릭 = **action list** (명령 목록). 목적 다르니 구조 달라도 OK. 디자인 토큰/간격/아이콘만 동일 수준.
-
-- **제외 재확인**: Title 블록화는 Phase 4까지 보류 (2026-04-15 대결정 유지). Article background 단독 필드는 skip — Hero가 상위 호환.
-
-### 과거 방향 (2026-04-14 확정)
+### 최신 방향 (2026-04-14 확정)
 - **Note/Wiki 2-entity 철학 확정** — 엔티티 통합 논의(Alpha/Beta/Gamma) 전부 폐기. 차별점의 원천 = 데이터 구조 (TipTap JSON vs WikiBlock[]). 렌더러는 위키 전용. 자세히: `docs/BRAINSTORM-2026-04-14-entity-philosophy.md`
 - **위키 디자인 강화 우선** — 엔티티 통합보단 디자인 약점 해결 (`wiki-color` 프리셋 + themeColor + Hatnote/Ambox/Navbox)
 - **위키 템플릿 3층 모델** — Layer 1 Layout Preset + Layer 2 Content Template + Layer 3 Typed Infobox. 노트 템플릿은 NoteTemplate slice 유지 (UpNote식)

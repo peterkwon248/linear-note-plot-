@@ -8,7 +8,7 @@ import { BookOpen, ArrowSquareOut, X as PhX, ArrowsIn } from "@/lib/editor/edito
 import { usePlotStore } from "@/lib/store"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
-import { WikiArticleRenderer } from "@/components/wiki-editor/wiki-article-renderer"
+import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
 import type { WikiArticle } from "@/lib/types"
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
         >
           <div className="flex items-center gap-2 text-muted-foreground/50">
             <BookOpen size={14} />
-            <span className="text-2xs italic">Book article not found</span>
+            <span className="text-2xs italic">Wiki article not found</span>
             <button
               type="button"
               onClick={() => deleteNode()}
@@ -121,7 +121,7 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 import("@/lib/wiki-article-nav").then(({ navigateToWikiArticle }) => navigateToWikiArticle(articleId))
               }}
               className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
-              title="Open book"
+              title="Open wiki article"
             >
               <ArrowSquareOut size={12} />
             </button>
@@ -145,11 +145,12 @@ function WikiEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
             </button>
           </div>
         </div>
-        {/* Wiki content — read-only encyclopedia view (Phase 2-1B-1: ColumnRenderer 기반) */}
+        {/* Wiki content — read-only encyclopedia view */}
         <div className={embedHeight ? "overflow-y-auto h-full" : ""}>
-          <WikiArticleRenderer
-            articleId={displayArticle.id}
-            variant="encyclopedia"
+          <WikiArticleEncyclopedia
+            article={displayArticle}
+            isEditing={false}
+            onBack={() => {}}
           />
         </div>
       </div>

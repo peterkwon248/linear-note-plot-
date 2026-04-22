@@ -262,8 +262,8 @@ export function GraphInsightsView() {
 
             {/* Wiki Coverage */}
             <DashboardCard
-              title="Book Coverage"
-              subtitle="Book distribution"
+              title="Wiki Coverage"
+              subtitle="Wiki article distribution"
             >
               <div className="px-2 py-1 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -274,7 +274,7 @@ export function GraphInsightsView() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-2xs text-muted-foreground">Books</p>
+                    <p className="text-2xs text-muted-foreground">Wiki Articles</p>
                     <p className="text-ui font-semibold tabular-nums text-accent">
                       {wikiNotes.length}
                     </p>
@@ -288,7 +288,7 @@ export function GraphInsightsView() {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-2xs text-muted-foreground">Book %</span>
+                    <span className="text-2xs text-muted-foreground">Wiki %</span>
                     <span className="text-2xs tabular-nums text-muted-foreground">
                       {wikiNotes.length} / {nodeCount}
                     </span>

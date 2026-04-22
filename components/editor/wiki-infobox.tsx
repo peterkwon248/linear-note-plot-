@@ -42,18 +42,7 @@ function hexToRgba(hex: string, alpha = 0.35): string {
 }
 
 interface WikiInfoboxProps {
-  /** Entity ID — Note id when entityType="note", WikiArticle id when entityType="wiki". */
   noteId: string
-  /**
-   * Which slice owns this infobox. Phase 1 fix: previously hardcoded to Note slice
-   * which silently failed when a WikiArticle id was passed. Default "note" for
-   * backwards compat (note-editor.tsx still works without changes).
-   *
-   * Phase 2-2-C: wiki articles now pipe entries/headerColor via `onEntriesChange`/
-   * `onHeaderColorChange` (block-scoped). When `onEntriesChange` is provided the
-   * component skips the legacy store-dispatch path entirely.
-   */
-  entityType?: "note" | "wiki"
   entries: WikiInfoboxEntry[]
   editable?: boolean
   className?: string
@@ -61,29 +50,15 @@ interface WikiInfoboxProps {
   headerColor?: string | null
   /** Tier 1-2: Callback when header color changes. If omitted, the color picker is hidden. */
   onHeaderColorChange?: (color: string | null) => void
-  /**
-   * Phase 2-2-C: When provided, entry mutations call this instead of the store
-   * action. Used by block-wrapped infoboxes where state lives on `WikiBlock.fields`.
-   */
-  onEntriesChange?: (entries: WikiInfoboxEntry[]) => void
-  /**
-   * Phase 3.1-B: Extra action slot rendered at the right end of the header,
-   * after the color/edit buttons. Used by wiki-infobox-block wrapper to inject
-   * the ⋯ block-actions menu without overlapping the existing buttons.
-   */
-  headerExtraActions?: React.ReactNode
 }
 
 export function WikiInfobox({
   noteId,
-  entityType = "note",
   entries,
   editable = false,
   className,
   headerColor = null,
   onHeaderColorChange,
-  onEntriesChange,
-  headerExtraActions,
 }: WikiInfoboxProps) {
   const setWikiInfobox = usePlotStore((s) => s.setWikiInfobox)
   const [isEditing, setIsEditing] = useState(false)
@@ -99,18 +74,9 @@ export function WikiInfobox({
 
   const handleSave = useCallback(() => {
     const cleaned = localEntries.filter((e) => e.key.trim() !== "")
-    // Phase 2-2-C: block-wrapped wiki callers route via `onEntriesChange`.
-    // Note-entity callers still persist via `setWikiInfobox` (unchanged).
-    if (onEntriesChange) {
-      onEntriesChange(cleaned)
-    } else if (entityType === "note") {
-      setWikiInfobox(noteId, cleaned)
-    }
-    // entityType === "wiki" without onEntriesChange is a bug post-Phase 2-2-C —
-    // wiki entries must go through the block wrapper. Silently no-op to avoid
-    // corrupting state.
+    setWikiInfobox(noteId, cleaned)
     setIsEditing(false)
-  }, [noteId, entityType, localEntries, setWikiInfobox, onEntriesChange])
+  }, [noteId, localEntries, setWikiInfobox])
 
   const handleCancel = useCallback(() => {
     setLocalEntries([...entries])
@@ -189,11 +155,7 @@ export function WikiInfobox({
               >
                 <PencilSimple size={12} />
               </button>
-              {headerExtraActions}
             </div>
-          )}
-          {!editable && headerExtraActions && (
-            <div className="flex items-center gap-0.5">{headerExtraActions}</div>
           )}
 
           {canChangeColor && showColorPicker && (

@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, AutopilotLogEntry, Relation, Reflection, ColumnStructure } from "../types"
+import type { NoteEvent, AutopilotLogEntry, Relation, Reflection } from "../types"
 import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
@@ -30,7 +30,6 @@ import { createWikiArticlesSlice } from "./slices/wiki-articles"
 import { createWikiCategoriesSlice } from "./slices/wiki-categories"
 import { createReferencesSlice } from "./slices/references"
 import { createGlobalBookmarksSlice } from "./slices/global-bookmarks"
-import { createWikiTemplatesSlice } from "./slices/wiki-templates"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -86,7 +85,6 @@ export const usePlotStore = create<PlotState>()(
         wikiArticles: SEED_WIKI_ARTICLES,
         references: {} as Record<string, import("../types").Reference>,
         globalBookmarks: {} as Record<string, import("../types").GlobalBookmark>,
-        wikiTemplates: {} as Record<string, import("../types").WikiTemplate>,
         listPaneWidth: 320,
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
@@ -123,7 +121,6 @@ export const usePlotStore = create<PlotState>()(
         ...createWikiArticlesSlice(set, get),
         ...createReferencesSlice(set),
         ...createGlobalBookmarksSlice(set),
-        ...createWikiTemplatesSlice(set, get),
 
         // ── Todo Index ──
         rebuildTodoIndex: async () => {
@@ -242,7 +239,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 80,
+      version: 75,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -251,26 +248,10 @@ export const usePlotStore = create<PlotState>()(
           ...rest,
           notes: state.notes.map((n) => ({ ...n, content: "", contentJson: null })),
           // Strip blocks from wiki articles — block metadata is persisted in IDB (plot-wiki-block-meta)
-          // Phase 3: also strip layout.leaf.blocks (heavy) but keep blockIds (lightweight)
-          wikiArticles: state.wikiArticles.map((a) => {
-            let layout = a.layout
-            if (layout) {
-              // Phase 3: strip heavy leaf.blocks, keep lightweight blockIds
-              const stripLeafBlocks = (node: ColumnStructure): ColumnStructure => ({
-                ...node,
-                columns: node.columns.map((col) => {
-                  if (col.content.type === "columns") {
-                    return { ...col, content: stripLeafBlocks(col.content) }
-                  }
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                  const { blocks: _heavy, ...leafRest } = col.content
-                  return { ...col, content: { ...leafRest, type: "blocks" as const } }
-                }),
-              })
-              layout = stripLeafBlocks(layout)
-            }
-            return { ...a, blocks: [], layout }
-          }),
+          wikiArticles: state.wikiArticles.map((a) => ({
+            ...a,
+            blocks: [],  // blocks are persisted separately in IDB
+          })),
         } as unknown as PlotState
       },
       migrate,
@@ -368,53 +349,29 @@ export const usePlotStore = create<PlotState>()(
                   const blocks = await getArticleBlocks(a.id)
                   return { id: a.id, blocks }
                 })
-              ).then(async (results) => {
+              ).then((results) => {
                 const store = usePlotStore.getState()
-                const [{ populateLeafBlocksFromPool }, { nanoid }] = await Promise.all([
-                  import("@/lib/wiki-column-tree"),
-                  import("nanoid"),
-                ])
                 const updatedArticles = store.wikiArticles.map((a) => {
                   const result = results.find((r) => r.id === a.id)
-                  let blocks = a.blocks
                   if (result?.blocks && result.blocks.length > 0) {
-                    blocks = [...result.blocks]
-                    // Phase 2-2-C compat: IDB blocks predating v78 lack infobox/toc blocks.
-                    // Inject them once so the article matches post-v78 expectations.
-                    // Safe to re-run: if blocks already have these types, no-op.
-                    if (!blocks.some((b) => b.type === "infobox")) {
-                      blocks.unshift({ id: `infobox-${nanoid(8)}`, type: "infobox" as const, fields: [], headerColor: null })
-                    }
-                    if (!blocks.some((b) => b.type === "toc")) {
-                      const insertAt = blocks.findIndex((b) => b.type !== "infobox")
-                      blocks.splice(insertAt === -1 ? 0 : insertAt, 0, { id: `toc-${nanoid(8)}`, type: "toc" as const, tocCollapsed: false })
-                    }
-                  } else {
-                    // Fallback: seed articles on first load (no IDB data yet)
-                    const seedArticle = SEED_WIKI_ARTICLES.find((s) => s.id === a.id)
-                    if (seedArticle && blocks.length === 0) {
-                      // Persist seed blocks to IDB for future loads
-                      import("@/lib/wiki-block-meta-store").then(({ saveArticleBlocks }) => {
-                        saveArticleBlocks(a.id, seedArticle.blocks).catch(() => {})
-                      })
-                      for (const b of seedArticle.blocks) {
-                        if (b.type === "text" && b.content) {
-                          persistBlockBody({ id: b.id, content: b.content })
-                        }
+                    return { ...a, blocks: result.blocks }
+                  }
+                  // Fallback: seed articles on first load (no IDB data yet)
+                  const seedArticle = SEED_WIKI_ARTICLES.find((s) => s.id === a.id)
+                  if (seedArticle && a.blocks.length === 0) {
+                    // Persist seed blocks to IDB for future loads
+                    import("@/lib/wiki-block-meta-store").then(({ saveArticleBlocks }) => {
+                      saveArticleBlocks(a.id, seedArticle.blocks).catch(() => {})
+                    })
+                    // Persist seed text block bodies to IDB
+                    for (const b of seedArticle.blocks) {
+                      if (b.type === "text" && b.content) {
+                        persistBlockBody({ id: b.id, content: b.content })
                       }
-                      blocks = seedArticle.blocks
                     }
+                    return { ...a, blocks: seedArticle.blocks }
                   }
-                  // Phase 3: populate layout leaf.blocks from the loaded blocks pool
-                  let layout = a.layout
-                  if (layout && blocks.length > 0) {
-                    layout = populateLeafBlocksFromPool(
-                      layout,
-                      blocks,
-                      (a as any).columnAssignments ?? {},
-                    )
-                  }
-                  return { ...a, blocks, layout }
+                  return a
                 })
                 usePlotStore.setState({ wikiArticles: updatedArticles })
 
@@ -426,26 +383,16 @@ export const usePlotStore = create<PlotState>()(
 
                 if (textBlockIds.length > 0) {
                   import("@/lib/wiki-block-body-store").then(({ getBlockBodies }) => {
-                    getBlockBodies(textBlockIds).then(async (bodies) => {
+                    getBlockBodies(textBlockIds).then((bodies) => {
                       if (bodies.size === 0) return
-                      const { populateLeafBlocksFromPool } = await import("@/lib/wiki-column-tree")
                       usePlotStore.setState((s) => ({
-                        wikiArticles: s.wikiArticles.map((a) => {
-                          const newBlocks = a.blocks.map((b) => {
+                        wikiArticles: s.wikiArticles.map((a) => ({
+                          ...a,
+                          blocks: a.blocks.map((b) => {
                             const content = bodies.get(b.id)
                             return content !== undefined ? { ...b, content } : b
-                          })
-                          // Phase 3: re-sync layout leaves with body-enriched blocks
-                          let layout = a.layout
-                          if (layout && newBlocks.length > 0) {
-                            layout = populateLeafBlocksFromPool(
-                              layout,
-                              newBlocks,
-                              (a as any).columnAssignments ?? {},
-                            )
-                          }
-                          return { ...a, blocks: newBlocks, layout }
-                        }),
+                          }),
+                        })),
                       }))
                     })
                   })

@@ -618,7 +618,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
       <WikiPickerDialog
         open={wikiEmbedPickerOpen}
         onOpenChange={setWikiEmbedPickerOpen}
-        title="Embed a book"
+        title="Embed a wiki article"
         onSelect={handleWikiEmbedSelect}
       />
       <UrlInputDialog

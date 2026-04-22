@@ -1544,7 +1544,7 @@ export function CategorySidePanel({
           <h4 className="text-2xs font-medium text-muted-foreground mb-2">Content</h4>
           <div className="space-y-1">
             <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
-              <span className="text-foreground/80">Books</span>
+              <span className="text-foreground/80">Wiki Articles</span>
               <span className="text-accent/70 tabular-nums font-medium">{totalArticles}</span>
             </div>
             <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">

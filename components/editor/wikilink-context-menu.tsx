@@ -327,7 +327,7 @@ export function WikilinkContextMenu() {
       ) : (
         <>
           <MenuItem icon={<NotePencil size={14} />} label="Create Note" onClick={handleCreateNote} />
-          <MenuItem icon={<BookOpen size={14} />} label="Create Book" onClick={handleCreateWiki} />
+          <MenuItem icon={<BookOpen size={14} />} label="Create Wiki" onClick={handleCreateWiki} />
           <div className="my-1 border-t border-border-subtle" />
           <MenuItem icon={<ArrowsClockwise size={14} />} label="Change link" onClick={handleChangeLink} />
           <MenuItem icon={<Copy size={14} />} label={`Copy [[${titleDisplay}]]`} onClick={handleCopyLink} />
