@@ -1,30 +1,5 @@
 # Phase Plan — Wiki Enrichment (인포박스/배너/편집 고도화)
 
-> ## ⚠️ DEPRECATED — 2026-04-14 저녁 재설계
->
-> **이 Phase 계획 전체가 폐기됨.** 3-layer 모델 전제로 설계됐는데 프레임이 바뀜.
->
-> **새 Phase 계획**: [BRAINSTORM-2026-04-14-column-template-system.md](./BRAINSTORM-2026-04-14-column-template-system.md) 하단 "Phase 계획" 섹션 참조
->
-> **새 계획 요약 (Phase 0 → 7)**:
-> 1. Phase 0 (현재): 문서 정비
-> 2. Phase 1: 데이터 모델 + 기본 템플릿 8종 (ColumnStructure, WikiTemplate)
-> 3. Phase 2: 컬럼 렌더러 + titleStyle
-> 4. Phase 3: 편집 UX (컬럼 드래그, 추가/삭제, 중첩 3 depth)
-> 5. Phase 4: 사용자 커스텀 템플릿 편집기
-> 6. Phase 5: 나무위키 잔여 기능 (Hatnote, Ambox, Navbox 등 — 이 문서 기존 Phase 1~4 내용의 재편)
-> 7. Phase 6: 편집 히스토리
-> 8. Phase 7: 노트 split
->
-> **이 문서의 여전히 유효한 내용** (새 Phase 계획에 흡수됨):
-> - 0.1 WikiInfobox 저장 버그 → 새 Phase 1에 포함
-> - Phase 1의 Hatnote/Ambox 설계 → 새 Phase 5에 포함
-> - Phase 2의 themeColor, 섹션 구분 행 → 이미 PR #194에 완료됐거나 새 Phase 2에 포함
-> - Phase 3의 타입 인포박스 스키마 → 새 Phase 1 템플릿 시스템에 통합됨
-> - Phase 4의 Callout 12타입, Navbox 자동 → 새 Phase 5
->
-> 아래 내용은 **히스토리 보존** 목적으로 남겨둠.
-
 > `docs/BRAINSTORM-2026-04-14-wiki-ultra.md`의 Top 7 + 선행 조건을 **실행 단위**로 쪼갠 체크리스트.
 > 각 Phase = 1 PR 단위. 각 Phase 내 sub-task = 개별 커밋 단위.
 > 작업 중엔 이 문서를 실시간 업데이트 (완료 체크). PDCA Do 단계의 작업 스크립트.

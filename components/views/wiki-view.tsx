@@ -25,7 +25,7 @@ import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
-import { ColumnPresetToggle } from "@/components/wiki-editor/column-preset-toggle"
+import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
 import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
 import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
@@ -48,14 +48,14 @@ import { WikiArticleReader } from "./wiki-article-reader"
 import { WikiDashboard } from "./wiki-dashboard"
 import { WikiList } from "./wiki-list"
 import { WikiFloatingActionBar } from "@/components/wiki-floating-action-bar"
-import { WikiArticleRenderer } from "@/components/wiki-editor/wiki-article-renderer"
+import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
+import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
 import { useWikiCategoryFilter, setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { usePendingWikiArticle, consumePendingWikiArticle } from "@/lib/wiki-article-nav"
 import { WikiMergePreview } from "@/components/wiki-merge-preview"
 import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
 import { WikiCategoryPage } from "./wiki-category-page"
-import { WikiTemplatePickerDialog } from "@/components/wiki-template-picker-dialog"
 import { isWikiStub } from "@/lib/wiki-utils"
 
 export function WikiView() {
@@ -267,19 +267,11 @@ export function WikiView() {
     [notes, wikiArticles, navigateToNote]
   )
 
-  // Phase 1: opens template picker first instead of immediately creating a Blank article
-  const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
   const handleCreateWiki = useCallback(() => {
-    setTemplatePickerOpen(true)
-  }, [])
-  const handleTemplatePicked = useCallback(
-    (templateId: string) => {
-      const id = createWikiArticle({ title: "Untitled Wiki", templateId })
-      setSelectedWikiArticleId(id)
-      setIsEditingWikiArticle(true)
-    },
-    [createWikiArticle],
-  )
+    const id = createWikiArticle({ title: "Untitled Wiki" })
+    setSelectedWikiArticleId(id)
+    setIsEditingWikiArticle(true)
+  }, [createWikiArticle])
 
   const handleCreateFromRedLink = useCallback(
     (title: string) => {
@@ -748,9 +740,8 @@ export function WikiView() {
                 </button>
               )}
 
-              {/* Phase 3: column preset dropdown (edit mode only) */}
-              <ColumnPresetToggle articleId={selectedWikiArticleId} editable={isEditingWikiArticle} />
-              {/* Phase 2-2-C: ColumnMetaPositionMenu removed — infobox/toc are blocks now */}
+              {/* Layout toggle */}
+              <WikiLayoutToggle articleId={selectedWikiArticleId} layout={selectedWikiArticle.layout} />
 
               {isEditingWikiArticle ? (
                 <button
@@ -819,21 +810,32 @@ export function WikiView() {
           </div>
         </ViewHeader>
 
-        <WikiArticleRenderer
-          articleId={selectedWikiArticleId}
-          editable={isEditingWikiArticle}
-          variant={(selectedWikiArticle.layout?.columns.length ?? 1) >= 2 ? "encyclopedia" : "default"}
-          collapseAllCmd={collapseAllCmd}
-          onCollapseAllDone={() => setCollapseAllCmd(null)}
-          onAllCollapsedChange={setAllSectionsCollapsed}
-          fontSize={selectedWikiArticle.fontSize}
-          onDelete={() => {
-            deleteWikiArticle(selectedWikiArticleId)
-            setSelectedWikiArticleId(null)
-            setIsEditingWikiArticle(false)
-            toast.success("Article deleted")
-          }}
-        />
+        {selectedWikiArticle.layout === "encyclopedia" ? (
+          <WikiArticleEncyclopedia
+            article={selectedWikiArticle}
+            isEditing={isEditingWikiArticle}
+            onBack={() => { setSelectedWikiArticleId(null); setIsEditingWikiArticle(false) }}
+            collapseAllCmd={collapseAllCmd}
+            onCollapseAllDone={() => setCollapseAllCmd(null)}
+            onAllCollapsedChange={setAllSectionsCollapsed}
+            fontSize={selectedWikiArticle.fontSize}
+          />
+        ) : (
+          <WikiArticleView
+            articleId={selectedWikiArticleId}
+            editable={isEditingWikiArticle}
+            collapseAllCmd={collapseAllCmd}
+            onCollapseAllDone={() => setCollapseAllCmd(null)}
+            onAllCollapsedChange={setAllSectionsCollapsed}
+            fontSize={selectedWikiArticle.fontSize}
+            onDelete={() => {
+              deleteWikiArticle(selectedWikiArticleId)
+              setSelectedWikiArticleId(null)
+              setIsEditingWikiArticle(false)
+              toast.success("Article deleted")
+            }}
+          />
+        )}
       </div>
     )
   }
@@ -912,7 +914,7 @@ export function WikiView() {
     <div data-editor-scope="wiki" className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
         icon={<IconWiki size={20} />}
-        title="Book"
+        title="Wiki"
         count={stats.total}
         showFilter={wikiViewMode !== "dashboard"}
         hasActiveFilters={wikiViewMode === "category" ? categoryFilters.length > 0 : wikiFilters.length > 0}
@@ -1077,7 +1079,7 @@ export function WikiView() {
                         {/* Articles */}
                         {importTargets.articles.length > 0 && (
                           <>
-                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Books</p>
+                            <p className="mt-1 px-3 py-1 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Wiki Articles</p>
                             {importTargets.articles.map((a) => (
                               <button
                                 key={a.id}
@@ -1242,13 +1244,6 @@ export function WikiView() {
           }}
         />
       )}
-
-      {/* Phase 1: Template picker for new wiki articles */}
-      <WikiTemplatePickerDialog
-        open={templatePickerOpen}
-        onOpenChange={setTemplatePickerOpen}
-        onSelect={handleTemplatePicked}
-      />
     </div>
   )
 }
@@ -1283,7 +1278,7 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search books..."
+          placeholder="Search wiki articles..."
           className="w-full px-3.5 py-2.5 text-note bg-transparent border-b border-border text-foreground outline-none placeholder:text-muted-foreground/50"
         />
         <div className="max-h-[360px] overflow-y-auto py-1">

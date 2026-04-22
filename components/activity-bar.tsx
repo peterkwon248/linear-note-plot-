@@ -38,7 +38,7 @@ const SPACES: {
 }[] = [
   { id: "home",     label: "Home",     icon: IconHome,     shortcut: "G then H" },
   { id: "notes",    label: "Notes",    icon: IconNotes,    shortcut: "G then N" },
-  { id: "wiki",     label: "Book",     icon: IconWiki,     shortcut: "" },
+  { id: "wiki",     label: "Wiki",     icon: IconWiki,     shortcut: "" },
   { id: "calendar", label: "Calendar", icon: IconCalendar, shortcut: "" },
   { id: "ontology", label: "Ontology",  icon: Graph,        shortcut: "" },
   { id: "library",  label: "Library",  icon: (props) => <Books {...props} weight="light" />, shortcut: "" },

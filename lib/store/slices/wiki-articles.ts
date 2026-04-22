@@ -1,434 +1,10 @@
-import type { WikiArticle, WikiBlock, WikiMergeSnapshot, ColumnPath, ColumnStructure, ColumnDefinition, WikiTemplate } from "../../types"
+import type { WikiArticle, WikiBlock, WikiMergeSnapshot } from "../../types"
 import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, removeArticleBlocks, type AppendEventFn } from "../helpers"
 import { buildSectionIndex } from "../../wiki-section-index"
 import { extractLinksFromWikiBlocks } from "../../body-helpers"
-import { resolveWikiTemplate } from "./wiki-templates"
-import {
-  findBlockLocation,
-  insertBlockAtPath,
-  removeBlockFromPath,
-  patchBlockAtPath,
-  updateLeafAtPath,
-  firstLeafPath,
-  collectBlocksFromLayout,
-} from "../../wiki-column-tree"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
-
-/* ── Phase 1 helpers ───────────────────────────────────────────────
- *  Instantiate blocks + columnAssignments from a WikiTemplate.
- *  Each section becomes a Section block (and any initialBlocks attached).
- *  columnAssignments maps every generated block id → its section's columnPath. */
-
-interface TemplateInstantiation {
-  blocks: WikiBlock[]
-  columnAssignments: Record<string, ColumnPath>
-  layout: ColumnStructure
-  titleStyle?: WikiArticle["titleStyle"]
-  themeColor?: WikiArticle["themeColor"]
-}
-
-/**
- * Phase 2-2-C: Infobox + TOC emerge as first-class `WikiBlock`s at instantiation
- * time (no more scalar metadata on `WikiArticle`). The infobox is placed in its
- * template-prescribed column; the TOC lands in the first-of-multi-column or the
- * only column for 1-col templates (keeps it near the content).
- */
-function instantiateTemplate(template: WikiTemplate): TemplateInstantiation {
-  const blocks: WikiBlock[] = []
-  const columnAssignments: Record<string, ColumnPath> = {}
-  // Group blocks by columnPath so we can populate ColumnBlocksLeaf.blockIds correctly.
-  const blocksByPath = new Map<string, string[]>()
-  const pathKey = (p: ColumnPath) => p.join(".")
-  const assign = (blockId: string, path: ColumnPath) => {
-    columnAssignments[blockId] = path
-    const key = pathKey(path)
-    if (!blocksByPath.has(key)) blocksByPath.set(key, [])
-    blocksByPath.get(key)!.push(blockId)
-  }
-
-  // 1) Infobox block — always emit so the authoring UX matches pre-Phase-2-2-C
-  //    behaviour (editable articles showed an "+ Add infobox" affordance even
-  //    when empty). Uses the template-prescribed column path.
-  const infoboxBlock: WikiBlock = {
-    id: genId(),
-    type: "infobox",
-    fields: template.infobox.fields.map((f) => ({ ...f })),
-    headerColor: template.infobox.headerColor ?? null,
-  }
-  blocks.push(infoboxBlock)
-  assign(infoboxBlock.id, template.infobox.columnPath)
-
-  // 2) TOC block — defaults to the main column ([0]) so it's always near content.
-  //    User can drag it elsewhere post-instantiation.
-  const tocBlock: WikiBlock = {
-    id: genId(),
-    type: "toc",
-    tocCollapsed: false,
-  }
-  blocks.push(tocBlock)
-  assign(tocBlock.id, [0])
-
-  // 3) Section blocks (+ optional seed blocks under each) from the template.
-  for (const section of template.sections) {
-    const sectionBlock: WikiBlock = {
-      id: genId(),
-      type: "section",
-      title: section.title,
-      level: section.level,
-    }
-    blocks.push(sectionBlock)
-    assign(sectionBlock.id, section.columnPath)
-
-    if (section.initialBlocks) {
-      for (const seed of section.initialBlocks) {
-        const b: WikiBlock = { ...seed, id: genId() }
-        blocks.push(b)
-        assign(b.id, section.columnPath)
-      }
-    }
-  }
-
-  // Walk template.layout and populate the leaf blockIds based on each leaf's path.
-  const populated = populateColumnLayoutBlockIds(template.layout, [], blocksByPath)
-
-  return {
-    blocks,
-    columnAssignments,
-    layout: populated,
-    titleStyle: template.titleStyle,
-    themeColor: template.themeColor,
-  }
-}
-
-/** Recursively populate ColumnBlocksLeaf.blockIds based on the path map. */
-function populateColumnLayoutBlockIds(
-  node: ColumnStructure,
-  basePath: number[],
-  blocksByPath: Map<string, string[]>,
-): ColumnStructure {
-  return {
-    ...node,
-    columns: node.columns.map((col, i) => {
-      const path = [...basePath, i]
-      if (col.content.type === "columns") {
-        return { ...col, content: populateColumnLayoutBlockIds(col.content, path, blocksByPath) }
-      }
-      return {
-        ...col,
-        content: { type: "blocks", blockIds: blocksByPath.get(path.join(".")) ?? [] },
-      }
-    }),
-  }
-}
-
-/** 1-column Blank fallback for articles without a template. */
-function blankColumnLayout(blockIds: string[]): ColumnStructure {
-  return {
-    type: "columns",
-    columns: [{ ratio: 1, content: { type: "blocks", blockIds } }],
-  }
-}
-
-/**
- * Phase 2-2-B-2: Sync every ColumnBlocksLeaf's `blockIds` from the canonical
- * `columnAssignments` record. Keeps the source of truth on `columnAssignments`
- * (blockId → ColumnPath) and makes leaf blockIds a derived view, ordered by
- * the article's `blocks[]` array so ordering stays stable.
- *
- * Blocks whose columnAssignments entry doesn't resolve to any leaf fall back
- * to the first leaf (main column, depth-first) so they remain visible.
- */
-function syncLayoutFromAssignments(
-  layout: ColumnStructure,
-  blocks: WikiBlock[],
-  assignments: Record<string, ColumnPath>,
-): ColumnStructure {
-  const leafPaths: number[][] = []
-  const collectLeafPaths = (node: ColumnStructure, basePath: number[]) => {
-    node.columns.forEach((col, i) => {
-      const p = [...basePath, i]
-      if (col.content.type === "columns") collectLeafPaths(col.content, p)
-      else leafPaths.push(p)
-    })
-  }
-  collectLeafPaths(layout, [])
-  const firstLeafKey = leafPaths[0] ? leafPaths[0].join(".") : ""
-
-  // Phase 3: bucket by block objects (not just ids) so leaf.blocks also gets populated
-  const blockMap = new Map(blocks.map((b) => [b.id, b]))
-  const idBuckets = new Map<string, string[]>()
-  const blockBuckets = new Map<string, WikiBlock[]>()
-  leafPaths.forEach((p) => {
-    const key = p.join(".")
-    idBuckets.set(key, [])
-    blockBuckets.set(key, [])
-  })
-  for (const b of blocks) {
-    const assignPath = assignments[b.id]
-    const key = assignPath && assignPath.length > 0 ? assignPath.join(".") : firstLeafKey
-    const idBucket = idBuckets.get(key) ?? idBuckets.get(firstLeafKey)
-    const blkBucket = blockBuckets.get(key) ?? blockBuckets.get(firstLeafKey)
-    idBucket?.push(b.id)
-    blkBucket?.push(b)
-  }
-
-  const rewrite = (node: ColumnStructure, basePath: number[]): ColumnStructure => ({
-    ...node,
-    columns: node.columns.map((col, i) => {
-      const p = [...basePath, i]
-      if (col.content.type === "columns") {
-        return { ...col, content: rewrite(col.content, p) }
-      }
-      const key = p.join(".")
-      return {
-        ...col,
-        content: {
-          type: "blocks",
-          blockIds: idBuckets.get(key) ?? [],
-          blocks: blockBuckets.get(key) ?? [],
-        },
-      }
-    }),
-  })
-  return rewrite(layout, [])
-}
-
-/**
- * Phase 2-2-B-3: Immutably insert a new empty column at a parent path, after `afterIndex`.
- * `parentPath: []` means top-level. `afterIndex: -1` inserts at the front.
- * Returns null if parentPath doesn't resolve to a columns node.
- */
-function insertColumnAtPath(
-  layout: ColumnStructure,
-  parentPath: number[],
-  afterIndex: number,
-  newCol: ColumnDefinition,
-): ColumnStructure | null {
-  if (parentPath.length === 0) {
-    const insertAt = Math.max(-1, Math.min(layout.columns.length - 1, afterIndex)) + 1
-    const columns = [...layout.columns.slice(0, insertAt), newCol, ...layout.columns.slice(insertAt)]
-    return { ...layout, columns }
-  }
-  const [head, ...rest] = parentPath
-  const col = layout.columns[head]
-  if (!col || col.content.type !== "columns") return null
-  const updatedInner = insertColumnAtPath(col.content, rest, afterIndex, newCol)
-  if (!updatedInner) return null
-  const columns = layout.columns.map((c, i) => (i === head ? { ...c, content: updatedInner } : c))
-  return { ...layout, columns }
-}
-
-/**
- * Phase 2-2-B-3: Immutably remove a column at a ColumnPath. Returns null if the
- * path doesn't resolve to a column, or if removing would leave zero columns.
- */
-function removeColumnAtPath(layout: ColumnStructure, path: number[]): ColumnStructure | null {
-  if (path.length === 0) return null // can't remove the root structure itself
-  if (path.length === 1) {
-    const idx = path[0]
-    if (idx < 0 || idx >= layout.columns.length) return null
-    if (layout.columns.length <= 1) return null // keep at least one column
-    return { ...layout, columns: layout.columns.filter((_, i) => i !== idx) }
-  }
-  const [head, ...rest] = path
-  const col = layout.columns[head]
-  if (!col || col.content.type !== "columns") return null
-  const updatedInner = removeColumnAtPath(col.content, rest)
-  if (!updatedInner) return null
-  const columns = layout.columns.map((c, i) => (i === head ? { ...c, content: updatedInner } : c))
-  return { ...layout, columns }
-}
-
-/**
- * Phase 2-2-B-3-b: Convert a leaf cell at `path` into a nested N-column
- * ColumnStructure. The leaf's existing blockIds land in the first inner column;
- * the remaining N-1 inner columns start empty. Returns null if the path doesn't
- * resolve to a blocks-leaf.
- *
- * Depth check is done at the action level (path.length < 3 required so the new
- * inner columns sit at depth <= 3).
- */
-function splitLeafAtPath(
-  layout: ColumnStructure,
-  path: number[],
-  splitCount: number,
-): ColumnStructure | null {
-  if (path.length === 0) return null // root is already columns
-  const [head, ...rest] = path
-  const col = layout.columns[head]
-  if (!col) return null
-
-  if (rest.length === 0) {
-    if (col.content.type !== "blocks") return null
-    const originalBlockIds = col.content.blockIds
-    const innerColumns: ColumnDefinition[] = Array.from({ length: splitCount }, (_, i) => ({
-      ratio: 1,
-      minWidth: 180,
-      content: { type: "blocks" as const, blockIds: i === 0 ? originalBlockIds : [] },
-    }))
-    const newInner: ColumnStructure = { type: "columns", columns: innerColumns }
-    const columns = layout.columns.map((c, i) =>
-      i === head ? { ...c, content: newInner } : c,
-    )
-    return { ...layout, columns }
-  }
-
-  if (col.content.type !== "columns") return null
-  const updatedInner = splitLeafAtPath(col.content, rest, splitCount)
-  if (!updatedInner) return null
-  const columns = layout.columns.map((c, i) =>
-    i === head ? { ...c, content: updatedInner } : c,
-  )
-  return { ...layout, columns }
-}
-
-/**
- * Phase 2-2-B-3: Remap columnAssignments after a removal — any block whose
- * assignment path was rooted at `removedPath` (or started with it) falls back
- * to the article's first-leaf path.
- */
-function remapAssignmentsAfterRemoval(
-  assignments: Record<string, ColumnPath>,
-  removedPath: number[],
-  newLayout: ColumnStructure,
-): Record<string, ColumnPath> {
-  // Find first leaf path in the new layout (depth-first).
-  let firstLeaf: number[] = []
-  const find = (node: ColumnStructure, base: number[]): boolean => {
-    for (let i = 0; i < node.columns.length; i++) {
-      const p = [...base, i]
-      const col = node.columns[i]
-      if (col.content.type === "columns") {
-        if (find(col.content, p)) return true
-      } else {
-        firstLeaf = p
-        return true
-      }
-    }
-    return false
-  }
-  find(newLayout, [])
-
-  const out: Record<string, ColumnPath> = {}
-  const matchesRemoved = (p: number[]) => {
-    if (p.length < removedPath.length) return false
-    for (let i = 0; i < removedPath.length; i++) if (p[i] !== removedPath[i]) return false
-    return true
-  }
-  for (const [blockId, assignPath] of Object.entries(assignments)) {
-    if (matchesRemoved(assignPath)) out[blockId] = firstLeaf
-    else out[blockId] = assignPath
-  }
-  return out
-}
-
-/**
- * Phase 2-2-B-1: Immutably update column ratios at a ColumnPath.
- * `path: []` → update top-level ratios. `path: [i]` → update nested columns[i].content (must be ColumnStructure).
- * Returns new ColumnStructure, or `null` if the path doesn't resolve to a columns node.
- */
-function updateRatiosAtPath(
-  layout: ColumnStructure,
-  path: number[],
-  newRatios: number[],
-): ColumnStructure | null {
-  if (path.length === 0) {
-    if (newRatios.length !== layout.columns.length) return null
-    return {
-      ...layout,
-      columns: layout.columns.map((col, i) => ({ ...col, ratio: newRatios[i] })),
-    }
-  }
-  const [head, ...rest] = path
-  const col = layout.columns[head]
-  if (!col || col.content.type !== "columns") return null
-  const updatedInner = updateRatiosAtPath(col.content, rest, newRatios)
-  if (!updatedInner) return null
-  const columns = layout.columns.map((c, i) =>
-    i === head ? { ...c, content: updatedInner } : c,
-  )
-  return { ...layout, columns }
-}
-
-/**
- * Phase 3.1-A — apply an arbitrary patch to the ColumnDefinition at `path`.
- * Used for setColumnName / setColumnPaletteId / other per-column field updates.
- *
- * Path must point to a specific column (not root). Returns null if path invalid.
- */
-function patchColumnDefAtPath(
-  layout: ColumnStructure,
-  path: number[],
-  patch: (col: ColumnDefinition) => ColumnDefinition,
-): ColumnStructure | null {
-  if (path.length === 0) return null // must target a column, not root
-  const [head, ...rest] = path
-  const target = layout.columns[head]
-  if (!target) return null
-
-  if (rest.length === 0) {
-    // Direct patch at this level
-    const next = patch(target)
-    const columns = layout.columns.map((c, i) => (i === head ? next : c))
-    return { ...layout, columns }
-  }
-
-  if (target.content.type !== "columns") return null
-  const updatedInner = patchColumnDefAtPath(target.content, rest, patch)
-  if (!updatedInner) return null
-  const columns = layout.columns.map((c, i) =>
-    i === head ? { ...c, content: updatedInner } : c,
-  )
-  return { ...layout, columns }
-}
-
-/**
- * Build a flat N-column ColumnStructure preset.
- * - 1 col: full-width single column (Blank)
- * - 2 col: main 3fr + sidebar 1fr (min 240px, priority 1 = first to collapse on narrow)
- * - 3 col: main 2fr + 2× sidebar 1fr (each min 200px, priority 1)
- * - N col (4+): equal columns, each ratio 1, min 180px
- *
- * All existing blocks land in column [0] (main). Sidebar columns start empty —
- * Phase 2-2-B will add UI to drag blocks between columns.
- */
-function buildColumnPreset(presetCount: number, blockIds: string[]): ColumnStructure {
-  const main = { ratio: presetCount === 1 ? 1 : presetCount === 2 ? 3 : 2, content: { type: "blocks" as const, blockIds } }
-  if (presetCount === 1) {
-    return { type: "columns", columns: [main] }
-  }
-  if (presetCount === 2) {
-    return {
-      type: "columns",
-      columns: [
-        main,
-        { ratio: 1, minWidth: 240, priority: 1, content: { type: "blocks", blockIds: [] } },
-      ],
-    }
-  }
-  if (presetCount === 3) {
-    return {
-      type: "columns",
-      columns: [
-        main,
-        { ratio: 1, minWidth: 200, priority: 1, content: { type: "blocks", blockIds: [] } },
-        { ratio: 1, minWidth: 200, priority: 2, content: { type: "blocks", blockIds: [] } },
-      ],
-    }
-  }
-  // 4+ columns — equal split
-  return {
-    type: "columns",
-    columns: Array.from({ length: presetCount }, (_, i) => ({
-      ratio: 1,
-      minWidth: 180,
-      priority: i + 1,
-      content: { type: "blocks" as const, blockIds: i === 0 ? blockIds : [] },
-    })),
-  }
-}
 
 export function createWikiArticlesSlice(set: Set, get: Get) {
   return {
@@ -439,73 +15,24 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       aliases?: string[]
       tags?: string[]
       blocks?: WikiBlock[]
-      templateId?: string
     }) => {
       const id = genId()
-
-      // Phase 1: resolve template if templateId provided. Falls back to default if not found.
-      const template = partial.templateId
-        ? resolveWikiTemplate(get(), partial.templateId)
-        : undefined
-
-      // Block source priority: explicit `partial.blocks` > template instantiation > legacy default.
-      let blocks: WikiBlock[]
-      let layout: ColumnStructure
-      let columnAssignments: Record<string, ColumnPath>
-      let titleStyle: WikiArticle["titleStyle"]
-      let themeColor: WikiArticle["themeColor"]
-
-      if (partial.blocks) {
-        // Explicit blocks override — assume 1-column Blank, no template metadata.
-        // Phase 2-2-C: caller is responsible for including any infobox/toc blocks
-        // they want (this path bypasses template instantiation entirely).
-        blocks = partial.blocks
-        const ids = blocks.map((b) => b.id)
-        layout = blankColumnLayout(ids)
-        columnAssignments = Object.fromEntries(ids.map((bid) => [bid, [0]]))
-      } else if (template) {
-        const inst = instantiateTemplate(template)
-        blocks = inst.blocks
-        layout = inst.layout
-        columnAssignments = inst.columnAssignments
-        titleStyle = inst.titleStyle
-        themeColor = inst.themeColor
-      } else {
-        // Legacy default: Infobox + TOC + Overview + Details + See Also
-        // (Phase 2-2-C: meta is now blocks; preserves feature parity with old scalar path)
-        const infoboxId = genId()
-        const tocId = genId()
-        const overviewId = genId()
-        const textId = genId()
-        const detailsId = genId()
-        const seeAlsoId = genId()
-        blocks = [
-          { id: infoboxId, type: "infobox" as const, fields: [], headerColor: null },
-          { id: tocId, type: "toc" as const, tocCollapsed: false },
-          { id: overviewId, type: "section" as const, title: "Overview", level: 2 },
-          { id: textId, type: "text" as const, content: "" },
-          { id: detailsId, type: "section" as const, title: "Details", level: 2 },
-          { id: seeAlsoId, type: "section" as const, title: "See Also", level: 2 },
-        ]
-        const ids = blocks.map((b) => b.id)
-        layout = blankColumnLayout(ids)
-        columnAssignments = Object.fromEntries(ids.map((bid) => [bid, [0]]))
-      }
-
+      const blocks = partial.blocks ?? [
+        // Default template: Overview + Details + See Also sections
+        { id: genId(), type: "section" as const, title: "Overview", level: 2 },
+        { id: genId(), type: "text" as const, content: "" },
+        { id: genId(), type: "section" as const, title: "Details", level: 2 },
+        { id: genId(), type: "section" as const, title: "See Also", level: 2 },
+      ]
       const article: WikiArticle = {
         id,
         title: partial.title,
         aliases: partial.aliases ?? [],
+        infobox: [],
         blocks,
         sectionIndex: buildSectionIndex(blocks),
         tags: partial.tags ?? [],
         linksOut: extractLinksFromWikiBlocks(blocks),
-        // Phase 1 fields
-        layout,
-        columnAssignments,
-        titleStyle,
-        themeColor,
-        templateId: template?.id,
         createdAt: now(),
         updatedAt: now(),
       }
@@ -535,498 +62,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
             persistArticleBlocks(articleId, patch.blocks)
           }
           return updated
-        }),
-      }))
-    },
-
-    /**
-     * Phase 2-2-B-3: Insert a new empty column at `parentPath`, after `afterIndex`.
-     * `parentPath: []` = top-level. `afterIndex: -1` inserts at the front.
-     * Caps total top-level columns at 6 (matches `applyColumnPreset` clamp).
-     */
-    addColumnAfter: (articleId: string, parentPath: number[], afterIndex: number) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          // Hard cap to prevent runaway column counts (applies to top-level only — nested is user's responsibility).
-          if (parentPath.length === 0 && a.layout.columns.length >= 6) return a
-          const newCol: ColumnDefinition = {
-            ratio: 1,
-            minWidth: 180,
-            content: { type: "blocks", blockIds: [] },
-          }
-          const layout = insertColumnAtPath(a.layout, parentPath, afterIndex, newCol)
-          if (!layout) return a
-          return { ...a, layout, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 2-2-B-3: Remove the column at `path`. Blocks that were assigned to
-     * the removed column (or any descendant) fall back to the first remaining leaf.
-     * No-op if removal would leave zero columns at that level.
-     */
-    removeColumn: (articleId: string, path: number[]) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          const newLayout = removeColumnAtPath(a.layout, path)
-          if (!newLayout) return a
-          const remappedAssignments = remapAssignmentsAfterRemoval(
-            a.columnAssignments ?? {},
-            path,
-            newLayout,
-          )
-          const synced = syncLayoutFromAssignments(newLayout, a.blocks, remappedAssignments)
-          return { ...a, layout: synced, columnAssignments: remappedAssignments, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 2-2-B-3-b: Split a leaf cell at `path` into `count` inner columns.
-     * The leaf's existing blocks stay in inner column [0]; the rest start empty.
-     * `columnAssignments` entries that pointed to `path` are remapped to `[...path, 0]`.
-     *
-     * Guards:
-     * - `path.length < 3` (so new inner columns live at depth <= 3)
-     * - `count` must be 2, 3, or 4
-     * - No-op if path doesn't resolve to a blocks-leaf
-     */
-    splitLeafIntoColumns: (articleId: string, path: number[], count: number) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          if (path.length === 0 || path.length >= 3) return a
-          if (count < 2 || count > 4) return a
-          const newLayout = splitLeafAtPath(a.layout, path, count)
-          if (!newLayout) return a
-          const pathStr = path.join(".")
-          const oldAssignments = a.columnAssignments ?? {}
-          const nextAssignments: Record<string, ColumnPath> = {}
-          for (const [blockId, p] of Object.entries(oldAssignments)) {
-            nextAssignments[blockId] = p.join(".") === pathStr ? [...path, 0] : p
-          }
-          const synced = syncLayoutFromAssignments(newLayout, a.blocks, nextAssignments)
-          return { ...a, layout: synced, columnAssignments: nextAssignments, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 2-2-B-2: Move a block to a target column by ColumnPath.
-     * Updates `columnAssignments[blockId]` and re-syncs every leaf's blockIds
-     * from the canonical assignments map (stable ordering from `blocks[]`).
-     * No-op if targetPath doesn't resolve to a leaf within the current layout.
-     */
-    moveBlockToColumn: (articleId: string, blockId: string, targetPath: ColumnPath) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          if (!a.blocks.some((b) => b.id === blockId)) return a
-          const nextAssignments = { ...(a.columnAssignments ?? {}), [blockId]: targetPath }
-          const layout = syncLayoutFromAssignments(a.layout, a.blocks, nextAssignments)
-          return { ...a, layout, columnAssignments: nextAssignments, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 2-2-B-1: Update column ratios at a given path (top-level or nested).
-     * `path` identifies which ColumnStructure to mutate ([] = top-level, [i] = nested at columns[i], etc.).
-     * `newRatios` must match the length of columns at that path. Keeps all other properties intact.
-     */
-    updateColumnRatios: (articleId: string, path: number[], newRatios: number[]) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          const layout = updateRatiosAtPath(a.layout, path, newRatios)
-          if (!layout) return a
-          return { ...a, layout, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 2-2-A: Apply a column count preset (1, 2, 3, ...) to an article.
-     * Resets `layout` to a flat preset and `columnAssignments` so all blocks live in column [0].
-     * Sidebar columns start empty — Phase 2-2-B will let users drag blocks across columns.
-     *
-     * If presetCount matches current column count, this is a no-op (preserves user's drag-adjusted ratios).
-     */
-    applyColumnPreset: (articleId: string, presetCount: number) => {
-      const safeCount = Math.max(1, Math.min(6, Math.floor(presetCount)))
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId) return a
-          const currentCount = a.layout?.columns.length ?? 1
-          if (currentCount === safeCount) return a // no-op preserves user's ratio adjustments
-          const blockIds = a.blocks.map((b) => b.id)
-          const layout = buildColumnPreset(safeCount, blockIds)
-          const columnAssignments = Object.fromEntries(blockIds.map((id) => [id, [0]]))
-          return { ...a, layout, columnAssignments, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-A — apply an asymmetric ratio preset (e.g. 5:3, golden ratio).
-     * Rebuilds columns with given `ratios`/`minWidths` from `lib/column-palette.ts`.
-     * Existing blocks land in column [0] (main). Sidebars start empty.
-     */
-    applyAsymmetricPreset: (articleId: string, ratios: number[], minWidths?: number[]) => {
-      if (!ratios.length) return
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId) return a
-          const blockIds = a.blocks.map((b) => b.id)
-          const columns: ColumnDefinition[] = ratios.map((ratio, i) => ({
-            ratio,
-            minWidth: minWidths?.[i],
-            priority: i,
-            content: { type: "blocks" as const, blockIds: i === 0 ? blockIds : [] },
-          }))
-          const layout: ColumnStructure = {
-            type: "columns",
-            columns,
-            // Preserve existing rule/gap if the user had them configured.
-            ...(a.layout?.rule !== undefined ? { rule: a.layout.rule } : {}),
-            ...(a.layout?.gap !== undefined ? { gap: a.layout.gap } : {}),
-          }
-          const columnAssignments = Object.fromEntries(blockIds.map((id) => [id, [0]]))
-          return { ...a, layout, columnAssignments, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-A — toggle hairline vertical rule between columns.
-     */
-    setColumnRule: (articleId: string, rule: boolean) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          return { ...a, layout: { ...a.layout, rule }, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-A — set column gap token ("sm" | "md" | "lg").
-     */
-    setColumnGap: (articleId: string, gap: "sm" | "md" | "lg") => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          return { ...a, layout: { ...a.layout, gap }, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-A — set a column's display name (used for header label).
-     * Pass null/empty to clear.
-     */
-    setColumnName: (articleId: string, path: number[], name: string | null) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          const trimmed = name?.trim() || null
-          const next = patchColumnDefAtPath(a.layout, path, (col) => {
-            if (trimmed) return { ...col, name: trimmed }
-            const { name: _dropped, ...rest } = col
-            return rest as ColumnDefinition
-          })
-          if (!next) return a
-          return { ...a, layout: next, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-A — set a column's palette id (e.g. "slate", "sage").
-     * Pass null to clear (revert to plain surface bg).
-     */
-    setColumnPaletteId: (articleId: string, path: number[], paletteId: string | null) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          const next = patchColumnDefAtPath(a.layout, path, (col) => {
-            if (paletteId) return { ...col, paletteId }
-            const { paletteId: _dropped, ...rest } = col
-            return rest as ColumnDefinition
-          })
-          if (!next) return a
-          return { ...a, layout: next, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-A — assign random palette colors to every column in the article.
-     * Deterministic per column path (so re-shuffling is stable unless user calls again).
-     */
-    applyAutoColumnColors: (articleId: string) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          const PALETTE_IDS = ["slate", "sage", "blush", "sand", "sky", "lavender", "peach", "ash"]
-          // Shuffle seed based on current timestamp so each call gives new assignment
-          const seed = Date.now()
-          const assignPalette = (structure: ColumnStructure, basePath: number[]): ColumnStructure => {
-            return {
-              ...structure,
-              columns: structure.columns.map((col, i) => {
-                const myPath = [...basePath, i]
-                // Hash path + seed for stable-per-call random selection
-                let hash = seed
-                for (const n of myPath) {
-                  hash = ((hash << 5) - hash) + n
-                  hash |= 0
-                }
-                const paletteId = PALETTE_IDS[Math.abs(hash) % PALETTE_IDS.length]
-                const withPalette: ColumnDefinition = { ...col, paletteId }
-                // Recurse into nested columns
-                if (withPalette.content.type === "columns") {
-                  withPalette.content = assignPalette(withPalette.content, myPath)
-                }
-                return withPalette
-              }),
-            }
-          }
-          return { ...a, layout: assignPalette(a.layout, []), updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-A — clear all palette colors from an article's columns.
-     */
-    clearAllColumnColors: (articleId: string) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          const clearPalettes = (structure: ColumnStructure): ColumnStructure => ({
-            ...structure,
-            columns: structure.columns.map((col) => {
-              const { paletteId: _dropped, ...rest } = col
-              const cleaned = rest as ColumnDefinition
-              if (cleaned.content.type === "columns") {
-                cleaned.content = clearPalettes(cleaned.content)
-              }
-              return cleaned
-            }),
-          })
-          return { ...a, layout: clearPalettes(a.layout), updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-B — add a full-width pane above or below the column layout.
-     * If the current layout is horizontal, wraps it in a vertical container first.
-     * Returns the path of the new full-width pane for callers to insert blocks into.
-     */
-    /**
-     * Phase 3.1-B — Wrap two blocks into a column-group (Notion-style side-by-side).
-     * `targetBlockId` is the stationary block, `draggedBlockId` is dropped beside it.
-     * `side` determines left/right placement inside the new column-group.
-     */
-    wrapInColumnGroup: (articleId: string, targetBlockId: string, draggedBlockId: string, side: "left" | "right") => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-
-          // Find both blocks in any leaf
-          let targetBlock: WikiBlock | undefined
-          let draggedBlock: WikiBlock | undefined
-          const findInLeaf = (blocks: WikiBlock[]) => {
-            for (const b of blocks) {
-              if (b.id === targetBlockId) targetBlock = b
-              if (b.id === draggedBlockId) draggedBlock = b
-            }
-          }
-          // Search all leaf panes
-          const searchLayout = (node: ColumnStructure) => {
-            node.columns.forEach((col) => {
-              if (col.content.type === "columns") searchLayout(col.content)
-              else findInLeaf(col.content.blocks ?? [])
-            })
-          }
-          searchLayout(a.layout)
-          // Also check flat blocks array
-          findInLeaf(a.blocks)
-
-          if (!targetBlock || !draggedBlock) return a
-
-          // Create column-group block
-          const groupBlock: WikiBlock = {
-            id: genId(),
-            type: "column-group",
-            columnChildren: side === "left"
-              ? [[draggedBlock], [targetBlock]]
-              : [[targetBlock], [draggedBlock]],
-          }
-
-          // Replace target block with group, remove dragged block from its position
-          const replaceInBlocks = (blocks: WikiBlock[]): WikiBlock[] => {
-            return blocks
-              .filter((b) => b.id !== draggedBlockId) // remove dragged
-              .map((b) => b.id === targetBlockId ? groupBlock : b) // replace target with group
-          }
-
-          // Apply to all leaf panes
-          const updateLayout = (node: ColumnStructure): ColumnStructure => ({
-            ...node,
-            columns: node.columns.map((col) => {
-              if (col.content.type === "columns") {
-                return { ...col, content: updateLayout(col.content) }
-              }
-              return {
-                ...col,
-                content: {
-                  ...col.content,
-                  blocks: replaceInBlocks(col.content.blocks ?? []),
-                  blockIds: replaceInBlocks(col.content.blocks ?? []).map((b) => b.id),
-                },
-              }
-            }),
-          })
-
-          return {
-            ...a,
-            layout: updateLayout(a.layout),
-            blocks: replaceInBlocks(a.blocks),
-            updatedAt: now(),
-          }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-B — Unwrap a column-group: dissolve it and put its children
-     * back as sequential blocks in the parent list.
-     */
-    unwrapColumnGroup: (articleId: string, groupBlockId: string) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId) return a
-
-          const expandGroup = (blocks: WikiBlock[]): WikiBlock[] => {
-            const result: WikiBlock[] = []
-            for (const b of blocks) {
-              if (b.id === groupBlockId && b.type === "column-group" && b.columnChildren) {
-                // Flatten all sub-columns' blocks into sequential list
-                for (const subCol of b.columnChildren) {
-                  for (const innerBlock of subCol) result.push(innerBlock)
-                }
-              } else {
-                result.push(b)
-              }
-            }
-            return result
-          }
-
-          // Apply to all leaf panes
-          const updateLayout = (node: ColumnStructure): ColumnStructure => ({
-            ...node,
-            columns: node.columns.map((col) => {
-              if (col.content.type === "columns") {
-                return { ...col, content: updateLayout(col.content) }
-              }
-              const expanded = expandGroup(col.content.blocks ?? [])
-              return {
-                ...col,
-                content: {
-                  ...col.content,
-                  blocks: expanded,
-                  blockIds: expanded.map((b) => b.id),
-                },
-              }
-            }),
-          })
-
-          return {
-            ...a,
-            layout: a.layout ? updateLayout(a.layout) : a.layout,
-            blocks: expandGroup(a.blocks),
-            updatedAt: now(),
-          }
-        }),
-      }))
-    },
-
-    addFullWidthPane: (articleId: string, position: "above" | "below") => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          const currentDir = a.layout.direction ?? "horizontal"
-          let verticalLayout: ColumnStructure
-
-          if (currentDir === "vertical") {
-            // Already vertical — just add a new leaf pane at top or bottom
-            verticalLayout = a.layout
-          } else {
-            // Horizontal — wrap in a vertical container
-            verticalLayout = {
-              type: "columns",
-              direction: "vertical",
-              columns: [{
-                ratio: 1,
-                content: a.layout, // existing horizontal layout becomes a nested child
-              }],
-              // Preserve existing rule/gap on the inner horizontal layout
-            }
-          }
-
-          const newPane: ColumnDefinition = {
-            ratio: 1,
-            content: { type: "blocks", blockIds: [], blocks: [] },
-          }
-
-          const columns = position === "above"
-            ? [newPane, ...verticalLayout.columns]
-            : [...verticalLayout.columns, newPane]
-
-          return {
-            ...a,
-            layout: { ...verticalLayout, columns },
-            updatedAt: now(),
-          }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-A — set column background opacity (0.1 ~ 1).
-     */
-    setColumnPaletteAlpha: (articleId: string, path: number[], alpha: number) => {
-      const clamped = Math.max(0.1, Math.min(1, alpha))
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          const next = patchColumnDefAtPath(a.layout, path, (col) => ({ ...col, paletteAlpha: clamped }))
-          if (!next) return a
-          return { ...a, layout: next, updatedAt: now() }
-        }),
-      }))
-    },
-
-    /**
-     * Phase 3.1-A — set gradient second color (paletteId). Pass null to clear.
-     */
-    setColumnGradientTo: (articleId: string, path: number[], gradientTo: string | null) => {
-      set((state: any) => ({
-        wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
-          if (a.id !== articleId || !a.layout) return a
-          const next = patchColumnDefAtPath(a.layout, path, (col) => {
-            if (gradientTo) return { ...col, gradientTo }
-            const { gradientTo: _dropped, ...rest } = col
-            return rest as ColumnDefinition
-          })
-          if (!next) return a
-          return { ...a, layout: next, updatedAt: now() }
         }),
       }))
     },
@@ -1070,6 +105,14 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       }))
     },
 
+    setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id === articleId ? { ...a, infobox, updatedAt: now() } : a
+        ),
+      }))
+    },
+
     /* ── Block Operations ── */
 
     addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => {
@@ -1077,7 +120,6 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       set((state: any) => ({
         wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
           if (a.id !== articleId) return a
-          // ── Legacy flat blocks update ──
           const blocks = [...a.blocks]
           if (afterBlockId === "__prepend__") {
             blocks.unshift(newBlock)
@@ -1087,36 +129,10 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           } else {
             blocks.push(newBlock)
           }
-          // ── Phase 3: layout leaf sync ──
-          let layout = a.layout
-          if (layout) {
-            // Bug fix: when afterBlockId is given, insert immediately after it
-            // within its leaf (not at the end of the leaf). Previously this
-            // was always "append", which sent new TOC/Infobox/etc. to the
-            // bottom even when the user clicked "+ Add block" right under
-            // an existing block.
-            let targetPath: ColumnPath | null = null
-            let insertPos: "prepend" | "append" | number = "append"
-            if (afterBlockId === "__prepend__") {
-              targetPath = firstLeafPath(layout)
-              insertPos = "prepend"
-            } else if (afterBlockId) {
-              const loc = findBlockLocation(layout, afterBlockId)
-              if (loc) {
-                targetPath = loc.path
-                insertPos = loc.index + 1
-              }
-            }
-            if (!targetPath) {
-              targetPath = firstLeafPath(layout)
-              insertPos = "append"
-            }
-            layout = insertBlockAtPath(layout, targetPath, newBlock, insertPos) ?? layout
-          }
           const sectionIndex = buildSectionIndex(blocks)
           const linksOut = extractLinksFromWikiBlocks(blocks)
           persistArticleBlocks(articleId, blocks)
-          return { ...a, blocks, layout, sectionIndex, linksOut, updatedAt: now() }
+          return { ...a, blocks, sectionIndex, linksOut, updatedAt: now() }
         }),
       }))
       // Persist text block body to IDB
@@ -1131,23 +147,20 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
           if (a.id !== articleId) return a
           const blocks = a.blocks.filter((b) => b.id !== blockId)
-          // Phase 3: remove from layout leaf too
-          let layout = a.layout
-          if (layout) {
-            const loc = findBlockLocation(layout, blockId)
-            if (loc) layout = removeBlockFromPath(layout, loc.path, blockId) ?? layout
-          }
           const sectionIndex = buildSectionIndex(blocks)
           const linksOut = extractLinksFromWikiBlocks(blocks)
           persistArticleBlocks(articleId, blocks)
-          return { ...a, blocks, layout, sectionIndex, linksOut, updatedAt: now() }
+          return { ...a, blocks, sectionIndex, linksOut, updatedAt: now() }
         }),
       }))
+      // Remove block body from IDB
       removeBlockBody(blockId)
     },
 
     updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => {
+      // Check if patch affects section index (section title, level, collapsed, or type change)
       const affectsIndex = patch.title !== undefined || patch.level !== undefined || patch.collapsed !== undefined || patch.type !== undefined
+      // Check if patch affects links (content or title changes in text/section blocks)
       const affectsLinks = patch.content !== undefined || patch.title !== undefined
       set((state: any) => ({
         wikiArticles: state.wikiArticles.map((a: WikiArticle) => {
@@ -1155,18 +168,13 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           const blocks = a.blocks.map((b) =>
             b.id === blockId ? { ...b, ...patch } : b
           )
-          // Phase 3: patch in layout leaf too
-          let layout = a.layout
-          if (layout) {
-            const loc = findBlockLocation(layout, blockId)
-            if (loc) layout = patchBlockAtPath(layout, loc.path, blockId, patch) ?? layout
-          }
           persistArticleBlocks(articleId, blocks)
           const sectionIndex = affectsIndex ? buildSectionIndex(blocks) : a.sectionIndex
           const linksOut = affectsLinks ? extractLinksFromWikiBlocks(blocks) : a.linksOut
-          return { ...a, blocks, layout, sectionIndex, linksOut, updatedAt: now() }
+          return { ...a, blocks, sectionIndex, linksOut, updatedAt: now() }
         }),
       }))
+      // Persist updated content to IDB
       if (patch.content !== undefined) {
         persistBlockBody({ id: blockId, content: patch.content })
       }
@@ -1197,32 +205,9 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           const ordered = blockIds
             .map((id) => blockMap.get(id))
             .filter(Boolean) as WikiBlock[]
-          // Phase 3: rebuild each leaf's blocks from the new order.
-          // Blocks stay in whatever leaf they were in; only the within-leaf
-          // ordering changes to match the new global ordering.
-          let layout = a.layout
-          if (layout) {
-            const newOrderIndex = new Map(blockIds.map((id, idx) => [id, idx]))
-            const rebuildLeaf = (leaf: import("../../types").ColumnBlocksLeaf): import("../../types").ColumnBlocksLeaf => {
-              if (!leaf.blocks) return leaf
-              const sorted = [...leaf.blocks].sort((x, y) =>
-                (newOrderIndex.get(x.id) ?? Infinity) - (newOrderIndex.get(y.id) ?? Infinity),
-              )
-              return { ...leaf, blocks: sorted, blockIds: sorted.map((b) => b.id) }
-            }
-            const walkReorder = (node: ColumnStructure): ColumnStructure => ({
-              ...node,
-              columns: node.columns.map((col) =>
-                col.content.type === "columns"
-                  ? { ...col, content: walkReorder(col.content) }
-                  : { ...col, content: rebuildLeaf(col.content) },
-              ),
-            })
-            layout = walkReorder(layout)
-          }
           const sectionIndex = buildSectionIndex(ordered)
           persistArticleBlocks(articleId, ordered)
-          return { ...a, blocks: ordered, layout, sectionIndex, linksOut: extractLinksFromWikiBlocks(ordered), updatedAt: now() }
+          return { ...a, blocks: ordered, sectionIndex, linksOut: extractLinksFromWikiBlocks(ordered), updatedAt: now() }
         }),
       }))
     },
@@ -1233,8 +218,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
       const secondary = (state.wikiArticles as WikiArticle[]).find((a) => a.id === secondaryId)
       if (!primary || !secondary) return
 
-      // Divider section with merge snapshot for unmerge.
-      // Phase 2-2-C: infobox lives inside `blocks` — snapshot carries blocks only.
+      // Divider section with merge snapshot for unmerge
       const secondaryBlockIds = secondary.blocks.map((b) => b.id)
       const dividerBlock: WikiBlock = {
         id: genId(),
@@ -1246,14 +230,19 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           title: secondary.title,
           aliases: [...secondary.aliases],
           tags: [...secondary.tags],
+          infobox: [...secondary.infobox],
           blockIds: secondaryBlockIds,
           blocks: JSON.parse(JSON.stringify(secondary.blocks)),
           mergedAt: now(),
         },
       }
 
-      // Concat blocks: primary + divider + secondary (infobox blocks naturally included)
+      // Concat blocks: primary + divider + secondary
       const mergedBlocks = [...primary.blocks, dividerBlock, ...secondary.blocks]
+
+      // Infobox: merge (primary values take precedence for duplicate keys)
+      const primaryKeys = new Set(primary.infobox.map((e) => e.key))
+      const mergedInfobox = [...primary.infobox, ...secondary.infobox.filter((e) => !primaryKeys.has(e.key))]
 
       // Title: use option override, else keep primary title
       const mergedTitle = options?.title ?? primary.title
@@ -1268,6 +257,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
             title: mergedTitle,
             blocks: mergedBlocks,
             sectionIndex,
+            infobox: mergedInfobox,
             aliases: [...new Set([...a.aliases, secondary.title, ...secondary.aliases].filter((al) => al !== mergedTitle))],
             tags: [...new Set([...a.tags, ...secondary.tags])],
             linksOut: extractLinksFromWikiBlocks(mergedBlocks),
@@ -1304,6 +294,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         id: newId,
         title: newTitle,
         aliases: [],
+        infobox: [],
         blocks: extractedBlocks,
         sectionIndex: buildSectionIndex(extractedBlocks),
         tags: [...source.tags],
@@ -1362,6 +353,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         id: newId,
         title: newTitle,
         aliases: [],
+        infobox: [],
         blocks: clonedBlocks,
         sectionIndex: buildSectionIndex(clonedBlocks),
         tags: [...source.tags],
@@ -1409,6 +401,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         id: restoredId,
         title: snapshot.title,
         aliases: snapshot.aliases,
+        infobox: snapshot.infobox,
         blocks: extractedBlocks,
         sectionIndex: buildSectionIndex(extractedBlocks),
         tags: snapshot.tags,
@@ -1464,13 +457,13 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
 
       if (sources.length === 0) return ""
 
-      // Build merge history snapshots for each source.
-      // Phase 2-2-C: infobox now lives inside `blocks` — snapshot just captures blocks.
+      // Build merge history snapshots for each source
       const mergeHistory: WikiMergeSnapshot[] = sources.map((src) => ({
         articleId: src.id,
         title: src.title,
         aliases: [...src.aliases],
         tags: [...src.tags],
+        infobox: [...src.infobox],
         blockIds: src.blocks.map((b) => b.id),
         blocks: JSON.parse(JSON.stringify(src.blocks)),
         mergedAt: now(),
@@ -1494,8 +487,17 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         for (const t of src.tags) allTags.add(t)
       }
 
-      // Phase 2-2-C: infobox is now a block — merge order preserves whichever
-      // infobox block the caller ordered in `options.blockOrder`. No scalar merge.
+      // Merge infoboxes (first source takes precedence for duplicate keys)
+      const seenKeys = new Set<string>()
+      const mergedInfobox: WikiArticle["infobox"] = []
+      for (const src of sources) {
+        for (const entry of src.infobox) {
+          if (!seenKeys.has(entry.key)) {
+            seenKeys.add(entry.key)
+            mergedInfobox.push(entry)
+          }
+        }
+      }
 
       if (options.mode === "into" && options.targetId) {
         // Mode: merge into existing article
@@ -1521,6 +523,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
                 aliases: Array.from(allAliases),
                 tags: Array.from(allTags),
                 categoryIds: options.categoryIds ?? a.categoryIds,
+                infobox: mergedInfobox,
                 linksOut,
                 mergeHistory: [...existingHistory, ...targetMergeHistory],
                 updatedAt: now(),
@@ -1549,6 +552,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
           id: newId,
           title: options.title,
           aliases: Array.from(allAliases),
+          infobox: mergedInfobox,
           blocks,
           sectionIndex,
           tags: Array.from(allTags),
@@ -1603,15 +607,13 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         ? extractedBlocks
         : JSON.parse(JSON.stringify(snapshot.blocks)) as WikiBlock[]
 
-      // Create restored article from snapshot.
-      // Phase 2-2-C: snapshot.infobox (legacy scalar) no longer restored directly —
-      // pre-v78 snapshots would require a migration pass. Current snapshots keep
-      // infobox inside `blocks`, so restoration is complete via restorationBlocks.
+      // Create restored article from snapshot
       const restoredId = genId()
       const restoredArticle: WikiArticle = {
         id: restoredId,
         title: snapshot.title,
         aliases: [...snapshot.aliases],
+        infobox: [...snapshot.infobox],
         blocks: restorationBlocks,
         sectionIndex: buildSectionIndex(restorationBlocks),
         tags: [...snapshot.tags],

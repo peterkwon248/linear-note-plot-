@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, WikiTemplate, ColumnPath } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -124,9 +124,6 @@ export interface PlotState {
 
   // ── Global Bookmarks (Cross-note anchors) ──
   globalBookmarks: Record<string, GlobalBookmark>
-
-  // ── Wiki Templates (user-defined; built-ins ship in lib/wiki-templates/built-in.ts) ──
-  wikiTemplates: Record<string, WikiTemplate>
 
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
@@ -272,41 +269,12 @@ export interface PlotState {
   setArticleCategories: (articleId: string, categoryIds: string[]) => void
 
   // ── Wiki Articles (Assembly Model) ──
-  createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[]; templateId?: string }) => string
+  createWikiArticle: (partial: { title: string; aliases?: string[]; tags?: string[]; blocks?: WikiBlock[] }) => string
   updateWikiArticle: (articleId: string, patch: Partial<Omit<WikiArticle, "id" | "createdAt">>) => void
   addArticleReference: (articleId: string, referenceId: string) => void
   removeArticleReference: (articleId: string, referenceId: string) => void
   deleteWikiArticle: (articleId: string) => void
-  applyColumnPreset: (articleId: string, presetCount: number) => void
-  /** Phase 3.1-A — apply an asymmetric ratio preset (e.g. 5:3, golden ratio). */
-  applyAsymmetricPreset: (articleId: string, ratios: number[], minWidths?: number[]) => void
-  /** Phase 3.1-A — toggle hairline vertical rule between columns. */
-  setColumnRule: (articleId: string, rule: boolean) => void
-  /** Phase 3.1-A — set column gap token. */
-  setColumnGap: (articleId: string, gap: "sm" | "md" | "lg") => void
-  /** Phase 3.1-A — set a column's display name. Pass null to clear. */
-  setColumnName: (articleId: string, path: number[], name: string | null) => void
-  /** Phase 3.1-A — set a column's palette id (e.g. "slate"). Pass null to clear. */
-  setColumnPaletteId: (articleId: string, path: number[], paletteId: string | null) => void
-  /** Phase 3.1-A — assign random palette colors to every column. */
-  applyAutoColumnColors: (articleId: string) => void
-  /** Phase 3.1-B — wrap two blocks into a column-group (Notion-style side-by-side). */
-  wrapInColumnGroup: (articleId: string, targetBlockId: string, draggedBlockId: string, side: "left" | "right") => void
-  /** Phase 3.1-B — dissolve a column-group, putting children back as flat blocks. */
-  unwrapColumnGroup: (articleId: string, groupBlockId: string) => void
-  /** Phase 3.1-B — add a full-width pane above/below columns (vertical wrap). */
-  addFullWidthPane: (articleId: string, position: "above" | "below") => void
-  /** Phase 3.1-A — set column bg opacity (0.1~1). */
-  setColumnPaletteAlpha: (articleId: string, path: number[], alpha: number) => void
-  /** Phase 3.1-A — set gradient second color. Pass null to clear. */
-  setColumnGradientTo: (articleId: string, path: number[], gradientTo: string | null) => void
-  /** Phase 3.1-A — clear all palette colors from all columns. */
-  clearAllColumnColors: (articleId: string) => void
-  updateColumnRatios: (articleId: string, path: number[], newRatios: number[]) => void
-  moveBlockToColumn: (articleId: string, blockId: string, targetPath: ColumnPath) => void
-  addColumnAfter: (articleId: string, parentPath: number[], afterIndex: number) => void
-  removeColumn: (articleId: string, path: number[]) => void
-  splitLeafIntoColumns: (articleId: string, path: number[], count: number) => void
+  setWikiArticleInfobox: (articleId: string, infobox: WikiArticle["infobox"]) => void
   addWikiBlock: (articleId: string, block: Omit<WikiBlock, "id">, afterBlockId?: string) => string
   removeWikiBlock: (articleId: string, blockId: string) => void
   updateWikiBlock: (articleId: string, blockId: string, patch: Partial<Omit<WikiBlock, "id">>) => void
@@ -339,12 +307,6 @@ export interface PlotState {
   pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType']) => string
   unpinBookmark: (bookmarkId: string) => void
   updateBookmarkLabel: (bookmarkId: string, label: string) => void
-
-  // ── Wiki Templates (CRUD; built-ins are read-only) ──
-  createWikiTemplate: (partial: Omit<WikiTemplate, "id" | "createdAt" | "updatedAt" | "isBuiltIn">) => string
-  updateWikiTemplate: (id: string, updates: Partial<Omit<WikiTemplate, "id" | "createdAt" | "isBuiltIn">>) => void
-  deleteWikiTemplate: (id: string) => void
-  duplicateWikiTemplate: (sourceId: string, newName?: string) => string | null
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

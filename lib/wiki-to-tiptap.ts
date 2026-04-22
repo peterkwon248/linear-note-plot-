@@ -193,14 +193,11 @@ export function wikiArticleToTipTap(article: WikiArticle): TipTapDoc {
     content.push(paragraph(article.aliases.join(" · "), [{ type: "italic" }]))
   }
 
-  // 3. Infobox as table (Phase 2-2-C: derived from infobox blocks)
-  const infoboxFields = article.blocks
-    .filter((b) => b.type === "infobox")
-    .flatMap((b) => b.fields ?? [])
-  content.push(...convertInfobox(infoboxFields))
+  // 3. Infobox as table
+  content.push(...convertInfobox(article.infobox))
 
   // 4. Horizontal rule separator
-  if (infoboxFields.length > 0) {
+  if (article.infobox.length > 0) {
     content.push({ type: "horizontalRule" })
   }
 

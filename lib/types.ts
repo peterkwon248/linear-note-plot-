@@ -9,140 +9,8 @@ export type NoteSource = "manual" | "webclip" | "import" | "share" | "api" | nul
 /** Note type discriminator — replaces legacy isWiki boolean */
 export type NoteType = "note" | "wiki"
 
-/* ── Phase 1: Column Layout + Template System ────────────────────────
- *  진실의 원천: docs/BRAINSTORM-2026-04-14-column-template-system.md
- *
- *  "컬럼 렌더러 + 섹션(블록) 배치 = 템플릿"
- *  ColumnStructure is recursive — nested columns up to 3 depth.
- *  columns reference blocks by id via `ColumnPath` in `columnAssignments`.
- */
-
-/** Recursive column container. Nested max 3 depth (enforced at edit UX). */
-export interface ColumnStructure {
-  type: "columns"
-  direction?: "horizontal" | "vertical"  // default "horizontal"
-  columns: ColumnDefinition[]
-  /** Phase 3.1-A: hairline vertical rule between columns (opt-in). */
-  rule?: boolean
-  /** Phase 3.1-A: gap token — sm=16px / md=24px (default) / lg=40px. */
-  gap?: "sm" | "md" | "lg"
-}
-
-/**
- * One column within a ColumnStructure.
- *
- * Phase 3 (Multi-pane Document Model) additions:
- * - `name`: per-column label (e.g. "목차", "본문", "관련 자료")
- * - `themeColor`: per-column background/accent for magazine-style visuals
- * - `minHeight`: used by vertical-direction columns
- * - `ratio` now also covers height-ratio in vertical direction
- */
-export interface ColumnDefinition {
-  ratio: number                // flex weight (width for horizontal, height for vertical)
-  minWidth?: number            // responsive collapse threshold (px)
-  minHeight?: number           // min height (px) — vertical-direction pane
-  priority?: number            // hide order when narrow (lower priority hides first)
-  name?: string                // Phase 3 — optional column label
-  themeColor?: WikiThemeColor  // Phase 3 — per-column explicit {light, dark} hex override (rarely used)
-  paletteId?: string           // Phase 3.1-A — column palette entry id (e.g. "slate", "sage"). See lib/column-palette.ts
-  paletteAlpha?: number        // Phase 3.1-A — bg opacity 0.1~1 (default 1). Controls pastel intensity
-  gradientTo?: string          // Phase 3.1-A — second palette id for gradient bg (CSS linear-gradient)
-  content: ColumnStructure | ColumnBlocksLeaf
-}
-
-/**
- * Leaf node of a column. Phase 3 (Multi-pane Document Model):
- * During the transition both fields coexist.
- * - Pre-v80 (legacy): `blockIds` resolved against `WikiArticle.blocks` pool
- * - Post-v80 (Phase 3): `blocks` is canonical per-column storage
- *
- * `blockIds` is kept required during Step 1 so existing renderer code still
- * compiles. Step 7 (renderer refactor) switches readers to prefer `blocks`
- * and fall back to `blockIds` only for not-yet-migrated articles.
- */
-export interface ColumnBlocksLeaf {
-  type: "blocks"
-  blockIds: string[]             // Legacy — stays required during transition
-  blocks?: WikiBlock[]           // Phase 3 canonical (populated by migration v80)
-}
-
-/** Path into nested columns. e.g. [0, 1, 2] = columns[0].columns[1].columns[2]. */
-export type ColumnPath = number[]
-
-/** Title rendering style. Applied to `WikiArticle.title + aliases`, not as a block. */
-export interface WikiTitleStyle {
-  alignment?: "left" | "center"         // default "left"
-  size?: "default" | "large" | "hero"   // "hero" = cover style
-  showAliases?: boolean                 // render aliases as subtitle
-  themeColorBg?: boolean                // apply themeColor background behind title
-}
-
-/**
- * TOC (Table of Contents) styling for an article.
- * Phase 2-1: TOC is meta content (auto-generated/updated from sections), not a block.
- * Phase 2-2-C: `WikiTocStyle` removed — TOC is now a first-class `WikiBlock`
- * (`type: "toc"`). Its position is expressed via `columnAssignments`, and the
- * show/collapsed state lives on the block itself.
- */
-
-/** Theme color for an article/template (light + dark mode variants). */
-export interface WikiThemeColor {
-  light: string   // CSS color (hex / rgba / named)
-  dark: string
-}
-
-/** Section placement definition in a template (sections + where they land). */
-export interface WikiTemplateSection {
-  title: string
-  level: 2 | 3 | 4
-  columnPath: ColumnPath           // which column this section belongs to
-  initialBlocks?: WikiBlock[]      // default content to seed when applying template
-  icon?: string                    // emoji / Remix icon name (section identity)
-  themeColor?: string              // per-section tint (overrides article themeColor)
-  description?: string             // subheading text
-}
-
-/** Infobox placement inside a template. */
-export interface WikiTemplateInfobox {
-  fields: WikiInfoboxEntry[]       // supports type: "field" | "section"
-  headerColor?: string             // infoboxHeaderColor default for this template
-  columnPath: ColumnPath           // which column hosts the infobox
-}
-
-/** Hatnote definition (links at top of article, e.g. "See also"). Phase 5 renders. */
-export interface WikiTemplateHatnote {
-  type: "about" | "distinguish" | "see_also" | "main" | "further"
-  text?: string
-  targetId?: string
-}
-
-/** Navigation box configuration. Phase 5 renders. */
-export interface WikiTemplateNavbox {
-  sourceCategoryId?: string        // auto-collect articles from this category
-  items?: string[]                 // manual list of article IDs
-}
-
-/**
- * Wiki template — unified "layout + sections + infobox + styling" definition.
- * Built-in templates live in `lib/wiki-templates/built-in.ts`.
- * User-defined templates are stored in the `wikiTemplates` slice.
- */
-export interface WikiTemplate {
-  id: string
-  name: string
-  description: string
-  icon?: string                        // emoji or Remix icon name (catalog display)
-  isBuiltIn: boolean                   // true = shipped preset, false = user created
-  layout: ColumnStructure
-  titleStyle?: WikiTitleStyle
-  themeColor?: WikiThemeColor
-  sections: WikiTemplateSection[]
-  infobox: WikiTemplateInfobox
-  hatnotes?: WikiTemplateHatnote[]
-  navbox?: WikiTemplateNavbox
-  createdAt: string
-  updatedAt: string
-}
+/** Wiki article layout mode */
+export type WikiLayout = "default" | "encyclopedia"
 
 /** Activity Bar spaces — top-level navigation */
 export type ActivitySpace = "home" | "notes" | "wiki" | "calendar" | "ontology" | "library"
@@ -193,14 +61,7 @@ export interface WikiCategory {
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
 /** Wiki block types — building blocks of a wiki article */
-export type WikiBlockType =
-  | 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url'
-  // Phase 2-2-C: meta blocks (previously scalar fields on WikiArticle)
-  | 'infobox' | 'toc'
-  // Phase 3.1-B: magazine blocks
-  | 'pull-quote'
-  // Phase 3.1-B: Notion-style implicit column group (created by side-dragging blocks)
-  | 'column-group'
+export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url'
 
 /** A single block in a wiki article */
 export interface WikiBlock {
@@ -246,37 +107,6 @@ export interface WikiBlock {
   editorHeight?: number | null
   /** Merge history: snapshot of the merged article for unmerge */
   mergedFrom?: WikiMergeSnapshot
-  // Phase 2-2-C — infobox block
-  /** Infobox: key/value entries (section rows allowed via entry.type = 'section') */
-  fields?: WikiInfoboxEntry[]
-  /** Infobox: optional header color override (CSS color string) — null = default theme */
-  headerColor?: string | null
-  // Phase 2-2-C — toc block
-  /** TOC: whether the TOC is collapsed by default (persisted) */
-  tocCollapsed?: boolean
-  /** TOC: optional heading levels to hide (e.g. [4,5] to hide deep headings) */
-  hiddenLevels?: number[]
-  // Phase 3.1-B — pull-quote block
-  /** Pull Quote: main text */
-  quoteText?: string
-  /** Pull Quote: optional attribution / citation */
-  quoteAttribution?: string
-  /** Pull Quote: visual variant — "minimal" (default) | "editorial" (NYT serif) | "bordered" (Medium) */
-  quoteVariant?: "minimal" | "editorial" | "bordered"
-  // Phase 3.1-B: Notion-style inline column group (NOT in Insert menu — created by side-dragging).
-  // Each inner array = one sub-column's blocks (rendered side-by-side horizontally).
-  /** `column-group` block only — 2~4 side-by-side sub-columns, each owning WikiBlock[]. */
-  columnChildren?: WikiBlock[][]
-  // Phase 3.1-B: Per-block width control (opt-in — default undefined = natural width).
-  // Strings = preset sizes, number = custom pixel width from drag. Block renderers
-  // decide what to do with it (currently used by Infobox; others TBD).
-  /** Block width: "narrow" | "default" | "wide" | "full" | number(px) */
-  width?: "narrow" | "default" | "wide" | "full" | number
-  /** Block spacing/density — interpretation is block-specific.
-   *  TOC: vertical gap between items. Infobox: row padding.
-   *  Text: line-height. Section: margin above.
-   *  Default undefined = "normal". */
-  density?: "compact" | "normal" | "loose"
 }
 
 /** Snapshot of a merged article — stored on the divider section block for unmerge */
@@ -285,11 +115,7 @@ export interface WikiMergeSnapshot {
   title: string
   aliases: string[]
   tags: string[]
-  /**
-   * Phase 2-2-C: infobox is now a block in `blocks`. Legacy snapshots (pre-v78)
-   * retain a scalar `infobox` field — kept optional for backward compatibility.
-   */
-  infobox?: WikiInfoboxEntry[]
+  infobox: WikiInfoboxEntry[]
   blockIds: string[]       // IDs of blocks that came from this merged article
   blocks: WikiBlock[]      // full block data for restoration (deep clone)
   mergedAt: string
@@ -316,37 +142,19 @@ export interface WikiArticle {
   id: string
   title: string
   aliases: string[]
+  infobox: WikiInfoboxEntry[]
+  /** Tier 1-2: Infobox header background color (null/undefined = default bg-secondary/30). Raw CSS color (rgba/hex). */
+  infoboxHeaderColor?: string | null
   blocks: WikiBlock[]
   sectionIndex: WikiSectionIndex[]
   tags: string[]
   categoryIds?: string[]           // references to WikiCategory.id (DAG)
+  layout?: WikiLayout              // article layout mode (default: "default")
   fontSize?: number                // global font size multiplier (0.85=S, 1=M default, 1.15=L, 1.3=XL)
   contentAlign?: "left" | "center" // content alignment (undefined = "left")
   linksOut?: string[]              // extracted [[wiki-links]] from text blocks
   referenceIds?: string[]              // linked Reference IDs (bibliography, not inline footnotes)
   mergeHistory?: WikiMergeSnapshot[]  // snapshots from N→1 merge for unmerge
-
-  /* ── Column Layout + Template System (Phase 2-1B-3 rename: columnLayout → layout) ──
-   *  Migration v77 ensures every article has `layout` populated (1-col Blank fallback).
-   *  `titleStyle`/`themeColor`/`templateId` stay undefined unless a template is applied. */
-  layout?: ColumnStructure                         // recursive column structure (Phase 2-1B-3 rename from columnLayout)
-  columnAssignments?: Record<string, ColumnPath>   // blockId → column path into layout
-  titleStyle?: WikiTitleStyle                      // title rendering customization
-  themeColor?: WikiThemeColor                      // article-level theme color
-  templateId?: string                              // source template (traceability only, not enforced)
-  /** Phase 3.1-B: section numbering mode across columns.
-   * "independent" (default) = each pane 1..N separately.
-   * "continuous" = left→right depth-first global 1..N. */
-  numberingMode?: "independent" | "continuous"
-  /** Phase 3.1-C: typography mode.
-   * "sans" (default) = current Inter/Geist body.
-   * "serif-body" = Merriweather + Noto Serif KR body, keep sans headings.
-   * "editorial" = serif body + display H2 + drop cap on first paragraph of each section. */
-  typography?: "sans" | "serif-body" | "editorial"
-
-  /* Phase 2-2-C: `infobox`, `infoboxHeaderColor`, `infoboxColumnPath`, `tocStyle`
-   * all moved to `WikiBlock`s (types "infobox" / "toc"). See migration v78. */
-
   createdAt: string
   updatedAt: string
 }

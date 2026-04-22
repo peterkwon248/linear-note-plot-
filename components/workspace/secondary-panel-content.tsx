@@ -5,7 +5,7 @@ import { usePlotStore } from "@/lib/store"
 import { useSecondaryRoute, useSecondarySpace, setSecondarySpace, DEFAULT_ROUTES } from "@/lib/table-route"
 import { NoteEditor } from "@/components/note-editor"
 import { PaneProvider, useIsActivePane } from "./pane-context"
-import { ColumnPresetToggle } from "@/components/wiki-editor/column-preset-toggle"
+import { WikiLayoutToggle } from "@/components/wiki-editor/wiki-layout-toggle"
 import { cn } from "@/lib/utils"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
@@ -26,10 +26,11 @@ import {
 import type { ActivitySpace } from "@/lib/types"
 
 // Lazy-load view components to avoid bloating the secondary panel bundle
-const WikiArticleRenderer = lazy(() => import("@/components/wiki-editor/wiki-article-renderer").then(m => ({ default: m.WikiArticleRenderer })))
+const WikiArticleView = lazy(() => import("@/components/wiki-editor/wiki-article-view").then(m => ({ default: m.WikiArticleView })))
+const WikiArticleEncyclopedia = lazy(() => import("@/components/wiki-editor/wiki-article-encyclopedia").then(m => ({ default: m.WikiArticleEncyclopedia })))
 const NotesTableView = lazy(() => import("@/components/notes-table-view").then(m => ({ default: m.NotesTableView })))
 const HomeView = lazy(() => import("@/components/views/home-view").then(m => ({ default: m.HomeView })))
-const BookWorkspace = lazy(() => import("@/components/book/book-workspace").then(m => ({ default: m.BookWorkspace })))
+const WikiView = lazy(() => import("@/components/views/wiki-view").then(m => ({ default: m.WikiView })))
 const CalendarView = lazy(() => import("@/components/calendar-view").then(m => ({ default: m.CalendarView })))
 const OntologyView = lazy(() => import("@/components/views/ontology-view").then(m => ({ default: m.OntologyView })))
 const LibraryView = lazy(() => import("@/components/views/library-view").then(m => ({ default: m.LibraryView })))
@@ -222,9 +223,10 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
               </svg>
             </button>
           )}
-          {/* Phase 3: column preset dropdown (edit mode only, compact) */}
-          {article && <ColumnPresetToggle articleId={articleId} editable={isEditing} compact />}
-          {/* Phase 2-2-C: ColumnMetaPositionMenu removed — infobox/toc are blocks now */}
+          {/* Layout toggle */}
+          {article && (
+            <WikiLayoutToggle articleId={articleId} layout={article.layout} showIcon={false} />
+          )}
           {/* Edit/Done toggle */}
           {isEditing ? (
             <button
@@ -252,15 +254,22 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
       </header>
       <div className="flex-1 min-h-0 overflow-auto">
         <Suspense fallback={<ViewFallback />}>
-          {article && (
-            <WikiArticleRenderer
-              articleId={articleId}
-              editable={isEditing}
-              variant={(article.layout?.columns.length ?? 1) >= 2 ? "encyclopedia" : "default"}
+          {article?.layout === "encyclopedia" ? (
+            <WikiArticleEncyclopedia
+              article={article}
+              isEditing={isEditing}
+              onBack={() => closeSecondary()}
               collapseAllCmd={collapseAllCmd}
               onCollapseAllDone={() => setCollapseAllCmd(null)}
               onAllCollapsedChange={setAllSectionsCollapsed}
               fontSize={article.fontSize}
+            />
+          ) : (
+            <WikiArticleView
+              articleId={articleId}
+              editable={isEditing}
+              collapseAllCmd={collapseAllCmd}
+              onCollapseAllDone={() => setCollapseAllCmd(null)}
             />
           )}
         </Suspense>
@@ -345,7 +354,7 @@ function SecondaryViewRouter({ route }: { route: string }) {
     if (TABLE_VIEW_ROUTES.includes(route)) return <NotesTableView />
     switch (route) {
       case "/home": return <HomeView />
-      case "/wiki": return <BookWorkspace />
+      case "/wiki": return <WikiView />
       case "/calendar": return <CalendarView title="Calendar" />
       case "/ontology":
       case "/graph-insights": return <OntologyView />

@@ -287,7 +287,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                           <span className="text-accent text-2xs">+</span>
                           <IconWiki size={14} className="shrink-0 text-accent" />
                           <span className="truncate font-medium text-foreground">{item.title}</span>
-                          <span className="ml-auto shrink-0 text-2xs text-accent">+ Create Book</span>
+                          <span className="ml-auto shrink-0 text-2xs text-accent">+ Create Wiki</span>
                         </>
                       ) : (
                         <>

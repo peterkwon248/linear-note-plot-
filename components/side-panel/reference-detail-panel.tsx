@@ -306,7 +306,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
             )}
             {referencingArticles.length > 0 && (
               <>
-                <p className="text-2xs text-muted-foreground/40 font-medium uppercase tracking-wider mt-2">Books</p>
+                <p className="text-2xs text-muted-foreground/40 font-medium uppercase tracking-wider mt-2">Wiki</p>
                 {referencingArticles.map(a => (
                   <button
                     key={a.id}
