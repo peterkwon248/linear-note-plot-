@@ -5,7 +5,26 @@
 
 ---
 
-**Last Updated**: 2026-04-22 — **Hard reset to PR #194 (3f2e54c)**. PR #195-#213 전부 폐기. UI 일관성 방향 전환.
+**Last Updated**: 2026-04-23 — Wiki visual polish (TOC 나무위키 스타일, updatedAt, Ontology rename) + IDB fix. PR #215 머지 대기.
+
+---
+
+## 🎯 2026-04-23 다음 세션 즉시 시작
+
+### Step 1 — PR #215 머지 확인
+- `gh pr merge 215 --squash` (이미 생성됨)
+
+### Step 2 — UI 일관성 감사: 다음 영역
+이번 세션에서 wiki visual polish 완료 (TOC + updatedAt + Ontology rename). 이어서:
+1. **사용자에게 직접 물어보기**: "지금 가장 거슬리는 UI 3가지?"
+2. `docs/DESIGN-AUDIT.md` 있으면 재검토
+3. `designer` 에이전트로 개선 위임
+
+### 잊지 말 것
+- 두 wiki 모드 병행 유지 (Default + Encyclopedia) — 장기적으로 단일화 논의 가능하지만 지금은 유지
+- Wiki TOC = 자동 생성 (section blocks 기반), TipTap toc-node는 별개 (인라인 삽입용)
+- IDB `plot-note-bodies` DB_VERSION = 2 (버전 올림으로 복구 완료)
+- "멋진 레이아웃 / 시각적 다양성" 방향 제안 금지 (2026-04-22 자각 유지)
 
 ---
 
