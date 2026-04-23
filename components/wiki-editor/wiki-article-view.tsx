@@ -13,6 +13,7 @@ import { Virtuoso } from "react-virtuoso"
 import { toast } from "sonner"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { computeSectionNumbers, buildVisibleBlocks } from "@/lib/wiki-block-utils"
+import { shortRelative } from "@/lib/format-utils"
 import { useWikiBlockActions } from "@/hooks/use-wiki-block-actions"
 import {
   DndContext,
@@ -403,10 +404,10 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   const outerContent = (
     <div className="flex flex-1 min-h-0 overflow-hidden" style={fontSize ? { fontSize: `${fontSize}em` } : undefined}>
       {/* TOC Sidebar */}
-      {!preview && <aside className="min-w-[160px] max-w-[280px] w-auto shrink overflow-y-auto border-r border-border-subtle px-3 py-4 hidden xl:block">
+      {!preview && <aside className="min-w-[160px] max-w-[240px] w-auto shrink overflow-y-auto border-r border-border-subtle px-3 py-4 hidden xl:block">
         <div className="sticky top-0">
-          <h4 className="text-2xs text-muted-foreground uppercase tracking-wider mb-2">
-            Contents
+          <h4 className="text-[11px] text-muted-foreground/50 font-medium mb-2 pl-2">
+            목차
           </h4>
           {tocSections.length > 0 ? (
             <nav className="space-y-0.5">
@@ -454,6 +455,10 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
               {article.title}
             </h1>
           )}
+          {/* Updated at */}
+          <p className="text-[12px] text-muted-foreground/40 mb-1">
+            최근 수정: {shortRelative(article.updatedAt)} 전
+          </p>
           {/* Aliases (editable) */}
           {editable ? (
             <input

@@ -3,6 +3,17 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
+## 🟢 2026-04-23 최신 — Wiki visual polish + PR #215
+
+**PR #215 (2026-04-23, 머지 대기)**:
+- Graph → Ontology rename (5파일)
+- Encyclopedia TOC: dark-only hardcoded → 디자인 토큰 (라이트/다크 호환)
+- 두 모드 공통 updatedAt "최근 수정: N시간 전"
+- Default TOC 헤더: "Contents" → "목차" 조용하게
+- IDB fix: `plot-note-bodies` DB_VERSION 2 (bodies store 복구)
+
+---
+
 ## 🟢 2026-04-22 상태 — Hard reset to PR #194
 
 **현재 branch HEAD**: `3f2e54c` (PR #194: "Tier 1 인포박스 전체 완료 + 위키 디자인 버그 수정")

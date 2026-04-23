@@ -9,7 +9,7 @@ import type { NoteBody } from "./types"
 export const BODIES_MIGRATED_KEY = "plot-bodies-migrated"
 
 const DB_NAME = "plot-note-bodies"
-const DB_VERSION = 1
+const DB_VERSION = 2
 const STORE_NAME = "bodies"
 
 function openDB(): Promise<IDBDatabase> {

@@ -6,6 +6,38 @@
 
 ---
 
+## 2026-04-23 (Wiki visual polish + Ontology rename + IDB fix)
+
+### 완료
+- **Graph → Ontology rename** (5파일): `editor-breadcrumb.tsx`, `linear-sidebar.tsx`, `view-header.tsx`, `secondary-panel-content.tsx`, `ontology-view.tsx` — activity bar는 이미 "Ontology"였음
+- **Wiki Encyclopedia TOC 리디자인**: dark-only `white/XX` hardcoded color → 디자인 토큰 (`border-border-subtle`, `bg-secondary/20`, `text-foreground/80`). 라이트/다크 모드 호환
+- **두 모드 공통 updatedAt 추가**: 타이틀 아래 "최근 수정: N시간 전" (`shortRelative()` 사용)
+- **Default 모드 TOC 조용하게**: "Contents" uppercase → "목차" quiet (`text-[11px] text-muted-foreground/50`), max-width 280→240px
+- **IDB fix**: `plot-note-bodies` DB_VERSION 1→2 (corrupted state 복구, bodies store 재생성)
+- PR #215 생성 (2 commits)
+
+### 브레인스토밍 & 큰 결정
+- **나무위키 스타일 채택**: TOC + updatedAt 위치, categories 인라인 — 두 모드 모두 적용
+- **두 모드 병행 유지**: Default (TOC 좌측 aside + Infobox float-right) + Encyclopedia (TOC 박스 inline + Infobox 스택) — 장기적 단일화는 나중에
+- **Wiki TOC = 자동 생성** 재확인: section blocks 기반 sectionIndex, TipTap toc-node는 별개
+- **Infobox 위치 = 문서 내 유지**: sidebar Detail과 대립하지 않음 (사용자 pain은 없었음)
+- **Ontology를 Activity Bar 공간으로 유지**: Display View에 통합 안 함 (사용자 결정)
+
+### 다음
+- PR #215 머지
+- 사용자에게 "가장 거슬리는 UI 3가지" 구체화 요청
+- UI 일관성 감사 계속
+
+### Watch Out
+- IDB 에러 1/11 → 0: DB_VERSION 2로 해결됨. 다음 세션 새 브라우저에서도 재현 안 될 것
+- `search-dialog.tsx`의 "Graph" 헤딩은 그래프 시각화 커맨드용이라 유지 (Ontology로 바꾸지 않음)
+- 기존 hydration mismatch (Radix UI aria-controls ID) — pre-existing, 기능 영향 없음
+
+### 머신
+집
+
+---
+
 ## 2026-04-22 (집, Hard reset to PR #194 + 도돌이표 자각 + UI 일관성 방향 전환)
 
 ### 수행 작업

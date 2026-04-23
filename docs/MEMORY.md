@@ -188,6 +188,15 @@ notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, 
 - **표류 종결** — 2026-03-30 PIVOT #1 (IKEA 전략) → 2026-04-01 ROLLBACK #2 (노션식 폐기) → 2026-04-14 FINAL (분리 유지 + 위키 디자인 강화). 향후 엔티티 통합 제안 금지.
 
 ## Completed PRs (recent)
+- **PR #215 (2026-04-23)**: Wiki visual polish + Ontology rename + IDB fix
+  - Graph → Ontology rename (editor-breadcrumb, linear-sidebar, view-header, secondary-panel-content, ontology-view)
+  - Encyclopedia TOC: dark-only `white/XX` → design tokens (border-border-subtle / bg-secondary/20 / text-foreground/80)
+  - Both modes: "최근 수정: N시간 전" updatedAt below title (`shortRelative()`)
+  - Default TOC header: "Contents" uppercase → quiet "목차" (text-[11px] text-muted-foreground/50), max-w-[240px]
+  - `plot-note-bodies` IDB DB_VERSION 1→2 (corrupted object store 복구)
+
+- **PR #214 (merged 2026-04-22)**: Hard reset to PR #194 — Book Pivot 전면 롤백. PR #195-#213 폐기.
+
 - **WIP (2026-04-14 밤, next PR)**: 인포박스 Tier 1 전체 (Tier 1-2 헤더 색상 + Default 인포박스 통합 + Tier 1-4 섹션 구분 행 + Tier 1-5 필드 리치텍스트)
   - **경로 A: TipTap `InfoboxBlockNode`** (노트 에디터 + 위키 TextBlock 내부 슬래시 `/infobox`)
     - `headerColor` attr 추가 (`string | null`, null=default `bg-secondary/30` class)
