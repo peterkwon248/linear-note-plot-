@@ -220,7 +220,7 @@ export function OntologyView() {
     <main className="flex h-full flex-1 flex-col overflow-hidden bg-background">
       <ViewHeader
         icon={<Graph size={20} weight="regular" />}
-        title="Graph"
+        title="Ontology"
         searchPlaceholder="Search nodes..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}

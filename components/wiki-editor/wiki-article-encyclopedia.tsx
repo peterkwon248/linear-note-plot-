@@ -6,6 +6,7 @@ import type { WikiArticle, WikiBlock, WikiSectionIndex } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { InlineCategoryTags } from "./wiki-article-view"
+import { shortRelative } from "@/lib/format-utils"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
@@ -40,29 +41,29 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
   if (sections.length === 0) return null
 
   return (
-    <div className="mb-6 rounded-lg border border-white/[0.08] bg-white/[0.02] max-w-sm">
+    <div className="mb-6 max-w-xs rounded-md border border-border-subtle bg-secondary/20">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-4 py-3 w-full text-left"
+        className="flex items-center justify-between px-3.5 py-2.5 w-full text-left"
       >
-        <span className="font-bold text-white/80">Contents</span>
+        <span className="text-[13px] font-medium text-foreground/80">목차</span>
         <CaretDown
-          size={14}
+          size={12}
           weight="bold"
           className={cn(
-            "text-white/40 transition-transform duration-200",
+            "text-muted-foreground/50 transition-transform duration-200",
             !open && "-rotate-90"
           )}
         />
       </button>
       {open && (
-        <div className="px-4 pb-3.5 space-y-1">
+        <div className="px-3.5 pb-3 space-y-0.5">
           {sections.map((s) => {
             const num = sectionNumbers.get(s.id) ?? ""
             return (
               <div
                 key={s.id}
-                style={{ paddingLeft: (s.level - 2) * 16 }}
+                style={{ paddingLeft: (s.level - 2) * 14 }}
               >
                 <button
                   onClick={() => {
@@ -71,9 +72,10 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
                       block: "start",
                     })
                   }}
-                  className="text-accent/70 hover:text-accent transition-colors"
+                  className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-100 text-left w-full py-0.5"
                 >
-                  {num}. {s.title}
+                  <span className="text-accent/60 text-[12px] shrink-0">{num}.</span>
+                  <span>{s.title}</span>
                 </button>
               </div>
             )
@@ -202,7 +204,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
   return (
     <div className="flex-1 overflow-y-auto" style={fontSize ? { fontSize: `${fontSize}em` } : undefined}>
       {/* Title (editable) */}
-      <div className={cn("px-10 pt-4 pb-2", article.contentAlign === "center" && "max-w-4xl mx-auto")}>
+      <div className={cn("px-10 pt-6 pb-2", article.contentAlign === "center" && "max-w-4xl mx-auto")}>
         {isEditing ? (
           <input
             defaultValue={article.title}
@@ -213,11 +215,15 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
               }
             }}
             onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
-            className="text-[1.875em] font-bold text-white/90 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
+            className="text-[1.875em] font-bold text-foreground bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
           />
         ) : (
-          <h1 className="text-[1.875em] font-bold text-white/90">{article.title}</h1>
+          <h1 className="text-[1.875em] font-bold text-foreground">{article.title}</h1>
         )}
+        {/* Updated at */}
+        <p className="mt-1 text-[12px] text-muted-foreground/40">
+          최근 수정: {shortRelative(article.updatedAt)} 전
+        </p>
         {isEditing ? (
           <input
             defaultValue={article.aliases.join(", ")}
@@ -227,10 +233,10 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
               usePlotStore.getState().updateWikiArticle(article.id, { aliases })
             }}
             onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
-            className="mt-1 text-note text-white/40 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
+            className="mt-1 text-note text-muted-foreground/50 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
           />
         ) : article.aliases.length > 0 ? (
-          <p className="mt-1 text-note text-white/40">
+          <p className="mt-1 text-note text-muted-foreground/50">
             {article.aliases.join(", ")}
           </p>
         ) : null}

@@ -34,7 +34,7 @@ const SPACE_LABELS: Record<ActivitySpace, string> = {
   notes: "Notes",
   wiki: "Wiki",
   calendar: "Calendar",
-  ontology: "Graph",
+  ontology: "Ontology",
   library: "Library",
 }
 

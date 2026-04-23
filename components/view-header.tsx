@@ -271,7 +271,7 @@ const SECONDARY_SPACE_CONFIG: Array<{ key: string; label: string; Icon: any }> =
   { key: "notes", label: "Notes", Icon: IconNotes },
   { key: "wiki", label: "Wiki", Icon: IconWiki },
   { key: "calendar", label: "Calendar", Icon: IconCalendar },
-  { key: "ontology", label: "Graph", Icon: GraphIcon },
+  { key: "ontology", label: "Ontology", Icon: GraphIcon },
   { key: "library", label: "Library", Icon: Books },
 ]
 
