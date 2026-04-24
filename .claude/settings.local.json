@@ -135,7 +135,16 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); zs=[x for x in d['dbs'] if x['dbName']=='plot-zustand'][0]; s=zs['entries'][0]['value']; s=json.loads\\(s\\) if isinstance\\(s,str\\) else s; state=s.get\\('state',s\\); notes=state.get\\('notes',[]\\); print\\('Total notes:', len\\(notes\\)\\); [print\\(n.get\\('id'\\), '|', \\(n.get\\('title'\\) or '\\(none\\)'\\)[:40], '|', len\\(n.get\\('content'\\) or ''\\), 'chars'\\) for n in notes]\")",
       "Bash(python -c ':*)",
       "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-04-14_2213.md)",
-      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)"
+      "Bash(cp ~/.claude/.omc-worklog/latest.md .omc/worklog/latest.md)",
+      "Bash(cp /c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/jovial-mirzakhani-a88d1c/components/wiki-editor/category-tree-picker.tsx components/wiki-editor/)",
+      "Bash(cp /c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/jovial-mirzakhani-a88d1c/components/wiki-editor/navbox-block.tsx components/wiki-editor/)",
+      "Bash(cp /c/Users/user/Desktop/linear-note-plot-/.claude/worktrees/jovial-mirzakhani-a88d1c/components/wiki-editor/navigation-block.tsx components/wiki-editor/)",
+      "Bash(grep -oE 'Unexpected[^\\\\\\\\\"]{0,100}' \"C:\\\\Users\\\\user\\\\.claude\\\\projects\\\\C--Users-user-Desktop-linear-note-plot---claude-worktrees-practical-kepler-a53649\\\\f7b8a6c8-746d-4e9b-ae13-fbe9ce5d74c2\\\\tool-results\\\\mcp-Claude_Preview-preview_console_logs-1777002641162.txt\")",
+      "Bash(grep -oE 'toc-node[^\"]{0,80}' \"C:\\\\Users\\\\user\\\\.claude\\\\projects\\\\C--Users-user-Desktop-linear-note-plot---claude-worktrees-practical-kepler-a53649\\\\f7b8a6c8-746d-4e9b-ae13-fbe9ce5d74c2\\\\tool-results\\\\mcp-Claude_Preview-preview_console_logs-1777002641162.txt\")",
+      "Bash(grep -oE '\\\\\\\\n  [0-9]+ \\\\|[^\\\\\\\\]{0,100}' \"C:\\\\Users\\\\user\\\\.claude\\\\projects\\\\C--Users-user-Desktop-linear-note-plot---claude-worktrees-practical-kepler-a53649\\\\f7b8a6c8-746d-4e9b-ae13-fbe9ce5d74c2\\\\tool-results\\\\mcp-Claude_Preview-preview_console_logs-1777002641162.txt\")",
+      "Bash(python3 -c ' *)",
+      "Bash(cp \"C:/Users/user/.claude/.omc-worklog/latest.md\" \"C:/Users/user/.claude/.omc-worklog/2026-04-24_1500.md\")",
+      "Bash(cp \"C:/Users/user/.claude/.omc-worklog/latest.md\" \".omc/worklog/latest.md\")"
     ]
   }
 }

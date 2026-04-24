@@ -7,6 +7,8 @@ import type { WikiBlock } from "@/lib/types"
 import { useAttachmentUrl } from "@/lib/use-attachment-url"
 import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { useWikiBlockContent, useWikiBlockContentJson } from "@/hooks/use-wiki-block-content"
+import { NavboxBlock } from "./navbox-block"
+import { NavigationBlock } from "./navigation-block"
 import { useEditor, EditorContent } from "@tiptap/react"
 import { createEditorExtensions, createRenderExtensions } from "@/components/editor/core/shared-editor-config"
 import { generateHTML } from "@tiptap/html"
@@ -86,6 +88,10 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
       return <UrlBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     case "table":
       return <TableBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+    case "navbox":
+      return <NavboxBlock block={block} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+    case "nav":
+      return <NavigationBlock block={block} articleId={articleId} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     default:
       return null
   }
@@ -796,7 +802,27 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
   // No note selected
   if (!note) {
     return (
-      <div className="group/noteref rounded-lg border border-dashed border-border-subtle bg-secondary/10 px-4 py-3">
+      <div className="group/noteref relative rounded-lg border border-dashed border-border-subtle bg-secondary/10 px-4 py-3">
+        {editable && (
+          <>
+            {/* Drag handle */}
+            <div className="absolute -left-6 top-3 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 transition-opacity duration-100">
+              <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
+                <DotsSixVertical size={14} weight="regular" />
+              </button>
+            </div>
+            {/* Delete button */}
+            {onDelete && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete() }}
+                title="Delete block"
+                className="absolute right-2 top-2 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all duration-100 z-10"
+              >
+                <Trash size={14} weight="regular" />
+              </button>
+            )}
+          </>
+        )}
         {editable ? (
           <button
             onClick={() => setPicking(true)}
@@ -1600,6 +1626,8 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
     { type: "image", label: "Image", desc: "Upload image" },
     { type: "url", label: "URL", desc: "Embed a link" },
     { type: "table", label: "Table", desc: "Data table" },
+    { type: "navbox", label: "Navbox", desc: "Category article grid" },
+    { type: "nav", label: "Navigation", desc: "Prev ← Current → Next" },
   ]
 
   const contentItems: { type: string; label: string; desc: string }[] = [

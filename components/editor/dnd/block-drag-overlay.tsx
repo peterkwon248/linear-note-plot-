@@ -22,7 +22,7 @@ import { CSS } from "@dnd-kit/utilities"
 import type { Editor } from "@tiptap/core"
 import { useBlockPositions, getBlockDomRect, type BlockPosition } from "./use-block-positions"
 import { useBlockReorder, useSideDrop } from "./use-block-reorder"
-import { DotsSixVertical, Trash, Copy, ArrowUp, ArrowDown, ArrowsClockwise, Plus, CaretRight, TextH, Paragraph, ListBullets, ListNumbers, CheckSquare, Quotes, Code, Info, CaretDown as PhToggle, Table as PhTable, Minus as PhDivider, Image as PhImage, MathOperations, Database, Columns as PhColumns } from "@/lib/editor/editor-icons"
+import { DotsSixVertical, Trash, Copy, ArrowUp, ArrowDown, ArrowsClockwise, Plus, CaretRight, TextH, Paragraph, ListBullets, ListNumbers, CheckSquare, Quotes, Code, Info, CaretDown as PhToggle, Table as PhTable, Minus as PhDivider, Image as PhImage, MathOperations, Database, Columns as PhColumns, Layout } from "@/lib/editor/editor-icons"
 import { nanoid } from "nanoid"
 
 // ── BlockMenu (dropdown on handle click) ────────────────────
@@ -164,7 +164,7 @@ function BlockMenu({
       editor.chain().focus().setTextSelection(insertPos).setDetails().run()
     })},
     { label: "Columns", icon: <PhColumns size={14} />, action: () => insertBelow({ type: "columnsBlock", content: [{ type: "columnCell", content: [{ type: "paragraph" }] }, { type: "columnCell", content: [{ type: "paragraph" }] }] }) },
-    { label: "TOC", icon: <ListNumbers size={14} />, action: () => insertBelow({ type: "tocBlock", attrs: { entries: [] } }) },
+    { label: "TOC", icon: <Layout size={14} />, action: () => insertBelow({ type: "tocBlock", attrs: { entries: [] } }) },
     { label: "Query", icon: <Database size={14} />, action: () => insertBelow({ type: "queryBlock", attrs: { queryId: nanoid(8) } }) },
     { label: "Code Block", icon: <Code size={14} />, action: () => insertBelow({ type: "codeBlock" }) },
     { label: "Math (Block)", icon: <MathOperations size={14} />, action: () => insertBelow({ type: "blockMath", attrs: { latex: " " } }) },

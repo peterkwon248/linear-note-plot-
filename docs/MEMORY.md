@@ -1,5 +1,26 @@
 # Plot Project Memory
 
+## 🟢 2026-04-24 세션 — TOC 비주얼 폴리시 + contentBlock Enter 조사
+
+**TOC gutter 번호 계층 시각화 최종 결정**:
+- 세로선(실선/점선/페이드/원+선) 전부 "별로" 피드백
+- 웹 리서치(Notion/Craft/Obsidian/Bear/Wikipedia/나무위키): **본문에 부모-자식 연결선을 그리는 앱 거의 없음**. Outliner(Logseq/Workflowy)만 사용. 문서 앱은 전부 폰트 크기+들여쓰기+여백만으로 계층 표현.
+- 최종: 세로선 완전 제거. 번호만 거터에 opacity 0.9 / weight 700 유지 (희미하게 바꿨다가 "잘 안 보인다" 피드백으로 롤백).
+- `components/editor/EditorStyles.css`의 `[data-toc-child-depth]::after` 제거됨.
+
+**contentBlock Enter 버그 조사 (미해결)**:
+- 증상: contentBlock 안 단락 중간에서 Enter → 블록 밖으로 튀어나감
+- 원인: ProseMirror `splitBlock` 기본 동작이 `$from.depth === 0 ? 1 : 2`로 split하여 contentBlock 래퍼까지 쪼갬
+- 시도: `addKeyboardShortcuts` Enter 커스텀 핸들러 + `tr.split(pos, depth-cbDepth)` + `priority: 1000` — 전부 효과 없음
+- 결론: **"근본적으로 안 되는 걸로 알기"로 사용자 판단**. 롤백 완료.
+
+**리서치 레퍼런스** (세로선 구현 관련):
+- Obsidian Lapel 플러그인 = gutter 텍스트 레이블 방식
+- CSS counter로 TipTap 자동 번호 가능 (GitHub Discussion #914)
+- Logseq bullet threading은 `:has()` 셀렉터 필요 → 퍼포먼스 이슈
+
+---
+
 ## 🟢 2026-04-22 Hard Reset to PR #194 (최우선 읽기)
 
 **현재 branch HEAD**: `3f2e54c` (PR #194). PR #195 ~ #213 전부 폐기.

@@ -30,6 +30,7 @@ import { createWikiArticlesSlice } from "./slices/wiki-articles"
 import { createWikiCategoriesSlice } from "./slices/wiki-categories"
 import { createReferencesSlice } from "./slices/references"
 import { createGlobalBookmarksSlice } from "./slices/global-bookmarks"
+import { createCommentsSlice } from "./slices/comments"
 import { DEFAULT_AUTOPILOT_RULES } from "../autopilot/defaults"
 import { migrate } from "./migrate"
 import type { PlotState } from "./types"
@@ -85,6 +86,7 @@ export const usePlotStore = create<PlotState>()(
         wikiArticles: SEED_WIKI_ARTICLES,
         references: {} as Record<string, import("../types").Reference>,
         globalBookmarks: {} as Record<string, import("../types").GlobalBookmark>,
+        comments: {} as Record<string, import("../types").Comment>,
         listPaneWidth: 320,
         srsStateByNoteId: {} as Record<string, SRSState>,
         autopilotEnabled: true,
@@ -121,6 +123,7 @@ export const usePlotStore = create<PlotState>()(
         ...createWikiArticlesSlice(set, get),
         ...createReferencesSlice(set),
         ...createGlobalBookmarksSlice(set),
+        ...createCommentsSlice(set),
 
         // ── Todo Index ──
         rebuildTodoIndex: async () => {
@@ -239,7 +242,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 75,
+      version: 76,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

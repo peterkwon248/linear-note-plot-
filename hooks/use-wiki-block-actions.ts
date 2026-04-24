@@ -32,6 +32,27 @@ export function useWikiBlockActions(articleId: string) {
       return
     }
 
+    if (type === "navbox") {
+      const block: Omit<WikiBlock, "id"> = {
+        type: "navbox",
+        navboxColumns: 4,
+      }
+      addWikiBlock(articleId, block, afterBlockId)
+      return
+    }
+
+    if (type === "nav") {
+      const block: Omit<WikiBlock, "id"> = {
+        type: "nav",
+        navTitle: "",
+        navPrev: { text: "" },
+        navCurrent: { text: "" },
+        navNext: { text: "" },
+      }
+      addWikiBlock(articleId, block, afterBlockId)
+      return
+    }
+
     // Content blocks: create Text block with pre-filled TipTap content
     if (type.startsWith("text:")) {
       const subtype = type.split(":")[1]

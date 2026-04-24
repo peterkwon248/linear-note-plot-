@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -124,6 +124,9 @@ export interface PlotState {
 
   // ── Global Bookmarks (Cross-note anchors) ──
   globalBookmarks: Record<string, GlobalBookmark>
+
+  // ── Comments (block/node-anchored annotations) ──
+  comments: Record<string, Comment>
 
   // ── Note Actions ──
   createNote: (partial?: Partial<Note>) => string
@@ -307,6 +310,12 @@ export interface PlotState {
   pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType']) => string
   unpinBookmark: (bookmarkId: string) => void
   updateBookmarkLabel: (bookmarkId: string, label: string) => void
+
+  // ── Comments ──
+  addComment: (anchor: CommentAnchor, body: string) => string
+  updateComment: (commentId: string, body: string) => void
+  toggleCommentResolved: (commentId: string) => void
+  deleteComment: (commentId: string) => void
 
   // Ontology
   ontologyPositions: Record<string, { x: number; y: number }>

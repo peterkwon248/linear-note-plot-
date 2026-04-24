@@ -2024,3 +2024,34 @@
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
+
+/* TOC gutter numbering — blocks registered in TOC show their section number.
+   Depth-aware: subsections step right (number) + vertical guide line on the left. */
+.ProseMirror [data-toc-num] {
+  position: relative;
+  --toc-depth: 0;
+}
+.ProseMirror [data-toc-depth="1"] { --toc-depth: 1; }
+.ProseMirror [data-toc-depth="2"] { --toc-depth: 2; }
+.ProseMirror [data-toc-depth="3"] { --toc-depth: 3; }
+
+/* Section number — stepped right by depth */
+.ProseMirror [data-toc-num]::before {
+  content: attr(data-toc-num);
+  position: absolute;
+  right: 100%;
+  margin-right: calc(10px - var(--toc-depth) * 10px);
+  top: 0.15em;
+  color: var(--accent, #818cf8);
+  opacity: 0.9;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* No vertical line — industry standard (Notion/Craft/Wikipedia) relies on
+   number + indent alone to convey hierarchy. */
