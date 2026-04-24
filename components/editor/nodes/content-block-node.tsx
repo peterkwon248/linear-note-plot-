@@ -29,30 +29,33 @@ function ContentBlockView({ node, updateAttributes, editor }: NodeViewProps) {
     <NodeViewWrapper>
       <div
         ref={containerRef}
-        className={`not-draggable flex my-1 group relative rounded-md hover:bg-hover-bg transition-colors block-resize-wrapper ${isResizing ? "is-resizing" : ""}`}
+        className={`not-draggable flex group relative ${(width || height) ? "block-resize-wrapper" : ""} ${isResizing ? "is-resizing" : ""}`}
         style={{
           ...(width ? { width: `${width}px` } : {}),
           ...(height ? { height: `${height}px`, overflowY: "auto" as const } : {}),
         }}
       >
-        {editor?.isEditable && <BlockResizeHandles onResizeStart={onResizeStart} />}
-        {/* Drag handle on the left */}
+        {editor?.isEditable && (width || height) && <BlockResizeHandles onResizeStart={onResizeStart} />}
+        {/* Unified drag handle (grouped) */}
         <div
           contentEditable={false}
           className="flex items-start pt-1 pr-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
           data-drag-handle
         >
-          <div className="flex items-center justify-center w-5 h-5 rounded cursor-grab text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg active:cursor-grabbing">
+          <div
+            className="flex items-center justify-center w-5 h-5 rounded cursor-grab text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg active:cursor-grabbing"
+            title="Drag group"
+          >
             <DotsSixVertical size={14} />
           </div>
         </div>
 
-        {/* Content area */}
-        <div className="flex-1 min-w-0 border-l-2 border-transparent group-hover:border-accent/30 pl-2 transition-colors">
-          <NodeViewContent className="prose-sm" />
+        {/* Content area — no box, flush with surrounding paragraphs */}
+        <div className="flex-1 min-w-0">
+          <NodeViewContent />
         </div>
 
-        {/* Unwrap button */}
+        {/* Ungroup / reset size */}
         <div
           contentEditable={false}
           className="flex items-start pt-1 pl-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -71,7 +74,7 @@ function ContentBlockView({ node, updateAttributes, editor }: NodeViewProps) {
             type="button"
             onClick={unwrap}
             className="flex items-center justify-center w-5 h-5 rounded text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
-            title="Unblock"
+            title="Ungroup"
           >
             <PhX size={10} />
           </button>

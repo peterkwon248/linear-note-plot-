@@ -193,11 +193,11 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                 value={heroCaption}
                 onChange={(e) => updateHeroCaption(e.target.value)}
                 placeholder="Caption (optional)"
-                className="w-full px-3 py-1.5 text-2xs italic text-center text-muted-foreground bg-secondary/10 outline-none placeholder:text-muted-foreground/30 border-t border-border-subtle"
+                className="w-full px-3 py-1.5 text-[0.75em] italic text-center text-muted-foreground bg-secondary/10 outline-none placeholder:text-muted-foreground/30 border-t border-border-subtle"
               />
             ) : (
               heroCaption && (
-                <div className="px-3 py-1.5 text-2xs italic text-center text-muted-foreground bg-secondary/10 border-t border-border-subtle">
+                <div className="px-3 py-1.5 text-[0.75em] italic text-center text-muted-foreground bg-secondary/10 border-t border-border-subtle">
                   {heroCaption}
                 </div>
               )
@@ -208,7 +208,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
           <button
             type="button"
             onClick={pickHeroImage}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors border-b border-border-subtle opacity-0 group-hover/infobox:opacity-100"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[0.75em] text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors border-b border-border-subtle opacity-0 group-hover/infobox:opacity-100"
             title="Add hero image"
           >
             <PhImage size={12} />
@@ -238,7 +238,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
               value={title}
               onChange={(e) => updateTitle(e.target.value)}
               readOnly={!editable}
-              className="text-2xs font-semibold uppercase tracking-wider bg-transparent border-none outline-none text-muted-foreground w-full min-w-0"
+              className="text-[0.75em] font-semibold uppercase tracking-wider bg-transparent border-none outline-none text-muted-foreground w-full min-w-0"
               placeholder="Infobox Title"
             />
           </div>
@@ -331,7 +331,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                   value={row.label}
                   onChange={(e) => updateRow(index, "label", e.target.value)}
                   readOnly={!editable}
-                  className="flex-1 px-3 py-1.5 text-2xs font-semibold uppercase tracking-wider text-foreground/80 bg-transparent outline-none placeholder:text-muted-foreground/40"
+                  className="flex-1 px-3 py-1.5 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/80 bg-transparent outline-none placeholder:text-muted-foreground/40"
                   placeholder="Section name"
                 />
                 {editable && (
@@ -352,7 +352,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                   value={row.label}
                   onChange={(e) => updateRow(index, "label", e.target.value)}
                   readOnly={!editable}
-                  className="w-[120px] shrink-0 px-3 py-1.5 text-2xs font-medium text-muted-foreground bg-secondary/20 border-r border-border-subtle outline-none placeholder:text-muted-foreground/30"
+                  className="w-[120px] shrink-0 px-3 py-1.5 text-[0.75em] font-medium text-muted-foreground bg-secondary/20 border-r border-border-subtle outline-none placeholder:text-muted-foreground/30"
                   placeholder="Label"
                 />
                 {editable ? (
@@ -360,14 +360,14 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                     type="text"
                     value={row.value}
                     onChange={(e) => updateRow(index, "value", e.target.value)}
-                    className="flex-1 px-3 py-1.5 text-2xs text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
+                    className="flex-1 px-3 py-1.5 text-[0.75em] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
                     placeholder="Value"
                   />
                 ) : (
                   // Tier 1-5: read-only 리치텍스트 렌더링 (wikilink/md-link/md-image/auto-url)
                   <InfoboxValueRenderer
                     text={row.value}
-                    className="flex-1 px-3 py-1.5 text-2xs text-foreground"
+                    className="flex-1 px-3 py-1.5 text-[0.75em] text-foreground"
                   />
                 )}
                 {editable && (
@@ -392,7 +392,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
             <button
               type="button"
               onClick={addRow}
-              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-[0.75em] text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
             >
               <PhPlus size={11} />
               <span>Add row</span>
@@ -401,7 +401,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
             <button
               type="button"
               onClick={addSectionRow}
-              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-[0.75em] text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
               title="Add section divider row"
             >
               <PhPlus size={11} />

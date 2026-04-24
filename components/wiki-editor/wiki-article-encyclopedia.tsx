@@ -41,23 +41,23 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
   if (sections.length === 0) return null
 
   return (
-    <div className="mb-6 max-w-xs rounded-md border border-border-subtle bg-secondary/20">
+    <div className="mb-6 max-w-sm rounded-md border border-border-subtle bg-secondary/20">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between px-3.5 py-2.5 w-full text-left"
+        className="flex items-center justify-between px-4 py-2.5 w-full text-left"
       >
-        <span className="text-[13px] font-medium text-foreground/80">목차</span>
+        <span className="text-[1.0625em] font-semibold text-foreground/90">Contents</span>
         <CaretDown
-          size={12}
+          size={14}
           weight="bold"
           className={cn(
-            "text-muted-foreground/50 transition-transform duration-200",
+            "text-muted-foreground/60 transition-transform duration-200",
             !open && "-rotate-90"
           )}
         />
       </button>
       {open && (
-        <div className="px-3.5 pb-3 space-y-0.5">
+        <div className="px-4 pb-3 space-y-0">
           {sections.map((s) => {
             const num = sectionNumbers.get(s.id) ?? ""
             return (
@@ -72,9 +72,9 @@ function CollapsibleTOC({ sections, sectionNumbers }: {
                       block: "start",
                     })
                   }}
-                  className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-100 text-left w-full py-0.5"
+                  className="flex items-center gap-1.5 text-[1em] text-muted-foreground hover:text-foreground transition-colors duration-100 text-left w-full py-1"
                 >
-                  <span className="text-accent/60 text-[12px] shrink-0">{num}.</span>
+                  <span className="text-accent/70 font-medium text-[1em] shrink-0">{num}.</span>
                   <span>{s.title}</span>
                 </button>
               </div>
@@ -222,7 +222,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         )}
         {/* Updated at */}
         <p className="mt-1 text-[12px] text-muted-foreground/40">
-          최근 수정: {shortRelative(article.updatedAt)} 전
+          Updated {shortRelative(article.updatedAt)} ago
         </p>
         {isEditing ? (
           <input

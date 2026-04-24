@@ -800,6 +800,9 @@ export function migrate(persistedState: unknown): PlotState {
   // v72: Global Bookmarks — cross-note anchor store
   if (!state.globalBookmarks) state.globalBookmarks = {}
 
+  // v76: Comments — block/node-anchored annotations
+  if (!state.comments) state.comments = {}
+
   // v72: Split-First migration — remove all Peek infrastructure
   delete (state as any).sidePanelPeekContext
   delete (state as any).peekHistory

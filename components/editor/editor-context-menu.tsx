@@ -16,7 +16,7 @@ import {
 import {
   Scissors, Copy, ClipboardText, SelectionAll, TextB, TextItalic, TextUnderline,
   TextStrikethrough, Code, Eraser, ArrowLineRight, ArrowLineLeft, ArrowUp, ArrowDown,
-  TextH, ListBullets, BookmarkSimple, ListNumbers, CheckSquare, Quotes, CodeBlock,
+  TextH, ListBullets, BookmarkSimple, ListNumbers, CheckSquare, Quotes, CodeBlock, TextAlignLeft,
   CaretDown, Minus, Table, Image, MathOperations, Link, NotePencil, CaretRight,
   Info, Article, Columns as PhColumns, Note as PhNote, Cube, GitMerge,
   IdentificationCard, Trash, ArrowSquareOut,
@@ -48,6 +48,7 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
   const [hasSelection, setHasSelection] = useState(false)
   const [isInList, setIsInList] = useState(false)
   const [isInColumn, setIsInColumn] = useState(false)
+  const [isInContentBlock, setIsInContentBlock] = useState(false)
   const [linkDialogOpen, setLinkDialogOpen] = useState(false)
 
   const handleOpenChange = useCallback(
@@ -63,10 +64,34 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
           if ($from.node(d).type.name === "columnCell") { inCol = true; break }
         }
         setIsInColumn(inCol)
+        let inCB = false
+        for (let d = $from.depth; d >= 1; d--) {
+          if ($from.node(d).type.name === "contentBlock") { inCB = true; break }
+        }
+        setIsInContentBlock(inCB)
       }
     },
     [editor],
   )
+
+  function ungroupContentBlock() {
+    if (!editor) return
+    const { $from } = editor.state.selection
+    let cbPos = -1
+    let cbNode: any = null
+    for (let d = $from.depth; d >= 1; d--) {
+      const n = $from.node(d)
+      if (n.type.name === "contentBlock") {
+        cbPos = $from.before(d)
+        cbNode = n
+        break
+      }
+    }
+    if (cbPos < 0 || !cbNode) return
+    const { tr } = editor.state
+    tr.replaceWith(cbPos, cbPos + cbNode.nodeSize, cbNode.content)
+    editor.view.dispatch(tr)
+  }
 
   /** Move the current block out of its column, placing it after the columnsBlock */
   function moveOutOfColumn() {
@@ -245,9 +270,10 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
     if (!editor) return
     const { from, to } = editor.state.selection
     const selectedText = editor.state.doc.textBetween(from, to, " ")
-    if (!selectedText.trim()) return
+    const label = selectedText.trim()
+    if (!label) return
 
-    // Find the nearest heading/anchor that contains the selection for linking
+    // Prefer heading id; fall back to the id of any enclosing block with an id (paragraph, etc.)
     let targetId = ""
     const $from = editor.state.doc.resolve(from)
     for (let d = $from.depth; d >= 0; d--) {
@@ -255,6 +281,15 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
       if (node.type.name === "heading" && node.attrs.id) {
         targetId = node.attrs.id
         break
+      }
+    }
+    if (!targetId) {
+      for (let d = $from.depth; d >= 0; d--) {
+        const node = $from.node(d)
+        if (node.attrs?.id) {
+          targetId = node.attrs.id
+          break
+        }
       }
     }
 
@@ -270,17 +305,17 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
     })
 
     if (tocPos !== null && tocNode) {
-      // Add entry to existing TOC block
       const existingEntries = (tocNode.attrs.entries as any[]) || []
-      const newEntries = [...existingEntries, { label: selectedText.trim(), targetId, indent: 0 }]
+      // Dedupe: skip if already pointing to this block
+      if (targetId && existingEntries.some((e) => e.targetId === targetId)) return
+      const newEntries = [...existingEntries, { label, targetId, indent: 0 }]
       const tr = editor.state.tr
       tr.setNodeMarkup(tocPos, undefined, { ...tocNode.attrs, entries: newEntries })
       editor.view.dispatch(tr)
     } else {
-      // No TOC block exists — insert one with this entry at the top of the document
       editor.chain().focus().insertContentAt(0, {
         type: "tocBlock",
-        attrs: { entries: [{ label: selectedText.trim(), targetId, indent: 0 }] },
+        attrs: { entries: [{ label, targetId, indent: 0 }] },
       }).run()
     }
   }
@@ -422,10 +457,20 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
                 className={itemCls}
                 onSelect={addToToc}
               >
-                <BookmarkSimple size={14} />
+                <TextAlignLeft size={14} />
                 Add to TOC
               </ContextMenu.Item>
             </>
+          )}
+
+          {isInContentBlock && (
+            <ContextMenu.Item
+              className={itemCls}
+              onSelect={ungroupContentBlock}
+            >
+              <GitMerge size={14} />
+              Ungroup Block
+            </ContextMenu.Item>
           )}
 
           {/* ── List submenu (only in list context) ───────── */}

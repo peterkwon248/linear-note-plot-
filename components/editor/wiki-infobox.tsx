@@ -111,7 +111,7 @@ export function WikiInfobox({
         <div className={cn("rounded-lg border border-dashed border-border p-3", className)}>
           <button
             onClick={handleStartEdit}
-            className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-[0.875em] text-muted-foreground hover:text-foreground transition-colors"
           >
             <PhPlus size={14} />
             Add infobox
@@ -129,7 +129,7 @@ export function WikiInfobox({
           )}
           style={headerColor ? { backgroundColor: headerColor } : undefined}
         >
-          <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-[0.75em] font-semibold uppercase tracking-wider text-muted-foreground">
             Info
           </span>
           {editable && (
@@ -203,18 +203,18 @@ export function WikiInfobox({
               // Tier 1-4: Section divider row — full width, bold label, tinted bg, value hidden
               <div
                 key={i}
-                className="bg-secondary/40 px-3 py-1.5 text-2xs font-semibold uppercase tracking-wider text-foreground/80"
+                className="bg-secondary/40 px-3 py-1.5 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/80"
               >
                 {entry.key || "Section"}
               </div>
             ) : (
               <div key={i} className="flex gap-3 px-3 py-2">
-                <span className="shrink-0 text-note font-medium text-muted-foreground min-w-[80px]">
+                <span className="shrink-0 text-[0.875em] font-medium text-muted-foreground min-w-[80px]">
                   {entry.key}
                 </span>
                 <InfoboxValueRenderer
                   text={entry.value}
-                  className="text-note text-foreground break-words"
+                  className="text-[0.875em] text-foreground break-words"
                 />
               </div>
             ),
@@ -234,7 +234,7 @@ export function WikiInfobox({
         )}
         style={headerColor ? { backgroundColor: headerColor } : undefined}
       >
-        <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-[0.75em] font-semibold uppercase tracking-wider text-muted-foreground">
           Edit Infobox
         </span>
         <div className="flex items-center gap-1">
@@ -261,7 +261,7 @@ export function WikiInfobox({
                 value={entry.key}
                 onChange={(e) => handleChange(i, "key", e.target.value)}
                 placeholder="Section name"
-                className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-2xs font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
+                className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
               />
               <button
                 onClick={() => handleRemove(i)}
@@ -277,13 +277,13 @@ export function WikiInfobox({
                 value={entry.key}
                 onChange={(e) => handleChange(i, "key", e.target.value)}
                 placeholder="Key"
-                className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-note outline-none focus:ring-1 focus:ring-ring"
+                className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[0.875em] outline-none focus:ring-1 focus:ring-ring"
               />
               <input
                 value={entry.value}
                 onChange={(e) => handleChange(i, "value", e.target.value)}
                 placeholder="Value"
-                className="flex-1 rounded border border-border bg-background px-2 py-1 text-note outline-none focus:ring-1 focus:ring-ring"
+                className="flex-1 rounded border border-border bg-background px-2 py-1 text-[0.875em] outline-none focus:ring-1 focus:ring-ring"
               />
               <button
                 onClick={() => handleRemove(i)}
@@ -297,14 +297,14 @@ export function WikiInfobox({
         <div className="flex items-center gap-4">
           <button
             onClick={handleAdd}
-            className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-[0.875em] text-muted-foreground hover:text-foreground transition-colors"
           >
             <PhPlus size={14} />
             Add field
           </button>
           <button
             onClick={handleAddSection}
-            className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-[0.875em] text-muted-foreground hover:text-foreground transition-colors"
             title="Add section divider row"
           >
             <PhPlus size={14} />

@@ -61,7 +61,17 @@ export interface WikiCategory {
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
 /** Wiki block types — building blocks of a wiki article */
-export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url'
+export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url' | 'navbox' | 'nav'
+
+/** Navigation block slot — prev/current/next segment */
+export interface WikiNavSlot {
+  /** Optional linked article. When set, clicking navigates there. */
+  articleId?: string
+  /** Display text (overrides article title if both present). */
+  text: string
+  /** Optional subtext below text (e.g., "(2022~2024)"). */
+  subtext?: string
+}
 
 /** A single block in a wiki article */
 export interface WikiBlock {
@@ -105,6 +115,20 @@ export interface WikiBlock {
   editorWidth?: number | null
   /** Text: editor height in edit mode (px). Null = auto height */
   editorHeight?: number | null
+  /** Navbox: target category id. Navbox lists all articles assigned to this category. */
+  navboxCategoryId?: string
+  /** Navbox: optional custom title override. If omitted, category name is used. */
+  navboxTitle?: string
+  /** Navbox: grid columns for articles (3-6, default 4) */
+  navboxColumns?: 3 | 4 | 5 | 6
+  /** Navigation: banner/header title (e.g., "Series name / Week N") */
+  navTitle?: string
+  /** Navigation: previous slot (left column, typically has articleId). */
+  navPrev?: WikiNavSlot
+  /** Navigation: current slot (middle column, defaults to owning article title). */
+  navCurrent?: WikiNavSlot
+  /** Navigation: next slot (right column, typically has articleId). */
+  navNext?: WikiNavSlot
   /** Merge history: snapshot of the merged article for unmerge */
   mergedFrom?: WikiMergeSnapshot
 }
@@ -492,4 +516,24 @@ export interface GlobalBookmark {
   label: string
   anchorType: "inline" | "divider" | "heading"
   createdAt: string
+}
+
+/* ── Comments ─────────────────────────────── */
+
+/**
+ * Target anchor for a comment — polymorphic across Note and Wiki.
+ * Phase 1 supports block-level only. Range-level comments deferred to Phase 2.
+ */
+export type CommentAnchor =
+  | { kind: "wiki-block"; articleId: string; blockId: string }
+  | { kind: "note-block"; noteId: string; nodeId: string }
+
+/** Single comment attached to a block (wiki) or ProseMirror top-level node (note). */
+export interface Comment {
+  id: string
+  anchor: CommentAnchor
+  body: string
+  createdAt: string
+  updatedAt: string
+  resolved: boolean
 }

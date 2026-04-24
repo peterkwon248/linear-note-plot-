@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useMemo, useCallback, useRef, useEffect } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect, Fragment } from "react"
+import { useRouter } from "next/navigation"
 import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiBlock } from "@/lib/types"
 import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
+import { CategoryTreePicker } from "./category-tree-picker"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
@@ -14,6 +16,8 @@ import { toast } from "sonner"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import { computeSectionNumbers, buildVisibleBlocks } from "@/lib/wiki-block-utils"
 import { shortRelative } from "@/lib/format-utils"
+import { setActiveCategoryView } from "@/lib/wiki-view-mode"
+import { setActiveRoute } from "@/lib/table-route"
 import { useWikiBlockActions } from "@/hooks/use-wiki-block-actions"
 import {
   DndContext,
@@ -242,11 +246,12 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     setDragSplitPrompt(null)
   }, [dragSplitPrompt, article, articleId, splitWikiArticle])
 
-  // Improvement 1: onDragStart handler
+  // Improvement 1: onDragStart handler — FloatingDragDropBar only for section blocks
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    setIsDragging(true)
+    const block = article?.blocks.find((b) => b.id === event.active.id)
+    if (block?.type === "section") setIsDragging(true)
     setActiveDragId(event.active.id as string)
-  }, [])
+  }, [article])
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     setDragOverDropzone(false)
@@ -406,11 +411,11 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
       {/* TOC Sidebar */}
       {!preview && <aside className="min-w-[160px] max-w-[240px] w-auto shrink overflow-y-auto border-r border-border-subtle px-3 py-4 hidden xl:block">
         <div className="sticky top-0">
-          <h4 className="text-[11px] text-muted-foreground/50 font-medium mb-2 pl-2">
-            목차
+          <h4 className="text-[1em] text-muted-foreground/65 font-semibold mb-2.5 pl-2">
+            Contents
           </h4>
           {tocSections.length > 0 ? (
-            <nav className="space-y-0.5">
+            <nav className="space-y-0">
               {tocSections.map((s) => (
                 <button
                   key={s.id}
@@ -420,16 +425,16 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                       block: "start",
                     })
                   }}
-                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-note text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
+                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-[1em] text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
                   style={{ paddingLeft: `${(s.level - 2) * 12 + 8}px` }}
                 >
-                  <span className="shrink-0 text-accent font-semibold text-2xs">{s.number}.</span>
+                  <span className="shrink-0 text-accent/70 font-medium text-[1em]">{s.number}.</span>
                   <span>{s.title}</span>
                 </button>
               ))}
             </nav>
           ) : (
-            <p className="px-2 text-2xs text-muted-foreground/40">No sections yet</p>
+            <p className="px-2 text-[0.8125em] text-muted-foreground/40">No sections yet</p>
           )}
         </div>
       </aside>}
@@ -457,7 +462,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
           )}
           {/* Updated at */}
           <p className="text-[12px] text-muted-foreground/40 mb-1">
-            최근 수정: {shortRelative(article.updatedAt)} 전
+            Updated {shortRelative(article.updatedAt)} ago
           </p>
           {/* Aliases (editable) */}
           {editable ? (
@@ -477,45 +482,6 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
             </p>
           ) : null}
 
-          {/* Infobox — Default layout 도 지원 (Tier 1-2 헤더 색상 포함).
-              Encyclopedia와 동일 — center=stack vertically, left=float right */}
-          {(article.infobox.length > 0 || editable) && (
-            article.contentAlign === "center" ? (
-              <div className="mb-6 max-w-sm">
-                <WikiInfobox
-                  noteId={article.id}
-                  entries={article.infobox}
-                  editable={editable}
-                  headerColor={article.infoboxHeaderColor ?? null}
-                  onHeaderColorChange={
-                    editable
-                      ? (color) =>
-                          usePlotStore
-                            .getState()
-                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
-                      : undefined
-                  }
-                />
-              </div>
-            ) : (
-              <div className="float-right ml-6 mb-4 w-[280px]">
-                <WikiInfobox
-                  noteId={article.id}
-                  entries={article.infobox}
-                  editable={editable}
-                  headerColor={article.infoboxHeaderColor ?? null}
-                  onHeaderColorChange={
-                    editable
-                      ? (color) =>
-                          usePlotStore
-                            .getState()
-                            .updateWikiArticle(article.id, { infoboxHeaderColor: color })
-                      : undefined
-                  }
-                />
-              </div>
-            )
-          )}
 
           {/* Category tag row */}
           <InlineCategoryTags articleId={articleId} categoryIds={article.categoryIds ?? []} editable={editable} />
@@ -682,6 +648,28 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
         )}
       </div>
 
+      {/* Infobox Right Panel — Wikipedia style 3-column */}
+      {!preview && (article.infobox.length > 0 || editable) && (
+        <aside className="w-[260px] shrink-0 overflow-y-auto border-l border-border-subtle px-4 py-6 hidden xl:block">
+          <div className="sticky top-0">
+            <WikiInfobox
+              noteId={article.id}
+              entries={article.infobox}
+              editable={editable}
+              headerColor={article.infoboxHeaderColor ?? null}
+              onHeaderColorChange={
+                editable
+                  ? (color) =>
+                      usePlotStore
+                        .getState()
+                        .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                  : undefined
+              }
+            />
+          </div>
+        </aside>
+      )}
+
       <UrlInputDialog
         open={urlBlockDialog.open}
         mode="link"
@@ -791,37 +779,30 @@ export function InlineCategoryTags({
   categoryIds: string[]
   editable?: boolean
 }) {
+  const router = useRouter()
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const setArticleCategories = usePlotStore((s) => s.setArticleCategories)
-  const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
+  const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [search, setSearch] = useState("")
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [creatingUnder, setCreatingUnder] = useState<string | null>(null)
-  const [newChildName, setNewChildName] = useState("")
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
+
+  const handleCategoryClick = useCallback((catId: string) => {
+    setSelectedNoteId(null)
+    setActiveRoute("/wiki")
+    setActiveCategoryView(catId)
+    router.push("/wiki")
+  }, [router, setSelectedNoteId])
 
   const assignedSet = useMemo(() => new Set(categoryIds), [categoryIds])
-  const assignedCategories = wikiCategories.filter((c) => assignedSet.has(c.id))
-
-  // Build tree: root categories (no parent) with children
-  const rootCategories = useMemo(
-    () => wikiCategories.filter((c) => c.parentIds.length === 0),
-    [wikiCategories]
-  )
-
-  const childrenOf = useMemo(() => {
-    const map = new Map<string, typeof wikiCategories>()
-    for (const cat of wikiCategories) {
-      if (cat.parentIds.length > 0) {
-        const parentId = cat.parentIds[0]
-        if (!map.has(parentId)) map.set(parentId, [])
-        map.get(parentId)!.push(cat)
-      }
-    }
-    return map
-  }, [wikiCategories])
+  const assignedCategories = useMemo(() => {
+    const seen = new Set<string>()
+    return wikiCategories.filter((c) => {
+      if (!assignedSet.has(c.id)) return false
+      if (seen.has(c.id)) return false
+      seen.add(c.id)
+      return true
+    })
+  }, [wikiCategories, assignedSet])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -829,125 +810,19 @@ export function InlineCategoryTags({
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false)
-        setSearch("")
       }
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [dropdownOpen])
 
-  useEffect(() => {
-    if (dropdownOpen) setTimeout(() => searchRef.current?.focus(), 50)
-  }, [dropdownOpen])
-
-  const toggleAssign = (catId: string) => {
+  const toggleAssign = useCallback((catId: string) => {
     if (assignedSet.has(catId)) {
       setArticleCategories(articleId, categoryIds.filter((id) => id !== catId))
     } else {
       setArticleCategories(articleId, [...categoryIds, catId])
     }
-  }
-
-  const toggleExpand = (catId: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(catId)) next.delete(catId)
-      else next.add(catId)
-      return next
-    })
-  }
-
-  // Filter tree by search
-  const matchesSearch = useCallback((cat: typeof wikiCategories[number]): boolean => {
-    if (!search.trim()) return true
-    const q = search.toLowerCase()
-    if (cat.name.toLowerCase().includes(q)) return true
-    // Check children
-    const children = childrenOf.get(cat.id) ?? []
-    return children.some((c) => matchesSearch(c))
-  }, [search, childrenOf])
-
-  // Render tree node recursively
-  const renderNode = (cat: typeof wikiCategories[number], depth: number) => {
-    if (!matchesSearch(cat)) return null
-    const children = childrenOf.get(cat.id) ?? []
-    const hasChildren = children.length > 0 || creatingUnder === cat.id
-    const isExpanded = expanded.has(cat.id) || search.trim().length > 0 || creatingUnder === cat.id
-    const isAssigned = assignedSet.has(cat.id)
-
-    return (
-      <div key={cat.id}>
-        <div
-          className="group/node flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs transition-colors hover:bg-white/[0.06]"
-          style={{ paddingLeft: depth * 16 + 6 }}
-        >
-          {/* Expand/collapse toggle */}
-          {(children.length > 0) ? (
-            <button
-              onClick={() => toggleExpand(cat.id)}
-              className="p-0.5 text-muted-foreground/40 hover:text-muted-foreground transition-colors shrink-0"
-            >
-              {isExpanded
-                ? <CaretDown size={10} weight="bold" />
-                : <CaretRight size={10} weight="bold" />
-              }
-            </button>
-          ) : (
-            <span className="w-[18px]" />
-          )}
-
-          {/* Category name + check toggle */}
-          <button
-            onClick={() => toggleAssign(cat.id)}
-            className="flex-1 flex items-center gap-1.5 text-left text-foreground/80 truncate"
-          >
-            <span className={cn(
-              "w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors",
-              isAssigned
-                ? "bg-accent border-accent"
-                : "border-white/20 hover:border-white/40"
-            )}>
-              {isAssigned && <PhCheck size={9} weight="bold" className="text-white" />}
-            </span>
-            <span className="truncate">{cat.name}</span>
-          </button>
-
-          {/* [+] add child button (hover only) */}
-          <button
-            onClick={(e) => { e.stopPropagation(); setCreatingUnder(cat.id); setExpanded(prev => new Set([...prev, cat.id])) }}
-            className="opacity-0 group-hover/node:opacity-100 p-0.5 text-muted-foreground/40 hover:text-accent transition-all shrink-0"
-            title={`Add subcategory under ${cat.name}`}
-          >
-            <PhPlus size={9} weight="bold" />
-          </button>
-        </div>
-
-        {/* Inline child creation input */}
-        {creatingUnder === cat.id && (
-          <div style={{ paddingLeft: (depth + 1) * 16 + 6 }} className="flex items-center gap-1 px-1.5 py-1">
-            <input
-              autoFocus
-              value={newChildName}
-              onChange={e => setNewChildName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === "Enter" && newChildName.trim()) {
-                  const id = createWikiCategory(newChildName.trim(), [cat.id])
-                  if (id) { toggleAssign(id); setCreatingUnder(null); setNewChildName("") }
-                }
-                if (e.key === "Escape") { setCreatingUnder(null); setNewChildName("") }
-              }}
-              onBlur={() => { setTimeout(() => { setCreatingUnder(null); setNewChildName("") }, 150) }}
-              placeholder="New subcategory..."
-              className="flex-1 bg-transparent text-2xs text-foreground outline-none placeholder:text-muted-foreground/30 border-b border-accent/30"
-            />
-          </div>
-        )}
-
-        {/* Children */}
-        {isExpanded && (childrenOf.get(cat.id) ?? []).map((child) => renderNode(child, depth + 1))}
-      </div>
-    )
-  }
+  }, [articleId, categoryIds, assignedSet, setArticleCategories])
 
   // Breadcrumb for hover tooltip
   const getBreadcrumb = useCallback((cat: typeof wikiCategories[number]): string => {
@@ -963,97 +838,66 @@ export function InlineCategoryTags({
     return parts.join(" > ")
   }, [wikiCategories])
 
+  // Don't render anything if no categories and not editable
+  if (assignedCategories.length === 0 && !editable) return null
+
   return (
-    <div className="flex flex-wrap items-center gap-1.5 mb-5 min-h-[24px]">
-      {/* Display: flat names, hover tooltip shows full breadcrumb */}
-      {assignedCategories.map((cat) => (
-        <span
-          key={cat.id}
-          title={cat.parentIds.length > 0 ? getBreadcrumb(cat) : undefined}
-          className="group inline-flex items-center gap-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-2xs font-medium text-foreground/60 transition-colors hover:border-white/[0.14] hover:text-foreground/80"
-        >
-          {cat.name}
-          {editable && (
-            <button
-              onClick={() => toggleAssign(cat.id)}
-              className="ml-0.5 hidden rounded-full p-0 text-muted-foreground/40 transition-colors hover:text-foreground/70 group-hover:inline-flex"
-            >
-              <PhX size={9} weight="bold" />
-            </button>
-          )}
-        </span>
-      ))}
-
-      {/* + Add with tree dropdown (edit mode only) */}
-      {editable && (
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="inline-flex items-center gap-1 rounded-full border border-dashed border-white/[0.10] px-2 py-0.5 text-2xs text-white/40 transition-colors hover:border-white/[0.20] hover:text-white/60"
-          >
-            <PhPlus size={10} weight="regular" />
-            Add
-          </button>
-          {dropdownOpen && (
-            <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-lg border border-white/[0.08] bg-popover shadow-xl">
-              {/* Search */}
-              <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-white/[0.06]">
-                <MagnifyingGlass size={12} weight="regular" className="text-muted-foreground/40 shrink-0" />
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Escape") { setDropdownOpen(false); setSearch("") } }}
-                  placeholder="Search categories..."
-                  className="flex-1 bg-transparent text-2xs text-foreground outline-none placeholder:text-muted-foreground/30"
-                />
-              </div>
-
-              {/* Tree */}
-              <div className="max-h-52 overflow-y-auto p-1">
-                {rootCategories.map((cat) => renderNode(cat, 0))}
-                {rootCategories.length === 0 && !search.trim() && (
-                  <p className="px-2 py-2 text-2xs text-muted-foreground/40 text-center">No categories yet</p>
-                )}
-
-                {/* Search = Create pattern */}
-                {search.trim() && !wikiCategories.some(c => c.name.toLowerCase() === search.trim().toLowerCase()) && (
-                  <div className="border-t border-white/[0.06] p-1 mt-1">
+    <div className="mb-5">
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md border border-border-subtle bg-secondary/20 px-3 py-1.5 text-[13px] min-h-[34px]">
+        {assignedCategories.length > 0 && (
+          <>
+            <span className="text-muted-foreground/70 font-medium shrink-0">Categories:</span>
+            {assignedCategories.map((cat, i) => (
+              <Fragment key={cat.id}>
+                {i > 0 && <span className="text-border select-none" aria-hidden>|</span>}
+                <span className="group/cat inline-flex items-center gap-0.5">
+                  <button
+                    onClick={() => handleCategoryClick(cat.id)}
+                    title={cat.parentIds.length > 0 ? getBreadcrumb(cat) : cat.name}
+                    className="text-accent/80 hover:text-accent hover:underline transition-colors"
+                  >
+                    {cat.name}
+                  </button>
+                  {editable && (
                     <button
-                      onClick={() => {
-                        const id = createWikiCategory(search.trim())
-                        if (id) { toggleAssign(id); setSearch("") }
-                      }}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-2xs text-accent transition-colors hover:bg-white/[0.06]"
+                      onClick={() => toggleAssign(cat.id)}
+                      className="opacity-0 group-hover/cat:opacity-100 text-muted-foreground/50 hover:text-destructive transition-all p-0.5 -mr-0.5"
+                      title={`Remove ${cat.name}`}
                     >
-                      <PhPlus size={10} /> Create &ldquo;{search.trim()}&rdquo; as root
+                      <PhX size={10} weight="bold" />
                     </button>
-                    {/* Offer to create under last-expanded parent */}
-                    {(() => {
-                      const expandedArr = Array.from(expanded)
-                      const lastExpanded = expandedArr.length > 0 ? expandedArr[expandedArr.length - 1] : null
-                      const parentCat = lastExpanded ? wikiCategories.find(c => c.id === lastExpanded) : null
-                      if (!parentCat) return null
-                      return (
-                        <button
-                          onClick={() => {
-                            const id = createWikiCategory(search.trim(), [parentCat.id])
-                            if (id) { toggleAssign(id); setSearch("") }
-                          }}
-                          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-2xs text-accent transition-colors hover:bg-white/[0.06]"
-                        >
-                          <PhPlus size={10} /> Create &ldquo;{search.trim()}&rdquo; under {parentCat.name}
-                        </button>
-                      )
-                    })()}
-                  </div>
-                )}
-              </div>
+                  )}
+                </span>
+              </Fragment>
+            ))}
+          </>
+        )}
+
+        {/* + Add with tree dropdown (edit mode only) */}
+        {editable && (
+          <>
+            {assignedCategories.length > 0 && <span className="text-border select-none" aria-hidden>|</span>}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="inline-flex items-center gap-1 text-muted-foreground/60 hover:text-foreground transition-colors"
+              >
+                <PhPlus size={11} weight="regular" />
+                {assignedCategories.length === 0 ? "Add category" : "Add"}
+              </button>
+              {dropdownOpen && (
+                <div className="absolute left-0 top-full z-50 mt-1.5">
+                  <CategoryTreePicker
+                    mode="multi"
+                    selectedIds={categoryIds}
+                    onSelect={toggleAssign}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   )
 }
