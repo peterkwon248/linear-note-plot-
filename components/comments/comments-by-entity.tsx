@@ -18,8 +18,75 @@ import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { TextH } from "@phosphor-icons/react/dist/ssr/TextH"
+import { Paragraph } from "@phosphor-icons/react/dist/ssr/Paragraph"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
+import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
+import { Table as PhTable } from "@phosphor-icons/react/dist/ssr/Table"
+import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
+import { Compass } from "@phosphor-icons/react/dist/ssr/Compass"
+import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
+import { ListNumbers } from "@phosphor-icons/react/dist/ssr/ListNumbers"
+import { CheckSquare } from "@phosphor-icons/react/dist/ssr/CheckSquare"
+import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
+import { Code as PhCode } from "@phosphor-icons/react/dist/ssr/Code"
+import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
+import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb"
+import { Article } from "@phosphor-icons/react/dist/ssr/Article"
+import { CaretDoubleDown } from "@phosphor-icons/react/dist/ssr/CaretDoubleDown"
+import { ListNumbers as PhTocIcon } from "@phosphor-icons/react/dist/ssr/ListNumbers"
 import { toast } from "sonner"
 import { CommentEditor, CommentBodyDisplay } from "./comment-editor"
+
+type BlockTargetType =
+  | "section"
+  | "text"
+  | "note-ref"
+  | "image"
+  | "url"
+  | "table"
+  | "navbox"
+  | "nav"
+  | "navigation"
+  | "paragraph"
+  | "bulletList"
+  | "orderedList"
+  | "taskList"
+  | "blockquote"
+  | "codeBlock"
+  | "horizontalRule"
+  | "calloutBlock"
+  | "summaryBlock"
+  | "details"
+  | "tocBlock"
+
+/** Phosphor icon for each block type — consistent with rest of Plot UI. */
+function BlockTypeIcon({ type, className }: { type: BlockTargetType; className?: string }) {
+  const props = { size: 11, weight: "regular" as const, className: cn("shrink-0 text-muted-foreground/70", className) }
+  switch (type) {
+    case "section": return <TextH {...props} />
+    case "text":
+    case "paragraph": return <Paragraph {...props} />
+    case "note-ref": return <FileText {...props} />
+    case "image": return <PhImage {...props} />
+    case "url": return <LinkSimple {...props} />
+    case "table": return <PhTable {...props} />
+    case "navbox": return <Folders {...props} />
+    case "nav":
+    case "navigation": return <Compass {...props} />
+    case "bulletList": return <ListBullets {...props} />
+    case "orderedList": return <ListNumbers {...props} />
+    case "taskList": return <CheckSquare {...props} />
+    case "blockquote": return <Quotes {...props} />
+    case "codeBlock": return <PhCode {...props} />
+    case "horizontalRule": return <PhMinus {...props} />
+    case "calloutBlock": return <Lightbulb {...props} />
+    case "summaryBlock": return <Article {...props} />
+    case "details": return <CaretDoubleDown {...props} />
+    case "tocBlock": return <PhTocIcon {...props} />
+    default: return <Paragraph {...props} />
+  }
+}
 
 function isBodyEmpty(body: string): boolean {
   if (!body || !body.trim()) return true
@@ -157,7 +224,7 @@ export function CommentsByEntity({
 
   // Build block target list — wiki blocks or note ProseMirror top-level nodes
   const blockTargets = useMemo(() => {
-    const items: { id: string; label: string; depth: number }[] = []
+    const items: { id: string; label: string; type: BlockTargetType; depth: number }[] = []
 
     // ── Wiki blocks ──
     if (entity.kind === "wiki" && article?.blocks) {
@@ -166,11 +233,10 @@ export function CommentsByEntity({
         if (b.type === "section") {
           const lvl = (b.level ?? 2) - 1
           currentSectionLevel = lvl
-          items.push({ id: b.id, label: `§ ${b.title || "Untitled"}`, depth: lvl })
+          items.push({ id: b.id, label: b.title || "Untitled", type: "section", depth: lvl })
         } else {
           const depth = currentSectionLevel + 1
-          const label = wikiBlockLabel(b)
-          items.push({ id: b.id, label, depth })
+          items.push({ id: b.id, label: wikiBlockLabel(b), type: b.type as BlockTargetType, depth })
         }
       }
       return items
@@ -188,13 +254,14 @@ export function CommentsByEntity({
             const text = extractText(node).trim()
             const lvl = node.attrs?.level || 2
             currentHeadingLevel = lvl
-            items.push({ id, label: `§ ${text || "Heading"}`, depth: Math.max(0, lvl - 1) })
+            items.push({ id, label: text || "Heading", type: "section", depth: Math.max(0, lvl - 1) })
           } else {
             const text = extractText(node).trim()
             const preview = text.slice(0, 50) || node.type
             items.push({
               id,
-              label: noteBlockLabel(node, preview),
+              label: preview || node.type,
+              type: node.type as BlockTargetType,
               depth: currentHeadingLevel,
             })
           }
@@ -208,41 +275,16 @@ export function CommentsByEntity({
     // helpers (closures)
     function wikiBlockLabel(b: any): string {
       switch (b.type) {
-        case "text":
-          return `📝 Text block`
-        case "note-ref":
-          return `📎 Note ref`
-        case "image":
-          return `🖼️ Image`
-        case "url":
-          return `🔗 Link`
-        case "table":
-          return `📊 Table`
-        case "navbox":
-          return `🗺️ Navbox`
+        case "text": return "Text block"
+        case "note-ref": return "Note ref"
+        case "image": return "Image"
+        case "url": return "Link"
+        case "table": return "Table"
+        case "navbox": return "Navbox"
         case "nav":
-        case "navigation":
-          return `🧭 Navigation`
-        default:
-          return `▢ ${b.type}`
+        case "navigation": return "Navigation"
+        default: return b.type
       }
-    }
-    function noteBlockLabel(node: any, preview: string): string {
-      const t = node.type
-      if (t === "paragraph") return `📝 ${preview || "(empty)"}`
-      if (t === "bulletList") return `• Bullet list`
-      if (t === "orderedList") return `1. Ordered list`
-      if (t === "taskList") return `☐ Task list`
-      if (t === "blockquote") return `❝ ${preview}`
-      if (t === "codeBlock") return `</> Code`
-      if (t === "table") return `📊 Table`
-      if (t === "image") return `🖼️ Image`
-      if (t === "horizontalRule") return `― Divider`
-      if (t === "calloutBlock") return `💡 Callout`
-      if (t === "summaryBlock") return `📋 Summary`
-      if (t === "details") return `▾ Details`
-      if (t === "tocBlock") return `📑 TOC`
-      return `▢ ${preview || t}`
     }
     function extractText(node: any): string {
       if (node.type === "text") return node.text || ""
@@ -251,10 +293,9 @@ export function CommentsByEntity({
     }
   }, [entity, article, note])
 
-  const targetLabel = useMemo(() => {
-    if (!targetBlockId) return "📄 Document-level"
-    const t = blockTargets.find((b) => b.id === targetBlockId)
-    return t?.label || "(unknown block)"
+  const selectedTarget = useMemo(() => {
+    if (!targetBlockId) return null
+    return blockTargets.find((b) => b.id === targetBlockId) ?? null
   }, [targetBlockId, blockTargets])
 
   const submit = () => {
@@ -346,9 +387,19 @@ export function CommentsByEntity({
           <div className="relative mb-1.5">
             <button
               onClick={() => setPickerOpen((v) => !v)}
-              className="flex items-center gap-1.5 px-2 py-1 rounded text-[10px] text-muted-foreground/80 hover:text-foreground hover:bg-hover-bg w-full text-left transition-colors"
+              className="flex items-center gap-1.5 px-2 py-1 rounded text-[11px] text-muted-foreground/80 hover:text-foreground hover:bg-hover-bg w-full text-left transition-colors"
             >
-              <span className="truncate">{targetLabel}</span>
+              {selectedTarget ? (
+                <>
+                  <BlockTypeIcon type={selectedTarget.type} />
+                  <span className="truncate">{selectedTarget.label}</span>
+                </>
+              ) : (
+                <>
+                  <FileText size={11} weight="regular" className="shrink-0 text-muted-foreground/70" />
+                  <span>Document-level</span>
+                </>
+              )}
               <CaretDown size={9} weight="bold" className="ml-auto shrink-0" />
             </button>
             {pickerOpen && (
@@ -365,7 +416,8 @@ export function CommentsByEntity({
                       !targetBlockId ? "text-foreground" : "text-muted-foreground/80",
                     )}
                   >
-                    📄 Document-level
+                    <FileText size={11} weight="regular" className="shrink-0 text-muted-foreground/70" />
+                    Document-level
                     {!targetBlockId && <span className="ml-auto text-accent">•</span>}
                   </button>
                   <div className="my-1 h-px bg-border/40" />
@@ -382,7 +434,8 @@ export function CommentsByEntity({
                         targetBlockId === b.id ? "text-foreground" : "text-muted-foreground/80",
                       )}
                     >
-                      <span className="truncate">{b.label}</span>
+                      <BlockTypeIcon type={b.type} />
+                      <span className={cn("truncate", b.type === "section" && "font-medium")}>{b.label}</span>
                       {targetBlockId === b.id && <span className="ml-auto text-accent shrink-0">•</span>}
                     </button>
                   ))}
