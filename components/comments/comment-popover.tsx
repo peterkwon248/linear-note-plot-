@@ -6,6 +6,7 @@ import { usePlotStore } from "@/lib/store"
 import type { CommentAnchor, Comment, CommentStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CommentEditor, CommentBodyDisplay } from "./comment-editor"
 import { ChatCircle } from "@phosphor-icons/react/dist/ssr/ChatCircle"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { PaperPlaneRight } from "@phosphor-icons/react/dist/ssr/PaperPlaneRight"
@@ -162,7 +163,7 @@ function CommentList({
 }) {
   const [tab, setTab] = useState<"open" | "resolved">("open")
   const [draft, setDraft] = useState("")
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const [composerKey, setComposerKey] = useState(0)
 
   const filtered = useMemo(() => {
     if (tab === "open") return comments.filter((c) => c.status !== "done")
@@ -172,21 +173,11 @@ function CommentList({
   const openCount = comments.filter((c) => c.status !== "done").length
   const resolvedCount = comments.filter((c) => c.status === "done").length
 
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
-
-  const submit = () => {
-    const trimmed = draft.trim()
-    if (!trimmed) return
-    onAdd(trimmed)
-    setDraft("")
-  }
-
-  const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      submit()
+  const submit = (body: string) => {
+    if (!isBodyEmpty(body)) {
+      onAdd(body)
+      setDraft("")
+      setComposerKey((k) => k + 1)
     }
   }
 
@@ -225,18 +216,19 @@ function CommentList({
 
       {/* Composer */}
       <div className="flex items-end gap-2 p-3 border-t border-border-subtle">
-        <textarea
-          ref={inputRef}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKey}
-          placeholder="Add comment…  (Ctrl+Enter to send)"
-          rows={4}
-          className="flex-1 resize-none bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground/40 outline-none leading-relaxed"
-        />
+        <div className="flex-1 min-h-[80px]">
+          <CommentEditor
+            key={composerKey}
+            initialBody=""
+            placeholder="Add comment…  (Ctrl+Enter to send)"
+            autoFocus
+            onChange={(body) => setDraft(body)}
+            onSubmit={(body) => submit(body)}
+          />
+        </div>
         <button
-          onClick={submit}
-          disabled={!draft.trim()}
+          onClick={() => submit(draft)}
+          disabled={isBodyEmpty(draft)}
           className="p-2 rounded-md text-accent hover:bg-accent/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           title="Send (Ctrl+Enter)"
         >
@@ -245,6 +237,27 @@ function CommentList({
       </div>
     </div>
   )
+}
+
+/** Check if a comment body (JSON string or plain text) is effectively empty. */
+function isBodyEmpty(body: string): boolean {
+  if (!body || !body.trim()) return true
+  try {
+    const json = JSON.parse(body)
+    if (json?.type === "doc" && Array.isArray(json.content)) {
+      const text = extractText(json).trim()
+      return text === ""
+    }
+  } catch {
+    /* not JSON */
+  }
+  return body.trim() === ""
+}
+
+function extractText(node: any): string {
+  if (node.type === "text") return node.text || ""
+  if (!node.content) return ""
+  return node.content.map(extractText).join("")
 }
 
 /* ── Status picker (portal-based to escape parent popover overflow) ───── */
@@ -379,10 +392,10 @@ function CommentItem({
     setEditing(false)
   }
 
-  const submitReply = () => {
-    const t = replyDraft.trim()
-    if (!t) return
-    addComment(anchor, t, { parentId: comment.id })
+  const submitReply = (body?: string) => {
+    const value = body ?? replyDraft
+    if (isBodyEmpty(value)) return
+    addComment(anchor, value, { parentId: comment.id })
     setReplyDraft("")
     setReplying(false)
   }
@@ -421,34 +434,30 @@ function CommentItem({
         {/* Body */}
         <div className="flex-1 min-w-0">
           {editing ? (
-            <textarea
+            <CommentEditor
+              initialBody={comment.body}
               autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={saveEdit}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  setDraft(comment.body)
-                  setEditing(false)
-                } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault()
-                  saveEdit()
-                }
+              placeholder="Edit comment…"
+              onChange={(b) => setDraft(b)}
+              onSubmit={(b) => {
+                if (b && b !== comment.body) updateComment(comment.id, b)
+                setEditing(false)
               }}
-              rows={Math.max(3, draft.split("\n").length)}
-              className="w-full resize-none bg-transparent text-[14px] text-foreground/90 outline-none border-b border-accent/40 pb-1 leading-relaxed"
+              onCancel={() => {
+                setDraft(comment.body)
+                setEditing(false)
+              }}
+              className="border-b border-accent/40 pb-1"
             />
           ) : (
-            <div
+            <CommentBodyDisplay
+              body={comment.body}
               onClick={() => !isResolved && setEditing(true)}
               className={cn(
-                "whitespace-pre-wrap break-words text-foreground/90 cursor-text leading-relaxed",
+                "text-foreground/90 cursor-text leading-relaxed",
                 isResolved && "line-through cursor-default",
               )}
-              title={isResolved ? undefined : "Click to edit"}
-            >
-              {comment.body}
-            </div>
+            />
           )}
           <div
             className="mt-1.5 text-[11px] text-muted-foreground/60"
@@ -476,26 +485,23 @@ function CommentItem({
       {/* Reply composer */}
       {replying && (
         <div className="mt-2.5 ml-7 flex items-end gap-2">
-          <textarea
-            autoFocus
-            value={replyDraft}
-            onChange={(e) => setReplyDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
+          <div className="flex-1 border border-border-subtle rounded p-2">
+            <CommentEditor
+              initialBody=""
+              autoFocus
+              placeholder="Reply… (Ctrl+Enter)"
+              onChange={(b) => setReplyDraft(b)}
+              onSubmit={(b) => submitReply(b)}
+              onCancel={() => {
                 setReplying(false)
                 setReplyDraft("")
-              } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault()
-                submitReply()
-              }
-            }}
-            placeholder="Reply… (Ctrl+Enter)"
-            rows={3}
-            className="flex-1 resize-none bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/40 outline-none border border-border-subtle rounded p-2 leading-relaxed"
-          />
+              }}
+              className="text-[13px]"
+            />
+          </div>
           <button
-            onClick={submitReply}
-            disabled={!replyDraft.trim()}
+            onClick={() => submitReply()}
+            disabled={isBodyEmpty(replyDraft)}
             className="p-2 rounded text-accent hover:bg-accent/10 disabled:opacity-30 transition-colors"
           >
             <PaperPlaneRight size={14} weight="fill" />
@@ -519,43 +525,29 @@ function ReplyItem({ reply }: { reply: Comment }) {
   const updateComment = usePlotStore((s) => s.updateComment)
   const deleteComment = usePlotStore((s) => s.deleteComment)
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(reply.body)
-
-  const save = () => {
-    const t = draft.trim()
-    if (t && t !== reply.body) updateComment(reply.id, t)
-    setEditing(false)
-  }
 
   return (
     <li className="text-[12px] text-foreground/85 group">
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           {editing ? (
-            <textarea
+            <CommentEditor
+              initialBody={reply.body}
               autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={save}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  setDraft(reply.body)
-                  setEditing(false)
-                } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault()
-                  save()
-                }
+              placeholder="Edit reply…"
+              onSubmit={(b) => {
+                if (b && b !== reply.body) updateComment(reply.id, b)
+                setEditing(false)
               }}
-              rows={Math.max(1, draft.split("\n").length)}
-              className="w-full resize-none bg-transparent outline-none border-b border-accent/40 pb-0.5"
+              onCancel={() => setEditing(false)}
+              className="border-b border-accent/40 pb-0.5 text-[12px]"
             />
           ) : (
-            <div
+            <CommentBodyDisplay
+              body={reply.body}
               onClick={() => setEditing(true)}
-              className="whitespace-pre-wrap break-words cursor-text"
-            >
-              {reply.body}
-            </div>
+              className="cursor-text text-[12px]"
+            />
           )}
           <div
             className="mt-0.5 text-[10px] text-muted-foreground/60"

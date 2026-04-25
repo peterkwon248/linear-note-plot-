@@ -19,6 +19,19 @@ import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { toast } from "sonner"
+import { CommentEditor, CommentBodyDisplay } from "./comment-editor"
+
+function isBodyEmpty(body: string): boolean {
+  if (!body || !body.trim()) return true
+  try {
+    const json = JSON.parse(body)
+    if (json?.type === "doc") {
+      const extract = (n: any): string => n.type === "text" ? (n.text || "") : (n.content?.map(extract).join("") ?? "")
+      return extract(json).trim() === ""
+    }
+  } catch { /* not JSON */ }
+  return body.trim() === ""
+}
 
 const STATUS_META: Record<CommentStatus, { label: string; icon: any; color: string; bg: string }> = {
   backlog: { label: "Backlog", icon: CircleDashed, color: "text-muted-foreground/70", bg: "bg-muted-foreground/10" },
@@ -380,22 +393,24 @@ export function CommentsByEntity({
         )}
 
         <div className="flex items-end gap-1.5">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault()
-                submit()
-              }
-            }}
-            placeholder={`Add a comment…  (Ctrl+Enter)`}
-            rows={2}
-            className="flex-1 resize-none bg-transparent text-[12px] text-foreground placeholder:text-muted-foreground/40 outline-none border border-border-subtle rounded p-1.5"
-          />
+          <div className="flex-1 border border-border-subtle rounded p-1.5 min-h-[60px]">
+            <CommentEditor
+              key={`composer-${draft === "" ? "empty" : "filled"}`}
+              initialBody=""
+              placeholder="Add a comment…  (Ctrl+Enter)"
+              onChange={(b) => setDraft(b)}
+              onSubmit={(b) => {
+                if (!isBodyEmpty(b)) {
+                  setDraft(b)
+                  submit()
+                }
+              }}
+              className="text-[13px]"
+            />
+          </div>
           <button
             onClick={submit}
-            disabled={!draft.trim()}
+            disabled={isBodyEmpty(draft)}
             className="p-1.5 rounded text-accent hover:bg-accent/10 disabled:opacity-30 transition-colors"
           >
             <PaperPlaneRight size={14} weight="fill" />
@@ -566,30 +581,27 @@ function CommentRow({
         {/* Body */}
         <div className="flex-1 min-w-0">
           {editing ? (
-            <textarea
+            <CommentEditor
+              initialBody={comment.body}
               autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={saveEdit}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  setDraft(comment.body)
-                  setEditing(false)
-                } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault()
-                  saveEdit()
-                }
+              placeholder="Edit comment…"
+              onChange={(b) => setDraft(b)}
+              onSubmit={(b) => {
+                if (b && b !== comment.body) updateComment(comment.id, b)
+                setEditing(false)
               }}
-              rows={Math.max(2, draft.split("\n").length)}
-              className="w-full resize-none bg-transparent outline-none border-b border-accent/40 pb-0.5"
+              onCancel={() => {
+                setDraft(comment.body)
+                setEditing(false)
+              }}
+              className="border-b border-accent/40 pb-0.5 text-[12px]"
             />
           ) : (
-            <div
+            <CommentBodyDisplay
+              body={comment.body}
               onClick={() => !isResolved && setEditing(true)}
-              className={cn("whitespace-pre-wrap break-words text-foreground/85 cursor-text", isResolved && "line-through cursor-default")}
-            >
-              {comment.body}
-            </div>
+              className={cn("text-foreground/85 cursor-text text-[12px]", isResolved && "line-through cursor-default")}
+            />
           )}
           <div className="mt-0.5 text-[10px] text-muted-foreground/50">{formatRelativeTime(comment.updatedAt || comment.createdAt)}</div>
         </div>
@@ -608,24 +620,26 @@ function CommentRow({
 
       {replying && (
         <div className="mt-2 ml-5 flex items-end gap-1.5">
-          <textarea
-            autoFocus
-            value={replyDraft}
-            onChange={(e) => setReplyDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
+          <div className="flex-1 border border-border-subtle rounded p-1.5">
+            <CommentEditor
+              initialBody=""
+              autoFocus
+              placeholder="Reply… (Ctrl+Enter)"
+              onChange={(b) => setReplyDraft(b)}
+              onSubmit={(b) => {
+                if (!isBodyEmpty(b)) {
+                  setReplyDraft(b)
+                  submitReply()
+                }
+              }}
+              onCancel={() => {
                 setReplying(false)
                 setReplyDraft("")
-              } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault()
-                submitReply()
-              }
-            }}
-            placeholder="Reply… (Ctrl+Enter)"
-            rows={2}
-            className="flex-1 resize-none bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/40 outline-none border border-border-subtle rounded p-1.5"
-          />
-          <button onClick={submitReply} disabled={!replyDraft.trim()} className="p-1 rounded text-accent hover:bg-accent/10 disabled:opacity-30">
+              }}
+              className="text-[11px]"
+            />
+          </div>
+          <button onClick={submitReply} disabled={isBodyEmpty(replyDraft)} className="p-1 rounded text-accent hover:bg-accent/10 disabled:opacity-30">
             <PaperPlaneRight size={11} weight="fill" />
           </button>
         </div>
@@ -637,7 +651,7 @@ function CommentRow({
             <li key={r.id} className="text-[11px] text-foreground/80 group">
               <div className="flex items-start gap-1.5">
                 <div className="flex-1 min-w-0">
-                  <div className="whitespace-pre-wrap break-words">{r.body}</div>
+                  <CommentBodyDisplay body={r.body} className="text-[11px]" />
                   <div className="mt-0.5 text-[9px] text-muted-foreground/50">{formatRelativeTime(r.updatedAt || r.createdAt)}</div>
                 </div>
                 <button
