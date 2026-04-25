@@ -375,6 +375,7 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
         editable={editable}
         placeholder="Type / for commands, or start writing..."
         onEditorReady={handleEditorReady}
+        noteId={note.id}
         ydoc={ydoc ?? undefined}
       />
       <FootnotesFooter editor={editorInstance} noteId={note.id} editable={editable} />

@@ -14,7 +14,7 @@ export function createCommentsSlice(set: Set) {
         body,
         createdAt: now,
         updatedAt: now,
-        status: opts?.status ?? "note",
+        status: opts?.status ?? "backlog",
         parentId: opts?.parentId,
         resolved: opts?.status === "done",
       }
@@ -55,13 +55,13 @@ export function createCommentsSlice(set: Set) {
       })
     },
 
-    /** Legacy: toggles between "note" ↔ "done". Prefer setCommentStatus. */
+    /** Legacy: toggles between "backlog" ↔ "done". Prefer setCommentStatus. */
     toggleCommentResolved: (commentId: string) => {
       set((state: any) => {
         const existing = state.comments[commentId]
         if (!existing) return {}
         const isDone = existing.status === "done"
-        const nextStatus: CommentStatus = isDone ? "note" : "done"
+        const nextStatus: CommentStatus = isDone ? "backlog" : "done"
         return {
           comments: {
             ...state.comments,

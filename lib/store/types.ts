@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -83,9 +83,6 @@ export interface PlotState {
   threads: Thread[]
   graphFocusDepth: number
   commandPaletteMode: "commands" | "links"
-
-  // Reflections
-  reflections: Reflection[]
 
   // Relations
   relations: Relation[]
@@ -224,10 +221,7 @@ export interface PlotState {
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
   setPendingWikiAssembly: (noteIds: string[] | null) => void
 
-  // ── Reflections ──
-  addReflection: (noteId: string, text: string) => string
-
-  // ── Thread ──
+  // ── Thread (legacy — used only by command palette quick-step) ──
   startThread: (noteId: string) => string
   addThreadStep: (threadId: string, text: string, parentId?: string | null) => void
   endThread: (threadId: string) => void

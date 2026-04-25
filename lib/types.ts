@@ -439,15 +439,6 @@ export interface Thread {
   status: "active" | "done"
 }
 
-/* ── Phase 2: Reflection ───────────────────────────── */
-
-export interface Reflection {
-  id: string
-  noteId: string
-  text: string
-  createdAt: string
-}
-
 /* ── Relations ─────────────────────────────────────── */
 
 export type RelationType = "related-to" | "inspired-by" | "contradicts" | "extends" | "depends-on"
@@ -531,8 +522,8 @@ export type CommentAnchor =
   | { kind: "wiki"; articleId: string }
   | { kind: "note"; noteId: string }
 
-/** Linear-style status for a comment. Default "note" = plain memo. */
-export type CommentStatus = "note" | "todo" | "done" | "blocker"
+/** Linear-style status for a comment. Default "backlog" = not yet actioned. */
+export type CommentStatus = "backlog" | "todo" | "done" | "blocker"
 
 /** Single comment attached to a block (wiki) or ProseMirror top-level node (note). */
 export interface Comment {

@@ -8,7 +8,7 @@ import type { CommentAnchor, CommentStatus } from "@/lib/types"
 const PRIORITY: Record<CommentStatus, number> = {
   blocker: 4,
   todo: 3,
-  note: 2,
+  backlog: 2,
   done: 0,
 }
 
@@ -58,7 +58,7 @@ export function useBlockCommentStatus(anchor: CommentAnchor): BlockCommentSummar
 
 /** Tailwind classes for status colors (shared with popover). */
 export const STATUS_COLORS: Record<CommentStatus, { dot: string; border: string }> = {
-  note: { dot: "bg-muted-foreground/60", border: "border-l-muted-foreground/40" },
+  backlog: { dot: "bg-muted-foreground/60", border: "border-l-muted-foreground/40" },
   todo: { dot: "bg-blue-400", border: "border-l-blue-400" },
   done: { dot: "bg-emerald-400", border: "border-l-emerald-400" },
   blocker: { dot: "bg-red-400", border: "border-l-red-400" },

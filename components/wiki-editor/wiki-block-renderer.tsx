@@ -154,7 +154,6 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
 
   return (
     <div className="group/section relative" style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}>
-      {articleId && <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} className="-left-2" />}
       <div className={cn(
         "flex items-center gap-1",
         isEnc ? "mt-10 mb-4 border-b border-white/[0.08] pb-1.5 gap-2" : "mt-8 mb-2",
@@ -232,13 +231,20 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
           </button>
         )}
 
-        {/* Inline actions: comment + bookmark */}
+        {/* Always-visible comment marker (right side) */}
+        {articleId && (
+          <BlockCommentMarker
+            anchor={{ kind: "wiki-block", articleId, blockId: block.id }}
+            className="ml-auto"
+          />
+        )}
+
+        {/* Inline actions: comment + bookmark (hover) */}
         {articleId && (
           <WikiBlockInlineActions
             articleId={articleId}
             blockId={block.id}
             label={block.title || "Section"}
-            className="ml-auto"
           />
         )}
 
@@ -478,7 +484,12 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
 
   return (
     <div ref={blockRef} className="group/text relative mb-4">
-      {articleId && <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} className="-left-3" />}
+      {/* Always-visible comment marker — placed left of ⋯ menu to avoid overlap */}
+      {articleId && (
+        <div className={cn("absolute z-10", editable ? "right-9 top-1" : "right-1 top-1")}>
+          <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} />
+        </div>
+      )}
       {editable && (
         <div className="absolute -left-6 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 transition-opacity duration-100">
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>

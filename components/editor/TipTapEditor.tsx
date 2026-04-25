@@ -8,6 +8,7 @@ import "katex/dist/katex.min.css"
 import { EditorToolbar } from "./EditorToolbar"
 import { TableBubbleMenu } from "./TableBubbleMenu"
 import { BlockDragOverlay } from "./dnd/block-drag-overlay"
+import { NoteCommentMarkerLayer } from "./note-comment-marker-layer"
 import { FloatingToc } from "./floating-toc"
 import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
@@ -20,6 +21,8 @@ interface TipTapEditorProps {
   editable?: boolean
   placeholder?: string
   onEditorReady?: (editor: ReturnType<typeof useEditor>) => void
+  /** Note id for inline comment anchoring (kind:"note-block"). */
+  noteId?: string
   /**
    * Experimental: bind ProseMirror state to a shared Y.Doc so multiple
    * editors opened for the same note stay in sync in real time.
@@ -34,6 +37,7 @@ export function TipTapEditor({
   editable = true,
   placeholder = "Start writing...",
   onEditorReady,
+  noteId,
   ydoc,
 }: TipTapEditorProps) {
   const wordWrap = useSettingsStore((s) => s.wordWrap)
@@ -208,6 +212,9 @@ export function TipTapEditor({
       <div ref={editorWrapRef} className="flex-1 relative">
         <BlockDragOverlay editor={editor}>
           <EditorContent editor={editor} className="w-full" />
+          {noteId && editor && (
+            <NoteCommentMarkerLayer editor={editor} noteId={noteId} containerRef={editorWrapRef} />
+          )}
         </BlockDragOverlay>
         {editor && <TableBubbleMenu editor={editor} />}
         {editor && <FloatingToc editor={editor} />}

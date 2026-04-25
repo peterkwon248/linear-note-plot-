@@ -807,8 +807,16 @@ export function migrate(persistedState: unknown): PlotState {
   if (state.comments) {
     for (const id of Object.keys(state.comments as Record<string, any>)) {
       const c = (state.comments as Record<string, any>)[id]
-      if (!c.status) c.status = c.resolved ? "done" : "note"
+      if (!c.status) c.status = c.resolved ? "done" : "backlog"
       if (c.parentId === undefined) c.parentId = undefined
+    }
+  }
+
+  // v79: Rename status "note" → "backlog" (Linear-style consistency)
+  if (state.comments) {
+    for (const id of Object.keys(state.comments as Record<string, any>)) {
+      const c = (state.comments as Record<string, any>)[id]
+      if (c.status === "note") c.status = "backlog"
     }
   }
 
@@ -829,7 +837,7 @@ export function migrate(persistedState: unknown): PlotState {
         body: r.text || "",
         createdAt: r.createdAt || new Date().toISOString(),
         updatedAt: r.createdAt || new Date().toISOString(),
-        status: "note",
+        status: "backlog",
         parentId: undefined,
         resolved: false,
       }
@@ -857,7 +865,7 @@ export function migrate(persistedState: unknown): PlotState {
           body: step.text || "",
           createdAt: step.at || t.startedAt || new Date().toISOString(),
           updatedAt: step.at || t.startedAt || new Date().toISOString(),
-          status: t.status === "done" ? "done" : "note",
+          status: t.status === "done" ? "done" : "backlog",
           parentId: parentNew,
           resolved: t.status === "done",
         }
