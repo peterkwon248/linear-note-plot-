@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useSidePanelEntity } from "./use-side-panel-entity"
 import { usePlotStore } from "@/lib/store"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
@@ -8,11 +8,14 @@ import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
 import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { X } from "@phosphor-icons/react/dist/ssr/X"
 import { extractAnchorsFromContentJson } from "@/lib/anchor-utils"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import type { GlobalBookmark } from "@/lib/types"
 import { cn } from "@/lib/utils"
+
+type BookmarkFilter = "all" | "note" | "wiki"
 
 /**
  * Unified Bookmarks panel — shows ALL pinned bookmarks (note + wiki) in one list,
@@ -27,6 +30,9 @@ export function SidePanelBookmarks() {
   const pinBookmark = usePlotStore((s) => s.pinBookmark)
   const unpinBookmark = usePlotStore((s) => s.unpinBookmark)
 
+  const [filter, setFilter] = useState<BookmarkFilter>("all")
+  const [query, setQuery] = useState("")
+
   const notesById = useMemo(
     () => Object.fromEntries(notes.map((n) => [n.id, n])),
     [notes],
@@ -37,15 +43,41 @@ export function SidePanelBookmarks() {
   )
 
   // Sorted pinned bookmarks (newest first), unified across note + wiki
-  const pinnedList = useMemo(() => {
+  const allBookmarks = useMemo(() => {
     return Object.values(globalBookmarks as Record<string, GlobalBookmark>).sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
   }, [globalBookmarks])
 
+  const totalCounts = useMemo(() => {
+    let note = 0, wiki = 0
+    for (const b of allBookmarks) {
+      const k = b.targetKind ?? "note"
+      if (k === "wiki") wiki++; else note++
+    }
+    return { all: allBookmarks.length, note, wiki }
+  }, [allBookmarks])
+
+  // Apply filter + search
+  const pinnedList = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return allBookmarks.filter((b) => {
+      const kind = b.targetKind ?? "note"
+      if (filter !== "all" && kind !== filter) return false
+      if (q) {
+        const target = kind === "wiki" ? articlesById[b.noteId] : notesById[b.noteId]
+        const targetTitle = (target as any)?.title?.toLowerCase() || ""
+        if (!b.label.toLowerCase().includes(q) && !targetTitle.includes(q)) return false
+      }
+      return true
+    })
+  }, [allBookmarks, filter, query, articlesById, notesById])
+
   const navigateToBookmark = (bm: GlobalBookmark) => {
     const kind = bm.targetKind ?? "note"
     if (kind === "wiki") {
+      // Switch to wiki route + select the article
+      import("@/lib/table-route").then((m) => m.setActiveRoute("/wiki"))
       navigateToWikiArticle(bm.noteId)
     } else {
       const openNote = (usePlotStore.getState() as any).openNote
@@ -72,11 +104,56 @@ export function SidePanelBookmarks() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {/* ── Unified bookmarks list (cross-entity, no header — tab name is enough) ── */}
+      {/* ── Unified bookmarks list (cross-entity) ── */}
       <div className="p-3 border-b border-border">
-        {pinnedList.length === 0 ? (
+        {/* Filter chips */}
+        {totalCounts.all > 0 && (
+          <div className="flex items-center gap-1 mb-2">
+            <FilterChip active={filter === "all"} onClick={() => setFilter("all")} count={totalCounts.all}>
+              All
+            </FilterChip>
+            <FilterChip active={filter === "note"} onClick={() => setFilter("note")} count={totalCounts.note}>
+              Notes
+            </FilterChip>
+            <FilterChip active={filter === "wiki"} onClick={() => setFilter("wiki")} count={totalCounts.wiki}>
+              Wiki
+            </FilterChip>
+          </div>
+        )}
+
+        {/* Search input */}
+        {totalCounts.all > 0 && (
+          <div className="relative mb-2">
+            <MagnifyingGlass
+              size={11}
+              className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/40"
+            />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search bookmarks..."
+              className="w-full text-2xs bg-secondary/30 rounded-md pl-7 pr-7 py-1.5 outline-none focus:ring-1 focus:ring-accent/40 placeholder:text-muted-foreground/40 text-foreground"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-hover-bg text-muted-foreground/60 hover:text-foreground"
+                title="Clear"
+              >
+                <X size={10} />
+              </button>
+            )}
+          </div>
+        )}
+
+        {totalCounts.all === 0 ? (
           <p className="text-2xs text-muted-foreground/50 italic px-1">
             No bookmarks yet
+          </p>
+        ) : pinnedList.length === 0 ? (
+          <p className="text-2xs text-muted-foreground/50 italic px-1">
+            {query ? `No bookmarks match "${query}"` : "No bookmarks in this filter"}
           </p>
         ) : (
           <ul className="space-y-0.5">
@@ -156,7 +233,7 @@ export function SidePanelBookmarks() {
         )}
       </div>
 
-      {/* ── Context-specific local sections ────────────── */}
+      {/* Note-specific local anchors (anchorMark/anchorDivider/heading inside body) */}
       {entity.type === "note" && entity.note && (
         <NoteLocalAnchors
           note={entity.note}
@@ -167,11 +244,35 @@ export function SidePanelBookmarks() {
           onUnpin={unpinBookmark}
         />
       )}
-
-      {entity.type === "wiki" && entity.wikiArticle && (
-        <WikiSectionsList article={entity.wikiArticle} />
-      )}
+      {/* Wiki SECTIONS removed — Outline is shown in Detail tab */}
     </div>
+  )
+}
+
+function FilterChip({
+  active,
+  count,
+  onClick,
+  children,
+}: {
+  active: boolean
+  count: number
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors",
+        active
+          ? "bg-accent/20 text-accent"
+          : "bg-secondary/40 text-muted-foreground/70 hover:text-foreground hover:bg-secondary/70",
+      )}
+    >
+      {children}
+      <span className="ml-1 opacity-60">{count}</span>
+    </button>
   )
 }
 
@@ -278,45 +379,3 @@ function NoteLocalAnchors({
   )
 }
 
-/* ── Wiki sections (auto outline) ────────────── */
-
-function WikiSectionsList({ article }: { article: any }) {
-  const sections = useMemo(() => {
-    if (!article?.blocks) return []
-    return article.blocks
-      .filter((b: any) => b.type === "section")
-      .map((b: any, idx: number) => ({
-        id: b.id,
-        title: b.title ?? "Untitled section",
-        level: b.level ?? 2,
-        index: idx + 1,
-      }))
-  }, [article])
-
-  if (sections.length === 0) return null
-
-  return (
-    <div className="p-3">
-      <SectionHeader icon={TextAlignLeft} label="SECTIONS" count={sections.length} />
-      <ul className="space-y-0.5">
-        {sections.map((s: any) => (
-          <li
-            key={s.id}
-            onClick={() => {
-              const el = document.getElementById(`wiki-block-${s.id}`)
-              el?.scrollIntoView({ behavior: "smooth", block: "start" })
-            }}
-            className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
-            style={{ paddingLeft: `${8 + (s.level - 2) * 12}px` }}
-          >
-            <span className="shrink-0 text-2xs font-mono text-muted-foreground/50 w-5 text-right">
-              {s.index}.
-            </span>
-            <span className="text-note text-foreground/80 flex-1 truncate">{s.title}</span>
-            <span className="text-2xs text-muted-foreground/40">H{s.level}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}

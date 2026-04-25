@@ -15,6 +15,8 @@ import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
+import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
+import { WikiBlockInlineActions } from "./wiki-block-inline-actions"
 
 type SlotKey = "navPrev" | "navCurrent" | "navNext"
 
@@ -123,28 +125,38 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
         </button>
 
         <div className="relative flex-1 rounded-lg border border-border-subtle overflow-hidden bg-card/30">
-          {/* Menu on right */}
-          <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-            <PopoverTrigger asChild>
-              <button
-                onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-                className="absolute right-1 top-1 opacity-0 group-hover/nav:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-20"
-              >
-                <DotsThree size={14} weight="bold" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
-              {onDelete && (
+          {/* Right-side actions cluster: [marker] [bookmark] [⋯] */}
+          <div className="absolute left-full top-1 ml-2 z-20 flex items-center gap-0.5">
+            {articleId && (
+              <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} />
+            )}
+            {articleId && (
+              <WikiBlockInlineActions articleId={articleId} blockId={block.id} label="Navigation" />
+            )}
+            {editable && (
+            <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+              <PopoverTrigger asChild>
                 <button
-                  onClick={() => { setMenuOpen(false); onDelete() }}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+                  className="opacity-0 group-hover/nav:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
                 >
-                  <Trash size={14} weight="regular" />
-                  Delete navigation
+                  <DotsThree size={14} weight="bold" />
                 </button>
-              )}
-            </PopoverContent>
-          </Popover>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+                {onDelete && (
+                  <button
+                    onClick={() => { setMenuOpen(false); onDelete() }}
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+                  >
+                    <Trash size={14} weight="regular" />
+                    Delete navigation
+                  </button>
+                )}
+              </PopoverContent>
+            </Popover>
+            )}
+          </div>
           {/* Title input */}
           <div className="bg-secondary/40 px-3 py-2 border-b border-border-subtle">
             <input

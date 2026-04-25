@@ -18,6 +18,8 @@ import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
+import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
+import { WikiBlockInlineActions } from "./wiki-block-inline-actions"
 
 interface NavboxBlockProps {
   block: WikiBlock
@@ -25,9 +27,10 @@ interface NavboxBlockProps {
   onUpdate: (patch: Partial<WikiBlock>) => void
   onDelete?: () => void
   dragHandleProps?: DraggableSyntheticListeners
+  articleId?: string
 }
 
-export function NavboxBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: NavboxBlockProps) {
+export function NavboxBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articleId }: NavboxBlockProps) {
   const router = useRouter()
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
@@ -84,30 +87,40 @@ export function NavboxBlock({ block, editable, onUpdate, onDelete, dragHandlePro
   const displayTitle = block.navboxTitle || category?.name || ""
   const columns = block.navboxColumns ?? 4
 
-  // Shared "..." menu (absolute inside card)
-  const dotMenu = editable ? (
-    <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-      <PopoverTrigger asChild>
-        <button
-          onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-          className="absolute right-1 top-1 opacity-0 group-hover/navbox:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
-        >
-          <DotsThree size={14} weight="bold" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
-        {onDelete && (
-          <button
-            onClick={() => { setMenuOpen(false); onDelete() }}
-            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
-          >
-            <Trash size={14} weight="regular" />
-            Delete navbox
-          </button>
-        )}
-      </PopoverContent>
-    </Popover>
-  ) : null
+  // Shared right-side cluster: [marker] [bookmark] [⋯]
+  const dotMenu = (
+    <div className="absolute left-full top-1 ml-2 z-10 flex items-center gap-0.5">
+      {articleId && (
+        <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} />
+      )}
+      {articleId && (
+        <WikiBlockInlineActions articleId={articleId} blockId={block.id} label="Navbox" />
+      )}
+      {editable && (
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+              className="opacity-0 group-hover/navbox:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
+            >
+              <DotsThree size={14} weight="bold" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
+            {onDelete && (
+              <button
+                onClick={() => { setMenuOpen(false); onDelete() }}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-destructive hover:bg-active-bg transition-colors"
+              >
+                <Trash size={14} weight="regular" />
+                Delete navbox
+              </button>
+            )}
+          </PopoverContent>
+        </Popover>
+      )}
+    </div>
+  )
 
   // No category picked yet
   if (!block.navboxCategoryId) {
