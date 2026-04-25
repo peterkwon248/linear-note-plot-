@@ -115,8 +115,12 @@ export interface WikiBlock {
   editorWidth?: number | null
   /** Text: editor height in edit mode (px). Null = auto height */
   editorHeight?: number | null
-  /** Navbox: target category id. Navbox lists all articles assigned to this category. */
+  /** Navbox mode: "category" auto-pulls from a category, "manual" uses curated list. Default "category". */
+  navboxMode?: "category" | "manual"
+  /** Navbox (category mode): target category id. */
   navboxCategoryId?: string
+  /** Navbox (manual mode): explicit article id list, in display order (Wiki convention). */
+  navboxArticleIds?: string[]
   /** Navbox: optional custom title override. If omitted, category name is used. */
   navboxTitle?: string
   /** Navbox: grid columns for articles (3-6, default 4) */

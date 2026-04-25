@@ -91,7 +91,7 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
     case "table":
       return <TableBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "navbox":
-      return <NavboxBlock block={block} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+      return <NavboxBlock block={block} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "nav":
       return <NavigationBlock block={block} articleId={articleId} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     default:

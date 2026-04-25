@@ -124,8 +124,8 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
           <DotsSixVertical size={14} weight="regular" />
         </button>
 
-        <div className="relative flex-1 rounded-lg border border-border-subtle overflow-hidden bg-card/30">
-          {/* Right-side actions cluster: [marker] [bookmark] [⋯] */}
+        <div className="relative flex-1">
+          {/* Right-side actions cluster: [marker] [bookmark] [⋯] — outside overflow-hidden card */}
           <div className="absolute left-full top-1 ml-2 z-20 flex items-center gap-0.5">
             {articleId && (
               <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} />
@@ -157,6 +157,7 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
             </Popover>
             )}
           </div>
+          <div className="rounded-lg border border-border-subtle overflow-hidden bg-card/30">
           {/* Title input */}
           <div className="bg-secondary/40 px-3 py-2 border-b border-border-subtle">
             <input
@@ -194,6 +195,7 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
               onPickArticle={() => setPickerOpenFor("navNext")}
               wikiArticles={wikiArticles}
             />
+          </div>
           </div>
         </div>
       </div>
