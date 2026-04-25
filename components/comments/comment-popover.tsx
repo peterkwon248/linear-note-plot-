@@ -133,7 +133,7 @@ export function CommentPopover({
       <PopoverContent
         align="start"
         side="bottom"
-        className="w-[560px] min-h-[360px] p-0"
+        className="w-[480px] p-0"
         collisionPadding={16}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
@@ -215,8 +215,8 @@ function CommentList({
       )}
 
       {/* Composer */}
-      <div className="flex items-end gap-2 p-3 border-t border-border-subtle">
-        <div className="flex-1 min-h-[80px]">
+      <div className="flex items-stretch gap-2 p-3 border-t border-border-subtle">
+        <div className="flex-1">
           <CommentEditor
             key={composerKey}
             initialBody=""
@@ -229,7 +229,7 @@ function CommentList({
         <button
           onClick={() => submit(draft)}
           disabled={isBodyEmpty(draft)}
-          className="p-2 rounded-md text-accent hover:bg-accent/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          className="p-2 self-end rounded-md text-accent hover:bg-accent/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           title="Send (Ctrl+Enter)"
         >
           <PaperPlaneRight size={16} weight="fill" />
@@ -447,7 +447,6 @@ function CommentItem({
                 setDraft(comment.body)
                 setEditing(false)
               }}
-              className="border-b border-accent/40 pb-1"
             />
           ) : (
             <CommentBodyDisplay
@@ -484,8 +483,8 @@ function CommentItem({
 
       {/* Reply composer */}
       {replying && (
-        <div className="mt-2.5 ml-7 flex items-end gap-2">
-          <div className="flex-1 border border-border-subtle rounded p-2">
+        <div className="mt-2.5 ml-7 flex items-stretch gap-2">
+          <div className="flex-1">
             <CommentEditor
               initialBody=""
               autoFocus
@@ -496,13 +495,14 @@ function CommentItem({
                 setReplying(false)
                 setReplyDraft("")
               }}
+              showToolbar={false}
               className="text-[13px]"
             />
           </div>
           <button
             onClick={() => submitReply()}
             disabled={isBodyEmpty(replyDraft)}
-            className="p-2 rounded text-accent hover:bg-accent/10 disabled:opacity-30 transition-colors"
+            className="p-2 self-end rounded text-accent hover:bg-accent/10 disabled:opacity-30 transition-colors"
           >
             <PaperPlaneRight size={14} weight="fill" />
           </button>
@@ -540,7 +540,8 @@ function ReplyItem({ reply }: { reply: Comment }) {
                 setEditing(false)
               }}
               onCancel={() => setEditing(false)}
-              className="border-b border-accent/40 pb-0.5 text-[12px]"
+              showToolbar={false}
+              className="text-[12px]"
             />
           ) : (
             <CommentBodyDisplay

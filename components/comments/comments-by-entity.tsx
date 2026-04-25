@@ -392,8 +392,8 @@ export function CommentsByEntity({
           </div>
         )}
 
-        <div className="flex items-end gap-1.5">
-          <div className="flex-1 border border-border-subtle rounded p-1.5 min-h-[60px]">
+        <div className="flex items-stretch gap-1.5">
+          <div className="flex-1">
             <CommentEditor
               key={`composer-${draft === "" ? "empty" : "filled"}`}
               initialBody=""
@@ -405,13 +405,14 @@ export function CommentsByEntity({
                   submit()
                 }
               }}
+              showToolbar={false}
               className="text-[13px]"
             />
           </div>
           <button
             onClick={submit}
             disabled={isBodyEmpty(draft)}
-            className="p-1.5 rounded text-accent hover:bg-accent/10 disabled:opacity-30 transition-colors"
+            className="p-1.5 self-end rounded text-accent hover:bg-accent/10 disabled:opacity-30 transition-colors"
           >
             <PaperPlaneRight size={14} weight="fill" />
           </button>
@@ -594,7 +595,8 @@ function CommentRow({
                 setDraft(comment.body)
                 setEditing(false)
               }}
-              className="border-b border-accent/40 pb-0.5 text-[12px]"
+              showToolbar={false}
+              className="text-[12px]"
             />
           ) : (
             <CommentBodyDisplay
@@ -619,8 +621,8 @@ function CommentRow({
       </div>
 
       {replying && (
-        <div className="mt-2 ml-5 flex items-end gap-1.5">
-          <div className="flex-1 border border-border-subtle rounded p-1.5">
+        <div className="mt-2 ml-5 flex items-stretch gap-1.5">
+          <div className="flex-1">
             <CommentEditor
               initialBody=""
               autoFocus
@@ -636,10 +638,11 @@ function CommentRow({
                 setReplying(false)
                 setReplyDraft("")
               }}
+              showToolbar={false}
               className="text-[11px]"
             />
           </div>
-          <button onClick={submitReply} disabled={isBodyEmpty(replyDraft)} className="p-1 rounded text-accent hover:bg-accent/10 disabled:opacity-30">
+          <button onClick={submitReply} disabled={isBodyEmpty(replyDraft)} className="p-1 self-end rounded text-accent hover:bg-accent/10 disabled:opacity-30">
             <PaperPlaneRight size={11} weight="fill" />
           </button>
         </div>

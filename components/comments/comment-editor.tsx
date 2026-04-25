@@ -4,6 +4,7 @@ import { useEditor, EditorContent } from "@tiptap/react"
 import { useEffect, useRef } from "react"
 import { generateHTML } from "@tiptap/html"
 import { createEditorExtensions, createRenderExtensions } from "@/components/editor/core/shared-editor-config"
+import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { cn } from "@/lib/utils"
 
 /* Memoized render-only extensions (used for read mode `generateHTML`). */
@@ -79,8 +80,9 @@ export function CommentBodyDisplay({
 }
 
 /**
- * Editable comment editor — TipTap "comment" tier.
- * Supports basic markdown-ish formatting + [[wikilinks]] + #tags.
+ * Editable comment editor — full TipTap "note" tier with FixedToolbar.
+ * Same editing experience as note/wiki body — markdown shortcuts + toolbar + slash commands +
+ * [[wikilinks]] + #tags + @mentions + lists/tables/code etc.
  */
 export function CommentEditor({
   initialBody,
@@ -90,6 +92,7 @@ export function CommentEditor({
   onCancel,
   onChange,
   className,
+  showToolbar = true,
 }: {
   initialBody: string
   placeholder?: string
@@ -101,6 +104,8 @@ export function CommentEditor({
   /** Called on every change with serialized JSON body. */
   onChange?: (jsonBody: string) => void
   className?: string
+  /** Show the toolbar bar. Default true. */
+  showToolbar?: boolean
 }) {
   const onSubmitRef = useRef(onSubmit)
   const onCancelRef = useRef(onCancel)
@@ -110,7 +115,7 @@ export function CommentEditor({
   onChangeRef.current = onChange
 
   const editor = useEditor({
-    extensions: createEditorExtensions("comment", { placeholder }),
+    extensions: createEditorExtensions("note", { placeholder }),
     content: bodyToContent(initialBody),
     autofocus: autoFocus,
     immediatelyRender: false,
@@ -118,7 +123,7 @@ export function CommentEditor({
       attributes: {
         class: cn(
           "comment-editor prose prose-sm dark:prose-invert max-w-none focus:outline-none",
-          "min-h-[40px] leading-relaxed text-[14px]",
+          "min-h-[60px] leading-relaxed text-[14px] px-3 py-2",
           className,
         ),
       },
@@ -157,5 +162,16 @@ export function CommentEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialBody])
 
-  return <EditorContent editor={editor} />
+  return (
+    <div className="flex flex-col rounded border border-border-subtle overflow-hidden bg-card/30">
+      <div className="max-h-[120px] overflow-y-auto">
+        <EditorContent editor={editor} />
+      </div>
+      {showToolbar && editor && (
+        <div className="border-t border-border-subtle">
+          <FixedToolbar editor={editor} position="bottom" tier="note" />
+        </div>
+      )}
+    </div>
+  )
 }
