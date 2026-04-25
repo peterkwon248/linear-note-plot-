@@ -61,8 +61,8 @@ type BlockTargetType =
   | "tocBlock"
 
 /** Phosphor icon for each block type — consistent with rest of Plot UI. */
-function BlockTypeIcon({ type, className }: { type: BlockTargetType; className?: string }) {
-  const props = { size: 11, weight: "regular" as const, className: cn("shrink-0 text-muted-foreground/70", className) }
+function BlockTypeIcon({ type, size = 14, className }: { type: BlockTargetType; size?: number; className?: string }) {
+  const props = { size, weight: "regular" as const, className: cn("shrink-0", className) }
   switch (type) {
     case "section": return <TextH {...props} />
     case "text":
@@ -85,6 +85,26 @@ function BlockTypeIcon({ type, className }: { type: BlockTargetType; className?:
     case "details": return <CaretDoubleDown {...props} />
     case "tocBlock": return <PhTocIcon {...props} />
     default: return <Paragraph {...props} />
+  }
+}
+
+/** Type-specific accent color for left stripe (Option G minimap visual). */
+function blockTypeColor(type: BlockTargetType): string {
+  switch (type) {
+    case "section": return "bg-accent/60"
+    case "text":
+    case "paragraph": return "bg-muted-foreground/30"
+    case "note-ref": return "bg-blue-500/40"
+    case "image": return "bg-emerald-500/40"
+    case "url": return "bg-cyan-500/40"
+    case "table": return "bg-purple-500/40"
+    case "navbox":
+    case "nav":
+    case "navigation": return "bg-amber-500/40"
+    case "calloutBlock": return "bg-yellow-500/40"
+    case "blockquote": return "bg-muted-foreground/30"
+    case "codeBlock": return "bg-pink-500/40"
+    default: return "bg-muted-foreground/20"
   }
 }
 
@@ -387,58 +407,97 @@ export function CommentsByEntity({
           <div className="relative mb-1.5">
             <button
               onClick={() => setPickerOpen((v) => !v)}
-              className="flex items-center gap-1.5 px-2 py-1 rounded text-[11px] text-muted-foreground/80 hover:text-foreground hover:bg-hover-bg w-full text-left transition-colors"
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded text-[13px] text-muted-foreground/80 hover:text-foreground hover:bg-hover-bg w-full text-left transition-colors"
             >
               {selectedTarget ? (
                 <>
-                  <BlockTypeIcon type={selectedTarget.type} />
+                  <BlockTypeIcon type={selectedTarget.type} size={14} className="text-muted-foreground/70" />
                   <span className="truncate">{selectedTarget.label}</span>
                 </>
               ) : (
                 <>
-                  <FileText size={11} weight="regular" className="shrink-0 text-muted-foreground/70" />
+                  <FileText size={14} weight="regular" className="shrink-0 text-muted-foreground/70" />
                   <span>Document-level</span>
                 </>
               )}
-              <CaretDown size={9} weight="bold" className="ml-auto shrink-0" />
+              <CaretDown size={11} weight="bold" className="ml-auto shrink-0" />
             </button>
             {pickerOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setPickerOpen(false)} />
-                <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto bg-surface-overlay border border-border rounded-md shadow-lg p-1 z-50">
+                <div className="absolute left-0 right-0 top-full mt-1 max-h-80 overflow-y-auto bg-surface-overlay border border-border rounded-md shadow-lg p-1.5 z-50">
+                  {/* Document-level option — special header style */}
                   <button
                     onClick={() => {
                       setTargetBlockId("")
                       setPickerOpen(false)
                     }}
                     className={cn(
-                      "flex items-center gap-2 w-full px-2 py-1.5 rounded text-[11px] hover:bg-hover-bg",
-                      !targetBlockId ? "text-foreground" : "text-muted-foreground/80",
+                      "flex items-center gap-2 w-full px-2.5 py-2 rounded text-[13px] hover:bg-hover-bg",
+                      !targetBlockId ? "text-foreground bg-hover-bg/40" : "text-muted-foreground/80",
                     )}
                   >
-                    <FileText size={11} weight="regular" className="shrink-0 text-muted-foreground/70" />
-                    Document-level
-                    {!targetBlockId && <span className="ml-auto text-accent">•</span>}
+                    <FileText size={14} weight="regular" className="shrink-0 text-muted-foreground/70" />
+                    <span>Document-level</span>
+                    {!targetBlockId && <span className="ml-auto text-accent text-base leading-none">•</span>}
                   </button>
-                  <div className="my-1 h-px bg-border/40" />
-                  {blockTargets.map((b) => (
-                    <button
-                      key={b.id}
-                      onClick={() => {
-                        setTargetBlockId(b.id)
-                        setPickerOpen(false)
-                      }}
-                      style={{ paddingLeft: `${8 + b.depth * 10}px` }}
-                      className={cn(
-                        "flex items-center gap-2 w-full pr-2 py-1.5 rounded text-[11px] hover:bg-hover-bg",
-                        targetBlockId === b.id ? "text-foreground" : "text-muted-foreground/80",
-                      )}
-                    >
-                      <BlockTypeIcon type={b.type} />
-                      <span className={cn("truncate", b.type === "section" && "font-medium")}>{b.label}</span>
-                      {targetBlockId === b.id && <span className="ml-auto text-accent shrink-0">•</span>}
-                    </button>
-                  ))}
+
+                  {/* Minimap-like block list (Option G) */}
+                  <div className="mt-1 pt-1 border-t border-border/40 space-y-px">
+                    {blockTargets.map((b, idx) => {
+                      const isSection = b.type === "section"
+                      const prevWasSection = idx > 0 && blockTargets[idx - 1].type === "section"
+                      const needsSeparator = isSection && idx > 0 && !prevWasSection
+                      return (
+                        <div key={b.id}>
+                          {needsSeparator && <div className="my-1 mx-2 h-px bg-border/30" />}
+                          <button
+                            onClick={() => {
+                              setTargetBlockId(b.id)
+                              setPickerOpen(false)
+                            }}
+                            style={{ paddingLeft: `${10 + b.depth * 14}px` }}
+                            className={cn(
+                              "relative flex items-center gap-2 w-full pr-2 py-1.5 rounded text-[13px] hover:bg-hover-bg transition-colors group",
+                              isSection ? "py-2" : "py-1.5",
+                              targetBlockId === b.id ? "text-foreground bg-hover-bg/40" : "text-muted-foreground/80",
+                            )}
+                          >
+                            {/* Minimap stripe (block type color) — left edge */}
+                            {!isSection && (
+                              <span
+                                className={cn(
+                                  "absolute top-1 bottom-1 w-0.5 rounded-full",
+                                  blockTypeColor(b.type),
+                                )}
+                                style={{ left: `${4 + b.depth * 14}px` }}
+                              />
+                            )}
+                            <BlockTypeIcon
+                              type={b.type}
+                              size={isSection ? 15 : 13}
+                              className={cn(
+                                isSection
+                                  ? "text-foreground/70"
+                                  : "text-muted-foreground/60 group-hover:text-muted-foreground",
+                              )}
+                            />
+                            <span
+                              className={cn(
+                                "truncate",
+                                isSection ? "font-semibold text-foreground/90" : "",
+                              )}
+                            >
+                              {b.label}
+                            </span>
+                            {targetBlockId === b.id && (
+                              <span className="ml-auto text-accent text-base leading-none shrink-0">•</span>
+                            )}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               </>
             )}
