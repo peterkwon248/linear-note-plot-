@@ -495,7 +495,6 @@ function CommentItem({
                 setReplying(false)
                 setReplyDraft("")
               }}
-              showToolbar={false}
               className="text-[13px]"
             />
           </div>
@@ -540,7 +539,6 @@ function ReplyItem({ reply }: { reply: Comment }) {
                 setEditing(false)
               }}
               onCancel={() => setEditing(false)}
-              showToolbar={false}
               className="text-[12px]"
             />
           ) : (

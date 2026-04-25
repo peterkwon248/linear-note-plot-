@@ -4,7 +4,6 @@ import { useEditor, EditorContent } from "@tiptap/react"
 import { useEffect, useRef } from "react"
 import { generateHTML } from "@tiptap/html"
 import { createEditorExtensions, createRenderExtensions } from "@/components/editor/core/shared-editor-config"
-import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { cn } from "@/lib/utils"
 
 /* Memoized render-only extensions (used for read mode `generateHTML`). */
@@ -80,9 +79,9 @@ export function CommentBodyDisplay({
 }
 
 /**
- * Editable comment editor — full TipTap "note" tier with FixedToolbar.
- * Same editing experience as note/wiki body — markdown shortcuts + toolbar + slash commands +
- * [[wikilinks]] + #tags + @mentions + lists/tables/code etc.
+ * Editable comment editor — lightweight TipTap "comment" tier.
+ * Markdown shortcuts (**bold**, *italic*, `code`, - list, etc) + [[wikilinks]] + #tags.
+ * No visible toolbar — comments stay lightweight by design.
  */
 export function CommentEditor({
   initialBody,
@@ -92,7 +91,6 @@ export function CommentEditor({
   onCancel,
   onChange,
   className,
-  showToolbar = true,
 }: {
   initialBody: string
   placeholder?: string
@@ -104,8 +102,6 @@ export function CommentEditor({
   /** Called on every change with serialized JSON body. */
   onChange?: (jsonBody: string) => void
   className?: string
-  /** Show the toolbar bar. Default true. */
-  showToolbar?: boolean
 }) {
   const onSubmitRef = useRef(onSubmit)
   const onCancelRef = useRef(onCancel)
@@ -115,7 +111,7 @@ export function CommentEditor({
   onChangeRef.current = onChange
 
   const editor = useEditor({
-    extensions: createEditorExtensions("note", { placeholder }),
+    extensions: createEditorExtensions("comment", { placeholder }),
     content: bodyToContent(initialBody),
     autofocus: autoFocus,
     immediatelyRender: false,
@@ -164,14 +160,9 @@ export function CommentEditor({
 
   return (
     <div className="flex flex-col w-full max-w-full rounded border border-border-subtle bg-card/30 overflow-hidden">
-      <div className="max-h-[120px] overflow-y-auto w-full">
+      <div className="max-h-[160px] overflow-y-auto w-full">
         <EditorContent editor={editor} />
       </div>
-      {showToolbar && editor && (
-        <div className="comment-toolbar-scroll w-full max-w-full overflow-x-auto overflow-y-hidden border-t border-border">
-          <FixedToolbar editor={editor} position="bottom" tier="note" embedded />
-        </div>
-      )}
     </div>
   )
 }

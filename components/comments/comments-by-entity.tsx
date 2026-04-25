@@ -636,7 +636,6 @@ function CommentRow({
                 setReplying(false)
                 setReplyDraft("")
               }}
-              showToolbar={false}
               className="text-[11px]"
             />
           </div>
