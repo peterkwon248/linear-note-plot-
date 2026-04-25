@@ -4,7 +4,7 @@ import { useEditor, EditorContent } from "@tiptap/react"
 import { useEffect, useRef } from "react"
 import { generateHTML } from "@tiptap/html"
 import { createEditorExtensions, createRenderExtensions } from "@/components/editor/core/shared-editor-config"
-import { CommentToolbar } from "./comment-toolbar"
+import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { cn } from "@/lib/utils"
 
 /* Memoized render-only extensions (used for read mode `generateHTML`). */
@@ -167,7 +167,11 @@ export function CommentEditor({
       <div className="max-h-[120px] overflow-y-auto">
         <EditorContent editor={editor} />
       </div>
-      {showToolbar && editor && <CommentToolbar editor={editor} />}
+      {showToolbar && editor && (
+        <div className="border-t border-border-subtle min-w-0">
+          <FixedToolbar editor={editor} position="bottom" tier="note" />
+        </div>
+      )}
     </div>
   )
 }

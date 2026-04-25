@@ -133,7 +133,7 @@ export function CommentPopover({
       <PopoverContent
         align="start"
         side="bottom"
-        className="w-[480px] p-0"
+        className="w-[560px] p-0"
         collisionPadding={16}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
