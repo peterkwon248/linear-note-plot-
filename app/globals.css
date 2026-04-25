@@ -312,3 +312,19 @@
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* Comment toolbar — always-visible scrollbar so users discover horizontal scroll */
+.comment-toolbar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.comment-toolbar-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.comment-toolbar-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+}
+.comment-toolbar-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.32);
+}

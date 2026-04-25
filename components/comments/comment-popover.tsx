@@ -133,7 +133,7 @@ export function CommentPopover({
       <PopoverContent
         align="start"
         side="bottom"
-        className="w-[560px] p-0"
+        className="w-[560px] p-0 overflow-hidden"
         collisionPadding={16}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
@@ -216,7 +216,7 @@ function CommentList({
 
       {/* Composer */}
       <div className="flex items-stretch gap-2 p-3 border-t border-border-subtle">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <CommentEditor
             key={composerKey}
             initialBody=""
@@ -484,7 +484,7 @@ function CommentItem({
       {/* Reply composer */}
       {replying && (
         <div className="mt-2.5 ml-7 flex items-stretch gap-2">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <CommentEditor
               initialBody=""
               autoFocus

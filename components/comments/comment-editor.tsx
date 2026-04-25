@@ -163,13 +163,13 @@ export function CommentEditor({
   }, [initialBody])
 
   return (
-    <div className="flex flex-col rounded border border-border-subtle overflow-hidden bg-card/30">
-      <div className="max-h-[120px] overflow-y-auto">
+    <div className="flex flex-col w-full max-w-full rounded border border-border-subtle bg-card/30 overflow-hidden">
+      <div className="max-h-[120px] overflow-y-auto w-full">
         <EditorContent editor={editor} />
       </div>
       {showToolbar && editor && (
-        <div className="border-t border-border-subtle min-w-0">
-          <FixedToolbar editor={editor} position="bottom" tier="note" />
+        <div className="comment-toolbar-scroll w-full max-w-full overflow-x-auto overflow-y-hidden border-t border-border">
+          <FixedToolbar editor={editor} position="bottom" tier="note" embedded />
         </div>
       )}
     </div>

@@ -393,7 +393,7 @@ export function CommentsByEntity({
         )}
 
         <div className="flex items-stretch gap-1.5">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <CommentEditor
               key={`composer-${draft === "" ? "empty" : "filled"}`}
               initialBody=""
@@ -620,7 +620,7 @@ function CommentRow({
 
       {replying && (
         <div className="mt-2 ml-5 flex items-stretch gap-1.5">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <CommentEditor
               initialBody=""
               autoFocus
