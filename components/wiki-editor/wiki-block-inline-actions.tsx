@@ -36,7 +36,7 @@ export function WikiBlockInlineActions({
     if (pinned && existing) {
       unpinBookmark(existing.id)
     } else {
-      pinBookmark(articleId, blockId, label || "Block", "block")
+      pinBookmark(articleId, blockId, label || "Block", "block", "wiki")
     }
   }
 

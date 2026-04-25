@@ -301,7 +301,7 @@ export interface PlotState {
   permanentlyDeleteReference: (id: string) => void
 
   // ── Global Bookmarks ──
-  pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType']) => string
+  pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType'], targetKind?: "note" | "wiki") => string
   unpinBookmark: (bookmarkId: string) => void
   updateBookmarkLabel: (bookmarkId: string, label: string) => void
 

@@ -7,18 +7,173 @@ import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
+import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { X } from "@phosphor-icons/react/dist/ssr/X"
 import { extractAnchorsFromContentJson } from "@/lib/anchor-utils"
 import type { GlobalBookmark } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
+/**
+ * Unified Bookmarks panel — shows ALL pinned bookmarks (note + wiki) in one list,
+ * plus context-specific local sections.
+ */
 export function SidePanelBookmarks() {
   const entity = useSidePanelEntity()
 
-  if (entity.type === "wiki") {
-    return <WikiBookmarks />
+  const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const globalBookmarks = usePlotStore((s) => s.globalBookmarks)
+  const pinBookmark = usePlotStore((s) => s.pinBookmark)
+  const unpinBookmark = usePlotStore((s) => s.unpinBookmark)
+
+  const notesById = useMemo(
+    () => Object.fromEntries(notes.map((n) => [n.id, n])),
+    [notes],
+  )
+  const articlesById = useMemo(
+    () => Object.fromEntries(wikiArticles.map((a) => [a.id, a])),
+    [wikiArticles],
+  )
+
+  // Sorted pinned bookmarks (newest first), unified across note + wiki
+  const pinnedList = useMemo(() => {
+    return Object.values(globalBookmarks as Record<string, GlobalBookmark>).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
+  }, [globalBookmarks])
+
+  const navigateToBookmark = (bm: GlobalBookmark) => {
+    const kind = bm.targetKind ?? "note"
+    if (kind === "wiki") {
+      // Open wiki article + scroll
+      const article = articlesById[bm.noteId]
+      if (article) {
+        usePlotStore.getState().setSidePanelContext({ type: "wiki", id: bm.noteId })
+        // Trigger wiki navigation if available
+        if (typeof window !== "undefined") {
+          window.location.hash = `#wiki-block-${bm.anchorId}`
+        }
+      }
+    } else {
+      const openNote = (usePlotStore.getState() as any).openNote
+      if (openNote) openNote(bm.noteId)
+    }
+    setTimeout(() => {
+      const safe = (window as any).CSS?.escape ? CSS.escape(bm.anchorId) : bm.anchorId
+      const el =
+        document.querySelector(`[data-anchor-id="${safe}"]`) ||
+        document.querySelector(`[id="${safe}"]`) ||
+        document.querySelector(`[id="wiki-block-${safe}"]`) ||
+        document.querySelector(`[data-id="${safe}"]`)
+      el?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }, 300)
   }
 
-  return <NoteBookmarks />
+  return (
+    <div className="flex-1 overflow-y-auto">
+      {/* ── PINNED (unified, cross-entity) ─────────────── */}
+      <div className="p-3 border-b border-border">
+        <SectionHeader icon={PushPin} label="PINNED" count={pinnedList.length} />
+        {pinnedList.length === 0 ? (
+          <p className="text-2xs text-muted-foreground/50 italic px-1">
+            No pinned bookmarks yet
+          </p>
+        ) : (
+          <ul className="space-y-0.5">
+            {pinnedList.map((bm) => {
+              const kind = bm.targetKind ?? "note"
+              const target = kind === "wiki" ? articlesById[bm.noteId] : notesById[bm.noteId]
+              const isDeleted = !target || (target as any).trashed
+              const targetTitle = target ? (kind === "wiki" ? (target as any).title : (target as any).title) : null
+              return (
+                <li
+                  key={bm.id}
+                  className="group flex items-start gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
+                  onClick={() => !isDeleted && navigateToBookmark(bm)}
+                >
+                  {kind === "wiki" ? (
+                    <BookOpen
+                      size={12}
+                      weight="fill"
+                      className={cn(
+                        "mt-0.5 flex-shrink-0",
+                        isDeleted ? "text-muted-foreground/30" : "text-amber-400",
+                      )}
+                    />
+                  ) : (
+                    <MapPin
+                      size={12}
+                      weight="fill"
+                      className={cn(
+                        "mt-0.5 flex-shrink-0",
+                        isDeleted ? "text-muted-foreground/30" : "text-accent",
+                      )}
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <span
+                      className={cn(
+                        "text-note block truncate",
+                        isDeleted ? "text-muted-foreground/40" : "text-foreground/80",
+                      )}
+                    >
+                      {bm.label}
+                      {isDeleted && (
+                        <span className="ml-1 text-2xs text-muted-foreground/40">(deleted)</span>
+                      )}
+                    </span>
+                    <span className="flex items-center gap-1 text-2xs text-muted-foreground/50">
+                      <span
+                        className={cn(
+                          "uppercase tracking-wider font-semibold text-[9px]",
+                          kind === "wiki" ? "text-amber-400/70" : "text-accent/70",
+                        )}
+                      >
+                        {kind}
+                      </span>
+                      {!isDeleted && targetTitle && (
+                        <>
+                          <span className="text-muted-foreground/30">·</span>
+                          <span className="truncate">{targetTitle || "Untitled"}</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-hover-bg transition-all flex-shrink-0"
+                    onClick={(ev) => {
+                      ev.stopPropagation()
+                      unpinBookmark(bm.id)
+                    }}
+                    title="Unpin"
+                  >
+                    <X size={11} weight="regular" className="text-muted-foreground/60" />
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+
+      {/* ── Context-specific local sections ────────────── */}
+      {entity.type === "note" && entity.note && (
+        <NoteLocalAnchors
+          note={entity.note}
+          pinnedList={pinnedList}
+          onPin={(anchorId, label, anchorType) =>
+            pinBookmark(entity.note!.id, anchorId, label, anchorType, "note")
+          }
+          onUnpin={unpinBookmark}
+        />
+      )}
+
+      {entity.type === "wiki" && entity.wikiArticle && (
+        <WikiSectionsList article={entity.wikiArticle} />
+      )}
+    </div>
+  )
 }
 
 function SectionHeader({
@@ -39,33 +194,24 @@ function SectionHeader({
   )
 }
 
-function NoteBookmarks() {
-  const entity = useSidePanelEntity()
-  const note = entity.type === "note" ? entity.note : null
+/* ── Note local anchors ───────────────────────── */
 
-  const notesArr = usePlotStore((s) => s.notes)
-  const notesById = useMemo(
-    () => Object.fromEntries(notesArr.map((n) => [n.id, n])),
-    [notesArr]
-  )
-  const globalBookmarks = usePlotStore((s) => s.globalBookmarks)
-  const pinBookmark = usePlotStore((s) => s.pinBookmark)
-  const unpinBookmark = usePlotStore((s) => s.unpinBookmark)
-
-  // Sorted pinned bookmarks, newest first
-  const pinnedList = useMemo(() => {
-    return Object.values(globalBookmarks as Record<string, GlobalBookmark>).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-  }, [globalBookmarks])
-
-  // Local anchors from current note
+function NoteLocalAnchors({
+  note,
+  pinnedList,
+  onPin,
+  onUnpin,
+}: {
+  note: any
+  pinnedList: GlobalBookmark[]
+  onPin: (anchorId: string, label: string, anchorType: GlobalBookmark["anchorType"]) => void
+  onUnpin: (bookmarkId: string) => void
+}) {
   const localAnchors = useMemo(() => {
     if (!note?.contentJson) return []
     return extractAnchorsFromContentJson(note.contentJson)
   }, [note?.contentJson])
 
-  // Build a set of "noteId:anchorId" for quick pinned lookup
   const pinnedSet = useMemo(() => {
     const set = new Set<string>()
     for (const bm of pinnedList) {
@@ -76,7 +222,6 @@ function NoteBookmarks() {
 
   const scrollToAnchor = (anchorId: string) => {
     const safe = (window as any).CSS?.escape ? CSS.escape(anchorId) : anchorId
-    // Try anchor mark/divider first, then heading id, then block UniqueID (for "block" anchorType)
     const el =
       document.querySelector(`[data-anchor-id="${safe}"]`) ||
       document.querySelector(`[id="${safe}"]`) ||
@@ -84,144 +229,59 @@ function NoteBookmarks() {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
   }
 
-  const handlePinClick = (anchorId: string, label: string, anchorType: GlobalBookmark["anchorType"]) => {
-    if (!note) return
-    const key = `${note.id}:${anchorId}`
-    if (pinnedSet.has(key)) {
-      // Unpin — find the bookmark id
-      const existing = pinnedList.find((b) => b.noteId === note.id && b.anchorId === anchorId)
-      if (existing) unpinBookmark(existing.id)
-    } else {
-      pinBookmark(note.id, anchorId, label, anchorType)
-    }
-  }
-
-  if (!note) {
-    return (
-      <div className="p-4 text-muted-foreground text-note">No note selected</div>
-    )
+  if (localAnchors.length === 0) {
+    return null
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      {/* ── PINNED BOOKMARKS (global) ────────────────────── */}
-      <div className="p-3 border-b border-border">
-        <SectionHeader icon={PushPin} label="PINNED" count={pinnedList.length} />
-
-        {pinnedList.length === 0 ? (
-          <p className="text-2xs text-muted-foreground/50 italic px-1">
-            No pinned bookmarks yet
-          </p>
-        ) : (
-          <ul className="space-y-0.5">
-            {pinnedList.map((bm) => {
-              const bmNote = notesById[bm.noteId]
-              const isDeleted = !bmNote || (bmNote as any).trashed
-              return (
-                <li
-                  key={bm.id}
-                  className="group flex items-start gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
-                  onClick={() => {
-                    if (isDeleted) return
-                    usePlotStore.getState().openNote(bm.noteId)
-                    setTimeout(() => scrollToAnchor(bm.anchorId), 300)
-                  }}
-                >
-                  <MapPin
-                    size={12}
-                    weight="fill"
-                    className={`mt-0.5 flex-shrink-0 ${isDeleted ? "text-muted-foreground/30" : "text-accent"}`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <span
-                      className={`text-note block truncate ${
-                        isDeleted ? "text-muted-foreground/40" : "text-foreground/80"
-                      }`}
-                    >
-                      {bm.label}
-                      {isDeleted && (
-                        <span className="ml-1 text-2xs text-muted-foreground/40">(deleted)</span>
-                      )}
-                    </span>
-                    {!isDeleted && bmNote && (
-                      <span className="text-2xs text-muted-foreground/50 block truncate">
-                        {bmNote.title || "Untitled"}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-hover-bg transition-all flex-shrink-0"
-                    onClick={(ev) => {
-                      ev.stopPropagation()
-                      unpinBookmark(bm.id)
-                    }}
-                    title="Unpin"
-                  >
-                    <X size={11} weight="regular" className="text-muted-foreground/60" />
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
-
-      {/* ── THIS NOTE (local) ───────────────────────────── */}
-      <div className="p-3">
-        <SectionHeader icon={BookmarkSimple} label="THIS NOTE" count={localAnchors.length} />
-
-        {localAnchors.length === 0 ? (
-          <p className="text-2xs text-muted-foreground/50 italic px-1">
-            No bookmarks. Use{" "}
-            <kbd className="text-2xs bg-secondary px-1 rounded">/bookmark</kbd> to add one.
-          </p>
-        ) : (
-          <ul className="space-y-0.5">
-            {localAnchors.map((anchor) => {
-              const isPinned = pinnedSet.has(`${note.id}:${anchor.id}`)
-              return (
-                <li
-                  key={anchor.id}
-                  className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
-                  onClick={() => scrollToAnchor(anchor.id)}
-                >
-                  <MapPin
-                    size={12}
-                    weight="fill"
-                    className="text-muted-foreground/50 flex-shrink-0"
-                  />
-                  <span className="text-note text-foreground/80 flex-1 truncate">{anchor.label}</span>
-                  <span className="text-2xs text-muted-foreground/40">
-                    {anchor.type === "divider" ? "divider" : anchor.type === "heading" ? "heading" : "inline"}
-                  </span>
-                  <button
-                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-hover-bg transition-all flex-shrink-0"
-                    onClick={(ev) => {
-                      ev.stopPropagation()
-                      handlePinClick(anchor.id, anchor.label, anchor.type)
-                    }}
-                    title={isPinned ? "Unpin" : "Pin bookmark"}
-                  >
-                    <PushPin
-                      size={12}
-                      weight={isPinned ? "fill" : "regular"}
-                      className={isPinned ? "text-accent" : "text-muted-foreground/60"}
-                    />
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+    <div className="p-3">
+      <SectionHeader icon={BookmarkSimple} label="ANCHORS IN NOTE" count={localAnchors.length} />
+      <ul className="space-y-0.5">
+        {localAnchors.map((anchor) => {
+          const key = `${note.id}:${anchor.id}`
+          const isPinned = pinnedSet.has(key)
+          return (
+            <li
+              key={anchor.id}
+              className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
+              onClick={() => scrollToAnchor(anchor.id)}
+            >
+              {anchor.type === "heading" ? (
+                <TextAlignLeft size={11} weight="regular" className="text-muted-foreground/50 shrink-0" />
+              ) : (
+                <MapPin size={11} weight="regular" className="text-muted-foreground/50 shrink-0" />
+              )}
+              <span className="flex-1 truncate text-note text-foreground/80">{anchor.label}</span>
+              <button
+                className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-hover-bg transition-all"
+                onClick={(ev) => {
+                  ev.stopPropagation()
+                  if (isPinned) {
+                    const existing = pinnedList.find((b) => b.noteId === note.id && b.anchorId === anchor.id)
+                    if (existing) onUnpin(existing.id)
+                  } else {
+                    onPin(anchor.id, anchor.label, anchor.type)
+                  }
+                }}
+                title={isPinned ? "Unpin" : "Pin bookmark"}
+              >
+                <PushPin
+                  size={12}
+                  weight={isPinned ? "fill" : "regular"}
+                  className={isPinned ? "text-accent" : "text-muted-foreground/60"}
+                />
+              </button>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }
 
-function WikiBookmarks() {
-  const entity = useSidePanelEntity()
-  const article = entity.type === "wiki" ? entity.wikiArticle : null
+/* ── Wiki sections (auto outline) ────────────── */
 
+function WikiSectionsList({ article }: { article: any }) {
   const sections = useMemo(() => {
     if (!article?.blocks) return []
     return article.blocks
@@ -234,47 +294,30 @@ function WikiBookmarks() {
       }))
   }, [article])
 
-  if (!article) {
-    return (
-      <div className="p-4 text-muted-foreground text-note">No wiki article selected</div>
-    )
-  }
+  if (sections.length === 0) return null
 
   return (
-    <div className="flex-1 overflow-y-auto p-3">
-      <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-        <TextAlignLeft size={14} weight="regular" />
-        <span className="text-2xs font-semibold uppercase tracking-wider">Sections</span>
-        <span className="text-2xs text-muted-foreground/50">{sections.length}</span>
-      </div>
-
-      {sections.length === 0 ? (
-        <p className="text-2xs text-muted-foreground/50 italic px-1">
-          No sections in this article.
-        </p>
-      ) : (
-        <ul className="space-y-0.5">
-          {sections.map((s: any) => (
-            <li
-              key={s.id}
-              onClick={() => {
-                const el = document.getElementById(`wiki-block-${s.id}`)
-                el?.scrollIntoView({ behavior: "smooth", block: "start" })
-              }}
-              className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
-              style={{ paddingLeft: `${8 + (s.level - 2) * 12}px` }}
-            >
-              <span className="shrink-0 text-2xs font-mono text-muted-foreground/50 w-5 text-right">
-                {s.index}.
-              </span>
-              <span className="text-note text-foreground/80 flex-1 truncate">{s.title}</span>
-              <span className="text-2xs text-muted-foreground/40">
-                H{s.level}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="p-3">
+      <SectionHeader icon={TextAlignLeft} label="SECTIONS" count={sections.length} />
+      <ul className="space-y-0.5">
+        {sections.map((s: any) => (
+          <li
+            key={s.id}
+            onClick={() => {
+              const el = document.getElementById(`wiki-block-${s.id}`)
+              el?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
+            className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-hover-bg transition-colors cursor-pointer"
+            style={{ paddingLeft: `${8 + (s.level - 2) * 12}px` }}
+          >
+            <span className="shrink-0 text-2xs font-mono text-muted-foreground/50 w-5 text-right">
+              {s.index}.
+            </span>
+            <span className="text-note text-foreground/80 flex-1 truncate">{s.title}</span>
+            <span className="text-2xs text-muted-foreground/40">H{s.level}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

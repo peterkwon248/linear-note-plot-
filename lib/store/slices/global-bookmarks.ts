@@ -5,7 +5,7 @@ type Set = (fn: ((state: any) => any) | any) => void
 
 export function createGlobalBookmarksSlice(set: Set) {
   return {
-    pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType']): string => {
+    pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType'], targetKind: "note" | "wiki" = "note"): string => {
       const id = genId()
       const bookmark: GlobalBookmark = {
         id,
@@ -13,6 +13,7 @@ export function createGlobalBookmarksSlice(set: Set) {
         anchorId,
         label,
         anchorType,
+        targetKind,
         createdAt: new Date().toISOString(),
       }
       set((state: any) => ({

@@ -502,10 +502,13 @@ export interface WikiClusterSuggestion {
 
 export interface GlobalBookmark {
   id: string
+  /** Target entity id — noteId for notes, articleId for wiki articles. */
   noteId: string
   anchorId: string
   label: string
   anchorType: "inline" | "divider" | "heading" | "block"
+  /** Target entity kind. Default "note" for backward compat. */
+  targetKind?: "note" | "wiki"
   createdAt: string
 }
 

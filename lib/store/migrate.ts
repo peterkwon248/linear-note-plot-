@@ -820,6 +820,14 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v80: GlobalBookmark.targetKind — backfill existing as "note" (cross-note bookmarks were note-only)
+  if (state.globalBookmarks) {
+    for (const id of Object.keys(state.globalBookmarks as Record<string, any>)) {
+      const b = (state.globalBookmarks as Record<string, any>)[id]
+      if (!b.targetKind) b.targetKind = "note"
+    }
+  }
+
   // v78: Migrate legacy Reflection + Thread → Comment (entity-anchored)
   // Reflections become kind:"note" comments. Threads become kind:"note" comments with parentId for nested replies.
   if (!state.comments) state.comments = {}
