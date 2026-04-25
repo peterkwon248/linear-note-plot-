@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { usePlotStore } from "@/lib/store"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
+import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { cn } from "@/lib/utils"
 
 /**
@@ -44,7 +44,7 @@ export function WikiBlockInlineActions({
     <button
       type="button"
       onClick={togglePin}
-      title={pinned ? "Unpin bookmark" : "Bookmark block"}
+      title={pinned ? "Remove bookmark" : "Add bookmark"}
       className={cn(
         "p-1 rounded-md transition-all duration-100",
         pinned
@@ -53,7 +53,7 @@ export function WikiBlockInlineActions({
         className,
       )}
     >
-      <PushPin size={13} weight={pinned ? "fill" : "regular"} />
+      <BookmarkSimple size={13} weight={pinned ? "fill" : "regular"} />
     </button>
   )
 }

@@ -5,12 +5,12 @@ import { useSidePanelEntity } from "./use-side-panel-entity"
 import { usePlotStore } from "@/lib/store"
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple"
 import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin"
-import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { X } from "@phosphor-icons/react/dist/ssr/X"
 import { extractAnchorsFromContentJson } from "@/lib/anchor-utils"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 import type { GlobalBookmark } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -46,38 +46,37 @@ export function SidePanelBookmarks() {
   const navigateToBookmark = (bm: GlobalBookmark) => {
     const kind = bm.targetKind ?? "note"
     if (kind === "wiki") {
-      // Open wiki article + scroll
-      const article = articlesById[bm.noteId]
-      if (article) {
-        usePlotStore.getState().setSidePanelContext({ type: "wiki", id: bm.noteId })
-        // Trigger wiki navigation if available
-        if (typeof window !== "undefined") {
-          window.location.hash = `#wiki-block-${bm.anchorId}`
-        }
-      }
+      navigateToWikiArticle(bm.noteId)
     } else {
       const openNote = (usePlotStore.getState() as any).openNote
       if (openNote) openNote(bm.noteId)
     }
-    setTimeout(() => {
+    // Wait for navigation/render then scroll
+    const tryScroll = (attempts: number) => {
       const safe = (window as any).CSS?.escape ? CSS.escape(bm.anchorId) : bm.anchorId
       const el =
+        document.querySelector(`[id="wiki-block-${safe}"]`) ||
         document.querySelector(`[data-anchor-id="${safe}"]`) ||
         document.querySelector(`[id="${safe}"]`) ||
-        document.querySelector(`[id="wiki-block-${safe}"]`) ||
         document.querySelector(`[data-id="${safe}"]`)
-      el?.scrollIntoView({ behavior: "smooth", block: "center" })
-    }, 300)
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" })
+        ;(el as HTMLElement).classList.add("ring-2", "ring-accent/50", "rounded")
+        setTimeout(() => (el as HTMLElement).classList.remove("ring-2", "ring-accent/50", "rounded"), 1500)
+      } else if (attempts > 0) {
+        setTimeout(() => tryScroll(attempts - 1), 200)
+      }
+    }
+    setTimeout(() => tryScroll(8), 300)
   }
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {/* ── PINNED (unified, cross-entity) ─────────────── */}
+      {/* ── Unified bookmarks list (cross-entity, no header — tab name is enough) ── */}
       <div className="p-3 border-b border-border">
-        <SectionHeader icon={PushPin} label="PINNED" count={pinnedList.length} />
         {pinnedList.length === 0 ? (
           <p className="text-2xs text-muted-foreground/50 italic px-1">
-            No pinned bookmarks yet
+            No bookmarks yet
           </p>
         ) : (
           <ul className="space-y-0.5">
@@ -263,9 +262,9 @@ function NoteLocalAnchors({
                     onPin(anchor.id, anchor.label, anchor.type)
                   }
                 }}
-                title={isPinned ? "Unpin" : "Pin bookmark"}
+                title={isPinned ? "Remove bookmark" : "Add bookmark"}
               >
-                <PushPin
+                <BookmarkSimple
                   size={12}
                   weight={isPinned ? "fill" : "regular"}
                   className={isPinned ? "text-accent" : "text-muted-foreground/60"}
