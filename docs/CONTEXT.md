@@ -3,7 +3,58 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
-## 🟢 2026-04-23 최신 — Wiki visual polish + PR #215
+## 🟢 2026-04-25 최신 — 코멘트 시스템 대규모 + 사이드패널 통합 + 미니맵
+
+**한 세션 18 커밋 — Plot 코멘트 인프라 구축 + 노트/위키 사이드패널 대칭 통합 + 디자인 폴리시.**
+
+### 새로 추가된 시스템
+
+**Comment 시스템 (신규)**:
+- Linear 스타일 status: Backlog/Todo/Done/Blocker
+- 1단계 답글 (parentId)
+- CommentAnchor 4종: note, note-block, wiki, wiki-block
+- 인라인 진입점: 위키 모든 블록 8종 + 노트 모든 블록 (BlockDragOverlay 패턴)
+- 사이드패널 Activity → CommentsByEntity (블록 + 엔티티 통합)
+- Convert to Note 액션 (코멘트 → inbox 노트로 promote)
+
+**통합 작업**:
+- Activity 통합: ThreadPanel/ReflectionPanel 폐기 → CommentsByEntity 단일
+- Bookmarks 통합: targetKind ("note"|"wiki") + Filter chips + Search
+- Connections 통합: 위키 incoming wikilink 추가
+- Pin → Bookmark 네이밍 통일 (BookmarkSimple 아이콘)
+- Wiki SECTIONS 섹션 제거 (Detail Outline과 중복)
+
+**Navbox 하이브리드** (Wiki 표준 호환):
+- Auto: 카테고리 자동 필터 (편의)
+- Manual: WikiPickerDialog로 직접 선택 (Wikipedia/나무위키 정통)
+- 둘 다 지원, 모드 토글
+
+**미니맵 (Document-level 드롭다운)**:
+- Phosphor 아이콘 통일 (이모지 전부 제거)
+- 블록 타입별 컬러 stripe (note-ref=blue, image=emerald 등)
+- 섹션 = accent 번호 badge (1, 1.1, 2.3.1 — H 아이콘 제거)
+- Plot 디자인 시스템과 일관
+
+### 데이터 모델 변경
+- Store v76 → **v80** (4 마이그레이션 — v77/v78/v79/v80)
+- v77: Comment.status + parentId
+- v78: Reflections/Threads → Comments 마이그레이션
+- v79: status "note" → "backlog"
+- v80: GlobalBookmark.targetKind 백필
+
+### 정책 결정
+- **Comment 본질**: 가벼운 메모. 풀 에디터 툴바 X. 라이트 tier (마크다운 + 위키링크 + 해시태그)
+- **노트/위키 대칭**: 모든 블록에서 인라인 코멘트 가능 (B 옵션 선택)
+- **Pin = Bookmark**: 시각/네이밍 통일
+
+### 다음 방향
+- 미니맵 G 진화 (필요시 — 좌측/우측 영역 항상 보이는 미니맵으로 확장)
+- Connections 상세 (어느 블록/코멘트에서 링크되는지 — 별도 7시간 작업으로 미룸)
+- TipTap 미니 에디터 추가 발전 (필요시)
+
+---
+
+## 🟢 2026-04-23 — Wiki visual polish + PR #215
 
 **PR #215 (2026-04-23, 머지 대기)**:
 - Graph → Ontology rename (5파일)

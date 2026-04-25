@@ -356,6 +356,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
                 key={block.id}
                 block={block}
                 editable={false}
+                articleId={article.id}
                 sectionNumber={num}
                 variant="encyclopedia"
                 onToggleCollapse={() => toggleSection(block.id)}

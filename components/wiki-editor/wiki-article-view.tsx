@@ -562,6 +562,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                   <WikiBlockRenderer
                     block={block}
                     editable={false}
+                    articleId={articleId}
                     sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
                     onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
                     onDelete={() => handleDeleteBlock(block.id)}
@@ -578,6 +579,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                 <WikiBlockRenderer
                   block={block}
                   editable={false}
+                  articleId={articleId}
                   sectionNumber={block.type === "section" ? sectionNumbers.get(block.id) : undefined}
                   onUpdate={(patch) => updateWikiBlock(articleId, block.id, patch)}
                   onDelete={() => handleDeleteBlock(block.id)}

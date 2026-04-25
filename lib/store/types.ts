@@ -1,4 +1,4 @@
-import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, Reflection, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
+import type { Note, NoteBody, Folder, Tag, Label, NoteTemplate, ActiveView, NoteEvent, Thread, AutopilotRule, AutopilotLogEntry, Relation, RelationType, Attachment, CoOccurrence, RelationSuggestion, WikiClusterSuggestion, WikiInfoboxEntry, WikiCollectionItem, SavedView, WikiArticle, WikiBlock, WikiCategory, Reference, GlobalBookmark, Comment, CommentAnchor } from "../types"
 import type { SRSState, SRSRating } from "@/lib/srs"
 import type { ViewState, ViewContextKey } from "../view-engine/types"
 import type { WorkspaceTab } from "../workspace/types"
@@ -83,9 +83,6 @@ export interface PlotState {
   threads: Thread[]
   graphFocusDepth: number
   commandPaletteMode: "commands" | "links"
-
-  // Reflections
-  reflections: Reflection[]
 
   // Relations
   relations: Relation[]
@@ -224,10 +221,7 @@ export interface PlotState {
   setLinkPickerOpen: (open: boolean, sourceId?: string | null) => void
   setPendingWikiAssembly: (noteIds: string[] | null) => void
 
-  // ── Reflections ──
-  addReflection: (noteId: string, text: string) => string
-
-  // ── Thread ──
+  // ── Thread (legacy — used only by command palette quick-step) ──
   startThread: (noteId: string) => string
   addThreadStep: (threadId: string, text: string, parentId?: string | null) => void
   endThread: (threadId: string) => void
@@ -307,13 +301,14 @@ export interface PlotState {
   permanentlyDeleteReference: (id: string) => void
 
   // ── Global Bookmarks ──
-  pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType']) => string
+  pinBookmark: (noteId: string, anchorId: string, label: string, anchorType: GlobalBookmark['anchorType'], targetKind?: "note" | "wiki") => string
   unpinBookmark: (bookmarkId: string) => void
   updateBookmarkLabel: (bookmarkId: string, label: string) => void
 
   // ── Comments ──
-  addComment: (anchor: CommentAnchor, body: string) => string
+  addComment: (anchor: CommentAnchor, body: string, opts?: { parentId?: string; status?: import("../types").CommentStatus }) => string
   updateComment: (commentId: string, body: string) => void
+  setCommentStatus: (commentId: string, status: import("../types").CommentStatus) => void
   toggleCommentResolved: (commentId: string) => void
   deleteComment: (commentId: string) => void
 

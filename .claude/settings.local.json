@@ -144,7 +144,9 @@
       "Bash(grep -oE '\\\\\\\\n  [0-9]+ \\\\|[^\\\\\\\\]{0,100}' \"C:\\\\Users\\\\user\\\\.claude\\\\projects\\\\C--Users-user-Desktop-linear-note-plot---claude-worktrees-practical-kepler-a53649\\\\f7b8a6c8-746d-4e9b-ae13-fbe9ce5d74c2\\\\tool-results\\\\mcp-Claude_Preview-preview_console_logs-1777002641162.txt\")",
       "Bash(python3 -c ' *)",
       "Bash(cp \"C:/Users/user/.claude/.omc-worklog/latest.md\" \"C:/Users/user/.claude/.omc-worklog/2026-04-24_1500.md\")",
-      "Bash(cp \"C:/Users/user/.claude/.omc-worklog/latest.md\" \".omc/worklog/latest.md\")"
+      "Bash(cp \"C:/Users/user/.claude/.omc-worklog/latest.md\" \".omc/worklog/latest.md\")",
+      "Bash(cp \".omc/worklog/latest.md\" \"C:/Users/user/.claude/.omc-worklog/latest.md\")",
+      "Bash(cp \".omc/worklog/latest.md\" \"C:/Users/user/.claude/.omc-worklog/2026-04-25_1700.md\")"
     ]
   }
 }

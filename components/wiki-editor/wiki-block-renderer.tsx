@@ -9,6 +9,8 @@ import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { useWikiBlockContent, useWikiBlockContentJson } from "@/hooks/use-wiki-block-content"
 import { NavboxBlock } from "./navbox-block"
 import { NavigationBlock } from "./navigation-block"
+import { WikiBlockInlineActions } from "./wiki-block-inline-actions"
+import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
 import { useEditor, EditorContent } from "@tiptap/react"
 import { createEditorExtensions, createRenderExtensions } from "@/components/editor/core/shared-editor-config"
 import { generateHTML } from "@tiptap/html"
@@ -79,17 +81,17 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
     case "section":
       return <SectionBlock block={block} editable={editable} sectionNumber={sectionNumber} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} onSplitSection={onSplitSection} onMoveToArticle={onMoveToArticle} variant={variant} onToggleCollapse={onToggleCollapse} collapsed={collapsed} />
     case "text":
-      return <TextBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} footnoteStartOffset={footnoteStartOffset} onFootnoteCount={onFootnoteCount} />
+      return <TextBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} footnoteStartOffset={footnoteStartOffset} onFootnoteCount={onFootnoteCount} />
     case "note-ref":
-      return <NoteRefBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+      return <NoteRefBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "image":
-      return <ImageBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+      return <ImageBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "url":
-      return <UrlBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+      return <UrlBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "table":
-      return <TableBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+      return <TableBlock block={block} editable={editable} onUpdate={onUpdate} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "navbox":
-      return <NavboxBlock block={block} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+      return <NavboxBlock block={block} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "nav":
       return <NavigationBlock block={block} articleId={articleId} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     default:
@@ -151,7 +153,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
   const isEnc = variant === "encyclopedia"
 
   return (
-    <div className="group/section" style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}>
+    <div className="group/section relative" style={fontScale !== 1 ? { fontSize: `${fontScale}em` } : undefined}>
       <div className={cn(
         "flex items-center gap-1",
         isEnc ? "mt-10 mb-4 border-b border-white/[0.08] pb-1.5 gap-2" : "mt-8 mb-2",
@@ -227,6 +229,23 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
           >
             Unmerge
           </button>
+        )}
+
+        {/* Always-visible comment marker (right side) */}
+        {articleId && (
+          <BlockCommentMarker
+            anchor={{ kind: "wiki-block", articleId, blockId: block.id }}
+            className="ml-auto"
+          />
+        )}
+
+        {/* Inline actions: comment + bookmark (hover) */}
+        {articleId && (
+          <WikiBlockInlineActions
+            articleId={articleId}
+            blockId={block.id}
+            label={block.title || "Section"}
+          />
         )}
 
         {/* Section actions menu — shown on hover in edit mode */}
@@ -391,7 +410,7 @@ function countFootnoteRefsInJson(json: Record<string, unknown> | null | undefine
   return count
 }
 
-function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footnoteStartOffset, onFootnoteCount }: WikiBlockRendererProps) {
+function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articleId, footnoteStartOffset, onFootnoteCount }: WikiBlockRendererProps) {
   const { content, contentJson, loading } = useWikiBlockContentJson(block.id, block.content, block.contentJson)
   const [editing, setEditing] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -473,17 +492,28 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footn
         </div>
       )}
 
-      {/* Block actions menu */}
-      {editable && (
-        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-          <PopoverTrigger asChild>
-            <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-              className="absolute right-1 top-1 opacity-0 group-hover/text:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
-            >
-              <DotsThree size={14} weight="bold" />
-            </button>
-          </PopoverTrigger>
+      {/* Right-side actions cluster: [marker] [bookmark] [⋯] — outside block boundary in right gutter */}
+      <div className="absolute left-full top-1 ml-2 z-10 flex items-center gap-0.5">
+        {articleId && (
+          <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} />
+        )}
+        {articleId && (
+          <WikiBlockInlineActions
+            articleId={articleId}
+            blockId={block.id}
+            label="Text block"
+          />
+        )}
+        {editable && (
+          <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+            <PopoverTrigger asChild>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
+                className="opacity-0 group-hover/text:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
+              >
+                <DotsThree size={14} weight="bold" />
+              </button>
+            </PopoverTrigger>
           <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
             <div className="px-2.5 py-1.5">
               <span className="text-2xs text-muted-foreground/50">Size</span>
@@ -532,7 +562,8 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, footn
             )}
           </PopoverContent>
         </Popover>
-      )}
+        )}
+      </div>
 
       {editing && !loading ? (
         <WikiTextEditor
@@ -715,7 +746,7 @@ function WikiTextEditor({
 
 /* ── Note Reference Block ── */
 
-function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articleId }: WikiBlockRendererProps) {
   const notes = usePlotStore((s) => s.notes)
   const note = useMemo(() => notes.find((n) => n.id === block.noteId), [notes, block.noteId])
   const [picking, setPicking] = useState(!block.noteId) // auto-open picker if no note selected
@@ -849,13 +880,20 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
         </div>
       )}
 
-      {/* Block actions menu */}
-      {editable && (
+      {/* Right-side actions cluster: [marker] [bookmark] [⋯] */}
+      <div className="absolute left-full top-1 ml-2 z-10 flex items-center gap-0.5">
+        {articleId && (
+          <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} />
+        )}
+        {articleId && (
+          <WikiBlockInlineActions articleId={articleId} blockId={block.id} label={note?.title || "Note"} />
+        )}
+        {editable && (
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
           <PopoverTrigger asChild>
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-              className="absolute right-2 top-2 opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+              className="opacity-0 group-hover/noteref:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
             >
               <DotsThree size={14} weight="bold" />
             </button>
@@ -889,7 +927,8 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
             )}
           </PopoverContent>
         </Popover>
-      )}
+        )}
+      </div>
 
       <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-2">
         <FileText className="text-accent/60" size={14} weight="regular" />
@@ -914,7 +953,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: 
 
 /* ── Image Block ── */
 
-function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articleId }: WikiBlockRendererProps) {
   const src = block.attachmentId ? `attachment://${block.attachmentId}` : ""
   const { url, loading } = useAttachmentUrl(src)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -997,6 +1036,14 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
           <button className="p-0.5 text-muted-foreground cursor-grab" {...(dragHandleProps ?? {})}>
             <DotsSixVertical size={14} weight="regular" />
           </button>
+        </div>
+      )}
+
+      {/* Right-side actions cluster (outside boundary): [marker] [bookmark] */}
+      {articleId && (
+        <div className="absolute left-full top-1 ml-2 z-10 flex items-center gap-0.5">
+          <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} />
+          <WikiBlockInlineActions articleId={articleId} blockId={block.id} label="Image" />
         </div>
       )}
 
@@ -1130,7 +1177,7 @@ function getYoutubeVideoId(url: string): string | null {
   return match ? match[1] : null
 }
 
-function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articleId }: WikiBlockRendererProps) {
   const [editing, setEditing] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [editUrl, setEditUrl] = useState(block.url || "")
@@ -1231,13 +1278,20 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
         </div>
       )}
 
-      {/* Block actions menu */}
-      {editable && (
+      {/* Right-side actions cluster: [marker] [bookmark] [⋯] */}
+      <div className="absolute left-full top-1 ml-2 z-10 flex items-center gap-0.5">
+        {articleId && (
+          <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} />
+        )}
+        {articleId && (
+          <WikiBlockInlineActions articleId={articleId} blockId={block.id} label={block.url || "Link"} />
+        )}
+        {editable && (
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
           <PopoverTrigger asChild>
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-              className="absolute right-1 top-1 opacity-0 group-hover/url:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+              className="opacity-0 group-hover/url:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
             >
               <DotsThree size={14} weight="bold" />
             </button>
@@ -1264,7 +1318,8 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
             )}
           </PopoverContent>
         </Popover>
-      )}
+        )}
+      </div>
 
       {youtubeId ? (
         <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-white/[0.08]">
@@ -1297,7 +1352,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wiki
 
 /* ── Table Block ── */
 
-function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: WikiBlockRendererProps) {
+function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articleId }: WikiBlockRendererProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const headers = block.tableHeaders ?? []
   const rows = block.tableRows ?? []
@@ -1327,13 +1382,20 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
         </div>
       )}
 
-      {/* Menu on right */}
-      {editable && (
+      {/* Right-side actions cluster: [marker] [bookmark] [⋯] */}
+      <div className="absolute left-full top-1 ml-2 z-10 flex items-center gap-0.5">
+        {articleId && (
+          <BlockCommentMarker anchor={{ kind: "wiki-block", articleId, blockId: block.id }} />
+        )}
+        {articleId && (
+          <WikiBlockInlineActions articleId={articleId} blockId={block.id} label="Table" />
+        )}
+        {editable && (
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
           <PopoverTrigger asChild>
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-              className="absolute right-1 top-1 opacity-0 group-hover/table:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100 z-10"
+              className="opacity-0 group-hover/table:opacity-30 hover:!opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all duration-100"
             >
               <DotsThree size={14} weight="bold" />
             </button>
@@ -1377,7 +1439,8 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps }: Wi
             )}
           </PopoverContent>
         </Popover>
-      )}
+        )}
+      </div>
 
       <figure className="my-2">
         {/* Caption */}

@@ -238,7 +238,7 @@ const TypewriterExtension = Extension.create<{
 
 // ── Types ────────────────────────────────────────────────────────────
 
-export type EditorTier = "base" | "note" | "wiki" | "template" | "footnote"
+export type EditorTier = "base" | "note" | "wiki" | "template" | "footnote" | "comment"
 
 export interface EditorConfigOptions {
   placeholder?: string
@@ -891,6 +891,33 @@ export function createEditorExtensions(
         Underline as Extension,
         Placeholder.configure({ placeholder: placeholderText }) as Extension,
       ]
+    }
+
+    case "comment": {
+      // Lightweight tier for comment bodies — markdown-ish formatting + wikilinks.
+      // Excludes headings, code blocks, horizontal rule, and full mention (kept simple).
+      const placeholderText = options?.placeholder ?? "Add comment…"
+      const commentExts: Extension[] = [
+        StarterKit.configure({
+          heading: false,
+          horizontalRule: false,
+          codeBlock: false,
+          dropcursor: false,
+          gapcursor: false,
+        }) as Extension,
+        Link.configure({
+          openOnClick: false,
+          HTMLAttributes: { class: "comment-link text-accent underline" },
+        }) as Extension,
+        Underline as Extension,
+        Highlight.configure({ multicolor: false }) as Extension,
+        Placeholder.configure({ placeholder: placeholderText }) as Extension,
+        WikilinkSuggestion as Extension,
+        WikilinkNode as Extension,
+        WikilinkInteractionExtension as Extension,
+        HashtagSuggestion as Extension,
+      ]
+      return commentExts
     }
   }
 }

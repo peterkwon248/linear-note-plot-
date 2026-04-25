@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { NoteEvent, AutopilotLogEntry, Relation, Reflection } from "../types"
+import type { NoteEvent, AutopilotLogEntry, Relation } from "../types"
 import type { Attachment, CoOccurrence, RelationSuggestion } from "../types"
 import type { SRSState } from "@/lib/srs"
 import { buildDefaultViewStates } from "../view-engine/defaults"
@@ -23,7 +23,6 @@ import { createEditorSlice } from "./slices/editor"
 import { createWorkspaceSlice } from "./slices/workspace"
 import { createAttachmentsSlice } from "./slices/attachments"
 import { createOntologySlice } from "./slices/ontology"
-import { createReflectionsSlice } from "./slices/reflections"
 import { createWikiCollectionsSlice } from "./slices/wiki-collections"
 import { createSavedViewsSlice } from "./slices/saved-views"
 import { createWikiArticlesSlice } from "./slices/wiki-articles"
@@ -73,7 +72,6 @@ export const usePlotStore = create<PlotState>()(
         threads: [],
         graphFocusDepth: 0,
         commandPaletteMode: "commands" as const,
-        reflections: [] as Reflection[],
         relations: [] as Relation[],
         attachments: [] as Attachment[],
         coOccurrences: [] as CoOccurrence[],
@@ -116,7 +114,6 @@ export const usePlotStore = create<PlotState>()(
         ...createWorkspaceSlice(set, get),
         ...createAttachmentsSlice(set, get, appendEvent),
         ...createOntologySlice(set, get, appendEvent),
-        ...createReflectionsSlice(set, get, appendEvent),
         ...createWikiCollectionsSlice(set, get),
         ...createSavedViewsSlice(set),
         ...createWikiCategoriesSlice(set, get),
@@ -242,7 +239,7 @@ export const usePlotStore = create<PlotState>()(
     },
     {
       name: "plot-store",
-      version: 76,
+      version: 80,
       storage: createIDBStorage<PlotState>(),
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -80,6 +80,12 @@ interface FixedToolbarProps {
    * visually distinct from the main editor toolbar when both are on screen.
    */
   variant?: 'default' | 'peek'
+  /**
+   * If true, disables the toolbar's own sticky positioning + overflow-x-auto so the
+   * caller can wrap it in a custom scroll container (e.g., comment popover).
+   * Default false (full main-editor behavior).
+   */
+  embedded?: boolean
 }
 
 function HeadingDropdown({ editor }: { editor: Editor }) {
@@ -529,7 +535,7 @@ function OverflowGrid({ editor, editorState, isVisible, handleSetLink, handleAli
   )
 }
 
-export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, noteId, tier = 'note', variant = 'default' }: FixedToolbarProps) {
+export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, noteId, tier = 'note', variant = 'default', embedded = false }: FixedToolbarProps) {
   const toolbarLayout = useSettingsStore((s) => s.toolbarLayout)
   const [arrangeOpen, setArrangeOpen] = useState(false)
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
@@ -630,9 +636,9 @@ export function FixedToolbar({ editor, position = 'bottom', onTogglePosition, no
   const isPeek = variant === 'peek'
   return (
     <div
-      className={`shrink-0 sticky bottom-0 z-10 h-14 flex items-center gap-0.5 px-3 overflow-x-auto overflow-y-hidden min-w-0 ${
+      className={`shrink-0 ${embedded ? '' : 'sticky bottom-0 z-10 overflow-x-auto overflow-y-hidden min-w-0'} h-14 flex items-center gap-0.5 px-3 ${
         position === 'top' ? 'border-b border-border' : 'border-t border-border'
-      } ${isPeek ? 'bg-wiki-complete/[0.06]' : 'bg-background'}`}
+      } ${isPeek ? 'bg-wiki-complete/[0.06]' : 'bg-background'} ${embedded ? 'w-max' : ''}`}
     >
       {isVisible("insert") && (
         <ToolbarGroup>

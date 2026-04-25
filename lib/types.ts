@@ -115,8 +115,12 @@ export interface WikiBlock {
   editorWidth?: number | null
   /** Text: editor height in edit mode (px). Null = auto height */
   editorHeight?: number | null
-  /** Navbox: target category id. Navbox lists all articles assigned to this category. */
+  /** Navbox mode: "category" auto-pulls from a category, "manual" uses curated list. Default "category". */
+  navboxMode?: "category" | "manual"
+  /** Navbox (category mode): target category id. */
   navboxCategoryId?: string
+  /** Navbox (manual mode): explicit article id list, in display order (Wiki convention). */
+  navboxArticleIds?: string[]
   /** Navbox: optional custom title override. If omitted, category name is used. */
   navboxTitle?: string
   /** Navbox: grid columns for articles (3-6, default 4) */
@@ -439,15 +443,6 @@ export interface Thread {
   status: "active" | "done"
 }
 
-/* ── Phase 2: Reflection ───────────────────────────── */
-
-export interface Reflection {
-  id: string
-  noteId: string
-  text: string
-  createdAt: string
-}
-
 /* ── Relations ─────────────────────────────────────── */
 
 export type RelationType = "related-to" | "inspired-by" | "contradicts" | "extends" | "depends-on"
@@ -511,10 +506,13 @@ export interface WikiClusterSuggestion {
 
 export interface GlobalBookmark {
   id: string
+  /** Target entity id — noteId for notes, articleId for wiki articles. */
   noteId: string
   anchorId: string
   label: string
-  anchorType: "inline" | "divider" | "heading"
+  anchorType: "inline" | "divider" | "heading" | "block"
+  /** Target entity kind. Default "note" for backward compat. */
+  targetKind?: "note" | "wiki"
   createdAt: string
 }
 
@@ -522,11 +520,17 @@ export interface GlobalBookmark {
 
 /**
  * Target anchor for a comment — polymorphic across Note and Wiki.
- * Phase 1 supports block-level only. Range-level comments deferred to Phase 2.
+ * - "block" anchors target a specific block within an entity
+ * - "entity" anchors (note/wiki) target the document as a whole (replaces legacy Reflection/Thread)
  */
 export type CommentAnchor =
   | { kind: "wiki-block"; articleId: string; blockId: string }
   | { kind: "note-block"; noteId: string; nodeId: string }
+  | { kind: "wiki"; articleId: string }
+  | { kind: "note"; noteId: string }
+
+/** Linear-style status for a comment. Default "backlog" = not yet actioned. */
+export type CommentStatus = "backlog" | "todo" | "done" | "blocker"
 
 /** Single comment attached to a block (wiki) or ProseMirror top-level node (note). */
 export interface Comment {
@@ -535,5 +539,9 @@ export interface Comment {
   body: string
   createdAt: string
   updatedAt: string
-  resolved: boolean
+  status: CommentStatus
+  /** Optional 1-level threaded reply parent. */
+  parentId?: string
+  /** Deprecated — kept for migration compatibility. Mirrors `status === "done"`. */
+  resolved?: boolean
 }

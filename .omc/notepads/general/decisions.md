@@ -66,3 +66,40 @@
 - WikiSplitPage 패턴 그대로 (`components/views/wiki-split-page.tsx` 502줄 복사)
 - 2-column Original/New + 체크박스 + Shift+Click 범위 선택 + Title 입력
 - 사용자 명시 요청
+
+
+## 2026-04-25 — 코멘트 시스템 대규모 결정사항
+
+### Comment 본질 = 가벼운 메모
+- 풀 에디터 툴바 X. 라이트 TipTap "comment" tier만
+- 마크다운 단축키 + `[[wikilinks]]` + `#hashtag`로 충분
+- 노트/위키는 풀 에디터 (상세 작성 필요), 코멘트는 가볍게 — 역할 분리
+
+### 노트/위키 대칭 (B 옵션)
+- 모든 블록에서 인라인 코멘트 가능
+- 위키 모든 블록 8종에 cluster (section/text/note-ref/image/url/table/navbox/navigation)
+- 노트는 BlockDragOverlay 패턴으로 ProseMirror 블록 위 absolute overlay
+
+### Linear 스타일 status
+- Backlog (CircleDashed) / Todo (Circle, blue) / Done (CheckCircle, green) / Blocker (Warning, red)
+- 4개 고정. 사용자 커스터마이징 X (단순성 유지)
+
+### Pin = Bookmark 통일
+- `PushPin` → `BookmarkSimple` 아이콘 (시각 통일)
+- 사이드패널 PINNED 헤더 제거 (탭 이름 "Bookmarks"와 중복)
+- 내부 함수명 `pinBookmark`/`unpinBookmark`는 유지 (호출 site 많음 — 별도 리팩터)
+
+### Navbox 하이브리드 (Wiki 표준 호환)
+- 리서치 결과: Wikipedia/나무위키 모두 100% 수동 큐레이션이 표준
+- Plot은 Auto(편의) + Manual(표준) 둘 다 지원
+- `navboxMode: "category" | "manual"` + `navboxArticleIds[]` 필드
+
+### 미니맵 디자인 (Option F + G)
+- F: 코드 전체 Phosphor 아이콘 일관성 (이모지 전부 제거)
+- G: 시각적 구조 표현 (블록 타입별 컬러 stripe)
+- 섹션 번호 badge (1, 1.1, 1.2): H 아이콘 대체 + 본문 article과 일치
+
+### 사이드패널 통합 원칙
+- Activity: 코멘트 단일 시스템 (Thread/Reflection 폐기)
+- Bookmarks: 모든 핀 한 곳에 (note + wiki targetKind)
+- Connections: 양방향 backlinks (위키 incoming wikilink 추가)

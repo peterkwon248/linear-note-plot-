@@ -149,6 +149,15 @@ function WikiArticleConnections() {
     )
   }, [articleId, wikiArticles])
 
+  // Notes that wikilink to this article (matches title or aliases)
+  const linkingNotes = useMemo(() => {
+    if (!article) return []
+    const targetTitles = [article.title.toLowerCase(), ...((article.aliases as string[] | undefined) ?? []).map((a) => a.toLowerCase())]
+    return notes.filter(
+      (n) => !n.trashed && n.linksOut?.some((l: string) => targetTitles.includes(l)),
+    )
+  }, [article, notes])
+
   if (!article) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-center">
@@ -159,7 +168,7 @@ function WikiArticleConnections() {
     )
   }
 
-  const totalCount = referencedNotes.length + referencedBy.length
+  const totalCount = referencedNotes.length + referencedBy.length + linkingNotes.length
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -194,7 +203,7 @@ function WikiArticleConnections() {
 
             {referencedBy.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Referenced By</SubLabel>
+                <SubLabel>Referenced By (Wiki)</SubLabel>
                 {referencedBy.map((a) => (
                   <button
                     key={a.id}
@@ -204,6 +213,23 @@ function WikiArticleConnections() {
                     <DirArrow dir="in" />
                     <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
                     <span className="truncate">{a.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {linkingNotes.length > 0 && (
+              <div className="space-y-0.5">
+                <SubLabel>Linked from Notes</SubLabel>
+                {linkingNotes.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => openInSecondary(n.id)}
+                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
+                  >
+                    <DirArrow dir="in" />
+                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
+                    <span className="truncate">{n.title || "Untitled"}</span>
                   </button>
                 ))}
               </div>

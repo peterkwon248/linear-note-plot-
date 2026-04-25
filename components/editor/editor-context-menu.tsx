@@ -4,6 +4,7 @@ import { useState, useCallback } from "react"
 import * as ContextMenu from "@radix-ui/react-context-menu"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import type { Editor } from "@tiptap/react"
+import { usePlotStore } from "@/lib/store"
 import {
   indentCommand,
   outdentCommand,
@@ -266,6 +267,28 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
       .run()
   }
 
+  /** Get current top-level block id + label (for bookmark/comment anchors). */
+  function getCurrentBlockTarget(): { id: string; label: string } | null {
+    if (!editor) return null
+    const { $from } = editor.state.selection
+    // Walk up to top-level block (depth 1)
+    if ($from.depth < 1) return null
+    const blockNode = $from.node(1)
+    const id = blockNode.attrs?.id
+    if (!id) return null
+    const text = blockNode.textContent?.trim() || ""
+    const label = text.slice(0, 60) || (blockNode.type.name === "paragraph" ? "Paragraph" : blockNode.type.name)
+    return { id, label }
+  }
+
+  function bookmarkBlock() {
+    const target = getCurrentBlockTarget()
+    if (!target) return
+    const noteId = usePlotStore.getState().selectedNoteId
+    if (!noteId) return
+    usePlotStore.getState().pinBookmark(noteId, target.id, target.label, "block")
+  }
+
   function addToToc() {
     if (!editor) return
     const { from, to } = editor.state.selection
@@ -459,6 +482,13 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
               >
                 <TextAlignLeft size={14} />
                 Add to TOC
+              </ContextMenu.Item>
+              <ContextMenu.Item
+                className={itemCls}
+                onSelect={bookmarkBlock}
+              >
+                <BookmarkSimple size={14} />
+                Bookmark Block
               </ContextMenu.Item>
             </>
           )}

@@ -1,5 +1,89 @@
 # Plot Project Memory
 
+## 🟢 2026-04-25 세션 — 코멘트 시스템 대규모 작업 + 통합 + 미니맵 (최우선 읽기)
+
+**한 세션 18 커밋 — Plot 코멘트 인프라 전체 구축 + 사이드패널 통합 + 디자인 폴리시.**
+
+### Phase 1: Comment 데이터 모델 (v77~v79)
+- `Comment.status: "backlog" | "todo" | "done" | "blocker"` (Linear 스타일)
+- `Comment.parentId` (1단계 답글 / threaded reply)
+- `CommentAnchor` 4 종: `note`, `note-block`, `wiki`, `wiki-block`
+- v77: status + parentId 필드, v78: Reflection/Thread → Comment 마이그레이션, v79: "note" → "backlog" 리네임
+
+### Phase 2: 코멘트 UI 시스템
+- **`CommentPopover`** (인라인 트리거): 위키 블록 옆 호버 → 클릭 시 popover (560px, w/ overflow-hidden 클립)
+- **`CommentsByEntity`** (사이드패널 Activity 탭): 엔티티의 모든 코멘트 한 곳 — block + entity-level 통합
+- **`CommentEditor`** (TipTap "comment" tier — 라이트): `[[wikilinks]]` + `#tags` + 마크다운 단축키. 툴바 X (코멘트는 가벼운 메모라는 사용자 결정)
+- **`CommentBodyDisplay`**: read-only 렌더 (JSON or plain text 둘 다)
+- **`StatusPicker`**: portal 기반 (z-[10011], 부모 popover 오버플로우 영향 X)
+- **`MoreMenu`**: ⋯ — Reply primary, Convert to Note + Delete inside
+
+### Phase 3: 블록 마커 + 인라인 진입점
+- **`BlockCommentMarker`**: 블록 우측에 항상 보이는 말풍선 + status dot + 갯수. 클릭 시 popover trigger 역할
+- **`use-block-comment-status.ts`**: `useBlockCommentStatus(anchor)` + `useCommentStatusByBlockId(blockId)`
+- **위키 모든 블록 8종 대칭**: section/text/note-ref/image/url/table/navbox/navigation 모두 인라인 [💬 마커] [🔖 북마크] [⋯ 메뉴] cluster (left-full top-1 ml-2 거터)
+- **`NoteCommentMarkerLayer`**: ProseMirror 블록 위 absolute overlay → 노트 본문 어디든 인라인 코멘트 (BlockDragOverlay 패턴)
+
+### Phase 4: 통합
+- **Activity 통합**: ThreadPanel/ReflectionPanel 폐기 → `CommentsByEntity` 단일 컴포넌트 (note + wiki 공용). `lib/store/slices/reflections.ts` 삭제
+- **Bookmarks 통합**: `GlobalBookmark.targetKind: "note" | "wiki"` (v80 migration). 사이드패널 Bookmarks 탭 = 모든 핀 통합 표시 + Filter chips ([All/Notes/Wiki]) + Search input. SECTIONS 섹션 제거 (Detail Outline과 중복)
+- **Connections 통합**: 위키에 `linkingNotes` 추가 (linksOut 기반 backlinks)
+- **Pin → Bookmark 네이밍 통일**: `PushPin` → `BookmarkSimple` 아이콘. 사이드패널 PINNED 헤더 제거 (탭 이름과 중복)
+
+### Phase 5: 위키 블록 + Navbox
+- **Navbox 하이브리드** (Wiki 표준 호환): Auto/Manual 모드 토글
+  - Auto: 카테고리 자동 필터 (기존)
+  - Manual: WikiPickerDialog로 article 직접 선택 (Wikipedia/나무위키 표준)
+  - Wiki 리서치 결과: Navbox는 100% 수동 큐레이션이 표준 — Plot은 둘 다 지원
+- 모든 블록 cluster overflow-hidden 잘림 버그 수정 (wrapper 분리)
+
+### Phase 6: 코멘트 composer 디자인 폴리시
+- 본문 article 섹션 번호와 일치하는 미니맵 (Option F + G):
+  - Phosphor 아이콘 통일 (이모지 전부 제거: 📄📝📎🖼️🔗📊🗺️🧭)
+  - 블록 타입별 컬러 stripe (note-ref=blue, image=emerald, url=cyan, table=purple, navbox/nav=amber, callout=yellow, code=pink)
+  - 섹션 = accent 색깔 번호 badge ("1", "1.1", "2.3.1") — H 아이콘 제거
+  - 섹션 사이 separator + font-semibold visual 강조
+- TipTap 툴바 시도 (note tier + FixedToolbar) → 사용자 피드백으로 라이트 코멘트 tier로 롤백
+
+### TOC entry 코멘트 배지
+- TOC 항목에 코멘트 갯수 배지 (`useCommentStatusByBlockId` 활용)
+- 코멘트 있는 블록을 가리키는 TOC entry 즉시 인지
+
+### 활동 바 + 클릭 네비게이션
+- Activity Bar Wiki 아이콘 `IconWiki` → `BookOpen` (Notes와 시각 구분)
+- Wiki 북마크 클릭 시 `setActiveRoute("/wiki")` + `navigateToWikiArticle()` (이전엔 `window.location.hash`만 변경되어 안 됐음)
+- 8회 retry scroll + ring-2 highlight (1.5s)
+
+**커밋 18개:**
+1. session: TOC 세로선 제거 + comments/bookmarks WIP
+2. feat(comments): Linear status + threaded + Activity 통합
+3. feat(comments): 노트 인라인 마커 + 레거시 정리 + Note→Backlog
+4. feat: Bookmarks + Connections 통합
+5. feat(comments): TOC entry 코멘트 배지 + 통합 마무리
+6. feat: Bookmark 네이밍 통일 + 노트 인라인 북마크
+7. feat(bookmarks): 모든 위키 블록 cluster + Filter chips + Search
+8. feat(navbox): Auto/Manual 하이브리드
+9. feat(comments): TipTap 미니 에디터 통합
+10. fix(comments): 풀 에디터 + 폭 조정 + 본문 스크롤
+11. fix(comments): 컴팩트 툴바
+12. fix(comments): 풀 FixedToolbar 복원
+13. fix(comments): 툴바 가로 스크롤 작동
+14. revert(comments): 풀 툴바 롤백 — 라이트 유지
+15. refactor(comments): document-level 드롭다운 Phosphor 통일
+16. feat(comments): document-level 드롭다운 미니맵 (Option G)
+17. feat(comments): 미니맵 섹션 번호 (1, 1.1, 1.2)
+
+**핵심 정책 결정**:
+- Comment 본질: 가벼운 메모. 풀 에디터 툴바 X. 마크다운 단축키 + 위키링크 + 해시태그로 충분
+- Linear 스타일 status: Backlog/Todo/Done/Blocker (Linear 정통 영감)
+- Pin = Bookmark (네이밍 통일, 시각 통일 BookmarkSimple)
+- Navbox: 자동(편의) + 수동(Wiki 표준) 둘 다 (하이브리드)
+- 미니맵: 코드 아이콘 일관 (F) + 시각적 구조 표현 (G)
+
+**스토어 v80 (이전 v76)**.
+
+---
+
 ## 🟢 2026-04-24 세션 — TOC 비주얼 폴리시 + contentBlock Enter 조사
 
 **TOC gutter 번호 계층 시각화 최종 결정**:

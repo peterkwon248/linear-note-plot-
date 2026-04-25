@@ -62,3 +62,66 @@
 - `/after-work` 슬래시 커맨드 = expand된 프롬프트 전달
 - Skill tool 재호출해도 같은 프롬프트 반복
 - 실행 주체는 Claude. Skill = 프롬프트 템플릿 + command mapping 인프라
+
+
+## 2026-04-25 — 코멘트 + 사이드패널 작업 학습
+
+### Flex 자식 contents-driven 확장 (자주 발생)
+**증상**: `flex-1` 자식이 contents 따라 부모 폭을 1400px+로 확장
+**원인**: flex item 기본 `min-width: auto` — contents 사이즈 이하로 못 줄임
+**해결**: 자식에 `min-w-0` 추가 → contents 무시하고 flex 분배만 따름
+**주의**: popover/dropdown 안에서 toolbar overflow 잘림 = 거의 항상 이 원인
+
+### Radix PopoverContent 기본 overflow
+- 기본값: `overflow: visible` → 자식 내용이 popover 경계 밖으로 빠져나갈 수 있음
+- 컴팩트 popover에서 자식 toolbar 등이 클립 안 됨
+- **해결**: `className="overflow-hidden"` 명시
+
+### 글로벌 scrollbar-color (전역 영향)
+- `globals.css`에서 `*` 셀렉터로 `scrollbar-color: rgba(0,0,0,0)` 적용 중
+- 어떤 곳에서든 스크롤바가 시각적으로 안 보임 (hover 시에만 흐릿하게)
+- **명시적 색깔 필요한 경우**: 별도 CSS 클래스 + WebKit + Firefox 둘 다
+
+### FixedToolbar 임베드 패턴
+- `FixedToolbar`는 sticky bottom-0 + overflow-x-auto 자체 보유
+- 좁은 컨테이너에 그대로 넣으면 자체 overflow가 외곽 스크롤을 무력화
+- **해결**: `embedded` prop 추가 — 자체 sticky/overflow 비활성화 + `w-max` (contents 너비)
+- 외곽 wrapper가 진짜 스크롤 컨테이너 역할
+
+### Wiki Navbox 표준 (리서치)
+- Wikipedia/나무위키 둘 다 100% **수동 큐레이션**
+- 카테고리 자동 필터는 비표준 (Plot 기존 구현)
+- 둘 다 지원하는 하이브리드가 정답
+
+### TipTap "comment" tier vs "note" tier
+- Comment는 짧은 메모 → "comment" tier (heading/codeBlock/horizontalRule 제외)
+- Note/Wiki는 상세 작성 → "note" tier (모든 기능)
+- 같은 컴포넌트가 다른 tier로 다른 UX 제공
+
+### 섹션 번호 매기기 알고리즘
+```ts
+const counters: number[] = []
+let lastDepth = -1
+function next(depth: number): string {
+  if (depth > lastDepth) while (counters.length <= depth) counters.push(0)
+  else if (depth < lastDepth) counters.length = depth + 1
+  counters[depth] = (counters[depth] || 0) + 1
+  lastDepth = depth
+  return counters.slice(0, depth + 1).join(".")
+}
+```
+- 더 깊으면 새 카운터 시작
+- 위로 올라오면 깊은 카운터 trim
+- depth 0: "1"/"2", depth 1: "1.1"/"1.2", depth 2: "1.1.1"
+
+### Comment popover 사이즈 시행착오
+- 720 → 너무 큼
+- 480 → 너무 작음
+- **560** → 적정 (균형)
+- 폭 결정만큼 중요한 것: contents가 넘치지 않게 `min-w-0` + `overflow-hidden` 처리
+
+### 사용자 피드백 패턴 (이번 세션)
+- "엉망진창" → 시각/구조 문제. 즉시 디버깅 모드
+- "별로" → 디자인 quality 문제. 옵션 제시하고 결정 받기
+- "롤백" → 직진하지 말고 한 단계 뒤로
+- "F도 마음에 들고 G로 진화" → 점진적 향상이 best
