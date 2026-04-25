@@ -244,16 +244,40 @@ export function CommentsByEntity({
 
   // Build block target list — wiki blocks or note ProseMirror top-level nodes
   const blockTargets = useMemo(() => {
-    const items: { id: string; label: string; type: BlockTargetType; depth: number }[] = []
+    const items: { id: string; label: string; type: BlockTargetType; depth: number; sectionNumber?: string }[] = []
+    /** Section numbering counters — index = depth (0 = level-1 sections) */
+    const counters: number[] = []
+    let lastSectionDepth = -1
+
+    function nextSectionNumber(depth: number): string {
+      if (depth > lastSectionDepth) {
+        // Going deeper → start fresh counter at this depth
+        while (counters.length <= depth) counters.push(0)
+      } else if (depth < lastSectionDepth) {
+        // Coming back up → trim deeper counters
+        counters.length = depth + 1
+      }
+      counters[depth] = (counters[depth] || 0) + 1
+      lastSectionDepth = depth
+      return counters.slice(0, depth + 1).join(".")
+    }
 
     // ── Wiki blocks ──
     if (entity.kind === "wiki" && article?.blocks) {
       let currentSectionLevel = 0
       for (const b of article.blocks as any[]) {
         if (b.type === "section") {
+          // Wiki section level: H2 = 2, H3 = 3 → numbering depth = level - 2
+          const numberDepth = Math.max(0, (b.level ?? 2) - 2)
           const lvl = (b.level ?? 2) - 1
           currentSectionLevel = lvl
-          items.push({ id: b.id, label: b.title || "Untitled", type: "section", depth: lvl })
+          items.push({
+            id: b.id,
+            label: b.title || "Untitled",
+            type: "section",
+            depth: lvl,
+            sectionNumber: nextSectionNumber(numberDepth),
+          })
         } else {
           const depth = currentSectionLevel + 1
           items.push({ id: b.id, label: wikiBlockLabel(b), type: b.type as BlockTargetType, depth })
@@ -274,7 +298,15 @@ export function CommentsByEntity({
             const text = extractText(node).trim()
             const lvl = node.attrs?.level || 2
             currentHeadingLevel = lvl
-            items.push({ id, label: text || "Heading", type: "section", depth: Math.max(0, lvl - 1) })
+            // Note heading: H1 → depth 0, H2 → depth 1, etc.
+            const numberDepth = Math.max(0, lvl - 1)
+            items.push({
+              id,
+              label: text || "Heading",
+              type: "section",
+              depth: Math.max(0, lvl - 1),
+              sectionNumber: nextSectionNumber(numberDepth),
+            })
           } else {
             const text = extractText(node).trim()
             const preview = text.slice(0, 50) || node.type
@@ -317,6 +349,26 @@ export function CommentsByEntity({
     if (!targetBlockId) return null
     return blockTargets.find((b) => b.id === targetBlockId) ?? null
   }, [targetBlockId, blockTargets])
+
+  /** Render the leading icon/number for a target row. Sections show number; others show type icon. */
+  function renderLeading(item: { type: BlockTargetType; sectionNumber?: string }, isSection: boolean) {
+    if (isSection && item.sectionNumber) {
+      return (
+        <span className="shrink-0 inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[11px] font-semibold text-accent/80 tabular-nums">
+          {item.sectionNumber}
+        </span>
+      )
+    }
+    return (
+      <BlockTypeIcon
+        type={item.type}
+        size={isSection ? 15 : 13}
+        className={cn(
+          isSection ? "text-foreground/70" : "text-muted-foreground/60 group-hover:text-muted-foreground",
+        )}
+      />
+    )
+  }
 
   const submit = () => {
     const t = draft.trim()
@@ -411,7 +463,13 @@ export function CommentsByEntity({
             >
               {selectedTarget ? (
                 <>
-                  <BlockTypeIcon type={selectedTarget.type} size={14} className="text-muted-foreground/70" />
+                  {selectedTarget.type === "section" && selectedTarget.sectionNumber ? (
+                    <span className="shrink-0 inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[11px] font-semibold text-accent/80 tabular-nums">
+                      {selectedTarget.sectionNumber}
+                    </span>
+                  ) : (
+                    <BlockTypeIcon type={selectedTarget.type} size={14} className="text-muted-foreground/70" />
+                  )}
                   <span className="truncate">{selectedTarget.label}</span>
                 </>
               ) : (
@@ -473,15 +531,7 @@ export function CommentsByEntity({
                                 style={{ left: `${4 + b.depth * 14}px` }}
                               />
                             )}
-                            <BlockTypeIcon
-                              type={b.type}
-                              size={isSection ? 15 : 13}
-                              className={cn(
-                                isSection
-                                  ? "text-foreground/70"
-                                  : "text-muted-foreground/60 group-hover:text-muted-foreground",
-                              )}
-                            />
+                            {renderLeading(b, isSection)}
                             <span
                               className={cn(
                                 "truncate",
