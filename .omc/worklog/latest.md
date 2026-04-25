@@ -1,59 +1,109 @@
 ---
-session_date: "2026-04-24 15:00"
+session_date: "2026-04-25"
 project: "linear-note-plot"
 working_directory: "C:\\Users\\user\\Desktop\\linear-note-plot-\\.claude\\worktrees\\practical-kepler-a53649"
-duration_estimate: "~3h (prior continuation + this session)"
+duration_estimate: "긴 세션 — 18 커밋, 코멘트 시스템 대규모"
 ---
 
 ## Completed Work
-- TOC gutter 번호 계층 시각화 최종 결정: 세로선 완전 제거, 번호만 유지 (`components/editor/EditorStyles.css`)
-- 웹 리서치로 업계 표준 확인 (Notion/Craft/Obsidian/Bear/Wikipedia — 연결선 없음이 표준)
-- docs/MEMORY.md 세션 기록 추가
+
+### Comment 시스템 전체 구축 (Phase 1-3)
+- 데이터 모델: status (Backlog/Todo/Done/Blocker) + parentId + CommentAnchor 4종
+- Store v77/v78/v79 마이그레이션
+- `CommentPopover` (인라인) + `CommentsByEntity` (사이드패널) + `CommentEditor` (TipTap 라이트 tier)
+- `BlockCommentMarker` (항상 보이는 말풍선 + status dot + count)
+- Open/Resolved 필터 탭 + Status 칩 + 인라인 편집 + 1단계 답글 + Convert to Note
+- 포털 기반 StatusPicker (z-index 충돌 해결)
+- ⋯ 메뉴 (Reply primary, Convert/Delete inside)
+
+### 노트/위키 대칭 인라인 코멘트
+- 위키 모든 블록 8종 (section/text/note-ref/image/url/table/navbox/navigation)에 [💬][🔖][⋯] cluster
+- `NoteCommentMarkerLayer`: ProseMirror 블록 위 absolute overlay (BlockDragOverlay 패턴)
+- 블록 cluster overflow-hidden 잘림 버그 수정
+
+### 사이드패널 통합
+- Activity: Thread/Reflection → CommentsByEntity 흡수 (`reflections.ts` slice 삭제)
+- Bookmarks: targetKind ("note"|"wiki") + Filter chips + Search input + SECTIONS 제거
+- Connections: 위키에 incoming wikilink 추가
+- Pin → Bookmark 네이밍 통일 (BookmarkSimple)
+
+### Navbox 하이브리드
+- Auto/Manual 모드 토글 (Wiki 리서치: 100% 수동이 표준 → Plot 둘 다 지원)
+- WikiPickerDialog 활용한 manual mode
+
+### TOC entry 코멘트 배지
+- `useCommentStatusByBlockId` 훅
+- TOC 항목에 status dot + 갯수
+
+### 미니맵 (Option F + G — Document-level 드롭다운)
+- Phosphor 아이콘 통일 (이모지 전부 제거)
+- 블록 타입별 컬러 stripe (note-ref=blue, image=emerald, url=cyan 등)
+- 섹션 번호 badge (1, 1.1, 1.2 형식 — H 아이콘 대체)
+- 본문 article 섹션 번호와 일치
+
+### 활동 바 + nav fix
+- Activity Bar Wiki 아이콘 BookOpen으로 변경 (Notes와 시각 구분)
+- 북마크 클릭 nav 수정: setActiveRoute + navigateToWikiArticle + 8회 retry scroll
+
+### 코멘트 컴포저 디자인 폴리시 (사이클 많음)
+- TipTap 풀 에디터 시도 → 사용자 피드백으로 라이트로 롤백
+- 폭 720→560→480→560 시행착오
+- min-w-0 fix (flex item 폭 제어)
+- 결론: "코멘트는 가벼운 메모" — 툴바 없이 마크다운 단축키만
 
 ## In Progress
-- (prior session) 북마크 확장: `GlobalBookmark` anchorType에 'block' 추가 + scrollIntoView 확장 — store 변경 상태로 대기
+- 없음 (이번 세션 클린)
 
 ## Remaining Tasks
-- [ ] Wiki 블록 인라인 💬 + 📌 아이콘 + 팝오버 UI (`components/comments/` 이미 작성, 렌더 검증 필요)
-- [ ] 노트 블록 메뉴(BlockMenu)에 Comment + Bookmark 항목 추가
-- [ ] Activity 탭 3섹션 리팩터 (Threads / Comments / History)
-- [ ] 섹션 ... 메뉴에 Add comment + Bookmark 연동 (wiki)
-- [ ] Preview로 comments/bookmarks end-to-end 검증
+- [ ] 미니맵 G 진화 — 좌측/우측 영역 항상 보이는 미니맵 (별도 세션)
+- [ ] Connections 상세 (어느 블록/코멘트에서 링크되는지 — 7시간 작업)
+- [ ] TipTap 미니 에디터 추가 발전 (필요시)
 
 ## Key Decisions
-- **TOC 세로선 전면 제거**: 4-5차례 디자인 시도(실선/점선/페이드/원+선) 전부 "별로" → 리서치 결과 업계 표준은 "선 없음" → 폰트+들여쓰기만으로 계층 표현. Notion/Craft/Bear/나무위키/위키피디아 모두 이 방식.
-- **번호 opacity 0.4 롤백 → 0.9 유지**: 희미하면 가독성 저하.
-- **contentBlock Enter 버그 포기**: `splitBlock` 기본 depth=2 동작 때문에 래퍼 탈출. 커스텀 핸들러 + priority 1000 + 수동 `tr.split(pos, depth-cbDepth)` 전부 효과 없음. 사용자 판단으로 종결.
+- **Comment 본질 = 가벼운 메모**: 풀 에디터 툴바 X. 라이트 TipTap tier (마크다운 + 위키링크 + 해시태그)
+- **노트/위키 대칭 (B 옵션)**: 모든 블록에서 인라인 코멘트 가능
+- **Linear 스타일 status**: Backlog/Todo/Done/Blocker
+- **Pin = Bookmark 통일**: 시각 + 네이밍 (BookmarkSimple 아이콘)
+- **Navbox 하이브리드**: 자동(편의) + 수동(Wiki 표준) 둘 다
+- **미니맵 디자인**: F (코드 아이콘 일관) + G (시각 구조) 조합
+- **섹션 번호**: H 아이콘 → accent 번호 badge (본문 article과 일치)
 
 ## Technical Learnings
-- **ProseMirror splitBlock**: `$from.depth === 0 ? 1 : 2` — 항상 2단계 쪼개기 때문에 defining wrapper가 paragraph의 부모라도 같이 split됨. `defining: true` 만으론 안쪽 split 보장 안 됨.
-- **업계 계층 표현 패턴**: Obsidian Lapel = gutter 텍스트 레이블(H1/H2/H3), CSS counter로 auto-numbering 가능 (TipTap GitHub Discussion #914), Logseq bullet threading은 `:has()` 셀렉터 필요해서 퍼포먼스 이슈.
+- **min-w-0 + flex-1**: flex item이 contents 따라 부모를 확장하는 문제 해결 키. 특히 popover 내부에서 toolbar overflow 잘림 원인이었음
+- **Radix Popover overflow**: 기본 visible. `overflow-hidden` 명시 필요
+- **글로벌 scrollbar-color: transparent**: globals.css가 scrollbar 색을 투명으로 깔았음. 명시적 색깔 필요한 경우 별도 클래스
+- **FixedToolbar.embedded prop**: 자체 sticky/overflow 비활성화 → 외곽 wrapper로 스크롤 위임
+- **Wiki Navbox 표준**: Wikipedia/나무위키 모두 100% 수동 큐레이션. 자동은 비표준 (Plot은 둘 다 지원)
+- **Comment popover 박스 사이즈**: 사용자 피드백으로 720→480→560으로 변동. 결국 "툴바 없이 라이트"가 best fit
+- **섹션 번호 매기기 알고리즘**: depth별 counters[] 배열 + lastSectionDepth 추적
 
 ## Blockers / Issues
-- **contentBlock Enter**: 안에서 Enter로 블록 확장 불가. 포기. 향후 필요 시 ProseMirror 커스텀 command로 `tr.split`을 더 정교하게 제어하거나 `isolating: true` 실험 필요.
+- 없음. 모든 사이클 깔끔히 마무리.
 
 ## Environment & Config
+- Node 20+, Next.js 16, TypeScript, Zustand 5, TipTap 3, Tailwind v4
 - Branch: `claude/practical-kepler-a53649`
-- Dev server: http://localhost:1588 (running)
-- Build: npm run build 통과 (Next.js 16)
-- Store version: v75 → v76 (comments slice 추가 중)
+- Store: 22 slices, **v80** (이전 v76)
+- Build: `npm run build` (이번 세션 통과)
 
 ## Notes for Next Session
-- `components/comments/comment-popover.tsx` 이미 작성됨 — 실제 노트/위키 렌더 검증 필요
-- `components/wiki-editor/navbox-block.tsx`, `navigation-block.tsx`, `category-tree-picker.tsx` 신규 — 사용처 연결 확인
-- `lib/store/slices/comments.ts` 신규 — v76 migration 확인
-- `components/editor/nodes/toc-node.tsx` — 대규모 변경(+400 lines), 동작 검증
-- `components/wiki-editor/wiki-article-view.tsx` -400 lines — encyclopedia view 재구조화, 리그레션 체크
+- **위키에서 코멘트 시스템 검증** — 인라인 marker 클릭 / 사이드바 Activity → Comments / 답글 / Convert to Note 등 전체 플로우
+- **노트에서도 인라인 코멘트 검증** — NoteCommentMarkerLayer 작동 확인
+- **북마크 통합 검증** — note + wiki 핀이 한 곳에 표시
+- **Navbox** — Auto/Manual 토글 검증
+- **미니맵** — 섹션 번호 + 컬러 stripe 시각 효과 검증
+- **다음 큰 작업 후보**: Connections 상세 추적 (7시간), 미니맵 G 진화, TipTap 미니 에디터 추가 기능
 
 ## Files Modified
-- `components/editor/EditorStyles.css` — TOC 세로선 제거
-- `components/editor/nodes/content-block-node.tsx` — Enter 핸들러 시도 후 롤백
-- `components/editor/nodes/toc-node.tsx` — (prior) TOC 대규모 변경
-- `components/editor/editor-context-menu.tsx` — (prior) Add to TOC
-- `components/editor/nodes/infobox-node.tsx`, `wiki-infobox.tsx` — (prior)
-- `components/wiki-editor/wiki-article-view.tsx`, `wiki-article-encyclopedia.tsx`, `wiki-block-renderer.tsx` — (prior)
-- `components/editor/dnd/block-drag-overlay.tsx` — (prior)
-- `lib/store/index.ts`, `migrate.ts`, `types.ts`, `lib/types.ts` — comments + GlobalBookmark
-- `hooks/use-wiki-block-actions.ts` — (prior)
-- 신규: `components/comments/`, `lib/store/slices/comments.ts`, `components/wiki-editor/{navbox,navigation,category-tree-picker}.tsx`
-- `docs/MEMORY.md` — 세션 기록
+- 신규: `components/comments/comment-popover.tsx`, `comments-by-entity.tsx`, `comment-editor.tsx`, `block-comment-marker.tsx`, `use-block-comment-status.ts`
+- 신규: `components/wiki-editor/wiki-block-inline-actions.tsx`, `navbox-block.tsx`, `navigation-block.tsx`, `category-tree-picker.tsx`
+- 신규: `components/editor/note-comment-marker-layer.tsx`
+- 신규: `lib/store/slices/comments.ts`
+- 수정: `lib/types.ts` (CommentAnchor + Comment), `lib/store/index.ts` (v80), `lib/store/migrate.ts` (v77-80), `lib/store/types.ts`
+- 수정: 위키 모든 블록 컴포넌트 (cluster + articleId 전달)
+- 수정: `components/side-panel/side-panel-bookmarks.tsx`, `side-panel-connections.tsx`, `side-panel-activity.tsx`
+- 수정: `components/editor/FixedToolbar.tsx` (embedded prop)
+- 수정: `components/activity-bar.tsx` (Wiki icon BookOpen)
+- 수정: `components/editor/nodes/toc-node.tsx` (TocCommentBadge)
+- 삭제: `components/editor/reflection-panel.tsx`, `thread-panel.tsx`, `lib/store/slices/reflections.ts`
+- 문서: `docs/MEMORY.md`, `docs/CONTEXT.md` 갱신
