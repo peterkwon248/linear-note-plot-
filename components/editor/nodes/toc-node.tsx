@@ -8,6 +8,8 @@ import { Layout, X as PhX, Plus, Trash, DotsSixVertical, DotsThree, MapPin, Text
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
+import { useCommentStatusByBlockId, STATUS_COLORS } from "@/components/comments/use-block-comment-status"
+import { ChatCircle } from "@phosphor-icons/react/dist/ssr/ChatCircle"
 
 /* ── Types ─────────────────────────────────────────────────── */
 
@@ -79,6 +81,22 @@ function collectAllBlocks(editor: NodeViewProps["editor"]): BlockTarget[] {
     }
   })
   return blocks
+}
+
+/** Comment count badge for TOC entry — shows status dot + count if any comments. */
+function TocCommentBadge({ blockId }: { blockId: string }) {
+  const { topStatus, openCount } = useCommentStatusByBlockId(blockId)
+  if (!topStatus || openCount === 0) return null
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 rounded-full px-1 py-px text-[9px] font-semibold bg-muted-foreground/10 text-muted-foreground/80"
+      title={`${openCount} open comment${openCount === 1 ? "" : "s"}`}
+    >
+      <span className={`w-1 h-1 rounded-full ${STATUS_COLORS[topStatus].dot}`} />
+      <ChatCircle size={9} weight="fill" className="text-muted-foreground/70" />
+      <span className="tabular-nums">{openCount}</span>
+    </span>
+  )
 }
 
 /** Find a node by its `id` attr in the document and scroll to it */
@@ -734,6 +752,9 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
                     </button>
                   )
                 })()}
+
+                {/* Comment count badge */}
+                {entry.targetId && <TocCommentBadge blockId={entry.targetId} />}
 
                 {/* Add subsection — always faintly visible */}
                 {entry.indent < 3 && (

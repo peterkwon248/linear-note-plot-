@@ -56,6 +56,38 @@ export function useBlockCommentStatus(anchor: CommentAnchor): BlockCommentSummar
   }, [comments, anchor])
 }
 
+/**
+ * Lookup comment status for a block by ID alone (no entity context required).
+ * Useful for TOC entries where we just have a targetId but don't know if it's note/wiki.
+ */
+export function useCommentStatusByBlockId(blockId: string | null | undefined): BlockCommentSummary {
+  const comments = usePlotStore((s) => s.comments)
+  return useMemo(() => {
+    let topStatus: CommentStatus | null = null
+    let topPriority = 0
+    let openCount = 0
+    let totalCount = 0
+    if (!blockId) return { topStatus: null, openCount: 0, totalCount: 0 }
+    for (const c of Object.values(comments)) {
+      const a = c.anchor
+      const matchId =
+        (a.kind === "wiki-block" && a.blockId === blockId) ||
+        (a.kind === "note-block" && a.nodeId === blockId)
+      if (!matchId) continue
+      totalCount++
+      if (c.status !== "done") {
+        openCount++
+        const p = PRIORITY[c.status] || 0
+        if (p > topPriority) {
+          topPriority = p
+          topStatus = c.status
+        }
+      }
+    }
+    return { topStatus, openCount, totalCount }
+  }, [comments, blockId])
+}
+
 /** Tailwind classes for status colors (shared with popover). */
 export const STATUS_COLORS: Record<CommentStatus, { dot: string; border: string }> = {
   backlog: { dot: "bg-muted-foreground/60", border: "border-l-muted-foreground/40" },
