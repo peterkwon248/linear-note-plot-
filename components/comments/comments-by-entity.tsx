@@ -405,7 +405,6 @@ export function CommentsByEntity({
                   submit()
                 }
               }}
-              showToolbar={false}
               className="text-[13px]"
             />
           </div>
@@ -595,7 +594,6 @@ function CommentRow({
                 setDraft(comment.body)
                 setEditing(false)
               }}
-              showToolbar={false}
               className="text-[12px]"
             />
           ) : (
