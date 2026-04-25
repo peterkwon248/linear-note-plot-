@@ -514,7 +514,7 @@ export interface GlobalBookmark {
   noteId: string
   anchorId: string
   label: string
-  anchorType: "inline" | "divider" | "heading"
+  anchorType: "inline" | "divider" | "heading" | "block"
   createdAt: string
 }
 
@@ -522,11 +522,17 @@ export interface GlobalBookmark {
 
 /**
  * Target anchor for a comment — polymorphic across Note and Wiki.
- * Phase 1 supports block-level only. Range-level comments deferred to Phase 2.
+ * - "block" anchors target a specific block within an entity
+ * - "entity" anchors (note/wiki) target the document as a whole (replaces legacy Reflection/Thread)
  */
 export type CommentAnchor =
   | { kind: "wiki-block"; articleId: string; blockId: string }
   | { kind: "note-block"; noteId: string; nodeId: string }
+  | { kind: "wiki"; articleId: string }
+  | { kind: "note"; noteId: string }
+
+/** Linear-style status for a comment. Default "note" = plain memo. */
+export type CommentStatus = "note" | "todo" | "done" | "blocker"
 
 /** Single comment attached to a block (wiki) or ProseMirror top-level node (note). */
 export interface Comment {
@@ -535,5 +541,9 @@ export interface Comment {
   body: string
   createdAt: string
   updatedAt: string
-  resolved: boolean
+  status: CommentStatus
+  /** Optional 1-level threaded reply parent. */
+  parentId?: string
+  /** Deprecated — kept for migration compatibility. Mirrors `status === "done"`. */
+  resolved?: boolean
 }

@@ -312,8 +312,9 @@ export interface PlotState {
   updateBookmarkLabel: (bookmarkId: string, label: string) => void
 
   // ── Comments ──
-  addComment: (anchor: CommentAnchor, body: string) => string
+  addComment: (anchor: CommentAnchor, body: string, opts?: { parentId?: string; status?: import("../types").CommentStatus }) => string
   updateComment: (commentId: string, body: string) => void
+  setCommentStatus: (commentId: string, status: import("../types").CommentStatus) => void
   toggleCommentResolved: (commentId: string) => void
   deleteComment: (commentId: string) => void
 

@@ -89,7 +89,7 @@ export function ReflectionPanel({ noteId }: ReflectionPanelProps) {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="이 노트를 돌아보며... (Enter to save, Esc to cancel)"
+                placeholder="Reflect on this note... (Enter to save, Esc to cancel)"
                 rows={2}
                 className={cn(
                   "w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-note text-foreground",

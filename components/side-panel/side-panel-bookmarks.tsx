@@ -75,7 +75,12 @@ function NoteBookmarks() {
   }, [pinnedList])
 
   const scrollToAnchor = (anchorId: string) => {
-    const el = document.querySelector(`[data-anchor-id="${anchorId}"]`)
+    const safe = (window as any).CSS?.escape ? CSS.escape(anchorId) : anchorId
+    // Try anchor mark/divider first, then heading id, then block UniqueID (for "block" anchorType)
+    const el =
+      document.querySelector(`[data-anchor-id="${safe}"]`) ||
+      document.querySelector(`[id="${safe}"]`) ||
+      document.querySelector(`[data-id="${safe}"]`)
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
   }
 

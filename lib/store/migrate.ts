@@ -803,6 +803,69 @@ export function migrate(persistedState: unknown): PlotState {
   // v76: Comments — block/node-anchored annotations
   if (!state.comments) state.comments = {}
 
+  // v77: Comment.status (Linear-style) + parentId (1-level threaded reply)
+  if (state.comments) {
+    for (const id of Object.keys(state.comments as Record<string, any>)) {
+      const c = (state.comments as Record<string, any>)[id]
+      if (!c.status) c.status = c.resolved ? "done" : "note"
+      if (c.parentId === undefined) c.parentId = undefined
+    }
+  }
+
+  // v78: Migrate legacy Reflection + Thread → Comment (entity-anchored)
+  // Reflections become kind:"note" comments. Threads become kind:"note" comments with parentId for nested replies.
+  if (!state.comments) state.comments = {}
+  const commentsMap = state.comments as Record<string, any>
+
+  // Reflections → Comments
+  if (Array.isArray(state.reflections)) {
+    for (const r of state.reflections as any[]) {
+      if (!r?.id || !r?.noteId) continue
+      const cid = `cmt-mig-${r.id}`
+      if (commentsMap[cid]) continue // already migrated
+      commentsMap[cid] = {
+        id: cid,
+        anchor: { kind: "note", noteId: r.noteId },
+        body: r.text || "",
+        createdAt: r.createdAt || new Date().toISOString(),
+        updatedAt: r.createdAt || new Date().toISOString(),
+        status: "note",
+        parentId: undefined,
+        resolved: false,
+      }
+    }
+    state.reflections = []
+  }
+
+  // Threads → Comments (each step becomes a comment; step.parentId stays as parentId)
+  if (Array.isArray(state.threads)) {
+    for (const t of state.threads as any[]) {
+      if (!t?.noteId || !Array.isArray(t.steps)) continue
+      // Map old stepId → new commentId
+      const stepIdMap = new Map<string, string>()
+      for (const step of t.steps as any[]) {
+        const newId = `cmt-mig-${step.id}`
+        stepIdMap.set(step.id, newId)
+      }
+      for (const step of t.steps as any[]) {
+        const cid = stepIdMap.get(step.id)!
+        if (commentsMap[cid]) continue
+        const parentNew = step.parentId ? stepIdMap.get(step.parentId) : undefined
+        commentsMap[cid] = {
+          id: cid,
+          anchor: { kind: "note", noteId: t.noteId },
+          body: step.text || "",
+          createdAt: step.at || t.startedAt || new Date().toISOString(),
+          updatedAt: step.at || t.startedAt || new Date().toISOString(),
+          status: t.status === "done" ? "done" : "note",
+          parentId: parentNew,
+          resolved: t.status === "done",
+        }
+      }
+    }
+    state.threads = []
+  }
+
   // v72: Split-First migration — remove all Peek infrastructure
   delete (state as any).sidePanelPeekContext
   delete (state as any).peekHistory
