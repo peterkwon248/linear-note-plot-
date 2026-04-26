@@ -5,17 +5,23 @@ import type { AttachmentBlob } from "../attachment-store"
 import { saveBlockBody as saveBlockBodyToIDB, deleteBlockBody as deleteBlockBodyFromIDB } from "../wiki-block-body-store"
 import type { WikiBlockBody } from "../wiki-block-body-store"
 import { saveArticleBlocks as saveArticleBlocksToIDB, deleteArticleBlocks as deleteArticleBlocksFromIDB } from "../wiki-block-meta-store"
+import { updateMentionsForNote, removeMentionsForNote } from "../mention-index-store"
 
 /** Fire-and-forget IDB body write (guarded for SSR) */
 export function persistBody(body: NoteBody) {
   if (typeof indexedDB === "undefined") return
   saveBodyToIDB(body).catch((err) => console.warn("[Plot] Body save failed:", err))
+  // Keep the mention index in sync. Failures are silent — the index is a
+  // perf cache, not a source of truth, and mention-only backlinks degrade
+  // gracefully (Connections panel falls back to empty list, never crashes).
+  updateMentionsForNote(body.id, body.contentJson).catch(() => {})
 }
 
 /** Fire-and-forget IDB body delete (guarded for SSR) */
 export function removeBody(id: string) {
   if (typeof indexedDB === "undefined") return
   deleteBodyFromIDB(id).catch((err) => console.warn("[Plot] Body delete failed:", err))
+  removeMentionsForNote(id).catch(() => {})
 }
 
 /** Fire-and-forget IDB attachment blob write (guarded for SSR) */

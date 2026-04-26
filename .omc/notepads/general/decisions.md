@@ -103,3 +103,11 @@
 - Activity: 코멘트 단일 시스템 (Thread/Reflection 폐기)
 - Bookmarks: 모든 핀 한 곳에 (note + wiki targetKind)
 - Connections: 양방향 backlinks (위키 incoming wikilink 추가)
+
+## 2026-04-26 (큰 세션, 9 PR)
+- **Home 정체성 분리**: 시간 기반 (Inbox/Today/Snooze) Home에서 제거. Plot 정체성은 제텔카스텐 = 연결. 시간 관리는 워크플로우 앱 영역.
+- **Ontology = Single Source of Insights**: 모든 정비 행동/메트릭/Nudge Ontology Insights 탭으로 이전. Home은 본업, Ontology는 가끔 들어가는 분석 허브.
+- **Pinned 통합 시스템**: Note + WikiArticle + Folder + SavedView + Bookmark 모두 Home Mixed Quicklinks 카드 그리드. WikiArticle.pinned 신설 (Note와 대칭).
+- **루비 텍스트 제거**: 한국어 사용자 fit X, 노트앱 표준 X (Notion/Bear/Capacities/Tana 모두 안 함). 차별화에도 무관.
+- **Plane 풀 미러 거부**: Stickies + Manage widgets + Greeting 시도 후 "너무 많음" 롤백. Plot 정체성에 fit하는 부분만 채택.
+- **자동 등재 dedupe 가드**: createWikiStub에 동일 title 검사 — 무한 누적 방지. 자동 등재가 매 사이클 같은 redLink 발견 시 중복 폭발 버그 fix.

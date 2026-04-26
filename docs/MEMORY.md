@@ -1,6 +1,106 @@
 # Plot Project Memory
 
-## 🟢 2026-04-25 세션 — 코멘트 시스템 대규모 작업 + 통합 + 미니맵 (최우선 읽기)
+## 🟢 2026-04-26 세션 — Plot 디자인 + 인사이트 대규모 (큰 세션, ~9시간)
+
+**한 세션 9개 PR + 다수 핫픽스 — 인포박스/Navbox/배너 다채로움 + Connections 풀 강화 + Ontology Insights 허브 + Home 정체성 분리.**
+
+### 핵심 아키텍처 결정
+- **Home = 데이터 대시보드 + 빠른 진입** (Quick Capture / Stats / Recent / Quicklinks). 시간 기반 워크플로우(Inbox/Today/Snooze) 제거.
+- **Ontology = Single Source of Insights** — 모든 정비 행동(Orphan/Promote/Unlinked/메트릭)은 Ontology Insights 탭으로 이전.
+- **Pinned 통합 시스템** — Note.pinned + WikiArticle.pinned (NEW) + Folder.pinned + SavedView.pinned + globalBookmarks 모두 Mixed Quicklinks에 통합.
+
+### PR 1-3: 인포박스/Navbox/배너 다채로움
+- **PR 1**: Wiki Infobox type 11 프리셋 (custom/person/character/place/organization/work-film/work-book/work-music/work-game/event/concept) + Group Header 토글 + 색상 picker. Store v83.
+- **PR 2**: Navbox/Navigation 풀 디자인 — 다단 헤더 / 그룹 / 색상 / 1-6 col 그리드 / 펼치기·접기 (Editorial-Imperial 스타일, 나무위키 "명 황제" 수준). Store v84. luminance 기반 자동 contrast.
+- **PR 3**: Banner 4 다채로움 — 좌측 아이콘 8종 / Compact·Default·Hero / stripe 옵션 / gradient 옵션. Settings 통합 popover. Store v85.
+
+### PR 4: Connections 상세 (블록 단위 + 인라인 스니펫)
+- `extractBlockLinkContexts` walker — TipTap JSON 재귀, 4종 링크(wikilink/noteEmbed/wikiEmbed/referenceLink) + mention 노드 매칭, blockId dedupe, 140자 스니펫
+- `useBacklinksWithContext` 훅 — 2단계 (title-match 동기 + IDB 비동기 contentJson 로드)
+- `BacklinkCard` — Obsidian 스타일 카드 + sub 스니펫 + hover 풀 프리뷰 (`showNotePreviewById` 재사용)
+- 위키 source도 contentJson scan (block 단위 추출)
+- `outboundLinked`에 위키 article title 매칭 추가 (이전 누락 버그)
+- `@` mention도 Connections에 잡히게 (4종 케이스 [[]] / @ × 노트 / 위키 모두 처리)
+
+### PR 5: Discover mention + 위키 source + IDB 캐시 + hydration
+- `discover-engine.ts`에 mention 가중치 추가 (W_BACKLINK 4 / shared mention 2x)
+- `mention-index-store.ts` 신설 — `plot-mention-index` IDB DB (edges + sources 양방향). `getMentionSources(targetId)` O(1) 룩업
+- `persistBody/removeBody` hook에 자동 wiring → 모든 노트 CRUD가 자동 인덱싱
+- `view-header.tsx` 3 Popover에 hydrated guard (Radix aria-controls SSR/CSR mismatch fix)
+- `<ClientOnly>` 신규 컴포넌트 추가 (재사용)
+
+### PR 6: Ontology Insights 탭
+- `lib/insights/types.ts` + `lib/insights/metrics.ts` (순수 함수 엔진)
+- `useKnowledgeMetrics` 훅 (사이드바 Health + Insights 패널 단일 source)
+- 새 메트릭 7종: Knowledge WAR (top 10), Concept Reach (2-hop), Hubs, Link Density, Orphan Rate, Tag Coverage, Cluster Cohesion
+- `OntologyTabBar` (Graph / Insights), Graph keep-alive (display:hidden 토글)
+- `OntologyInsightsPanel` — 세이버메트릭스 미니멀 (라벨 + 숫자 row만)
+- `OntologyNudgeSection` 추가 — Orphan / 위키 승격 후보 / Unlinked Mention 액션 카드
+- `linear-sidebar.tsx`의 Health 섹션 O(N²) 인라인 → O(1) 훅 호출
+
+### PR 7-8: Home 정체성 분리 + 디자인 iteration
+**원칙**: Home은 담백한 데이터 대시보드. 시간 기반 (Inbox/Today/Review) 제거. 정비 인사이트 → Ontology.
+
+**Home 최종 구성** (사용자 다회 피드백 반영):
+- Quick Capture (max-w-2xl 가운데)
+- StatsRow (5 카드: Notes/Wiki/Tags/Refs/Files, 컬러 적용 — blue/violet/emerald/amber/rose, sub 텍스트로 Coverage/Stubs/Active/Unused/Size)
+- RecentCards (4 카드, h-32, preview + meta)
+- MixedQuicklinks (Note pinned + Wiki pinned + Folder pinned + SavedView pinned + Bookmark 통합 카드)
+- "Improve your knowledge graph →" CTA → Ontology Insights 탭으로 점프
+- max-w-5xl
+
+**시도 후 롤백한 것들**:
+- Linear 큰 리스트 (옵션 1): "디자인 별로"
+- Plane 풀 미러 (Greeting + Quicklinks + Stickies + Rediscover): "너무 많음"
+- Knowledge Nudge in Home: 압박감 → Ontology로 이전
+
+### Wiki article 핀 시스템 (NEW)
+- `WikiArticle.pinned: boolean` 필드 추가 (Store v87)
+- `toggleWikiArticlePin` 액션 추가
+- 사이드패널 wiki article detail 우상단 Pin 버튼 (PushPin 아이콘, accent 강조)
+- Wiki dashboard에 PINNED 섹션 추가 (Featured Article 다음, Categories 전)
+- Home Quicklinks에도 통합 표시
+
+### 핫픽스 다수 (v86-v91)
+- **v86**: `wikiArticle.infobox` undefined backfill (런타임 TypeError 해결)
+- **v87**: `WikiArticle.pinned` 백필
+- **v88**: 모든 위키 article 강제 unpin (잘못 박힌 핀 클린업)
+- **v89**: `noteType wiki` notes dedup by title (가장 오래된 keep, 나머지 trashed)
+- **v90**: `wikiArticles` 배열 dedup (별도 entity)
+- **v91**: idempotent re-run (이전 마이그레이션 누락 대비)
+- `createWikiStub` dedupe 가드 — 동일 title 이미 있으면 ID 재사용 (자동 등재 무한 누적 방지)
+- Wiki view에 `!trashed` 필터 추가
+- Slash description 영어 통일 / 루비 텍스트 base 티어에서 완전 제거 / Inline Math NodeView (Popover) 신규 / popover 정렬 (`align="start"` + collisionPadding) 통일
+
+### Note Split 기능 (P2 must-todo 완료)
+- WikiSplitPage 패턴 그대로 노트에 적용
+- `lib/note-split-mode.ts` (외부 store, useSyncExternalStore)
+- `components/views/note-split-page.tsx` (좌 체크리스트 / 우 새 노트 preview, heading 그룹 자동 선택)
+- `splitNote` action (atomic, source content 분할 + 새 노트 생성 + persistBody 양쪽)
+- 진입점 3곳: 노트 에디터 ⋯ / 리스트 우클릭 / 플로팅 액션 바
+- 글로벌 마운트 (app/(app)/layout.tsx의 NoteSplitOverlay)
+- 빈 컨텐츠 graceful 처리 + IDB hydration
+
+### 나무위키 Tier 2-4 (사용자 결정으로 진행)
+- **Tier 2 배너 블록** (PR 3 참조)
+- **Tier 3a age + dday** 인라인 매크로 (Popover NodeView, 한국식 만 나이 + 한국어/영어 라벨 영어로 통일)
+- **Tier 3b Include** — 기존 NoteEmbed/WikiEmbed에 alias + 양방향 활성화 + cycle guard (`lib/embed-cycle.ts`)
+- **Tier 4a 각주 이미지** — Reference.imageUrl 필드 + footnote modal에 Image URL input + footer 썸네일. Store v81.
+- **Tier 4b 루비 텍스트** — 사용자 결정으로 **완전 제거** (한국어 사용자 거의 안 씀, 노트앱 표준 X)
+- **Tier 4c 위키 parent-child article** — `WikiArticle.parentArticleId` + breadcrumb + Children 섹션 + 사이클 가드 (`lib/wiki-hierarchy.ts`)
+
+### Y.Doc P0-1 (P0 부분 진행)
+- y-indexeddb 패키지 설치
+- `lib/y-doc-manager.ts`에 IndexeddbPersistence 통합 + `whenReady` Promise + `getIsFresh()` post-hydration 판정
+- `NoteEditorAdapter`에 `ydocReadyForNoteId` state 추가 (mount gate)
+- 사이드 이슈: `plot-note-bodies` IDB v3 bump + post-open store-presence check, StarterKit duplicate extension (link/underline/gapcursor) 비활성화
+
+### Store version: v82 → **v91**
+9 마이그레이션 추가 (v83~v91). 모두 안전 (백필 또는 idempotent dedup).
+
+---
+
+## 🟢 2026-04-25 세션 — 코멘트 시스템 대규모 작업 + 통합 + 미니맵
 
 **한 세션 18 커밋 — Plot 코멘트 인프라 전체 구축 + 사이드패널 통합 + 디자인 폴리시.**
 

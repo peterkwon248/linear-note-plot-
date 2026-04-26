@@ -3,6 +3,14 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { usePlotStore } from "@/lib/store"
 
+/* ── Helpers ── */
+
+/** Check if a URL is safe to display as image (https / http / data:image/) */
+function isSafeImageUrl(url: string): boolean {
+  const trimmed = url.trim()
+  return /^https?:\/\/.+/i.test(trimmed) || /^data:image\//i.test(trimmed)
+}
+
 /* ── Event-based API ── */
 
 interface FootnoteModalState {
@@ -61,6 +69,7 @@ export function FootnoteEditModal() {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [url, setUrl] = useState("")
+  const [imageUrl, setImageUrl] = useState("")
   const titleRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -76,6 +85,7 @@ export function FootnoteEditModal() {
     setTitle(ref?.title ?? "")
     setContent(ref?.content ?? state.content ?? "")
     setUrl(ref?.fields.find((f) => f.key.toLowerCase() === "url")?.value ?? "")
+    setImageUrl(ref?.imageUrl ?? "")
     setTimeout(() => titleRef.current?.focus(), 50)
   }, [state.open, state.footnoteId])
 
@@ -84,6 +94,8 @@ export function FootnoteEditModal() {
     const trimmedTitle = title.trim()
     const trimmedContent = content.trim()
     const trimmedUrl = url.trim()
+    const trimmedImageUrl = imageUrl.trim()
+    const safeImageUrl = trimmedImageUrl && isSafeImageUrl(trimmedImageUrl) ? trimmedImageUrl : null
     const displayText = trimmedContent || trimmedTitle
 
     if (!displayText) {
@@ -96,7 +108,7 @@ export function FootnoteEditModal() {
     const refTitle = trimmedTitle || (displayText.length > 60 ? displayText.slice(0, 60) + "…" : displayText)
 
     if (!refId) {
-      refId = createReference({ title: refTitle, content: trimmedContent, fields } as any)
+      refId = createReference({ title: refTitle, content: trimmedContent, fields, imageUrl: safeImageUrl } as any)
     } else {
       const ref = references[refId]
       if (ref) {
@@ -105,13 +117,13 @@ export function FootnoteEditModal() {
             ? ref.fields.map((f) => f.key.toLowerCase() === "url" ? { ...f, value: trimmedUrl } : f)
             : [...ref.fields, { key: "URL", value: trimmedUrl }]
           : ref.fields.filter((f) => f.key.toLowerCase() !== "url")
-        updateReference(refId, { title: refTitle, content: trimmedContent, fields: updatedFields })
+        updateReference(refId, { title: refTitle, content: trimmedContent, fields: updatedFields, imageUrl: safeImageUrl })
       }
     }
 
     state.onSave({ content: displayText, contentJson: null, referenceId: refId })
     closeFootnoteModal()
-  }, [state, title, content, url, references, createReference, updateReference])
+  }, [state, title, content, url, imageUrl, references, createReference, updateReference])
 
   if (!state.open) return null
 
@@ -162,6 +174,39 @@ export function FootnoteEditModal() {
               placeholder="https://..."
               className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
             />
+          </div>
+          <div>
+            <label className="text-2xs text-muted-foreground/60 mb-1 block">Image URL (optional)</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.png"
+                className="flex-1 h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+              />
+              {imageUrl.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setImageUrl("")}
+                  className="shrink-0 text-2xs text-muted-foreground/50 hover:text-destructive transition-colors px-1"
+                  title="Remove image"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            {imageUrl.trim() && isSafeImageUrl(imageUrl.trim()) && (
+              <div className="mt-1.5 rounded-md overflow-hidden border border-border/40 bg-secondary/30 inline-block max-w-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl.trim()}
+                  alt="Preview"
+                  className="max-h-32 object-contain"
+                  onError={(e) => { e.currentTarget.style.display = "none" }}
+                />
+              </div>
+            )}
           </div>
         </div>
 

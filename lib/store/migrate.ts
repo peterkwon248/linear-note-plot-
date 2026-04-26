@@ -896,12 +896,97 @@ export function migrate(persistedState: unknown): PlotState {
   // Reset sidePanelMode if it was 'peek' (no longer a valid mode)
   if (state.sidePanelMode === 'peek') state.sidePanelMode = 'detail'
 
+  // v81: Reference.imageUrl — optional field, backfill null for existing entries
+  if (state.references) {
+    for (const key of Object.keys(state.references as Record<string, any>)) {
+      const ref = (state.references as Record<string, any>)[key]
+      if (ref.imageUrl === undefined) {
+        ref.imageUrl = null
+      }
+    }
+  }
+
+  // v82: WikiArticle.parentArticleId — parent-child hierarchy (single-parent tree)
+  if (Array.isArray(state.wikiArticles)) {
+    state.wikiArticles = (state.wikiArticles as any[]).map((a: any) => ({
+      ...a,
+      parentArticleId: a.parentArticleId ?? null,
+    }))
+  }
+
+  // v84: Navbox PR2 — schema additions.
+  //      Block data lives in IDB (plot-wiki-block-meta). This migration only
+  //      sets a localStorage marker so the post-load IDB sweep runs once.
+  //      The component layer (`navboxBlockMigrate`) gracefully reads either
+  //      legacy (`navboxArticleIds`) or new (`navboxGroups`) shape, so first
+  //      paint is safe even before the IDB sweep finishes.
+  if (typeof window !== "undefined") {
+    try {
+      const FLAG = "plot.navbox-pr2-migrated"
+      if (!window.localStorage.getItem(FLAG)) {
+        window.localStorage.setItem(FLAG, "pending")
+      }
+    } catch {
+      // ignore quota / privacy mode
+    }
+  }
+
+  // v83: WikiArticle.infoboxPreset — domain preset selector (default "custom").
+  //      Also backfill `type: "field"` on infobox entries that predate the discriminator.
+  if (Array.isArray(state.wikiArticles)) {
+    state.wikiArticles = (state.wikiArticles as any[]).map((a: any) => {
+      const infobox = Array.isArray(a.infobox)
+        ? (a.infobox as any[]).map((e: any) => {
+            if (!e || typeof e !== "object") return e
+            const t = e.type
+            if (t === "field" || t === "section" || t === "group-header") return e
+            return { ...e, type: "field" as const }
+          })
+        : []  // v83 hotfix: backfill empty array when undefined/null
+      return {
+        ...a,
+        infobox,
+        infoboxPreset: a.infoboxPreset ?? "custom",
+      }
+    })
+  }
+  // Same backfill for note.wikiInfobox — notes also use WikiInfoboxEntry.
+  if (Array.isArray(state.notes)) {
+    for (const note of state.notes as any[]) {
+      if (Array.isArray(note.wikiInfobox)) {
+        note.wikiInfobox = note.wikiInfobox.map((e: any) => {
+          if (!e || typeof e !== "object") return e
+          const t = e.type
+          if (t === "field" || t === "section" || t === "group-header") return e
+          return { ...e, type: "field" as const }
+        })
+      }
+    }
+  }
+
   // v75: WikiBlock.editorWidth/editorHeight — optional, no backfill needed
 
   // v74: Add referenceIds to notes
   if (Array.isArray(state.notes)) {
     for (const note of state.notes as any[]) {
       if (!note.referenceIds) note.referenceIds = []
+    }
+  }
+
+  // v85: Banner block PR3 — adds bannerBgColorEnd / bannerIcon / bannerSize /
+  //      bannerBgStyle to wiki banner blocks AND to TipTap bannerBlock nodes.
+  //      Block data lives in IDB (plot-wiki-block-meta) for wiki, and in note
+  //      bodies for TipTap. Both surfaces lazily default missing fields via
+  //      `?? "default-value"`, so this migration is a no-op in Zustand state
+  //      and just sets a localStorage marker for future analytics / debugging.
+  if (typeof window !== "undefined") {
+    try {
+      const FLAG = "plot.banner-pr3-migrated"
+      if (!window.localStorage.getItem(FLAG)) {
+        window.localStorage.setItem(FLAG, "pending")
+      }
+    } catch {
+      // ignore quota / privacy mode
     }
   }
 
@@ -914,6 +999,141 @@ export function migrate(persistedState: unknown): PlotState {
           { timestamp: ref.createdAt, action: "created" }
         ]
       }
+    }
+  }
+
+  // v86: hotfix — wikiArticle.infobox sometimes undefined on legacy data even
+  // after v83 migration. Always backfill to empty array.
+  if (Array.isArray(state.wikiArticles)) {
+    state.wikiArticles = (state.wikiArticles as any[]).map((a: any) => {
+      if (Array.isArray(a.infobox)) return a
+      return { ...a, infobox: [] }
+    })
+  }
+
+  // v87: WikiArticle.pinned — whole-article pin (mirrors Note.pinned).
+  if (Array.isArray(state.wikiArticles)) {
+    state.wikiArticles = (state.wikiArticles as any[]).map((a: any) => ({
+      ...a,
+      pinned: typeof a.pinned === "boolean" ? a.pinned : false,
+    }))
+  }
+
+  // v88: hotfix — clear all wiki article pins. Earlier seed/auto-promotion code
+  // accidentally set pinned=true on bulk-created articles. Reset everyone to
+  // false; users can re-pin intentionally via the Detail panel.
+  if (Array.isArray(state.wikiArticles)) {
+    state.wikiArticles = (state.wikiArticles as any[]).map((a: any) => ({
+      ...a,
+      pinned: false,
+    }))
+  }
+
+  // v89: dedupe wiki notes (noteType === "wiki") that share the same title.
+  // Earlier `createWikiStub` had no dedupe guard, so auto-enrollment spawned
+  // N copies of the same red-link target. Keep the oldest one per title;
+  // trash the rest (recoverable from /trash).
+  if (Array.isArray(state.notes)) {
+    const groups = new Map<string, any[]>()
+    for (const n of state.notes as any[]) {
+      if (n.noteType !== "wiki" || n.trashed) continue
+      const key = (n.title || "").trim().toLowerCase()
+      if (!key) continue
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(n)
+    }
+    const toTrash = new Set<string>()
+    const trashTime = new Date().toISOString()
+    for (const [, arr] of groups) {
+      if (arr.length <= 1) continue
+      // Keep the oldest (smallest createdAt), trash the rest.
+      arr.sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""))
+      for (let i = 1; i < arr.length; i++) {
+        toTrash.add(arr[i].id)
+      }
+    }
+    if (toTrash.size > 0) {
+      state.notes = (state.notes as any[]).map((n: any) =>
+        toTrash.has(n.id)
+          ? { ...n, trashed: true, trashedAt: trashTime }
+          : n,
+      )
+    }
+  }
+
+  // v90: dedupe wikiArticles (separate entity since v47) by title.
+  // Same root cause as v89, different array. Keep oldest, trash the rest.
+  if (Array.isArray(state.wikiArticles)) {
+    const groups = new Map<string, any[]>()
+    for (const a of state.wikiArticles as any[]) {
+      if ((a as { trashed?: boolean }).trashed) continue
+      const key = (a.title || "").trim().toLowerCase()
+      if (!key) continue
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(a)
+    }
+    const toTrash = new Set<string>()
+    const trashTime = new Date().toISOString()
+    for (const [, arr] of groups) {
+      if (arr.length <= 1) continue
+      arr.sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""))
+      for (let i = 1; i < arr.length; i++) {
+        toTrash.add(arr[i].id)
+      }
+    }
+    if (toTrash.size > 0) {
+      state.wikiArticles = (state.wikiArticles as any[]).map((a: any) =>
+        toTrash.has(a.id)
+          ? { ...a, trashed: true, trashedAt: trashTime }
+          : a,
+      )
+    }
+  }
+
+  // v91: idempotent re-run of v89/v90 dedupe in case earlier passes didn't apply
+  // (e.g. seed re-hydration, persist version skip). Same algorithm, runs again.
+  if (Array.isArray(state.wikiArticles)) {
+    const groups = new Map<string, any[]>()
+    for (const a of state.wikiArticles as any[]) {
+      if ((a as { trashed?: boolean }).trashed) continue
+      const key = (a.title || "").trim().toLowerCase()
+      if (!key) continue
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(a)
+    }
+    const toTrash = new Set<string>()
+    const trashTime = new Date().toISOString()
+    for (const [, arr] of groups) {
+      if (arr.length <= 1) continue
+      arr.sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""))
+      for (let i = 1; i < arr.length; i++) toTrash.add(arr[i].id)
+    }
+    if (toTrash.size > 0) {
+      state.wikiArticles = (state.wikiArticles as any[]).map((a: any) =>
+        toTrash.has(a.id) ? { ...a, trashed: true, trashedAt: trashTime } : a,
+      )
+    }
+  }
+  if (Array.isArray(state.notes)) {
+    const groups = new Map<string, any[]>()
+    for (const n of state.notes as any[]) {
+      if (n.noteType !== "wiki" || n.trashed) continue
+      const key = (n.title || "").trim().toLowerCase()
+      if (!key) continue
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(n)
+    }
+    const toTrash = new Set<string>()
+    const trashTime = new Date().toISOString()
+    for (const [, arr] of groups) {
+      if (arr.length <= 1) continue
+      arr.sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""))
+      for (let i = 1; i < arr.length; i++) toTrash.add(arr[i].id)
+    }
+    if (toTrash.size > 0) {
+      state.notes = (state.notes as any[]).map((n: any) =>
+        toTrash.has(n.id) ? { ...n, trashed: true, trashedAt: trashTime } : n,
+      )
     }
   }
 

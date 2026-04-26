@@ -125,3 +125,11 @@ function next(depth: number): string {
 - "별로" → 디자인 quality 문제. 옵션 제시하고 결정 받기
 - "롤백" → 직진하지 말고 한 단계 뒤로
 - "F도 마음에 들고 G로 진화" → 점진적 향상이 best
+
+## 2026-04-26
+- **Zustand persist version migration**: stored < currentVersion일 때만 호출. 재실행 보장 idempotent + version bump. `partialize`가 contentJson strip → IDB 비동기 로드 필수.
+- **Radix Popover hydration**: SSR/CSR 자동 ID 다름 → console warning. `<ClientOnly>` 또는 mount guard. 기능 영향 X.
+- **TipTap NodeView Popover 정렬**: `align="start"` + `sideOffset` + `collisionPadding` 필수. default `align="center"`는 좁은 chip에서 화면 좌측으로 밀림.
+- **자동 등재 무한 누적 버그**: `createWikiStub` dedupe 가드 없으면 매 사이클 동일 title 누적. 시드 노트의 [[wiki:Title]] 다수 → 12시간마다 중복 폭발.
+- **WikiArticle vs noteType "wiki" Note**: 별도 entity (wikiArticles slice + notes slice). wiki space는 wikiArticles만 표시. createWikiStub은 notes에 추가. dedupe 양쪽 필요.
+- **MixedQuicklinks sortKey**: `${type-priority}-${pinnedOrder/createdAt}` 복합 키. 종류별 그룹 + 안정 정렬.

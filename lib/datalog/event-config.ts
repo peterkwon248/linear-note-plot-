@@ -12,6 +12,7 @@ import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { FileText as PhFileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { BookOpen as PhBookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Scissors as PhScissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import type { Icon as PhIcon } from "@phosphor-icons/react"
 import type { NoteEventType } from "@/lib/types"
 import { EVENT_HEX } from "@/lib/colors"
@@ -49,6 +50,7 @@ export const EVENT_CONFIG: Record<NoteEventType, EventTypeConfig> = {
   attachment_added: { icon: Paperclip, verb: "attached file", color: EVENT_HEX.attachment_added },
   attachment_removed: { icon: Paperclip, verb: "removed attachment", color: EVENT_HEX.attachment_removed },
   reflection_added: { icon: PhBookOpen, verb: "Added reflection", color: EVENT_HEX.reflection_added },
+  split: { icon: PhScissors, verb: "Split into new note", color: EVENT_HEX.split },
 }
 
 // Human-readable event type labels for filter chips

@@ -20,7 +20,9 @@ import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
 import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
 import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
+import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 
@@ -399,6 +401,20 @@ export function FloatingActionBar({
             >
               <GitMerge size={16} weight="regular" /> GitMerge
             </button>
+
+            {/* Split (single selection only) */}
+            {count === 1 && (
+              <button
+                onClick={() => {
+                  const note = selectedNotes[0]
+                  if (note) setSplitTargetNoteId(note.id)
+                }}
+                className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+                title="Split this note into two"
+              >
+                <Scissors size={16} weight="regular" /> Split
+              </button>
+            )}
 
             {/* Wiki Assembly */}
             <button

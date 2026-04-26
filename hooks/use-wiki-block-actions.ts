@@ -53,6 +53,21 @@ export function useWikiBlockActions(articleId: string) {
       return
     }
 
+    if (type === "banner") {
+      const block: Omit<WikiBlock, "id"> = {
+        type: "banner",
+        title: "Banner title",
+        bannerSubtitle: "",
+        bannerBgColor: null,
+        bannerBgColorEnd: null,
+        bannerIcon: "megaphone",
+        bannerSize: "default",
+        bannerBgStyle: "solid",
+      }
+      addWikiBlock(articleId, block, afterBlockId)
+      return
+    }
+
     // Content blocks: create Text block with pre-filled TipTap content
     if (type.startsWith("text:")) {
       const subtype = type.split(":")[1]

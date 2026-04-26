@@ -27,17 +27,22 @@ export function NoteCommentMarkerLayer({
   return (
     <>
       {editor &&
-        blocks.map((block) => (
-          <NoteMarkerSlot
-            key={block.id}
-            blockId={block.id}
-            docPos={block.docPos}
-            nodeSize={block.nodeSize}
-            editor={editor}
-            noteId={noteId}
-            containerRef={containerRef}
-          />
-        ))}
+        blocks
+          // Banners host their own integrated cluster (PaintBucket + Comment +
+          // Bookmark + X) inside the node view, so the global overlay must skip
+          // them — otherwise the user sees a duplicate cluster.
+          .filter((block) => block.nodeType !== "bannerBlock")
+          .map((block) => (
+            <NoteMarkerSlot
+              key={block.id}
+              blockId={block.id}
+              docPos={block.docPos}
+              nodeSize={block.nodeSize}
+              editor={editor}
+              noteId={noteId}
+              containerRef={containerRef}
+            />
+          ))}
     </>
   )
 }

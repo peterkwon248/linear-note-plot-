@@ -8,8 +8,12 @@ import { WikiBlockRenderer, AddBlockButton } from "./wiki-block-renderer"
 import { SortableBlockItem } from "./sortable-block-item"
 import { CategoryTreePicker } from "./category-tree-picker"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
+import { NotePickerDialog } from "@/components/note-picker-dialog"
+import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
+import { getEmbedDescendants } from "@/lib/embed-cycle"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
+import { INFOBOX_PRESETS } from "@/lib/wiki-infobox-presets"
 import { cn } from "@/lib/utils"
 import { Virtuoso } from "react-virtuoso"
 import { toast } from "sonner"
@@ -19,6 +23,7 @@ import { shortRelative } from "@/lib/format-utils"
 import { setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { setActiveRoute } from "@/lib/table-route"
 import { useWikiBlockActions } from "@/hooks/use-wiki-block-actions"
+import { WikiBreadcrumb } from "./wiki-breadcrumb"
 import {
   DndContext,
   DragOverlay,
@@ -130,6 +135,7 @@ interface WikiArticleViewProps {
 
 export function WikiArticleView({ articleId, editable = false, preview = false, onDelete, collapseAllCmd, onCollapseAllDone, onAllCollapsedChange, fontSize }: WikiArticleViewProps) {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const notes = usePlotStore((s) => s.notes)
   const updateWikiBlock = usePlotStore((s) => s.updateWikiBlock)
   const reorderWikiBlocks = usePlotStore((s) => s.reorderWikiBlocks)
   const splitWikiArticle = usePlotStore((s) => s.splitWikiArticle)
@@ -146,6 +152,63 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
   const [dragSplitPrompt, setDragSplitPrompt] = useState<{ blockId: string; defaultTitle: string } | null>(null)
   // Footnote offset tracking: each text block reports how many footnoteRef nodes it has
   const [footnoteCounts, setFootnoteCounts] = useState<Map<string, number>>(new Map())
+
+  // ── Embed picker state (for wiki TextBlock embed-note/embed-wiki slash commands) ──
+  const [embedNotePickerOpen, setEmbedNotePickerOpen] = useState(false)
+  const embedNoteEditorRef = useRef<import("@tiptap/react").Editor | null>(null)
+  const [embedWikiPickerOpen, setEmbedWikiPickerOpen] = useState(false)
+  const embedWikiEditorRef = useRef<import("@tiptap/react").Editor | null>(null)
+
+  // Cycle-safe exclude IDs: descendants of the current wiki article
+  const embedNoteExcludeIds = useMemo(() => {
+    const { notes: descNotes } = getEmbedDescendants(articleId, "wiki", { notes, wikiArticles })
+    return [...descNotes]
+  }, [articleId, notes, wikiArticles])
+
+  const embedWikiExcludeIds = useMemo(() => {
+    const { wikis: descWikis } = getEmbedDescendants(articleId, "wiki", { notes, wikiArticles })
+    return [...descWikis]
+  }, [articleId, notes, wikiArticles])
+
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ editor: import("@tiptap/react").Editor; editorTier?: string }>) => {
+      // Only handle events from wiki-tier editors
+      if (e.detail.editorTier && e.detail.editorTier !== "wiki") return
+      embedNoteEditorRef.current = e.detail.editor
+      setEmbedNotePickerOpen(true)
+    }
+    window.addEventListener("plot:embed-note-pick", handler as EventListener)
+    return () => window.removeEventListener("plot:embed-note-pick", handler as EventListener)
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ editor: import("@tiptap/react").Editor; editorTier?: string }>) => {
+      // Only handle events from wiki-tier editors
+      if (e.detail.editorTier && e.detail.editorTier !== "wiki") return
+      embedWikiEditorRef.current = e.detail.editor
+      setEmbedWikiPickerOpen(true)
+    }
+    window.addEventListener("plot:embed-wiki-pick", handler as EventListener)
+    return () => window.removeEventListener("plot:embed-wiki-pick", handler as EventListener)
+  }, [])
+
+  const handleEmbedNoteSelect = useCallback((selectedNoteId: string) => {
+    const editor = embedNoteEditorRef.current
+    if (editor) {
+      editor.chain().focus().insertContent({ type: "noteEmbed", attrs: { noteId: selectedNoteId } }).run()
+    }
+    setEmbedNotePickerOpen(false)
+    embedNoteEditorRef.current = null
+  }, [])
+
+  const handleEmbedWikiSelect = useCallback((selectedArticleId: string) => {
+    const editor = embedWikiEditorRef.current
+    if (editor) {
+      editor.chain().focus().insertContent({ type: "wikiEmbed", attrs: { articleId: selectedArticleId } }).run()
+    }
+    setEmbedWikiPickerOpen(false)
+    embedWikiEditorRef.current = null
+  }, [])
 
   const handleFootnoteCount = useCallback((blockId: string, count: number) => {
     setFootnoteCounts(prev => {
@@ -442,6 +505,9 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
       {/* Blocks Content */}
       <div className="flex-1 overflow-y-auto flex flex-col" id="wiki-article-scroll-container">
         <div className={cn("px-8 py-6 pb-40 space-y-1 flex-1", !preview && (article.contentAlign === "center" ? "max-w-4xl mx-auto" : "max-w-[780px]"))}>
+          {/* Breadcrumb (parent hierarchy) */}
+          <WikiBreadcrumb articleId={articleId} />
+
           {/* Title (editable) */}
           {editable ? (
             <input
@@ -651,11 +717,12 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
       </div>
 
       {/* Infobox Right Panel — Wikipedia style 3-column */}
-      {!preview && (article.infobox.length > 0 || editable) && (
+      {!preview && ((article.infobox?.length ?? 0) > 0 || editable) && (
         <aside className="w-[260px] shrink-0 overflow-y-auto border-l border-border-subtle px-4 py-6 hidden xl:block">
           <div className="sticky top-0">
             <WikiInfobox
               noteId={article.id}
+              kind="wiki"
               entries={article.infobox}
               editable={editable}
               headerColor={article.infoboxHeaderColor ?? null}
@@ -665,6 +732,23 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                       usePlotStore
                         .getState()
                         .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                  : undefined
+              }
+              preset={article.infoboxPreset ?? "custom"}
+              onPresetChange={
+                editable
+                  ? (preset, seed) => {
+                      const def = INFOBOX_PRESETS.find((p) => p.preset === preset)
+                      usePlotStore.getState().updateWikiArticle(article.id, {
+                        infobox: seed,
+                        infoboxPreset: preset,
+                        // Apply preset's default header color when swapping to a non-custom preset
+                        // and the user hasn't customized the header color yet (or is on custom).
+                        ...(preset !== "custom" && def?.defaultHeaderColor !== undefined
+                          ? { infoboxHeaderColor: def.defaultHeaderColor }
+                          : {}),
+                      })
+                    }
                   : undefined
               }
             />
@@ -681,6 +765,22 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
           addWikiBlock(articleId, block, urlBlockDialog.afterBlockId)
           setUrlBlockDialog({ open: false })
         }}
+      />
+
+      {/* Embed pickers for wiki TextBlock slash commands */}
+      <NotePickerDialog
+        open={embedNotePickerOpen}
+        onOpenChange={setEmbedNotePickerOpen}
+        title="Embed a note"
+        excludeIds={embedNoteExcludeIds}
+        onSelect={handleEmbedNoteSelect}
+      />
+      <WikiPickerDialog
+        open={embedWikiPickerOpen}
+        onOpenChange={setEmbedWikiPickerOpen}
+        title="Embed a wiki article"
+        excludeIds={embedWikiExcludeIds}
+        onSelect={handleEmbedWikiSelect}
       />
     </div>
   )

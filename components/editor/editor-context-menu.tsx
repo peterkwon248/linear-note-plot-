@@ -749,7 +749,7 @@ export function EditorContextMenu({ editor, children }: EditorContextMenuProps) 
                   className={itemCls}
                   onSelect={() => {
                     if (editor) {
-                      window.dispatchEvent(new CustomEvent("plot:embed-note-pick", { detail: { editor } }))
+                      window.dispatchEvent(new CustomEvent("plot:embed-note-pick", { detail: { editor, editorTier: "note" } }))
                     }
                   }}
                 >

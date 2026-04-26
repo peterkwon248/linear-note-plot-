@@ -54,6 +54,8 @@ interface WikiPickerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title?: string
+  /** Wiki article IDs to exclude from the picker (e.g., for cycle prevention) */
+  excludeIds?: string[]
   onSelect: (articleId: string) => void
 }
 
@@ -63,10 +65,12 @@ export function WikiPickerDialog({
   open,
   onOpenChange,
   title = "Select a wiki article",
+  excludeIds = [],
   onSelect,
 }: WikiPickerDialogProps) {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const excludeSet = useMemo(() => new Set(excludeIds), [excludeIds])
 
   const [activeFilter, setActiveFilter] = useState<Set<string> | null>(null)
   const [search, setSearch] = useState("")
@@ -87,10 +91,11 @@ export function WikiPickerDialog({
     ]
   }, [wikiCategories])
 
-  // Deduplicate by title (keep most recently updated)
+  // Deduplicate by title (keep most recently updated), then apply excludeIds
   const deduped = useMemo(() => {
     const byTitle = new Map<string, (typeof wikiArticles)[0]>()
     for (const a of wikiArticles) {
+      if (excludeSet.has(a.id)) continue
       const key = a.title.toLowerCase()
       const existing = byTitle.get(key)
       if (!existing || new Date(a.updatedAt) > new Date(existing.updatedAt)) {
@@ -100,7 +105,7 @@ export function WikiPickerDialog({
     return [...byTitle.values()].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     )
-  }, [wikiArticles])
+  }, [wikiArticles, excludeSet])
 
   // Apply category filter
   const afterCategoryFilter = useMemo(() => {

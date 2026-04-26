@@ -14,6 +14,7 @@ import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { TextAlignLeft } from "@phosphor-icons/react/dist/ssr/TextAlignLeft"
 import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut"
+import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
 import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise"
 import { PencilSimple } from "@phosphor-icons/react/dist/ssr/PencilSimple"
 import { Link } from "@phosphor-icons/react/dist/ssr/Link"
@@ -104,6 +105,17 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
         }
       }
       updateReference(referenceId, { fields: newFields })
+    },
+    [referenceId, reference, updateReference]
+  )
+
+  const handleImageUrlBlur = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      if (!reference) return
+      const val = e.target.value.trim() || null
+      if (val !== (reference.imageUrl ?? null)) {
+        updateReference(referenceId, { imageUrl: val })
+      }
     },
     [referenceId, reference, updateReference]
   )
@@ -216,6 +228,33 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
             >
               <ArrowSquareOut size={14} weight="regular" />
             </a>
+          )}
+        </div>
+      </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* Image URL */}
+      <InspectorSection title="Image URL" icon={<PhImage size={16} weight="regular" />}>
+        <div className="space-y-2">
+          <input
+            type="text"
+            defaultValue={reference.imageUrl ?? ""}
+            key={reference.imageUrl ?? ""}
+            onBlur={handleImageUrlBlur}
+            placeholder="https://example.com/image.png"
+            className="w-full rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/40 focus:border-accent/50 focus:outline-none transition-colors"
+          />
+          {reference.imageUrl && (
+            <div className="rounded-md overflow-hidden border border-border/30 bg-secondary/20 inline-block max-w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={reference.imageUrl}
+                alt=""
+                className="max-h-32 object-contain"
+                onError={(e) => { e.currentTarget.style.display = "none" }}
+              />
+            </div>
           )}
         </div>
       </InspectorSection>

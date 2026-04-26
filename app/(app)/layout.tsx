@@ -42,6 +42,8 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 import { SecondaryPanelContent } from "@/components/workspace/secondary-panel-content"
 import { PaneProvider } from "@/components/workspace/pane-context"
 import { useSecondarySpace } from "@/lib/table-route"
+import { useSplitTargetNoteId, setSplitTargetNoteId } from "@/lib/note-split-mode"
+import { NoteSplitPage } from "@/components/views/note-split-page"
 
 const MIN_WIDTH = 200
 const MAX_WIDTH = 320
@@ -207,9 +209,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <PaneProvider pane="primary">
               <div
-                className="flex h-full overflow-hidden"
+                className="relative flex h-full overflow-hidden"
                 onPointerDownCapture={() => usePlotStore.getState().setActivePane('primary')}
               >
+                {/* Global Note Split overlay — covers entire primary panel when active */}
+                <NoteSplitOverlay />
+
                 {/* Table views (notes/pinned/trash): always mounted */}
                 <div className={isTableView ? "flex flex-1 overflow-hidden" : "hidden"}>
                   <NotesTableView />
@@ -354,5 +359,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Toaster position="bottom-right" theme={resolvedTheme === "dark" ? "dark" : "light"} />
       </div>
     </TooltipProvider>
+  )
+}
+
+/**
+ * Renders NoteSplitPage as an absolute overlay covering the entire primary
+ * panel area when split mode is active. This makes Split work from ANY view
+ * (notes list, inbox, even when no note is open).
+ */
+function NoteSplitOverlay() {
+  const splitTargetNoteId = useSplitTargetNoteId()
+  if (!splitTargetNoteId) return null
+  return (
+    <div className="absolute inset-0 z-40 flex flex-col bg-background">
+      <NoteSplitPage
+        noteId={splitTargetNoteId}
+        onClose={() => setSplitTargetNoteId(null)}
+      />
+    </div>
   )
 }

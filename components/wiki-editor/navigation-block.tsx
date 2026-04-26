@@ -6,6 +6,11 @@ import type { WikiBlock, WikiNavSlot } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
 import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
+import {
+  shouldUseLightText,
+  navboxForegroundClass,
+} from "@/lib/wiki-color-contrast"
+import { BannerColorPickerPopover } from "@/components/editor/nodes/banner-block-node"
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
@@ -13,6 +18,7 @@ import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { DotsSixVertical } from "@phosphor-icons/react/dist/ssr/DotsSixVertical"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
+import { PaintBucket } from "@phosphor-icons/react/dist/ssr/PaintBucket"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
@@ -38,6 +44,12 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
 
   const [pickerOpenFor, setPickerOpenFor] = useState<SlotKey | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [showHeaderColor, setShowHeaderColor] = useState(false)
+
+  const headerColor = block.navHeaderColor ?? null
+  const headerImage = block.navHeaderImage ?? null
+  const headerLight = shouldUseLightText(headerColor)
+  const headerFgClass = navboxForegroundClass(headerColor)
 
   const prev: WikiNavSlot = block.navPrev ?? { text: "" }
   const current: WikiNavSlot = block.navCurrent ?? { text: "" }
@@ -84,8 +96,26 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
     return (
       <div className="group/nav relative my-4 rounded-lg border border-border-subtle overflow-hidden">
         {block.navTitle && block.navTitle.trim() && (
-          <div className="bg-secondary/40 px-4 py-2 text-center text-sm font-semibold text-foreground border-b border-border-subtle">
-            {block.navTitle}
+          <div
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 text-center text-sm font-semibold border-b",
+              !headerColor && "bg-secondary/40",
+              headerLight ? "border-black/15" : "border-border-subtle",
+              headerFgClass || "text-foreground",
+            )}
+            style={headerColor ? { backgroundColor: headerColor } : undefined}
+          >
+            {headerImage && (
+              <img
+                src={headerImage}
+                alt=""
+                className="h-5 w-5 rounded-sm object-cover shrink-0"
+                onError={(e) => {
+                  ;(e.target as HTMLImageElement).style.display = "none"
+                }}
+              />
+            )}
+            <span className="flex-1 truncate">{block.navTitle}</span>
           </div>
         )}
         <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center bg-card/30">
@@ -158,14 +188,67 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
             )}
           </div>
           <div className="rounded-lg border border-border-subtle overflow-hidden bg-card/30">
-          {/* Title input */}
-          <div className="bg-secondary/40 px-3 py-2 border-b border-border-subtle">
+          {/* Title row + header color/image picker */}
+          <div
+            className={cn(
+              "relative flex items-center gap-2 px-3 py-2 border-b",
+              !headerColor && "bg-secondary/40",
+              headerLight ? "border-black/15" : "border-border-subtle",
+            )}
+            style={headerColor ? { backgroundColor: headerColor } : undefined}
+          >
+            {headerImage && (
+              <img
+                src={headerImage}
+                alt=""
+                className="h-5 w-5 rounded-sm object-cover shrink-0"
+                onError={(e) => {
+                  ;(e.target as HTMLImageElement).style.display = "none"
+                }}
+              />
+            )}
             <input
               type="text"
               value={block.navTitle ?? ""}
               onChange={(e) => onUpdate({ navTitle: e.target.value })}
               placeholder="Navigation title (optional)"
-              className="w-full bg-transparent text-sm font-semibold text-foreground text-center outline-none placeholder:text-muted-foreground/40 placeholder:font-normal"
+              className={cn(
+                "flex-1 bg-transparent text-sm font-semibold text-center outline-none placeholder:font-normal",
+                headerFgClass || "text-foreground",
+                headerLight ? "placeholder:text-white/40" : "placeholder:text-muted-foreground/40",
+              )}
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowHeaderColor((v) => !v)
+              }}
+              title="Header color"
+              className={cn(
+                "shrink-0 p-1 rounded transition-colors",
+                headerLight
+                  ? "text-white/70 hover:text-white hover:bg-white/10"
+                  : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
+              )}
+            >
+              <PaintBucket size={11} weight="regular" />
+            </button>
+            {showHeaderColor && (
+              <BannerColorPickerPopover
+                bgColor={headerColor}
+                onPick={(value) => onUpdate({ navHeaderColor: value })}
+                onClose={() => setShowHeaderColor(false)}
+              />
+            )}
+          </div>
+          {/* Header image URL row */}
+          <div className="px-3 py-1 bg-secondary/15 border-b border-border-subtle">
+            <input
+              type="text"
+              value={headerImage ?? ""}
+              onChange={(e) => onUpdate({ navHeaderImage: e.target.value || null })}
+              placeholder="Header image URL (optional)"
+              className="w-full bg-transparent text-2xs text-foreground/80 outline-none placeholder:text-muted-foreground/40 text-center"
             />
           </div>
 

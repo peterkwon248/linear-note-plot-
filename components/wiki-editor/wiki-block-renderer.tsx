@@ -9,6 +9,7 @@ import { persistAttachmentBlob } from "@/lib/store/helpers"
 import { useWikiBlockContent, useWikiBlockContentJson } from "@/hooks/use-wiki-block-content"
 import { NavboxBlock } from "./navbox-block"
 import { NavigationBlock } from "./navigation-block"
+import { WikiBannerBlock } from "./banner-block"
 import { WikiBlockInlineActions } from "./wiki-block-inline-actions"
 import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
 import { useEditor, EditorContent } from "@tiptap/react"
@@ -17,6 +18,7 @@ import { generateHTML } from "@tiptap/html"
 import { FixedToolbar } from "@/components/editor/FixedToolbar"
 import { BlockDragOverlay } from "@/components/editor/dnd/block-drag-overlay"
 import { saveBlockBody } from "@/lib/wiki-block-body-store"
+import { setEntityContext } from "@/lib/editor/entity-context"
 import type { DraggableSyntheticListeners } from "@dnd-kit/core"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
@@ -94,6 +96,8 @@ export function WikiBlockRenderer({ block, editable, sectionNumber, onUpdate, on
       return <NavboxBlock block={block} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} articleId={articleId} />
     case "nav":
       return <NavigationBlock block={block} articleId={articleId} editable={!!editable} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} />
+    case "banner":
+      return <WikiBannerBlock block={block} editable={!!editable} articleId={articleId} onUpdate={(patch) => onUpdate?.(patch)} onDelete={onDelete} dragHandleProps={dragHandleProps} />
     default:
       return null
   }
@@ -575,6 +579,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
           editorWidth={editorWidth}
           editorHeight={editorHeight}
           onEditorResize={(w, h) => onUpdate?.({ editorWidth: w, editorHeight: h })}
+          articleId={articleId}
         />
       ) : (
         <div
@@ -586,7 +591,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
           style={textSizeStyle}
         >
           {hasRichContent ? (
-            <ReadOnlyBlock content={initialContent} footnoteStartOffset={footnoteStartOffset} />
+            <ReadOnlyBlock content={initialContent} footnoteStartOffset={footnoteStartOffset} articleId={articleId} />
           ) : (
             <div className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground/85 whitespace-pre-wrap">
               {content || <span className="text-muted-foreground/30 italic">Write something...</span>}
@@ -599,7 +604,16 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
 }
 
 /** Read-only TipTap renderer — renders all custom nodes (Table, Callout, Toggle, etc.) correctly */
-function ReadOnlyBlock({ content, footnoteStartOffset = 0 }: { content: Record<string, unknown>; footnoteStartOffset?: number }) {
+function ReadOnlyBlock({
+  content,
+  footnoteStartOffset = 0,
+  articleId,
+}: {
+  content: Record<string, unknown>
+  footnoteStartOffset?: number
+  /** Parent wiki article id — published to editor.storage so embedded BannerNodeView etc. can build wiki-block anchors. */
+  articleId?: string
+}) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: createEditorExtensions("wiki", { placeholder: "" }),
@@ -614,6 +628,12 @@ function ReadOnlyBlock({ content, footnoteStartOffset = 0 }: { content: Record<s
       storage.footnoteRef = { ...storage.footnoteRef, footnoteStartOffset }
     }
   }, [editor, footnoteStartOffset])
+
+  // Publish wiki entity context for embedded node views (banner, etc.)
+  useEffect(() => {
+    if (!editor || !articleId) return
+    setEntityContext(editor, { kind: "wiki", entityId: articleId })
+  }, [editor, articleId])
 
   if (!editor) return null
 
@@ -634,6 +654,7 @@ function WikiTextEditor({
   editorWidth,
   editorHeight,
   onEditorResize,
+  articleId,
 }: {
   content: Record<string, unknown>
   onChange: (json: Record<string, unknown>, plainText: string) => void
@@ -642,6 +663,8 @@ function WikiTextEditor({
   editorWidth?: number | null
   editorHeight?: number | null
   onEditorResize?: (width: number | null, height: number | null) => void
+  /** Parent wiki article id — published to editor.storage so node views can build wiki-block anchors. */
+  articleId?: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isResizing, setIsResizing] = useState(false)
@@ -669,6 +692,13 @@ function WikiTextEditor({
       storage.footnoteRef = { ...storage.footnoteRef, footnoteStartOffset }
     }
   }, [editor, footnoteStartOffset])
+
+  // Publish wiki entity context so embedded nodes (e.g. BannerNodeView) can
+  // build a wiki-block comment anchor against the parent article.
+  useEffect(() => {
+    if (!editor || !articleId) return
+    setEntityContext(editor, { kind: "wiki", entityId: articleId })
+  }, [editor, articleId])
 
   // Click on empty area → focus editor (must be before early return to keep hook order stable)
   const handleContainerClick = useCallback((e: React.MouseEvent) => {
@@ -1689,6 +1719,7 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
     { type: "image", label: "Image", desc: "Upload image" },
     { type: "url", label: "URL", desc: "Embed a link" },
     { type: "table", label: "Table", desc: "Data table" },
+    { type: "banner", label: "Banner", desc: "Highlighted notice with title" },
     { type: "navbox", label: "Navbox", desc: "Category article grid" },
     { type: "nav", label: "Navigation", desc: "Prev ← Current → Next" },
   ]

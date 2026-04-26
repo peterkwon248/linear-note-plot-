@@ -21,6 +21,7 @@ import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
+import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,6 +86,8 @@ import { NotePickerDialog } from "@/components/note-picker-dialog"
 import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { onEmbedUrlRequest } from "@/lib/editor/embed-url-request"
+import { setSplitTargetNoteId } from "@/lib/note-split-mode"
+import { getEmbedDescendants } from "@/lib/embed-cycle"
 
 interface NoteEditorProps {
   noteId?: string
@@ -97,6 +100,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   const activeNoteId = propNoteId ?? storeSelectedNoteId
   const setSelectedNoteId = usePlotStore((s) => s.setSelectedNoteId)
   const notes = usePlotStore((s) => s.notes)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const togglePin = usePlotStore((s) => s.togglePin)
   const deleteNote = usePlotStore((s) => s.deleteNote)
   const duplicateNote = usePlotStore((s) => s.duplicateNote)
@@ -118,6 +122,19 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
   const isActivePane = useIsActivePane()
 
   const note = notes.find((n) => n.id === activeNoteId) ?? null
+
+  // Cycle-safe embed picker: exclude all note/wiki IDs reachable from current note
+  const embedNoteExcludeIds = useMemo(() => {
+    if (!activeNoteId) return []
+    const { notes: descNotes } = getEmbedDescendants(activeNoteId, "note", { notes, wikiArticles })
+    return [...descNotes]
+  }, [activeNoteId, notes, wikiArticles])
+
+  const embedWikiExcludeIds = useMemo(() => {
+    if (!activeNoteId) return []
+    const { wikis: descWikis } = getEmbedDescendants(activeNoteId, "note", { notes, wikiArticles })
+    return [...descWikis]
+  }, [activeNoteId, notes, wikiArticles])
 
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
   const [isReadMode, setIsReadMode] = useState(false)
@@ -249,9 +266,11 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
     return () => window.removeEventListener("keydown", handler)
   }, [note, togglePin, deleteNote, setSelectedNoteId, confirmDelete])
 
-  // Listen for embed note picker requests from SlashCommand / context menu
+  // Listen for embed note picker requests from SlashCommand / context menu (note tier only)
   useEffect(() => {
-    const handler = (e: CustomEvent<{ editor: Editor }>) => {
+    const handler = (e: CustomEvent<{ editor: Editor; editorTier?: string }>) => {
+      // Ignore events from wiki-tier editors (handled by wiki-article-view)
+      if (e.detail.editorTier && e.detail.editorTier !== "note") return
       embedEditorRef.current = e.detail.editor
       setEmbedPickerOpen(true)
     }
@@ -269,9 +288,11 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
     embedEditorRef.current = null
   }, [])
 
-  // Listen for embed wiki picker requests from SlashCommand
+  // Listen for embed wiki picker requests from SlashCommand (note tier only)
   useEffect(() => {
-    const handler = (e: CustomEvent<{ editor: Editor }>) => {
+    const handler = (e: CustomEvent<{ editor: Editor; editorTier?: string }>) => {
+      // Ignore events from wiki-tier editors (handled by wiki-article-view)
+      if (e.detail.editorTier && e.detail.editorTier !== "note") return
       wikiEmbedEditorRef.current = e.detail.editor
       setWikiEmbedPickerOpen(true)
     }
@@ -470,6 +491,10 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
                 <GitMerge size={16} weight="regular" />
                 GitMerge with...
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSplitTargetNoteId(note.id)}>
+                <Scissors size={16} weight="regular" />
+                Split this note...
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLinkPickerOpen(true, note.id)}>
                 <PhLink size={16} weight="regular" />
                 Link to...
@@ -606,7 +631,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
         open={embedPickerOpen}
         onOpenChange={setEmbedPickerOpen}
         title="Embed a note"
-        excludeIds={activeNoteId ? [activeNoteId] : []}
+        excludeIds={embedNoteExcludeIds}
         onSelect={handleEmbedNoteSelect}
       />
       <NotePickerDialog
@@ -619,6 +644,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
         open={wikiEmbedPickerOpen}
         onOpenChange={setWikiEmbedPickerOpen}
         title="Embed a wiki article"
+        excludeIds={embedWikiExcludeIds}
         onSelect={handleWikiEmbedSelect}
       />
       <UrlInputDialog

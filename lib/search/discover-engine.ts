@@ -50,6 +50,12 @@ export interface DiscoverNoteInput {
   folderId?: string | null
   isWiki?: boolean
   preview?: string
+  /**
+   * Mention atom targets extracted from this note's contentJson.
+   * `noteIds` = ids of @-mentioned notes; `wikiIds` = ids of @-mentioned wiki articles.
+   * Optional — when omitted, mention overlap is skipped for this note.
+   */
+  mentionTargets?: { noteIds: string[]; wikiIds: string[] }
 }
 
 export interface DiscoverParams {
@@ -62,6 +68,13 @@ export interface DiscoverParams {
   allNotes: DiscoverNoteInput[]
   backlinksMap: Record<string, string[]>
   allTags: Array<{ id: string; name: string }>
+  /**
+   * Current note's @-mention atom targets (note ids + wiki ids).
+   * When provided, candidates that appear in either set get a "mention"
+   * bonus equivalent to a direct wikilink, and shared mention overlap
+   * counts the same as shared link targets.
+   */
+  noteMentionTargets?: { noteIds: Set<string>; wikiIds: Set<string> }
 }
 
 // ── Scoring ──────────────────────────────────────────────
@@ -82,6 +95,7 @@ export function discoverRelated(params: DiscoverParams): DiscoverResult {
     allNotes,
     backlinksMap,
     allTags,
+    noteMentionTargets,
   } = params
 
   // Tokenize current note
@@ -89,6 +103,13 @@ export function discoverRelated(params: DiscoverParams): DiscoverResult {
   const sourceTokens = new Set(tokenize(sourceText))
   const sourceLinksSet = new Set(noteLinksOut)
   const sourceTagsSet = new Set(noteTags)
+  // Combined mention id set (note + wiki ids) — used for fast O(1) lookup of
+  // candidates the current note has @-mentioned anywhere in its body.
+  const sourceMentionIds = new Set<string>()
+  if (noteMentionTargets) {
+    for (const id of noteMentionTargets.noteIds) sourceMentionIds.add(id)
+    for (const id of noteMentionTargets.wikiIds) sourceMentionIds.add(id)
+  }
 
   // Pre-compute: which notes does the current note link TO?
   // backlinksMap[X] = [notes that link to X]
@@ -144,6 +165,27 @@ export function discoverRelated(params: DiscoverParams): DiscoverResult {
       reasons.push("direct link")
     }
 
+    // Mention bonus (treated equivalent to direct link):
+    //   (a) current note @-mentions `other`
+    //   (b) `other` @-mentions current note
+    // Either case earns a single "mention" reason — we don't double-count
+    // when both directions hold to keep scores comparable to "direct link".
+    let mentionMatched = false
+    if (sourceMentionIds.has(other.id)) mentionMatched = true
+    if (!mentionMatched && other.mentionTargets) {
+      const otherMentions = other.mentionTargets
+      if (
+        otherMentions.noteIds.includes(noteId) ||
+        otherMentions.wikiIds.includes(noteId)
+      ) {
+        mentionMatched = true
+      }
+    }
+    if (mentionMatched) {
+      backlinkScore += W_BACKLINK
+      reasons.push("mention")
+    }
+
     // Shared backlink targets: both link to the same note
     let sharedTargets = 0
     for (const link of noteLinksOut) {
@@ -152,6 +194,23 @@ export function discoverRelated(params: DiscoverParams): DiscoverResult {
     if (sharedTargets > 0) {
       backlinkScore += sharedTargets * 2
       reasons.push(`${sharedTargets} shared link target${sharedTargets > 1 ? "s" : ""}`)
+    }
+
+    // Shared mention targets: both mention the same note/wiki id.
+    // Counts the same as shared link targets to stay consistent with the
+    // wikilink-based shared-target bonus.
+    if (other.mentionTargets && sourceMentionIds.size > 0) {
+      let sharedMentions = 0
+      for (const id of other.mentionTargets.noteIds) {
+        if (sourceMentionIds.has(id)) sharedMentions++
+      }
+      for (const id of other.mentionTargets.wikiIds) {
+        if (sourceMentionIds.has(id)) sharedMentions++
+      }
+      if (sharedMentions > 0) {
+        backlinkScore += sharedMentions * 2
+        reasons.push(`${sharedMentions} shared mention${sharedMentions > 1 ? "s" : ""}`)
+      }
     }
 
     // Shared backlinkers: both are linked FROM the same note

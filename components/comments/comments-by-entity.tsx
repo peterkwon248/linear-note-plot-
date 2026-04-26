@@ -35,6 +35,7 @@ import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb"
 import { Article } from "@phosphor-icons/react/dist/ssr/Article"
 import { CaretDoubleDown } from "@phosphor-icons/react/dist/ssr/CaretDoubleDown"
 import { ListNumbers as PhTocIcon } from "@phosphor-icons/react/dist/ssr/ListNumbers"
+import { Megaphone } from "@phosphor-icons/react/dist/ssr/Megaphone"
 import { toast } from "sonner"
 import { CommentEditor, CommentBodyDisplay } from "./comment-editor"
 
@@ -48,6 +49,8 @@ type BlockTargetType =
   | "navbox"
   | "nav"
   | "navigation"
+  | "banner"
+  | "bannerBlock"
   | "paragraph"
   | "bulletList"
   | "orderedList"
@@ -74,6 +77,9 @@ function BlockTypeIcon({ type, size = 14, className }: { type: BlockTargetType; 
     case "navbox": return <Folders {...props} />
     case "nav":
     case "navigation": return <Compass {...props} />
+    case "banner":
+    case "bannerBlock": return <Megaphone {...props} />
+
     case "bulletList": return <ListBullets {...props} />
     case "orderedList": return <ListNumbers {...props} />
     case "taskList": return <CheckSquare {...props} />
@@ -101,6 +107,8 @@ function blockTypeColor(type: BlockTargetType): string {
     case "navbox":
     case "nav":
     case "navigation": return "bg-amber-500/40"
+    case "banner":
+    case "bannerBlock": return "bg-rose-500/40"
     case "calloutBlock": return "bg-yellow-500/40"
     case "blockquote": return "bg-muted-foreground/30"
     case "codeBlock": return "bg-pink-500/40"
@@ -227,6 +235,7 @@ export function CommentsByEntity({
       const block = article.blocks?.find((b: any) => b.id === anchor.blockId)
       if (!block) return "(deleted block)"
       if (block.type === "section") return block.title || "Untitled section"
+      if (block.type === "banner") return block.title || "Banner"
       return block.type
     }
     if (anchor.kind === "note-block") {
@@ -333,6 +342,7 @@ export function CommentsByEntity({
         case "url": return "Link"
         case "table": return "Table"
         case "navbox": return "Navbox"
+        case "banner": return b.title || "Banner"
         case "nav":
         case "navigation": return "Navigation"
         default: return b.type

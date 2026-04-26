@@ -8,6 +8,7 @@ import { SortableBlockItem } from "./sortable-block-item"
 import { InlineCategoryTags } from "./wiki-article-view"
 import { shortRelative } from "@/lib/format-utils"
 import { WikiInfobox } from "@/components/editor/wiki-infobox"
+import { INFOBOX_PRESETS } from "@/lib/wiki-infobox-presets"
 import { UrlInputDialog } from "@/components/editor/url-input-dialog"
 import { WikiFootnotesSection, WikiReferencesSection } from "./wiki-footnotes-section"
 import { cn } from "@/lib/utils"
@@ -256,10 +257,11 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         {article.contentAlign === "center" ? (
           <>
             {/* Center mode: stack vertically — Infobox → TOC → blocks */}
-            {(article.infobox.length > 0 || isEditing) && (
+            {((article.infobox?.length ?? 0) > 0 || isEditing) && (
               <div className="mb-6 max-w-sm">
                 <WikiInfobox
                   noteId={article.id}
+                  kind="wiki"
                   entries={article.infobox}
                   editable={isEditing}
                   headerColor={article.infoboxHeaderColor ?? null}
@@ -269,6 +271,21 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
                           usePlotStore
                             .getState()
                             .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                      : undefined
+                  }
+                  preset={article.infoboxPreset ?? "custom"}
+                  onPresetChange={
+                    isEditing
+                      ? (preset, seed) => {
+                          const def = INFOBOX_PRESETS.find((p) => p.preset === preset)
+                          usePlotStore.getState().updateWikiArticle(article.id, {
+                            infobox: seed,
+                            infoboxPreset: preset,
+                            ...(preset !== "custom" && def?.defaultHeaderColor !== undefined
+                              ? { infoboxHeaderColor: def.defaultHeaderColor }
+                              : {}),
+                          })
+                        }
                       : undefined
                   }
                 />
@@ -283,10 +300,11 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
         ) : (
           <>
             {/* Left mode: float infobox right, TOC inline */}
-            {(article.infobox.length > 0 || isEditing) && (
+            {((article.infobox?.length ?? 0) > 0 || isEditing) && (
               <div className="float-right ml-6 mb-4 w-[320px]">
                 <WikiInfobox
                   noteId={article.id}
+                  kind="wiki"
                   entries={article.infobox}
                   editable={isEditing}
                   headerColor={article.infoboxHeaderColor ?? null}
@@ -296,6 +314,21 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
                           usePlotStore
                             .getState()
                             .updateWikiArticle(article.id, { infoboxHeaderColor: color })
+                      : undefined
+                  }
+                  preset={article.infoboxPreset ?? "custom"}
+                  onPresetChange={
+                    isEditing
+                      ? (preset, seed) => {
+                          const def = INFOBOX_PRESETS.find((p) => p.preset === preset)
+                          usePlotStore.getState().updateWikiArticle(article.id, {
+                            infobox: seed,
+                            infoboxPreset: preset,
+                            ...(preset !== "custom" && def?.defaultHeaderColor !== undefined
+                              ? { infoboxHeaderColor: def.defaultHeaderColor }
+                              : {}),
+                          })
+                        }
                       : undefined
                   }
                 />

@@ -286,6 +286,77 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       }
     },
 
+    splitNote: (sourceId: string, { extractedJson, remainingJson, newTitle }: { extractedJson: Record<string, unknown>; remainingJson: Record<string, unknown>; newTitle: string }): string | null => {
+      const state = get()
+      const source = state.notes.find((n: Note) => n.id === sourceId)
+      if (!source) return null
+
+      // Guard: both sides must have ≥1 top-level block.
+      const extractedContent = (extractedJson?.content as unknown[] | undefined) ?? []
+      const remainingContent = (remainingJson?.content as unknown[] | undefined) ?? []
+      if (!Array.isArray(extractedContent) || extractedContent.length === 0) return null
+      if (!Array.isArray(remainingContent) || remainingContent.length === 0) return null
+
+      const newId = genId()
+      const titleForNew = newTitle.trim() || "Untitled"
+
+      // New note inherits metadata (tags, label, folder, type) from source.
+      // Status defaults to "inbox" — a freshly split-off note belongs in triage.
+      const newNote: Note = {
+        id: newId,
+        title: titleForNew,
+        content: "",
+        contentJson: extractedJson,
+        folderId: source.folderId,
+        tags: [...source.tags],
+        status: "inbox",
+        priority: "none",
+        reads: 0,
+        pinned: false,
+        trashed: false,
+        createdAt: now(),
+        updatedAt: now(),
+        labelId: source.labelId,
+        preview: extractPreview(""),
+        linksOut: extractLinksOut(""),
+        noteType: source.noteType,
+        aliases: [],
+        wikiInfobox: [],
+        referenceIds: [],
+        ...workflowDefaults("inbox"),
+      }
+
+      set((s: any) => ({
+        notes: [
+          newNote,
+          ...s.notes.map((n: Note) =>
+            n.id === sourceId
+              ? {
+                  ...n,
+                  contentJson: remainingJson,
+                  // Note: we deliberately do NOT touch n.content (markdown).
+                  // contentJson is the source of truth for the editor; content
+                  // gets re-derived on the next edit via NoteEditorAdapter.flush.
+                  updatedAt: now(),
+                  lastTouchedAt: now(),
+                }
+              : n
+          ),
+        ],
+        selectedNoteId: newId,
+      }))
+
+      // Persist both bodies to IDB.
+      persistBody({ id: newId, content: "", contentJson: extractedJson })
+      persistBody({ id: sourceId, content: source.content, contentJson: remainingJson })
+
+      // Events.
+      appendEvent(sourceId, "split", { newNoteId: newId, newTitle: titleForNew })
+      appendEvent(newId, "created", { splitFrom: sourceId })
+
+      return newId
+    },
+
     togglePin: (id: string) => {
       set((state: any) => ({
         notes: state.notes.map((n: Note) =>
@@ -376,6 +447,18 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
     },
 
     createWikiStub: (title: string, aliases?: string[]) => {
+      // Dedupe: if a wiki note with the same title (case-insensitive) already
+      // exists, return its id instead of creating a duplicate. This prevents
+      // auto-enrollment from spawning N copies of the same red-link target.
+      const titleLower = title.trim().toLowerCase()
+      const existing = (get() as any).notes.find(
+        (n: Note) =>
+          !n.trashed &&
+          n.noteType === "wiki" &&
+          (n.title || "").trim().toLowerCase() === titleLower,
+      )
+      if (existing) return existing.id
+
       const id = genId()
       // Wiki template: pre-fill with basic structure so TOC appears immediately
       const templateContent = `## Overview\n\n\n\n## Details\n\n\n\n## See Also\n\n`

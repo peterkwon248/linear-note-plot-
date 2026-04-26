@@ -1,4 +1,12 @@
 /**
+ * @deprecated Since PR 7. Heavy Home insights (Orphans / Unresolved Links / Unlinked
+ * Mentions / Suggestions) moved to Ontology > Insights. Home no longer has a
+ * drill-down router — it is a single-page workflow surface.
+ *
+ * This module is kept as a no-op stub for back-compat with any caller that still
+ * imports `setHomeSection` (currently: activity-bar.tsx during space switch).
+ * It can be removed once all callers are cleaned up.
+ *
  * Lightweight external store for Home view section drill-down.
  * Same pattern as lib/table-route.ts — synchronous updates, no React state.
  * Components subscribe via useSyncExternalStore.
