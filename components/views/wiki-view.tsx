@@ -294,8 +294,12 @@ export function WikiView() {
     setSelectedArticleId(null)
   }, [])
 
-  // Wiki data comes from wikiArticles (separate entity since v47)
-  const wikiNotes = wikiArticles
+  // Wiki data comes from wikiArticles (separate entity since v47).
+  // Exclude trashed articles (v90 dedupe migration soft-trashes duplicates).
+  const wikiNotes = useMemo(
+    () => wikiArticles.filter((a) => !(a as { trashed?: boolean }).trashed),
+    [wikiArticles],
+  )
 
   // Filter wiki notes
   const filteredWikiNotes = useMemo(() => {
@@ -1153,7 +1157,7 @@ export function WikiView() {
         <div className="flex flex-1 overflow-hidden">
           <WikiDashboard
             wikiNotes={wikiNotes}
-            wikiArticles={wikiArticles}
+            wikiArticles={wikiNotes}
             stats={stats}
             articleCount={articleCount}
             stubCount={stubCount}

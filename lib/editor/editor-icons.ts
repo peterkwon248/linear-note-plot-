@@ -105,6 +105,12 @@ import {
   RiSortAsc,
   RiSortDesc,
   RiPriceTag3Line,
+  RiMegaphoneLine,
+  RiCakeLine,
+  RiTimerLine,
+  RiStarLine,
+  RiSparklingLine,
+  RiPushpinLine,
 
   // Settings & Info
   RiSettings3Line,
@@ -244,7 +250,13 @@ export { RiPencilLine as PencilSimple }
 export { RiAddLine as Plus }
 export { RiPushpin2Line as PushPin }
 export { RiDoubleQuotesL as Quotes }
+export { RiMegaphoneLine as Megaphone }
 export { RiPriceTag3Line as Tag }
+export { RiCakeLine as Cake }
+export { RiTimerLine as Timer }
+export { RiStarLine as Star }
+export { RiSparklingLine as Sparkle }
+export { RiPushpinLine as Pushpin }
 
 // Settings & Info
 export { RiSettings3Line as GearSix }

@@ -40,6 +40,12 @@ function FootnoteRow({
     return urlField?.value || null
   }, [fn.referenceId, references])
 
+  const referenceImageUrl = useMemo(() => {
+    if (!fn.referenceId) return null
+    const ref = references[fn.referenceId]
+    return ref?.imageUrl || null
+  }, [fn.referenceId, references])
+
   const openModal = () => {
     if (!editor.isEditable) return
     openFootnoteModal({
@@ -109,6 +115,18 @@ function FootnoteRow({
 
       {fn.count > 1 && (
         <span className="footnotes-footer-count">({fn.count}× referenced)</span>
+      )}
+
+      {referenceImageUrl && (
+        <div className="w-full mt-1.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={referenceImageUrl}
+            alt=""
+            className="max-h-24 rounded object-contain"
+            onError={(e) => { e.currentTarget.style.display = "none" }}
+          />
+        </div>
       )}
     </li>
   )
@@ -291,6 +309,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
   const [newTitle, setNewTitle] = useState("")
   const [newUrl, setNewUrl] = useState("")
   const [newContent, setNewContent] = useState("")
+  const [newImageUrl, setNewImageUrl] = useState("")
   const searchRef = useRef<HTMLInputElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
 
@@ -325,6 +344,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
     setNewTitle("")
     setNewUrl("")
     setNewContent("")
+    setNewImageUrl("")
     setTimeout(() => searchRef.current?.focus(), 50)
   }
 
@@ -359,6 +379,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
     setNewTitle("")
     setNewUrl("")
     setNewContent("")
+    setNewImageUrl("")
     setEditingRefId(null)
   }
 
@@ -370,6 +391,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
     setNewTitle(ref.title)
     setNewUrl(ref.fields.find((f) => f.key.toLowerCase() === "url")?.value ?? "")
     setNewContent(ref.content)
+    setNewImageUrl(ref.imageUrl ?? "")
     setShowModal(true)
     setTimeout(() => titleRef.current?.focus(), 50)
   }
@@ -377,6 +399,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
   const handleSaveEdit = () => {
     if (!editingRefId || !newTitle.trim()) return
     const trimmedUrl = newUrl.trim()
+    const trimmedImageUrl = newImageUrl.trim()
     const ref = references[editingRefId]
     if (!ref) return
     const updatedFields = trimmedUrl
@@ -388,6 +411,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
       title: newTitle.trim(),
       content: newContent.trim(),
       fields: updatedFields,
+      imageUrl: trimmedImageUrl || null,
     })
     closeModal()
   }
@@ -403,16 +427,19 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
     setNewTitle(prefillTitle ?? search)
     setNewUrl("")
     setNewContent("")
+    setNewImageUrl("")
     setTimeout(() => titleRef.current?.focus(), 50)
   }
 
   const handleCreateAndLink = () => {
     if (!newTitle.trim() || !noteId) return
     const fields = newUrl.trim() ? [{ key: "URL", value: newUrl.trim() }] : []
+    const trimmedImageUrl = newImageUrl.trim()
     const refId = createReference({
       title: newTitle.trim(),
       content: newContent.trim() || newTitle.trim(),
       fields,
+      imageUrl: trimmedImageUrl || null,
     } as any)
     addNoteReference(noteId, refId)
     closeModal()
@@ -600,6 +627,27 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
                       rows={2}
                       className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent resize-none"
                     />
+                  </div>
+                  <div>
+                    <label className="text-2xs text-muted-foreground/60 mb-1 block">Image URL (optional)</label>
+                    <input
+                      type="text"
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="https://example.com/image.png"
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                    />
+                    {newImageUrl.trim() && (
+                      <div className="mt-1.5 rounded-md overflow-hidden border border-border/40 bg-secondary/30 inline-block max-w-full">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={newImageUrl.trim()}
+                          alt="Preview"
+                          className="max-h-24 object-contain"
+                          onError={(e) => { e.currentTarget.style.display = "none" }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="border-t border-border/30 px-5 py-3 flex justify-between items-center">

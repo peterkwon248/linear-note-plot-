@@ -7,7 +7,6 @@ import {
   setActiveSpace,
   DEFAULT_ROUTES,
 } from "@/lib/table-route"
-import { setHomeSection } from "@/lib/home-section"
 import { usePlotStore } from "@/lib/store"
 import type { ActivitySpace } from "@/lib/types"
 import {
@@ -63,10 +62,7 @@ export function ActivityBar() {
       // Same space → do nothing (use dedicated sidebar toggle button)
       return
     }
-    // Reset home section when leaving home space
-    if (space !== "home") {
-      setHomeSection("overview")
-    }
+    // PR 7: Home no longer has section drill-downs; nothing to reset on space switch.
     // Different space → switch (don't touch sidebar state)
     setActiveSpace(space)
     router.push(DEFAULT_ROUTES[space])

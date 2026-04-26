@@ -18,9 +18,35 @@ export type ActivitySpace = "home" | "notes" | "wiki" | "calendar" | "ontology" 
 export interface WikiInfoboxEntry {
   key: string
   value: string
-  /** Tier 1-4: "section" = group header row (bold + tinted bg, value hidden). "field" or undefined = normal key/value row */
-  type?: "field" | "section"
+  /**
+   * Tier 1-4 / PR1:
+   * - "section" = section divider row (bold + tinted bg, value hidden, NOT collapsible).
+   * - "group-header" = collapsible group header (chevron + label). Owns rows until next group-header.
+   * - "field" or undefined = normal key/value row
+   */
+  type?: "field" | "section" | "group-header"
+  /** group-header only: optional row background color (rgba/hex). null/undefined = default tinted bg. */
+  color?: string | null
+  /** group-header only: whether the group is collapsed by default on first render. */
+  defaultCollapsed?: boolean
 }
+
+/**
+ * Infobox preset — selects a domain-specific seed of fields/groups for a wiki article.
+ * Persisted on WikiArticle.infoboxPreset. "custom" = user-curated, no seed applied.
+ */
+export type WikiInfoboxPreset =
+  | "custom"
+  | "person"
+  | "character"
+  | "place"
+  | "organization"
+  | "work-film"
+  | "work-book"
+  | "work-music"
+  | "work-game"
+  | "event"
+  | "concept"
 
 /** Item in a wiki article's collection (staging area for related material) */
 export interface WikiCollectionItem {
@@ -61,7 +87,7 @@ export interface WikiCategory {
 /* ── Wiki Article (Assembly Model) ────────────────── */
 
 /** Wiki block types — building blocks of a wiki article */
-export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url' | 'navbox' | 'nav'
+export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url' | 'navbox' | 'nav' | 'banner'
 
 /** Navigation block slot — prev/current/next segment */
 export interface WikiNavSlot {
@@ -71,6 +97,39 @@ export interface WikiNavSlot {
   text: string
   /** Optional subtext below text (e.g., "(2022~2024)"). */
   subtext?: string
+}
+
+/* ── Navbox (PR2: 다단 헤더 + 그룹 + 색상) ─────────────── */
+
+/** Target type for a navbox item — wiki article, note, or external URL. */
+export type NavboxItemTargetType = "wiki" | "note" | "url"
+
+/** Single clickable item inside a navbox group. */
+export interface NavboxItem {
+  id: string
+  /** Display label. If empty, falls back to target's title (wiki/note). */
+  label: string
+  /** What kind of target this item points to. */
+  targetType?: NavboxItemTargetType
+  /** Wiki article id or note id, depending on targetType. */
+  targetId?: string | null
+  /** External URL (when targetType === "url"). */
+  url?: string | null
+}
+
+/** A row-grouping inside a navbox (e.g. "초대~제4대"). */
+export interface NavboxGroup {
+  id: string
+  /** Group header label text. */
+  label: string
+  /** Group label row background (rgba/hex). null = default tinted bg. */
+  labelColor?: string | null
+  /** Item row background color (rgba/hex). null = default. */
+  itemColor?: string | null
+  /** Whether the group starts collapsed on first render. */
+  collapsedByDefault?: boolean
+  /** Items in this group, displayed as a grid. */
+  items: NavboxItem[]
 }
 
 /** A single block in a wiki article */
@@ -119,12 +178,22 @@ export interface WikiBlock {
   navboxMode?: "category" | "manual"
   /** Navbox (category mode): target category id. */
   navboxCategoryId?: string
-  /** Navbox (manual mode): explicit article id list, in display order (Wiki convention). */
+  /** Navbox (manual mode, legacy single-group): explicit article id list. Migrated to navboxGroups[0].items in v84. */
   navboxArticleIds?: string[]
   /** Navbox: optional custom title override. If omitted, category name is used. */
   navboxTitle?: string
-  /** Navbox: grid columns for articles (3-6, default 4) */
-  navboxColumns?: 3 | 4 | 5 | 6
+  /** Navbox: grid columns (1-6, default 4). Widened to 1-6 in PR2. */
+  navboxColumns?: 1 | 2 | 3 | 4 | 5 | 6
+  /** Navbox PR2: header background color (rgba/hex). null/undefined = default. */
+  navboxHeaderColor?: string | null
+  /** Navbox PR2: header left icon image URL (optional). */
+  navboxHeaderImage?: string | null
+  /** Navbox PR2: groups (each with own label + items). The main multi-tier structure. */
+  navboxGroups?: NavboxGroup[]
+  /** Navbox PR2: footer caption text (e.g., classification breadcrumbs). */
+  navboxFooterText?: string
+  /** Navbox PR2: whether the entire box is collapsed by default on first render. */
+  navboxCollapsedByDefault?: boolean
   /** Navigation: banner/header title (e.g., "Series name / Week N") */
   navTitle?: string
   /** Navigation: previous slot (left column, typically has articleId). */
@@ -133,6 +202,22 @@ export interface WikiBlock {
   navCurrent?: WikiNavSlot
   /** Navigation: next slot (right column, typically has articleId). */
   navNext?: WikiNavSlot
+  /** Navigation PR2: header bg color override. null = default tinted. */
+  navHeaderColor?: string | null
+  /** Navigation PR2: header left icon image URL. */
+  navHeaderImage?: string | null
+  /** Banner: subtitle text (small line under title). Banner reuses `title` for the headline. */
+  bannerSubtitle?: string
+  /** Banner: background color (rgba/hex). null/undefined = default bg-secondary/40. */
+  bannerBgColor?: string | null
+  /** Banner v2: secondary color used for `bannerBgStyle === "gradient"`. null = auto-fade. */
+  bannerBgColorEnd?: string | null
+  /** Banner v2: leading icon key (megaphone | warning | info | lightbulb | star | sparkle | bookmark | pushpin). */
+  bannerIcon?: string
+  /** Banner v2: layout density. */
+  bannerSize?: "compact" | "default" | "hero"
+  /** Banner v2: visual treatment of the color (solid box / left stripe / gradient fade). */
+  bannerBgStyle?: "solid" | "stripe" | "gradient"
   /** Merge history: snapshot of the merged article for unmerge */
   mergedFrom?: WikiMergeSnapshot
 }
@@ -173,6 +258,8 @@ export interface WikiArticle {
   infobox: WikiInfoboxEntry[]
   /** Tier 1-2: Infobox header background color (null/undefined = default bg-secondary/30). Raw CSS color (rgba/hex). */
   infoboxHeaderColor?: string | null
+  /** PR1: domain preset (drives default header color and seed entries). Default "custom". */
+  infoboxPreset?: WikiInfoboxPreset
   blocks: WikiBlock[]
   sectionIndex: WikiSectionIndex[]
   tags: string[]
@@ -183,6 +270,10 @@ export interface WikiArticle {
   linksOut?: string[]              // extracted [[wiki-links]] from text blocks
   referenceIds?: string[]              // linked Reference IDs (bibliography, not inline footnotes)
   mergeHistory?: WikiMergeSnapshot[]  // snapshots from N→1 merge for unmerge
+  /** Parent article ID for hierarchy (single-parent tree). Null = root. Separate from WikiCategory. */
+  parentArticleId?: string | null
+  /** Whole-article pin (mirrors Note.pinned). Surfaces in Home > Quicklinks. */
+  pinned?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -286,6 +377,7 @@ export interface Reference {
   contentJson?: Record<string, unknown> | null  // 리치텍스트 (TipTap JSON)
   fields: Array<{ key: string; value: string }>  // 인포박스식 메타데이터
   tags?: string[]         // 글로벌 태그 공유
+  imageUrl?: string | null  // 각주/참조에 첨부된 이미지 URL
   createdAt: string
   updatedAt: string
   trashed?: boolean
@@ -416,6 +508,7 @@ export type NoteEventType =
   | "relation_added" | "relation_removed" | "relation_type_changed"
   | "alias_changed" | "wiki_converted" | "attachment_added" | "attachment_removed"
   | "reflection_added"
+  | "split"
 
 export interface NoteEvent {
   id: string

@@ -13,6 +13,7 @@ import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 
 /* ── Types ── */
 
@@ -179,6 +180,45 @@ export function WikiDashboard({
             <ArrowRight className="mt-1 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-accent" size={16} weight="regular" />
           </button>
         )}
+
+        {/* ── Pinned Articles ── */}
+        {(() => {
+          const pinned = (wikiArticles as WikiArticle[]).filter(
+            (a) => a.pinned && !(a as { trashed?: boolean }).trashed,
+          )
+          if (pinned.length === 0) return null
+          return (
+            <div className="mb-6">
+              <SectionLabel>
+                <span className="inline-flex items-center gap-1.5">
+                  <PushPin size={11} weight="fill" />
+                  Pinned
+                </span>
+              </SectionLabel>
+              <div className="grid grid-cols-1 gap-2 min-[640px]:grid-cols-2 min-[900px]:grid-cols-3">
+                {pinned.slice(0, 6).map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => onOpenWikiArticle?.(a.id)}
+                    className="group flex items-center gap-2 rounded-md border border-border-subtle bg-card/30 px-3 py-2 text-left transition-colors duration-100 hover:border-accent/30 hover:bg-accent/[0.03]"
+                  >
+                    <PushPin
+                      size={12}
+                      weight="fill"
+                      className="shrink-0 text-accent/70"
+                    />
+                    <span className="truncate text-note text-foreground group-hover:text-accent">
+                      {a.title || "Untitled"}
+                    </span>
+                    <span className="ml-auto shrink-0 text-2xs text-muted-foreground/40">
+                      {shortRelative(a.updatedAt)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ── Categories Grid ── */}
         {categories.items.length > 0 && (

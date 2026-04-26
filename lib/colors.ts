@@ -138,4 +138,5 @@ export const EVENT_HEX = {
   attachment_added:    "#22c55e",
   attachment_removed:  "#ef4444",
   reflection_added:    "#f59e0b",
+  split:               "#a855f7",
 } as const

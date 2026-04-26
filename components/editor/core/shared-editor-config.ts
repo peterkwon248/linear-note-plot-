@@ -32,7 +32,6 @@ import Youtube from "@tiptap/extension-youtube"
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight"
 import { common, createLowlight } from "lowlight"
 import { Details, DetailsSummary, DetailsContent } from "@tiptap/extension-details"
-import Mathematics from "@tiptap/extension-mathematics"
 import { Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 import type { EditorView } from "@tiptap/pm/view"
@@ -67,12 +66,16 @@ import { LinkCardNode } from "@/components/editor/nodes/link-card-node"
 import { isValidUrl, detectUrlType } from "@/lib/editor/url-detect"
 import { WikiEmbedNode } from "@/components/editor/nodes/wiki-embed-node"
 import { InfoboxBlockNode } from "@/components/editor/nodes/infobox-node"
+import { BannerBlockNode } from "@/components/editor/nodes/banner-block-node"
 import { ContentBlockNode } from "@/components/editor/nodes/content-block-node"
 import { AnchorMarkNode } from "@/components/editor/nodes/anchor-node"
 import { AnchorDividerNode } from "@/components/editor/nodes/anchor-divider-node"
 import { FootnoteRefExtension } from "@/components/editor/nodes/footnote-node"
 import { ReferenceLinkNode } from "@/components/editor/nodes/reference-link-node"
 import { QueryBlockNode } from "@/components/editor/nodes/query-node"
+import { AgeMacroNode } from "@/components/editor/nodes/age-macro-node"
+import { DDayMacroNode } from "@/components/editor/nodes/dday-macro-node"
+import { InlineMathNode, BlockMathNode } from "@/components/editor/nodes/math-nodes"
 import { IndentExtension } from "./indent-extension"
 import { handleMentionClick } from "@/lib/note-reference-actions"
 import { showNotePreview, showNotePreviewById, hideNotePreview, togglePreviewPin, isPreviewShowing, isPreviewPinned } from "@/components/editor/note-hover-preview"
@@ -264,6 +267,14 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
       heading: { levels: [1, 2, 3, 4, 5, 6] },
       dropcursor: false,
       codeBlock: false,
+      // Disable StarterKit's bundled link/underline/gapcursor so we can
+      // register our own (configured) copies below. StarterKit 3.x ships
+      // these by default and registering twice triggers "Duplicate extension
+      // name" warnings (and worse: silent mark-attribute conflicts). Our
+      // override of Link needs openOnClick:false, so we MUST own that config.
+      link: false,
+      underline: false,
+      gapcursor: false,
       // Disable StarterKit's built-in undo/redo when Y.js Collaboration is
       // active — Y.js ships its own history (via y-prosemirror) and mixing
       // the two silently breaks update propagation. TipTap 3.x renamed
@@ -330,9 +341,10 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     Details.configure({ HTMLAttributes: { class: "details-block" }, persist: true }),
     DetailsSummary,
     DetailsContent,
-    // Toggle delete: use right-click "Delete Block" or Backspace/Delete key
-    Mathematics,
-    // Single-dollar $...$ inline math input rule (Mathematics only supports $$...$$)
+    // Math nodes — React NodeView (Popover edit) + KaTeX render
+    InlineMathNode,
+    BlockMathNode,
+    // Single-dollar $...$ inline math input rule
     Extension.create({
       name: "singleDollarMath",
       addInputRules() {
@@ -358,9 +370,13 @@ function createBaseExtensions(options?: EditorConfigOptions): Extension[] {
     // -- New extensions (Phase 1C+) --
     Audio,
     LinkCardNode,
+    BannerBlockNode,
     UniqueID.configure({
-      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock', 'anchorMark', 'anchorDivider', 'queryBlock', 'linkCard'],
+      types: ['heading', 'paragraph', 'codeBlock', 'image', 'table', 'bulletList', 'orderedList', 'taskList', 'blockquote', 'details', 'horizontalRule', 'tocBlock', 'calloutBlock', 'summaryBlock', 'columnsBlock', 'noteEmbed', 'infoboxBlock', 'contentBlock', 'anchorMark', 'anchorDivider', 'queryBlock', 'linkCard', 'bannerBlock'],
     }),
+    // Inline macro nodes (base tier — note + wiki 공용)
+    AgeMacroNode,
+    DDayMacroNode,
     IndentExtension,
   ] as Extension[]
 }
@@ -480,6 +496,7 @@ export function createEditorExtensions(
       wikiExtensions.push(AnchorDividerNode as Extension)
       wikiExtensions.push(FootnoteRefExtension as Extension)
       wikiExtensions.push(ReferenceLinkNode as Extension)
+      wikiExtensions.push(NoteEmbedNode as Extension)
       wikiExtensions.push(WikiEmbedNode as Extension)
       wikiExtensions.push(TableOfContents as Extension)
       wikiExtensions.push(TocBlockNode as Extension)
@@ -886,6 +903,9 @@ export function createEditorExtensions(
           orderedList: false,
           dropcursor: false,
           gapcursor: false,
+          // Disable bundled link/underline — we register configured copies.
+          link: false,
+          underline: false,
         }) as Extension,
         Link.configure({ openOnClick: false, HTMLAttributes: { class: "footnote-link" } }) as Extension,
         Underline as Extension,
@@ -904,6 +924,9 @@ export function createEditorExtensions(
           codeBlock: false,
           dropcursor: false,
           gapcursor: false,
+          // Disable bundled link/underline — we register configured copies.
+          link: false,
+          underline: false,
         }) as Extension,
         Link.configure({
           openOnClick: false,
@@ -933,6 +956,12 @@ export function createRenderExtensions(): Extension[] {
       heading: { levels: [1, 2, 3, 4, 5, 6] },
       dropcursor: false,
       codeBlock: false,
+      // Mirror createBaseExtensions: disable StarterKit's bundled
+      // link/underline/gapcursor so our own configured copies below don't
+      // collide. (Same "Duplicate extension name" warning origin.)
+      link: false,
+      underline: false,
+      gapcursor: false,
     }),
     TaskList,
     TaskItem.configure({ nested: true }),
@@ -986,7 +1015,8 @@ export function createRenderExtensions(): Extension[] {
     Details.configure({ HTMLAttributes: { class: "details-block" }, persist: true }),
     DetailsSummary,
     DetailsContent,
-    Mathematics,
+    InlineMathNode,
+    BlockMathNode,
     Audio,
     LinkCardNode,
     // Custom block nodes
@@ -995,6 +1025,7 @@ export function createRenderExtensions(): Extension[] {
     ColumnsBlockNode,
     ColumnCellNode,
     InfoboxBlockNode,
+    BannerBlockNode,
     ContentBlockNode,
     AnchorMarkNode,
     AnchorDividerNode,

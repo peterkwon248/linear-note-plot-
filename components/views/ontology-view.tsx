@@ -5,6 +5,8 @@ import { usePlotStore } from "@/lib/store"
 import { buildOntologyGraphData, type OntologyGraph, type OntologyNode } from "@/lib/graph"
 import { OntologyGraphCanvas } from "@/components/ontology/ontology-graph-canvas"
 import { OntologyDetailPanel } from "@/components/ontology/ontology-detail-panel"
+import { OntologyTabBar, type OntologyTabKey } from "@/components/ontology/ontology-tab-bar"
+import { OntologyInsightsPanel } from "@/components/ontology/ontology-insights-panel"
 import { ontologyLayoutClient } from "@/lib/graph/ontology-layout-client"
 import type { Note } from "@/lib/types"
 import { ViewHeader } from "@/components/view-header"
@@ -33,6 +35,20 @@ export function OntologyView() {
   const [graph, setGraph] = useState<OntologyGraph | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [graphFilters, setGraphFilters] = useState<FilterRule[]>([])
+  const [tab, setTab] = useState<OntologyTabKey>("graph")
+
+  // External tab control: Home's "Improve your knowledge graph" link fires
+  // a `plot:set-ontology-tab` CustomEvent so we land directly on Insights.
+  useEffect(() => {
+    function handler(e: Event) {
+      const detail = (e as CustomEvent<{ tab?: OntologyTabKey }>).detail
+      if (detail?.tab === "graph" || detail?.tab === "insights") {
+        setTab(detail.tab)
+      }
+    }
+    window.addEventListener("plot:set-ontology-tab", handler)
+    return () => window.removeEventListener("plot:set-ontology-tab", handler)
+  }, [])
 
   // Graph display state from store (unified via viewStateByContext)
   const graphViewState = usePlotStore((s) => s.viewStateByContext["graph"]) ?? buildViewStateForContext("graph")
@@ -260,7 +276,17 @@ export function OntologyView() {
           }
         }}
       />
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <OntologyTabBar tab={tab} onChange={setTab} />
+
+      {/* Graph: always mounted (hidden when Insights is active) so the worker
+          layout never re-runs on tab switch. */}
+      <div
+        className={
+          tab === "graph"
+            ? "flex flex-1 min-h-0 overflow-hidden"
+            : "hidden"
+        }
+      >
         {graph ? (
           <OntologyGraphCanvas
             graph={graph}
@@ -290,6 +316,14 @@ export function OntologyView() {
           />
         )}
       </div>
+
+      {/* Insights: mounted on demand. Heavy compute lives behind a useMemo
+          so re-mounting just re-reads the cached result. */}
+      {tab === "insights" && (
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <OntologyInsightsPanel />
+        </div>
+      )}
     </main>
   )
 }

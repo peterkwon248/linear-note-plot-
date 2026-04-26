@@ -3,7 +3,27 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
-## 🟢 2026-04-25 최신 — 코멘트 시스템 대규모 + 사이드패널 통합 + 미니맵
+## 🟢 2026-04-26 최신 — Plot 디자인 + 인사이트 대규모 (9시간 세션, 9 PR + 핫픽스)
+
+**핵심 결정**:
+- **Home = 데이터 대시보드 + 빠른 진입** (시간 기반 X). Quick Capture / Stats (컬러) / Recent (4 카드) / Quicklinks (Mixed pinned 통합) / CTA. max-w-5xl.
+- **Ontology = Single Source of Insights**. 모든 정비 행동(Orphan/Promote/Unlinked/메트릭) Ontology Insights 탭으로 이전. 새 메트릭: Knowledge WAR / Concept Reach / Hubs / Density / Coverage / Tag Coverage / Cluster Cohesion.
+- **Pinned 통합 시스템**: Note + Wiki + Folder + SavedView + Bookmark (글로벌) 모두 Mixed Quicklinks에 통합. WikiArticle.pinned 신설 (Store v87).
+- **나무위키 Tier 2-4 완료**: 배너 블록 (4 다채로움) + age/dday 매크로 + Include 양방향 + 각주 이미지 + 위키 parent-child. 루비 텍스트는 사용자 결정으로 제거 (한국어 fit X).
+- **인포박스 Type 11 프리셋 + 그룹 토글** + Navbox 풀 디자인 (Editorial-Imperial, 다단/그룹/색상/그리드/펼치기) — 둘 다 사용자 비전 그대로 구현.
+- **Connections 풀 강화**: 블록 단위 인라인 스니펫 + 호버 풀 프리뷰 + mention 처리 + 위키 source contentJson scan + mention IDB 인덱스 캐시 (O(1) 룩업).
+- **Y.Doc PoC → 본 구현 (P0-1 부분)**: y-indexeddb 영속화 + 4 race guard 유지 + side issue (plot-note-bodies / duplicate extensions) 정리.
+
+**Store version**: v82 → v91 (9 마이그레이션, 모두 안전). 핵심: v86~v91은 핫픽스 (infobox undefined / 위키 article pinned / dedup).
+
+**다음 작업 후보**:
+- PR 9: 시계열 메트릭 + Wiki Dashboard 통합
+- TipTap InfoboxBlockNode group-header 지원 (작은 폴리시)
+- P0-2: Wiki Y.Doc 적용 (위험)
+
+---
+
+## 🟢 2026-04-25 — 코멘트 시스템 대규모 + 사이드패널 통합 + 미니맵
 
 **한 세션 18 커밋 — Plot 코멘트 인프라 구축 + 노트/위키 사이드패널 대칭 통합 + 디자인 폴리시.**
 
@@ -48,9 +68,9 @@
 - **Pin = Bookmark**: 시각/네이밍 통일
 
 ### 다음 방향
-- 미니맵 G 진화 (필요시 — 좌측/우측 영역 항상 보이는 미니맵으로 확장)
 - Connections 상세 (어느 블록/코멘트에서 링크되는지 — 별도 7시간 작업으로 미룸)
 - TipTap 미니 에디터 추가 발전 (필요시)
+- ~~미니맵 G 진화~~ — **폐기 (2026-04-25)**: 현 Document-level 드롭다운으로 충분, 좌/우 항상 보이는 미니맵은 불필요
 
 ---
 

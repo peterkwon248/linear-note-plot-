@@ -156,39 +156,53 @@ export function WikiFootnotesSection({ article }: WikiFootnotesSectionProps) {
             const ref = fn.referenceId ? references[fn.referenceId] : null
             const urlField = ref?.fields.find((f) => f.key.toLowerCase() === "url")
             const url = urlField?.value || null
+            const imageUrl = ref?.imageUrl || null
 
             return (
               <li
                 key={fn.id}
                 data-wiki-footnote-id={fn.id}
-                className="flex items-baseline gap-1.5 leading-relaxed"
+                className="flex flex-col gap-0.5 leading-relaxed"
               >
-                <button
-                  onClick={() => {
-                    const el = document.querySelector(`[data-footnote-id="${fn.id}"]`)
-                    el?.scrollIntoView({ behavior: "smooth", block: "center" })
-                  }}
-                  className="shrink-0 text-accent font-semibold text-[0.875em] min-w-[20px] text-right hover:opacity-70 hover:underline transition-opacity bg-transparent border-none p-0 cursor-pointer"
-                >
-                  [{fn.globalNumber}]
-                </button>
-                <span className="flex-1 min-w-0 break-words">
-                  {fn.content || <span className="italic opacity-40">Empty footnote</span>}
-                  {url && (
-                    <>
-                      {" "}
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent/60 hover:text-accent hover:underline transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {url.replace(/^https?:\/\//, "").split("/")[0]}
-                      </a>
-                    </>
-                  )}
-                </span>
+                <div className="flex items-baseline gap-1.5">
+                  <button
+                    onClick={() => {
+                      const el = document.querySelector(`[data-footnote-id="${fn.id}"]`)
+                      el?.scrollIntoView({ behavior: "smooth", block: "center" })
+                    }}
+                    className="shrink-0 text-accent font-semibold text-[0.875em] min-w-[20px] text-right hover:opacity-70 hover:underline transition-opacity bg-transparent border-none p-0 cursor-pointer"
+                  >
+                    [{fn.globalNumber}]
+                  </button>
+                  <span className="flex-1 min-w-0 break-words">
+                    {fn.content || <span className="italic opacity-40">Empty footnote</span>}
+                    {url && (
+                      <>
+                        {" "}
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent/60 hover:text-accent hover:underline transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {url.replace(/^https?:\/\//, "").split("/")[0]}
+                        </a>
+                      </>
+                    )}
+                  </span>
+                </div>
+                {imageUrl && (
+                  <div className="ml-[26px] mt-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imageUrl}
+                      alt=""
+                      className="max-h-24 rounded object-contain"
+                      onError={(e) => { e.currentTarget.style.display = "none" }}
+                    />
+                  </div>
+                )}
               </li>
             )
           })}
@@ -235,6 +249,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
   const [newTitle, setNewTitle] = useState("")
   const [newUrl, setNewUrl] = useState("")
   const [newContent, setNewContent] = useState("")
+  const [newImageUrl, setNewImageUrl] = useState("")
   const searchRef = useRef<HTMLInputElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
 
@@ -264,6 +279,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
     setNewTitle("")
     setNewUrl("")
     setNewContent("")
+    setNewImageUrl("")
     setTimeout(() => searchRef.current?.focus(), 50)
   }
 
@@ -273,6 +289,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
     setNewTitle("")
     setNewUrl("")
     setNewContent("")
+    setNewImageUrl("")
   }
 
   const openEditModal = (refId: string) => {
@@ -283,6 +300,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
     setNewTitle(ref.title)
     setNewUrl(ref.fields.find((f) => f.key.toLowerCase() === "url")?.value ?? "")
     setNewContent(ref.content)
+    setNewImageUrl(ref.imageUrl ?? "")
     setShowModal(true)
     setTimeout(() => titleRef.current?.focus(), 50)
   }
@@ -290,6 +308,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
   const handleSaveEdit = () => {
     if (!editingRefId || !newTitle.trim()) return
     const trimmedUrl = newUrl.trim()
+    const trimmedImageUrl = newImageUrl.trim()
     const ref = references[editingRefId]
     if (!ref) return
     const updatedFields = trimmedUrl
@@ -301,6 +320,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
       title: newTitle.trim(),
       content: newContent.trim(),
       fields: updatedFields,
+      imageUrl: trimmedImageUrl || null,
     })
     closeModal()
     setEditingRefId(null)
@@ -316,16 +336,19 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
     setNewTitle(prefillTitle ?? search)
     setNewUrl("")
     setNewContent("")
+    setNewImageUrl("")
     setTimeout(() => titleRef.current?.focus(), 50)
   }
 
   const handleCreateAndLink = () => {
     if (!newTitle.trim()) return
     const fields = newUrl.trim() ? [{ key: "URL", value: newUrl.trim() }] : []
+    const trimmedImageUrl = newImageUrl.trim()
     const refId = createReference({
       title: newTitle.trim(),
       content: newContent.trim() || newTitle.trim(),
       fields,
+      imageUrl: trimmedImageUrl || null,
     } as any)
     addArticleReference(article.id, refId)
     closeModal()
@@ -508,6 +531,27 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
                       rows={2}
                       className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent resize-none"
                     />
+                  </div>
+                  <div>
+                    <label className="text-2xs text-muted-foreground/60 mb-1 block">Image URL (optional)</label>
+                    <input
+                      type="text"
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="https://example.com/image.png"
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                    />
+                    {newImageUrl.trim() && (
+                      <div className="mt-1.5 rounded-md overflow-hidden border border-border/40 bg-secondary/30 inline-block max-w-full">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={newImageUrl.trim()}
+                          alt="Preview"
+                          className="max-h-24 object-contain"
+                          onError={(e) => { e.currentTarget.style.display = "none" }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="border-t border-border/30 px-5 py-3 flex justify-between items-center">

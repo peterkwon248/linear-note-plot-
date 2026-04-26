@@ -155,21 +155,36 @@ function convertInfobox(entries: WikiInfoboxEntry[]): TipTapNode[] {
     ],
   }
 
-  const dataRows = entries.map((entry) => ({
-    type: "tableRow" as const,
-    content: [
-      {
-        type: "tableCell" as const,
-        attrs: { colspan: 1, rowspan: 1, colwidth: null },
-        content: [paragraph(entry.key, [{ type: "bold" }])],
-      },
-      {
-        type: "tableCell" as const,
-        attrs: { colspan: 1, rowspan: 1, colwidth: null },
-        content: [paragraph(entry.value)],
-      },
-    ],
-  }))
+  const dataRows = entries.map((entry) => {
+    // section / group-header → full-width single-cell row with bold uppercase label
+    if (entry.type === "section" || entry.type === "group-header") {
+      return {
+        type: "tableRow" as const,
+        content: [
+          {
+            type: "tableHeader" as const,
+            attrs: { colspan: 2, rowspan: 1, colwidth: null },
+            content: [paragraph(entry.key || "Section", [{ type: "bold" }])],
+          },
+        ],
+      }
+    }
+    return {
+      type: "tableRow" as const,
+      content: [
+        {
+          type: "tableCell" as const,
+          attrs: { colspan: 1, rowspan: 1, colwidth: null },
+          content: [paragraph(entry.key, [{ type: "bold" }])],
+        },
+        {
+          type: "tableCell" as const,
+          attrs: { colspan: 1, rowspan: 1, colwidth: null },
+          content: [paragraph(entry.value)],
+        },
+      ],
+    }
+  })
 
   return [
     { type: "table", content: [headerRow, ...dataRows] },
@@ -197,7 +212,7 @@ export function wikiArticleToTipTap(article: WikiArticle): TipTapDoc {
   content.push(...convertInfobox(article.infobox))
 
   // 4. Horizontal rule separator
-  if (article.infobox.length > 0) {
+  if ((article.infobox?.length ?? 0) > 0) {
     content.push({ type: "horizontalRule" })
   }
 
@@ -229,6 +244,22 @@ export function wikiArticleToTipTap(article: WikiArticle): TipTapDoc {
       }
       case "url":
         content.push(convertUrl(block))
+        break
+      case "banner":
+        // Map wiki banner block → TipTap bannerBlock node so the copy looks
+        // identical in the note editor.
+        content.push({
+          type: "bannerBlock",
+          attrs: {
+            title:      block.title || "Banner title",
+            subtitle:   block.bannerSubtitle || "",
+            bgColor:    block.bannerBgColor    ?? null,
+            bgColorEnd: block.bannerBgColorEnd ?? null,
+            icon:       block.bannerIcon       ?? "megaphone",
+            size:       block.bannerSize       ?? "default",
+            bgStyle:    block.bannerBgStyle    ?? "solid",
+          },
+        })
         break
       default:
         // Unknown block type — skip

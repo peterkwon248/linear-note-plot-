@@ -1,9 +1,14 @@
 "use client"
 
-import { useMemo, useState, useCallback } from "react"
+import { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { usePlotStore } from "@/lib/store"
+import { getBody, getAllBodies } from "@/lib/note-body-store"
+import { extractMentionTargets } from "@/lib/body-helpers"
+import { ensureMentionIndexBuilt, getMentionSources } from "@/lib/mention-index-store"
 import { useSidePanelEntity } from "./use-side-panel-entity"
 import { useBacklinksFor } from "@/lib/search/use-backlinks-for"
+import { useBacklinksWithContext } from "@/hooks/use-backlinks-with-context"
+import { BacklinkCard } from "./backlink-card"
 import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
 import { discoverRelated, type DiscoverResult } from "@/lib/search/discover-engine"
 import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
@@ -127,6 +132,18 @@ function WikiArticleConnections() {
     [wikiArticles, articleId]
   )
 
+  // Rich block-level contexts (note sources only — wiki sources scan plaintext only)
+  const wikiBacklinkTarget = useMemo(
+    () => (articleId ? ({ kind: "wiki", id: articleId } as const) : null),
+    [articleId]
+  )
+  const wikiRichBacklinks = useBacklinksWithContext(wikiBacklinkTarget)
+  const wikiRichByKey = useMemo(() => {
+    const m = new Map<string, (typeof wikiRichBacklinks)[number]>()
+    for (const r of wikiRichBacklinks) m.set(`${r.sourceKind}:${r.sourceId}`, r)
+    return m
+  }, [wikiRichBacklinks])
+
   // Notes referenced by this article (note-ref blocks)
   const referencedNotes = useMemo(() => {
     if (!article?.blocks) return []
@@ -220,18 +237,30 @@ function WikiArticleConnections() {
 
             {linkingNotes.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>Linked from Notes</SubLabel>
-                {linkingNotes.map((n) => (
-                  <button
-                    key={n.id}
-                    onClick={() => openInSecondary(n.id)}
-                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
-                  >
-                    <DirArrow dir="in" />
-                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
-                    <span className="truncate">{n.title || "Untitled"}</span>
-                  </button>
-                ))}
+                <div className="flex items-center gap-1 px-2">
+                  <DirArrow dir="in" />
+                  <SubLabel>Linked from Notes</SubLabel>
+                </div>
+                <div className="space-y-px">
+                  {linkingNotes.map((n) => {
+                    const rich = wikiRichByKey.get(`note:${n.id}`)
+                    return (
+                      <BacklinkCard
+                        key={n.id}
+                        source={
+                          rich ?? {
+                            sourceId: n.id,
+                            sourceKind: "note",
+                            sourceTitle: n.title || "Untitled",
+                            contexts: [],
+                            loading: false,
+                          }
+                        }
+                        onClick={() => openInSecondary(n.id)}
+                      />
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -278,6 +307,18 @@ function NoteConnections() {
 
   const backlinkNotes = useBacklinksFor(noteId)
 
+  // Rich block-level contexts for backlinks (note + wiki sources)
+  const backlinkTarget = useMemo(
+    () => (noteId ? ({ kind: "note", id: noteId } as const) : null),
+    [noteId]
+  )
+  const richBacklinks = useBacklinksWithContext(backlinkTarget)
+  const richBacklinksByKey = useMemo(() => {
+    const m = new Map<string, (typeof richBacklinks)[number]>()
+    for (const r of richBacklinks) m.set(`${r.sourceKind}:${r.sourceId}`, r)
+    return m
+  }, [richBacklinks])
+
   const unlinkedMentions = useMemo(
     () => (noteId ? detectUnlinkedMentions(noteId, notes) : []),
     [noteId, notes]
@@ -308,22 +349,81 @@ function NoteConnections() {
     return Array.from(resultMap, ([id, title]) => ({ id, title })).filter((a) => a.title)
   }, [noteId, wikiCollections, wikiArticles, notes])
 
+  // ── CONNECTED: Outbound mention targets (async IDB) ──────────
+
+  const [outboundMentionIds, setOutboundMentionIds] = useState<{
+    noteIds: Set<string>
+    wikiIds: Set<string>
+  }>({ noteIds: new Set(), wikiIds: new Set() })
+
+  // Inbound mention source ids (other notes that @-mention the current note).
+  // O(1) lookup via the mention index — used by Discover to give a "mention"
+  // bonus to notes that mention this one without a wikilink.
+  const [inboundMentionSourceIds, setInboundMentionSourceIds] = useState<Set<string>>(
+    () => new Set(),
+  )
+
+  const noteIdRef = useRef<string | null>(noteId)
+
+  useEffect(() => {
+    noteIdRef.current = noteId
+    if (!noteId) {
+      setOutboundMentionIds({ noteIds: new Set(), wikiIds: new Set() })
+      setInboundMentionSourceIds(new Set())
+      return
+    }
+    let cancelled = false
+    getBody(noteId).then((body) => {
+      if (cancelled || noteIdRef.current !== noteId) return
+      if (!body?.contentJson) {
+        setOutboundMentionIds({ noteIds: new Set(), wikiIds: new Set() })
+        return
+      }
+      const { noteIds, wikiIds } = extractMentionTargets(body.contentJson)
+      setOutboundMentionIds({ noteIds, wikiIds })
+    })
+
+    // Inbound mentions — uses the IDB mention index for O(1) lookup.
+    void (async () => {
+      await ensureMentionIndexBuilt(async () => {
+        const bodies = await getAllBodies()
+        return bodies.map((b) => ({ id: b.id, contentJson: b.contentJson }))
+      }).catch(() => {})
+      if (cancelled || noteIdRef.current !== noteId) return
+      const sources = await getMentionSources(noteId)
+      if (cancelled || noteIdRef.current !== noteId) return
+      setInboundMentionSourceIds(new Set(sources))
+    })()
+    return () => { cancelled = true }
+  }, [noteId])
+
   // ── CONNECTED: Outbound ────────────────────────────────
 
-  // Notes & wiki this note links to via [[wikilinks]] + note-ref blocks + collections
+  // Notes & wiki this note links to via [[wikilinks]] + note-ref blocks + collections + @mentions
   const outboundLinked = useMemo(() => {
     if (!note) return [] as { id: string; title: string; isWiki: boolean }[]
     const seen = new Set<string>()
     const result: { id: string; title: string; isWiki: boolean }[] = []
 
     const titleToNote = new Map(notes.map((n) => [n.title.toLowerCase(), n]))
+    const titleToWikiArticle = new Map(wikiArticles.map((a) => [a.title.toLowerCase(), a]))
 
-    // 1. [[wikilinks]]
+    // 1. [[wikilinks]] — match against notes first, then wiki articles
     for (const title of note.linksOut ?? []) {
-      const linked = titleToNote.get(title.toLowerCase())
-      if (linked && linked.id !== noteId && !seen.has(linked.id)) {
-        seen.add(linked.id)
-        result.push({ id: linked.id, title: linked.title, isWiki: wikiArticleIds.has(linked.id) })
+      const key = title.toLowerCase()
+
+      // (a) note match
+      const linkedNote = titleToNote.get(key)
+      if (linkedNote && linkedNote.id !== noteId && !seen.has(linkedNote.id)) {
+        seen.add(linkedNote.id)
+        result.push({ id: linkedNote.id, title: linkedNote.title, isWiki: wikiArticleIds.has(linkedNote.id) })
+      }
+
+      // (b) wiki article match (independent — same title can exist in both spaces)
+      const linkedWiki = titleToWikiArticle.get(key)
+      if (linkedWiki && linkedWiki.id !== noteId && !seen.has(linkedWiki.id)) {
+        seen.add(linkedWiki.id)
+        result.push({ id: linkedWiki.id, title: linkedWiki.title, isWiki: true })
       }
     }
 
@@ -355,8 +455,28 @@ function NoteConnections() {
       }
     }
 
+    // 4. @mention targets (note mentionType)
+    for (const mentionedNoteId of outboundMentionIds.noteIds) {
+      if (mentionedNoteId === noteId) continue
+      if (seen.has(mentionedNoteId)) continue
+      const mentionedNote = notes.find((n) => n.id === mentionedNoteId)
+      if (!mentionedNote || mentionedNote.trashed) continue
+      seen.add(mentionedNoteId)
+      result.push({ id: mentionedNoteId, title: mentionedNote.title, isWiki: wikiArticleIds.has(mentionedNoteId) })
+    }
+
+    // 4b. @mention targets (wiki mentionType)
+    for (const mentionedWikiId of outboundMentionIds.wikiIds) {
+      if (mentionedWikiId === noteId) continue
+      if (seen.has(mentionedWikiId)) continue
+      const mentionedArticle = wikiArticles.find((a) => a.id === mentionedWikiId)
+      if (!mentionedArticle) continue
+      seen.add(mentionedWikiId)
+      result.push({ id: mentionedWikiId, title: mentionedArticle.title, isWiki: true })
+    }
+
     return result
-  }, [note, notes, noteId, wikiArticles, wikiCollections, wikiArticleIds])
+  }, [note, notes, noteId, wikiArticles, wikiCollections, wikiArticleIds, outboundMentionIds])
 
   // Split outbound into notes vs wiki
   const outboundNotes = useMemo(() => outboundLinked.filter((i) => !i.isWiki), [outboundLinked])
@@ -382,8 +502,15 @@ function NoteConnections() {
           folderId: n.folderId,
           isWiki: n.noteType === "wiki" || wikiArticleIds.has(n.id),
           preview: n.preview,
+          // Surface mentionTargets to Discover only for notes that mention
+          // the *current* note. The engine uses this to award a "mention"
+          // bonus for the inbound direction (other → current). For notes
+          // that don't mention current, an empty mentionTargets is harmless.
+          mentionTargets: inboundMentionSourceIds.has(n.id)
+            ? ({ noteIds: noteId ? [noteId] : [], wikiIds: [] })
+            : undefined,
         })),
-    [notes, wikiArticleIds]
+    [notes, wikiArticleIds, inboundMentionSourceIds, noteId]
   )
 
   const backlinksMap = useMemo(() => {
@@ -416,8 +543,9 @@ function NoteConnections() {
       allNotes: allNotesInput,
       backlinksMap,
       allTags: tags.map((t) => ({ id: t.id, name: t.name })),
+      noteMentionTargets: outboundMentionIds,
     })
-  }, [note, allNotesInput, backlinksMap, tags])
+  }, [note, allNotesInput, backlinksMap, tags, outboundMentionIds])
 
   // ── Empty state ──────────────────────────────────────
 
@@ -468,45 +596,65 @@ function NoteConnections() {
           </p>
         ) : (
           <div className="space-y-3">
-            {/* ← Notes (backlinks) */}
+            {/* ← Notes (backlinks with block-level context) */}
             {backlinkNotes.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>← Notes</SubLabel>
-                {backlinkNotes.map((n) => (
-                  <button
-                    key={n.id}
-                    onClick={() => openInSecondary(n.id)}
-                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
-                  >
-                    <DirArrow dir="in" />
-                    <FileText className="shrink-0 text-muted-foreground/60" size={14} weight="regular" />
-                    <span className="truncate">{n.title || "Untitled"}</span>
-                    {linkedIds.has(n.id) && (
-                      <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
-                    )}
-                  </button>
-                ))}
+                <div className="flex items-center gap-1 px-2">
+                  <DirArrow dir="in" />
+                  <SubLabel>Notes</SubLabel>
+                </div>
+                <div className="space-y-px">
+                  {backlinkNotes.map((n) => {
+                    const rich = richBacklinksByKey.get(`note:${n.id}`)
+                    return (
+                      <BacklinkCard
+                        key={n.id}
+                        source={
+                          rich ?? {
+                            sourceId: n.id,
+                            sourceKind: "note",
+                            sourceTitle: n.title || "Untitled",
+                            contexts: [],
+                            loading: false,
+                          }
+                        }
+                        mutual={linkedIds.has(n.id)}
+                        onClick={() => openInSecondary(n.id)}
+                      />
+                    )
+                  })}
+                </div>
               </div>
             )}
 
-            {/* ← Wiki */}
+            {/* ← Wiki (incoming wikilinks from wiki articles) */}
             {inboundWiki.length > 0 && (
               <div className="space-y-0.5">
-                <SubLabel>← Wiki</SubLabel>
-                {inboundWiki.map((a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => openInSecondary(a.id)}
-                    className="flex items-center gap-2 w-full text-left px-2 py-0.5 rounded text-note text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
-                  >
-                    <DirArrow dir="in" />
-                    <IconWiki size={14} className="shrink-0 text-muted-foreground/60" />
-                    <span className="truncate">{a.title}</span>
-                    {linkedIds.has(a.id) && (
-                      <span className="shrink-0 text-2xs text-accent/60 font-medium" title="Mutual link">↔</span>
-                    )}
-                  </button>
-                ))}
+                <div className="flex items-center gap-1 px-2">
+                  <DirArrow dir="in" />
+                  <SubLabel>Wiki</SubLabel>
+                </div>
+                <div className="space-y-px">
+                  {inboundWiki.map((a) => {
+                    const rich = richBacklinksByKey.get(`wiki:${a.id}`)
+                    return (
+                      <BacklinkCard
+                        key={a.id}
+                        source={
+                          rich ?? {
+                            sourceId: a.id,
+                            sourceKind: "wiki",
+                            sourceTitle: a.title,
+                            contexts: [],
+                            loading: false,
+                          }
+                        }
+                        mutual={linkedIds.has(a.id)}
+                        onClick={() => openInSecondary(a.id)}
+                      />
+                    )
+                  })}
+                </div>
               </div>
             )}
 

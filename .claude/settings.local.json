@@ -146,7 +146,22 @@
       "Bash(cp \"C:/Users/user/.claude/.omc-worklog/latest.md\" \"C:/Users/user/.claude/.omc-worklog/2026-04-24_1500.md\")",
       "Bash(cp \"C:/Users/user/.claude/.omc-worklog/latest.md\" \".omc/worklog/latest.md\")",
       "Bash(cp \".omc/worklog/latest.md\" \"C:/Users/user/.claude/.omc-worklog/latest.md\")",
-      "Bash(cp \".omc/worklog/latest.md\" \"C:/Users/user/.claude/.omc-worklog/2026-04-25_1700.md\")"
+      "Bash(cp \".omc/worklog/latest.md\" \"C:/Users/user/.claude/.omc-worklog/2026-04-25_1700.md\")",
+      "Bash(npm view *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(echo \"exit=$?\")",
+      "Bash(grep -n \"version:\\\\s*[0-9]\" \"C:\\\\Users\\\\user\\\\Desktop\\\\linear-note-plot-\\\\.claude\\\\worktrees\\\\peaceful-saha-25d0cd\\\\lib\\\\store\"\\\\\\\\index.ts)",
+      "Bash(npx eslint *)",
+      "Bash(python -c \"import sys,json; p=json.load\\(sys.stdin\\); deps={**p.get\\('dependencies',{}\\), **p.get\\('devDependencies',{}\\)}; [print\\(k,v\\) for k,v in deps.items\\(\\) if 'math' in k.lower\\(\\) or 'katex' in k.lower\\(\\)]\")",
+      "Bash(echo \"TSC=$?\")",
+      "Bash(npx tsc *)",
+      "Read(//tmp/**)",
+      "Bash(echo \"EXIT_CODE: $?\")",
+      "Bash(echo \"TSC_EXIT: $?\")",
+      "Bash(npm run *)",
+      "Bash(echo \"BUILD_EXIT: $?\")",
+      "Bash(mkdir -p ~/.claude/.omc-worklog .omc/worklog .omc/notepads/general)",
+      "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-04-26_2300.md)"
     ]
   }
 }

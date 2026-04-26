@@ -15,6 +15,7 @@ import {
   releaseYDoc,
   isYjsExperimentEnabled,
   getRefCount,
+  getIsFresh,
 } from "@/lib/y-doc-manager"
 
 interface NoteEditorAdapterProps {
@@ -48,9 +49,27 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
   //
   // Fix: mutate refs synchronously during render, so `ydoc` seen by the
   // JSX below is always the one matching the current `note.id`.
+  //
+  // P0-1 (IDB persistence): we now ALSO need to wait for IDB hydration
+  // before mounting the editor — otherwise the Collaboration extension
+  // would bind to an empty fragment, fire onUpdate("") and the empty-
+  // content guard would have to swallow an avalanche of empty saves.
+  // We track hydration completion with `ydocReady` state and gate the
+  // <TipTapEditor> mount on it.
   const ydocRef = useRef<Y.Doc | null>(null)
   const ydocNoteIdRef = useRef<string | null>(null)
   const ydocIsFreshRef = useRef(false)
+  // ydocReadyForNoteId: when set to current note.id, hydration finished
+  // and the editor is safe to mount. When mismatched (or null) we keep
+  // the editor in a "loading" state. Stored as state so changes trigger
+  // re-render after the async whenReady resolves.
+  //
+  // Initial value: when yjs is OFF, the editor should mount immediately
+  // (legacy std behavior), so we lazy-init to the current note.id. When
+  // yjs is ON, we leave it null so the gate blocks until hydration.
+  const [ydocReadyForNoteId, setYdocReadyForNoteId] = useState<string | null>(() =>
+    typeof window !== "undefined" && isYjsExperimentEnabled() ? null : note.id,
+  )
 
   if (ydocNoteIdRef.current !== note.id) {
     // Release Y.Doc held for the previous note (if any).
@@ -61,13 +80,53 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
     if (isYjsExperimentEnabled()) {
       const { doc, isFresh } = acquireYDoc("note", note.id)
       ydocRef.current = doc
+      // Provisional. Re-evaluated post-hydration via getIsFresh below.
+      // (whenReady is awaited in the useEffect that follows — we re-acquire
+      // there to get the same Promise instance from the registry.)
       ydocIsFreshRef.current = isFresh
+      // Reset ready flag for this note while we wait for IDB hydration.
+      // (No setState during render — defer to effect below.)
     } else {
       ydocRef.current = null
       ydocIsFreshRef.current = false
     }
     ydocNoteIdRef.current = note.id
   }
+
+  // After noteId-switch, await IDB hydration before allowing the editor
+  // to mount. Re-runs whenever note.id changes. If yjs experiment is OFF
+  // we mark ready synchronously so the std editor mounts immediately.
+  useEffect(() => {
+    let cancelled = false
+    if (!isYjsExperimentEnabled() || !ydocRef.current) {
+      setYdocReadyForNoteId(note.id)
+      return
+    }
+    // We're in yjs mode — re-acquire to get the same `whenReady` Promise
+    // (acquireYDoc bumps refCount on second call; we balance with
+    // releaseYDoc in the cleanup). This is cheap (registry lookup).
+    const { whenReady } = acquireYDoc("note", note.id)
+    setYdocReadyForNoteId(null) // Reset while waiting.
+    whenReady
+      .then(() => {
+        if (cancelled) return
+        // Hydration done. Re-read isFresh from the registry — the value
+        // may have flipped from true→false if IDB had prior data.
+        const freshNow = getIsFresh("note", note.id)
+        ydocIsFreshRef.current = freshNow ?? ydocIsFreshRef.current
+        setYdocReadyForNoteId(note.id)
+      })
+      .catch((e) => {
+        console.warn("[NoteEditorAdapter] Y.Doc hydration failed for", note.id, e)
+        if (cancelled) return
+        // Even on failure, mount the editor so the user isn't blocked.
+        setYdocReadyForNoteId(note.id)
+      })
+    return () => {
+      cancelled = true
+      releaseYDoc("note", note.id)
+    }
+  }, [note.id])
 
   // Release on unmount. Uses refs (closure capture of .current reads the
   // live value at unmount time, not the initial one).
@@ -82,6 +141,9 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
   }, [])
 
   const ydoc = ydocRef.current
+  // The editor is "yjs-ready" when (a) yjs is off (std editor mounts
+  // immediately), or (b) hydration completed for the current note.id.
+  const ydocReady = ydocReadyForNoteId === note.id
 
   // Track the latest content to debounce saves
   const pendingRef = useRef<{
@@ -341,17 +403,21 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
   // runtime thinks about the Y.js experiment:
   //   - gray  "yjs OFF"          → flag not active, std editor in use
   //   - amber "yjs ON acquiring" → flag active but Y.Doc not yet attached
-  //   - green "yjs ON ref=N"     → Y.Doc attached; ref=2 means both panes share it
+  //   - blue  "yjs hydrating"    → Y.Doc attached, awaiting IDB load
+  //   - green "yjs ON ref=N"     → ready; ref=2 means both panes share it
   const yjsEnabled = isYjsExperimentEnabled()
   const refCount = ydoc ? getRefCount("note", note.id) : 0
-  const badgeState: "off" | "acquiring" | "ready" = !yjsEnabled
+  const badgeState: "off" | "acquiring" | "hydrating" | "ready" = !yjsEnabled
     ? "off"
-    : ydoc
-      ? "ready"
-      : "acquiring"
+    : !ydoc
+      ? "acquiring"
+      : !ydocReady
+        ? "hydrating"
+        : "ready"
   const badgeStyle: Record<typeof badgeState, { bg: string; fg: string; label: string }> = {
     off: { bg: "rgba(148,163,184,0.18)", fg: "rgb(148,163,184)", label: "yjs OFF" },
     acquiring: { bg: "rgba(245,158,11,0.18)", fg: "rgb(245,158,11)", label: "yjs ON acquiring…" },
+    hydrating: { bg: "rgba(59,130,246,0.18)", fg: "rgb(59,130,246)", label: "yjs hydrating…" },
     ready: { bg: "rgba(34,197,94,0.18)", fg: "rgb(34,197,94)", label: `yjs ON ref=${refCount}` },
   }
 
@@ -368,16 +434,24 @@ export function NoteEditorAdapter({ note, onEditorReady, editable = true }: Note
       >
         {badgeStyle[badgeState].label}
       </div>
-      <TipTapEditor
-        key={`${note.id}-${ydoc ? "yjs" : "std"}`}
-        content={initialContent}
-        onChange={editable ? handleChange : undefined}
-        editable={editable}
-        placeholder="Type / for commands, or start writing..."
-        onEditorReady={handleEditorReady}
-        noteId={note.id}
-        ydoc={ydoc ?? undefined}
-      />
+      {/* Gate editor mount on hydration. Mounting before `whenReady` would
+          let Collaboration bind to the empty fragment and emit a flood of
+          empty onUpdate events, which the empty-content guard then has to
+          chase down. Cheaper and safer to just wait. */}
+      {ydocReady ? (
+        <TipTapEditor
+          key={`${note.id}-${ydoc ? "yjs" : "std"}`}
+          content={initialContent}
+          onChange={editable ? handleChange : undefined}
+          editable={editable}
+          placeholder="Type / for commands, or start writing..."
+          onEditorReady={handleEditorReady}
+          noteId={note.id}
+          ydoc={ydoc ?? undefined}
+        />
+      ) : (
+        <div className="flex-1" />
+      )}
       <FootnotesFooter editor={editorInstance} noteId={note.id} editable={editable} />
       <LinkSuggestion
         suggestions={suggestions}

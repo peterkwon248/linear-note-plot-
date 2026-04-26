@@ -36,10 +36,6 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { Folders } from "@phosphor-icons/react/dist/ssr/Folders"
 import { SidebarSimple } from "@phosphor-icons/react/dist/ssr/SidebarSimple"
 import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar"
-import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple"
-import { GitFork } from "@phosphor-icons/react/dist/ssr/GitFork"
-import { LinkBreak } from "@phosphor-icons/react/dist/ssr/LinkBreak"
-import { Island } from "@phosphor-icons/react/dist/ssr/Island"
 import { ChartPie } from "@phosphor-icons/react/dist/ssr/ChartPie"
 import { CheckSquare as CheckSquareIcon } from "@phosphor-icons/react/dist/ssr/CheckSquare"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
@@ -47,10 +43,9 @@ import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
-import { detectUnlinkedMentions } from "@/lib/unlinked-mentions"
-import { setHomeSection, useHomeSection } from "@/lib/home-section"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
+import { useKnowledgeMetrics } from "@/hooks/use-knowledge-metrics"
 type PanelContent = Record<string, unknown>
 import { setViewDragData, setNoteDragData } from "@/lib/drag-helpers"
 import { StatusIcon } from "@/components/status-icon"
@@ -268,9 +263,6 @@ export function LinearSidebar() {
   const labels = usePlotStore((s) => s.labels)
   const templates = usePlotStore((s) => s.templates)
 
-  const relationSuggestions = usePlotStore((s) => s.relationSuggestions)
-  const wikiArticles = usePlotStore((s) => s.wikiArticles)
-
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const createWikiCategory = usePlotStore((s) => s.createWikiCategory)
   const updateWikiCategory = usePlotStore((s) => s.updateWikiCategory)
@@ -278,7 +270,10 @@ export function LinearSidebar() {
 
   const activeSpace = useActiveSpace()
   const wikiViewMode = useWikiViewMode()
-  const homeSection = useHomeSection()
+
+  // Shared knowledge metrics — same hook drives the Ontology > Insights tab,
+  // so the Health numbers stay 1:1 with the panel.
+  const knowledgeMetrics = useKnowledgeMetrics()
 
   const [recentlyViewedOpen, setRecentlyViewedOpen] = useState(false)
   const recentlyViewedRef = useRef<HTMLDivElement>(null)
@@ -434,107 +429,10 @@ export function LinearSidebar() {
     [notes]
   )
 
-  // ── Intelligence Panel computations ──
-
-  const nonTrashedNotes = useMemo(() => notes.filter((n) => !n.trashed), [notes])
-
-  // Unlinked mentions: scan only the 10 most recent notes for performance
-  const unlinkedMentionData = useMemo(() => {
-    const recentNonTrashed = [...nonTrashedNotes]
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-      .slice(0, 10)
-
-    const mentionMap = new Map<string, { noteId: string; title: string; count: number }>()
-
-    for (const note of recentNonTrashed) {
-      const mentions = detectUnlinkedMentions(note.id, nonTrashedNotes)
-      for (const m of mentions) {
-        const existing = mentionMap.get(m.noteId)
-        if (existing) {
-          existing.count += m.count
-        } else {
-          mentionMap.set(m.noteId, { noteId: m.noteId, title: m.title, count: m.count })
-        }
-      }
-    }
-
-    const all = Array.from(mentionMap.values()).sort((a, b) => b.count - a.count)
-    return { total: all.length, top3: all.slice(0, 3) }
-  }, [nonTrashedNotes])
-
-  // Pending relation suggestions
-  const pendingSuggestions = useMemo(() => {
-    const pending = relationSuggestions.filter((s) => s.status === "pending")
-    const top3 = pending.slice(0, 3).map((s) => {
-      const source = notes.find((n) => n.id === s.sourceNoteId)
-      const target = notes.find((n) => n.id === s.targetNoteId)
-      return {
-        id: s.id,
-        sourceId: s.sourceNoteId,
-        targetId: s.targetNoteId,
-        sourceTitle: source?.title || "Untitled",
-        targetTitle: target?.title || "Untitled",
-      }
-    })
-    return { total: pending.length, top3 }
-  }, [relationSuggestions, notes])
-
-  // Red links: wiki links that don't match any existing note or wiki article
-  const redLinkData = useMemo(() => {
-    const existingTitles = new Set<string>()
-    for (const n of nonTrashedNotes) {
-      existingTitles.add(n.title.toLowerCase())
-      if (n.aliases) n.aliases.forEach((a) => existingTitles.add(a.toLowerCase()))
-    }
-    for (const w of wikiArticles) {
-      existingTitles.add(w.title.toLowerCase())
-      w.aliases.forEach((a) => existingTitles.add(a.toLowerCase()))
-    }
-
-    const redMap = new Map<string, number>()
-    for (const n of nonTrashedNotes) {
-      for (const link of n.linksOut) {
-        if (!existingTitles.has(link.toLowerCase())) {
-          redMap.set(link, (redMap.get(link) || 0) + 1)
-        }
-      }
-    }
-
-    const all = Array.from(redMap.entries())
-      .map(([title, refs]) => ({ title, refs }))
-      .sort((a, b) => b.refs - a.refs)
-    return { total: all.length, top3: all.slice(0, 3) }
-  }, [nonTrashedNotes, wikiArticles])
-
-  // Orphans: notes with no outgoing links and no incoming links
-  const orphanData = useMemo(() => {
-    const incomingSet = new Set<string>()
-    for (const n of nonTrashedNotes) {
-      for (const link of n.linksOut) {
-        const target = nonTrashedNotes.find((t) => t.title.toLowerCase() === link.toLowerCase())
-        if (target) incomingSet.add(target.id)
-      }
-    }
-    const orphans = nonTrashedNotes.filter(
-      (n) => n.linksOut.length === 0 && !incomingSet.has(n.id)
-    )
-    return {
-      total: orphans.length,
-      top3: orphans.slice(0, 3).map((n) => ({ id: n.id, title: n.title || "Untitled" })),
-    }
-  }, [nonTrashedNotes])
-
-  // Knowledge health
-  const knowledgeHealth = useMemo(() => {
-    const total = nonTrashedNotes.length
-    if (total === 0) return { coverage: 0, density: 0, total: 0 }
-    const withLinks = nonTrashedNotes.filter((n) => n.linksOut.length > 0).length
-    const coverage = Math.round((withLinks / total) * 100)
-    const totalEdges = nonTrashedNotes.reduce((sum, n) => sum + n.linksOut.length, 0)
-    const possibleEdges = total * (total - 1)
-    const density = possibleEdges > 0 ? Math.round((totalEdges / possibleEdges) * 10000) / 100 : 0
-    return { coverage, density, total }
-  }, [nonTrashedNotes])
+  // ── Home Intelligence Panel removed (PR 7).
+  // Heavy insights (orphans, redlinks, suggestions, unlinked mentions, knowledge health)
+  // now live in Ontology > Insights via useKnowledgeMetrics().
+  // Home space sidebar shows only the Inbox NavLink — workflow stays in HomeView itself.
 
   // Recent notes: walk backwards from navigationIndex, dedup, exclude trashed, take 5
   const recentNotes = useMemo(() => {
@@ -1280,70 +1178,54 @@ export function LinearSidebar() {
             {/* Ontology Views */}
             {renderViewsSection("ontology", "/ontology")}
 
-            {/* Graph Health */}
+            {/* Graph Health — shares useKnowledgeMetrics with the Insights tab */}
             <Section title="Health">
               {(() => {
-                const nonTrashedNotes = notes.filter((n) => !n.trashed)
-                const totalNodes = nonTrashedNotes.length
-
-                // Orphan nodes: notes with no linksOut and no backlinks (isolated)
-                const orphanCount = nonTrashedNotes.filter((n) => {
-                  const hasOutLinks = n.linksOut && n.linksOut.length > 0
-                  const hasInLinks = nonTrashedNotes.some((other) =>
-                    other.id !== n.id && other.linksOut?.some((link) => {
-                      const normalized = link.toLowerCase()
-                      return n.title.toLowerCase() === normalized ||
-                             n.aliases.some((a) => a.toLowerCase() === normalized)
-                    })
-                  )
-                  return !hasOutLinks && !hasInLinks
-                }).length
-
-                // Hub nodes: notes with 5+ connections (linksOut + backlinks)
-                const hubCount = nonTrashedNotes.filter((n) => {
-                  const outCount = n.linksOut?.length ?? 0
-                  const inCount = nonTrashedNotes.filter((other) =>
-                    other.id !== n.id && other.linksOut?.some((link) => {
-                      const normalized = link.toLowerCase()
-                      return n.title.toLowerCase() === normalized ||
-                             n.aliases.some((a) => a.toLowerCase() === normalized)
-                    })
-                  ).length
-                  return (outCount + inCount) >= 5
-                }).length
-
-                // Total edges (links between notes)
-                const totalEdges = nonTrashedNotes.reduce((sum, n) => sum + (n.linksOut?.length ?? 0), 0)
-
-                // Density: edges / max possible edges
-                const maxEdges = totalNodes * (totalNodes - 1)
-                const density = maxEdges > 0 ? Math.round((totalEdges / maxEdges) * 100) : 0
-
-                // Wiki coverage: wiki notes / total notes
-                const wikiCount = nonTrashedNotes.filter((n) => n.noteType === "wiki").length
-                const wikiPercent = totalNodes > 0 ? Math.round((wikiCount / totalNodes) * 100) : 0
+                const m = knowledgeMetrics
+                const orphanCount = Math.round(m.orphanRate * m.totalNotes)
+                const hubLeader = m.topHubs[0]
+                const wikiPercent =
+                  m.totalNotes > 0
+                    ? Math.round((m.totalWiki / m.totalNotes) * 100)
+                    : 0
+                const orphanPct = Math.round(m.orphanRate * 100)
+                const tagPct = Math.round(m.tagCoverage * 100)
 
                 return (
                   <div className="flex flex-col gap-2 px-2.5">
                     <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Nodes</span>
-                      <span className="text-sidebar-foreground tabular-nums">{totalNodes}</span>
+                      <span className="text-sidebar-foreground tabular-nums">{m.totalNotes}</span>
                     </div>
                     <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Edges</span>
-                      <span className="text-sidebar-foreground tabular-nums">{totalEdges}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Orphans</span>
-                      <span className={`tabular-nums ${orphanCount > 0 ? "text-chart-3" : "text-sidebar-foreground"}`}>{orphanCount}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-2xs">
-                      <span className="text-sidebar-muted">Hubs (5+)</span>
-                      <span className="text-sidebar-foreground tabular-nums">{hubCount}</span>
+                      <span className="text-sidebar-foreground tabular-nums">{m.totalEdges}</span>
                     </div>
                     <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Density</span>
-                      <span className="text-sidebar-foreground tabular-nums">{density}%</span>
+                      <span className="text-sidebar-foreground tabular-nums">
+                        {m.linkDensity.toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-2xs">
+                      <span className="text-sidebar-muted">Orphans</span>
+                      <span
+                        className={`tabular-nums ${
+                          orphanCount > 0 ? "text-chart-3" : "text-sidebar-foreground"
+                        }`}
+                      >
+                        {orphanCount} · {orphanPct}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-2xs">
+                      <span className="text-sidebar-muted">Tagged</span>
+                      <span className="text-sidebar-foreground tabular-nums">{tagPct}%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-2xs">
+                      <span className="text-sidebar-muted">Top hub</span>
+                      <span className="text-sidebar-foreground tabular-nums">
+                        {hubLeader ? hubLeader.backlinks : 0}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-2xs">
                       <span className="text-sidebar-muted">Wiki Coverage</span>
@@ -1401,132 +1283,19 @@ export function LinearSidebar() {
           </>
         )}
 
-        {/* ── Home: Knowledge Intelligence Panel ─── */}
+        {/* ── Home: minimal sidebar — only Inbox.
+            Heavy insights moved to Ontology > Insights (PR 6).
+            Home view itself surfaces workflow + nudges. */}
         {activeSpace === "home" && (
-          <>
-            {/* Inbox — the only navigation item */}
-            <div className="space-y-px">
-              <NavLink
-                href="/inbox"
-                icon={<IconInbox size={20} />}
-                label="Inbox"
-                count={inboxCount > 0 ? inboxCount : undefined}
-                active={isActive("/inbox")}
-              />
-            </div>
-
-            {/* Unlinked Mentions */}
-            {unlinkedMentionData.total > 0 && (
-              <Section title="Unlinked Mentions" count={unlinkedMentionData.total} onHeaderClick={() => setHomeSection("unlinked")} active={homeSection === "unlinked"}>
-                {unlinkedMentionData.top3.map((m) => (
-                  <button
-                    key={m.noteId}
-                    onClick={(e) => { setActiveRoute("/notes"); openNote(m.noteId, { forceNewTab: e.ctrlKey || e.metaKey }) }}
-                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                  >
-                    <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
-                      <LinkSimple size={16} />
-                    </span>
-                    <span className="truncate text-left flex-1">{m.title}</span>
-                    <span className="text-2xs text-sidebar-count tabular-nums">{m.count} notes</span>
-                  </button>
-                ))}
-              </Section>
-            )}
-
-            {/* Suggestions */}
-            {pendingSuggestions.total > 0 && (
-              <Section title="Suggestions" count={pendingSuggestions.total} onHeaderClick={() => setHomeSection("suggestions")} active={homeSection === "suggestions"}>
-                {pendingSuggestions.top3.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={(e) => { setActiveRoute("/notes"); openNote(s.sourceId, { forceNewTab: e.ctrlKey || e.metaKey }) }}
-                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                  >
-                    <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
-                      <GitFork size={16} />
-                    </span>
-                    <span className="truncate text-left flex-1 text-2xs">
-                      {s.sourceTitle} <span className="text-sidebar-muted">↔</span> {s.targetTitle}
-                    </span>
-                  </button>
-                ))}
-              </Section>
-            )}
-
-            {/* Unresolved Links */}
-            {redLinkData.total > 0 && (
-              <Section title="Unresolved Links" count={redLinkData.total} onHeaderClick={() => setHomeSection("redlinks")} active={homeSection === "redlinks"}>
-                {redLinkData.top3.map((r) => (
-                  <div
-                    key={r.title}
-                    className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui"
-                  >
-                    <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
-                      <LinkBreak size={16} />
-                    </span>
-                    <span className="truncate text-left flex-1 text-red-400">{r.title}</span>
-                    <span className="text-2xs text-sidebar-count tabular-nums">{r.refs} refs</span>
-                  </div>
-                ))}
-              </Section>
-            )}
-
-            {/* Orphans */}
-            {orphanData.total > 0 && (
-              <Section title="Orphans" count={orphanData.total} onHeaderClick={() => setHomeSection("orphans")} active={homeSection === "orphans"}>
-                {orphanData.top3.map((o) => (
-                  <button
-                    key={o.id}
-                    onClick={(e) => { setActiveRoute("/notes"); openNote(o.id, { forceNewTab: e.ctrlKey || e.metaKey }) }}
-                    className="nav-item group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-ui transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-text"
-                  >
-                    <span className="flex shrink-0 items-center justify-center w-5 h-5 text-sidebar-muted">
-                      <Island size={16} />
-                    </span>
-                    <span className="truncate text-left flex-1">{o.title}</span>
-                  </button>
-                ))}
-              </Section>
-            )}
-
-            {/* Knowledge Health */}
-            <Section title="Knowledge Health">
-              <div className="px-2.5 py-1.5 space-y-2.5">
-                {/* Coverage */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-2xs">
-                    <span className="text-sidebar-muted">Coverage</span>
-                    <span className="text-sidebar-foreground tabular-nums">{knowledgeHealth.coverage}%</span>
-                  </div>
-                  <div className="h-1 rounded-full bg-sidebar-border">
-                    <div
-                      className="h-1 rounded-full bg-chart-5 transition-all"
-                      style={{ width: `${knowledgeHealth.coverage}%` }}
-                    />
-                  </div>
-                </div>
-                {/* Density */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-2xs">
-                    <span className="text-sidebar-muted">Density</span>
-                    <span className="text-sidebar-foreground tabular-nums">{knowledgeHealth.density}%</span>
-                  </div>
-                  <div className="h-1 rounded-full bg-sidebar-border">
-                    <div
-                      className="h-1 rounded-full bg-chart-5 transition-all"
-                      style={{ width: `${Math.min(knowledgeHealth.density * 10, 100)}%` }}
-                    />
-                  </div>
-                </div>
-                {/* Total */}
-                <div className="flex items-center justify-between text-2xs">
-                  <span className="text-sidebar-muted">Total</span>
-                  <span className="text-sidebar-foreground tabular-nums">{knowledgeHealth.total} notes</span>
-                </div>
-              </div>
-            </Section>
-          </>
+          <div className="space-y-px">
+            <NavLink
+              href="/inbox"
+              icon={<IconInbox size={20} />}
+              label="Inbox"
+              count={inboxCount > 0 ? inboxCount : undefined}
+              active={isActive("/inbox")}
+            />
+          </div>
         )}
       </nav>
 

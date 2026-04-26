@@ -132,6 +132,7 @@ export interface PlotState {
   deleteNote: (id: string) => void
   duplicateNote: (id: string) => void
   mergeNotes: (targetId: string, sourceIds: string[]) => void
+  splitNote: (sourceId: string, args: { extractedJson: Record<string, unknown>; remainingJson: Record<string, unknown>; newTitle: string }) => string | null
   togglePin: (id: string) => void
   toggleTrash: (id: string) => void
   touchNote: (id: string) => void
@@ -292,6 +293,8 @@ export interface PlotState {
     aliases?: string[]
   }) => string
   unmergeFromHistory: (articleId: string, snapshotIndex: number) => string[]
+  setWikiArticleParent: (articleId: string, parentId: string | null) => boolean
+  toggleWikiArticlePin: (articleId: string) => void
 
   // ── References ──
   createReference: (partial: { title: string; content: string; contentJson?: Record<string, unknown> | null; fields?: Array<{ key: string; value: string }>; tags?: string[] }) => string

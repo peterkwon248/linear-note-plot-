@@ -13,6 +13,7 @@ import { FloatingToc } from "./floating-toc"
 import { useSettingsStore } from "@/lib/settings-store"
 import { usePlotStore } from "@/lib/store"
 import { createEditorExtensions } from "./core/shared-editor-config"
+import { setEntityContext } from "@/lib/editor/entity-context"
 import "./EditorStyles.css"
 
 interface TipTapEditorProps {
@@ -132,6 +133,13 @@ export function TipTapEditor({
   useEffect(() => {
     if (editor) onEditorReady?.(editor)
   }, [editor]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Publish entity context on editor.storage so node views (e.g. BannerNodeView)
+  // can render the right comment/bookmark anchor. Re-runs when noteId changes.
+  useEffect(() => {
+    if (!editor || !noteId) return
+    setEntityContext(editor, { kind: "note", entityId: noteId })
+  }, [editor, noteId])
 
   // Listen for wikilink change events — only respond if this editor is editable (not preview)
   useEffect(() => {

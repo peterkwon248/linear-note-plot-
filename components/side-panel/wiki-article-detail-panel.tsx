@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { usePlotStore } from "@/lib/store"
 import { format, formatDistanceToNow } from "date-fns"
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank"
@@ -11,9 +11,17 @@ import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
 import { Layout } from "@phosphor-icons/react/dist/ssr/Layout"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Image as PhImage } from "@phosphor-icons/react/dist/ssr/Image"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
+import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
+import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { IconWiki } from "@/components/plot-icons"
 import { setActiveRoute } from "@/lib/table-route"
 import type { WikiArticle } from "@/lib/types"
+import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
+import { getDescendants, getChildren } from "@/lib/wiki-hierarchy"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 
 function InspectorSection({
   title,
@@ -39,14 +47,35 @@ function InspectorSection({
 
 export function WikiArticleDetailPanel({ article }: { article: WikiArticle | null }) {
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
+  const setWikiArticleParent = usePlotStore((s) => s.setWikiArticleParent)
+  const toggleWikiArticlePin = usePlotStore((s) => s.toggleWikiArticlePin)
   const tags = usePlotStore((s) => s.tags)
   const notes = usePlotStore((s) => s.notes)
   const attachments = usePlotStore((s) => s.attachments)
+  const [parentPickerOpen, setParentPickerOpen] = useState(false)
 
   const articleCategories = useMemo(() => {
     if (!article?.categoryIds?.length) return []
     return wikiCategories.filter((c) => article.categoryIds!.includes(c.id))
   }, [article?.categoryIds, wikiCategories])
+
+  const parentArticle = useMemo(() => {
+    if (!article?.parentArticleId) return null
+    return wikiArticles.find((a) => a.id === article.parentArticleId) ?? null
+  }, [article?.parentArticleId, wikiArticles])
+
+  const childArticles = useMemo(() => {
+    if (!article) return []
+    return getChildren(article.id, { wikiArticles })
+  }, [article, wikiArticles])
+
+  // Exclude self + all descendants when picking a parent (cycle prevention)
+  const parentPickerExcludeIds = useMemo(() => {
+    if (!article) return []
+    const descendants = getDescendants(article.id, { wikiArticles })
+    return [...descendants]
+  }, [article, wikiArticles])
 
   const articleTags = useMemo(() => {
     if (!article?.tags?.length) return []
@@ -121,6 +150,19 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
             {article.layout.charAt(0).toUpperCase() + article.layout.slice(1)}
           </span>
         )}
+        <button
+          type="button"
+          onClick={() => toggleWikiArticlePin(article.id)}
+          className={`ml-auto flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium transition-colors ${
+            article.pinned
+              ? "bg-accent/15 text-accent"
+              : "text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground"
+          }`}
+          title={article.pinned ? "Unpin from Quicklinks" : "Pin to Quicklinks"}
+        >
+          <PushPin size={12} weight={article.pinned ? "fill" : "regular"} />
+          {article.pinned ? "Pinned" : "Pin"}
+        </button>
       </div>
 
       {/* Aliases */}
@@ -135,6 +177,58 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
                 >
                   {alias}
                 </span>
+              ))}
+            </div>
+          </InspectorSection>
+          <div className="mx-4 border-b border-border" />
+        </>
+      )}
+
+      {/* Parent Article */}
+      <InspectorSection title="Parent" icon={<ArrowUp size={16} weight="regular" />}>
+        {parentArticle ? (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => navigateToWikiArticle(parentArticle.id)}
+              className="flex-1 min-w-0 text-left text-note text-foreground/80 hover:text-foreground truncate transition-colors duration-100"
+            >
+              {parentArticle.title}
+            </button>
+            <button
+              onClick={() => setWikiArticleParent(article.id, null)}
+              title="Remove parent"
+              className="shrink-0 text-muted-foreground/40 hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
+            >
+              <PhX size={12} weight="bold" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setParentPickerOpen(true)}
+            className="flex items-center gap-1.5 text-note text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100"
+          >
+            <PhPlus size={12} weight="bold" />
+            Set parent
+          </button>
+        )}
+      </InspectorSection>
+
+      <div className="mx-4 border-b border-border" />
+
+      {/* Children Articles */}
+      {childArticles.length > 0 && (
+        <>
+          <InspectorSection title="Children" icon={<ArrowDown size={16} weight="regular" />}>
+            <div className="space-y-px">
+              {childArticles.map((child) => (
+                <button
+                  key={child.id}
+                  onClick={() => navigateToWikiArticle(child.id)}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-note text-foreground/70 hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
+                >
+                  <IconWiki size={12} className="shrink-0 text-muted-foreground/40" />
+                  <span className="truncate">{child.title}</span>
+                </button>
               ))}
             </div>
           </InspectorSection>
@@ -322,6 +416,18 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           Delete article
         </button>
       </div>
+
+      {/* Parent picker */}
+      <WikiPickerDialog
+        open={parentPickerOpen}
+        onOpenChange={setParentPickerOpen}
+        title="Select parent article"
+        excludeIds={parentPickerExcludeIds}
+        onSelect={(selectedId) => {
+          setWikiArticleParent(article.id, selectedId)
+          setParentPickerOpen(false)
+        }}
+      />
     </div>
   )
 }

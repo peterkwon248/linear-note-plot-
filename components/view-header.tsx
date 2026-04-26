@@ -124,6 +124,17 @@ export function ViewHeader({
   const [filterOpen, setFilterOpen] = useState(false)
   const [displayOpen, setDisplayOpen] = useState(false)
 
+  // Hydration guard: Radix Popover/Dropdown components emit aria-controls
+  // referencing IDs that aren't stable between SSR + client (React 19 useId
+  // collisions w/ Radix internals). Wait until client mount before rendering
+  // the interactive Popover wrappers — the trigger HTML still exists during
+  // SSR so layout doesn't shift, but the Popover's mount-time DOM mutations
+  // happen after hydration is complete.
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+
   // Close other when one opens
   useEffect(() => {
     if (filterOpen) setDisplayOpen(false)
@@ -186,41 +197,53 @@ export function ViewHeader({
           <div className="flex items-center gap-0.5">
             {extraToolbarButtons}
             {showFilter && (
-              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-                <PopoverTrigger asChild>
-                  <div>
-                    <HBtn active={filterOpen || hasActiveFilters}>
-                      <FunnelSimple size={16} weight="regular" />
-                    </HBtn>
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  sideOffset={5}
-                  className="!w-auto !max-w-none rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg"
-                >
-                  {filterContent}
-                </PopoverContent>
-              </Popover>
+              hydrated ? (
+                <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                  <PopoverTrigger asChild>
+                    <div>
+                      <HBtn active={filterOpen || hasActiveFilters}>
+                        <FunnelSimple size={16} weight="regular" />
+                      </HBtn>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="end"
+                    sideOffset={5}
+                    className="!w-auto !max-w-none rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg"
+                  >
+                    {filterContent}
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <HBtn active={hasActiveFilters}>
+                  <FunnelSimple size={16} weight="regular" />
+                </HBtn>
+              )
             )}
 
             {showDisplay && (
-              <Popover open={displayOpen} onOpenChange={setDisplayOpen}>
-                <PopoverTrigger asChild>
-                  <div>
-                    <HBtn active={displayOpen}>
-                      <SlidersHorizontal size={16} weight="regular" />
-                    </HBtn>
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  sideOffset={5}
-                  className="w-[300px] overflow-hidden rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg"
-                >
-                  {displayContent}
-                </PopoverContent>
-              </Popover>
+              hydrated ? (
+                <Popover open={displayOpen} onOpenChange={setDisplayOpen}>
+                  <PopoverTrigger asChild>
+                    <div>
+                      <HBtn active={displayOpen}>
+                        <SlidersHorizontal size={16} weight="regular" />
+                      </HBtn>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="end"
+                    sideOffset={5}
+                    className="w-[300px] overflow-hidden rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg"
+                  >
+                    {displayContent}
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <HBtn>
+                  <SlidersHorizontal size={16} weight="regular" />
+                </HBtn>
+              )
             )}
 
             {showDetailPanel && (
@@ -232,14 +255,18 @@ export function ViewHeader({
             <SplitViewButton />
 
             {createMenuContent ? (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <div><HBtn><Plus size={16} weight="regular" /></HBtn></div>
-                </PopoverTrigger>
-                <PopoverContent align="end" sideOffset={5} className="!w-auto !max-w-none rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg">
-                  {createMenuContent}
-                </PopoverContent>
-              </Popover>
+              hydrated ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <div><HBtn><Plus size={16} weight="regular" /></HBtn></div>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" sideOffset={5} className="!w-auto !max-w-none rounded-lg border border-border-subtle bg-surface-overlay p-0 shadow-lg">
+                    {createMenuContent}
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <HBtn><Plus size={16} weight="regular" /></HBtn>
+              )
             ) : onCreateNew ? (
               <HBtn onClick={onCreateNew}>
                 <Plus size={16} weight="regular" />

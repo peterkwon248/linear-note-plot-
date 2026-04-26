@@ -40,6 +40,9 @@ import {
   LinkSimple,
   Book,
   CalendarDots,
+  Megaphone,
+  Cake,
+  Timer,
 } from "@/lib/editor/editor-icons"
 import { detectUrlType } from "@/lib/editor/url-detect"
 import { requestEmbedUrl } from "@/lib/editor/embed-url-request"
@@ -278,6 +281,23 @@ export const BLOCK_REGISTRY: readonly BlockRegistryEntry[] = [
         .run(),
   },
   {
+    id: "banner",
+    label: "Banner",
+    description: "Highlighted banner with title and subtitle",
+    aliases: ["banner", "hero", "notice", "announce"],
+    icon: Megaphone,
+    surfaces: ["slash", "insertMenu"],
+    group: "structure",
+    tier: "base",
+    execute: ({ editor, range }) =>
+      chainWithRange(editor, range)
+        .insertContent({
+          type: "bannerBlock",
+          attrs: { title: "Banner title", subtitle: "Subtitle", bgColor: null },
+        })
+        .run(),
+  },
+  {
     id: "content-block",
     label: "Block",
     description: "Wrap content in a draggable block",
@@ -359,14 +379,17 @@ export const BLOCK_REGISTRY: readonly BlockRegistryEntry[] = [
     id: "embed-note",
     label: "Embed Note",
     description: "Embed a note preview",
+    aliases: ["include", "transclude"],
     icon: PhNote,
     surfaces: ["slash", "insertMenu"],
     group: "embed",
     tier: "base",
     execute: ({ editor, range }) => {
       if (range) editor.chain().focus().deleteRange(range).run()
+      // Include editorTier so listeners can route to the correct picker
+      const editorTier = editor.schema.nodes.queryBlock ? "note" : "wiki"
       window.dispatchEvent(
-        new CustomEvent("plot:embed-note-pick", { detail: { editor } }),
+        new CustomEvent("plot:embed-note-pick", { detail: { editor, editorTier } }),
       )
     },
   },
@@ -374,14 +397,17 @@ export const BLOCK_REGISTRY: readonly BlockRegistryEntry[] = [
     id: "embed-wiki",
     label: "Embed Wiki",
     description: "Embed a wiki article",
+    aliases: ["include", "transclude"],
     icon: BookOpen,
     surfaces: ["slash", "insertMenu"],
     group: "embed",
     tier: "base",
     execute: ({ editor, range }) => {
       if (range) editor.chain().focus().deleteRange(range).run()
+      // Include editorTier so listeners can route to the correct picker
+      const editorTier = editor.schema.nodes.queryBlock ? "note" : "wiki"
       window.dispatchEvent(
-        new CustomEvent("plot:embed-wiki-pick", { detail: { editor } }),
+        new CustomEvent("plot:embed-wiki-pick", { detail: { editor, editorTier } }),
       )
     },
   },
@@ -455,6 +481,43 @@ export const BLOCK_REGISTRY: readonly BlockRegistryEntry[] = [
         .insertContent(format(new Date(), "yyyy-MM-dd"))
         .run(),
   },
+  {
+    id: "age",
+    label: "Age",
+    description: "Auto-calculated age from a birth date",
+    aliases: ["age", "birthday", "born", "나이", "만나이"],
+    icon: Cake,
+    surfaces: ["slash", "insertMenu"],
+    group: "field",
+    tier: "base",
+    execute: ({ editor, range }) => {
+      // Default to empty so the chip renders "[date]" placeholder until the user picks a DOB.
+      const chain = range
+        ? editor.chain().focus().deleteRange(range)
+        : editor.chain().focus()
+      chain.insertContent({ type: "ageMacro", attrs: { date: "" } }).run()
+    },
+  },
+  {
+    id: "dday",
+    label: "D-Day",
+    description: "Countdown to a target date",
+    aliases: ["dday", "countdown", "timer", "deadline", "카운트다운"],
+    icon: Timer,
+    surfaces: ["slash", "insertMenu"],
+    group: "field",
+    tier: "base",
+    execute: ({ editor, range }) => {
+      // 기본값: 오늘 + 7일
+      const d = new Date()
+      d.setDate(d.getDate() + 7)
+      const target = d.toISOString().slice(0, 10)
+      const chain = range
+        ? editor.chain().focus().deleteRange(range)
+        : editor.chain().focus()
+      chain.insertContent({ type: "ddayMacro", attrs: { date: target, label: null } }).run()
+    },
+  },
 
   // ── Math ─────────────────────────────────────────────────────────────
   {
@@ -467,11 +530,10 @@ export const BLOCK_REGISTRY: readonly BlockRegistryEntry[] = [
     group: "math",
     tier: "base",
     execute: ({ editor, range }) => {
-      // Slash-triggered: blank LaTeX (user types formula).
-      // Menu-triggered: "E = mc^2" example (matches previous inline code).
-      const latex = range ? " " : "E = mc^2"
+      // Insert with empty latex — NodeView shows "$ math $" placeholder.
+      // User clicks the chip to open the Popover and enter LaTeX.
       chainWithRange(editor, range)
-        .insertContent({ type: "inlineMath", attrs: { latex } })
+        .insertContent({ type: "inlineMath", attrs: { latex: "" } })
         .run()
     },
   },
@@ -485,9 +547,9 @@ export const BLOCK_REGISTRY: readonly BlockRegistryEntry[] = [
     group: "math",
     tier: "base",
     execute: ({ editor, range }) => {
-      const latex = range ? " " : "\\sum_{i=1}^{n} x_i"
+      // Insert with empty latex — NodeView shows "$$ math $$" placeholder.
       chainWithRange(editor, range)
-        .insertContent({ type: "blockMath", attrs: { latex } })
+        .insertContent({ type: "blockMath", attrs: { latex: "" } })
         .run()
     },
   },

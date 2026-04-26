@@ -32,6 +32,8 @@ import { Bell } from "@phosphor-icons/react/dist/ssr/Bell"
 import { Clock as PhClock } from "@phosphor-icons/react/dist/ssr/Clock"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { SplitHorizontal } from "@phosphor-icons/react/dist/ssr/SplitHorizontal"
+import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
+import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { Minus as PhMinus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
@@ -1689,6 +1691,13 @@ function NoteRowInner({
         <ContextMenuItem onClick={onMergeWith} className="text-note">
           <GitMerge className="mr-2 text-muted-foreground" size={16} weight="regular" />
           GitMerge with...
+        </ContextMenuItem>
+        <ContextMenuItem
+          onClick={() => setSplitTargetNoteId(note.id)}
+          className="text-note"
+        >
+          <Scissors className="mr-2 text-muted-foreground" size={16} weight="regular" />
+          Split this note...
         </ContextMenuItem>
         <ContextMenuItem onClick={onLinkWith} className="text-note">
           <PhLink className="mr-2 text-muted-foreground" size={16} weight="regular" />

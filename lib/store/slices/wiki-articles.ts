@@ -2,6 +2,7 @@ import type { WikiArticle, WikiBlock, WikiMergeSnapshot } from "../../types"
 import { genId, now, persistBlockBody, removeBlockBody, persistArticleBlocks, removeArticleBlocks, type AppendEventFn } from "../helpers"
 import { buildSectionIndex } from "../../wiki-section-index"
 import { extractLinksFromWikiBlocks } from "../../body-helpers"
+import { wouldCreateCycle } from "../../wiki-hierarchy"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
@@ -86,6 +87,38 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
             referenceIds: (a.referenceIds ?? []).filter((id: string) => id !== referenceId),
             updatedAt: now(),
           }
+        ),
+      }))
+    },
+
+    setWikiArticleParent: (articleId: string, parentId: string | null): boolean => {
+      const state = get()
+      const articles: WikiArticle[] = state.wikiArticles
+
+      // Guard: article must exist
+      if (!articles.find((a: WikiArticle) => a.id === articleId)) return false
+
+      // Guard: self-parent
+      if (parentId === articleId) return false
+
+      // Guard: cycle (candidateParent is a descendant of article)
+      if (parentId !== null && wouldCreateCycle(articleId, parentId, { wikiArticles: articles })) return false
+
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id === articleId ? { ...a, parentArticleId: parentId, updatedAt: now() } : a
+        ),
+      }))
+      return true
+    },
+
+    /** Toggle whole-article pin. Mirrors Note.pinned semantics. */
+    toggleWikiArticlePin: (articleId: string) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id === articleId
+            ? { ...a, pinned: !a.pinned, updatedAt: now() }
+            : a
         ),
       }))
     },

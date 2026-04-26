@@ -5,7 +5,7 @@ type Set = (fn: ((state: any) => any) | any) => void
 
 export function createReferencesSlice(set: Set) {
   return {
-    createReference: (partial: { title: string; content: string; contentJson?: Record<string, unknown> | null; fields?: Array<{ key: string; value: string }>; tags?: string[] }): string => {
+    createReference: (partial: { title: string; content: string; contentJson?: Record<string, unknown> | null; fields?: Array<{ key: string; value: string }>; tags?: string[]; imageUrl?: string | null }): string => {
       const id = genId()
       const createdAt = now()
       const ref: Reference = {
@@ -15,6 +15,7 @@ export function createReferencesSlice(set: Set) {
         contentJson: partial.contentJson ?? null,
         fields: partial.fields ?? [],
         tags: partial.tags,
+        imageUrl: partial.imageUrl ?? null,
         createdAt,
         updatedAt: createdAt,
         history: [{ timestamp: createdAt, action: "created" as const }],
