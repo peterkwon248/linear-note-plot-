@@ -3,7 +3,26 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
-## 🟢 2026-04-26 최신 — Plot 디자인 + 인사이트 대규모 (9시간 세션, 9 PR + 핫픽스)
+## 🟢 2026-04-27 최신 — Doc sync + group-header + attachment drag-drop + 시계열 메트릭
+
+**완료**:
+- Doc sync (SESSION-LOG / NEXT-ACTION / TODO를 PR #218 시점으로 정합성 회복)
+- TipTap InfoboxBlockNode `"group-header"` row 타입 지원 (collapse + 8 컬러 프리셋 + custom hex). 위키 인포박스와 일관성 회복
+- FileHandler onDrop/onPaste 구현 — 이미지 드래그/스크린샷 paste 자동 attachment
+- 시계열 메트릭 — `lib/insights/timeseries.ts` `computeWikiTimeSeries` (day/week/month 버킷) + `wiki-growth-chart.tsx` (recharts AreaChart + BarChart, ResizeObserver 패턴) → Wiki Dashboard 통합
+
+**큰 결정 (영구)**:
+- **Wiki Y.Doc 폐기** — WikiBlock 배열 구조라 Note 패턴 직접 적용 불가. 블록 단위라 race 표면적 작음. 안 해도 안전
+- **AI provider 폐기** — "LLM 없이 규칙/통계/그래프" 코어 정체성 위반
+
+**출시 방향 논의 진행** (다음 세션 결정):
+- Google Play Store + 마케팅 웹사이트 출시 의향
+- 모바일 전략: PWA → TWA 추천
+- 출시 전 부족 영역: 온톨로지 / 캘린더 / 노트·위키 템플릿
+
+---
+
+## 🟢 2026-04-26 — Plot 디자인 + 인사이트 대규모 (9시간 세션, 9 PR + 핫픽스)
 
 **핵심 결정**:
 - **Home = 데이터 대시보드 + 빠른 진입** (시간 기반 X). Quick Capture / Stats (컬러) / Recent (4 카드) / Quicklinks (Mixed pinned 통합) / CTA. max-w-5xl.

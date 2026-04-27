@@ -3,7 +3,8 @@
 import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
-import type { WikiArticle } from "@/lib/types"
+import type { Note, WikiArticle } from "@/lib/types"
+import { WikiGrowthChart } from "@/components/wiki-editor/wiki-growth-chart"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
@@ -20,6 +21,8 @@ import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 interface WikiDashboardProps {
   wikiNotes: WikiArticle[]
   wikiArticles: WikiArticle[]
+  /** All notes — used for the growth chart's "New Notes" overlay. */
+  notes: Note[]
   stats: {
     total: number
     internalLinks: number
@@ -56,6 +59,7 @@ interface WikiDashboardProps {
 export function WikiDashboard({
   wikiNotes,
   wikiArticles,
+  notes,
   stats,
   articleCount,
   stubCount,
@@ -244,6 +248,11 @@ export function WikiDashboard({
             </div>
           </div>
         )}
+
+        {/* ── Growth Chart ── */}
+        <div className="mb-6">
+          <WikiGrowthChart notes={notes} wikiArticles={wikiArticles} />
+        </div>
 
         {/* ── Two-Column Content ── */}
         <div className="grid grid-cols-1 gap-5 min-[700px]:grid-cols-2">

@@ -41,6 +41,32 @@ export interface PromotionCandidate {
   contentLength: number
 }
 
+/* ── Time series ─────────────────────────────────────── */
+
+/**
+ * One bucket of cumulative + delta knowledge counts at a point in time.
+ * `ts` is the bucket START (ISO date string for stable sorting / formatting).
+ *
+ * Edge counts are SNAPSHOTS of "current" linksOut filtered by createdAt of
+ * source — we cannot reconstruct historical link state without an event log,
+ * so this is a best-effort approximation. New notes/wiki are exact (createdAt
+ * is reliable).
+ */
+export interface TimeSeriesPoint {
+  /** ISO date string (YYYY-MM-DD), bucket start. */
+  ts: string
+  /** Cumulative live notes existing at end of bucket. */
+  totalNotes: number
+  /** Cumulative live wiki articles existing at end of bucket. */
+  totalWiki: number
+  /** New notes created within the bucket. */
+  newNotes: number
+  /** New wiki articles created within the bucket. */
+  newWiki: number
+  /** Cumulative internal edges (linksOut count) approximated by source createdAt. */
+  totalEdges: number
+}
+
 export interface KnowledgeMetrics {
   /* ── Counts ───────────────────────────────── */
   totalNotes: number

@@ -79,6 +79,9 @@ export function TipTapEditor({
         // When a Y.Doc is supplied we MUST disable StarterKit's built-in
         // history — Y.js ships its own history and the two conflict.
         collaborative: !!ydoc,
+        // Used by FileHandler onDrop/onPaste to associate dropped attachments
+        // with the active note.
+        noteId,
       }),
       // Experimental: Y.Doc collaboration for split-view sync.
       // When ydoc is provided, ProseMirror state is bound to the Y.Doc
