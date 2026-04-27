@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-14T08:50:00.907Z",
+  "lastUpdated": "2026-04-27T07:15:19.281Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -28,7 +28,9 @@
     "nodes",
     "vigorous-spence",
     "adoring-benz",
-    "block-registry"
+    "block-registry",
+    "insights",
+    "pedantic-robinson-e8e2a1"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -41,9 +43,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-05T00:23:24.929Z",
-        "lastUpdated": "2026-04-14T08:18:10.402Z"
+        "lastUpdated": "2026-04-27T07:07:58.197Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\FixedToolbar.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\components\\editor\\TipTapEditor.tsx"
     },
     "wizardly-kare": {
       "phase": "do",
@@ -262,9 +264,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-14T03:06:42.360Z"
+        "lastUpdated": "2026-04-27T07:15:19.281Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\wiki-editor\\wiki-footnotes-section.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\components\\wiki-editor\\wiki-growth-chart.tsx"
     },
     "core": {
       "phase": "do",
@@ -275,9 +277,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-03T00:38:18.960Z",
-        "lastUpdated": "2026-04-14T05:39:22.859Z"
+        "lastUpdated": "2026-04-27T07:07:48.688Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\core\\shared-editor-config.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\components\\editor\\core\\shared-editor-config.ts"
     },
     "zealous-haslett": {
       "phase": "do",
@@ -340,9 +342,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-08T03:18:21.569Z",
-        "lastUpdated": "2026-04-14T08:50:00.907Z"
+        "lastUpdated": "2026-04-27T07:02:04.167Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\nodes\\infobox-node.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\components\\editor\\nodes\\infobox-node.tsx"
     },
     "vigorous-spence": {
       "phase": "do",
@@ -382,6 +384,32 @@
         "lastUpdated": "2026-04-14T08:14:01.099Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\components\\editor\\block-registry\\types.ts"
+    },
+    "insights": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-27T07:10:21.986Z",
+        "lastUpdated": "2026-04-27T07:10:47.172Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\lib\\insights\\timeseries.ts"
+    },
+    "pedantic-robinson-e8e2a1": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-27T07:11:25.886Z",
+        "lastUpdated": "2026-04-27T07:12:04.118Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\components\\views\\wiki-view.tsx"
     }
   },
   "pipeline": {
@@ -392,7 +420,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-14T08:50:00.907Z"
+    "lastActivity": "2026-04-27T07:15:19.281Z"
   },
   "history": [
     {
@@ -5384,6 +5412,162 @@
     {
       "timestamp": "2026-04-14T08:50:00.907Z",
       "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:00:53.167Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:01:09.598Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:01:34.305Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:01:56.618Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:02:04.167Z",
+      "feature": "nodes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:07:09.853Z",
+      "feature": "core",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:07:26.147Z",
+      "feature": "core",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:07:32.481Z",
+      "feature": "core",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:07:48.688Z",
+      "feature": "core",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:07:58.197Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:10:21.986Z",
+      "feature": "insights",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:10:47.172Z",
+      "feature": "insights",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:11:12.125Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:11:25.886Z",
+      "feature": "pedantic-robinson-e8e2a1",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:11:30.729Z",
+      "feature": "pedantic-robinson-e8e2a1",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:11:36.155Z",
+      "feature": "pedantic-robinson-e8e2a1",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:11:42.114Z",
+      "feature": "pedantic-robinson-e8e2a1",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:12:04.118Z",
+      "feature": "pedantic-robinson-e8e2a1",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:13:10.857Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:13:15.296Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:14:27.482Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:14:51.426Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:14:59.131Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:15:06.827Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:15:12.655Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-27T07:15:19.281Z",
+      "feature": "wiki-editor",
       "phase": "do",
       "action": "updated"
     }

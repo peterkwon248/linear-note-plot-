@@ -6,6 +6,109 @@
 
 ---
 
+## 2026-04-27 (집, Doc sync + group-header + attachment drag-drop + 시계열 메트릭 + 출시 방향 논의)
+
+### 완료
+- **Doc sync** — PR #218 이후 stale했던 SESSION-LOG/NEXT-ACTION/TODO를 CONTEXT.md(2026-04-26) 기준으로 정합성 회복. Wiki Y.Doc + AI provider 영구 폐기 결정 반영
+- **InfoboxBlockNode group-header 지원** — 노트 TipTap 인포박스에 `"group-header"` row 타입 + in-memory collapse + 8 프리셋 컬러 피커 + custom hex + "Add group" 버튼. 위키 `WikiInfobox` 컴포넌트(PR #218에서 함)와 일관성 회복
+- **Attachment drag-drop 연결** — `shared-editor-config.ts` FileHandler onDrop/onPaste 구현. 이미지 → image 노드 (`attachment://` URL), 파일 → download 링크. `EditorConfigOptions.noteId` 추가, TipTapEditor에서 전달. **E2E 검증 완료** (가짜 PNG 2개 paste → attachments slice +2, ImageNode가 attachment:// → blob URL 자동 resolve)
+- **시계열 메트릭 + Wiki Dashboard 통합** — `lib/insights/timeseries.ts` (`computeWikiTimeSeries`, day/week/month 버킷, createdAt 기반 cumulative + delta), `components/wiki-editor/wiki-growth-chart.tsx` (recharts AreaChart + BarChart, ResizeObserver 직접 패턴), `wiki-dashboard.tsx` Categories 아래 통합. ResponsiveContainer 0-width 이슈 우회
+
+### 큰 결정
+- **Wiki Y.Doc 영구 폐기** — WikiBlock 배열 구조라 Note Y.Doc 패턴 직접 적용 불가. 블록 단위라 race 표면적 작음. CONTEXT.md "위험" 표기가 자연스러운 신호. 유저 동의
+- **AI provider 폐기** — CLAUDE.md "LLM 없이 규칙/통계/그래프" 정체성 위반. lib/ai/index.ts placeholder 유지
+- **Recharts ResponsiveContainer 회피** — React 19/Next 16 환경에서 width 0 측정 이슈. 직접 ResizeObserver + width-state 패턴으로 우회. 이후 차트 추가 시 동일 패턴 사용 권장
+
+### 출시 방향 논의 (결정 대기)
+- **사용자 의향**: Google Play Store + 마케팅 웹사이트 출시
+- **사용자 지적**: 온톨로지 / 캘린더 / 노트·위키 템플릿 종류 부족
+- **제안한 길**:
+  - 모바일: PWA → TWA(Trusted Web Activity) 추천 (Plot 100% 클라이언트라 적합, 1~2주)
+  - 웹사이트: 별도 Next.js 워크트리 (`plot-website`) + Vercel
+  - 부족한 부분 ROI: 노트 템플릿 시드 → 온톨로지 nudge → 캘린더 점검 순
+- **결정 대기**: 4개 (모바일 전략 / 부족분 우선순위 / 웹사이트 옵션 / 타임라인). 결정 받기 전 코드 X (영구 규칙)
+
+### 다음
+- 사용자 결정 4개 받기
+- 결정 후 첫 작업 후보: 모바일 반응형 감사 + 노트 템플릿 시드 10개
+
+### Watch Out
+- Recharts ResponsiveContainer는 이 환경에서 작동 X — 새 차트 만들 때 ResizeObserver 패턴 (`wiki-growth-chart.tsx` 참고)
+- 시계열 차트 실제 시각 검증은 사용자 직접 (preview headless에선 viewport=0)
+- 모바일 출시 전 hover-only UI는 touch UX로 마이그레이션 필요
+- TipTap atom node에서 group-header collapse는 in-memory (위키처럼 persist 안 됨 — atom은 stable id 없어서)
+
+### 머신
+집
+
+---
+
+## 2026-04-26 (집, Plot 디자인 + 인사이트 대규모 — 9시간, 9 PR + 핫픽스, Store v82→v91)
+
+### 완료
+- **Home = 데이터 대시보드 + 빠른 진입**: 시간 기반 X. Quick Capture / Stats (컬러) / Recent (4 카드) / Quicklinks (Mixed pinned 통합) / CTA. max-w-5xl
+- **Ontology = Single Source of Insights**: 모든 정비 행동(Orphan/Promote/Unlinked/메트릭) Ontology Insights 탭으로 이전. 새 메트릭: Knowledge WAR / Concept Reach / Hubs / Density / Coverage / Tag Coverage / Cluster Cohesion
+- **Pinned 통합**: Note + Wiki + Folder + SavedView + Bookmark(글로벌) 모두 Mixed Quicklinks. WikiArticle.pinned 신설 (Store v87)
+- **나무위키 Tier 2-4 완료**: 배너 블록 (4 다채로움) + age/dday 매크로 + Include 양방향 + 각주 이미지 + 위키 parent-child. 루비 텍스트 제거 (한국어 fit X)
+- **인포박스 Type 11 프리셋 + 그룹 토글** + Navbox 풀 디자인 (Editorial-Imperial, 다단/그룹/색상/그리드/펼치기)
+- **Connections 풀 강화**: 블록 단위 인라인 스니펫 + 호버 풀 프리뷰 + mention 처리 + 위키 source contentJson scan + mention IDB 인덱스 캐시 (O(1) 룩업)
+- **Y.Doc 본 구현 (P0-1 부분)**: y-indexeddb 영속화 + 4 race guard 유지 + side issue 정리 (plot-note-bodies / duplicate extensions)
+- Store version: **v82 → v91** (9 마이그레이션, v86~v91은 핫픽스)
+- PR #218 머지
+
+### 큰 결정
+- **Wiki Y.Doc 폐기** (2026-04-27 추가 결정): WikiBlock 배열 구조라 Note Y.Doc 패턴 직접 적용 불가, 블록 단위라 race 표면적 작아 안 해도 안전. 솔직히 지금 할 일 아님
+- **AI provider 연결 폐기**: "LLM 없이 규칙/통계/그래프" 코어 정체성 위반
+
+### 다음
+- Doc sync (NEXT-ACTION/SESSION-LOG/TODO 정합성 회복) ← 다음 세션 즉시
+- TipTap InfoboxBlockNode group-header 지원 (작은 폴리시)
+- Attachment drag-drop 연결 (FileHandler onDrop/onPaste TODO)
+- 시계열 메트릭 + Wiki Dashboard 통합
+
+### Watch Out
+- Wiki Y.Doc는 영구 폐기 — CONTEXT.md "다음 작업 후보"에 적힌 거 무시하라
+- 노트 InfoboxBlockNode는 "field"/"section"만 지원 ("group-header" 미적용 — 위키와 일관성 깨짐)
+
+### 머신
+집
+
+---
+
+## 2026-04-25 (집, 코멘트 시스템 대규모 + 사이드패널 통합 + 미니맵 — 18 커밋)
+
+### 완료
+- **Comment 시스템 신규**: Linear 스타일 status (Backlog/Todo/Done/Blocker), 1단계 답글, CommentAnchor 4종 (note/note-block/wiki/wiki-block), 인라인 진입점 (위키 8종 + 노트 모든 블록), Convert to Note 액션
+- **Activity 통합**: ThreadPanel/ReflectionPanel 폐기 → CommentsByEntity 단일
+- **Bookmarks 통합**: targetKind ("note"|"wiki") + Filter chips + Search
+- **Connections**: 위키 incoming wikilink 추가
+- **Pin → Bookmark 네이밍 통일** (BookmarkSimple 아이콘)
+- **Wiki SECTIONS 섹션 제거** (Detail Outline과 중복)
+- **Navbox 하이브리드**: Auto(카테고리 자동) + Manual(WikiPickerDialog) 토글
+- **미니맵 (Document-level)**: Phosphor 통일, 블록 타입별 컬러 stripe, 섹션 accent 번호 badge
+- Store v76 → **v80** (v77 Comment.status+parentId, v78 Reflections/Threads→Comments, v79 status backlog, v80 GlobalBookmark.targetKind)
+- PR #217 머지
+
+### 결정
+- **Comment 본질 = 가벼운 메모**: 풀 에디터 툴바 X. 라이트 tier (마크다운 + 위키링크 + 해시태그)
+- **노트/위키 대칭**: 모든 블록에서 인라인 코멘트 가능
+- **Pin = Bookmark**: 시각/네이밍 통일
+- **미니맵 G 진화 폐기**: Document-level 드롭다운으로 충분
+
+### 다음
+- Connections 상세 (블록/코멘트 단위 — 7시간 작업으로 미룸)
+
+### 머신
+집
+
+---
+
+## 2026-04-24 (TOC 세로선 제거 + comments/bookmarks WIP — PR #216)
+
+PR #216 머지 (interim WIP, 2026-04-25 세션의 prep). Note: 이 세션은 별도 entry 없이 PR로만 기록.
+
+---
+
 ## 2026-04-23 (Wiki visual polish + Ontology rename + IDB fix)
 
 ### 완료

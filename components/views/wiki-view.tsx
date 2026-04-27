@@ -1158,6 +1158,7 @@ export function WikiView() {
           <WikiDashboard
             wikiNotes={wikiNotes}
             wikiArticles={wikiNotes}
+            notes={notes}
             stats={stats}
             articleCount={articleCount}
             stubCount={stubCount}

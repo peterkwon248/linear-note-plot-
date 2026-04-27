@@ -78,6 +78,9 @@ import { DDayMacroNode } from "@/components/editor/nodes/dday-macro-node"
 import { InlineMathNode, BlockMathNode } from "@/components/editor/nodes/math-nodes"
 import { IndentExtension } from "./indent-extension"
 import { handleMentionClick } from "@/lib/note-reference-actions"
+import { usePlotStore } from "@/lib/store"
+import { persistAttachmentBlob } from "@/lib/store/helpers"
+import type { Editor } from "@tiptap/core"
 import { showNotePreview, showNotePreviewById, hideNotePreview, togglePreviewPin, isPreviewShowing, isPreviewPinned } from "@/components/editor/note-hover-preview"
 import { resolveNoteById } from "@/lib/note-reference-actions"
 
@@ -254,6 +257,12 @@ export interface EditorConfigOptions {
    * conflict and the Y.Doc updates silently fail to propagate.
    */
   collaborative?: boolean
+  /**
+   * Active note ID — used by FileHandler onDrop/onPaste to associate
+   * dropped/pasted attachments with the correct note. Optional; if absent,
+   * attachments are stored with empty noteId (still functional, just orphaned).
+   */
+  noteId?: string
 }
 
 // ── Factory ──────────────────────────────────────────────────────────
@@ -429,6 +438,70 @@ function injectDetailsDeleteButtons(editor: any) {
     });
     block.appendChild(btn);
   });
+}
+
+// ── Attachment drop/paste helper ─────────────────────────────────────
+// Used by FileHandler in note tier. Saves each file as an Attachment +
+// IDB blob, then inserts the appropriate TipTap node:
+//   - image MIME → <img src="attachment://...">
+//   - everything else → <a href="attachment://..." download>...</a>
+// Stable across drop and paste; pos is only meaningful for drops.
+function formatFileSizeShort(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+}
+
+async function handleEditorFiles(
+  editor: Editor,
+  files: File[],
+  noteId: string | undefined,
+  dropPos?: number,
+): Promise<void> {
+  if (!files || files.length === 0) return
+  const addAttachment = usePlotStore.getState().addAttachment
+  // Insertion position: dropPos if drop, else current selection anchor.
+  let pos = dropPos ?? editor.state.selection.anchor
+  for (const file of files) {
+    try {
+      const buffer = await file.arrayBuffer()
+      const isImage = file.type.startsWith("image/")
+      const attachmentId = addAttachment({
+        noteId: noteId ?? "",
+        name: file.name || (isImage ? "image" : "file"),
+        type: isImage ? "image" : "file",
+        url: "",
+        mimeType: file.type || "application/octet-stream",
+        size: file.size,
+      })
+      persistAttachmentBlob({ id: attachmentId, data: buffer })
+
+      if (isImage) {
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(pos, {
+            type: "image",
+            attrs: { src: `attachment://${attachmentId}`, alt: file.name },
+          })
+          .run()
+      } else {
+        const safeName = (file.name || "file").replace(/"/g, "&quot;")
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            pos,
+            `<a href="attachment://${attachmentId}" download="${safeName}">${safeName} (${formatFileSizeShort(file.size)})</a>`,
+          )
+          .run()
+      }
+      // Advance pos so subsequent files in the same drop don't stack at the same offset.
+      pos = editor.state.selection.anchor
+    } catch (e) {
+      console.warn("[attachment-drop] failed to attach file", file.name, e)
+    }
+  }
 }
 
 export function createEditorExtensions(
@@ -658,16 +731,19 @@ export function createEditorExtensions(
         MentionInteractionExtension as Extension,
         Emoji as Extension,
       )
-      // File drag-and-drop handler
+      // File drag-and-drop handler — wires drops/pastes into the attachment system
+      // (Image MIME → image node, others → download link). Mirrors insert-menu's
+      // file-input flow so the resulting attachment is shape-identical regardless
+      // of entry path. noteId is read from options so the attachment associates
+      // with the right note; if absent, falls back to empty string (orphan-safe).
       noteExtensions.push(
         FileHandler.configure({
-          onDrop: () => {
-            // TODO: Wire up file drop to attachment system (PR 3)
-            return false
+          allowedMimeTypes: undefined, // accept all; we route by type below
+          onDrop: (currentEditor, files, pos) => {
+            void handleEditorFiles(currentEditor, files, options?.noteId, pos)
           },
-          onPaste: () => {
-            // TODO: Wire up file paste to attachment system (PR 3)
-            return false
+          onPaste: (currentEditor, files) => {
+            void handleEditorFiles(currentEditor, files, options?.noteId)
           },
         }) as Extension,
       )

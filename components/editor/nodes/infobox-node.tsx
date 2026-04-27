@@ -22,8 +22,17 @@ import { InfoboxValueRenderer } from "@/components/editor/infobox-value-renderer
 interface InfoboxRow {
   label: string
   value: string
-  /** Tier 1-4: "section" = group header row (bold + tinted bg, value hidden). undefined/field = normal label/value row */
-  type?: "field" | "section"
+  /**
+   * Tier 1-4 / PR1 (위키와 동일):
+   * - "section" = section divider row (bold + tinted bg, value hidden, NOT collapsible)
+   * - "group-header" = collapsible group header (chevron + label). Owns rows until next group-header
+   * - "field" or undefined = normal label/value row
+   */
+  type?: "field" | "section" | "group-header"
+  /** group-header only: optional row background color (rgba/hex). null/undefined = default tinted bg. */
+  color?: string | null
+  /** group-header only: whether the group is collapsed by default on first render. */
+  defaultCollapsed?: boolean
 }
 
 // Tier 1-2: Header color presets (나무위키식 인포박스 색상 테마)
@@ -123,10 +132,51 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
     updateAttributes({ rows: [...rows, { label: "", value: "", type: "section" }] })
   }, [rows, updateAttributes])
 
+  const addGroupHeaderRow = useCallback(() => {
+    updateAttributes({
+      rows: [...rows, { label: "", value: "", type: "group-header", color: null, defaultCollapsed: false }],
+    })
+  }, [rows, updateAttributes])
+
+  const updateRowColor = useCallback((index: number, color: string | null) => {
+    const newRows = rows.map((r, i) => (i === index && r.type === "group-header" ? { ...r, color } : r))
+    updateAttributes({ rows: newRows })
+  }, [rows, updateAttributes])
+
   const removeRow = useCallback((index: number) => {
     const newRows = rows.filter((_, i) => i !== index)
     updateAttributes({ rows: newRows })
   }, [rows, updateAttributes])
+
+  // Group collapse state — in-memory, keyed by group label. Resets on remount.
+  // (Wiki uses persisted state via useInfoboxGroupCollapsed, but TipTap atom node
+  // doesn't have a stable articleId; in-memory is the simpler trade-off.)
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {}
+    rows.forEach((r) => {
+      if (r.type === "group-header" && r.label && r.defaultCollapsed) init[r.label] = true
+    })
+    return init
+  })
+
+  // Color picker popover state — keyed by group-header row index.
+  const [groupColorPickerIndex, setGroupColorPickerIndex] = useState<number | null>(null)
+
+  const toggleGroupCollapsed = useCallback((groupKey: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }))
+  }, [])
+
+  // Walk rows to compute current group context per row.
+  const rowsWithGroup = rows.map((row, index) => {
+    let currentGroup = ""
+    for (let i = 0; i <= index; i++) {
+      const r = rows[i]
+      if (r.type === "group-header") currentGroup = r.label || `group-${i}`
+    }
+    // The group-header row itself "owns" its group, never hidden by it.
+    if (row.type === "group-header") return { row, index, groupKey: row.label || `group-${index}`, hiddenByGroup: false }
+    return { row, index, groupKey: currentGroup, hiddenByGroup: !!currentGroup && !!collapsedGroups[currentGroup] }
+  })
 
   const pickHeroImage = useCallback(() => {
     // Phase 1: URL input via prompt.
@@ -322,8 +372,103 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
         {/* Rows — hidden when collapsed (Tier 1-3) */}
         {!collapsed && (
         <div className="divide-y divide-border-subtle">
-          {rows.map((row, index) =>
-            row.type === "section" ? (
+          {rowsWithGroup.map(({ row, index, groupKey, hiddenByGroup }) => {
+            if (hiddenByGroup) return null
+            if (row.type === "group-header") {
+              // PR1: Collapsible group header — chevron + label + optional color + Add color picker
+              const isCollapsed = !!collapsedGroups[groupKey]
+              return (
+                <div
+                  key={index}
+                  className="relative flex items-center group/row"
+                  style={row.color ? { backgroundColor: row.color } : { backgroundColor: "rgba(148,163,184,0.12)" }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleGroupCollapsed(groupKey)}
+                    className="px-2 py-1.5 text-muted-foreground/60 hover:text-foreground transition-colors shrink-0"
+                    title={isCollapsed ? "Expand group" : "Collapse group"}
+                  >
+                    {isCollapsed ? <CaretRight size={12} /> : <CaretDown size={12} />}
+                  </button>
+                  <input
+                    type="text"
+                    value={row.label}
+                    onChange={(e) => updateRow(index, "label", e.target.value)}
+                    readOnly={!editable}
+                    className="flex-1 pr-3 py-1.5 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/85 bg-transparent outline-none placeholder:text-muted-foreground/40"
+                    placeholder="Group header"
+                  />
+                  {editable && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setGroupColorPickerIndex((cur) => (cur === index ? null : index))
+                        }
+                        className={`px-1.5 transition-colors shrink-0 ${
+                          groupColorPickerIndex === index || row.color
+                            ? "text-foreground"
+                            : "text-muted-foreground/30 hover:text-foreground opacity-0 group-hover/row:opacity-100"
+                        }`}
+                        title="Group color"
+                      >
+                        <PaintBucket size={11} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeRow(index)}
+                        className="px-2 text-muted-foreground/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
+                        title="Remove group"
+                      >
+                        <PhTrash size={11} />
+                      </button>
+                    </>
+                  )}
+                  {editable && groupColorPickerIndex === index && (
+                    <div
+                      className="absolute right-2 top-[calc(100%-2px)] z-10 flex items-center gap-1 rounded-md border border-border-subtle bg-popover p-1.5 shadow-md"
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      {HEADER_COLOR_PRESETS.map((preset) => {
+                        const isActive = (row.color ?? null) === preset.value
+                        return (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => {
+                              updateRowColor(index, preset.value)
+                              setGroupColorPickerIndex(null)
+                            }}
+                            title={preset.label}
+                            className={`h-5 w-5 rounded-sm border transition-transform hover:scale-110 ${
+                              isActive ? "border-foreground ring-1 ring-foreground" : "border-border-subtle"
+                            }`}
+                            style={{ backgroundColor: preset.swatch }}
+                          />
+                        )
+                      })}
+                      <div className="mx-1 h-4 w-px bg-border-subtle" />
+                      <label
+                        className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm border border-border-subtle bg-gradient-to-br from-red-400 via-yellow-300 to-blue-400 hover:scale-110 transition-transform"
+                        title="Custom color"
+                      >
+                        <input
+                          type="color"
+                          value={(row.color && /^#/.test(row.color)) ? row.color : "#3b82f6"}
+                          onChange={(e) => {
+                            updateRowColor(index, hexToRgba(e.target.value))
+                          }}
+                          className="pointer-events-none h-0 w-0 opacity-0"
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
+              )
+            }
+            if (row.type === "section") {
+              return (
               // Tier 1-4: Section divider row — full-width, bold, tinted bg, value hidden
               <div key={index} className="flex items-center group/row bg-secondary/40">
                 <input
@@ -345,7 +490,9 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                   </button>
                 )}
               </div>
-            ) : (
+              )
+            }
+            return (
               <div key={index} className="flex items-center group/row">
                 <input
                   type="text"
@@ -381,8 +528,8 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                   </button>
                 )}
               </div>
-            ),
-          )}
+            )
+          })}
         </div>
         )}
 
@@ -406,6 +553,16 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
             >
               <PhPlus size={11} />
               <span>Add section</span>
+            </button>
+            <div className="w-px bg-border-subtle" />
+            <button
+              type="button"
+              onClick={addGroupHeaderRow}
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-[0.75em] text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+              title="Add collapsible group header"
+            >
+              <PhPlus size={11} />
+              <span>Add group</span>
             </button>
           </div>
         )}
