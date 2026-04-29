@@ -228,8 +228,8 @@ function BoardColumn({
     <div
       ref={(node) => { setSortableRef(node); setDropRef(node); }}
       style={sortableStyle}
-      className={`flex w-[260px] shrink-0 flex-col rounded-lg transition-colors ${
-        isCardOver ? "bg-accent/8 ring-1 ring-accent/30" : "bg-secondary/20"
+      className={`flex w-[260px] shrink-0 flex-col rounded-lg border border-border-subtle transition-colors ${
+        isCardOver ? "bg-accent/8 ring-1 ring-accent/30" : "bg-secondary/40"
       }`}
     >
       {/* Column header — drag handle for column reorder */}
@@ -334,7 +334,7 @@ function BoardCardInner({
         e.stopPropagation()
         onDoubleClick?.()
       }}
-      className={`group relative cursor-pointer rounded-md border bg-background p-2.5 transition-all hover:border-muted-foreground/30 ${
+      className={`group relative cursor-pointer rounded-md border bg-card shadow-sm p-2.5 transition-all hover:border-muted-foreground/30 ${
         isSelected ? "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
         : isActive ? "border-accent ring-1 ring-accent/30"
         : "border-border"
@@ -345,7 +345,7 @@ function BoardCardInner({
         className={`absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded border transition-all cursor-pointer ${
           isSelected
             ? "bg-accent border-accent"
-            : "border-border opacity-0 group-hover:opacity-100 hover:border-foreground/50 bg-background"
+            : "border-border opacity-0 group-hover:opacity-100 hover:border-foreground/50 bg-card"
         }`}
         onClick={(e) => {
           e.stopPropagation()
@@ -1084,8 +1084,8 @@ export function NotesBoard({
                 {/* Stacked cards behind for multi-drag */}
                 {dragCount > 1 && (
                   <>
-                    <div className="absolute inset-0 translate-x-1 translate-y-1 rounded-md border border-border bg-background opacity-60" />
-                    <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md border border-border bg-background opacity-30" />
+                    <div className="absolute inset-0 translate-x-1 translate-y-1 rounded-md border border-border bg-card opacity-60" />
+                    <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md border border-border bg-card opacity-30" />
                   </>
                 )}
                 {/* Main card */}

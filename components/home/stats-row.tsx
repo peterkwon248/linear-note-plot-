@@ -5,6 +5,11 @@ import { usePlotStore } from "@/lib/store"
 import { setActiveRoute } from "@/lib/table-route"
 import { isWikiStub } from "@/lib/wiki-utils"
 import type { Note, WikiArticle } from "@/lib/types"
+import { IconNotes } from "@/components/plot-icons"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
+import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
+import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 
 /**
  * Home > Stats card grid.
@@ -83,12 +88,13 @@ export function StatsRow() {
     /** Tailwind color class applied to the big number (knowledge-base accent). */
     color: string
     bgColor: string
+    icon: React.ReactNode
   }> = [
-    { label: "Notes", value: stats.notes, sub: stats.notesSub, route: "/notes", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
-    { label: "Wiki", value: stats.wiki, sub: stats.wikiSub, route: "/wiki", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-500/10" },
-    { label: "Tags", value: stats.tags, sub: stats.tagsSub, route: "/library/tags", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10" },
-    { label: "References", value: stats.refs, sub: stats.refsSub, route: "/library/references", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-500/10" },
-    { label: "Files", value: stats.files, sub: stats.filesSub, route: "/library/files", color: "text-rose-600 dark:text-rose-400", bgColor: "bg-rose-500/10" },
+    { label: "Notes", value: stats.notes, sub: stats.notesSub, route: "/notes", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10", icon: <IconNotes size={12} /> },
+    { label: "Wiki", value: stats.wiki, sub: stats.wikiSub, route: "/wiki", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-500/10", icon: <BookOpen size={12} weight="regular" /> },
+    { label: "Tags", value: stats.tags, sub: stats.tagsSub, route: "/library/tags", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10", icon: <PhTag size={12} weight="regular" /> },
+    { label: "References", value: stats.refs, sub: stats.refsSub, route: "/library/references", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-500/10", icon: <Quotes size={12} weight="regular" /> },
+    { label: "Files", value: stats.files, sub: stats.filesSub, route: "/library/files", color: "text-rose-600 dark:text-rose-400", bgColor: "bg-rose-500/10", icon: <Paperclip size={12} weight="regular" /> },
   ]
 
   return (
@@ -104,8 +110,8 @@ export function StatsRow() {
             <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">
               {item.label}
             </span>
-            <span className={`flex h-5 w-5 items-center justify-center rounded ${item.bgColor}`}>
-              <span className={`text-2xs font-bold ${item.color}`}>{item.value > 99 ? "+" : ""}</span>
+            <span className={`flex h-5 w-5 items-center justify-center rounded ${item.bgColor} ${item.color}`}>
+              {item.icon}
             </span>
           </div>
           <span className={`text-2xl font-semibold tabular-nums leading-none ${item.color}`}>

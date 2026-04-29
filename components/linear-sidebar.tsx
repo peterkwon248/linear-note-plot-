@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation"
 import {
   IconInbox,
   IconNotes,
-  IconWiki,
   IconCalendar,
   IconOntology,
   IconFolder,
@@ -39,9 +38,10 @@ import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar"
 import { ChartPie } from "@phosphor-icons/react/dist/ssr/ChartPie"
 import { CheckSquare as CheckSquareIcon } from "@phosphor-icons/react/dist/ssr/CheckSquare"
 import { Books } from "@phosphor-icons/react/dist/ssr/Books"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
-import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
@@ -952,7 +952,7 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/wiki"
-                icon={<IconWiki size={20} />}
+                icon={<BookOpen size={20} weight="regular" />}
                 label="Overview"
                 count={wikiCount > 0 ? wikiCount : undefined}
                 active={isActive("/wiki") && wikiViewMode !== "merge" && wikiViewMode !== "split"}
@@ -1254,13 +1254,13 @@ export function LinearSidebar() {
             <div className="space-y-px">
               <NavLink
                 href="/library"
-                icon={<SquaresFour size={20} weight="light" />}
+                icon={<Books size={20} weight="regular" />}
                 label="Overview"
                 active={isActive("/library")}
               />
               <NavLink
                 href="/library/references"
-                icon={<Books size={20} weight="light" />}
+                icon={<Quotes size={20} weight="regular" />}
                 label="References"
                 count={Object.keys(references).length > 0 ? Object.keys(references).length : undefined}
                 active={isActive("/library/references")}

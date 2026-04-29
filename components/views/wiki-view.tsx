@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react"
 import type { FilterRule, ViewState, ViewContextKey } from "@/lib/view-engine/types"
 import { buildViewStateForContext } from "@/lib/view-engine/defaults"
+import { applyWikiFilters, applyWikiSort } from "@/lib/view-engine/wiki-list-pipeline"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_VIEW_CONFIG, WIKI_CATEGORY_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -132,34 +133,23 @@ export function WikiView() {
     lastClickedIndexRef.current = -1
   }, [])
 
-  // Filter / Display state
-  const [wikiFilters, setWikiFilters] = useState<FilterRule[]>([])
-  const [wikiViewState, setWikiViewState] = useState<ViewState>({
-    viewMode: "list" as const,
-    sortField: "updatedAt" as const,
-    sortDirection: "desc" as const,
-    groupBy: "none" as const,
-    subGroupBy: "none" as const,
-    filters: [] as FilterRule[],
-    visibleColumns: ["status", "links", "tags", "updatedAt"],
-    showEmptyGroups: false,
-    toggles: {},
-    groupOrder: null,
-    subGroupOrder: null,
-    subGroupSortBy: "default" as const,
-  })
-  const handleWikiFilterToggle = (rule: FilterRule) => {
-    setWikiFilters((prev) => {
-      const exists = prev.some(
-        (f) => f.field === rule.field && f.value === rule.value
-      )
-      return exists
-        ? prev.filter(
-            (f) => !(f.field === rule.field && f.value === rule.value)
-          )
-        : [...prev, rule]
-    })
-  }
+  // Filter / Display state — unified via viewStateByContext["wiki"] for persistence
+  // Phase 1 (UI 일관성 audit): wikiFilters 로컬 state + wikiViewState 로컬 useState 제거
+  const wikiViewState = usePlotStore((s) => s.viewStateByContext["wiki"]) ?? buildViewStateForContext("wiki")
+  const updateWikiViewState = useCallback(
+    (patch: Partial<ViewState>) => setViewState("wiki" as ViewContextKey, patch),
+    [setViewState]
+  )
+  const wikiFilters = wikiViewState.filters
+  const handleWikiFilterToggle = useCallback((rule: FilterRule) => {
+    const exists = wikiFilters.some(
+      (f) => f.field === rule.field && f.value === rule.value
+    )
+    const next = exists
+      ? wikiFilters.filter((f) => !(f.field === rule.field && f.value === rule.value))
+      : [...wikiFilters, rule]
+    updateWikiViewState({ filters: next })
+  }, [wikiFilters, updateWikiViewState])
 
   // Article reader state (Note-based legacy)
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
@@ -213,6 +203,20 @@ export function WikiView() {
       }
     }
   }, [pane, selectedWikiArticleId])
+
+  // List-mode multi-select → side panel mirror.
+  // When exactly one row is checkbox-selected in the list, point the side panel's
+  // Detail tab at that article. 0 selected = no change (preserve last context).
+  // 2+ selected = ambiguous, keep last context rather than flicker.
+  useEffect(() => {
+    if (pane === 'secondary') return
+    if (wikiViewMode !== 'list') return
+    if (selectedArticleIds.size !== 1) return
+    const onlyId = [...selectedArticleIds][0]
+    if (!wikiArticles.some((a) => a.id === onlyId)) return
+    usePlotStore.getState().setSidePanelContext({ type: "wiki", id: onlyId })
+    usePlotStore.getState().setSidePanelOpen(true)
+  }, [pane, wikiViewMode, selectedArticleIds, wikiArticles])
 
   // Navigate to notes view (for non-wiki notes)
   const navigateToNote = useCallback(
@@ -299,25 +303,61 @@ export function WikiView() {
     [wikiArticles],
   )
 
-  // Filter wiki notes
+  // Set of article IDs that have at least one child article (parentArticleId === id).
+  // Used by wiki-list-pipeline for "_leaf" hierarchy filter.
+  const hasChildrenSet = useMemo(() => {
+    const set = new Set<string>()
+    for (const a of wikiArticles) {
+      if (a.parentArticleId) set.add(a.parentArticleId)
+    }
+    return set
+  }, [wikiArticles])
+
+  // Filter wiki notes — applies sidebar category filter + viewState.filters + showStubs toggle
+  const showStubs = wikiViewState.toggles?.showStubs !== false  // default: true (show stubs)
   const filteredWikiNotes = useMemo(() => {
     let result = wikiNotes
-    // Apply category filter from sidebar
+    // Sidebar category filter (separate from filterPanel category filter)
     if (categoryFilterTagId) {
       result = result.filter(n => (n.categoryIds ?? []).includes(categoryFilterTagId))
     }
+    // FilterPanel rules from viewStateByContext["wiki"].filters (Phase 1)
+    if (wikiFilters.length > 0) {
+      result = applyWikiFilters(result, wikiFilters, { backlinksMap: backlinkCounts, hasChildrenSet })
+    }
+    // showStubs toggle (display config) — default true. When false, hide stubs globally.
+    if (!showStubs) {
+      result = result.filter((a) => !isWikiStub(a))
+    }
     return result
-  }, [wikiNotes, categoryFilterTagId])
+  }, [wikiNotes, categoryFilterTagId, wikiFilters, backlinkCounts, hasChildrenSet, showStubs])
 
-  // Sorted by updatedAt descending for articles table-list
+  // Sort filtered articles using wikiViewState.sortFields (Phase 1: dynamic, no hardcoded override)
   const sortedFilteredWikiNotes = useMemo(
-    () =>
-      [...filteredWikiNotes].sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      ),
-    [filteredWikiNotes]
+    () => applyWikiSort(filteredWikiNotes, wikiViewState.sortFields, backlinkCounts),
+    [filteredWikiNotes, wikiViewState.sortFields, backlinkCounts]
   )
+
+  // Hydrate WIKI_VIEW_CONFIG.filterCategories with runtime WikiCategory entities.
+  // Mirror notes-table pattern (folder/label/tags receive dynamic values).
+  const wikiFilterCategories = useMemo(() => {
+    return WIKI_VIEW_CONFIG.filterCategories.map((cat) => {
+      if (cat.key === "category") {
+        return {
+          ...cat,
+          values: [
+            { key: "_none", label: "Uncategorized" },
+            ...wikiCategories.map((c) => ({
+              key: c.id,
+              label: c.name,
+              count: wikiNotes.filter((n) => (n.categoryIds ?? []).includes(c.id)).length,
+            })),
+          ],
+        }
+      }
+      return cat
+    })
+  }, [wikiCategories, wikiNotes])
 
   // Selection handlers (need sortedFilteredWikiNotes)
   const handleArticleSelect = useCallback((id: string, options: { multi?: boolean; shift?: boolean; index?: number }) => {
@@ -650,7 +690,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<IconWiki size={20} />}
+          icon={<BookOpen size={20} weight="regular" />}
           title={selectedWikiArticle.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -847,7 +887,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<IconWiki size={20} />}
+          icon={<BookOpen size={20} weight="regular" />}
           title={selectedNote.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -915,7 +955,7 @@ export function WikiView() {
   return (
     <div data-editor-scope="wiki" className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<IconWiki size={20} />}
+        icon={<BookOpen size={20} weight="regular" />}
         title="Wiki"
         count={stats.total}
         showFilter={wikiViewMode !== "dashboard"}
@@ -934,13 +974,15 @@ export function WikiView() {
             />
           ) : (
             <FilterPanel
-              categories={WIKI_VIEW_CONFIG.filterCategories}
+              categories={wikiFilterCategories}
               activeFilters={wikiFilters}
               onToggle={handleWikiFilterToggle}
+              quickFilters={WIKI_VIEW_CONFIG.quickFilters as any}
+              onQuickFilter={(rules) => updateWikiViewState({ filters: rules })}
             />
           )
         }
-        showDisplay
+        showDisplay={wikiViewMode !== "dashboard"}
         displayContent={
           wikiViewMode === "category" ? (
             <DisplayPanel
@@ -957,20 +999,15 @@ export function WikiView() {
             <DisplayPanel
               config={WIKI_VIEW_CONFIG.displayConfig}
               viewState={wikiViewState}
-              onViewStateChange={(patch) =>
-                setWikiViewState((prev) => ({ ...prev, ...patch }))
-              }
-              toggleStates={wikiViewState.toggles}
+              onViewStateChange={updateWikiViewState}
+              toggleStates={wikiViewState.toggles ?? {}}
               onToggleChange={(key, value) =>
-                setWikiViewState((prev) => ({
-                  ...prev,
-                  toggles: { ...prev.toggles, [key]: value },
-                }))
+                updateWikiViewState({ toggles: { ...(wikiViewState.toggles ?? {}), [key]: value } })
               }
             />
           )
         }
-        showDetailPanel
+        showDetailPanel={wikiViewMode !== "dashboard"}
         detailPanelOpen={sidePanelOpen}
         onDetailPanelToggle={() => {
           const store = usePlotStore.getState()
@@ -1214,6 +1251,8 @@ export function WikiView() {
             onSelectAll={handleArticleSelectAll}
             stubCount={stubCount}
             wikiArticles={wikiArticles}
+            visibleColumns={wikiViewState.visibleColumns}
+            wikiCategories={wikiCategories}
           />
           {selectedArticleIds.size > 0 && (
             <WikiFloatingActionBar

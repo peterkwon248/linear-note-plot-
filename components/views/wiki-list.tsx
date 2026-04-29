@@ -6,7 +6,7 @@ import { groupByInitial } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { isWikiStub } from "@/lib/wiki-utils"
-import type { WikiArticle } from "@/lib/types"
+import type { WikiArticle, WikiCategory } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
@@ -55,6 +55,13 @@ interface WikiListProps {
   selectedIds?: Set<string>
   onSelect?: (id: string, opts: { multi?: boolean; shift?: boolean; index?: number }) => void
   onSelectAll?: (ids: string[]) => void
+
+  /** Visible column keys from WIKI_VIEW_CONFIG.displayConfig.properties.
+   *  Keys: "title" | "links" | "tags" (Categories) | "aliases" | "updatedAt".
+   *  Title is always shown. Undefined => all columns visible (backwards compat). */
+  visibleColumns?: string[]
+  /** Wiki categories for resolving categoryIds → display names. */
+  wikiCategories?: WikiCategory[]
 }
 
 /* ── Column Header ── */
@@ -64,20 +71,24 @@ function ColumnHeaders({
   onSelectAll,
   isAllSelected,
   isPartiallySelected,
+  visibleColumns,
 }: {
   hasSelection?: boolean
   onSelectAll?: () => void
   isAllSelected?: boolean
   isPartiallySelected?: boolean
+  visibleColumns?: string[]
 }) {
+  // undefined visibleColumns => all visible (backwards compat).
+  const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
   return (
-    <div className="flex items-center px-5 py-2 text-2xs font-medium text-muted-foreground/50 border-b border-border-subtle">
+    <div className="flex items-center px-5 py-2 text-note font-medium text-muted-foreground border-b border-border bg-secondary/30">
       {hasSelection && (
         <div className="w-7 shrink-0 flex items-center justify-center">
           {onSelectAll ? (
             <button
               onClick={onSelectAll}
-              className="w-4 h-4 rounded border border-border flex items-center justify-center hover:border-foreground/30 transition-colors"
+              className="w-4 h-4 rounded-[4px] border bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 flex items-center justify-center transition-colors shadow-sm"
             >
               {isAllSelected ? (
                 <PhCheck size={10} weight="bold" className="text-accent" />
@@ -91,9 +102,11 @@ function ColumnHeaders({
         </div>
       )}
       <span className="min-w-0 flex-1">Title</span>
-      <span className="w-[60px] text-right">Links</span>
-      <span className="w-[36px]" />
-      <span className="w-[70px] text-right">Updated</span>
+      {isVisible("tags") && <span className="w-[140px] shrink-0 px-2">Categories</span>}
+      {isVisible("aliases") && <span className="w-[140px] shrink-0 px-2">Aliases</span>}
+      {isVisible("links") && <span className="w-[60px] shrink-0 text-right">Links</span>}
+      <span className="w-[36px] shrink-0" />
+      {isVisible("updatedAt") && <span className="w-[70px] shrink-0 text-right">Updated</span>}
     </div>
   )
 }
@@ -111,6 +124,8 @@ function ArticleTableRow({
   isSelected,
   selectionActive,
   onSelect,
+  visibleColumns,
+  wikiCategories,
 }: {
   note: WikiArticle
   backlinkCount: number
@@ -122,7 +137,14 @@ function ArticleTableRow({
   isSelected?: boolean
   selectionActive?: boolean
   onSelect?: (opts: { multi?: boolean; shift?: boolean; index?: number }) => void
+  visibleColumns?: string[]
+  wikiCategories?: WikiCategory[]
 }) {
+  const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
+  const categoryNames = (note.categoryIds ?? [])
+    .map((id) => wikiCategories?.find((c) => c.id === id)?.name)
+    .filter((n): n is string => typeof n === "string" && n.length > 0)
+  const aliases = note.aliases ?? []
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
@@ -174,9 +196,53 @@ function ArticleTableRow({
           {note.title || "Untitled"}
         </span>
       </button>
-      <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
-        {backlinkCount > 0 ? backlinkCount : "\u2014"}
-      </span>
+      {isVisible("tags") && (
+        <div
+          className="w-[140px] shrink-0 flex items-center gap-1 px-2 overflow-hidden"
+          title={categoryNames.length > 0 ? categoryNames.join(", ") : undefined}
+        >
+          {categoryNames.length === 0 ? (
+            <span className="text-2xs text-muted-foreground/40">{"\u2014"}</span>
+          ) : (
+            <>
+              <span className="truncate rounded-md bg-accent/10 px-1.5 py-0.5 text-2xs font-medium text-accent">
+                {categoryNames[0]}
+              </span>
+              {categoryNames.length > 1 && (
+                <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/60">
+                  +{categoryNames.length - 1}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
+      {isVisible("aliases") && (
+        <div
+          className="w-[140px] shrink-0 flex items-center gap-1 px-2 overflow-hidden"
+          title={aliases.length > 0 ? aliases.join(", ") : undefined}
+        >
+          {aliases.length === 0 ? (
+            <span className="text-2xs text-muted-foreground/40">{"\u2014"}</span>
+          ) : (
+            <>
+              <span className="truncate text-2xs text-muted-foreground/80">
+                {aliases[0]}
+              </span>
+              {aliases.length > 1 && (
+                <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/60">
+                  +{aliases.length - 1}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
+      {isVisible("links") && (
+        <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
+          {backlinkCount > 0 ? backlinkCount : "\u2014"}
+        </span>
+      )}
 
       {/* Context menu */}
       <span className="w-[36px] shrink-0 flex justify-center">
@@ -223,9 +289,11 @@ function ArticleTableRow({
         ) : null}
       </span>
 
-      <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
-        {shortRelative(note.updatedAt)}
-      </span>
+      {isVisible("updatedAt") && (
+        <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
+          {shortRelative(note.updatedAt)}
+        </span>
+      )}
     </div>
   )
 }
@@ -295,6 +363,8 @@ export function WikiList({
   selectedIds,
   onSelect,
   onSelectAll,
+  visibleColumns,
+  wikiCategories,
 }: WikiListProps) {
   const selectionActive = selectedIds ? selectedIds.size > 0 : false
   const groupedArticles = groupByInitial(filteredWikiNotes, (n: WikiArticle) => n.title || "Untitled")
@@ -339,7 +409,7 @@ export function WikiList({
         {/* Back to Overview */}
         <button
           onClick={() => { setWikiViewMode("dashboard"); onClearCategoryFilter?.() }}
-          className="flex items-center gap-1 text-note text-muted-foreground/50 hover:text-foreground transition-colors duration-100 mr-1"
+          className="flex items-center gap-1 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 mr-1"
         >
           <ArrowLeft size={12} weight="regular" />
           Overview
@@ -360,12 +430,11 @@ export function WikiList({
               }}
               className={cn(
                 "rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
-                tab === "stubs" && "text-amber-500/70",
                 dashFilter === tab && !showAllArticles
-                  ? tab === "stubs" ? "bg-amber-500/10 text-amber-500"
+                  ? tab === "stubs" ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                     : "bg-foreground/10 text-foreground"
-                  : tab === "stubs" ? "text-amber-500/50 hover:bg-hover-bg hover:text-amber-500/70"
-                    : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
+                  : tab === "stubs" ? "text-amber-600/80 dark:text-amber-400/80 hover:bg-hover-bg hover:text-amber-600 dark:hover:text-amber-400"
+                    : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
               )}
             >
               {labels[tab]}
@@ -403,7 +472,7 @@ export function WikiList({
             "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
             showAllArticles
               ? "bg-foreground/10 text-foreground"
-              : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
+              : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
           )}
         >
           <ListBullets size={12} weight="regular" />
@@ -415,7 +484,7 @@ export function WikiList({
       {showAllArticles ? (
         /* ── Alphabetical Index ── */
         <div className="flex-1 overflow-y-auto">
-          <ColumnHeaders />
+          <ColumnHeaders visibleColumns={visibleColumns} />
           <div>
             {Array.from(groupedArticles.entries()).map(([group, articles]) => (
               <div key={group} id={`wiki-group-${group}`}>
@@ -442,6 +511,7 @@ export function WikiList({
             onSelectAll={handleSelectAll}
             isAllSelected={isAllSelected}
             isPartiallySelected={isPartiallySelected}
+            visibleColumns={visibleColumns}
           />
           {sortedFilteredWikiNotes.length === 0 ? (
             <EmptyState />
@@ -473,6 +543,8 @@ export function WikiList({
                   isSelected={selectedIds?.has(note.id)}
                   selectionActive={selectionActive}
                   onSelect={onSelect ? (opts) => onSelect(note.id, { ...opts, index: idx }) : undefined}
+                  visibleColumns={visibleColumns}
+                  wikiCategories={wikiCategories}
                 />
               ))}
               {/* Empty state for stubs filter with no stubs */}

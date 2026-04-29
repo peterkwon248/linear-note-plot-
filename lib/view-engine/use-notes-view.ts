@@ -103,8 +103,8 @@ export function useNotesView(
 
   // ── Stage 4: Sort ─────────────────────────────────────
   const sorted = useMemo(
-    () => applySort(searched, viewState.sortField, viewState.sortDirection, extras?.backlinksMap),
-    [searched, viewState.sortField, viewState.sortDirection, extras?.backlinksMap]
+    () => applySort(searched, viewState.sortFields, extras?.backlinksMap),
+    [searched, viewState.sortFields, extras?.backlinksMap]
   )
 
   // ── Stage 5: Group ────────────────────────────────────

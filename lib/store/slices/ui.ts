@@ -1,7 +1,8 @@
 import { nanoid } from "nanoid"
 import type { Note, ActiveView } from "../../types"
 import type { SidePanelContext } from "../types"
-import type { ViewState, ViewContextKey } from "../../view-engine/types"
+import type { ViewState, ViewContextKey, SortRule } from "../../view-engine/types"
+import { MAX_SORT_RULES } from "../../view-engine/types"
 import type { WorkspaceTab } from "../../workspace/types"
 import { now, type AppendEventFn } from "../helpers"
 import { getActiveRoute } from "../../table-route"
@@ -222,12 +223,33 @@ export function createUISlice(set: Set, get: Get, appendEvent: AppendEventFn) {
 
     // View Engine
     setViewState: (ctx: ViewContextKey, patch: Partial<ViewState>) => {
-      set((state: any) => ({
-        viewStateByContext: {
-          ...state.viewStateByContext,
-          [ctx]: { ...state.viewStateByContext[ctx], ...patch },
-        },
-      }))
+      set((state: any) => {
+        const prev = state.viewStateByContext[ctx] ?? {}
+        const merged: any = { ...prev, ...patch }
+
+        // ── Bidirectional sync between sortFields[0] and sortField/sortDirection ──
+        // Patch wins; if both shapes are in patch, sortFields takes precedence.
+        if (Array.isArray(patch.sortFields) && patch.sortFields.length > 0) {
+          const head = patch.sortFields[0]
+          merged.sortField = head.field
+          merged.sortDirection = head.direction
+        } else if (patch.sortField !== undefined || patch.sortDirection !== undefined) {
+          const field = (patch.sortField ?? prev.sortField) as SortRule["field"]
+          const direction = (patch.sortDirection ?? prev.sortDirection) as SortRule["direction"]
+          // Update head of chain; preserve tail (secondary/tertiary sorts)
+          const tail = (Array.isArray(prev.sortFields) ? prev.sortFields.slice(1) : [])
+            .filter((r: SortRule) => r.field !== field)
+            .slice(0, MAX_SORT_RULES - 1)
+          merged.sortFields = [{ field, direction }, ...tail]
+        }
+
+        return {
+          viewStateByContext: {
+            ...state.viewStateByContext,
+            [ctx]: merged,
+          },
+        }
+      })
     },
   }
 }

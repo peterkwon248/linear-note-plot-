@@ -378,6 +378,17 @@ export function NotesTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const lastClickedRef = useRef<number | null>(null)
 
+  // List-mode multi-select → side panel mirror.
+  // When exactly one row is checkbox-selected, point the side panel's Detail tab
+  // at that note. 0 selected = preserve last context (don't flicker), 2+ = ambiguous.
+  // Mirrors the wiki-list behavior so list views feel consistent.
+  useEffect(() => {
+    if (selectedIds.size !== 1) return
+    const onlyId = [...selectedIds][0]
+    usePlotStore.getState().setSidePanelContext({ type: "note", id: onlyId })
+    usePlotStore.getState().setSidePanelOpen(true)
+  }, [selectedIds])
+
   // ── Group collapse state ──
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
 

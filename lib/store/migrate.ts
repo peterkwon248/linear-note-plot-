@@ -1170,5 +1170,33 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v94: Multi-sort — sortField/sortDirection → sortFields[]
+  // Build a length-1 chain from existing single-sort fields. Keep the legacy
+  // fields in sync with sortFields[0] (mirror) for backward compat with code
+  // still reading viewState.sortField / viewState.sortDirection.
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+    for (const ctx of Object.keys(vsMap)) {
+      const vs = vsMap[ctx]
+      if (!vs || typeof vs !== "object") continue
+      const existing = vs.sortFields as Array<{ field: string; direction: string }> | undefined
+      if (!Array.isArray(existing) || existing.length === 0) {
+        const field = (typeof vs.sortField === "string" && vs.sortField) ? vs.sortField : "updatedAt"
+        const direction = (vs.sortDirection === "asc" || vs.sortDirection === "desc") ? vs.sortDirection : "desc"
+        vs.sortFields = [{ field, direction }]
+        // Keep legacy fields in sync (mirror)
+        vs.sortField = field
+        vs.sortDirection = direction
+      } else {
+        // Already has sortFields — sync legacy mirror to head
+        const head = existing[0]
+        if (head) {
+          vs.sortField = head.field
+          vs.sortDirection = head.direction
+        }
+      }
+    }
+  }
+
   return state as unknown as PlotState
 }

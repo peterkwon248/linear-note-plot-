@@ -1,11 +1,14 @@
 "use client"
 
-import type { SortField, GroupBy, GroupSortBy, ViewMode, ViewState } from "@/lib/view-engine/types"
+import type { SortField, GroupBy, GroupSortBy, ViewMode, ViewState, SortRule } from "@/lib/view-engine/types"
+import { MAX_SORT_RULES } from "@/lib/view-engine/types"
 import type { ReactNode } from "react"
 import { List } from "@phosphor-icons/react/dist/ssr/List"
 import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
 import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
 import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
+import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { ChipDropdown } from "@/components/ui/chip-dropdown"
 
@@ -236,28 +239,86 @@ export function DisplayPanel({
         </>
       )}
 
-      {/* ── Section 2: Ordering + Sort direction ── */}
-      <div className="flex items-center justify-between">
-        <span className="text-note text-muted-foreground">Ordering</span>
-        <div className="flex items-center gap-1">
-          <ChipDropdown<SortField>
-            value={viewState.sortField}
-            options={config.orderingOptions}
-            onChange={(v) => onViewStateChange({ sortField: v })}
-          />
-          <button
-            onClick={() =>
-              onViewStateChange({
-                sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc",
-              })
-            }
-            className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground hover:text-foreground transition-colors"
-            title={viewState.sortDirection === "asc" ? "Ascending" : "Descending"}
-          >
-            {viewState.sortDirection === "asc" ? <SortAscending size={12} weight="regular" /> : <SortDescending size={12} weight="regular" />}
-          </button>
-        </div>
-      </div>
+      {/* ── Section 2: Ordering (multi-sort chain) ── */}
+      {(() => {
+        // Resolve current sort chain — fall back to legacy single-field shape if absent
+        const sortFields: SortRule[] = (Array.isArray(viewState.sortFields) && viewState.sortFields.length > 0)
+          ? viewState.sortFields
+          : [{ field: viewState.sortField, direction: viewState.sortDirection }]
+
+        const orderingValues = config.orderingOptions.map(o => o.value)
+
+        function updateRuleAt(idx: number, patch: Partial<SortRule>) {
+          const next = sortFields.map((r, i) => i === idx ? { ...r, ...patch } : r)
+          onViewStateChange({ sortFields: next })
+        }
+
+        function removeRuleAt(idx: number) {
+          if (sortFields.length <= 1) return
+          const next = sortFields.filter((_, i) => i !== idx)
+          onViewStateChange({ sortFields: next })
+        }
+
+        function addRule() {
+          if (sortFields.length >= MAX_SORT_RULES) return
+          // Pick the first ordering option not already used
+          const used = new Set(sortFields.map(r => r.field))
+          const nextField = orderingValues.find(v => !used.has(v)) ?? orderingValues[0]
+          const next: SortRule[] = [...sortFields, { field: nextField, direction: "desc" }]
+          onViewStateChange({ sortFields: next })
+        }
+
+        return (
+          <div className="flex flex-col gap-1.5">
+            {sortFields.map((rule, idx) => {
+              // Disable already-used fields (except current row's own value)
+              const usedElsewhere = sortFields
+                .filter((_, i) => i !== idx)
+                .map(r => r.field)
+              return (
+                <div key={`${idx}-${rule.field}`} className="flex items-center justify-between">
+                  <span className="text-note text-muted-foreground">
+                    {idx === 0 ? "Ordering" : idx === 1 ? "Then by" : "Then by"}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <ChipDropdown<SortField>
+                      value={rule.field}
+                      options={config.orderingOptions}
+                      onChange={(v) => updateRuleAt(idx, { field: v })}
+                      disabledValues={usedElsewhere as SortField[]}
+                    />
+                    <button
+                      onClick={() => updateRuleAt(idx, { direction: rule.direction === "asc" ? "desc" : "asc" })}
+                      className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-border-subtle bg-surface-overlay text-muted-foreground hover:text-foreground transition-colors"
+                      title={rule.direction === "asc" ? "Ascending" : "Descending"}
+                    >
+                      {rule.direction === "asc" ? <SortAscending size={12} weight="regular" /> : <SortDescending size={12} weight="regular" />}
+                    </button>
+                    {idx > 0 && (
+                      <button
+                        onClick={() => removeRuleAt(idx)}
+                        className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
+                        title="Remove sort"
+                      >
+                        <PhX size={11} weight="regular" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+            {sortFields.length < MAX_SORT_RULES && sortFields.length < orderingValues.length && (
+              <button
+                onClick={addRule}
+                className="self-end inline-flex items-center gap-1 px-2 py-1 rounded-md text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
+              >
+                <PhPlus size={11} weight="regular" />
+                Add sort
+              </button>
+            )}
+          </div>
+        )
+      })()}
 
       {/* ── Section 3: Mode-specific options (toggles) ── */}
       {config.toggles.length > 0 && (

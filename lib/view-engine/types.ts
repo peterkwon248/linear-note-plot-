@@ -42,7 +42,19 @@ export type SortField =
 
 export type SortDirection = "asc" | "desc"
 
-export type GroupBy = "none" | "status" | "priority" | "date" | "folder" | "label" | "triage" | "linkCount"
+/** Single sort step. Multiple steps form a chain (primary → secondary → tertiary). */
+export interface SortRule {
+  field: SortField
+  direction: SortDirection
+}
+
+/** Maximum number of chained sort rules. Linear/Notion match this cap. */
+export const MAX_SORT_RULES = 3
+
+export type GroupBy =
+  | "none" | "status" | "priority" | "date" | "folder" | "label" | "triage" | "linkCount"
+  // Wiki-specific groupings (Notes pipeline ignores these — handled by wiki-list-pipeline)
+  | "tier" | "parent"
 
 export type GroupSortBy = "default" | "manual" | "name" | "count"
 
@@ -67,7 +79,11 @@ export interface FilterRule {
 
 export interface ViewState {
   viewMode: ViewMode
+  /** Multi-sort chain (primary → secondary → tertiary). Always has length >= 1. */
+  sortFields: SortRule[]
+  /** @deprecated mirror of sortFields[0].field. Kept in sync by setViewState; remove in v95. */
   sortField: SortField
+  /** @deprecated mirror of sortFields[0].direction. Kept in sync by setViewState; remove in v95. */
   sortDirection: SortDirection
   groupBy: GroupBy
   subGroupBy: GroupBy
@@ -136,12 +152,14 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
-  "updatedAt", "createdAt", "title", "status", "links", "reads", "folder", "label",
+  "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label",
   "sub", "tier", "parent",
 ]
 
 export const VALID_GROUP_BY: GroupBy[] = [
   "none", "status", "priority", "date", "folder", "label", "triage", "linkCount",
+  // Wiki-specific
+  "tier", "parent",
 ]
 
 export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calendar"]
@@ -150,6 +168,8 @@ export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", 
 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "folder", "links", "reads", "wordCount", "createdAt", "updatedAt",
+  // Wiki-specific columns (article list)
+  "tags", "aliases",
   // Wiki-category-specific columns
   "parent", "tier", "sub",
 ]

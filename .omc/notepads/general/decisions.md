@@ -1,5 +1,18 @@
 # Architectural Decisions
 
+## 2026-04-30 (Sprint 1.3 + Sprint 1.4 plan)
+
+- **Hub Tier 자동 분류 폐기** — 사용자 통제 부재로 혼선 위험. Stub/Article 2단계만 유지. Backlinks 정렬로 hub-like 식별 가능. "사용자 명시 마킹 없는 자동 분류는 혼선" 영구 규칙 추가
+- **공간(space) 아이콘 3곳 통일 원칙 코드화** — Activity Bar 아이콘 = Sidebar Overview 아이콘 = ViewHeader 아이콘. 모든 공간(Wiki/Library/Notes/etc.)에 적용
+- **References 아이콘 분리** — Library와 동일 `Books` 사용했었음. 인용 메타포에 맞춰 `Quotes`로 분리 (3곳: Sidebar nav / ViewHeader / Empty state)
+- **Folder 컬럼 (Wiki) 영구 미포함** — Categories가 wiki에서 그 역할. Folder 자체가 wiki 메타포에 어울리지 않음
+- **Words 컬럼 (Wiki) 영구 미포함** — 위키는 길이로 분류 안 함. Block count는 Detail 패널에 이미 있음
+- **Plot 영구 규칙 재해석** — "시각적 다양성 ≠ Plot 코어"는 유효하지만, 명확한 그룹 차원이 있고 사용자 가치 판단하면 보드 뷰 등 검토 가능. Wiki 보드 뷰가 그 예 (Category 기준)
+- **카테고리 chip + count 패턴** — list view 컴팩트 (첫 chip + `+N`), Detail 패널은 전체 chip pill. 시각적 hierarchy: 컴팩트 list ↔ 상세 detail
+- **차트 sub-tabs (All/Articles/Stubs)** = Wiki List sub-tabs와 동일 디자인 재사용 (학습 부담 0). 같은 공간 내 동일 컨트롤 패턴
+- **사이드 패널 자동 동기화** — list view에서 단일 체크박스 선택 시 sidePanelContext mirror (Wiki/Notes 둘 다). Space 전환 시 clear (stale context 방지)
+- **출시 빌드 fix는 PR 범위 안에 포함** — 작은 빌드 에러는 별도 PR로 미루지 말고 함께 처리. NEXT-ACTION.md 알려진 이슈 1건 (home-view.tsx:41 backlinks) 이 세션에서 해소
+
 ## 2026-03-16
 - **Activity UI 삭제, event 인프라 유지**: noteEvents 배열 + datalog 헬퍼 + appendEvent는 Insights 뷰에서 재사용 예정
 - **activity-timeline.tsx 유지**: note-inspector의 History 섹션에서 개별 노트 활동 이력 표시에 사용

@@ -5,162 +5,199 @@
 
 ---
 
-**Last Updated**: 2026-04-29 — v0 협업 흡수 + UI polish + dead code 정리 + P0 필터 강화 + Row density 시도/revert (5 PR 머지) + **다중 기기 sync 큰 결정 보류**
-
-**다음 머신**: 다른 컴퓨터 (사용자 명시). before-work에서 git pull + IDB 별도 인지
+**Last Updated**: 2026-04-30 (오전) — **Sprint 1.3 머지 완료. 다음은 Sprint 1.4 (Wiki 보드 뷰 + 차트 개선).**
 
 ---
 
-## 🚨 다음 세션 첫 액션 — 다중 기기 sync 결정 6개 받기 (큰 방향 전환)
+## 🆕 다음 컴퓨터에서 시작할 때 (다른 머신 인계)
 
-**사용자 의향 (2026-04-29)**: "다중 기기 sync 필요해. 옵시디언도 이걸로 유료 구독료를 받잖아."
-
-→ **수익 모델 + Sync 도입 결정**. 영구 규칙 "큰 방향 전환 전 전체 설계 확정" 적용. **결정 6개 받기 전 코드 X.**
-
-### 자세한 옵션 비교: `docs/SYNC-DESIGN-DECISIONS.md` ★
-
-요약:
-- **추천 옵션 B (Supabase + E2E 암호화)** — 균형 (프라이버시 + 출시 일정 + 비용)
-- **추천 가격**: Free / Sync $4 / Pro $8
-- **추천 결제**: Lemon Squeezy (Merchant of Record)
-- **추천 인증**: Magic link + OAuth (Google/Apple)
-- **Y.Doc 재활용 결정 뒤집기**: 노트 본문에 CRDT 재도입 (충돌 해결)
-- **임시 phase 안**: 7~11주 = 2~3개월 (4 phase)
-
-### 결정 받아야 할 6개 (`docs/SYNC-DESIGN-DECISIONS.md` 참고)
-1. **옵션 선택**: A / B / C / D / E / F (추천 B)
-2. **가격 모델**: Free / $4 / $8 OK? 다른 가격?
-3. **출시 시점**: sync 포함 출시 / 출시 후 추가 / v2.0
-4. **CRDT/Y.Doc 재활용**: 이전 폐기 뒤집을 것인가
-5. **결제 시스템**: Lemon Squeezy / Stripe / Paddle
-6. **인증**: 이메일+비번 / Magic link / OAuth (Google/Apple) / 모두
-
-→ 결정 후 → 별도 PRD 작성 → phase 분할 → 구현 시작.
-
-**P1 Notes 3개는 sync와 무관**한 일반 강화. sync 결정 받기 전이라도 P1 진행 가능 (병행).
+1. `git pull origin main` — Sprint 1.3 머지 코드 가져오기
+2. 새 worktree 생성:
+   ```bash
+   git worktree add .claude/worktrees/<new-name> -b claude/<new-name>
+   cd .claude/worktrees/<new-name>
+   npm install  # 첫 worktree 만든 후 한 번
+   ```
+3. `npm run dev` (port 3002 기본 — 이미 사용 중이면 autoPort)
+4. **이 파일 (NEXT-ACTION.md) 읽고 Sprint 1.4 작업 시작**
 
 ---
 
-## 🎯 다음 세션 즉시 시작 (선택 1) — P1 Notes 3개
+## 🎯 큰 방향 (변경 없음)
 
-이번 세션 P0 4개 다 완료 (PR #222). 5 앱 리서치 기반 P1 후속:
+**Sync 대신 출시 준비 먼저** — 결정 #3 = (c) Free 출시 후 v2.0에 Sync (6개월~1년 후)
 
-### 1. Sub-group ★ 가장 빠른 wins (S 난이도)
-**인프라 100% 이미 구축됨**:
-- `lib/view-engine/types.ts`: `ViewState.subGroupBy: GroupBy` ✓
-- `lib/view-engine/group.ts`: `applyGrouping` 재귀 처리 ✓
-- `NoteGroup.subGroups?: NoteGroup[]` 타입 ✓
-
-**UI 노출만 남음** — `components/display-panel.tsx`에 Grouping dropdown 옆에 Sub-grouping dropdown 추가. notes-table.tsx에서 `groups[].subGroups` 렌더 (이미 있을 수도, 확인 필요). 작업량 거의 0.
-
-**의미 있는 조합** (사용자 시나리오):
-- Status × Priority — Inbox 안에서 Urgent/High 그룹별 정리
-- Folder × Status — 프로젝트별로 진행 상황 시각화
-- Date × Priority — 시간순 + 우선순위
-
-**Wiki/Library Sub-group은 비추** (분석 결과). 직교하는 두 dimension이 Notes에만 존재.
-
-### 2. Multi-sort (S~M)
-- `lib/view-engine/sort.ts`: `applySort(notes, field, direction, backlinksMap)` → `applySort(notes, sorts: Array<{field, direction}>, backlinksMap)` 시그니처 변경
-- comparator chain 패턴: `(a, b) => sorts.reduce((acc, s) => acc !== 0 ? acc : compareSingle(a, b, s), 0)`
-- UI: dropdown 1개 → 2~3개 (`+ Add another sort` 버튼). 최대 3단계 제한
-- ViewState: `sortField: string` → `sortFields: Array<{field, direction}>`. v94 migration 필요
-- 호환성: 단일 sort도 length-1 배열로 normalize
-
-### 3. 날짜 상대값 (S)
-- `lib/view-engine/filter.ts`에 이미 일부 처리 있음 (`stale`, `24h`, `7d` 같은 `parseRelativeTime`). 확장.
-- 새 옵션: "이번 주" (7d), "이번 달" (30d), "지난 7일", "오늘" (24h), "어제"
-- `view-configs.tsx` `filterCategories.updatedAt.values` / `createdAt.values`에 추가
-- date-fns 활용 (이미 의존성 있는지 확인. 없으면 직접 구현 — 시간대 처리 주의)
-
-### 작업 묶음 권장
-**한 PR로 묶음** (Notes display & filter 영역):
-- Title: `feat(filter): P1 Notes — Sub-group + Multi-sort + 날짜 상대값`
-- 변경 파일: types.ts, group.ts (이미 OK), sort.ts, filter.ts, view-configs.tsx, display-panel.tsx, defaults.ts, migrate.ts(v94?), notes-table.tsx (subGroups 렌더 확인)
+**타임라인**: 자유 — 품질 우선
+**플랫폼**: 데스크톱 우선 → 회원 수 충분해지면 모바일 (PWA + TWA)
+**Sync**: PRD 보존 ([`docs/SYNC-PRD.md`](./SYNC-PRD.md)). v2.0 시점 활성화
 
 ---
 
-## 🟡 별도 PR (다음 세션 또는 그 다음)
+## 🚀 Sprint 1.4 (~1주): Wiki 보드 뷰 + 차트 개선 + Knowledge Connectivity
 
-### Wiki 1차 groupBy 추가 (M)
-- WikiList는 view-engine 파이프라인 사용 안 함. 직접 적용 vs 별도 grouping 구현 결정 필요
-- 제안: `linkCount bucket` (5+ / 10+ / no backlinks) → "허브 위키" 식별
-- 또는 `infoboxPreset` 별 (person / place / concept 등)
-- WikiArticle은 status 필드 X (isWikiStub 런타임 파생). 1차 dimension 빈약
-- Plot 코어 적용도 (지식 관계망): "linkCount 많은 stub" = 자주 참조되지만 미완성 → actionable
+### A. Wiki 보드 뷰
 
-### P0-4 note picker 기반 inbound link filter (M)
-- 특정 노트 ID picker → "그 노트로 inbound link한 노트만" 필터
-- UX 결정 필요: SmartSidePanel Connections 강화 vs FilterPanel에 새 picker
-- 현재 "Has backlinks" 만 활성화 (PR #222). 특정 노트 지정은 미구현
+- [ ] `WIKI_VIEW_CONFIG.displayConfig.supportedModes`에 `"board"` 추가 ([lib/view-engine/view-configs.tsx:212](lib/view-engine/view-configs.tsx))
+- [ ] View mode toggle UI (List ↔ Board) — Notes 패턴 재활용
+- [ ] `WikiBoard` 컴포넌트 신규 (Notes 보드 컴포넌트 참고)
+- [ ] **Group by**:
+  - default: **Category** (가변, 사용자 정의 — Notes의 status 위치)
+  - 옵션: **Tier** (Stub/Article 2-column, "stub 정리" 워크플로)
+  - 옵션: **Parent article** (위계)
+- [ ] **카드 디자인** (Linear 식 컴팩트):
+  - 제목 (bold)
+  - Tier badge (Stub / Article)
+  - Backlinks 숫자
+  - Updated relative
+  - (옵션) Categories chip — display properties 토글
+- [ ] 카드 **drag → 그룹 변경** (카테고리 변경 지원)
 
----
+### B. Wiki 컬럼 정비 (List + Board 카드 공유)
 
-## ✅ 2026-04-29 세션 완료
+- [ ] **Tier** 컬럼/badge (Stub / Article 자동 — `isWikiStub` 기반) ★ 새
+- [ ] **Reads** 컬럼 ★ 새
+  - `WikiArticle.reads: number` 필드 추가 + store 마이그레이션 (v75 → v76)
+  - `openWikiArticle` 호출 시 `reads++` 로직
+- [ ] **Created** 컬럼 ★ 새
 
-| PR | 내용 | Commit |
-|----|------|--------|
-| #220 | v0 작업 흡수 (라이트모드 contrast + Home View 리디자인) | 23fe1be |
-| #221 | UI polish (체크박스 + chart 색) + dead code 14개 | 4f5165a |
-| #222 | P0 필터 강화 (True orphan + Has backlinks + Wiki-registered) | f613532 |
-| #223 | Row density dropdown 통합 (Compact + Show card preview) | 7423c08 |
-| #224 | Row density 제거 — Linear 스타일 단일 행 | 7472321 |
+### C. Wiki 차트 개선
 
-Store version: **v91 → v92 → v93** (PR #223 v92 + PR #224 v93)
+- [ ] **Growth 차트 Article/Stub 분리**
+  - New per bucket: stacked bar (Article 보라 + Stub 회색)
+  - Cumulative: multi-line (Total / Articles / Stubs)
+  - `isWikiStub` 활용 — `lib/insights/timeseries.ts`에 분리 로직 추가
+- [ ] **차트 sub-tabs** (`All` / `Articles` / `Stubs`) — Wiki List sub-tabs와 동일 디자인
+  - All (default): stacked + multi-line
+  - Articles: 단일 색
+  - Stubs: 단일 색
+- [ ] **Knowledge Connectivity 차트 추가** ★
+  - 차트 종류 토글 (`Growth` / `Connectivity`) — 상위 레벨
+  - 시간별 wiki article 간 backlinks 합 시각화
+  - `cumEdges` 인프라 재활용 ([lib/insights/timeseries.ts:130](lib/insights/timeseries.ts) 이미 부분 계산 중)
 
----
-
-## 🟢 잊지 말 것
-
-### Plot 코어 정체성 (영구 규칙)
-- Plot = 노트 + 위키 + **지식 관계망** (팔란티어 × 제텔카스텐)
-- LLM 없이 **규칙/통계/그래프 알고리즘**
-- **시각적 다양성 ≠ Plot 코어** ← 2026-04-22 자각 + 2026-04-29 Row density 시도/revert로 재확인
-- "멋진 레이아웃" 방향 X
-- 토글 옵션 적게 (Linear 방식). 진짜 필요한 것만
-
-### 큰 방향 전환 전 전체 설계 확정
-- 2026-04-29 Row density 시도가 좋은 예 — Notion 패턴이 Plot에 안 맞아 revert
-- 다음 큰 변경(예: Sub-group UX) 전에 사용자 사용 시나리오 확실히
-
-### 코드 패턴
-- **executor agent 위임**: multi-file 변경 효율적. tsc/test 자동 검증
-- **dead code 정리**: Explore 1차 분류 후 executor 정밀 분리 (UI dead vs state dead)
-- **HMR 캐시 이슈**: 큰 schema 변경 후 hooks 에러 가능 — dev server restart
-- **Recharts ResponsiveContainer 회피**: React 19/Next 16에서 width 0. ResizeObserver 직접 패턴 (`wiki-growth-chart.tsx`)
-
-### Plot 사용자가 보일 새 P1 옵션
-- **True orphans** quickFilter (linksOut=0 AND backlinks=0)
-- **Wiki-registered** filter (note가 위키화 됐는가)
-- **Has backlinks** filter (역링크 있는 노트만)
-- **Row density 토글 사라짐** — 단일 행 (Linear 스타일). 자동 반응형은 모바일에서 그대로
+UI 계층 (확정):
+```
+[Growth | Connectivity]                    ← 차트 종류 (상위)
+                       [Day Week Month]    ← 시간 단위
+[All] [Articles] [Stubs]                   ← 데이터 필터 (Growth만)
+─────────────────────────
+        차트 영역
+```
 
 ---
 
-## 🚀 출시 방향 (여전히 보류)
+## 🟡 Sprint 1.5 (~3일): Outlinks + 후속
 
-이전 세션부터 결정 대기 4개. 다음 세션에서 사용자에게 받기:
-1. **모바일 전략**: PWA → TWA OK?
-2. **출시 전 부족분 우선순위**: 온톨로지 / 캘린더 / 템플릿
-3. **웹사이트 옵션**: 별도 Next.js + Vercel? 도메인?
-4. **타임라인**: 1개월 / 3개월 / 자유?
-
-→ 결정 받기 전 출시 관련 코드 X. **단 P1 Notes 3개는 출시와 무관한 일반 강화라 진행 OK**.
+- [ ] **Outlinks 컬럼** (Notes + Wiki 일관 적용)
+  - `Note.linksOut`, `WikiArticle.linksOut` 데이터 이미 존재 ([lib/types.ts:270, 344](lib/types.ts))
+  - List 컬럼 (Notes + Wiki 양쪽)
+  - 보드 카드에도 표시 (옵션, display properties 토글)
 
 ---
 
-## 🟡 알려진 이슈 (pre-existing, 기능 영향 없음)
-- TipTap duplicate extension warnings (link/underline/gapCursor)
-- Hydration mismatch (Radix UI aria-controls ID, suppressHydrationWarning으로 가림)
-- ResponsiveContainer (recharts) — React 19/Next 16 환경에서 width 0 발생 → ResizeObserver 패턴 우회 (PR #219)
-- `home-view.tsx:41` backlinks 관련 tsc 에러 1건 (기존, 우리 작업 무관)
+## 🟡 Sprint 1 P1 미완 (잔존)
+
+- [ ] **Sub-group** (S, 가장 빠른 wins) — 인프라 100% 있음. UI dropdown 추가만
+  - 변경: [components/display-panel.tsx](components/display-panel.tsx) Grouping dropdown 옆에 Sub-grouping dropdown
+  - 검증: [components/notes-table.tsx](components/notes-table.tsx)에서 `groups[].subGroups` 렌더 확인
+
+---
+
+## 🟡 Sprint 2 (~3주): 핵심 폴리시
+
+(변경 없음 — [docs/TODO.md](./TODO.md) 참조)
+
+- 노트 템플릿 시드 10~20개 (onboarding 강화)
+- 온톨로지 메트릭 설명 툴팁
+- 캘린더 현황 점검 + 부족분
+- Views 업그레이드 (실용적으로)
+- Insights 업그레이드 (실용적으로)
+
+---
+
+## 🟢 Sprint 3 (~2주): 데스크톱 출시 자산
+
+(변경 없음 — [docs/TODO.md](./TODO.md) 참조)
+
+- 도메인 결정 + 구매
+- 마케팅 사이트 (별도 워크트리)
+- Privacy Policy + Terms (sync 없는 버전, 한국 + GDPR)
+- 데스크톱 웹 배포
+
+### 🎯 데스크톱 Free 출시
+
+---
+
+## 🟡 Sprint 4: 모바일 추가 (회원 수 충분해진 후)
+
+(변경 없음)
+
+---
+
+## 🚀 Sync v2.0 (출시 후 6개월~1년)
+
+(변경 없음 — `docs/SYNC-PRD.md` 보존)
+
+---
+
+## ✅ 2026-04-30 Sprint 1.3 완료 (PR #228)
+
+| 작업 | 결과 |
+|------|------|
+| Activity Bar / Sidebar / ViewHeader 아이콘 일치 | ✅ 머지 |
+| Wiki Dashboard Display + DetailPanel mode 숨김 | ✅ |
+| Knowledge Base 카드 색깔 박스 → 5개 아이콘 | ✅ |
+| Quick Capture placeholder 5문구 cycle | ✅ |
+| 라이트모드 Wiki contrast (Dashboard + List + Sub-tabs) | ✅ |
+| Wiki/Notes List 단일 select ↔ 사이드 패널 동기화 | ✅ |
+| Space 전환 시 sidePanelContext clear | ✅ |
+| Wiki Article Detail typeof guard (article.layout object 데이터) | ✅ |
+| **Wiki List Display Properties 동적 컬럼** (Categories chip + count) | ✅ ★ |
+| 빌드 fix: home-view.tsx:41 backlinks → useBacklinksIndex | ✅ ★ (출시 빌드 통과) |
+
+**Store 변경 없음** (v75 유지). 다음 Sprint 1.4의 Reads 필드 추가 시 v76.
+
+---
+
+## 📝 사용자 명시 결정 (2026-04-30 세션)
+
+### 폐기 (영구)
+
+- **Hub Tier 자동 분류** — 사용자 통제 부재로 혼선 위험. Stub/Article 2단계로 충분. Backlinks 정렬로 hub-like 식별 가능
+- **Folder 컬럼 (Wiki)** — Categories가 그 역할
+- **Words 컬럼 (Wiki)** — 위키는 길이로 분류 안 함. Block count는 Detail 패널에 이미 있음
+
+### 합의 (Sprint 1.4 / 1.5)
+
+- **보드 뷰 default group by**: Category (가변, Notes의 status 위치)
+- **Tier**: Stub / Article 2단계만 (`isWikiStub` 기반)
+- **Reads**: WikiArticle에 필드 추가, 마이그레이션 v76
+- **Knowledge Connectivity 차트**: 추가 OK
+- **Growth 차트 Article/Stub 분리 + sub-tabs**: 오버엔지니어링 아님, 추가 OK
+- **Outlinks 컬럼**: Notes + Wiki 양쪽 일관 적용 (Phase 3)
+
+### Plot 영구 규칙 재확인
+
+- "시각적 다양성 ≠ Plot 코어" — 단, 명확한 그룹 차원이 있고 사용자가 가치 판단하면 검토 가능 (Wiki 보드 뷰가 좋은 예 — Category 기준)
+- 단순/명확/사용자 통제 친화적 (Hub Tier 자동 분류 폐기는 이 규칙 적용)
+
+---
+
+## 🟡 알려진 이슈
+
+- TipTap duplicate extension warnings (link/underline/gapCursor) — 기능 영향 없음
+- Hydration mismatch (Radix UI aria-controls ID) — 기능 영향 없음
+- ResponsiveContainer (recharts) — React 19/Next 16 환경 → ResizeObserver 패턴 우회 (이미 적용)
+- ~~home-view.tsx:41 backlinks tsc 에러~~ → ✅ 2026-04-30 fix (useBacklinksIndex)
 
 ---
 
 ## 📚 필수 참고
 
-- `docs/CONTEXT.md` — Source of truth (PR #224 + 이번 세션 반영)
-- `docs/MEMORY.md` — 전체 PR 히스토리 + 아키텍처
-- `docs/TODO.md` — 우선순위 (P0/P1/P2/P3)
-- `docs/DESIGN-TOKENS.md` — 디자인 토큰
-- `docs/SESSION-LOG.md` — 시간순 세션 기록 (2026-04-29 entry 가장 위)
+- [`docs/CONTEXT.md`](./CONTEXT.md) — 현재 Plot 상태 + 설계 결정
+- [`docs/MEMORY.md`](./MEMORY.md) — 전체 PR 히스토리
+- [`docs/TODO.md`](./TODO.md) — Sprint 진행 추적
+- [`docs/SYNC-PRD.md`](./SYNC-PRD.md) — Sync v2.0 PRD (보존, 향후 활성화)
+- [`docs/SYNC-DESIGN-DECISIONS.md`](./SYNC-DESIGN-DECISIONS.md) — Sync 6개 결정
+- [`docs/UI-CONSISTENCY-AUDIT.md`](./UI-CONSISTENCY-AUDIT.md) — UI 일관성 audit (Sprint 1.2)
+- [`docs/DESIGN-TOKENS.md`](./DESIGN-TOKENS.md) — 디자인 토큰
