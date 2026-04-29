@@ -140,6 +140,10 @@
 - [ ] **column-click이 secondary/tertiary sort drops** — `notes-table.tsx:597-600` 컬럼 헤더 클릭 시 chain head를 갱신하지만 tail 보존 안됨. 사용자가 secondary sort 설정 후 컬럼 헤더 클릭하면 secondary 사라짐. 옵션: (a) tail 보존하도록 핸들러 수정 (b) "컬럼 클릭은 primary만 변경" 명시. P2.
 - [ ] **view-configs.tsx:133 "reads" 라벨 오류** — `{ value: "reads", label: "Word count" }` 잘못 표시. `"Reads"` 또는 `"wordCount"` 필드로 수정. 기존 버그, multi-sort UI에서 더 두드러짐.
 
+### Wiki Phase 1 PR follow-ups (architect 검증에서 발견, P2)
+- [ ] **GroupBy `tier`/`parent` cross-context guard** — Notes context에 wiki-only groupBy가 persisted되면 fall-through로 단일 그룹 표시. 발생 확률 낮음 (UI 노출 없음) but defensive code 권장. `lib/view-engine/group.ts` default → `groupByStatus(notes)` fallback OR `normalizeViewState`에 context별 valid group 검증.
+- [ ] **codebase-wide 한글 라벨 sweep** — 영어 버전 코드베이스 전반 한글 라벨 누수 점검 (위키, 토스트, 모달 등). 별도 sweep PR.
+
 ---
 
 ## ✅ 2026-04-29 세션 완료

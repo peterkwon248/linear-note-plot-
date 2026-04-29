@@ -152,37 +152,87 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
   },
 }
 
+// Wiki-specific filter/display options.
+// 의도된 차이 (Notes 대비):
+//   - priority sort 제외: wiki에 priority 개념 없음
+//   - status filter 제외: stub/article은 런타임 파생 (isWikiStub) → toggle로 처리
+//   - groupingOptions: tier(depth)/linkCount/parent/category — wiki 위계 반영
+//   - filterCategories: category(WikiCategory)/links/dates/aliases/parent
 export const WIKI_VIEW_CONFIG: ViewConfig = {
   showFilter: true,
   showDisplay: true,
   showDetailPanel: true,
   filterCategories: [
-    { key: "tags", label: "Category", icon: TagIcon, values: [] },
+    // category: WikiCategory entity. values는 런타임 hydrate (wiki-view.tsx)
+    { key: "category", label: "Category", icon: TagIcon, values: [] },
     { key: "links", label: "Backlinks", icon: LinkIcon, values: [
+      { key: "_any", label: "Has backlinks" },
       { key: "5+", label: "5+ backlinks" },
       { key: "10+", label: "10+ backlinks" },
       { key: "_none", label: "No backlinks" },
+      { key: "_orphan", label: "True orphans (no in/out)" },
+    ]},
+    { key: "updatedAt", label: "Updated", icon: CalendarIcon, values: [
+      { key: "today", label: "Today" },
+      { key: "yesterday", label: "Yesterday" },
+      { key: "this-week", label: "This week" },
+      { key: "last-7-days", label: "Last 7 days" },
+      { key: "this-month", label: "This month" },
+      { key: "last-30-days", label: "Last 30 days" },
+      { key: "stale", label: "Stale (30+ days)" },
+    ]},
+    { key: "createdAt", label: "Created", icon: CalendarIcon, values: [
+      { key: "today", label: "Today" },
+      { key: "this-week", label: "This week" },
+      { key: "this-month", label: "This month" },
+    ]},
+    { key: "title", label: "Aliases", icon: ContentIcon, values: [
+      { key: "_aliased", label: "Has aliases" },
+      { key: "_unaliased", label: "No aliases" },
+    ]},
+    // parent: parent-child article hierarchy. values는 런타임 hydrate
+    { key: "wikiTier", label: "Hierarchy", icon: GraphIcon, values: [
+      { key: "_root", label: "Root (no parent)" },
+      { key: "_child", label: "Has parent" },
+      { key: "_leaf", label: "Leaf (no children)" },
     ]},
   ],
-  quickFilters: [],
+  quickFilters: [
+    { label: "Stale articles", desc: "30+ days no update", rules: [
+      { field: "updatedAt", operator: "lt", value: "stale" },
+    ]},
+    { label: "Orphans", desc: "no backlinks", rules: [
+      { field: "links", operator: "eq", value: "_none" },
+    ]},
+    { label: "Hubs", desc: "10+ backlinks", rules: [
+      { field: "links", operator: "eq", value: "10+" },
+    ]},
+  ],
   displayConfig: {
-    supportedModes: ["list", "board"],
+    supportedModes: ["list"],
+    // priority 제외 (wiki에 의미 없음). status 제외 (stub/article은 런타임 파생)
     orderingOptions: [
-      { value: "links", label: "Most linked" },
       { value: "updatedAt", label: "Updated" },
+      { value: "createdAt", label: "Created" },
       { value: "title", label: "Name" },
-      { value: "status", label: "Wiki status" },
+      { value: "links", label: "Most linked" },
     ],
+    // tier(depth) / linkCount(bucket) / parent — wiki 고유 위계
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "status", label: "Wiki Status" },
+      { value: "tier", label: "Tier (depth)" },
+      { value: "linkCount", label: "Link count" },
+      { value: "parent", label: "Parent article" },
       { value: "label", label: "Category" },
     ],
-    toggles: [],
+    toggles: [
+      { key: "showStubs", label: "Show stubs", icon: ContentIcon },
+    ],
     properties: [
-      { key: "status", label: "Wiki status", icon: StatusIcon },
+      { key: "title", label: "Title", icon: ContentIcon },
       { key: "links", label: "Backlinks", icon: LinkIcon },
       { key: "tags", label: "Categories", icon: TagIcon },
+      { key: "aliases", label: "Aliases", icon: ContentIcon },
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
     ],
   },

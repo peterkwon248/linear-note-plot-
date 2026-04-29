@@ -298,7 +298,7 @@ export function DisplayPanel({
                       <button
                         onClick={() => removeRuleAt(idx)}
                         className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
-                        title="정렬 제거"
+                        title="Remove sort"
                       >
                         <PhX size={11} weight="regular" />
                       </button>
@@ -313,7 +313,7 @@ export function DisplayPanel({
                 className="self-end inline-flex items-center gap-1 px-2 py-1 rounded-md text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
               >
                 <PhPlus size={11} weight="regular" />
-                정렬 추가하기
+                Add sort
               </button>
             )}
           </div>

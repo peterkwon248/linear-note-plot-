@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react"
 import type { FilterRule, ViewState, ViewContextKey } from "@/lib/view-engine/types"
 import { buildViewStateForContext } from "@/lib/view-engine/defaults"
+import { applyWikiFilters, applyWikiSort } from "@/lib/view-engine/wiki-list-pipeline"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_VIEW_CONFIG, WIKI_CATEGORY_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -132,36 +133,23 @@ export function WikiView() {
     lastClickedIndexRef.current = -1
   }, [])
 
-  // Filter / Display state
-  // TODO(v95): sortField/sortDirection mirror 제거 시 이 literal에서도 함께 제거
-  const [wikiFilters, setWikiFilters] = useState<FilterRule[]>([])
-  const [wikiViewState, setWikiViewState] = useState<ViewState>({
-    viewMode: "list" as const,
-    sortFields: [{ field: "updatedAt", direction: "desc" }],
-    sortField: "updatedAt" as const,
-    sortDirection: "desc" as const,
-    groupBy: "none" as const,
-    subGroupBy: "none" as const,
-    filters: [] as FilterRule[],
-    visibleColumns: ["status", "links", "tags", "updatedAt"],
-    showEmptyGroups: false,
-    toggles: {},
-    groupOrder: null,
-    subGroupOrder: null,
-    subGroupSortBy: "default" as const,
-  })
-  const handleWikiFilterToggle = (rule: FilterRule) => {
-    setWikiFilters((prev) => {
-      const exists = prev.some(
-        (f) => f.field === rule.field && f.value === rule.value
-      )
-      return exists
-        ? prev.filter(
-            (f) => !(f.field === rule.field && f.value === rule.value)
-          )
-        : [...prev, rule]
-    })
-  }
+  // Filter / Display state — unified via viewStateByContext["wiki"] for persistence
+  // Phase 1 (UI 일관성 audit): wikiFilters 로컬 state + wikiViewState 로컬 useState 제거
+  const wikiViewState = usePlotStore((s) => s.viewStateByContext["wiki"]) ?? buildViewStateForContext("wiki")
+  const updateWikiViewState = useCallback(
+    (patch: Partial<ViewState>) => setViewState("wiki" as ViewContextKey, patch),
+    [setViewState]
+  )
+  const wikiFilters = wikiViewState.filters
+  const handleWikiFilterToggle = useCallback((rule: FilterRule) => {
+    const exists = wikiFilters.some(
+      (f) => f.field === rule.field && f.value === rule.value
+    )
+    const next = exists
+      ? wikiFilters.filter((f) => !(f.field === rule.field && f.value === rule.value))
+      : [...wikiFilters, rule]
+    updateWikiViewState({ filters: next })
+  }, [wikiFilters, updateWikiViewState])
 
   // Article reader state (Note-based legacy)
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
@@ -301,25 +289,61 @@ export function WikiView() {
     [wikiArticles],
   )
 
-  // Filter wiki notes
+  // Set of article IDs that have at least one child article (parentArticleId === id).
+  // Used by wiki-list-pipeline for "_leaf" hierarchy filter.
+  const hasChildrenSet = useMemo(() => {
+    const set = new Set<string>()
+    for (const a of wikiArticles) {
+      if (a.parentArticleId) set.add(a.parentArticleId)
+    }
+    return set
+  }, [wikiArticles])
+
+  // Filter wiki notes — applies sidebar category filter + viewState.filters + showStubs toggle
+  const showStubs = wikiViewState.toggles?.showStubs !== false  // default: true (show stubs)
   const filteredWikiNotes = useMemo(() => {
     let result = wikiNotes
-    // Apply category filter from sidebar
+    // Sidebar category filter (separate from filterPanel category filter)
     if (categoryFilterTagId) {
       result = result.filter(n => (n.categoryIds ?? []).includes(categoryFilterTagId))
     }
+    // FilterPanel rules from viewStateByContext["wiki"].filters (Phase 1)
+    if (wikiFilters.length > 0) {
+      result = applyWikiFilters(result, wikiFilters, { backlinksMap: backlinkCounts, hasChildrenSet })
+    }
+    // showStubs toggle (display config) — default true. When false, hide stubs globally.
+    if (!showStubs) {
+      result = result.filter((a) => !isWikiStub(a))
+    }
     return result
-  }, [wikiNotes, categoryFilterTagId])
+  }, [wikiNotes, categoryFilterTagId, wikiFilters, backlinkCounts, hasChildrenSet, showStubs])
 
-  // Sorted by updatedAt descending for articles table-list
+  // Sort filtered articles using wikiViewState.sortFields (Phase 1: dynamic, no hardcoded override)
   const sortedFilteredWikiNotes = useMemo(
-    () =>
-      [...filteredWikiNotes].sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      ),
-    [filteredWikiNotes]
+    () => applyWikiSort(filteredWikiNotes, wikiViewState.sortFields, backlinkCounts),
+    [filteredWikiNotes, wikiViewState.sortFields, backlinkCounts]
   )
+
+  // Hydrate WIKI_VIEW_CONFIG.filterCategories with runtime WikiCategory entities.
+  // Mirror notes-table pattern (folder/label/tags receive dynamic values).
+  const wikiFilterCategories = useMemo(() => {
+    return WIKI_VIEW_CONFIG.filterCategories.map((cat) => {
+      if (cat.key === "category") {
+        return {
+          ...cat,
+          values: [
+            { key: "_none", label: "Uncategorized" },
+            ...wikiCategories.map((c) => ({
+              key: c.id,
+              label: c.name,
+              count: wikiNotes.filter((n) => (n.categoryIds ?? []).includes(c.id)).length,
+            })),
+          ],
+        }
+      }
+      return cat
+    })
+  }, [wikiCategories, wikiNotes])
 
   // Selection handlers (need sortedFilteredWikiNotes)
   const handleArticleSelect = useCallback((id: string, options: { multi?: boolean; shift?: boolean; index?: number }) => {
@@ -936,9 +960,11 @@ export function WikiView() {
             />
           ) : (
             <FilterPanel
-              categories={WIKI_VIEW_CONFIG.filterCategories}
+              categories={wikiFilterCategories}
               activeFilters={wikiFilters}
               onToggle={handleWikiFilterToggle}
+              quickFilters={WIKI_VIEW_CONFIG.quickFilters as any}
+              onQuickFilter={(rules) => updateWikiViewState({ filters: rules })}
             />
           )
         }
@@ -959,15 +985,10 @@ export function WikiView() {
             <DisplayPanel
               config={WIKI_VIEW_CONFIG.displayConfig}
               viewState={wikiViewState}
-              onViewStateChange={(patch) =>
-                setWikiViewState((prev) => ({ ...prev, ...patch }))
-              }
-              toggleStates={wikiViewState.toggles}
+              onViewStateChange={updateWikiViewState}
+              toggleStates={wikiViewState.toggles ?? {}}
               onToggleChange={(key, value) =>
-                setWikiViewState((prev) => ({
-                  ...prev,
-                  toggles: { ...prev.toggles, [key]: value },
-                }))
+                updateWikiViewState({ toggles: { ...(wikiViewState.toggles ?? {}), [key]: value } })
               }
             />
           )
