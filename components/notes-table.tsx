@@ -147,14 +147,14 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-note font-medium text-foreground/50 transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
       {active ? (
-        sortDir === "asc" ? <ArrowUp className="text-foreground/50" size={12} weight="regular" /> : <ArrowDown className="text-foreground/50" size={12} weight="regular" />
+        sortDir === "asc" ? <ArrowUp className="text-muted-foreground" size={12} weight="regular" /> : <ArrowDown className="text-muted-foreground" size={12} weight="regular" />
       ) : (
-        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-50" size={12} weight="regular" />
+        <ArrowsDownUp className="opacity-0 group-hover/th:opacity-60" size={12} weight="regular" />
       )}
     </button>
   )
@@ -209,10 +209,10 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" | "re
     <div className="flex-1 overflow-y-auto">
       {/* Header row */}
       <div className="sticky top-0 z-10 flex items-center border-b border-border bg-background px-5 py-2">
-        <div className="flex-1 text-note font-medium text-muted-foreground">Name</div>
-        <div className="w-16 shrink-0 text-center text-note font-medium text-muted-foreground">Color</div>
-        <div className="w-32 shrink-0 text-right text-note font-medium text-muted-foreground">Trashed</div>
-        <div className="w-32 shrink-0 text-right text-note font-medium text-muted-foreground">Actions</div>
+        <div className="flex-1 text-note font-medium text-foreground/80">Name</div>
+        <div className="w-16 shrink-0 text-center text-note font-medium text-foreground/80">Color</div>
+        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">Trashed</div>
+        <div className="w-32 shrink-0 text-right text-note font-medium text-foreground/80">Actions</div>
       </div>
       {items.map((item) => {
         const color = (item as Tag).color ?? ""
@@ -1058,7 +1058,7 @@ export function NotesTable({
                           ? "bg-accent border-accent"
                           : selectedIds.size > 0
                             ? "bg-accent/50 border-accent"
-                            : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                            : "border-border-subtle hover:border-muted-foreground"
                       }`}
                       onClick={() => {
                         if (selectedIds.size === flatNotes.length && flatNotes.length > 0) {
@@ -1131,12 +1131,12 @@ export function NotesTable({
                               if (!reorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <CaretDown className={`text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
+                            <CaretDown className={`text-muted-foreground transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-note font-semibold text-foreground/80">
+                            <span className="text-note font-semibold text-foreground">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-2xs text-muted-foreground/60 tabular-nums">{item.count}</span>
+                            <span className="text-2xs text-muted-foreground tabular-nums">{item.count}</span>
                           </div>
                           ) : (
                           <div
@@ -1155,12 +1155,12 @@ export function NotesTable({
                               if (!reorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <CaretDown className={`text-muted-foreground/60 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
+                            <CaretDown className={`text-muted-foreground transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={12} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-note font-semibold text-foreground/80">
+                            <span className="text-note font-semibold text-foreground">
                               {resolveGroupLabel(item.groupBy, item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-2xs text-muted-foreground/60 tabular-nums">{item.count}</span>
+                            <span className="text-2xs text-muted-foreground tabular-nums">{item.count}</span>
                           </div>
                           )
                         ) : item.type === "subheader" ? (
@@ -1180,12 +1180,12 @@ export function NotesTable({
                               if (!subReorderMoved.current) toggleGroupCollapse(item.groupKey)
                             }}
                           >
-                            <CaretDown className={`text-muted-foreground/50 transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} weight="regular" />
+                            <CaretDown className={`text-muted-foreground transition-transform ${collapsedGroups.has(item.groupKey) ? "-rotate-90" : ""}`} size={10} weight="regular" />
                             <GroupHeaderIcon groupBy={item.groupBy} groupKey={item.groupKey.split("::")[1] ?? item.groupKey} label={item.label} folders={folders} labels={labels} />
-                            <span className="text-2xs font-medium text-foreground/60">
+                            <span className="text-2xs font-medium text-foreground">
                               {resolveGroupLabel(item.groupBy, item.groupKey.split("::")[1] ?? item.groupKey, item.label, folders, labels)}
                             </span>
-                            <span className="text-2xs text-muted-foreground/50 tabular-nums">{item.count}</span>
+                            <span className="text-2xs text-muted-foreground tabular-nums">{item.count}</span>
                           </div>
                         ) : (
                           <NoteRow
@@ -1371,13 +1371,13 @@ function GroupHeaderIcon({ groupBy, groupKey, label, folders, labels }: {
     case "status":
       return <StatusShapeIcon status={label.toLowerCase() as NoteStatus} size={16} />
     case "folder":
-      return <FolderOpen className="text-muted-foreground/70" size={16} weight="regular" />
+      return <FolderOpen className="text-muted-foreground" size={16} weight="regular" />
     case "label": {
       const labelColor = labels.find((l) => l.id === groupKey)?.color
       return labelColor ? (
         <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: labelColor }} />
       ) : (
-        <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-muted-foreground/30" />
+        <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-muted-foreground" />
       )
     }
     default:
@@ -1463,7 +1463,7 @@ function NoteRowInner({
           className={`rounded border flex items-center justify-center transition-colors pointer-events-none ${
             isCompact ? "h-3 w-3" : "h-4 w-4"
           } ${
-            isSelected ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
+            isSelected ? "bg-accent border-accent" : "border-border-subtle hover:border-muted-foreground"
           }`}
         >
           {isSelected && <PhCheck className="text-accent-foreground" size={8} weight="bold" />}
@@ -1494,7 +1494,7 @@ function NoteRowInner({
           <SourceIcon source={note.source} />
         </div>
         {showCardPreview && note.preview && (
-          <span className="text-2xs text-muted-foreground/50 truncate pl-6 mt-0.5">{note.preview}</span>
+          <span className="text-2xs text-muted-foreground truncate pl-6 mt-0.5">{note.preview}</span>
         )}
       </div>
 
