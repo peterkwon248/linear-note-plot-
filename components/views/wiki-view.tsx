@@ -143,8 +143,6 @@ export function WikiView() {
     filters: [] as FilterRule[],
     visibleColumns: ["status", "links", "tags", "updatedAt"],
     showEmptyGroups: false,
-    orderPermanentByRecency: false,
-    showThread: false,
     toggles: {},
     groupOrder: null,
     subGroupOrder: null,

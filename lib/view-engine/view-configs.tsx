@@ -128,7 +128,6 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
       { key: "compact", label: "Compact mode", icon: SortIcon },
       { key: "showCardPreview", label: "Show card preview", icon: EyeIcon },
-      { key: "nestedReplies", label: "Nested replies", icon: ContentIcon },
     ],
     properties: [
       { key: "status", label: "Status", icon: StatusIcon },
@@ -167,10 +166,7 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "status", label: "Wiki Status" },
       { value: "label", label: "Category" },
     ],
-    toggles: [
-      { key: "showStubs", label: "Show stubs", icon: EyeIcon },
-      { key: "showRedLinks", label: "Show red links", icon: LinkIcon },
-    ],
+    toggles: [],
     properties: [
       { key: "status", label: "Wiki status", icon: StatusIcon },
       { key: "links", label: "Backlinks", icon: LinkIcon },
@@ -203,9 +199,6 @@ export const WIKI_CATEGORY_VIEW_CONFIG: ViewConfig = {
     ],
     groupingOptions: [
       { value: "none", label: "No grouping" },
-      { value: "tier", label: "Tier" },
-      { value: "parent", label: "Parent" },
-      { value: "family", label: "Family" },
     ],
     toggles: [
       { key: "showDescription", label: "Show description", icon: ContentIcon },
@@ -331,7 +324,6 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
     toggles: [
       { key: "showNotes", label: "Notes", icon: ContentIcon },
       { key: "showWiki", label: "Wiki", icon: LinkIcon },
-      { key: "showReminders", label: "Reminders", icon: CalendarIcon },
     ],
     properties: [],
   },

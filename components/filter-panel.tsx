@@ -61,10 +61,10 @@ function Checkbox({ checked }: { checked: boolean }) {
   return (
     <div
       className={[
-        "w-4 h-4 rounded flex items-center justify-center shrink-0 transition-all",
+        "w-4 h-4 rounded-[4px] flex items-center justify-center shrink-0 transition-all shadow-sm",
         checked
           ? "bg-accent border-transparent opacity-100"
-          : "border-[1.5px] border-muted-foreground/20 bg-transparent opacity-0 group-hover/row:opacity-100",
+          : "border border-zinc-400 dark:border-zinc-600 bg-card opacity-0 group-hover/row:opacity-100",
       ].join(" ")}
     >
       {checked && <CheckIcon />}

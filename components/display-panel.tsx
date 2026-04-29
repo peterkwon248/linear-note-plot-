@@ -259,28 +259,7 @@ export function DisplayPanel({
         </div>
       </div>
 
-      {/* ── Section 3: Built-in toggles (always shown) ── */}
-      <hr className="border-border-subtle" />
-      <div className="flex flex-col gap-2.5">
-        <ToggleSwitch
-          label="Order permanent by recency"
-          checked={!!viewState.orderPermanentByRecency}
-          onCheckedChange={() =>
-            onViewStateChange({
-              orderPermanentByRecency: !viewState.orderPermanentByRecency,
-            })
-          }
-        />
-        <ToggleSwitch
-          label="Show thread"
-          checked={!!viewState.showThread}
-          onCheckedChange={() =>
-            onViewStateChange({ showThread: !viewState.showThread })
-          }
-        />
-      </div>
-
-      {/* ── Section 4: Mode-specific toggles ── */}
+      {/* ── Section 3: Mode-specific toggles ── */}
       {config.toggles.length > 0 && (
         <>
           <hr className="border-border-subtle" />

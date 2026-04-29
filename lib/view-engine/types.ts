@@ -43,7 +43,6 @@ export type SortField =
 export type SortDirection = "asc" | "desc"
 
 export type GroupBy = "none" | "status" | "priority" | "date" | "folder" | "label" | "triage" | "linkCount"
-  | "tier" | "parent" | "family"  // wiki-category grouping
 
 export type GroupSortBy = "default" | "manual" | "name" | "count"
 
@@ -73,9 +72,7 @@ export interface ViewState {
   filters: FilterRule[]
   visibleColumns: string[]
   showEmptyGroups: boolean
-  orderPermanentByRecency: boolean
-  showThread: boolean
-  /** View-config-specific toggle states (showArchived, showStubs, compact, etc.) */
+  /** View-config-specific toggle states (showArchived, compact, etc.) */
   toggles: Record<string, boolean>
   /** Custom group ordering per groupBy dimension. null = natural order */
   groupOrder: Record<string, string[]> | null
@@ -141,7 +138,6 @@ export const VALID_SORT_FIELDS: SortField[] = [
 
 export const VALID_GROUP_BY: GroupBy[] = [
   "none", "status", "priority", "date", "folder", "label", "triage", "linkCount",
-  "tier", "parent", "family",
 ]
 
 export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calendar"]

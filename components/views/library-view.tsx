@@ -211,10 +211,10 @@ function ReferenceRow({
             >
               <div
                 className={cn(
-                  "h-4 w-4 rounded border flex items-center justify-center transition-colors pointer-events-none",
+                  "h-4 w-4 rounded-[4px] border flex items-center justify-center transition-colors pointer-events-none shadow-sm",
                   isMultiSelected
                     ? "bg-accent border-accent"
-                    : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                    : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
                 )}
               >
                 {isMultiSelected && (
