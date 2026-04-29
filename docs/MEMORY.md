@@ -1,5 +1,97 @@
 # Plot Project Memory
 
+## 🟢 2026-04-29 세션 — v0 협업 흡수 + UI polish + dead code 정리 + P0 필터 + Row density 시도/revert (5 PR)
+
+5개 PR 머지. 이 세션 주제는 "외부 디자인 도구(v0)와 협업 흡수 + 5 앱 필터 리서치 기반 P0 강화 + 영구 규칙(시각적 다양성 ≠ Plot 코어) 재확인".
+
+### PR #220 (23fe1be): v0 작업 흡수
+v0 cloud에서 작업한 라이트모드 contrast + Home View 리디자인 12개 파일 흡수. v0 환경 wrapper(`next.config.mjs` — `*.vusercontent.net` 도메인 / turbopack v0 캐시 / `next.user-config.mjs` 의존)는 별도 commit으로 revert. 깔끔한 PR. **워크플로우 정립**: v0가 push → Claude Code가 git worktree로 받아서 환경 잡음 제거 → PR + 머지.
+
+### PR #221 (4f5165a): UI polish + dead code 14개
+**체크박스 6 위치 통일**:
+- `bg-card` (라이트 흰 배경) / `dark:bg-input/30` + `border-zinc-400` / `dark:border-zinc-600` + `shadow-sm` + `rounded-[4px]` + `hover:border-zinc-500`
+- `components/ui/checkbox.tsx` (Radix base), `notes-table.tsx` (header select-all + row), `wiki-list.tsx`, `library-view.tsx`, `filter-panel.tsx`
+
+**라이트모드 chart 색 WCAG AA 통과**:
+- `--chart-2` (Inbox) #0891b2 → **#0e7490** (cyan-700, contrast 3.4 → 5.5)
+- `--chart-3` (Capture) #ea580c → **#c2410c** (orange-700, 3.7 → 4.6)
+- `--chart-5` (Permanent) #16a34a → **#15803d** (green-700, 3.0 → 5.0)
+- `StatusShapeIcon`: `NOTE_STATUS_HEX` (hex 직접) → `NOTE_STATUS_COLORS[status].css` (CSS var) — 라이트/다크 자동 분리. 노트 row 왼쪽 작은 ○ 아이콘이 라이트모드에서 더 진해짐
+
+**Dead code 14개 정리**:
+- Notes: `orderPermanentByRecency`, `showThread`, `nestedReplies` toggle
+- Wiki: `showStubs`, `showRedLinks` toggle
+- Wiki Category: `showDescription` toggle, `showEmptyGroups` toggle, `tier`/`parent`/`family` grouping options
+- Calendar: `showReminders` toggle
+- `display-panel.tsx` "Built-in toggles" 섹션 통째 제거
+
+**유지** (Explore가 dead 분류했으나 executor 깊이 파보니 실제 사용): `showNotes`/`showWiki` (calendar-view), `showDescription` 내부 (wiki-category-page), `showEmptyGroups` ViewState (notes-table/board), `tier`/`parent`/`family` 내부 grouping (wiki-category-page)
+
+### PR #222 (f613532): P0 필터 강화 (5 앱 리서치 기반)
+다른 노트앱 5개 (Linear/Notion/Obsidian/Capacities/Bear) 필터 시스템 리서치 후 P0 4개 도출:
+
+- **P0-1 역링크 수 소트** — 이미 구현+노출 확인 (sort dropdown "Links" + sort.ts:46 `backlinksMap` 정렬). 사용자에게 안내만
+- **P0-2 True orphan 필터** — `_orphan` value 추가 (linksOut=0 AND backlinks=0). 새 quickFilter "True orphans". 기존 "Orphans" → "Unlinked (no outbound)" 라벨 명확화
+- **P0-2 보너스 "Has backlinks" 활성화** — view-configs에 옵션 있었으나 filter.ts 처리 X였던 dead config 활성화
+- **P0-3 Wiki-registered 필터** — `FilterField.wikiRegistered` 추가. Note title+aliases ↔ WikiArticle title+aliases lowercase 매칭. `PipelineExtras.wikiTitles?: Set<string>` 추가
+- **P0-4 부분 적용** — Has backlinks로 일부. note picker 기반은 다음 PR
+
+**인프라 확장**: `applyFilters(notes, filters)` → `applyFilters(notes, filters, extras?)`. extras에 `backlinksMap` + `wikiTitles`. pipeline.ts / use-notes-view.ts 호출부 갱신. `wikiTitles` Set은 use-notes-view에서 wikiArticles store 구독해서 title + aliases lowercase로 합산.
+
+### PR #223 (7423c08): Row density dropdown 통합 (시도)
+**문제**: Compact mode + Show card preview 두 토글이 같은 차원(행 밀도) 별도 관리 → 충돌 가능 + 사용자 혼란.
+
+**시도**: Notion식 Row height (Short/Medium/Tall) 패턴으로 통합. `ViewState.rowDensity?: "compact" | "standard" | "comfortable"` 새 필드. v92 migration. display-panel에 segmented 3-button control + 라인 밀도 SVG 아이콘.
+
+### PR #224 (7472321): Row density 제거 (Linear 방식 회귀)
+**사용자 피드백**: "Comfortable 모드 엉망. Linear 방식(별도 토글 X)으로 가자."
+
+**revert**: rowDensity 필드 + segmented control + 모든 사용처 제거. v93 migration으로 rowDensity 필드 삭제. Linear 스타일 정착:
+- Notes 리스트 단일 행 (40px)
+- 자동 반응형 `containerWidth < 480` → 32px (모바일/좁은 화면)
+- preview 없음 (Linear는 preview 토글 없음)
+
+**의의**: "시각적 다양성 ≠ Plot 코어" 영구 규칙(2026-04-22 자각) 재확인. Notion 패턴 시도 후 Plot에 안 맞음 발견 → 즉시 revert. Plot 코어(지식 관계망)에 토글 옵션 적은 게 맞다는 학습.
+
+### Store version
+v91 → **v92** (PR #223 rowDensity 추가) → **v93** (PR #224 rowDensity 제거). Forward-only chain. 사용자 어떤 버전에서 시작해도 Linear 스타일로 정착.
+
+### 5 앱 리서치 결과 (Plot 향후 방향)
+
+**P0 (모두 이번 세션 완료)**: 역링크 소트 / 고아 필터 / 위키 등재 / 역방향 링크
+
+**P1 (다음 세션)**:
+- ✨ **Sub-group** (S, 인프라 있음) — Notes만. Status × Priority 같은 두 차원 그룹핑
+- **Multi-sort** (S~M) — Primary + Secondary
+- **날짜 상대값** (S) — "이번 주" / "지난 7일"
+- **Wiki 1차 groupBy** (M, 별도 PR) — WikiList에 그룹핑 자체 X. linkCount bucket / infoboxPreset 별
+
+**P1에서 제외**:
+- Saved View — 이미 구현됨 (`lib/store/slices/saved-views.ts`). 검증만
+- 그룹별 카운트 — 사이드바와 중복 ROI 낮음
+
+**P2 (출시 후 검토)**:
+- AND/OR 중첩 필터 빌더 (L, over-engineering 위험)
+- Wiki Gallery 뷰 (L, Notes Gallery는 영구 규칙 위반)
+- Time in status (M, noteEvents 활용 단축 가능)
+
+**Anti-pattern (영구 폐기 권장)**:
+- 뷰 타입 대량 추가 (Notion 8가지 같은) — Plot은 데이터베이스 앱 X
+- AI/LLM 필터 — Plot 영구 결정 위반
+- 태그별 독립 정렬 — Bear 커뮤니티 미해결, 인지 부하 ↑
+- 과도한 컬럼 (Linear 15+) — Plot dimensional 부족
+- Manual ordering 드래그 — 노트 수십~수백 규모에서 유지 불가
+
+### 작업 흐름 학습
+
+- **executor agent 위임 패턴 정립** — multi-file 변경(체크박스 6 / dead code 14 / P0 4 / Row density 통합 9 / Row density 제거 8)은 모두 executor 위임이 효율적. 명확 spec + tsc/test 자동 검증
+- **dead code 정밀 분리 패턴** — Explore agent 1차 분류 후 executor가 깊이 파봐서 "UI dropdown만 dead vs state field 진짜 사용" 분리. 무자비한 삭제 X
+- **HMR 캐시 이슈** — 큰 schema 변경(P0 PR / Row density 시도) 후 React Hooks 순서 에러 / Fast Refresh full reload 발생. dev server restart로 해결
+- **Recharts ResponsiveContainer 회피 (계속 적용)** — React 19/Next 16에서 width 0. ResizeObserver 직접 패턴 (`wiki-growth-chart.tsx` 참고)
+- **v0 + Claude Code 협업 패턴** — v0가 디자인 작업 자동 push → Claude Code가 worktree로 받아서 환경 잡음 제거 후 PR + 머지
+
+---
+
 ## 🟢 2026-04-26 세션 — Plot 디자인 + 인사이트 대규모 (큰 세션, ~9시간)
 
 **한 세션 9개 PR + 다수 핫픽스 — 인포박스/Navbox/배너 다채로움 + Connections 풀 강화 + Ontology Insights 허브 + Home 정체성 분리.**

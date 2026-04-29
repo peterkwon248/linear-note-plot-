@@ -6,6 +6,76 @@
 
 ---
 
+## 2026-04-29 (집, v0 협업 흡수 + UI polish + dead code 정리 + P0 필터 강화 + Row density 시도/revert — 5 PR)
+
+### 완료 (5 PR 머지)
+
+**PR #220 (23fe1be) — v0 작업 흡수**: v0 cloud에서 작업한 라이트모드 contrast 개선 + Home View 리디자인 12개 파일 흡수. v0 환경 wrapper (`next.config.mjs` — `*.vusercontent.net` 도메인, turbopack v0 캐시, `next.user-config.mjs` 의존)는 제외. git worktree로 분리 + 머지
+
+**PR #221 (4f5165a) — UI polish + dead code 14개**:
+- 체크박스 6 위치 통일: `bg-card` 흰 배경 + `border-zinc-400` (라이트) / `dark:border-zinc-600` + `shadow-sm` + `rounded-[4px]` + `hover:border-zinc-500`. ui/checkbox.tsx (Radix base) / notes-table.tsx (header select-all + row) / wiki-list.tsx / library-view.tsx / filter-panel.tsx
+- 라이트모드 chart 색 WCAG AA: `--chart-2` #0891b2 → **#0e7490** (cyan-700, contrast 3.4→5.5) / `--chart-3` #ea580c → **#c2410c** (orange-700, 3.7→4.6) / `--chart-5` #16a34a → **#15803d** (green-700, 3.0→5.0)
+- StatusShapeIcon hex 직접 → CSS var (`NOTE_STATUS_HEX[status]` → `NOTE_STATUS_COLORS[status].css`) — 라이트/다크 자동 분리. 노트 row 왼쪽 작은 ○ 아이콘 더 진해짐
+- Dead code 14개: Notes(orderPermanentByRecency / showThread / nestedReplies toggle), Wiki(showStubs / showRedLinks toggle), Wiki Category(showDescription / showEmptyGroups toggle, tier/parent/family grouping options), Calendar(showReminders), display-panel "Built-in toggles" 섹션. **유지** (UI toggle만 dead, 내부 사용 중): showNotes/showWiki (calendar-view), showDescription 내부 (wiki-category-page), showEmptyGroups ViewState (notes-table/board), tier/parent/family 내부 (wiki-category-page)
+
+**PR #222 (f613532) — P0 필터 강화 (5 앱 리서치 기반)**:
+- **P0-1 역링크 수 소트** 이미 구현+노출 확인 (sort dropdown "Links" + sort.ts:46 backlinksMap 정렬)
+- **P0-2 True orphan 필터** (linksOut=0 AND backlinks=0) — `_orphan` value + quickFilter "True orphans" 추가. 기존 "Orphans" → "Unlinked (no outbound)" 명확화
+- **P0-2 보너스 Has backlinks 활성화** — view-configs 옵션은 있었으나 filter.ts 처리 X였던 dead config 활성화
+- **P0-3 Wiki-registered 필터** — Note title+aliases ↔ WikiArticle title+aliases lowercase 매칭. `PipelineExtras.wikiTitles?: Set<string>` 추가, `applyFilters(notes, filters, extras?)` 시그니처 확장
+- **P0-4 부분 적용** — Has backlinks로 일부 효과. note picker 기반은 다음 PR
+
+**PR #223 (7423c08) — Row density dropdown 통합**: Compact + Show card preview 두 토글이 같은 차원 별도 관리 → 충돌 + 혼란. Notion식 segmented (Compact / Standard / Comfortable + 라인 밀도 SVG) 통합. v92 migration
+
+**PR #224 (7472321) — Row density 제거 (Linear 스타일)**: 사용자 피드백 "Comfortable 엉망. Linear 방식 = 별도 토글 X". v93 migration으로 rowDensity 필드 삭제. List 뷰 단일 행 (40px) + 자동 반응형 (`containerWidth < 480` → 32px) 만 유지. 영구 규칙 "시각적 다양성 ≠ Plot 코어" 재확인
+
+### 큰 결정
+
+- **dead code 정리 원칙**: Explore agent 1차 분류 후 executor가 실제 사용처 깊이 파봐서 "toggle UI dead vs state field 진짜 사용" 분리. UI dropdown만 제거하고 내부 구현은 보존하는 정밀 정리
+- **5 앱 필터 리서치 (Linear/Notion/Obsidian/Capacities/Bear)** 결과 P0 4개 / P1 5개 / P2 3개 도출. **Anti-pattern** 명시 (뷰 타입 대량 추가 / AI 필터 / Manual ordering / 과도한 컬럼)
+- **Sub-group 인프라 이미 있음 발견**: `ViewState.subGroupBy` 필드 + `applyGrouping` 재귀 처리 + `NoteGroup.subGroups?` 모두 구현됨. UI 노출만 남음 → 다음 세션 빠른 wins (S 난이도)
+- **Wiki Sub-group 비추**: WikiArticle은 status 필드 자체 없음 (isWikiStub 런타임 파생). 1차 그룹핑 dimension 빈약. Sub-group 전에 1차 groupBy(linkCount bucket / infoboxPreset) 추가가 우선
+- **Library Sub-group 비추**: References/Tags/Files 각 탭 1차 groupBy로 충분
+- **Saved View 이미 구현됨 발견**: `lib/store/slices/saved-views.ts` + linear-sidebar에 `createSavedView` 등 존재. P1에서 제외 (검증만 필요)
+- **그룹별 카운트 ROI 낮음**: 사이드바와 중복 느낌. P1에서 제외
+- **Linear 스타일 채택**: "시각적 다양성 ≠ Plot 코어" 영구 규칙 재확인. Notion식 Row density 토글 시도 후 사용자 피드백으로 회귀. Plot 코어(지식 관계망)에 토글 옵션 적은 게 맞다는 학습
+
+### 작업 흐름 학습
+
+- **v0 + Claude Code 협업 패턴**: v0가 디자인 작업 → 자동 push되는 별도 브랜치 → Claude Code가 git worktree로 받아서 v0 환경 잡음(next.config.mjs)만 제거 후 PR. 깔끔히 흡수 가능
+- **executor agent 위임 패턴**: multi-file 변경(체크박스 6 / dead code 14 / P0 4 / Row density 통합 9 / Row density 제거 8)은 executor 위임이 효율적. 명확 spec + tsc/test 자동 검증
+- **HMR 캐시 이슈**: 큰 schema 변경 후 React Hooks 순서 에러 / Fast Refresh full reload 발생 가능. dev server restart로 해결
+
+### 다음 세션 (다른 컴퓨터)
+
+- **즉시 시작**: P1 Notes 3개 (Sub-group + Multi-sort + 날짜 상대값)
+  - **Sub-group**: 인프라 있어 UI dropdown 추가만 (S, 가장 빠른 wins)
+  - **Multi-sort**: sort.ts comparator chain + UI 1→2~3개 dropdown 확장
+  - **날짜 상대값**: date-fns로 "이번 주"/"지난 7일" 등. filter.ts에 일부 stale 처리 있음, 확장
+- **별도 PR**: Wiki 1차 groupBy (linkCount bucket / infoboxPreset) — M 난이도, 새 컨텍스트
+- **선택**: P0-4 note picker 기반 inbound link filter (M)
+
+### 출시 방향 (여전히 결정 대기)
+이전 세션부터 보류. 다음 세션에서 사용자 결정 받으면 진행:
+- 모바일 전략 (PWA → TWA?)
+- 출시 전 부족분 우선순위 (온톨로지 / 캘린더 / 템플릿)
+- 마케팅 웹사이트 옵션
+- 타임라인
+
+### Watch Out
+
+- **Sub-group UI**: `viewState.subGroupBy` dropdown만 노출. 인프라 그대로 사용 (display-panel 확장)
+- **Multi-sort signature 변경**: `applySort(notes, field, direction, backlinksMap)` → `applySort(notes, sorts[], backlinksMap)`. 모든 사용처 영향. 호환성 위해 단일 sort도 배열로 normalize
+- **날짜 상대값**: filter.ts에 이미 "stale" / "24h" / "7d" 처리 있음. 호환성 유지하며 확장
+- **Wiki 1차 groupBy**: WikiList가 view-engine 파이프라인 사용 안 함. 직접 적용 vs 별도 grouping 구현 결정 필요
+- **Store version**: v93. Sub-group은 store 변경 불필요. Multi-sort는 sortField → sortFields[] 변경 시 v94 migration
+- **Plot 코어 정체성 영구 규칙**: 토글 추가 신중. Linear 방식 우선 — 진짜 필요한 옵션만 노출
+
+### 머신
+집 → **다음 세션은 다른 컴퓨터** (사용자 명시)
+
+---
+
 ## 2026-04-27 (집, Doc sync + group-header + attachment drag-drop + 시계열 메트릭 + 출시 방향 논의)
 
 ### 완료

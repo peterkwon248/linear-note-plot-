@@ -1,18 +1,51 @@
-# Plot — TODO (2026-04-27, PR #218 + 이번 세션 반영)
+# Plot — TODO (2026-04-29)
 
-> CONTEXT.md(2026-04-26)가 source of truth. 이번 세션에서 group-header / attachment / 시계열 메트릭 완료.
+> CONTEXT.md가 source of truth. 2026-04-29 세션에서 5 PR 머지 완료. 다음 세션은 다른 컴퓨터.
 
-## 🚀 출시 모드 (방향 논의 진행 중)
+---
 
-**사용자 의향**: Google Play Store + 마케팅 웹사이트 출시
+## 🎯 다음 세션 즉시 (P1 Notes 3개)
 
-### 결정 대기 (다음 세션 첫 액션)
-- [ ] 모바일 전략: **PWA → TWA** OK?
-- [ ] 출시 전 부족분 우선순위 (온톨로지 / 캘린더 / 템플릿 중)
-- [ ] 웹사이트 옵션 (별도 Next.js + Vercel 추천) + 도메인
+한 PR로 묶어서 진행 권장 (Notes display & filter 영역).
+
+- [ ] **Sub-group** (S, 가장 빠른 wins) — 인프라 100% 있음. UI dropdown 추가만 (display-panel)
+- [ ] **Multi-sort (Primary + Secondary)** (S~M) — sort.ts comparator chain + UI 1→2~3개 dropdown. v94 migration (sortField → sortFields[])
+- [ ] **날짜 상대값** (S) — date-fns로 "이번 주" / "지난 7일" / "오늘" / "어제" 옵션. filter.ts 기존 `parseRelativeTime` 확장
+
+---
+
+## 🟡 별도 PR (다음 또는 그 다음 세션)
+
+- [ ] **Wiki 1차 groupBy 추가** (M) — WikiList에 현재 그룹핑 X. linkCount bucket 또는 infoboxPreset 별. WikiList가 view-engine 파이프라인 사용 안 함 → 직접 적용 vs 별도 grouping 결정 필요
+- [ ] **P0-4 note picker 기반 inbound link filter** (M) — 특정 노트로 inbound link한 노트만. UX 결정 필요 (SmartSidePanel Connections 강화 vs FilterPanel picker)
+
+---
+
+## ✅ 2026-04-29 세션 완료
+
+| 묶음 | PR | 상태 |
+|------|-----|------|
+| v0 협업 흡수 (라이트모드 contrast + Home View) | #220 | ✅ 머지 |
+| 체크박스 통일 + chart 색 WCAG AA + dead code 14개 | #221 | ✅ 머지 |
+| P0 필터 강화 (True orphan + Has backlinks + Wiki-registered) | #222 | ✅ 머지 |
+| Row density dropdown 통합 (Notion 패턴) | #223 | ✅ 머지 |
+| Row density 제거 (Linear 스타일 — revert) | #224 | ✅ 머지 |
+
+Store version: v91 → v92 → v93
+
+---
+
+## 🚀 출시 모드 (여전히 결정 대기)
+
+**사용자 의향**: Google Play Store + 마케팅 웹사이트 출시 (이전 세션부터 보류)
+
+### 결정 대기
+- [ ] 모바일 전략: PWA → TWA OK?
+- [ ] 출시 전 부족분 우선순위 (온톨로지 / 캘린더 / 템플릿)
+- [ ] 웹사이트 옵션 (별도 Next.js + Vercel?) + 도메인
 - [ ] 타임라인 (1개월 / 3개월 / 자유?)
 
-### 결정 후 작업 후보 (제안 순서)
+### 결정 후 작업 후보
 1. [ ] 모바일 반응형 감사 — 깨지는 페이지 매핑
 2. [ ] 노트 템플릿 시드 10~20개 (가장 ROI 높음)
 3. [ ] PWA manifest + Service Worker
@@ -24,17 +57,14 @@
 
 ---
 
-## ✅ 2026-04-27 세션 완료
+## 🟡 P2 — 미루는 작업
 
-- [x] Doc sync (SESSION-LOG / NEXT-ACTION / TODO 정합성)
-- [x] InfoboxBlockNode group-header 지원
-- [x] Attachment drag-drop (FileHandler onDrop/onPaste)
-- [x] 시계열 메트릭 + Wiki Dashboard 통합 (`computeWikiTimeSeries` + WikiGrowthChart)
+### 5 앱 리서치 결과 P2 (출시 후 검토)
+- [ ] **AND/OR 중첩 필터 빌더** (L) — Linear 패턴. Plot 현재 사용자 규모(주로 본인)에 over-engineering 위험. Saved View 안정화 후 검토
+- [ ] **뷰 타입 전환 Wiki Gallery** (L) — Notion/Capacities 패턴. 단 Notes Gallery 비추 (영구 규칙). **Wiki만 한정** 신중 검토
+- [ ] **Time in status 표시** (M) — Linear 패턴. noteEvents 활용으로 단축 가능. "방치된 노트" 식별
 
----
-
-## 🟡 P2 — 미루는 작업 (출시 결정 후 다시 검토)
-
+### 기존 P2 (이전 세션부터)
 - **노트 Split 검증** — `note-split-page.tsx` 만들어졌으나 실제 동작 검증 필요 (PR #218에서 신규 생성)
 - **인포박스 base 티어 통합** — `WikiInfobox` → `InfoboxBlockNode` 단일화 (중장기)
 - **Connections 상세** — 블록/코멘트 단위 어느 위치에서 링크되는지 (사용자가 7시간 작업으로 미룸 — 2026-04-25)
@@ -54,18 +84,24 @@
 
 ## 🚫 폐기됨 (영구)
 
+### 2026-04-29 폐기 (Row density 시도)
+- **Notion식 Row density dropdown** — Compact/Standard/Comfortable segmented 시도(#223) 후 사용자 피드백으로 즉시 revert(#224). Linear 방식 (별도 토글 X) 채택. **시각적 다양성 ≠ Plot 코어** 영구 규칙 재확인.
+
 ### 2026-04-27 폐기
-- **Wiki Y.Doc 적용** — WikiBlock 배열 구조라 Note Y.Doc 패턴 직접 적용 불가. 블록 단위라 race 표면적 작음. 안 해도 안전
-- **AI provider 연결** — CLAUDE.md "LLM 없이 규칙/통계/그래프" 정체성 위반. `lib/ai/index.ts` placeholder 유지
+- **Wiki Y.Doc 적용** — WikiBlock 배열 구조라 Note Y.Doc 패턴 직접 적용 불가. 블록 단위라 race 표면적 작음
+- **AI provider 연결** — CLAUDE.md "LLM 없이 규칙/통계/그래프" 정체성 위반
 
 ### 2026-04-22 폐기 (Hard reset to PR #194)
-- Book Pivot 5 shell (#211-213)
-- Page Identity Tier (#209)
-- 메타→블록 통합 (#208)
-- 컬럼 시스템 (#198-#205)
-- WikiTemplate 8 built-in (#197)
+- Book Pivot 5 shell (#211-213) / Page Identity Tier (#209) / 메타→블록 통합 (#208) / 컬럼 시스템 (#198-#205) / WikiTemplate 8 built-in (#197)
 
-→ 이후 PR #215~218에서 일부는 다른 형태로 재구현 (Tier 2-4, 인포박스 11 프리셋, Navbox 풀 디자인). 컬럼/Book Pivot은 영구 폐기.
+→ 이후 PR #215~218에서 일부는 다른 형태로 재구현. 컬럼/Book Pivot은 영구 폐기.
+
+### 5 앱 리서치 anti-pattern (영구 폐기 권장)
+- 뷰 타입 대량 추가 (Notion 8가지 같은) — Plot은 지식 관계망 앱, 데이터베이스 앱 X
+- AI/LLM 기반 스마트 필터 — Plot 영구 결정 위반
+- 태그별 독립 정렬 — Bear 커뮤니티 미해결 요청. 인지 부하만 ↑
+- 과도한 디스플레이 컬럼 (15+) — Linear 협업 도구 패턴, Plot에 dimensional 부족
+- Manual ordering (드래그 수동 정렬) — 노트 수십~수백 개에서 유지 불가능
 
 ---
 
@@ -74,12 +110,13 @@
 - **위키 시각적 다양화** — 추가 레이아웃 프리셋, 5 shell 등
 - **나무위키 Top 7 나머지** — Hatnote / Ambox / 편집 히스토리
 - **Wiki Y.Doc + 협업 모드** — 로컬 앱이라 우선순위 낮음
+- **Notes Gallery 뷰** — 영구 규칙 위반 위험 (Wiki Gallery만 신중 검토)
 
 ---
 
 ## 📚 참조
 
-- `docs/CONTEXT.md` — 현재 상태 + 설계 결정 (PR #218 반영)
+- `docs/CONTEXT.md` — 현재 상태 + 설계 결정
 - `docs/MEMORY.md` — 전체 PR 히스토리 + 아키텍처
 - `docs/SESSION-LOG.md` — 시간순 세션 기록
 - `docs/NEXT-ACTION.md` — 다음 즉시 액션

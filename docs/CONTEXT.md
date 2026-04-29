@@ -3,7 +3,36 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
-## 🟢 2026-04-27 최신 — Doc sync + group-header + attachment drag-drop + 시계열 메트릭
+## 🟢 2026-04-29 최신 — v0 협업 + UI polish + dead code 정리 + P0 필터 + Row density 시도/revert (5 PR)
+
+**완료 PR**:
+- **#220 (23fe1be)**: v0 작업 흡수 — 라이트모드 contrast 개선 + Home View 리디자인 (12 파일). v0 환경 wrapper(`next.config.mjs`) 제외
+- **#221 (4f5165a)**: UI polish + dead code 14개
+  - 체크박스 6 위치 통일 (`bg-card` + `border-zinc-400` + `shadow-sm` + `rounded-[4px]`)
+  - 라이트모드 chart 색 WCAG AA: chart-2 → #0e7490 (cyan-700) / chart-3 → #c2410c (orange-700) / chart-5 → #15803d (green-700)
+  - StatusShapeIcon hex → CSS var (라이트/다크 자동)
+  - Dead code 14개 정리 (Notes / Wiki / Wiki Cat / Calendar toggles)
+- **#222 (f613532)**: P0 필터 강화 (5 앱 리서치 기반)
+  - True orphan filter (linksOut=0 AND backlinks=0)
+  - "Has backlinks" 활성화 (기존 dead config)
+  - Wiki-registered filter (title+aliases 매칭)
+  - `applyFilters` extras 인프라 확장 (backlinksMap + wikiTitles)
+- **#223 (7423c08)**: Row density dropdown 통합 (Notion 패턴 시도)
+- **#224 (7472321)**: Row density 제거 — Linear 스타일 (revert + 영구 규칙 재확인)
+
+**큰 결정**:
+- **Linear 방식 재확인** — "시각적 다양성 ≠ Plot 코어" 영구 규칙. Notion 패턴 시도 후 사용자 피드백으로 회귀. 토글 옵션 적게 (진짜 필요한 것만)
+- **5 앱 리서치 결과 P0 4개 / P1 3-5개 / P2 3개 도출** — Linear / Notion / Obsidian / Capacities / Bear 분석. anti-pattern 명시
+- **Sub-group 인프라 발견** — `ViewState.subGroupBy` + `applyGrouping` 재귀 + `NoteGroup.subGroups` 모두 구현됨. Notes만 의미 있음 (Wiki/Library는 비추)
+- **Saved View 이미 구현** — `lib/store/slices/saved-views.ts` + linear-sidebar `createSavedView`. 검증만 필요. P1에서 제외
+
+**Store version**: v91 → v92 → v93
+
+**다음 세션 (다른 컴퓨터)**: P1 Notes 3개 (Sub-group + Multi-sort + 날짜 상대값) 한 PR로 묶음 + Wiki 1차 groupBy 별도 PR
+
+---
+
+## 🟢 2026-04-27 — Doc sync + group-header + attachment drag-drop + 시계열 메트릭
 
 **완료**:
 - Doc sync (SESSION-LOG / NEXT-ACTION / TODO를 PR #218 시점으로 정합성 회복)
