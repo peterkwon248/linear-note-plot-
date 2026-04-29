@@ -228,7 +228,7 @@ function BoardColumn({
     <div
       ref={(node) => { setSortableRef(node); setDropRef(node); }}
       style={sortableStyle}
-      className={`flex w-[260px] shrink-0 flex-col rounded-lg transition-colors ${
+      className={`flex w-[260px] shrink-0 flex-col rounded-lg border border-border-subtle transition-colors ${
         isCardOver ? "bg-accent/8 ring-1 ring-accent/30" : "bg-secondary/40"
       }`}
     >
