@@ -137,8 +137,6 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     ],
     toggles: [
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
-      { key: "compact", label: "Compact mode", icon: SortIcon },
-      { key: "showCardPreview", label: "Show card preview", icon: EyeIcon },
     ],
     properties: [
       { key: "status", label: "Status", icon: StatusIcon },
