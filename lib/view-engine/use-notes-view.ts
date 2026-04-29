@@ -45,6 +45,7 @@ export function useNotesView(
   const notes = usePlotStore((s) => s.notes)
   const labels = usePlotStore((s) => s.labels)
   const folders = usePlotStore((s) => s.folders)
+  const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const viewState = usePlotStore((s) => s.viewStateByContext[contextKey]) ?? buildViewStateForContext(contextKey)
   const searchQuery = usePlotStore((s) => s.searchQuery)
   const setViewState = usePlotStore((s) => s.setViewState)
@@ -62,6 +63,18 @@ export function useNotesView(
     return map
   }, [folders])
 
+  // ── Wiki titles set (for wikiRegistered filter) ────────
+  const wikiTitles = useMemo(() => {
+    const set = new Set<string>()
+    for (const a of wikiArticles) {
+      set.add(a.title.toLowerCase())
+      for (const alias of a.aliases ?? []) {
+        set.add(alias.toLowerCase())
+      }
+    }
+    return set
+  }, [wikiArticles])
+
   // ── Stage 1: Context filter ───────────────────────────
   const showTrashed = viewState.toggles?.showTrashed === true
   const contextFiltered = useMemo(
@@ -72,9 +85,13 @@ export function useNotesView(
   const totalCount = notes.length
 
   // ── Stage 2: User filters ─────────────────────────────
+  const filterExtras = useMemo(
+    () => ({ backlinksMap: extras?.backlinksMap, wikiTitles }),
+    [extras?.backlinksMap, wikiTitles]
+  )
   const filtered = useMemo(
-    () => applyFilters(contextFiltered, viewState.filters),
-    [contextFiltered, viewState.filters]
+    () => applyFilters(contextFiltered, viewState.filters, filterExtras),
+    [contextFiltered, viewState.filters, filterExtras]
   )
 
   // ── Stage 3: Search ───────────────────────────────────

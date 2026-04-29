@@ -1,5 +1,5 @@
 import type { Note } from "../types"
-import type { FilterRule } from "./types"
+import type { FilterRule, PipelineExtras } from "./types"
 
 /**
  * Stage 2: Apply user-defined filter rules.
@@ -10,7 +10,11 @@ import type { FilterRule } from "./types"
  *
  * This matches the standard filter behaviour of Linear, Notion, etc.
  */
-export function applyFilters(notes: Note[], filters: FilterRule[]): Note[] {
+export function applyFilters(
+  notes: Note[],
+  filters: FilterRule[],
+  extras?: Pick<PipelineExtras, "backlinksMap" | "wikiTitles">
+): Note[] {
   if (filters.length === 0) return notes
 
   // Group rules by field name
@@ -30,7 +34,7 @@ export function applyFilters(notes: Note[], filters: FilterRule[]): Note[] {
     // AND across different fields
     fieldGroups.every((fieldRules) =>
       // OR within the same field
-      fieldRules.some((rule) => matchesRule(note, rule)),
+      fieldRules.some((rule) => matchesRule(note, rule, extras)),
     ),
   )
 }
@@ -45,7 +49,7 @@ function parseRelativeTime(value: string): number | null {
   return null
 }
 
-function matchesRule(note: Note, rule: FilterRule): boolean {
+function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras, "backlinksMap" | "wikiTitles">): boolean {
   const { field, operator, value } = rule
 
   switch (field) {
@@ -56,9 +60,39 @@ function matchesRule(note: Note, rule: FilterRule): boolean {
       return compareString(note.priority, operator, value)
 
     case "links": {
-      // linksOut count (outbound wiki-links from the note)
-      const count = note.linksOut?.length ?? 0
-      return compareNumber(count, operator, value)
+      const outCount = note.linksOut?.length ?? 0
+      const inCount = extras?.backlinksMap?.get(note.id) ?? 0
+
+      // String sentinel values — must be checked before numeric comparison
+      if (value === "_orphan") {
+        // True orphan: no outbound AND no inbound links
+        const result = outCount === 0 && inCount === 0
+        return operator === "eq" ? result : !result
+      }
+      if (value === "backlinks") {
+        // Has at least one inbound backlink
+        const result = inCount > 0
+        return operator === "eq" ? result : !result
+      }
+      if (value === "_any") {
+        // Has any link (outbound OR inbound)
+        const result = outCount > 0 || inCount > 0
+        return operator === "eq" ? result : !result
+      }
+      if (value === "_none") {
+        // No outbound links (legacy "Orphans" quickFilter behaviour)
+        const result = outCount === 0
+        return operator === "eq" ? result : !result
+      }
+      // Numeric suffix patterns for wiki context: "5+", "10+"
+      if (value.endsWith("+")) {
+        const threshold = Number(value.slice(0, -1))
+        if (!isNaN(threshold)) {
+          return inCount >= threshold
+        }
+      }
+      // Fallback: numeric outbound count comparison
+      return compareNumber(outCount, operator, value)
     }
 
     case "reads":
@@ -187,6 +221,16 @@ function matchesRule(note: Note, rule: FilterRule): boolean {
 
     case "noteType": {
       return compareString(note.noteType, operator, value)
+    }
+
+    case "wikiRegistered": {
+      const wikiTitles = extras?.wikiTitles
+      const titleLower = (note.title ?? "").toLowerCase()
+      const inWiki = wikiTitles
+        ? (wikiTitles.has(titleLower) || (note.aliases?.some((a) => wikiTitles.has(a.toLowerCase())) ?? false))
+        : false
+      const target = value === "true"
+      return operator === "eq" ? inWiki === target : inWiki !== target
     }
 
     case "reviewAt": {
