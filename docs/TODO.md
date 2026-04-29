@@ -4,7 +4,20 @@
 
 ---
 
-## 🎯 다음 세션 즉시 (P1 Notes 3개)
+## 🚨 큰 방향 — 다중 기기 sync + 수익 모델 (사용자 의향, 결정 보류)
+
+**자세한 설계 문서**: [`docs/SYNC-DESIGN-DECISIONS.md`](./SYNC-DESIGN-DECISIONS.md) ★
+
+- [ ] 6개 결정 받기 (옵션 / 가격 / 출시 시점 / Y.Doc 재활용 / 결제 / 인증)
+- [ ] 결정 후 PRD 작성 (별도 문서)
+- [ ] phase 분할 (Phase 1: 인증+기본 sync 2~3주 / Phase 2: 양방향 sync+CRDT 3~4주 / Phase 3: 다중 기기 1~2주 / Phase 4: 출시 1~2주)
+- [ ] 구현 시작
+
+**제약**: 영구 규칙 "큰 방향 전환 전 전체 설계 확정" → 결정 받기 전 코드 X
+
+---
+
+## 🎯 다음 세션 즉시 (P1 Notes 3개 — sync와 무관, 병행 가능)
 
 한 PR로 묶어서 진행 권장 (Notes display & filter 영역).
 

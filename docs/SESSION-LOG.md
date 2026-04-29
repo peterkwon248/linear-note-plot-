@@ -46,9 +46,20 @@
 - **executor agent 위임 패턴**: multi-file 변경(체크박스 6 / dead code 14 / P0 4 / Row density 통합 9 / Row density 제거 8)은 executor 위임이 효율적. 명확 spec + tsc/test 자동 검증
 - **HMR 캐시 이슈**: 큰 schema 변경 후 React Hooks 순서 에러 / Fast Refresh full reload 발생 가능. dev server restart로 해결
 
+### 추가 큰 결정 — 다중 기기 sync (보류)
+세션 끝나기 전 사용자 의향: "**다중 기기 sync 필요해. 옵시디언도 이걸로 유료 구독료를 받잖아.**"
+- **수익 모델 + Sync 도입 결정** — Plot "비용 0" 영구 규칙을 "구독 모델"로 변경 의향. E2E 암호화 + 프라이버시 + 오프라인 우선 + 단일 사용자 정체성은 유지
+- 6개 옵션 비교 + Obsidian Sync 모델 분석 + 가격 모델 제안 + 임시 phase 안 → `docs/SYNC-DESIGN-DECISIONS.md` 작성
+- **추천 옵션 B (Supabase + E2E 암호화)**: 균형 (프라이버시 + 비용 + 출시 일정). $4 Sync / $8 Pro 가격. 7~11주 작업
+- **Y.Doc 재활용 결정 뒤집기 필요**: 이전 (2026-04-27) "Wiki Y.Doc 폐기"는 단일 사용자 IDB 전제. 다중 기기 sync = CRDT가 자연스러운 솔루션
+- 영구 규칙 "큰 방향 전환 전 전체 설계 확정" → **결정 6개 받기 전 코드 X**
+- 다음 세션 첫 액션: 결정 6개 받고 PRD 작성 → phase 분할 → 구현
+
 ### 다음 세션 (다른 컴퓨터)
 
-- **즉시 시작**: P1 Notes 3개 (Sub-group + Multi-sort + 날짜 상대값)
+- **즉시 시작 옵션 A**: 다중 기기 sync 결정 6개 받기 (`docs/SYNC-DESIGN-DECISIONS.md` 참고). 큰 방향이라 우선
+- **즉시 시작 옵션 B**: P1 Notes 3개 (Sub-group + Multi-sort + 날짜 상대값) — sync와 무관, 병행 가능
+- **권장 순서**: A 결정 받고 → PRD 분할 → P1 Notes 3개 (sync와 무관) 빠르게 끝내고 → sync phase 시작
   - **Sub-group**: 인프라 있어 UI dropdown 추가만 (S, 가장 빠른 wins)
   - **Multi-sort**: sort.ts comparator chain + UI 1→2~3개 dropdown 확장
   - **날짜 상대값**: date-fns로 "이번 주"/"지난 7일" 등. filter.ts에 일부 stale 처리 있음, 확장
