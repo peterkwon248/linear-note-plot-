@@ -12,8 +12,6 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   filters: [],
   visibleColumns: ["title", "status", "folder", "links", "reads", "updatedAt", "createdAt"],
   showEmptyGroups: false,
-  orderPermanentByRecency: false,
-  showThread: false,
   toggles: {},
   groupOrder: null,
   subGroupOrder: null,
@@ -32,7 +30,7 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   label:     { viewMode: "list", sortField: "updatedAt" },
   savedView: { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
   wiki:           { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
-  "wiki-category": { viewMode: "list", sortField: "title", groupBy: "tier", visibleColumns: ["parent", "tier", "articles", "stubs", "sub", "updatedAt"] },
+  "wiki-category": { viewMode: "list", sortField: "title", groupBy: "none", visibleColumns: ["parent", "tier", "articles", "stubs", "sub", "updatedAt"] },
   graph:          { viewMode: "list", sortField: "updatedAt", groupBy: "none", toggles: { showWikilinks: true, showTagNodes: false, showLabels: false } },
   calendar:       { viewMode: "calendar", sortField: "createdAt", groupBy: "none", toggles: { showNotes: true, showWiki: true } },
 }
@@ -97,8 +95,6 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
         : base.visibleColumns
     ),
     showEmptyGroups: typeof merged.showEmptyGroups === "boolean" ? merged.showEmptyGroups : false,
-    orderPermanentByRecency: typeof merged.orderPermanentByRecency === "boolean" ? merged.orderPermanentByRecency : false,
-    showThread: typeof merged.showThread === "boolean" ? merged.showThread : false,
     toggles: (merged.toggles && typeof merged.toggles === "object" && !Array.isArray(merged.toggles))
       ? merged.toggles as Record<string, boolean>
       : {},

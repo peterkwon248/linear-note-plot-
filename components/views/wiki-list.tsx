@@ -151,10 +151,10 @@ function ArticleTableRow({
           }}
         >
           <div className={cn(
-            "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+            "h-4 w-4 rounded-[4px] border flex items-center justify-center transition-colors shadow-sm",
             isSelected
               ? "bg-accent border-accent text-white"
-              : "border-muted-foreground/30 hover:border-muted-foreground/50"
+              : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
           )}>
             {isSelected && <PhCheck size={10} weight="bold" />}
           </div>

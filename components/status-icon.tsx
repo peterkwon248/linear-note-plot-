@@ -4,7 +4,7 @@ import type { NoteStatus } from "@/lib/types"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
 import { CircleHalf } from "@phosphor-icons/react/dist/ssr/CircleHalf"
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { NOTE_STATUS_HEX } from "@/lib/colors"
+import { NOTE_STATUS_COLORS } from "@/lib/colors"
 
 /**
  * Shared status icon component — colored dot per status.
@@ -42,7 +42,7 @@ export function StatusShapeIcon({
   size?: number
   className?: string
 }) {
-  const color = NOTE_STATUS_HEX[status]
+  const color = NOTE_STATUS_COLORS[status].css
   const shared = cn("shrink-0", className)
   if (status === "inbox") {
     return <CircleDashed size={size} weight="regular" style={{ color }} className={shared} />

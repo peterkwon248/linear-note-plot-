@@ -1053,12 +1053,12 @@ export function NotesTable({
                 >
                   <div className="flex items-center justify-center">
                     <div
-                      className={`h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${
+                      className={`h-4 w-4 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm ${
                         selectedIds.size === flatNotes.length && flatNotes.length > 0
                           ? "bg-accent border-accent"
                           : selectedIds.size > 0
                             ? "bg-accent/50 border-accent"
-                            : "border-border hover:border-foreground/50"
+                            : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
                       }`}
                       onClick={() => {
                         if (selectedIds.size === flatNotes.length && flatNotes.length > 0) {
@@ -1460,10 +1460,10 @@ function NoteRowInner({
         }}
       >
         <div
-          className={`rounded border flex items-center justify-center transition-colors pointer-events-none ${
+          className={`rounded-[4px] border flex items-center justify-center transition-colors pointer-events-none shadow-sm ${
             isCompact ? "h-3 w-3" : "h-4 w-4"
           } ${
-            isSelected ? "bg-accent border-accent" : "border-border hover:border-foreground/50"
+            isSelected ? "bg-accent border-accent" : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
           }`}
         >
           {isSelected && <PhCheck className="text-accent-foreground" size={8} weight="bold" />}
