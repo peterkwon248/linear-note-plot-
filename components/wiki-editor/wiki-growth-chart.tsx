@@ -79,12 +79,12 @@ export function WikiGrowthChart({ notes, wikiArticles }: WikiGrowthChartProps) {
   }
 
   return (
-    <div className="rounded-lg border border-border-subtle bg-card/30 w-full">
-      <div className="flex items-center justify-between gap-2 border-b border-border-subtle px-4 py-3">
-        <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/50">
+    <div className="rounded-lg border border-border bg-card w-full">
+      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
           Wiki Growth Over Time
         </h3>
-        <div className="flex items-center gap-0.5 rounded-md border border-border-subtle bg-secondary/30 p-0.5">
+        <div className="flex items-center gap-0.5 rounded-md border border-border bg-secondary/50 p-0.5">
           {BUCKET_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -92,8 +92,8 @@ export function WikiGrowthChart({ notes, wikiArticles }: WikiGrowthChartProps) {
               onClick={() => setBucketSize(opt.value)}
               className={`px-2 py-0.5 text-2xs rounded-sm transition-colors ${
                 bucketSize === opt.value
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground/60 hover:text-foreground"
+                  ? "bg-background text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {opt.label}
@@ -105,7 +105,7 @@ export function WikiGrowthChart({ notes, wikiArticles }: WikiGrowthChartProps) {
       <div ref={containerRef} className="px-4 py-3 space-y-4">
         {/* Cumulative area chart */}
         <div>
-          <p className="mb-2 text-2xs text-muted-foreground/60">Cumulative articles &amp; notes</p>
+          <p className="mb-2 text-2xs text-muted-foreground">Cumulative articles &amp; notes</p>
           {width > 0 && (
           <AreaChart width={width - 32} height={140} data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <defs>
@@ -159,7 +159,7 @@ export function WikiGrowthChart({ notes, wikiArticles }: WikiGrowthChartProps) {
 
         {/* New per bucket */}
         <div>
-          <p className="mb-2 text-2xs text-muted-foreground/60">New per {bucketSize}</p>
+          <p className="mb-2 text-2xs text-muted-foreground">New per {bucketSize}</p>
           {width > 0 && (
           <BarChart width={width - 32} height={120} data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />

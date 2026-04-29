@@ -4,57 +4,57 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Light theme */
-  --background: #ffffff;
-  --foreground: #1a1a2e;
-  --card: #f7f8fa;
-  --card-foreground: #1a1a2e;
+  /* Light theme — improved contrast and clarity */
+  --background: #fafafa;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
   --popover: #ffffff;
-  --popover-foreground: #1a1a2e;
-  --primary: #1a1a2e;
-  --primary-foreground: #ffffff;
-  --secondary: #f0f1f4;
-  --secondary-foreground: #1a1a2e;
-  --muted: #f0f1f4;
-  --muted-foreground: #6b7280;
-  --accent: #5e6ad2;
+  --popover-foreground: #18181b;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #52525b;
+  --accent: #4f46e5;
   --accent-foreground: #ffffff;
-  --destructive: #e5484d;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: #e2e3e8;
-  --input: #e2e3e8;
-  --ring: #5e6ad2;
-  --chart-1: #5e6ad2;
-  --chart-2: #26b5ce;
-  --chart-3: #f2994a;
-  --chart-4: #e5484d;
-  --chart-5: #45d483;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #4f46e5;
+  --chart-1: #4f46e5;
+  --chart-2: #0891b2;
+  --chart-3: #ea580c;
+  --chart-4: #dc2626;
+  --chart-5: #16a34a;
   --wiki-complete: #7c3aed;
   --priority-medium: #d97706;
   --radius: 0.5rem;
-  --sidebar-bg: #f5f5f7;
-  --sidebar-foreground: #1a1a2e;
-  --sidebar-primary: #5e6ad2;
+  --sidebar-bg: #fafafa;
+  --sidebar-foreground: #18181b;
+  --sidebar-primary: #4f46e5;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eaebef;
-  --sidebar-accent-foreground: #1a1a2e;
-  --sidebar-border: #e2e3e8;
-  --sidebar-ring: #5e6ad2;
-  --sidebar-muted: #6b7280;
-  --sidebar-hover: #eaebef;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #4f46e5;
+  --sidebar-muted: #52525b;
+  --sidebar-hover: #f4f4f5;
 
-  /* === Linear Polish: 신규 시맨틱 토큰 (Light) === */
-  --sidebar-active: rgba(0,0,0, 0.06);
-  --sidebar-active-text: #1a1a2e;
-  --sidebar-hover-text: #1a1a2e;
-  --sidebar-icon: #9ca3af;
-  --sidebar-count: #9ca3af;
+  /* === Linear Polish: 시맨틱 토큰 (Light) === */
+  --sidebar-active: rgba(0,0,0, 0.05);
+  --sidebar-active-text: #18181b;
+  --sidebar-hover-text: #18181b;
+  --sidebar-icon: #71717a;
+  --sidebar-count: #71717a;
   --surface-overlay: #ffffff;
-  --border-subtle: rgba(0,0,0, 0.08);
-  --hover-bg: rgba(0,0,0, 0.03);
-  --active-bg: rgba(0,0,0, 0.04);
-  --active-bg-strong: rgba(0,0,0, 0.06);
-  --toolbar-active: rgba(94,106,210, 0.15);
+  --border-subtle: #d4d4d8;
+  --hover-bg: rgba(0,0,0, 0.04);
+  --active-bg: rgba(0,0,0, 0.06);
+  --active-bg-strong: rgba(0,0,0, 0.08);
+  --toolbar-active: rgba(79,70,229, 0.12);
 
   /* Editor Spine */
   --editor-font-size: 15px;
@@ -93,68 +93,68 @@
 }
 
 .dark {
-  /* App background: charcoal (not pure black) for depth hierarchy */
-  --background: #141417;
-  --foreground: #fafafa;
-  --card: #1c1c20;
-  --card-foreground: #fafafa;
-  --popover: #222226;
-  --popover-foreground: #fafafa;
-  --primary: #fafafa;
-  --primary-foreground: #141417;
+  /* App background: refined charcoal with better depth */
+  --background: #0f0f11;
+  --foreground: #f4f4f5;
+  --card: #18181b;
+  --card-foreground: #f4f4f5;
+  --popover: #1c1c1f;
+  --popover-foreground: #f4f4f5;
+  --primary: #f4f4f5;
+  --primary-foreground: #0f0f11;
   --secondary: #27272a;
-  --secondary-foreground: #fafafa;
+  --secondary-foreground: #f4f4f5;
   --muted: #27272a;
-  --muted-foreground: #b0b0b8;
-  --accent: #6366f1;
-  --accent-foreground: #fafafa;
-  --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
-  --border: #2a2a2e;
-  --input: #2a2a2e;
-  --ring: #6366f1;
-  --chart-1: #6366f1;
+  --muted-foreground: #a1a1aa;
+  --accent: #818cf8;
+  --accent-foreground: #0f0f11;
+  --destructive: #f87171;
+  --destructive-foreground: #0f0f11;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #818cf8;
+  --chart-1: #818cf8;
   --chart-2: #22d3ee;
-  --chart-3: #f97316;
-  --chart-4: #ef4444;
-  --chart-5: #22c55e;
-  --wiki-complete: #8b5cf6;
-  --priority-medium: #f59e0b;
-  /* Sidebar: solid charcoal, opacity-based hierarchy */
-  --sidebar-bg: #1c1c20;
-  --sidebar-foreground: rgba(255,255,255, 0.65);
-  --sidebar-muted: rgba(255,255,255, 0.50);
-  --sidebar-hover: rgba(255,255,255, 0.05);
-  --sidebar-border: rgba(255,255,255, 0.06);
-  --sidebar-primary: #6366f1;
-  --sidebar-primary-foreground: #fafafa;
+  --chart-3: #fb923c;
+  --chart-4: #f87171;
+  --chart-5: #4ade80;
+  --wiki-complete: #a78bfa;
+  --priority-medium: #fbbf24;
+  /* Sidebar: subtle layering */
+  --sidebar-bg: #141416;
+  --sidebar-foreground: #d4d4d8;
+  --sidebar-muted: #a1a1aa;
+  --sidebar-hover: rgba(255,255,255, 0.04);
+  --sidebar-border: #27272a;
+  --sidebar-primary: #818cf8;
+  --sidebar-primary-foreground: #0f0f11;
   --sidebar-accent: #27272a;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-ring: #6366f1;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-ring: #818cf8;
 
-  /* === Linear Polish: 신규 시맨틱 토큰 === */
+  /* === Linear Polish: 시맨틱 토큰 === */
   /* 사이드바 상태 */
-  --sidebar-active: rgba(255,255,255, 0.08);
-  --sidebar-active-text: rgba(255,255,255, 0.93);
-  --sidebar-hover-text: rgba(255,255,255, 0.85);
-  --sidebar-icon: rgba(255,255,255, 0.55);
-  --sidebar-count: rgba(255,255,255, 0.45);
+  --sidebar-active: rgba(255,255,255, 0.06);
+  --sidebar-active-text: #f4f4f5;
+  --sidebar-hover-text: #e4e4e7;
+  --sidebar-icon: #71717a;
+  --sidebar-count: #71717a;
 
   /* Surface 계층 */
-  --surface-overlay: #1d1d20;
-  --border-subtle: rgba(255,255,255, 0.08);
+  --surface-overlay: #1c1c1f;
+  --border-subtle: #3f3f46;
 
   /* 인터랙션 */
-  --hover-bg: rgba(255,255,255, 0.04);
-  --active-bg: rgba(255,255,255, 0.06);
-  --active-bg-strong: rgba(255,255,255, 0.08);
+  --hover-bg: rgba(255,255,255, 0.05);
+  --active-bg: rgba(255,255,255, 0.07);
+  --active-bg-strong: rgba(255,255,255, 0.10);
 
   /* 에디터 툴바 */
-  --toolbar-active: rgba(99,102,241, 0.2);
+  --toolbar-active: rgba(129,140,248, 0.2);
 
   /* Editor Spine (dark) */
   --editor-code-bg: rgba(255,255,255,0.08);
-  --editor-inline-code-color: #E0A8F0;
+  --editor-inline-code-color: #c4b5fd;
 }
 
 @theme inline {

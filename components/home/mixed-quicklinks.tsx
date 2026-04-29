@@ -164,15 +164,15 @@ export function MixedQuicklinks({ limit = 8 }: { limit?: number }) {
           key={it.key}
           type="button"
           onClick={it.onClick}
-          className="group flex flex-col gap-2 rounded-lg border border-border/40 bg-card/30 px-4 py-3.5 text-left transition-colors duration-100 hover:border-border/70 hover:bg-secondary/40"
+          className="group flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3.5 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
         >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/50 text-muted-foreground/70">
+          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${colorForKind(it.kind)}`}>
             {iconFor(it.kind)}
           </span>
-          <h3 className="line-clamp-1 text-note font-medium text-foreground">
+          <h3 className="line-clamp-1 text-note font-medium text-foreground group-hover:text-accent transition-colors">
             {it.title}
           </h3>
-          <p className="line-clamp-1 text-2xs text-muted-foreground/50">{it.meta}</p>
+          <p className="line-clamp-1 text-2xs text-muted-foreground">{it.meta}</p>
         </button>
       ))}
     </div>
@@ -193,6 +193,21 @@ function iconFor(kind: "note" | "wiki" | "folder" | "view" | "bookmark") {
       return <Funnel size={14} weight="regular" />
     case "bookmark":
       return <BookmarkSimple size={14} weight="fill" />
+  }
+}
+
+function colorForKind(kind: "note" | "wiki" | "folder" | "view" | "bookmark") {
+  switch (kind) {
+    case "note":
+      return "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+    case "wiki":
+      return "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+    case "folder":
+      return "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+    case "view":
+      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+    case "bookmark":
+      return "bg-rose-500/10 text-rose-600 dark:text-rose-400"
   }
 }
 

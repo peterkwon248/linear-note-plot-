@@ -42,14 +42,14 @@ export function HomeSection({
 
   if (variant === "card") {
     return (
-      <section className="mb-3 rounded-lg border border-border/40 bg-card/30 p-3">
+      <section className="mb-3 rounded-lg border border-border bg-card p-3">
         <header className="mb-1.5 flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               {label}
             </h3>
             {typeof count === "number" && count > 0 && (
-              <span className="text-2xs tabular-nums text-muted-foreground/70">
+              <span className="text-2xs tabular-nums text-muted-foreground">
                 {count}
               </span>
             )}
@@ -58,7 +58,7 @@ export function HomeSection({
         </header>
         <div className="flex flex-col">
           {hasContent ? children : empty ? (
-            <p className="px-2 py-1.5 text-2xs text-muted-foreground/60">{empty}</p>
+            <p className="px-2 py-1.5 text-2xs text-muted-foreground">{empty}</p>
           ) : null}
         </div>
       </section>
@@ -66,14 +66,14 @@ export function HomeSection({
   }
 
   return (
-    <section className="mb-6 border-b border-border/40 pb-4 last:mb-0 last:border-b-0">
+    <section className="mb-6 border-b border-border pb-4 last:mb-0 last:border-b-0">
       <header className="mb-1.5 flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
           <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
             {label}
           </h3>
           {typeof count === "number" && count > 0 && (
-            <span className="text-2xs tabular-nums text-muted-foreground/70">
+            <span className="text-2xs tabular-nums text-muted-foreground">
               {count}
             </span>
           )}
@@ -82,7 +82,7 @@ export function HomeSection({
       </header>
       <div className="flex flex-col">
         {hasContent ? children : empty ? (
-          <p className="px-2 py-1.5 text-2xs text-muted-foreground/60">{empty}</p>
+          <p className="px-2 py-1.5 text-2xs text-muted-foreground">{empty}</p>
         ) : null}
       </div>
     </section>
