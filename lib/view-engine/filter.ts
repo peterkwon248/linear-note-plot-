@@ -1,5 +1,6 @@
 import type { Note } from "../types"
 import type { FilterRule, PipelineExtras } from "./types"
+import { isToday, isThisWeek, isThisMonth, isYesterday } from "date-fns"
 
 /**
  * Stage 2: Apply user-defined filter rules.
@@ -47,6 +48,50 @@ function parseRelativeTime(value: string): number | null {
   if (unit === "h") return num * 60 * 60 * 1000
   if (unit === "d") return num * 24 * 60 * 60 * 1000
   return null
+}
+
+/**
+ * Match a date against a named sentinel value (today, this-week, etc.).
+ * Returns null if `value` is not a recognized sentinel — caller should fall
+ * back to other parsers (ISO date, relative time).
+ *
+ * Operator semantics: "neq" inverts the match; everything else (eq/gt/lt) is
+ * treated as positive match. This keeps legacy quickFilters such as
+ *   { operator: "lt", value: "stale" }   // legacy "old notes"
+ *   { operator: "eq", value: "this-week" }
+ * working without rewriting them.
+ */
+function matchDateSentinel(date: Date, value: string, operator: string): boolean | null {
+  const ms = date.getTime()
+  let result: boolean | null = null
+
+  switch (value) {
+    case "today":
+      result = isToday(date)
+      break
+    case "yesterday":
+      result = isYesterday(date)
+      break
+    case "this-week":
+      result = isThisWeek(date, { weekStartsOn: 1 })
+      break
+    case "this-month":
+      result = isThisMonth(date)
+      break
+    case "last-7-days":
+      result = ms >= Date.now() - 7 * 24 * 60 * 60 * 1000
+      break
+    case "last-30-days":
+      result = ms >= Date.now() - 30 * 24 * 60 * 60 * 1000
+      break
+    case "stale":
+      result = Date.now() - ms >= 30 * 24 * 60 * 60 * 1000
+      break
+    default:
+      return null
+  }
+
+  return operator === "neq" ? !result : result
 }
 
 function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras, "backlinksMap" | "wikiTitles">): boolean {
@@ -119,7 +164,11 @@ function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras,
     }
 
     case "updatedAt": {
-      const noteTime = new Date(note.updatedAt).getTime()
+      const noteDate = new Date(note.updatedAt)
+      const noteTime = noteDate.getTime()
+      // Named sentinels: today, yesterday, this-week, this-month, last-7-days, last-30-days, stale
+      const sentinel = matchDateSentinel(noteDate, value, operator)
+      if (sentinel !== null) return sentinel
       // Support ISO date prefix (e.g., "2026-04-04" for "today")
       if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const targetEnd = new Date(value + "T23:59:59.999Z").getTime()
@@ -143,7 +192,11 @@ function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras,
     }
 
     case "createdAt": {
-      const noteTime = new Date(note.createdAt).getTime()
+      const noteDate = new Date(note.createdAt)
+      const noteTime = noteDate.getTime()
+      // Named sentinels: today, yesterday, this-week, this-month, last-7-days, last-30-days, stale
+      const sentinel = matchDateSentinel(noteDate, value, operator)
+      if (sentinel !== null) return sentinel
       // Support ISO date prefix (e.g., "2026-04-04")
       if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const targetEnd = new Date(value + "T23:59:59.999Z").getTime()

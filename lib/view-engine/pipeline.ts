@@ -34,8 +34,7 @@ export function runPipeline(
   // Stage 4: Sort
   const sorted = applySort(
     searched,
-    viewState.sortField,
-    viewState.sortDirection,
+    viewState.sortFields,
     extras?.backlinksMap
   )
 

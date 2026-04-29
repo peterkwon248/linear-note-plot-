@@ -42,6 +42,15 @@ export type SortField =
 
 export type SortDirection = "asc" | "desc"
 
+/** Single sort step. Multiple steps form a chain (primary → secondary → tertiary). */
+export interface SortRule {
+  field: SortField
+  direction: SortDirection
+}
+
+/** Maximum number of chained sort rules. Linear/Notion match this cap. */
+export const MAX_SORT_RULES = 3
+
 export type GroupBy = "none" | "status" | "priority" | "date" | "folder" | "label" | "triage" | "linkCount"
 
 export type GroupSortBy = "default" | "manual" | "name" | "count"
@@ -67,7 +76,11 @@ export interface FilterRule {
 
 export interface ViewState {
   viewMode: ViewMode
+  /** Multi-sort chain (primary → secondary → tertiary). Always has length >= 1. */
+  sortFields: SortRule[]
+  /** @deprecated mirror of sortFields[0].field. Kept in sync by setViewState; remove in v95. */
   sortField: SortField
+  /** @deprecated mirror of sortFields[0].direction. Kept in sync by setViewState; remove in v95. */
   sortDirection: SortDirection
   groupBy: GroupBy
   subGroupBy: GroupBy
@@ -136,7 +149,7 @@ export const VALID_VIEW_CONTEXT_KEYS: ViewContextKey[] = [
 ]
 
 export const VALID_SORT_FIELDS: SortField[] = [
-  "updatedAt", "createdAt", "title", "status", "links", "reads", "folder", "label",
+  "updatedAt", "createdAt", "priority", "title", "status", "links", "reads", "folder", "label",
   "sub", "tier", "parent",
 ]
 

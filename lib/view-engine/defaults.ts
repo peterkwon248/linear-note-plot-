@@ -1,10 +1,11 @@
-import type { ViewState, ViewContextKey, GroupBy, GroupSortBy } from "./types"
-import { VALID_VIEW_CONTEXT_KEYS, VALID_SORT_FIELDS, VALID_GROUP_BY, VALID_VIEW_MODES, VALID_COLUMNS, VALID_GROUP_SORT_BY } from "./types"
+import type { ViewState, ViewContextKey, GroupBy, GroupSortBy, SortField, SortDirection, SortRule } from "./types"
+import { VALID_VIEW_CONTEXT_KEYS, VALID_SORT_FIELDS, VALID_GROUP_BY, VALID_VIEW_MODES, VALID_COLUMNS, VALID_GROUP_SORT_BY, MAX_SORT_RULES } from "./types"
 
 /* ── Default ViewState ─────────────────────────────────── */
 
 export const DEFAULT_VIEW_STATE: ViewState = {
   viewMode: "list",
+  sortFields: [{ field: "updatedAt", direction: "desc" }],
   sortField: "updatedAt",
   sortDirection: "desc",
   groupBy: "none",
@@ -20,19 +21,25 @@ export const DEFAULT_VIEW_STATE: ViewState = {
 
 /* ── Context-specific overrides ────────────────────────── */
 
+const ctx = (field: SortField, direction: SortDirection = "desc"): Partial<ViewState> => ({
+  sortField: field,
+  sortDirection: direction,
+  sortFields: [{ field, direction }],
+})
+
 const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
-  inbox:     { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
-  capture:   { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
-  permanent: { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
-  review:    { viewMode: "list", sortField: "updatedAt", groupBy: "status" },
-  folder:    { viewMode: "list", sortField: "updatedAt" },
-  tag:       { viewMode: "list", sortField: "updatedAt" },
-  label:     { viewMode: "list", sortField: "updatedAt" },
-  savedView: { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
-  wiki:           { viewMode: "list", sortField: "updatedAt", groupBy: "none" },
-  "wiki-category": { viewMode: "list", sortField: "title", groupBy: "none", visibleColumns: ["parent", "tier", "articles", "stubs", "sub", "updatedAt"] },
-  graph:          { viewMode: "list", sortField: "updatedAt", groupBy: "none", toggles: { showWikilinks: true, showTagNodes: false, showLabels: false } },
-  calendar:       { viewMode: "calendar", sortField: "createdAt", groupBy: "none", toggles: { showNotes: true, showWiki: true } },
+  inbox:     { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
+  capture:   { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
+  permanent: { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
+  review:    { viewMode: "list", ...ctx("updatedAt"), groupBy: "status" },
+  folder:    { viewMode: "list", ...ctx("updatedAt") },
+  tag:       { viewMode: "list", ...ctx("updatedAt") },
+  label:     { viewMode: "list", ...ctx("updatedAt") },
+  savedView: { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
+  wiki:           { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
+  "wiki-category": { viewMode: "list", ...ctx("title", "asc"), groupBy: "none", visibleColumns: ["parent", "tier", "articles", "stubs", "sub", "updatedAt"] },
+  graph:          { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", toggles: { showWikilinks: true, showTagNodes: false, showLabels: false } },
+  calendar:       { viewMode: "calendar", ...ctx("createdAt"), groupBy: "none", toggles: { showNotes: true, showWiki: true } },
 }
 
 /** Build a ViewState for a specific context, merging defaults */
@@ -60,12 +67,24 @@ function ensureRequiredColumns(columns: string[]): string[] {
   return [...filtered, ...REQUIRED_TAIL_COLUMNS]
 }
 
+/** Validate a single SortRule shape; returns null on invalid */
+function validateSortRule(raw: unknown): SortRule | null {
+  if (!raw || typeof raw !== "object") return null
+  const r = raw as Record<string, unknown>
+  const field = r.field as SortField
+  const direction = r.direction as SortDirection
+  if (!VALID_SORT_FIELDS.includes(field)) return null
+  if (direction !== "asc" && direction !== "desc") return null
+  return { field, direction }
+}
+
 /**
  * Normalize a persisted ViewState to ensure all fields are valid.
  * - Invalid sortField/groupBy/viewMode → fallback to default
  * - Unknown column keys → filtered out
  * - Missing required columns → auto-added
  * - Missing fields → filled from default
+ * - Keeps sortField/sortDirection in sync with sortFields[0]
  */
 export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey): ViewState {
   const base = buildViewStateForContext(ctx)
@@ -80,12 +99,33 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
 
   const merged = { ...base, ...migrated }
 
+  // Validate / build sortFields chain (max MAX_SORT_RULES, dedup by field)
+  let sortFields: SortRule[] = []
+  if (Array.isArray(merged.sortFields)) {
+    const seen = new Set<SortField>()
+    for (const raw of merged.sortFields) {
+      const rule = validateSortRule(raw)
+      if (!rule) continue
+      if (seen.has(rule.field)) continue
+      seen.add(rule.field)
+      sortFields.push(rule)
+      if (sortFields.length >= MAX_SORT_RULES) break
+    }
+  }
+  if (sortFields.length === 0) {
+    // Fallback to legacy single-field shape
+    const field = VALID_SORT_FIELDS.includes(merged.sortField) ? merged.sortField : base.sortFields[0].field
+    const direction = (merged.sortDirection === "asc" || merged.sortDirection === "desc")
+      ? merged.sortDirection
+      : base.sortFields[0].direction
+    sortFields = [{ field, direction }]
+  }
+
   return {
     viewMode: VALID_VIEW_MODES.includes(merged.viewMode) ? merged.viewMode : base.viewMode,
-    sortField: VALID_SORT_FIELDS.includes(merged.sortField) ? merged.sortField : base.sortField,
-    sortDirection: (merged.sortDirection === "asc" || merged.sortDirection === "desc")
-      ? merged.sortDirection
-      : base.sortDirection,
+    sortFields,
+    sortField: sortFields[0].field,
+    sortDirection: sortFields[0].direction,
     groupBy: VALID_GROUP_BY.includes(merged.groupBy) ? merged.groupBy : base.groupBy,
     subGroupBy: VALID_GROUP_BY.includes(merged.subGroupBy as GroupBy) ? (merged.subGroupBy as GroupBy) : "none",
     filters: Array.isArray(merged.filters) ? merged.filters : [],

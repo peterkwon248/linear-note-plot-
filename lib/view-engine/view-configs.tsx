@@ -78,8 +78,11 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     ]},
     { key: "updatedAt", label: "Dates", icon: CalendarIcon, values: [
       { key: "today", label: "Today" },
+      { key: "yesterday", label: "Yesterday" },
       { key: "this-week", label: "This week" },
+      { key: "last-7-days", label: "Last 7 days" },
       { key: "this-month", label: "This month" },
+      { key: "last-30-days", label: "Last 30 days" },
       { key: "stale", label: "Stale (30+ days)" },
     ]},
     { key: "links", label: "Links", icon: LinkIcon, values: [

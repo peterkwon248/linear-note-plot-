@@ -133,9 +133,11 @@ export function WikiView() {
   }, [])
 
   // Filter / Display state
+  // TODO(v95): sortField/sortDirection mirror 제거 시 이 literal에서도 함께 제거
   const [wikiFilters, setWikiFilters] = useState<FilterRule[]>([])
   const [wikiViewState, setWikiViewState] = useState<ViewState>({
     viewMode: "list" as const,
+    sortFields: [{ field: "updatedAt", direction: "desc" }],
     sortField: "updatedAt" as const,
     sortDirection: "desc" as const,
     groupBy: "none" as const,
