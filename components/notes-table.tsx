@@ -1058,7 +1058,7 @@ export function NotesTable({
                           ? "bg-accent border-accent"
                           : selectedIds.size > 0
                             ? "bg-accent/50 border-accent"
-                            : "border-border-subtle hover:border-muted-foreground"
+                            : "border-border hover:border-foreground/50"
                       }`}
                       onClick={() => {
                         if (selectedIds.size === flatNotes.length && flatNotes.length > 0) {
@@ -1463,7 +1463,7 @@ function NoteRowInner({
           className={`rounded border flex items-center justify-center transition-colors pointer-events-none ${
             isCompact ? "h-3 w-3" : "h-4 w-4"
           } ${
-            isSelected ? "bg-accent border-accent" : "border-border-subtle hover:border-muted-foreground"
+            isSelected ? "bg-accent border-accent" : "border-border hover:border-foreground/50"
           }`}
         >
           {isSelected && <PhCheck className="text-accent-foreground" size={8} weight="bold" />}
@@ -1510,12 +1510,12 @@ function NoteRowInner({
         <div className="flex items-center justify-center px-2">
           {note.folderId ? (() => {
             const folder = folders.find((f: Folder) => f.id === note.folderId)
-            if (!folder) return <span className="text-note text-muted-foreground/50">—</span>
+            if (!folder) return <span className="text-note text-muted-foreground">—</span>
             return (
-              <span className="text-note text-foreground/60 truncate">{folder.name}</span>
+              <span className="text-note text-foreground truncate">{folder.name}</span>
             )
           })() : (
-            <span className="text-note text-muted-foreground/50">—</span>
+            <span className="text-note text-muted-foreground">—</span>
           )}
         </div>
       )}
@@ -1523,7 +1523,7 @@ function NoteRowInner({
       {/* Links */}
       {visibleCols.includes("links") && (
         <div className="text-center px-1">
-          <span className={`tabular-nums text-note ${links === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
+          <span className={`tabular-nums text-note ${links === 0 ? "text-muted-foreground" : "text-foreground"}`}>
             {links}
           </span>
         </div>
@@ -1532,7 +1532,7 @@ function NoteRowInner({
       {/* Reads */}
       {visibleCols.includes("reads") && (
         <div className="text-center px-1">
-          <span className={`tabular-nums text-note ${note.reads === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
+          <span className={`tabular-nums text-note ${note.reads === 0 ? "text-muted-foreground" : "text-foreground"}`}>
             {note.reads}
           </span>
         </div>
@@ -1541,7 +1541,7 @@ function NoteRowInner({
       {/* Word Count */}
       {visibleCols.includes("wordCount") && (
         <div className="text-right px-1">
-          <span className={`tabular-nums text-note ${wordCount === 0 ? "text-muted-foreground/50" : "text-foreground/60"}`}>
+          <span className={`tabular-nums text-note ${wordCount === 0 ? "text-muted-foreground" : "text-foreground"}`}>
             {wordCount}
           </span>
         </div>
@@ -1552,7 +1552,7 @@ function NoteRowInner({
         <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-note text-foreground/60 cursor-default">
+              <span className="tabular-nums text-note text-muted-foreground cursor-default">
                 {shortRelative(note.updatedAt)}
               </span>
             </TooltipTrigger>
@@ -1568,7 +1568,7 @@ function NoteRowInner({
         <div className="text-right px-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="tabular-nums text-note text-foreground/60 cursor-default">
+              <span className="tabular-nums text-note text-muted-foreground cursor-default">
                 {absDate(note.createdAt)}
               </span>
             </TooltipTrigger>

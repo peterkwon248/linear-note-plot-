@@ -345,7 +345,7 @@ function BoardCardInner({
         className={`absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded border transition-all cursor-pointer ${
           isSelected
             ? "bg-accent border-accent"
-            : "border-border-subtle opacity-0 group-hover:opacity-100 hover:border-muted-foreground bg-background"
+            : "border-border opacity-0 group-hover:opacity-100 hover:border-foreground/50 bg-background"
         }`}
         onClick={(e) => {
           e.stopPropagation()

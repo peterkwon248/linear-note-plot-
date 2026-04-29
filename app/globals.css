@@ -16,7 +16,7 @@
   --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
   --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --muted-foreground: #52525b;
   --accent: #4f46e5;
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
@@ -40,17 +40,17 @@
   --sidebar-accent-foreground: #18181b;
   --sidebar-border: #e4e4e7;
   --sidebar-ring: #4f46e5;
-  --sidebar-muted: #71717a;
+  --sidebar-muted: #52525b;
   --sidebar-hover: #f4f4f5;
 
   /* === Linear Polish: 시맨틱 토큰 (Light) === */
   --sidebar-active: rgba(0,0,0, 0.05);
   --sidebar-active-text: #18181b;
   --sidebar-hover-text: #18181b;
-  --sidebar-icon: #a1a1aa;
-  --sidebar-count: #a1a1aa;
+  --sidebar-icon: #71717a;
+  --sidebar-count: #71717a;
   --surface-overlay: #ffffff;
-  --border-subtle: #e4e4e7;
+  --border-subtle: #d4d4d8;
   --hover-bg: rgba(0,0,0, 0.04);
   --active-bg: rgba(0,0,0, 0.06);
   --active-bg-strong: rgba(0,0,0, 0.08);
