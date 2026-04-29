@@ -5,13 +5,43 @@
 
 ---
 
-**Last Updated**: 2026-04-29 — v0 협업 흡수 + UI polish + dead code 정리 + P0 필터 강화 + Row density 시도/revert (5 PR 머지)
+**Last Updated**: 2026-04-29 — v0 협업 흡수 + UI polish + dead code 정리 + P0 필터 강화 + Row density 시도/revert (5 PR 머지) + **다중 기기 sync 큰 결정 보류**
 
 **다음 머신**: 다른 컴퓨터 (사용자 명시). before-work에서 git pull + IDB 별도 인지
 
 ---
 
-## 🎯 다음 세션 즉시 시작 — P1 Notes 3개
+## 🚨 다음 세션 첫 액션 — 다중 기기 sync 결정 6개 받기 (큰 방향 전환)
+
+**사용자 의향 (2026-04-29)**: "다중 기기 sync 필요해. 옵시디언도 이걸로 유료 구독료를 받잖아."
+
+→ **수익 모델 + Sync 도입 결정**. 영구 규칙 "큰 방향 전환 전 전체 설계 확정" 적용. **결정 6개 받기 전 코드 X.**
+
+### 자세한 옵션 비교: `docs/SYNC-DESIGN-DECISIONS.md` ★
+
+요약:
+- **추천 옵션 B (Supabase + E2E 암호화)** — 균형 (프라이버시 + 출시 일정 + 비용)
+- **추천 가격**: Free / Sync $4 / Pro $8
+- **추천 결제**: Lemon Squeezy (Merchant of Record)
+- **추천 인증**: Magic link + OAuth (Google/Apple)
+- **Y.Doc 재활용 결정 뒤집기**: 노트 본문에 CRDT 재도입 (충돌 해결)
+- **임시 phase 안**: 7~11주 = 2~3개월 (4 phase)
+
+### 결정 받아야 할 6개 (`docs/SYNC-DESIGN-DECISIONS.md` 참고)
+1. **옵션 선택**: A / B / C / D / E / F (추천 B)
+2. **가격 모델**: Free / $4 / $8 OK? 다른 가격?
+3. **출시 시점**: sync 포함 출시 / 출시 후 추가 / v2.0
+4. **CRDT/Y.Doc 재활용**: 이전 폐기 뒤집을 것인가
+5. **결제 시스템**: Lemon Squeezy / Stripe / Paddle
+6. **인증**: 이메일+비번 / Magic link / OAuth (Google/Apple) / 모두
+
+→ 결정 후 → 별도 PRD 작성 → phase 분할 → 구현 시작.
+
+**P1 Notes 3개는 sync와 무관**한 일반 강화. sync 결정 받기 전이라도 P1 진행 가능 (병행).
+
+---
+
+## 🎯 다음 세션 즉시 시작 (선택 1) — P1 Notes 3개
 
 이번 세션 P0 4개 다 완료 (PR #222). 5 앱 리서치 기반 P1 후속:
 
