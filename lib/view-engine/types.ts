@@ -56,6 +56,8 @@ export type FilterField =
   | "nodeType" | "relationType" | "showWikilinks" | "showTagNodes"
   // Wiki-specific filter fields
   | "category" | "wikiTier"
+  // Knowledge-graph filter fields
+  | "wikiRegistered"
 
 export interface FilterRule {
   field: FilterField
@@ -100,6 +102,8 @@ export interface PipelineResult {
 
 export interface PipelineExtras {
   backlinksMap?: Map<string, number>
+  /** Lowercase set of all wiki article titles + aliases for wikiRegistered filter */
+  wikiTitles?: Set<string>
   searchQuery?: string
   folderId?: string
   tagId?: string

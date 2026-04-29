@@ -85,7 +85,12 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     { key: "links", label: "Links", icon: LinkIcon, values: [
       { key: "_any", label: "Has links" },
       { key: "backlinks", label: "Has backlinks" },
-      { key: "_none", label: "No links" },
+      { key: "_none", label: "No outbound" },
+      { key: "_orphan", label: "True orphans (no in/out)" },
+    ]},
+    { key: "wikiRegistered", label: "Wiki", icon: GraphIcon, values: [
+      { key: "true", label: "In wiki" },
+      { key: "false", label: "Not in wiki" },
     ]},
     { key: "content", label: "Content", icon: ContentIcon, values: [
       { key: "hasImage", label: "Has images" },
@@ -105,8 +110,14 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     { label: "Active work", desc: "updated < 7d", rules: [
       { field: "updatedAt", operator: "eq", value: "this-week" },
     ]},
-    { label: "Orphans", desc: "unlinked + unread", rules: [
+    { label: "Unlinked", desc: "no outbound links", rules: [
       { field: "links", operator: "eq", value: "_none" },
+    ]},
+    { label: "True orphans", desc: "no in/out links", rules: [
+      { field: "links", operator: "eq", value: "_orphan" },
+    ]},
+    { label: "Wiki-registered", desc: "promoted to wiki", rules: [
+      { field: "wikiRegistered", operator: "eq", value: "true" },
     ]},
   ],
   displayConfig: {

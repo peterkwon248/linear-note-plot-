@@ -648,6 +648,8 @@ const FIELD_TO_GROUP: Record<FilterField, FilterGroupKey> = {
   // Wiki-specific fields
   category: "tags",
   wikiTier: "content",
+  // Knowledge-graph filter fields
+  wikiRegistered: "links",
 }
 
 export function getFilterGroupKey(field: FilterField): FilterGroupKey {

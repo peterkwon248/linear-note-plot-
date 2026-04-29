@@ -26,7 +26,7 @@ export function runPipeline(
   const contextFiltered = applyContext(notes, context, extras)
 
   // Stage 2: User filters
-  const filtered = applyFilters(contextFiltered, viewState.filters)
+  const filtered = applyFilters(contextFiltered, viewState.filters, extras)
 
   // Stage 3: Search
   const searched = applySearch(filtered, extras?.searchQuery ?? "")
