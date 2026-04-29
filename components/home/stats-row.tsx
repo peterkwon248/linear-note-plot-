@@ -82,12 +82,13 @@ export function StatsRow() {
     route: string
     /** Tailwind color class applied to the big number (knowledge-base accent). */
     color: string
+    bgColor: string
   }> = [
-    { label: "Notes", value: stats.notes, sub: stats.notesSub, route: "/notes", color: "text-blue-400" },
-    { label: "Wiki", value: stats.wiki, sub: stats.wikiSub, route: "/wiki", color: "text-violet-400" },
-    { label: "Tags", value: stats.tags, sub: stats.tagsSub, route: "/library/tags", color: "text-emerald-400" },
-    { label: "References", value: stats.refs, sub: stats.refsSub, route: "/library/references", color: "text-amber-400" },
-    { label: "Files", value: stats.files, sub: stats.filesSub, route: "/library/files", color: "text-rose-400" },
+    { label: "Notes", value: stats.notes, sub: stats.notesSub, route: "/notes", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
+    { label: "Wiki", value: stats.wiki, sub: stats.wikiSub, route: "/wiki", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-500/10" },
+    { label: "Tags", value: stats.tags, sub: stats.tagsSub, route: "/library/tags", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10" },
+    { label: "References", value: stats.refs, sub: stats.refsSub, route: "/library/references", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-500/10" },
+    { label: "Files", value: stats.files, sub: stats.filesSub, route: "/library/files", color: "text-rose-600 dark:text-rose-400", bgColor: "bg-rose-500/10" },
   ]
 
   return (
@@ -97,16 +98,21 @@ export function StatsRow() {
           key={item.label}
           type="button"
           onClick={() => setActiveRoute(item.route)}
-          className="flex flex-col items-start gap-1.5 rounded-lg border border-border/40 bg-card/30 px-4 py-4 text-left transition-colors duration-100 hover:border-border/70 hover:bg-secondary/40"
+          className="group flex flex-col items-start gap-2 rounded-lg border border-border bg-card px-4 py-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
         >
-          <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/70">
-            {item.label}
-          </span>
+          <div className="flex items-center justify-between w-full">
+            <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+              {item.label}
+            </span>
+            <span className={`flex h-5 w-5 items-center justify-center rounded ${item.bgColor}`}>
+              <span className={`text-2xs font-bold ${item.color}`}>{item.value > 99 ? "+" : ""}</span>
+            </span>
+          </div>
           <span className={`text-2xl font-semibold tabular-nums leading-none ${item.color}`}>
             {item.value}
           </span>
-          <span className="text-2xs text-muted-foreground/50 tabular-nums">
-            {item.sub || " "}
+          <span className="text-2xs text-muted-foreground tabular-nums">
+            {item.sub || "\u00A0"}
           </span>
         </button>
       ))}

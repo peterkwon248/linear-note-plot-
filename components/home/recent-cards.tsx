@@ -114,30 +114,32 @@ export function RecentCards({ limit = 8 }: { limit?: number }) {
           key={`${it.kind}:${it.id}`}
           type="button"
           onClick={it.onClick}
-          className="group flex h-32 flex-col rounded-lg border border-border/40 bg-card/30 p-3.5 text-left transition-colors duration-100 hover:border-border/70 hover:bg-secondary/40"
+          className="group flex h-32 flex-col rounded-lg border border-border bg-card p-3.5 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
         >
           <div className="mb-2 flex items-center justify-between">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground/60">
+            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${
+              it.kind === "wiki" ? "bg-violet-500/10 text-violet-600 dark:text-violet-400" : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+            }`}>
               {it.kind === "wiki" ? (
-                <BookOpen size={14} weight="regular" />
+                <BookOpen size={13} weight="regular" />
               ) : (
-                <FileText size={14} weight="regular" />
+                <FileText size={13} weight="regular" />
               )}
             </span>
-            <span className="text-2xs tabular-nums text-muted-foreground/50">
+            <span className="text-2xs tabular-nums text-muted-foreground">
               {compactTime(it.ts)}
             </span>
           </div>
-          <h3 className="mb-1 line-clamp-2 text-note font-medium leading-snug text-foreground">
+          <h3 className="mb-1 line-clamp-2 text-note font-medium leading-snug text-foreground group-hover:text-accent transition-colors">
             {it.title}
           </h3>
           {it.preview && (
-            <p className="line-clamp-2 text-2xs leading-relaxed text-muted-foreground/60">
+            <p className="line-clamp-2 text-2xs leading-relaxed text-muted-foreground">
               {it.preview}
             </p>
           )}
           {it.meta && (
-            <p className="mt-auto truncate pt-2 text-2xs text-muted-foreground/40">
+            <p className="mt-auto truncate pt-2 text-2xs text-muted-foreground/70">
               {it.meta}
             </p>
           )}

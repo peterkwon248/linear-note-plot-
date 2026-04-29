@@ -74,10 +74,10 @@ export function QuickCapture() {
         }}
         placeholder="What's on your mind?"
         className={
-          "h-9 w-full bg-transparent px-3 text-note text-foreground " +
-          "border-b border-border/40 outline-none transition-colors " +
-          "placeholder:text-muted-foreground/60 " +
-          "focus:border-foreground/30"
+          "h-10 w-full rounded-lg bg-secondary/50 px-4 text-note text-foreground " +
+          "border border-border outline-none transition-all " +
+          "placeholder:text-muted-foreground " +
+          "focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:bg-background"
         }
         aria-label="Quick capture — press Enter to add a note to your Inbox"
       />
