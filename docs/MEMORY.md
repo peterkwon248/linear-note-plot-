@@ -1,6 +1,123 @@
 # Plot Project Memory
 
-## 🟢 2026-04-29 세션 — v0 협업 흡수 + UI polish + dead code 정리 + P0 필터 + Row density 시도/revert (5 PR)
+## 🚀 2026-04-29 (오후 후반) 세션 — **출시 준비 우선 결정. Sync는 v2.0**
+
+**같은 세션 내 재고 — (a) → (c) 변경**:
+
+Sync 6개 결정 + PRD 작성 후 사용자 재고: "꼭 페이즈 1부터 해야 되나? 우선은 앱부터 다듬고 출시 계획을 제대로 진행하고 싶은데?"
+
+→ 결정 #3 **(a) Sync 포함 출시 → (c) Free 출시 후 v2.0에 Sync** (6개월~1년 후)
+
+**이유**:
+- Sync = 3~4개월 작업, 그 동안 사용자 facing 개선 멈춤 위험
+- 앱 폴리시 빚 있는 채로 인프라 쌓는 건 위험
+- 출시 후 실제 사용자 피드백 반영해서 sync 설계 보강 가능
+- 1인 개발 부담 분산
+
+### 출시 4-Sprint 계획 수립
+
+**타임라인**: 자유 (끝날 때까지) — 품질 우선
+**플랫폼**: 데스크톱 우선 → 회원 수 충분해지면 모바일
+**모바일 전략**: PWA + TWA (Bubblewrap → Google Play Store)
+
+**Sprint 1 (~2주): 빠른 wins**
+- P1 Notes 3개 (Sub-group + Multi-sort + 날짜 상대값) 한 PR
+- 필터/디스플레이 드롭다운 정리 (액티비티별 일관성)
+
+**Sprint 2 (~3주): 핵심 폴리시**
+- 노트 템플릿 시드 10~20개 (onboarding 강화)
+- 온톨로지 메트릭 설명 툴팁
+- 캘린더 현황 점검 + 부족분
+- Views 업그레이드 (실용적으로)
+- Insights 업그레이드 (실용적으로)
+
+**Sprint 3 (~2주): 데스크톱 출시 자산**
+- 도메인 결정 + 구매
+- 마케팅 사이트 (별도 워크트리)
+- Privacy Policy + Terms (sync 없는 버전, 한국 + GDPR)
+- 데스크톱 웹 배포
+
+**🎯 데스크톱 Free 출시**
+
+**Sprint 4 (회원 수 충분해진 후): 모바일 추가**
+- 모바일 반응형 감사
+- PWA manifest + Service Worker
+- Bubblewrap TWA 빌드
+- Google Play Store
+
+**Sync v2.0 (출시 후 6개월~1년)**
+- SYNC-PRD.md 활성화 (PRD 보존됨)
+- 사용자 피드백 반영해서 보강
+
+### 학습
+
+- **(a) → (c) 재고가 좋은 예** — 결정 후에도 "정말 지금 시작?" 자기 검증
+- **PRD 보존이 좋은 결정** — v2.0 시점에 다시 활성화 가능, 작업 낭비 X
+- **출시 → 피드백 → sync 설계 보강** = 더 나은 sync 결과 기대
+
+---
+
+## 🚀 2026-04-29 (오후) 세션 — **다중 기기 sync 6개 결정 LOCKED + PRD 작성**
+
+**큰 방향 전환 확정**: Plot에 다중 기기 sync 도입 + 수익 모델. 영구 규칙 "큰 방향 전환 전 전체 설계 확정"에 따라 6개 결정 받고 PRD까지 작성한 후 Phase 진행.
+
+### 6개 결정 (LOCKED)
+
+| # | 항목 | 결정 | 비고 |
+|---|------|------|------|
+| 1 | Sync 옵션 | **B. Supabase + E2E 암호화** | 균형 (프라이버시 + 일정 + 비용) |
+| 2 | 가격 | **Free / Sync $5 / Pro $10** | Obsidian 동일 |
+| 3 | 출시 시점 | **(a) Sync 포함 출시** | 첫인상 sync 가치 어필 |
+| 4 | CRDT/Y.Doc | **노트+메타 모두 Yjs** | 충돌 안전 최대화 |
+| 5 | 결제 | **결정 보류** (Phase 4 시점) | Lemon Squeezy 잠정 |
+| 6 | 인증 | **Magic link + Google + Kakao** | SMS 영구 폐기 |
+
+### 결정 흐름
+
+1. 사용자 의향 (이전 세션 끝): "다중 기기 sync 필요해. 옵시디언도 이걸로 유료 구독료 받잖아."
+2. /before-work 실행 → SYNC-DESIGN-DECISIONS.md (이전 세션 작성한 옵션 비교) 가이드 받음
+3. 사용자에게 6개 결정 받음 (옵션 / 가격 / 출시 시점 / CRDT / 결제 / 인증)
+4. 옵션 1번 (Sync 옵션)에서 사용자가 비용 비교 요청 → A vs B 상세 비용 분석 제시 → B 선택
+5. 인증에서 한국 OAuth (카카오, SMS) 질문 → SMS 영구 폐기 + Kakao 추가 결정
+6. 6개 결정 → PRD 작성 (10 섹션, 11~15주 = 3~4개월 phase 분할)
+
+### 산출물
+
+- **`docs/SYNC-PRD.md`** (신규, 10 섹션):
+  - Goals + Non-Goals
+  - User Stories (Free / Sync / Pro)
+  - Technical Architecture (Stack, 데이터 모델, E2E 흐름, Sync 프로토콜, 결제 흐름)
+  - Phase 분할 (Phase 1: 인증+백업 3~4주 / Phase 2: 양방향 sync+Yjs 4~5주 / Phase 3: 다중기기+Pro 2~3주 / Phase 4: 결제+출시 2~3주)
+  - Risks & Mitigations (9개 위험)
+  - Open Questions (Phase 진입 전 결정 항목)
+  - Success Metrics (출시 6개월 후 목표: 500+ 사용자, 3% 전환율, $75+ MRR)
+
+- **`docs/SYNC-DESIGN-DECISIONS.md`** (갱신): 6개 결정 LOCKED 표 + 위험 재정리
+- **`docs/NEXT-ACTION.md`** (갱신): Phase 1 Week-by-Week 작업 가이드 + 사전 작업 체크리스트
+- **`docs/CONTEXT.md`** (갱신): 최상단에 sync 결정 + Phase 분할 추가
+- **`docs/TODO.md`** (갱신): "큰 방향 sync" 섹션을 LOCKED + Phase 1 작업으로 변경
+
+### Y.Doc 폐기 결정 (2026-04-27) 뒤집음
+
+이전 "Wiki Y.Doc 폐기"는 **단일 사용자 + 단일 IDB** 전제. 다중 기기 sync 도입 시 CRDT(Yjs)가 충돌 해결의 표준이라 재활용 결정. 노트 본문 + 메타 모두 Yjs.
+
+### 영구 규칙 추가 (sync 관련)
+
+- 단일 사용자 도구 유지 — 협업 모드 안 만듦. 다중 기기만 sync.
+- E2E 암호화 절대 양보 X — 사용자 노트 내용은 서버가 못 봄.
+- 오프라인 우선 — sync는 옵션, 인터넷 없을 때도 동작.
+- 마스터 비번 분실 = 데이터 복구 불가 — Recovery Phrase 강제 표시.
+
+### 다음 세션 즉시 시작 (Phase 1)
+
+1. Supabase 계정 + 프로젝트 3개 (dev/staging/prod)
+2. Lemon Squeezy + Kakao Developers + Google Cloud Console 사전 준비
+3. `@supabase/supabase-js` 설치 + `lib/supabase/` 신규
+4. Magic link 인증 UI
+
+---
+
+## 🟢 2026-04-29 (오전) 세션 — v0 협업 흡수 + UI polish + dead code 정리 + P0 필터 + Row density 시도/revert (5 PR)
 
 5개 PR 머지. 이 세션 주제는 "외부 디자인 도구(v0)와 협업 흡수 + 5 앱 필터 리서치 기반 P0 강화 + 영구 규칙(시각적 다양성 ≠ Plot 코어) 재확인".
 
