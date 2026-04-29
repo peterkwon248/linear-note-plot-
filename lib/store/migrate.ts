@@ -1160,5 +1160,15 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v93: Remove rowDensity field from all ViewStates (Linear style — no density toggle)
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+    for (const ctx of Object.keys(vsMap)) {
+      const vs = vsMap[ctx]
+      if (!vs || typeof vs !== "object") continue
+      delete vs.rowDensity
+    }
+  }
+
   return state as unknown as PlotState
 }

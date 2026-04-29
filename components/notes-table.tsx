@@ -713,7 +713,7 @@ export function NotesTable({
     return cols.join(" ")
   }, [effectiveVisibleCols])
 
-  const isCompact = containerWidth < 480 || viewState.rowDensity === "compact"
+  const isCompact = containerWidth < 480
 
   const virtualItems = useMemo((): VirtualItem[] => {
     if (viewState.groupBy === "none") {
@@ -756,7 +756,6 @@ export function NotesTable({
       if (t === "header") return 36
       if (t === "subheader") return 32
       if (isCompact) return 32
-      if (viewState.rowDensity === "comfortable") return 56
       return 40
     },
     overscan: 5,
@@ -905,7 +904,6 @@ export function NotesTable({
             viewState={viewState}
             onViewStateChange={(patch) => updateViewState(patch)}
             showViewMode
-            showRowDensity
             toggleStates={viewState.toggles ?? {}}
             onToggleChange={(key, value) =>
               updateViewState({ toggles: { ...(viewState.toggles ?? {}), [key]: value } })
@@ -1217,7 +1215,7 @@ export function NotesTable({
                             onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
                             onMergeWith={() => setMergePickerOpen(true, item.note.id)}
                             onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
-                            showCardPreview={viewState.rowDensity === "comfortable"}
+                            showCardPreview={false}
                             groupBy={viewState.groupBy}
                           />
                         )}
