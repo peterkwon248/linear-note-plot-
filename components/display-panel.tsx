@@ -1,6 +1,6 @@
 "use client"
 
-import type { SortField, GroupBy, GroupSortBy, ViewMode, ViewState } from "@/lib/view-engine/types"
+import type { SortField, GroupBy, GroupSortBy, ViewMode, ViewState, RowDensity } from "@/lib/view-engine/types"
 import type { ReactNode } from "react"
 import { List } from "@phosphor-icons/react/dist/ssr/List"
 import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
@@ -38,6 +38,8 @@ interface DisplayPanelProps {
   onToggleChange?: (key: string, value: boolean) => void
   /** Show List/Board view mode switcher */
   showViewMode?: boolean
+  /** Show Row density segmented control (Compact/Standard/Comfortable) */
+  showRowDensity?: boolean
 }
 
 /* ── Icons ─────────────────────────────────────────────── */
@@ -65,6 +67,38 @@ export const SortIcon = () => (
   </svg>
 )
 
+/* ── Row density icons ──────────────────────────────────── */
+
+const RowDensityCompactIcon = (
+  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+    <line x1="2" y1="4" x2="14" y2="4" />
+    <line x1="2" y1="7" x2="14" y2="7" />
+    <line x1="2" y1="10" x2="14" y2="10" />
+    <line x1="2" y1="13" x2="14" y2="13" />
+  </svg>
+)
+
+const RowDensityStandardIcon = (
+  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+    <line x1="2" y1="4.5" x2="14" y2="4.5" />
+    <line x1="2" y1="8.5" x2="14" y2="8.5" />
+    <line x1="2" y1="12.5" x2="14" y2="12.5" />
+  </svg>
+)
+
+const RowDensityComfortableIcon = (
+  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+    <line x1="2" y1="4" x2="14" y2="4" />
+    <line x1="2" y1="12" x2="14" y2="12" />
+  </svg>
+)
+
+const ROW_DENSITY_DEFS: { value: RowDensity; label: string; icon: ReactNode }[] = [
+  { value: "compact", label: "Compact", icon: RowDensityCompactIcon },
+  { value: "standard", label: "Standard", icon: RowDensityStandardIcon },
+  { value: "comfortable", label: "Comfortable", icon: RowDensityComfortableIcon },
+]
+
 /* ── Mode config helpers ────────────────────────────────── */
 
 const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string }[] = [
@@ -86,6 +120,7 @@ export function DisplayPanel({
   toggleStates = {},
   onToggleChange,
   showViewMode,
+  showRowDensity,
 }: DisplayPanelProps) {
   const supportedModes = config.supportedModes ?? (["list", "board"] as ViewMode[])
   const currentMode = resolveViewMode(viewState.viewMode)
@@ -259,14 +294,40 @@ export function DisplayPanel({
         </div>
       </div>
 
-      {/* ── Section 3: Mode-specific toggles ── */}
-      {config.toggles.length > 0 && (
+      {/* ── Section 3: Mode-specific options (Row density + toggles) ── */}
+      {(showRowDensity || config.toggles.length > 0) && (
         <>
           <hr className="border-border-subtle" />
           <div className="flex flex-col gap-2.5">
             <p className="text-2xs font-medium text-muted-foreground/50 mb-0">
               {optionsSectionLabel}
             </p>
+            {/* Row density segmented control */}
+            {showRowDensity && (
+              <div className="flex items-center justify-between">
+                <span className="text-note text-muted-foreground">Row density</span>
+                <div className="flex rounded-md border border-border-subtle bg-card p-0.5 gap-0.5">
+                  {ROW_DENSITY_DEFS.map((def) => {
+                    const isActive = (viewState.rowDensity ?? "standard") === def.value
+                    return (
+                      <button
+                        key={def.value}
+                        title={def.label}
+                        onClick={() => onViewStateChange({ rowDensity: def.value })}
+                        className={[
+                          "flex items-center justify-center w-7 h-6 rounded transition-all",
+                          isActive
+                            ? "bg-active-bg-strong text-foreground shadow-sm"
+                            : "text-muted-foreground/50 hover:text-muted-foreground",
+                        ].join(" ")}
+                      >
+                        {def.icon}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             {config.toggles.map((toggle) => (
               <div key={toggle.key} className="flex items-center gap-2">
                 {toggle.icon && (

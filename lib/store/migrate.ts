@@ -1137,5 +1137,28 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v92: Migrate toggles.compact + toggles.showCardPreview → rowDensity on each ViewState
+  if (state.viewStateByContext && typeof state.viewStateByContext === "object") {
+    const vsMap = state.viewStateByContext as Record<string, Record<string, unknown>>
+    for (const ctx of Object.keys(vsMap)) {
+      const vs = vsMap[ctx]
+      if (!vs || typeof vs !== "object") continue
+      const toggles = (vs.toggles ?? {}) as Record<string, boolean>
+      if (!("rowDensity" in vs)) {
+        // Convert legacy toggles to rowDensity
+        if (toggles.compact) {
+          vs.rowDensity = "compact"
+        } else if (toggles.showCardPreview) {
+          vs.rowDensity = "comfortable"
+        } else {
+          vs.rowDensity = "standard"
+        }
+      }
+      // Remove legacy keys from toggles
+      const { compact: _c, showCardPreview: _sp, ...restToggles } = toggles
+      vs.toggles = restToggles
+    }
+  }
+
   return state as unknown as PlotState
 }
