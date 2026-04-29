@@ -37,10 +37,10 @@ const SPACES: {
 }[] = [
   { id: "home",     label: "Home",     icon: IconHome,     shortcut: "G then H" },
   { id: "notes",    label: "Notes",    icon: IconNotes,    shortcut: "G then N" },
-  { id: "wiki",     label: "Wiki",     icon: (props) => <BookOpen {...props} weight="light" />, shortcut: "" },
+  { id: "wiki",     label: "Wiki",     icon: (props) => <BookOpen {...props} weight="regular" />, shortcut: "" },
   { id: "calendar", label: "Calendar", icon: IconCalendar, shortcut: "" },
   { id: "ontology", label: "Ontology",  icon: Graph,        shortcut: "" },
-  { id: "library",  label: "Library",  icon: (props) => <Books {...props} weight="light" />, shortcut: "" },
+  { id: "library",  label: "Library",  icon: (props) => <Books {...props} weight="regular" />, shortcut: "" },
 ]
 
 /* ── Component ──────────────────────────────────────── */
@@ -62,6 +62,10 @@ export function ActivityBar() {
       // Same space → do nothing (use dedicated sidebar toggle button)
       return
     }
+    // Clear stale side panel context — a wiki article's Detail tab shouldn't
+    // remain pinned when switching to Notes/Library/etc. The new space's
+    // selection logic will repopulate context when the user clicks something.
+    usePlotStore.getState().setSidePanelContext(null)
     // PR 7: Home no longer has section drill-downs; nothing to reset on space switch.
     // Different space → switch (don't touch sidebar state)
     setActiveSpace(space)

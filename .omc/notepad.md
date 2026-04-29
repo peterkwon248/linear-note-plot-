@@ -1,22 +1,30 @@
-# Session Notepad (Updated: 2026-04-26)
+# Session Notepad (Updated: 2026-04-30 07:00)
 
 ## Critical Context
 
-- **9 PR 큰 세션** (~9시간): 인포박스/Navbox/배너 다채로움 + Connections 강화 + Ontology Insights 허브 + Home 정체성 분리. Store v82 → v91.
-- **Home 정체성**: 데이터 대시보드 + 빠른 진입. 시간 기반(Inbox/Today) 제거. Quick Capture / Stats(컬러) / Recent(4 카드) / Quicklinks(Mixed pinned 통합) / CTA. max-w-5xl.
-- **Ontology = Single Source of Insights**: 정비 행동/메트릭/Nudge 모두 Ontology Insights 탭으로 이전. Knowledge WAR / Concept Reach / Hubs / Density / Coverage / Tag Coverage / Cluster Cohesion.
-- **Pinned 통합**: Note + WikiArticle (NEW v87) + Folder + SavedView + Bookmark 모두 Mixed Quicklinks.
-- **나무위키 Tier 2-4 완료**: 배너/age/dday/Include/각주이미지/parent-child. 루비 텍스트는 사용자 결정으로 제거.
-- **createWikiStub dedupe**: 자동 등재 무한 누적 버그 fix.
-- **Y.Doc P0-1 완료**: y-indexeddb 영속화 + 4 race guard 유지.
+- **Sprint 1.3 완료**: PR #228 머지. 디자인 polish + 사이드 패널 + Display Properties 동적 컬럼 + 출시 빌드 fix (12 파일). Store v75 유지.
+- **다음 세션은 다른 컴퓨터에서 진행 예정** — `git pull origin main` → 새 worktree → `npm install` → NEXT-ACTION.md 읽고 시작
+- **Plot 영구 규칙 재해석**: "시각적 다양성 ≠ Plot 코어"는 유효하지만, 명확한 그룹 차원이 있으면 검토 가능. Wiki 보드 뷰가 그 예 (Category 기준).
 
-## Active Tasks
+## Active Tasks (Sprint 1.4 — 다음 세션 즉시 시작)
 
-- [ ] **위키 dashboard 카운트 정합성** 검증 (다음 세션 시작 시)
-- [ ] **PR 9 시계열 메트릭** + Wiki Dashboard 통합
-- [ ] **TipTap InfoboxBlockNode group-header** 지원 (작은 폴리시)
-- [ ] **P0-2 Wiki Y.Doc 적용** (위험, 별도 세션 권장)
+- [ ] **Wiki 보드 뷰** — supportedModes에 "board" 추가, View mode toggle, WikiBoard 컴포넌트 (Notes 보드 패턴 재활용), Group by Category(default)/Tier/Parent
+- [ ] **Wiki 컬럼 정비** — Tier badge / Reads (마이그레이션 v76) / Created
+- [ ] **Wiki 차트 개선** — Growth Article/Stub 분리 (stacked + multi-line) + sub-tabs (All/Articles/Stubs) + Knowledge Connectivity 차트 추가
+
+## Polished Decisions (이번 세션)
+
+- **Hub Tier 자동 분류 폐기** — 사용자 통제 부재로 혼선. Stub/Article 2단계 + Backlinks 정렬로 충분
+- **Folder/Words 컬럼 (Wiki) 미포함** — Categories가 그 역할 / 위키는 길이로 분류 안 함
+- **카테고리 chip + count 패턴** — list view 컴팩트 우선, 전체는 Detail 패널
+- **차트 sub-tabs (All/Articles/Stubs)** = Wiki List sub-tabs와 동일 디자인 (학습 부담 0)
 
 ## Blockers
 
-- 없음. 빌드/타입 PASS. 미해결은 의도된 후속.
+- 없음. Sprint 1.4 진행 가능.
+
+## Known Gotchas (다음 세션 주의)
+
+- **JSX text node에 em dash 직접 입력 금지** — Edit 도구가 literal로 저장해 `—` 표시 버그. 항상 `{"—"}` expression으로
+- **replace_all은 들여쓰기 매칭** — 들여쓰기 다른 동일 코드는 누락. 한 곳씩 수동 변경 필요할 수 있음
+- **`article.layout` object 데이터 잔존** (Book Pivot 흔적) — typeof guard 적용했으나 마이그레이션 PR 별도 필요

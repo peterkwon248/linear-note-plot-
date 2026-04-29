@@ -12,7 +12,8 @@ import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle"
 import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp"
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
-import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
+import { IconInbox } from "@/components/plot-icons"
+import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import type { Note } from "@/lib/types"
 
 /**
@@ -22,6 +23,7 @@ export function HomeView() {
   const notes = usePlotStore((s) => s.notes)
   const openNote = usePlotStore((s) => s.openNote)
   const tags = usePlotStore((s) => s.tags)
+  const backlinkCounts = useBacklinksIndex()
 
   // Compute insights
   const insights = useMemo(() => {
@@ -36,15 +38,18 @@ export function HomeView() {
       .filter((n: Note) => n.status !== "inbox")
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
 
-    // Most connected notes
+    // Most connected notes — out-degree (linksOut) + in-degree (backlinks via index)
     const withConnections = liveNotes
-      .map((n: Note) => ({ note: n, count: (n.linksOut?.length ?? 0) + (n.backlinks?.length ?? 0) }))
+      .map((n: Note) => ({
+        note: n,
+        count: (n.linksOut?.length ?? 0) + (backlinkCounts.get(n.id) ?? 0),
+      }))
       .filter((item) => item.count > 0)
       .sort((a, b) => b.count - a.count)
       .slice(0, 4)
 
     return { inboxNotes, recentlyEdited, featured, withConnections }
-  }, [notes])
+  }, [notes, backlinkCounts])
 
   function jumpToOntologyInsights() {
     setActiveRoute("/ontology")
@@ -107,7 +112,7 @@ export function HomeView() {
           <section className="mb-6">
             <ContentCard
               title="Inbox"
-              icon={Tray}
+              icon={IconInbox}
               iconColor="text-amber-500 dark:text-amber-400"
               trailing={
                 <button

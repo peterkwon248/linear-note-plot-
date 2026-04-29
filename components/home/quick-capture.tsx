@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { usePlotStore } from "@/lib/store"
 
@@ -18,11 +18,33 @@ import { usePlotStore } from "@/lib/store"
  *   - 36px tall, 12px padding-x, placeholder muted-foreground/60
  *   - On focus: border-bottom strengthens (border-foreground/30) — no ring, no shadow
  *   - Subtle ring animation on successful submit (60ms fade, ring-foreground/10)
+ *   - Placeholder cycles every 3s while idle (Linear search-bar pattern) to hint
+ *     at the kinds of things you can capture: thought / meeting / quote / idea / learning.
+ *     Cycle pauses while the user is typing.
  */
+const PLACEHOLDERS = [
+  "Capture a thought…",
+  "Meeting notes…",
+  "A quotation…",
+  "An idea…",
+  "Something learned…",
+]
+
 export function QuickCapture() {
   const [value, setValue] = useState("")
   const [flashing, setFlashing] = useState(false)
+  const [phIndex, setPhIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Cycle placeholder while the input is empty. Stops while the user is typing.
+  useEffect(() => {
+    if (value) return
+    const id = window.setInterval(
+      () => setPhIndex((i) => (i + 1) % PLACEHOLDERS.length),
+      3000,
+    )
+    return () => window.clearInterval(id)
+  }, [value])
 
   function submit() {
     const trimmed = value.trim()
@@ -72,7 +94,7 @@ export function QuickCapture() {
             inputRef.current?.blur()
           }
         }}
-        placeholder="What's on your mind?"
+        placeholder={PLACEHOLDERS[phIndex]}
         className={
           "h-10 w-full rounded-lg bg-secondary/50 px-4 text-note text-foreground " +
           "border border-border outline-none transition-all " +

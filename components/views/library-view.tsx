@@ -36,7 +36,6 @@ import { Check } from "@phosphor-icons/react/dist/ssr/Check"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
-import { SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText"
@@ -283,7 +282,7 @@ function ReferenceRow({
 function EmptyReferences({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-      <Books weight="duotone" className="h-12 w-12 text-muted-foreground/30" />
+      <Quotes weight="regular" className="h-12 w-12 text-muted-foreground/30" />
       <div>
         <p className="text-note font-medium text-muted-foreground/60">
           No references yet
@@ -309,7 +308,7 @@ function EmptyReferences({ onCreate }: { onCreate: () => void }) {
 function SearchEmpty({ query }: { query: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
-      <Books weight="duotone" className="h-8 w-8 text-muted-foreground/25" />
+      <Quotes weight="regular" className="h-8 w-8 text-muted-foreground/25" />
       <p className="text-2xs text-muted-foreground/40">
         No references matching &quot;{query}&quot;
       </p>
@@ -621,7 +620,7 @@ function LibraryOverview() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <ViewHeader
-        icon={<SquaresFour weight="duotone" className="h-4 w-4" />}
+        icon={<Books weight="regular" className="h-4 w-4" />}
         title="Library"
         showDetailPanel
         detailPanelOpen={usePlotStore.getState().sidePanelOpen}
@@ -1155,7 +1154,7 @@ function ReferencesView() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <ViewHeader
-        icon={<Books weight="duotone" className="h-4 w-4" />}
+        icon={<Quotes weight="regular" className="h-4 w-4" />}
         title="References"
         count={totalCount}
         searchPlaceholder="Search references..."

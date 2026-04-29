@@ -91,7 +91,7 @@ export function WikiDashboard({
   }, [wikiNotes])
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto bg-secondary/20">
       <div className="mx-auto max-w-5xl px-6 py-6">
 
         {/* ── Search ── */}
@@ -164,7 +164,7 @@ export function WikiDashboard({
         {featured && (
           <button
             onClick={() => onOpenWikiArticle?.(featured.id)}
-            className="group mb-6 flex w-full items-start gap-4 rounded-lg border border-border bg-card p-4 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
+            className="group mb-6 flex w-full items-start gap-4 rounded-lg border border-border bg-card p-4 text-left shadow-sm transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
               <Sparkle className="text-accent" size={16} weight="regular" />
@@ -204,7 +204,7 @@ export function WikiDashboard({
                   <button
                     key={a.id}
                     onClick={() => onOpenWikiArticle?.(a.id)}
-                    className="group flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
+                    className="group flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-left shadow-sm transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow"
                   >
                     <PushPin
                       size={12}
@@ -315,7 +315,7 @@ export function WikiDashboard({
                 <button
                   key={article.id}
                   onClick={() => onOpenWikiArticle?.(article.id)}
-                  className="group flex items-start gap-3 rounded-lg border border-border bg-card p-3 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
+                  className="group flex items-start gap-3 rounded-lg border border-border bg-card p-3 text-left shadow-sm transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow"
                 >
                   <div className="min-w-0 flex-1">
                     <h4 className="text-note font-semibold text-foreground group-hover:text-accent transition-colors">
@@ -382,8 +382,8 @@ function MiniStat({
     <Wrapper
       onClick={onClick}
       className={cn(
-        "rounded-lg border border-border bg-card px-3 py-2.5 text-left",
-        onClick && "cursor-pointer transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow-sm"
+        "rounded-lg border border-border bg-card px-3 py-2.5 text-left shadow-sm",
+        onClick && "cursor-pointer transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03] hover:shadow"
       )}
     >
       <p className={cn("text-xl font-semibold tabular-nums", color)}>{value}</p>
@@ -406,7 +406,7 @@ function ContentCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <div className="rounded-lg border border-border bg-card shadow-sm">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
         <Icon className={cn("h-3.5 w-3.5", iconColor)} strokeWidth={1.5} />
         <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{title}</h3>

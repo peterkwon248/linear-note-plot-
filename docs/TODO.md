@@ -1,6 +1,6 @@
-# Plot — TODO (2026-04-29 오후 후반 갱신)
+# Plot — TODO (2026-04-30 갱신)
 
-> CONTEXT.md가 source of truth. **2026-04-29 오후 후반 결정**: 출시 준비 우선, Sync는 v2.0 (출시 후 6개월~1년).
+> CONTEXT.md가 source of truth. **2026-04-29 결정**: 출시 준비 우선, Sync는 v2.0 (출시 후 6개월~1년).
 
 ---
 
@@ -14,20 +14,46 @@
 
 ---
 
-## 🚀 Sprint 1 (~2주): 빠른 wins
+## 🚀 Sprint 1.4 (~1주): Wiki 보드 뷰 + 차트 개선 ★ 다음 세션 즉시 시작
 
-### P1 Notes 3개 — 한 PR ★ 다음 세션 즉시 시작
+### A. Wiki 보드 뷰
+- [ ] `WIKI_VIEW_CONFIG.supportedModes`에 "board" 추가
+- [ ] View mode toggle (List ↔ Board)
+- [ ] WikiBoard 컴포넌트 (Notes 보드 패턴 재활용)
+- [ ] Group by: Category(default) / Tier / Parent
+- [ ] 카드: 제목 + Tier badge + Backlinks + Updated + 옵션 Categories chip
+- [ ] 카드 drag → 그룹 변경
 
-`feat(filter): P1 Notes — Sub-group + Multi-sort + 날짜 상대값`
+### B. Wiki 컬럼 정비 (List + Board 공유)
+- [ ] **Tier** 컬럼/badge (Stub/Article 자동) ★
+- [ ] **Reads** 컬럼 ★ — WikiArticle.reads 필드 + 마이그레이션 v76 + openWikiArticle reads++
+- [ ] **Created** 컬럼 ★
 
-- [ ] **Sub-group** (S) — 인프라 100% 있음. UI dropdown 추가만
-- [ ] **Multi-sort** (S~M) — `applySort` 시그니처 변경 + comparator chain + v94 migration
-- [ ] **날짜 상대값** (S) — date-fns 활용, `parseRelativeTime` 확장
+### C. Wiki 차트 개선
+- [ ] Growth 차트 Article/Stub 분리 (stacked bar + multi-line)
+- [ ] 차트 sub-tabs (All / Articles / Stubs) — Wiki List sub-tabs와 동일 디자인
+- [ ] **Knowledge Connectivity 차트 추가** ★ — 차트 종류 토글 (Growth/Connectivity)
 
-### 필터/디스플레이 드롭다운 정리
+---
+
+## 🟡 Sprint 1.5 (~3일): Outlinks + 후속
+
+- [ ] **Outlinks 컬럼** (Notes + Wiki 일관 적용) — 데이터 이미 존재, UI만
+
+---
+
+## 🟡 Sprint 1 P1 잔존
+
+### Sub-group (S, 가장 빠른 wins) — 인프라 100% 있음. UI dropdown 추가만
+
+- [ ] **Sub-group** — display-panel.tsx Grouping dropdown 옆에 Sub-grouping dropdown
+  - 인프라: notes-table.tsx에 `groups[].subGroups` 이미 렌더 가능
+  - 사용자 우선순위 결정 후 진행 (또는 Sprint 1.4와 같이)
+
+### 필터/디스플레이 드롭다운 정리 (선택)
 
 - [ ] 각 Activity Bar 공간 (Inbox / Notes / Wiki / Calendar / Ontology / Library) 사이드바 필터/디스플레이 매핑
-- [ ] 중복/dead 옵션 추가 정리 (PR #221에서 14개 정리됐으나 추가 검토)
+- [ ] 중복/dead 옵션 추가 정리
 - [ ] 디자인 일관성 (segmented vs dropdown vs toggle)
 - [ ] 사이드바 토글 패턴 통일
 
@@ -146,6 +172,25 @@
 
 ---
 
+## ✅ 2026-04-30 세션 완료
+
+| 묶음 | PR | 상태 |
+|------|-----|------|
+| **Sprint 1.3** — 디자인 polish + 사이드 패널 동기화 + Display Properties 동적 컬럼 + 출시 빌드 fix | #228 | ✅ 머지 |
+
+**Sprint 1.3 변경 (12 파일)**:
+- 아이콘 일관성 (Activity Bar / Sidebar Overview / ViewHeader 3곳 통일 — Wiki=BookOpen / Library=Books / References=Quotes)
+- Wiki Dashboard Display + DetailPanel mode 분기 숨김 + 카드 contrast (shadow-sm + bg-secondary/20)
+- Wiki List 컬럼 헤더 + 체크박스 + Sub-tabs Notes 톤 일치
+- Knowledge Base 5개 카드에 아이콘 채움
+- Quick Capture 5문구 cycle (3s, 입력 시 정지)
+- Wiki/Notes List 단일 select ↔ 사이드 패널 동기화
+- Space 전환 시 sidePanelContext clear (stale wiki article fix)
+- Wiki Article Detail typeof guard (article.layout object 데이터 fix)
+- **Wiki List Display Properties 동적 컬럼** (Categories chip + count, Aliases 등)
+- Home INBOX 아이콘 IconInbox 통일
+- 빌드 fix: home-view.tsx:41 backlinks → useBacklinksIndex (출시 빌드 통과)
+
 ## ✅ 2026-04-29 세션 완료
 
 | 묶음 | PR | 상태 |
@@ -156,6 +201,10 @@
 | Row density dropdown 통합 (Notion 패턴) | #223 | ✅ 머지 |
 | Row density 제거 (Linear 스타일 — revert) | #224 | ✅ 머지 |
 | docs (다중 기기 sync 큰 결정 보류) | #225, #226 | ✅ 머지 |
+| Sync v2.0 결정 + 4-Sprint 계획 (PRD 작성) | a20e465 | ✅ |
+| **Sprint 1.1** — P1 Notes Multi-sort + 날짜 sentinel | e6800f2 | ✅ |
+| **Sprint 1.2** — Wiki view-engine 통합 + UI polish + 5뷰 audit | ff9a081 | ✅ |
+| 라이트모드 보드 컬럼 간격선 추가 | 7e4ad28 | ✅ |
 
 **오후 후반 작업** (이번 세션, PR 미생성):
 - Sync 6개 결정 LOCKED (Supabase B + Free/$5/$10 + Yjs 전체 + Magic+Google+Kakao)

@@ -144,7 +144,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           <IconWiki size={14} />
           Wiki Article
         </span>
-        {article.layout && article.layout !== "default" && (
+        {typeof article.layout === "string" && article.layout && article.layout !== "default" && (
           <span className="flex items-center gap-1 rounded-md bg-chart-2/10 px-2 py-0.5 text-2xs font-medium text-chart-2">
             <Layout size={14} weight="regular" />
             {article.layout.charAt(0).toUpperCase() + article.layout.slice(1)}
@@ -353,7 +353,9 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           </div>
           <div className="flex items-center justify-between">
             <span className="text-note text-muted-foreground">Layout</span>
-            <span className="text-note text-foreground capitalize">{article.layout ?? "default"}</span>
+            <span className="text-note text-foreground capitalize">
+              {typeof article.layout === "string" ? article.layout : "default"}
+            </span>
           </div>
         </div>
       </InspectorSection>

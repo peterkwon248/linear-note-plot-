@@ -204,6 +204,20 @@ export function WikiView() {
     }
   }, [pane, selectedWikiArticleId])
 
+  // List-mode multi-select → side panel mirror.
+  // When exactly one row is checkbox-selected in the list, point the side panel's
+  // Detail tab at that article. 0 selected = no change (preserve last context).
+  // 2+ selected = ambiguous, keep last context rather than flicker.
+  useEffect(() => {
+    if (pane === 'secondary') return
+    if (wikiViewMode !== 'list') return
+    if (selectedArticleIds.size !== 1) return
+    const onlyId = [...selectedArticleIds][0]
+    if (!wikiArticles.some((a) => a.id === onlyId)) return
+    usePlotStore.getState().setSidePanelContext({ type: "wiki", id: onlyId })
+    usePlotStore.getState().setSidePanelOpen(true)
+  }, [pane, wikiViewMode, selectedArticleIds, wikiArticles])
+
   // Navigate to notes view (for non-wiki notes)
   const navigateToNote = useCallback(
     (noteId: string) => {
@@ -676,7 +690,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<IconWiki size={20} />}
+          icon={<BookOpen size={20} weight="regular" />}
           title={selectedWikiArticle.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -873,7 +887,7 @@ export function WikiView() {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <ViewHeader
-          icon={<IconWiki size={20} />}
+          icon={<BookOpen size={20} weight="regular" />}
           title={selectedNote.title || "Untitled"}
           actions={
             <div className="flex items-center gap-2">
@@ -941,7 +955,7 @@ export function WikiView() {
   return (
     <div data-editor-scope="wiki" className="flex flex-1 flex-col overflow-hidden">
       <ViewHeader
-        icon={<IconWiki size={20} />}
+        icon={<BookOpen size={20} weight="regular" />}
         title="Wiki"
         count={stats.total}
         showFilter={wikiViewMode !== "dashboard"}
@@ -968,7 +982,7 @@ export function WikiView() {
             />
           )
         }
-        showDisplay
+        showDisplay={wikiViewMode !== "dashboard"}
         displayContent={
           wikiViewMode === "category" ? (
             <DisplayPanel
@@ -993,7 +1007,7 @@ export function WikiView() {
             />
           )
         }
-        showDetailPanel
+        showDetailPanel={wikiViewMode !== "dashboard"}
         detailPanelOpen={sidePanelOpen}
         onDetailPanelToggle={() => {
           const store = usePlotStore.getState()
@@ -1237,6 +1251,8 @@ export function WikiView() {
             onSelectAll={handleArticleSelectAll}
             stubCount={stubCount}
             wikiArticles={wikiArticles}
+            visibleColumns={wikiViewState.visibleColumns}
+            wikiCategories={wikiCategories}
           />
           {selectedArticleIds.size > 0 && (
             <WikiFloatingActionBar

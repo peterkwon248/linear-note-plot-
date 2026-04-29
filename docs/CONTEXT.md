@@ -3,6 +3,16 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
+## 🚀 2026-04-30 — Sprint 1.3 머지 완료. 다음은 Sprint 1.4 (Wiki 보드 뷰 + 차트 개선)
+
+**Sprint 1.3 완료 (PR #228)**: 디자인 polish + 사이드 패널 동기화 + Display Properties 동적 컬럼 + 출시 빌드 fix. 12 파일 변경, store v75 유지.
+
+**다음 세션 (Sprint 1.4)**: Wiki 보드 뷰 + 차트 개선 + Knowledge Connectivity 추가. 자세한 plan은 [`docs/NEXT-ACTION.md`](./NEXT-ACTION.md) 참조.
+
+**다른 컴퓨터에서 인계**: `git pull origin main` → 새 worktree 생성 → `npm install` → `npm run dev` → NEXT-ACTION.md 읽고 Sprint 1.4 시작.
+
+---
+
 ## 🚀 2026-04-29 (오후 후반) — **출시 준비 우선 결정. Sync는 v2.0**
 
 **같은 세션 내 재고**: Sync 6개 결정 + PRD 작성 후 사용자 재고 → "꼭 페이즈 1부터 해야 되나? 우선은 앱부터 다듬고 출시 계획을 제대로 진행하고 싶은데?"

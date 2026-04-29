@@ -1,5 +1,131 @@
 # Plot Project Memory
 
+## 🚀 2026-04-30 세션 — Sprint 1.3 완료 (디자인 polish + 사이드 패널 동기화 + Display Properties 동적 컬럼) + Sprint 1.4 plan 합의
+
+**범위**: Sprint 1 후속 — 디자인 polish + 사이드 패널 + Display Properties + Wiki Article Detail typeof guard + 출시 빌드 fix
+
+### Sprint 1.3 완료 (PR #228)
+
+#### 12 파일 변경
+
+**1. 아이콘 일관성 (3곳 통일 원칙)**
+
+원칙 코드화: **공간 Overview 아이콘 = Activity Bar 아이콘 = ViewHeader 아이콘**
+
+| 항목 | Before | After |
+|------|--------|-------|
+| Activity Bar Wiki | `BookOpen weight="light"` (흐림) | `BookOpen weight="regular"` |
+| Activity Bar Library | `Books weight="light"` (흐림) | `Books weight="regular"` |
+| Sidebar Wiki Overview | `IconWiki` | `BookOpen weight="regular"` (Activity Bar와 일치) |
+| Sidebar Library Overview | `SquaresFour weight="light"` (뜬금없음) | `Books weight="regular"` |
+| Sidebar References | `Books weight="light"` (Library와 충돌) | `Quotes weight="regular"` (인용 메타포) |
+| ViewHeader Wiki | `IconWiki size={20}` (Activity Bar와 다름) | `BookOpen size={20} weight="regular"` |
+| ViewHeader Library Overview | `SquaresFour weight="duotone"` | `Books weight="regular"` |
+| ViewHeader References | `Books weight="duotone"` | `Quotes weight="regular"` |
+| Library Empty State (refs) | `Books weight="duotone"` | `Quotes weight="regular"` |
+| KB 카드 (Notes/Wiki/Tags/Refs/Files) | bgColor 박스만 (텍스트 0~+) | 실제 5 아이콘 채움 |
+| Home INBOX section | `Tray` (사이드바와 다름) | `IconInbox` (사이드바와 일치) |
+
+**2. Wiki Dashboard polish**
+- `wikiViewMode === "dashboard"`일 때 Display + DetailPanel 토글 둘 다 숨김 (mode 분기)
+- Wrapper에 `bg-secondary/20` (페이지 배경 톤) — 카드(bg-card)와 분리감 강화
+- 카드들에 `shadow-sm` rest state 추가 (라이트모드 contrast)
+
+**3. 라이트모드 Wiki List contrast**
+- 컬럼 헤더: `text-2xs muted/70` → `text-note text-foreground/80` → 최종 `text-muted-foreground` (Notes 패턴 일치) + `bg-secondary/30`
+- 체크박스: `border-border` → `border-zinc-400 dark:border-zinc-600 shadow-sm` (Notes row 체크박스와 일치)
+- Sub-tabs (Overview/All/Articles/Stubs/Index): 비-active `/50`, `/60` → `text-muted-foreground` (full opacity, contrast 유지하며 흐림 해소)
+
+**4. Quick Capture placeholder cycle**
+- 정적 "What's on your mind?" → 5문구 cycle (3s 간격, 입력 시 정지)
+- "Capture a thought…" / "Meeting notes…" / "A quotation…" / "An idea…" / "Something learned…"
+- Linear 검색바 패턴
+
+**5. 사이드 패널 동기화 (3건)**
+- Wiki List 단일 select → sidePanelContext mirror (`selectedArticleIds.size === 1`)
+- Notes List 단일 select → 동일 패턴 (`selectedIds.size === 1`)
+- Space 전환 시 sidePanelContext null clear (Activity Bar `handleSpaceClick`) — wiki article context가 Notes로 안 따라감
+
+**6. Wiki Article Detail Panel runtime fix**
+- `article.layout.charAt is not a function` 에러 fix
+- 옛 store 데이터의 layout이 `{type, columns}` object (Book Pivot 흔적)인 케이스
+- `typeof article.layout === "string"` guard 2곳 추가 (line 147, 355)
+
+**7. Wiki List Display Properties 동적 컬럼 ★ 핵심 fix**
+- **사용자 직접 발견**: "Categories/Aliases 토글했는데 컬럼에 안 나옴 — 버그 아님?"
+- 원인: WikiList가 hardcoded 4 컬럼 (Title/Backlinks/체크박스/Updated). visibleColumns 토글 무시
+- Fix: `WikiListProps`에 `visibleColumns?: string[]` + `wikiCategories?: WikiCategory[]` 추가
+- ColumnHeaders + ArticleTableRow conditional render
+- Categories chip + count 패턴: 첫 chip (accent) + `+N` (Linear 식 컴팩트)
+- Aliases도 동일 패턴
+- hover 시 native `title` attr로 전체 표시
+- `—` JSX text node escape 버그 → `{"—"}` expression으로 fix
+
+**8. 빌드 fix (pre-existing)**
+- `home-view.tsx:41 n.backlinks?.length` (Note type에 없음) — `useBacklinksIndex` hook 사용으로 정확히 fix
+- 출시 빌드 통과로 NEXT-ACTION.md 알려진 이슈 1건 해소
+
+#### 사용자 명시 결정 (Sprint 1.3 도중)
+
+- **(b1) worktree 정리**: `naughty-khorana-7b0358` worktree 제거 (force, file lock으로 디렉토리 일부 잔존하지만 git에서 unregister) → 현재 worktree(`upbeat-kare-f30bd8`)에서 그 브랜치 체크아웃하여 작업 통합
+- **위키 아이콘 다른 거로 교체 X** — BookOpen 유지하되 weight만 강화
+- **카테고리 chip + count** — list view 컴팩트 우선, 전체는 Detail 패널에서 (시각적 hierarchy)
+
+#### 학습
+
+- **사용자 직접 버그 발견 → 즉각 fix가 정답** (Display Properties 동적 컬럼)
+- **들여쓰기 차이로 replace_all 누락**: line 944 `<IconWiki size={20} />` 들여쓰기 8 spaces, 다른 두 곳은 10 spaces. replace_all이 들여쓰기까지 매칭하니 누락. 수동 직접 변경 필요했음
+- **JSX text node에 em dash 직접 입력**: Edit 도구가 `—` literal string으로 저장해 버그. `{"—"}` expression이 안전
+- **`article.layout` object 잔존 데이터**: Book Pivot 흔적. typeof guard로 빠른 fix, 마이그레이션은 별도 PR로
+- **Plot 영구 규칙 재검토 가능**: "Wiki Gallery만 신중 검토"였던 영구 규칙, 사용자가 보드 뷰 필요하다 판단해서 재검토. group by 명확하면 검토 OK
+- **Hub Tier 자동 분류 → 폐기**: "사용자 통제 없는 자동 분류는 혼선" — 좋은 비판
+- **dev server preview 포트**: 처음 13497, 이후 reused: true로 3002 (실제 우리 server). 사용자 화면 = 우리 코드 반영
+
+### Sprint 1.4 plan 합의 (다음 세션 — 다른 컴퓨터)
+
+**A. Wiki 보드 뷰**
+- `WIKI_VIEW_CONFIG.supportedModes`에 "board" 추가
+- View mode toggle (List ↔ Board)
+- `WikiBoard` 컴포넌트 (Notes 보드 패턴 재활용)
+- Group by:
+  - default: **Category** (가변, 사용자 정의 — Notes의 status 위치)
+  - 옵션: **Tier** (Stub/Article 2-column, "stub 정리" 워크플로)
+  - 옵션: **Parent article** (위계)
+- 카드: 제목 + Tier badge + Backlinks + Updated + 옵션 Categories chip
+- 카드 drag → 그룹 변경
+
+**B. Wiki 컬럼 정비** (List + Board 카드 공유)
+- Tier 컬럼/badge (Stub / Article 자동, isWikiStub 기반) ★ 새
+- Reads 컬럼 ★ 새 — `WikiArticle.reads: number` 필드 + store 마이그레이션 (v75 → v76) + `openWikiArticle` reads++ 로직
+- Created 컬럼 ★ 새
+
+**C. Wiki 차트 개선**
+- Growth 차트 Article/Stub 분리 (stacked bar + multi-line)
+- 차트 sub-tabs (`All` / `Articles` / `Stubs`) — Wiki List sub-tabs와 동일 디자인
+- **Knowledge Connectivity 차트 추가** ★
+  - 차트 종류 토글 (`Growth` / `Connectivity`)
+  - 시간별 wiki article 간 backlinks 합 시각화
+  - `cumEdges` 인프라 재활용 (timeseries.ts 이미 부분 계산 중)
+
+UI 계층:
+```
+[Growth | Connectivity]                    ← 차트 종류 (상위)
+                       [Day Week Month]    ← 시간 단위
+[All] [Articles] [Stubs]                   ← 데이터 필터 (Growth만)
+```
+
+### Sprint 1.5 plan
+
+- **Outlinks 컬럼** (Notes + Wiki 일관 적용) — 데이터는 이미 존재, UI만 추가
+
+### 폐기 (영구)
+
+- Hub Tier 자동 분류 (사용자 통제 부재로 혼선)
+- Folder 컬럼 (Wiki) — Categories가 그 역할
+- Words 컬럼 (Wiki) — 길이로 분류 안 함
+
+---
+
 ## 🚀 2026-04-29 (오후 후반) 세션 — **출시 준비 우선 결정. Sync는 v2.0**
 
 **같은 세션 내 재고 — (a) → (c) 변경**:

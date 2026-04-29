@@ -1,5 +1,15 @@
 # Technical Learnings
 
+## 2026-04-30 (Sprint 1.3)
+
+- **replace_all은 들여쓰기까지 매칭** — 동일 코드라도 들여쓰기 다르면 누락. 한 곳씩 수동 변경 필요할 수 있음. (예: wiki-view.tsx line 944 `<IconWiki size={20} />` 8 spaces, 나머지 두 곳은 10 spaces — replace_all에서 944만 누락)
+- **JSX text node에 em dash 직접 입력 금지** — Edit 도구가 `—` literal string으로 저장해 표시 버그(`—` 그대로 출력). 항상 `{"—"}` expression 형태로
+- **`article.layout` object 잔존 데이터** — Book Pivot 흔적 (PR #214에서 롤백 후 일부 데이터 남음). React child로 직접 렌더 시 "Objects are not valid" 에러. typeof guard로 빠른 fix, 마이그레이션은 별도 PR 권장
+- **`useBacklinksIndex` hook** — 노트별 in-degree(들어오는 링크 수) 정확한 lookup. `Note.backlinks?.length` 같은 필드는 type에 없으므로 hook으로 가져와야
+- **Linear sub-tabs 패턴 핵심** — 비-active 글자도 `text-muted-foreground` (full opacity) 유지. `/50`, `/60` 식 opacity 줄이면 흐림. active와 contrast는 글자 색이 아니라 배경(`bg-foreground/10`)으로
+- **dev server preview port 변동** — Claude Preview MCP `preview_start`가 처음 13497, 이후 reused로 3002. 같은 코드 베이스라 사용자 화면 = 우리 변경 반영 (HMR 작동)
+- **Notes 컬럼 헤더 색상** — `text-muted-foreground` (line 150 notes-table.tsx) — Wiki도 동일하게 통일하는 게 일관성 좋음
+
 ## 2026-03-16
 - Store는 실제 16 슬라이스 (relations 슬라이스가 문서에서 누락되어 있었음)
 - TemplatesView가 layout.tsx에 2번 마운트되는 복붙 버그 — mount-once 패턴에서 블록 복사 시 주의
