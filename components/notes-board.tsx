@@ -853,7 +853,6 @@ export function NotesBoard({
             viewState={viewState}
             onViewStateChange={(patch) => updateViewState(patch)}
             showViewMode
-            showRowDensity
             toggleStates={viewState.toggles ?? {}}
             onToggleChange={(key, value) =>
               updateViewState({ toggles: { ...(viewState.toggles ?? {}), [key]: value } })
@@ -966,7 +965,7 @@ export function NotesBoard({
                     folders={folders}
                     isActive={activePreviewId === note.id}
                     isSelected={selectedIds.has(note.id)}
-                    showCardPreview={viewState.rowDensity !== "compact"}
+                    showCardPreview={false}
                     groupBy={viewState.groupBy}
                     onClick={() => {
                       setSelectedIds(new Set())

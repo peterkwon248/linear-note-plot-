@@ -147,7 +147,6 @@ export function WikiView() {
     groupOrder: null,
     subGroupOrder: null,
     subGroupSortBy: "default" as const,
-    rowDensity: "standard" as const,
   })
   const handleWikiFilterToggle = (rule: FilterRule) => {
     setWikiFilters((prev) => {

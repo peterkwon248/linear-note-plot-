@@ -1,5 +1,5 @@
-import type { ViewState, ViewContextKey, GroupBy, GroupSortBy, RowDensity } from "./types"
-import { VALID_VIEW_CONTEXT_KEYS, VALID_SORT_FIELDS, VALID_GROUP_BY, VALID_VIEW_MODES, VALID_COLUMNS, VALID_GROUP_SORT_BY, VALID_ROW_DENSITY } from "./types"
+import type { ViewState, ViewContextKey, GroupBy, GroupSortBy } from "./types"
+import { VALID_VIEW_CONTEXT_KEYS, VALID_SORT_FIELDS, VALID_GROUP_BY, VALID_VIEW_MODES, VALID_COLUMNS, VALID_GROUP_SORT_BY } from "./types"
 
 /* ── Default ViewState ─────────────────────────────────── */
 
@@ -13,7 +13,6 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   visibleColumns: ["title", "status", "folder", "links", "reads", "updatedAt", "createdAt"],
   showEmptyGroups: false,
   toggles: {},
-  rowDensity: "standard",
   groupOrder: null,
   subGroupOrder: null,
   subGroupSortBy: "default",
@@ -97,15 +96,8 @@ export function normalizeViewState(raw: Partial<ViewState>, ctx: ViewContextKey)
     ),
     showEmptyGroups: typeof merged.showEmptyGroups === "boolean" ? merged.showEmptyGroups : false,
     toggles: (merged.toggles && typeof merged.toggles === "object" && !Array.isArray(merged.toggles))
-      ? (() => {
-          // Strip legacy compact/showCardPreview — migrated to rowDensity
-          const { compact: _c, showCardPreview: _sp, ...rest } = merged.toggles as Record<string, boolean>
-          return rest
-        })()
+      ? merged.toggles as Record<string, boolean>
       : {},
-    rowDensity: VALID_ROW_DENSITY.includes(merged.rowDensity as RowDensity)
-      ? (merged.rowDensity as RowDensity)
-      : "standard",
     groupOrder: (merged.groupOrder && typeof merged.groupOrder === "object" && !Array.isArray(merged.groupOrder))
       ? merged.groupOrder as Record<string, string[]>
       : null,

@@ -65,8 +65,6 @@ export interface FilterRule {
   value: string
 }
 
-export type RowDensity = "compact" | "standard" | "comfortable"
-
 export interface ViewState {
   viewMode: ViewMode
   sortField: SortField
@@ -78,8 +76,6 @@ export interface ViewState {
   showEmptyGroups: boolean
   /** View-config-specific toggle states (showArchived, showTrashed, etc.) */
   toggles: Record<string, boolean>
-  /** Row density: compact (32px) | standard (40px) | comfortable (56px + preview) */
-  rowDensity: RowDensity
   /** Custom group ordering per groupBy dimension. null = natural order */
   groupOrder: Record<string, string[]> | null
   /** Custom sub-group ordering per subGroupBy dimension. null = natural order */
@@ -151,8 +147,6 @@ export const VALID_GROUP_BY: GroupBy[] = [
 export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calendar"]
 
 export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", "count"]
-
-export const VALID_ROW_DENSITY: RowDensity[] = ["compact", "standard", "comfortable"]
 
 export const VALID_COLUMNS: string[] = [
   "title", "status", "folder", "links", "reads", "wordCount", "createdAt", "updatedAt",
