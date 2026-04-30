@@ -39,7 +39,9 @@ function clearTimers() {
   if (_hideTimer) { clearTimeout(_hideTimer); _hideTimer = null }
 }
 
-/** Show preview after 300ms delay. Ignored if currently pinned. */
+/** Show preview after 500ms delay. Ignored if currently pinned.
+ *  500ms = Notion/Gmail standard — long enough to filter out unintentional mouse-over,
+ *  short enough for users who deliberately hover to wait. */
 export function showNotePreview(target: HTMLElement, noteId: string, noteType: "note" | "wiki") {
   if (_pinned) return
   clearTimers()
@@ -52,7 +54,7 @@ export function showNotePreview(target: HTMLElement, noteId: string, noteType: "
       y: rect.bottom + 4,
     }
     notify()
-  }, 300)
+  }, 500)
 }
 
 /** Show preview by resolving a title first */

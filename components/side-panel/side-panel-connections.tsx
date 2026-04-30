@@ -18,9 +18,18 @@ import { IconWiki } from "@/components/plot-icons"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { GitBranch } from "@phosphor-icons/react/dist/ssr/GitBranch"
+import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
+import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import { cn } from "@/lib/utils"
+import { NotePickerDialog } from "@/components/note-picker-dialog"
+import { WikiPickerDialog } from "@/components/wiki-picker-dialog"
+import { getNoteDescendants } from "@/lib/note-hierarchy"
+import { getDescendants, getChildren } from "@/lib/wiki-hierarchy"
+import { navigateToWikiArticle } from "@/lib/wiki-article-nav"
 
 // ── Collapsible Section ──────────────────────────────────
 
@@ -125,12 +134,43 @@ function WikiArticleConnections() {
   const notes = usePlotStore((s) => s.notes)
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const openInSecondary = usePlotStore((s) => s.openInSecondary)
+  const setWikiArticleParent = usePlotStore((s) => s.setWikiArticleParent)
+
+  const [parentPickerOpen, setParentPickerOpen] = useState(false)
+  const [addChildOpen, setAddChildOpen] = useState(false)
 
   const articleId = ctx?.type === "wiki" ? ctx.id : null
   const article = useMemo(
     () => wikiArticles.find((a) => a.id === articleId) ?? null,
     [wikiArticles, articleId]
   )
+
+  const parentArticle = useMemo(() => {
+    if (!article?.parentArticleId) return null
+    return wikiArticles.find((a) => a.id === article.parentArticleId) ?? null
+  }, [article?.parentArticleId, wikiArticles])
+
+  const childArticles = useMemo(() => {
+    if (!article) return []
+    return getChildren(article.id, { wikiArticles })
+  }, [article, wikiArticles])
+
+  const parentPickerExcludeIds = useMemo(() => {
+    if (!article) return []
+    return [...getDescendants(article.id, { wikiArticles })]
+  }, [article, wikiArticles])
+
+  const childPickerExcludeIds = useMemo(() => {
+    if (!article) return []
+    return [...getDescendants(article.id, { wikiArticles })]
+  }, [article, wikiArticles])
+
+  const handleAddChildren = (selectedIds: string[]) => {
+    if (!article) return
+    for (const childId of selectedIds) {
+      setWikiArticleParent(childId, article.id)
+    }
+  }
 
   // Rich block-level contexts (note sources only — wiki sources scan plaintext only)
   const wikiBacklinkTarget = useMemo(
@@ -185,10 +225,78 @@ function WikiArticleConnections() {
     )
   }
 
+  const hierarchyCount = (parentArticle ? 1 : 0) + childArticles.length
   const totalCount = referencedNotes.length + referencedBy.length + linkingNotes.length
 
   return (
     <div className="flex-1 overflow-y-auto">
+      {/* Hierarchy — parent + children */}
+      <ConnectionSection
+        title="Hierarchy"
+        icon={<GitBranch size={14} weight="regular" />}
+        count={hierarchyCount}
+        defaultOpen
+      >
+        {/* Parent */}
+        <div className="space-y-0.5 mb-2">
+          <div className="flex items-center gap-1 px-2 mb-1">
+            <ArrowUp size={10} className="text-muted-foreground/50" />
+            <SubLabel>Parent</SubLabel>
+          </div>
+          {parentArticle ? (
+            <div className="flex items-center gap-1.5 px-2 py-0.5">
+              <button
+                onClick={() => navigateToWikiArticle(parentArticle.id)}
+                className="flex-1 min-w-0 text-left text-note text-foreground/80 hover:text-foreground truncate transition-colors duration-100"
+              >
+                {parentArticle.title}
+              </button>
+              <button
+                onClick={() => setWikiArticleParent(article.id, null)}
+                title="Remove parent"
+                className="shrink-0 text-muted-foreground/40 hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
+              >
+                <PhX size={12} weight="bold" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setParentPickerOpen(true)}
+              className="flex items-center gap-1.5 text-note text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100 px-2 py-0.5"
+            >
+              <PhPlus size={12} weight="bold" />
+              Set parent
+            </button>
+          )}
+        </div>
+
+        {/* Children */}
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-1 px-2 mb-1">
+            <ArrowDown size={10} className="text-muted-foreground/50" />
+            <SubLabel>Children</SubLabel>
+          </div>
+          {childArticles.map((child) => (
+            <button
+              key={child.id}
+              onClick={() => navigateToWikiArticle(child.id)}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground/70 hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
+            >
+              <IconWiki size={12} className="shrink-0 text-muted-foreground/40" />
+              <span className="truncate">{child.title}</span>
+            </button>
+          ))}
+          <button
+            onClick={() => setAddChildOpen(true)}
+            className="flex items-center gap-1.5 text-note text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100 px-2 py-0.5"
+          >
+            <PhPlus size={12} weight="bold" />
+            Add child
+          </button>
+        </div>
+      </ConnectionSection>
+
+      {/* Connected */}
       <ConnectionSection
         title="Connected"
         icon={<LinkSimple size={14} weight="regular" />}
@@ -266,6 +374,28 @@ function WikiArticleConnections() {
           </div>
         )}
       </ConnectionSection>
+
+      {/* Pickers */}
+      <WikiPickerDialog
+        open={parentPickerOpen}
+        onOpenChange={setParentPickerOpen}
+        title="Select parent article"
+        excludeIds={parentPickerExcludeIds}
+        onSelect={(selectedId) => {
+          setWikiArticleParent(article.id, selectedId)
+          setParentPickerOpen(false)
+        }}
+      />
+      {addChildOpen && (
+        <WikiPickerDialog
+          open={addChildOpen}
+          onOpenChange={setAddChildOpen}
+          title="Add children"
+          excludeIds={childPickerExcludeIds}
+          multiSelect={true}
+          onSelectMulti={handleAddChildren}
+        />
+      )}
     </div>
   )
 }
@@ -292,9 +422,39 @@ function NoteConnections() {
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCollections = usePlotStore((s) => s.wikiCollections)
   const openInSecondary = usePlotStore((s) => s.openInSecondary)
+  const openNote = usePlotStore((s) => s.openNote)
   const addWikiLink = usePlotStore((s) => s.addWikiLink)
+  const setNoteParent = usePlotStore((s) => s.setNoteParent)
+
+  const [parentPickerOpen, setParentPickerOpen] = useState(false)
+  const [addChildOpen, setAddChildOpen] = useState(false)
 
   const note = notes.find((n) => n.id === noteId) ?? null
+
+  // ── Hierarchy ────────────────────────────────────────────
+  const parentNote = useMemo(
+    () => (note?.parentNoteId ? notes.find((n) => n.id === note.parentNoteId) ?? null : null),
+    [note?.parentNoteId, notes]
+  )
+
+  const childNotes = useMemo(
+    () => notes.filter((n) => !n.trashed && n.parentNoteId === noteId),
+    [notes, noteId]
+  )
+
+  const parentPickerExcludeIds = useMemo(() => {
+    if (!noteId) return []
+    return Array.from(getNoteDescendants(noteId, { notes }))
+  }, [noteId, notes])
+
+  const childPickerExcludeIds = parentPickerExcludeIds
+
+  const handleAddChildren = (selectedIds: string[]) => {
+    if (!noteId) return
+    for (const childId of selectedIds) {
+      setNoteParent(childId, noteId)
+    }
+  }
 
   // ── Wiki article IDs set ───────────────────────────────
 
@@ -581,8 +741,100 @@ function NoteConnections() {
 
   // ── Render ───────────────────────────────────────────
 
+  const hierarchyCount = (parentNote ? 1 : 0) + childNotes.length
+
   return (
     <div className="flex-1 overflow-y-auto">
+      {/* Hierarchy */}
+      <ConnectionSection
+        title="Hierarchy"
+        icon={<GitBranch size={14} weight="regular" />}
+        count={hierarchyCount}
+        defaultOpen
+      >
+        {/* Parent */}
+        <div className="space-y-0.5 mb-2">
+          <div className="flex items-center gap-1 px-2 mb-1">
+            <ArrowUp size={10} className="text-muted-foreground/50" />
+            <SubLabel>Parent</SubLabel>
+          </div>
+          {parentNote ? (
+            <div className="flex items-center gap-1.5 px-2 py-0.5">
+              <button
+                onClick={() => openNote(parentNote.id)}
+                className="flex-1 min-w-0 text-left text-note text-foreground/80 hover:text-foreground truncate transition-colors duration-100"
+              >
+                {parentNote.title || "Untitled"}
+              </button>
+              <button
+                onClick={() => setNoteParent(note.id, null)}
+                title="Remove parent"
+                className="shrink-0 text-muted-foreground/40 hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
+              >
+                <PhX size={12} weight="bold" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setParentPickerOpen(true)}
+              className="flex items-center gap-1.5 text-note text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100 px-2 py-0.5"
+            >
+              <PhPlus size={12} weight="bold" />
+              Set parent
+            </button>
+          )}
+        </div>
+
+        {/* Children */}
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-1 px-2 mb-1">
+            <ArrowDown size={10} className="text-muted-foreground/50" />
+            <SubLabel>Children</SubLabel>
+          </div>
+          {childNotes.map((child) => (
+            <button
+              key={child.id}
+              onClick={() => openInSecondary(child.id)}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground/70 hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
+            >
+              <FileText size={12} className="shrink-0 text-muted-foreground/40" weight="regular" />
+              <span className="truncate">{child.title || "Untitled"}</span>
+            </button>
+          ))}
+          <button
+            onClick={() => setAddChildOpen(true)}
+            className="flex items-center gap-1.5 text-note text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100 px-2 py-0.5"
+          >
+            <PhPlus size={12} weight="bold" />
+            Add child
+          </button>
+        </div>
+      </ConnectionSection>
+
+      {/* Note parent picker */}
+      <NotePickerDialog
+        open={parentPickerOpen}
+        onOpenChange={setParentPickerOpen}
+        title="Select parent note"
+        excludeIds={parentPickerExcludeIds}
+        onSelect={(selectedId) => {
+          setNoteParent(note.id, selectedId)
+          setParentPickerOpen(false)
+        }}
+      />
+
+      {/* Note add-child picker (lazy mount) */}
+      {addChildOpen && (
+        <NotePickerDialog
+          open={addChildOpen}
+          onOpenChange={setAddChildOpen}
+          title="Add children"
+          excludeIds={childPickerExcludeIds}
+          multiSelect={true}
+          onSelectMulti={handleAddChildren}
+        />
+      )}
+
       {/* Connected */}
       <ConnectionSection
         title="Connected"

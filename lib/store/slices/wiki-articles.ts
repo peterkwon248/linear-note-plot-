@@ -34,6 +34,7 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         sectionIndex: buildSectionIndex(blocks),
         tags: partial.tags ?? [],
         linksOut: extractLinksFromWikiBlocks(blocks),
+        reads: 0,
         createdAt: now(),
         updatedAt: now(),
       }
@@ -110,6 +111,17 @@ export function createWikiArticlesSlice(set: Set, get: Get) {
         ),
       }))
       return true
+    },
+
+    /** Increment view count (reads) by 1. Does NOT update updatedAt. */
+    incrementWikiArticleReads: (articleId: string) => {
+      set((state: any) => ({
+        wikiArticles: state.wikiArticles.map((a: WikiArticle) =>
+          a.id === articleId
+            ? { ...a, reads: (a.reads ?? 0) + 1 }
+            : a
+        ),
+      }))
     },
 
     /** Toggle whole-article pin. Mirrors Note.pinned semantics. */

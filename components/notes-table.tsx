@@ -125,7 +125,7 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
 type VirtualItem =
   | { type: "header"; label: string; count: number; groupKey: string; groupBy: GroupBy }
   | { type: "subheader"; label: string; count: number; groupKey: string; parentKey: string; groupBy: GroupBy }
-  | { type: "note"; note: Note }
+  | { type: "note"; note: Note; depth?: number }
 
 /* ── Header cell ───────────────────────────────────────── */
 
@@ -749,7 +749,8 @@ export function NotesTable({
           }
         } else {
           for (const note of group.notes) {
-            items.push({ type: "note", note })
+            const depth = group.depthMap?.[note.id]
+            items.push({ type: "note", note, depth })
           }
         }
       }
@@ -1197,38 +1198,40 @@ export function NotesTable({
                             <span className="text-2xs text-muted-foreground tabular-nums">{item.count}</span>
                           </div>
                         ) : (
-                          <NoteRow
-                            note={item.note}
-                            folders={folders}
-                            links={backlinksMap.get(item.note.id) ?? 0}
-                            isActive={activePreviewId === item.note.id}
-                            isSelected={selectedIds.has(item.note.id)}
-                            selectionActive={selectedIds.size > 0}
-                            visibleColumns={effectiveVisibleCols}
-                            gridTemplate={gridTemplate}
-                            isCompact={isCompact}
-                            viewMode={viewState.viewMode}
-                            onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
-                            onClick={(e: React.MouseEvent) => {
-                              const flatIndex = flatNotes.findIndex((n) => n.id === item.note.id)
-                              handleRowClick(item.note.id, flatIndex, e)
-                            }}
-                            onDoubleClick={() => openNote(item.note.id)}
-                            onStatus={(s) => updateNote(item.note.id, { status: s })}
-                            onSetFolder={(folderId) => updateNote(item.note.id, { folderId })}
-                            onRemoveFolder={() => updateNote(item.note.id, { folderId: null })}
-                            onKeep={() => { triageKeep(item.note.id); pushUndo("Triage to Capture", () => moveBackToInbox(item.note.id), () => triageKeep(item.note.id)) }}
-                            onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
-                            onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id), () => triageTrash(item.note.id)) }}
-                            onPromote={() => { promoteToPermanent(item.note.id); pushUndo("Promote to Permanent", () => undoPromote(item.note.id), () => promoteToPermanent(item.note.id)) }}
-                            onDemote={() => { undoPromote(item.note.id); pushUndo("Demote to Capture", () => promoteToPermanent(item.note.id), () => undoPromote(item.note.id)) }}
-                            onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Inbox", () => triageKeep(item.note.id), () => moveBackToInbox(item.note.id)) }}
-                            onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
-                            onMergeWith={() => setMergePickerOpen(true, item.note.id)}
-                            onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
-                            showCardPreview={false}
-                            groupBy={viewState.groupBy}
-                          />
+                          <div style={item.depth ? { paddingLeft: `${item.depth * 24}px` } : undefined}>
+                            <NoteRow
+                              note={item.note}
+                              folders={folders}
+                              links={backlinksMap.get(item.note.id) ?? 0}
+                              isActive={activePreviewId === item.note.id}
+                              isSelected={selectedIds.has(item.note.id)}
+                              selectionActive={selectedIds.size > 0}
+                              visibleColumns={effectiveVisibleCols}
+                              gridTemplate={gridTemplate}
+                              isCompact={isCompact}
+                              viewMode={viewState.viewMode}
+                              onOpen={() => onRowClick ? onRowClick(item.note.id) : openNote(item.note.id)}
+                              onClick={(e: React.MouseEvent) => {
+                                const flatIndex = flatNotes.findIndex((n) => n.id === item.note.id)
+                                handleRowClick(item.note.id, flatIndex, e)
+                              }}
+                              onDoubleClick={() => openNote(item.note.id)}
+                              onStatus={(s) => updateNote(item.note.id, { status: s })}
+                              onSetFolder={(folderId) => updateNote(item.note.id, { folderId })}
+                              onRemoveFolder={() => updateNote(item.note.id, { folderId: null })}
+                              onKeep={() => { triageKeep(item.note.id); pushUndo("Triage to Capture", () => moveBackToInbox(item.note.id), () => triageKeep(item.note.id)) }}
+                              onSnooze={(opt) => triageSnooze(item.note.id, getSnoozeTime(opt))}
+                              onTrash={() => { triageTrash(item.note.id); pushUndo("Trash note", () => toggleTrash(item.note.id), () => triageTrash(item.note.id)) }}
+                              onPromote={() => { promoteToPermanent(item.note.id); pushUndo("Promote to Permanent", () => undoPromote(item.note.id), () => promoteToPermanent(item.note.id)) }}
+                              onDemote={() => { undoPromote(item.note.id); pushUndo("Demote to Capture", () => promoteToPermanent(item.note.id), () => undoPromote(item.note.id)) }}
+                              onMoveBack={() => { moveBackToInbox(item.note.id); pushUndo("Move back to Inbox", () => triageKeep(item.note.id), () => moveBackToInbox(item.note.id)) }}
+                              onRemind={(isoDate) => { setReminder(item.note.id, isoDate); toast("Reminder set") }}
+                              onMergeWith={() => setMergePickerOpen(true, item.note.id)}
+                              onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
+                              showCardPreview={false}
+                              groupBy={viewState.groupBy}
+                            />
+                          </div>
                         )}
                       </div>
                     )

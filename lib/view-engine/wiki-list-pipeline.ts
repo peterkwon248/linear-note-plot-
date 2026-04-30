@@ -16,8 +16,20 @@
  */
 
 import type { WikiArticle } from "../types"
-import type { FilterRule, SortRule } from "./types"
+import { isWikiStub } from "../wiki-utils"
+import type { FilterRule, GroupBy, SortRule } from "./types"
 import { isToday, isThisWeek, isThisMonth, isYesterday } from "date-fns"
+import { classifyWikiArticleRole, type WikiArticleRole } from "../wiki-hierarchy"
+
+/* ── Wiki Group type ─────────────────────────────────────── */
+
+export interface WikiGroup {
+  key: string
+  label: string
+  articles: WikiArticle[]
+  /** Per-article depth (0 = root). Only populated when groupBy="family". */
+  depthMap?: Record<string, number>
+}
 
 /* ── Helpers ─────────────────────────────────────────────── */
 
@@ -252,7 +264,20 @@ function compareSingleWiki(
       return dir * ap.localeCompare(bp)
     }
 
-    // Notes-specific fields (priority/status/folder/label/reads) — fail-safe 0
+    case "status": {
+      // Wiki status: Article (false = not stub) sorts before Stub (true). article first.
+      const aStub = isWikiStub(a) ? 1 : 0
+      const bStub = isWikiStub(b) ? 1 : 0
+      return dir * (aStub - bStub)
+    }
+
+    case "reads": {
+      const ar = a.reads ?? 0
+      const br = b.reads ?? 0
+      return dir * (ar - br)
+    }
+
+    // Notes-specific fields (priority/folder/label) — fail-safe 0
     default:
       return 0
   }
@@ -278,4 +303,295 @@ export function applyWikiSort(
     return 0
   })
   return sorted
+}
+
+/* ── Wiki Grouping ───────────────────────────────────────── */
+
+const WIKI_MAX_DEPTH = 20
+
+/**
+ * Build a depth map for wiki articles via parentArticleId chain.
+ * Root articles (no parentArticleId or pointing outside set) get depth 0.
+ * Cycle-safe via visited Set + WIKI_MAX_DEPTH cap.
+ */
+function buildWikiDepthMap(articles: WikiArticle[]): Map<string, number> {
+  const articleMap = new Map<string, WikiArticle>(articles.map((a) => [a.id, a]))
+  const depthCache = new Map<string, number>()
+
+  function getDepth(articleId: string, visited: Set<string>): number {
+    if (depthCache.has(articleId)) return depthCache.get(articleId)!
+    if (visited.has(articleId)) return 0  // cycle guard
+    const article = articleMap.get(articleId)
+    if (!article || !article.parentArticleId || !articleMap.has(article.parentArticleId)) {
+      depthCache.set(articleId, 0)
+      return 0
+    }
+    const nextVisited = new Set(visited)
+    nextVisited.add(articleId)
+    const parentDepth = getDepth(article.parentArticleId, nextVisited)
+    const depth = Math.min(parentDepth + 1, WIKI_MAX_DEPTH)
+    depthCache.set(articleId, depth)
+    return depth
+  }
+
+  for (const article of articles) {
+    getDepth(article.id, new Set())
+  }
+
+  return depthCache
+}
+
+/**
+ * Find the root ancestor ID for a wiki article.
+ * Traverses parentArticleId chain upward until no parent found in set.
+ * Cycle-safe via visited Set + WIKI_MAX_DEPTH cap.
+ */
+function getWikiRootId(articleId: string, articleMap: Map<string, WikiArticle>): string {
+  const visited = new Set<string>()
+  let current = articleId
+  let steps = 0
+
+  while (steps < WIKI_MAX_DEPTH) {
+    if (visited.has(current)) break  // cycle guard
+    visited.add(current)
+    const article = articleMap.get(current)
+    if (!article || !article.parentArticleId || !articleMap.has(article.parentArticleId)) break
+    current = article.parentArticleId
+    steps++
+  }
+
+  return current
+}
+
+export interface WikiGroupingExtras {
+  /** Required for "linkCount" grouping */
+  backlinksMap?: Map<string, number>
+  /** Full store article list for role classification (filterAwareRole OFF) */
+  allWikiArticles?: WikiArticle[]
+  /** When true, classify role based on filtered view slice; when false/undefined, use full store */
+  filterAwareRole?: boolean
+  /** categoryId → name lookup for "label" grouping headers (otherwise raw id leaks to UI) */
+  categoryNames?: Map<string, string>
+}
+
+/**
+ * Group wiki articles by the specified dimension.
+ * Currently supports: "none" | "family" | "tier" | "parent" | "linkCount" | "label" | "role".
+ * For grouping not handled here, returns a single flat group.
+ *
+ * @param articles - sorted+filtered article list
+ * @param groupBy - grouping dimension from ViewState
+ * @param extrasOrBacklinksMap - WikiGroupingExtras or legacy Map<string, number> for backward compat
+ */
+export function applyWikiGrouping(
+  articles: WikiArticle[],
+  groupBy: GroupBy,
+  extrasOrBacklinksMap?: WikiGroupingExtras | Map<string, number>,
+): WikiGroup[] {
+  // Backward compat: accept bare Map<string, number> as before
+  const extras: WikiGroupingExtras =
+    extrasOrBacklinksMap instanceof Map
+      ? { backlinksMap: extrasOrBacklinksMap }
+      : (extrasOrBacklinksMap ?? {})
+  const backlinksMap = extras.backlinksMap
+  switch (groupBy) {
+    case "none":
+      return [{ key: "_all", label: "", articles }]
+
+    case "family": {
+      const articleMap = new Map<string, WikiArticle>(articles.map((a) => [a.id, a]))
+      const depthMap = buildWikiDepthMap(articles)
+
+      // Group by root ancestor
+      const families = new Map<string, WikiArticle[]>()
+      for (const article of articles) {
+        const rootId = getWikiRootId(article.id, articleMap)
+        const bucket = families.get(rootId)
+        if (bucket) bucket.push(article)
+        else families.set(rootId, [article])
+      }
+
+      const groups: WikiGroup[] = []
+      for (const [rootId, members] of families) {
+        const root = articleMap.get(rootId)
+        const rootLabel = root?.title || "Untitled"
+
+        // Sort members by depth, then title
+        const sorted = [...members].sort((a, b) => {
+          const da = depthMap.get(a.id) ?? 0
+          const db = depthMap.get(b.id) ?? 0
+          if (da !== db) return da - db
+          return (a.title || "").localeCompare(b.title || "")
+        })
+
+        const groupDepthMap: Record<string, number> = {}
+        for (const article of sorted) {
+          groupDepthMap[article.id] = depthMap.get(article.id) ?? 0
+        }
+
+        groups.push({
+          key: `family-${rootId}`,
+          label: rootLabel,
+          articles: sorted,
+          depthMap: groupDepthMap,
+        })
+      }
+
+      // Sort groups by root label
+      groups.sort((a, b) => a.label.localeCompare(b.label))
+      return groups
+    }
+
+    case "tier": {
+      // Group by depth from root (0 = root, 1 = child, ...)
+      const depthMap = buildWikiDepthMap(articles)
+      const buckets = new Map<number, WikiArticle[]>()
+
+      for (const article of articles) {
+        const d = depthMap.get(article.id) ?? 0
+        const bucket = buckets.get(d)
+        if (bucket) bucket.push(article)
+        else buckets.set(d, [article])
+      }
+
+      return [...buckets.entries()]
+        .sort(([a], [b]) => a - b)
+        .map(([depth, arts]) => ({
+          key: `tier-${depth}`,
+          label: depth === 0 ? "Root" : `Tier ${depth + 1}`,
+          articles: arts,
+        }))
+    }
+
+    case "parent": {
+      // Group by parentArticleId (direct parent)
+      const articleMap = new Map<string, WikiArticle>(articles.map((a) => [a.id, a]))
+      const parentGroups = new Map<string, WikiArticle[]>()
+      const noParent: WikiArticle[] = []
+
+      for (const article of articles) {
+        const parentId = article.parentArticleId
+        if (!parentId) {
+          noParent.push(article)
+          continue
+        }
+        const bucket = parentGroups.get(parentId)
+        if (bucket) bucket.push(article)
+        else parentGroups.set(parentId, [article])
+      }
+
+      const groups: WikiGroup[] = []
+      const sortedParentIds = [...parentGroups.keys()].sort((a, b) => {
+        const titleA = articleMap.get(a)?.title ?? a
+        const titleB = articleMap.get(b)?.title ?? b
+        return titleA.localeCompare(titleB)
+      })
+
+      for (const parentId of sortedParentIds) {
+        const parent = articleMap.get(parentId)
+        groups.push({
+          key: `parent-${parentId}`,
+          label: parent?.title ?? "Unknown",
+          articles: parentGroups.get(parentId)!,
+        })
+      }
+
+      if (noParent.length > 0) {
+        groups.push({ key: "_no_parent", label: "No Parent", articles: noParent })
+      }
+
+      return groups
+    }
+
+    case "linkCount": {
+      type LBucket = "none" | "few" | "well" | "hub"
+      const bucketLabels: Record<LBucket, string> = {
+        none: "No Links",
+        few: "1-2 Links",
+        well: "3-5 Links",
+        hub: "6+ Links",
+      }
+      const bucketOrder: LBucket[] = ["none", "few", "well", "hub"]
+      const buckets: Record<LBucket, WikiArticle[]> = { none: [], few: [], well: [], hub: [] }
+
+      for (const article of articles) {
+        const inCount = backlinksMap?.get(article.id) ?? 0
+        const outCount = article.linksOut?.length ?? 0
+        const total = inCount + outCount
+        let bucket: LBucket
+        if (total === 0) bucket = "none"
+        else if (total <= 2) bucket = "few"
+        else if (total <= 5) bucket = "well"
+        else bucket = "hub"
+        buckets[bucket].push(article)
+      }
+
+      return bucketOrder.map((key) => ({
+        key: `linkCount-${key}`,
+        label: bucketLabels[key],
+        articles: buckets[key],
+      }))
+    }
+
+    case "label": {
+      // label = WikiCategory for wiki articles (categoryIds[])
+      const categoryGroups = new Map<string, WikiArticle[]>()
+      const noCategory: WikiArticle[] = []
+
+      for (const article of articles) {
+        const cats = article.categoryIds ?? []
+        if (cats.length === 0) {
+          noCategory.push(article)
+          continue
+        }
+        // Place article in the first category bucket
+        const catId = cats[0]
+        const bucket = categoryGroups.get(catId)
+        if (bucket) bucket.push(article)
+        else categoryGroups.set(catId, [article])
+      }
+
+      const groups: WikiGroup[] = []
+      for (const [catId, arts] of categoryGroups) {
+        const name = extras.categoryNames?.get(catId) ?? catId
+        groups.push({ key: `label-${catId}`, label: name, articles: arts })
+      }
+      if (noCategory.length > 0) {
+        groups.push({ key: "_no_label", label: "Uncategorized", articles: noCategory })
+      }
+
+      return groups
+    }
+
+    case "role": {
+      const WIKI_ROLE_KEYS: WikiArticleRole[] = ["root", "parent", "child", "solo"]
+      const WIKI_ROLE_LABELS: Record<WikiArticleRole, string> = {
+        root: "Root",
+        parent: "Parent",
+        child: "Child",
+        solo: "Solo",
+      }
+      const buckets: Record<WikiArticleRole, WikiArticle[]> = {
+        root: [],
+        parent: [],
+        child: [],
+        solo: [],
+      }
+      // filterAwareRole ON → classify within current view slice
+      // filterAwareRole OFF (default) → classify within full store (allWikiArticles ?? articles)
+      const lookupSource = extras.filterAwareRole ? articles : (extras.allWikiArticles ?? articles)
+      const store = { wikiArticles: lookupSource }
+      for (const article of articles) {
+        buckets[classifyWikiArticleRole(article.id, store)].push(article)
+      }
+      return WIKI_ROLE_KEYS.map((key) => ({
+        key: `role-${key}`,
+        label: WIKI_ROLE_LABELS[key],
+        articles: buckets[key],
+      }))
+    }
+
+    default:
+      return [{ key: "_all", label: "", articles }]
+  }
 }

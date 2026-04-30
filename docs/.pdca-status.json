@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-27T07:15:19.281Z",
+  "lastUpdated": "2026-04-30T08:28:03.126Z",
   "activeFeatures": [
     "editor",
     "wizardly-kare",
@@ -30,7 +30,8 @@
     "adoring-benz",
     "block-registry",
     "insights",
-    "pedantic-robinson-e8e2a1"
+    "pedantic-robinson-e8e2a1",
+    "wizardly-shamir-32ff22"
   ],
   "primaryFeature": "editor",
   "features": {
@@ -43,9 +44,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-05T00:23:24.929Z",
-        "lastUpdated": "2026-04-27T07:07:58.197Z"
+        "lastUpdated": "2026-04-30T07:00:52.113Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\components\\editor\\TipTapEditor.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\components\\editor\\NoteEditorAdapter.tsx"
     },
     "wizardly-kare": {
       "phase": "do",
@@ -134,9 +135,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-05T06:36:18.058Z",
-        "lastUpdated": "2026-03-05T06:36:18.058Z"
+        "lastUpdated": "2026-04-30T06:27:20.783Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-kare\\components\\ui\\command.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\components\\ui\\command.tsx"
     },
     "notes": {
       "phase": "do",
@@ -186,9 +187,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:20.714Z",
-        "lastUpdated": "2026-03-11T06:53:22.432Z"
+        "lastUpdated": "2026-04-30T08:27:48.010Z"
       },
-      "lastFile": "/c/Users/kwonkyunghun/Desktop/리니어 노트앱/.claude/worktrees/angry-easley/lib/view-engine/types.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\lib\\view-engine\\wiki-list-pipeline.ts"
     },
     "slices": {
       "phase": "do",
@@ -199,9 +200,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:25.454Z",
-        "lastUpdated": "2026-04-09T06:07:14.689Z"
+        "lastUpdated": "2026-04-30T08:02:23.353Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\vigorous-spence\\lib\\store\\slices\\global-bookmarks.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\lib\\store\\slices\\wiki-articles.ts"
     },
     "store": {
       "phase": "do",
@@ -212,9 +213,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-11T04:44:34.388Z",
-        "lastUpdated": "2026-04-14T05:54:46.498Z"
+        "lastUpdated": "2026-04-30T08:02:34.040Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\adoring-benz\\lib\\store\\index.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\lib\\store\\types.ts"
     },
     "__tests__": {
       "phase": "do",
@@ -264,9 +265,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T07:56:19.797Z",
-        "lastUpdated": "2026-04-27T07:15:19.281Z"
+        "lastUpdated": "2026-04-30T08:19:56.831Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\components\\wiki-editor\\wiki-growth-chart.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\components\\wiki-editor\\wiki-insights-chart.tsx"
     },
     "core": {
       "phase": "do",
@@ -303,9 +304,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-03T02:40:12.004Z",
-        "lastUpdated": "2026-04-09T08:15:04.179Z"
+        "lastUpdated": "2026-04-30T07:00:34.591Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\vigorous-spence\\components\\side-panel\\side-panel-context.tsx"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\components\\side-panel\\side-panel-connections.tsx"
     },
     "workspace": {
       "phase": "do",
@@ -394,9 +395,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-27T07:10:21.986Z",
-        "lastUpdated": "2026-04-27T07:10:47.172Z"
+        "lastUpdated": "2026-04-30T08:15:32.141Z"
       },
-      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\lib\\insights\\timeseries.ts"
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\lib\\insights\\timeseries.ts"
     },
     "pedantic-robinson-e8e2a1": {
       "phase": "do",
@@ -410,6 +411,19 @@
         "lastUpdated": "2026-04-27T07:12:04.118Z"
       },
       "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\pedantic-robinson-e8e2a1\\components\\views\\wiki-view.tsx"
+    },
+    "wizardly-shamir-32ff22": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-30T05:37:04.361Z",
+        "lastUpdated": "2026-04-30T08:28:03.126Z"
+      },
+      "lastFile": "C:\\Users\\kwonkyunghun\\Desktop\\리니어 노트앱\\.claude\\worktrees\\wizardly-shamir-32ff22\\components\\views\\wiki-view.tsx"
     }
   },
   "pipeline": {
@@ -420,7 +434,7 @@
   "session": {
     "startedAt": "2026-03-05T00:16:19.956Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-27T07:15:19.281Z"
+    "lastActivity": "2026-04-30T08:28:03.126Z"
   },
   "history": [
     {
@@ -5568,6 +5582,810 @@
     {
       "timestamp": "2026-04-27T07:15:19.281Z",
       "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:37:04.361Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:37:12.540Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:37:18.242Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:37:22.695Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:37:33.992Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:37:45.705Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:37:57.887Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:38:19.755Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:38:24.267Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:38:25.147Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:38:28.642Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:38:29.848Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:38:33.485Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:38:34.920Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:38:48.524Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:38:54.756Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:39:00.919Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:39:01.278Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:39:04.431Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:39:08.071Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:39:39.907Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:39:48.626Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:39:54.472Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:40:16.866Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:40:28.842Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:40:34.852Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:40:40.625Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:41:00.895Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:41:11.253Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:41:16.397Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:41:23.927Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:41:31.016Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:41:56.982Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:42:01.437Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:50:18.449Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:50:26.712Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T05:50:36.779Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:06:27.615Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:13:41.775Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:13:50.124Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:13:56.068Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:14:15.894Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:14:23.890Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:14:27.617Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:14:32.968Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:14:52.063Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:15:06.967Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:15:25.640Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:15:33.239Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:15:41.952Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:15:55.077Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:18:03.595Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:18:14.644Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:27:20.783Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:28:04.799Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:28:17.422Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:42:38.939Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:43:43.647Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:44:13.488Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:44:28.657Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:44:41.943Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:44:48.777Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:45:00.470Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:45:14.181Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:45:30.722Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:45:43.394Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:45:58.360Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:46:05.736Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:46:28.069Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T06:57:48.855Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:00:24.775Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:00:34.591Z",
+      "feature": "side-panel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:00:50.619Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:00:52.113Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:40:15.256Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:40:24.260Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:40:32.637Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:40:36.939Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:40:44.471Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:40:49.349Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:41:01.949Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:41:07.551Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:41:19.554Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:41:25.154Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:41:31.478Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:47:25.627Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:47:30.735Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:47:37.020Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:47:48.613Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:48:00.875Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:48:05.987Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:48:09.845Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:48:22.734Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:48:39.886Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:48:44.936Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:48:57.850Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T07:54:20.349Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:01:55.841Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:02:01.183Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:02:07.395Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:02:13.741Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:02:23.353Z",
+      "feature": "slices",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:02:34.040Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:02:42.098Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:02:53.236Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:03:07.845Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:03:14.753Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:03:23.656Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:03:29.853Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:03:36.352Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:03:43.480Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:03:49.549Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:03:58.543Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:04:06.776Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:04:12.541Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:04:17.923Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:15:17.984Z",
+      "feature": "insights",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:15:21.984Z",
+      "feature": "insights",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:15:32.142Z",
+      "feature": "insights",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:15:59.008Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:16:14.411Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:16:31.980Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:16:38.214Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:16:41.759Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:19:51.374Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:19:54.502Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:19:56.831Z",
+      "feature": "wiki-editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:23:29.376Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:24:41.643Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:24:45.601Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:25:01.700Z",
+      "feature": "wizardly-shamir-32ff22",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:27:44.537Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:27:48.010Z",
+      "feature": "view-engine",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-30T08:28:03.126Z",
+      "feature": "wizardly-shamir-32ff22",
       "phase": "do",
       "action": "updated"
     }

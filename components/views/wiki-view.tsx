@@ -3,7 +3,8 @@
 import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react"
 import type { FilterRule, ViewState, ViewContextKey } from "@/lib/view-engine/types"
 import { buildViewStateForContext } from "@/lib/view-engine/defaults"
-import { applyWikiFilters, applyWikiSort } from "@/lib/view-engine/wiki-list-pipeline"
+import { applyWikiFilters, applyWikiSort, applyWikiGrouping } from "@/lib/view-engine/wiki-list-pipeline"
+import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { WIKI_VIEW_CONFIG, WIKI_CATEGORY_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -48,6 +49,7 @@ import { toast } from "sonner"
 import { WikiArticleReader } from "./wiki-article-reader"
 import { WikiDashboard } from "./wiki-dashboard"
 import { WikiList } from "./wiki-list"
+import { WikiBoard } from "./wiki-board"
 import { WikiFloatingActionBar } from "@/components/wiki-floating-action-bar"
 import { WikiArticleView } from "@/components/wiki-editor/wiki-article-view"
 import { WikiArticleEncyclopedia } from "@/components/wiki-editor/wiki-article-encyclopedia"
@@ -69,6 +71,7 @@ export function WikiView() {
   const mergeWikiArticles = usePlotStore((s) => s.mergeWikiArticles)
   const deleteWikiArticle = usePlotStore((s) => s.deleteWikiArticle)
   const updateWikiArticle = usePlotStore((s) => s.updateWikiArticle)
+  const incrementWikiArticleReads = usePlotStore((s) => s.incrementWikiArticleReads)
   const addWikiBlock = usePlotStore((s) => s.addWikiBlock)
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
   const router = useRouter()
@@ -234,6 +237,7 @@ export function WikiView() {
     // PhCheck if id is a WikiArticle directly
     const directArticle = wikiArticles.find((a) => a.id === id)
     if (directArticle) {
+      incrementWikiArticleReads(id)
       setSelectedWikiArticleId(id)
       return
     }
@@ -244,12 +248,13 @@ export function WikiView() {
         (a) => a.title.toLowerCase() === note.title.toLowerCase()
       )
       if (matchingArticle) {
+        incrementWikiArticleReads(matchingArticle.id)
         setSelectedWikiArticleId(matchingArticle.id)
         return
       }
     }
     setSelectedArticleId(id)
-  }, [notes, wikiArticles, clearArticleSelection])
+  }, [notes, wikiArticles, clearArticleSelection, incrementWikiArticleReads])
 
   // Smart navigation: wiki articles open in-view, non-wiki go to /notes
   const handleNavigate = useCallback(
@@ -336,6 +341,24 @@ export function WikiView() {
   const sortedFilteredWikiNotes = useMemo(
     () => applyWikiSort(filteredWikiNotes, wikiViewState.sortFields, backlinkCounts),
     [filteredWikiNotes, wikiViewState.sortFields, backlinkCounts]
+  )
+
+  // Grouping for wiki list view (family / tier / parent / linkCount / label / role / none)
+  const filterAwareRole = wikiViewState.toggles?.filterAwareRole === true
+  // categoryId → name lookup so "label" grouping headers show readable names instead of raw ids
+  const categoryNamesMap = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const c of wikiCategories) m.set(c.id, c.name)
+    return m
+  }, [wikiCategories])
+  const wikiGroups = useMemo(
+    (): WikiGroup[] => applyWikiGrouping(sortedFilteredWikiNotes, wikiViewState.groupBy, {
+      backlinksMap: backlinkCounts,
+      allWikiArticles: wikiArticles,
+      filterAwareRole,
+      categoryNames: categoryNamesMap,
+    }),
+    [sortedFilteredWikiNotes, wikiViewState.groupBy, backlinkCounts, wikiArticles, filterAwareRole, categoryNamesMap]
   )
 
   // Hydrate WIKI_VIEW_CONFIG.filterCategories with runtime WikiCategory entities.
@@ -1224,36 +1247,54 @@ export function WikiView() {
            List Mode (table-list view)
            ══════════════════════════════════════════════════ */
         <div className="flex flex-1 overflow-hidden">
-          <WikiList
-            filteredWikiNotes={filteredWikiNotes}
-            sortedFilteredWikiNotes={sortedFilteredWikiNotes}
-            backlinkCounts={backlinkCounts}
-            dashFilter={dashFilter}
-            setDashFilter={setDashFilter}
-            showAllArticles={showAllArticles}
-            setShowAllArticles={setShowAllArticles}
-            categoryFilterLabel={categoryFilterTagId ? wikiCategories.find(c => c.id === categoryFilterTagId)?.name ?? null : null}
-            onClearCategoryFilter={() => setWikiCategoryFilter(null)}
-            onOpenArticle={openArticle}
-            onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
-            onSplitArticle={(id) => {
-              setSelectedWikiArticleId(id)
-              setIsEditingWikiArticle(true)
-            }}
-            onDeleteArticle={(id) => {
-              deleteWikiArticle(id)
-              toast.success("Article deleted")
-            }}
-            redLinks={redLinks}
-            onCreateFromRedLink={handleCreateFromRedLink}
-            selectedIds={selectedArticleIds}
-            onSelect={(id, opts) => handleArticleSelect(id, opts)}
-            onSelectAll={handleArticleSelectAll}
-            stubCount={stubCount}
-            wikiArticles={wikiArticles}
-            visibleColumns={wikiViewState.visibleColumns}
-            wikiCategories={wikiCategories}
-          />
+          {wikiViewState.viewMode === "board" ? (
+            <WikiBoard
+              groups={wikiGroups}
+              groupBy={wikiViewState.groupBy}
+              viewState={wikiViewState}
+              visibleColumns={wikiViewState.visibleColumns}
+              wikiCategories={wikiCategories}
+              backlinkCounts={backlinkCounts}
+              selectedIds={selectedArticleIds}
+              activeArticleId={selectedWikiArticleId}
+              onOpenArticle={openArticle}
+              onSelect={(id, opts) => handleArticleSelect(id, opts)}
+              onUpdateViewState={updateWikiViewState}
+            />
+          ) : (
+            <WikiList
+              filteredWikiNotes={filteredWikiNotes}
+              sortedFilteredWikiNotes={sortedFilteredWikiNotes}
+              backlinkCounts={backlinkCounts}
+              dashFilter={dashFilter}
+              setDashFilter={setDashFilter}
+              showAllArticles={showAllArticles}
+              setShowAllArticles={setShowAllArticles}
+              categoryFilterLabel={categoryFilterTagId ? wikiCategories.find(c => c.id === categoryFilterTagId)?.name ?? null : null}
+              onClearCategoryFilter={() => setWikiCategoryFilter(null)}
+              onOpenArticle={openArticle}
+              onMergeArticle={(sourceId) => setWikiMergeSourceId(sourceId)}
+              onSplitArticle={(id) => {
+                setSelectedWikiArticleId(id)
+                setIsEditingWikiArticle(true)
+              }}
+              onDeleteArticle={(id) => {
+                deleteWikiArticle(id)
+                toast.success("Article deleted")
+              }}
+              redLinks={redLinks}
+              onCreateFromRedLink={handleCreateFromRedLink}
+              selectedIds={selectedArticleIds}
+              onSelect={(id, opts) => handleArticleSelect(id, opts)}
+              onSelectAll={handleArticleSelectAll}
+              stubCount={stubCount}
+              wikiArticles={wikiArticles}
+              visibleColumns={wikiViewState.visibleColumns}
+              wikiCategories={wikiCategories}
+              wikiGroups={wikiGroups}
+              groupBy={wikiViewState.groupBy}
+            />
+          )}
           {selectedArticleIds.size > 0 && (
             <WikiFloatingActionBar
               selectedIds={selectedArticleIds}

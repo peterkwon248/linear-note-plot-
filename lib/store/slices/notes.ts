@@ -1,6 +1,7 @@
 import type { Note, NoteBody, ActiveView, WikiInfoboxEntry } from "../../types"
 import { extractPreview, extractLinksOut } from "../../body-helpers"
 import { genId, now, workflowDefaults, persistBody, removeBody, type AppendEventFn } from "../helpers"
+import { wouldCreateNoteCycle } from "../../note-hierarchy"
 
 type Set = (fn: ((state: any) => any) | any) => void
 type Get = () => any
@@ -422,6 +423,27 @@ export function createNotesSlice(set: Set, get: Get, appendEvent: AppendEventFn)
       persistBody({ id, content: "", contentJson: null })
       appendEvent(id, "created")
       return id
+    },
+
+    setNoteParent: (noteId: string, parentId: string | null): boolean => {
+      const state = get()
+      const notes: Note[] = state.notes
+
+      // Guard: note must exist
+      if (!notes.find((n: Note) => n.id === noteId)) return false
+
+      // Guard: self-parent
+      if (parentId === noteId) return false
+
+      // Guard: cycle (candidateParent is a descendant of note)
+      if (parentId !== null && wouldCreateNoteCycle(noteId, parentId, { notes })) return false
+
+      set((s: any) => ({
+        notes: s.notes.map((n: Note) =>
+          n.id === noteId ? { ...n, parentNoteId: parentId, updatedAt: now() } : n
+        ),
+      }))
+      return true
     },
 
     setNoteAliases: (noteId: string, aliases: string[]) => {

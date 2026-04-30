@@ -1198,5 +1198,13 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v95: WikiArticle.reads — view count field. Backfill 0 for all existing articles.
+  if (Array.isArray(state.wikiArticles)) {
+    state.wikiArticles = (state.wikiArticles as any[]).map((a: any) => ({
+      ...a,
+      reads: a.reads ?? 0,
+    }))
+  }
+
   return state as unknown as PlotState
 }

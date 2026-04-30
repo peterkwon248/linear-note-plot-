@@ -11,6 +11,7 @@
 
 import type { Note, WikiArticle } from "@/lib/types"
 import type { TimeSeriesPoint } from "./types"
+import { isWikiStub } from "@/lib/wiki-utils"
 
 export type BucketSize = "day" | "week" | "month"
 
@@ -128,11 +129,16 @@ export function computeWikiTimeSeries(
   let cumNotes = 0
   let cumWiki = 0
   let cumEdges = 0
+  let cumArticles = 0
+  let cumStubs = 0
+  let cumWikiEdges = 0
 
   for (let i = 0; i < finalBuckets.length; i++) {
     const bucketEnd = nextBucket(finalBuckets[i], bucketSize).getTime()
     let newNotes = 0
     let newWiki = 0
+    let newArticles = 0
+    let newStubs = 0
 
     while (noteIdx < sortedNotes.length && sortedNotes[noteIdx].t < bucketEnd) {
       const n = sortedNotes[noteIdx].note
@@ -142,8 +148,19 @@ export function computeWikiTimeSeries(
       noteIdx++
     }
     while (wikiIdx < sortedWiki.length && sortedWiki[wikiIdx].t < bucketEnd) {
+      const w = sortedWiki[wikiIdx].wiki
       cumWiki++
       newWiki++
+      // Article/stub split — current store state at compute time
+      if (isWikiStub(w)) {
+        cumStubs++
+        newStubs++
+      } else {
+        cumArticles++
+        newArticles++
+        // Count wiki-to-wiki links (linksOut on WikiArticle)
+        cumWikiEdges += w.linksOut?.length ?? 0
+      }
       wikiIdx++
     }
 
@@ -154,6 +171,11 @@ export function computeWikiTimeSeries(
       newNotes,
       newWiki,
       totalEdges: cumEdges,
+      totalArticles: cumArticles,
+      totalStubs: cumStubs,
+      newArticles,
+      newStubs,
+      totalWikiEdges: cumWikiEdges,
     })
   }
 

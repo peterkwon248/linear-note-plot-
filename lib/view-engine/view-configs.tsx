@@ -57,6 +57,7 @@ const TrashIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" st
 const SortIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="10" y2="4"/><line x1="2.5" y1="8" x2="7.5" y2="8"/><line x1="2.5" y1="12" x2="5" y2="12"/></svg>
 const GraphIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><line x1="5" y1="12.7" x2="11" y2="12.7"/></svg>
 const EyeIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 8s2.7-5 7-5 7 5 7 5-2.7 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+const CircleHalfIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5a5.5 5.5 0 010 11" fill="currentColor" opacity="0.5" stroke="none"/></svg>
 
 export const NOTES_VIEW_CONFIG: ViewConfig = {
   showFilter: true,
@@ -137,9 +138,13 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { value: "status", label: "Status" },
       { value: "folder", label: "Folder" },
       { value: "label", label: "Label" },
+      { value: "parent", label: "Parent" },
+      { value: "role", label: "Role" },
+      { value: "family", label: "Family" },
     ],
     toggles: [
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
+      { key: "filterAwareRole", label: "Filter-aware role" },
     ],
     properties: [
       { key: "status", label: "Status", icon: StatusIcon },
@@ -209,13 +214,15 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
     ]},
   ],
   displayConfig: {
-    supportedModes: ["list"],
-    // priority 제외 (wiki에 의미 없음). status 제외 (stub/article은 런타임 파생)
+    supportedModes: ["list", "board"],
+    // priority 제외 (wiki에 의미 없음)
     orderingOptions: [
       { value: "updatedAt", label: "Updated" },
       { value: "createdAt", label: "Created" },
       { value: "title", label: "Name" },
       { value: "links", label: "Most linked" },
+      { value: "reads", label: "Most read" },
+      { value: "status", label: "Status" },
     ],
     // tier(depth) / linkCount(bucket) / parent — wiki 고유 위계
     groupingOptions: [
@@ -223,16 +230,22 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "tier", label: "Tier (depth)" },
       { value: "linkCount", label: "Link count" },
       { value: "parent", label: "Parent article" },
+      { value: "role", label: "Role" },
       { value: "label", label: "Category" },
+      { value: "family", label: "Family" },
     ],
     toggles: [
       { key: "showStubs", label: "Show stubs", icon: ContentIcon },
+      { key: "filterAwareRole", label: "Filter-aware role" },
     ],
     properties: [
       { key: "title", label: "Title", icon: ContentIcon },
+      { key: "status", label: "Status", icon: CircleHalfIcon },
       { key: "links", label: "Backlinks", icon: LinkIcon },
+      { key: "reads", label: "Reads", icon: EyeIcon },
       { key: "tags", label: "Categories", icon: TagIcon },
       { key: "aliases", label: "Aliases", icon: ContentIcon },
+      { key: "createdAt", label: "Created", icon: CalendarIcon },
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
     ],
   },

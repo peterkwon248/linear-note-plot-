@@ -242,6 +242,9 @@ export interface PlotState {
   restoreAttachment: (attachmentId: string) => void
   permanentlyDeleteAttachment: (attachmentId: string) => void
 
+  // Hierarchy
+  setNoteParent: (noteId: string, parentId: string | null) => boolean
+
   // Wiki
   setNoteAliases: (noteId: string, aliases: string[]) => void
   setWikiInfobox: (noteId: string, infobox: WikiInfoboxEntry[]) => void
@@ -295,6 +298,7 @@ export interface PlotState {
   unmergeFromHistory: (articleId: string, snapshotIndex: number) => string[]
   setWikiArticleParent: (articleId: string, parentId: string | null) => boolean
   toggleWikiArticlePin: (articleId: string) => void
+  incrementWikiArticleReads: (articleId: string) => void
 
   // ── References ──
   createReference: (partial: { title: string; content: string; contentJson?: Record<string, unknown> | null; fields?: Array<{ key: string; value: string }>; tags?: string[] }) => string

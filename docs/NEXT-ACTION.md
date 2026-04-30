@@ -5,27 +5,27 @@
 
 ---
 
-**Last Updated**: 2026-04-30 (오전) — **Sprint 1.3 머지 완료. 다음은 Sprint 1.4 (Wiki 보드 뷰 + 차트 개선).**
+**Last Updated**: 2026-04-30 (오후) — **Sprint 1.4 완료 (4 PR 통합 단일 commit). 다음은 Sprint 1.5 (Outlinks + 위계 컬럼) + Wiki Hierarchy filter fix.**
 
 ---
 
 ## 🆕 다음 컴퓨터에서 시작할 때 (다른 머신 인계)
 
-1. `git pull origin main` — Sprint 1.3 머지 코드 가져오기
+1. `git pull origin main` — Sprint 1.4 머지 코드 가져오기
 2. 새 worktree 생성:
    ```bash
    git worktree add .claude/worktrees/<new-name> -b claude/<new-name>
    cd .claude/worktrees/<new-name>
-   npm install  # 첫 worktree 만든 후 한 번
+   npm install
    ```
-3. `npm run dev` (port 3002 기본 — 이미 사용 중이면 autoPort)
-4. **이 파일 (NEXT-ACTION.md) 읽고 Sprint 1.4 작업 시작**
+3. `npm run dev` (port 3002 기본)
+4. **이 파일 읽고 Sprint 1.5 또는 follow-up fix 시작**
 
 ---
 
 ## 🎯 큰 방향 (변경 없음)
 
-**Sync 대신 출시 준비 먼저** — 결정 #3 = (c) Free 출시 후 v2.0에 Sync (6개월~1년 후)
+**Sync 대신 출시 준비 먼저** — 결정 #3 = (c) Free 출시 후 v2.0에 Sync (6개월~1년 후).
 
 **타임라인**: 자유 — 품질 우선
 **플랫폼**: 데스크톱 우선 → 회원 수 충분해지면 모바일 (PWA + TWA)
@@ -33,73 +33,51 @@
 
 ---
 
-## 🚀 Sprint 1.4 (~1주): Wiki 보드 뷰 + 차트 개선 + Knowledge Connectivity
+## 🚨 다음 즉시 액션 — Wiki Hierarchy filter 4 카테고리 fix (S, ~10분)
 
-### A. Wiki 보드 뷰
+**이슈** (사용자가 Sprint 1.4 끝에서 발견): wiki Hierarchy filter의 `_root` 옵션이 Solo 노트도 포함. 일반 트리 정의 (Root = parent X)라 Solo (parent X + children X)도 Root로 분류됨.
 
-- [ ] `WIKI_VIEW_CONFIG.displayConfig.supportedModes`에 `"board"` 추가 ([lib/view-engine/view-configs.tsx:212](lib/view-engine/view-configs.tsx))
-- [ ] View mode toggle UI (List ↔ Board) — Notes 패턴 재활용
-- [ ] `WikiBoard` 컴포넌트 신규 (Notes 보드 컴포넌트 참고)
-- [ ] **Group by**:
-  - default: **Category** (가변, 사용자 정의 — Notes의 status 위치)
-  - 옵션: **Tier** (Stub/Article 2-column, "stub 정리" 워크플로)
-  - 옵션: **Parent article** (위계)
-- [ ] **카드 디자인** (Linear 식 컴팩트):
-  - 제목 (bold)
-  - Tier badge (Stub / Article)
-  - Backlinks 숫자
-  - Updated relative
-  - (옵션) Categories chip — display properties 토글
-- [ ] 카드 **drag → 그룹 변경** (카테고리 변경 지원)
+**Fix**: 사용자 정의 4 카테고리로 변경
+- `_root` (parent X + children O)
+- `_parent` (parent O + children O)
+- `_child` (parent O + children X)
+- `_solo` (parent X + children X)
 
-### B. Wiki 컬럼 정비 (List + Board 카드 공유)
+**작업 위치**:
+- [lib/view-engine/wiki-list-pipeline.ts:169-185](lib/view-engine/wiki-list-pipeline.ts:169) `case "wikiTier"` 4 분기로 변경
+- [lib/view-engine/view-configs.tsx:198-202](lib/view-engine/view-configs.tsx:198) WIKI_VIEW_CONFIG `wikiTier` filter values 4 옵션
+- `classifyWikiArticleRole` (이미 PR 1에 추가됨) 재활용 가능
 
-- [ ] **Tier** 컬럼/badge (Stub / Article 자동 — `isWikiStub` 기반) ★ 새
-- [ ] **Reads** 컬럼 ★ 새
-  - `WikiArticle.reads: number` 필드 추가 + store 마이그레이션 (v75 → v76)
-  - `openWikiArticle` 호출 시 `reads++` 로직
-- [ ] **Created** 컬럼 ★ 새
-
-### C. Wiki 차트 개선
-
-- [ ] **Growth 차트 Article/Stub 분리**
-  - New per bucket: stacked bar (Article 보라 + Stub 회색)
-  - Cumulative: multi-line (Total / Articles / Stubs)
-  - `isWikiStub` 활용 — `lib/insights/timeseries.ts`에 분리 로직 추가
-- [ ] **차트 sub-tabs** (`All` / `Articles` / `Stubs`) — Wiki List sub-tabs와 동일 디자인
-  - All (default): stacked + multi-line
-  - Articles: 단일 색
-  - Stubs: 단일 색
-- [ ] **Knowledge Connectivity 차트 추가** ★
-  - 차트 종류 토글 (`Growth` / `Connectivity`) — 상위 레벨
-  - 시간별 wiki article 간 backlinks 합 시각화
-  - `cumEdges` 인프라 재활용 ([lib/insights/timeseries.ts:130](lib/insights/timeseries.ts) 이미 부분 계산 중)
-
-UI 계층 (확정):
-```
-[Growth | Connectivity]                    ← 차트 종류 (상위)
-                       [Day Week Month]    ← 시간 단위
-[All] [Articles] [Stubs]                   ← 데이터 필터 (Growth만)
-─────────────────────────
-        차트 영역
-```
+**Notes Filter Role도 동일 누락** — wiki와 일관 적용 (Notes filter에 "role" filter 추가 또는 누락된 wikiTier 류 filter 검토)
 
 ---
 
-## 🟡 Sprint 1.5 (~3일): Outlinks + 후속
+## 🚀 Sprint 1.5 (~3일): Outlinks + 위계 컬럼
 
-- [ ] **Outlinks 컬럼** (Notes + Wiki 일관 적용)
-  - `Note.linksOut`, `WikiArticle.linksOut` 데이터 이미 존재 ([lib/types.ts:270, 344](lib/types.ts))
-  - List 컬럼 (Notes + Wiki 양쪽)
-  - 보드 카드에도 표시 (옵션, display properties 토글)
+### A. Outlinks 컬럼 (Notes + Wiki 일관 적용)
+- `Note.linksOut`, `WikiArticle.linksOut` 데이터 이미 존재 ([lib/types.ts:270, 344](lib/types.ts))
+- List 컬럼 (Notes + Wiki 양쪽)
+- Board 카드 옵션 표시 (Display Properties 토글)
+
+### B. 위계 컬럼 (Notes + Wiki, Sprint 1.4 follow-up)
+- **Children 컬럼** (자식 수) — Hub note 식별, sort 가능 ★
+- **Parent 컬럼** (직속 부모 노트 제목) — row 단위 부모 인지
+- ~~Root 컬럼~~ (비추 — Parent와 거의 중복)
+
+### Sprint 1 P1 잔존
+- **Sub-group** UI dropdown (인프라 100% 있음 — display-panel에 추가만)
 
 ---
 
-## 🟡 Sprint 1 P1 미완 (잔존)
+## 🟡 follow-up (별도 PR 또는 Sprint 1.4 후속)
 
-- [ ] **Sub-group** (S, 가장 빠른 wins) — 인프라 100% 있음. UI dropdown 추가만
-  - 변경: [components/display-panel.tsx](components/display-panel.tsx) Grouping dropdown 옆에 Sub-grouping dropdown
-  - 검증: [components/notes-table.tsx](components/notes-table.tsx)에서 `groups[].subGroups` 렌더 확인
+**Sprint 1.4 발견:**
+- [ ] **모든 picker lazy mount 일괄 적용** — StrictMode dev warning 정리 (prod 영향 없지만 정합성). `components/side-panel/side-panel-context.tsx` Set parent picker, `wiki-article-detail-panel.tsx` parent picker, 기타 picker 사용처 grep
+- [ ] **Wiki List multi-membership 일관성** — 현재 single (categoryIds[0]만). Board처럼 multi-membership 적용해서 일관
+- [ ] **Wiki 본문 하단 children footer 신규** — 노트와 일관 (현재 노트 footer는 폐기, 사이드 패널 통합)
+- [ ] **Board 단일 선택 컨텍스트 메뉴** (merge/split/delete) — PR 4 미구현
+- [ ] **v96 sortField/sortDirection deprecated 제거 단독** — 사용처 marathon (notes-table 8곳, calendar-view "Date source" 오버로드, query-node 12곳)
+- [ ] **a11y / Hydration mismatch 깊이 분석** — 기존 알려진 이슈와 연결 가능성
 
 ---
 
@@ -140,46 +118,65 @@ UI 계층 (확정):
 
 ---
 
-## ✅ 2026-04-30 Sprint 1.3 완료 (PR #228)
+## ✅ 2026-04-30 Sprint 1.4 완료 (4 PR — 단일 commit 통합)
 
-| 작업 | 결과 |
-|------|------|
-| Activity Bar / Sidebar / ViewHeader 아이콘 일치 | ✅ 머지 |
-| Wiki Dashboard Display + DetailPanel mode 숨김 | ✅ |
-| Knowledge Base 카드 색깔 박스 → 5개 아이콘 | ✅ |
-| Quick Capture placeholder 5문구 cycle | ✅ |
-| 라이트모드 Wiki contrast (Dashboard + List + Sub-tabs) | ✅ |
-| Wiki/Notes List 단일 select ↔ 사이드 패널 동기화 | ✅ |
-| Space 전환 시 sidePanelContext clear | ✅ |
-| Wiki Article Detail typeof guard (article.layout object 데이터) | ✅ |
-| **Wiki List Display Properties 동적 컬럼** (Categories chip + count) | ✅ ★ |
-| 빌드 fix: home-view.tsx:41 backlinks → useBacklinksIndex | ✅ ★ (출시 빌드 통과) |
+### PR 1 (D Parent 위계 활성화) — 노트 + 위키 양쪽
+- `lib/note-hierarchy.ts` 신규 (wiki-hierarchy.ts 1:1 미러: getNoteAncestors / getNoteChildren / getNoteDescendants / wouldCreateNoteCycle / classifyNoteRole)
+- `setNoteParent` action + ViewState/Store 타입 확장
+- 사이드 패널 **Connections > Hierarchy 섹션** 신설 (Detail에서 Parent/Children 이동) — Set parent picker + Children + Add child (multi-select picker)
+- 노트 에디터 breadcrumb에 Parent crumb (ancestors 1/2/3+ 단계별 collapse)
+- 노트 본문 하단 footer 폐기 (사이드 패널 단일 출처)
+- view-engine **Family / Parent / Role grouping** (4 카테고리: Root/Parent/Child/Solo)
+- **Filter-aware role 토글** (default OFF = 본질 store 전체 기준, ON = 필터 후)
+- NotePickerDialog/WikiPickerDialog **multi-select 모드** (Add children 일괄)
+- CommandItem hover 색 (bg-accent → bg-hover-bg, 라이트모드 contrast)
+- Hover preview delay 300 → **500ms** (Notion/Gmail 표준)
 
-**Store 변경 없음** (v75 유지). 다음 Sprint 1.4의 Reads 필드 추가 시 v76.
+### PR 2 (B Wiki 컬럼 정비)
+- `WikiArticle.reads?: number` 필드 + **store v95 마이그레이션** (reads: 0 백필)
+- `incrementWikiArticleReads` action + `openArticle` 시 reads++ 호출
+- view-engine wiki SortField status (isWikiStub) / reads
+- WIKI_VIEW_CONFIG orderingOptions에 reads/status + properties에 status/reads/createdAt
+- WikiList ColumnHeaders + ArticleTableRow에 status/reads/createdAt 컬럼 (Status badge: Stub=zinc / Article=accent)
+
+### PR 3 (C Wiki 차트 개선)
+- `lib/insights/types.ts` TimeSeriesPoint 5 필드 추가 (totalArticles/totalStubs/newArticles/newStubs/totalWikiEdges)
+- `lib/insights/timeseries.ts` Article/Stub 분리 누적 + totalWikiEdges (wiki article 간 backlinks)
+- `WikiGrowthChart` 리팩터 (bucketSize/dataFilter prop, stacked bar + multi-line)
+- `WikiConnectivityChart` 신규 (totalWikiEdges AreaChart, ResizeObserver 패턴)
+- `WikiInsightsChart` 신규 wrapper ([Growth | Connectivity] + [Day Week Month] + [All N | Articles M | Stubs K] sub-tabs with count)
+- `WikiDashboard`에서 WikiInsightsChart로 교체
+
+### PR 4 (A Wiki 보드 뷰)
+- `WIKI_VIEW_CONFIG.supportedModes`에 "board" 추가 → View mode toggle 자동 노출
+- `components/views/wiki-board.tsx` (신규, ~430 lines) — Linear-style compact board for WikiArticle
+- **Multi-membership**: card key = `${articleId}::${groupKey}`, 같은 article이 여러 Category 컬럼에 N번 unique 렌더
+- **Drag 분기**: Category=multi-set add/remove, Parent=setWikiArticleParent, tier/linkCount/role/family/none=비활성
+- 카드 디자인: 제목 + Status badge + Backlinks + Reads + Categories chip (label groupBy 시 자동 숨김) + Updated relative
+- `categoryNames` extras 추가 — wiki-list-pipeline에서 category name lookup (raw id 누수 fix)
+
+### Store / 마이그레이션
+- v94 → **v95** (reads 백필)
+- 다음 cleanup PR에서 v96 = sortField/sortDirection deprecated 제거 단독 (별도)
 
 ---
 
 ## 📝 사용자 명시 결정 (2026-04-30 세션)
 
-### 폐기 (영구)
-
-- **Hub Tier 자동 분류** — 사용자 통제 부재로 혼선 위험. Stub/Article 2단계로 충분. Backlinks 정렬로 hub-like 식별 가능
-- **Folder 컬럼 (Wiki)** — Categories가 그 역할
-- **Words 컬럼 (Wiki)** — 위키는 길이로 분류 안 함. Block count는 Detail 패널에 이미 있음
-
-### 합의 (Sprint 1.4 / 1.5)
-
-- **보드 뷰 default group by**: Category (가변, Notes의 status 위치)
-- **Tier**: Stub / Article 2단계만 (`isWikiStub` 기반)
-- **Reads**: WikiArticle에 필드 추가, 마이그레이션 v76
-- **Knowledge Connectivity 차트**: 추가 OK
-- **Growth 차트 Article/Stub 분리 + sub-tabs**: 오버엔지니어링 아님, 추가 OK
-- **Outlinks 컬럼**: Notes + Wiki 양쪽 일관 적용 (Phase 3)
+### 큰 결정 (영구)
+- **노트 parent 활성화** — 사용자 자유 트리 구조 ("유저의 마음대로"). 제텔카스텐 + 폴더 + 링크 + threading와 함께 위계 옵션 추가
+- **Hierarchy 섹션 = Connections 탭** — Detail은 메타데이터, Connections는 관계. parent-child = 본질적으로 관계
+- **본문 하단 footer 폐기** — 사이드 패널 Hierarchy가 단일 출처 (set parent + add child + children 표시)
+- **Multi-membership 채택** (Category grouping) — Plot "지식 관계망" 정체성 부합
+- **4 카테고리 모델** — Root/Parent/Child/Solo (mutually exclusive). 코드는 일반 트리 정의 (parent X = root) 유지. UI 분류는 4 카테고리
+- **Filter-aware role 디폴트 OFF** — 본질이 디폴트, 필터 후 분류는 토글 옵션
+- **Hover preview delay 500ms** — Notion/Gmail 표준. 갑작스러움 방지
+- **위키피디아 + 나무위키 하이브리드** — 카테고리 DAG (위키피디아) + Article 위계 single-parent tree (나무위키)
 
 ### Plot 영구 규칙 재확인
-
-- "시각적 다양성 ≠ Plot 코어" — 단, 명확한 그룹 차원이 있고 사용자가 가치 판단하면 검토 가능 (Wiki 보드 뷰가 좋은 예 — Category 기준)
-- 단순/명확/사용자 통제 친화적 (Hub Tier 자동 분류 폐기는 이 규칙 적용)
+- "시각적 다양성 ≠ Plot 코어" — 단, 명확한 그룹 차원 + 사용자 가치 판단 시 검토 가능
+- 단순/명확/사용자 통제 친화적
+- "tier" 명칭 절대 사용 X (4가지 의미 충돌) — Stub/Article은 항상 **"Status"**
 
 ---
 
@@ -187,8 +184,8 @@ UI 계층 (확정):
 
 - TipTap duplicate extension warnings (link/underline/gapCursor) — 기능 영향 없음
 - Hydration mismatch (Radix UI aria-controls ID) — 기능 영향 없음
+- "Can't perform a React state update on a component that hasn't mounted yet" warning — **StrictMode dev only, prod 영향 없음**. Picker dialogs 항상 mount 패턴 + Radix Dialog Title/Description id-association race
 - ResponsiveContainer (recharts) — React 19/Next 16 환경 → ResizeObserver 패턴 우회 (이미 적용)
-- ~~home-view.tsx:41 backlinks tsc 에러~~ → ✅ 2026-04-30 fix (useBacklinksIndex)
 
 ---
 

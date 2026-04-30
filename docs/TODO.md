@@ -14,25 +14,72 @@
 
 ---
 
-## 🚀 Sprint 1.4 (~1주): Wiki 보드 뷰 + 차트 개선 ★ 다음 세션 즉시 시작
+## ✅ Sprint 1.4 완료 (2026-04-30 오후, 4 PR 통합 단일 commit)
+
+**완료**: Parent 위계 활성화 (D) + Wiki 컬럼 정비 (B) + Wiki 차트 개선 (C) + Wiki 보드 뷰 (A). ~40 파일 변경. Store v94 → v95 (Reads 백필).
+
+자세한 내용: [docs/SESSION-LOG.md](./SESSION-LOG.md) 2026-04-30 오후 entry / [docs/MEMORY.md](./MEMORY.md)
+
+---
+
+## 🚀 Sprint 1.5 (~3일): Outlinks + 위계 컬럼 + Wiki Hierarchy filter fix ★ 다음 세션 즉시 시작
+
+### A. Wiki Hierarchy filter 4 카테고리 fix (S, ~10분, 우선)
+- 사용자 발견 이슈: `_root` 옵션이 Solo 노트 포함 (일반 트리 정의)
+- Fix: `_root` (parent X + children O) / `_parent` (둘 다) / `_child` (parent O + children X) / `_solo` (둘 다 X)
+- 위치: [lib/view-engine/wiki-list-pipeline.ts:169-185](lib/view-engine/wiki-list-pipeline.ts:169), [lib/view-engine/view-configs.tsx:198-202](lib/view-engine/view-configs.tsx:198)
+- classifyWikiArticleRole 재활용 가능
+
+### B. Outlinks 컬럼 (Notes + Wiki 일관 적용)
+- `Note.linksOut`, `WikiArticle.linksOut` 데이터 이미 존재
+- List + Board 카드 (옵션, Display Properties 토글)
+
+### C. 위계 컬럼
+- **Children 컬럼** (자식 수) — Hub note 식별 ★
+- **Parent 컬럼** (직속 부모 노트 제목)
+
+---
+
+## (구) Sprint 1.4 plan — 완료됨
+~~Wiki 보드 뷰 + 차트 + Parent 위계 활성화~~
+
+
 
 ### A. Wiki 보드 뷰
 - [ ] `WIKI_VIEW_CONFIG.supportedModes`에 "board" 추가
 - [ ] View mode toggle (List ↔ Board)
 - [ ] WikiBoard 컴포넌트 (Notes 보드 패턴 재활용)
-- [ ] Group by: Category(default) / Tier / Parent
-- [ ] 카드: 제목 + Tier badge + Backlinks + Updated + 옵션 Categories chip
-- [ ] 카드 drag → 그룹 변경
+- [ ] **Group by 4종** (Multi-membership — article이 `categoryIds[]` 길이만큼 N번 표시):
+  - Category (default, 카테고리 이름)
+  - Category Tier (1st/2nd/3rd+ depth, `WikiCategory.parentIds` 트리 깊이)
+  - Status (Stub/Article — 옛 "Tier" 명칭 폐기, "tier" 4가지 의미 충돌)
+  - Parent Article (`parentArticleId`, `lib/wiki-hierarchy.ts` 인프라 재활용 PR #218). **D1 picker 의존**
+- [ ] 카드: 제목 + Status badge + Backlinks + Updated + 옵션 Categories chip
+- [ ] 카드 drag → 그룹 변경 (Category / Status / Parent)
 
 ### B. Wiki 컬럼 정비 (List + Board 공유)
-- [ ] **Tier** 컬럼/badge (Stub/Article 자동) ★
-- [ ] **Reads** 컬럼 ★ — WikiArticle.reads 필드 + 마이그레이션 v76 + openWikiArticle reads++
+- [ ] **Status** 컬럼/badge (Stub/Article 자동, `isWikiStub` 기반) ★
+- [ ] **Reads** 컬럼 ★ — WikiArticle.reads 필드 + 마이그레이션 **v96** (v95 = sortField deprecated 제거 단독) + openWikiArticle reads++. SortField `"reads"`는 view-engine에 이미 정의됨
 - [ ] **Created** 컬럼 ★
 
 ### C. Wiki 차트 개선
 - [ ] Growth 차트 Article/Stub 분리 (stacked bar + multi-line)
 - [ ] 차트 sub-tabs (All / Articles / Stubs) — Wiki List sub-tabs와 동일 디자인
 - [ ] **Knowledge Connectivity 차트 추가** ★ — 차트 종류 토글 (Growth/Connectivity)
+
+### D. Parent 위계 활성화 (Note + Wiki 양쪽) ★ 신규 — A의 Group by Parent Article 의존성
+- [ ] **D1. Parent picker UI** (사이드 패널 Detail) — 위키 + 노트 양쪽
+  - 위키 (set 추가): `wiki-article-detail-panel.tsx:64`, `WikiPickerDialog` 재활용
+  - 노트 (set 신규): `side-panel-context.tsx:196`, `NotePickerDialog` 재활용
+  - Store: `notes.ts`에 `setNoteParent` 신규 (wiki는 이미 `setParent` 액션 있음)
+  - 사이클 가드: `lib/note-hierarchy.ts` 신규 (wiki-hierarchy 패턴)
+- [ ] **D2. 노트 breadcrumb + Children 섹션** (위키 이미 있음)
+  - 에디터 상단 breadcrumb (`Root › Parent › 현재`)
+  - 본문 하단 Children 섹션 (자식 N개 자동, 0이면 숨김)
+- [ ] **D3. List 뷰 Family 그룹핑 옵션** (Notes + Wiki 양쪽)
+  - view-engine `applyGrouping`에 `family` case 신규
+  - 같은 루트 조상 묶고 depth 들여쓰기 표현
+  - **List 5종 / Board 4종** 차이
 
 ---
 
@@ -161,10 +208,24 @@
 
 - [ ] **Wiki 1차 groupBy 추가** (M) — linkCount bucket / infoboxPreset 별. view-engine 사용 X
 - [ ] **P0-4 note picker 기반 inbound link filter** (M) — UX 결정 필요
+_(Sprint 1.4 D 묶음으로 이동 — 위 Sprint 1.4 섹션 참조)_
 
 ### Multi-sort follow-ups (Sprint 1 PR architect 검증에서 발견)
 - [ ] **column-click이 secondary/tertiary sort drops** — `notes-table.tsx:597-600` 컬럼 헤더 클릭 시 chain head를 갱신하지만 tail 보존 안됨. 사용자가 secondary sort 설정 후 컬럼 헤더 클릭하면 secondary 사라짐. 옵션: (a) tail 보존하도록 핸들러 수정 (b) "컬럼 클릭은 primary만 변경" 명시. P2.
 - [ ] **view-configs.tsx:133 "reads" 라벨 오류** — `{ value: "reads", label: "Word count" }` 잘못 표시. `"Reads"` 또는 `"wordCount"` 필드로 수정. 기존 버그, multi-sort UI에서 더 두드러짐.
+
+### Sprint 1.4 follow-ups (P2)
+- [ ] **Wiki Hierarchy filter (wikiTier) 4 카테고리로 fix** ([lib/view-engine/wiki-list-pipeline.ts:169-185](lib/view-engine/wiki-list-pipeline.ts:169), [lib/view-engine/view-configs.tsx:198-202](lib/view-engine/view-configs.tsx:198))
+  - 현재: `_root` (parent 없음, children 무관) / `_child` (parent 있음) / `_leaf` (children 없음) — 일반 트리 정의
+  - 문제: Root 필터에 Solo 노트도 포함됨 (둘 다 parent X). Leaf 필터엔 Solo + Child 둘 다 (둘 다 children X). 의미 모호
+  - Fix: 4 카테고리로 변경 — `_root` (parent X + children O) / `_parent` (둘 다) / `_child` (parent O + children X) / `_solo` (둘 다 X)
+  - Notes Filter Role도 동일 누락 — wiki와 일관 적용
+  - Group by Role과 동일 분류 차원 — classifyWikiArticleRole / classifyNoteRole 재활용 가능
+
+### PR 1 (D Parent 위계) follow-ups (P2)
+- [ ] **모든 picker lazy mount 패턴 적용** — `{open && <Picker .../>}` 형태로 변경. 대상: `components/side-panel/side-panel-context.tsx` (Set parent picker), `components/side-panel/wiki-article-detail-panel.tsx` parent picker (line 452), 기타 picker 사용처 grep. PR 1에서 add child picker 2곳만 lazy mount 적용했으나 set parent picker 등은 그대로. dev only StrictMode warning 발생 (prod 영향 없음, 기능 정상)
+- [ ] **command.tsx 구조 fix 추가 검증** — `DialogTitle/Description`을 `DialogContent` 안으로 이동 (이미 적용됨). 아직 warning 지속하니 a11y id-association 분석 추가 필요
+- [ ] **Hydration mismatch 깊이 분석** — Radix `_R_xxx` ID server↔client 불일치. NEXT-ACTION 알려진 이슈지만 "Can't perform state update"와 race로 연결 가능성
 
 ### Wiki Phase 1 PR follow-ups (architect 검증에서 발견, P2)
 - [ ] **GroupBy `tier`/`parent` cross-context guard** — Notes context에 wiki-only groupBy가 persisted되면 fall-through로 단일 그룹 표시. 발생 확률 낮음 (UI 노출 없음) but defensive code 권장. `lib/view-engine/group.ts` default → `groupByStatus(notes)` fallback OR `normalizeViewState`에 context별 valid group 검증.

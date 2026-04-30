@@ -95,8 +95,13 @@ export function DisplayPanel({
   const isBoard = currentMode === "board"
 
   /* ── Grouping options ── */
-  const groupingOptions = config.groupingOptions ?? []
-  const subGroupOptions = groupingOptions.filter((o) => o.value !== viewState.groupBy)
+  // "family" is List-only — exclude from Board column selector
+  const groupingOptions = (config.groupingOptions ?? []).filter(
+    (o) => !(isBoard && o.value === "family")
+  )
+  const subGroupOptions = groupingOptions.filter(
+    (o) => o.value !== viewState.groupBy && o.value !== "family"
+  )
   // Grouping 드롭다운에서 현재 subGroupBy 값을 disabled로 표시 (none은 항상 허용)
   const disabledGroupByValues = viewState.subGroupBy && viewState.subGroupBy !== "none"
     ? [viewState.subGroupBy]
@@ -328,30 +333,34 @@ export function DisplayPanel({
             <p className="text-2xs font-medium text-muted-foreground/50 mb-0">
               {optionsSectionLabel}
             </p>
-            {config.toggles.map((toggle) => (
-              <div key={toggle.key} className="flex items-center gap-2">
-                {toggle.icon && (
-                  <span className="text-muted-foreground/50 shrink-0">
-                    {toggle.icon}
-                  </span>
-                )}
-                <ToggleSwitch
-                  label={toggle.label}
-                  checked={
-                    toggle.key === "showEmptyGroups"
-                      ? !!viewState.showEmptyGroups
-                      : !!toggleStates[toggle.key]
-                  }
-                  onCheckedChange={() => {
-                    if (toggle.key === "showEmptyGroups") {
-                      onViewStateChange({ showEmptyGroups: !viewState.showEmptyGroups })
-                    } else {
-                      onToggleChange?.(toggle.key, !toggleStates[toggle.key])
+            {config.toggles.map((toggle) => {
+              // filterAwareRole is only meaningful when groupBy === "role"
+              if (toggle.key === "filterAwareRole" && viewState.groupBy !== "role") return null
+              return (
+                <div key={toggle.key} className="flex items-center gap-2">
+                  {toggle.icon && (
+                    <span className="text-muted-foreground/50 shrink-0">
+                      {toggle.icon}
+                    </span>
+                  )}
+                  <ToggleSwitch
+                    label={toggle.label}
+                    checked={
+                      toggle.key === "showEmptyGroups"
+                        ? !!viewState.showEmptyGroups
+                        : !!toggleStates[toggle.key]
                     }
-                  }}
-                />
-              </div>
-            ))}
+                    onCheckedChange={() => {
+                      if (toggle.key === "showEmptyGroups") {
+                        onViewStateChange({ showEmptyGroups: !viewState.showEmptyGroups })
+                      } else {
+                        onToggleChange?.(toggle.key, !toggleStates[toggle.key])
+                      }
+                    }}
+                  />
+                </div>
+              )
+            })}
           </div>
         </>
       )}

@@ -7,6 +7,8 @@ import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { isWikiStub } from "@/lib/wiki-utils"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
+import type { GroupBy } from "@/lib/view-engine/types"
+import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
@@ -62,6 +64,10 @@ interface WikiListProps {
   visibleColumns?: string[]
   /** Wiki categories for resolving categoryIds → display names. */
   wikiCategories?: WikiCategory[]
+  /** Grouped articles from applyWikiGrouping. When groupBy !== "none", renders with group headers. */
+  wikiGroups?: WikiGroup[]
+  /** Current groupBy from ViewState. Used to decide if group headers should be shown. */
+  groupBy?: GroupBy
 }
 
 /* ── Column Header ── */
@@ -102,10 +108,13 @@ function ColumnHeaders({
         </div>
       )}
       <span className="min-w-0 flex-1">Title</span>
+      {isVisible("status") && <span className="w-[72px] shrink-0 px-2">Status</span>}
       {isVisible("tags") && <span className="w-[140px] shrink-0 px-2">Categories</span>}
       {isVisible("aliases") && <span className="w-[140px] shrink-0 px-2">Aliases</span>}
       {isVisible("links") && <span className="w-[60px] shrink-0 text-right">Links</span>}
+      {isVisible("reads") && <span className="w-[56px] shrink-0 text-right">Reads</span>}
       <span className="w-[36px] shrink-0" />
+      {isVisible("createdAt") && <span className="w-[70px] shrink-0 text-right">Created</span>}
       {isVisible("updatedAt") && <span className="w-[70px] shrink-0 text-right">Updated</span>}
     </div>
   )
@@ -196,6 +205,19 @@ function ArticleTableRow({
           {note.title || "Untitled"}
         </span>
       </button>
+      {isVisible("status") && (
+        <div className="w-[72px] shrink-0 flex items-center px-2">
+          {isWikiStub(note) ? (
+            <span className="rounded-md bg-zinc-400/15 px-1.5 py-0.5 text-2xs font-medium text-zinc-500 dark:text-zinc-400">
+              Stub
+            </span>
+          ) : (
+            <span className="rounded-md bg-accent/15 px-1.5 py-0.5 text-2xs font-medium text-accent">
+              Article
+            </span>
+          )}
+        </div>
+      )}
       {isVisible("tags") && (
         <div
           className="w-[140px] shrink-0 flex items-center gap-1 px-2 overflow-hidden"
@@ -241,6 +263,11 @@ function ArticleTableRow({
       {isVisible("links") && (
         <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
           {backlinkCount > 0 ? backlinkCount : "\u2014"}
+        </span>
+      )}
+      {isVisible("reads") && (
+        <span className="w-[56px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
+          {(note.reads ?? 0) > 0 ? (note.reads ?? 0) : "\u2014"}
         </span>
       )}
 
@@ -289,6 +316,11 @@ function ArticleTableRow({
         ) : null}
       </span>
 
+      {isVisible("createdAt") && (
+        <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
+          {shortRelative(note.createdAt)}
+        </span>
+      )}
       {isVisible("updatedAt") && (
         <span className="w-[70px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
           {shortRelative(note.updatedAt)}
@@ -365,6 +397,8 @@ export function WikiList({
   onSelectAll,
   visibleColumns,
   wikiCategories,
+  wikiGroups,
+  groupBy,
 }: WikiListProps) {
   const selectionActive = selectedIds ? selectedIds.size > 0 : false
   const groupedArticles = groupByInitial(filteredWikiNotes, (n: WikiArticle) => n.title || "Untitled")
@@ -515,7 +549,62 @@ export function WikiList({
           />
           {sortedFilteredWikiNotes.length === 0 ? (
             <EmptyState />
+          ) : groupBy && groupBy !== "none" && wikiGroups && wikiGroups.length > 0 && !(wikiGroups.length === 1 && wikiGroups[0].key === "_all") ? (
+            /* ── Grouped view ── */
+            <div>
+              {wikiGroups.map((group) => {
+                const groupArticles = group.articles.filter((note) => {
+                  if (dashFilter === "stubs") {
+                    const article = wikiArticles?.find((a) => a.id === note.id)
+                    return article ? isWikiStub(article) : false
+                  }
+                  if (dashFilter === "articles") {
+                    const article = wikiArticles?.find((a) => a.id === note.id)
+                    return article ? !isWikiStub(article) : true
+                  }
+                  return true
+                })
+                if (groupArticles.length === 0) return null
+                return (
+                  <div key={group.key}>
+                    {group.label && (
+                      <div className="flex items-center gap-2.5 px-5 py-2 mt-3 mb-0.5 border-b border-border-subtle">
+                        <span className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide">
+                          {group.label}
+                        </span>
+                        <span className="text-2xs text-muted-foreground/40 tabular-nums">
+                          {groupArticles.length}
+                        </span>
+                      </div>
+                    )}
+                    {groupArticles.map((note, idx) => {
+                      const depth = group.depthMap?.[note.id] ?? 0
+                      return (
+                        <div key={note.id} style={depth > 0 ? { paddingLeft: `${depth * 24}px` } : undefined}>
+                          <ArticleTableRow
+                            note={note}
+                            backlinkCount={backlinkCounts.get(note.id) ?? 0}
+                            index={idx}
+                            onClick={() => onOpenArticle(note.id)}
+                            onMerge={onMergeArticle ? () => onMergeArticle(note.id) : undefined}
+                            onSplit={onSplitArticle ? () => onSplitArticle(note.id) : undefined}
+                            onDelete={onDeleteArticle ? () => onDeleteArticle(note.id) : undefined}
+                            isSelected={selectedIds?.has(note.id)}
+                            selectionActive={selectionActive}
+                            onSelect={onSelect ? (opts) => onSelect(note.id, { ...opts, index: idx }) : undefined}
+                            visibleColumns={visibleColumns}
+                            wikiCategories={wikiCategories}
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+              {dashFilter === "stubs" && (stubCount ?? 0) === 0 && <EmptyState />}
+            </div>
           ) : (
+            /* ── Flat view (no grouping) ── */
             <div>
               {/* Article/Stub rows */}
               {sortedFilteredWikiNotes

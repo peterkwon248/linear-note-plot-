@@ -65,6 +65,16 @@ export interface TimeSeriesPoint {
   newWiki: number
   /** Cumulative internal edges (linksOut count) approximated by source createdAt. */
   totalEdges: number
+  /** Cumulative wiki articles (isWikiStub === false) at end of bucket. */
+  totalArticles: number
+  /** Cumulative wiki stubs (isWikiStub === true) at end of bucket. */
+  totalStubs: number
+  /** New articles (non-stub) created within the bucket. */
+  newArticles: number
+  /** New stubs created within the bucket. */
+  newStubs: number
+  /** Cumulative wiki-to-wiki link edges (linksOut on WikiArticle) approximated by source createdAt. */
+  totalWikiEdges: number
 }
 
 export interface KnowledgeMetrics {

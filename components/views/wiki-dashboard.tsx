@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { shortRelative } from "@/lib/format-utils"
 import type { Note, WikiArticle } from "@/lib/types"
-import { WikiGrowthChart } from "@/components/wiki-editor/wiki-growth-chart"
+import { WikiInsightsChart } from "@/components/wiki-editor/wiki-insights-chart"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
@@ -251,7 +251,7 @@ export function WikiDashboard({
 
         {/* ── Growth Chart ── */}
         <div className="mb-6">
-          <WikiGrowthChart notes={notes} wikiArticles={wikiArticles} />
+          <WikiInsightsChart notes={notes} wikiArticles={wikiArticles} />
         </div>
 
         {/* ── Two-Column Content ── */}

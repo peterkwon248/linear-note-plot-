@@ -2,12 +2,13 @@ import { isToday, isThisWeek, isThisMonth } from "date-fns"
 import type { Note, NoteStatus, NotePriority, TriageStatus } from "../types"
 import type { GroupBy, GroupSortBy, NoteGroup } from "./types"
 import { STATUS_ORDER, PRIORITY_ORDER } from "./types"
+import { classifyNoteRole, type NoteRole } from "../note-hierarchy"
 
 /**
  * Stage 5: Group sorted notes by the given dimension.
  * Returns groups in a natural display order.
  */
-export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backlinksMap?: Map<string, number>; labelNames?: Map<string, string>; folderNames?: Map<string, string>; customOrder?: string[]; subGroupBy?: GroupBy; subGroupCustomOrder?: string[]; subGroupSortBy?: GroupSortBy }): NoteGroup[] {
+export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backlinksMap?: Map<string, number>; labelNames?: Map<string, string>; folderNames?: Map<string, string>; customOrder?: string[]; subGroupBy?: GroupBy; subGroupCustomOrder?: string[]; subGroupSortBy?: GroupSortBy; allNotes?: Note[]; filterAwareRole?: boolean }): NoteGroup[] {
   let groups: NoteGroup[]
 
   switch (groupBy) {
@@ -28,6 +29,16 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
       groups = groupByTriage(notes); break
     case "linkCount":
       groups = groupByLinkCount(notes, extras?.backlinksMap); break
+    case "family":
+      return groupByFamily(notes)
+    case "parent":
+      groups = groupByParent(notes, extras?.folderNames); break
+    case "role": {
+      // filterAwareRole ON → classify within current view slice (notes)
+      // filterAwareRole OFF (default) → classify within full store (allNotes ?? notes)
+      const lookupSource = extras?.filterAwareRole ? notes : (extras?.allNotes ?? notes)
+      groups = groupByRole(notes, lookupSource); break
+    }
     default:
       return [{ key: "_all", label: "", notes }]
   }
@@ -42,7 +53,9 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
   // Apply sub-grouping if specified
   const subGroupBy = extras?.subGroupBy
   const subGroupSortBy = extras?.subGroupSortBy ?? "default"
-  if (subGroupBy && subGroupBy !== "none" && subGroupBy !== groupBy) {
+  // Family sub-grouping disabled — family computes root from absolute parent chain,
+  // so nesting it under another group would compute roots within a sliced subset (incorrect)
+  if (subGroupBy && subGroupBy !== "none" && subGroupBy !== "family" && subGroupBy !== groupBy) {
     for (const group of groups) {
       if (group.notes.length === 0) continue
       const subGroups = applyGrouping(group.notes, subGroupBy, {
@@ -51,6 +64,10 @@ export function applyGrouping(notes: Note[], groupBy: GroupBy, extras?: { backli
         folderNames: extras?.folderNames,
         // Only pass customOrder when manual mode is active
         customOrder: subGroupSortBy === "manual" ? extras?.subGroupCustomOrder : undefined,
+        // Forward role-classification context so sub-group "Role" honors the filter-aware toggle
+        // (without these, sub-group Role would always classify against the group slice — ignoring the toggle)
+        allNotes: extras?.allNotes,
+        filterAwareRole: extras?.filterAwareRole,
       })
       // Only apply sub-grouping if it actually splits notes into multiple groups
       const nonEmpty = subGroups.filter((sg) => sg.notes.length > 0)
@@ -303,4 +320,183 @@ function groupByLinkCount(notes: Note[], backlinksMap?: Map<string, number>): No
       label: LINK_BUCKET_LABELS[key],
       notes: buckets[key],
     }))
+}
+
+/* ── Parent grouping (direct parent) ────────────────── */
+
+function groupByParent(notes: Note[], _folderNames?: Map<string, string>): NoteGroup[] {
+  const noteMap = new Map<string, Note>(notes.map((n) => [n.id, n]))
+  const parentGroups = new Map<string, Note[]>()
+  const noParent: Note[] = []
+
+  for (const note of notes) {
+    const parentId = note.parentNoteId
+    if (!parentId) {
+      noParent.push(note)
+      continue
+    }
+    const bucket = parentGroups.get(parentId)
+    if (bucket) bucket.push(note)
+    else parentGroups.set(parentId, [note])
+  }
+
+  const groups: NoteGroup[] = []
+  const sortedParentIds = [...parentGroups.keys()].sort((a, b) => {
+    const titleA = noteMap.get(a)?.title ?? a
+    const titleB = noteMap.get(b)?.title ?? b
+    return titleA.localeCompare(titleB)
+  })
+
+  for (const parentId of sortedParentIds) {
+    const parent = noteMap.get(parentId)
+    groups.push({
+      key: `parent-${parentId}`,
+      label: parent?.title || "Untitled",
+      notes: parentGroups.get(parentId)!,
+    })
+  }
+
+  if (noParent.length > 0) {
+    groups.push({ key: "_no_parent", label: "No Parent", notes: noParent })
+  }
+
+  return groups
+}
+
+/* ── Role grouping (Root / Parent / Child / Solo) ────── */
+
+const ROLE_KEYS: NoteRole[] = ["root", "parent", "child", "solo"]
+
+const ROLE_LABELS: Record<NoteRole, string> = {
+  root: "Root",
+  parent: "Parent",
+  child: "Child",
+  solo: "Solo",
+}
+
+function groupByRole(notes: Note[], lookupSource: Note[]): NoteGroup[] {
+  const buckets: Record<NoteRole, Note[]> = {
+    root: [],
+    parent: [],
+    child: [],
+    solo: [],
+  }
+  const store = { notes: lookupSource }
+  for (const note of notes) {
+    buckets[classifyNoteRole(note.id, store)].push(note)
+  }
+  return ROLE_KEYS.map((key) => ({
+    key: `role-${key}`,
+    label: ROLE_LABELS[key],
+    notes: buckets[key],
+  }))
+}
+
+/* ── Family grouping (tree / ancestor) ───────────────── */
+
+const MAX_DEPTH = 20
+
+/**
+ * Build a map of noteId → depth from root via parentNoteId chain.
+ * Root notes (parentNoteId = null or pointing outside the set) have depth 0.
+ * Cycle-safe via visited Set + MAX_DEPTH cap.
+ */
+function buildDepthMap(notes: Note[]): Map<string, number> {
+  const noteMap = new Map<string, Note>(notes.map((n) => [n.id, n]))
+  const depthCache = new Map<string, number>()
+
+  function getDepth(noteId: string, visited: Set<string>): number {
+    if (depthCache.has(noteId)) return depthCache.get(noteId)!
+    if (visited.has(noteId)) return 0  // cycle guard
+    const note = noteMap.get(noteId)
+    if (!note || !note.parentNoteId || !noteMap.has(note.parentNoteId)) {
+      depthCache.set(noteId, 0)
+      return 0
+    }
+    const nextVisited = new Set(visited)
+    nextVisited.add(noteId)
+    const parentDepth = getDepth(note.parentNoteId, nextVisited)
+    const depth = Math.min(parentDepth + 1, MAX_DEPTH)
+    depthCache.set(noteId, depth)
+    return depth
+  }
+
+  for (const note of notes) {
+    getDepth(note.id, new Set())
+  }
+
+  return depthCache
+}
+
+/**
+ * Find the root ancestor ID for a note.
+ * Traverses parentNoteId chain upward until no parent found in set.
+ * Cycle-safe via visited Set + MAX_DEPTH cap.
+ */
+function getRootId(noteId: string, noteMap: Map<string, Note>): string {
+  const visited = new Set<string>()
+  let current = noteId
+  let steps = 0
+
+  while (steps < MAX_DEPTH) {
+    if (visited.has(current)) break  // cycle guard
+    visited.add(current)
+    const note = noteMap.get(current)
+    if (!note || !note.parentNoteId || !noteMap.has(note.parentNoteId)) break
+    current = note.parentNoteId
+    steps++
+  }
+
+  return current
+}
+
+/**
+ * Group notes by their root ancestor (family).
+ * Each group contains all descendants of the same root, sorted by depth then title.
+ * depthMap: Record<noteId, depth> is included in each group.
+ */
+function groupByFamily(notes: Note[]): NoteGroup[] {
+  const noteMap = new Map<string, Note>(notes.map((n) => [n.id, n]))
+  const depthMap = buildDepthMap(notes)
+
+  // Group by root ancestor
+  const families = new Map<string, Note[]>()
+  for (const note of notes) {
+    const rootId = getRootId(note.id, noteMap)
+    const bucket = families.get(rootId)
+    if (bucket) bucket.push(note)
+    else families.set(rootId, [note])
+  }
+
+  // Build NoteGroup array, sorted by root title
+  const groups: NoteGroup[] = []
+  for (const [rootId, members] of families) {
+    const root = noteMap.get(rootId)
+    const rootLabel = root?.title || "Untitled"
+
+    // Sort members by depth, then title
+    const sorted = [...members].sort((a, b) => {
+      const da = depthMap.get(a.id) ?? 0
+      const db = depthMap.get(b.id) ?? 0
+      if (da !== db) return da - db
+      return (a.title || "").localeCompare(b.title || "")
+    })
+
+    const groupDepthMap: Record<string, number> = {}
+    for (const note of sorted) {
+      groupDepthMap[note.id] = depthMap.get(note.id) ?? 0
+    }
+
+    groups.push({
+      key: `family-${rootId}`,
+      label: rootLabel,
+      notes: sorted,
+      depthMap: groupDepthMap,
+    })
+  }
+
+  // Sort groups by root label
+  groups.sort((a, b) => a.label.localeCompare(b.label))
+
+  return groups
 }
