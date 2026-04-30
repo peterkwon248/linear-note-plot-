@@ -167,17 +167,21 @@ function matchWikiRule(article: WikiArticle, rule: FilterRule, extras?: WikiFilt
     }
 
     case "wikiTier": {
-      // Hierarchy filter (Phase 1): _root / _child / _leaf
+      // Hierarchy filter (4 categories — mirrors classifyWikiArticleRole):
+      //   _root   = no parent, has children
+      //   _parent = has parent, has children
+      //   _child  = has parent, no children
+      //   _solo   = no parent, no children
       const hasParent = !!article.parentArticleId
       const hasChildren = extras?.hasChildrenSet?.has(article.id) ?? false
-      if (value === "_root") {
-        return operator === "eq" ? !hasParent : hasParent
-      }
-      if (value === "_child") {
-        return operator === "eq" ? hasParent : !hasParent
-      }
-      if (value === "_leaf") {
-        return operator === "eq" ? !hasChildren : hasChildren
+      let role: "_root" | "_parent" | "_child" | "_solo"
+      if (hasParent && hasChildren) role = "_parent"
+      else if (hasParent) role = "_child"
+      else if (hasChildren) role = "_root"
+      else role = "_solo"
+      if (value === "_root" || value === "_parent" || value === "_child" || value === "_solo") {
+        const match = role === value
+        return operator === "eq" ? match : !match
       }
       return true
     }

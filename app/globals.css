@@ -21,8 +21,8 @@
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
+  --border: #a8a8ad;
+  --input: #a8a8ad;
   --ring: #4f46e5;
   --chart-1: #4f46e5;
   --chart-2: #0e7490;
@@ -38,19 +38,19 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f4f4f5;
   --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #e4e4e7;
+  --sidebar-border: #a8a8ad;
   --sidebar-ring: #4f46e5;
-  --sidebar-muted: #52525b;
+  --sidebar-muted: #3f3f46;
   --sidebar-hover: #f4f4f5;
 
   /* === Linear Polish: 시맨틱 토큰 (Light) === */
   --sidebar-active: rgba(0,0,0, 0.05);
   --sidebar-active-text: #18181b;
   --sidebar-hover-text: #18181b;
-  --sidebar-icon: #71717a;
-  --sidebar-count: #71717a;
+  --sidebar-icon: #52525b;
+  --sidebar-count: #52525b;
   --surface-overlay: #ffffff;
-  --border-subtle: #d4d4d8;
+  --border-subtle: #a1a1aa;
   --hover-bg: rgba(0,0,0, 0.04);
   --active-bg: rgba(0,0,0, 0.06);
   --active-bg-strong: rgba(0,0,0, 0.08);
@@ -110,8 +110,8 @@
   --accent-foreground: #0f0f11;
   --destructive: #f87171;
   --destructive-foreground: #0f0f11;
-  --border: #27272a;
-  --input: #27272a;
+  --border: #3f3f46;
+  --input: #3f3f46;
   --ring: #818cf8;
   --chart-1: #818cf8;
   --chart-2: #22d3ee;
@@ -123,9 +123,9 @@
   /* Sidebar: subtle layering */
   --sidebar-bg: #141416;
   --sidebar-foreground: #d4d4d8;
-  --sidebar-muted: #a1a1aa;
+  --sidebar-muted: #c4c4cb;
   --sidebar-hover: rgba(255,255,255, 0.04);
-  --sidebar-border: #27272a;
+  --sidebar-border: #3f3f46;
   --sidebar-primary: #818cf8;
   --sidebar-primary-foreground: #0f0f11;
   --sidebar-accent: #27272a;
@@ -137,8 +137,8 @@
   --sidebar-active: rgba(255,255,255, 0.06);
   --sidebar-active-text: #f4f4f5;
   --sidebar-hover-text: #e4e4e7;
-  --sidebar-icon: #71717a;
-  --sidebar-count: #71717a;
+  --sidebar-icon: #a1a1aa;
+  --sidebar-count: #a1a1aa;
 
   /* Surface 계층 */
   --surface-overlay: #1c1c1f;

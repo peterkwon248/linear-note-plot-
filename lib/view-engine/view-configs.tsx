@@ -1,7 +1,6 @@
 import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
 import { CircleDashed, CircleHalf, CheckCircle } from "@phosphor-icons/react"
-import { NOTE_STATUS_HEX } from "@/lib/colors"
 
 export interface FilterCategory {
   key: string
@@ -56,6 +55,12 @@ const ArchiveIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" 
 const TrashIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 4 3.3 4 14 4"/><path d="M12.7 4v9a1.3 1.3 0 01-1.4 1.3H4.7A1.3 1.3 0 013.3 13V4m2 0V2.7a1.3 1.3 0 011.4-1.4h2.6a1.3 1.3 0 011.4 1.4V4"/></svg>
 const SortIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="10" y2="4"/><line x1="2.5" y1="8" x2="7.5" y2="8"/><line x1="2.5" y1="12" x2="5" y2="12"/></svg>
 const GraphIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><line x1="5" y1="12.7" x2="11" y2="12.7"/></svg>
+
+// Parent: 위쪽 부모 노드 + 아래 self (selfd) — "내 위에 부모"
+const ParentIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><line x1="8" y1="5" x2="8" y2="11"/><circle cx="8" cy="12.7" r="1.5" fill="currentColor" stroke="none"/></svg>
+
+// Children: 위 self + 아래 두 자식 분기 — "내 아래 자식들"
+const ChildrenIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.5" fill="currentColor" stroke="none"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/></svg>
 const EyeIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 8s2.7-5 7-5 7 5 7 5-2.7 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
 const CircleHalfIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5a5.5 5.5 0 010 11" fill="currentColor" opacity="0.5" stroke="none"/></svg>
 
@@ -65,9 +70,9 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.inbox }} /> },
-      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.capture }} /> },
-      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.permanent }} /> },
+      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
+      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
+      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -149,6 +154,8 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
     properties: [
       { key: "status", label: "Status", icon: StatusIcon },
       { key: "folder", label: "Folder", icon: FolderIcon },
+      { key: "parent", label: "Parent", icon: ParentIcon },
+      { key: "children", label: "Children", icon: ChildrenIcon },
       { key: "links", label: "Links", icon: LinkIcon },
       { key: "wordCount", label: "Words", icon: ContentIcon },
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
@@ -195,11 +202,12 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { key: "_aliased", label: "Has aliases" },
       { key: "_unaliased", label: "No aliases" },
     ]},
-    // parent: parent-child article hierarchy. values는 런타임 hydrate
+    // 4 카테고리 hierarchy filter (classifyWikiArticleRole과 일관)
     { key: "wikiTier", label: "Hierarchy", icon: GraphIcon, values: [
-      { key: "_root", label: "Root (no parent)" },
-      { key: "_child", label: "Has parent" },
-      { key: "_leaf", label: "Leaf (no children)" },
+      { key: "_root", label: "Root (has children)" },
+      { key: "_parent", label: "Parent (both)" },
+      { key: "_child", label: "Child (no children)" },
+      { key: "_solo", label: "Solo (isolated)" },
     ]},
   ],
   quickFilters: [
@@ -245,6 +253,8 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { key: "reads", label: "Reads", icon: EyeIcon },
       { key: "tags", label: "Categories", icon: TagIcon },
       { key: "aliases", label: "Aliases", icon: ContentIcon },
+      { key: "parent", label: "Parent", icon: ParentIcon },
+      { key: "children", label: "Children", icon: ChildrenIcon },
       { key: "createdAt", label: "Created", icon: CalendarIcon },
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
     ],
@@ -294,9 +304,9 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.inbox }} /> },
-      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.capture }} /> },
-      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.permanent }} /> },
+      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
+      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
+      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "tags", label: "Tags", icon: TagIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
@@ -380,9 +390,9 @@ export const CALENDAR_VIEW_CONFIG: ViewConfig = {
   showDetailPanel: true,
   filterCategories: [
     { key: "status", label: "Status", icon: StatusIcon, values: [
-      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="regular" style={{ color: NOTE_STATUS_HEX.inbox }} /> },
-      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.capture }} /> },
-      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: NOTE_STATUS_HEX.permanent }} /> },
+      { key: "inbox", label: "Inbox", color: "rgba(255,255,255,0.32)", icon: <CircleDashed size={14} weight="bold" style={{ color: "var(--chart-2)" }} /> },
+      { key: "capture", label: "Capture", color: "#f5a623", icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
+      { key: "permanent", label: "Permanent", color: "#45d483", icon: <CheckCircle size={14} weight="fill" style={{ color: "var(--chart-5)" }} /> },
     ]},
     { key: "folder", label: "Folder", icon: FolderIcon, values: [] },
     { key: "label", label: "Label", icon: LabelIcon, values: [] },
