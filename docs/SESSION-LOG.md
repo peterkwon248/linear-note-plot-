@@ -6,6 +6,85 @@
 
 ---
 
+## 2026-04-30 오후 (집, Sprint 1.4 4 PR — Parent 위계 활성화 + Wiki 컬럼/차트/보드 뷰 — 단일 commit 통합)
+
+### 완료 (Sprint 1.4 4 PR — 통합 단일 commit)
+
+**PR 1 (D) — Parent 위계 활성화 (노트 + 위키)**
+- `lib/note-hierarchy.ts` 신규 (wiki-hierarchy 1:1 미러 + classifyNoteRole)
+- `setNoteParent` action + view-engine extras에 allNotes/filterAwareRole 인프라
+- 사이드 패널 **Connections > Hierarchy 섹션** 신설 (Detail에서 Parent/Children 이동) — Set parent picker + Children + Add child (multi-select picker, lazy mount)
+- 노트 에디터 breadcrumb에 Parent crumb (ancestors 1/2/3+ 단계별 collapse)
+- 노트 본문 하단 footer 폐기 (note-children-footer.tsx 삭제 — 사이드 패널 단일 출처)
+- view-engine **Family / Parent / Role grouping** (4 카테고리: Root/Parent/Child/Solo)
+- **Filter-aware role 토글** (default OFF = 본질 store 전체 기준)
+- NotePickerDialog/WikiPickerDialog **multi-select 모드** (Add children 일괄, queueMicrotask 순서)
+- CommandItem hover 색 fix (bg-accent → bg-hover-bg, 라이트모드 contrast)
+- DialogTitle/Description을 DialogContent 안으로 이동 (StrictMode warning 일부 해소)
+- Hover preview delay 300 → **500ms** (Notion/Gmail 표준)
+
+**PR 2 (B) — Wiki 컬럼 정비**
+- `WikiArticle.reads?: number` 필드 + **store v95 마이그레이션** (reads: 0 백필)
+- `incrementWikiArticleReads` action + `openArticle` 시 reads++
+- view-engine wiki SortField status (isWikiStub) / reads
+- WIKI_VIEW_CONFIG orderingOptions에 reads/status + properties에 status/reads/createdAt
+- WikiList ColumnHeaders + ArticleTableRow에 status/reads/createdAt 컬럼 (Status badge: Stub=zinc / Article=accent)
+
+**PR 3 (C) — Wiki 차트 개선**
+- `lib/insights/types.ts` TimeSeriesPoint 5 필드 추가 (totalArticles/totalStubs/newArticles/newStubs/totalWikiEdges)
+- `lib/insights/timeseries.ts` Article/Stub 분리 누적 + totalWikiEdges (wiki article 간 backlinks)
+- `WikiGrowthChart` 리팩터 (bucketSize/dataFilter prop, stacked bar + multi-line)
+- `WikiConnectivityChart` 신규 (totalWikiEdges AreaChart, ResizeObserver 패턴)
+- `WikiInsightsChart` 신규 wrapper ([Growth | Connectivity] + [Day Week Month] + [All N | Articles M | Stubs K] sub-tabs with count)
+- `WikiDashboard`에서 WikiInsightsChart로 교체
+
+**PR 4 (A) — Wiki 보드 뷰**
+- `WIKI_VIEW_CONFIG.supportedModes`에 "board" 추가 → View mode toggle 자동 노출
+- `components/views/wiki-board.tsx` 신규 (~430 lines, Linear-style compact board)
+- **Multi-membership**: card key = `${articleId}::${groupKey}` → 같은 article이 여러 Category 컬럼에 unique key로 N번 렌더
+- **Drag 분기**: Category=multi-set add/remove, Parent=setWikiArticleParent, tier/linkCount/role/family/none=비활성
+- 카드: 제목 + Status badge + Backlinks + Reads + Categories chip (label groupBy 시 자동 숨김) + Updated relative
+- `categoryNames` extras 추가 — wiki-list-pipeline에서 category name lookup (raw id 누수 fix)
+
+### 큰 결정 (영구)
+- **노트 parent 활성화** — 사용자 자유 트리 구조. 제텔카스텐 + 폴더 + 링크 + threading와 함께 위계 옵션 추가. 직전 cleanup/제거 결정 번복
+- **Hierarchy 섹션 = Connections 탭** — Detail은 메타데이터, Connections는 관계. parent-child = 본질적으로 관계
+- **본문 하단 footer 폐기** — 사이드 패널 Hierarchy가 단일 출처
+- **Multi-membership 채택** (Category grouping) — Plot "지식 관계망" 정체성 부합
+- **4 카테고리 모델** — Root/Parent/Child/Solo (mutually exclusive). 코드는 일반 트리 정의 (parent X = root) 유지. UI 분류만 4 카테고리
+- **Filter-aware role 디폴트 OFF** — 본질이 디폴트
+- **Hover preview delay 500ms** — Notion/Gmail 표준
+- **위키피디아 + 나무위키 하이브리드** — 카테고리 DAG (위키피디아) + Article 위계 single-parent tree (나무위키)
+- **"Solo" 명칭 채택** — 4 카테고리의 "고립" (parent X + children X). "Orphan"은 이미 다른 의미라 회피
+
+### 작업 흐름 학습
+- **executor 위임 패턴 효율적**: 큰 multi-file 변경 (PR 1: 26 파일, PR 4: ~430 lines 신규)은 executor 위임이 빠름. spec 명확하면 결과 정확
+- **executor-high (opus) vs executor (sonnet)**: PR 4 wiki-board처럼 큰 신규 컴포넌트는 opus 활용. 다른 작은 수정은 sonnet 충분
+- **architect verification**: 큰 변경 후 Pass 받고 follow-up 정리. 검증 통과 후에도 사용자 의견 받아 추가 수정 가능
+- **사용자 발견 이슈**: 본문 footer 제거 / hover delay / hierarchy 위치 이동 / 4 카테고리 / Filter-aware toggle / wiki Hierarchy filter — 모두 사용자가 사용 중에 발견. 작업 중간 자유롭게 디자인 변경
+
+### 다음
+- **Wiki Hierarchy filter 4 카테고리 fix** (S, ~10분) — 사용자가 발견한 마지막 이슈. `_root` 옵션이 Solo 포함 → 4 카테고리로 변경
+- **Sprint 1.5**: Outlinks 컬럼 + 위계 컬럼 (Children/Parent)
+- **follow-up**: 모든 picker lazy mount, Wiki List multi-membership 일관, Wiki 본문 footer 신규, v96 sortField 제거 단독
+
+### Watch Out (다음 세션)
+- "Can't perform a React state update" warning은 **StrictMode dev only**, prod 영향 없음. 모든 picker lazy mount 적용으로 정리 가능
+- store version v95 (reads). v96은 sortField/sortDirection deprecated 제거 단독 (사용처 marathon — notes-table 8곳, calendar-view "Date source" 오버로드, query-node 12곳)
+- Wiki Hierarchy filter `wikiTier` key는 그대로 유지하되 values만 4 옵션으로 (label도 명확히)
+- **"tier" 명칭 절대 사용 X** — 4가지 의미 충돌. Stub/Article은 항상 **"Status"**
+
+### 머신
+집 — 다음 세션은 **다른 컴퓨터** (사용자 명시적으로 안 했지만 cross-machine 패턴 가능)
+
+---
+
+## 2026-04-30 오전 (집, Sprint 1.3 — 디자인 polish + 사이드 패널 동기화 + Display Properties 동적 컬럼 — PR #228)
+
+(Sprint 1.3 entry 그대로 유지. 위 entry 추가됨)
+
+---
+
 ## 2026-04-29 (집, v0 협업 흡수 + UI polish + dead code 정리 + P0 필터 강화 + Row density 시도/revert — 5 PR)
 
 ### 완료 (5 PR 머지)

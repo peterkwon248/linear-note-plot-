@@ -22,6 +22,7 @@ import { Books } from "@phosphor-icons/react/dist/ssr/Books"
 import { CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown"
 import type { Note, ActivitySpace } from "@/lib/types"
 import { StatusShapeIcon } from "@/components/status-icon"
+import { getNoteAncestors } from "@/lib/note-hierarchy"
 
 interface EditorBreadcrumbProps {
   note: Note
@@ -55,6 +56,8 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
   const activeSpace = useActiveSpace()
   const secondarySpace = useSecondarySpace()
   const folders = usePlotStore((s) => s.folders)
+  const notes = usePlotStore((s) => s.notes)
+  const openNote = usePlotStore((s) => s.openNote)
 
   const folder = note.folderId ? folders.find((f) => f.id === note.folderId) : null
   // Notes always show "Notes" in breadcrumb regardless of which space opened the split
@@ -150,6 +153,66 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
           </button>
         </>
       )}
+
+      {/* Parent crumb (optional, primary only)
+          - ancestors.length === 1: directParent only
+          - ancestors.length === 2: root › directParent (둘 다 직접 표시)
+          - ancestors.length >= 3: root › … › directParent (collapse) */}
+      {pane === 'primary' && note.parentNoteId && (() => {
+        const ancestors = getNoteAncestors(note.id, { notes })
+        if (ancestors.length === 0) return null
+        const directParent = ancestors[0]
+        const rootAncestor = ancestors[ancestors.length - 1]
+        return (
+          <>
+            <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+            {ancestors.length === 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); openNote(directParent.id, { pane }) }}
+                className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+              >
+                {directParent.title || "Untitled"}
+              </button>
+            )}
+            {ancestors.length === 2 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); openNote(rootAncestor.id, { pane }) }}
+                  className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                >
+                  {rootAncestor.title || "Untitled"}
+                </button>
+                <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); openNote(directParent.id, { pane }) }}
+                  className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                >
+                  {directParent.title || "Untitled"}
+                </button>
+              </>
+            )}
+            {ancestors.length >= 3 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); openNote(rootAncestor.id, { pane }) }}
+                  className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                >
+                  {rootAncestor.title || "Untitled"}
+                </button>
+                <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+                <span className="shrink-0 text-lg text-muted-foreground/50">…</span>
+                <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); openNote(directParent.id, { pane }) }}
+                  className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                >
+                  {directParent.title || "Untitled"}
+                </button>
+              </>
+            )}
+          </>
+        )
+      })()}
 
       {/* Separator before note title — clickable note picker */}
       <NotePickerChevron pane={pane} currentNoteId={note.id} />

@@ -274,6 +274,8 @@ export interface WikiArticle {
   parentArticleId?: string | null
   /** Whole-article pin (mirrors Note.pinned). Surfaces in Home > Quicklinks. */
   pinned?: boolean
+  /** View count — incremented each time the article is opened. 0 by default. */
+  reads?: number
   createdAt: string
   updatedAt: string
 }

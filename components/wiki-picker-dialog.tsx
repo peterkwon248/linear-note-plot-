@@ -50,14 +50,16 @@ function getChipSummary(values: FilterValue[], selected: Set<string>): string {
 
 /* ── Props ─────────────────────────────────────── */
 
-interface WikiPickerDialogProps {
+type WikiPickerDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   title?: string
   /** Wiki article IDs to exclude from the picker (e.g., for cycle prevention) */
   excludeIds?: string[]
-  onSelect: (articleId: string) => void
-}
+} & (
+  | { multiSelect?: false; onSelect: (articleId: string) => void; onSelectMulti?: never }
+  | { multiSelect: true; onSelectMulti: (ids: string[]) => void; onSelect?: never }
+)
 
 /* ── Component ─────────────────────────────────── */
 
@@ -66,8 +68,11 @@ export function WikiPickerDialog({
   onOpenChange,
   title = "Select a wiki article",
   excludeIds = [],
+  multiSelect = false,
   onSelect,
-}: WikiPickerDialogProps) {
+  onSelectMulti,
+}: WikiPickerDialogProps & { multiSelect?: boolean; onSelect?: (articleId: string) => void; onSelectMulti?: (ids: string[]) => void }) {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const wikiArticles = usePlotStore((s) => s.wikiArticles)
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
   const excludeSet = useMemo(() => new Set(excludeIds), [excludeIds])
@@ -80,6 +85,7 @@ export function WikiPickerDialog({
     if (open) {
       setActiveFilter(null)
       setSearch("")
+      setSelectedIds(new Set())
     }
   }, [open])
 
@@ -136,11 +142,33 @@ export function WikiPickerDialog({
 
   const handleSelect = useCallback(
     (articleId: string) => {
-      onSelect(articleId)
-      onOpenChange(false)
+      if (multiSelect) {
+        setSelectedIds((prev) => {
+          const next = new Set(prev)
+          if (next.has(articleId)) {
+            next.delete(articleId)
+          } else {
+            next.add(articleId)
+          }
+          return next
+        })
+      } else {
+        onSelect?.(articleId)
+        onOpenChange(false)
+      }
     },
-    [onSelect, onOpenChange],
+    [multiSelect, onSelect, onOpenChange],
   )
+
+  const handleConfirmMulti = useCallback(() => {
+    const ids = [...selectedIds]
+    onOpenChange(false)
+    // Defer external callback so dialog close + state reset complete first
+    // (avoids "Can't perform a React state update on a component that hasn't mounted yet")
+    if (ids.length > 0) {
+      queueMicrotask(() => onSelectMulti?.(ids))
+    }
+  }, [selectedIds, onSelectMulti, onOpenChange])
 
   // ── Filter handlers ──────────────────────────────
 
@@ -298,6 +326,7 @@ export function WikiPickerDialog({
             const cats = (article.categoryIds ?? [])
               .map((cid) => categoryMap.get(cid))
               .filter(Boolean)
+            const isChecked = selectedIds.has(article.id)
 
             return (
               <CommandItem
@@ -306,7 +335,19 @@ export function WikiPickerDialog({
                 onSelect={() => handleSelect(article.id)}
                 className="flex items-center gap-3 px-3 py-2.5"
               >
-                <BookOpen className="shrink-0 text-teal-500/60" size={16} />
+                {multiSelect ? (
+                  <span
+                    className={`shrink-0 flex items-center justify-center h-4 w-4 rounded border transition-colors ${
+                      isChecked
+                        ? "border-accent bg-accent text-accent-foreground"
+                        : "border-border bg-transparent"
+                    }`}
+                  >
+                    {isChecked && <Check size={10} />}
+                  </span>
+                ) : (
+                  <BookOpen className="shrink-0 text-teal-500/60" size={16} />
+                )}
                 <div className="flex-1 min-w-0">
                   <span className="truncate text-note font-medium text-foreground block">
                     {article.title}
@@ -332,6 +373,23 @@ export function WikiPickerDialog({
           })}
         </CommandGroup>
       </CommandList>
+
+      {/* Multi-select footer */}
+      {multiSelect && (
+        <div className="border-t border-border px-3 py-2.5 flex items-center justify-between">
+          <span className="text-2xs text-muted-foreground">
+            {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select articles to add"}
+          </span>
+          <button
+            onClick={handleConfirmMulti}
+            disabled={selectedIds.size === 0}
+            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground transition-opacity disabled:opacity-40 hover:opacity-90"
+          >
+            <Plus size={12} />
+            Add {selectedIds.size > 0 ? selectedIds.size : ""}
+          </button>
+        </div>
+      )}
     </CommandDialog>
   )
 }

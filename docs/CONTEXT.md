@@ -3,13 +3,25 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
-## 🚀 2026-04-30 — Sprint 1.3 머지 완료. 다음은 Sprint 1.4 (Wiki 보드 뷰 + 차트 개선)
+## 🚀 2026-04-30 오후 — Sprint 1.4 완료 (4 PR 통합 단일 commit). 다음은 Sprint 1.5 + Wiki Hierarchy filter fix
 
-**Sprint 1.3 완료 (PR #228)**: 디자인 polish + 사이드 패널 동기화 + Display Properties 동적 컬럼 + 출시 빌드 fix. 12 파일 변경, store v75 유지.
+**Sprint 1.4 완료 (단일 commit, ~40 파일)**:
+- **PR 1 (D)** Parent 위계 활성화 — note-hierarchy + setNoteParent + Connections > Hierarchy + breadcrumb + Family/Parent/Role grouping + Filter-aware toggle + multi-select picker + hover delay 500ms
+- **PR 2 (B)** Wiki 컬럼 정비 — Status badge / Reads (v95 마이그레이션) / Created
+- **PR 3 (C)** Wiki 차트 개선 — Article/Stub 분리 + Sub-tabs (count) + Knowledge Connectivity (신규)
+- **PR 4 (A)** Wiki 보드 뷰 신규 — Multi-membership Category drag + categoryNames lookup
 
-**다음 세션 (Sprint 1.4)**: Wiki 보드 뷰 + 차트 개선 + Knowledge Connectivity 추가. 자세한 plan은 [`docs/NEXT-ACTION.md`](./NEXT-ACTION.md) 참조.
+**Store**: v94 → **v95** (Reads 백필). v96은 sortField/sortDirection deprecated 제거 단독 예정 (별도 cleanup PR).
 
-**다른 컴퓨터에서 인계**: `git pull origin main` → 새 worktree 생성 → `npm install` → `npm run dev` → NEXT-ACTION.md 읽고 Sprint 1.4 시작.
+**다음 세션**: Wiki Hierarchy filter 4 카테고리 fix (S, 10분) → Sprint 1.5 (Outlinks + 위계 컬럼) → Sprint 2.
+
+자세한 plan: [`docs/NEXT-ACTION.md`](./NEXT-ACTION.md)
+
+---
+
+## 🚀 2026-04-30 오전 — Sprint 1.3 머지 완료
+
+**Sprint 1.3 (PR #228)**: 디자인 polish + 사이드 패널 동기화 + Display Properties 동적 컬럼 + 출시 빌드 fix.
 
 ---
 
@@ -249,7 +261,7 @@ Layer 4 — Insights:    패턴 발견 (건강검진)
 ### Store
 - Zustand + persist (IDB storage via `lib/idb-storage.ts`)
 - Slices (22): notes, workflow, folders, tags, labels, thread, maps, relations, ui, autopilot, templates, editor, workspace, attachments, ontology, reflections, wiki-collections, saved-views, wiki-articles, wiki-categories, references, global-bookmarks
-- Store version: 75
+- Store version: 95
 - Types: `lib/store/types.ts`, `lib/types.ts`
 
 ### View System

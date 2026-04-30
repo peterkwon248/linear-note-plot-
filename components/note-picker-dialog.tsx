@@ -100,15 +100,16 @@ function getChipSummary(group: PickerFilterGroup, selected: Set<string>): string
 
 /* ── Props ──────────────────────────────────────── */
 
-interface NotePickerDialogProps {
+type NotePickerDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   title?: string
   /** Note IDs to exclude from the picker */
   excludeIds?: string[]
-  /** Called when a note is selected */
-  onSelect: (noteId: string) => void
-}
+} & (
+  | { multiSelect?: false; onSelect: (noteId: string) => void; onSelectMulti?: never }
+  | { multiSelect: true; onSelectMulti: (ids: string[]) => void; onSelect?: never }
+)
 
 /* ── Component ──────────────────────────────────── */
 
@@ -117,17 +118,23 @@ export function NotePickerDialog({
   onOpenChange,
   title = "Select a note",
   excludeIds = [],
+  multiSelect = false,
   onSelect,
-}: NotePickerDialogProps) {
+  onSelectMulti,
+}: NotePickerDialogProps & { multiSelect?: boolean; onSelect?: (noteId: string) => void; onSelectMulti?: (ids: string[]) => void }) {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const notes = usePlotStore((s) => s.notes)
   const tags = usePlotStore((s) => s.tags)
 
   // Record<groupKey, Set<selectedValues>>
   const [activeFilters, setActiveFilters] = useState<Record<string, Set<string>>>({})
 
-  // Reset filters when dialog opens
+  // Reset filters and selection when dialog opens
   useEffect(() => {
-    if (open) setActiveFilters({})
+    if (open) {
+      setActiveFilters({})
+      setSelectedIds(new Set())
+    }
   }, [open])
 
   const excludeSet = useMemo(() => new Set(excludeIds), [excludeIds])
@@ -181,11 +188,34 @@ export function NotePickerDialog({
 
   const handleSelect = useCallback(
     (noteId: string) => {
-      onSelect(noteId)
-      onOpenChange(false)
+      if (multiSelect) {
+        // toggle selection, don't close dialog
+        setSelectedIds((prev) => {
+          const next = new Set(prev)
+          if (next.has(noteId)) {
+            next.delete(noteId)
+          } else {
+            next.add(noteId)
+          }
+          return next
+        })
+      } else {
+        onSelect?.(noteId)
+        onOpenChange(false)
+      }
     },
-    [onSelect, onOpenChange],
+    [multiSelect, onSelect, onOpenChange],
   )
+
+  const handleConfirmMulti = useCallback(() => {
+    const ids = [...selectedIds]
+    onOpenChange(false)
+    // Defer external callback so dialog close + state reset complete first
+    // (avoids "Can't perform a React state update on a component that hasn't mounted yet")
+    if (ids.length > 0) {
+      queueMicrotask(() => onSelectMulti?.(ids))
+    }
+  }, [selectedIds, onSelectMulti, onOpenChange])
 
   // ── Filter handlers ──────────────────────────────
 
@@ -379,34 +409,66 @@ export function NotePickerDialog({
           </div>
         </CommandEmpty>
         <CommandGroup>
-          {candidates.map((note) => (
-            <CommandItem
-              key={note.id}
-              value={`${note.title} ${note.preview}`}
-              onSelect={() => handleSelect(note.id)}
-              className="flex items-center gap-3 px-3 py-2.5"
-            >
-              <FileText className="shrink-0 text-muted-foreground/40" size={16} weight="regular" />
-              <div className="flex-1 min-w-0">
-                <span className="truncate text-note font-medium text-foreground block">
-                  {note.title || "Untitled"}
-                </span>
-                {note.preview && (
-                  <p className="truncate text-2xs text-muted-foreground/50 mt-0.5">
-                    {note.preview}
-                  </p>
+          {candidates.map((note) => {
+            const isChecked = selectedIds.has(note.id)
+            return (
+              <CommandItem
+                key={note.id}
+                value={`${note.title} ${note.preview}`}
+                onSelect={() => handleSelect(note.id)}
+                className="flex items-center gap-3 px-3 py-2.5"
+              >
+                {multiSelect ? (
+                  <span
+                    className={`shrink-0 flex items-center justify-center h-4 w-4 rounded border transition-colors ${
+                      isChecked
+                        ? "border-accent bg-accent text-accent-foreground"
+                        : "border-border bg-transparent"
+                    }`}
+                  >
+                    {isChecked && <PhCheck size={10} weight="bold" />}
+                  </span>
+                ) : (
+                  <FileText className="shrink-0 text-muted-foreground/40" size={16} weight="regular" />
                 )}
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <StatusBadge status={note.status} />
-                <span className="text-2xs tabular-nums text-muted-foreground/40">
-                  {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
-                </span>
-              </div>
-            </CommandItem>
-          ))}
+                <div className="flex-1 min-w-0">
+                  <span className="truncate text-note font-medium text-foreground block">
+                    {note.title || "Untitled"}
+                  </span>
+                  {note.preview && (
+                    <p className="truncate text-2xs text-muted-foreground/50 mt-0.5">
+                      {note.preview}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <StatusBadge status={note.status} />
+                  <span className="text-2xs tabular-nums text-muted-foreground/40">
+                    {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
+                  </span>
+                </div>
+              </CommandItem>
+            )
+          })}
         </CommandGroup>
       </CommandList>
+
+      {/* Multi-select footer */}
+      {multiSelect && (
+        <div className="border-t border-border px-3 py-2.5 flex items-center justify-between">
+          <span className="text-2xs text-muted-foreground">
+            {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select notes to add"}
+          </span>
+          <button
+            onClick={handleConfirmMulti}
+            disabled={selectedIds.size === 0}
+            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-2xs font-medium text-accent-foreground transition-opacity disabled:opacity-40 hover:opacity-90"
+          >
+            <PhPlus size={12} weight="bold" />
+            Add {selectedIds.size > 0 ? selectedIds.size : ""}
+          </button>
+        </div>
+      )}
     </CommandDialog>
   )
 }

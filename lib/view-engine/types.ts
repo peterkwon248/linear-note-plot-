@@ -55,6 +55,10 @@ export type GroupBy =
   | "none" | "status" | "priority" | "date" | "folder" | "label" | "triage" | "linkCount"
   // Wiki-specific groupings (Notes pipeline ignores these — handled by wiki-list-pipeline)
   | "tier" | "parent"
+  // Tree grouping: same root ancestor → one group, depth indentation in List view only
+  | "family"
+  // Hierarchy role (Root/Parent/Child/Solo) — shared by Notes + Wiki
+  | "role"
 
 export type GroupSortBy = "default" | "manual" | "name" | "count"
 
@@ -107,6 +111,8 @@ export interface NoteGroup {
   label: string
   notes: Note[]
   subGroups?: NoteGroup[]
+  /** Per-note depth (0 = root, 1 = child, …). Only populated when groupBy="family". */
+  depthMap?: Record<string, number>
 }
 
 export interface PipelineResult {
@@ -160,6 +166,10 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "none", "status", "priority", "date", "folder", "label", "triage", "linkCount",
   // Wiki-specific
   "tier", "parent",
+  // Tree grouping
+  "family",
+  // Hierarchy role
+  "role",
 ]
 
 export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calendar"]

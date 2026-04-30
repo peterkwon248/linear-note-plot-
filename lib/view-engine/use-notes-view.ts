@@ -112,9 +112,10 @@ export function useNotesView(
   const subGroupBy = viewState.subGroupBy !== "none" ? viewState.subGroupBy : undefined
   const subGroupCustomOrder = viewState.subGroupOrder?.[viewState.subGroupBy] ?? undefined
   const subGroupSortBy = viewState.subGroupSortBy ?? "default"
+  const filterAwareRole = viewState.toggles?.filterAwareRole === true
   const groups = useMemo(
-    () => applyGrouping(sorted, viewState.groupBy, { backlinksMap: extras?.backlinksMap, labelNames, folderNames, customOrder, subGroupBy, subGroupCustomOrder, subGroupSortBy }),
-    [sorted, viewState.groupBy, subGroupBy, extras?.backlinksMap, labelNames, folderNames, customOrder, subGroupCustomOrder, subGroupSortBy]
+    () => applyGrouping(sorted, viewState.groupBy, { backlinksMap: extras?.backlinksMap, labelNames, folderNames, customOrder, subGroupBy, subGroupCustomOrder, subGroupSortBy, allNotes: notes, filterAwareRole }),
+    [sorted, viewState.groupBy, subGroupBy, extras?.backlinksMap, labelNames, folderNames, customOrder, subGroupCustomOrder, subGroupSortBy, notes, filterAwareRole]
   )
 
   // ── Actions ───────────────────────────────────────────

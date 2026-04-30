@@ -80,3 +80,31 @@ export function wouldCreateCycle(
   const descendants = getDescendants(articleId, store)
   return descendants.has(candidateParentId)
 }
+
+/* ── Role classification ──────────────────────────────── */
+
+export type WikiArticleRole = "root" | "parent" | "child" | "solo"
+
+/**
+ * Classify a wiki article's hierarchical role among all articles.
+ *
+ * Root   = no parent, has children  (시작점)
+ * Parent = has parent, has children (중간 노드, branch)
+ * Child  = has parent, no children  (말단)
+ * Solo   = no parent, no children   (고립)
+ *
+ * Roles are mutually exclusive.
+ */
+export function classifyWikiArticleRole(
+  articleId: string,
+  store: { wikiArticles: WikiArticle[] },
+): WikiArticleRole {
+  const article = store.wikiArticles.find((a) => a.id === articleId)
+  if (!article) return "solo"
+  const hasParent = !!article.parentArticleId
+  const hasChildren = store.wikiArticles.some((a) => a.parentArticleId === articleId)
+  if (hasParent && hasChildren) return "parent"
+  if (hasParent) return "child"
+  if (hasChildren) return "root"
+  return "solo"
+}

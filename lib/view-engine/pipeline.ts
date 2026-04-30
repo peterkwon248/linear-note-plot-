@@ -39,7 +39,8 @@ export function runPipeline(
   )
 
   // Stage 5: Group
-  const groups = applyGrouping(sorted, viewState.groupBy, { backlinksMap: extras?.backlinksMap })
+  const filterAwareRole = viewState.toggles?.filterAwareRole === true
+  const groups = applyGrouping(sorted, viewState.groupBy, { backlinksMap: extras?.backlinksMap, allNotes: notes, filterAwareRole })
 
   return {
     groups,

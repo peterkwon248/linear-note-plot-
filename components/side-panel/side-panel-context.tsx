@@ -28,7 +28,6 @@ import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight"
 import { ArrowDownLeft } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft"
 import { Tray } from "@phosphor-icons/react/dist/ssr/Tray"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
-import { GitBranch } from "@phosphor-icons/react/dist/ssr/GitBranch"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
 import { Info as PhInfo } from "@phosphor-icons/react/dist/ssr/Info"
@@ -191,12 +190,6 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
           <span className="flex items-center gap-1 rounded-md bg-chart-5/10 px-2 py-0.5 text-2xs font-medium text-chart-5">
             <Sparkle size={14} weight="regular" />
             Ready to promote
-          </span>
-        )}
-        {note.parentNoteId && (
-          <span className="flex items-center gap-1 rounded-md bg-chart-1/10 px-2 py-0.5 text-2xs font-medium text-chart-1">
-            <GitBranch size={14} weight="regular" />
-            Chain
           </span>
         )}
       </div>
