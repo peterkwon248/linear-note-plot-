@@ -54,12 +54,21 @@
 - **WikiArticle은 그래프 노드로 통합** — legacy `isWiki` (Note에 wiki 분류) 모델 deprecated
 - **체크박스 단일 패턴** — `bg-card border-zinc-400` + `bg-accent + PhCheck text-accent-foreground`. 모든 곳 통일
 
-### 다음 즉시 액션 (다음 세션 후보)
+### 다음 즉시 액션 (우선순위 순)
+
+**🔥 최우선 (디자인/가시성)**
 1. **Library References/Tags/Files 페이지** 가시성 + 디자인 통일 (All Notes 수준)
 2. **Library Filter/Display 디자인** (All Notes 수준)
+
+**중간 (UX 신기능)**
 3. **Quicklinks 구현** — globalBookmarks anchorType 확장 (folder/savedView/category 추가) + 사이드바 섹션 + Home prominent
 4. **Quickfilters 통합** — view-configs.quickFilters → SavedView로 자동 시드 + `builtin: boolean` 필드
 5. **사이드바 Inline Edit Mode** — DotsSix 핸들 + 드래그 + 👁 hide/show + sidebarCustomization persist (영역별)
+
+**후순위 (Insights 정리 — 합의됨, 옵션 D)**
+6. **GraphInsightsView → OntologyInsightsPanel 흡수** (graph stats 추가). 사이드바 More의 `/graph-insights` 제거
+7. **InsightsView 이름 "Notes Health"** (Notes 영역 그대로 유지 — 처방 컨텍스트 보전)
+8. **결정 근거**: "Single Source" 원칙은 **metrics에만** 적용. 개별 처방(Notes Issues)은 Notes 영역 유지가 컨텍스트 단절 없음
 
 ### Watch Out
 - Tailwind `border-[1.5px]`은 v4에서 미적용 → `style={{ borderWidth: "1.5px" }}` 직접

@@ -7,13 +7,22 @@
 - **다음 세션은 새 worktree에서** — 이번 worktree는 작업 완료
 - **합의된 다음 작업**: Quicklinks / Quickfilters 통합 / 사이드바 Inline Edit Mode
 
-## Active Tasks (다음 세션 즉시 시작 가능)
+## Active Tasks (다음 세션 — 우선순위 순)
 
+### 🔥 최우선 (디자인/가시성)
 - [ ] **Library References/Tags/Files 페이지** 가시성 + 디자인 통일 (All Notes 수준)
 - [ ] **Library Filter/Display 디자인** (All Notes 수준)
+
+### 중간 (UX 신기능)
 - [ ] **Quicklinks** — globalBookmarks anchorType 확장 (folder/savedView/category) + Home prominent + 영역별 사이드바 하단 collapsed (8px slide)
 - [ ] **Quickfilters 통합** — view-configs.quickFilters → SavedView 자동 시드 (builtin: boolean) + 사이드바 "Views" 섹션에 통합 (🔒 시스템 + ⭐ 사용자)
 - [ ] **사이드바 Inline Edit Mode** — DotsSix 핸들 + 드래그 + 👁 hide/show + sidebarCustomization (영역별 persist)
+
+### 후순위 (Insights 정리 — 합의됨, 옵션 D)
+- [ ] **GraphInsightsView 흡수** → `OntologyInsightsPanel`에 graph stats (nodes/edges/density) 추가
+- [ ] **사이드바 More 정리** — Ontology 영역의 `/graph-insights` 항목 제거 (Ontology 메인뷰 Insights 탭에 통합)
+- [ ] **InsightsView 이름 변경** → "Notes Health" (Notes 영역 More는 그대로 유지, 컨텍스트 보전)
+- [ ] **/insights 라우트는 그대로** (Notes 영역 사용자 동선 보전)
 
 ## Polished Decisions (이번 세션)
 
