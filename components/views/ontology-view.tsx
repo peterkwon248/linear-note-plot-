@@ -141,9 +141,11 @@ export function OntologyView() {
   )
   const wikiArticlesMapped = useMemo(
     () => wikiArticles.map((a) => ({
+      id: a.id,
       title: a.title,
       aliases: a.aliases,
-      // Extract noteIds from note-ref blocks so graph can identify which notes belong to this article
+      parentArticleId: a.parentArticleId,
+      // Extract noteIds from note-ref blocks so graph can link wiki nodes to referenced notes
       noteIds: a.blocks.filter((b) => b.type === "note-ref" && b.noteId).map((b) => b.noteId as string),
     })),
     [wikiArticles],

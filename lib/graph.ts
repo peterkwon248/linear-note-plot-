@@ -63,7 +63,7 @@ export function buildOntologyGraphData(
   notes: Note[],
   relations: Relation[],
   tags?: Array<{ id: string; name: string; color: string }>,
-  wikiArticles?: Array<{ title: string; aliases: string[]; noteIds?: string[] }>,
+  wikiArticles?: Array<{ id: string; title: string; aliases: string[]; parentArticleId?: string | null; noteIds?: string[] }>,
 ): OntologyGraphData {
   if (notes.length === 0) return { nodeData: [], edges: [], forceConfig: computeForceConfig(0) }
 
@@ -181,6 +181,58 @@ export function buildOntologyGraphData(
       // Add tag edges
       for (const noteId of noteIds) {
         edges.push({ source: tagNodeId, target: noteId, kind: "tag" })
+      }
+    }
+  }
+
+  // 6. Wiki Article nodes (separate entity — Assembly Model)
+  //    - parent → child article edges (hierarchy)
+  //    - article → note edges (note-ref blocks)
+  if (wikiArticles && wikiArticles.length > 0) {
+    const wikiIdSet = new Set(wikiArticles.map((w) => w.id))
+    const wikiConnCount = new Map<string, number>()
+
+    // Add wiki nodes (placeholder count — recomputed below)
+    for (const wa of wikiArticles) {
+      nodeData.push({
+        id: `wiki:${wa.id}`,
+        label: wa.title || "Untitled",
+        connectionCount: 0,
+        status: "permanent",
+        labelId: null,
+        isWiki: true,
+        nodeType: "wiki",
+      })
+    }
+
+    // Parent-child edges (wiki hierarchy)
+    for (const wa of wikiArticles) {
+      if (wa.parentArticleId && wikiIdSet.has(wa.parentArticleId)) {
+        const src = `wiki:${wa.parentArticleId}`
+        const tgt = `wiki:${wa.id}`
+        edges.push({ source: src, target: tgt, kind: "wikilink" })
+        wikiConnCount.set(src, (wikiConnCount.get(src) ?? 0) + 1)
+        wikiConnCount.set(tgt, (wikiConnCount.get(tgt) ?? 0) + 1)
+      }
+    }
+
+    // Article → Note edges (note-ref blocks linking to actual notes)
+    for (const wa of wikiArticles) {
+      if (!wa.noteIds) continue
+      const seenNotes = new Set<string>()
+      for (const nId of wa.noteIds) {
+        if (seenNotes.has(nId) || !noteIdSet.has(nId)) continue
+        seenNotes.add(nId)
+        const src = `wiki:${wa.id}`
+        edges.push({ source: src, target: nId, kind: "wikilink" })
+        wikiConnCount.set(src, (wikiConnCount.get(src) ?? 0) + 1)
+      }
+    }
+
+    // Update connectionCount on wiki nodes
+    for (const node of nodeData) {
+      if (node.nodeType === "wiki" && node.id.startsWith("wiki:")) {
+        node.connectionCount = wikiConnCount.get(node.id) ?? 0
       }
     }
   }

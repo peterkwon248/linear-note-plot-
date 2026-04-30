@@ -1280,8 +1280,8 @@ export function OntologyGraphCanvas({
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fontSize={9}
-                    fill="rgba(255,255,255,0.45)"
-                    opacity={dimmed ? 0.15 : 0.5}
+                    fill="var(--muted-foreground)"
+                    opacity={dimmed ? 0.3 : 0.7}
                     style={{ pointerEvents: "none" }}
                     fontFamily="-apple-system, system-ui, sans-serif"
                   >
@@ -1431,12 +1431,12 @@ export function OntologyGraphCanvas({
                     x={pos.x}
                     y={pos.y + shapeR + 14}
                     textAnchor="middle"
-                    fill={dimmed ? "rgba(255,255,255,0.15)" : nodeType === "tag" ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.6)"}
+                    fill="var(--foreground)"
                     fontSize={nodeType === "tag" ? 10 : 11}
                     fontFamily="-apple-system, system-ui, sans-serif"
-                    fontWeight={isSelected ? 600 : 400}
+                    fontWeight={isSelected ? 600 : 500}
                     fontStyle={nodeType === "tag" ? "italic" : "normal"}
-                    opacity={isHighlighted ? 1 : undefined}
+                    opacity={isHighlighted ? 1 : dimmed ? 0.3 : nodeType === "tag" ? 0.7 : 0.85}
                     style={{
                       transition: "opacity 0.15s",
                       pointerEvents: "none",
