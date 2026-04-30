@@ -280,8 +280,13 @@ function NotePickerChevron({ pane, currentNoteId }: { pane: 'primary' | 'seconda
                 <span className="truncate text-note font-medium flex-1">{n.title || "Untitled"}</span>
                 {label && (
                   <span
-                    className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium"
-                    style={{ backgroundColor: label.color + '20', color: label.color }}
+                    className="shrink-0 rounded border-solid px-1.5 py-0.5 text-[10px] font-medium"
+                    style={{
+                      backgroundColor: `color-mix(in srgb, ${label.color} 18%, transparent)`,
+                      color: label.color,
+                      borderColor: `color-mix(in srgb, ${label.color} 55%, transparent)`,
+                      borderWidth: "1.5px",
+                    }}
                   >
                     {label.name}
                   </span>

@@ -129,7 +129,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
           className={`ml-auto flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-medium transition-colors ${
             article.pinned
               ? "bg-accent/15 text-accent"
-              : "text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground"
+              : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
           }`}
           title={article.pinned ? "Unpin from Quicklinks" : "Pin to Quicklinks"}
         >
@@ -215,7 +215,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
                   className="flex items-center gap-1.5 text-note text-muted-foreground transition-colors hover:text-foreground cursor-default"
                   style={{ paddingLeft: `${((section.level ?? 2) - 2) * 12}px` }}
                 >
-                  <span className="shrink-0 text-2xs font-mono text-muted-foreground/50">
+                  <span className="shrink-0 text-2xs font-mono font-semibold text-accent/80">
                     {"H" + (section.level ?? 2)}
                   </span>
                   <span className="truncate">{section.title ?? "Untitled section"}</span>
@@ -307,16 +307,16 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
                   }}
                   className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-100 hover:bg-hover-bg"
                 >
-                  <span className="shrink-0 text-2xs font-semibold text-accent/40 tabular-nums w-4">
+                  <span className="shrink-0 text-2xs font-semibold text-accent tabular-nums w-4">
                     {i + 1}
                   </span>
-                  {src.type === "note" && <FileText className="shrink-0 text-muted-foreground/40" size={12} weight="regular" />}
-                  {src.type === "image" && <PhImage className="shrink-0 text-muted-foreground/40" size={12} weight="regular" />}
-                  <span className="flex-1 min-w-0 truncate text-note text-foreground/70">
+                  {src.type === "note" && <FileText className="shrink-0 text-muted-foreground" size={12} weight="bold" />}
+                  {src.type === "image" && <PhImage className="shrink-0 text-muted-foreground" size={12} weight="bold" />}
+                  <span className="flex-1 min-w-0 truncate text-note text-foreground">
                     {src.label}
                   </span>
                   {src.sub && (
-                    <span className="shrink-0 text-2xs text-muted-foreground/30">{src.sub}</span>
+                    <span className="shrink-0 text-2xs text-muted-foreground/70">{src.sub}</span>
                   )}
                 </button>
               ))}

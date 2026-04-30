@@ -363,14 +363,18 @@ export function WikiView() {
 
   // Hydrate WIKI_VIEW_CONFIG.filterCategories with runtime WikiCategory entities.
   // Mirror notes-table pattern (folder/label/tags receive dynamic values).
+  // Defensive: dedup wikiCategories by id (legacy data may have duplicate seeds).
   const wikiFilterCategories = useMemo(() => {
+    const uniqueCats = Array.from(
+      new Map(wikiCategories.map((c) => [c.id, c])).values()
+    )
     return WIKI_VIEW_CONFIG.filterCategories.map((cat) => {
       if (cat.key === "category") {
         return {
           ...cat,
           values: [
             { key: "_none", label: "Uncategorized" },
-            ...wikiCategories.map((c) => ({
+            ...uniqueCats.map((c) => ({
               key: c.id,
               label: c.name,
               count: wikiNotes.filter((n) => (n.categoryIds ?? []).includes(c.id)).length,

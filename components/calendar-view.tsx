@@ -427,10 +427,12 @@ function DayDashboard({
                       {/* Label badge */}
                       {label && (
                         <span
-                          className="rounded px-1.5 py-px text-2xs font-semibold uppercase tracking-wide"
+                          className="rounded border-solid px-1.5 py-px text-2xs font-semibold uppercase tracking-wide"
                           style={{
-                            backgroundColor: `${label.color}1a`,
+                            backgroundColor: `color-mix(in srgb, ${label.color} 18%, transparent)`,
                             color: label.color,
+                            borderColor: `color-mix(in srgb, ${label.color} 55%, transparent)`,
+                            borderWidth: "1.5px",
                           }}
                         >
                           {label.name}

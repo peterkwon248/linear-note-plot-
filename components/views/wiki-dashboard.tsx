@@ -97,7 +97,7 @@ export function WikiDashboard({
         {/* ── Search ── */}
         <div className="relative mb-6">
           <div className="relative">
-            <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" size={14} weight="regular" />
+            <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} weight="bold" />
             <input
               ref={searchInputRef}
               type="text"
@@ -116,7 +116,7 @@ export function WikiDashboard({
                 }
               }}
               placeholder="Search wiki articles..."
-              className="h-9 w-full rounded-lg border border-border-subtle bg-secondary/30 pl-9 pr-3 text-note text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-colors"
+              className="h-9 w-full rounded-lg border border-border-subtle bg-secondary/30 pl-9 pr-3 text-note text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-colors"
             />
           </div>
           {showSearchDropdown && (

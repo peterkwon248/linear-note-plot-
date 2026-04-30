@@ -219,11 +219,26 @@ function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras,
     }
 
     case "content": {
-      // "eq" with value "empty" means note has no content
-      // "neq" with value "empty" means note has content
-      const hasContent = (note.content?.trim().length ?? 0) > 0
+      const text = note.content ?? ""
+      // empty / non-empty
       if (value === "empty") {
+        const hasContent = text.trim().length > 0
         return operator === "eq" ? !hasContent : hasContent
+      }
+      // hasImage: markdown image or <img> tag
+      if (value === "hasImage") {
+        const has = /!\[[^\]]*\]\([^)]+\)|<img[\s>]/i.test(text)
+        return operator === "eq" ? has : !has
+      }
+      // hasCode: fenced code block (``` or ~~~) or 4-space indent code line
+      if (value === "hasCode") {
+        const has = /(^|\n)```[\s\S]*?\n```|(^|\n)~~~[\s\S]*?\n~~~/.test(text)
+        return operator === "eq" ? has : !has
+      }
+      // hasTable: pipe-delimited markdown table (header + separator)
+      if (value === "hasTable") {
+        const has = /(^|\n)\|.+\|\n\|[\s:|-]+\|/.test(text)
+        return operator === "eq" ? has : !has
       }
       return true
     }
@@ -243,9 +258,9 @@ function matchesRule(note: Note, rule: FilterRule, extras?: Pick<PipelineExtras,
     }
 
     case "pinned": {
-      // value "true" or "false"
+      // Accept "true"/"false" (current) and "yes"/"no" (legacy ViewStates)
       const isPinned = note.pinned === true
-      const target = value === "true"
+      const target = value === "true" || value === "yes"
       return operator === "eq" ? isPinned === target : isPinned !== target
     }
 

@@ -789,8 +789,8 @@ function CategoryFullListView({
         <Fragment key={group.key}>
           {group.label && (
             <div className="flex items-center gap-2.5 px-5 py-2 mt-3 mb-0.5">
-              <span className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide">{group.label}</span>
-              <span className="text-2xs text-muted-foreground/40 tabular-nums">{group.items.length}</span>
+              <span className="text-2xs font-semibold text-accent/80 uppercase tracking-wider">{group.label}</span>
+              <span className="text-2xs text-muted-foreground tabular-nums">{group.items.length}</span>
             </div>
           )}
           {group.items.map(
@@ -817,23 +817,23 @@ function CategoryFullListView({
                       weight="duotone"
                       className={
                         selectedId === cat.id
-                          ? "shrink-0 text-accent/70"
-                          : "shrink-0 text-muted-foreground/40"
+                          ? "shrink-0 text-accent"
+                          : "shrink-0 text-muted-foreground"
                       }
                     />
                     <div className="min-w-0 flex-1">
-                      <span className="text-note font-medium text-foreground/80 truncate block">
+                      <span className="text-note font-medium text-foreground truncate block">
                         {cat.name}
                       </span>
                       {showDescription && cat.description && (
-                        <span className="text-2xs text-muted-foreground/40 truncate block mt-0.5">
+                        <span className="text-2xs text-muted-foreground/80 truncate block mt-0.5">
                           {cat.description}
                         </span>
                       )}
                     </div>
                   </div>
                   {showCol("parent") && (
-                    <span className="w-[140px] text-note truncate text-muted-foreground/50">
+                    <span className="w-[140px] text-note truncate text-muted-foreground">
                       {parentName ?? "\u2014"}
                     </span>
                   )}
@@ -845,17 +845,17 @@ function CategoryFullListView({
                     </span>
                   )}
                   {showCol("articles") && (
-                    <span className="w-[72px] text-right text-note tabular-nums text-muted-foreground/60">
+                    <span className="w-[72px] text-right text-note tabular-nums text-muted-foreground">
                       {count > 0 ? count : "\u2014"}
                     </span>
                   )}
                   {showCol("sub") && (
-                    <span className="w-[56px] text-right text-note tabular-nums text-muted-foreground/40">
+                    <span className="w-[56px] text-right text-note tabular-nums text-muted-foreground/70">
                       {childCount > 0 ? childCount : "\u2014"}
                     </span>
                   )}
                   {showCol("updatedAt") && (
-                    <span className="w-[80px] text-right text-note tabular-nums text-muted-foreground/40">
+                    <span className="w-[80px] text-right text-note tabular-nums text-muted-foreground/70">
                       {cat.updatedAt ? shortRelative(cat.updatedAt) : "\u2014"}
                     </span>
                   )}

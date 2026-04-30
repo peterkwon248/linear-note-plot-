@@ -242,8 +242,8 @@ function NoteItem({
       onClick={onClick}
       className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
     >
-      <FileText className="shrink-0 text-muted-foreground/50" size={14} weight="regular" />
-      <span className="min-w-0 flex-1 truncate text-note text-foreground/90 group-hover:text-foreground">{title}</span>
+      <FileText className="shrink-0 text-muted-foreground" size={14} weight="bold" />
+      <span className="min-w-0 flex-1 truncate text-note text-foreground group-hover:text-foreground">{title}</span>
       <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{meta}</span>
     </button>
   )

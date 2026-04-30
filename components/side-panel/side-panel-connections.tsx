@@ -121,7 +121,7 @@ function SuggestedTagChip({
 
 function SubLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground/60 px-2">
+    <span className="text-2xs font-semibold uppercase tracking-wider text-accent/80 px-2">
       {children}
     </span>
   )
@@ -240,21 +240,21 @@ function WikiArticleConnections() {
         {/* Parent */}
         <div className="space-y-0.5 mb-2">
           <div className="flex items-center gap-1 px-2 mb-1">
-            <ArrowUp size={10} className="text-muted-foreground/50" />
+            <ArrowUp size={10} className="text-accent/70" />
             <SubLabel>Parent</SubLabel>
           </div>
           {parentArticle ? (
             <div className="flex items-center gap-1.5 px-2 py-0.5">
               <button
                 onClick={() => navigateToWikiArticle(parentArticle.id)}
-                className="flex-1 min-w-0 text-left text-note text-foreground/80 hover:text-foreground truncate transition-colors duration-100"
+                className="flex-1 min-w-0 text-left text-note text-foreground hover:text-foreground truncate transition-colors duration-100"
               >
                 {parentArticle.title}
               </button>
               <button
                 onClick={() => setWikiArticleParent(article.id, null)}
                 title="Remove parent"
-                className="shrink-0 text-muted-foreground/40 hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
+                className="shrink-0 text-muted-foreground hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
               >
                 <PhX size={12} weight="bold" />
               </button>
@@ -262,7 +262,7 @@ function WikiArticleConnections() {
           ) : (
             <button
               onClick={() => setParentPickerOpen(true)}
-              className="flex items-center gap-1.5 text-note text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100 px-2 py-0.5"
+              className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
             >
               <PhPlus size={12} weight="bold" />
               Set parent
@@ -273,22 +273,22 @@ function WikiArticleConnections() {
         {/* Children */}
         <div className="space-y-0.5">
           <div className="flex items-center gap-1 px-2 mb-1">
-            <ArrowDown size={10} className="text-muted-foreground/50" />
+            <ArrowDown size={10} className="text-accent/70" />
             <SubLabel>Children</SubLabel>
           </div>
           {childArticles.map((child) => (
             <button
               key={child.id}
               onClick={() => navigateToWikiArticle(child.id)}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground/70 hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
             >
-              <IconWiki size={12} className="shrink-0 text-muted-foreground/40" />
+              <IconWiki size={12} className="shrink-0 text-muted-foreground" />
               <span className="truncate">{child.title}</span>
             </button>
           ))}
           <button
             onClick={() => setAddChildOpen(true)}
-            className="flex items-center gap-1.5 text-note text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100 px-2 py-0.5"
+            className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
           >
             <PhPlus size={12} weight="bold" />
             Add child
@@ -755,21 +755,21 @@ function NoteConnections() {
         {/* Parent */}
         <div className="space-y-0.5 mb-2">
           <div className="flex items-center gap-1 px-2 mb-1">
-            <ArrowUp size={10} className="text-muted-foreground/50" />
+            <ArrowUp size={10} className="text-accent/70" />
             <SubLabel>Parent</SubLabel>
           </div>
           {parentNote ? (
             <div className="flex items-center gap-1.5 px-2 py-0.5">
               <button
                 onClick={() => openNote(parentNote.id)}
-                className="flex-1 min-w-0 text-left text-note text-foreground/80 hover:text-foreground truncate transition-colors duration-100"
+                className="flex-1 min-w-0 text-left text-note text-foreground hover:text-foreground truncate transition-colors duration-100"
               >
                 {parentNote.title || "Untitled"}
               </button>
               <button
                 onClick={() => setNoteParent(note.id, null)}
                 title="Remove parent"
-                className="shrink-0 text-muted-foreground/40 hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
+                className="shrink-0 text-muted-foreground hover:text-red-400 transition-colors duration-100 p-0.5 rounded"
               >
                 <PhX size={12} weight="bold" />
               </button>
@@ -777,7 +777,7 @@ function NoteConnections() {
           ) : (
             <button
               onClick={() => setParentPickerOpen(true)}
-              className="flex items-center gap-1.5 text-note text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100 px-2 py-0.5"
+              className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
             >
               <PhPlus size={12} weight="bold" />
               Set parent
@@ -788,22 +788,22 @@ function NoteConnections() {
         {/* Children */}
         <div className="space-y-0.5">
           <div className="flex items-center gap-1 px-2 mb-1">
-            <ArrowDown size={10} className="text-muted-foreground/50" />
+            <ArrowDown size={10} className="text-accent/70" />
             <SubLabel>Children</SubLabel>
           </div>
           {childNotes.map((child) => (
             <button
               key={child.id}
               onClick={() => openInSecondary(child.id)}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground/70 hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-0.5 text-left text-note text-foreground hover:bg-hover-bg hover:text-foreground transition-colors duration-100"
             >
-              <FileText size={12} className="shrink-0 text-muted-foreground/40" weight="regular" />
+              <FileText size={12} className="shrink-0 text-muted-foreground" weight="regular" />
               <span className="truncate">{child.title || "Untitled"}</span>
             </button>
           ))}
           <button
             onClick={() => setAddChildOpen(true)}
-            className="flex items-center gap-1.5 text-note text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100 px-2 py-0.5"
+            className="flex items-center gap-1.5 text-note text-muted-foreground hover:text-foreground transition-colors duration-100 px-2 py-0.5"
           >
             <PhPlus size={12} weight="bold" />
             Add child

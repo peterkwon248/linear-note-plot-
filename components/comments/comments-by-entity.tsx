@@ -441,7 +441,7 @@ export function CommentsByEntity({
       )}
 
       {tops.length === 0 && (
-        <p className="px-2 py-2 text-[12px] text-muted-foreground/50 italic">
+        <p className="px-2 py-2 text-[12px] text-muted-foreground italic">
           No comments yet.
         </p>
       )}

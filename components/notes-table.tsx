@@ -13,6 +13,8 @@ import {
   ContextMenuSubTrigger,
 } from "@/components/ui/context-menu"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
+import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
+import { groupByInitial } from "@/lib/korean-utils"
 import { ArrowsDownUp } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp"
 import { ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp"
 import { ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown"
@@ -109,15 +111,15 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
   parent: "Parent",
 }
 
-const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField: SortField; minWidth?: number }[] = [
+const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField?: SortField; minWidth?: number }[] = [
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
   { id: "status", label: "Status", width: "w-[120px] shrink-0", align: "text-right", sortField: "status", minWidth: 400 },
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
-  { id: "parent", label: "Parent", width: "w-[100px] shrink-0", align: "text-left", sortField: "title", minWidth: 700 },
-  { id: "children", label: "Children", width: "w-[56px] shrink-0", align: "text-center", sortField: "title", minWidth: 700 },
-  { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
-  { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
-  { id: "wordCount", label: "Words", width: "w-[56px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
+  { id: "parent", label: "Parent", width: "w-[100px] shrink-0", align: "text-center", minWidth: 700 },
+  { id: "children", label: "Children", width: "w-[72px] shrink-0", align: "text-center", minWidth: 700 },
+  { id: "links", label: "Links", width: "w-[72px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
+  { id: "reads", label: "Reads", width: "w-[72px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
+  { id: "wordCount", label: "Words", width: "w-[72px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
   { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
   { id: "createdAt", label: "Created", width: "w-[80px] shrink-0", align: "text-right", sortField: "createdAt", minWidth: 800 },
 ]
@@ -140,12 +142,19 @@ function TH({
   className = "",
 }: {
   label: string
-  col: SortField
+  col?: SortField
   sortCol: SortField
   sortDir: SortDirection
   onSort: (c: SortField) => void
   className?: string
 }) {
+  if (!col) {
+    return (
+      <span className={`inline-flex items-center text-note font-medium text-muted-foreground ${className}`}>
+        {label}
+      </span>
+    )
+  }
   const active = sortCol === col
   return (
     <button
@@ -369,12 +378,18 @@ export function NotesTable({
     [rawFlatNotes, trashFilterFn]
   )
 
-  const groups = useMemo(
-    () => isTrashView && trashFilter !== "all"
+  // Alphabetical Index toggle (Wiki-pattern parity)
+  const [showAlphaIndex, setShowAlphaIndex] = useState(false)
+
+  const groups = useMemo<NoteGroup[]>(() => {
+    const baseGroups = isTrashView && trashFilter !== "all"
       ? rawGroups.map((g) => ({ ...g, notes: g.notes.filter(trashFilterFn) }))
-      : rawGroups,
-    [rawGroups, isTrashView, trashFilter, trashFilterFn]
-  )
+      : rawGroups
+    if (!showAlphaIndex) return baseGroups
+    const allFlat = baseGroups.flatMap((g) => g.notes)
+    const map = groupByInitial(allFlat, (n: Note) => n.title || "Untitled")
+    return Array.from(map.entries()).map(([key, notes]) => ({ key, label: key, notes } as NoteGroup))
+  }, [rawGroups, isTrashView, trashFilter, trashFilterFn, showAlphaIndex])
 
   // ── Multi-select state ──
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -722,12 +737,14 @@ export function NotesTable({
     for (const n of notes) m.set(n.id, n)
     return m
   }, [notes, showParentCol])
-  const childrenCounts = useMemo(() => {
+  const childrenByParent = useMemo(() => {
     if (!showChildrenCol) return null
-    const m = new Map<string, number>()
+    const m = new Map<string, string[]>()
     for (const n of notes) {
       if (n.parentNoteId && !n.trashed) {
-        m.set(n.parentNoteId, (m.get(n.parentNoteId) ?? 0) + 1)
+        const arr = m.get(n.parentNoteId) ?? []
+        arr.push(n.title || "Untitled")
+        m.set(n.parentNoteId, arr)
       }
     }
     return m
@@ -739,10 +756,10 @@ export function NotesTable({
     if (effectiveVisibleCols.includes("status")) cols.push("120px")
     if (effectiveVisibleCols.includes("folder")) cols.push("80px")
     if (effectiveVisibleCols.includes("parent")) cols.push("100px")
-    if (effectiveVisibleCols.includes("children")) cols.push("56px")
-    if (effectiveVisibleCols.includes("links")) cols.push("56px")
-    if (effectiveVisibleCols.includes("reads")) cols.push("56px")
-    if (effectiveVisibleCols.includes("wordCount")) cols.push("56px")
+    if (effectiveVisibleCols.includes("children")) cols.push("72px")
+    if (effectiveVisibleCols.includes("links")) cols.push("72px")
+    if (effectiveVisibleCols.includes("reads")) cols.push("72px")
+    if (effectiveVisibleCols.includes("wordCount")) cols.push("72px")
     if (effectiveVisibleCols.includes("updatedAt")) cols.push("80px")
     if (effectiveVisibleCols.includes("createdAt")) cols.push("80px")
     return cols.join(" ")
@@ -895,33 +912,46 @@ export function NotesTable({
         icon={<FileText size={20} weight="regular" />}
         title={title ?? "Notes"}
         count={flatNotes.length}
-        extraToolbarButtons={viewState.groupBy !== "none" && groups.length > 0 ? (
-          <button
-            onClick={() => {
-              const allKeys = groups.map(g => g.key)
-              const allCollapsed = allKeys.every(k => collapsedGroups.has(k))
-              if (allCollapsed) {
-                setCollapsedGroups(new Set())
-              } else {
-                setCollapsedGroups(new Set(allKeys))
-              }
-            }}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
-            title={groups.every(g => collapsedGroups.has(g.key)) ? "Expand all groups" : "Collapse all groups"}
-          >
-            <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              {groups.every(g => collapsedGroups.has(g.key)) ? (
-                <>
-                  <path d="M4 6l4 4 4-4" />
-                </>
-              ) : (
-                <>
-                  <path d="M12 10l-4-4-4 4" />
-                </>
-              )}
-            </svg>
-          </button>
-        ) : undefined}
+        extraToolbarButtons={
+          <>
+            {/* Index toggle — Wiki-pattern parity (alphabetical group view) */}
+            <button
+              onClick={() => setShowAlphaIndex((v) => !v)}
+              className={`flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium transition-all duration-100 ${
+                showAlphaIndex
+                  ? "bg-foreground/10 text-foreground"
+                  : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
+              }`}
+              title={showAlphaIndex ? "Exit Index" : "Show alphabetical Index"}
+            >
+              <ListBullets size={13} weight="bold" />
+              Index
+            </button>
+            {viewState.groupBy !== "none" && groups.length > 0 && !showAlphaIndex && (
+              <button
+                onClick={() => {
+                  const allKeys = groups.map(g => g.key)
+                  const allCollapsed = allKeys.every(k => collapsedGroups.has(k))
+                  if (allCollapsed) {
+                    setCollapsedGroups(new Set())
+                  } else {
+                    setCollapsedGroups(new Set(allKeys))
+                  }
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                title={groups.every(g => collapsedGroups.has(g.key)) ? "Expand all groups" : "Collapse all groups"}
+              >
+                <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  {groups.every(g => collapsedGroups.has(g.key)) ? (
+                    <path d="M4 6l4 4 4-4" />
+                  ) : (
+                    <path d="M12 10l-4-4-4 4" />
+                  )}
+                </svg>
+              </button>
+            )}
+          </>
+        }
         showFilter
         hasActiveFilters={viewState.filters.length > 0}
         filterContent={
@@ -998,19 +1028,32 @@ export function NotesTable({
           onSetFilters={(filters) => updateViewState({ filters })}
         />
 
-        {/* ── Sort order chip ── */}
+        {/* ── Sort order chip (Linear-style 3-part: key | value | × ) ── */}
         {viewState.sortField !== "updatedAt" && (
-          <div className="flex items-center px-5 pb-1">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-2xs font-medium">
-              Order by {SORT_FIELD_LABELS[viewState.sortField]}
-              <span>{viewState.sortDirection === "asc" ? "↑" : "↓"}</span>
+          <div className="flex items-center px-5 py-2">
+            <div className="inline-flex items-stretch overflow-hidden rounded-md border border-border bg-secondary/40 text-2xs font-medium leading-none">
+              {/* key */}
+              <span className="inline-flex items-center px-2 py-0.5 text-muted-foreground">Order by</span>
+              <span className="w-px self-stretch bg-border" aria-hidden />
+              {/* value + direction (click to toggle) */}
+              <button
+                onClick={() => updateViewState({ sortDirection: viewState.sortDirection === "asc" ? "desc" : "asc" })}
+                className="inline-flex items-center gap-1 px-2 py-0.5 text-foreground hover:bg-hover-bg transition-colors"
+                title="Toggle direction"
+              >
+                {SORT_FIELD_LABELS[viewState.sortField]}
+                <span className="text-muted-foreground">{viewState.sortDirection === "asc" ? "↑" : "↓"}</span>
+              </button>
+              <span className="w-px self-stretch bg-border" aria-hidden />
+              {/* remove */}
               <button
                 onClick={() => updateViewState({ sortField: "updatedAt", sortDirection: "desc" })}
-                className="ml-0.5 hover:text-accent/80 transition-colors"
+                className="inline-flex items-center px-1.5 py-0.5 text-muted-foreground hover:text-foreground hover:bg-hover-bg transition-colors"
+                title="Remove sort"
               >
                 <PhX size={12} weight="regular" />
               </button>
-            </span>
+            </div>
           </div>
         )}
       </ViewHeader>
@@ -1255,7 +1298,7 @@ export function NotesTable({
                               showCardPreview={false}
                               groupBy={viewState.groupBy}
                               parentTitle={item.note.parentNoteId ? notesById?.get(item.note.parentNoteId)?.title : undefined}
-                              childrenCount={childrenCounts?.get(item.note.id) ?? 0}
+                              childTitles={childrenByParent?.get(item.note.id)}
                             />
                           </div>
                         )}
@@ -1372,7 +1415,7 @@ interface NoteRowProps {
   showCardPreview?: boolean
   groupBy?: string
   parentTitle?: string
-  childrenCount?: number
+  childTitles?: string[]
 }
 
 function SourceIcon({ source }: { source: NoteSource }) {
@@ -1455,7 +1498,7 @@ function NoteRowInner({
   showCardPreview,
   groupBy,
   parentTitle,
-  childrenCount,
+  childTitles,
 }: NoteRowProps) {
   const visibleCols = visibleColumns
   const labels = usePlotStore((s) => s.labels)
@@ -1524,8 +1567,13 @@ function NoteRowInner({
             if (label) {
               return (
                 <span
-                  className="shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-2xs font-medium"
-                  style={{ backgroundColor: `${label.color}18`, color: label.color }}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-full border-solid px-1.5 py-0.5 text-2xs font-medium"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${label.color} 18%, transparent)`,
+                    color: label.color,
+                    borderColor: `color-mix(in srgb, ${label.color} 55%, transparent)`,
+                    borderWidth: "1.5px",
+                  }}
                 >
                   {label.name}
                 </span>
@@ -1576,9 +1624,24 @@ function NoteRowInner({
       {/* Children */}
       {visibleCols.includes("children") && (
         <div className="text-center px-1">
-          <span className={`tabular-nums text-note ${(childrenCount ?? 0) === 0 ? "text-muted-foreground/50" : "text-foreground"}`}>
-            {(childrenCount ?? 0) > 0 ? childrenCount : "—"}
-          </span>
+          {(childTitles?.length ?? 0) > 0 ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="tabular-nums text-note text-foreground cursor-help">
+                  {childTitles!.length}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" align="center" className="max-w-[280px]">
+                <div className="flex flex-col gap-0.5">
+                  {childTitles!.map((t, i) => (
+                    <div key={i} className="truncate">{t}</div>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <span className="tabular-nums text-note text-muted-foreground/50">—</span>
+          )}
         </div>
       )}
 
