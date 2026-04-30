@@ -77,7 +77,7 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
               <button
                 type="button"
                 onClick={() => updateAttributes({ width: null, height: null })}
-                className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
+                className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
                 title="Reset size"
               >
                 <ArrowsIn size={12} />
@@ -86,7 +86,7 @@ function CalloutNodeView({ node, updateAttributes, editor }: NodeViewProps) {
             <button
               type="button"
               onClick={removeCallout}
-              className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
+              className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover:opacity-100"
               title="Remove callout"
             >
               <PhX size={12} />

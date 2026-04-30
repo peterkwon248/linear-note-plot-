@@ -182,13 +182,13 @@ function BlockPicker({
             }
           }}
           placeholder="Search blocks…  (Esc to close)"
-          className="flex-1 bg-transparent border-0 outline-none text-note text-foreground placeholder:text-muted-foreground/40"
+          className="flex-1 bg-transparent border-0 outline-none text-note text-foreground placeholder:text-muted-foreground/70"
         />
         <button
           type="button"
           onClick={onClose}
           title="Close"
-          className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
+          className="p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors"
         >
           <PhX size={12} />
         </button>
@@ -205,17 +205,17 @@ function BlockPicker({
             >
               <Plus size={12} className="flex-shrink-0" />
               <span className="truncate">{createLabel}: <span className="font-medium">{filter.trim()}</span></span>
-              <span className="ml-auto text-2xs text-muted-foreground/40">Enter</span>
+              <span className="ml-auto text-2xs text-muted-foreground/70">Enter</span>
             </button>
           ) : (
-            <p className="text-2xs text-muted-foreground/50 px-3 py-2">No blocks found.</p>
+            <p className="text-2xs text-muted-foreground/70 px-3 py-2">No blocks found.</p>
           )
         ) : (
           <>
             {/* Headings first */}
             {headings.length > 0 && (
               <>
-                <p className="text-2xs text-muted-foreground/40 px-3 py-1 font-medium uppercase tracking-wider">Headings</p>
+                <p className="text-2xs text-muted-foreground/70 px-3 py-1 font-medium uppercase tracking-wider">Headings</p>
                 {headings.map((b) => (
                   <button
                     key={b.id}
@@ -235,7 +235,7 @@ function BlockPicker({
             {others.length > 0 && (
               <>
                 {headings.length > 0 && (
-                  <p className="text-2xs text-muted-foreground/40 px-3 py-1 mt-1 font-medium uppercase tracking-wider">Paragraphs & Lists</p>
+                  <p className="text-2xs text-muted-foreground/70 px-3 py-1 mt-1 font-medium uppercase tracking-wider">Paragraphs & Lists</p>
                 )}
                 {others.map((b) => (
                   <button
@@ -263,7 +263,7 @@ function BlockPicker({
         <button
           type="button"
           onClick={() => onSelect({ id: "", text: "", level: 0, pos: 0, type: "other" })}
-          className="w-full text-left text-2xs px-3 py-1.5 rounded hover:bg-hover-bg text-muted-foreground/50 hover:text-muted-foreground flex items-center gap-2 transition-colors"
+          className="w-full text-left text-2xs px-3 py-1.5 rounded hover:bg-hover-bg text-muted-foreground/70 hover:text-muted-foreground flex items-center gap-2 transition-colors"
         >
           <PencilSimple size={12} className="opacity-50" />
           Add blank item (type manually)
@@ -631,7 +631,7 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
             <button
               type="button"
               onClick={() => updateAttributes({ width: null, height: null })}
-              className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
+              className="rounded p-0.5 text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Reset size"
             >
               <ArrowsIn size={12} />
@@ -640,7 +640,7 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
           <button
             type="button"
             onClick={() => deleteNode()}
-            className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
+            className="rounded p-0.5 text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors"
             title="Remove TOC block"
           >
             <PhX size={12} />
@@ -664,7 +664,7 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
         {/* Entries */}
         {entries.length === 0 ? (
           <div className="relative flex flex-col items-center gap-2 py-3">
-            <p className="text-2xs text-muted-foreground/50 italic">
+            <p className="text-2xs text-muted-foreground/70 italic">
               Click + to add items from your document.
             </p>
             <button
@@ -854,7 +854,7 @@ function TocNodeView({ editor, node, updateAttributes, deleteNode }: NodeViewPro
           <button
             type="button"
             onClick={() => setShowPicker(true)}
-            className="flex items-center gap-1 mt-2 text-2xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            className="flex items-center gap-1 mt-2 text-2xs text-muted-foreground/70 hover:text-muted-foreground transition-colors"
             title="Add top-level section"
           >
             <Plus size={10} /> Section

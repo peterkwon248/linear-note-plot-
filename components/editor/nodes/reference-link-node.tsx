@@ -108,7 +108,7 @@ function ReferenceLinkView({ node, editor }: NodeViewProps) {
                 🔗 {url}
               </span>
             )}
-            <span className="block mt-1.5 text-[10px] text-muted-foreground/40">
+            <span className="block mt-1.5 text-[10px] text-muted-foreground/70">
               Click to open · Ctrl+click for details
             </span>
           </span>

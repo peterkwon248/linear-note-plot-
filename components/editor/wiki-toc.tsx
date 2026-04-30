@@ -127,7 +127,7 @@ export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTO
       )}
 
       {headings.length === 0 && (
-        <p className="px-2 text-2xs text-muted-foreground/40">No sections yet</p>
+        <p className="px-2 text-2xs text-muted-foreground/70">No sections yet</p>
       )}
 
       {/* Inline add input */}
@@ -147,7 +147,7 @@ export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTO
               }}
               onBlur={() => { if (!newTitle.trim()) handleCancelAdd() }}
               placeholder={addingLevel === 2 ? "e.g. Background" : addingLevel === 3 ? "e.g. Key Points" : "e.g. Details"}
-              className="flex-1 bg-transparent text-2xs text-foreground outline-none placeholder:text-muted-foreground/30"
+              className="flex-1 bg-transparent text-2xs text-foreground outline-none placeholder:text-muted-foreground/60"
             />
           </div>
         </div>
@@ -158,14 +158,14 @@ export function WikiTOC({ content, onScrollTo, onAddSection, className }: WikiTO
         <div className="mt-2 space-y-0.5">
           <button
             onClick={() => setAddingLevel(2)}
-            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors duration-100"
+            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors duration-100"
           >
             <PhPlus size={12} />
             Section
           </button>
           <button
             onClick={() => setAddingLevel(3)}
-            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/30 hover:text-muted-foreground hover:bg-hover-bg transition-colors duration-100"
+            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted-foreground/60 hover:text-muted-foreground hover:bg-hover-bg transition-colors duration-100"
             style={{ paddingLeft: "20px" }}
           >
             <PhPlus size={10} />

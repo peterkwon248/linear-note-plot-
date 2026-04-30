@@ -1161,7 +1161,7 @@ export function FilterChipBar({
       <div className="ml-auto">
         <button
           onClick={onClearAll}
-          className="border-none bg-transparent px-1 py-0.5 text-2xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+          className="border-none bg-transparent px-1 py-0.5 text-2xs text-muted-foreground/70 transition-colors hover:text-muted-foreground"
         >
           Clear all
         </button>

@@ -32,7 +32,7 @@ export function WikiSidebar({
       {/* Categories */}
       <Section title="Categories">
         {categories.items.length === 0 && categories.uncategorized === 0 ? (
-          <p className="text-2xs text-muted-foreground/40">No categories</p>
+          <p className="text-2xs text-muted-foreground/70">No categories</p>
         ) : (
           <div className="space-y-0.5">
             {rootCategories.map((cat) => (
@@ -68,7 +68,7 @@ export function WikiSidebar({
       {/* Recent */}
       <Section title="Recent">
         {recentChanges.length === 0 ? (
-          <p className="text-2xs text-muted-foreground/40">No recent changes</p>
+          <p className="text-2xs text-muted-foreground/70">No recent changes</p>
         ) : (
           <div className="space-y-px">
             {recentChanges.map((note) => (
@@ -81,7 +81,7 @@ export function WikiSidebar({
                 <span className="min-w-0 flex-1 truncate text-2xs text-foreground/80">
                   {note.title || "Untitled"}
                 </span>
-                <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/30">
+                <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/60">
                   {shortRelative(note.updatedAt)}
                 </span>
               </button>
@@ -100,7 +100,7 @@ export function WikiSidebar({
                 <span className="min-w-0 flex-1 truncate text-2xs text-muted-foreground/70">
                   {item.title}
                 </span>
-                <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/30 group-hover:hidden">
+                <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/60 group-hover:hidden">
                   {item.refCount}
                 </span>
                 <button
@@ -143,7 +143,7 @@ function CategoryNode({
         <span className="min-w-0 flex-1 truncate text-2xs font-medium text-foreground/70">
           {category.name}
         </span>
-        <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/40">
+        <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/70">
           {category.count}
         </span>
       </button>
@@ -165,7 +165,7 @@ function CategoryNode({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
-      <h4 className="mb-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
+      <h4 className="mb-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground/70">
         {title}
       </h4>
       {children}

@@ -36,7 +36,7 @@ export function WikiBreadcrumb({ articleId }: WikiBreadcrumbProps) {
             <CaretRight
               size={10}
               weight="bold"
-              className="text-muted-foreground/30 shrink-0"
+              className="text-muted-foreground/60 shrink-0"
             />
           )}
           <button
@@ -51,7 +51,7 @@ export function WikiBreadcrumb({ articleId }: WikiBreadcrumbProps) {
       <CaretRight
         size={10}
         weight="bold"
-        className="text-muted-foreground/30 shrink-0"
+        className="text-muted-foreground/60 shrink-0"
       />
     </nav>
   )

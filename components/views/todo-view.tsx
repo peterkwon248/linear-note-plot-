@@ -71,7 +71,7 @@ export function TodoView() {
               }
             }}
             placeholder="Add a task..."
-            className="flex-1 bg-transparent text-note text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
+            className="flex-1 bg-transparent text-note text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
           />
           {newTaskText.trim() && (
             <span className="text-2xs text-muted-foreground">Enter to add</span>
@@ -81,7 +81,7 @@ export function TodoView() {
         {/* Empty state */}
         {total === 0 && (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <CheckSquare size={32} className="text-muted-foreground/40" />
+            <CheckSquare size={32} className="text-muted-foreground/70" />
             <p className="text-note text-muted-foreground">No tasks yet</p>
             <p className="text-2xs text-muted-foreground/60">
               Type above to add your first task
@@ -168,7 +168,7 @@ function TaskRow({
       </button>
       <span
         className={`flex-1 text-note truncate ${
-          task.checked ? "line-through text-muted-foreground/50" : "text-foreground"
+          task.checked ? "line-through text-muted-foreground/70" : "text-foreground"
         }`}
       >
         {task.text || "Untitled task"}

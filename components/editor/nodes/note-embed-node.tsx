@@ -96,13 +96,13 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
           contentEditable={false}
           className="not-draggable border-l-4 border-destructive/40 rounded-lg p-3 my-2 select-none bg-secondary/20"
         >
-          <div className="flex items-center gap-2 text-muted-foreground/50">
+          <div className="flex items-center gap-2 text-muted-foreground/70">
             <PhNote size={14} />
             <span className="text-2xs italic">Note not found</span>
             <button
               type="button"
               onClick={() => deleteNode()}
-              className="ml-auto rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+              className="ml-auto rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Remove embed"
             >
               <PhX size={12} />
@@ -149,7 +149,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                   setActiveRoute("/notes")
                   usePlotStore.getState().openNote(noteId)
                 }}
-                className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
+                className="rounded p-0.5 text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Open note"
               >
                 <ArrowSquareOut size={12} />
@@ -158,7 +158,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); updateAttributes({ width: null, height: null }) }}
-                  className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+                  className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
                   title="Reset size"
                 >
                   <ArrowsIn size={12} />
@@ -167,7 +167,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); deleteNode() }}
-                className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+                className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Remove embed"
               >
                 <PhX size={12} />
@@ -176,7 +176,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
           </div>
           <div className="px-3 pb-2">
             {loading ? (
-              <p className="text-2xs text-muted-foreground/40 italic py-2">Loading...</p>
+              <p className="text-2xs text-muted-foreground/70 italic py-2">Loading...</p>
             ) : initialContent ? (
               <SyncedBlockEditor
                 key={noteId}
@@ -185,7 +185,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 onChange={handleChange}
               />
             ) : (
-              <p className="text-2xs text-muted-foreground/40 italic py-2">Empty note</p>
+              <p className="text-2xs text-muted-foreground/70 italic py-2">Empty note</p>
             )}
           </div>
         </div>
@@ -231,7 +231,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
                 setActiveRoute("/notes")
                 usePlotStore.getState().openNote(noteId)
               }}
-              className="rounded p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
+              className="rounded p-0.5 text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Open note"
             >
               <ArrowSquareOut size={12} />
@@ -240,7 +240,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); updateAttributes({ width: null, height: null }) }}
-                className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+                className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Reset size"
               >
                 <ArrowsIn size={12} />
@@ -249,7 +249,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); deleteNode() }}
-              className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+              className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Remove embed"
             >
               <PhX size={12} />
@@ -261,7 +261,7 @@ function NoteEmbedView({ node, deleteNode, editor: parentEditor, updateAttribute
             {bodyPreview}
           </p>
         ) : (
-          <p className="text-2xs text-muted-foreground/40 italic">Empty note</p>
+          <p className="text-2xs text-muted-foreground/70 italic">Empty note</p>
         )}
       </div>
     </NodeViewWrapper>

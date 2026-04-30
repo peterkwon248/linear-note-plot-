@@ -209,7 +209,7 @@ function TrashEntityList({ type }: { type: "tags" | "labels" | "templates" | "re
     return (
       <div className="flex flex-1 items-center justify-center text-center">
         <div>
-          <Trash className="mx-auto mb-3 text-muted-foreground/40" size={40} weight="regular" />
+          <Trash className="mx-auto mb-3 text-muted-foreground/70" size={40} weight="regular" />
           <p className="text-ui text-muted-foreground">No trashed {type}</p>
         </div>
       </div>
@@ -938,7 +938,7 @@ export function NotesTable({
                     setCollapsedGroups(new Set(allKeys))
                   }
                 }}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
                 title={groups.every(g => collapsedGroups.has(g.key)) ? "Expand all groups" : "Collapse all groups"}
               >
                 <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1097,7 +1097,7 @@ export function NotesTable({
           <div className="flex-1 flex flex-col">
             {virtualItems.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-                <PhNotePencil size={32} weight="light" className="text-muted-foreground/40" />
+                <PhNotePencil size={32} weight="light" className="text-muted-foreground/70" />
                 <p className="text-note">
                   {context === "trash" ? "Trash is empty" : "No notes yet"}
                 </p>
@@ -1616,7 +1616,7 @@ function NoteRowInner({
           {parentTitle ? (
             <span className="truncate text-note text-muted-foreground">{parentTitle}</span>
           ) : (
-            <span className="text-note text-muted-foreground/50">{"—"}</span>
+            <span className="text-note text-muted-foreground/70">{"—"}</span>
           )}
         </div>
       )}
@@ -1640,7 +1640,7 @@ function NoteRowInner({
               </TooltipContent>
             </Tooltip>
           ) : (
-            <span className="tabular-nums text-note text-muted-foreground/50">—</span>
+            <span className="tabular-nums text-note text-muted-foreground/70">—</span>
           )}
         </div>
       )}

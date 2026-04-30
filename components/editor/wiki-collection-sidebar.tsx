@@ -265,7 +265,7 @@ function CollectionItemRow({
           <span className="text-note text-muted-foreground truncate block">
             {item.fileName || "File"}
             {item.fileSize && (
-              <span className="ml-1 text-2xs text-muted-foreground/50">
+              <span className="ml-1 text-2xs text-muted-foreground/70">
                 ({item.fileSize < 1024 * 1024
                   ? `${(item.fileSize / 1024).toFixed(0)} KB`
                   : `${(item.fileSize / (1024 * 1024)).toFixed(1)} MB`

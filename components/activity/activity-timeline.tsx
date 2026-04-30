@@ -23,7 +23,7 @@ export function ActivityTimeline({ noteId }: { noteId: string }) {
 
   if (noteEvents.length === 0) {
     return (
-      <p className="text-2xs text-muted-foreground/50">No activity yet</p>
+      <p className="text-2xs text-muted-foreground/70">No activity yet</p>
     )
   }
 
@@ -59,7 +59,7 @@ function TimelineRow({ event }: { event: NoteEvent }) {
       <span className="text-2xs text-muted-foreground">
         {config.verb}
       </span>
-      <span className="ml-auto text-2xs text-muted-foreground/50 shrink-0">
+      <span className="ml-auto text-2xs text-muted-foreground/70 shrink-0">
         {timeAgo}
       </span>
     </div>

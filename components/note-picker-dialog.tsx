@@ -306,7 +306,7 @@ export function NotePickerDialog({
                   <GroupIcon className="h-3 w-3 text-accent/70" />
                   <span className="font-medium">{group.label}:</span>
                   <span className="max-w-[120px] truncate text-muted-foreground">{summary}</span>
-                  <CaretDown className="text-muted-foreground/50" size={10} weight="regular" />
+                  <CaretDown className="text-muted-foreground/70" size={10} weight="regular" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-52" onCloseAutoFocus={(e) => e.preventDefault()}>
@@ -357,7 +357,7 @@ export function NotePickerDialog({
               {/* × button to remove chip — outside the dropdown */}
               <button
                 onClick={() => clearGroup(groupKey)}
-                className="shrink-0 -ml-0.5 rounded-sm p-0.5 text-muted-foreground/50 transition-colors hover:bg-hover-bg hover:text-foreground"
+                className="shrink-0 -ml-0.5 rounded-sm p-0.5 text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
               >
                 <PhX size={10} weight="regular" />
               </button>
@@ -379,7 +379,7 @@ export function NotePickerDialog({
 
         {/* Right side */}
         <div className="shrink-0 flex items-center gap-1.5 ml-auto">
-          <span className="text-2xs tabular-nums text-muted-foreground/50">
+          <span className="text-2xs tabular-nums text-muted-foreground/70">
             {candidates.length}/{baseCandidates.length}
           </span>
           {activeGroupKeys.length > 0 && (
@@ -396,7 +396,7 @@ export function NotePickerDialog({
       <CommandList className="max-h-[560px]">
         <CommandEmpty>
           <div className="flex flex-col items-center gap-1.5 py-2">
-            <FileText className="text-muted-foreground/30" size={32} weight="regular" />
+            <FileText className="text-muted-foreground/60" size={32} weight="regular" />
             <p className="text-note text-muted-foreground">No notes found</p>
             {activeGroupKeys.length > 0 && (
               <button
@@ -429,21 +429,21 @@ export function NotePickerDialog({
                     {isChecked && <PhCheck size={10} weight="bold" />}
                   </span>
                 ) : (
-                  <FileText className="shrink-0 text-muted-foreground/40" size={16} weight="regular" />
+                  <FileText className="shrink-0 text-muted-foreground/70" size={16} weight="regular" />
                 )}
                 <div className="flex-1 min-w-0">
                   <span className="truncate text-note font-medium text-foreground block">
                     {note.title || "Untitled"}
                   </span>
                   {note.preview && (
-                    <p className="truncate text-2xs text-muted-foreground/50 mt-0.5">
+                    <p className="truncate text-2xs text-muted-foreground/70 mt-0.5">
                       {note.preview}
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <StatusBadge status={note.status} />
-                  <span className="text-2xs tabular-nums text-muted-foreground/40">
+                  <span className="text-2xs tabular-nums text-muted-foreground/70">
                     {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
                   </span>
                 </div>

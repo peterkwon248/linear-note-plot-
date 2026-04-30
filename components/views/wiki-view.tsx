@@ -796,7 +796,7 @@ export function WikiView() {
                       bubbles: true,
                     }))
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
                   title={allSectionsCollapsed ? "Expand all sections" : "Collapse all sections"}
                 >
                   <svg width={17} height={17} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1356,7 +1356,7 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQuery("") }}>
       <PopoverTrigger asChild>
-        <button className="shrink-0 rounded p-0.5 text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors">
+        <button className="shrink-0 rounded p-0.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors">
           <IconChevronRight size={16} />
         </button>
       </PopoverTrigger>
@@ -1366,7 +1366,7 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search wiki articles..."
-          className="w-full px-3.5 py-2.5 text-note bg-transparent border-b border-border text-foreground outline-none placeholder:text-muted-foreground/50"
+          className="w-full px-3.5 py-2.5 text-note bg-transparent border-b border-border text-foreground outline-none placeholder:text-muted-foreground/70"
         />
         <div className="max-h-[360px] overflow-y-auto py-1">
           {filtered.map((a) => {
@@ -1390,7 +1390,7 @@ function WikiPickerChevron({ currentArticleId, onSelect }: { currentArticleId: s
             )
           })}
           {filtered.length === 0 && (
-            <div className="px-3.5 py-6 text-note text-muted-foreground/50 text-center">
+            <div className="px-3.5 py-6 text-note text-muted-foreground/70 text-center">
               No articles found
             </div>
           )}

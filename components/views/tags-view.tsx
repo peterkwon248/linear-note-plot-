@@ -611,32 +611,32 @@ export function TagsView() {
                     )}
                   </button>
                   <button
-                    className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground/80"
                     onClick={() => setTagSortBy(tagSortBy === "name-asc" ? "name-desc" : "name-asc")}
                   >
                     Name
                     {(tagSortBy === "name-asc" || tagSortBy === "name-desc") && (
                       tagSortBy === "name-asc"
-                        ? <ArrowUp size={12} weight="regular" className="text-muted-foreground/50" />
-                        : <ArrowDown size={12} weight="regular" className="text-muted-foreground/50" />
+                        ? <ArrowUp size={12} weight="regular" className="text-muted-foreground/70" />
+                        : <ArrowDown size={12} weight="regular" className="text-muted-foreground/70" />
                     )}
                   </button>
                   <button
-                    className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground/80"
                     onClick={() => setTagSortBy(tagSortBy === "count-desc" ? "count-asc" : "count-desc")}
                   >
                     Notes
                     {(tagSortBy === "count-desc" || tagSortBy === "count-asc") && (
                       tagSortBy === "count-desc"
-                        ? <ArrowDown size={12} weight="regular" className="text-muted-foreground/50" />
-                        : <ArrowUp size={12} weight="regular" className="text-muted-foreground/50" />
+                        ? <ArrowDown size={12} weight="regular" className="text-muted-foreground/70" />
+                        : <ArrowUp size={12} weight="regular" className="text-muted-foreground/70" />
                     )}
                   </button>
                   <button
                     onClick={() => setHideEmptyTags(!hideEmptyTags)}
                     className={cn(
                       "ml-2 rounded p-1 transition-colors",
-                      hideEmptyTags ? "text-accent" : "text-muted-foreground/30 hover:text-muted-foreground/50"
+                      hideEmptyTags ? "text-accent" : "text-muted-foreground/60 hover:text-muted-foreground/70"
                     )}
                     title={hideEmptyTags ? "Show all" : "Hide empty"}
                   >

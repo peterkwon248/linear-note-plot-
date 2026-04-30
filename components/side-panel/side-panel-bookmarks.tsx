@@ -149,11 +149,11 @@ export function SidePanelBookmarks() {
         )}
 
         {totalCounts.all === 0 ? (
-          <p className="text-2xs text-muted-foreground/50 italic px-1">
+          <p className="text-2xs text-muted-foreground/70 italic px-1">
             No bookmarks yet
           </p>
         ) : pinnedList.length === 0 ? (
-          <p className="text-2xs text-muted-foreground/50 italic px-1">
+          <p className="text-2xs text-muted-foreground/70 italic px-1">
             {query ? `No bookmarks match "${query}"` : "No bookmarks in this filter"}
           </p>
         ) : (
@@ -211,7 +211,7 @@ export function SidePanelBookmarks() {
                       </span>
                       {!isDeleted && targetTitle && (
                         <>
-                          <span className="text-muted-foreground/30">·</span>
+                          <span className="text-muted-foreground/60">·</span>
                           <span className="truncate">{targetTitle || "Untitled"}</span>
                         </>
                       )}

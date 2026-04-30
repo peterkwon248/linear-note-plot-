@@ -134,7 +134,7 @@ function MostOpenedList({ items }: { items: { noteId: string; title: string; cou
             onClick={() => openNote(item.noteId)}
             className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors hover:bg-hover-bg"
           >
-            <span className="text-2xs text-muted-foreground/50 w-4 text-right">{i + 1}</span>
+            <span className="text-2xs text-muted-foreground/70 w-4 text-right">{i + 1}</span>
             <FileText className="text-muted-foreground shrink-0" size={12} weight="regular" />
             <span className="flex-1 truncate text-note text-foreground/80">{item.title}</span>
             <span className="text-2xs text-muted-foreground">{item.count}×</span>
@@ -385,7 +385,7 @@ export function InsightsView() {
 
           {total === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-secondary/30 py-10 text-center">
-              <Lightbulb className="mb-3 text-muted-foreground/30" size={32} weight="regular" />
+              <Lightbulb className="mb-3 text-muted-foreground/60" size={32} weight="regular" />
               <p className="text-note font-medium text-foreground/70">All good!</p>
               <p className="mt-0.5 text-2xs text-muted-foreground">No issues detected.</p>
             </div>

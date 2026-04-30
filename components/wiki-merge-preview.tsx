@@ -196,14 +196,14 @@ export function WikiMergePreview({
               <div className="relative">
                 <MagnifyingGlass
                   size={14}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/70"
                 />
                 <input
                   type="text"
                   placeholder="Search articles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-md border border-border bg-secondary/50 py-1.5 pl-8 pr-3 text-note text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-accent/50"
+                  className="w-full rounded-md border border-border bg-secondary/50 py-1.5 pl-8 pr-3 text-note text-foreground placeholder:text-muted-foreground/70 outline-none focus:border-accent/50"
                   autoFocus
                 />
               </div>
@@ -218,7 +218,7 @@ export function WikiMergePreview({
                   className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-hover-bg"
                 >
                   <BookOpen
-                    className="shrink-0 text-muted-foreground/40"
+                    className="shrink-0 text-muted-foreground/70"
                     size={16}
                     weight="regular"
                   />
@@ -230,7 +230,7 @@ export function WikiMergePreview({
                 </button>
               ))}
               {filteredArticles.length === 0 && (
-                <p className="py-8 text-center text-2xs text-muted-foreground/40">
+                <p className="py-8 text-center text-2xs text-muted-foreground/70">
                   No articles found
                 </p>
               )}

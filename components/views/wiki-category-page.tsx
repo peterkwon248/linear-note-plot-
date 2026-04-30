@@ -203,11 +203,11 @@ function CategoryBoardCard({
       </div>
       {/* Description */}
       {showDescription && cat.description && (
-        <p className="text-2xs text-muted-foreground/50 mt-1 line-clamp-1">{cat.description}</p>
+        <p className="text-2xs text-muted-foreground/70 mt-1 line-clamp-1">{cat.description}</p>
       )}
       {/* Stats row */}
       {(count > 0 || childCount > 0) && (
-        <div className="flex items-center gap-3 mt-2 text-2xs text-muted-foreground/50">
+        <div className="flex items-center gap-3 mt-2 text-2xs text-muted-foreground/70">
           {count > 0 && <span className="text-accent/70">{count} article{count > 1 ? "s" : ""}</span>}
           {childCount > 0 && <span>{childCount} sub</span>}
         </div>
@@ -266,7 +266,7 @@ function CategoryBoardColumn({
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2.5 text-note font-semibold text-foreground/80">
         <span>{label}</span>
-        <span className="text-2xs text-muted-foreground/50 tabular-nums">{items.length}</span>
+        <span className="text-2xs text-muted-foreground/70 tabular-nums">{items.length}</span>
         {isRootColumn && isDragging && (
           <span className="ml-auto text-2xs text-accent/70 font-normal animate-pulse">
             Drop to make root
@@ -279,7 +279,7 @@ function CategoryBoardColumn({
           <CategoryBoardCard key={item.cat.id} item={item} onSelect={onSelect} showDescription={showDescription} isSelected={selectedIds?.has(item.cat.id)} onDoubleClick={onDoubleClick} />
         ))}
         {items.length === 0 && (
-          <div className="text-2xs text-muted-foreground/40 text-center py-8">No categories</div>
+          <div className="text-2xs text-muted-foreground/70 text-center py-8">No categories</div>
         )}
       </div>
     </div>
@@ -888,9 +888,9 @@ function CategoryFullListView({
           <FolderSimple
             size={32}
             weight="thin"
-            className="text-muted-foreground/20"
+            className="text-muted-foreground/50"
           />
-          <p className="text-note text-muted-foreground/40">No categories yet</p>
+          <p className="text-note text-muted-foreground/70">No categories yet</p>
         </div>
       )}
     </div>
@@ -1083,7 +1083,7 @@ function CategoryEditor({
               e.currentTarget.blur()
             }
           }}
-          className="w-full bg-transparent text-xl font-semibold text-foreground placeholder:text-muted-foreground/30 border-none outline-none rounded-md px-1 -ml-1 hover:bg-hover-bg focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
+          className="w-full bg-transparent text-xl font-semibold text-foreground placeholder:text-muted-foreground/60 border-none outline-none rounded-md px-1 -ml-1 hover:bg-hover-bg focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
           placeholder="Category name"
         />
       </div>
@@ -1096,7 +1096,7 @@ function CategoryEditor({
           onBlur={commitDescription}
           placeholder="Add a description..."
           rows={2}
-          className="w-full resize-none bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/30 border-none outline-none rounded-md px-1 -ml-1 hover:bg-hover-bg focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
+          className="w-full resize-none bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/60 border-none outline-none rounded-md px-1 -ml-1 hover:bg-hover-bg focus:bg-secondary/30 focus:ring-1 focus:ring-accent/30 transition-colors"
         />
       </div>
 
@@ -1165,7 +1165,7 @@ function CategoryEditor({
                     className="text-accent/50 shrink-0"
                   />
                   <span className="flex-1 truncate text-left">{anc.name}</span>
-                  <span className="text-2xs text-muted-foreground/40 shrink-0">
+                  <span className="text-2xs text-muted-foreground/70 shrink-0">
                     {getDepth(anc.id, categories) === 0 ? "root" : `${getDepth(anc.id, categories) + 1}th`}
                   </span>
                 </button>
@@ -1230,7 +1230,7 @@ function CategoryEditor({
                 setShowNewSub(false)
               }}
               placeholder="Subcategory name..."
-              className="flex-1 bg-transparent text-note text-foreground placeholder:text-muted-foreground/30 border-none outline-none"
+              className="flex-1 bg-transparent text-note text-foreground placeholder:text-muted-foreground/60 border-none outline-none"
             />
           </div>
         )}
@@ -1252,10 +1252,10 @@ function CategoryEditor({
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
                   >
-                    <FolderSimple size={12} weight="regular" className="text-muted-foreground/50 shrink-0" />
+                    <FolderSimple size={12} weight="regular" className="text-muted-foreground/70 shrink-0" />
                     <span className="truncate text-left">{c.name}</span>
                     {c.parentIds.length > 0 && (
-                      <span className="text-2xs text-muted-foreground/40 ml-auto shrink-0">
+                      <span className="text-2xs text-muted-foreground/70 ml-auto shrink-0">
                         in {categories.find((p) => p.id === c.parentIds[0])?.name ?? "..."}
                       </span>
                     )}
@@ -1263,7 +1263,7 @@ function CategoryEditor({
                 ))}
               </div>
             ) : (
-              <p className="text-2xs text-muted-foreground/40 py-2 text-center">No available categories</p>
+              <p className="text-2xs text-muted-foreground/70 py-2 text-center">No available categories</p>
             )}
           </div>
         )}
@@ -1279,19 +1279,19 @@ function CategoryEditor({
                 <FolderSimple
                   size={14}
                   weight="regular"
-                  className="text-muted-foreground/50 shrink-0"
+                  className="text-muted-foreground/70 shrink-0"
                 />
                 <span className="flex-1 truncate text-left">{sub.name}</span>
                 <CaretRight
                   size={12}
                   weight="regular"
-                  className="text-muted-foreground/30 shrink-0"
+                  className="text-muted-foreground/60 shrink-0"
                 />
               </button>
             ))}
           </div>
         ) : !showNewSub && (
-          <p className="text-2xs text-muted-foreground/40 px-3 py-2">
+          <p className="text-2xs text-muted-foreground/70 px-3 py-2">
             No subcategories
           </p>
         )}
@@ -1317,7 +1317,7 @@ function CategoryEditor({
             ))}
           </div>
         ) : (
-          <p className="text-2xs text-muted-foreground/40 px-3 py-2">
+          <p className="text-2xs text-muted-foreground/70 px-3 py-2">
             No articles
           </p>
         )}
@@ -1417,7 +1417,7 @@ export function CategorySidePanel({
         <div className="space-y-4">
           {/* Breadcrumb + description */}
           {breadcrumbPath.length > 1 && (
-            <div className="text-2xs text-muted-foreground/50">
+            <div className="text-2xs text-muted-foreground/70">
               {breadcrumbPath.join(" > ")}
             </div>
           )}
@@ -1428,7 +1428,7 @@ export function CategorySidePanel({
             value={category.description ?? ""}
             placeholder="Add description..."
             onChange={(e) => updateWikiCategory(category.id, { description: e.target.value })}
-            className="w-full bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/30 border-none focus:outline-none"
+            className="w-full bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/60 border-none focus:outline-none"
           />
 
           {/* Meta info card */}
@@ -1473,7 +1473,7 @@ export function CategorySidePanel({
                     onClick={() => onSelect(sub.id)}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-note text-foreground/80 transition-colors hover:bg-hover-bg"
                   >
-                    <FolderSimple size={12} weight="regular" className="text-muted-foreground/50 shrink-0" />
+                    <FolderSimple size={12} weight="regular" className="text-muted-foreground/70 shrink-0" />
                     <span className="truncate">{sub.name}</span>
                   </button>
                 ))}
@@ -1549,7 +1549,7 @@ export function CategorySidePanel({
             </div>
             <div className="flex items-center justify-between rounded-md px-3 py-1.5 text-note">
               <span className="text-foreground/80">Empty categories</span>
-              <span className="text-muted-foreground/50 tabular-nums font-medium">{emptyCount}</span>
+              <span className="text-muted-foreground/70 tabular-nums font-medium">{emptyCount}</span>
             </div>
           </div>
         </div>

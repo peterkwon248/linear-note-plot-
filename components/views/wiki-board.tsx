@@ -436,7 +436,7 @@ export function WikiBoard({
     return (
       <div className="flex flex-1 items-center justify-center text-center">
         <div>
-          <FileText className="mx-auto mb-3 text-muted-foreground/40" size={40} weight="regular" />
+          <FileText className="mx-auto mb-3 text-muted-foreground/70" size={40} weight="regular" />
           <p className="text-ui text-muted-foreground">No articles found</p>
           <p className="mt-1 text-note text-muted-foreground/60">
             {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first wiki article."}

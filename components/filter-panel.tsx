@@ -169,7 +169,7 @@ export function FilterPanel({
                   {val.label}
                 </span>
                 {val.count !== undefined && (
-                  <span className="text-2xs text-muted-foreground/50 tabular-nums">{val.count}</span>
+                  <span className="text-2xs text-muted-foreground/70 tabular-nums">{val.count}</span>
                 )}
               </button>
             )

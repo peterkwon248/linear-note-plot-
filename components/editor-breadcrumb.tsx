@@ -144,7 +144,7 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
       {/* Folder crumb (optional, primary only) */}
       {folder && pane === 'primary' && (
         <>
-          <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+          <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
           <button
             onClick={(e) => { e.stopPropagation(); navigateToFolder() }}
             className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
@@ -165,7 +165,7 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
         const rootAncestor = ancestors[ancestors.length - 1]
         return (
           <>
-            <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+            <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
             {ancestors.length === 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); openNote(directParent.id, { pane }) }}
@@ -182,7 +182,7 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
                 >
                   {rootAncestor.title || "Untitled"}
                 </button>
-                <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+                <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
                 <button
                   onClick={(e) => { e.stopPropagation(); openNote(directParent.id, { pane }) }}
                   className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
@@ -199,9 +199,9 @@ export function EditorBreadcrumb({ note, onClose, pane = 'primary' }: EditorBrea
                 >
                   {rootAncestor.title || "Untitled"}
                 </button>
-                <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
-                <span className="shrink-0 text-lg text-muted-foreground/50">…</span>
-                <IconChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+                <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
+                <span className="shrink-0 text-lg text-muted-foreground/70">…</span>
+                <IconChevronRight size={16} className="shrink-0 text-muted-foreground/70" />
                 <button
                   onClick={(e) => { e.stopPropagation(); openNote(directParent.id, { pane }) }}
                   className="shrink-0 text-lg text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
@@ -251,7 +251,7 @@ function NotePickerChevron({ pane, currentNoteId }: { pane: 'primary' | 'seconda
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQuery("") }}>
       <PopoverTrigger asChild>
-        <button className="shrink-0 rounded p-0.5 text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors">
+        <button className="shrink-0 rounded p-0.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors">
           <IconChevronRight size={16} />
         </button>
       </PopoverTrigger>
@@ -261,7 +261,7 @@ function NotePickerChevron({ pane, currentNoteId }: { pane: 'primary' | 'seconda
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search notes..."
-          className="w-full px-3.5 py-2.5 text-note bg-transparent border-b border-border text-foreground outline-none placeholder:text-muted-foreground/50"
+          className="w-full px-3.5 py-2.5 text-note bg-transparent border-b border-border text-foreground outline-none placeholder:text-muted-foreground/70"
         />
         <div className="max-h-[360px] overflow-y-auto py-1">
           {filtered.map((n) => {
@@ -295,7 +295,7 @@ function NotePickerChevron({ pane, currentNoteId }: { pane: 'primary' | 'seconda
             )
           })}
           {filtered.length === 0 && (
-            <div className="px-3.5 py-6 text-note text-muted-foreground/50 text-center">
+            <div className="px-3.5 py-6 text-note text-muted-foreground/70 text-center">
               No notes found
             </div>
           )}

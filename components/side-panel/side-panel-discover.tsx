@@ -238,7 +238,7 @@ export function SidePanelDiscover() {
   if (!selectedNoteId || !selectedNote) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-        <MagnifyingGlass size={32} weight="regular" className="text-muted-foreground/40" />
+        <MagnifyingGlass size={32} weight="regular" className="text-muted-foreground/70" />
         <p className="text-note text-muted-foreground">
           Select a note to discover related content
         </p>
@@ -249,7 +249,7 @@ export function SidePanelDiscover() {
   if (!result || (result.relatedNotes.length === 0 && result.relatedWiki.length === 0 && result.suggestedTags.length === 0)) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-        <MagnifyingGlass size={32} weight="regular" className="text-muted-foreground/40" />
+        <MagnifyingGlass size={32} weight="regular" className="text-muted-foreground/70" />
         <p className="text-note text-muted-foreground">
           No related content found
         </p>

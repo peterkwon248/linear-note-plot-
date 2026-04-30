@@ -46,7 +46,7 @@ export function ChipDropdown<T extends string>({
                   disabled={disabled}
                   className={`flex w-full items-center justify-between px-3 py-1.5 text-note ${
                     disabled
-                      ? "text-muted-foreground/30 cursor-not-allowed"
+                      ? "text-muted-foreground/60 cursor-not-allowed"
                       : "hover:bg-hover-bg"
                   }`}
                 >

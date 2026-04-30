@@ -110,7 +110,7 @@ export function PinnedList({ limit = 8 }: { limit?: number }) {
             it.label ? (
               <span>
                 {it.title}
-                <span className="ml-2 text-muted-foreground/50">{it.label}</span>
+                <span className="ml-2 text-muted-foreground/70">{it.label}</span>
               </span>
             ) : (
               it.title

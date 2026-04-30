@@ -222,7 +222,7 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
           <h1 className="text-[1.875em] font-bold text-foreground">{article.title}</h1>
         )}
         {/* Updated at */}
-        <p className="mt-1 text-[12px] text-muted-foreground/40">
+        <p className="mt-1 text-[12px] text-muted-foreground/70">
           Updated {shortRelative(article.updatedAt)} ago
         </p>
         {isEditing ? (
@@ -234,10 +234,10 @@ export function WikiArticleEncyclopedia({ article, isEditing, onBack, collapseAl
               usePlotStore.getState().updateWikiArticle(article.id, { aliases })
             }}
             onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
-            className="mt-1 text-note text-muted-foreground/50 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
+            className="mt-1 text-note text-muted-foreground/70 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
           />
         ) : article.aliases.length > 0 ? (
-          <p className="mt-1 text-note text-muted-foreground/50">
+          <p className="mt-1 text-note text-muted-foreground/70">
             {article.aliases.join(", ")}
           </p>
         ) : null}

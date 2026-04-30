@@ -288,7 +288,7 @@ function AlignDropdown({ editor, editorState, handleAlign, isVisible }: {
               )}
               <Icon size={16} />
               <span className="flex-1 text-left">{label}</span>
-              <span className="text-2xs text-muted-foreground/50">{shortcut}</span>
+              <span className="text-2xs text-muted-foreground/70">{shortcut}</span>
             </button>
           ))}
         </div>,

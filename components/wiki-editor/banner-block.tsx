@@ -133,7 +133,7 @@ export function WikiBannerBlock({
                 "rounded p-1 transition-colors",
                 settingsActive
                   ? "text-foreground bg-hover-bg"
-                  : "text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
+                  : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
               )}
               title="Banner settings"
             >
@@ -167,7 +167,7 @@ export function WikiBannerBlock({
                   ? "text-accent bg-hover-bg"
                   : settingsActive
                     ? "text-foreground hover:bg-hover-bg"
-                    : "text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
+                    : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
               )}
             >
               <BookmarkSimple size={13} />
@@ -185,7 +185,7 @@ export function WikiBannerBlock({
                 "rounded p-1 transition-colors",
                 settingsActive
                   ? "text-foreground hover:bg-hover-bg"
-                  : "text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
+                  : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
               )}
               title="Remove banner"
             >
@@ -231,13 +231,13 @@ export function WikiBannerBlock({
                 onChange={(e) => onUpdate?.({ title: e.target.value })}
                 placeholder="Banner title"
                 className={cn(
-                  "w-full bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/30",
+                  "w-full bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/60",
                   sizeStyles.titleClass,
                 )}
               />
             ) : (
               <div className={cn("text-foreground", sizeStyles.titleClass)}>
-                {title || <span className="text-muted-foreground/30">Banner title</span>}
+                {title || <span className="text-muted-foreground/60">Banner title</span>}
               </div>
             )}
 
@@ -248,7 +248,7 @@ export function WikiBannerBlock({
                 onChange={(e) => onUpdate?.({ bannerSubtitle: e.target.value })}
                 placeholder="Subtitle (optional)"
                 className={cn(
-                  "w-full bg-transparent border-none outline-none text-muted-foreground placeholder:text-muted-foreground/30",
+                  "w-full bg-transparent border-none outline-none text-muted-foreground placeholder:text-muted-foreground/60",
                   sizeStyles.subtitleClass,
                 )}
               />

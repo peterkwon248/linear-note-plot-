@@ -1131,7 +1131,7 @@ export function LinearSidebar() {
                           <IconDoc size={14} />
                         </span>
                         <span className="truncate text-left flex-1">{note.title || "Untitled"}</span>
-                        <span className="text-2xs text-muted-foreground/40 tabular-nums">{relDate}</span>
+                        <span className="text-2xs text-muted-foreground/70 tabular-nums">{relDate}</span>
                       </button>
                     )
                   })}

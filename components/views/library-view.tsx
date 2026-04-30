@@ -74,12 +74,12 @@ function QuickFilterButton({
         "flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-medium transition-colors",
         active
           ? "bg-accent/10 text-accent"
-          : "text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg"
+          : "text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg"
       )}
     >
       {label}
       {count !== undefined && (
-        <span className="text-muted-foreground/40">{count}</span>
+        <span className="text-muted-foreground/70">{count}</span>
       )}
     </button>
   )
@@ -240,7 +240,7 @@ function ReferenceRow({
                     </span>
                   )}
                   {timeAgo && (
-                    <span className="text-2xs text-muted-foreground/50 whitespace-nowrap">
+                    <span className="text-2xs text-muted-foreground/70 whitespace-nowrap">
                       {timeAgo}
                     </span>
                   )}
@@ -282,12 +282,12 @@ function ReferenceRow({
 function EmptyReferences({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-      <Quotes weight="regular" className="h-12 w-12 text-muted-foreground/30" />
+      <Quotes weight="regular" className="h-12 w-12 text-muted-foreground/60" />
       <div>
         <p className="text-note font-medium text-muted-foreground/60">
           No references yet
         </p>
-        <p className="mt-1 text-2xs text-muted-foreground/40 max-w-[280px]">
+        <p className="mt-1 text-2xs text-muted-foreground/70 max-w-[280px]">
           References are reusable sources linked to your footnotes.
           Create one to get started.
         </p>
@@ -308,8 +308,8 @@ function EmptyReferences({ onCreate }: { onCreate: () => void }) {
 function SearchEmpty({ query }: { query: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
-      <Quotes weight="regular" className="h-8 w-8 text-muted-foreground/25" />
-      <p className="text-2xs text-muted-foreground/40">
+      <Quotes weight="regular" className="h-8 w-8 text-muted-foreground/50" />
+      <p className="text-2xs text-muted-foreground/70">
         No references matching &quot;{query}&quot;
       </p>
     </div>
@@ -389,7 +389,7 @@ function LibraryFloatingActionBar({
         >
           <Lightning size={14} weight="fill" className="text-accent" />
           {count} selected
-          <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/50" />
+          <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/70" />
         </button>
 
         <Divider />
@@ -484,7 +484,7 @@ function LibraryFloatingActionBar({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mb-2.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
+    <h3 className="mb-2.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground/70">
       {children}
     </h3>
   )
@@ -642,7 +642,7 @@ function LibraryOverview() {
               <Tag size={16} weight="regular" className="shrink-0 text-muted-foreground" />
               <input
                 placeholder="New tag name..."
-                className="w-full bg-transparent text-note text-foreground outline-none placeholder:text-muted-foreground/40"
+                className="w-full bg-transparent text-note text-foreground outline-none placeholder:text-muted-foreground/70"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
                     const name = (e.target as HTMLInputElement).value.trim()
@@ -731,18 +731,18 @@ function LibraryOverview() {
 
               {/* ── Attention Banner ── */}
               {hasAttention && (
-                <div className="mb-6 flex items-start gap-4 rounded-lg border border-amber-500/20 bg-amber-500/[0.03] p-4">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-                    <Warning className="text-amber-500" size={16} weight="regular" />
+                <div className="mb-6 flex items-start gap-4 rounded-lg border border-amber-500/30 bg-amber-500/[0.05] p-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/15">
+                    <Warning className="text-amber-500" size={16} weight="bold" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">Needs Attention</span>
+                    <span className="text-2xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Needs Attention</span>
                     <div className="mt-1 space-y-0.5">
                       {unlinkedRefCount > 0 && (
-                        <p className="text-note text-amber-400/80">{unlinkedRefCount} unlinked reference{unlinkedRefCount !== 1 ? "s" : ""}</p>
+                        <p className="text-note font-medium text-amber-600 dark:text-amber-400">{unlinkedRefCount} unlinked reference{unlinkedRefCount !== 1 ? "s" : ""}</p>
                       )}
                       {unusedTagCount > 0 && (
-                        <p className="text-note text-amber-400/80">{unusedTagCount} unused tag{unusedTagCount !== 1 ? "s" : ""}</p>
+                        <p className="text-note font-medium text-amber-600 dark:text-amber-400">{unusedTagCount} unused tag{unusedTagCount !== 1 ? "s" : ""}</p>
                       )}
                     </div>
                   </div>
@@ -793,7 +793,7 @@ function LibraryOverview() {
                         className="rounded-lg border border-border-subtle bg-card/30 px-4 py-3 text-left transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
                       >
                         <p className="text-note font-medium text-foreground">{tag.name}</p>
-                        <p className="text-2xs text-muted-foreground/40">{tag.count} note{tag.count !== 1 ? "s" : ""}</p>
+                        <p className="text-2xs text-muted-foreground/70">{tag.count} note{tag.count !== 1 ? "s" : ""}</p>
                       </button>
                     ))}
                   </div>
@@ -878,7 +878,7 @@ function FilesView() {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/40">
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/70">
             <Folder weight="duotone" className="h-10 w-10" />
             <span className="text-note font-medium">No files yet</span>
             <span className="text-2xs">
@@ -898,13 +898,13 @@ function FilesView() {
                   size={16}
                   className={cn(
                     "shrink-0",
-                    att.type === "image" ? "text-accent/60" : "text-muted-foreground/50"
+                    att.type === "image" ? "text-accent/60" : "text-muted-foreground/70"
                   )}
                 />
                 <span className="flex-1 truncate text-note text-foreground">
                   {att.name || "Untitled file"}
                 </span>
-                <span className="text-2xs text-muted-foreground/40 shrink-0">{att.type}</span>
+                <span className="text-2xs text-muted-foreground/70 shrink-0">{att.type}</span>
               </div>
             ))}
           </div>
@@ -1213,7 +1213,7 @@ function ReferencesView() {
                   setQuickFilter("all")
                   setActiveFieldKeys(new Set())
                 }}
-                className="mt-3 w-full text-2xs text-muted-foreground/50 hover:text-foreground transition-colors"
+                className="mt-3 w-full text-2xs text-muted-foreground/70 hover:text-foreground transition-colors"
               >
                 Clear all filters
               </button>
@@ -1283,7 +1283,7 @@ function ReferencesView() {
                       "px-2 py-0.5 rounded text-2xs transition-colors",
                       groupFieldKey === key
                         ? "bg-accent/10 text-accent"
-                        : "text-muted-foreground/40 hover:bg-hover-bg hover:text-foreground"
+                        : "text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground"
                     )}
                   >
                     {key}
@@ -1360,8 +1360,8 @@ function ReferencesView() {
               groupedReferences.map((group) => (
                 <div key={group.label}>
                   <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border/30 bg-background/95 backdrop-blur-sm px-5 py-1.5">
-                    <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/50">{group.label}</span>
-                    <span className="text-2xs text-muted-foreground/30">{group.items.length}</span>
+                    <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/70">{group.label}</span>
+                    <span className="text-2xs text-muted-foreground/60">{group.items.length}</span>
                   </div>
                   {group.items.map((ref) => (
                     <ReferenceRow

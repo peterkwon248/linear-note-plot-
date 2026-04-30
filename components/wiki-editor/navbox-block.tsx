@@ -506,7 +506,7 @@ export function NavboxBlock({
                   onChange={(e) => onUpdate({ navboxTitle: e.target.value })}
                   placeholder="Navbox title"
                   className={cn(
-                    "w-full bg-transparent text-center text-base font-semibold tracking-tight outline-none placeholder:text-muted-foreground/40 placeholder:font-normal",
+                    "w-full bg-transparent text-center text-base font-semibold tracking-tight outline-none placeholder:text-muted-foreground/70 placeholder:font-normal",
                     headerFgClass || "text-foreground",
                   )}
                 />
@@ -664,7 +664,7 @@ export function NavboxBlock({
                       onUpdate({ navboxHeaderImage: e.target.value || null })
                     }
                     placeholder="Header image URL (optional)"
-                    className="flex-1 max-w-[260px] bg-secondary/30 rounded px-2 py-0.5 text-2xs text-foreground/80 outline-none placeholder:text-muted-foreground/40 focus:bg-secondary/60"
+                    className="flex-1 max-w-[260px] bg-secondary/30 rounded px-2 py-0.5 text-2xs text-foreground/80 outline-none placeholder:text-muted-foreground/70 focus:bg-secondary/60"
                   />
                 )}
               </div>
@@ -704,7 +704,7 @@ export function NavboxBlock({
           {!boxCollapsed && (
             <div>
               {groups.length === 0 ? (
-                <div className="px-4 py-6 text-center text-sm text-muted-foreground/50">
+                <div className="px-4 py-6 text-center text-sm text-muted-foreground/70">
                   {mode === "category"
                     ? "No articles in this category yet."
                     : "No items yet."}
@@ -764,7 +764,7 @@ export function NavboxBlock({
                         onUpdate({ navboxFooterText: e.target.value })
                       }
                       placeholder="Footer caption (e.g. classification breadcrumbs)"
-                      className="w-full bg-transparent text-center outline-none placeholder:text-muted-foreground/30"
+                      className="w-full bg-transparent text-center outline-none placeholder:text-muted-foreground/60"
                     />
                   ) : (
                     <span>{block.navboxFooterText}</span>
@@ -1013,7 +1013,7 @@ function NavboxGroupRow({
                   labelFgClass || "text-foreground",
                   labelLight
                     ? "placeholder:text-white/40"
-                    : "placeholder:text-muted-foreground/40",
+                    : "placeholder:text-muted-foreground/70",
                 )}
               />
             ) : (
@@ -1143,7 +1143,7 @@ function NavboxGroupRow({
           style={itemColor ? { backgroundColor: itemColor } : undefined}
         >
           {group.items.length === 0 && editable ? (
-            <div className="px-3 py-3 text-center text-2xs text-muted-foreground/40">
+            <div className="px-3 py-3 text-center text-2xs text-muted-foreground/70">
               No items. Use the + button to add.
             </div>
           ) : group.items.length === 0 ? null : (
@@ -1382,7 +1382,7 @@ function NavboxItemCell({
           className={cn(
             "flex-1 min-w-0 bg-transparent text-[11px] outline-none",
             itemFgClass || "text-foreground",
-            itemLight ? "placeholder:text-white/30" : "placeholder:text-muted-foreground/40",
+            itemLight ? "placeholder:text-white/30" : "placeholder:text-muted-foreground/70",
           )}
         />
         <button
@@ -1453,7 +1453,7 @@ function NavboxItemCell({
             className={cn(
               "flex-1 min-w-0 bg-transparent text-[9px] outline-none px-1",
               itemFgClass || "text-foreground/70",
-              itemLight ? "placeholder:text-white/30" : "placeholder:text-muted-foreground/40",
+              itemLight ? "placeholder:text-white/30" : "placeholder:text-muted-foreground/70",
             )}
           />
         )}

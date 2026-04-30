@@ -177,7 +177,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
   if (!reference) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
-        <PhInfo size={24} weight="light" className="text-muted-foreground/40" />
+        <PhInfo size={24} weight="light" className="text-muted-foreground/70" />
         <p className="text-note text-center">Reference not found</p>
       </div>
     )
@@ -201,7 +201,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
           defaultValue={reference.title}
           onBlur={handleTitleBlur}
           placeholder="Untitled Reference"
-          className="w-full rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note font-semibold text-foreground placeholder:text-muted-foreground/40 focus:border-accent/50 focus:outline-none transition-colors"
+          className="w-full rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note font-semibold text-foreground placeholder:text-muted-foreground/70 focus:border-accent/50 focus:outline-none transition-colors"
         />
       </InspectorSection>
 
@@ -216,7 +216,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
             key={urlValue}
             onBlur={handleUrlBlur}
             placeholder="https://..."
-            className="flex-1 rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/40 focus:border-accent/50 focus:outline-none transition-colors"
+            className="flex-1 rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/70 focus:border-accent/50 focus:outline-none transition-colors"
           />
           {urlValue && (
             <a
@@ -243,7 +243,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
             key={reference.imageUrl ?? ""}
             onBlur={handleImageUrlBlur}
             placeholder="https://example.com/image.png"
-            className="w-full rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/40 focus:border-accent/50 focus:outline-none transition-colors"
+            className="w-full rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/70 focus:border-accent/50 focus:outline-none transition-colors"
           />
           {reference.imageUrl && (
             <div className="rounded-md overflow-hidden border border-border/30 bg-secondary/20 inline-block max-w-full">
@@ -268,7 +268,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
           onBlur={handleContentBlur}
           placeholder="Add a description..."
           rows={3}
-          className="w-full resize-none rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/40 focus:border-accent/50 focus:outline-none transition-colors field-sizing-content"
+          className="w-full resize-none rounded-md border border-border/50 bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/70 focus:border-accent/50 focus:outline-none transition-colors field-sizing-content"
         />
       </InspectorSection>
 
@@ -288,18 +288,18 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
                     defaultValue={field.key}
                     onBlur={(e) => handleFieldKeyBlur(i, e.target.value)}
                     placeholder="Key"
-                    className="w-[35%] shrink-0 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-muted-foreground placeholder:text-muted-foreground/30 focus:border-accent/50 focus:outline-none transition-colors"
+                    className="w-[35%] shrink-0 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-muted-foreground placeholder:text-muted-foreground/60 focus:border-accent/50 focus:outline-none transition-colors"
                   />
                   <input
                     type="text"
                     defaultValue={field.value}
                     onBlur={(e) => handleFieldValueBlur(i, e.target.value)}
                     placeholder="Value"
-                    className="flex-1 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-foreground placeholder:text-muted-foreground/30 focus:border-accent/50 focus:outline-none transition-colors"
+                    className="flex-1 rounded-md border border-border/50 bg-transparent px-2 py-1 text-2xs text-foreground placeholder:text-muted-foreground/60 focus:border-accent/50 focus:outline-none transition-colors"
                   />
                   <button
                     onClick={() => handleRemoveField(i)}
-                    className="shrink-0 rounded-md p-0.5 text-muted-foreground/40 transition-colors hover:bg-hover-bg hover:text-destructive"
+                    className="shrink-0 rounded-md p-0.5 text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-destructive"
                     title="Remove field"
                   >
                     <PhX size={12} weight="bold" />
@@ -309,7 +309,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
             })}
           </div>
         ) : (
-          <p className="text-2xs text-muted-foreground/50">No fields added</p>
+          <p className="text-2xs text-muted-foreground/70">No fields added</p>
         )}
         <button
           onClick={handleAddField}
@@ -325,12 +325,12 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
       {/* Usage — notes & wiki that reference this */}
       <InspectorSection title="Usage" icon={<Books size={16} weight="regular" />}>
         {referencingNotes.length === 0 && referencingArticles.length === 0 ? (
-          <p className="text-2xs text-muted-foreground/50">No notes or wiki articles reference this yet</p>
+          <p className="text-2xs text-muted-foreground/70">No notes or wiki articles reference this yet</p>
         ) : (
           <div className="space-y-1">
             {referencingNotes.length > 0 && (
               <>
-                <p className="text-2xs text-muted-foreground/40 font-medium uppercase tracking-wider">Notes</p>
+                <p className="text-2xs text-muted-foreground/70 font-medium uppercase tracking-wider">Notes</p>
                 {referencingNotes.map(n => (
                   <button
                     key={n.id}
@@ -345,7 +345,7 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
             )}
             {referencingArticles.length > 0 && (
               <>
-                <p className="text-2xs text-muted-foreground/40 font-medium uppercase tracking-wider mt-2">Wiki</p>
+                <p className="text-2xs text-muted-foreground/70 font-medium uppercase tracking-wider mt-2">Wiki</p>
                 {referencingArticles.map(a => (
                   <button
                     key={a.id}
@@ -393,15 +393,15 @@ export function ReferenceDetailPanel({ referenceId }: { referenceId: string }) {
           <div className="space-y-1.5">
             {[...reference.history].reverse().slice(0, 10).map((entry, i) => (
               <div key={i} className="flex items-center gap-2 text-2xs">
-                <span className="shrink-0 text-muted-foreground/40">
+                <span className="shrink-0 text-muted-foreground/70">
                   {entry.action === "created" && <Sparkle size={11} weight="fill" />}
                   {entry.action === "edited" && <PencilSimple size={11} weight="regular" />}
                   {entry.action === "linked" && <Link size={11} weight="regular" />}
                   {entry.action === "unlinked" && <LinkBreak size={11} weight="regular" />}
                 </span>
                 <span className="text-muted-foreground/60 capitalize">{entry.action}</span>
-                {entry.detail && <span className="text-muted-foreground/40">— {entry.detail}</span>}
-                <span className="ml-auto shrink-0 text-muted-foreground/30 tabular-nums">
+                {entry.detail && <span className="text-muted-foreground/70">— {entry.detail}</span>}
+                <span className="ml-auto shrink-0 text-muted-foreground/60 tabular-nums">
                   {shortRelative(entry.timestamp)}
                 </span>
               </div>

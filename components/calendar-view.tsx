@@ -77,7 +77,7 @@ function LayerIcon({ isWiki }: { isWiki: boolean }) {
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="shrink-0 text-muted-foreground/40"
+        className="shrink-0 text-muted-foreground/70"
       >
         <path d="M2 3h12M2 7h8M2 11h10" />
       </svg>
@@ -93,7 +93,7 @@ function LayerIcon({ isWiki }: { isWiki: boolean }) {
       strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="shrink-0 text-muted-foreground/40"
+      className="shrink-0 text-muted-foreground/70"
     >
       <path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" />
       <line x1="5" y1="6" x2="11" y2="6" />
@@ -226,7 +226,7 @@ function DayCell({
                 ? isWeekend
                   ? "text-muted-foreground/70"
                   : "text-foreground/80"
-                : "text-muted-foreground/30",
+                : "text-muted-foreground/60",
           )}
         >
           {dayNum}
@@ -239,7 +239,7 @@ function DayCell({
               e.stopPropagation()
               onCreateNote(day)
             }}
-            className="flex h-4 w-4 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-all duration-150 hover:bg-hover-bg hover:text-foreground group-hover/cell:opacity-100"
+            className="flex h-4 w-4 items-center justify-center rounded text-muted-foreground/70 opacity-0 transition-all duration-150 hover:bg-hover-bg hover:text-foreground group-hover/cell:opacity-100"
           >
             <PhPlus size={10} weight="regular" />
           </button>
@@ -362,7 +362,7 @@ function DayDashboard({
           /* Empty state */
           <div className="flex flex-col items-center gap-2.5 py-6 text-center">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary/60">
-              <CalendarDots className="text-muted-foreground/40" size={16} weight="regular" />
+              <CalendarDots className="text-muted-foreground/70" size={16} weight="regular" />
             </div>
             <div>
               <p className="text-note text-muted-foreground/70">No notes on this day</p>
@@ -441,7 +441,7 @@ function DayDashboard({
 
                       {/* Time */}
                       {timeStr && (
-                        <span className="text-2xs tabular-nums text-muted-foreground/50">
+                        <span className="text-2xs tabular-nums text-muted-foreground/70">
                           {timeStr}
                         </span>
                       )}
@@ -521,7 +521,7 @@ function WeekView({
                 {format(day, "EEE d")}
               </span>
               {dayNotes.length > 0 && (
-                <span className="ml-1 text-2xs text-muted-foreground/50">
+                <span className="ml-1 text-2xs text-muted-foreground/70">
                   {dayNotes.length}
                 </span>
               )}
@@ -545,7 +545,7 @@ function WeekView({
               {dayNotes.length === 0 && (
                 <button
                   onClick={() => onCreateNote(day)}
-                  className="mt-1 flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/40 transition-colors hover:bg-hover-bg hover:text-muted-foreground"
+                  className="mt-1 flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-muted-foreground"
                 >
                   <PhPlus size={12} weight="regular" />
                   Add
@@ -592,7 +592,7 @@ function AgendaView({
     <div className="flex-1 overflow-y-auto">
       {datesWithNotes.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-20 text-center">
-          <CalendarDots className="text-muted-foreground/50" size={20} weight="regular" />
+          <CalendarDots className="text-muted-foreground/70" size={20} weight="regular" />
           <p className="text-note text-muted-foreground">No notes in this period</p>
         </div>
       ) : (
@@ -611,7 +611,7 @@ function AgendaView({
                   >
                     {isToday(date) ? "Today" : format(date, "EEEE, MMMM d")}
                   </span>
-                  <span className="text-2xs text-muted-foreground/40">
+                  <span className="text-2xs text-muted-foreground/70">
                     {notes.length}
                   </span>
                 </div>
@@ -948,7 +948,7 @@ export function CalendarView({
               key={label}
               className="border-r border-border px-2 py-2 last:border-r-0"
             >
-              <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground/50">
+              <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground/70">
                 {label}
               </span>
             </div>
@@ -965,7 +965,7 @@ export function CalendarView({
               {filteredNotes.length === 0 && (
                 <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
-                    <CalendarDots className="text-muted-foreground/50" size={20} weight="regular" />
+                    <CalendarDots className="text-muted-foreground/70" size={20} weight="regular" />
                   </div>
                   <div>
                     <p className="text-note font-medium text-muted-foreground">No notes yet</p>

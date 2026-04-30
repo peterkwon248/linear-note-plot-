@@ -101,7 +101,7 @@ export function CategoryTreePicker({
           {children.length > 0 ? (
             <button
               onClick={() => toggleExpand(cat.id)}
-              className="p-0.5 text-muted-foreground/40 hover:text-muted-foreground transition-colors shrink-0"
+              className="p-0.5 text-muted-foreground/70 hover:text-muted-foreground transition-colors shrink-0"
             >
               {isExpanded ? (
                 <CaretDown size={10} weight="bold" />
@@ -149,7 +149,7 @@ export function CategoryTreePicker({
               setCreatingUnder(cat.id)
               setExpanded((prev) => new Set([...prev, cat.id]))
             }}
-            className="opacity-0 group-hover/node:opacity-100 p-0.5 text-muted-foreground/40 hover:text-accent transition-all shrink-0"
+            className="opacity-0 group-hover/node:opacity-100 p-0.5 text-muted-foreground/70 hover:text-accent transition-all shrink-0"
             title={`Add subcategory under ${cat.name}`}
           >
             <PhPlus size={9} weight="bold" />
@@ -186,7 +186,7 @@ export function CategoryTreePicker({
                 }, 150)
               }}
               placeholder="New subcategory..."
-              className="flex-1 bg-transparent text-2xs text-foreground outline-none placeholder:text-muted-foreground/30 border-b border-accent/30"
+              className="flex-1 bg-transparent text-2xs text-foreground outline-none placeholder:text-muted-foreground/60 border-b border-accent/30"
             />
           </div>
         )}
@@ -208,7 +208,7 @@ export function CategoryTreePicker({
         <MagnifyingGlass
           size={12}
           weight="regular"
-          className="text-muted-foreground/40 shrink-0"
+          className="text-muted-foreground/70 shrink-0"
         />
         <input
           ref={searchRef}
@@ -216,14 +216,14 @@ export function CategoryTreePicker({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search categories..."
-          className="flex-1 bg-transparent text-2xs text-foreground outline-none placeholder:text-muted-foreground/30"
+          className="flex-1 bg-transparent text-2xs text-foreground outline-none placeholder:text-muted-foreground/60"
         />
       </div>
 
       <div className="max-h-52 overflow-y-auto p-1">
         {rootCategories.map((cat) => renderNode(cat, 0))}
         {rootCategories.length === 0 && !search.trim() && (
-          <p className="px-2 py-2 text-2xs text-muted-foreground/40 text-center">
+          <p className="px-2 py-2 text-2xs text-muted-foreground/70 text-center">
             No categories yet
           </p>
         )}

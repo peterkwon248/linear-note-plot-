@@ -44,7 +44,7 @@ export function BlockCommentMarker({
           hasComments
             ? "bg-muted-foreground/10 hover:bg-muted-foreground/20 text-muted-foreground/80 hover:text-foreground"
             : alwaysVisibleWhenEmpty
-              ? "text-muted-foreground/40 hover:text-foreground hover:bg-hover-bg"
+              ? "text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg"
               : "opacity-0 group-hover/section:opacity-50 group-hover/text:opacity-50 group-hover/noteref:opacity-50 group-hover/image:opacity-50 group-hover/url:opacity-50 group-hover/table:opacity-50 hover:!opacity-100 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
           className,
         )}

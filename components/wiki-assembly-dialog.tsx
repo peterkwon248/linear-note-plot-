@@ -110,7 +110,7 @@ export function WikiAssemblyDialog({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter wiki article title..."
-            className="w-full rounded-md border border-border bg-secondary/30 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent"
+            className="w-full rounded-md border border-border bg-secondary/30 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-accent"
           />
         </div>
 
@@ -122,13 +122,13 @@ export function WikiAssemblyDialog({
                 key={note.id}
                 className="flex items-center gap-3 rounded-md px-3 py-2.5 bg-secondary/20"
               >
-                <BookOpen className="shrink-0 text-muted-foreground/50" size={14} weight="regular" />
+                <BookOpen className="shrink-0 text-muted-foreground/70" size={14} weight="regular" />
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-note text-foreground">
                     {note.title || "Untitled"}
                   </p>
                 </div>
-                <span className="shrink-0 text-2xs text-muted-foreground/50">
+                <span className="shrink-0 text-2xs text-muted-foreground/70">
                   {STATUS_LABELS[note.status] ?? note.status}
                 </span>
               </div>

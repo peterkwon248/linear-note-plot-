@@ -965,7 +965,7 @@ function NoteConnections() {
                     <span className="truncate flex-1 text-note text-muted-foreground">
                       {m.title}
                     </span>
-                    <span className="text-2xs text-muted-foreground/40">
+                    <span className="text-2xs text-muted-foreground/70">
                       {m.count}×
                     </span>
                     <button
@@ -1014,7 +1014,7 @@ function NoteConnections() {
                       >
                         {sNote.title || "Untitled"}
                       </button>
-                      <span className="text-2xs text-muted-foreground/40 shrink-0 tabular-nums">
+                      <span className="text-2xs text-muted-foreground/70 shrink-0 tabular-nums">
                         {item.score.toFixed(1)}
                       </span>
                       <button
@@ -1050,7 +1050,7 @@ function NoteConnections() {
                       >
                         {title}
                       </button>
-                      <span className="text-2xs text-muted-foreground/40 shrink-0 tabular-nums">
+                      <span className="text-2xs text-muted-foreground/70 shrink-0 tabular-nums">
                         {item.score.toFixed(1)}
                       </span>
                       <button

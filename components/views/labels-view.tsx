@@ -615,32 +615,32 @@ export function LabelsView() {
                     )}
                   </button>
                   <button
-                    className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground/80"
                     onClick={() => setLabelSortBy(labelSortBy === "name-asc" ? "name-desc" : "name-asc")}
                   >
                     Name
                     {(labelSortBy === "name-asc" || labelSortBy === "name-desc") && (
                       labelSortBy === "name-asc"
-                        ? <ArrowUp size={12} weight="regular" className="text-muted-foreground/50" />
-                        : <ArrowDown size={12} weight="regular" className="text-muted-foreground/50" />
+                        ? <ArrowUp size={12} weight="regular" className="text-muted-foreground/70" />
+                        : <ArrowDown size={12} weight="regular" className="text-muted-foreground/70" />
                     )}
                   </button>
                   <button
-                    className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
+                    className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground/80"
                     onClick={() => setLabelSortBy(labelSortBy === "count-desc" ? "count-asc" : "count-desc")}
                   >
                     Notes
                     {(labelSortBy === "count-desc" || labelSortBy === "count-asc") && (
                       labelSortBy === "count-desc"
-                        ? <ArrowDown size={12} weight="regular" className="text-muted-foreground/50" />
-                        : <ArrowUp size={12} weight="regular" className="text-muted-foreground/50" />
+                        ? <ArrowDown size={12} weight="regular" className="text-muted-foreground/70" />
+                        : <ArrowUp size={12} weight="regular" className="text-muted-foreground/70" />
                     )}
                   </button>
                   <button
                     onClick={() => setHideEmptyLabels(!hideEmptyLabels)}
                     className={cn(
                       "ml-2 rounded p-1 transition-colors",
-                      hideEmptyLabels ? "text-accent" : "text-muted-foreground/30 hover:text-muted-foreground/50"
+                      hideEmptyLabels ? "text-accent" : "text-muted-foreground/60 hover:text-muted-foreground/70"
                     )}
                     title={hideEmptyLabels ? "Show all" : "Hide empty"}
                   >
