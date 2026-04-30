@@ -731,7 +731,7 @@ function LibraryOverview() {
 
               {/* ── Attention Banner ── */}
               {hasAttention && (
-                <div className="mb-6 flex items-start gap-4 rounded-lg border border-amber-500/30 bg-amber-500/[0.05] p-4">
+                <div className="mb-6 flex items-start gap-4 rounded-lg border-2 border-amber-600/60 dark:border-amber-500/40 bg-amber-500/[0.05] p-4">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/15">
                     <Warning className="text-amber-500" size={16} weight="bold" />
                   </div>

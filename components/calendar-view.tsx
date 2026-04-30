@@ -948,7 +948,7 @@ export function CalendarView({
               key={label}
               className="border-r border-border px-2 py-2 last:border-r-0"
             >
-              <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+              <span className="text-2xs font-semibold uppercase tracking-widest text-foreground">
                 {label}
               </span>
             </div>

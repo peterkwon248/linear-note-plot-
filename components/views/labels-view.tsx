@@ -615,36 +615,36 @@ export function LabelsView() {
                     )}
                   </button>
                   <button
-                    className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground/80"
+                    className="flex flex-1 items-center gap-1 text-left text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => setLabelSortBy(labelSortBy === "name-asc" ? "name-desc" : "name-asc")}
                   >
                     Name
                     {(labelSortBy === "name-asc" || labelSortBy === "name-desc") && (
                       labelSortBy === "name-asc"
-                        ? <ArrowUp size={12} weight="regular" className="text-muted-foreground/70" />
-                        : <ArrowDown size={12} weight="regular" className="text-muted-foreground/70" />
+                        ? <ArrowUp size={12} weight="bold" className="text-muted-foreground" />
+                        : <ArrowDown size={12} weight="bold" className="text-muted-foreground" />
                     )}
                   </button>
                   <button
-                    className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground/80"
+                    className="flex w-16 items-center justify-end gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => setLabelSortBy(labelSortBy === "count-desc" ? "count-asc" : "count-desc")}
                   >
                     Notes
                     {(labelSortBy === "count-desc" || labelSortBy === "count-asc") && (
                       labelSortBy === "count-desc"
-                        ? <ArrowDown size={12} weight="regular" className="text-muted-foreground/70" />
-                        : <ArrowUp size={12} weight="regular" className="text-muted-foreground/70" />
+                        ? <ArrowDown size={12} weight="bold" className="text-muted-foreground" />
+                        : <ArrowUp size={12} weight="bold" className="text-muted-foreground" />
                     )}
                   </button>
                   <button
                     onClick={() => setHideEmptyLabels(!hideEmptyLabels)}
                     className={cn(
                       "ml-2 rounded p-1 transition-colors",
-                      hideEmptyLabels ? "text-accent" : "text-muted-foreground/60 hover:text-muted-foreground/70"
+                      hideEmptyLabels ? "text-accent" : "text-muted-foreground hover:text-foreground"
                     )}
                     title={hideEmptyLabels ? "Show all" : "Hide empty"}
                   >
-                    <EyeSlash size={14} weight="regular" />
+                    <EyeSlash size={14} weight="bold" />
                   </button>
                   <span className="w-16" />
                 </div>
@@ -666,10 +666,15 @@ export function LabelsView() {
                     >
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleCheck(label.id) }}
-                        className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-border transition-colors hover:border-foreground/50 mt-0.5"
+                        className={cn(
+                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors mt-0.5 shadow-sm",
+                          checkedLabels.has(label.id)
+                            ? "bg-accent border-accent text-accent-foreground"
+                            : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
+                        )}
                       >
                         {checkedLabels.has(label.id) && (
-                          <div className="h-2 w-2 rounded-sm bg-accent" />
+                          <PhCheck size={10} weight="bold" />
                         )}
                       </button>
                       <span
