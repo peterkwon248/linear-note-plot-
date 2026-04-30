@@ -1151,7 +1151,7 @@ export function LinearSidebar() {
               <NavLink
                 href="/ontology"
                 icon={<ChartBar size={20} weight="light" />}
-                label="Ontology"
+                label="Overview"
                 count={allNotesCount > 0 ? allNotesCount : undefined}
                 active={isActive("/ontology")}
                 dragContent={{ type: "ontology" }}
