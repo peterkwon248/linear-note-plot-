@@ -125,20 +125,21 @@ export function SidePanelBookmarks() {
         {totalCounts.all > 0 && (
           <div className="relative mb-2">
             <MagnifyingGlass
-              size={11}
-              className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/40"
+              size={14}
+              weight="bold"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search bookmarks..."
-              className="w-full text-2xs bg-secondary/30 rounded-md pl-7 pr-7 py-1.5 outline-none focus:ring-1 focus:ring-accent/40 placeholder:text-muted-foreground/40 text-foreground"
+              className="w-full text-sm bg-secondary/30 border border-border-subtle rounded-md pl-9 pr-8 py-2 outline-none focus:ring-1 focus:ring-accent/40 focus:border-accent/50 placeholder:text-muted-foreground/70 text-foreground"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
-                className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-hover-bg text-muted-foreground/60 hover:text-foreground"
+                className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-hover-bg text-muted-foreground hover:text-foreground"
                 title="Clear"
               >
                 <X size={10} />
@@ -170,36 +171,36 @@ export function SidePanelBookmarks() {
                 >
                   {kind === "wiki" ? (
                     <BookOpen
-                      size={12}
+                      size={13}
                       weight="fill"
                       className={cn(
                         "mt-0.5 flex-shrink-0",
-                        isDeleted ? "text-muted-foreground/30" : "text-amber-400",
+                        isDeleted ? "text-muted-foreground/60" : "text-amber-500",
                       )}
                     />
                   ) : (
                     <MapPin
-                      size={12}
+                      size={13}
                       weight="fill"
                       className={cn(
                         "mt-0.5 flex-shrink-0",
-                        isDeleted ? "text-muted-foreground/30" : "text-accent",
+                        isDeleted ? "text-muted-foreground/60" : "text-accent",
                       )}
                     />
                   )}
                   <div className="flex-1 min-w-0">
                     <span
                       className={cn(
-                        "text-note block truncate",
-                        isDeleted ? "text-muted-foreground/40" : "text-foreground/80",
+                        "text-note block truncate font-medium",
+                        isDeleted ? "text-muted-foreground" : "text-foreground",
                       )}
                     >
                       {bm.label}
                       {isDeleted && (
-                        <span className="ml-1 text-2xs text-muted-foreground/40">(deleted)</span>
+                        <span className="ml-1 text-2xs text-muted-foreground/70">(deleted)</span>
                       )}
                     </span>
-                    <span className="flex items-center gap-1 text-2xs text-muted-foreground/50">
+                    <span className="flex items-center gap-1 text-2xs text-muted-foreground">
                       <span
                         className={cn(
                           "uppercase tracking-wider font-semibold text-[9px]",
@@ -264,14 +265,14 @@ function FilterChip({
     <button
       onClick={onClick}
       className={cn(
-        "px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors",
+        "px-3 py-1.5 rounded-full text-sm font-semibold transition-colors",
         active
           ? "bg-accent/20 text-accent"
-          : "bg-secondary/40 text-muted-foreground/70 hover:text-foreground hover:bg-secondary/70",
+          : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary",
       )}
     >
       {children}
-      <span className="ml-1 opacity-60">{count}</span>
+      <span className="ml-1.5 opacity-70 tabular-nums">{count}</span>
     </button>
   )
 }
@@ -286,10 +287,10 @@ function SectionHeader({
   count: number
 }) {
   return (
-    <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-      <Icon size={13} weight="regular" />
+    <div className="flex items-center gap-2 mb-2 text-accent/80">
+      <Icon size={13} weight="bold" />
       <span className="text-2xs font-semibold uppercase tracking-wider">{label}</span>
-      <span className="text-2xs text-muted-foreground/50">{count}</span>
+      <span className="text-2xs text-accent tabular-nums">{count}</span>
     </div>
   )
 }
@@ -347,11 +348,11 @@ function NoteLocalAnchors({
               onClick={() => scrollToAnchor(anchor.id)}
             >
               {anchor.type === "heading" ? (
-                <TextAlignLeft size={11} weight="regular" className="text-muted-foreground/50 shrink-0" />
+                <TextAlignLeft size={12} weight="bold" className="text-muted-foreground shrink-0" />
               ) : (
-                <MapPin size={11} weight="regular" className="text-muted-foreground/50 shrink-0" />
+                <MapPin size={12} weight="bold" className="text-muted-foreground shrink-0" />
               )}
-              <span className="flex-1 truncate text-note text-foreground/80">{anchor.label}</span>
+              <span className="flex-1 truncate text-note text-foreground">{anchor.label}</span>
               <button
                 className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-hover-bg transition-all"
                 onClick={(ev) => {

@@ -511,7 +511,7 @@ export function WikiList({
             >
               {labels[tab]}
               {tabCount !== undefined && tabCount > 0 && (
-                <span className="ml-1 tabular-nums text-muted-foreground/40">
+                <span className="ml-1 tabular-nums text-muted-foreground">
                   {tabCount}
                 </span>
               )}
@@ -547,7 +547,7 @@ export function WikiList({
               : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
           )}
         >
-          <ListBullets size={12} weight="regular" />
+          <ListBullets size={13} weight="bold" />
           Index
         </button>
       </div>

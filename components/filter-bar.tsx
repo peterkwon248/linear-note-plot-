@@ -25,6 +25,7 @@ import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { PushPin } from "@phosphor-icons/react/dist/ssr/PushPin"
 import { CircleDashed } from "@phosphor-icons/react/dist/ssr/CircleDashed"
 import { Globe } from "@phosphor-icons/react/dist/ssr/Globe"
+import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { FileText } from "@phosphor-icons/react/dist/ssr/FileText"
 import { TextT } from "@phosphor-icons/react/dist/ssr/TextT"
 import { TextAa } from "@phosphor-icons/react/dist/ssr/TextAa"
@@ -104,8 +105,123 @@ export function formatFilterLabel(rule: FilterRule, folderList?: Folder[], tagLi
   if (rule.field === "createdAt" && rule.operator === "gt" && rule.value === "7d") return "Created this week"
   if (rule.field === "createdAt" && rule.operator === "gt" && rule.value === "30d") return "Created this month"
   // Pinned
-  if (rule.field === "pinned" && rule.value === "true") return "Pinned"
+  if (rule.field === "pinned" && (rule.value === "true" || rule.value === "yes")) return "Pinned"
+  if (rule.field === "pinned" && (rule.value === "false" || rule.value === "no")) return "Not pinned"
+  // Content
+  if (rule.field === "content" && rule.value === "hasImage") return "Has images"
+  if (rule.field === "content" && rule.value === "hasCode") return "Has code blocks"
+  if (rule.field === "content" && rule.value === "hasTable") return "Has tables"
+  if (rule.field === "content" && rule.value === "empty") return "Empty content"
   return `${rule.field}: ${rule.value}`
+}
+
+/* ── Filter chip 4-part decomposition (Linear-style) ─── */
+
+const FIELD_INFO: Record<string, { label: string; icon: React.ReactNode }> = {
+  status:         { label: "Status",    icon: <CircleDashed size={11} weight="regular" /> },
+  folder:         { label: "Folder",    icon: <FolderOpen size={11} weight="regular" /> },
+  label:          { label: "Label",     icon: <PhTag size={11} weight="regular" /> },
+  tags:           { label: "Tags",      icon: <PhHash size={11} weight="regular" /> },
+  source:         { label: "Source",    icon: <FileText size={11} weight="regular" /> },
+  updatedAt:      { label: "Updated",   icon: <PhClock size={11} weight="regular" /> },
+  createdAt:      { label: "Created",   icon: <PhClock size={11} weight="regular" /> },
+  links:          { label: "Links",     icon: <PhLink size={11} weight="regular" /> },
+  reads:          { label: "Reads",     icon: <PhEye size={11} weight="regular" /> },
+  pinned:         { label: "Pinned",    icon: <PushPin size={11} weight="regular" /> },
+  wikiRegistered: { label: "Wiki",      icon: <BookOpen size={11} weight="regular" /> },
+  content:        { label: "Content",   icon: <FileText size={11} weight="regular" /> },
+  title:          { label: "Title",     icon: <TextT size={11} weight="regular" /> },
+  wordCount:      { label: "Words",     icon: <TextAa size={11} weight="regular" /> },
+  category:       { label: "Category",  icon: <PhTag size={11} weight="regular" /> },
+  wikiTier:       { label: "Hierarchy", icon: <PhLink size={11} weight="regular" /> },
+}
+
+export function formatFilterChip(
+  rule: FilterRule,
+  folderList?: Folder[],
+  tagList?: TagType[],
+  labelList?: Label[],
+): { icon: React.ReactNode | null; fieldLabel: string; operatorLabel: string; valueLabel: string } {
+  const info = FIELD_INFO[rule.field]
+  const fieldLabel = info?.label ?? rule.field.charAt(0).toUpperCase() + rule.field.slice(1)
+  const icon = info?.icon ?? null
+
+  // Operator
+  let operatorLabel = "is"
+  const isDate = rule.field === "updatedAt" || rule.field === "createdAt"
+  if (rule.operator === "neq") operatorLabel = "is not"
+  else if (rule.operator === "lt") operatorLabel = isDate ? "older than" : "<"
+  else if (rule.operator === "gt") operatorLabel = isDate ? "within" : ">"
+
+  // Value
+  const valueLabel = (() => {
+    if (rule.field === "status") return rule.value.charAt(0).toUpperCase() + rule.value.slice(1)
+    if (rule.field === "folder") {
+      if (rule.value === "_none") return "None"
+      const f = folderList?.find((x) => x.id === rule.value)
+      return f?.name ?? rule.value
+    }
+    if (rule.field === "label") {
+      if (rule.value === "_none") return "None"
+      if (rule.value === "_any") return "Any"
+      const l = labelList?.find((x) => x.id === rule.value)
+      return l?.name ?? rule.value
+    }
+    if (rule.field === "tags") {
+      if (rule.value === "_none") return "None"
+      if (rule.value === "_any") return "Any"
+      const t = tagList?.find((x) => x.id === rule.value)
+      return t ? `#${t.name}` : rule.value
+    }
+    if (rule.field === "source") {
+      if (rule.value === "_none") return "None"
+      const map: Record<string, string> = { manual: "Manual", webclip: "Web clip", import: "Import" }
+      return map[rule.value] ?? rule.value
+    }
+    if (rule.field === "links") {
+      const map: Record<string, string> = { _any: "Any", _none: "None", _orphan: "Orphan", backlinks: "Has backlinks" }
+      if (map[rule.value]) return map[rule.value]
+      if (rule.value.endsWith("+")) return rule.value
+      return rule.value
+    }
+    if (rule.field === "pinned") {
+      if (rule.value === "true" || rule.value === "yes") return "Yes"
+      if (rule.value === "false" || rule.value === "no") return "No"
+      return rule.value
+    }
+    if (rule.field === "wikiRegistered") {
+      return rule.value === "true" ? "In wiki" : rule.value === "false" ? "Not in wiki" : rule.value
+    }
+    if (rule.field === "content") {
+      const map: Record<string, string> = { empty: "Empty", hasImage: "Has images", hasCode: "Has code", hasTable: "Has tables" }
+      return map[rule.value] ?? rule.value
+    }
+    if (rule.field === "title") {
+      if (rule.value === "empty") return "Untitled"
+      if (rule.value === "_aliased") return "Has aliases"
+      if (rule.value === "_unaliased") return "No aliases"
+      return rule.value
+    }
+    if (isDate) {
+      const map: Record<string, string> = {
+        today: "Today", yesterday: "Yesterday",
+        "this-week": "This week", "this-month": "This month",
+        "last-7-days": "Last 7 days", "last-30-days": "Last 30 days",
+        stale: "Stale (30d+)",
+      }
+      return map[rule.value] ?? rule.value
+    }
+    if (rule.field === "wikiTier") {
+      const map: Record<string, string> = { _root: "Root", _parent: "Parent", _child: "Child", _solo: "Solo" }
+      return map[rule.value] ?? rule.value
+    }
+    if (rule.field === "category") {
+      return rule.value === "_none" ? "None" : rule.value
+    }
+    return rule.value
+  })()
+
+  return { icon, fieldLabel, operatorLabel, valueLabel }
 }
 
 /* ── Active count badge ─────────────────────────────── */
@@ -996,22 +1112,38 @@ export function FilterChipBar({
   if (filters.length === 0) return null
 
   return (
-    <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-5 py-2">
-      {/* Active filter chips — accent style */}
-      {filters.map((f, i) => (
-        <span
-          key={i}
-          className="inline-flex items-center gap-1.5 rounded-md border border-accent/30 bg-accent/[0.14] py-1 pl-2.5 pr-1 text-2xs font-medium text-accent/90"
-        >
-          {formatFilterLabel(f, folders, tags, labels)}
-          <button
-            onClick={() => onRemoveFilter(i)}
-            className="flex h-5 w-5 items-center justify-center rounded text-accent/60 transition-colors hover:bg-accent/25"
+    <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border px-5 py-2">
+      {/* Active filter chips — Linear-style 4-part: [icon] field | op | value | × */}
+      {filters.map((f, i) => {
+        const parts = formatFilterChip(f, folders, tags, labels)
+        return (
+          <div
+            key={i}
+            className="inline-flex items-stretch overflow-hidden rounded-md border border-accent/30 bg-accent/[0.10] text-2xs font-medium leading-none"
           >
-            <PhX size={10} weight="regular" />
-          </button>
-        </span>
-      ))}
+            {/* field + icon */}
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-accent">
+              {parts.icon}
+              <span>{parts.fieldLabel}</span>
+            </span>
+            <span className="w-px self-stretch bg-accent/25" aria-hidden />
+            {/* operator */}
+            <span className="inline-flex items-center px-1.5 py-0.5 text-accent/60">{parts.operatorLabel}</span>
+            <span className="w-px self-stretch bg-accent/25" aria-hidden />
+            {/* value */}
+            <span className="inline-flex items-center px-2 py-0.5 text-accent">{parts.valueLabel}</span>
+            <span className="w-px self-stretch bg-accent/25" aria-hidden />
+            {/* remove */}
+            <button
+              onClick={() => onRemoveFilter(i)}
+              className="inline-flex items-center px-1.5 py-0.5 text-accent/60 hover:bg-accent/25 hover:text-accent transition-colors"
+              aria-label="Remove filter"
+            >
+              <PhX size={10} weight="regular" />
+            </button>
+          </div>
+        )
+      })}
 
       {/* + Add more */}
       <DropdownMenu>

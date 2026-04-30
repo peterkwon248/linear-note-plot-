@@ -1206,5 +1206,23 @@ export function migrate(persistedState: unknown): PlotState {
     }))
   }
 
+  // v96: dedupe wikiCategories by id. Earlier seed/hydrate paths could append
+  // the same SEED_WIKI_CATEGORIES set twice, leading to duplicate ids in the
+  // store. Keep first occurrence per id.
+  if (Array.isArray(state.wikiCategories)) {
+    const seen = new Set<string>()
+    const before = (state.wikiCategories as any[]).length
+    state.wikiCategories = (state.wikiCategories as any[]).filter((c: any) => {
+      if (!c || typeof c.id !== "string") return false
+      if (seen.has(c.id)) return false
+      seen.add(c.id)
+      return true
+    })
+    const removed = before - (state.wikiCategories as any[]).length
+    if (removed > 0) {
+      console.log(`[migrate] v95→v96: removed ${removed} duplicate wikiCategories`)
+    }
+  }
+
   return state as unknown as PlotState
 }

@@ -63,7 +63,7 @@ function Checkbox({ checked }: { checked: boolean }) {
       className={[
         "w-4 h-4 rounded-[4px] flex items-center justify-center shrink-0 transition-all shadow-sm",
         checked
-          ? "bg-accent border-transparent opacity-100"
+          ? "bg-accent border-transparent opacity-100 text-accent-foreground"
           : "border border-zinc-400 dark:border-zinc-600 bg-card opacity-0 group-hover/row:opacity-100",
       ].join(" ")}
     >
@@ -180,13 +180,13 @@ export function FilterPanel({
       {/* ── Main Panel (categories) — RIGHT side, always visible ── */}
       <div className="w-[260px] max-h-[560px] overflow-y-auto py-1 shrink-0">
         {/* Search input */}
-        <div className="px-2 pb-1" onMouseEnter={() => setOpenCat(null)}>
+        <div className="px-2 pb-1.5" onMouseEnter={() => setOpenCat(null)}>
           <input
             type="text"
             placeholder="Filter..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-md bg-transparent px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
+            className="w-full rounded-md border border-border-subtle bg-background/50 px-2.5 py-1.5 text-note text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-colors"
             autoFocus
           />
         </div>
@@ -194,7 +194,7 @@ export function FilterPanel({
         {/* Quick Filters */}
         {filteredQuickFilters && filteredQuickFilters.length > 0 && (
           <div className="pb-1.5" onMouseEnter={() => setOpenCat(null)}>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 text-2xs font-medium text-muted-foreground/40 uppercase tracking-wide">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 text-2xs font-semibold text-accent uppercase tracking-wider">
               <SparkleIcon />
               <span>Quick Filters</span>
             </div>
@@ -204,8 +204,8 @@ export function FilterPanel({
                 className="w-full flex items-center justify-between px-3 pl-8 py-1.5 hover:bg-hover-bg transition-colors cursor-default"
                 onClick={() => onQuickFilter?.(qf.rules)}
               >
-                <span className="text-note text-foreground/80 leading-none">{qf.label}</span>
-                <span className="text-2xs text-muted-foreground/30 leading-none">{qf.desc}</span>
+                <span className="text-note text-foreground leading-none">{qf.label}</span>
+                <span className="text-2xs text-muted-foreground leading-none">{qf.desc}</span>
               </button>
             ))}
           </div>

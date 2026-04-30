@@ -640,7 +640,7 @@
 /* Placeholder */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+  color: var(--muted-foreground);
   pointer-events: none;
   height: 0;
   float: left;

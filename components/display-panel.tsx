@@ -150,7 +150,7 @@ export function DisplayPanel({
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-note font-medium transition-all ${
                     isActive
                       ? "bg-active-bg-strong text-foreground shadow-sm"
-                      : "text-muted-foreground/60 hover:text-muted-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {def.icon}
@@ -330,7 +330,7 @@ export function DisplayPanel({
         <>
           <hr className="border-border-subtle" />
           <div className="flex flex-col gap-2.5">
-            <p className="text-2xs font-medium text-muted-foreground/50 mb-0">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-accent/80 mb-0">
               {optionsSectionLabel}
             </p>
             {config.toggles.map((toggle) => {
@@ -339,7 +339,7 @@ export function DisplayPanel({
               return (
                 <div key={toggle.key} className="flex items-center gap-2">
                   {toggle.icon && (
-                    <span className="text-muted-foreground/50 shrink-0">
+                    <span className="text-muted-foreground shrink-0">
                       {toggle.icon}
                     </span>
                   )}
@@ -370,7 +370,7 @@ export function DisplayPanel({
         <>
           <hr className="border-border-subtle" />
           <div>
-            <p className="text-2xs font-medium text-muted-foreground/50 mb-2.5">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-accent/80 mb-2.5">
               Display properties
             </p>
             <div className="flex flex-wrap gap-1.5">

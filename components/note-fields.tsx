@@ -259,10 +259,15 @@ export function PriorityDropdown({
 export function LabelBadge({ label }: { label: { name: string; color: string } }) {
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium leading-none"
-      style={{ backgroundColor: `${label.color}18`, color: label.color }}
+      className="inline-flex items-center gap-1 rounded-full border-solid px-2 py-0.5 text-2xs font-medium leading-none"
+      style={{
+        backgroundColor: `color-mix(in srgb, ${label.color} 18%, transparent)`,
+        color: label.color,
+        borderColor: `color-mix(in srgb, ${label.color} 55%, transparent)`,
+        borderWidth: "1.5px",
+      }}
     >
-      <PhTag size={10} weight="regular" />
+      <PhTag size={10} weight="bold" />
       {label.name}
     </span>
   )

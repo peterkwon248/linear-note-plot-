@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { SortField, ViewMode, GroupBy } from "./types"
-import { CircleDashed, CircleHalf, CheckCircle } from "@phosphor-icons/react"
+import { CircleDashed, CircleHalf, CheckCircle, BookOpen } from "@phosphor-icons/react"
 
 export interface FilterCategory {
   key: string
@@ -55,6 +55,8 @@ const ArchiveIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" 
 const TrashIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 4 3.3 4 14 4"/><path d="M12.7 4v9a1.3 1.3 0 01-1.4 1.3H4.7A1.3 1.3 0 013.3 13V4m2 0V2.7a1.3 1.3 0 011.4-1.4h2.6a1.3 1.3 0 011.4 1.4V4"/></svg>
 const SortIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="10" y2="4"/><line x1="2.5" y1="8" x2="7.5" y2="8"/><line x1="2.5" y1="12" x2="5" y2="12"/></svg>
 const GraphIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><line x1="5" y1="12.7" x2="11" y2="12.7"/></svg>
+// Wiki: 활동바 BookOpen과 동일 — 일관성
+const WikiIcon = <BookOpen size={14} weight="regular" />
 
 // Parent: 위쪽 부모 노드 + 아래 self (selfd) — "내 위에 부모"
 const ParentIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><line x1="8" y1="5" x2="8" y2="11"/><circle cx="8" cy="12.7" r="1.5" fill="currentColor" stroke="none"/></svg>
@@ -97,7 +99,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "_none", label: "No outbound" },
       { key: "_orphan", label: "True orphans (no in/out)" },
     ]},
-    { key: "wikiRegistered", label: "Wiki", icon: GraphIcon, values: [
+    { key: "wikiRegistered", label: "Wiki", icon: WikiIcon, values: [
       { key: "true", label: "In wiki" },
       { key: "false", label: "Not in wiki" },
     ]},
@@ -107,8 +109,8 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { key: "hasTable", label: "Has tables" },
     ]},
     { key: "pinned", label: "Pinned", icon: PinIcon, values: [
-      { key: "yes", label: "Pinned" },
-      { key: "no", label: "Not pinned" },
+      { key: "true", label: "Pinned" },
+      { key: "false", label: "Not pinned" },
     ]},
   ],
   quickFilters: [

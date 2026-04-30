@@ -518,17 +518,17 @@ function LibMiniStat({
         onClick && "cursor-pointer transition-all duration-150 hover:border-accent/30 hover:bg-accent/[0.03]"
       )}
     >
-      {icon && <span className="absolute right-3 top-2.5 text-muted-foreground/25">{icon}</span>}
+      {icon && <span className={cn("absolute right-3 top-2.5", color, "opacity-70")}>{icon}</span>}
       <p className={cn("text-xl font-semibold tabular-nums", color)}>{value}</p>
-      <p className="text-2xs font-medium text-foreground/70">{label}</p>
-      <p className="text-2xs text-muted-foreground/40">{sub}</p>
+      <p className="text-2xs font-medium text-foreground">{label}</p>
+      <p className="text-2xs text-muted-foreground">{sub}</p>
     </Wrapper>
   )
 }
 
 function LibSectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-2.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
+    <h2 className="mb-2.5 text-2xs font-semibold uppercase tracking-wider text-accent/80">
       {children}
     </h2>
   )
@@ -765,13 +765,13 @@ function LibraryOverview() {
                           }}
                           className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors duration-100 hover:bg-hover-bg"
                         >
-                          <span className="shrink-0 text-muted-foreground/50">
-                            {item.type === "reference" && <BookOpenText size={14} weight="regular" />}
-                            {item.type === "tag" && <Tag size={14} weight="regular" />}
-                            {item.type === "file" && <Paperclip size={14} weight="regular" />}
+                          <span className="shrink-0 text-muted-foreground">
+                            {item.type === "reference" && <BookOpenText size={14} weight="bold" />}
+                            {item.type === "tag" && <Tag size={14} weight="bold" />}
+                            {item.type === "file" && <Paperclip size={14} weight="bold" />}
                           </span>
-                          <span className="flex-1 truncate text-note text-foreground/90">{item.title}</span>
-                          <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/40">
+                          <span className="flex-1 truncate text-note text-foreground">{item.title}</span>
+                          <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/70">
                             {shortRelative(new Date(item.time).toISOString())}
                           </span>
                         </button>
