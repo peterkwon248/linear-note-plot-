@@ -124,3 +124,35 @@
 - **루비 텍스트 제거**: 한국어 사용자 fit X, 노트앱 표준 X (Notion/Bear/Capacities/Tana 모두 안 함). 차별화에도 무관.
 - **Plane 풀 미러 거부**: Stickies + Manage widgets + Greeting 시도 후 "너무 많음" 롤백. Plot 정체성에 fit하는 부분만 채택.
 - **자동 등재 dedupe 가드**: createWikiStub에 동일 title 검사 — 무한 누적 방지. 자동 등재가 매 사이클 같은 redLink 발견 시 중복 폭발 버그 fix.
+
+## 2026-05-01
+
+### Filter/Design 패턴
+- **필터 칩 4-part Linear 패턴** (옵션 A): `icon + field | op | value | ×` 모든 케이스
+- **Order by chip 3-part**: `key | value+direction | ×` (operator 없음)
+- **체크박스 단일 패턴**: `bg-card border-zinc-400` + `bg-accent + PhCheck text-accent-foreground`
+- **라벨 테두리**: `1.5px borderWidth` + `color-mix 55%` (다크/라이트 양쪽)
+
+### Quicklinks 위치 (다음 PR 합의)
+- Home 사이드바: prominent 섹션 (Pinned 옆/대체)
+- 각 영역 사이드바 (Notes/Wiki/Calendar/Ontology/Library): 하단에 collapsed `Quicklinks` 섹션
+- 펼친 상태는 영역별 persist
+- 키보드 shortcut으로 어디서든 즉시 점프 (⌘K 또는 ⌘1~9)
+
+### Quickfilters/Views 통합 (다음 PR 합의)
+- 사이드바 "Views" 섹션 유지 (이름 변경 X)
+- 시스템 quickFilter (🔒 편집 불가) + 사용자 SavedView (⭐ 편집 가능) 한 섹션
+- 필터 드롭다운의 ✨ Quick Filters 섹션 제거
+- `SavedView { builtin: boolean, context: notes/wiki/ontology/library }` 모델
+
+### 사이드바 Inline Edit Mode (다음 PR 합의)
+- DotsSix 핸들 (12px) + 8px slide-right transition (200ms)
+- 섹션 단위만 재배열 (자식 항목 X)
+- 👁 hide/show 토글
+- "Done" 버튼 또는 외부 클릭으로 종료 (즉시 persist, Save 단계 X)
+- `sidebarCustomization.byContext`로 영역별 분리
+
+### WikiArticle 그래프 통합
+- legacy `isWiki` 모델 (Note에 wiki 분류) deprecated
+- `buildOntologyGraphData`에 WikiArticle 별도 노드 (`wiki:{id}` prefix)
+- parent-child hierarchy + note-ref edges

@@ -1,30 +1,47 @@
-# Session Notepad (Updated: 2026-04-30 07:00)
+# Session Notepad (Updated: 2026-05-01 04:30)
 
 ## Critical Context
 
-- **Sprint 1.3 완료**: PR #228 머지. 디자인 polish + 사이드 패널 + Display Properties 동적 컬럼 + 출시 빌드 fix (12 파일). Store v75 유지.
-- **다음 세션은 다른 컴퓨터에서 진행 예정** — `git pull origin main` → 새 worktree → `npm install` → NEXT-ACTION.md 읽고 시작
-- **Plot 영구 규칙 재해석**: "시각적 다양성 ≠ Plot 코어"는 유효하지만, 명확한 그룹 차원이 있으면 검토 가능. Wiki 보드 뷰가 그 예 (Category 기준).
+- **이번 세션 PR 4건 머지 완료**: #229 (Parent/Children) / #230 (Linear filter + Notes Index, 22 files) / #231 (라이트모드 가시성 78 files sed) / #232 (Ontology 그래프 + WikiArticle 노드)
+- **Store v96 적용** — wikiCategories dedup 마이그레이션 (legacy 17개 → 10개)
+- **다음 세션은 새 worktree에서** — 이번 worktree는 작업 완료
+- **합의된 다음 작업**: Quicklinks / Quickfilters 통합 / 사이드바 Inline Edit Mode
 
-## Active Tasks (Sprint 1.4 — 다음 세션 즉시 시작)
+## Active Tasks (다음 세션 즉시 시작 가능)
 
-- [ ] **Wiki 보드 뷰** — supportedModes에 "board" 추가, View mode toggle, WikiBoard 컴포넌트 (Notes 보드 패턴 재활용), Group by Category(default)/Tier/Parent
-- [ ] **Wiki 컬럼 정비** — Tier badge / Reads (마이그레이션 v76) / Created
-- [ ] **Wiki 차트 개선** — Growth Article/Stub 분리 (stacked + multi-line) + sub-tabs (All/Articles/Stubs) + Knowledge Connectivity 차트 추가
+- [ ] **Library References/Tags/Files 페이지** 가시성 + 디자인 통일 (All Notes 수준)
+- [ ] **Library Filter/Display 디자인** (All Notes 수준)
+- [ ] **Quicklinks** — globalBookmarks anchorType 확장 (folder/savedView/category) + Home prominent + 영역별 사이드바 하단 collapsed (8px slide)
+- [ ] **Quickfilters 통합** — view-configs.quickFilters → SavedView 자동 시드 (builtin: boolean) + 사이드바 "Views" 섹션에 통합 (🔒 시스템 + ⭐ 사용자)
+- [ ] **사이드바 Inline Edit Mode** — DotsSix 핸들 + 드래그 + 👁 hide/show + sidebarCustomization (영역별 persist)
 
 ## Polished Decisions (이번 세션)
 
-- **Hub Tier 자동 분류 폐기** — 사용자 통제 부재로 혼선. Stub/Article 2단계 + Backlinks 정렬로 충분
-- **Folder/Words 컬럼 (Wiki) 미포함** — Categories가 그 역할 / 위키는 길이로 분류 안 함
-- **카테고리 chip + count 패턴** — list view 컴팩트 우선, 전체는 Detail 패널
-- **차트 sub-tabs (All/Articles/Stubs)** = Wiki List sub-tabs와 동일 디자인 (학습 부담 0)
+- **필터 칩 4-part Linear 패턴 채택** — `icon + field | op | value | ×`
+- **Quicklinks 위치**: Home prominent + 영역별 collapsed
+- **Quickfilters/Views 한 섹션 통합** — 시스템(🔒) / 사용자(⭐) 마크
+- **사이드바 customize**: Inline Edit Mode (8px slide-right + DotsSix), 영역별 persist
+- **WikiArticle 그래프 노드 통합** — legacy isWiki 모델 deprecated
+- **체크박스 단일 패턴** — `bg-card border-zinc-400` + `bg-accent` + `PhCheck text-accent-foreground`
 
 ## Blockers
 
-- 없음. Sprint 1.4 진행 가능.
+- 없음
 
 ## Known Gotchas (다음 세션 주의)
 
-- **JSX text node에 em dash 직접 입력 금지** — Edit 도구가 literal로 저장해 `—` 표시 버그. 항상 `{"—"}` expression으로
-- **replace_all은 들여쓰기 매칭** — 들여쓰기 다른 동일 코드는 누락. 한 곳씩 수동 변경 필요할 수 있음
-- **`article.layout` object 데이터 잔존** (Book Pivot 흔적) — typeof guard 적용했으나 마이그레이션 PR 별도 필요
+- **Tailwind `border-[1.5px]`은 v4에서 미적용** → `style={{ borderWidth: "1.5px" }}` 직접
+- **라이트모드 alpha 사용 자제** — `/30~/50`은 흰 배경에서 거의 안 보임. `/60+` 또는 `var(--muted-foreground)` 직접
+- **체크박스/필터 칩은 단일 패턴 따를 것** — PR #230, #232에서 정의됨
+- **buildOntologyGraphData에 entity 추가 시 prefix 사용** — `wiki:{id}` 등 (noteId 충돌 방지)
+- **formatFilterChip 헬퍼**가 모든 필터 case 분해 — 새 필터 추가 시 거기에 case 추가
+
+## Resume Commands
+
+```bash
+# 새 worktree에서 시작
+cd C:/Users/user/Desktop/linear-note-plot-
+git pull origin main
+# 새 worktree 만들기 (claude code가 자동)
+npm install  # in new worktree
+```
