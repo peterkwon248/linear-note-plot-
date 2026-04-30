@@ -103,7 +103,7 @@ export function WikiArticleDetailPanel({ article }: { article: WikiArticle | nul
   if (!article) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
-        <PhInfo size={24} weight="light" className="text-muted-foreground/40" />
+        <PhInfo size={24} weight="light" className="text-muted-foreground/70" />
         <p className="text-note text-center">Select a wiki article to see details</p>
       </div>
     )

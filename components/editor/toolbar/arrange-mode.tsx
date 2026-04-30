@@ -74,7 +74,7 @@ function SortableItem({
         className={`p-1 rounded-md transition-colors ${
           item.visible
             ? "text-foreground hover:bg-hover-bg"
-            : "text-muted-foreground/40 hover:bg-hover-bg hover:text-muted-foreground"
+            : "text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground"
         }`}
       >
         {item.visible ? (

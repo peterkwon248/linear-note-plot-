@@ -215,7 +215,7 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
               className={cn(
                 "flex-1 bg-transparent text-sm font-semibold text-center outline-none placeholder:font-normal",
                 headerFgClass || "text-foreground",
-                headerLight ? "placeholder:text-white/40" : "placeholder:text-muted-foreground/40",
+                headerLight ? "placeholder:text-white/40" : "placeholder:text-muted-foreground/70",
               )}
             />
             <button
@@ -248,7 +248,7 @@ export function NavigationBlock({ block, articleId, editable, onUpdate, onDelete
               value={headerImage ?? ""}
               onChange={(e) => onUpdate({ navHeaderImage: e.target.value || null })}
               placeholder="Header image URL (optional)"
-              className="w-full bg-transparent text-2xs text-foreground/80 outline-none placeholder:text-muted-foreground/40 text-center"
+              className="w-full bg-transparent text-2xs text-foreground/80 outline-none placeholder:text-muted-foreground/70 text-center"
             />
           </div>
 
@@ -334,7 +334,7 @@ function SlotDisplay({
 
 function Divider() {
   return (
-    <div className="flex items-center justify-center text-muted-foreground/40 px-1.5">
+    <div className="flex items-center justify-center text-muted-foreground/70 px-1.5">
       <ArrowRight size={14} weight="regular" />
     </div>
   )
@@ -399,7 +399,7 @@ function SlotEditor({
         onChange={(e) => onChange({ text: e.target.value })}
         placeholder={fallbackText || "Label"}
         className={cn(
-          "w-full bg-transparent text-sm text-center outline-none placeholder:text-muted-foreground/40",
+          "w-full bg-transparent text-sm text-center outline-none placeholder:text-muted-foreground/70",
           isCurrent ? "font-semibold text-foreground" : "font-medium text-foreground"
         )}
       />
@@ -410,7 +410,7 @@ function SlotEditor({
         value={slot.subtext ?? ""}
         onChange={(e) => onChange({ subtext: e.target.value })}
         placeholder="Subtext (optional)"
-        className="w-full bg-transparent text-2xs text-center text-muted-foreground/70 outline-none placeholder:text-muted-foreground/30"
+        className="w-full bg-transparent text-2xs text-center text-muted-foreground/70 outline-none placeholder:text-muted-foreground/60"
       />
     </div>
   )

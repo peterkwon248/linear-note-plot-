@@ -144,7 +144,7 @@ export function FootnoteEditModal() {
 
         <div className="px-5 space-y-3 pb-4">
           <div>
-            <label className="text-2xs text-muted-foreground/60 mb-1 block">Title <span className="text-muted-foreground/30">— saved as reference name in Library</span></label>
+            <label className="text-2xs text-muted-foreground/60 mb-1 block">Title <span className="text-muted-foreground/60">— saved as reference name in Library</span></label>
             <input
               ref={titleRef}
               type="text"
@@ -152,7 +152,7 @@ export function FootnoteEditModal() {
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleSave() }}
               placeholder="Reference title..."
-              className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+              className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
             />
           </div>
           <div>
@@ -162,7 +162,7 @@ export function FootnoteEditModal() {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Footnote content..."
               rows={3}
-              className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent resize-none"
+              className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent resize-none"
             />
           </div>
           <div className="mt-3">
@@ -172,7 +172,7 @@ export function FootnoteEditModal() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://..."
-              className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+              className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
             />
           </div>
           <div>
@@ -183,13 +183,13 @@ export function FootnoteEditModal() {
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 placeholder="https://example.com/image.png"
-                className="flex-1 h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                className="flex-1 h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
               />
               {imageUrl.trim() && (
                 <button
                   type="button"
                   onClick={() => setImageUrl("")}
-                  className="shrink-0 text-2xs text-muted-foreground/50 hover:text-destructive transition-colors px-1"
+                  className="shrink-0 text-2xs text-muted-foreground/70 hover:text-destructive transition-colors px-1"
                   title="Remove image"
                 >
                   ×

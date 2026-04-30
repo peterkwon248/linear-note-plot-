@@ -43,7 +43,7 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
               "rounded-md p-1 transition-colors",
               canGoBack
                 ? "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
-                : "text-muted-foreground/25 cursor-default"
+                : "text-muted-foreground/50 cursor-default"
             )}
             title="Go back"
           >
@@ -56,7 +56,7 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
               "rounded-md p-1 transition-colors",
               canGoForward
                 ? "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
-                : "text-muted-foreground/25 cursor-default"
+                : "text-muted-foreground/50 cursor-default"
             )}
             title="Go forward"
           >
@@ -69,7 +69,7 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
             onClick={(e) => { e.stopPropagation(); setSidePanelOpen(!sidePanelOpen) }}
             className={cn(
               "rounded-md p-1 transition-colors hover:bg-hover-bg",
-              sidePanelOpen ? "text-accent" : "text-muted-foreground/50 hover:text-foreground"
+              sidePanelOpen ? "text-accent" : "text-muted-foreground/70 hover:text-foreground"
             )}
             title={sidePanelOpen ? "Close side panel" : "Open side panel"}
           >
@@ -78,7 +78,7 @@ export function EditorPaneHeader({ tabs, activeTabId, noteTitle, pane, showClose
           {showClose && (
             <button
               onClick={(e) => { e.stopPropagation(); closeSecondary() }}
-              className="rounded-md p-1 text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg transition-colors"
+              className="rounded-md p-1 text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors"
             >
               <PhX size={12} weight="regular" />
             </button>

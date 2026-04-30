@@ -423,7 +423,7 @@ export function TagPicker({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search or create tag..."
-              className="w-full bg-transparent text-note text-foreground placeholder:text-muted-foreground/50 outline-none"
+              className="w-full bg-transparent text-note text-foreground placeholder:text-muted-foreground/70 outline-none"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && showCreate) {
                   e.preventDefault()
@@ -538,7 +538,7 @@ export function LabelPicker({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search or create label..."
-            className="w-full bg-transparent text-note text-foreground placeholder:text-muted-foreground/50 outline-none"
+            className="w-full bg-transparent text-note text-foreground placeholder:text-muted-foreground/70 outline-none"
             onKeyDown={(e) => {
               if (e.key === "Enter" && showCreate) {
                 e.preventDefault()

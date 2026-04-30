@@ -922,7 +922,7 @@ export function NotesBoard({
       {flatNotes.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
-            <FileText className="mx-auto mb-3 text-muted-foreground/40" size={40} weight="regular" />
+            <FileText className="mx-auto mb-3 text-muted-foreground/70" size={40} weight="regular" />
             <p className="text-ui text-muted-foreground">No notes found</p>
             <p className="mt-1 text-note text-muted-foreground/60">
               {viewState.filters.length > 0 ? "Try adjusting your filters." : "Create your first note to get started."}
@@ -1016,7 +1016,7 @@ export function NotesBoard({
                                   >
                                     <CaretRight className={`shrink-0 transition-transform ${isCollapsed ? "" : "rotate-90"}`} size={12} weight="regular" />
                                     <span className="font-medium truncate">{subLabel}</span>
-                                    <span className="text-muted-foreground/50 tabular-nums ml-auto">{sub.notes.length}</span>
+                                    <span className="text-muted-foreground/70 tabular-nums ml-auto">{sub.notes.length}</span>
                                   </button>
                                   {!isCollapsed && notesToShow.map(renderCard)}
                                 </div>

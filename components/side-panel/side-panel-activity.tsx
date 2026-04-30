@@ -22,7 +22,7 @@ export function SidePanelActivity() {
             <span className="text-muted-foreground"><ClockCounterClockwise size={16} weight="regular" /></span>
             <span className="text-2xs font-medium text-muted-foreground">History</span>
           </div>
-          <p className="text-note text-muted-foreground/50">
+          <p className="text-note text-muted-foreground/70">
             Wiki article history is not yet available.
           </p>
         </div>

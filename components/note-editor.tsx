@@ -386,7 +386,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
 
   if (!note) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-      <PhCursor size={32} weight="light" className="text-muted-foreground/40" />
+      <PhCursor size={32} weight="light" className="text-muted-foreground/70" />
       <p className="text-note">Select a note to start editing</p>
       <p className="text-2xs text-muted-foreground/60">Or press + to create a new one</p>
     </div>
@@ -411,7 +411,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
                   "rounded-md p-1 transition-colors",
                   secondaryHistoryIndex > 0
                     ? "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
-                    : "text-muted-foreground/25 cursor-default"
+                    : "text-muted-foreground/50 cursor-default"
                 )}
                 title="Go back"
               >
@@ -424,7 +424,7 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
                   "rounded-md p-1 transition-colors",
                   secondaryHistoryIndex < secondaryHistoryLen - 1
                     ? "text-muted-foreground hover:text-foreground hover:bg-hover-bg"
-                    : "text-muted-foreground/25 cursor-default"
+                    : "text-muted-foreground/50 cursor-default"
                 )}
                 title="Go forward"
               >
@@ -444,8 +444,8 @@ export function NoteEditor({ noteId: propNoteId, onClose, pane = 'primary' }: No
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-md transition-all duration-100",
                     hasCollapsibles
-                      ? "text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground cursor-pointer"
-                      : "text-muted-foreground/20 cursor-default"
+                      ? "text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground cursor-pointer"
+                      : "text-muted-foreground/50 cursor-default"
                   )}
                 >
                   <svg width={17} height={17} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -813,7 +813,7 @@ function ReferencedInBadges({ noteId, pane = 'primary' }: { noteId: string; pane
 
   return (
     <div className="flex items-center gap-1 shrink min-w-0 overflow-hidden">
-      <span className="text-note text-muted-foreground/50 shrink-0">in</span>
+      <span className="text-note text-muted-foreground/70 shrink-0">in</span>
       {visible.map((a) => (
         <button
           key={a.id}
@@ -829,7 +829,7 @@ function ReferencedInBadges({ noteId, pane = 'primary' }: { noteId: string; pane
       {overflow > 0 && (
         <Popover>
           <PopoverTrigger asChild>
-            <button className="shrink-0 rounded-sm bg-secondary/50 px-1.5 py-px text-2xs font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-100">
+            <button className="shrink-0 rounded-sm bg-secondary/50 px-1.5 py-px text-2xs font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors duration-100">
               +{overflow} more
             </button>
           </PopoverTrigger>

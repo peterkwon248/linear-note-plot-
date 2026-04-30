@@ -419,7 +419,7 @@ export function CommentsByEntity({
       <div className="flex items-center gap-2 mb-2 px-2">
         <ChatCircle size={14} weight="regular" className="text-muted-foreground" />
         <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider">Comments</span>
-        <span className="text-2xs text-muted-foreground/50">{tops.length}</span>
+        <span className="text-2xs text-muted-foreground/70">{tops.length}</span>
       </div>
 
       {/* Tabs */}
@@ -435,7 +435,7 @@ export function CommentsByEntity({
       )}
 
       {filtered.length === 0 && tops.length > 0 && (
-        <p className="px-2 py-3 text-[12px] text-muted-foreground/50 italic">
+        <p className="px-2 py-3 text-[12px] text-muted-foreground/70 italic">
           No {tab === "open" ? "open" : "resolved"} comments.
         </p>
       )}
@@ -661,7 +661,7 @@ function TabButton({ active, onClick, count, children }: { active: boolean; onCl
       )}
     >
       {children}
-      <span className="ml-1.5 text-muted-foreground/50">{count}</span>
+      <span className="ml-1.5 text-muted-foreground/70">{count}</span>
     </button>
   )
 }
@@ -737,7 +737,7 @@ function CommentRow({
             <span className="truncate max-w-[180px]">{blockLabel || "Block"}</span>
           </button>
         ) : (
-          <span className="flex items-center gap-1 text-[10px] text-muted-foreground/50">
+          <span className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
             <FileText size={9} weight="regular" />
             <span>Document-level</span>
           </span>
@@ -775,7 +775,7 @@ function CommentRow({
               className={cn("text-foreground/85 cursor-text text-[12px]", isResolved && "line-through cursor-default")}
             />
           )}
-          <div className="mt-0.5 text-[10px] text-muted-foreground/50">{formatRelativeTime(comment.updatedAt || comment.createdAt)}</div>
+          <div className="mt-0.5 text-[10px] text-muted-foreground/70">{formatRelativeTime(comment.updatedAt || comment.createdAt)}</div>
         </div>
 
         {/* Actions: Reply primary, others under ⋯ */}
@@ -824,7 +824,7 @@ function CommentRow({
               <div className="flex items-start gap-1.5">
                 <div className="flex-1 min-w-0">
                   <CommentBodyDisplay body={r.body} className="text-[11px]" />
-                  <div className="mt-0.5 text-[9px] text-muted-foreground/50">{formatRelativeTime(r.updatedAt || r.createdAt)}</div>
+                  <div className="mt-0.5 text-[9px] text-muted-foreground/70">{formatRelativeTime(r.updatedAt || r.createdAt)}</div>
                 </div>
                 <button
                   onClick={() => deleteComment(r.id)}

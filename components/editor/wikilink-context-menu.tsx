@@ -257,7 +257,7 @@ export function WikilinkContextMenu() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
             placeholder="Search notes..."
-            className="w-full px-3 py-1.5 text-2xs bg-transparent border-b border-border-subtle text-foreground outline-none placeholder:text-muted-foreground/50"
+            className="w-full px-3 py-1.5 text-2xs bg-transparent border-b border-border-subtle text-foreground outline-none placeholder:text-muted-foreground/70"
           />
           <div className="max-h-[200px] overflow-y-auto py-1">
             {filteredResults.notes.length > 0 && (
@@ -309,7 +309,7 @@ export function WikilinkContextMenu() {
               </>
             )}
             {allResults.length === 0 && (
-              <div className="px-3 py-2 text-2xs text-muted-foreground/50 text-center">
+              <div className="px-3 py-2 text-2xs text-muted-foreground/70 text-center">
                 No results
               </div>
             )}

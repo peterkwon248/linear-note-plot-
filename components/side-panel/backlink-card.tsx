@@ -81,7 +81,7 @@ export function BacklinkCard({
 
       {/* Context snippets (Obsidian-style italic muted) */}
       {source.loading ? (
-        <p className="mt-0.5 ml-[18px] text-2xs italic text-muted-foreground/40">
+        <p className="mt-0.5 ml-[18px] text-2xs italic text-muted-foreground/70">
           Loading context…
         </p>
       ) : visibleContexts.length > 0 ? (
@@ -98,7 +98,7 @@ export function BacklinkCard({
             </p>
           ))}
           {remaining > 0 && (
-            <p className="text-[10px] text-muted-foreground/40">
+            <p className="text-[10px] text-muted-foreground/70">
               +{remaining} more
             </p>
           )}

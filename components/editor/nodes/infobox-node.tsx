@@ -243,7 +243,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                 value={heroCaption}
                 onChange={(e) => updateHeroCaption(e.target.value)}
                 placeholder="Caption (optional)"
-                className="w-full px-3 py-1.5 text-[0.75em] italic text-center text-muted-foreground bg-secondary/10 outline-none placeholder:text-muted-foreground/30 border-t border-border-subtle"
+                className="w-full px-3 py-1.5 text-[0.75em] italic text-center text-muted-foreground bg-secondary/10 outline-none placeholder:text-muted-foreground/60 border-t border-border-subtle"
               />
             ) : (
               heroCaption && (
@@ -258,7 +258,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
           <button
             type="button"
             onClick={pickHeroImage}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[0.75em] text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors border-b border-border-subtle opacity-0 group-hover/infobox:opacity-100"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[0.75em] text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors border-b border-border-subtle opacity-0 group-hover/infobox:opacity-100"
             title="Add hero image"
           >
             <PhImage size={12} />
@@ -300,7 +300,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                 className={`rounded p-0.5 transition-colors shrink-0 ${
                   showColorPicker || headerColor
                     ? "text-foreground"
-                    : "text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/infobox:opacity-100"
+                    : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/infobox:opacity-100"
                 }`}
                 title="Header color"
               >
@@ -310,7 +310,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                 <button
                   type="button"
                   onClick={() => updateAttributes({ width: null, height: null })}
-                  className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
+                  className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
                   title="Reset size"
                 >
                   <ArrowsIn size={12} />
@@ -319,7 +319,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
               <button
                 type="button"
                 onClick={() => deleteNode()}
-                className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
+                className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
                 title="Remove infobox"
               >
                 <PhX size={12} />
@@ -396,7 +396,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                     value={row.label}
                     onChange={(e) => updateRow(index, "label", e.target.value)}
                     readOnly={!editable}
-                    className="flex-1 pr-3 py-1.5 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/85 bg-transparent outline-none placeholder:text-muted-foreground/40"
+                    className="flex-1 pr-3 py-1.5 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/85 bg-transparent outline-none placeholder:text-muted-foreground/70"
                     placeholder="Group header"
                   />
                   {editable && (
@@ -409,7 +409,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                         className={`px-1.5 transition-colors shrink-0 ${
                           groupColorPickerIndex === index || row.color
                             ? "text-foreground"
-                            : "text-muted-foreground/30 hover:text-foreground opacity-0 group-hover/row:opacity-100"
+                            : "text-muted-foreground/60 hover:text-foreground opacity-0 group-hover/row:opacity-100"
                         }`}
                         title="Group color"
                       >
@@ -418,7 +418,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                       <button
                         type="button"
                         onClick={() => removeRow(index)}
-                        className="px-2 text-muted-foreground/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
+                        className="px-2 text-muted-foreground/50 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
                         title="Remove group"
                       >
                         <PhTrash size={11} />
@@ -476,14 +476,14 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                   value={row.label}
                   onChange={(e) => updateRow(index, "label", e.target.value)}
                   readOnly={!editable}
-                  className="flex-1 px-3 py-1.5 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/80 bg-transparent outline-none placeholder:text-muted-foreground/40"
+                  className="flex-1 px-3 py-1.5 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/80 bg-transparent outline-none placeholder:text-muted-foreground/70"
                   placeholder="Section name"
                 />
                 {editable && (
                   <button
                     type="button"
                     onClick={() => removeRow(index)}
-                    className="px-2 text-muted-foreground/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
+                    className="px-2 text-muted-foreground/50 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
                     title="Remove section"
                   >
                     <PhTrash size={11} />
@@ -499,7 +499,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                   value={row.label}
                   onChange={(e) => updateRow(index, "label", e.target.value)}
                   readOnly={!editable}
-                  className="w-[120px] shrink-0 px-3 py-1.5 text-[0.75em] font-medium text-muted-foreground bg-secondary/20 border-r border-border-subtle outline-none placeholder:text-muted-foreground/30"
+                  className="w-[120px] shrink-0 px-3 py-1.5 text-[0.75em] font-medium text-muted-foreground bg-secondary/20 border-r border-border-subtle outline-none placeholder:text-muted-foreground/60"
                   placeholder="Label"
                 />
                 {editable ? (
@@ -507,7 +507,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                     type="text"
                     value={row.value}
                     onChange={(e) => updateRow(index, "value", e.target.value)}
-                    className="flex-1 px-3 py-1.5 text-[0.75em] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
+                    className="flex-1 px-3 py-1.5 text-[0.75em] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/60"
                     placeholder="Value"
                   />
                 ) : (
@@ -521,7 +521,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                   <button
                     type="button"
                     onClick={() => removeRow(index)}
-                    className="px-2 text-muted-foreground/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
+                    className="px-2 text-muted-foreground/50 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100"
                     title="Remove row"
                   >
                     <PhTrash size={11} />
@@ -539,7 +539,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
             <button
               type="button"
               onClick={addRow}
-              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-[0.75em] text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-[0.75em] text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
             >
               <PhPlus size={11} />
               <span>Add row</span>
@@ -548,7 +548,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
             <button
               type="button"
               onClick={addSectionRow}
-              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-[0.75em] text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-[0.75em] text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
               title="Add section divider row"
             >
               <PhPlus size={11} />
@@ -558,7 +558,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
             <button
               type="button"
               onClick={addGroupHeaderRow}
-              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-[0.75em] text-muted-foreground/40 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-[0.75em] text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
               title="Add collapsible group header"
             >
               <PhPlus size={11} />

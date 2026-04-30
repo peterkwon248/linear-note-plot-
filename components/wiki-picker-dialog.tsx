@@ -234,7 +234,7 @@ export function WikiPickerDialog({
                 <span className="max-w-[120px] truncate text-muted-foreground">
                   {getChipSummary(categoryValues, activeFilter)}
                 </span>
-                <CaretDown className="text-muted-foreground/50" size={10} />
+                <CaretDown className="text-muted-foreground/70" size={10} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-52" onCloseAutoFocus={(e) => e.preventDefault()}>
@@ -272,7 +272,7 @@ export function WikiPickerDialog({
             {/* × remove chip */}
             <button
               onClick={clearFilter}
-              className="shrink-0 -ml-0.5 rounded-sm p-0.5 text-muted-foreground/50 transition-colors hover:bg-hover-bg hover:text-foreground"
+              className="shrink-0 -ml-0.5 rounded-sm p-0.5 text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground"
             >
               <X size={10} />
             </button>
@@ -292,7 +292,7 @@ export function WikiPickerDialog({
 
         {/* Right side counter */}
         <div className="shrink-0 flex items-center gap-1.5 ml-auto">
-          <span className="text-2xs tabular-nums text-muted-foreground/50">
+          <span className="text-2xs tabular-nums text-muted-foreground/70">
             {candidates.length}/{deduped.length}
           </span>
           {isFilterActive && (
@@ -309,7 +309,7 @@ export function WikiPickerDialog({
       <CommandList className="max-h-[560px]">
         <CommandEmpty>
           <div className="flex flex-col items-center gap-1.5 py-2">
-            <BookOpen className="text-muted-foreground/30" size={32} />
+            <BookOpen className="text-muted-foreground/60" size={32} />
             <p className="text-note text-muted-foreground">No wiki articles found</p>
             {isFilterActive && (
               <button
@@ -353,18 +353,18 @@ export function WikiPickerDialog({
                     {article.title}
                   </span>
                   {article.aliases.length > 0 && (
-                    <p className="truncate text-2xs text-muted-foreground/50 mt-0.5">
+                    <p className="truncate text-2xs text-muted-foreground/70 mt-0.5">
                       {article.aliases.join(", ")}
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {cats.length > 0 && (
-                    <span className="text-2xs text-muted-foreground/50 max-w-[140px] truncate">
+                    <span className="text-2xs text-muted-foreground/70 max-w-[140px] truncate">
                       {cats.join(", ")}
                     </span>
                   )}
-                  <span className="text-2xs tabular-nums text-muted-foreground/40">
+                  <span className="text-2xs tabular-nums text-muted-foreground/70">
                     {formatDistanceToNow(new Date(article.updatedAt), { addSuffix: true })}
                   </span>
                 </div>

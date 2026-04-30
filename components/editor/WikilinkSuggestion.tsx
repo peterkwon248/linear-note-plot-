@@ -201,7 +201,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                   <>
                     <Hash className="shrink-0 text-muted-foreground/60" size={12} />
                     <span className="truncate">{item.label}</span>
-                    <span className="ml-auto shrink-0 text-2xs text-muted-foreground/40 capitalize">
+                    <span className="ml-auto shrink-0 text-2xs text-muted-foreground/70 capitalize">
                       {item.type}
                     </span>
                   </>
@@ -304,7 +304,7 @@ const WikilinkList = forwardRef<WikilinkListRef, WikilinkListProps>(
                           )}
                           <span className="truncate">{item.title}</span>
                           {item.isAlias && (
-                            <span className="shrink-0 text-2xs italic text-muted-foreground/50">
+                            <span className="shrink-0 text-2xs italic text-muted-foreground/70">
                               alias
                             </span>
                           )}

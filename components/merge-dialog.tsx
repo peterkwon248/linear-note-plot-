@@ -116,7 +116,7 @@ export function MergeDialog({
                     {note.title || "Untitled"}
                   </p>
                 </div>
-                <span className="shrink-0 text-2xs text-muted-foreground/50">
+                <span className="shrink-0 text-2xs text-muted-foreground/70">
                   {STATUS_LABELS[note.status] ?? note.status}
                 </span>
               </label>

@@ -94,13 +94,13 @@ export function ViewDistributionPanel({
             <span className="flex-1 truncate text-note text-foreground/80">
               {item.label}
             </span>
-            <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/50">
+            <span className="shrink-0 text-2xs tabular-nums text-muted-foreground/70">
               {item.count}
             </span>
           </button>
         ))}
         {items.length === 0 && (
-          <div className="px-3 py-6 text-center text-2xs text-muted-foreground/40">
+          <div className="px-3 py-6 text-center text-2xs text-muted-foreground/70">
             No data
           </div>
         )}

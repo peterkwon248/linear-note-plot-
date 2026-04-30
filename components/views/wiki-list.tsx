@@ -233,7 +233,7 @@ function ArticleTableRow({
           title={categoryNames.length > 0 ? categoryNames.join(", ") : undefined}
         >
           {categoryNames.length === 0 ? (
-            <span className="text-2xs text-muted-foreground/40">{"\u2014"}</span>
+            <span className="text-2xs text-muted-foreground/70">{"\u2014"}</span>
           ) : (
             <>
               <span className="truncate rounded-md bg-accent/10 px-1.5 py-0.5 text-2xs font-medium text-accent">
@@ -254,7 +254,7 @@ function ArticleTableRow({
           title={aliases.length > 0 ? aliases.join(", ") : undefined}
         >
           {aliases.length === 0 ? (
-            <span className="text-2xs text-muted-foreground/40">{"\u2014"}</span>
+            <span className="text-2xs text-muted-foreground/70">{"\u2014"}</span>
           ) : (
             <>
               <span className="truncate text-2xs text-muted-foreground/80">
@@ -277,7 +277,7 @@ function ArticleTableRow({
           {parentTitle ? (
             <span className="truncate text-2xs text-muted-foreground/80">{parentTitle}</span>
           ) : (
-            <span className="text-2xs text-muted-foreground/40">{"\u2014"}</span>
+            <span className="text-2xs text-muted-foreground/70">{"\u2014"}</span>
           )}
         </div>
       )}
@@ -304,7 +304,7 @@ function ArticleTableRow({
             <PopoverTrigger asChild>
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(true) }}
-                className="rounded-md p-1 text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-active-bg hover:text-muted-foreground/60 transition-all duration-100"
+                className="rounded-md p-1 text-muted-foreground/60 opacity-0 group-hover:opacity-100 hover:bg-active-bg hover:text-muted-foreground/60 transition-all duration-100"
               >
                 <DotsThree size={14} weight="bold" />
               </button>
@@ -391,7 +391,7 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
-        <BookOpen className="text-muted-foreground/40" size={20} weight="regular" />
+        <BookOpen className="text-muted-foreground/70" size={20} weight="regular" />
       </div>
       <p className="text-note text-muted-foreground/60">No articles found</p>
     </div>
@@ -560,7 +560,7 @@ export function WikiList({
           <div>
             {Array.from(groupedArticles.entries()).map(([group, articles]) => (
               <div key={group} id={`wiki-group-${group}`}>
-                <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-2xs font-medium text-muted-foreground/50 border-b border-border-subtle">
+                <div className="sticky top-0 z-10 bg-background py-1.5 px-5 text-2xs font-medium text-muted-foreground/70 border-b border-border-subtle">
                   {group}
                 </div>
                 {(articles as WikiArticle[]).map(note => (
@@ -610,7 +610,7 @@ export function WikiList({
                         <span className="text-2xs font-semibold text-muted-foreground/60 uppercase tracking-wide">
                           {group.label}
                         </span>
-                        <span className="text-2xs text-muted-foreground/40 tabular-nums">
+                        <span className="text-2xs text-muted-foreground/70 tabular-nums">
                           {groupArticles.length}
                         </span>
                       </div>

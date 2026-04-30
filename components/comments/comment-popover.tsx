@@ -209,7 +209,7 @@ function CommentList({
       )}
 
       {comments.length > 0 && filtered.length === 0 && (
-        <div className="px-3 py-6 text-center text-[12px] text-muted-foreground/50">
+        <div className="px-3 py-6 text-center text-[12px] text-muted-foreground/70">
           No {tab === "open" ? "open" : "resolved"} comments.
         </div>
       )}
@@ -357,7 +357,7 @@ function TabButton({
       )}
     >
       {children}
-      <span className="ml-1.5 text-muted-foreground/50">{count}</span>
+      <span className="ml-1.5 text-muted-foreground/70">{count}</span>
     </button>
   )
 }

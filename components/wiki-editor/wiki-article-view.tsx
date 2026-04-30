@@ -113,7 +113,7 @@ function ExistingArticleDropTarget({ articleId, title, isOver }: { articleId: st
         "flex flex-col items-center justify-center gap-1 rounded-lg border px-4 min-h-[80px] min-w-[100px] max-w-[160px] transition-all duration-200 cursor-default",
         isOver
           ? "border-accent bg-accent/10 text-accent scale-[1.03] shadow-md shadow-accent/10 animate-pulse"
-          : "border-border-subtle text-muted-foreground/50 hover:border-border-subtle hover:text-muted-foreground/70 hover:scale-[1.01]"
+          : "border-border-subtle text-muted-foreground/70 hover:border-border-subtle hover:text-muted-foreground/70 hover:scale-[1.01]"
       )}
     >
       <BookOpen size={16} weight="regular" className="shrink-0" />
@@ -403,7 +403,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
     return (
       <div className="flex flex-col items-center gap-3 py-20 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary/60">
-          <BookOpen className="text-muted-foreground/40" size={20} weight="regular" />
+          <BookOpen className="text-muted-foreground/70" size={20} weight="regular" />
         </div>
         <p className="text-note text-muted-foreground/60">Article not found</p>
       </div>
@@ -497,7 +497,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
               ))}
             </nav>
           ) : (
-            <p className="px-2 text-[0.8125em] text-muted-foreground/40">No sections yet</p>
+            <p className="px-2 text-[0.8125em] text-muted-foreground/70">No sections yet</p>
           )}
         </div>
       </aside>}
@@ -527,7 +527,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
             </h1>
           )}
           {/* Updated at */}
-          <p className="text-[12px] text-muted-foreground/40 mb-1">
+          <p className="text-[12px] text-muted-foreground mb-1">
             Updated {shortRelative(article.updatedAt)} ago
           </p>
           {/* Aliases (editable) */}
@@ -540,10 +540,10 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                 usePlotStore.getState().updateWikiArticle(article.id, { aliases })
               }}
               onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
-              className="text-note text-muted-foreground/50 mb-2 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
+              className="text-note text-muted-foreground mb-2 bg-transparent outline-none border-b border-transparent hover:border-accent/30 focus:border-accent/50 w-full transition-colors"
             />
           ) : article.aliases.length > 0 ? (
-            <p className="text-note text-muted-foreground/50 mb-2">
+            <p className="text-note text-muted-foreground mb-2">
               {article.aliases.join(" · ")}
             </p>
           ) : null}
@@ -662,7 +662,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
           )}
 
           {article.blocks.length === 0 && !editable && (
-            <p className="py-8 text-center text-note text-muted-foreground/40">
+            <p className="py-8 text-center text-note text-muted-foreground/70">
               This article has no content yet.
             </p>
           )}
@@ -857,7 +857,7 @@ export function WikiArticleView({ articleId, editable = false, preview = false, 
                   </p>
                 )}
                 {block.type === "text" && block.content && block.content.length > 50 && (
-                  <p className="text-2xs text-muted-foreground/40 mt-0.5">...</p>
+                  <p className="text-2xs text-muted-foreground/70 mt-0.5">...</p>
                 )}
               </div>
             )
@@ -963,7 +963,7 @@ export function InlineCategoryTags({
                   {editable && (
                     <button
                       onClick={() => toggleAssign(cat.id)}
-                      className="opacity-0 group-hover/cat:opacity-100 text-muted-foreground/50 hover:text-destructive transition-all p-0.5 -mr-0.5"
+                      className="opacity-0 group-hover/cat:opacity-100 text-muted-foreground/70 hover:text-destructive transition-all p-0.5 -mr-0.5"
                       title={`Remove ${cat.name}`}
                     >
                       <PhX size={10} weight="bold" />
@@ -1072,11 +1072,11 @@ export function ArticleCategories({
 
   return (
     <div className="space-y-2">
-      <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/40">
+      <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground/70">
         Categories
       </h4>
       {assignedCategories.length === 0 && !editable && (
-        <p className="text-2xs text-muted-foreground/40">No categories</p>
+        <p className="text-2xs text-muted-foreground/70">No categories</p>
       )}
       <div className="flex flex-wrap gap-1">
         {assignedCategories.map((cat) => (
@@ -1087,17 +1087,17 @@ export function ArticleCategories({
           >
             {cat.parentIds.length > 0 && (
               <>
-                <span className="text-muted-foreground/40">
+                <span className="text-muted-foreground/70">
                   {wikiCategories.find((p) => p.id === cat.parentIds[0])?.name ?? ""}
                 </span>
-                <CaretRight size={8} weight="bold" className="text-muted-foreground/30" />
+                <CaretRight size={8} weight="bold" className="text-muted-foreground/60" />
               </>
             )}
             {cat.name}
             {editable && (
               <button
                 onClick={() => handleRemove(cat.id)}
-                className="ml-0.5 hidden rounded-sm p-0 text-muted-foreground/40 transition-colors hover:text-foreground group-hover:inline-flex"
+                className="ml-0.5 hidden rounded-sm p-0 text-muted-foreground/70 transition-colors hover:text-foreground group-hover:inline-flex"
               >
                 <PhX size={10} weight="bold" />
               </button>
@@ -1109,7 +1109,7 @@ export function ArticleCategories({
         <div className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-medium text-muted-foreground/50 transition-colors hover:bg-hover-bg hover:text-foreground/70"
+            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-medium text-muted-foreground/70 transition-colors hover:bg-hover-bg hover:text-foreground/70"
           >
             <PhPlus size={12} weight="regular" />
             Add category
@@ -1137,7 +1137,7 @@ export function ArticleCategories({
                     onChange={(e) => setNewCatName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleCreateAndAdd() }}
                     placeholder="New category..."
-                    className="flex-1 rounded-md bg-transparent px-1.5 py-1 text-2xs text-foreground outline-none placeholder:text-muted-foreground/30"
+                    className="flex-1 rounded-md bg-transparent px-1.5 py-1 text-2xs text-foreground outline-none placeholder:text-muted-foreground/60"
                     autoFocus
                   />
                   <button
@@ -1151,7 +1151,7 @@ export function ArticleCategories({
               </div>
               <button
                 onClick={() => setDropdownOpen(false)}
-                className="mt-1 w-full rounded-md px-2 py-1 text-center text-2xs text-muted-foreground/40 transition-colors hover:bg-hover-bg"
+                className="mt-1 w-full rounded-md px-2 py-1 text-center text-2xs text-muted-foreground/70 transition-colors hover:bg-hover-bg"
               >
                 Close
               </button>

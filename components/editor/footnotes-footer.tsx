@@ -547,7 +547,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
                       if (e.key === "Escape") closeModal()
                     }}
                     placeholder="Search existing references..."
-                    className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                    className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
                   />
                 </div>
                 <div className="max-h-52 overflow-y-auto px-2 pb-2">
@@ -567,7 +567,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
                     )
                   })}
                   {filteredRefs.length === 0 && (
-                    <p className="px-3 py-3 text-2xs text-muted-foreground/40 text-center">
+                    <p className="px-3 py-3 text-2xs text-muted-foreground/70 text-center">
                       {search.trim() ? "No matching references" : "No references in Library"}
                     </p>
                   )}
@@ -605,7 +605,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
                         if (e.key === "Escape") closeModal()
                       }}
                       placeholder="Reference title..."
-                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
                     />
                   </div>
                   <div>
@@ -615,7 +615,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
                       value={newUrl}
                       onChange={(e) => setNewUrl(e.target.value)}
                       placeholder="https://..."
-                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
                     />
                   </div>
                   <div>
@@ -625,7 +625,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
                       onChange={(e) => setNewContent(e.target.value)}
                       placeholder="Brief description..."
                       rows={2}
-                      className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent resize-none"
+                      className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent resize-none"
                     />
                   </div>
                   <div>
@@ -635,7 +635,7 @@ function NoteReferencesFooter({ footnoteRefIds, noteId, editable = true }: NoteR
                       value={newImageUrl}
                       onChange={(e) => setNewImageUrl(e.target.value)}
                       placeholder="https://example.com/image.png"
-                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
                     />
                     {newImageUrl.trim() && (
                       <div className="mt-1.5 rounded-md overflow-hidden border border-border/40 bg-secondary/30 inline-block max-w-full">

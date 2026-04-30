@@ -98,7 +98,7 @@ export function WikiArticleReader({
 
           {/* Aliases as subtitle */}
           {note.aliases && note.aliases.length > 0 && (
-            <p className="text-note text-muted-foreground/50 mb-6">
+            <p className="text-note text-muted-foreground/70 mb-6">
               {note.aliases.join(" \u00b7 ")}
             </p>
           )}

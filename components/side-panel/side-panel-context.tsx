@@ -144,7 +144,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
 
   if (!note) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground px-4">
-      <PhInfo size={24} weight="light" className="text-muted-foreground/40" />
+      <PhInfo size={24} weight="light" className="text-muted-foreground/70" />
       <p className="text-note text-center">Select a note to see details</p>
     </div>
   )
@@ -457,7 +457,7 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
         {outline.items.length > 0 ? (
           <div className="space-y-0.5">
             {outline.source === "toc" && (
-              <div className="mb-1.5 text-2xs uppercase tracking-wider text-muted-foreground/40">
+              <div className="mb-1.5 text-2xs uppercase tracking-wider text-muted-foreground/70">
                 From TOC block
               </div>
             )}
@@ -474,11 +474,11 @@ export function SidePanelContext({ noteId: propNoteId }: { noteId?: string | nul
                 }}
               >
                 {item.source === "heading" ? (
-                  <span className="shrink-0 text-2xs font-mono text-muted-foreground/50 w-5">
+                  <span className="shrink-0 text-2xs font-mono text-muted-foreground/70 w-5">
                     H{item.level}
                   </span>
                 ) : (
-                  <span className="shrink-0 text-muted-foreground/50">→</span>
+                  <span className="shrink-0 text-muted-foreground/70">→</span>
                 )}
                 <span className="truncate">{item.label}</span>
               </button>

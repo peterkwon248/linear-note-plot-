@@ -88,7 +88,7 @@ export function WikiFloatingActionBar({
         >
           <Lightning size={14} weight="fill" className="text-accent" />
           {count} selected
-          <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/50" />
+          <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/70" />
         </button>
 
         <Divider />

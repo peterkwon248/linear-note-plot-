@@ -384,11 +384,11 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
                     className="group flex items-start gap-2 rounded-md px-2 py-0.5 hover:bg-hover-bg transition-colors cursor-pointer"
                     onClick={() => editable && openEditModal(ref.id)}
                   >
-                    <span className="shrink-0 text-muted-foreground/40 pt-0.5">•</span>
+                    <span className="shrink-0 text-muted-foreground/70 pt-0.5">•</span>
                     <span className="flex-1 text-foreground/70">
                       <span className="font-medium">{ref.title}</span>
                       {ref.content && ref.content !== ref.title && (
-                        <span className="text-muted-foreground/50"> — {ref.content.length > 80 ? ref.content.slice(0, 80) + "…" : ref.content}</span>
+                        <span className="text-muted-foreground/70"> — {ref.content.length > 80 ? ref.content.slice(0, 80) + "…" : ref.content}</span>
                       )}
                       {url && (
                         <>
@@ -408,7 +408,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
                     {editable && (
                       <button
                         onClick={(e) => { e.stopPropagation(); removeArticleReference(article.id, ref.id) }}
-                        className="shrink-0 opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground/40 hover:text-destructive transition-all"
+                        className="shrink-0 opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground/70 hover:text-destructive transition-all"
                         title="Remove from this article"
                       >
                         ×
@@ -423,7 +423,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
           {editable && (
             <button
               onClick={openModal}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/50 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-2xs text-muted-foreground/70 hover:text-muted-foreground hover:bg-hover-bg transition-colors"
             >
               + Add Reference
             </button>
@@ -451,7 +451,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
                       if (e.key === "Escape") closeModal()
                     }}
                     placeholder="Search existing references..."
-                    className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                    className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
                   />
                 </div>
                 <div className="max-h-52 overflow-y-auto px-2 pb-2">
@@ -471,7 +471,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
                     )
                   })}
                   {filteredRefs.length === 0 && (
-                    <p className="px-3 py-3 text-2xs text-muted-foreground/40 text-center">
+                    <p className="px-3 py-3 text-2xs text-muted-foreground/70 text-center">
                       {search.trim() ? "No matching references" : "No references in Library"}
                     </p>
                   )}
@@ -509,7 +509,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
                         if (e.key === "Escape") closeModal()
                       }}
                       placeholder="Reference title..."
-                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
                     />
                   </div>
                   <div>
@@ -519,7 +519,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
                       value={newUrl}
                       onChange={(e) => setNewUrl(e.target.value)}
                       placeholder="https://..."
-                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
                     />
                   </div>
                   <div>
@@ -529,7 +529,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
                       onChange={(e) => setNewContent(e.target.value)}
                       placeholder="Brief description..."
                       rows={2}
-                      className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent resize-none"
+                      className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent resize-none"
                     />
                   </div>
                   <div>
@@ -539,7 +539,7 @@ export function WikiReferencesSection({ article, editable = false }: WikiReferen
                       value={newImageUrl}
                       onChange={(e) => setNewImageUrl(e.target.value)}
                       placeholder="https://example.com/image.png"
-                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-accent"
+                      className="w-full h-8 rounded-md border border-border bg-secondary/50 px-3 text-note text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent"
                     />
                     {newImageUrl.trim() && (
                       <div className="mt-1.5 rounded-md overflow-hidden border border-border/40 bg-secondary/30 inline-block max-w-full">

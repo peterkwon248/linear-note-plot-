@@ -103,7 +103,7 @@ export function HomeView() {
                 {insights.featured.preview || "No preview available"}
               </p>
             </div>
-            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-accent" size={16} weight="regular" />
+            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-accent" size={16} weight="regular" />
           </button>
         )}
 

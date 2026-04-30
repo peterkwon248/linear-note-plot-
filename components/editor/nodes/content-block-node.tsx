@@ -43,7 +43,7 @@ function ContentBlockView({ node, updateAttributes, editor }: NodeViewProps) {
           data-drag-handle
         >
           <div
-            className="flex items-center justify-center w-5 h-5 rounded cursor-grab text-muted-foreground/50 hover:text-foreground hover:bg-hover-bg active:cursor-grabbing"
+            className="flex items-center justify-center w-5 h-5 rounded cursor-grab text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg active:cursor-grabbing"
             title="Drag group"
           >
             <DotsSixVertical size={14} />
@@ -64,7 +64,7 @@ function ContentBlockView({ node, updateAttributes, editor }: NodeViewProps) {
             <button
               type="button"
               onClick={() => updateAttributes({ width: null, height: null })}
-              className="flex items-center justify-center w-5 h-5 rounded text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+              className="flex items-center justify-center w-5 h-5 rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Reset size"
             >
               <ArrowsIn size={10} />
@@ -73,7 +73,7 @@ function ContentBlockView({ node, updateAttributes, editor }: NodeViewProps) {
           <button
             type="button"
             onClick={unwrap}
-            className="flex items-center justify-center w-5 h-5 rounded text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+            className="flex items-center justify-center w-5 h-5 rounded text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
             title="Ungroup"
           >
             <PhX size={10} />

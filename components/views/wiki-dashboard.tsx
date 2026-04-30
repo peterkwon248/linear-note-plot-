@@ -181,7 +181,7 @@ export function WikiDashboard({
                 {(featured.categoryIds?.length ?? 0) > 0 && ` · ${featured.categoryIds!.length} categories`}
               </p>
             </div>
-            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-accent" size={16} weight="regular" />
+            <ArrowRight className="mt-1 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-accent" size={16} weight="regular" />
           </button>
         )}
 

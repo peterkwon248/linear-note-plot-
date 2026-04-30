@@ -378,7 +378,7 @@ function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
               type="button"
               onClick={removeColumn}
               disabled={columnCount <= 1}
-              className="rounded p-0.5 text-muted-foreground/40 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="rounded p-0.5 text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               title="Remove column"
             >
               <PhMinus size={12} />
@@ -387,7 +387,7 @@ function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
               type="button"
               onClick={addColumn}
               disabled={columnCount >= 4}
-              className="rounded p-0.5 text-muted-foreground/40 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="rounded p-0.5 text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               title="Add column"
             >
               <PhPlus size={12} />
@@ -396,7 +396,7 @@ function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
               <button
                 type="button"
                 onClick={() => updateAttributes({ width: null, height: null })}
-                className="rounded p-0.5 text-muted-foreground/40 hover:text-foreground hover:bg-hover-bg transition-colors"
+                className="rounded p-0.5 text-muted-foreground/70 hover:text-foreground hover:bg-hover-bg transition-colors"
                 title="Reset size"
               >
                 <ArrowsIn size={12} />
@@ -405,7 +405,7 @@ function ColumnsNodeView({ node, editor, updateAttributes }: NodeViewProps) {
             <button
               type="button"
               onClick={removeColumns}
-              className="rounded p-0.5 text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg transition-colors"
+              className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors"
               title="Remove columns layout"
             >
               <PhX size={12} />

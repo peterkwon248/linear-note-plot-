@@ -172,7 +172,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
         )}
         <button
           onClick={toggleCollapsed}
-          className="p-0.5 text-muted-foreground/40 hover:text-muted-foreground transition-colors duration-100"
+          className="p-0.5 text-muted-foreground/70 hover:text-muted-foreground transition-colors duration-100"
         >
           {collapsed
             ? <CaretRight size={14} weight="regular" />
@@ -309,7 +309,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                   >
                     <ArrowSquareOut size={14} weight="regular" />
                     <span className="flex-1 text-left">Move to article</span>
-                    <CaretRight size={10} weight="regular" className="text-muted-foreground/40" />
+                    <CaretRight size={10} weight="regular" className="text-muted-foreground/70" />
                   </button>
                   {moveSubmenuOpen && (
                     <div className="absolute left-full top-0 ml-1 w-48 rounded-lg border border-border-subtle bg-surface-overlay shadow-lg py-1 z-10">
@@ -323,7 +323,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
                           }}
                           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
                         >
-                          <BookOpen size={12} weight="regular" className="shrink-0 text-muted-foreground/50" />
+                          <BookOpen size={12} weight="regular" className="shrink-0 text-muted-foreground/70" />
                           <span className="truncate">{a.title}</span>
                         </button>
                       ))}
@@ -349,7 +349,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
               {/* Font size options */}
               <div className="my-1 h-px bg-border/40" />
               <div className="px-2.5 py-1.5">
-                <span className="text-2xs text-muted-foreground/50">Size</span>
+                <span className="text-2xs text-muted-foreground/70">Size</span>
                 <div className="flex items-center gap-1 mt-1">
                   {[
                     { label: "S", value: 0.85 },
@@ -391,7 +391,7 @@ function SectionBlock({ block, editable, sectionNumber, onUpdate, onDelete, drag
 
       </div>
       {collapsed && (
-        <p className="ml-7 mt-0.5 text-2xs text-muted-foreground/30 italic">Section collapsed</p>
+        <p className="ml-7 mt-0.5 text-2xs text-muted-foreground/60 italic">Section collapsed</p>
       )}
     </div>
   )
@@ -520,7 +520,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
             </PopoverTrigger>
           <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
             <div className="px-2.5 py-1.5">
-              <span className="text-2xs text-muted-foreground/50">Size</span>
+              <span className="text-2xs text-muted-foreground/70">Size</span>
               <div className="flex items-center gap-1 mt-1">
                 {[
                   { label: "S", value: 0.85 },
@@ -594,7 +594,7 @@ function TextBlock({ block, editable, onUpdate, onDelete, dragHandleProps, artic
             <ReadOnlyBlock content={initialContent} footnoteStartOffset={footnoteStartOffset} articleId={articleId} />
           ) : (
             <div className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground/85 whitespace-pre-wrap">
-              {content || <span className="text-muted-foreground/30 italic">Write something...</span>}
+              {content || <span className="text-muted-foreground/60 italic">Write something...</span>}
             </div>
           )}
         </div>
@@ -822,7 +822,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
     return (
       <div className="rounded-lg border border-accent/30 bg-card/50 overflow-hidden">
         <div className="flex items-center gap-2 border-b border-border-subtle px-3 py-2">
-          <MagnifyingGlass className="text-muted-foreground/50 shrink-0" size={14} weight="regular" />
+          <MagnifyingGlass className="text-muted-foreground/70 shrink-0" size={14} weight="regular" />
           <input
             ref={inputRef}
             autoFocus
@@ -830,18 +830,18 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Escape") setPicking(false) }}
             placeholder="MagnifyingGlass notes to embed..."
-            className="flex-1 bg-transparent text-note outline-none placeholder:text-muted-foreground/30"
+            className="flex-1 bg-transparent text-note outline-none placeholder:text-muted-foreground/60"
           />
           <button
             onClick={() => setPicking(false)}
-            className="text-2xs text-muted-foreground/40 hover:text-muted-foreground"
+            className="text-2xs text-muted-foreground/70 hover:text-muted-foreground"
           >
             Cancel
           </button>
         </div>
         <div className="max-h-48 overflow-y-auto py-1">
           {filteredNotes.length === 0 ? (
-            <p className="px-3 py-3 text-center text-2xs text-muted-foreground/40">No notes found</p>
+            <p className="px-3 py-3 text-center text-2xs text-muted-foreground/70">No notes found</p>
           ) : (
             filteredNotes.map((n) => (
               <button
@@ -849,9 +849,9 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
                 onClick={() => handlePickNote(n.id)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-note hover:bg-hover-bg transition-colors duration-100"
               >
-                <FileText className="shrink-0 text-muted-foreground/50" size={14} weight="regular" />
+                <FileText className="shrink-0 text-muted-foreground/70" size={14} weight="regular" />
                 <span className="truncate text-foreground/80">{n.title || "Untitled"}</span>
-                <span className="ml-auto shrink-0 text-2xs text-muted-foreground/30 capitalize">{n.status}</span>
+                <span className="ml-auto shrink-0 text-2xs text-muted-foreground/60 capitalize">{n.status}</span>
               </button>
             ))
           )}
@@ -887,13 +887,13 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
         {editable ? (
           <button
             onClick={() => setPicking(true)}
-            className="flex items-center gap-2 text-note text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            className="flex items-center gap-2 text-note text-muted-foreground/70 hover:text-muted-foreground transition-colors"
           >
             <PhPlus size={14} weight="regular" />
             Select a note to embed
           </button>
         ) : (
-          <p className="text-note text-muted-foreground/40 italic">Note not found</p>
+          <p className="text-note text-muted-foreground/70 italic">Note not found</p>
         )}
       </div>
     )
@@ -974,7 +974,7 @@ function NoteRefBlock({ block, editable, onUpdate, onDelete, dragHandleProps, ar
         ) : noteBodyText ? (
           <div className="whitespace-pre-wrap">{noteBodyText}</div>
         ) : (
-          <span className="text-muted-foreground/30 italic">Empty note</span>
+          <span className="text-muted-foreground/60 italic">Empty note</span>
         )}
       </div>
     </div>
@@ -1044,13 +1044,13 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
         {editable ? (
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex h-28 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-note text-muted-foreground/40 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
+            className="flex h-28 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-note text-muted-foreground/70 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
           >
             <UploadSimple size={16} weight="regular" />
             UploadSimple image
           </button>
         ) : (
-          <div className="flex h-28 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/40">
+          <div className="flex h-28 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/70">
             <PhImage className="mr-2" size={20} weight="regular" />
             No image
           </div>
@@ -1088,7 +1088,7 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
       )}
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelected} style={{ display: "none" }} />
       {loading ? (
-        <div className="flex h-32 items-center justify-center rounded-lg bg-secondary/30 text-2xs text-muted-foreground/40">
+        <div className="flex h-32 items-center justify-center rounded-lg bg-secondary/30 text-2xs text-muted-foreground/70">
           Loading image...
         </div>
       ) : url ? (
@@ -1185,13 +1185,13 @@ function ImageBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
             )}
           </div>
           {block.caption && (
-            <figcaption className="mt-1.5 text-center text-2xs text-muted-foreground/50">
+            <figcaption className="mt-1.5 text-center text-2xs text-muted-foreground/70">
               {block.caption}
             </figcaption>
           )}
         </figure>
       ) : (
-        <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/40">
+        <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/70">
           <PhImage className="mr-2" size={20} weight="regular" />
           Image not found
         </div>
@@ -1239,7 +1239,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
           onChange={(e) => setEditUrl(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
           placeholder="https://..."
-          className="w-full bg-transparent outline-none border-b border-accent/20 pb-1 text-note text-foreground/85 placeholder:text-muted-foreground/30"
+          className="w-full bg-transparent outline-none border-b border-accent/20 pb-1 text-note text-foreground/85 placeholder:text-muted-foreground/60"
         />
         <input
           value={editTitle}
@@ -1247,7 +1247,7 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
           onKeyDown={(e) => { if (e.key === "Enter") handleFinishEdit(); if (e.key === "Escape") { setEditing(false) } }}
           onBlur={handleFinishEdit}
           placeholder="Label (optional)"
-          className="w-full bg-transparent outline-none border-b border-accent/10 pb-1 text-2xs text-muted-foreground/60 placeholder:text-muted-foreground/30"
+          className="w-full bg-transparent outline-none border-b border-accent/10 pb-1 text-2xs text-muted-foreground/60 placeholder:text-muted-foreground/60"
         />
       </div>
     )
@@ -1281,13 +1281,13 @@ function UrlBlock({ block, editable, onUpdate, onDelete, dragHandleProps, articl
         {editable ? (
           <button
             onClick={handleStartEdit}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-note text-muted-foreground/40 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-note text-muted-foreground/70 hover:border-accent/30 hover:text-muted-foreground transition-colors duration-100"
           >
             <PhLink size={16} weight="regular" />
             Add URL
           </button>
         ) : (
-          <div className="flex h-14 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/40">
+          <div className="flex h-14 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-secondary/10 text-2xs text-muted-foreground/70">
             <PhLink className="mr-2" size={16} weight="regular" />
             No URL
           </div>
@@ -1433,7 +1433,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
           <PopoverContent align="end" className="w-44 p-1" onOpenAutoFocus={(e) => e.preventDefault()} style={{ fontSize: '13px' }}>
             {/* Table position */}
             <div className="px-2.5 py-1.5">
-              <span className="text-2xs text-muted-foreground/50">Position</span>
+              <span className="text-2xs text-muted-foreground/70">Position</span>
               <div className="flex items-center gap-1 mt-1">
                 {([
                   { label: "←", value: "left" as const },
@@ -1583,7 +1583,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
                     })
                   }}
                 >
-                  <PhPlus size={12} weight="regular" className="mx-auto text-muted-foreground/30" />
+                  <PhPlus size={12} weight="regular" className="mx-auto text-muted-foreground/60" />
                 </th>
               )}
             </tr>
@@ -1681,7 +1681,7 @@ function TableBlock({ block, editable, onUpdate, onDelete, dragHandleProps, arti
             onClick={() => {
               onUpdate?.({ tableRows: [...rows, new Array(headers.length).fill("")] })
             }}
-            className="mt-1 flex w-full items-center justify-center gap-1 rounded-b-lg py-1.5 text-2xs text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-white/[0.03] transition-colors"
+            className="mt-1 flex w-full items-center justify-center gap-1 rounded-b-lg py-1.5 text-2xs text-muted-foreground/60 hover:text-muted-foreground/60 hover:bg-white/[0.03] transition-colors"
           >
             <PhPlus size={10} weight="regular" />
             Add row
@@ -1736,7 +1736,7 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
       <div className="absolute inset-x-0 top-1/2 h-px bg-border/0 group-hover/add:bg-border/30 transition-colors duration-150" />
       <button
         onClick={() => setOpen(!open)}
-        className="relative z-10 flex items-center gap-1 rounded-md bg-background px-2 py-0.5 text-2xs text-muted-foreground/0 group-hover/add:text-muted-foreground/40 hover:!text-muted-foreground transition-all duration-150"
+        className="relative z-10 flex items-center gap-1 rounded-md bg-background px-2 py-0.5 text-2xs text-muted-foreground/0 group-hover/add:text-muted-foreground/70 hover:!text-muted-foreground transition-all duration-150"
       >
         <PhPlus size={12} weight="regular" />
         Add block
@@ -1753,11 +1753,11 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
                 className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
               >
                 <span className="text-note font-medium text-foreground/80">{label}</span>
-                <span className="text-2xs text-muted-foreground/30">{desc}</span>
+                <span className="text-2xs text-muted-foreground/60">{desc}</span>
               </button>
             ))}
             <div className="my-1 border-t border-white/[0.06]" />
-            <div className="px-3 py-1 text-2xs text-muted-foreground/30">Content</div>
+            <div className="px-3 py-1 text-2xs text-muted-foreground/60">Content</div>
             {contentItems.map(({ type, label, desc }) => (
               <button
                 key={type}
@@ -1765,11 +1765,11 @@ export function AddBlockButton({ onAdd, nearestSectionLevel }: {
                 className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-hover-bg transition-colors duration-100"
               >
                 <span className="text-note font-medium text-foreground/80">{label}</span>
-                <span className="text-2xs text-muted-foreground/30">{desc}</span>
+                <span className="text-2xs text-muted-foreground/60">{desc}</span>
               </button>
             ))}
             <div className="my-1 border-t border-white/[0.06]" />
-            <div className="px-3 py-1 text-2xs text-muted-foreground/20 italic">Use / in text for more</div>
+            <div className="px-3 py-1 text-2xs text-muted-foreground/50 italic">Use / in text for more</div>
           </div>
         </>
       )}

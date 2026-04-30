@@ -123,7 +123,7 @@ export function WikiInsightsChart({ notes, wikiArticles }: WikiInsightsChartProp
               )}
             >
               {f.label}
-              <span className="ml-1 tabular-nums text-muted-foreground/40">
+              <span className="ml-1 tabular-nums text-muted-foreground/70">
                 {counts[f.value]}
               </span>
             </button>

@@ -261,7 +261,7 @@ export function BannerBookmarkButton({
           ? "text-accent bg-hover-bg"
           : active
             ? "text-foreground hover:bg-hover-bg"
-            : "text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
+            : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
       )}
     >
       <BookmarkSimple size={13} />
@@ -316,7 +316,7 @@ function BannerActionCluster({
             "rounded p-1 transition-colors",
             settingsActive
               ? "text-foreground bg-hover-bg"
-              : "text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
+              : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
           )}
           title="Banner settings"
         >
@@ -359,7 +359,7 @@ function BannerActionCluster({
             "rounded p-1 transition-colors",
             settingsActive
               ? "text-foreground hover:bg-hover-bg"
-              : "text-muted-foreground/30 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
+              : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/banner:opacity-100",
           )}
           title="Remove banner"
         >
@@ -730,13 +730,13 @@ function BannerNodeView({ node, updateAttributes, deleteNode, editor }: NodeView
                 onChange={(e) => updateTitle(e.target.value)}
                 placeholder="Banner title"
                 className={cn(
-                  "w-full bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/30",
+                  "w-full bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/60",
                   sizeStyles.titleClass,
                 )}
               />
             ) : (
               <div className={cn("text-foreground", sizeStyles.titleClass)}>
-                {title || <span className="text-muted-foreground/30">Banner title</span>}
+                {title || <span className="text-muted-foreground/60">Banner title</span>}
               </div>
             )}
             {/* Subtitle */}
@@ -747,7 +747,7 @@ function BannerNodeView({ node, updateAttributes, deleteNode, editor }: NodeView
                 onChange={(e) => updateSubtitle(e.target.value)}
                 placeholder="Subtitle (optional)"
                 className={cn(
-                  "w-full bg-transparent border-none outline-none text-muted-foreground placeholder:text-muted-foreground/30",
+                  "w-full bg-transparent border-none outline-none text-muted-foreground placeholder:text-muted-foreground/60",
                   sizeStyles.subtitleClass,
                 )}
               />

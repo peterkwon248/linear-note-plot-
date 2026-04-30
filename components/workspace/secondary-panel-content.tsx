@@ -168,7 +168,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
               })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <span className="text-muted-foreground/40 mx-0.5">&gt;</span>
+          <span className="text-muted-foreground/70 mx-0.5">&gt;</span>
           <span className="min-w-0 truncate text-note font-medium text-foreground">
             {article?.title || "Wiki Article"}
           </span>
@@ -179,7 +179,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
             <Popover>
               <PopoverTrigger asChild>
                 <button
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground transition-all"
                   title="Font size"
                 >
                   <TextAa size={18} weight="regular" />
@@ -215,7 +215,7 @@ function SecondaryWikiArticle({ articleId }: { articleId: string }) {
           {hasSections && (
             <button
               onClick={() => setCollapseAllCmd(allSectionsCollapsed ? "expand" : "collapse")}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/50 hover:bg-hover-bg hover:text-muted-foreground transition-all"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground transition-all"
               title={allSectionsCollapsed ? "Expand all" : "Collapse all"}
             >
               <svg width={17} height={17} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

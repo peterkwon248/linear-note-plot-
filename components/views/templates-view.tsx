@@ -378,7 +378,7 @@ function TemplateEditor({
           value={name}
           onChange={(e) => handleName(e.target.value)}
           placeholder="Template name"
-          className="w-full bg-transparent text-xl font-semibold text-foreground placeholder:text-muted-foreground/50 focus:outline-none border-b border-transparent focus:border-border pb-1 transition-colors"
+          className="w-full bg-transparent text-xl font-semibold text-foreground placeholder:text-muted-foreground/70 focus:outline-none border-b border-transparent focus:border-border pb-1 transition-colors"
         />
 
         {/* Description */}
@@ -387,7 +387,7 @@ function TemplateEditor({
           value={description}
           onChange={(e) => handleDescription(e.target.value)}
           placeholder="Brief description"
-          className="w-full bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/50 focus:outline-none border-b border-transparent focus:border-border pb-1 transition-colors"
+          className="w-full bg-transparent text-note text-muted-foreground placeholder:text-muted-foreground/70 focus:outline-none border-b border-transparent focus:border-border pb-1 transition-colors"
         />
 
         {/* Icon + Color picker row */}
@@ -592,7 +592,7 @@ function TemplateCard({
                   {tmpl.content.split("\n").filter(Boolean).slice(0, 4).map((line, i) => (
                     <p key={i} className={cn(
                       line.startsWith("#") && "font-semibold text-muted-foreground/90",
-                      (line.startsWith("- ") || line.startsWith("* ")) && "pl-2 before:content-['·'] before:mr-1 before:text-muted-foreground/40",
+                      (line.startsWith("- ") || line.startsWith("* ")) && "pl-2 before:content-['·'] before:mr-1 before:text-muted-foreground/70",
                       (line.match(/^\d+\.\s/)) && "pl-2",
                     )}>
                       {line.replace(/^#+\s*/, "")}
@@ -600,7 +600,7 @@ function TemplateCard({
                   ))}
                 </div>
               ) : (
-                <p className="text-2xs text-muted-foreground/40 italic">Empty template</p>
+                <p className="text-2xs text-muted-foreground/70 italic">Empty template</p>
               )}
             </div>
 
@@ -842,7 +842,7 @@ export function TemplatesView() {
         <div className="flex-1 overflow-y-auto">
           {templates.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 gap-2 px-4">
-              <Layout className="text-muted-foreground/30" size={32} weight="regular" />
+              <Layout className="text-muted-foreground/60" size={32} weight="regular" />
               <span className="text-2xs text-muted-foreground text-center">No templates yet</span>
               <button
                 onClick={() => setShowCreateDialog(true)}
@@ -907,7 +907,7 @@ export function TemplatesView() {
         ) : (
           // Fallback: no template selected in focus mode
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
-            <Layout className="text-muted-foreground/30" size={48} weight="regular" />
+            <Layout className="text-muted-foreground/60" size={48} weight="regular" />
             <p className="text-note font-medium text-muted-foreground">No template selected</p>
             <button
               onClick={() => setViewMode("list-editor")}
@@ -962,7 +962,7 @@ export function TemplatesView() {
         <div className="flex-1 overflow-y-auto py-1">
           {templates.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 gap-2 px-4">
-              <Layout className="text-muted-foreground/30" size={32} weight="regular" />
+              <Layout className="text-muted-foreground/60" size={32} weight="regular" />
               <span className="text-2xs text-muted-foreground text-center">No templates yet</span>
               <button
                 onClick={() => setShowCreateDialog(true)}
@@ -1052,7 +1052,7 @@ export function TemplatesView() {
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
-            <Layout className="text-muted-foreground/30" size={48} weight="regular" />
+            <Layout className="text-muted-foreground/60" size={48} weight="regular" />
             <p className="text-note font-medium text-muted-foreground">Select a template to edit</p>
             <p className="text-2xs text-muted-foreground/60 max-w-xs">
               Choose a template from the list on the left, or create a new one to get started.

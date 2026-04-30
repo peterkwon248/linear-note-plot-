@@ -817,7 +817,7 @@ function GroupHeaderEditRow({
           value={entry.key}
           onChange={(e) => onKeyChange(e.target.value)}
           placeholder="Group name"
-          className="flex-1 bg-transparent text-[0.75em] font-semibold uppercase tracking-wider text-foreground/90 outline-none placeholder:text-muted-foreground/40"
+          className="flex-1 bg-transparent text-[0.75em] font-semibold uppercase tracking-wider text-foreground/90 outline-none placeholder:text-muted-foreground/70"
         />
         <button
           type="button"

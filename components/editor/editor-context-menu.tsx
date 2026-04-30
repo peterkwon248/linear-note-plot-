@@ -41,7 +41,7 @@ const separatorCls = "my-1 h-px bg-border"
 
 function Shortcut({ keys }: { keys: string }) {
   return (
-    <span className="ml-auto text-2xs text-muted-foreground/50 pl-4">{keys}</span>
+    <span className="ml-auto text-2xs text-muted-foreground/70 pl-4">{keys}</span>
   )
 }
 

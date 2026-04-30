@@ -411,7 +411,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
             </button>
             {showBacklinks && (
               <div className="absolute left-4 top-full mt-1 w-64 rounded-md border border-border-subtle bg-surface-overlay py-1 shadow-lg z-20">
-                <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
                   Referenced by
                 </p>
                 {backlinks.slice(0, 10).map((n) => (
@@ -427,7 +427,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                     className="flex w-full items-center gap-2 px-3 py-1.5 text-2xs text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
                   >
                     <span className="truncate">{n.title || "Untitled"}</span>
-                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/40 capitalize">{n.status}</span>
+                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/70 capitalize">{n.status}</span>
                   </button>
                 ))}
               </div>
@@ -449,12 +449,12 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                 </button>
                 {showBlocks && (
                   <div className="absolute left-4 top-full mt-1 w-56 rounded-md border border-border-subtle bg-surface-overlay py-1 shadow-lg z-20 max-h-48 overflow-y-auto">
-                    <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                    <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
                       Blocks
                     </p>
                     {wikiArticle.blocks.map((b) => (
                       <div key={b.id} className="flex items-center gap-2 px-3 py-1 text-2xs text-muted-foreground">
-                        <span className="shrink-0 text-[10px] text-muted-foreground/40 uppercase w-12">{b.type}</span>
+                        <span className="shrink-0 text-[10px] text-muted-foreground/70 uppercase w-12">{b.type}</span>
                         <span className="truncate">{b.title || b.content?.slice(0, 40) || "—"}</span>
                       </div>
                     ))}
@@ -475,7 +475,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
                 </button>
                 {showCategories && (
                   <div className="absolute left-4 top-full mt-1 w-auto min-w-48 max-w-72 rounded-md border border-border-subtle bg-surface-overlay py-1 shadow-lg z-20">
-                    <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                    <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
                       Categories
                     </p>
                     {wikiArticle.categoryIds!.map((catId) => {
@@ -516,7 +516,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         </>
       ) : (
         <div className="px-4 pb-3">
-          <p className="text-2xs text-muted-foreground/50 italic">Empty note</p>
+          <p className="text-2xs text-muted-foreground/70 italic">Empty note</p>
         </div>
       )}
       {/* Floating Quote button removed — Quote is now in action bar with select-all-first UX */}
@@ -737,7 +737,7 @@ function PreviewCard({ noteId, noteType, x, y }: PreviewState) {
         onPointerMove={onResizePointerMove}
         onPointerUp={onResizePointerUp}
       >
-        <svg width="10" height="10" viewBox="0 0 10 10" className="text-muted-foreground/20 group-hover:text-muted-foreground/50 transition-colors">
+        <svg width="10" height="10" viewBox="0 0 10 10" className="text-muted-foreground/50 group-hover:text-muted-foreground/70 transition-colors">
           <path d="M9 1L1 9M9 5L5 9M9 9L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
         </svg>
       </div>
