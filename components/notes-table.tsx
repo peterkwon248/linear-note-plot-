@@ -113,6 +113,8 @@ const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; s
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
   { id: "status", label: "Status", width: "w-[120px] shrink-0", align: "text-right", sortField: "status", minWidth: 400 },
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
+  { id: "parent", label: "Parent", width: "w-[100px] shrink-0", align: "text-left", sortField: "title", minWidth: 700 },
+  { id: "children", label: "Children", width: "w-[56px] shrink-0", align: "text-center", sortField: "title", minWidth: 700 },
   { id: "links", label: "Links", width: "w-[56px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
   { id: "reads", label: "Reads", width: "w-[56px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
   { id: "wordCount", label: "Words", width: "w-[56px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
@@ -711,11 +713,33 @@ export function NotesTable({
     })
   }, [visibleCols, containerWidth, viewState.groupBy])
 
+  // ── Parent / Children lookup (only computed when columns visible) ──
+  const showParentCol = effectiveVisibleCols.includes("parent")
+  const showChildrenCol = effectiveVisibleCols.includes("children")
+  const notesById = useMemo(() => {
+    if (!showParentCol) return null
+    const m = new Map<string, Note>()
+    for (const n of notes) m.set(n.id, n)
+    return m
+  }, [notes, showParentCol])
+  const childrenCounts = useMemo(() => {
+    if (!showChildrenCol) return null
+    const m = new Map<string, number>()
+    for (const n of notes) {
+      if (n.parentNoteId && !n.trashed) {
+        m.set(n.parentNoteId, (m.get(n.parentNoteId) ?? 0) + 1)
+      }
+    }
+    return m
+  }, [notes, showChildrenCol])
+
   // ── Grid template for table-mode columns ──
   const gridTemplate = useMemo(() => {
     const cols = ["32px", "1fr"] // checkbox + name (always)
     if (effectiveVisibleCols.includes("status")) cols.push("120px")
     if (effectiveVisibleCols.includes("folder")) cols.push("80px")
+    if (effectiveVisibleCols.includes("parent")) cols.push("100px")
+    if (effectiveVisibleCols.includes("children")) cols.push("56px")
     if (effectiveVisibleCols.includes("links")) cols.push("56px")
     if (effectiveVisibleCols.includes("reads")) cols.push("56px")
     if (effectiveVisibleCols.includes("wordCount")) cols.push("56px")
@@ -1230,6 +1254,8 @@ export function NotesTable({
                               onLinkWith={() => setLinkPickerOpen(true, item.note.id)}
                               showCardPreview={false}
                               groupBy={viewState.groupBy}
+                              parentTitle={item.note.parentNoteId ? notesById?.get(item.note.parentNoteId)?.title : undefined}
+                              childrenCount={childrenCounts?.get(item.note.id) ?? 0}
                             />
                           </div>
                         )}
@@ -1345,6 +1371,8 @@ interface NoteRowProps {
   onLinkWith: () => void
   showCardPreview?: boolean
   groupBy?: string
+  parentTitle?: string
+  childrenCount?: number
 }
 
 function SourceIcon({ source }: { source: NoteSource }) {
@@ -1426,6 +1454,8 @@ function NoteRowInner({
   onLinkWith,
   showCardPreview,
   groupBy,
+  parentTitle,
+  childrenCount,
 }: NoteRowProps) {
   const visibleCols = visibleColumns
   const labels = usePlotStore((s) => s.labels)
@@ -1529,6 +1559,26 @@ function NoteRowInner({
           })() : (
             <span className="text-note text-muted-foreground">—</span>
           )}
+        </div>
+      )}
+
+      {/* Parent */}
+      {visibleCols.includes("parent") && (
+        <div className="flex items-center px-1 overflow-hidden" title={parentTitle || undefined}>
+          {parentTitle ? (
+            <span className="truncate text-note text-muted-foreground">{parentTitle}</span>
+          ) : (
+            <span className="text-note text-muted-foreground/50">{"—"}</span>
+          )}
+        </div>
+      )}
+
+      {/* Children */}
+      {visibleCols.includes("children") && (
+        <div className="text-center px-1">
+          <span className={`tabular-nums text-note ${(childrenCount ?? 0) === 0 ? "text-muted-foreground/50" : "text-foreground"}`}>
+            {(childrenCount ?? 0) > 0 ? childrenCount : "—"}
+          </span>
         </div>
       )}
 

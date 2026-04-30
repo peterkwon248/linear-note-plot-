@@ -38,24 +38,27 @@ export function pickColor(name: string): string {
 
 export const STATUS_CONFIG: Record<
   NoteStatus,
-  { label: string; color: string; bg: string; icon: React.ReactNode }
+  { label: string; color: string; bg: string; border: string; icon: React.ReactNode }
 > = {
   inbox: {
     label: "Inbox",
     color: "var(--chart-2)",
-    bg: "color-mix(in srgb, var(--chart-2) 12%, transparent)",
-    icon: <CircleDashed size={14} weight="regular" />,
+    bg: "color-mix(in srgb, var(--chart-2) 18%, transparent)",
+    border: "color-mix(in srgb, var(--chart-2) 35%, transparent)",
+    icon: <CircleDashed size={14} weight="bold" />,
   },
   capture: {
     label: "Capture",
     color: "var(--chart-3)",
-    bg: "color-mix(in srgb, var(--chart-3) 12%, transparent)",
+    bg: "color-mix(in srgb, var(--chart-3) 18%, transparent)",
+    border: "color-mix(in srgb, var(--chart-3) 35%, transparent)",
     icon: <CircleHalf size={14} weight="fill" />,
   },
   permanent: {
     label: "Permanent",
     color: "var(--chart-5)",
-    bg: "color-mix(in srgb, var(--chart-5) 12%, transparent)",
+    bg: "color-mix(in srgb, var(--chart-5) 18%, transparent)",
+    border: "color-mix(in srgb, var(--chart-5) 35%, transparent)",
     icon: <CheckCircle size={14} weight="fill" />,
   },
 }
@@ -103,8 +106,8 @@ export function StatusBadge({ status }: { status: NoteStatus }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.capture
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-medium leading-none"
-      style={{ backgroundColor: cfg.bg, color: cfg.color }}
+      className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-medium leading-none"
+      style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
     >
       {cfg.icon}
       {cfg.label}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import { groupByInitial } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
@@ -111,6 +111,8 @@ function ColumnHeaders({
       {isVisible("status") && <span className="w-[72px] shrink-0 px-2">Status</span>}
       {isVisible("tags") && <span className="w-[140px] shrink-0 px-2">Categories</span>}
       {isVisible("aliases") && <span className="w-[140px] shrink-0 px-2">Aliases</span>}
+      {isVisible("parent") && <span className="w-[100px] shrink-0 px-1">Parent</span>}
+      {isVisible("children") && <span className="w-[56px] shrink-0 text-center">Children</span>}
       {isVisible("links") && <span className="w-[60px] shrink-0 text-right">Links</span>}
       {isVisible("reads") && <span className="w-[56px] shrink-0 text-right">Reads</span>}
       <span className="w-[36px] shrink-0" />
@@ -135,6 +137,8 @@ function ArticleTableRow({
   onSelect,
   visibleColumns,
   wikiCategories,
+  wikiArticles,
+  childrenCount,
 }: {
   note: WikiArticle
   backlinkCount: number
@@ -148,12 +152,17 @@ function ArticleTableRow({
   onSelect?: (opts: { multi?: boolean; shift?: boolean; index?: number }) => void
   visibleColumns?: string[]
   wikiCategories?: WikiCategory[]
+  wikiArticles?: WikiArticle[]
+  childrenCount?: number
 }) {
   const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
   const categoryNames = (note.categoryIds ?? [])
     .map((id) => wikiCategories?.find((c) => c.id === id)?.name)
     .filter((n): n is string => typeof n === "string" && n.length > 0)
   const aliases = note.aliases ?? []
+  const parentTitle = note.parentArticleId
+    ? wikiArticles?.find((a) => a.id === note.parentArticleId)?.title
+    : undefined
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
@@ -259,6 +268,23 @@ function ArticleTableRow({
             </>
           )}
         </div>
+      )}
+      {isVisible("parent") && (
+        <div
+          className="w-[100px] shrink-0 flex items-center px-1 overflow-hidden"
+          title={parentTitle || undefined}
+        >
+          {parentTitle ? (
+            <span className="truncate text-2xs text-muted-foreground/80">{parentTitle}</span>
+          ) : (
+            <span className="text-2xs text-muted-foreground/40">{"\u2014"}</span>
+          )}
+        </div>
+      )}
+      {isVisible("children") && (
+        <span className="w-[56px] shrink-0 text-center text-2xs tabular-nums text-muted-foreground/60">
+          {(childrenCount ?? 0) > 0 ? childrenCount : "\u2014"}
+        </span>
       )}
       {isVisible("links") && (
         <span className="w-[60px] shrink-0 text-right text-2xs tabular-nums text-muted-foreground/60">
@@ -436,6 +462,18 @@ export function WikiList({
     redlinks: redLinks.length,
   }
 
+  // Children count map: articleId → number of articles whose parentArticleId === id
+  const childrenCounts = useMemo(() => {
+    const map = new Map<string, number>()
+    if (!wikiArticles) return map
+    for (const a of wikiArticles) {
+      if (a.parentArticleId) {
+        map.set(a.parentArticleId, (map.get(a.parentArticleId) ?? 0) + 1)
+      }
+    }
+    return map
+  }, [wikiArticles])
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── Controls Bar ── */}
@@ -594,6 +632,8 @@ export function WikiList({
                             onSelect={onSelect ? (opts) => onSelect(note.id, { ...opts, index: idx }) : undefined}
                             visibleColumns={visibleColumns}
                             wikiCategories={wikiCategories}
+                            wikiArticles={wikiArticles}
+                            childrenCount={childrenCounts.get(note.id) ?? 0}
                           />
                         </div>
                       )
@@ -634,6 +674,8 @@ export function WikiList({
                   onSelect={onSelect ? (opts) => onSelect(note.id, { ...opts, index: idx }) : undefined}
                   visibleColumns={visibleColumns}
                   wikiCategories={wikiCategories}
+                  wikiArticles={wikiArticles}
+                  childrenCount={childrenCounts.get(note.id) ?? 0}
                 />
               ))}
               {/* Empty state for stubs filter with no stubs */}
