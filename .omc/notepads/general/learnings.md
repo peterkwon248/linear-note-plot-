@@ -143,3 +143,24 @@ function next(depth: number): string {
 - **자동 등재 무한 누적 버그**: `createWikiStub` dedupe 가드 없으면 매 사이클 동일 title 누적. 시드 노트의 [[wiki:Title]] 다수 → 12시간마다 중복 폭발.
 - **WikiArticle vs noteType "wiki" Note**: 별도 entity (wikiArticles slice + notes slice). wiki space는 wikiArticles만 표시. createWikiStub은 notes에 추가. dedupe 양쪽 필요.
 - **MixedQuicklinks sortKey**: `${type-priority}-${pinnedOrder/createdAt}` 복합 키. 종류별 그룹 + 안정 정렬.
+
+## 2026-05-01 라이트모드 가시성 + Linear 필터 패턴
+
+### muted-foreground alpha의 함정
+- `--muted-foreground: #52525b` (라이트) 자체는 진하지만 alpha `/30~/50`은 흰 배경에서 거의 안 보임
+- 시스템적 sed 일괄 변경 가능 (순서 신경): `/50→/70`, `/40→/70`, `/30→/60`, `/25→/50`, `/20→/50`
+- 다크모드는 `--muted-foreground: #a1a1aa`라 alpha 영향 적음
+
+### Tailwind v4 quirks
+- `border-[1.5px]` arbitrary value 미적용 → `style={{ borderWidth: "1.5px" }}` 직접
+- color-mix 활용: `color-mix(in srgb, var(--accent) 18%, transparent)` 라벨 패턴
+
+### Filter chip 4-part 분해
+- `formatFilterChip(rule)` → `{icon, fieldLabel, operatorLabel, valueLabel}` 헬퍼
+- 모든 case 분기 (status/folder/label/tags/source/dates/links/pinned/content/wikiRegistered/title/wikiTier/category)
+- operator: eq → "is", neq → "is not", lt/gt + date → "older than"/"within"
+
+### Ontology 그래프 entity 통합
+- `buildOntologyGraphData`에 entity 추가 시 prefix 사용 (`wiki:{id}`, `tag:{id}`)
+- noteId 충돌 방지 + nodeType 분기 가능
+- WikiArticle을 별도 노드로 추가하면 parent-child + note-ref edges 자연 생성

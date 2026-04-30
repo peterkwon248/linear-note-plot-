@@ -1,5 +1,73 @@
 # Plot Project Memory
 
+## 🚀 2026-04-30 야간 ~ 2026-05-01 새벽 세션 — Linear-style 필터/디자인 종합 개편 + 라이트모드 가시성 일괄 강화 + Ontology 그래프 통합 (PR #229~#232 4건 머지)
+
+**범위**: 디자인/UX 종합 정비. Linear 필터 칩 패턴 + 필터 mismatch 수정 + Notes Index + 라이트모드 가시성 일괄 강화 + Ontology 그래프 WikiArticle 통합
+
+### 완료 PR (4건)
+
+**PR #229** — Notes/Wiki Parent·Children 컬럼 + Hierarchy 4분류 + StatusBadge border
+- 이전 elated-cerf worktree의 작업 정리 commit + push + squash merge
+- Notes 테이블 + Wiki 리스트에 Parent / Children 컬럼 (Display Properties 토글)
+- Wiki Hierarchy 필터 4분류 (Root/Parent/Child/Solo, classifyWikiArticleRole 일관)
+- StatusBadge border 추가 (다크/라이트 양쪽 가시성↑)
+- 신규 ParentIcon / ChildrenIcon
+
+**PR #230** — Linear-style 필터/디자인 종합 개편 (22 files, +425/-178)
+- **필터 칩 4-part Linear 패턴**: `icon + field | op | value | ×`. `formatFilterChip` 헬퍼로 모든 case 분해
+- **Order by chip 3-part**: `key | value+direction | ×`, 톤다운, py-2 균형
+- **필터 시스템 mismatch 2건 수정**:
+  - Pinned: view-configs `yes/no` ↔ filter.ts `true/false` → key 변경 + legacy backward compat
+  - Content: `hasImage`/`hasCode`/`hasTable` 미구현 → 정규식 구현 추가
+- **라벨 테두리 강화** (1.5px borderWidth + color-mix 55%) — 4곳 일관 (note-fields/notes-table/calendar-view/editor-breadcrumb)
+- **Notes Index 토글** (Wiki 패턴 이식) — `groupByInitial` 기반 alphabetical view
+- **Children hover tooltip** — Radix Tooltip로 자식 노트 이름 표시
+- **wikiCategories 중복 제거** — 17 → 10개 (v95 → v96 마이그레이션)
+- **Wiki 아이콘 통일** (BookOpen, 활동바와 일치)
+- **체크박스 색상 통일** (`text-accent-foreground`)
+- **드롭다운 가시성 강화** (QUICK FILTERS accent, 검색창 border, desc full opacity)
+- Detail/Connections/Activity/Bookmarks 사이드 패널 라이트모드 가시성
+
+**PR #231** — 라이트모드 가시성 일괄 강화 (78 files)
+- 시스템적 sed 정비: `text-muted-foreground/20~50 → /50~70`
+  - /20, /25 → /50
+  - /30 → /60
+  - /40, /50 → /70
+- Library Needs Attention banner 강화 (border-2 amber-600/60, 텍스트 amber-600/400 font-medium)
+- Wiki article "Updated 5d ago" + Aliases — `text-muted-foreground` full
+
+**PR #232** — Ontology 그래프 라이트모드 + Wiki Article 노드 통합 + Labels/Library/Calendar (6 files)
+- **Ontology 그래프 라이트모드 텍스트** — 노드 라벨 fill 하드코딩 흰색 → `var(--foreground)`. 엣지 라벨도 `var(--muted-foreground)`
+- **WikiArticle 그래프 노드 통합** (사용자 지적: legacy isWiki 모델 deprecated):
+  - `wiki:{id}` prefix 노드
+  - parent-child hierarchy edges
+  - article → note (note-ref blocks) edges
+- Library Needs Attention border-2 amber-600/60
+- Notes Labels 페이지: 컬럼 헤더 + 체크박스 (Notes 테이블과 통일)
+- Calendar 요일 헤더 `text-foreground`
+
+### 큰 결정 (영구)
+- **필터 칩 4-part Linear 패턴 채택** (옵션 A) — `icon + field | op | value | ×` 모든 케이스
+- **Quicklinks 위치**: Home prominent + 각 영역 사이드바 하단 collapsed (영역별 persist)
+- **Quickfilters/Views 통합**: 시스템 quickFilter (🔒) + 사용자 SavedView (⭐) 한 섹션. 필터 드롭다운에서 Quick Filters 제거
+- **사이드바 Inline Edit Mode**: 8px slide-right + DotsSix 핸들 + 👁 hide/show. 영역별 customization persist
+- **WikiArticle은 그래프 노드로 통합** — legacy `isWiki` (Note에 wiki 분류) 모델 deprecated
+- **체크박스 단일 패턴** — `bg-card border-zinc-400` + `bg-accent + PhCheck text-accent-foreground`. 모든 곳 통일
+
+### 다음 즉시 액션 (다음 세션 후보)
+1. **Library References/Tags/Files 페이지** 가시성 + 디자인 통일 (All Notes 수준)
+2. **Library Filter/Display 디자인** (All Notes 수준)
+3. **Quicklinks 구현** — globalBookmarks anchorType 확장 (folder/savedView/category 추가) + 사이드바 섹션 + Home prominent
+4. **Quickfilters 통합** — view-configs.quickFilters → SavedView로 자동 시드 + `builtin: boolean` 필드
+5. **사이드바 Inline Edit Mode** — DotsSix 핸들 + 드래그 + 👁 hide/show + sidebarCustomization persist (영역별)
+
+### Watch Out
+- Tailwind `border-[1.5px]`은 v4에서 미적용 → `style={{ borderWidth: "1.5px" }}` 직접
+- Store v96 (wikiCategories dedup). 다음은 v97 후보
+- 라이트모드 새 코드 작성 시 `text-muted-foreground/30~50` 사용 자제 — `/60+` 또는 `var(--muted-foreground)` 직접
+
+---
+
 ## 🚀 2026-04-30 오후 세션 — Sprint 1.4 완료 (4 PR 통합) + Wiki Hierarchy filter fix follow-up
 
 **범위**: Sprint 1.4 4 PR 묶음 작업을 단일 commit으로 통합. Parent 위계 활성화 + Wiki 컬럼/차트/보드 뷰
