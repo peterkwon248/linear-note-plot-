@@ -1080,6 +1080,17 @@ export function LinearSidebar() {
                 </span>
                 <span className="truncate text-left flex-1">Categories</span>
               </button>
+              {/* Stickers — cross-entity bundling marker. Sticker entries
+                  reference both notes and wiki articles, so the entry point
+                  belongs in every space, not just Notes. */}
+              <NavLink
+                href="/stickers"
+                icon={<StickerPhosphor size={20} />}
+                label="Stickers"
+                count={stickers.filter((s) => !s.trashed).length}
+                active={isActive("/stickers")}
+                dragContent={{ type: "stickers" }}
+              />
             </div>
 
             {/* Wiki Views */}
@@ -1277,6 +1288,17 @@ export function LinearSidebar() {
                   </>
                 )
               })()}
+              {/* Stickers — Group by Sticker is already the default ontology
+                  grouping option, so a direct entry point here keeps the
+                  mental model consistent. */}
+              <NavLink
+                href="/stickers"
+                icon={<StickerPhosphor size={20} />}
+                label="Stickers"
+                count={stickers.filter((s) => !s.trashed).length}
+                active={isActive("/stickers")}
+                dragContent={{ type: "stickers" }}
+              />
             </div>
 
             {/* Node Types removed in Phase 7 — moved into Display popover */}
@@ -1437,11 +1459,21 @@ export function LinearSidebar() {
                 count={attachments.length > 0 ? attachments.length : undefined}
                 active={isActive("/library/files")}
               />
+              {/* Stickers — cross-entity bundling marker, alongside other
+                  cross-cutting library indices (References / Tags / Files). */}
+              <NavLink
+                href="/stickers"
+                icon={<StickerPhosphor size={20} />}
+                label="Stickers"
+                count={stickers.filter((s) => !s.trashed).length}
+                active={isActive("/stickers")}
+                dragContent={{ type: "stickers" }}
+              />
             </div>
           </>
         )}
 
-        {/* ── Home: minimal sidebar — only Inbox.
+        {/* ── Home: minimal sidebar — Inbox + cross-entity entry points.
             Heavy insights moved to Ontology > Insights (PR 6).
             Home view itself surfaces workflow + nudges. */}
         {activeSpace === "home" && (
@@ -1452,6 +1484,16 @@ export function LinearSidebar() {
               label="Inbox"
               count={inboxCount > 0 ? inboxCount : undefined}
               active={isActive("/inbox")}
+            />
+            {/* Stickers — cross-entity grouping is global by definition,
+                so it earns a top-level Home entry point. */}
+            <NavLink
+              href="/stickers"
+              icon={<StickerPhosphor size={20} />}
+              label="Stickers"
+              count={stickers.filter((s) => !s.trashed).length}
+              active={isActive("/stickers")}
+              dragContent={{ type: "stickers" }}
             />
           </div>
         )}
