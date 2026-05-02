@@ -1,5 +1,144 @@
 # Plot Project Memory
 
+## ⭐ Plot 정체성 (영구 디자인 원칙, 2026-05-03 확정)
+
+> **"Gentle by default, powerful when needed."**
+> 기본만으로 충분, 원할 때 강력. 소란스럽지 않게.
+> 모든 디자인 결정의 척도.
+
+---
+
+## 🚀 2026-05-03 세션 — 대규모 디자인 토론 + Hull 버그 fix
+
+**범위**: 코드 변경 (Hull 버그 fix 3개) + 33개 디자인 결정 (앞으로 작업 방향)
+
+### 코드 변경 (PR #237에 누적, 9 → 11 커밋)
+- 90e18f1: Hull 클릭 안 되는 버그 (pointerEvents)
+- 9cec76a: Hull stuck 버그 (renderTick deps)
+- b65caa3: Hull 우클릭 sticker 메타 액션 (Rename / Change color / Delete)
+
+### 핵심 디자인 결정 (33개 → 큰 그림)
+
+#### A. 4사분면 모델 정립
+```
+                Unordered (collection)    Ordered (sequence)
+Type-strict     Folder                    (의미 약함)
+Type-free       Sticker                   Book ⭐ (신규)
+```
+
+#### B. Folder 변경 (큰 PR)
+- type-strict (Note 폴더 = 노트만, Wiki 폴더 = 위키만)
+- N:M 멤버십 (한 노트 → 여러 폴더)
+
+#### C. Sticker v2 (큰 PR, cross-everything)
+- 모든 entity 수용 (Note + Wiki + Tag + Label + Category + File + Reference)
+- 정참조 모델 (`Sticker.members[]`)
+- Universal Entity Picker UI
+
+#### D. Book entity 신규 (v3급 PR)
+- Activity Bar 7번째 (7개 OK)
+- cross-entity (Note + Wiki 포괄, 단일 Book entity)
+- ordered sequence (chapter 순서가 본질)
+- Manual drag-drop default + Auto-sort 액션
+- 시각화: Hull + Sequence edge + 별도 Reading view
+- Wikilink: `[[Book]]` / `[[Book#Chapter]]`
+
+#### E. Page entity = 폐기 (확정)
+- 제텔카스텐 atomic 위배
+- Book entity로 needs 충족 (atomic 보존 + sequence)
+
+#### F. Sandbox + Save view 통합 (옵션 B)
+- Save view = 보기 + 데이터 staging 함께 영구
+- Sandbox = 그래프만 (노트/위키 즉시 영구)
+- Wikilink = 본문에서만, Relation = 그래프에서
+
+#### G. Relation 저장 = 본문 embed 자동 추가
+- 본문 contentJson에 직접 embed (footer 추가 X)
+- 사용자 첫 번째만 prompt + "기억" 옵션
+- 위키: 자동 "See also" 섹션 + entity-ref WikiBlock 일반화
+
+#### H. Sticker 진입점 = Library만 (정정)
+- 이전 4 space에서 추가 → Library만으로 변경
+- 다른 4 space에서 NavLink 제거 작업 필요
+
+#### I. 사이드 패널 변경
+- Detail/Connections/Activity 모두 영향
+- 각 큰 PR이 자기 부분 처리 (별도 사이드 패널 PR 없음)
+
+#### J. Linear-style entity navigation (의미 A)
+- view 안 노트 간 ↑/↓ 키, 1/N 표시
+- 작은 PR로 즉시 가능
+
+#### K. 마크다운 단축키 (Obsidian 90% 수준)
+- Phase 1: `---` Enter 패턴 + Highlight + Image embed
+- Phase 2: Math + Heading anchor
+- Phase 3: Block reference + Definition list (큰 작업)
+
+### 다음 작업 큐 (재정렬, 우선순위 순)
+
+**🟢 작은 polish PR (즉시)**
+1. `---` Enter 패턴 + Highlight + Image embed (마크다운 Phase 1)
+2. Linear-style entity navigation (↑/↓ 키)
+3. Wiki "Blocks" Display Property
+4. Stickers Library만 진입점 (4 space에서 NavLink revert)
+5. Notes 사이드바 위계 (Notes ▼ Status 그룹)
+
+**🟡 중간 PR**
+6. NoteStatus 리네이밍 (PRD 사전 조사 완료)
+7. 마크다운 Phase 2 (Math + Heading anchor)
+8. Filter chip 3-part 드롭다운
+9. Linear 검색창 패턴
+
+**🔴 큰 데이터 모델 PR (의존성 큼)**
+10. Folder type-strict + N:M
+11. Sticker v2 (cross-everything)
+12. Sandbox + Save view 통합
+13. Entity-ref WikiBlock 일반화
+14. 온톨로지 그래프 노드 확장 (모든 entity)
+
+**🟣 v3급 PR (가장 마지막)**
+15. Book entity (cross-entity, ordered sequence)
+16. Activity Bar 7개 확장
+
+**🎨 디자인 polish (별도)**
+- 컬럼 헤더 아이콘 통일
+- Status 아이콘 시리즈 (Linear 빈/반/꽉)
+- Updated/Created 아이콘 분기
+
+### Technical Learnings (이번 세션)
+
+#### 1. Hull 클릭 안 됨 — `pointer-events: visiblePainted` 함정
+- SVG default `pointer-events="visiblePainted"`는 fillOpacity 0.04~0.10을 "not painted"로 판단
+- 클릭 이벤트가 통과해 SVG background로 빠짐
+- 해결: `style.pointerEvents = "all"` 명시
+
+#### 2. Hull stuck 버그 — useMemo deps 누락
+- `clusterHulls` useMemo deps에 viewport `transform`만 있어서 노드 드래그 시 재계산 안 됨
+- `positionsRef`는 ref라 React 추적 X
+- 해결: `forceRender`의 카운터 (renderTick) 노출 + deps에 추가
+
+#### 3. 자료구조 본질 — Set vs Sequence
+- Sticker = collection (set, 무순서)
+- Book = sequence (list, 순서 있음)
+- 다른 자료구조 → 다른 entity 정당화
+
+#### 4. 종이책 메타포 함정
+- "한 책 = 한 종류 콘텐츠" 종이책 메타포에 갇히면 안 됨
+- 디지털 책은 cross-type 자유 (Notion 페이지 패턴)
+- Plot의 Sticker도 cross-everything → Book도 같은 패턴
+
+#### 5. 사용자 통찰 = 디자인 시그널
+- 사용자가 "Sticker = 글로벌 폴더 같은 것" 통찰 = 의미 분리 약하다는 신호
+- 사용자가 "Detail 패널 = 본문 변화 추적/반영" 통찰 = 본문 source of truth 원칙
+- 사용자 직관을 무시하지 말 것
+
+#### 6. Page vs Book — 같은 needs, 다른 정체성 정합
+- Page = sub-entity (atomic 위배)
+- Book = entity 묶음 (atomic 보존)
+- 같은 사용자 needs (소설 회차)지만 정체성 측면에서 Book이 정합
+
+---
+
 ## 🚀 2026-05-02 (늦은 밤) 세션 — Index 버튼 위치 통일 + viewState.toggles 보존 (옵션 B)
 
 **범위**: Notes/Wiki list view의 Index 토글 위치 통일. Display 패널 토글 + viewState.toggles 보존으로 saved view에 같이 저장.

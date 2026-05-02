@@ -3,6 +3,127 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
+## ⭐ Plot 정체성 (영구 디자인 원칙)
+
+> **"Gentle by default, powerful when needed."**
+>
+> - 사용자가 원하는 모든 것 가능 (강력)
+> - 그러나 소란스럽지 않게 (gentle)
+> - 기본만으로 충분 (sensible defaults)
+> - 원할 때만 (opt-in)
+>
+> 모든 디자인 결정의 척도. memory의 "기능 5개의 98점" 철학 + Linear UI 정합.
+
+---
+
+## 🚀 2026-05-03 — 대규모 디자인 토론 (코드 변경 X, 결정사항만)
+
+이 세션은 코드 변경보다 **앞으로 작업 방향 결정**이 핵심이었음. 33개 디자인 결정 정리.
+
+### 1. View/Folder/Sticker/Book — 4사분면 모델 (확정)
+
+```
+                Unordered (collection)    Ordered (sequence)
+Type-strict     Folder                    (의미 약함)
+Type-free       Sticker                   Book ⭐ (신규 결정)
+```
+
+**의미 분리**:
+- **View** = 동적 (필터 조건 저장, type-strict)
+- **Folder** = 수동 멤버십, type-strict (한 종류만)
+- **Sticker** = 수동 멤버십, cross-entity (collection)
+- **Book** = 수동 멤버십, cross-entity, **ordered sequence**
+- **Search** = 일회성 도구 (컨테이너 X, Linear 탭형 검색창 패턴)
+
+### 2. Folder 변경 결정 (큰 PR 예정)
+- **type-strict** (노트 폴더는 노트만, 위키 폴더는 위키만)
+- **N:M 멤버십** (한 노트 → 여러 폴더)
+- 메타포: "텍스트 파일만 수용하는 폴더"
+
+### 3. Sticker v2 결정 (큰 PR 예정)
+- **cross-everything** (Note + Wiki + Tag + Label + Category + File + Reference 모두 수용)
+- **다중 멤버십 + 다중 sticker** (한 노드 → 여러 sticker, hull 겹침 가능)
+- 메타포: "이미지+텍스트+Python 등 모든 형식 수용"
+- 데이터 모델 옵션 D2 (정참조 단일) 추천: `Sticker.members[]`
+- Universal Entity Picker UI 신규 필요
+
+### 4. Book entity 신규 결정 (v3급 PR 예정)
+- **신규 1급 entity** (Activity Bar 7번째 space — 7개 OK)
+- **cross-entity** (Note + Wiki 포괄, 단일 Book entity)
+- **ordered sequence** (chapter 순서 = 본질, slideshow 비유 정확)
+- 메타: title / color / chapters[] / author? / series? / cover?
+- chapter 정렬: **Manual drag-drop default + Auto-sort 액션**
+- 시각화: **Hull + Sequence edge** (그래프) + **별도 Reading view** (Book detail)
+- Wikilink 통합: `[[Book]]` / `[[Book#Chapter]]`
+
+### 5. Page entity 도입 폐기 (확정)
+**이유**:
+- 제텔카스텐 atomic 정체성 위배 (page = sub-entity 묶음)
+- 비용 v3급, 가치 한정적 (대다수 사용자에 의문)
+- 별도 노트 + 폴더 + Linear navigation으로 80% 충족
+- 사용자 needs는 **Book entity로 더 정합** (atomic 보존 + sequence 표현)
+
+### 6. 그래프 sandbox 모델 (옵션 B 통합)
+- **Save view = 보기 + 데이터 변경 staging 함께 저장** (통합 모델)
+- **Sandbox = 그래프만** (노트/위키 편집은 즉시 영구 — 노트앱 표준)
+- **Wikilink = 본문에서만** (편집기 [[..]])
+- **Relation = 그래프 sandbox에서 추가** (별도 메타 layer)
+
+### 7. Relation 저장 방식
+- **본문 contentJson에 직접 embed 추가** (footer 새로 만들지 X)
+- **사용자 명시 동의** (Q2: 첫 번째만 prompt + "기억" 옵션)
+- 위키: 자동 "See also" 섹션 + entity-ref WikiBlock 일반화
+- Entity-ref = note-ref 일반화 (모든 entity type 수용)
+
+### 8. Sticker 진입점 = Library만 (정정)
+- 이전 결정: 4 space (Notes/Wiki/Ontology/Home)에 NavLink
+- **새 결정**: Library만 진입점 (cross-cutting 인덱스 결로 정합)
+- 다른 space에서 제거 작업 필요
+
+### 9. 사이드 패널 변경 — 모든 큰 PR의 collateral
+- **Detail 탭**: status 라벨 / folder list / sticker chips / block count / page 정보
+- **Connections 탭**: Wikilinks / Graph Relations 분리 + Page toggle + Sticker members + Source
+- **Activity 탭**: 새 이벤트 타입 (relation/sticker/folder/page/status) + source 메타
+- **원칙**: entity 단위 dashboard. 각 큰 PR이 자기 변경의 사이드 패널 부분 처리
+
+### 10. Linear-style entity navigation (의미 A)
+- view 안 노트 간 ↑/↓ 키, 1/N 표시
+- **Page 폐기 후 80% needs 충족**
+- 작은 PR로 즉시 가능
+
+### 11. Linear 검색창 패턴
+- All / Notes / Wiki / Tag / Label / Sticker / Folder / Book / 탭형 검색
+- Search = 일회성 도구 (컨테이너 X, 4사분면 외)
+
+### 12. 마크다운 단축키 강화 (Obsidian 90% 수준)
+**Phase 1 (작은 PR)**:
+- `---` Enter 패턴 (UpNote 스타일, 즉시 변환 X)
+- Highlight (`==`)
+- Image embed (`![[..]]`)
+
+**Phase 2 (중간 PR)**:
+- Math (`$$...$$` KaTeX)
+- Heading anchor (`[[Title#Heading]]`)
+
+**Phase 3 (큰 PR)**:
+- Block reference (`[[Title^block-id]]`)
+- Definition list
+
+### 13. UI Polish 항목
+- Wiki "Blocks" Display Property (Words 자리)
+- Notes 사이드바 위계 (Notes ▼ Status 그룹: Inbox/Capture/Permanent/Pinned)
+- All Notes 명칭 유지 (Overview로 변경 X)
+- 컬럼 헤더 아이콘 통일 (별도 PR)
+- Status 아이콘 시리즈 (Linear 패턴: 빈/반/꽉)
+
+### 14. 기술 학습
+- **Hull 클릭 안 됨 버그**: SVG `pointer-events="visiblePainted"` default가 fillOpacity 0.04~0.10을 "not painted"로 판단 → `pointerEvents: "all"` 명시 필요
+- **Hull stuck 버그**: `clusterHulls` useMemo deps에 `transform`만 있어서 노드 드래그 시 재계산 안 됨 → `forceRender`의 카운터 (renderTick) 노출해서 deps에 추가
+- **위키-노트 cross-entity가 디지털에선 자연**: 종이책 메타포에 갇히지 말 것 (Notion 페이지가 다양한 블록 mix하듯)
+- **자료구조 본질 차이**: Sticker = collection (set, 무순서) / Book = sequence (list, 순서 있음). 다른 entity 정당화
+
+---
+
 ## 🚀 2026-05-02 (늦은 밤) — Index 버튼 위치 통일 + viewState.toggles에 보존
 
 **문제**: Notes의 Index 토글은 ViewHeader 우측 toolbar (Filter/Display 옆), Wiki list는 ViewHeader 아래 별도 toolbar에 있어서 두 view 패턴이 어색하게 달랐음.

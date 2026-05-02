@@ -1,56 +1,78 @@
-# Session Notepad (Updated: 2026-05-01 04:30)
+# Session Notepad (Updated: 2026-05-03 01:30)
 
 ## Critical Context
 
-- **이번 세션 PR 4건 머지 완료**: #229 (Parent/Children) / #230 (Linear filter + Notes Index, 22 files) / #231 (라이트모드 가시성 78 files sed) / #232 (Ontology 그래프 + WikiArticle 노드)
-- **Store v96 적용** — wikiCategories dedup 마이그레이션 (legacy 17개 → 10개)
-- **다음 세션은 새 worktree에서** — 이번 worktree는 작업 완료
-- **합의된 다음 작업**: Quicklinks / Quickfilters 통합 / 사이드바 Inline Edit Mode
+- **Plot 정체성 (영구 디자인 원칙)**: "Gentle by default, powerful when needed"
+- **PR #237**: 11 커밋, main 머지 대기 (open). 다음 세션은 fresh worktree 권장
+- **이번 세션 = 코드 9 커밋 + 33 디자인 결정** (앞으로 작업 방향 정리)
 
 ## Active Tasks (다음 세션 — 우선순위 순)
 
-### 🔥 최우선 (디자인/가시성)
-- [ ] **Library References/Tags/Files 페이지** 가시성 + 디자인 통일 (All Notes 수준)
-- [ ] **Library Filter/Display 디자인** (All Notes 수준)
+### 🟢 작은 polish PR (즉시 시작)
+- [ ] 마크다운 Phase 1: `---` Enter 패턴 + Highlight + Image embed
+- [ ] Linear-style entity navigation (↑/↓ 키)
+- [ ] Wiki "Blocks" Display Property
+- [ ] Stickers Library만 진입점 (4 space NavLink revert)
+- [ ] Notes 사이드바 위계 (Notes ▼ Status 그룹)
 
-### 중간 (UX 신기능)
-- [ ] **Quicklinks** — globalBookmarks anchorType 확장 (folder/savedView/category) + Home prominent + 영역별 사이드바 하단 collapsed (8px slide)
-- [ ] **Quickfilters 통합** — view-configs.quickFilters → SavedView 자동 시드 (builtin: boolean) + 사이드바 "Views" 섹션에 통합 (🔒 시스템 + ⭐ 사용자)
-- [ ] **사이드바 Inline Edit Mode** — DotsSix 핸들 + 드래그 + 👁 hide/show + sidebarCustomization (영역별 persist)
+### 🟡 중간 PR
+- [ ] NoteStatus 리네이밍 Phase 1 (PRD 사전 조사 완료)
+- [ ] 마크다운 Phase 2 (Math + Heading anchor)
+- [ ] Filter chip 3-part 드롭다운
+- [ ] Linear 검색창 패턴
 
-### 후순위 (Insights 정리 — 합의됨, 옵션 D)
-- [ ] **GraphInsightsView 흡수** → `OntologyInsightsPanel`에 graph stats (nodes/edges/density) 추가
-- [ ] **사이드바 More 정리** — Ontology 영역의 `/graph-insights` 항목 제거 (Ontology 메인뷰 Insights 탭에 통합)
-- [ ] **InsightsView 이름 변경** → "Notes Health" (Notes 영역 More는 그대로 유지, 컨텍스트 보전)
-- [ ] **/insights 라우트는 그대로** (Notes 영역 사용자 동선 보전)
+### 🔴 큰 데이터 모델 PR
+- [ ] Folder type-strict + N:M
+- [ ] Sticker v2 cross-everything
+- [ ] Sandbox + Save view 통합
+- [ ] Entity-ref WikiBlock 일반화
+- [ ] 온톨로지 그래프 노드 확장
 
-## Polished Decisions (이번 세션)
+### 🟣 v3급 PR (가장 마지막)
+- [ ] Book entity (cross-entity, ordered sequence, Activity Bar 7번째)
 
-- **필터 칩 4-part Linear 패턴 채택** — `icon + field | op | value | ×`
-- **Quicklinks 위치**: Home prominent + 영역별 collapsed
-- **Quickfilters/Views 한 섹션 통합** — 시스템(🔒) / 사용자(⭐) 마크
-- **사이드바 customize**: Inline Edit Mode (8px slide-right + DotsSix), 영역별 persist
-- **WikiArticle 그래프 노드 통합** — legacy isWiki 모델 deprecated
-- **체크박스 단일 패턴** — `bg-card border-zinc-400` + `bg-accent` + `PhCheck text-accent-foreground`
+## 핵심 결정사항 (영구)
 
-## Blockers
+### 4사분면 컨테이너 모델
+```
+                Unordered (collection)    Ordered (sequence)
+Type-strict     Folder                    -
+Type-free       Sticker                   Book
+```
 
-- 없음
+### Page entity 폐기 (atomic 위배), Book entity 채택 (atomic 보존 + sequence)
 
-## Known Gotchas (다음 세션 주의)
+### Sandbox = 그래프만 / 노트/위키 = 즉시 영구
+- Wikilink = 본문에서만, Relation = 그래프에서
+- Save view = 보기 + 데이터 staging 함께 영구 (옵션 B 통합)
 
-- **Tailwind `border-[1.5px]`은 v4에서 미적용** → `style={{ borderWidth: "1.5px" }}` 직접
-- **라이트모드 alpha 사용 자제** — `/30~/50`은 흰 배경에서 거의 안 보임. `/60+` 또는 `var(--muted-foreground)` 직접
-- **체크박스/필터 칩은 단일 패턴 따를 것** — PR #230, #232에서 정의됨
-- **buildOntologyGraphData에 entity 추가 시 prefix 사용** — `wiki:{id}` 등 (noteId 충돌 방지)
-- **formatFilterChip 헬퍼**가 모든 필터 case 분해 — 새 필터 추가 시 거기에 case 추가
+### Relation 저장 = 본문 contentJson에 직접 embed
+- 사용자 첫 번째만 prompt + "기억" 옵션
+- 위키: 자동 "See also" 섹션 + entity-ref WikiBlock 일반화
+
+## Technical Learnings (이번 세션)
+
+- **SVG pointer-events 함정**: fillOpacity 낮으면 클릭 통과. `pointerEvents: "all"` 명시 필요
+- **useMemo + ref**: `forceRender` 카운터 노출 + deps 추가 (renderTick 패턴)
+- **자료구조 = entity 정당화**: Sticker (set) vs Book (sequence)
+- **종이책 메타포 함정 회피**: 디지털은 cross-type 자유
 
 ## Resume Commands
 
 ```bash
-# 새 worktree에서 시작
+# 다음 세션 시작 시
 cd C:/Users/user/Desktop/linear-note-plot-
 git pull origin main
-# 새 worktree 만들기 (claude code가 자동)
-npm install  # in new worktree
+# 새 worktree 만들기 (claude code 자동)
+npm install  # 새 worktree에서
+
+# /before-work 실행
 ```
+
+## Blockers
+- 없음
+
+## 다음 세션 진입 전 점검
+1. PR #237 머지 상태 확인
+2. main 동기화 (git pull origin main)
+3. 새 worktree에서 작은 polish PR 시작 추천

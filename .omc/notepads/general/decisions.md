@@ -1,5 +1,57 @@
 # Architectural Decisions
 
+## 2026-05-03 — 대규모 디자인 토론 (Plot v3 방향)
+
+### Plot 정체성 영구 정의
+- **"Gentle by default, powerful when needed"** — 모든 디자인 결정 척도
+
+### 4사분면 컨테이너 모델
+- View (동적 + type-strict) / Folder (수동 + type-strict)
+- Sticker (수동 + cross-entity) / Book (수동 + cross-entity + ordered)
+- Search = 일회성 도구 (컨테이너 X)
+
+### 큰 데이터 모델 변경 결정 (큰 PR 예정)
+- **Folder type-strict + N:M** — 노트/위키 폴더 분리, 다중 멤버십
+- **Sticker v2 cross-everything** — 모든 entity 수용 (Note+Wiki+Tag+Label+Category+File+Reference)
+- **Book entity 신규** — cross-entity ordered sequence (Activity Bar 7번째)
+- **Page entity 폐기** — 제텔카스텐 atomic 위배, Book이 더 정합
+
+### Sandbox + Save view 통합 (옵션 B)
+- Save view = 보기 + 데이터 staging 함께 영구
+- Sandbox = 그래프만 (노트/위키 즉시 영구 — 노트앱 표준 보존)
+- Wikilink = 본문에서만, Relation = 그래프에서
+
+### Relation 저장 = 본문 embed 자동 추가
+- 본문 contentJson에 직접 embed (footer 추가 X — 사용자 우려 반영)
+- 사용자 첫 번째만 prompt + "기억" 옵션
+- 위키: 자동 "See also" 섹션 + entity-ref WikiBlock 일반화
+
+### 사이드 패널 변경 분배
+- Detail/Connections/Activity 모두 영향
+- 각 큰 PR이 자기 부분 처리 (별도 사이드 패널 PR 없음)
+- 원칙: entity 단위 dashboard 유지
+
+### Sticker 진입점 = Library만 (정정)
+- 이전 4 space에서 추가 → Library만으로 변경 (cross-cutting 인덱스 결로 정합)
+
+### 그 외 결정
+- Linear-style entity navigation (의미 A) 채택, Page는 폐기
+- 마크다운 단축키 Obsidian 90% 수준 도입 (Phase 1+2+3 분할)
+- All Notes 명칭 유지 (Overview로 변경 X)
+- Notes 사이드바 위계 = Notes ▼ Status 그룹 (Inbox/Capture/Permanent/Pinned)
+- Wiki "Blocks" Display Property 추가 (Words 자리)
+
+### 자료구조 본질 — Sticker vs Book
+- Sticker = collection (set, 무순서)
+- Book = sequence (list, 순서 있음)
+- 자료구조 차이 → 다른 entity 정당화
+
+### Note + Wiki cross-entity 자유 인정
+- 종이책 메타포 함정 회피
+- 디지털 책 = cross-type 자유 (Notion 페이지 패턴)
+
+---
+
 ## 2026-04-30 (Sprint 1.3 + Sprint 1.4 plan)
 
 - **Hub Tier 자동 분류 폐기** — 사용자 통제 부재로 혼선 위험. Stub/Article 2단계만 유지. Backlinks 정렬로 hub-like 식별 가능. "사용자 명시 마킹 없는 자동 분류는 혼선" 영구 규칙 추가
