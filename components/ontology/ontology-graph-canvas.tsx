@@ -1441,17 +1441,28 @@ export function OntologyGraphCanvas({
               const dragTransform = isDragging
                 ? `translate(${hullDragDelta.dx}, ${hullDragDelta.dy})`
                 : undefined
+              // Hull is "selected" when every member node is in multi-select.
+              // Stronger visuals so the user gets clear feedback that the
+              // group click registered (otherwise low default fillOpacity
+              // makes it feel unresponsive).
+              const isSelected =
+                hull.nodeIds.length > 0 &&
+                hull.nodeIds.every((id) => multiSelectedIds.has(id))
               return (
                 <path
                   key={hull.id}
                   d={hull.path}
                   fill={hull.color}
-                  fillOpacity={hullProps.fillOpacity}
+                  fillOpacity={isSelected ? hullProps.fillOpacity * 2.5 : hullProps.fillOpacity}
                   stroke={hull.color}
-                  strokeOpacity={hullProps.strokeOpacity}
-                  strokeWidth={hullProps.strokeWidth}
+                  strokeOpacity={isSelected ? Math.min(1, hullProps.strokeOpacity * 1.6) : hullProps.strokeOpacity}
+                  strokeWidth={isSelected ? hullProps.strokeWidth * 1.8 : hullProps.strokeWidth}
                   transform={dragTransform}
-                  style={{ cursor: isDragging ? "grabbing" : "grab" }}
+                  // pointer-events: "all" — default "visiblePainted" treats very
+                  // low fillOpacity (0.04~0.10) as not-painted in some browsers,
+                  // so clicks pass through. Force hit-testing across the whole
+                  // path regardless of paint visibility.
+                  style={{ cursor: isDragging ? "grabbing" : "grab", pointerEvents: "all" }}
                   onMouseDown={(e) => {
                     // Left-button only — right-click handled by onContextMenu.
                     if (e.button !== 0) return
