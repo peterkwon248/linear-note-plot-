@@ -5,6 +5,8 @@ import { MAX_SORT_RULES } from "@/lib/view-engine/types"
 import type { ReactNode } from "react"
 import { List } from "@phosphor-icons/react/dist/ssr/List"
 import { Kanban } from "@phosphor-icons/react/dist/ssr/Kanban"
+import { Graph } from "@phosphor-icons/react/dist/ssr/Graph"
+import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine"
 import { SortAscending } from "@phosphor-icons/react/dist/ssr/SortAscending"
 import { SortDescending } from "@phosphor-icons/react/dist/ssr/SortDescending"
 import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
@@ -71,13 +73,15 @@ export const SortIcon = () => (
 /* ── Mode config helpers ────────────────────────────────── */
 
 const MODE_DEFS: { mode: ViewMode; icon: ReactNode; label: string }[] = [
-  { mode: "list", icon: <List size={14} weight="regular" />, label: "List" },
-  { mode: "board", icon: <Kanban size={14} weight="regular" />, label: "Board" },
+  { mode: "list",     icon: <List size={14} weight="regular" />,     label: "List" },
+  { mode: "board",    icon: <Kanban size={14} weight="regular" />,   label: "Board" },
+  { mode: "graph",    icon: <Graph size={14} weight="regular" />,    label: "Graph" },
+  { mode: "insights", icon: <ChartLine size={14} weight="regular" />, label: "Insights" },
 ]
 
-function resolveViewMode(viewMode: ViewMode): "list" | "board" {
-  if (viewMode === "board") return "board"
-  return "list"
+function resolveViewMode(viewMode: ViewMode): ViewMode {
+  // Just pass through — caller decides what's valid for their context.
+  return viewMode
 }
 
 /* ── DisplayPanel ───────────────────────────────────────── */

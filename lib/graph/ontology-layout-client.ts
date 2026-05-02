@@ -3,6 +3,9 @@ export interface ForceConfig {
   linkDistance: number
   collisionRadius: number
   ticks: number
+  linkStrength?: number
+  centerStrength?: number
+  distanceMax?: number
 }
 
 export interface LayoutNodeInput {

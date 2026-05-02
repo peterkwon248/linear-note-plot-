@@ -21,6 +21,7 @@ import { usePlotStore } from "@/lib/store"
 import { getEntityContext } from "@/lib/editor/entity-context"
 import { BlockCommentMarker } from "@/components/comments/block-comment-marker"
 import type { CommentAnchor } from "@/lib/types"
+import { useTintedBg } from "@/lib/tinted-bg"
 
 // ── Color Presets ─────────────────────────────────────────────────────────────
 // Reuses the same RGBA-0.35 palette as InfoboxBlockNode to stay consistent.
@@ -116,7 +117,7 @@ export interface BannerSizeStyle {
 export const BANNER_SIZE_STYLES: Record<BannerSize, BannerSizeStyle> = {
   compact: {
     containerPadding: "px-4 py-3",
-    titleClass:       "text-base font-medium leading-tight",
+    titleClass:       "text-[calc(1em*var(--scale-misc,1))] font-medium leading-tight",
     subtitleClass:    "mt-0.5 text-xs",
     iconSize:         16,
     iconMarginTop:    "mt-0.5",
@@ -125,7 +126,7 @@ export const BANNER_SIZE_STYLES: Record<BannerSize, BannerSizeStyle> = {
   },
   default: {
     containerPadding: "px-6 py-5",
-    titleClass:       "text-xl font-semibold leading-tight",
+    titleClass:       "text-[calc(1.25em*var(--scale-misc,1))] font-semibold leading-tight",
     subtitleClass:    "mt-1 text-sm",
     iconSize:         20,
     iconMarginTop:    "mt-0.5",
@@ -134,7 +135,7 @@ export const BANNER_SIZE_STYLES: Record<BannerSize, BannerSizeStyle> = {
   },
   hero: {
     containerPadding: "px-8 py-8",
-    titleClass:       "text-2xl font-bold leading-tight",
+    titleClass:       "text-[calc(1.5em*var(--scale-misc,1))] font-bold leading-tight",
     subtitleClass:    "mt-2 text-base",
     iconSize:         24,
     iconMarginTop:    "mt-1",
@@ -670,7 +671,9 @@ function BannerNodeView({ node, updateAttributes, deleteNode, editor }: NodeView
   const bgStyle    = resolveBannerBgStyle(bgStyleAttr)
   const sizeStyles = BANNER_SIZE_STYLES[size]
   const Icon       = resolveBannerIcon(iconKey)
-  const visual     = computeBannerVisual(bgStyle, bgColor, bgColorEnd)
+  const renderedBgColor    = useTintedBg(bgColor) ?? bgColor
+  const renderedBgColorEnd = useTintedBg(bgColorEnd) ?? bgColorEnd
+  const visual     = computeBannerVisual(bgStyle, renderedBgColor, renderedBgColorEnd)
 
   // "Customised" = anything non-default (color, non-default icon, non-default size, non-solid style).
   const hasCustomization = !!bgColor

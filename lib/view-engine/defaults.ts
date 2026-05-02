@@ -38,7 +38,7 @@ const CONTEXT_DEFAULTS: Partial<Record<ViewContextKey, Partial<ViewState>>> = {
   savedView: { viewMode: "list", ...ctx("updatedAt"), groupBy: "none" },
   wiki:           { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", visibleColumns: ["title", "links", "tags", "updatedAt"], toggles: { showStubs: true } },
   "wiki-category": { viewMode: "list", ...ctx("title", "asc"), groupBy: "none", visibleColumns: ["parent", "tier", "articles", "stubs", "sub", "updatedAt"] },
-  graph:          { viewMode: "list", ...ctx("updatedAt"), groupBy: "none", toggles: { showWikilinks: true, showTagNodes: false, showLabels: false } },
+  graph:          { viewMode: "graph", ...ctx("updatedAt"), groupBy: "none", toggles: { showWikilinks: true, showTagNodes: false, showLabels: false, showNotes: true, showWiki: true } },
   calendar:       { viewMode: "calendar", ...ctx("createdAt"), groupBy: "none", toggles: { showNotes: true, showWiki: true } },
 }
 

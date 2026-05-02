@@ -80,6 +80,7 @@ export interface WikiCategory {
   name: string
   parentIds: string[]  // multiple parents = DAG
   description?: string
+  color: string        // Graph hull color for grouping visualization
   createdAt: string
   updatedAt: string
 }
@@ -88,6 +89,22 @@ export interface WikiCategory {
 
 /** Wiki block types — building blocks of a wiki article */
 export type WikiBlockType = 'section' | 'text' | 'note-ref' | 'image' | 'table' | 'url' | 'navbox' | 'nav' | 'banner'
+
+/**
+ * Per-group font size fine-tuning. Applied as a multiplier on top of
+ * `WikiArticle.fontSize` (global). undefined = 1× (no change).
+ *
+ * Computed final size = baseEm × fontSize × scales[group]
+ * Range: 0.7 ~ 1.6 (clamped in UI).
+ */
+export interface WikiFontScales {
+  title?: number      // h1 article title
+  heading?: number    // section h2/h3/h4
+  body?: number       // paragraph + table cells + note-ref preview
+  infobox?: number    // infobox header/group/field key/value
+  meta?: number       // TOC + footnotes + references
+  misc?: number       // navbox + banner
+}
 
 /** Navigation block slot — prev/current/next segment */
 export interface WikiNavSlot {
@@ -264,8 +281,13 @@ export interface WikiArticle {
   sectionIndex: WikiSectionIndex[]
   tags: string[]
   categoryIds?: string[]           // references to WikiCategory.id (DAG)
+  /** Folder membership (mirrors Note.folderId). Enables unified note+wiki grouping by folder. */
+  folderId?: string | null
+  /** Sticker membership (multi). Cross-entity grouping marker — see Sticker. */
+  stickerIds?: string[]
   layout?: WikiLayout              // article layout mode (default: "default")
   fontSize?: number                // global font size multiplier (0.85=S, 1=M default, 1.15=L, 1.3=XL)
+  fontScales?: WikiFontScales      // per-group fine-tune multipliers (relative to global). undefined = 1×
   contentAlign?: "left" | "center" // content alignment (undefined = "left")
   linksOut?: string[]              // extracted [[wiki-links]] from text blocks
   referenceIds?: string[]              // linked Reference IDs (bibliography, not inline footnotes)
@@ -310,6 +332,8 @@ export interface Note {
   contentJson: Record<string, unknown> | null
   folderId: string | null
   tags: string[]
+  /** Sticker membership (multi). Cross-entity grouping marker — see Sticker. */
+  stickerIds?: string[]
   labelId: string | null
   status: NoteStatus
   priority: NotePriority
@@ -397,6 +421,26 @@ export interface Label {
   color: string
   trashed?: boolean
   trashedAt?: string | null
+}
+
+/**
+ * Sticker — a free-form, cross-entity grouping marker.
+ *
+ * Unlike Label (note-only color category) or WikiCategory (wiki-only DAG),
+ * a Sticker can be attached to BOTH notes and wiki articles. It exists for
+ * the user intent: "I just want to bundle these together — not necessarily
+ * by topic, label, or category."
+ *
+ * Multi-membership: a single note/wiki can carry multiple stickers.
+ * Color drives the graph hull when grouping by sticker.
+ */
+export interface Sticker {
+  id: string
+  name: string
+  color: string
+  trashed?: boolean
+  trashedAt?: string | null
+  createdAt: string
 }
 
 /* ── Autopilot Rules ─────────────────────────────── */

@@ -594,49 +594,56 @@ export function TagsView() {
             )}
             {sortedTags.length > 0 && (
               <div>
-                {/* Header row with select-all checkbox */}
-                <div className="flex items-center gap-3 border-b border-border-subtle px-6 py-2">
-                  <button
+                {/* Header row with select-all checkbox (PR #230 pattern, Notes-aligned) */}
+                <div
+                  data-header-row
+                  className="sticky top-0 z-10 flex items-center gap-3 border-b border-border-subtle bg-background px-6 py-2.5"
+                >
+                  <div
                     onClick={toggleAll}
                     className={cn(
-                      "flex h-4 w-4 items-center justify-center rounded border transition-colors",
-                      checkedTags.size > 0 ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                      "h-4 w-4 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                      checkedTags.size === sortedTags.length && sortedTags.length > 0
+                        ? "bg-accent border-accent"
+                        : checkedTags.size > 0
+                          ? "bg-accent/50 border-accent"
+                          : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
                     )}
                   >
                     {checkedTags.size === sortedTags.length && sortedTags.length > 0 && (
-                      <PhCheck size={8} weight="bold" className="text-accent-foreground" />
+                      <PhCheck size={10} weight="bold" className="text-accent-foreground" />
                     )}
                     {checkedTags.size > 0 && checkedTags.size < sortedTags.length && (
-                      <Minus size={8} weight="bold" className="text-accent-foreground" />
+                      <Minus size={10} weight="regular" className="text-accent-foreground" />
                     )}
-                  </button>
+                  </div>
                   <button
-                    className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground/80"
+                    className="flex flex-1 items-center gap-1 text-left text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => setTagSortBy(tagSortBy === "name-asc" ? "name-desc" : "name-asc")}
                   >
                     Name
                     {(tagSortBy === "name-asc" || tagSortBy === "name-desc") && (
                       tagSortBy === "name-asc"
-                        ? <ArrowUp size={12} weight="regular" className="text-muted-foreground/70" />
-                        : <ArrowDown size={12} weight="regular" className="text-muted-foreground/70" />
+                        ? <ArrowUp size={12} weight="regular" className="text-accent" />
+                        : <ArrowDown size={12} weight="regular" className="text-accent" />
                     )}
                   </button>
                   <button
-                    className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground/70 transition-colors hover:text-muted-foreground/80"
+                    className="flex w-16 items-center justify-end gap-1 text-2xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => setTagSortBy(tagSortBy === "count-desc" ? "count-asc" : "count-desc")}
                   >
                     Notes
                     {(tagSortBy === "count-desc" || tagSortBy === "count-asc") && (
                       tagSortBy === "count-desc"
-                        ? <ArrowDown size={12} weight="regular" className="text-muted-foreground/70" />
-                        : <ArrowUp size={12} weight="regular" className="text-muted-foreground/70" />
+                        ? <ArrowDown size={12} weight="regular" className="text-accent" />
+                        : <ArrowUp size={12} weight="regular" className="text-accent" />
                     )}
                   </button>
                   <button
                     onClick={() => setHideEmptyTags(!hideEmptyTags)}
                     className={cn(
                       "ml-2 rounded p-1 transition-colors",
-                      hideEmptyTags ? "text-accent" : "text-muted-foreground/60 hover:text-muted-foreground/70"
+                      hideEmptyTags ? "text-accent" : "text-muted-foreground hover:text-foreground"
                     )}
                     title={hideEmptyTags ? "Show all" : "Hide empty"}
                   >
@@ -647,8 +654,8 @@ export function TagsView() {
                   <div
                     key={tag.id}
                     data-tag-index={index}
-                    className={`group flex items-center gap-3 px-6 py-2.5 transition-colors ${
-                      checkedTags.has(tag.id) ? "bg-accent/10" : "hover:bg-hover-bg"
+                    className={`group flex items-center gap-3 px-6 py-2.5 border-b border-border/50 transition-colors ${
+                      checkedTags.has(tag.id) ? "bg-accent/8" : "hover:bg-hover-bg"
                     }`}
                     onClick={(e) => {
                       // Only handle if click is on the row background (not buttons)
@@ -656,17 +663,20 @@ export function TagsView() {
                       handleRowClick(tag.id, index, e)
                     }}
                   >
-                    <button
-                      onClick={() => toggleCheck(tag.id)}
+                    <div
+                      data-checkbox
+                      onClick={(e) => { e.stopPropagation(); toggleCheck(tag.id) }}
                       className={cn(
-                        "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
-                        checkedTags.has(tag.id) ? "bg-accent border-accent" : "border-muted-foreground/30 hover:border-muted-foreground/50"
+                        "h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                        checkedTags.has(tag.id)
+                          ? "bg-accent border-accent"
+                          : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
                       )}
                     >
                       {checkedTags.has(tag.id) && (
-                        <PhCheck size={8} weight="bold" className="text-accent-foreground" />
+                        <PhCheck size={10} weight="bold" className="text-accent-foreground" />
                       )}
-                    </button>
+                    </div>
                     <button
                       onClick={() => setSelectedTagId(tag.id)}
                       className="flex-1 text-left text-ui text-foreground transition-colors hover:text-accent"
@@ -704,26 +714,22 @@ export function TagsView() {
         </ContextMenuContent>
       </ContextMenu>
 
-      {/* Floating action bar (bottom) */}
+      {/* Floating action bar (bottom) — unified with Notes/References */}
       {checkedTags.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border border-border bg-card shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-200">
-          <div className="flex items-center gap-1 px-4 py-2.5">
-            <div className="flex items-center gap-1.5 px-1.5">
-              <Lightning className="text-accent" size={16} weight="regular" />
-              <span className="text-ui font-medium text-foreground whitespace-nowrap">
-                {checkedTags.size} selected
-              </span>
-              <button
-                onClick={() => setCheckedTags(new Set())}
-                className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-hover-bg hover:text-foreground"
-              >
-                <PhX size={16} weight="regular" />
-              </button>
-            </div>
-            <div className="mx-1.5 h-7 w-px bg-border" />
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 fade-in duration-200">
+          <div className="flex items-center gap-1 rounded-xl border border-border bg-surface-overlay px-4 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+            <button
+              onClick={() => setCheckedTags(new Set())}
+              className="mr-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-2xs font-medium text-muted-foreground hover:bg-active-bg transition-colors"
+            >
+              <Lightning size={14} weight="fill" className="text-accent" />
+              {checkedTags.size} selected
+              <PhX size={12} weight="regular" className="ml-0.5 text-muted-foreground/70" />
+            </button>
+            <div className="h-7 w-px bg-border mx-1.5" />
             <button
               onClick={handleDeleteChecked}
-              className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-ui font-medium text-destructive transition-colors hover:bg-destructive/20"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-2xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
             >
               <Trash size={16} weight="regular" /> Delete
             </button>

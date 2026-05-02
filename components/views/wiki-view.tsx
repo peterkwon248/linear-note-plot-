@@ -20,6 +20,7 @@ import { Plus as PhPlus } from "@phosphor-icons/react/dist/ssr/Plus"
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
+import { WikiReaderSettings } from "@/components/wiki-editor/wiki-reader-settings"
 import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine"
 import { Check as PhCheck } from "@phosphor-icons/react/dist/ssr/Check"
 import { ArrowLineUp } from "@phosphor-icons/react/dist/ssr/ArrowLineUp"
@@ -328,7 +329,13 @@ export function WikiView() {
     }
     // FilterPanel rules from viewStateByContext["wiki"].filters (Phase 1)
     if (wikiFilters.length > 0) {
-      result = applyWikiFilters(result, wikiFilters, { backlinksMap: backlinkCounts, hasChildrenSet })
+      // Pass `allArticles` so the connectedTo filter can resolve target IDs
+      // back to titles (wiki linksOut contains titles, not IDs).
+      result = applyWikiFilters(result, wikiFilters, {
+        backlinksMap: backlinkCounts,
+        hasChildrenSet,
+        allArticles: wikiArticles,
+      })
     }
     // showStubs toggle (display config) — default true. When false, hide stubs globally.
     if (!showStubs) {
@@ -725,60 +732,30 @@ export function WikiView() {
               <Popover>
                 <PopoverTrigger asChild>
                   <button
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/75 dark:text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground dark:hover:text-muted-foreground transition-all duration-100"
                     title="Font size"
                   >
                     <TextAa size={18} weight="regular" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-auto p-2.5" sideOffset={4}>
-                  <div className="flex items-center gap-1.5">
-                    {([
-                      { label: "S", value: 0.85 },
-                      { label: "M", value: 1 },
-                      { label: "L", value: 1.15 },
-                      { label: "XL", value: 1.3 },
-                    ] as const).map((opt) => {
-                      const active = (selectedWikiArticle.fontSize ?? 1) === opt.value
-                      return (
-                        <button
-                          key={opt.label}
-                          onClick={() => updateWikiArticle(selectedWikiArticleId, { fontSize: opt.value === 1 ? undefined : opt.value })}
-                          className={cn(
-                            "px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-100",
-                            active
-                              ? "bg-accent/20 text-accent"
-                              : "text-foreground/60 hover:bg-hover-bg"
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <div className="my-1.5 border-t border-white/[0.08]" />
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => updateWikiArticle(selectedWikiArticleId, { contentAlign: undefined })}
-                      className={cn("px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                        !selectedWikiArticle.contentAlign || selectedWikiArticle.contentAlign === "left"
-                          ? "bg-accent/20 text-accent"
-                          : "text-foreground/60 hover:bg-hover-bg"
-                      )}
-                    >
-                      Left
-                    </button>
-                    <button
-                      onClick={() => updateWikiArticle(selectedWikiArticleId, { contentAlign: "center" })}
-                      className={cn("px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                        selectedWikiArticle.contentAlign === "center"
-                          ? "bg-accent/20 text-accent"
-                          : "text-foreground/60 hover:bg-hover-bg"
-                      )}
-                    >
-                      Center
-                    </button>
-                  </div>
+                <PopoverContent align="end" className="w-auto p-0" sideOffset={4}>
+                  <WikiReaderSettings
+                    fontSize={selectedWikiArticle.fontSize}
+                    fontScales={selectedWikiArticle.fontScales}
+                    contentAlign={selectedWikiArticle.contentAlign}
+                    onFontSizeChange={(v) => updateWikiArticle(selectedWikiArticleId, { fontSize: v })}
+                    onFontScalesChange={(v) => updateWikiArticle(selectedWikiArticleId, { fontScales: v })}
+                    onContentAlignChange={(v) => updateWikiArticle(selectedWikiArticleId, { contentAlign: v })}
+                    onResetLayout={() => {
+                      try {
+                        const key = `react-resizable-panels:wiki-article-${selectedWikiArticleId}-layout`
+                        localStorage.removeItem(key)
+                      } catch {}
+                      window.dispatchEvent(new CustomEvent("plot:reset-wiki-layout", {
+                        detail: { articleId: selectedWikiArticleId },
+                      }))
+                    }}
+                  />
                 </PopoverContent>
               </Popover>
 
@@ -796,7 +773,7 @@ export function WikiView() {
                       bubbles: true,
                     }))
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/75 dark:text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground dark:hover:text-muted-foreground transition-all duration-100"
                   title={allSectionsCollapsed ? "Expand all sections" : "Collapse all sections"}
                 >
                   <svg width={17} height={17} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -842,7 +819,7 @@ export function WikiView() {
                     setSecondarySpace(getActiveSpace())
                   }
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground transition-all duration-100"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/75 dark:text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground dark:hover:text-muted-foreground transition-all duration-100"
                 title="Split View"
               >
                 <SplitHorizontal size={16} weight="regular" />
@@ -855,7 +832,7 @@ export function WikiView() {
                   "flex h-8 w-8 items-center justify-center rounded-md transition-all duration-100",
                   sidePanelOpen
                     ? "text-accent bg-accent/10 hover:bg-accent/20"
-                    : "text-muted-foreground/60 hover:bg-hover-bg hover:text-muted-foreground"
+                    : "text-foreground/75 dark:text-muted-foreground/60 hover:bg-hover-bg hover:text-foreground dark:hover:text-muted-foreground"
                 )}
                 title="Toggle sidebar"
               >
@@ -1285,6 +1262,25 @@ export function WikiView() {
               onDeleteArticle={(id) => {
                 deleteWikiArticle(id)
                 toast.success("Article deleted")
+              }}
+              onShowConnectedArticle={(id, direction) => {
+                // Same in-place backlink-filter pattern as Notes view.
+                // Replace any prior connectedTo rule (single connection
+                // filter at a time keeps results predictable).
+                const existingFilters = wikiViewState.filters ?? []
+                const otherRules = existingFilters.filter((r) => r.field !== "connectedTo")
+                updateWikiViewState({
+                  filters: [
+                    ...otherRules,
+                    { field: "connectedTo", operator: "eq", value: `${id}:${direction}` },
+                  ],
+                })
+                const article = wikiArticles.find((a) => a.id === id)
+                const dirLabel =
+                  direction === "in" ? "backlinks" :
+                  direction === "out" ? "links out" :
+                  "both directions"
+                toast(`Filtering: connected to "${article?.title ?? "article"}" (${dirLabel})`)
               }}
               redLinks={redLinks}
               onCreateFromRedLink={handleCreateFromRedLink}

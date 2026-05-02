@@ -23,7 +23,7 @@ export type ViewContextKey =
 
 /* ── View State ────────────────────────────────────────── */
 
-export type ViewMode = "list" | "board" | "insights" | "calendar"
+export type ViewMode = "list" | "board" | "insights" | "calendar" | "graph" | "dashboard"
 
 export type SortField =
   | "updatedAt"
@@ -59,6 +59,10 @@ export type GroupBy =
   | "family"
   // Hierarchy role (Root/Parent/Child/Solo) — shared by Notes + Wiki
   | "role"
+  // Graph-specific grouping (Ontology view hull): tag/category for unified
+  // note+wiki grouping; connections = legacy BFS connected component fallback.
+  // sticker = explicit cross-entity bundling marker (Sticker entity).
+  | "tag" | "category" | "connections" | "sticker"
 
 export type GroupSortBy = "default" | "manual" | "name" | "count"
 
@@ -74,12 +78,23 @@ export type FilterField =
   | "category" | "wikiTier"
   // Knowledge-graph filter fields
   | "wikiRegistered"
+  // Connection filter — "show entities connected to this one in the graph".
+  // Lets users do in-place backlink/linksOut filtering inside Notes/Wiki
+  // views without jumping to the Ontology graph.
+  // value format: "<entityId>:<direction>"  where direction ∈ both/in/out
+  // - both: union of incoming + outgoing references (default)
+  // - in:   only entities that REFERENCE the target (backlinks)
+  // - out:  only entities REFERENCED BY the target (linksOut)
+  | "connectedTo"
 
 export interface FilterRule {
   field: FilterField
   operator: FilterOperator
   value: string
 }
+
+/** Direction modes for the "connectedTo" filter. */
+export type ConnectionDirection = "both" | "in" | "out"
 
 export interface ViewState {
   viewMode: ViewMode
@@ -102,6 +117,17 @@ export interface ViewState {
   subGroupOrder: Record<string, string[]> | null
   /** Sub-group sort criterion: default (natural), manual (drag), name (alpha), count (by size) */
   subGroupSortBy: GroupSortBy
+  /** ── Graph-only: hidden edge state ────────────────── *
+   * Visual-only filters used by the Ontology graph view to let users
+   * temporarily declutter the canvas without modifying underlying data.
+   * - hiddenEdgeIds: specific "src→tgt:kind" identifiers
+   * - hiddenEdgeKinds: bulk kinds ("wikilink" / "tag" / relation types)
+   * - isolatedNodeIds: when non-empty, only these nodes (and their edges
+   *   to other isolated nodes) render at full opacity; everything else dims.
+   * All cleared by "Show all" / clearing isolation in the Display popover. */
+  hiddenEdgeIds?: string[]
+  hiddenEdgeKinds?: string[]
+  isolatedNodeIds?: string[]
 }
 
 /* ── Pipeline Types ────────────────────────────────────── */
@@ -172,7 +198,7 @@ export const VALID_GROUP_BY: GroupBy[] = [
   "role",
 ]
 
-export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calendar"]
+export const VALID_VIEW_MODES: ViewMode[] = ["list", "board", "insights", "calendar", "graph"]
 
 export const VALID_GROUP_SORT_BY: GroupSortBy[] = ["default", "manual", "name", "count"]
 

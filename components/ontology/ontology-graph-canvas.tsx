@@ -29,8 +29,12 @@ import {
 import type { OntologyGraph, OntologyNode, OntologyEdge, OntologyEdgeKind } from "@/lib/graph"
 import { computeForceConfig } from "@/lib/graph"
 import { RELATION_TYPE_CONFIG } from "@/lib/relation-helpers"
-import type { RelationType, Label } from "@/lib/types"
-import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE, WIKI_STATUS_HEX } from "@/lib/colors"
+import type { RelationType, Label, WikiCategory, Folder, Sticker } from "@/lib/types"
+import type { GroupBy } from "@/lib/view-engine/types"
+import { GRAPH_NODE_HEX, GRAPH_CLUSTER_PALETTE, WIKI_STATUS_HEX, NOTE_STATUS_HEX } from "@/lib/colors"
+import { NodeContextMenu } from "@/components/ontology/node-context-menu"
+import { useTheme } from "next-themes"
+import { LOD, VIEWPORT, NODE_THEME, FIT_CONFIG, MAX_VISIBLE_NODES, FORCE_CONFIG, SIM_CONFIG, NODE_SIZE, EDGE_STYLE, HULL, MINIMAP, LABEL_CONFIG, TOOLTIP_CONFIG, SELECTION, classifyTier, nodeRadius as configNodeRadius, getNodeRenderProps, getHullRenderProps, fadeOpacity } from "@/lib/graph/ontology-graph-config"
 
 /* ── Types ─────────────────────────────────────────────── */
 
@@ -41,12 +45,39 @@ export interface OntologyFilters {
   relationTypes: RelationType[] | "all"
   showWikilinks: boolean
   showTagNodes: boolean
+  // Node type visibility — when false, that kind of node is hidden entirely
+  // (default: all true). Allows users to focus on notes-only or wiki-only views.
+  showNotes?: boolean
+  showWiki?: boolean
 }
 
 interface OntologyGraphCanvasProps {
   graph: OntologyGraph
   filters: OntologyFilters
   labels: Label[]
+  /** Wiki categories — used to look up hull color when grouping by category. */
+  wikiCategories?: WikiCategory[]
+  /** Folders — used to look up hull color when grouping by folder. */
+  folders?: Folder[]
+  /** Stickers — used to look up hull color when grouping by sticker. */
+  stickers?: Sticker[]
+  /** Group by mode (= hull rule). "none" disables hulls; "connections" keeps
+   *  legacy BFS connected-component behavior. Other values group nodes by
+   *  the matching entity field (label/tag/category/folder/status). */
+  groupBy?: GroupBy
+  /** Callback to switch group by mode. Used after creating a sticker so
+   *  the new hull lights up immediately (auto-switch to "sticker"). */
+  onRequestGroupBy?: (g: GroupBy) => void
+  /** Visual-only filters — temporary declutter without touching data. */
+  hiddenEdgeIds?: string[]
+  hiddenEdgeKinds?: string[]
+  isolatedNodeIds?: string[]
+  /** Callbacks for the right-click "Hide / Isolate" actions. */
+  onHideEdge?: (edgeId: string) => void
+  onHideEdgeKind?: (kind: string) => void
+  onHideNodeConnections?: (nodeId: string) => void
+  onIsolateNodes?: (nodeIds: string[]) => void
+  onShowAll?: () => void
   notes?: Array<{ id: string; title: string; preview: string; status: string; tags: string[] }>
   tags?: Array<{ id: string; name: string; color: string }>
   searchMatchIds: Set<string> | null
@@ -71,11 +102,9 @@ interface SimNode extends SimulationNodeDatum {
 
 /* ── Constants ─────────────────────────────────────────── */
 
-const MIN_SCALE = 0.05
-const MAX_SCALE = 3.0
-const ZOOM_STEP = 0.15
-const LABEL_TRUNCATE = 18
-const MAX_VISIBLE_NODES = 200
+const MIN_SCALE = VIEWPORT.zoomMin
+const MAX_SCALE = VIEWPORT.zoomMax
+const ZOOM_STEP = VIEWPORT.zoomStep
 
 /* ── Node type derivation (safe fallback when nodeType not yet on OntologyNode) ── */
 
@@ -85,8 +114,8 @@ function getNodeType(node: OntologyNode): GraphNodeType {
   // Check for tag nodes (id starts with "tag:")
   if (node.id.startsWith("tag:")) return "tag"
 
-  // Wiki nodes
-  if (node.isWiki || (node as any).nodeType === "wiki-article" || (node as any).nodeType === "wiki-stub" || (node as any).nodeType === "wiki") return "wiki"
+  // Wiki nodes — OntologyNode.nodeType is the canonical source of truth.
+  if (node.isWiki || node.nodeType === "wiki") return "wiki"
 
   return "note"
 }
@@ -127,11 +156,22 @@ function diamondPointsStr(cx: number, cy: number, d: number): string {
 
 /* ── Edge style by kind (3-tier thickness) ─────────────── */
 
-function getEdgeStyle(kind: OntologyEdgeKind): { strokeWidth: number; strokeColor: string; opacity: number } {
+function getEdgeStyle(kind: OntologyEdgeKind, isDark: boolean = true): { strokeWidth: number; strokeColor: string; opacity: number } {
+  // In dark mode the edges are white-ish and ride on a dark bg.
+  // In light mode they need to be black-ish (visible on white).
+  const base = isDark ? "255,255,255" : "30,41,59" // slate-800 for light
+  if (!isDark) {
+    // Boost alphas so edges remain visible against white.
+    switch (kind) {
+      case "wikilink": return { strokeWidth: EDGE_STYLE.wikilink.strokeWidth, strokeColor: `rgba(${base},${EDGE_STYLE.alphaWikilink.light})`, opacity: 1.0 }
+      case "tag": return { strokeWidth: EDGE_STYLE.tag.strokeWidth, strokeColor: `rgba(${base},${EDGE_STYLE.alphaTag.light})`, opacity: EDGE_STYLE.tag.opacityLight }
+      default: return { strokeWidth: EDGE_STYLE.relation.strokeWidth, strokeColor: `rgba(${base},${EDGE_STYLE.alphaRelation.light})`, opacity: 1.0 }
+    }
+  }
   switch (kind) {
-    case "wikilink": return { strokeWidth: 1.2, strokeColor: "rgba(255,255,255,0.08)", opacity: 1.0 }
-    case "tag": return { strokeWidth: 0.8, strokeColor: "rgba(255,255,255,0.06)", opacity: 0.35 }
-    default: return { strokeWidth: 2.0, strokeColor: "rgba(255,255,255,0.12)", opacity: 1.0 } // relation types
+    case "wikilink": return { strokeWidth: EDGE_STYLE.wikilink.strokeWidth, strokeColor: `rgba(255,255,255,${EDGE_STYLE.alphaWikilink.dark})`, opacity: 1.0 }
+    case "tag": return { strokeWidth: EDGE_STYLE.tag.strokeWidth, strokeColor: `rgba(255,255,255,${EDGE_STYLE.alphaTag.dark})`, opacity: EDGE_STYLE.tag.opacityDark }
+    default: return { strokeWidth: EDGE_STYLE.relation.strokeWidth, strokeColor: `rgba(255,255,255,${EDGE_STYLE.alphaRelation.dark})`, opacity: 1.0 } // relation types
   }
 }
 
@@ -146,7 +186,7 @@ function truncate(str: string, max: number): string {
 }
 
 /** Generate a smooth closed curve through convex hull points using Catmull-Rom → cubic bezier */
-function smoothHullPath(points: { x: number; y: number }[], tension: number = 0.3): string {
+function smoothHullPath(points: { x: number; y: number }[], tension: number = HULL.smoothingTension): string {
   if (points.length < 3) return ""
   const n = points.length
   let d = `M ${points[0].x} ${points[0].y}`
@@ -169,17 +209,25 @@ function smoothHullPath(points: { x: number; y: number }[], tension: number = 0.
   return d
 }
 
+/**
+ * Node radius — Obsidian sqrt(degree) pattern. See ontology-graph-config.
+ * Information ∝ degree, perceived area ∝ r² → sqrt(degree) feels natural.
+ */
 function nodeRadius(connectionCount: number): number {
-  return Math.min(10 + connectionCount * 2, 22)
+  return configNodeRadius(connectionCount)
 }
 
 function computeFitTransform(
   positions: Map<string, { x: number; y: number }>,
   svgWidth: number,
   svgHeight: number,
-  padding = 80,
 ): Transform {
   if (positions.size === 0) return { x: svgWidth / 2, y: svgHeight / 2, scale: 1 }
+
+  // Tier-based fit policy — sparse graphs zoom in close (so nodes show
+  // at near-real pixel size); dense graphs zoom out to fit topology.
+  const tier = classifyTier(positions.size)
+  const fit = FIT_CONFIG[tier]
 
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
   for (const { x, y } of positions.values()) {
@@ -194,9 +242,10 @@ function computeFitTransform(
   const centerX = (minX + maxX) / 2
   const centerY = (minY + maxY) / 2
 
-  const scaleX = (svgWidth - padding * 2) / graphW
-  const scaleY = (svgHeight - padding * 2) / graphH
-  const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, Math.min(scaleX, scaleY)))
+  const scaleX = (svgWidth - fit.padding * 2) / graphW
+  const scaleY = (svgHeight - fit.padding * 2) / graphH
+  const naturalScale = Math.min(scaleX, scaleY)
+  const scale = Math.max(fit.minScale, Math.min(fit.maxScale, naturalScale))
 
   return {
     x: svgWidth / 2 - centerX * scale,
@@ -230,9 +279,9 @@ function computeEdgePath(
 
   let offset: number
   if (totalEdges <= 1) {
-    offset = dist * 0.12 // elegant curve for visual appeal
+    offset = dist * EDGE_STYLE.bezierSingleOffsetRatio // elegant curve for visual appeal
   } else {
-    const spreadFactor = 20
+    const spreadFactor = EDGE_STYLE.parallelEdgeSpread
     const offsetIndex = edgeIndex - (totalEdges - 1) / 2
     offset = offsetIndex * spreadFactor
   }
@@ -266,23 +315,8 @@ function getNodeBaseColor(node: OntologyNode, labels: Label[]): string {
     if (label?.color) return label.color
   }
   // Wiki nodes use violet color
-  if (node.isWiki || (node as any).nodeType === "wiki-article" || (node as any).nodeType === "wiki-stub" || (node as any).nodeType === "wiki") return WIKI_STATUS_HEX.article    // #8b5cf6 violet
+  if (node.isWiki || node.nodeType === "wiki") return WIKI_STATUS_HEX.article    // #8b5cf6 violet
   return STATUS_COLORS[node.status] ?? DEFAULT_NODE_COLOR
-}
-
-/* ── Node fill color by status/label ──────────────────── */
-
-function getNodeFill(
-  node: OntologyNode,
-  labels: Label[],
-  isSelected: boolean,
-  isHovered: boolean,
-  isConnected: boolean,
-): string {
-  // Always use the node's own color — never replace with accent
-  const base = getNodeBaseColor(node, labels)
-  if (isSelected || isHovered || isConnected) return base
-  return base
 }
 
 /* ── Component ─────────────────────────────────────────── */
@@ -291,6 +325,19 @@ export function OntologyGraphCanvas({
   graph,
   filters,
   labels,
+  wikiCategories,
+  folders,
+  stickers,
+  groupBy = "connections",
+  onRequestGroupBy,
+  hiddenEdgeIds,
+  hiddenEdgeKinds,
+  isolatedNodeIds,
+  onHideEdge,
+  onHideEdgeKind,
+  onHideNodeConnections,
+  onIsolateNodes,
+  onShowAll,
   notes,
   tags,
   searchMatchIds,
@@ -301,6 +348,8 @@ export function OntologyGraphCanvas({
 }: OntologyGraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [, forceRender] = useReducer((c: number) => c + 1, 0)
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme !== "light"
 
   /* ── State ─────────────────────────────────────────── */
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
@@ -324,6 +373,29 @@ export function OntologyGraphCanvas({
   const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set())
   const multiSelectedIdsRef = useRef<Set<string>>(multiSelectedIds)
   useEffect(() => { multiSelectedIdsRef.current = multiSelectedIds }, [multiSelectedIds])
+
+  /* ── Context menu state (right-click on node or hull) ── */
+  // Targets are entity ids ready for store actions (notes are bare ids,
+  // wikis are "wiki:<id>"). Aligns with bulkAddSticker's expected format.
+  const [contextMenu, setContextMenu] = useState<{
+    x: number
+    y: number
+    targets: string[]
+  } | null>(null)
+
+  /* ── Hull drag state ── *
+   * When the user grabs a hull, freeze its path shape and translate it
+   * with the cursor instead of letting it re-compute from member positions
+   * every tick. Prevents the "hull dissolves and re-forms" jitter.
+   *
+   * draggingHullId — which hull is being moved (matches hull.id).
+   * hullDragDelta  — graph-coord offset to apply via SVG transform.
+   * Member nodes use the existing group-drag logic (positionsRef + fx/fy)
+   * so they end up at the same delta — when drag ends and the path
+   * unfreezes, it naturally re-forms around the new positions seamlessly.
+   */
+  const [draggingHullId, setDraggingHullId] = useState<string | null>(null)
+  const [hullDragDelta, setHullDragDelta] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 })
   const [selectionRect, setSelectionRect] = useState<{
     startX: number; startY: number; endX: number; endY: number
   } | null>(null)
@@ -379,17 +451,24 @@ export function OntologyGraphCanvas({
 
     const config = computeForceConfig(simNodes.length)
 
+    // Build links with optional linkStrength (Phase 2: tier-based)
+    const linkForce = forceLink<SimNode, SimulationLinkDatum<SimNode>>(simLinks)
+      .distance(config.linkDistance)
+    if (config.linkStrength !== undefined) linkForce.strength(config.linkStrength)
+
+    // Charge force with optional distanceMax (perf cap for large graphs)
+    const chargeForce = forceManyBody<SimNode>().strength(config.chargeStrength)
+    if (config.distanceMax !== undefined) chargeForce.distanceMax(config.distanceMax)
+
     const sim = forceSimulation<SimNode>(simNodes)
-      .force(
-        "link",
-        forceLink<SimNode, SimulationLinkDatum<SimNode>>(simLinks).distance(config.linkDistance),
-      )
-      .force("charge", forceManyBody().strength(config.chargeStrength))
-      .force("center", forceCenter(0, 0))
+      .force("link", linkForce)
+      .force("charge", chargeForce)
+      .force("center", forceCenter(0, 0).strength(config.centerStrength ?? 1))
       .force("collide", forceCollide(config.collisionRadius))
-      .alpha(0.01) // start nearly settled
-      .alphaMin(0.001)
-      .alphaDecay(0.02)
+      .alpha(SIM_CONFIG.alphaInitial)
+      .alphaMin(SIM_CONFIG.alphaMin)
+      .alphaDecay(SIM_CONFIG.alphaDecay)
+      .velocityDecay(SIM_CONFIG.velocityDecay)
       .stop()
 
     simRef.current = sim
@@ -430,6 +509,27 @@ export function OntologyGraphCanvas({
     return () => observer.disconnect()
   }, [graphFingerprint])
 
+  /* ── Search → auto-center on single match (PRD Q2 (a)) ── */
+  // When the user's search narrows to exactly ONE node, smoothly center
+  // the camera on it at scale 1.5 so the user sees what they searched for
+  // without manual zoom.
+  useEffect(() => {
+    if (!searchMatchIds || searchMatchIds.size !== 1) return
+    const targetId = [...searchMatchIds][0]
+    const pos = positionsRef.current.get(targetId)
+    if (!pos) return
+    const svg = svgRef.current
+    if (!svg) return
+    const rect = svg.getBoundingClientRect()
+    if (rect.width === 0) return
+    const targetScale = 1.5
+    setTransform({
+      x: rect.width / 2 - pos.x * targetScale,
+      y: rect.height / 2 - pos.y * targetScale,
+      scale: targetScale,
+    })
+  }, [searchMatchIds])
+
   /* ── rAF simulation loop ───────────────────────────── */
   const startSimLoop = useCallback(() => {
     if (simActiveRef.current) return
@@ -468,7 +568,7 @@ export function OntologyGraphCanvas({
   }, [])
 
   // Space key = pan mode (n8n style) + Arrow keys = pan viewport
-  const PAN_STEP = 60
+  const PAN_STEP = VIEWPORT.panStep
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" && !e.repeat) {
@@ -511,10 +611,33 @@ export function OntologyGraphCanvas({
     }
   }, [])
 
+  /* ── Edge identity helper ────────────────────────────
+   * Stable string id for an edge (since OntologyEdge has no id field).
+   * Used for hide/restore tracking. Multiple edges between the same
+   * pair of nodes with different `kind`s coexist (e.g. wikilink + relation),
+   * so kind is part of the key. */
+  const edgeId = useCallback(
+    (e: OntologyEdge) => `${e.source}→${e.target}:${e.kind}`,
+    [],
+  )
+
   /* ── Derived: visible edges ────────────────────────── */
+  const hiddenEdgeIdSet = useMemo(() => new Set(hiddenEdgeIds ?? []), [hiddenEdgeIds])
+  const hiddenEdgeKindSet = useMemo(() => new Set(hiddenEdgeKinds ?? []), [hiddenEdgeKinds])
+  const isolatedSet = useMemo(
+    () => (isolatedNodeIds && isolatedNodeIds.length > 0 ? new Set(isolatedNodeIds) : null),
+    [isolatedNodeIds],
+  )
   const visibleEdges = useMemo(
-    () => graph.edges.filter((e) => isEdgeVisible(e, filters)),
-    [graph.edges, filters],
+    () => graph.edges.filter((e) => {
+      if (!isEdgeVisible(e, filters)) return false
+      if (hiddenEdgeIdSet.has(edgeId(e))) return false
+      if (hiddenEdgeKindSet.has(e.kind)) return false
+      // Isolation mode: only edges between two isolated nodes survive.
+      if (isolatedSet && !(isolatedSet.has(e.source) && isolatedSet.has(e.target))) return false
+      return true
+    }),
+    [graph.edges, filters, hiddenEdgeIdSet, hiddenEdgeKindSet, isolatedSet, edgeId],
   )
 
   /* ── Node lookup map — O(1) instead of O(n) find ──── */
@@ -562,80 +685,39 @@ export function OntologyGraphCanvas({
     return map
   }, [visibleEdges])
 
-  /* ── Edge-based cluster hulls (connected components) ── */
+  /* ── Cluster hulls — Group by aware ──────────────────── *
+   *
+   * Hull rule = the user's "Group by" selection in the Display popover.
+   * Same vocabulary as Notes/Wiki views, so the graph is "Notes view in
+   * graph mode" rather than a separate clustering system.
+   *
+   * Modes:
+   *  - "none"        → no hulls
+   *  - "connections" → legacy BFS connected component (graph topology)
+   *  - others        → group nodes by entity field (label/tag/folder/category/status)
+   *
+   * Color resolution: each group's color comes from the entity that defines
+   * it (label.color / tag.color / category.color / folder.color / status hex).
+   * Falls back to GRAPH_CLUSTER_PALETTE if entity not found.
+   */
   const clusterHulls = useMemo(() => {
-    // Build adjacency from visible edges
-    const adj = new Map<string, Set<string>>()
-    for (const edge of visibleEdges) {
-      if (!adj.has(edge.source)) adj.set(edge.source, new Set())
-      if (!adj.has(edge.target)) adj.set(edge.target, new Set())
-      adj.get(edge.source)!.add(edge.target)
-      adj.get(edge.target)!.add(edge.source)
-    }
+    if (groupBy === "none") return []
 
-    // Find connected components via BFS
-    const visited = new Set<string>()
-    const components: string[][] = []
-
-    for (const nodeId of adj.keys()) {
-      if (visited.has(nodeId)) continue
-      const component: string[] = []
-      const queue = [nodeId]
-      visited.add(nodeId)
-      while (queue.length > 0) {
-        const current = queue.shift()!
-        component.push(current)
-        for (const neighbor of adj.get(current) ?? []) {
-          if (!visited.has(neighbor)) {
-            visited.add(neighbor)
-            queue.push(neighbor)
-          }
-        }
-      }
-      components.push(component)
-    }
-
-    const hulls: { id: string; color: string; path: string }[] = []
-
-    for (let ci = 0; ci < components.length; ci++) {
-      const component = components[ci]
-      if (component.length < 3) continue // Need at least 3 nodes for a hull
-
-      // Gather positions
+    // Helper: collect points for a list of node IDs, return null if too few.
+    const gatherPoints = (nodeIds: string[]): { x: number; y: number }[] | null => {
       const points: { x: number; y: number }[] = []
-      for (const nid of component) {
+      for (const nid of nodeIds) {
         const pos = positionsRef.current.get(nid)
         if (pos) points.push(pos)
       }
-      if (points.length < 3) continue
+      return points.length >= 3 ? points : null
+    }
 
-      // Determine color — if all nodes share a common label, use that label's color
-      let commonLabelId: string | null = null
-      let allSameLabel = true
-      for (const nid of component) {
-        const node = nodeMap.get(nid)
-        if (!node) continue
-        if (commonLabelId === null) {
-          commonLabelId = node.labelId
-        } else if (node.labelId !== commonLabelId) {
-          allSameLabel = false
-          break
-        }
-      }
-
-      let color: string
-      if (allSameLabel && commonLabelId) {
-        const label = labels.find((l) => l.id === commonLabelId)
-        color = label?.color ?? CLUSTER_COLORS[ci % CLUSTER_COLORS.length]
-      } else {
-        color = CLUSTER_COLORS[ci % CLUSTER_COLORS.length]
-      }
-
-      // Compute convex hull (Graham scan)
+    // Helper: convex hull → padding → smooth curve → SVG path.
+    const buildHullPath = (points: { x: number; y: number }[]): string | null => {
       const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y)
       const cross = (o: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }) =>
         (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
-
       const lower: { x: number; y: number }[] = []
       for (const p of sorted) {
         while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop()
@@ -650,10 +732,9 @@ export function OntologyGraphCanvas({
       upper.pop()
       lower.pop()
       const hull = lower.concat(upper)
-      if (hull.length < 3) continue
+      if (hull.length < 3) return null
 
-      // Expand hull outward by padding
-      const pad = 30
+      const pad = HULL.padding
       const cx = hull.reduce((s, p) => s + p.x, 0) / hull.length
       const cy = hull.reduce((s, p) => s + p.y, 0) / hull.length
       const expanded = hull.map((p) => {
@@ -661,15 +742,145 @@ export function OntologyGraphCanvas({
         const d = Math.sqrt(dx * dx + dy * dy) || 1
         return { x: p.x + (dx / d) * pad, y: p.y + (dy / d) * pad }
       })
-
-      // Build smooth closed curve
-      const path = smoothHullPath(expanded)
-
-      hulls.push({ id: `cluster-${ci}`, color, path })
+      return smoothHullPath(expanded)
     }
 
+    // ── Mode A: legacy BFS connected components ──
+    if (groupBy === "connections") {
+      const adj = new Map<string, Set<string>>()
+      for (const edge of visibleEdges) {
+        if (!adj.has(edge.source)) adj.set(edge.source, new Set())
+        if (!adj.has(edge.target)) adj.set(edge.target, new Set())
+        adj.get(edge.source)!.add(edge.target)
+        adj.get(edge.target)!.add(edge.source)
+      }
+      const visited = new Set<string>()
+      const components: string[][] = []
+      for (const nodeId of adj.keys()) {
+        if (visited.has(nodeId)) continue
+        const component: string[] = []
+        const queue = [nodeId]
+        visited.add(nodeId)
+        while (queue.length > 0) {
+          const current = queue.shift()!
+          component.push(current)
+          for (const neighbor of adj.get(current) ?? []) {
+            if (!visited.has(neighbor)) {
+              visited.add(neighbor)
+              queue.push(neighbor)
+            }
+          }
+        }
+        components.push(component)
+      }
+
+      const hulls: { id: string; color: string; path: string; nodeIds: string[] }[] = []
+      for (let ci = 0; ci < components.length; ci++) {
+        const component = components[ci]
+        if (component.length < HULL.minNodes) continue
+        const points = gatherPoints(component)
+        if (!points) continue
+
+        // Color: shared label color if all nodes have the same label, else palette.
+        let commonLabelId: string | null = null
+        let allSameLabel = true
+        for (const nid of component) {
+          const node = nodeMap.get(nid)
+          if (!node) continue
+          if (commonLabelId === null) commonLabelId = node.labelId
+          else if (node.labelId !== commonLabelId) { allSameLabel = false; break }
+        }
+        let color: string
+        if (allSameLabel && commonLabelId) {
+          const label = labels.find((l) => l.id === commonLabelId)
+          color = label?.color ?? CLUSTER_COLORS[ci % CLUSTER_COLORS.length]
+        } else {
+          color = CLUSTER_COLORS[ci % CLUSTER_COLORS.length]
+        }
+        const path = buildHullPath(points)
+        if (path) hulls.push({ id: `cluster-conn-${ci}`, color, path, nodeIds: component })
+      }
+      return hulls
+    }
+
+    // ── Mode B: Group by entity field ──
+    // Each node may belong to multiple groups (e.g. multiple tags/categories),
+    // so a node can appear in multiple hulls. This is intentional — matches
+    // how Notes/Wiki views display multi-membership groupings.
+    type GroupKey = string
+    const groups = new Map<GroupKey, OntologyNode[]>()
+
+    const wikiCategoryFor = (node: OntologyNode): string[] => node.categoryIds ?? []
+    const tagsFor         = (node: OntologyNode): string[] => node.tags ?? []
+    const stickersFor     = (node: OntologyNode): string[] => node.stickerIds ?? []
+
+    for (const node of graph.nodes) {
+      // Skip tag nodes — they're metadata markers, not group members
+      if (node.nodeType === "tag") continue
+      let keys: GroupKey[] = []
+      switch (groupBy) {
+        case "sticker":
+          // Cross-entity (notes + wikis) explicit grouping marker.
+          // First in the switch since it's the recommended default.
+          keys = stickersFor(node)
+          break
+        case "label":
+          if (node.labelId) keys = [node.labelId]
+          break
+        case "tag":
+          keys = tagsFor(node)
+          break
+        case "folder":
+          if (node.folderId) keys = [node.folderId]
+          break
+        case "category":
+          // Wiki-only field; notes won't have categoryIds → won't be grouped
+          keys = wikiCategoryFor(node)
+          break
+        case "status":
+          keys = [node.status]
+          break
+        default:
+          keys = []
+      }
+      for (const key of keys) {
+        if (!groups.has(key)) groups.set(key, [])
+        groups.get(key)!.push(node)
+      }
+    }
+
+    // Resolve color for a group key based on the active groupBy.
+    const resolveColor = (key: string, fallbackIdx: number): string => {
+      const fallback = CLUSTER_COLORS[fallbackIdx % CLUSTER_COLORS.length]
+      switch (groupBy) {
+        case "sticker":  return stickers?.find((s) => s.id === key)?.color ?? fallback
+        case "label":    return labels.find((l) => l.id === key)?.color ?? fallback
+        case "tag":      return tags?.find((t) => t.id === key)?.color ?? fallback
+        case "folder":   return folders?.find((f) => f.id === key)?.color ?? fallback
+        case "category": return wikiCategories?.find((c) => c.id === key)?.color ?? fallback
+        case "status":   return NOTE_STATUS_HEX[key as keyof typeof NOTE_STATUS_HEX] ?? fallback
+        default:         return fallback
+      }
+    }
+
+    const hulls: { id: string; color: string; path: string; nodeIds: string[] }[] = []
+    let idx = 0
+    for (const [key, members] of groups.entries()) {
+      if (members.length < HULL.minNodes) { idx++; continue }
+      const memberIds = members.map((m) => m.id)
+      const points = gatherPoints(memberIds)
+      if (!points) { idx++; continue }
+      const color = resolveColor(key, idx)
+      const path = buildHullPath(points)
+      if (path) hulls.push({ id: `cluster-${groupBy}-${key}`, color, path, nodeIds: memberIds })
+      idx++
+    }
     return hulls
-  }, [visibleEdges, graph.nodes, labels, nodeMap, positionsRef.current])
+    // PRD Q3 (a): re-compute every render. n=200 hull build < 5ms so cheap.
+    // positionsRef.current is a ref — React doesn't track ref mutations as
+    // deps, so we use the per-render `transform` (changes on every sim tick
+    // via forceRender) to invalidate the memo when needed.
+  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, nodeMap, transform])
 
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(
@@ -782,12 +993,19 @@ export function OntologyGraphCanvas({
       setTooltip(null)
       if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
 
-      // If this node is in multi-selection, prepare group drag
-      // If not (and no Ctrl/Cmd), start fresh single drag
-      // Compute new set synchronously so we can update the ref immediately
+      // Multi-select rules (matches Mac Finder / Linear conventions):
+      //  - Ctrl/Cmd + click → toggle this node in/out of selection
+      //  - Shift + click    → add this node to selection (no toggle)
+      //  - Plain click on already-selected node → keep group (for drag)
+      //  - Plain click otherwise → start fresh single selection
       const prev = multiSelectedIdsRef.current
       let nextSet: Set<string>
       if (e.ctrlKey || e.metaKey) {
+        nextSet = new Set(prev)
+        if (nextSet.has(nodeId)) nextSet.delete(nodeId)
+        else nextSet.add(nodeId)
+        if (nextSet.size === 0) nextSet.add(nodeId) // never end up with 0 during drag
+      } else if (e.shiftKey) {
         nextSet = new Set(prev)
         nextSet.add(nodeId)
       } else if (prev.has(nodeId) && prev.size > 1) {
@@ -850,11 +1068,15 @@ export function OntologyGraphCanvas({
         const dragId = dragNodeIdRef.current
         const selectedIds = multiSelectedIdsRef.current
         const startPos = dragStartPositions.current.get(dragId)
+        let curDx = 0
+        let curDy = 0
         if (!startPos) {
           positionsRef.current.set(dragId, { x: gp.x, y: gp.y })
         } else {
           const dx = gp.x - startPos.x
           const dy = gp.y - startPos.y
+          curDx = dx
+          curDy = dy
 
           // Move all selected nodes by the same delta (read from ref for latest value)
           for (const id of selectedIds) {
@@ -865,6 +1087,16 @@ export function OntologyGraphCanvas({
           }
           // Also ensure the drag node itself moves (in case not in set)
           positionsRef.current.set(dragId, { x: startPos.x + dx, y: startPos.y + dy })
+        }
+
+        // If we're dragging a hull (rather than a single node), update the
+        // hull's translate offset so the SVG path moves with the cursor
+        // without re-computing convex hull every tick. Member node positions
+        // already moved by the same delta above — when drag ends and the
+        // hull's `transform` is cleared, the freshly computed hull path
+        // appears in exactly the same place: no visible jump.
+        if (draggingHullId) {
+          setHullDragDelta({ dx: curDx, dy: curDy })
         }
 
         // Sync simulation
@@ -941,13 +1173,21 @@ export function OntologyGraphCanvas({
       if (onPositionsUpdate) onPositionsUpdate(new Map(positionsRef.current))
       dragNodeIdRef.current = null
       dragStartPositions.current.clear()
+      // Clear hull drag state — the path will re-compute from new node
+      // positions on the next render and slot in seamlessly (member nodes
+      // already moved by the same delta, so the convex hull's points
+      // shifted by the same delta too).
+      if (draggingHullId) {
+        setDraggingHullId(null)
+        setHullDragDelta({ dx: 0, dy: 0 })
+      }
       return
     }
 
     // --- End pan ---
     setPanning(false)
     panStart.current = null
-  }, [selectionRect, onPositionsUpdate])
+  }, [selectionRect, onPositionsUpdate, draggingHullId])
 
   /* ── Click on background: deselect ─────────────────── */
   const handleSvgClick = useCallback(
@@ -1043,10 +1283,17 @@ export function OntologyGraphCanvas({
     visibleEdges.some((e) => e.kind === type),
   ) as [RelationType, (typeof RELATION_TYPE_CONFIG)[RelationType]][]
 
-  /* ── LOD zoom (Feature 4) ──────────────────────────── */
-  const showLabels = transform.scale >= 0.3
-  const showEdgeLabels = transform.scale > 0.7
-  const showNodesAtAll = transform.scale >= 0.15
+  /* ── LOD zoom (smooth fade, Obsidian textFadeMultiplier pattern) ── */
+  // Smooth opacity transitions instead of binary toggles — feels more polished
+  // and keeps the user oriented during zoom changes.
+  const labelOpacityScale = fadeOpacity(transform.scale, LOD.labelFadeStart, LOD.labelFadeEnd)
+  const edgeOpacityScale = fadeOpacity(transform.scale, LOD.edgeFadeStart, LOD.edgeFadeEnd)
+  const showEdgeLabels = transform.scale >= LOD.edgeLabelMinZoom
+  const showNodesAtAll = transform.scale >= LOD.nodeMinZoom
+  // Back-compat alias — some code paths still use binary `showLabels`.
+  // True when opacity > 0 so we can short-circuit text rendering entirely
+  // when label is fully invisible (perf for large graphs at low zoom).
+  const showLabels = labelOpacityScale > 0
 
   /* ── Viewport culling (Feature 4) ─────────────────── */
   const viewBounds = (() => {
@@ -1054,7 +1301,7 @@ export function OntologyGraphCanvas({
     if (!svg) return null
     const rect = svg.getBoundingClientRect()
     if (rect.width === 0) return null
-    const pad = 60
+    const pad = VIEWPORT.cullPadding
     return {
       left: -transform.x / transform.scale - pad,
       top: -transform.y / transform.scale - pad,
@@ -1063,6 +1310,9 @@ export function OntologyGraphCanvas({
     }
   })()
 
+  // Node type visibility filters (default: all true if undefined).
+  const showNotes = filters.showNotes !== false
+  const showWiki  = filters.showWiki  !== false
   const culledNodes = (viewBounds
     ? cappedNodes.filter((n) => {
         const pos = getPos(n.id)
@@ -1070,7 +1320,13 @@ export function OntologyGraphCanvas({
                pos.y >= viewBounds.top && pos.y <= viewBounds.bottom
       })
     : cappedNodes
-  ).filter((n) => filters.showTagNodes || !n.id.startsWith("tag:"))
+  ).filter((n) => {
+    if (!filters.showTagNodes && n.id.startsWith("tag:")) return false
+    const t = getNodeType(n)
+    if (t === "note" && !showNotes) return false
+    if (t === "wiki" && !showWiki) return false
+    return true
+  })
 
   const culledNodeIds = new Set(culledNodes.map((n) => n.id))
 
@@ -1165,19 +1421,71 @@ export function OntologyGraphCanvas({
         </defs>
 
         <g transform={`translate(${transform.x},${transform.y}) scale(${transform.scale})`}>
-          {/* ── Cluster hull backgrounds ──────────── */}
-          {clusterHulls.map((hull) => (
-            <path
-              key={hull.id}
-              d={hull.path}
-              fill={hull.color}
-              fillOpacity={0.04}
-              stroke={hull.color}
-              strokeOpacity={0.12}
-              strokeWidth={1}
-              style={{ pointerEvents: "none" }}
-            />
-          ))}
+          {/* ── Cluster hull backgrounds (interactive) ──── *
+           * Hulls are clickable / draggable / right-clickable as a group:
+           *  - click  → select all member nodes (multi-select)
+           *  - drag   → group-move all members (uses existing group-drag logic)
+           *  - rclick → context menu acting on all members
+           * Theme-aware visibility — light mode bumps opacity ~3× so hull
+           * reads against a white page. Hull color comes from the group
+           * entity (label/tag/category/folder/sticker) when groupBy != none.
+           */}
+          {(() => {
+            const hullProps = getHullRenderProps(isDarkMode)
+            return clusterHulls.map((hull) => {
+              // While this hull is being dragged, freeze its path shape and
+              // translate the whole <path> element with the cursor delta.
+              // This avoids the visual "wobble" of hull recomputing from
+              // member positions each tick.
+              const isDragging = draggingHullId === hull.id
+              const dragTransform = isDragging
+                ? `translate(${hullDragDelta.dx}, ${hullDragDelta.dy})`
+                : undefined
+              return (
+                <path
+                  key={hull.id}
+                  d={hull.path}
+                  fill={hull.color}
+                  fillOpacity={hullProps.fillOpacity}
+                  stroke={hull.color}
+                  strokeOpacity={hullProps.strokeOpacity}
+                  strokeWidth={hullProps.strokeWidth}
+                  transform={dragTransform}
+                  style={{ cursor: isDragging ? "grabbing" : "grab" }}
+                  onMouseDown={(e) => {
+                    // Left-button only — right-click handled by onContextMenu.
+                    if (e.button !== 0) return
+                    e.stopPropagation()
+                    // Select all hull member nodes so the existing group-drag
+                    // logic kicks in when the user moves the mouse.
+                    const newSelection = new Set(hull.nodeIds)
+                    setMultiSelectedIds(newSelection)
+                    multiSelectedIdsRef.current = newSelection
+                    // Mark this hull as being dragged so its path gets the
+                    // translate transform instead of rebuilding each tick.
+                    setDraggingHullId(hull.id)
+                    setHullDragDelta({ dx: 0, dy: 0 })
+                    // Initiate drag on the first member node — group-drag
+                    // logic moves the rest along with it.
+                    if (hull.nodeIds.length > 0) {
+                      handleNodeMouseDown(e as ReactMouseEvent<SVGPathElement, MouseEvent>, hull.nodeIds[0])
+                    }
+                  }}
+                  onClick={(e) => {
+                    // Plain click (no drag) just selects the group.
+                    e.stopPropagation()
+                    setMultiSelectedIds(new Set(hull.nodeIds))
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setMultiSelectedIds(new Set(hull.nodeIds))
+                    setContextMenu({ x: e.clientX, y: e.clientY, targets: hull.nodeIds })
+                  }}
+                />
+              )
+            })
+          })()}
 
           {/* ── Edges (bezier curves) ─────────────── */}
           {culledEdges.map((edge, i) => {
@@ -1211,15 +1519,17 @@ export function OntologyGraphCanvas({
             const dimmed = searchMatchIds !== null && !searchMatchIds.has(edge.source) && !searchMatchIds.has(edge.target)
 
             // 3-tier edge styling per spec
-            const edgeStyle = getEdgeStyle(edge.kind)
+            const edgeStyle = getEdgeStyle(edge.kind, isDarkMode)
 
             // Highlighted edges use accent color
             const isHighlightedEdge = isHighlighted
             const edgeStroke = isHighlightedEdge
-              ? `${ACCENT_COLOR}70`
+              ? `${ACCENT_COLOR}${EDGE_STYLE.highlightAlphaHex}`
               : edgeStyle.strokeColor
-            const edgeWidth = isHighlightedEdge ? 2.5 : edgeStyle.strokeWidth
-            const edgeOpacity = dimmed ? 0.08 : isHighlightedEdge ? 1 : edgeStyle.opacity
+            const edgeWidth = isHighlightedEdge ? EDGE_STYLE.highlightStrokeWidth : edgeStyle.strokeWidth
+            // LOD fade: at very low zoom, edges become invisible (cluster hulls
+            // remain as visual anchor). Multiplied with the per-edge opacity.
+            const edgeOpacity = (dimmed ? 0.08 : isHighlightedEdge ? 1 : edgeStyle.opacity) * edgeOpacityScale
 
             if (isWikilink) {
               return (
@@ -1259,7 +1569,7 @@ export function OntologyGraphCanvas({
             const tgtColor = getNodeBaseColor(targetNode, labels)
             const gradId = gradientLookup.get(`${srcColor}||${tgtColor}`)
             const strokeRef = isHighlightedEdge
-              ? `${ACCENT_COLOR}70`
+              ? `${ACCENT_COLOR}${EDGE_STYLE.highlightAlphaHex}`
               : gradId ? `url(#${gradId})` : edgeStyle.strokeColor
 
             return (
@@ -1279,7 +1589,7 @@ export function OntologyGraphCanvas({
                     y={labelY}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize={9}
+                    fontSize={LABEL_CONFIG.fontSizeEdge}
                     fill="var(--muted-foreground)"
                     opacity={dimmed ? 0.3 : 0.7}
                     style={{ pointerEvents: "none" }}
@@ -1305,7 +1615,7 @@ export function OntologyGraphCanvas({
             const dimmed = searchMatchIds !== null && !searchMatchIds.has(node.id)
 
             const r = nodeRadius(node.connectionCount)
-            const fill = getNodeFill(node, labels, isSelected, isHovered, isConnected)
+            const fill = getNodeBaseColor(node, labels)
             const isDragging = dragNodeIdRef.current === node.id
             const nodeType = getNodeType(node)
 
@@ -1336,7 +1646,7 @@ export function OntologyGraphCanvas({
                         screenX: p.x * transform.scale + transform.x + rect.left,
                         screenY: p.y * transform.scale + transform.y + rect.top,
                       })
-                    }, 300)
+                    }, TOOLTIP_CONFIG.showDelay)
                   }
                 }}
                 onMouseLeave={() => {
@@ -1349,79 +1659,103 @@ export function OntologyGraphCanvas({
                 }}
                 onClick={(e) => handleNodeClick(e, node.id)}
                 onDoubleClick={(e) => handleNodeDblClick(e, node.id)}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  // If the right-clicked node is part of the current
+                  // multi-selection, act on the whole selection. Otherwise
+                  // act on just this node (and select it for visual feedback).
+                  const isInSelection = multiSelectedIdsRef.current.has(node.id)
+                  const targets = isInSelection
+                    ? Array.from(multiSelectedIdsRef.current)
+                    : [node.id]
+                  if (!isInSelection) {
+                    setMultiSelectedIds(new Set([node.id]))
+                  }
+                  setContextMenu({ x: e.clientX, y: e.clientY, targets })
+                }}
               >
                 {/* Selection ring — accent color */}
                 {isSelected && (
                   <circle
-                    cx={pos.x} cy={pos.y} r={r + 6}
-                    fill="none" stroke={ACCENT_COLOR} strokeWidth={1.5} opacity={0.4}
+                    cx={pos.x} cy={pos.y} r={r + SELECTION.singleRingExtra}
+                    fill="none" stroke={ACCENT_COLOR} strokeWidth={SELECTION.ringStrokeWidth} opacity={0.4}
                   />
                 )}
 
                 {/* Multi-selection ring */}
                 {isMultiSelected && !isSelected && (
                   <circle
-                    cx={pos.x} cy={pos.y} r={r + 5}
-                    fill="none" stroke={fill} strokeWidth={1.5} strokeDasharray="4 3" opacity={0.5}
+                    cx={pos.x} cy={pos.y} r={r + SELECTION.multiRingExtra}
+                    fill="none" stroke={fill} strokeWidth={SELECTION.ringStrokeWidth} strokeDasharray="4 3" opacity={0.5}
                   />
                 )}
 
-                {/* ── Node shape — type-dependent per spec ── */}
-                {nodeType === "note" && (() => {
-                  const op = dimmed ? 0.15 : 0.85
-                  return (
-                    <circle
-                      cx={pos.x} cy={pos.y} r={r}
-                      fill={`${fill}15`}
-                      stroke={fill}
-                      strokeWidth={1.3}
-                      opacity={op}
-                      style={{ transition: "opacity 0.15s" }}
-                    />
-                  )
-                })()}
-
-                {nodeType === "wiki" && (() => {
-                  const s = shapeR * 0.85
-                  const pts = hexagonPoints(pos.x, pos.y, s)
-                  const op = dimmed ? 0.15 : 0.85
+                {/* ── Node shape — type-dependent per spec ──
+                 * Theme-aware fill alpha: dark mode keeps a subtle ghost
+                 * tint (alpha ~15/0x); light mode bumps to ~55 (≈33%) so the
+                 * shape reads as a colored fill on a white page. Stroke
+                 * width is also bumped slightly in light mode for clarity. */}
+                {(() => {
+                  // Theme-aware render props — single helper consolidates the
+                  // light/dark fillOpacity & strokeWidth branching.
+                  const renderProps = getNodeRenderProps(nodeType, isDarkMode)
+                  const op = dimmed ? 0.15 : (nodeType === "tag" ? 0.85 : 0.95)
                   return (
                     <>
-                      <polygon
-                        points={pts.map(p => `${p[0]},${p[1]}`).join(" ")}
-                        fill={`${fill}12`}
-                        stroke={fill}
-                        strokeWidth={1.5}
-                        strokeLinejoin="round"
-                        opacity={op}
-                        style={{ transition: "opacity 0.15s" }}
-                      />
-                      {/* Internal cube wireframe lines: center → vertices 0, 2, 4 */}
-                      <line x1={pos.x} y1={pos.y} x2={pts[0][0]} y2={pts[0][1]}
-                        stroke={fill} strokeWidth={1.05} opacity={op * 0.6} />
-                      <line x1={pos.x} y1={pos.y} x2={pts[2][0]} y2={pts[2][1]}
-                        stroke={fill} strokeWidth={1.05} opacity={op * 0.6} />
-                      <line x1={pos.x} y1={pos.y} x2={pts[4][0]} y2={pts[4][1]}
-                        stroke={fill} strokeWidth={1.05} opacity={op * 0.6} />
+                      {nodeType === "note" && (
+                        <circle
+                          cx={pos.x} cy={pos.y} r={r}
+                          fill={fill}
+                          fillOpacity={renderProps.fillOpacity}
+                          stroke={fill}
+                          strokeWidth={renderProps.strokeWidth}
+                          opacity={op}
+                          style={{ transition: "opacity 0.15s" }}
+                        />
+                      )}
+                      {nodeType === "wiki" && (() => {
+                        const s = shapeR * 0.85
+                        const pts = hexagonPoints(pos.x, pos.y, s)
+                        return (
+                          <>
+                            <polygon
+                              points={pts.map(p => `${p[0]},${p[1]}`).join(" ")}
+                              fill={fill}
+                              fillOpacity={renderProps.fillOpacity}
+                              stroke={fill}
+                              strokeWidth={renderProps.strokeWidth}
+                              strokeLinejoin="round"
+                              opacity={op}
+                              style={{ transition: "opacity 0.15s" }}
+                            />
+                            {/* Internal cube wireframe lines: center → vertices 0, 2, 4 */}
+                            <line x1={pos.x} y1={pos.y} x2={pts[0][0]} y2={pts[0][1]}
+                              stroke={fill} strokeWidth={1.05} opacity={op * 0.6} />
+                            <line x1={pos.x} y1={pos.y} x2={pts[2][0]} y2={pts[2][1]}
+                              stroke={fill} strokeWidth={1.05} opacity={op * 0.6} />
+                            <line x1={pos.x} y1={pos.y} x2={pts[4][0]} y2={pts[4][1]}
+                              stroke={fill} strokeWidth={1.05} opacity={op * 0.6} />
+                          </>
+                        )
+                      })()}
+                      {nodeType === "tag" && (() => {
+                        const color = node.tagColor || fill
+                        const pw = r * 0.7   // pill half-width
+                        const ph = r * 0.35  // pill half-height
+                        return (
+                          <rect
+                            x={pos.x - pw} y={pos.y - ph}
+                            width={pw * 2} height={ph * 2}
+                            rx={ph} ry={ph}
+                            fill={color}
+                            fillOpacity={renderProps.fillOpacity}
+                            stroke={color}
+                            strokeWidth={renderProps.strokeWidth}
+                            opacity={op}
+                          />
+                        )
+                      })()}
                     </>
-                  )
-                })()}
-
-                {nodeType === "tag" && (() => {
-                  const color = (node as any).tagColor || fill
-                  const pw = r * 0.7   // pill half-width
-                  const ph = r * 0.35  // pill half-height
-                  const op = dimmed ? 0.15 : 0.75
-                  return (
-                    <rect
-                      x={pos.x - pw} y={pos.y - ph}
-                      width={pw * 2} height={ph * 2}
-                      rx={ph} ry={ph}
-                      fill={`${color}18`}
-                      stroke={color}
-                      strokeWidth={1.3}
-                      opacity={op}
-                    />
                   )
                 })()}
 
@@ -1429,20 +1763,20 @@ export function OntologyGraphCanvas({
                 {showLabels && (
                   <text
                     x={pos.x}
-                    y={pos.y + shapeR + 14}
+                    y={pos.y + shapeR + LABEL_CONFIG.yOffsetFromShape}
                     textAnchor="middle"
                     fill="var(--foreground)"
-                    fontSize={nodeType === "tag" ? 10 : 11}
+                    fontSize={nodeType === "tag" ? LABEL_CONFIG.fontSizeTag : LABEL_CONFIG.fontSizeNote}
                     fontFamily="-apple-system, system-ui, sans-serif"
                     fontWeight={isSelected ? 600 : 500}
                     fontStyle={nodeType === "tag" ? "italic" : "normal"}
-                    opacity={isHighlighted ? 1 : dimmed ? 0.3 : nodeType === "tag" ? 0.7 : 0.85}
+                    opacity={(isHighlighted ? 1 : dimmed ? 0.3 : nodeType === "tag" ? 0.7 : 0.85) * labelOpacityScale}
                     style={{
                       transition: "opacity 0.15s",
                       pointerEvents: "none",
                     }}
                   >
-                    {isHovered ? node.label : truncate(node.label, LABEL_TRUNCATE)}
+                    {isHovered ? node.label : truncate(node.label, LABEL_CONFIG.truncate)}
                   </text>
                 )}
               </g>
@@ -1471,17 +1805,18 @@ export function OntologyGraphCanvas({
             svgRef={svgRef}
             legendRelationTypes={legendRelationTypes}
             hasWikilinkEdges={hasWikilinkEdges}
+            isDarkMode={isDarkMode}
           />
         )}
       </svg>
 
-      {/* ── Minimap ──────────────────────────────────── */}
+      {/* ── Minimap ─────── edges synced with main canvas filter ──── */}
       <MiniMap
         positions={positionsRef}
         transform={transform}
         svgRef={svgRef}
         nodes={graph.nodes}
-        edges={graph.edges}
+        edges={visibleEdges}
         labels={labels}
         selectedNodeId={selectedNodeId}
         onNavigate={(t) => setTransform(t)}
@@ -1533,6 +1868,107 @@ export function OntologyGraphCanvas({
         </button>
       </div>
 
+      {/* ── Selection hint / status / hidden-edges indicator (top-left) ── *
+       * Stack of small bars conveying current canvas state.
+       * - shortcut tutorial when nothing selected
+       * - selection count + clear when nodes selected
+       * - hidden-count + restore when any visual filter is active */}
+      {!contextMenu && (
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
+          {multiSelectedIds.size === 0 ? (
+            <div
+              className="px-2.5 py-1.5 rounded text-2xs text-foreground/85 font-medium bg-card/95 backdrop-blur-sm border border-border-subtle pointer-events-none select-none shadow-sm"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
+              <Kbd>Shift</Kbd> <span>+ drag</span>
+              <span className="text-foreground/30 mx-1.5">·</span>
+              <Kbd>{typeof navigator !== "undefined" && /Mac/.test(navigator.platform) ? "⌘" : "Ctrl"}</Kbd>
+              <span> + click</span>
+              <span className="text-foreground/30 mx-1.5">·</span>
+              <span>right-click for actions</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded text-2xs bg-accent/90 backdrop-blur-sm border border-border-subtle select-none shadow-sm">
+              <span className="text-foreground tabular-nums">
+                {multiSelectedIds.size} selected
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setMultiSelectedIds(new Set())
+                  multiSelectedIdsRef.current = new Set()
+                }}
+                className="text-muted-foreground hover:text-foreground"
+                title="Clear selection (Esc)"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Hidden / isolated state indicator */}
+          {(() => {
+            const hiddenCount = (hiddenEdgeIds?.length ?? 0) + (hiddenEdgeKinds?.length ?? 0)
+            const isolatedCount = isolatedNodeIds?.length ?? 0
+            if (hiddenCount === 0 && isolatedCount === 0) return null
+            const parts: string[] = []
+            if (hiddenCount > 0) parts.push(`${hiddenCount} hidden`)
+            if (isolatedCount > 0) parts.push(`${isolatedCount} isolated`)
+            return (
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded text-2xs bg-amber-500/15 backdrop-blur-sm border border-amber-500/30 select-none shadow-sm">
+                <span className="text-foreground tabular-nums" title="Visual filters active — data is unchanged">
+                  {parts.join(" · ")}
+                </span>
+                {onShowAll && (
+                  <button
+                    type="button"
+                    onClick={onShowAll}
+                    className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                    title="Restore all hidden edges and clear isolation"
+                  >
+                    Show all
+                  </button>
+                )}
+              </div>
+            )
+          })()}
+        </div>
+      )}
+
+      {/* ── Right-click context menu ───────────────── *
+       * Renders portaled at viewport coords. Auto-switches groupBy to
+       * "sticker" after creating a sticker so the new hull lights up
+       * immediately (only if not already grouped by sticker). */}
+      {contextMenu && (() => {
+        const hasAnyHidden =
+          (hiddenEdgeIds && hiddenEdgeIds.length > 0) ||
+          (hiddenEdgeKinds && hiddenEdgeKinds.length > 0) ||
+          (isolatedNodeIds && isolatedNodeIds.length > 0)
+        return (
+          <NodeContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            selectedIds={contextMenu.targets}
+            onClose={() => setContextMenu(null)}
+            onAfterAddSticker={() => {
+              if (groupBy !== "sticker") onRequestGroupBy?.("sticker")
+            }}
+            onSpread={() => adjustSpread("spread")}
+            onCluster={() => adjustSpread("cluster")}
+            onHideConnections={
+              onHideNodeConnections
+                ? () => contextMenu.targets.forEach((id) => onHideNodeConnections(id))
+                : undefined
+            }
+            onIsolate={
+              onIsolateNodes ? () => onIsolateNodes(contextMenu.targets) : undefined
+            }
+            hasHidden={hasAnyHidden}
+            onShowAll={onShowAll}
+          />
+        )
+      })()}
+
       {/* ── Tooltip (Feature 3) ──────────────────────── */}
       {tooltip && notes && (() => {
         const note = notes.find((n) => n.id === tooltip.nodeId)
@@ -1562,7 +1998,7 @@ export function OntologyGraphCanvas({
               </div>
               {noteTags.length > 0 && (
                 <div className="flex gap-1 mt-1.5 flex-wrap">
-                  {noteTags.slice(0, 4).map((t: any) => (
+                  {noteTags.slice(0, TOOLTIP_CONFIG.maxTags).map((t: any) => (
                     <span key={t.id} className="flex items-center gap-0.5 text-2xs px-1 py-0.5 rounded bg-secondary/70">
                       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
                       {t.name}
@@ -1580,9 +2016,9 @@ export function OntologyGraphCanvas({
 
 /* ── MiniMap sub-component ──────────────────────────────── */
 
-const MINIMAP_W = 200
-const MINIMAP_H = 130
-const MINIMAP_PAD = 20
+const MINIMAP_W = MINIMAP.width
+const MINIMAP_H = MINIMAP.height
+const MINIMAP_PAD = MINIMAP.padding
 
 interface MiniMapProps {
   positions: React.RefObject<Map<string, { x: number; y: number }>>
@@ -1726,8 +2162,8 @@ function MiniMap({ positions, transform, svgRef, nodes, edges, labels, selectedN
       const sz = isSelected ? 3 : 2
 
       if (isSelected) {
-        ctx.fillStyle = "rgba(94, 106, 210, 1)"
-        ctx.strokeStyle = "rgba(94, 106, 210, 1)"
+        ctx.fillStyle = MINIMAP.selectedColor
+        ctx.strokeStyle = MINIMAP.selectedColor
       } else {
         const color = getNodeBaseColor(node, labels)
         ctx.fillStyle = color
@@ -1789,9 +2225,9 @@ function MiniMap({ positions, transform, svgRef, nodes, edges, labels, selectedN
     ctx.fillRect(0, Math.max(0, tl.my), Math.max(0, tl.mx), Math.min(vpMH, MINIMAP_H))
     ctx.fillRect(Math.min(MINIMAP_W, tl.mx + vpMW), Math.max(0, tl.my), MINIMAP_W, Math.min(vpMH, MINIMAP_H))
 
-    // Viewport border
-    ctx.strokeStyle = "rgba(94, 106, 210, 0.85)"
-    ctx.lineWidth = 1.5
+    // Viewport border (uses SPACE_COLORS.home via MINIMAP config)
+    ctx.strokeStyle = `${MINIMAP.selectedColor}D9` // 0xD9 ≈ 85% alpha
+    ctx.lineWidth = MINIMAP.borderWidth
     ctx.strokeRect(tl.mx, tl.my, vpMW, vpMH)
   })
 
@@ -1888,15 +2324,25 @@ function MiniMap({ positions, transform, svgRef, nodes, edges, labels, selectedN
   )
 }
 
+/* ── Tiny inline Kbd badge (used by the selection hint above) ──────── */
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex items-center justify-center min-w-[18px] px-1 py-0 text-[10px] rounded border border-border-subtle bg-muted/60 text-foreground font-mono">
+      {children}
+    </kbd>
+  )
+}
+
 /* ── Legend sub-component ───────────────────────────────── */
 
 interface LegendOverlayProps {
   svgRef: React.RefObject<SVGSVGElement | null>
   legendRelationTypes: [RelationType, (typeof RELATION_TYPE_CONFIG)[RelationType]][]
   hasWikilinkEdges: boolean
+  isDarkMode: boolean
 }
 
-function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: LegendOverlayProps) {
+function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges, isDarkMode }: LegendOverlayProps) {
   const [svgSize, setSvgSize] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
@@ -1931,39 +2377,59 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
   // Compute edge section start offset (after node types + separator)
   const edgeSectionStart = nodeTypeRows + (edgeRows > 0 ? 1 : 0)
 
+  // Theme-aware visuals — light mode uses a near-opaque white background
+  // and unified dark slate text so every label reads crisply. Per-status
+  // colors (cyan/orange/green/violet) are too low-contrast on white when
+  // used as text fill, so we use them ONLY for swatches and unify the
+  // text color. Same approach as Linear's status badges.
+  const bgFill          = isDarkMode ? "rgba(0,0,0,0.65)"           : "rgba(255,255,255,0.98)"
+  // Light mode: bumped border to 60% opacity so the legend frame is clearly
+  // visible against any graph content underneath. Dark mode keeps subtle.
+  const bgStroke        = isDarkMode ? "rgba(255,255,255,0.10)"     : "rgba(30,41,59,0.60)"
+  const labelFill       = isDarkMode ? "rgba(255,255,255,0.92)"     : "#1e293b"  // slate-800
+  const edgeLabelFill   = labelFill
+  const wikilinkStroke  = isDarkMode ? "#cbd5e1"                    : "#334155"  // slate-300/700
+  const wikilinkFill    = labelFill
+  // Match graph node fill density so legend swatches read as solid color
+  // chips against either background. Light mode bumped further (0x88→0xB0=69%)
+  // because per-status colors (cyan/orange/green/violet) all get washed out
+  // on white at lower densities, especially the violet wiki hexagon which
+  // is the largest swatch in the legend.
+  const nodeFillAlpha   = isDarkMode ? "55" : "B0"  // 0x55=33%, 0xB0=69%
+
   return (
     <g transform={`translate(${tx},${ty})`} style={{ pointerEvents: "none" }}>
-      <rect x={0} y={0} width={legendW} height={legendH} rx={6} ry={6} fill="rgba(0,0,0,0.55)" />
+      <rect x={0} y={0} width={legendW} height={legendH} rx={6} ry={6}
+            fill={bgFill} stroke={bgStroke} strokeWidth={1} />
 
-      {/* ── Notes (circle, by status) ── */}
+      {/* ── Notes (circle, by status) — text uses unified slate, swatch carries the color.
+           Light-mode swatches use a thicker stroke + denser fill so the
+           tiny 8px shapes still read against a white card background. ── */}
       <g transform={`translate(10, ${10 + 0 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.inbox + "30"} stroke={GRAPH_NODE_HEX.inbox} strokeWidth={1.3} />
-        <text x={26} y={10} fill={GRAPH_NODE_HEX.inbox} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Inbox</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.inbox + nodeFillAlpha} stroke={GRAPH_NODE_HEX.inbox} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Inbox</text>
       </g>
       <g transform={`translate(10, ${10 + 1 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.capture + "30"} stroke={GRAPH_NODE_HEX.capture} strokeWidth={1.3} />
-        <text x={26} y={10} fill={GRAPH_NODE_HEX.capture} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Capture</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.capture + nodeFillAlpha} stroke={GRAPH_NODE_HEX.capture} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Capture</text>
       </g>
       <g transform={`translate(10, ${10 + 2 * rowHeight})`}>
-        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.permanent + "30"} stroke={GRAPH_NODE_HEX.permanent} strokeWidth={1.3} />
-        <text x={26} y={10} fill={GRAPH_NODE_HEX.permanent} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Permanent</text>
+        <circle cx={6} cy={6} r={4} fill={GRAPH_NODE_HEX.permanent + nodeFillAlpha} stroke={GRAPH_NODE_HEX.permanent} strokeWidth={isDarkMode ? 1.3 : 1.8} />
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Permanent</text>
       </g>
 
-      {/* Separator */}
-      <line x1={8} y1={10 + 3 * rowHeight - 2} x2={legendW - 8} y2={10 + 3 * rowHeight - 2} stroke="rgba(255,255,255,0.12)" strokeWidth={0.5} />
-
-      {/* ── Wiki (hexagon) ── */}
+      {/* ── Wiki (hexagon — matches actual graph shape) ── */}
       <g transform={`translate(10, ${10 + 3 * rowHeight})`}>
         {(() => {
           const pts = hexagonPoints(6, 6, 4)
-          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={WIKI_STATUS_HEX.article + "30"} stroke={WIKI_STATUS_HEX.article} strokeWidth={1.3} strokeLinejoin="round" />
+          return <polygon points={pts.map(p => `${p[0]},${p[1]}`).join(" ")} fill={WIKI_STATUS_HEX.article + nodeFillAlpha} stroke={WIKI_STATUS_HEX.article} strokeWidth={isDarkMode ? 1.5 : 2.0} strokeLinejoin="round" />
         })()}
-        <text x={26} y={10} fill={WIKI_STATUS_HEX.article} fontSize={10} fontFamily="-apple-system, system-ui, sans-serif">Wiki</text>
+        <text x={26} y={10} fill={labelFill} fontSize={10} fontWeight={isDarkMode ? 500 : 600} fontFamily="-apple-system, system-ui, sans-serif">Wiki</text>
       </g>
 
       {/* Separator line before edges */}
       {edgeRows > 0 && (
-        <line x1={8} y1={10 + nodeTypeRows * rowHeight - 2} x2={legendW - 8} y2={10 + nodeTypeRows * rowHeight - 2} stroke="rgba(255,255,255,0.15)" strokeWidth={0.5} />
+        <line x1={8} y1={10 + nodeTypeRows * rowHeight - 2} x2={legendW - 8} y2={10 + nodeTypeRows * rowHeight - 2} stroke={isDarkMode ? "rgba(255,255,255,0.18)" : "rgba(30,41,59,0.30)"} strokeWidth={0.5} />
       )}
 
       {/* Edge type legends */}
@@ -1971,15 +2437,15 @@ function LegendOverlay({ svgRef, legendRelationTypes, hasWikilinkEdges }: Legend
         <g key={type} transform={`translate(10, ${10 + (edgeSectionStart + i) * rowHeight})`}>
           <line x1={0} y1={6} x2={20} y2={6} stroke={config.color} strokeWidth={1.5} />
           <polygon points="16 3.5, 20 6, 16 8.5" fill={config.color} />
-          <text x={26} y={10} fill="rgba(255,255,255,0.75)" fontSize={10} fontFamily="var(--font-sans)">
+          <text x={26} y={10} fill={edgeLabelFill} fontSize={10} fontFamily="var(--font-sans)">
             {config.label}
           </text>
         </g>
       ))}
       {hasWikilinkEdges && (
         <g transform={`translate(10, ${10 + (edgeSectionStart + legendRelationTypes.length) * rowHeight})`}>
-          <line x1={0} y1={6} x2={20} y2={6} stroke="#6b7280" strokeWidth={1.5} strokeDasharray="4 2" />
-          <text x={26} y={10} fill="rgba(255,255,255,0.6)" fontSize={10} fontFamily="var(--font-sans)">
+          <line x1={0} y1={6} x2={20} y2={6} stroke={wikilinkStroke} strokeWidth={1.5} strokeDasharray="4 2" />
+          <text x={26} y={10} fill={wikilinkFill} fontSize={10} fontFamily="var(--font-sans)">
             Wiki-link
           </text>
         </g>

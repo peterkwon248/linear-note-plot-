@@ -18,6 +18,10 @@ import {
 import { useBlockResize } from "@/components/editor/hooks/use-block-resize"
 import { BlockResizeHandles } from "@/components/editor/hooks/block-resize-handles"
 import { InfoboxValueRenderer } from "@/components/editor/infobox-value-renderer"
+import { InfoboxColorPicker } from "@/components/editor/infobox-color-picker"
+import { useTintedBg, useTintedText, boostAlphaForLight } from "@/lib/tinted-bg"
+import { useTheme } from "next-themes"
+import { cn } from "@/lib/utils"
 
 interface InfoboxRow {
   label: string
@@ -35,36 +39,6 @@ interface InfoboxRow {
   defaultCollapsed?: boolean
 }
 
-// Tier 1-2: Header color presets (나무위키식 인포박스 색상 테마)
-// 알파 0.35 — text가 충분히 읽히면서 색상 구분 가능. Tables의 CELL_COLORS 패턴 차용.
-interface HeaderColorPreset {
-  label: string
-  value: string | null
-  swatch: string // 스와치 표시용 (null일 때는 bg-secondary/30 mimic)
-}
-
-const HEADER_COLOR_PRESETS: HeaderColorPreset[] = [
-  { label: "Default", value: null, swatch: "rgba(148,163,184,0.25)" },
-  { label: "Blue", value: "rgba(59,130,246,0.35)", swatch: "rgba(59,130,246,0.35)" },
-  { label: "Red", value: "rgba(239,68,68,0.35)", swatch: "rgba(239,68,68,0.35)" },
-  { label: "Green", value: "rgba(34,197,94,0.35)", swatch: "rgba(34,197,94,0.35)" },
-  { label: "Yellow", value: "rgba(234,179,8,0.35)", swatch: "rgba(234,179,8,0.35)" },
-  { label: "Orange", value: "rgba(249,115,22,0.35)", swatch: "rgba(249,115,22,0.35)" },
-  { label: "Purple", value: "rgba(168,85,247,0.35)", swatch: "rgba(168,85,247,0.35)" },
-  { label: "Pink", value: "rgba(236,72,153,0.35)", swatch: "rgba(236,72,153,0.35)" },
-]
-
-// hex (#rrggbb) → rgba(r,g,b,0.35). input[type=color]는 항상 #rrggbb.
-function hexToRgba(hex: string, alpha = 0.35): string {
-  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim())
-  if (!m) return hex
-  const n = parseInt(m[1], 16)
-  const r = (n >> 16) & 0xff
-  const g = (n >> 8) & 0xff
-  const b = n & 0xff
-  return `rgba(${r},${g},${b},${alpha})`
-}
-
 function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeViewProps) {
   const editable = editor.isEditable
   const title = (node.attrs.title as string) || "Info"
@@ -75,6 +49,10 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
   const heroCaption = (node.attrs.heroCaption as string) || ""
   const headerColor = (node.attrs.headerColor as string | null) ?? null
   const { containerRef, isResizing, onResizeStart } = useBlockResize(width, height, updateAttributes)
+  const renderedHeaderColor = useTintedBg(headerColor)
+  const headerTextColor = useTintedText(headerColor)
+  const { resolvedTheme } = useTheme()
+  const isLight = resolvedTheme === "light"
 
   // Tier 1-3: 접기/펼치기 state (local, not persisted — consistent with Summary node)
   const [collapsed, setCollapsed] = useState(false)
@@ -271,24 +249,30 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
           className={`relative flex items-center justify-between px-3 py-2 ${
             headerColor ? "" : "bg-secondary/30"
           } ${collapsed ? "" : "border-b border-border-subtle"}`}
-          style={headerColor ? { backgroundColor: headerColor } : undefined}
+          style={renderedHeaderColor ? { backgroundColor: renderedHeaderColor } : undefined}
         >
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setCollapsed((c) => !c)}
               className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors shrink-0"
+              style={headerColor ? { color: headerTextColor } : undefined}
               title={collapsed ? "Expand infobox" : "Collapse infobox"}
             >
               {collapsed ? <CaretRight size={12} /> : <CaretDown size={12} />}
             </button>
-            <PhTable size={14} className="text-muted-foreground shrink-0" />
+            <PhTable size={14} className={headerColor ? "shrink-0" : "text-muted-foreground shrink-0"}
+              style={headerColor ? { color: headerTextColor } : undefined} />
             <input
               type="text"
               value={title}
               onChange={(e) => updateTitle(e.target.value)}
               readOnly={!editable}
-              className="text-[0.75em] font-semibold uppercase tracking-wider bg-transparent border-none outline-none text-muted-foreground w-full min-w-0"
+              className={cn(
+                "text-[0.75em] font-semibold uppercase tracking-wider bg-transparent border-none outline-none w-full min-w-0",
+                !headerColor && "text-muted-foreground",
+              )}
+              style={headerColor ? { color: headerTextColor } : undefined}
               placeholder="Infobox Title"
             />
           </div>
@@ -297,11 +281,15 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
               <button
                 type="button"
                 onClick={() => setShowColorPicker((v) => !v)}
-                className={`rounded p-0.5 transition-colors shrink-0 ${
+                className={cn(
+                  "rounded p-0.5 transition-colors shrink-0",
                   showColorPicker || headerColor
-                    ? "text-foreground"
-                    : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/infobox:opacity-100"
-                }`}
+                    ? headerColor
+                      ? "hover:bg-black/10 dark:hover:bg-white/10"
+                      : "text-foreground"
+                    : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/infobox:opacity-100",
+                )}
+                style={headerColor ? { color: headerTextColor } : undefined}
                 title="Header color"
               >
                 <PaintBucket size={12} />
@@ -310,7 +298,11 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                 <button
                   type="button"
                   onClick={() => updateAttributes({ width: null, height: null })}
-                  className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
+                  className={cn(
+                    "rounded p-0.5 transition-colors opacity-0 group-hover/infobox:opacity-100",
+                    headerColor ? "hover:bg-black/10 dark:hover:bg-white/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
+                  )}
+                  style={headerColor ? { color: headerTextColor } : undefined}
                   title="Reset size"
                 >
                   <ArrowsIn size={12} />
@@ -319,7 +311,11 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
               <button
                 type="button"
                 onClick={() => deleteNode()}
-                className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg transition-colors opacity-0 group-hover/infobox:opacity-100"
+                className={cn(
+                  "rounded p-0.5 transition-colors opacity-0 group-hover/infobox:opacity-100",
+                  headerColor ? "hover:bg-black/10 dark:hover:bg-white/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg",
+                )}
+                style={headerColor ? { color: headerTextColor } : undefined}
                 title="Remove infobox"
               >
                 <PhX size={12} />
@@ -329,42 +325,14 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
 
           {/* Tier 1-2: Color picker popover */}
           {editable && showColorPicker && (
-            <div
-              className="absolute right-2 top-[calc(100%+4px)] z-10 flex items-center gap-1 rounded-md border border-border-subtle bg-popover p-1.5 shadow-md"
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              {HEADER_COLOR_PRESETS.map((preset) => {
-                const isActive = (headerColor ?? null) === preset.value
-                return (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    onClick={() => {
-                      updateAttributes({ headerColor: preset.value })
-                      setShowColorPicker(false)
-                    }}
-                    title={preset.label}
-                    className={`h-5 w-5 rounded-sm border transition-transform hover:scale-110 ${
-                      isActive ? "border-foreground ring-1 ring-foreground" : "border-border-subtle"
-                    }`}
-                    style={{ backgroundColor: preset.swatch }}
-                  />
-                )
-              })}
-              <div className="mx-1 h-4 w-px bg-border-subtle" />
-              <label
-                className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm border border-border-subtle bg-gradient-to-br from-red-400 via-yellow-300 to-blue-400 hover:scale-110 transition-transform"
-                title="Custom color"
-              >
-                <input
-                  type="color"
-                  value={(headerColor && /^#/.test(headerColor)) ? headerColor : "#3b82f6"}
-                  onChange={(e) => {
-                    updateAttributes({ headerColor: hexToRgba(e.target.value) })
-                  }}
-                  className="pointer-events-none h-0 w-0 opacity-0"
-                />
-              </label>
+            <div className="absolute right-2 top-[calc(100%+4px)] z-10">
+              <InfoboxColorPicker
+                value={headerColor ?? null}
+                onChange={(v) => {
+                  updateAttributes({ headerColor: v })
+                  setShowColorPicker(false)
+                }}
+              />
             </div>
           )}
         </div>
@@ -381,7 +349,7 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                 <div
                   key={index}
                   className="relative flex items-center group/row"
-                  style={row.color ? { backgroundColor: row.color } : { backgroundColor: "rgba(148,163,184,0.12)" }}
+                  style={row.color ? { backgroundColor: isLight ? boostAlphaForLight(row.color) : row.color } : { backgroundColor: "rgba(148,163,184,0.12)" }}
                 >
                   <button
                     type="button"
@@ -426,42 +394,14 @@ function InfoboxNodeView({ node, updateAttributes, deleteNode, editor }: NodeVie
                     </>
                   )}
                   {editable && groupColorPickerIndex === index && (
-                    <div
-                      className="absolute right-2 top-[calc(100%-2px)] z-10 flex items-center gap-1 rounded-md border border-border-subtle bg-popover p-1.5 shadow-md"
-                      onMouseDown={(e) => e.stopPropagation()}
-                    >
-                      {HEADER_COLOR_PRESETS.map((preset) => {
-                        const isActive = (row.color ?? null) === preset.value
-                        return (
-                          <button
-                            key={preset.label}
-                            type="button"
-                            onClick={() => {
-                              updateRowColor(index, preset.value)
-                              setGroupColorPickerIndex(null)
-                            }}
-                            title={preset.label}
-                            className={`h-5 w-5 rounded-sm border transition-transform hover:scale-110 ${
-                              isActive ? "border-foreground ring-1 ring-foreground" : "border-border-subtle"
-                            }`}
-                            style={{ backgroundColor: preset.swatch }}
-                          />
-                        )
-                      })}
-                      <div className="mx-1 h-4 w-px bg-border-subtle" />
-                      <label
-                        className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm border border-border-subtle bg-gradient-to-br from-red-400 via-yellow-300 to-blue-400 hover:scale-110 transition-transform"
-                        title="Custom color"
-                      >
-                        <input
-                          type="color"
-                          value={(row.color && /^#/.test(row.color)) ? row.color : "#3b82f6"}
-                          onChange={(e) => {
-                            updateRowColor(index, hexToRgba(e.target.value))
-                          }}
-                          className="pointer-events-none h-0 w-0 opacity-0"
-                        />
-                      </label>
+                    <div className="absolute right-2 top-[calc(100%-2px)] z-10">
+                      <InfoboxColorPicker
+                        value={row.color ?? null}
+                        onChange={(v) => {
+                          updateRowColor(index, v)
+                          setGroupColorPickerIndex(null)
+                        }}
+                      />
                     </div>
                   )}
                 </div>

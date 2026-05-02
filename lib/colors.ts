@@ -7,6 +7,61 @@
  * canvas / SVG contexts that cannot resolve CSS vars.
  */
 
+/* ── Space Symbol Colors ─────────────────────────
+ * Single source of truth for "what color represents each major feature".
+ * Used in bookmarks, mentions, search results, graph, activity-bar hints.
+ * Never use raw hex inline for these — always import from here.
+ */
+
+export const SPACE_COLORS = {
+  home:     "#5e6ad2",   // Indigo  — workspace overview
+  notes:    "#06b6d4",   // Cyan    — information / clarity
+  wiki:     "#8b5cf6",   // Violet  — knowledge / encyclopedia
+  ontology: "#0f766e",   // Teal-700 — graph / connection (deep, calm)
+  calendar: "#ec4899",   // Pink    — time / events
+  library:  "#b45309",   // Amber-700 — storage / archive (bronze, easier on eyes)
+} as const
+
+export type Space = keyof typeof SPACE_COLORS
+
+/** Tailwind-compatible class lookups. Use for className with arbitrary value. */
+export const SPACE_COLOR_CLASSES = {
+  home:     { text: "text-[#5e6ad2]", bg: "bg-[#5e6ad2]" },
+  notes:    { text: "text-[#06b6d4]", bg: "bg-[#06b6d4]" },
+  wiki:     { text: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]" },
+  ontology: { text: "text-[#0f766e]", bg: "bg-[#0f766e]" },
+  calendar: { text: "text-[#ec4899]", bg: "bg-[#ec4899]" },
+  library:  { text: "text-[#b45309]", bg: "bg-[#b45309]" },
+} as const
+
+/* ── Status Colors (system semantics) ─────────────
+ * Used for warning/error/success/info banners and notifications.
+ * Tuned to be readable in both light and dark modes without
+ * being too neon/eye-straining.
+ */
+
+export const STATUS_COLORS = {
+  warning: "#b45309",   // amber-700  — bronze, soft
+  error:   "#dc2626",   // red-600
+  success: "#16a34a",   // green-600
+  info:    "#2563eb",   // blue-600
+} as const
+
+/* ── Entity Type Colors ──────────────────────────
+ * For non-space entity types that appear globally (bookmarks, references,
+ * tags, etc.). Distinct from SPACE_COLORS to keep hierarchy clear.
+ */
+
+export const ENTITY_COLORS = {
+  tag:       "#6b7280",   // Gray   — neutral metadata
+  label:     "#64748b",   // Slate  — neutral type (individual labels override)
+  folder:    "#f97316",   // Orange — file folder
+  bookmark:  "#fbbf24",   // Amber  — pin
+  reference: "#3b82f6",   // Blue   — citation / link
+  note:      SPACE_COLORS.notes,
+  wiki:      SPACE_COLORS.wiki,
+} as const
+
 /* ── Note Status ─────────────────────────────── */
 
 /** CSS-var references (for Tailwind / inline style with var()) */
@@ -30,10 +85,12 @@ export const WIKI_STATUS_COLORS = {
   article: { css: "var(--wiki-complete)", tw: "wiki-complete" },
 } as const
 
-/** Wiki hex — article uses violet to distinguish from permanent green */
+/** Wiki hex — article uses violet to distinguish from permanent green.
+ *  Bumped 8b5cf6 → 7c3aed (deeper violet) for better light-mode contrast
+ *  on graph hexagon nodes. */
 export const WIKI_STATUS_HEX = {
   stub:    "#f97316",   // orange
-  article: "#8b5cf6",   // violet  ← NOT green
+  article: "#7c3aed",   // violet  ← NOT green (darker than #8b5cf6)
 } as const
 
 /* ── Priority ────────────────────────────────── */
@@ -89,12 +146,52 @@ export const GRAPH_CLUSTER_PALETTE = [
   "#8b5cf6", "#06b6d4", "#f97316", "#14b8a6",
 ] as const
 
-/* ── Preset Palette (labels / folders / tags) ── */
+/* ── Preset Palette (labels / folders / tags) ──
+ * Linear-style: 18 colors covering full hue spectrum at consistent saturation/lightness.
+ * Names match Tailwind 500 tier for hover labels and keyboard-first selection.
+ */
 
 export const PRESET_COLORS = [
-  "#e5484d", "#f2994a", "#f2c94c", "#45d483", "#06b6d4",
-  "#5e6ad2", "#9b59b6", "#e91e8c", "#8b5cf6", "#0ea5e9",
+  "#ef4444", // red
+  "#f97316", // orange
+  "#f59e0b", // amber
+  "#eab308", // yellow
+  "#84cc16", // lime
+  "#22c55e", // green
+  "#10b981", // emerald
+  "#14b8a6", // teal
+  "#06b6d4", // cyan
+  "#0ea5e9", // sky
+  "#3b82f6", // blue
+  "#6366f1", // indigo
+  "#8b5cf6", // violet
+  "#a855f7", // purple
+  "#d946ef", // fuchsia
+  "#ec4899", // pink
+  "#f43f5e", // rose
+  "#64748b", // slate (neutral)
 ] as const
+
+export const PRESET_COLOR_NAMES: Record<string, string> = {
+  "#ef4444": "Red",
+  "#f97316": "Orange",
+  "#f59e0b": "Amber",
+  "#eab308": "Yellow",
+  "#84cc16": "Lime",
+  "#22c55e": "Green",
+  "#10b981": "Emerald",
+  "#14b8a6": "Teal",
+  "#06b6d4": "Cyan",
+  "#0ea5e9": "Sky",
+  "#3b82f6": "Blue",
+  "#6366f1": "Indigo",
+  "#8b5cf6": "Violet",
+  "#a855f7": "Purple",
+  "#d946ef": "Fuchsia",
+  "#ec4899": "Pink",
+  "#f43f5e": "Rose",
+  "#64748b": "Slate",
+}
 
 /* ── Link Density (board view) ──────────────── */
 

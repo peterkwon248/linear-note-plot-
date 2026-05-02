@@ -30,38 +30,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-
-// ── Header color presets (existing — unchanged) ───────────────────────────────
-interface HeaderColorPreset {
-  label: string
-  value: string | null
-  swatch: string
-}
-
-const HEADER_COLOR_PRESETS: HeaderColorPreset[] = [
-  { label: "Default", value: null, swatch: "rgba(148,163,184,0.25)" },
-  { label: "Blue", value: "rgba(59,130,246,0.35)", swatch: "rgba(59,130,246,0.35)" },
-  { label: "Red", value: "rgba(239,68,68,0.35)", swatch: "rgba(239,68,68,0.35)" },
-  { label: "Green", value: "rgba(34,197,94,0.35)", swatch: "rgba(34,197,94,0.35)" },
-  { label: "Yellow", value: "rgba(234,179,8,0.35)", swatch: "rgba(234,179,8,0.35)" },
-  { label: "Orange", value: "rgba(249,115,22,0.35)", swatch: "rgba(249,115,22,0.35)" },
-  { label: "Purple", value: "rgba(168,85,247,0.35)", swatch: "rgba(168,85,247,0.35)" },
-  { label: "Pink", value: "rgba(236,72,153,0.35)", swatch: "rgba(236,72,153,0.35)" },
-]
-
-// Group-header color picker reuses the same alpha-0.35 palette but with a
-// noticeably stronger default label so it reads as a "section accent".
-const GROUP_HEADER_COLOR_PRESETS = HEADER_COLOR_PRESETS
-
-function hexToRgba(hex: string, alpha = 0.35): string {
-  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim())
-  if (!m) return hex
-  const n = parseInt(m[1], 16)
-  const r = (n >> 16) & 0xff
-  const g = (n >> 8) & 0xff
-  const b = n & 0xff
-  return `rgba(${r},${g},${b},${alpha})`
-}
+import { InfoboxColorPicker } from "./infobox-color-picker"
+import { useTintedBg, useTintedText } from "@/lib/tinted-bg"
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 //
@@ -178,6 +148,8 @@ export function WikiInfobox({
   const [isEditing, setIsEditing] = useState(false)
   const [localEntries, setLocalEntries] = useState<WikiInfoboxEntry[]>(entries)
   const [showColorPicker, setShowColorPicker] = useState(false)
+  const renderedHeaderColor = useTintedBg(headerColor)
+  const headerTextColor = useTintedText(headerColor)
   const [showPresetDropdown, setShowPresetDropdown] = useState(false)
   const [pendingPreset, setPendingPreset] = useState<WikiInfoboxPreset | null>(null)
 
@@ -299,7 +271,7 @@ export function WikiInfobox({
         <div className={cn("rounded-lg border border-dashed border-border p-3", className)}>
           <button
             onClick={handleStartEdit}
-            className="flex items-center gap-1.5 text-[0.875em] text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
           >
             <PhPlus size={14} />
             Add infobox
@@ -332,13 +304,14 @@ export function WikiInfobox({
               "relative flex items-center justify-between border-b border-border px-3 py-2",
               !headerColor && "bg-secondary/30",
             )}
-            style={headerColor ? { backgroundColor: headerColor } : undefined}
+            style={renderedHeaderColor ? { backgroundColor: renderedHeaderColor } : undefined}
           >
             <span
               className={cn(
-                "text-[0.75em] font-semibold uppercase tracking-wider",
-                headerColor ? "text-white/85" : "text-muted-foreground",
+                "text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider",
+                !headerColor && "text-muted-foreground",
               )}
+              style={headerColor ? { color: headerTextColor } : undefined}
             >
               {presetDef.preset === "custom" ? "Info" : presetDef.label}
             </span>
@@ -362,10 +335,11 @@ export function WikiInfobox({
                       "rounded p-0.5 transition-colors shrink-0",
                       showColorPicker || headerColor
                         ? headerColor
-                          ? "text-white/85 hover:bg-white/10"
+                          ? "hover:bg-black/10 dark:hover:bg-white/10"
                           : "text-foreground"
                         : "text-muted-foreground/60 hover:text-foreground hover:bg-hover-bg opacity-0 group-hover/infobox:opacity-100",
                     )}
+                    style={headerColor ? { color: headerTextColor } : undefined}
                   >
                     <PaintBucket size={12} />
                   </button>
@@ -375,9 +349,10 @@ export function WikiInfobox({
                   className={cn(
                     "rounded p-0.5 transition-colors",
                     headerColor
-                      ? "text-white/70 hover:text-white hover:bg-white/10"
+                      ? "hover:bg-black/10 dark:hover:bg-white/10"
                       : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
                   )}
+                  style={headerColor ? { color: headerTextColor } : undefined}
                   title="Edit infobox"
                 >
                   <PencilSimple size={12} />
@@ -386,43 +361,14 @@ export function WikiInfobox({
             )}
 
             {canChangeColor && showColorPicker && (
-              <div
-                className="absolute right-2 top-[calc(100%+4px)] z-10 flex items-center gap-1 rounded-md border border-border-subtle bg-popover p-1.5 shadow-md"
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                {HEADER_COLOR_PRESETS.map((p) => {
-                  const isActive = (headerColor ?? null) === p.value
-                  return (
-                    <button
-                      key={p.label}
-                      type="button"
-                      onClick={() => {
-                        onHeaderColorChange?.(p.value)
-                        setShowColorPicker(false)
-                      }}
-                      title={p.label}
-                      className={cn(
-                        "h-5 w-5 rounded-sm border transition-transform hover:scale-110",
-                        isActive
-                          ? "border-foreground ring-1 ring-foreground"
-                          : "border-border-subtle",
-                      )}
-                      style={{ backgroundColor: p.swatch }}
-                    />
-                  )
-                })}
-                <div className="mx-1 h-4 w-px bg-border-subtle" />
-                <label
-                  className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm border border-border-subtle bg-gradient-to-br from-red-400 via-yellow-300 to-blue-400 hover:scale-110 transition-transform"
-                  title="Custom color"
-                >
-                  <input
-                    type="color"
-                    value={headerColor && /^#/.test(headerColor) ? headerColor : "#3b82f6"}
-                    onChange={(e) => onHeaderColorChange?.(hexToRgba(e.target.value))}
-                    className="pointer-events-none h-0 w-0 opacity-0"
-                  />
-                </label>
+              <div className="absolute right-2 top-[calc(100%+4px)] z-10">
+                <InfoboxColorPicker
+                  value={headerColor ?? null}
+                  onChange={(v) => {
+                    onHeaderColorChange?.(v)
+                    setShowColorPicker(false)
+                  }}
+                />
               </div>
             )}
           </div>
@@ -441,18 +387,18 @@ export function WikiInfobox({
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>인포박스 프리셋 변경</AlertDialogTitle>
+              <AlertDialogTitle>Change Infobox Preset</AlertDialogTitle>
               <AlertDialogDescription>
-                기존 필드를 모두 삭제하고{" "}
+                All current fields will be replaced with the{" "}
                 <span className="font-semibold text-foreground">
                   {pendingPreset ? getPresetDefinition(pendingPreset).label : ""}
                 </span>{" "}
-                프리셋으로 교체합니다. 이 동작은 되돌릴 수 없습니다.
+                preset. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={cancelPresetSwap}>취소</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmPresetSwap}>교체</AlertDialogAction>
+              <AlertDialogCancel onClick={cancelPresetSwap}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmPresetSwap}>Replace</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -474,13 +420,14 @@ export function WikiInfobox({
             "flex items-center justify-between border-b border-border px-3 py-2",
             !headerColor && "bg-secondary/30",
           )}
-          style={headerColor ? { backgroundColor: headerColor } : undefined}
+          style={renderedHeaderColor ? { backgroundColor: renderedHeaderColor } : undefined}
         >
           <span
             className={cn(
-              "text-[0.75em] font-semibold uppercase tracking-wider",
-              headerColor ? "text-white/85" : "text-muted-foreground",
+              "text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider",
+              !headerColor && "text-muted-foreground",
             )}
+            style={headerColor ? { color: headerTextColor } : undefined}
           >
             Edit Infobox
           </span>
@@ -506,9 +453,10 @@ export function WikiInfobox({
               className={cn(
                 "rounded p-1 transition-colors",
                 headerColor
-                  ? "text-white/70 hover:text-white hover:bg-white/10"
+                  ? "hover:bg-black/10 dark:hover:bg-white/10"
                   : "text-muted-foreground hover:bg-hover-bg",
               )}
+              style={headerColor ? { color: headerTextColor } : undefined}
             >
               <PhX size={14} />
             </button>
@@ -523,7 +471,7 @@ export function WikiInfobox({
                     value={entry.key}
                     onChange={(e) => handleChange(i, "key", e.target.value)}
                     placeholder="Section name"
-                    className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
+                    className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider text-foreground/80 outline-none focus:ring-1 focus:ring-ring"
                   />
                   <button
                     onClick={() => handleRemove(i)}
@@ -555,13 +503,13 @@ export function WikiInfobox({
                   value={entry.key}
                   onChange={(e) => handleChange(i, "key", e.target.value)}
                   placeholder="Key"
-                  className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[0.875em] outline-none focus:ring-1 focus:ring-ring"
+                  className="w-[100px] shrink-0 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
                 />
                 <input
                   value={entry.value}
                   onChange={(e) => handleChange(i, "value", e.target.value)}
                   placeholder="Value"
-                  className="flex-1 rounded border border-border bg-background px-2 py-1 text-[0.875em] outline-none focus:ring-1 focus:ring-ring"
+                  className="flex-1 rounded border border-border bg-background px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))] outline-none focus:ring-1 focus:ring-ring"
                 />
                 <button
                   onClick={() => handleRemove(i)}
@@ -575,14 +523,14 @@ export function WikiInfobox({
           <div className="flex items-center gap-4">
             <button
               onClick={handleAdd}
-              className="flex items-center gap-1.5 text-[0.875em] text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
             >
               <PhPlus size={14} />
               Add field
             </button>
             <button
               onClick={handleAddSection}
-              className="flex items-center gap-1.5 text-[0.875em] text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
               title="Add section divider row"
             >
               <PhPlus size={14} />
@@ -590,7 +538,7 @@ export function WikiInfobox({
             </button>
             <button
               onClick={handleAddGroupHeader}
-              className="flex items-center gap-1.5 text-[0.875em] text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 text-[calc(0.875em*var(--scale-infobox,1))] text-muted-foreground hover:text-foreground transition-colors"
               title="Add collapsible group header"
             >
               <PhPlus size={14} />
@@ -609,24 +557,24 @@ export function WikiInfobox({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>인포박스 프리셋 변경</AlertDialogTitle>
+            <AlertDialogTitle>Change Infobox Preset</AlertDialogTitle>
             <AlertDialogDescription>
-              기존 필드를 모두 삭제하고{" "}
+              All current fields will be replaced with the{" "}
               <span className="font-semibold text-foreground">
                 {pendingPreset ? getPresetDefinition(pendingPreset).label : ""}
               </span>{" "}
-              프리셋으로 교체합니다. 편집 중인 변경 사항도 함께 사라집니다.
+              preset. Unsaved edits will also be lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelPresetSwap}>취소</AlertDialogCancel>
+            <AlertDialogCancel onClick={cancelPresetSwap}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 confirmPresetSwap()
                 setIsEditing(false)
               }}
             >
-              교체
+              Replace
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -654,7 +602,7 @@ function ReadModeBody({
           return (
             <div
               key={i}
-              className="bg-secondary/40 px-3 py-1.5 text-[0.75em] font-semibold uppercase tracking-wider text-foreground/80"
+              className="bg-secondary/40 px-3 py-1.5 text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider text-foreground/80"
             >
               {entry.key || "Section"}
             </div>
@@ -714,12 +662,12 @@ function FieldRow({
 
   return (
     <div className="flex gap-3 px-3 py-2">
-      <span className="shrink-0 text-[0.875em] font-medium text-muted-foreground min-w-[80px]">
+      <span className="shrink-0 text-[calc(0.875em*var(--scale-infobox,1))] font-medium text-muted-foreground min-w-[80px]">
         {entry.key}
       </span>
       <InfoboxValueRenderer
         text={entry.value}
-        className="text-[0.875em] text-foreground break-words"
+        className="text-[calc(0.875em*var(--scale-infobox,1))] text-foreground break-words"
       />
     </div>
   )
@@ -762,17 +710,18 @@ function GroupHeaderRow({
   )
 
   const customColor = entry.color ?? null
+  const renderedColor = useTintedBg(customColor)
 
   return (
     <button
       type="button"
       onClick={() => toggle()}
       className={cn(
-        "flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-[0.75em] font-semibold uppercase tracking-wider transition-colors",
+        "flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider transition-colors",
         !customColor && "bg-secondary/40 text-foreground/80 hover:bg-secondary/55",
         customColor && "text-foreground/90 hover:brightness-110",
       )}
-      style={customColor ? { backgroundColor: customColor } : undefined}
+      style={renderedColor ? { backgroundColor: renderedColor } : undefined}
     >
       {collapsed ? <CaretRight size={11} /> : <CaretDown size={11} />}
       <span className="flex-1 truncate">{entry.key || "Group"}</span>
@@ -801,6 +750,7 @@ function GroupHeaderEditRow({
 }) {
   const [showColor, setShowColor] = useState(false)
   const customColor = entry.color ?? null
+  const renderedColor = useTintedBg(customColor)
   const defaultCollapsed = entry.defaultCollapsed ?? false
 
   return (
@@ -810,14 +760,14 @@ function GroupHeaderEditRow({
           "flex-1 flex items-center gap-1.5 rounded border px-2 py-1",
           customColor ? "border-transparent" : "border-border bg-secondary/30",
         )}
-        style={customColor ? { backgroundColor: customColor, borderColor: customColor } : undefined}
+        style={renderedColor ? { backgroundColor: renderedColor, borderColor: renderedColor } : undefined}
       >
         <CaretDown size={11} className="text-muted-foreground/70 shrink-0" />
         <input
           value={entry.key}
           onChange={(e) => onKeyChange(e.target.value)}
           placeholder="Group name"
-          className="flex-1 bg-transparent text-[0.75em] font-semibold uppercase tracking-wider text-foreground/90 outline-none placeholder:text-muted-foreground/70"
+          className="flex-1 bg-transparent text-[calc(0.75em*var(--scale-infobox,1))] font-semibold uppercase tracking-wider text-foreground/90 outline-none placeholder:text-muted-foreground/70"
         />
         <button
           type="button"
@@ -861,41 +811,14 @@ function GroupHeaderEditRow({
       </button>
 
       {showColor && (
-        <div
-          className="absolute right-10 top-[calc(100%+4px)] z-20 flex items-center gap-1 rounded-md border border-border-subtle bg-popover p-1.5 shadow-md"
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          {GROUP_HEADER_COLOR_PRESETS.map((p) => {
-            const isActive = customColor === p.value
-            return (
-              <button
-                key={p.label}
-                type="button"
-                onClick={() => {
-                  onColorChange(p.value)
-                  setShowColor(false)
-                }}
-                title={p.label}
-                className={cn(
-                  "h-5 w-5 rounded-sm border transition-transform hover:scale-110",
-                  isActive ? "border-foreground ring-1 ring-foreground" : "border-border-subtle",
-                )}
-                style={{ backgroundColor: p.swatch }}
-              />
-            )
-          })}
-          <div className="mx-1 h-4 w-px bg-border-subtle" />
-          <label
-            className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm border border-border-subtle bg-gradient-to-br from-red-400 via-yellow-300 to-blue-400 hover:scale-110 transition-transform"
-            title="Custom color"
-          >
-            <input
-              type="color"
-              value={customColor && /^#/.test(customColor) ? customColor : "#3b82f6"}
-              onChange={(e) => onColorChange(hexToRgba(e.target.value))}
-              className="pointer-events-none h-0 w-0 opacity-0"
-            />
-          </label>
+        <div className="absolute right-10 top-[calc(100%+4px)] z-20">
+          <InfoboxColorPicker
+            value={customColor ?? null}
+            onChange={(v) => {
+              onColorChange(v)
+              setShowColor(false)
+            }}
+          />
         </div>
       )}
     </div>
@@ -931,7 +854,7 @@ function PresetDropdown({
           "flex items-center gap-1 rounded transition-colors",
           compact
             ? "px-1.5 py-0.5 text-[0.7em]"
-            : "px-2 py-1 text-[0.875em]",
+            : "px-2 py-1 text-[calc(0.875em*var(--scale-infobox,1))]",
           inverted
             ? "text-white/85 hover:bg-white/10"
             : "text-muted-foreground hover:bg-hover-bg hover:text-foreground",
@@ -952,7 +875,7 @@ function PresetDropdown({
             }}
           />
           <div
-            className="absolute right-0 top-[calc(100%+4px)] z-40 min-w-[180px] rounded-md border border-border-subtle bg-popover p-1 shadow-md"
+            className="absolute right-0 top-[calc(100%+4px)] z-40 min-w-[220px] max-h-[min(60vh,440px)] overflow-y-auto rounded-md border border-border bg-popover p-1.5 shadow-lg"
             onMouseDown={(e) => e.stopPropagation()}
           >
             {INFOBOX_PRESETS.map((p) => {
@@ -966,16 +889,16 @@ function PresetDropdown({
                     onPick(p.preset)
                   }}
                   className={cn(
-                    "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-[0.8125em] transition-colors",
+                    "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-sm transition-colors",
                     isActive
-                      ? "bg-secondary/60 text-foreground"
-                      : "text-foreground/80 hover:bg-hover-bg hover:text-foreground",
+                      ? "bg-secondary/60 text-foreground font-medium"
+                      : "text-foreground/85 hover:bg-hover-bg hover:text-foreground",
                   )}
                 >
                   <span className="truncate">{p.label}</span>
                   {p.defaultHeaderColor && (
                     <span
-                      className="h-3 w-3 shrink-0 rounded-full border border-border-subtle"
+                      className="h-4 w-4 shrink-0 rounded-full ring-1 ring-black/5 dark:ring-white/10"
                       style={{ backgroundColor: p.defaultHeaderColor }}
                     />
                   )}

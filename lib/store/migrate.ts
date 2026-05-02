@@ -1224,5 +1224,136 @@ export function migrate(persistedState: unknown): PlotState {
     }
   }
 
+  // v97: Translate Korean infobox field/group keys → English. Existing data
+  // from preset-cloned entries used Korean labels; presets file is now English.
+  // Keep the user's `value` content untouched — only the `key` (label) is
+  // translated. Custom-typed keys (not in the map) are left as-is.
+  const INFOBOX_KEY_KO_TO_EN: Record<string, string> = {
+    // Person
+    "본명": "Full name", "출생": "Born", "국적": "Nationality",
+    "직업": "Occupation", "주요 업적": "Notable work", "학력": "Education",
+    "활동 기간": "Active period", "웹사이트": "Website",
+    // Character
+    "이름": "Name", "종/분류": "Species/Type", "소속": "Affiliation",
+    "성별": "Gender", "첫 등장": "First appearance", "성우": "Voice actor",
+    "능력/특기": "Abilities",
+    // Place
+    "공식 명칭": "Official name", "국가": "Country", "행정구역": "Region",
+    "면적": "Area", "인구": "Population", "설립/건설": "Founded/Built",
+    "수장": "Head", "좌표": "Coordinates",
+    // Organization
+    "설립일": "Founded", "설립자": "Founder", "본사": "Headquarters",
+    "대표": "Director", "업종": "Industry", "임직원 수": "Employees",
+    "법적 형태": "Legal form",
+    // Film
+    "감독": "Director", "출연진": "Cast", "장르": "Genre",
+    "개봉일": "Release", "상영시간": "Runtime", "제작사": "Studio",
+    "배급사": "Distributor", "제작 국가": "Country",
+    // Book
+    "저자": "Author", "출판사": "Publisher", "출판일": "Published",
+    "페이지 수": "Pages", "언어": "Language", "시리즈": "Series",
+    // Music
+    "아티스트": "Artist", "레이블": "Label", "발매일": "Released",
+    "트랙 수": "Tracks", "러닝타임": "Runtime", "프로듀서": "Producer",
+    // Game
+    "개발사": "Developer", "퍼블리셔": "Publisher", "플랫폼": "Platform",
+    "출시일": "Released", "등급": "Rating", "게임 엔진": "Engine",
+    "플레이 모드": "Mode",
+    // Event
+    "발생일": "Date", "발생지": "Location", "원인": "Cause",
+    "결과": "Outcome", "참여자": "Participants", "피해 규모": "Damage",
+    "기간": "Duration",
+    // Concept
+    "분야": "Field", "기원/등장 시기": "Origin", "제안자": "Proposed by",
+    "관련 개념": "Related concepts", "적용 사례": "Applications",
+    "참고 문헌": "References",
+    // Group headers
+    "추가 정보": "Additional info", "제작 정보": "Production info",
+  }
+  const translateKey = (k: unknown): unknown =>
+    typeof k === "string" && INFOBOX_KEY_KO_TO_EN[k] ? INFOBOX_KEY_KO_TO_EN[k] : k
+
+  if (Array.isArray(state.wikiArticles)) {
+    state.wikiArticles = (state.wikiArticles as any[]).map((a: any) => {
+      if (!Array.isArray(a.infobox)) return a
+      return {
+        ...a,
+        infobox: a.infobox.map((e: any) => ({ ...e, key: translateKey(e.key) })),
+      }
+    })
+  }
+  if (Array.isArray(state.notes)) {
+    for (const note of state.notes as any[]) {
+      if (Array.isArray(note.wikiInfobox)) {
+        note.wikiInfobox = note.wikiInfobox.map((e: any) => ({
+          ...e,
+          key: translateKey(e.key),
+        }))
+      }
+    }
+  }
+
+  // v98: strict dedup wikiArticles by id. Prior dedup passes (v90/v91) only
+  // trash-marked duplicates without removing them from the array, and a
+  // separate seed/hydrate path was re-pushing the same seeds on each load —
+  // resulting in 20+ copies of `wiki-1`, `wiki-2`, `wiki-3` in some users'
+  // stores, which broke React rendering with duplicate-key errors and an
+  // empty ontology canvas.
+  //
+  // Strategy: keep the FIRST occurrence per id and drop the rest.
+  if (Array.isArray(state.wikiArticles)) {
+    const seen = new Set<string>()
+    const before = (state.wikiArticles as any[]).length
+    state.wikiArticles = (state.wikiArticles as any[]).filter((a: any) => {
+      if (!a || typeof a.id !== "string") return false
+      if (seen.has(a.id)) return false
+      seen.add(a.id)
+      return true
+    })
+    const removed = before - (state.wikiArticles as any[]).length
+    if (removed > 0) {
+      console.log(`[migrate] v97→v98: removed ${removed} duplicate wikiArticles by id`)
+    }
+  }
+
+  // v99: Graph grouping redesign — assign default colors to existing wiki
+  // categories (didn't have a color field before; needed for hull color in
+  // the ontology graph when grouping by category). Also normalize
+  // wikiArticles.folderId to null so unified note+wiki grouping by folder
+  // works correctly.
+  //
+  // Color palette cycles so categories without explicit color still render
+  // distinct hulls in the graph.
+  const CATEGORY_DEFAULT_PALETTE_V99 = [
+    "#a78bfa", "#60a5fa", "#34d399", "#fbbf24", "#fb7185",
+    "#f472b6", "#22d3ee", "#fb923c", "#84cc16", "#c084fc",
+  ]
+
+  if (Array.isArray(state.wikiCategories)) {
+    state.wikiCategories = (state.wikiCategories as any[]).map((cat: any, i: number) => ({
+      ...cat,
+      color: typeof cat.color === "string" && cat.color.length > 0
+        ? cat.color
+        : CATEGORY_DEFAULT_PALETTE_V99[i % CATEGORY_DEFAULT_PALETTE_V99.length],
+    }))
+  }
+
+  if (Array.isArray(state.wikiArticles)) {
+    state.wikiArticles = (state.wikiArticles as any[]).map((a: any) => ({
+      ...a,
+      folderId: typeof a.folderId === "string" ? a.folderId : null,
+    }))
+  }
+
+  // v100: Sticker entity introduction.
+  // Cross-entity grouping marker (notes + wikis) — the third grouping
+  // dimension after Label (note-only) and WikiCategory (wiki-only).
+  // Migration is purely additive: ensure `stickers` array exists, and
+  // ensure `stickerIds` defaults to undefined (left optional in types
+  // so empty arrays aren't forced).
+  if (!Array.isArray((state as any).stickers)) {
+    (state as any).stickers = []
+  }
+
   return state as unknown as PlotState
 }

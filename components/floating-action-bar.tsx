@@ -25,6 +25,7 @@ import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
 import { setSplitTargetNoteId } from "@/lib/note-split-mode"
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
 
 /* ── Props ────────────────────────────────────────────── */
 
@@ -64,6 +65,9 @@ export function FloatingActionBar({
 
   const addWikiLink = usePlotStore((s) => s.addWikiLink)
   const setMergePickerOpen = usePlotStore((s) => s.setMergePickerOpen)
+  // Folders are global containers (notes + wikis). Listed here for the
+  // bulk "Move to folder" picker popover.
+  const folders = usePlotStore((s) => s.folders)
 
   /* ── GitMerge ── */
   const [mergeOpen, setMergeOpen] = useState(false)
@@ -432,6 +436,66 @@ export function FloatingActionBar({
             >
               <PhLink size={16} weight="regular" /> Link
             </button>
+
+            {/* Move to folder — bulk apply to all selected notes. Folders are
+                global containers shared with wiki articles, so the picker
+                shows every available folder + a "No folder" reset option. */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className="inline-flex items-center gap-1 rounded-md bg-secondary/60 px-3 py-2 text-ui font-medium text-muted-foreground hover:bg-hover-bg hover:text-foreground transition-colors"
+                  title="Move selected notes to a folder"
+                >
+                  <FolderOpen size={16} weight="regular" /> Folder
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="center" className="w-56 p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    batchUpdateNotes(ids, { folderId: null })
+                    toast(`${count} note${count !== 1 ? "s" : ""} moved out of folder`)
+                  }}
+                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded hover:bg-accent text-muted-foreground"
+                >
+                  No folder
+                </button>
+                {folders.length > 0 && <div className="my-1 border-t border-border-subtle" />}
+                {folders.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => {
+                      batchUpdateNotes(ids, { folderId: f.id })
+                      toast(`${count} note${count !== 1 ? "s" : ""} moved to ${f.name}`)
+                    }}
+                    className="flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded hover:bg-accent"
+                  >
+                    <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: f.color }} />
+                    <span className="truncate">{f.name}</span>
+                  </button>
+                ))}
+                {/* Inline folder creation — bulk apply to selected notes
+                    after creation. Saves a trip to the sidebar. */}
+                <div className="my-1 border-t border-border-subtle" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const name = window.prompt("New folder name:")?.trim()
+                    if (!name) return
+                    const palette = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899", "#14b8a6", "#eab308"]
+                    const color = palette[folders.length % palette.length]
+                    const newId = usePlotStore.getState().createFolder(name, color)
+                    batchUpdateNotes(ids, { folderId: newId })
+                    toast(`${count} note${count !== 1 ? "s" : ""} moved to ${name}`)
+                  }}
+                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-note text-left rounded text-muted-foreground hover:text-foreground hover:bg-accent"
+                >
+                  <span className="text-base leading-none">+</span>
+                  <span>New folder…</span>
+                </button>
+              </PopoverContent>
+            </Popover>
 
             {/* Remind */}
             <Divider />

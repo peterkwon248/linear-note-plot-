@@ -162,7 +162,10 @@
       "Bash(echo \"BUILD_EXIT: $?\")",
       "Bash(mkdir -p ~/.claude/.omc-worklog .omc/worklog .omc/notepads/general)",
       "Bash(cp ~/.claude/.omc-worklog/latest.md ~/.claude/.omc-worklog/2026-04-26_2300.md)",
-      "Bash(grep -rn \">in<\\\\|{\\\\\"in\\\\\"}\\\\|\\\\\\\\bin\\\\\\\\b.*linksOut\" components/ --include=\"*.tsx\")"
+      "Bash(grep -rn \">in<\\\\|{\\\\\"in\\\\\"}\\\\|\\\\\\\\bin\\\\\\\\b.*linksOut\" components/ --include=\"*.tsx\")",
+      "Bash(grep -v \"//\")",
+      "WebFetch(domain:www.palantir.com)",
+      "WebFetch(domain:graphaware.com)"
     ]
   }
 }

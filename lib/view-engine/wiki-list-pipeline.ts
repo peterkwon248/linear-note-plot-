@@ -74,6 +74,10 @@ export interface WikiFilterExtras {
   backlinksMap?: Map<string, number>
   /** Set of article IDs that have at least one child (parentArticleId === id). Computed once. */
   hasChildrenSet?: Set<string>
+  /** Full article list — needed for connectedTo filter to resolve title↔id
+   *  mapping (wiki linksOut contains titles, not ids). Optional so existing
+   *  callers without this still work. */
+  allArticles?: WikiArticle[]
 }
 
 function matchWikiRule(article: WikiArticle, rule: FilterRule, extras?: WikiFilterExtras): boolean {
@@ -193,6 +197,39 @@ function matchWikiRule(article: WikiArticle, rule: FilterRule, extras?: WikiFilt
       if (value === "_none") return operator === "eq" ? ts.length === 0 : ts.length > 0
       const has = ts.includes(value)
       return operator === "eq" ? has : !has
+    }
+
+    case "connectedTo": {
+      // value: "<targetArticleId>:<direction>"
+      // Wiki linksOut contains TITLES (not ids), so we need allArticles
+      // to resolve target id → target title and check membership.
+      const [targetId, dirRaw] = value.split(":")
+      if (!targetId) return true
+      if (article.id === targetId) return false
+      const direction = (dirRaw === "in" || dirRaw === "out") ? dirRaw : "both"
+
+      const all = extras?.allArticles
+      const target = all?.find((a) => a.id === targetId)
+      if (!target) return false
+
+      // Match by title OR alias (wikilinks resolve via either).
+      const targetNames = [target.title, ...(target.aliases ?? [])].map((s) => s.toLowerCase())
+      const articleNames = [article.title, ...(article.aliases ?? [])].map((s) => s.toLowerCase())
+
+      const articleLinksOut = (article.linksOut ?? []).map((t) => t.toLowerCase())
+      const targetLinksOut = (target.linksOut ?? []).map((t) => t.toLowerCase())
+
+      const articleCitesTarget = targetNames.some((n) => articleLinksOut.includes(n))
+      const targetCitesArticle = articleNames.some((n) => targetLinksOut.includes(n))
+
+      let connected = false
+      switch (direction) {
+        case "in":  connected = articleCitesTarget;  break
+        case "out": connected = targetCitesArticle;  break
+        case "both":
+        default:    connected = articleCitesTarget || targetCitesArticle
+      }
+      return operator === "eq" ? connected : !connected
     }
 
     default:

@@ -6,6 +6,7 @@ import { groupByInitial } from "@/lib/korean-utils"
 import { shortRelative } from "@/lib/format-utils"
 import { setWikiViewMode } from "@/lib/wiki-view-mode"
 import { isWikiStub } from "@/lib/wiki-utils"
+import { usePlotStore } from "@/lib/store"
 import type { WikiArticle, WikiCategory } from "@/lib/types"
 import type { GroupBy } from "@/lib/view-engine/types"
 import type { WikiGroup } from "@/lib/view-engine/wiki-list-pipeline"
@@ -21,6 +22,127 @@ import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash"
 import { Scissors } from "@phosphor-icons/react/dist/ssr/Scissors"
 import { X as PhX } from "@phosphor-icons/react/dist/ssr/X"
+import { FolderOpen } from "@phosphor-icons/react/dist/ssr/FolderOpen"
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight"
+import { Link as PhLink } from "@phosphor-icons/react/dist/ssr/Link"
+
+/* ── ShowConnectedSubmenu ──────────────────────────────────
+ * Inline expand-to-list pattern (matching FolderPickerSubmenu).
+ * Three direction options for the "Connected to" filter applied via
+ * the wiki view's filter state. */
+function ShowConnectedSubmenu({
+  onSelect,
+}: {
+  onSelect: (direction: "both" | "in" | "out") => void
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="flex flex-col">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+      >
+        <PhLink size={14} weight="regular" />
+        <span className="flex-1 text-left">Show connected</span>
+        <CaretRight size={10} weight="bold" className={cn("transition-transform", open && "rotate-90")} />
+      </button>
+      {open && (
+        <div className="ml-4 mt-0.5 mb-1 flex flex-col gap-px">
+          <button type="button" onClick={() => onSelect("both")} className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs text-foreground/80 hover:bg-active-bg">
+            <span className="text-muted-foreground">↔</span> Both directions
+          </button>
+          <button type="button" onClick={() => onSelect("in")} className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs text-foreground/80 hover:bg-active-bg">
+            <span className="text-muted-foreground">←</span> Backlinks only
+          </button>
+          <button type="button" onClick={() => onSelect("out")} className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs text-foreground/80 hover:bg-active-bg">
+            <span className="text-muted-foreground">→</span> Links out only
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── FolderPickerSubmenu ─────────────────────────────────────
+ * Inline expand-to-list pattern (rather than nested Popover) — keeps
+ * the action stay open while the user picks. Used by both wiki list
+ * row menu and the global folder selector elsewhere. */
+function FolderPickerSubmenu({
+  currentFolderId,
+  onSelect,
+}: {
+  currentFolderId: string | null
+  onSelect: (folderId: string | null) => void
+}) {
+  const folders = usePlotStore((s) => s.folders)
+  const [open, setOpen] = useState(false)
+  const currentName = currentFolderId
+    ? folders.find((f) => f.id === currentFolderId)?.name ?? "Unknown"
+    : null
+  return (
+    <div className="flex flex-col">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-2xs text-foreground/80 hover:bg-active-bg transition-colors"
+      >
+        <FolderOpen size={14} weight="regular" />
+        <span className="flex-1 text-left">Move to folder</span>
+        <span className="text-2xs text-muted-foreground truncate max-w-[80px]">
+          {currentName ?? "—"}
+        </span>
+        <CaretRight size={10} weight="bold" className={cn("transition-transform", open && "rotate-90")} />
+      </button>
+      {open && (
+        <div className="ml-4 mt-0.5 mb-1 flex flex-col gap-px max-h-[200px] overflow-y-auto">
+          <button
+            type="button"
+            onClick={() => onSelect(null)}
+            className={cn(
+              "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs hover:bg-active-bg transition-colors",
+              !currentFolderId ? "text-foreground font-medium" : "text-muted-foreground"
+            )}
+          >
+            No folder
+            {!currentFolderId && <PhCheck className="ml-auto text-accent" size={12} weight="bold" />}
+          </button>
+          {folders.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => onSelect(f.id)}
+              className={cn(
+                "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs hover:bg-active-bg transition-colors",
+                currentFolderId === f.id ? "text-foreground font-medium" : "text-foreground/80"
+              )}
+            >
+              <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: f.color }} />
+              <span className="truncate">{f.name}</span>
+              {currentFolderId === f.id && <PhCheck className="ml-auto text-accent shrink-0" size={12} weight="bold" />}
+            </button>
+          ))}
+          {/* Inline folder creation — same flow as the notes context menu. */}
+          <div className="my-1 h-px bg-border/40" />
+          <button
+            type="button"
+            onClick={() => {
+              const name = window.prompt("New folder name:")?.trim()
+              if (!name) return
+              const palette = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899", "#14b8a6", "#eab308"]
+              const color = palette[folders.length % palette.length]
+              const newId = usePlotStore.getState().createFolder(name, color)
+              onSelect(newId)
+            }}
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-2xs text-muted-foreground hover:text-foreground hover:bg-active-bg transition-colors"
+          >
+            <span className="text-base leading-none">+</span> New folder…
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 /* ── Types ── */
 
@@ -48,6 +170,9 @@ interface WikiListProps {
   onMergeArticle?: (sourceId: string) => void
   onSplitArticle?: (id: string) => void
   onDeleteArticle?: (id: string) => void
+  /** "Show connected" filter — applied via the wiki view's filter state.
+   *  Direction: both / in (backlinks) / out (links from this article). */
+  onShowConnectedArticle?: (id: string, direction: "both" | "in" | "out") => void
 
   // Stub support
   stubCount?: number
@@ -92,16 +217,21 @@ function ColumnHeaders({
       {hasSelection && (
         <div className="w-7 shrink-0 flex items-center justify-center">
           {onSelectAll ? (
-            <button
+            <div
+              data-checkbox
               onClick={onSelectAll}
-              className="w-4 h-4 rounded-[4px] border bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 flex items-center justify-center transition-colors shadow-sm"
+              className={cn(
+                "h-4 w-4 rounded-[4px] border flex items-center justify-center cursor-pointer transition-colors shadow-sm",
+                isAllSelected
+                  ? "bg-accent border-accent"
+                  : isPartiallySelected
+                    ? "bg-accent/50 border-accent"
+                    : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-500"
+              )}
             >
-              {isAllSelected ? (
-                <PhCheck size={10} weight="bold" className="text-accent" />
-              ) : isPartiallySelected ? (
-                <Minus size={10} weight="bold" className="text-muted-foreground" />
-              ) : null}
-            </button>
+              {isAllSelected && <PhCheck size={10} weight="bold" className="text-accent-foreground" />}
+              {isPartiallySelected && !isAllSelected && <Minus size={10} weight="regular" className="text-accent-foreground" />}
+            </div>
           ) : (
             <span />
           )}
@@ -132,6 +262,7 @@ function ArticleTableRow({
   onMerge,
   onSplit,
   onDelete,
+  onShowConnected,
   isSelected,
   selectionActive,
   onSelect,
@@ -147,6 +278,7 @@ function ArticleTableRow({
   onMerge?: () => void
   onSplit?: () => void
   onDelete?: () => void
+  onShowConnected?: (direction: "both" | "in" | "out") => void
   isSelected?: boolean
   selectionActive?: boolean
   onSelect?: (opts: { multi?: boolean; shift?: boolean; index?: number }) => void
@@ -193,10 +325,10 @@ function ArticleTableRow({
           <div className={cn(
             "h-4 w-4 rounded-[4px] border flex items-center justify-center transition-colors shadow-sm",
             isSelected
-              ? "bg-accent border-accent text-white"
+              ? "bg-accent border-accent"
               : "bg-card border-zinc-400 dark:border-zinc-600 hover:border-zinc-500"
           )}>
-            {isSelected && <PhCheck size={10} weight="bold" />}
+            {isSelected && <PhCheck size={10} weight="bold" className="text-accent-foreground" />}
           </div>
         </div>
       )}
@@ -326,6 +458,31 @@ function ArticleTableRow({
                   <Scissors size={14} weight="regular" /> Split wiki
                 </button>
               )}
+              {/* Show connected — in-place backlink filter inside the
+                  Wiki view. Wikis use linksOut (extracted [[wiki-link]]s)
+                  and a backlinks index just like notes do. */}
+              {(onMerge || onSplit) && (
+                <div className="my-1 h-px bg-border/40" />
+              )}
+              {onShowConnected && (
+                <ShowConnectedSubmenu
+                  onSelect={(direction) => {
+                    setMenuOpen(false)
+                    onShowConnected(direction)
+                  }}
+                />
+              )}
+
+              {/* Move to folder — wiki articles share the same global folder
+                  containers as notes. Submenu of folders + "No folder" reset. */}
+              {onShowConnected && <div className="my-1 h-px bg-border/40" />}
+              <FolderPickerSubmenu
+                currentFolderId={note.folderId ?? null}
+                onSelect={(folderId) => {
+                  setMenuOpen(false)
+                  usePlotStore.getState().updateWikiArticle(note.id, { folderId })
+                }}
+              />
               {(onMerge || onSplit) && onDelete && (
                 <div className="my-1 h-px bg-border/40" />
               )}
@@ -412,6 +569,7 @@ export function WikiList({
   onClearCategoryFilter,
   onOpenArticle,
   onMergeArticle,
+  onShowConnectedArticle,
   onSplitArticle,
   onDeleteArticle,
   redLinks,
@@ -627,6 +785,7 @@ export function WikiList({
                             onMerge={onMergeArticle ? () => onMergeArticle(note.id) : undefined}
                             onSplit={onSplitArticle ? () => onSplitArticle(note.id) : undefined}
                             onDelete={onDeleteArticle ? () => onDeleteArticle(note.id) : undefined}
+                            onShowConnected={onShowConnectedArticle ? (dir) => onShowConnectedArticle(note.id, dir) : undefined}
                             isSelected={selectedIds?.has(note.id)}
                             selectionActive={selectionActive}
                             onSelect={onSelect ? (opts) => onSelect(note.id, { ...opts, index: idx }) : undefined}

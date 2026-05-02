@@ -322,16 +322,35 @@ export const GRAPH_VIEW_CONFIG: ViewConfig = {
   ],
   quickFilters: [],
   displayConfig: {
-    supportedModes: [],
+    supportedModes: ["graph", "insights"],
     orderingOptions: [
       { value: "links", label: "Connections" },
       { value: "title", label: "Name" },
     ],
-    groupingOptions: [],
+    // Group by (= graph hull rule). Hull color = grouping entity's color.
+    // tag/folder produce unified note+wiki hulls; label/category are
+    // entity-specific. "connections" preserves the legacy BFS behavior.
+    groupingOptions: [
+      { value: "none",        label: "No grouping" },
+      // Sticker = the most natural "user-defined cluster" — unified across
+      // notes + wikis. Listed first so users discover it as the default
+      // explicit-grouping mechanism.
+      { value: "sticker",     label: "Sticker" },
+      { value: "tag",         label: "Tag" },
+      { value: "label",       label: "Label" },
+      { value: "category",    label: "Wiki Category" },
+      { value: "folder",      label: "Folder" },
+      { value: "status",      label: "Status" },
+      { value: "connections", label: "Connections (legacy)" },
+    ],
     toggles: [
-      { key: "showTagNodes", label: "Show tag nodes", icon: TagIcon },
+      // Node type visibility
+      { key: "showNotes",    label: "Show note nodes",    icon: <CircleHalf size={14} weight="fill" style={{ color: "var(--chart-3)" }} /> },
+      { key: "showWiki",     label: "Show wiki nodes",    icon: <BookOpen size={14} weight="regular" style={{ color: "#8b5cf6" }} /> },
+      { key: "showTagNodes", label: "Show tag nodes",     icon: TagIcon },
+      // Edge / label visibility
       { key: "showWikilinks", label: "Show wikilinks", icon: LinkIcon },
-      { key: "showLabels", label: "Show labels", icon: EyeIcon },
+      { key: "showLabels",    label: "Show labels",    icon: EyeIcon },
     ],
     properties: [],
   },
