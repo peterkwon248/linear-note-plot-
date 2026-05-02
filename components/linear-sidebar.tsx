@@ -43,6 +43,7 @@ import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
 import { Quotes } from "@phosphor-icons/react/dist/ssr/Quotes"
 import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
+import { Sticker as StickerPhosphor } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
@@ -276,6 +277,7 @@ export function LinearSidebar() {
 
   const tags = usePlotStore((s) => s.tags)
   const labels = usePlotStore((s) => s.labels)
+  const stickers = usePlotStore((s) => s.stickers)
   const templates = usePlotStore((s) => s.templates)
 
   const wikiCategories = usePlotStore((s) => s.wikiCategories)
@@ -906,6 +908,14 @@ export function LinearSidebar() {
                 count={labels.length}
                 active={isActive("/labels")}
                 dragContent={{ type: "labels" }}
+              />
+              <NavLink
+                href="/stickers"
+                icon={<StickerPhosphor size={20} />}
+                label="Stickers"
+                count={stickers.filter((s) => !s.trashed).length}
+                active={isActive("/stickers")}
+                dragContent={{ type: "stickers" }}
               />
               <NavLink
                 href="/templates"

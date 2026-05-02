@@ -3,6 +3,61 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
+## 🚀 2026-05-02 (오후) — docs 정리 + Saved Views 완성 + 카테고리 색 UI + Sticker 사이드바 (사이드바 polish + Sticker 1급 UI 통합 PR)
+
+**5개 작업 묶음 PR**:
+
+1. **🗂️ docs archive 정리**: stale 문서 5개를 `docs/.archive/`로 이동
+   - `TODO.md`, `NEXT-ACTION.md`, `SESSION-LOG.md` — 4-30 시점, PR #228~#236 9개 누락. CONTEXT.md/MEMORY.md/worklog와 정보 중복
+   - `PHASE-PLAN-wiki-enrichment.md` — v75→v83 가정인데 현재 v100, 데이터 모델 가정 깨짐. 헤더에 "ARCHIVED + 분할 PRD로 대체" 노트
+   - `plot-discussion/` 11개 — 2026-03-30 historical brainstorm. entity 통합→분리 등 일부 결정 뒤집힘
+   - `docs/.archive/README.md` 신규 (보관 이유 + authoritative 문서 가이드)
+   - 의도: single source 원칙 (CONTEXT.md/MEMORY.md만 갱신, after-work 갱신 누락 패턴 차단)
+
+2. **🔧 SavedView.viewMode 타입 보강**: `lib/types.ts:314`에 `"graph" | "dashboard"` 추가
+   - 기존: `"list" | "table" | "board" | "insights" | "calendar"` — ontology의 graph/dashboard 누락
+   - Ontology saved view 만들 때 viewMode 보존되도록 fix (잠재 버그 사전 차단)
+
+3. **🆕 Saved Views 복원 패턴 Wiki/Ontology/Calendar에 적용**: 기존 Notes만 동작하던 viewState 복원 로직을 3개 view로 확장
+   - `components/views/wiki-view.tsx` + `ontology-view.tsx` + `calendar-view.tsx`에 `useActiveViewId` import + useEffect 패턴 추가
+   - SavedView.space 가드 (wiki/ontology/calendar 각각 자기 saved view만 적용)
+   - notes-table-view.tsx의 useEffect 패턴 거의 그대로 복제 (~10줄 × 3 파일)
+
+4. **🎨 카테고리 색 dot + Change color UI**: WikiCategory.color 활용 UI 완성
+   - List view 카테고리 row: 색 dot (h-2 w-2 rounded-full) + ContextMenu(Rename/Change color/Delete + undo)
+   - CategoryEditor: Name input 아래 Color Popover (ColorPickerGrid)
+   - `components/views/wiki-category-page.tsx` 단일 파일 121줄 추가
+   - 데이터 모델은 v99에서 이미 추가됨. UI만 늦게 추가됨.
+
+5. **🆕 Sticker 사이드바 + /stickers 페이지**: Sticker 1급 entity UI 완성
+   - `components/views/stickers-view.tsx` 신규 (754줄, LabelsView 복제 패턴)
+   - `app/(app)/stickers/page.tsx` shell (return null)
+   - `app/(app)/layout.tsx`에 StickersView always-mounted 등록
+   - `components/linear-sidebar.tsx` More 섹션에 Stickers NavLink 추가 (Sticker Phosphor 아이콘 + count)
+   - `lib/table-route.ts`의 VIEW_ROUTES에 `/stickers` 등록
+   - 의도: 그래프 우클릭 메뉴에서만 가능했던 sticker 생성/관리를 라벨처럼 사이드바 진입점에서도 가능하게
+
+**Saved Views 스냅샷 UX 결정사항 (다음 PR 후보)**:
+- 현재 사이드바 + 버튼은 이름만 받고 빈 default state 뷰 생성 → "현재 viewState 캡처" UX 부재
+- 사용자 합의 옵션 C (ViewHeader Save + 사이드바 + 버튼 의미 변경 둘 다):
+  - ViewHeader에 명시적 "Save view" 버튼 (변경 있을 때만 활성화 — Linear 패턴)
+  - 사이드바 + 버튼: 빈 뷰 대신 현재 viewState 캡처 (이름 입력 → 즉시 스냅샷)
+  - 우클릭 메뉴: "Update view" (덮어쓰기), "Reset to saved" 등
+
+**작업 안 한 것 (deferred)**:
+- linear-sidebar wiki space에 카테고리 트리 표시 (현재는 wiki-category-page에서만 색 dot 보임)
+- NoteStatus 리네이밍 (PRD 사전 조사 완료, 다음 큰 PR로)
+- Filter chip 3-part 드롭다운 Step B (별도 PR)
+- Saved Views 스냅샷 UX 개선 (옵션 C)
+
+**Out of scope (다음 PR)**:
+- Saved Views 스냅샷 UX (ViewHeader Save 버튼 + 사이드바 + 버튼 의미 변경)
+- NoteStatus → stone/brick/keystone 리네이밍 (Phase 1)
+- Filter chip 인라인 편집 Step B (모든 part 드롭다운)
+- 인포박스 Tier 1~3 (분할 PRD)
+
+---
+
 ## 🚀 2026-05-01 ~ 2026-05-02 — Light Mode + Ontology Graph 재설계 + Group by Hull + Sticker entity + Dashboard 3분할 (단일 PR)
 
 **12개 큰 작업을 한 PR에 누적:**

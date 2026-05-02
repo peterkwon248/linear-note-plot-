@@ -1,5 +1,17 @@
 # Phase Plan — Wiki Enrichment (인포박스/배너/편집 고도화)
 
+> ⚠️ **ARCHIVED (2026-05-02)** — v75→v83+ 마이그레이션을 가정했으나 현재 store version은 v100.
+> 데이터 모델 가정이 깨져 가이드로 사용 불가. "나무위키 리서치 기능" 비전은 유효하므로
+> 필요 시 작은 단위 PRD로 분할 재작성:
+> - `REDESIGN_INFOBOX_TIER1.md` (대표 이미지+캡션, 헤더 색상, 접기/펼치기)
+> - `REDESIGN_BANNER_NAVBOX.md` (배너 블록 + 둘러보기 틀)
+> - `REDESIGN_MACROS.md` (나이 계산/D-Day/Include)
+>
+> 코드에 `'banner'`/`'navbox'` 타입은 일부 살아있음 (v84/v85 migration markers).
+> 아래 내용은 **historical reference만**.
+
+---
+
 > `docs/BRAINSTORM-2026-04-14-wiki-ultra.md`의 Top 7 + 선행 조건을 **실행 단위**로 쪼갠 체크리스트.
 > 각 Phase = 1 PR 단위. 각 Phase 내 sub-task = 개별 커밋 단위.
 > 작업 중엔 이 문서를 실시간 업데이트 (완료 체크). PDCA Do 단계의 작업 스크립트.

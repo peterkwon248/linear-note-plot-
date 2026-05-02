@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { usePlotStore } from "@/lib/store"
-import { setActiveRoute, getSecondarySpace, setSecondarySpace, getActiveSpace } from "@/lib/table-route"
+import { setActiveRoute, getSecondarySpace, setSecondarySpace, getActiveSpace, useActiveViewId } from "@/lib/table-route"
 import { usePane } from "@/components/workspace/pane-context"
 import { useWikiViewMode, setWikiViewMode, setPendingMergeIds, useActiveCategoryId, setActiveCategoryView } from "@/lib/wiki-view-mode"
 import { ViewHeader } from "@/components/view-header"
@@ -144,6 +144,18 @@ export function WikiView() {
     (patch: Partial<ViewState>) => setViewState("wiki" as ViewContextKey, patch),
     [setViewState]
   )
+
+  // Saved view restoration — when a wiki-scoped saved view becomes active,
+  // hydrate its viewState into viewStateByContext["wiki"]
+  const activeViewId = useActiveViewId()
+  const savedViews = usePlotStore((s) => s.savedViews)
+  useEffect(() => {
+    if (!activeViewId) return
+    const view = savedViews.find((v) => v.id === activeViewId)
+    if (view && view.space === "wiki") {
+      setViewState("wiki" as ViewContextKey, view.viewState as Parameters<typeof setViewState>[1])
+    }
+  }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
   const wikiFilters = wikiViewState.filters
   const handleWikiFilterToggle = useCallback((rule: FilterRule) => {
     const exists = wikiFilters.some(

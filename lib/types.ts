@@ -311,7 +311,7 @@ export interface SavedView {
   color: string
   space: "inbox" | "notes" | "wiki" | "calendar" | "ontology" | "all"
   viewState: {
-    viewMode: "list" | "table" | "board" | "insights" | "calendar"
+    viewMode: "list" | "table" | "board" | "insights" | "calendar" | "graph" | "dashboard"
     sortField: string
     sortDirection: "asc" | "desc"
     groupBy: string

@@ -1,5 +1,46 @@
 # Plot Project Memory
 
+## 🚀 2026-05-02 (오후) 세션 — docs 정리 + Saved Views 완성 + 카테고리 색 UI + Sticker 사이드바 (사이드바 polish + Sticker 1급 UI 통합 PR)
+
+**범위**: 5개 작업 묶음 PR. PR #236 직후 fresh worktree에서 시작.
+
+### 핵심 결정사항
+- **stale docs 5개 archive로 분리**: TODO.md/NEXT-ACTION.md/SESSION-LOG.md (CONTEXT.md/MEMORY.md/worklog와 정보 중복, 매번 갱신 누락 패턴), PHASE-PLAN-wiki-enrichment.md (v75→v83 가정 깨짐), plot-discussion/ 11개 (historical, 일부 결정 뒤집힘). **single source 원칙**: 이제 CONTEXT.md + MEMORY.md만 갱신
+- **PHASE-PLAN-wiki-enrichment 분할 재작성 방침**: 한 큰 PRD 대신 필요할 때 작은 단위로 (REDESIGN_INFOBOX_TIER1, REDESIGN_BANNER_NAVBOX, REDESIGN_MACROS)
+- **Sticker 1급 UI 완성**: 그래프 우클릭 메뉴에서만 가능했던 sticker 생성/관리를 라벨처럼 사이드바 진입점 + /stickers 페이지로. LabelsView 패턴 1:1 복제 (754줄)
+- **Saved Views Wiki/Ontology/Calendar 완성**: 기존 Notes 패턴 복제 — Notes의 viewState 복원 useEffect를 3개 view로 확장, SavedView.space 가드 추가
+- **SavedView.viewMode 타입에 graph/dashboard 추가**: ontology saved view viewMode 보존 가능 (잠재 버그 사전 차단)
+- **Saved Views 스냅샷 UX 결함 식별**: 현재 사이드바 + 버튼은 빈 default state 뷰만 생성. ViewHeader Save 버튼 부재 → 사용자가 현재 viewState를 스냅샷으로 저장 불가. 다음 PR로 분리 (옵션 C: ViewHeader Save + 사이드바 + 버튼 의미 변경)
+
+### 코드 변경 요약
+- **이동**: `docs/TODO.md` → `docs/.archive/`, NEXT-ACTION/SESSION-LOG/PHASE-PLAN-wiki-enrichment 동일, `docs/plot-discussion/` → `docs/.archive/plot-discussion/`
+- **신규 docs**: `docs/.archive/README.md` (보관 이유 가이드)
+- **타입**: `lib/types.ts:314` SavedView.viewMode union에 `"graph" | "dashboard"` 추가
+- **3개 view (saved view 복원)**: `components/views/wiki-view.tsx`, `ontology-view.tsx`, `components/calendar-view.tsx`에 `useActiveViewId` import + savedView 복원 useEffect (~10줄 × 3)
+- **카테고리 UI**: `components/views/wiki-category-page.tsx` 121줄 추가 — ContextMenu/ColorPickerGrid/Popover imports, CategoryFullListView에 색 dot + ContextMenu(Rename/Change color/Delete + undo), CategoryEditor에 Color Popover. `lib/store/types.ts` updateWikiCategory color 파라미터 추가
+- **Sticker UI (신규)**:
+  - `components/views/stickers-view.tsx` 신규 (754줄, LabelsView 복제)
+  - `app/(app)/stickers/page.tsx` 신규 shell
+  - `app/(app)/layout.tsx` StickersView always-mounted 등록
+  - `components/linear-sidebar.tsx` More 섹션에 Stickers NavLink (Sticker Phosphor 아이콘 + count + dragContent)
+  - `lib/table-route.ts` VIEW_ROUTES에 `/stickers` 추가
+
+### 다음 작업 후보 (큐)
+- **Saved Views 스냅샷 UX 개선 (옵션 C)** — ViewHeader Save 버튼 + 사이드바 + 버튼 의미 변경 (현재 viewState 캡처). 사용자 합의됨, 별도 PR
+- **NoteStatus 리네이밍 Phase 1** — `inbox/capture/permanent` → `stone/brick/keystone` + IDB v101 마이그레이션. PRD 사전 조사 완료 (영향 범위 65 파일/353회). NoteTemplate.status, settings-store startView, graph-filter-adapter 인라인 리터럴, 테스트 4개, AGENTS.md까지 포함
+- **Filter chip 3-part 드롭다운 Step B** — Field/Operator/Value 모두 popover, Linear 한 술 더 뜸. 사용자 명시 요청
+- **카테고리 사이드바 트리** — linear-sidebar의 wiki space에 카테고리 트리 + 색 dot. 이번 PR scope 초과로 deferred
+- **dead code 정리** — `components/views/wiki-sidebar.tsx` 어디서도 import 안 됨, 삭제 후보
+
+### Technical Learnings
+- **dead code 발견**: `components/views/wiki-sidebar.tsx`는 자기 자신만 정의, 어디서도 import 안 됨. 다음 정리 PR에서 삭제 후보
+- **Saved View 적용 범위**: 사이드바 라우팅은 모든 space에서 동작했으나 viewState 복원은 Notes만 동작이었음. useEffect 패턴 복제만으로 해결 (~10줄/view)
+- **Saved View 스냅샷 UX 결함**: + 버튼이 `createSavedView(name, undefined, space)` 호출 → 빈 default state 뷰 생성. 사용자가 "내 현재 상태를 저장" 의도로 + 누르면 빈 뷰만 생기는 문제. Linear 패턴 (ViewHeader Save 버튼)이 정답
+- **single source docs 원칙**: 정보 중복 = 갱신 누락의 주범. CONTEXT.md/MEMORY.md/worklog가 같은 정보를 다른 형식으로 보존 → 별도 TODO/NEXT-ACTION/SESSION-LOG는 stale의 불가피한 운명
+- **LabelsView 1:1 복제 패턴**: Sticker UI 만들 때 LabelsView 구조 그대로 복제 → 일관된 UX 자동 보장. drag-to-select, ColorPickerGrid, ContextMenu, ViewHeader 등 동일
+
+---
+
 ## 🚀 2026-05-01 ~ 2026-05-02 세션 — Light Mode + Ontology 대규모 재설계 + Group by Hull + Sticker entity + Dashboard 3분할 (단일 PR 누적)
 
 **범위**: 12개 큰 작업이 한 PR에 누적.

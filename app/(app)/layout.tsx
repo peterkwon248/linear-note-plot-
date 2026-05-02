@@ -21,6 +21,7 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { NotesTableView } from "@/components/notes-table-view"
 import { useActiveRoute, syncFromPathname, TABLE_VIEW_ROUTES, VIEW_ROUTES } from "@/lib/table-route"
 import { LabelsView } from "@/components/views/labels-view"
+import { StickersView } from "@/components/views/stickers-view"
 import { OntologyView } from "@/components/views/ontology-view"
 import { TemplatesView } from "@/components/views/templates-view"
 import { InsightsView } from "@/components/insights-view"
@@ -239,6 +240,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {(mountedViews.has("/labels") || activeRoute === "/labels") && (
                   <div className={activeRoute === "/labels" ? "flex flex-1 overflow-hidden" : "hidden"}>
                     <LabelsView />
+                  </div>
+                )}
+
+                {(mountedViews.has("/stickers") || activeRoute === "/stickers") && (
+                  <div className={activeRoute === "/stickers" ? "flex flex-1 overflow-hidden" : "hidden"}>
+                    <StickersView />
                   </div>
                 )}
 

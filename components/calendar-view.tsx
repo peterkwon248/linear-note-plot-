@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import {
   startOfMonth,
   endOfMonth,
@@ -30,6 +30,7 @@ import type { NoteStatus } from "@/lib/types"
 import { usePlotStore } from "@/lib/store"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
+import { useActiveViewId } from "@/lib/table-route"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
@@ -668,6 +669,18 @@ export function CalendarView({
     (patch: Partial<import("@/lib/view-engine/types").ViewState>) => setViewState("calendar" as ViewContextKey, patch),
     [setViewState]
   )
+
+  // Saved view restoration — when a calendar-scoped saved view becomes active,
+  // hydrate its viewState into viewStateByContext["calendar"]
+  const activeViewId = useActiveViewId()
+  const savedViews = usePlotStore((s) => s.savedViews)
+  useEffect(() => {
+    if (!activeViewId) return
+    const view = savedViews.find((v) => v.id === activeViewId)
+    if (view && view.space === "calendar") {
+      setViewState("calendar" as ViewContextKey, view.viewState as Parameters<typeof setViewState>[1])
+    }
+  }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // dateSource derived from sortField
   const dateSource: DateSource = calViewState.sortField === "updatedAt" ? "updatedAt" : "createdAt"
