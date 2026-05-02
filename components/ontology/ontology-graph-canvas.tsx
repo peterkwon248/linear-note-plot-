@@ -382,10 +382,13 @@ export function OntologyGraphCanvas({
   /* ── Context menu state (right-click on node or hull) ── */
   // Targets are entity ids ready for store actions (notes are bare ids,
   // wikis are "wiki:<id>"). Aligns with bulkAddSticker's expected format.
+  // hullSticker: when right-clicking a sticker hull, expose the sticker's
+  // identity so the menu can show Rename / Change color / Delete actions.
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
     targets: string[]
+    hullSticker?: { id: string; name: string; color: string }
   } | null>(null)
 
   /* ── Hull drag state ── *
@@ -1499,7 +1502,19 @@ export function OntologyGraphCanvas({
                     e.preventDefault()
                     e.stopPropagation()
                     setMultiSelectedIds(new Set(hull.nodeIds))
-                    setContextMenu({ x: e.clientX, y: e.clientY, targets: hull.nodeIds })
+                    // If grouped by sticker, attach the sticker identity so
+                    // the context menu can offer rename / recolor / delete.
+                    // Hull id format: `cluster-${groupBy}-${key}` — extract key.
+                    let hullSticker: { id: string; name: string; color: string } | undefined
+                    if (groupBy === "sticker" && stickers) {
+                      const prefix = "cluster-sticker-"
+                      if (hull.id.startsWith(prefix)) {
+                        const stickerId = hull.id.slice(prefix.length)
+                        const s = stickers.find((s) => s.id === stickerId)
+                        if (s) hullSticker = { id: s.id, name: s.name, color: s.color }
+                      }
+                    }
+                    setContextMenu({ x: e.clientX, y: e.clientY, targets: hull.nodeIds, hullSticker })
                   }}
                 />
               )
@@ -1984,6 +1999,7 @@ export function OntologyGraphCanvas({
             }
             hasHidden={hasAnyHidden}
             onShowAll={onShowAll}
+            editingSticker={contextMenu.hullSticker}
           />
         )
       })()}
