@@ -347,7 +347,12 @@ export function OntologyGraphCanvas({
   onPositionsUpdate,
 }: OntologyGraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const [, forceRender] = useReducer((c: number) => c + 1, 0)
+  // renderTick must be exposed (not destructured to `_`) because some memos
+  // depend on it to invalidate when forceRender is called — most notably the
+  // hull path computation, which reads node positions from a ref (positionsRef)
+  // that React can't track. Without renderTick in deps, hulls would stay frozen
+  // at their drag-start positions while nodes move to new locations.
+  const [renderTick, forceRender] = useReducer((c: number) => c + 1, 0)
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme !== "light"
 
@@ -876,11 +881,14 @@ export function OntologyGraphCanvas({
       idx++
     }
     return hulls
-    // PRD Q3 (a): re-compute every render. n=200 hull build < 5ms so cheap.
+    // n=200 hull build < 5ms so re-computing every render is cheap.
     // positionsRef.current is a ref — React doesn't track ref mutations as
-    // deps, so we use the per-render `transform` (changes on every sim tick
-    // via forceRender) to invalidate the memo when needed.
-  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, nodeMap, transform])
+    // deps. We rely on `renderTick` (incremented by forceRender on every
+    // sim tick + during drag) to invalidate this memo so hulls follow node
+    // positions. Earlier versions used `transform` here, but that only
+    // changes during panning — node drags never invalidated the memo, so
+    // hulls stayed frozen at the drag-start positions while nodes moved.
+  }, [groupBy, visibleEdges, graph.nodes, labels, tags, wikiCategories, folders, stickers, nodeMap, renderTick])
 
   /* ── Node adjacency for hover highlight ────────────── */
   const connectedToHovered = useCallback(
