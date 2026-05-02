@@ -16,6 +16,7 @@ import { Minus } from "@phosphor-icons/react/dist/ssr/Minus"
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft"
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning"
 import { BookOpen } from "@phosphor-icons/react/dist/ssr/BookOpen"
+import { FileDashed } from "@phosphor-icons/react/dist/ssr/FileDashed"
 import { ListBullets } from "@phosphor-icons/react/dist/ssr/ListBullets"
 import { GitMerge } from "@phosphor-icons/react/dist/ssr/GitMerge"
 import { DotsThree } from "@phosphor-icons/react/dist/ssr/DotsThree"
@@ -375,11 +376,13 @@ function ArticleTableRow({
       {isVisible("status") && (
         <div className="w-[72px] shrink-0 flex items-center px-2">
           {isWikiStub(note) ? (
-            <span className="rounded-md bg-zinc-400/15 px-1.5 py-0.5 text-2xs font-medium text-zinc-500 dark:text-zinc-400">
+            <span className="inline-flex items-center gap-1 rounded-md bg-zinc-400/15 px-1.5 py-0.5 text-2xs font-medium text-zinc-500 dark:text-zinc-400">
+              <FileDashed size={11} weight="regular" />
               Stub
             </span>
           ) : (
-            <span className="rounded-md bg-accent/15 px-1.5 py-0.5 text-2xs font-medium text-accent">
+            <span className="inline-flex items-center gap-1 rounded-md bg-accent/15 px-1.5 py-0.5 text-2xs font-medium text-accent">
+              <BookOpen size={11} weight="regular" />
               Article
             </span>
           )}

@@ -114,11 +114,14 @@ const SORT_FIELD_LABELS: Record<SortField, string> = {
 
 const COLUMN_DEFS: { id: string; label: string; width: string; align?: string; sortField?: SortField; minWidth?: number }[] = [
   { id: "title", label: "Name", width: "flex-1 min-w-0", sortField: "title" },
-  { id: "status", label: "Status", width: "w-[120px] shrink-0", align: "text-right", sortField: "status", minWidth: 400 },
+  // status: header is left-aligned so the "Status" label sits directly above
+  // the status badge in each row (Wiki list pattern). Previously text-right
+  // caused header/data misalignment.
+  { id: "status", label: "Status", width: "w-[120px] shrink-0", sortField: "status", minWidth: 400 },
   { id: "folder", label: "Folder", width: "w-[80px] shrink-0", align: "text-center", sortField: "folder", minWidth: 560 },
   { id: "parent", label: "Parent", width: "w-[100px] shrink-0", align: "text-center", minWidth: 700 },
   { id: "children", label: "Children", width: "w-[72px] shrink-0", align: "text-center", minWidth: 700 },
-  { id: "links", label: "Links", width: "w-[72px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
+  { id: "links", label: "Backlinks", width: "w-[72px] shrink-0", align: "text-center", sortField: "links", minWidth: 600 },
   { id: "reads", label: "Reads", width: "w-[72px] shrink-0", align: "text-center", sortField: "reads", minWidth: 720 },
   { id: "wordCount", label: "Words", width: "w-[72px] shrink-0", align: "text-right", sortField: "reads", minWidth: 760 },
   { id: "updatedAt", label: "Updated", width: "w-[80px] shrink-0", align: "text-right", sortField: "updatedAt", minWidth: 280 },
@@ -1185,7 +1188,12 @@ export function NotesTable({
                             onClick={(e) => {
                               e.stopPropagation()
                               e.preventDefault()
-                              setShowAlphaIndex(!showAlphaIndex)
+                              const next = !showAlphaIndex
+                              // eslint-disable-next-line no-console
+                              console.log("[plot:index-toggle]", { effectiveTab, before: showAlphaIndex, next, viewStateToggles: viewState.toggles })
+                              setShowAlphaIndex(next)
+                              // eslint-disable-next-line no-console
+                              setTimeout(() => console.log("[plot:index-toggle:after]", { storedToggles: usePlotStore.getState().viewStateByContext[effectiveTab as any]?.toggles }), 50)
                             }}
                             className={`flex h-6 items-center gap-1 rounded-md px-1.5 text-note font-medium transition-all duration-100 ${
                               showAlphaIndex
@@ -1658,9 +1666,9 @@ function NoteRowInner({
         )}
       </div>
 
-      {/* Status */}
+      {/* Status — left-aligned to match the column header (Wiki list parity) */}
       {visibleCols.includes("status") && (
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-start">
           <StatusBadge status={note.status} />
         </div>
       )}

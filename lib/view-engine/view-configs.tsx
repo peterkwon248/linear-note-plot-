@@ -54,6 +54,8 @@ const PinIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stro
 const ArchiveIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><rect x="1.5" y="2" width="13" height="3" rx="1"/><path d="M2.5 5v8a1.3 1.3 0 001.3 1.3h8.4A1.3 1.3 0 0013.5 13V5"/><line x1="6" y1="8.5" x2="10" y2="8.5"/></svg>
 const TrashIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 4 3.3 4 14 4"/><path d="M12.7 4v9a1.3 1.3 0 01-1.4 1.3H4.7A1.3 1.3 0 013.3 13V4m2 0V2.7a1.3 1.3 0 011.4-1.4h2.6a1.3 1.3 0 011.4 1.4V4"/></svg>
 const SortIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><line x1="2.5" y1="4" x2="10" y2="4"/><line x1="2.5" y1="8" x2="7.5" y2="8"/><line x1="2.5" y1="12" x2="5" y2="12"/></svg>
+// Index (alphabetical group): 4 horizontal bars with leading dot bullets — "list with markers"
+const IndexIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><circle cx="3" cy="3.5" r="0.8" fill="currentColor" stroke="none"/><circle cx="3" cy="8" r="0.8" fill="currentColor" stroke="none"/><circle cx="3" cy="12.5" r="0.8" fill="currentColor" stroke="none"/><line x1="6" y1="3.5" x2="13.5" y2="3.5"/><line x1="6" y1="8" x2="13.5" y2="8"/><line x1="6" y1="12.5" x2="13.5" y2="12.5"/></svg>
 const GraphIcon = <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="3.3" r="1.7"/><circle cx="3.3" cy="12.7" r="1.7"/><circle cx="12.7" cy="12.7" r="1.7"/><line x1="8" y1="5" x2="3.3" y2="11"/><line x1="8" y1="5" x2="12.7" y2="11"/><line x1="5" y1="12.7" x2="11" y2="12.7"/></svg>
 // Wiki: 활동바 BookOpen과 동일 — 일관성
 const WikiIcon = <BookOpen size={14} weight="regular" />
@@ -158,12 +160,12 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       // the table to alphabetical group view. DisplayPanel routes it to
       // viewState.toggles.showAlphaIndex (not visibleColumns) since it's a
       // display-mode flag, not a column.
-      { key: "showAlphaIndex", label: "Index" },
+      { key: "showAlphaIndex", label: "Index", icon: IndexIcon },
       { key: "status", label: "Status", icon: StatusIcon },
       { key: "folder", label: "Folder", icon: FolderIcon },
       { key: "parent", label: "Parent", icon: ParentIcon },
       { key: "children", label: "Children", icon: ChildrenIcon },
-      { key: "links", label: "Links", icon: LinkIcon },
+      { key: "links", label: "Backlinks", icon: LinkIcon },
       { key: "wordCount", label: "Words", icon: ContentIcon },
       { key: "updatedAt", label: "Updated", icon: CalendarIcon },
       { key: "createdAt", label: "Created", icon: CalendarIcon },
@@ -257,8 +259,8 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       // Index lives alongside other display properties — toggling it switches
       // the table to alphabetical group view. DisplayPanel routes it to
       // viewState.toggles.showAlphaIndex (not visibleColumns).
-      { key: "showAlphaIndex", label: "Index" },
-      { key: "title", label: "Title", icon: ContentIcon },
+      { key: "showAlphaIndex", label: "Index", icon: IndexIcon },
+      // Title intentionally omitted — it's a required column, not toggleable
       { key: "status", label: "Status", icon: CircleHalfIcon },
       { key: "links", label: "Backlinks", icon: LinkIcon },
       { key: "reads", label: "Reads", icon: EyeIcon },
