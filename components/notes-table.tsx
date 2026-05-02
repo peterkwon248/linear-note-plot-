@@ -384,8 +384,17 @@ export function NotesTable({
     [rawFlatNotes, trashFilterFn]
   )
 
-  // Alphabetical Index toggle (Wiki-pattern parity)
-  const [showAlphaIndex, setShowAlphaIndex] = useState(false)
+  // Alphabetical Index toggle (Wiki-pattern parity).
+  // Stored in viewState.toggles so it persists across saved views — sidebar +
+  // button captures it, ViewHeader Save button restores it.
+  const showAlphaIndex = viewState.toggles?.showAlphaIndex ?? false
+  const setShowAlphaIndex = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const next = typeof value === "function" ? value(showAlphaIndex) : value
+      updateViewState({ toggles: { ...(viewState.toggles ?? {}), showAlphaIndex: next } })
+    },
+    [showAlphaIndex, viewState.toggles, updateViewState],
+  )
 
   const groups = useMemo<NoteGroup[]>(() => {
     const baseGroups = isTrashView && trashFilter !== "all"
@@ -922,19 +931,9 @@ export function NotesTable({
         onSaveView={onSaveView}
         extraToolbarButtons={
           <>
-            {/* Index toggle — Wiki-pattern parity (alphabetical group view) */}
-            <button
-              onClick={() => setShowAlphaIndex((v) => !v)}
-              className={`flex h-7 items-center gap-1.5 rounded-md px-2 text-2xs font-medium transition-all duration-100 ${
-                showAlphaIndex
-                  ? "bg-foreground/10 text-foreground"
-                  : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
-              }`}
-              title={showAlphaIndex ? "Exit Index" : "Show alphabetical Index"}
-            >
-              <ListBullets size={13} weight="bold" />
-              Index
-            </button>
+            {/* Index toggle moved into the column header row (next to Name) so
+                it sits with the data it acts on, freeing this toolbar for
+                global view-level actions (Filter / Display / Save view). */}
             {viewState.groupBy !== "none" && groups.length > 0 && !showAlphaIndex && (
               <button
                 onClick={() => {
@@ -1170,14 +1169,40 @@ export function NotesTable({
                   </div>
                   {COLUMN_DEFS.filter((col) => col.id === "title" || effectiveVisibleCols.includes(col.id)).map((col) => (
                     <div key={col.id} className={col.align ?? ""}>
-                      <TH
-                        label={col.label}
-                        col={col.sortField}
-                        sortCol={viewState.sortField}
-                        sortDir={viewState.sortDirection}
-                        onSort={handleSort}
-                        className={`${col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""}`}
-                      />
+                      {col.id === "title" ? (
+                        <div className="flex items-center justify-between gap-2">
+                          <TH
+                            label={col.label}
+                            col={col.sortField}
+                            sortCol={viewState.sortField}
+                            sortDir={viewState.sortDirection}
+                            onSort={handleSort}
+                            className=""
+                          />
+                          {/* Alphabetical Index toggle — sits with the data it groups */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setShowAlphaIndex((v) => !v) }}
+                            className={`flex h-6 items-center gap-1 rounded-md px-1.5 text-2xs font-medium transition-all duration-100 ${
+                              showAlphaIndex
+                                ? "bg-foreground/10 text-foreground"
+                                : "text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground"
+                            }`}
+                            title={showAlphaIndex ? "Exit alphabetical index" : "Show alphabetical index"}
+                          >
+                            <ListBullets size={11} weight="bold" />
+                            <span>Index</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <TH
+                          label={col.label}
+                          col={col.sortField}
+                          sortCol={viewState.sortField}
+                          sortDir={viewState.sortDirection}
+                          onSort={handleSort}
+                          className={`${col.align === "text-right" ? "justify-end" : col.align === "text-center" ? "justify-center" : ""}`}
+                        />
+                      )}
                     </div>
                   ))}
                 </div>

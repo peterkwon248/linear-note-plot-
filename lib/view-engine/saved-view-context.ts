@@ -79,9 +79,10 @@ export function getSavedViewSpaceForActivity(
  * Shallow-equal two viewStates for "dirty" detection.
  *
  * Compares the structural fields a SavedView captures: viewMode, sortField,
- * sortDirection, groupBy, filters, visibleColumns, showEmptyGroups. Toggles
- * (per-context flags like showWikilinks) are intentionally ignored — they're
- * not part of the persisted SavedView shape.
+ * sortDirection, groupBy, filters, visibleColumns, showEmptyGroups, and the
+ * `toggles` map (for showAlphaIndex on lists, plus graph-only flags like
+ * showWikilinks/showTagNodes). Saved views persist toggles too, so changes
+ * there must trigger Save view's dirty state.
  *
  * Returns true when the two states match (no save needed); false when they
  * differ (Save button should be active).
@@ -112,6 +113,16 @@ export function viewStateEquals(
   if (ac.length !== bc.length) return false
   for (let i = 0; i < ac.length; i++) {
     if (ac[i] !== bc[i]) return false
+  }
+  // toggles: shallow-equal map of boolean flags. Compares every key on both
+  // sides (no key-order dependence). Empty/missing toggles treated as {}.
+  const at = (a.toggles as Record<string, boolean> | undefined) ?? {}
+  const bt = (b.toggles as Record<string, boolean> | undefined) ?? {}
+  const atKeys = Object.keys(at)
+  const btKeys = Object.keys(bt)
+  if (atKeys.length !== btKeys.length) return false
+  for (const k of atKeys) {
+    if (at[k] !== bt[k]) return false
   }
   return true
 }

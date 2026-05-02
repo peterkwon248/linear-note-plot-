@@ -203,12 +203,17 @@ function ColumnHeaders({
   isAllSelected,
   isPartiallySelected,
   visibleColumns,
+  showAlphaIndex,
+  onToggleAlphaIndex,
 }: {
   hasSelection?: boolean
   onSelectAll?: () => void
   isAllSelected?: boolean
   isPartiallySelected?: boolean
   visibleColumns?: string[]
+  /** Index toggle state — when provided, renders an Index button next to Title */
+  showAlphaIndex?: boolean
+  onToggleAlphaIndex?: () => void
 }) {
   // undefined visibleColumns => all visible (backwards compat).
   const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
@@ -237,7 +242,25 @@ function ColumnHeaders({
           )}
         </div>
       )}
-      <span className="min-w-0 flex-1">Title</span>
+      <span className="min-w-0 flex-1 flex items-center gap-2">
+        <span>Title</span>
+        {/* Alphabetical Index toggle — sits with the data, mirroring Notes table */}
+        {onToggleAlphaIndex && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleAlphaIndex() }}
+            className={cn(
+              "flex h-6 items-center gap-1 rounded-md px-1.5 text-2xs font-medium transition-all duration-100",
+              showAlphaIndex
+                ? "bg-foreground/10 text-foreground"
+                : "text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground"
+            )}
+            title={showAlphaIndex ? "Exit alphabetical index" : "Show alphabetical index"}
+          >
+            <ListBullets size={11} weight="bold" />
+            <span>Index</span>
+          </button>
+        )}
+      </span>
       {isVisible("status") && <span className="w-[72px] shrink-0 px-2">Status</span>}
       {isVisible("tags") && <span className="w-[140px] shrink-0 px-2">Categories</span>}
       {isVisible("aliases") && <span className="w-[140px] shrink-0 px-2">Aliases</span>}
@@ -693,28 +716,20 @@ export function WikiList({
           </>
         )}
 
-        <span className="h-4 w-px bg-border/50" />
-
-        {/* Index Toggle */}
-        <button
-          onClick={() => setShowAllArticles(!showAllArticles)}
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-2xs font-medium transition-all duration-100",
-            showAllArticles
-              ? "bg-foreground/10 text-foreground"
-              : "text-muted-foreground hover:bg-hover-bg hover:text-foreground"
-          )}
-        >
-          <ListBullets size={13} weight="bold" />
-          Index
-        </button>
+        {/* Index toggle moved into ColumnHeaders so it sits with the data it
+            groups (next to the Status column header). Frees this toolbar of
+            data-level controls — it now hosts only tabs + category filter. */}
       </div>
 
       {/* ── Table Content ── */}
       {showAllArticles ? (
         /* ── Alphabetical Index ── */
         <div className="flex-1 overflow-y-auto">
-          <ColumnHeaders visibleColumns={visibleColumns} />
+          <ColumnHeaders
+            visibleColumns={visibleColumns}
+            showAlphaIndex={showAllArticles}
+            onToggleAlphaIndex={() => setShowAllArticles(!showAllArticles)}
+          />
           <div>
             {Array.from(groupedArticles.entries()).map(([group, articles]) => (
               <div key={group} id={`wiki-group-${group}`}>
@@ -742,6 +757,8 @@ export function WikiList({
             isAllSelected={isAllSelected}
             isPartiallySelected={isPartiallySelected}
             visibleColumns={visibleColumns}
+            showAlphaIndex={showAllArticles}
+            onToggleAlphaIndex={() => setShowAllArticles(!showAllArticles)}
           />
           {sortedFilteredWikiNotes.length === 0 ? (
             <EmptyState />

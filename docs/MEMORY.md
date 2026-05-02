@@ -1,5 +1,30 @@
 # Plot Project Memory
 
+## 🚀 2026-05-02 (늦은 밤) 세션 — Index 버튼 위치 통일 + viewState.toggles 보존 (옵션 B)
+
+**범위**: Notes/Wiki list view의 Index 토글 위치 통일. Display 패널 토글 + viewState.toggles 보존으로 saved view에 같이 저장.
+
+### 핵심 결정사항
+- **Index 위치 = Title 컬럼 헤더 옆 inline (통일)**: 데이터 영역에 인접 → "이 컬럼들을 알파벳 그룹화" 의미 명확. 위키도 동일 위치로 마이그레이션
+- **viewState.toggles.showAlphaIndex**: 로컬 useState 폐기, viewState에 보존 → saved view 스냅샷에 자동 포함
+- **컬럼 헤더 inline + Display 패널 두 진입점**: 같은 state (synced), Linear 패턴 모방
+- **viewStateEquals에 toggles 비교 추가**: dirty 검증 범위 확장. Index 토글 변경 시 ViewHeader Save 버튼 자동 등장 (보존 일관성)
+- **ViewHeader extraToolbarButtons는 글로벌 액션만**: Filter/Display/Save view만 — 데이터 액션(Index)은 컬럼으로 강등
+
+### 코드 변경 요약
+- `components/notes-table.tsx` — useState → useCallback 래퍼 (viewState.toggles 패치). ViewHeader에서 Index 버튼 제거. COLUMN_DEFS map의 title 컬럼에 `<button>Index</button>` inline. Collapse-all 버튼 등 다른 extraToolbar 항목은 유지
+- `components/views/wiki-list.tsx` — `ColumnHeaders` props에 `showAlphaIndex` + `onToggleAlphaIndex` 추가. 별도 toolbar의 Index 버튼 + divider 제거. 두 위치(alphabetical view + 일반 view)의 ColumnHeaders 호출처에 props 전달
+- `components/views/wiki-view.tsx` — `showAllArticles` useState 제거 → `wikiViewState.toggles?.showAlphaIndex ?? false`. setShowAllArticles 콜백이 `updateWikiViewState({ toggles: { ..., showAlphaIndex } })` 호출
+- `lib/view-engine/saved-view-context.ts` — `viewStateEquals`에 `toggles` map 비교 추가 (Object.keys 비교 + 각 키 값 비교)
+- `lib/view-engine/view-configs.tsx` — `NOTES_VIEW_CONFIG.displayConfig.toggles`와 `WIKI_VIEW_CONFIG.displayConfig.toggles`에 `{ key: "showAlphaIndex", label: "Alphabetical index" }` 추가
+
+### Technical Learnings
+- **변수 선언 순서 함정**: `wikiViewState`를 사용하는 hook을 그것 정의 위에 놓으면 TS error TS2448 ("used before declaration"). 의존성 그래프 따라 선언 순서 신경 써야
+- **toggles 비교 = saved view 보존의 단서**: 기존 viewStateEquals에서 toggles 비교 빠뜨려서 graph 관련 toggles(showWikilinks 등)도 dirty 감지 안 됐음. 통일된 비교로 모든 toggles가 saved view에 의미 있게 보존됨
+- **컬럼 헤더 inline 토글 = 데이터 액션 / ViewHeader = 글로벌 액션**: Linear 멘탈모델. Filter는 모든 데이터에 적용 → 글로벌. Index는 그룹화 모드 → 데이터 직접 액션 → 컬럼 인접
+
+---
+
 ## 🚀 2026-05-02 (밤) 세션 — Saved Views 스냅샷 UX (Linear 패턴, 옵션 C)
 
 **범위**: PR #237 직후 같은 워크트리에서 진행. 사용자 합의된 옵션 C 구현.

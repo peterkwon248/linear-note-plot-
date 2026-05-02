@@ -150,6 +150,7 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { value: "family", label: "Family" },
     ],
     toggles: [
+      { key: "showAlphaIndex", label: "Alphabetical index" },
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
       { key: "filterAwareRole", label: "Filter-aware role" },
     ],
@@ -245,6 +246,7 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "family", label: "Family" },
     ],
     toggles: [
+      { key: "showAlphaIndex", label: "Alphabetical index" },
       { key: "showStubs", label: "Show stubs", icon: ContentIcon },
       { key: "filterAwareRole", label: "Filter-aware role" },
     ],

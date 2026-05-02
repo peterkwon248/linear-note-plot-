@@ -3,6 +3,28 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
+## 🚀 2026-05-02 (늦은 밤) — Index 버튼 위치 통일 + viewState.toggles에 보존
+
+**문제**: Notes의 Index 토글은 ViewHeader 우측 toolbar (Filter/Display 옆), Wiki list는 ViewHeader 아래 별도 toolbar에 있어서 두 view 패턴이 어색하게 달랐음.
+
+**해결**: 두 view 모두 **컬럼 헤더의 Title 옆 inline 토글**로 통일. ViewHeader는 글로벌 view-level 액션(Filter/Display/Save view)만 보유.
+
+**옵션 B 선택** (Display 패널 + 컬럼 헤더 inline 두 진입점, viewState.toggles에 보존):
+- `viewState.toggles.showAlphaIndex` 키로 통일 (기존 `useState` 로컬 상태 폐기)
+- saved view에 함께 보존됨 — "알파벳 인덱스 켠 상태"의 view 만들 수 있음
+- 컬럼 헤더 inline 토글 + Display 패널 토글 = 같은 state (synced), Linear 패턴
+
+**dirty 검증 확장**: `viewStateEquals`에 `toggles` map 비교 추가. Index 켜면 ViewHeader Save 버튼 자동 등장.
+
+**적용 파일**:
+- `components/notes-table.tsx` — useState 제거, viewState.toggles 사용, ViewHeader extraToolbarButtons에서 제거, 컬럼 헤더 Title 셀에 toggle inline
+- `components/views/wiki-list.tsx` — `ColumnHeaders`에 `showAlphaIndex` + `onToggleAlphaIndex` props 추가, 별도 toolbar의 Index 버튼 제거
+- `components/views/wiki-view.tsx` — `showAllArticles` useState 제거, wikiViewState.toggles로 전환
+- `lib/view-engine/saved-view-context.ts` — viewStateEquals에 toggles 비교 추가
+- `lib/view-engine/view-configs.tsx` — NOTES + WIKI configs의 displayConfig.toggles에 `showAlphaIndex` 추가
+
+---
+
 ## 🚀 2026-05-02 (밤) — Saved Views 스냅샷 UX (Linear 패턴 옵션 C)
 
 **Saved Views snapshot 흐름 완성**: 이전엔 + 버튼이 빈 default state 뷰만 만들었음. 이제:

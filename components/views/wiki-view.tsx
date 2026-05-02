@@ -126,9 +126,6 @@ export function WikiView() {
   // Category filter from sidebar click
   const categoryFilterTagId = useWikiCategoryFilter()
 
-  // All Articles view state
-  const [showAllArticles, setShowAllArticles] = useState(false)
-
   // Wiki article selection state (for floating action bar)
   const [selectedArticleIds, setSelectedArticleIds] = useState<Set<string>>(new Set())
   const lastClickedIndexRef = useRef<number>(-1)
@@ -144,6 +141,17 @@ export function WikiView() {
   const updateWikiViewState = useCallback(
     (patch: Partial<ViewState>) => setViewState("wiki" as ViewContextKey, patch),
     [setViewState]
+  )
+
+  // All Articles view state — alphabetical index. Lives in viewState.toggles
+  // (showAlphaIndex) so saved views preserve the index-on/off setting.
+  // Must be declared after wikiViewState/updateWikiViewState.
+  const showAllArticles = wikiViewState.toggles?.showAlphaIndex ?? false
+  const setShowAllArticles = useCallback(
+    (show: boolean) => {
+      updateWikiViewState({ toggles: { ...(wikiViewState.toggles ?? {}), showAlphaIndex: show } })
+    },
+    [wikiViewState.toggles, updateWikiViewState],
   )
 
   // Saved view restoration — when a wiki-scoped saved view becomes active,
