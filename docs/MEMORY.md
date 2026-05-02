@@ -1,5 +1,38 @@
 # Plot Project Memory
 
+## 🚀 2026-05-02 (밤) 세션 — Saved Views 스냅샷 UX (Linear 패턴, 옵션 C)
+
+**범위**: PR #237 직후 같은 워크트리에서 진행. 사용자 합의된 옵션 C 구현.
+
+### 핵심 결정사항
+- **빈 뷰 생성 → 현재 viewState 캡처로 의미 변경**: 사이드바 + 버튼이 더 이상 빈 default state를 만들지 않음. `createSavedView(name, currentViewState, space)` — 이름 받자마자 현재 활성 context의 viewState 그대로 저장
+- **ViewHeader Save 버튼 신규** (Linear 패턴): 변경 감지 시 강조 색상으로 "Save" 등장. 활성 view 없을 땐 "Save view" popover로 이름 입력
+- **사이드바 우클릭 메뉴 확장**: Update view (덮어쓰기) / Reset to saved (되돌리기) 2개 추가. 기존 Rename / Delete 유지
+- **Dirty 검증 범위**: viewMode/sortField/sortDirection/groupBy/showEmptyGroups + filters[] + visibleColumns[]. toggles는 의도적 제외 (per-context 플래그라 SavedView 모델에 없음)
+- **활성 view 자동 활성화**: save-as 모드에서 새 뷰 생성 시 setActiveViewId 호출 → 이후 편집은 dirty 추적
+- **5 view 모두 적용**: notes-table, notes-board, wiki-view (list mode), ontology-view, calendar-view. wiki dashboard 모드는 의도적 hidden
+
+### 코드 변경 요약
+- **신규 helper**: `lib/view-engine/saved-view-context.ts` — `getCurrentViewContextKey(space, route)`, `getSavedViewSpaceForActivity(space)`, `viewStateEquals(a, b)`
+- **신규 hook**: `lib/view-engine/use-save-view-props.ts` — `useSaveViewProps(contextKey, space)` 자동 계산
+- **사이드바**: `components/linear-sidebar.tsx` — `handleNewViewSubmit` viewState 캡처로 변경, `handleUpdateView` / `handleResetView` 신규, ContextMenu 항목 4개로 확장
+- **ViewHeader**: `components/view-header.tsx` — `saveViewMode` (hidden/save-as/update/clean) + `onSaveView` props 추가, FloppyDisk 아이콘 + Save 버튼 (popover/직접 호출 분기)
+- **5 view 호출처**: notes-table, notes-board, wiki-view, ontology-view, calendar-view에 `useSaveViewProps` 호출 + ViewHeader prop 전달
+
+### 다음 작업 후보 (큐)
+- **NoteStatus 리네이밍 Phase 1** — `inbox/capture/permanent` → `stone/brick/keystone` + IDB v101 마이그레이션. PRD 사전 조사 완료
+- **Filter chip 3-part 드롭다운 Step B** — Field/Operator/Value 모두 popover, Linear 한 술 더 뜸
+- **linear-sidebar wiki space 카테고리 트리 표시** — 현재 wiki-category-page에서만 색 dot 보임
+- **dead code 정리** — `components/views/wiki-sidebar.tsx`
+
+### Technical Learnings
+- **shallow viewState 비교**: filters/visibleColumns는 deep 비교 안 해도 ordering이 stable해서 index-based 비교로 충분 (filter 추가 시 항상 끝에 push)
+- **save-as 자동 activate**: createSavedView 후 setActiveViewId — 사용자가 입력 후 즉시 dirty 추적 시작
+- **dynamic context (notes)**: notes context는 route에 따라 inbox/capture/permanent/folder/tag/label 변동. helper가 route 분기로 처리
+- **ViewHeader save 버튼 클로저 함정**: hydrated 가드 안 두면 Popover 마운트 시점이 server vs client 다름. 기존 Filter/Display 패턴 그대로 따름
+
+---
+
 ## 🚀 2026-05-02 (오후) 세션 — docs 정리 + Saved Views 완성 + 카테고리 색 UI + Sticker 사이드바 (사이드바 polish + Sticker 1급 UI 통합 PR)
 
 **범위**: 5개 작업 묶음 PR. PR #236 직후 fresh worktree에서 시작.

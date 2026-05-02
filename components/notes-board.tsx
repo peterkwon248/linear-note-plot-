@@ -53,6 +53,7 @@ import { BoardWorkbench } from "@/components/board-workbench"
 import type { Note, NoteStatus, NotePriority, TriageStatus, Folder } from "@/lib/types"
 import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
+import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -559,6 +560,8 @@ export function NotesBoard({
   const sidePanelOpen = usePlotStore((s) => s.sidePanelOpen)
 
   const effectiveTab = context ?? "all"
+  // Save view button (snapshot UX) — board view shares context with table
+  const { saveViewMode, onSaveView } = useSaveViewProps(effectiveTab as any, "notes")
 
   const backlinksMap = useBacklinksIndex()
 
@@ -835,6 +838,8 @@ export function NotesBoard({
         icon={<FileText size={20} weight="regular" />}
         title={title ?? "Notes"}
         count={flatNotes.length}
+        saveViewMode={saveViewMode}
+        onSaveView={onSaveView}
         showFilter
         hasActiveFilters={viewState.filters.length > 0}
         filterContent={

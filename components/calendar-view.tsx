@@ -31,6 +31,7 @@ import { usePlotStore } from "@/lib/store"
 import { useNotesView } from "@/lib/view-engine/use-notes-view"
 import { useBacklinksIndex } from "@/lib/search/use-backlinks-index"
 import { useActiveViewId } from "@/lib/table-route"
+import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { ViewHeader } from "@/components/view-header"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
@@ -682,6 +683,9 @@ export function CalendarView({
     }
   }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Save view button (snapshot UX) for Calendar
+  const { saveViewMode: calSaveViewMode, onSaveView: onSaveCalView } = useSaveViewProps("calendar", "calendar")
+
   // dateSource derived from sortField
   const dateSource: DateSource = calViewState.sortField === "updatedAt" ? "updatedAt" : "createdAt"
   // layers derived from toggles
@@ -868,6 +872,8 @@ export function CalendarView({
         icon={<CalendarDots size={20} weight="regular" />}
         title={headerTitle}
         count={currentMonthCount}
+        saveViewMode={calSaveViewMode}
+        onSaveView={onSaveCalView}
         showFilter
         hasActiveFilters={calendarFilters.length > 0}
         filterContent={

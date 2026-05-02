@@ -66,6 +66,7 @@ import { toast } from "sonner"
 import { FloatingActionBar } from "@/components/floating-action-bar"
 import { FilterChipBar } from "@/components/filter-bar"
 import { ViewHeader } from "@/components/view-header"
+import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 import { FilterPanel } from "@/components/filter-panel"
 import { DisplayPanel } from "@/components/display-panel"
 import { NOTES_VIEW_CONFIG } from "@/lib/view-engine/view-configs"
@@ -322,6 +323,11 @@ export function NotesTable({
 
   const effectiveTab = context ?? "all"
   const isTrashView = effectiveTab === "trash"
+
+  // Save view button (snapshot UX): captures or updates the current viewState
+  // for the active context. "all" → notes space; "trash" / "savedView" inherit
+  // the table's effective context so dirty detection works per-page.
+  const { saveViewMode, onSaveView } = useSaveViewProps(effectiveTab as any, "notes")
 
   const backlinksMap = useBacklinksIndex()
 
@@ -912,6 +918,8 @@ export function NotesTable({
         icon={<FileText size={20} weight="regular" />}
         title={title ?? "Notes"}
         count={flatNotes.length}
+        saveViewMode={saveViewMode}
+        onSaveView={onSaveView}
         extraToolbarButtons={
           <>
             {/* Index toggle — Wiki-pattern parity (alphabetical group view) */}

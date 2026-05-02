@@ -61,6 +61,7 @@ import { WikiMergePage } from "./wiki-merge-page"
 import { WikiSplitPage } from "./wiki-split-page"
 import { WikiCategoryPage } from "./wiki-category-page"
 import { isWikiStub } from "@/lib/wiki-utils"
+import { useSaveViewProps } from "@/lib/view-engine/use-save-view-props"
 
 export function WikiView() {
   const notes = usePlotStore((s) => s.notes)
@@ -156,6 +157,9 @@ export function WikiView() {
       setViewState("wiki" as ViewContextKey, view.viewState as Parameters<typeof setViewState>[1])
     }
   }, [activeViewId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save view button (snapshot UX) for Wiki list mode
+  const { saveViewMode: wikiSaveViewMode, onSaveView: onSaveWikiView } = useSaveViewProps("wiki", "wiki")
   const wikiFilters = wikiViewState.filters
   const handleWikiFilterToggle = useCallback((rule: FilterRule) => {
     const exists = wikiFilters.some(
@@ -974,6 +978,8 @@ export function WikiView() {
         icon={<BookOpen size={20} weight="regular" />}
         title="Wiki"
         count={stats.total}
+        saveViewMode={wikiViewMode === "dashboard" ? "hidden" : wikiSaveViewMode}
+        onSaveView={onSaveWikiView}
         showFilter={wikiViewMode !== "dashboard"}
         hasActiveFilters={wikiViewMode === "category" ? categoryFilters.length > 0 : wikiFilters.length > 0}
         filterContent={

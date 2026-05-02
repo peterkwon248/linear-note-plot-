@@ -3,6 +3,30 @@
 > This file is synced via git so all machines share the same context.
 > before-work reads this file. Update it whenever major decisions change.
 
+## 🚀 2026-05-02 (밤) — Saved Views 스냅샷 UX (Linear 패턴 옵션 C)
+
+**Saved Views snapshot 흐름 완성**: 이전엔 + 버튼이 빈 default state 뷰만 만들었음. 이제:
+
+1. **사이드바 + 버튼**: 이름 입력 → 즉시 **현재 viewState 캡처**해서 저장 (`createSavedView(name, currentViewState, space)`)
+2. **ViewHeader Save 버튼** (Linear 패턴):
+   - 활성 view 없음 → "Save view" (popover로 이름 입력)
+   - 활성 view + dirty (현재 state ≠ saved state) → 강조된 "Save" 버튼 (덮어쓰기)
+   - 활성 view + clean → 버튼 숨김
+3. **사이드바 saved view 우클릭 메뉴**:
+   - **Update view** — 현재 viewState로 saved view 덮어쓰기
+   - **Reset to saved** — 현재 viewState를 saved view 상태로 되돌림
+   - Rename / Delete
+
+**적용 범위**: notes-table, notes-board, wiki-view (list mode), ontology-view, calendar-view 5곳
+
+**핵심 헬퍼**:
+- `lib/view-engine/saved-view-context.ts` — `getCurrentViewContextKey(space, route)`, `getSavedViewSpaceForActivity(space)`, `viewStateEquals(a, b)`
+- `lib/view-engine/use-save-view-props.ts` — `useSaveViewProps(contextKey, space)` 훅. 자동으로 saveViewMode 계산 + onSaveView 콜백 제공
+
+**Dirty 검증**: viewMode/sortField/sortDirection/groupBy/showEmptyGroups + filters[] + visibleColumns[] 비교
+
+---
+
 ## 🚀 2026-05-02 (오후) — docs 정리 + Saved Views 완성 + 카테고리 색 UI + Sticker 사이드바 (사이드바 polish + Sticker 1급 UI 통합 PR)
 
 **5개 작업 묶음 PR**:

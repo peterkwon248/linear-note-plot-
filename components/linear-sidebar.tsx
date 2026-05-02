@@ -45,6 +45,8 @@ import { Tag as PhTag } from "@phosphor-icons/react/dist/ssr/Tag"
 import { Paperclip } from "@phosphor-icons/react/dist/ssr/Paperclip"
 import { Sticker as StickerPhosphor } from "@phosphor-icons/react/dist/ssr/Sticker"
 import { setWikiCategoryFilter } from "@/lib/wiki-category-filter"
+import { getCurrentViewContextKey, getSavedViewSpaceForActivity } from "@/lib/view-engine/saved-view-context"
+import type { ViewContextKey } from "@/lib/view-engine/types"
 import { ALL_SIDEBAR_ROUTES, setActiveRoute, getActiveRoute, setActiveFolderId, setActiveTagId, setActiveLabelId, useActiveRoute, useActiveFolderId, useActiveTagId, useActiveLabelId, useActiveSpace, setActiveViewId, useActiveViewId, routeGoBack, routeGoForward } from "@/lib/table-route"
 import type { Note, NoteStatus, ActivitySpace } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -534,7 +536,17 @@ export function LinearSidebar() {
   const handleNewViewSubmit = () => {
     const name = newViewName.trim()
     if (name) {
-      createSavedView(name, undefined, activeSpace as any)
+      // Capture current viewState (snapshot UX) instead of creating an empty
+      // default view. Resolves to the active context key by space + route, so
+      // /inbox saves "inbox" filters, /wiki saves "wiki" state, etc.
+      const contextKey = getCurrentViewContextKey(activeSpace, activeRoute)
+      const currentViewState = usePlotStore.getState().viewStateByContext[contextKey]
+      const savedSpace = getSavedViewSpaceForActivity(activeSpace)
+      createSavedView(
+        name,
+        currentViewState as any, // ViewState shape is wider than SavedView.viewState; the slice merges defaults
+        savedSpace
+      )
     }
     setNewViewName("")
     setNewViewOpen(false)
@@ -555,6 +567,26 @@ export function LinearSidebar() {
       setActiveRoute("/notes")
       router.push("/notes")
     }
+  }
+
+  // Saved Views snapshot UX:
+  //  - Update: overwrite saved viewState with the current (dirty) state
+  //  - Reset: discard current edits and re-apply the saved viewState
+  const handleUpdateView = (viewId: string) => {
+    const view = savedViews.find((v) => v.id === viewId)
+    if (!view) return
+    const contextKey = getCurrentViewContextKey(activeSpace, activeRoute)
+    const currentViewState = usePlotStore.getState().viewStateByContext[contextKey]
+    if (!currentViewState) return
+    updateSavedView(viewId, { viewState: currentViewState as any })
+  }
+
+  const handleResetView = (viewId: string) => {
+    const view = savedViews.find((v) => v.id === viewId)
+    if (!view) return
+    const contextKey = getCurrentViewContextKey(activeSpace, activeRoute)
+    const setViewState = usePlotStore.getState().setViewState
+    setViewState(contextKey as ViewContextKey, view.viewState as any)
   }
 
   const renderViewsSection = (spaceFilter: string, routeOnClick: string) => {
@@ -628,6 +660,13 @@ export function LinearSidebar() {
                 </button>
               </ContextMenuTrigger>
               <ContextMenuContent className="w-48">
+                <ContextMenuItem onClick={() => handleUpdateView(view.id)}>
+                  Update view
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => handleResetView(view.id)}>
+                  Reset to saved
+                </ContextMenuItem>
+                <ContextMenuSeparator />
                 <ContextMenuItem onClick={() => {
                   setRenamingItem({ id: view.id })
                   setRenameValue(view.name)
