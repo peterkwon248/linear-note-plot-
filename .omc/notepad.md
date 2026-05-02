@@ -2,8 +2,18 @@
 
 ## Critical Context
 
-- **Plot 정체성 (영구 디자인 원칙)**: "Gentle by default, powerful when needed"
-- **PR #237**: 11 커밋, main 머지 대기 (open). 다음 세션은 fresh worktree 권장
+### 영구 원칙 (모든 작업에 적용)
+- **디자인 원칙**: "Gentle by default, powerful when needed"
+- **작업 원칙**: "정확도 + 버그 위험 최소화"
+  1. 추측 X, 코드/패턴 정확 이해 후 변경
+  2. 최소 diff (scope 초과 X)
+  3. 빌드/타입 검증 의무
+  4. 사용자 reproduce 정보 우선
+  5. UI + 데이터 모델 분리 PR
+  6. 사용자 직관 = 디자인 시그널 (무시 X)
+
+### 현재 상태
+- **PR #237**: 12 커밋, main 머지 대기 (open). 다음 세션은 fresh worktree 권장
 - **이번 세션 = 코드 9 커밋 + 33 디자인 결정** (앞으로 작업 방향 정리)
 
 ## Active Tasks (다음 세션 — 우선순위 순)
