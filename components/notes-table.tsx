@@ -151,7 +151,7 @@ function TH({
 }) {
   if (!col) {
     return (
-      <span className={`inline-flex items-center text-note font-medium text-muted-foreground ${className}`}>
+      <span className={`inline-flex items-center text-note font-medium text-foreground/80 ${className}`}>
         {label}
       </span>
     )
@@ -159,7 +159,7 @@ function TH({
   const active = sortCol === col
   return (
     <button
-      className={`group/th inline-flex items-center gap-1 text-note font-medium text-muted-foreground transition-colors hover:text-foreground ${className}`}
+      className={`group/th inline-flex items-center gap-1 text-note font-medium text-foreground/80 transition-colors hover:text-foreground ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
@@ -1170,7 +1170,7 @@ export function NotesTable({
                   {COLUMN_DEFS.filter((col) => col.id === "title" || effectiveVisibleCols.includes(col.id)).map((col) => (
                     <div key={col.id} className={col.align ?? ""}>
                       {col.id === "title" ? (
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center justify-between gap-1 pr-0">
                           <TH
                             label={col.label}
                             col={col.sortField}
@@ -1179,17 +1179,22 @@ export function NotesTable({
                             onSort={handleSort}
                             className=""
                           />
-                          {/* Alphabetical Index toggle — sits with the data it groups */}
+                          {/* Alphabetical Index toggle — sits with the data it groups.
+                              Tight `mr-0` keeps it close to the next (Status) column. */}
                           <button
-                            onClick={(e) => { e.stopPropagation(); setShowAlphaIndex((v) => !v) }}
-                            className={`flex h-6 items-center gap-1 rounded-md px-1.5 text-2xs font-medium transition-all duration-100 ${
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              e.preventDefault()
+                              setShowAlphaIndex(!showAlphaIndex)
+                            }}
+                            className={`flex h-6 items-center gap-1 rounded-md px-1.5 text-note font-medium transition-all duration-100 ${
                               showAlphaIndex
                                 ? "bg-foreground/10 text-foreground"
-                                : "text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground"
+                                : "text-foreground/70 hover:bg-hover-bg hover:text-foreground"
                             }`}
                             title={showAlphaIndex ? "Exit alphabetical index" : "Show alphabetical index"}
                           >
-                            <ListBullets size={11} weight="bold" />
+                            <ListBullets size={12} weight="bold" />
                             <span>Index</span>
                           </button>
                         </div>

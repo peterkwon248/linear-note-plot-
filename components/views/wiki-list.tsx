@@ -218,7 +218,7 @@ function ColumnHeaders({
   // undefined visibleColumns => all visible (backwards compat).
   const isVisible = (key: string) => !visibleColumns || visibleColumns.includes(key)
   return (
-    <div className="flex items-center px-5 py-2 text-note font-medium text-muted-foreground border-b border-border bg-secondary/30">
+    <div className="flex items-center px-5 py-2 text-note font-medium text-foreground/80 border-b border-border bg-secondary/30">
       {hasSelection && (
         <div className="w-7 shrink-0 flex items-center justify-center">
           {onSelectAll ? (
@@ -242,21 +242,24 @@ function ColumnHeaders({
           )}
         </div>
       )}
-      <span className="min-w-0 flex-1 flex items-center gap-2">
+      <span className="min-w-0 flex-1 flex items-center justify-between gap-1 pr-0">
         <span>Title</span>
-        {/* Alphabetical Index toggle — sits with the data, mirroring Notes table */}
+        {/* Alphabetical Index toggle — Notes-style placement: Title left,
+            Index pinned to the cell's right edge (= immediately before
+            the next column's header). Sits with the data, not in the
+            global toolbar. */}
         {onToggleAlphaIndex && (
           <button
             onClick={(e) => { e.stopPropagation(); onToggleAlphaIndex() }}
             className={cn(
-              "flex h-6 items-center gap-1 rounded-md px-1.5 text-2xs font-medium transition-all duration-100",
+              "flex h-6 items-center gap-1 rounded-md px-1.5 text-note font-medium transition-all duration-100",
               showAlphaIndex
                 ? "bg-foreground/10 text-foreground"
-                : "text-muted-foreground/70 hover:bg-hover-bg hover:text-foreground"
+                : "text-foreground/70 hover:bg-hover-bg hover:text-foreground"
             )}
             title={showAlphaIndex ? "Exit alphabetical index" : "Show alphabetical index"}
           >
-            <ListBullets size={11} weight="bold" />
+            <ListBullets size={12} weight="bold" />
             <span>Index</span>
           </button>
         )}

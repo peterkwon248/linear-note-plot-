@@ -150,11 +150,15 @@ export const NOTES_VIEW_CONFIG: ViewConfig = {
       { value: "family", label: "Family" },
     ],
     toggles: [
-      { key: "showAlphaIndex", label: "Alphabetical index" },
       { key: "showTrashed", label: "Show trashed", icon: TrashIcon },
       { key: "filterAwareRole", label: "Filter-aware role" },
     ],
     properties: [
+      // Index lives alongside other display properties — toggling it switches
+      // the table to alphabetical group view. DisplayPanel routes it to
+      // viewState.toggles.showAlphaIndex (not visibleColumns) since it's a
+      // display-mode flag, not a column.
+      { key: "showAlphaIndex", label: "Index" },
       { key: "status", label: "Status", icon: StatusIcon },
       { key: "folder", label: "Folder", icon: FolderIcon },
       { key: "parent", label: "Parent", icon: ParentIcon },
@@ -246,11 +250,14 @@ export const WIKI_VIEW_CONFIG: ViewConfig = {
       { value: "family", label: "Family" },
     ],
     toggles: [
-      { key: "showAlphaIndex", label: "Alphabetical index" },
       { key: "showStubs", label: "Show stubs", icon: ContentIcon },
       { key: "filterAwareRole", label: "Filter-aware role" },
     ],
     properties: [
+      // Index lives alongside other display properties — toggling it switches
+      // the table to alphabetical group view. DisplayPanel routes it to
+      // viewState.toggles.showAlphaIndex (not visibleColumns).
+      { key: "showAlphaIndex", label: "Index" },
       { key: "title", label: "Title", icon: ContentIcon },
       { key: "status", label: "Status", icon: CircleHalfIcon },
       { key: "links", label: "Backlinks", icon: LinkIcon },
